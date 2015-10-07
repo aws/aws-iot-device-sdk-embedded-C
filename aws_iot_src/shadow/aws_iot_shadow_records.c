@@ -26,7 +26,7 @@
 
 typedef struct {
 	char clientTokenID[MAX_SIZE_CLIENT_ID_WITH_SEQUENCE];
-	char thingName[MAX_SIZE_OF_THINGNAME];
+	char thingName[MAX_SIZE_OF_THING_NAME];
 	ShadowActions_t action;
 	fpActionCallback_t callback;
 	void *pCallbackContext;
@@ -409,7 +409,7 @@ void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, ShadowAc
 		uint32_t timeout_seconds) {
 	AckWaitList[indexAckWaitList].callback = callback;
 	strncpy(AckWaitList[indexAckWaitList].clientTokenID, pExtractedClientToken, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE);
-	strncpy(AckWaitList[indexAckWaitList].thingName, pThingName, MAX_SIZE_OF_THINGNAME);
+	strncpy(AckWaitList[indexAckWaitList].thingName, pThingName, MAX_SIZE_OF_THING_NAME);
 	AckWaitList[indexAckWaitList].pCallbackContext = pCallbackContext;
 	AckWaitList[indexAckWaitList].action = action;
 	InitTimer(&(AckWaitList[indexAckWaitList].timer));
