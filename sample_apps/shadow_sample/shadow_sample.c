@@ -175,9 +175,9 @@ int main(int argc, char** argv) {
 	INFO("\nAWS IoT SDK Version(dev) %d.%d.%d-%s\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_TAG);
 
 	getcwd(CurrentWD, sizeof(CurrentWD));
-	sprintf(rootCA, "%s/%s%s", CurrentWD, certDirectory, cafileName);
-	sprintf(clientCRT, "%s/%s%s", CurrentWD, certDirectory, clientCRTName);
-	sprintf(clientKey, "%s/%s%s", CurrentWD, certDirectory, clientKeyName);
+	sprintf(rootCA, "%s/%s/%s", CurrentWD, certDirectory, cafileName);
+	sprintf(clientCRT, "%s/%s/%s", CurrentWD, certDirectory, clientCRTName);
+	sprintf(clientKey, "%s/%s/%s", CurrentWD, certDirectory, clientKeyName);
 
 	DEBUG("Using rootCA %s", rootCA);
 	DEBUG("Using clientCRT %s", clientCRT);
