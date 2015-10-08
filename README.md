@@ -2,7 +2,7 @@
 
 ##Overview
 
-The AWS IoT device SDK for embedded C is a collection of C source files which can be used in embedded applications to securely connect to the [AWS IoT platform](http://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It includes transport clients **(MQTT)**, **TLS** implementations and examples for their use. It also supports AWS IoT specific features such as **Thing Shadow**. It is distributed in source form and intended to be built into customer firmware along with application code, other libraries and RTOS.
+The AWS IoT device SDK for embedded C is a collection of C source files which can be used in embedded applications to securely connect to the [AWS IoT platform](http://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It includes transport clients **(MQTT)**, **TLS** implementations and examples for their use. It also supports AWS IoT specific features such as **Thing Shadow**. It is distributed in source form and intended to be built into customer firmware along with application code, other libraries and RTOS. For additional information about porting the Device SDK for embedded C onto additional platforms please refer to the [Porting Guide](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/PortingGuide.md).
 
 ##Features
 The Device SDK simplifies access to the Pub/Sub functionality of the AWS IoT broker via MQTT and provide APIs to interact with Thing Shadows. The SDK has been tested to work with the AWS IoT platform to ensure best interoperability of a device with the AWS IoT platform.
@@ -25,9 +25,9 @@ Primary aspects are:
 For more information on the Architecture of the SDK refer [here](http://aws-iot-device-sdk-embedded-c-docs.s3-website-us-east-1.amazonaws.com/index.html)
 
 ##How to get started ?
-Ensure you understand the AWS IoT service and create the necessary certificates and policies. For more information on the AWS IoT Service please visit [this](https://aws.amazon.com/iot)
+Ensure you understand the AWS IoT platform and create the necessary certificates and policies. For more information on the AWS IoT platform please visit the [AWS IoT developer guide](http://docs.aws.amazon.com/iot/latest/developerguide/iot-security-identity.html).
 
-In order to quickly get started with the AWS IoT service, we have ported the SDK for POSIX type Operating Systems like Ubuntu, OS X and RHEL. The porting of the SDK happens at the TLS layer, and for the MQTT protocol. The SDK is configured for two TLS libraries and can be built out of the box with *GCC* using *make utility*. The tarballs can be downloaded from the below links.
+In order to quickly get started with the AWS IoT platform, we have ported the SDK for POSIX type Operating Systems like Ubuntu, OS X and RHEL. The porting of the SDK happens at the TLS layer, and for the MQTT protocol. The SDK is configured for two TLS libraries and can be built out of the box with *GCC* using *make utility*. The tarballs can be downloaded from the below links.
 
 * [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.0.0.tar)
 * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.0.0.tar)
@@ -50,7 +50,7 @@ Steps:
  	* `shadow_sample` - a simple device shadow example using a connected window example
  	* `shadow_sample_console_echo` - a sample to work with the AWS IoT Console interactive guide
  * For each sample:
- 	* Explore the example.  It connects to AWS IoT Service using MQTT and demonstrates few actions that can be performed by the SDK
+ 	* Explore the example.  It connects to AWS IoT platform using MQTT and demonstrates few actions that can be performed by the SDK
  	* Build the example using make.  (''make'')
  	* Place device identity cert and private key in locations referenced in the example (certs/).  Alternatively, you can run the sample application with the ''-c'' flag to point to a specific certificate directory.
  	* Download certificate authority CA file from this [link](https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem) and place in location referenced in the example (certs/). Ensure the names of the cert files are the same as in the `aws_iot_config.h` file
@@ -68,11 +68,11 @@ As Embedded devices run on different Real Time Operating Systems and TCP/IP stac
 [MQTT 3.1.1 Spec](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/csprd02/mqtt-v3.1.1-csprd02.html)
 
 ##Support
-If you have any technical questions about AWS IoT Device SDK, use the [AWS IoT forum](https://forums.aws.amazon.com/forum.jspa?forumID=30).
+If you have any technical questions about AWS IoT Device SDK, use the [AWS IoT forum](https://forums.aws.amazon.com/forum.jspa?forumID=210).
 For any other questions on AWS IoT, contact [AWS Support](https://aws.amazon.com/contact-us/).
 
 ##Sample APIs
-Connecting to the AWS IoT MQTT Service
+Connecting to the AWS IoT MQTT platform
 ``` rc = aws_iot_mqtt_connect(&connectParams);```
 
 Subscribe to a topic
