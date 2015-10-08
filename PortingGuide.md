@@ -29,7 +29,7 @@ All makefiles in this SDK were configured using the documented folder structure 
 
 `certs` : This directory is initially empty and will need to contain the private key, the client certificate and the root CA. The client certificate and private key can be downloaded from the AWS IoT console or be created using the AWS CLI commands. The root CA can be downloaded from [here](https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem)
 
-`docs` : SDK API and file documentation.
+`docs` : [Device SDK API and file documentation](http://aws-iot-device-sdk-embedded-c-docs.s3-website-us-east-1.amazonaws.com/index.html).
 
 `mbedtls_lib` : The mbedTLS source files. This directory is included when downloading the mbedTLS version of the SDK. It contains the mbedTLS source files to be built into the device application.
 
