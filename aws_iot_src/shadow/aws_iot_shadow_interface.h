@@ -153,11 +153,11 @@ typedef void (*fpActionCallback_t)(const char *pThingName, ShadowActions_t actio
  * 2. wait for 2 seconds for the subscription to take effect
  * 3. Publish on the update topic - $aws/things/{thingName}/shadow/update
  * 4. In the \c aws_iot_shadow_yield() function the response will be handled. In case of timeout or if the response is received, the subscription to shadow response topics are un-subscribed from.
- *    On the contrary if the persistent subscription is set to true then the un-subscribe will not be done. The topics will always be listened to
+ *    On the contrary if the persistent subscription is set to true then the un-subscribe will not be done. The topics will always be listened to.
  *
  * @param pClient	MQTT Client used as the protocol layer
  * @param pThingName Thing Name of the shadow that needs to be Updated
- * @param pJsonString The update action expects a JSON document to sent. This JSON document should adhere to the AWS IoT Thing Shadow specification. To help in the process of creating this document- SDK provides apis in \c aws_iot_shadow_json_data.h
+ * @param pJsonString The update action expects a JSON document to send. The JSO String should be a null terminated string. This JSON document should adhere to the AWS IoT Thing Shadow specification. To help in the process of creating this document- SDK provides apis in \c aws_iot_shadow_json_data.h
  * @param callback This is the callback that will be used to inform the caller of the response from the AWS IoT Shadow service.Callback could be set to NULL if response is not important
  * @param pContextData This is an extra parameter that could be passed along with the callback. It should be set to NULL if not used
  * @param timeout_seconds It is the time the SDK will wait for the response on either accepted/rejected before declaring timeout on the action

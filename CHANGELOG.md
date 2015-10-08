@@ -1,3 +1,12 @@
+## 1.0.0 (October 8, 2015)
+
+Features:
+  - Release to github
+  - SDK tarballs made available for public download
+
+Bugfixes/Improvements:
+  - Updated API documentation
+ 
 ## 0.4.0 (October 5, 2015)
 
 Features:

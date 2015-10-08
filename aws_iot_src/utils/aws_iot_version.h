@@ -31,11 +31,11 @@
 /**
  * @brief MAJOR version, incremented when incompatible API changes are made.
  */
-#define VERSION_MAJOR 0
+#define VERSION_MAJOR 1
 /**
  * @brief MINOR version when functionality is added in a backwards-compatible manner.
  */
-#define VERSION_MINOR 4
+#define VERSION_MINOR 0
 /**
  * @brief PATCH version when backwards-compatible bug fixes are made.
  */
@@ -43,6 +43,6 @@
 /**
  * @brief TAG is an (optional) tag appended to the version if a more descriptive verion is needed.
  */
-#define VERSION_TAG "BETA"
+#define VERSION_TAG ""
 
 #endif /* SRC_UTILS_AWS_IOT_VERSION_H_ */

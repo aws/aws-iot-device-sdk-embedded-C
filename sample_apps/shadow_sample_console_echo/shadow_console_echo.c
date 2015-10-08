@@ -25,13 +25,34 @@
 #include "aws_iot_shadow_interface.h"
 #include "aws_iot_config.h"
 
-/*
- * The purpose of the application is to echo the contents of the message published on the delta topic
- * For More details follow the console wizard
- * Anything received on the delta topic will be sent back in reported
+/**
+ * @file shadow_console_echo.c
+ * @brief  Echo received Delta message
  *
+ * This application will echo the message received in delta, as reported.
+ * for example:
+ * Received Delta message
+ * {
+ *    "state": {
+ *       "switch": "on"
+ *   }
+ * }
+ * This delta message means the desired switch position has changed to "on"
+ *
+ * This application will take this delta message and publish it back as the reported message from the device.
+ * {
+ *    "state": {
+ *     "reported": {
+ *       "switch": "on"
+ *      }
+ *    }
+ * }
+ *
+ * This update message will remove the delta that was created. If this message was not removed then the AWS IoT Thing Shadow is going to always have a delta and keep sending delta any time an update is applied to the Shadow
  * This example will not use any of the json builder/helper functions provided in the aws_iot_shadow_json_data.h.
+ * @note Ensure the buffer sizes in aws_iot_config.h are big enough to receive the delta message. The delta message will also contain the metadata with the timestamps
  */
+
 char certDirectory[PATH_MAX + 1] = "../../certs";
 char HostAddress[255] = AWS_IOT_MQTT_HOST;
 uint32_t port = AWS_IOT_MQTT_PORT;
@@ -143,7 +164,14 @@ int main(int argc, char** argv) {
 
 	return rc;
 }
-
+/**
+ * @brief This function builds a full Shadow expected JSON document by putting the data in the reported section
+ *
+ * @param pJsonDocument Buffer to be filled up with the JSON data
+ * @param maxSizeOfJsonDocument maximum size of the buffer that could be used to fill
+ * @param pReceivedDeltaData This is the data that will be embedded in the reported section of the JSON document
+ * @param lengthDelta Length of the data
+ */
 bool buildJSONForReported(char *pJsonDocument, size_t maxSizeOfJsonDocument, const char *pReceivedDeltaData, uint32_t lengthDelta) {
 	int32_t ret;
 

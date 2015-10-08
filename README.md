@@ -33,7 +33,7 @@ In order to quickly get started with the AWS IoT service, we have ported the SDK
 * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.0.0.tar)
 
 ##Installation
-This section explains the indivdual steps to retrieve the necessary files and be able to build your first application using the AWS IoT device SDK for embedded C.
+This section explains the individual steps to retrieve the necessary files and be able to build your first application using the AWS IoT device SDK for embedded C.
 
 Steps:
 
@@ -60,7 +60,7 @@ Steps:
 Also, for a guided example on getting started with the Thing Shadow, visit the AWS IoT Console's [Interactive Guide](https://console.aws.amazon.com/iot).
 
 ##Porting to different platforms
-As Embedded devices run on different Real Time Operating Systems and TCP/IP stacks, it is one of the important design goals for the Device SDK to keep it portable. Please refer to the [porting guide](http://aws-iot-device-sdk-embedded-c-docs.s3-website-us-east-1.amazonaws.com/index.html) to get more information on how to make this SDK run on your devices (i.e. micro-controllers).
+As Embedded devices run on different Real Time Operating Systems and TCP/IP stacks, it is one of the important design goals for the Device SDK to keep it portable. Please refer to the [porting guide](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/PortingGuide.md) to get more information on how to make this SDK run on your devices (i.e. micro-controllers).
 
 ##Resources
 [API Documentation](http://aws-iot-device-sdk-embedded-c-docs.s3-website-us-east-1.amazonaws.com/index.html)

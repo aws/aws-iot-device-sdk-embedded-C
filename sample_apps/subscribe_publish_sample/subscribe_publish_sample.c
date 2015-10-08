@@ -12,6 +12,19 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
+/**
+ * @file subscribe_publish_sample.c
+ * @brief simple MQTT publish and subscribe on the same topic
+ *
+ * This example takes the parameters from the aws_iot_config.h file and establishes a connection to the AWS IoT MQTT Platform.
+ * It subscribes and publishes to the same topic - "sdkTest/sub"
+ *
+ * If all the certs are correct, you should see the messages received by the application in a loop.
+ *
+ * The application takes in the certificate path, host name , port and the number of times the publish should happen.
+ *
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -41,10 +54,24 @@ void disconnectCallbackHandler(void) {
 	WARN("MQTT Disconnect");
 }
 
-
+/**
+ * @brief Default cert location
+ */
 char certDirectory[PATH_MAX + 1] = "../../certs";
+
+/**
+ * @brief Default MQTT HOST URL is pulled from the aws_iot_config.h
+ */
 char HostAddress[255] = AWS_IOT_MQTT_HOST;
+
+/**
+ * @brief Default MQTT port is pulled from the aws_iot_config.h
+ */
 uint32_t port = AWS_IOT_MQTT_PORT;
+
+/**
+ * @brief This parameter will avoid infinite loop of publish and exit the program after certain number of publishes
+ */
 uint32_t publishCount = 0;
 
 void parseInputArgsForConnectParams(int argc, char** argv) {
@@ -167,6 +194,8 @@ int main(int argc, char** argv) {
 	}
 
 	while (NONE_ERROR == rc && (publishCount > 0 || infinitePublishFlag)) {
+
+		//Max time the yield function will wait for read messages
 		rc = aws_iot_mqtt_yield(100);
 		INFO("-->sleep");
 		sleep(1);
