@@ -43,7 +43,7 @@ Steps:
  * Expand the tarball (tar -xf <tarball.tar>).  This will create 4 directories:
  	* `aws_iot_src` - the AWS IoT SDK source files
  	* `sample_apps` - the sample applications
- 	* `aws_mqtt_embedded_client_lib` - the aws MQTT client derived from Paho Embedded C client
+ 	* `aws_mqtt_embedded_client_lib` - the aws MQTT client derived from [Eclipse Paho](http://www.eclipse.org/paho/clients/c/embedded/) Embedded C client
  	* `certs` - TLS certificates directory
  * Change directory to sample_apps.  The following sample applications are included:
  	* `subscribe_publish_sample` - a simple pub/sub MQTT example
