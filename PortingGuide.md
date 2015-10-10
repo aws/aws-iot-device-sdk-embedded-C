@@ -4,7 +4,13 @@
 The scope of this document is to provide instructions to modify the provided source files and functions in of this SDK to run in a variety of embedded C–based environments (e.g. real-time OS, embedded Linux) and to be adjusted to use a specific TLS implementation as available with specific hardware platforms.
 
 ##Contents of the SDK
-The SDK ported for linux could be downloaded from this link The C-code files of this SDK are delivered via the following directory structure (see comment behind folder name for an explanation of its content). 
+The SDK ported for linux can be downloaded from the below links.
+
+* [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-latest.tar)
+* [mbedTLS from
+  ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-latest.tar)
+
+The C-code files of this SDK are delivered via the following directory structure (see comment behind folder name for an explanation of its content). 
 
 Directory structure Current SDK Directory Layout (OpenSSL)
 
