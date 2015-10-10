@@ -36,7 +36,7 @@ All makefiles in this SDK were configured using the documented folder structure 
 
 `aws_mqtt_embedded_client_lib` : The source code for the Embedded C MQTT client. This client is a modified version of the [Eclipse Paho](http://www.eclipse.org/paho/clients/c/embedded/) Embedded C client. The modifications include improved keep alive handling (callback on disconnect), a fix for unsubscribe functionality, buffer protection against too large MQTT messages and additional callback context to allow for a better layered architecture of the AWS IoT SDK.
 
-`certs` : This directory is initially empty and will need to contain the private key, the client certificate and the root CA. The client certificate and private key can be downloaded from the AWS IoT console or be created using the AWS CLI commands. The root CA can be downloaded from here.
+`certs` : This directory is initially empty and will need to contain the private key, the client certificate and the root CA. The client certificate and private key can be downloaded from the AWS IoT console or be created using the AWS CLI commands. The root CA can be downloaded from [here](https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem).
 
 `docs` : SDK API and file documentation.
 
