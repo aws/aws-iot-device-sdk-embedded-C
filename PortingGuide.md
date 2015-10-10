@@ -4,7 +4,13 @@
 The scope of this document is to provide instructions to modify the provided source files and functions in of this SDK to run in a variety of embedded C–based environments (e.g. real-time OS, embedded Linux) and to be adjusted to use a specific TLS implementation as available with specific hardware platforms.
 
 ##Contents of the SDK
-The SDK ported for linux could be downloaded from this link The C-code files of this SDK are delivered via the following directory structure (see comment behind folder name for an explanation of its content). 
+The SDK ported for linux can be downloaded from the below links.
+
+* [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-latest.tar)
+* [mbedTLS from
+  ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-latest.tar)
+
+The C-code files of this SDK are delivered via the following directory structure (see comment behind folder name for an explanation of its content). 
 
 Directory structure Current SDK Directory Layout (OpenSSL)
 
@@ -30,7 +36,7 @@ All makefiles in this SDK were configured using the documented folder structure 
 
 `aws_mqtt_embedded_client_lib` : The source code for the Embedded C MQTT client. This client is a modified version of the [Eclipse Paho](http://www.eclipse.org/paho/clients/c/embedded/) Embedded C client. The modifications include improved keep alive handling (callback on disconnect), a fix for unsubscribe functionality, buffer protection against too large MQTT messages and additional callback context to allow for a better layered architecture of the AWS IoT SDK.
 
-`certs` : This directory is initially empty and will need to contain the private key, the client certificate and the root CA. The client certificate and private key can be downloaded from the AWS IoT console or be created using the AWS CLI commands. The root CA can be downloaded from here.
+`certs` : This directory is initially empty and will need to contain the private key, the client certificate and the root CA. The client certificate and private key can be downloaded from the AWS IoT console or be created using the AWS CLI commands. The root CA can be downloaded from [here](https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem).
 
 `docs` : SDK API and file documentation.
 
@@ -66,7 +72,7 @@ left_ms - query time in milliseconds left on the timer.
 
 ###Network Functions
 
-In order to for the MQTT client stack to be able to communicate via the TCP/IP network protocol stack using a mutually authenticated TLS connection, the following API calls need to be implemented for your platform. 
+In order for the MQTT client stack to be able to communicate via the TCP/IP network protocol stack using a mutually authenticated TLS connection, the following API calls need to be implemented for your platform. 
 
 For additional details about API parameters refer to the API documentation.
 
