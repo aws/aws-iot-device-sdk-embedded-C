@@ -72,7 +72,7 @@ left_ms - query time in milliseconds left on the timer.
 
 ###Network Functions
 
-In order to for the MQTT client stack to be able to communicate via the TCP/IP network protocol stack using a mutually authenticated TLS connection, the following API calls need to be implemented for your platform. 
+In order for the MQTT client stack to be able to communicate via the TCP/IP network protocol stack using a mutually authenticated TLS connection, the following API calls need to be implemented for your platform. 
 
 For additional details about API parameters refer to the API documentation.
 
