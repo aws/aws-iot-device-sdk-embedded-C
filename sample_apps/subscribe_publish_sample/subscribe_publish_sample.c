@@ -200,6 +200,8 @@ int main(int argc, char** argv) {
 		INFO("-->sleep");
 		sleep(1);
 		sprintf(cPayload, "%s : %d ", "hello from SDK", i++);
+		Msg.PayloadLen = strlen(cPayload) + 1;
+
 		rc = aws_iot_mqtt_publish(&Params);
 		if(publishCount > 0){
 			publishCount--;
