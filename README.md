@@ -52,7 +52,8 @@ Steps:
  * For each sample:
  	* Explore the example.  It connects to AWS IoT platform using MQTT and demonstrates few actions that can be performed by the SDK
  	* Ensure you have [created a thing](https://docs.aws.amazon.com/iot/latest/developerguide/create-thing.html) through your AWS IoT console with name matching the definition AWS_IOT_MY_THING_NAME in the `aws_iot_config.h` file (currently AWS-IoT-C-SDK).
- 	* Build the example using make.  (''make'')
+ 	* Build the example using make.  (''make -f Makefile_name.mk'')
+ 	  * Use the appropriate makefile in the -f argument based on the configuration of your TLS library.
  	* Place device identity cert and private key in locations referenced in the example (certs/).  Alternatively, you can run the sample application with the ''-c'' flag to point to a specific certificate directory.
  	  * You can use the aws iot command line and create-keys-and-certificate / describe-certificate cli operations as described [here](https://docs.aws.amazon.com/iot/latest/developerguide/secure-communication.html) to create identity certs and private keys.
  	* Download certificate authority CA file from this [link](https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem) and place in location referenced in the example (certs/). Ensure the names of the cert files are the same as in the `aws_iot_config.h` file
