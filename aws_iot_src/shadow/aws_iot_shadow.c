@@ -143,7 +143,7 @@ IoT_Error_t aws_iot_shadow_delete(MQTTClient_t *pClient, const char *pThingName,
 
 	char deleteRequestJsonBuf[MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE];
 	iot_shadow_delete_request_json(deleteRequestJsonBuf);
-	ret_val = iot_shadow_action(pClient, pThingName, SHADOW_GET, deleteRequestJsonBuf, callback, pContextData,
+	ret_val = iot_shadow_action(pClient, pThingName, SHADOW_DELETE, deleteRequestJsonBuf, callback, pContextData,
 			timeout_seconds, isPersistentSubscribe);
 
 	return ret_val;

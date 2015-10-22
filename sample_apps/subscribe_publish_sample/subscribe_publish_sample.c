@@ -183,11 +183,11 @@ int main(int argc, char** argv) {
 	char cPayload[100];
 	sprintf(cPayload, "%s : %d ", "hello from SDK", i);
 	Msg.pPayload = (void *) cPayload;
-	Msg.PayloadLen = strlen(cPayload) + 1;
+
 
 	MQTTPublishParams Params = MQTTPublishParamsDefault;
 	Params.pTopic = "sdkTest/sub";
-	Params.MessageParams = Msg;
+
 
 	if(publishCount != 0){
 		infinitePublishFlag = false;
@@ -200,6 +200,8 @@ int main(int argc, char** argv) {
 		INFO("-->sleep");
 		sleep(1);
 		sprintf(cPayload, "%s : %d ", "hello from SDK", i++);
+		Msg.PayloadLen = strlen(cPayload) + 1;
+		Params.MessageParams = Msg;
 		rc = aws_iot_mqtt_publish(&Params);
 		if(publishCount > 0){
 			publishCount--;

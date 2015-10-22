@@ -1,4 +1,12 @@
-## 1.0.0 (October 8, 2015)
+## [1.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v1.0.1) (October 21,2015)
+
+Bugfixes/Improvements:
+  - Paho name changed to Eclipse Paho
+  - Renamed the Makefiles in the samples directory 
+  - Device Shadow - Delete functionality macro fixed
+  - `subscribe_publish_sample` updated
+
+## [1.0.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v1.0.0) (October 8, 2015)
 
 Features:
   - Release to github

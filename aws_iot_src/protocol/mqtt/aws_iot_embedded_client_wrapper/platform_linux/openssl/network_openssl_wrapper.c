@@ -20,12 +20,15 @@
 #include <openssl/x509_vfy.h>
 #include <sys/socket.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <string.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
 
 #include "aws_iot_error.h"
+#include "aws_iot_log.h"
 #include "network_interface.h"
 #include "openssl_hostname_validation.h"
 
@@ -57,6 +60,7 @@ int iot_tls_init(Network *pNetwork) {
 	method = TLSv1_2_method();
 
 	if ((pSSLContext = SSL_CTX_new(method)) == NULL) {
+		ERROR(" SSL INIT Failed - Unable to create SSL Context");
 		ret_val = SSL_INIT_ERROR;
 	}
 
@@ -103,14 +107,17 @@ int iot_tls_connect(Network *pNetwork, TLSConnectParams params) {
 	}
 
 	if (!SSL_CTX_load_verify_locations(pSSLContext, params.pRootCALocation, NULL)) {
+		ERROR(" Root CA Loading error");
 		ret_val = SSL_CERT_ERROR;
 	}
 
 	if (!SSL_CTX_use_certificate_file(pSSLContext, params.pDeviceCertLocation, SSL_FILETYPE_PEM)) {
+		ERROR(" Device Certificate Loading error");
 		ret_val = SSL_CERT_ERROR;
 	}
 
 	if(1 != SSL_CTX_use_PrivateKey_file(pSSLContext, params.pDevicePrivateKeyLocation, SSL_FILETYPE_PEM)){
+		ERROR(" Device Private Key Loading error");
 		ret_val = SSL_CERT_ERROR;
 	}
 	if(params.ServerVerificationFlag){
@@ -125,23 +132,29 @@ int iot_tls_connect(Network *pNetwork, TLSConnectParams params) {
 	pDestinationURL = params.pDestinationURL;
 	ret_val = Connect_TCPSocket(server_TCPSocket, params.pDestinationURL, params.DestinationPort);
 	if(NONE_ERROR != ret_val){
+		ERROR(" TCP Connection error");
 		return ret_val;
 	}
 
 	SSL_set_fd(pSSLHandle, server_TCPSocket);
 
-	if(NONE_ERROR == ret_val){
+	if(ret_val == NONE_ERROR){
 		ret_val = setSocketToNonBlocking(server_TCPSocket);
+		if(ret_val != NONE_ERROR){
+			ERROR(" Unable to set the socket to Non-Blocking");
+		}
 	}
 
 	if(NONE_ERROR == ret_val){
 		ret_val = ConnectOrTimeoutOrExitOnError(pSSLHandle, params.timeout_ms);
 		if(X509_V_OK != SSL_get_verify_result(pSSLHandle)){
+			ERROR(" Server Certificate Verification failed");
 			ret_val = SSL_CONNECT_ERROR;
 		}
 		else{
 			// ensure you have a valid certificate returned, otherwise no certificate exchange happened
 			if(NULL == SSL_get_peer_certificate(pSSLHandle)){
+				ERROR(" No certificate exchange happened");
 				ret_val = SSL_CONNECT_ERROR;
 			}
 		}
@@ -210,6 +223,7 @@ IoT_Error_t setSocketToNonBlocking( server_fd) {
 
 	status = fcntl(server_TCPSocket, F_SETFL, flags | O_NONBLOCK);
 	if (status < 0) {
+		ERROR("fcntl - %s", strerror(errno));
 		ret_val = TCP_CONNECT_ERROR;
 	}
 
@@ -247,8 +261,10 @@ IoT_Error_t ConnectOrTimeoutOrExitOnError(SSL *pSSL, int timeout_ms){
 			FD_SET(server_TCPSocket, &readFds);
 			select_retCode = select(server_TCPSocket + 1, (void *) &readFds, NULL, NULL, &timeout);
 			if (SELECT_TIMEOUT == select_retCode) {
+				ERROR(" SSL Connect time out while waiting for read");
 				ret_val = SSL_CONNECT_TIMEOUT_ERROR;
 			} else if (SELECT_ERROR == select_retCode) {
+				ERROR(" SSL Connect Select error for read %d", select_retCode);
 				ret_val = SSL_CONNECT_ERROR;
 			}
 		}
@@ -258,8 +274,10 @@ IoT_Error_t ConnectOrTimeoutOrExitOnError(SSL *pSSL, int timeout_ms){
 			FD_SET(server_TCPSocket, &writeFds);
 			select_retCode = select(server_TCPSocket + 1, NULL, (void *) &writeFds, NULL, &timeout);
 			if (SELECT_TIMEOUT == select_retCode) {
+				ERROR(" SSL Connect time out while waiting for write");
 				ret_val = SSL_CONNECT_TIMEOUT_ERROR;
 			} else if (SELECT_ERROR == select_retCode) {
+				ERROR(" SSL Connect Select error for write %d", select_retCode);
 				ret_val = SSL_CONNECT_ERROR;
 			}
 		}

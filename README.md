@@ -29,8 +29,8 @@ Ensure you understand the AWS IoT platform and create the necessary certificates
 
 In order to quickly get started with the AWS IoT platform, we have ported the SDK for POSIX type Operating Systems like Ubuntu, OS X and RHEL. The porting of the SDK happens at the TLS layer, and for the MQTT protocol. The SDK is configured for two TLS libraries and can be built out of the box with *GCC* using *make utility*. The tarballs can be downloaded from the below links.
 
-* [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.0.0.tar)
-* [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.0.0.tar)
+* [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.0.1.tar)
+* [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.0.1.tar)
 
 ##Installation
 This section explains the individual steps to retrieve the necessary files and be able to build your first application using the AWS IoT device SDK for embedded C.
@@ -53,7 +53,7 @@ Steps:
  	* Explore the example.  It connects to AWS IoT platform using MQTT and demonstrates few actions that can be performed by the SDK
  	* Build the example using make.  (''make'')
  	* Place device identity cert and private key in locations referenced in the example (certs/).  Alternatively, you can run the sample application with the ''-c'' flag to point to a specific certificate directory.
- 	* Download certificate authority CA file from this [link](https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem) and place in location referenced in the example (certs/). Ensure the names of the cert files are the same as in the `aws_iot_config.h` file
+ 	* Download certificate authority CA file from [Symantec](https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem) and place in location referenced in the example (certs/). Ensure the names of the cert files are the same as in the `aws_iot_config.h` file
  	* Run sample application (./subscribe_publish_sample or ./shadow_sample).  The sample will print status messages to stdout.
  	* More information on the examples could be found in the sample source file
  	
