@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
 	/*
 	 * Register the jsonStruct object
 	 */
-	rc = aws_iot_shadow_register_delta(&mqttClient, &deltaObject);
+	rc = aws_iot_shadow_register_delta(&mqttClient, AWS_IOT_MY_THING_NAME, &deltaObject);
 
 	// Now wait in the loop to receive any message sent from the console
 	while (rc == NONE_ERROR) {

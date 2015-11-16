@@ -56,13 +56,15 @@ ToBeReceivedAckRecord_t AckWaitList[MAX_ACKS_TO_COMEIN_AT_ANY_GIVEN_TIME];
 
 MQTTClient_t *pMqttClient;
 
-#define SHADOW_DELTA_TOPIC_WITH_THING_NAME "$aws/things/" AWS_IOT_MY_THING_NAME "/shadow/update/delta"
+#define SHADOW_DELTA_TOPIC_WITH_THING_NAME "$aws/things/%s/shadow/update/delta"
 
 #define MAX_TOPICS_AT_ANY_GIVEN_TIME 2*MAX_THINGNAME_HANDLED_AT_ANY_GIVEN_TIME
 SubscriptionRecord_t SubscriptionList[MAX_TOPICS_AT_ANY_GIVEN_TIME];
 
 #define SUBSCRIBE_SETTLING_TIME 2
 char shadowRxBuf[SHADOW_MAX_SIZE_OF_RX_BUFFER];
+static char topicNameBuf[MAX_SHADOW_TOPIC_LENGTH_BYTES];
+static const char *thingNamePtr;
 
 static JsonTokenTable_t tokenTable[MAX_JSON_TOKEN_EXPECTED];
 static uint32_t tokenTableIndex = 0;
@@ -87,17 +89,19 @@ void initDeltaTokens(void) {
 	deltaTopicSubscribedFlag = false;
 }
 
-IoT_Error_t registerJsonTokenOnDelta(jsonStruct_t *pStruct) {
+IoT_Error_t registerJsonTokenOnDelta(const char *pThingName, jsonStruct_t *pStruct) {
 
 	IoT_Error_t rc = NONE_ERROR;
 
 	if (!deltaTopicSubscribedFlag) {
 		MQTTSubscribeParams subParams;
 		subParams.mHandler = shadow_delta_callback;
-		subParams.pTopic = SHADOW_DELTA_TOPIC_WITH_THING_NAME;
+		snprintf(topicNameBuf, sizeof(topicNameBuf),
+			 SHADOW_DELTA_TOPIC_WITH_THING_NAME, pThingName);
+		subParams.pTopic = topicNameBuf;
 		subParams.qos = QOS_0;
 		rc = pMqttClient->subscribe(&subParams);
-		DEBUG("delta topic %s", SHADOW_DELTA_TOPIC_WITH_THING_NAME);
+		DEBUG("delta topic %s", topicNameBuf);
 		deltaTopicSubscribedFlag = true;
 	}
 
@@ -152,8 +156,19 @@ static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, Sh
 	}
 }
 
-static bool isAckForMyThingName(const char *pTopicName) {
-	if (strstr(pTopicName, AWS_IOT_MY_THING_NAME) != NULL && ((strstr(pTopicName, "get/accepted") != NULL) || (strstr(pTopicName, "delta") != NULL))) {
+static int setThingNameforShadowAction(const char *pThingName) {
+	if (!pThingName || strlen(pThingName) > MAX_SIZE_OF_THING_NAME)
+		return GENERIC_ERROR;
+	thingNamePtr = pThingName;
+	return NONE_ERROR;
+}
+
+static const char *getThingNameSetForShadowAction() {
+	return thingNamePtr;
+}
+
+static bool isAckForMyThingName(const char* pThingName, const char *pTopicName) {
+	if (strstr(pTopicName, pThingName) != NULL && ((strstr(pTopicName, "get/accepted") != NULL) || (strstr(pTopicName, "delta") != NULL))) {
 		return true;
 	}
 	return false;
@@ -164,6 +179,7 @@ static int AckStatusCallback(MQTTCallbackParams params) {
 	int32_t i;
 	void *pJsonHandler;
 	char temporaryClientToken[MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE];
+	const char *pThingName = getThingNameSetForShadowAction();
 
 	if (params.MessageParams.PayloadLen > SHADOW_MAX_SIZE_OF_RX_BUFFER) {
 		return GENERIC_ERROR;
@@ -177,7 +193,7 @@ static int AckStatusCallback(MQTTCallbackParams params) {
 		return GENERIC_ERROR;
 	}
 
-	if (isAckForMyThingName(params.pTopicName)) {
+	if (isAckForMyThingName(pThingName, params.pTopicName)) {
 		uint32_t tempVersionNumber = 0;
 		if (extractVersionNumber(shadowRxBuf, pJsonHandler, tokenCount, &tempVersionNumber)) {
 			if (tempVersionNumber > shadowJsonVersionNum) {
@@ -316,6 +332,10 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 
 	if (indexAcceptedSubList >= 0 && indexRejectedSubList >= 0) {
 		topicNameFromThingAndAction(SubscriptionList[indexAcceptedSubList].Topic, pThingName, action, SHADOW_ACCEPTED);
+		if (setThingNameforShadowAction(pThingName) != NONE_ERROR) {
+			WARN("Received thing name is invalid");
+			return GENERIC_ERROR;
+		}
 		subParams.mHandler = AckStatusCallback;
 		subParams.qos = QOS_0;
 		subParams.pTopic = SubscriptionList[indexAcceptedSubList].Topic;
