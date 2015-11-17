@@ -97,14 +97,14 @@ IoT_Error_t aws_iot_shadow_connect(MQTTClient_t *pClient, ShadowParameters_t *pP
 	return rc;
 }
 
-IoT_Error_t aws_iot_shadow_register_delta(MQTTClient_t *pClient, jsonStruct_t *pStruct) {
+IoT_Error_t aws_iot_shadow_register_delta(MQTTClient_t *pClient, const char *pThingName, jsonStruct_t *pStruct) {
 	IoT_Error_t rc = NONE_ERROR;
 
 	if (!(pClient->isConnected())) {
 		return CONNECTION_ERROR;
 	}
 
-	rc = registerJsonTokenOnDelta(pStruct);
+	rc = registerJsonTokenOnDelta(pThingName, pStruct);
 
 	return rc;
 }

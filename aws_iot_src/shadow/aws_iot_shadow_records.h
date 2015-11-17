@@ -37,6 +37,6 @@ void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, ShadowAc
 bool getNextFreeIndexOfAckWaitList(uint8_t *pIndex);
 void HandleExpiredResponseCallbacks(void);
 void initDeltaTokens(void);
-IoT_Error_t registerJsonTokenOnDelta(jsonStruct_t *pStruct);
+IoT_Error_t registerJsonTokenOnDelta(const char *pThingName, jsonStruct_t *pStruct);
 
 #endif /* SRC_SHADOW_AWS_IOT_SHADOW_RECORDS_H_ */

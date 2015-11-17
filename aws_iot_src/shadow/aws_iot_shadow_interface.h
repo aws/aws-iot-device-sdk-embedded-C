@@ -201,15 +201,16 @@ IoT_Error_t aws_iot_shadow_delete(MQTTClient_t *pClient, const char *pThingName,
 		void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscriptions);
 
 /**
- * @brief This function is used to listen on the delta topic of #AWS_IOT_MY_THING_NAME mentioned in the aws_iot_config.h file.
+ * @brief This function is used to listen on the delta topic of pThingName passed as input parameter
  *
  * Any time a delta is published the Json document will be delivered to the pStruct->cb. If you don't want the parsing done by the SDK then use the jsonStruct_t key set to "state". A good example of this is displayed in the sample_apps/shadow_console_echo.c
  *
  * @param pClient MQTT Client used as the protocol layer
+ * @param pThingName Thing Name of the Shadow to listen on delta topic
  * @param pStruct The struct used to parse JSON value
  * @return An IoT Error Type defining successful/failed delta registering
  */
-IoT_Error_t aws_iot_shadow_register_delta(MQTTClient_t *pClient, jsonStruct_t *pStruct);
+IoT_Error_t aws_iot_shadow_register_delta(MQTTClient_t *pClient, const char *pThingName, jsonStruct_t *pStruct);
 
 /**
  * @brief Reset the last received version number to zero.
@@ -219,7 +220,7 @@ IoT_Error_t aws_iot_shadow_register_delta(MQTTClient_t *pClient, jsonStruct_t *p
  */
 void aws_iot_shadow_reset_last_received_version(void);
 /**
- * @brief Version of a document is received with every accepted/rejected and the SDK keeps track of the last received version of the JSON document of #AWS_IOT_MY_THING_NAME shadow
+ * @brief Version of a document is received with every accepted/rejected and the SDK keeps track of the last received version of the JSON document of the configured thingname shadow
  *
  * One exception to this version tracking is that, the SDK will ignore the version from update/accepted topic. Rest of the responses will be scanned to update the version number.
  * Accepting version change for update/accepted may cause version conflicts for delta message if the update message is received before the delta.

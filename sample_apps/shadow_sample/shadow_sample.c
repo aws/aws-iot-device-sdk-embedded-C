@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
 		ERROR("Shadow Connection Error %d", rc);
 	}
 
-	rc = aws_iot_shadow_register_delta(&mqttClient, &windowActuator);
+	rc = aws_iot_shadow_register_delta(&mqttClient, AWS_IOT_MY_THING_NAME, &windowActuator);
 
 	if (NONE_ERROR != rc) {
 		ERROR("Shadow Register Delta Error");
