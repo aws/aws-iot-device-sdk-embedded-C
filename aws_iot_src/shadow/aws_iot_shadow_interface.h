@@ -53,6 +53,7 @@ typedef struct {
 	char *pRootCA; ///< Location with the Filename of the Root CA
 	char *pClientCRT; ///< Location of Device certs signed by AWS IoT service
 	char *pClientKey; ///< Location of Device private key
+ 	iot_disconnect_handler disconnectHandler; ///< Callback to be invoked upon connection loss.
 } ShadowParameters_t;
 
 /*!
