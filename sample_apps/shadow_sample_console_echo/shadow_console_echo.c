@@ -92,7 +92,9 @@ int main(int argc, char** argv) {
 	sprintf(clientCRT, "%s/%s/%s", CurrentWD, certDirectory, clientCRTName);
 	sprintf(clientKey, "%s/%s/%s", CurrentWD, certDirectory, clientKeyName);
 
-	DEBUG("rootCA %s", rootCA);DEBUG("clientCRT %s", clientCRT);DEBUG("clientKey %s", clientKey);
+	DEBUG("rootCA %s", rootCA);
+	DEBUG("clientCRT %s", clientCRT);
+	DEBUG("clientKey %s", clientKey);
 
 	parseInputArgsForConnectParams(argc, argv);
 
@@ -123,6 +125,17 @@ int main(int argc, char** argv) {
 		return rc;
 	}
 
+	/*
+	 * Enable Auto Reconnect functionality. Minimum and Maximum time of Exponential backoff are set in aws_iot_config.h
+	 *  #AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL
+	 *  #AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL
+	 */
+	rc = mqttClient.setAutoReconnectStatus(true);
+	if(NONE_ERROR != rc){
+		ERROR("Unable to set Auto Reconnect to true - %d", rc);
+		return rc;
+	}
+
 	jsonStruct_t deltaObject;
 	deltaObject.pData = stringToEchoDelta;
 	deltaObject.pKey = "state";
@@ -135,11 +148,17 @@ int main(int argc, char** argv) {
 	rc = aws_iot_shadow_register_delta(&mqttClient, &deltaObject);
 
 	// Now wait in the loop to receive any message sent from the console
-	while (rc == NONE_ERROR) {
+	while (NETWORK_ATTEMPTING_RECONNECT == rc || RECONNECT_SUCCESSFUL == rc || NONE_ERROR == rc) {
 		/*
 		 * Lets check for the incoming messages for 200 ms.
 		 */
 		rc = aws_iot_shadow_yield(&mqttClient, 200);
+
+		if (NETWORK_ATTEMPTING_RECONNECT == rc) {
+			sleep(1);
+			// If the client is attempting to reconnect we will skip the rest of the loop.
+			continue;
+		}
 
 		if (messageArrivedOnDelta) {
 			INFO("\nSending delta message back %s\n", stringToEchoDelta);

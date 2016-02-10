@@ -69,6 +69,8 @@ LOG_FLAGS += -DIOT_ERROR
 
 COMPILER_FLAGS += -g 
 COMPILER_FLAGS += $(LOG_FLAGS)
+#If the processor is big endian uncomment the compiler flag
+#COMPILER_FLAGS += -DREVERSED
 
 MBED_TLS_MAKE_CMD = cd $(MBEDTLS_DIR) && make
 

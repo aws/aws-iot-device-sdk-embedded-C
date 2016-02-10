@@ -17,85 +17,105 @@
 #ifndef __MQTT_CLIENT_C_
 #define __MQTT_CLIENT_C_
 
-#include "MQTTPacket.h"
+/* Library Header files */
 #include "stdio.h"
+#include "stdint.h"
+#include "stddef.h"
+
+/* MQTT Specific header files */
+#include "MQTTReturnCodes.h"
+#include "MQTTMessage.h"
+#include "MQTTPacket.h"
+
+/* AWS Specific header files */
 #include "aws_iot_config.h"
 
-//Platform specific implementation header file
+/* Platform specific implementation header files */
 #include "network_interface.h"
 #include "timer_interface.h"
 
 #define MAX_PACKET_ID 65535
 #define MAX_MESSAGE_HANDLERS AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS
 
-enum QoS { QOS0, QOS1, QOS2 };
+#define MIN_RECONNECT_WAIT_INTERVAL AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL
+#define MAX_RECONNECT_WAIT_INTERVAL AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL
 
-// all failure return codes must be negative
-enum returnCode { BUFFER_OVERFLOW = -2, FAILURE = -1, SUCCESS = 0 };
-
-void NewTimer(Timer*);
-
-typedef struct MQTTMessage MQTTMessage;
-
-typedef struct MessageData MessageData;
-
-typedef void (*messageHandler)(MessageData*);
-typedef void (*pApplicationHandler_t)(void);
-typedef void (*disconnectHander_t)(void);
-
-struct MQTTMessage
-{
-    enum QoS qos;
-    char retained;
-    char dup;
-    unsigned short id;
-    void *payload;
-    size_t payloadlen;
-};
-
-struct MessageData
-{
-    MQTTMessage* message;
-    MQTTString* topicName;
-    pApplicationHandler_t applicationHandler;
-};
+void NewTimer(Timer *);
 
 typedef struct Client Client;
 
-int MQTTConnect (Client*, MQTTPacket_connectData*);
-int MQTTPublish (Client*, const char*, MQTTMessage*);
-int MQTTSubscribe(Client* c, const char* topicFilter, enum QoS qos, messageHandler messageHandler, pApplicationHandler_t applicationHandler);
-int MQTTUnsubscribe (Client*, const char*);
-int MQTTDisconnect (Client*);
-int MQTTYield (Client*, int);
+typedef struct MessageData MessageData;
 
-void setDefaultMessageHandler(Client*, messageHandler);
-void setDisconnectHandler(Client*, disconnectHander_t disconnectHandler);
+typedef void (*messageHandler)(MessageData *);
+typedef void (*pApplicationHandler_t)(void);
+typedef void (*disconnectHandler_t)(void);
+typedef int (*networkInitHandler_t)(Network *);
 
-void MQTTClient(Client*, Network*, unsigned int, unsigned char*, size_t, unsigned char*, size_t);
+struct MessageData {
+    MQTTMessage *message;
+    MQTTString *topicName;
+    pApplicationHandler_t applicationHandler;
+};
+
+MQTTReturnCode MQTTConnect(Client *c, MQTTPacket_connectData *options);
+MQTTReturnCode MQTTPublish (Client *, const char *, MQTTMessage *);
+MQTTReturnCode MQTTSubscribe(Client *c, const char *topicFilter, QoS qos,
+                             messageHandler messageHandler, pApplicationHandler_t applicationHandler);
+MQTTReturnCode MQTTResubscribe(Client *c);
+MQTTReturnCode MQTTUnsubscribe(Client *c, const char *topicFilter);
+MQTTReturnCode MQTTDisconnect (Client *);
+MQTTReturnCode MQTTYield (Client *, uint32_t);
+MQTTReturnCode MQTTAttemptReconnect(Client *c);
+
+uint8_t MQTTIsConnected(Client *);
+uint8_t MQTTIsAutoReconnectEnabled(Client *c);
+
+void setDefaultMessageHandler(Client *, messageHandler);
+MQTTReturnCode setDisconnectHandler(Client *c, disconnectHandler_t disconnectHandler);
+MQTTReturnCode setAutoReconnectEnabled(Client *c, uint8_t value);
+
+MQTTReturnCode MQTTClient(Client *, uint32_t, unsigned char *, size_t, unsigned char *,
+                          size_t, uint8_t, networkInitHandler_t, TLSConnectParams *);
+
+uint32_t MQTTGetNetworkDisconnectedCount(Client *c);
+void MQTTResetNetworkDisconnectedCount(Client *c);
 
 struct Client {
-    unsigned int next_packetid;
-    unsigned int command_timeout_ms;
-    size_t buf_size, readbuf_size;
-    unsigned char *buf;  
-    unsigned char *readbuf; 
-    unsigned int keepAliveInterval;
-    char ping_outstanding;
-    int isconnected;
+    uint8_t isConnected;
+    uint8_t wasManuallyDisconnected;
+    uint8_t isPingOutstanding;
+    uint8_t isAutoReconnectEnabled;
 
-    struct MessageHandlers
-    {
-        const char* topicFilter;
-        void (*fp) (MessageData*);
+    uint16_t nextPacketId;
+
+    uint32_t commandTimeoutMs;
+    uint32_t keepAliveInterval;
+    uint32_t currentReconnectWaitInterval;
+    uint32_t counterNetworkDisconnected;
+
+    size_t bufSize;
+    size_t readBufSize;
+
+    unsigned char *buf;  
+    unsigned char *readbuf;
+
+    TLSConnectParams tlsConnectParams;
+    MQTTPacket_connectData options;
+
+    Network networkStack;
+    Timer pingTimer;
+    Timer reconnectDelayTimer;
+
+    struct MessageHandlers {
+        const char *topicFilter;
+        void (*fp) (MessageData *);
         pApplicationHandler_t applicationHandler;
-    } messageHandlers[MAX_MESSAGE_HANDLERS];      // Message handlers are indexed by subscription topic
+        QoS qos;
+    } messageHandlers[MAX_MESSAGE_HANDLERS];      /* Message handlers are indexed by subscription topic */
     
-    void (*defaultMessageHandler) (MessageData*);
-    disconnectHander_t disconnectHandler;
-    
-    Network* ipstack;
-    Timer ping_timer;
+    void (* defaultMessageHandler) (MessageData *);
+    disconnectHandler_t disconnectHandler;
+    networkInitHandler_t networkInitHandler;
 };
 
 #define DefaultClient {0, 0, 0, 0, NULL, NULL, 0, 0, 0}

@@ -25,14 +25,24 @@
   #define DLLExport
 #endif
 
-DLLExport int MQTTSerialize_publish(unsigned char* buf, int buflen, unsigned char dup, int qos, unsigned char retained, unsigned short packetid,
-		MQTTString topicName, unsigned char* payload, int payloadlen);
+#include "MQTTMessage.h"
 
-DLLExport int MQTTDeserialize_publish(unsigned char* dup, int* qos, unsigned char* retained, unsigned short* packetid, MQTTString* topicName,
-		unsigned char** payload, int* payloadlen, unsigned char* buf, int len);
+DLLExport MQTTReturnCode MQTTSerialize_publish(unsigned char *buf, size_t buflen, uint8_t dup,
+                                               QoS qos, uint8_t retained, uint16_t packetid,
+                                               MQTTString topicName, unsigned char *payload, size_t payloadlen,
+                                               uint32_t *serialized_len);
 
-DLLExport int MQTTSerialize_puback(unsigned char* buf, int buflen, unsigned short packetid);
-DLLExport int MQTTSerialize_pubrel(unsigned char* buf, int buflen, unsigned char dup, unsigned short packetid);
-DLLExport int MQTTSerialize_pubcomp(unsigned char* buf, int buflen, unsigned short packetid);
+DLLExport MQTTReturnCode MQTTDeserialize_publish(unsigned char *dup, QoS *qos,
+                                                 unsigned char *retained, uint16_t *packetid,
+                                                 MQTTString* topicName, unsigned char **payload,
+                                                 uint32_t *payloadlen, unsigned char *buf, size_t buflen);
+
+DLLExport MQTTReturnCode MQTTSerialize_puback(unsigned char* buf, size_t buflen,
+                                              uint16_t packetid, uint32_t *serialized_len);
+DLLExport MQTTReturnCode MQTTSerialize_pubrel(unsigned char *buf, size_t buflen,
+                                              unsigned char dup, uint16_t packetid,
+                                              uint32_t *serialized_len);
+DLLExport MQTTReturnCode MQTTSerialize_pubcomp(unsigned char *buf, size_t buflen,
+                                               uint16_t packetid, uint32_t *serialized_len);
 
 #endif /* MQTTPUBLISH_H_ */

@@ -85,11 +85,19 @@ int iot_tls_init(Network *pNetwork) {
 	} DEBUG("ok\n");
 
 	pNetwork->my_socket = 0;
+	pNetwork->connect = iot_tls_connect;
 	pNetwork->mqttread = iot_tls_read;
 	pNetwork->mqttwrite = iot_tls_write;
 	pNetwork->disconnect = iot_tls_disconnect;
+	pNetwork->isConnected = iot_tls_is_connected;
+	pNetwork->destroy = iot_tls_destroy;
 
 	return ret_val;
+}
+
+int iot_tls_is_connected(Network *pNetwork) {
+	/* Use this to add implementation which can check for physical layer disconnect */
+	return 1;
 }
 
 int iot_tls_connect(Network *pNetwork, TLSConnectParams params) {

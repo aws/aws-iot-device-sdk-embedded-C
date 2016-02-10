@@ -71,6 +71,12 @@ IoT_Error_t aws_iot_shadow_connect(MQTTClient_t *pClient, ShadowParameters_t *pP
 		return NULL_VALUE_ERROR;
 	}
 
+	snprintf(myThingName, MAX_SIZE_OF_THING_NAME, "%s", pParams->pMyThingName );
+	snprintf(mqttClientID, MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES, "%s", pParams->pMqttClientId );
+
+	DEBUG("Thing Name %s", myThingName);
+	DEBUG("MQTT Client ID %s", mqttClientID);
+
 	ConnectParams.KeepAliveInterval_sec = 10;
 	ConnectParams.MQTTVersion = MQTT_3_1_1;
 	ConnectParams.mqttCommandTimeout_ms = 2000;

@@ -80,6 +80,7 @@ typedef void (*iot_disconnect_handler)(void);
  *
  */
 typedef struct {
+	uint8_t enableAutoReconnect;		///< Set to true to enable auto reconnect
 	char *pHostURL;						///< Pointer to a string defining the endpoint for the MQTT service
 	uint16_t port;						///< MQTT service listening port
 	char *pRootCALocation;				///< Pointer to a string defining the Root CA file (full file, not path)
@@ -211,6 +212,18 @@ IoT_Error_t aws_iot_mqtt_subscribe(MQTTSubscribeParams *pParams);
 IoT_Error_t aws_iot_mqtt_unsubscribe(char *pTopic);
 
 /**
+ * @brief MQTT Manual Re-Connection Function
+ *
+ * Called to establish an MQTT connection with the AWS IoT Service
+ * using parameters from the last time a connection was attempted
+ * Use after disconnect to start the reconnect process manually
+ * Makes only one reconnect attempt
+ *
+ * @return An IoT Error Type defining successful/failed connection
+ */
+IoT_Error_t aws_iot_mqtt_attempt_reconnect(void);
+
+/**
  * @brief Disconnect an MQTT Connection
  *
  * Called to send a disconnect message to the broker.
@@ -246,6 +259,27 @@ IoT_Error_t aws_iot_mqtt_yield(int timeout);
  */
 bool aws_iot_is_mqtt_connected(void);
 
+/**
+ * @brief Is the MQTT client set to reconnect automatically?
+ *
+ * Called to determine if the MQTT client is set to reconnect automatically.
+ * Used to support logic in the device application around reconnecting
+ *
+ * @return true = enabled, false = disabled
+ */
+bool aws_iot_is_autoreconnect_enabled(void);
+
+/**
+ * @brief Enable or Disable AutoReconnect on Network Disconnect
+ *
+ * Called to enable or disabled the auto reconnect features provided with the SDK
+ *
+ * @param value set to true for enabling and false for disabling
+ *
+ * @return IoT_Error_t Type defining successful/failed API call
+ */
+IoT_Error_t aws_iot_mqtt_autoreconnect_set_status(bool value);
+
 typedef IoT_Error_t (*pConnectFunc_t)(MQTTConnectParams *pParams);
 typedef IoT_Error_t (*pPublishFunc_t)(MQTTPublishParams *pParams);
 typedef IoT_Error_t (*pSubscribeFunc_t)(MQTTSubscribeParams *pParams);
@@ -253,7 +287,9 @@ typedef IoT_Error_t (*pUnsubscribeFunc_t)(char *pTopic);
 typedef IoT_Error_t (*pDisconnectFunc_t)(void);
 typedef IoT_Error_t (*pYieldFunc_t)(int timeout);
 typedef bool (*pIsConnectedFunc_t)(void);
-
+typedef bool (*pIsAutoReconnectEnabledFunc_t)(void);
+typedef IoT_Error_t (*pReconnectFunc_t)();
+typedef IoT_Error_t (*pSetAutoReconnectStatusFunc_t)(bool);
 /**
  * @brief MQTT Client Type Definition
  *
@@ -270,6 +306,9 @@ typedef struct{
 	pDisconnectFunc_t disconnect;		///< function implementing the iot_mqtt_disconnect function
 	pYieldFunc_t yield;					///< function implementing the iot_mqtt_yield function
 	pIsConnectedFunc_t isConnected;		///< function implementing the iot_is_mqtt_connected function
+	pReconnectFunc_t reconnect;			///< function implementing the iot_mqtt_reconnect function
+	pIsAutoReconnectEnabledFunc_t isAutoReconnectEnabled;	///< function implementing the iot_is_autoreconnect_enabled function
+	pSetAutoReconnectStatusFunc_t setAutoReconnectStatus;	///< function implementing the iot_mqtt_autoreconnect_set_status function
 }MQTTClient_t;
 
 

@@ -54,9 +54,12 @@ typedef struct{
  */
 struct Network{
 	int my_socket;	///< Integer holding the socket file descriptor
+	int (*connect) (Network *, TLSConnectParams);
 	int (*mqttread) (Network*, unsigned char*, int, int);	///< Function pointer pointing to the network function to read from the network
 	int (*mqttwrite) (Network*, unsigned char*, int, int);	///< Function pointer pointing to the network function to write to the network
 	void (*disconnect) (Network*);		///< Function pointer pointing to the network function to disconnect from the network
+	int (*isConnected) (Network*);     ///< Function pointer pointing to the network function to check if physical layer is connected
+	int (*destroy) (Network*);		///< Function pointer pointing to the network function to destroy the network object
 };
 
 /**
@@ -120,5 +123,15 @@ void iot_tls_disconnect(Network *pNetwork);
  * @return integer - successful cleanup or TLS error
  */
 int iot_tls_destroy(Network *pNetwork);
+
+/**
+ * @brief Check if TLS layer is still connected
+ *
+ * Called to check if the TLS layer is still connected or not.
+ *
+ * @param Network - Pointer to a Network struct defining the network interface.
+ * @return int - integer indicating status of network physical layer connection
+ */
+int iot_tls_is_connected(Network *pNetwork);
 
 #endif //__NETWORK_INTERFACE_H_

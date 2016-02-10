@@ -1,8 +1,6 @@
-#AWS IoT Embedded-C SDK
-
 ##Overview
 
-The AWS IoT device SDK for embedded C is a collection of C source files which can be used in embedded applications to securely connect to the [AWS IoT platform](http://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It includes transport clients **(MQTT)**, **TLS** implementations and examples for their use. It also supports AWS IoT specific features such as **Thing Shadow**. It is distributed in source form and intended to be built into customer firmware along with application code, other libraries and RTOS. For additional information about porting the Device SDK for embedded C onto additional platforms please refer to the [Porting Guide](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/PortingGuide.md).
+The AWS IoT device SDK for embedded C is a collection of C source files which can be used in embedded applications to securely connect to the [AWS IoT platform](http://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It includes transport clients **MQTT**, **TLS** implementations and examples for their use. It also supports AWS IoT specific features such as **Thing Shadow**. It is distributed in source form and intended to be built into customer firmware along with application code, other libraries and RTOS. For additional information about porting the Device SDK for embedded C onto additional platforms please refer to the [PortingGuide](https://github.com/aws/aws-iot-device-sdk-embedded-c/blob/master/PortingGuide.md/).
 
 ##Features
 The Device SDK simplifies access to the Pub/Sub functionality of the AWS IoT broker via MQTT and provide APIs to interact with Thing Shadows. The SDK has been tested to work with the AWS IoT platform to ensure best interoperability of a device with the AWS IoT platform.
@@ -29,8 +27,8 @@ Ensure you understand the AWS IoT platform and create the necessary certificates
 
 In order to quickly get started with the AWS IoT platform, we have ported the SDK for POSIX type Operating Systems like Ubuntu, OS X and RHEL. The porting of the SDK happens at the TLS layer, and for the MQTT protocol. The SDK is configured for two TLS libraries and can be built out of the box with *GCC* using *make utility*. The tarballs can be downloaded from the below links.
 
-* [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.0.1.tar)
-* [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.0.1.tar)
+* [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.1.0.tar)
+* [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.1.0.tar)
 
 ##Installation
 This section explains the individual steps to retrieve the necessary files and be able to build your first application using the AWS IoT device SDK for embedded C.
@@ -60,7 +58,7 @@ Steps:
 Also, for a guided example on getting started with the Thing Shadow, visit the AWS IoT Console's [Interactive Guide](https://console.aws.amazon.com/iot).
 
 ##Porting to different platforms
-As Embedded devices run on different Real Time Operating Systems and TCP/IP stacks, it is one of the important design goals for the Device SDK to keep it portable. Please refer to the [porting guide](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/PortingGuide.md) to get more information on how to make this SDK run on your devices (i.e. micro-controllers).
+As Embedded devices run on different Real Time Operating Systems and TCP/IP stacks, it is one of the important design goals for the Device SDK to keep it portable. Please refer to the [porting guide](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/master/PortingGuide.md/) to get more information on how to make this SDK run on your devices (i.e. micro-controllers).
 
 ##Resources
 [API Documentation](http://aws-iot-device-sdk-embedded-c-docs.s3-website-us-east-1.amazonaws.com/index.html)
@@ -73,7 +71,11 @@ For any other questions on AWS IoT, contact [AWS Support](https://aws.amazon.com
 
 ##Sample APIs
 Connecting to the AWS IoT MQTT platform
-``` rc = aws_iot_mqtt_connect(&connectParams);```
+
+```
+rc = aws_iot_mqtt_connect( &connectParams ) ;
+```
+
 
 Subscribe to a topic
 
@@ -82,11 +84,12 @@ MQTTSubscribeParams subParams = MQTTSubscribeParamsDefault;
 subParams.mHandler = MQTTcallbackHandler;
 subParams.qos = QOS_0;
 subParams.pTopic = "sdkTest/sub";
-rc = aws_iot_mqtt_subscribe(&subParams);
+rc = aws_iot_mqtt_subscribe( &subParams ) ;
 ```
 
 
 Update Thing Shadow from a device
+
 ``` 
 rc = aws_iot_shadow_update(&mqttClient,
 AWS_IOT_MY_THING_NAME, 

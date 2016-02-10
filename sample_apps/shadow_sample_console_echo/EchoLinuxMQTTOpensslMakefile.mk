@@ -70,6 +70,9 @@ LOG_FLAGS += -DIOT_ERROR
 
 COMPILER_FLAGS += -g 
 COMPILER_FLAGS += $(LOG_FLAGS)
+#If the processor is big endian uncomment the compiler flag
+#COMPILER_FLAGS += -DREVERSED
+
 
 MAKE_CMD = $(CC) $(SRC_FILES) $(COMPILER_FLAGS) -o $(APP_NAME) $(EXTERNAL_LIBS) $(LD_FLAG) $(INCLUDE_ALL_DIRS)
 

@@ -34,9 +34,6 @@ IoT_Error_t iot_shadow_action(MQTTClient_t *pClient, const char *pThingName, Sha
 		return NULL_VALUE_ERROR;
 	}
 
-	if (getNextFreeIndexOfAckWaitList(&indexAckWaitList)) {
-		isAckWaitListFree = true;
-	}
 	if (callback != NULL) {
 		isCallbackPresent = true;
 	}
@@ -44,11 +41,20 @@ IoT_Error_t iot_shadow_action(MQTTClient_t *pClient, const char *pThingName, Sha
 	char extractedClientToken[MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE];
 	isClientTokenPresent = extractClientToken(pJsonDocumentToBeSent, extractedClientToken);
 
-	if (isClientTokenPresent && isCallbackPresent && isAckWaitListFree) {
-		if (!isSubscriptionPresent(pThingName, action)) {
-			ret_val = subscribeToShadowActionAcks(pThingName, action, isSticky);
-		} else {
-			incrementSubscriptionCnt(pThingName, action, isSticky);
+	if (isClientTokenPresent && isCallbackPresent) {
+		if (getNextFreeIndexOfAckWaitList(&indexAckWaitList)) {
+			isAckWaitListFree = true;
+		}
+
+		if(isAckWaitListFree) {
+			if (!isSubscriptionPresent(pThingName, action)) {
+				ret_val = subscribeToShadowActionAcks(pThingName, action, isSticky);
+			} else {
+				incrementSubscriptionCnt(pThingName, action, isSticky);
+			}
+		}
+		else {
+			ret_val = GENERIC_ERROR;
 		}
 	}
 

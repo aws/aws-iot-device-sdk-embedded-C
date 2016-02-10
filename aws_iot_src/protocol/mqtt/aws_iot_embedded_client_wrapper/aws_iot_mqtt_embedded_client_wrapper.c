@@ -13,20 +13,20 @@
  * permissions and limitations under the License.
  */
 
+#include "timer_interface.h"
 #include "aws_iot_mqtt_interface.h"
 #include "MQTTClient.h"
 #include "aws_iot_config.h"
 
-static Network n;
 static Client c;
+
 static iot_disconnect_handler clientDisconnectHandler;
 
 static unsigned char writebuf[AWS_IOT_MQTT_TX_BUF_LEN];
 static unsigned char readbuf[AWS_IOT_MQTT_RX_BUF_LEN];
 
-
-
 const MQTTConnectParams MQTTConnectParamsDefault = {
+		.enableAutoReconnect = 0,
 		.pHostURL = AWS_IOT_MQTT_HOST,
 		.port = AWS_IOT_MQTT_PORT,
 		.pRootCALocation = NULL,
@@ -102,83 +102,77 @@ void pahoMessageCallback(MessageData* md) {
 }
 
 void pahoDisconnectHandler(void) {
-	if (clientDisconnectHandler != NULL) {
+	if(NULL != clientDisconnectHandler) {
 		clientDisconnectHandler();
 	}
-}
-
-static IoT_Error_t parseConnectParamsForError(MQTTConnectParams *pParams) {
-	IoT_Error_t rc = NONE_ERROR;
-	if (
-	NULL == pParams->pClientID ||
-	NULL == pParams->pHostURL) {
-		rc = NULL_VALUE_ERROR;
-	}
-	return rc;
 }
 
 static bool isPowerCycle = true;
 
 IoT_Error_t aws_iot_mqtt_connect(MQTTConnectParams *pParams) {
 	IoT_Error_t rc = NONE_ERROR;
+	MQTTReturnCode pahoRc = SUCCESS;
 
-	rc = parseConnectParamsForError(pParams);
+	if(NULL == pParams || NULL == pParams->pClientID || NULL == pParams->pHostURL) {
+		return NULL_VALUE_ERROR;
+	}
 
-	if (NONE_ERROR == rc) {
+	TLSConnectParams TLSParams;
+	TLSParams.DestinationPort = pParams->port;
+	TLSParams.pDestinationURL = pParams->pHostURL;
+	TLSParams.pDeviceCertLocation = pParams->pDeviceCertLocation;
+	TLSParams.pDevicePrivateKeyLocation = pParams->pDevicePrivateKeyLocation;
+	TLSParams.pRootCALocation = pParams->pRootCALocation;
+	TLSParams.timeout_ms = pParams->tlsHandshakeTimeout_ms;
+	TLSParams.ServerVerificationFlag = pParams->isSSLHostnameVerify;
 
-		iot_tls_init(&n);
-		TLSConnectParams TLSParams;
-		TLSParams.DestinationPort = pParams->port;
-		TLSParams.pDestinationURL = pParams->pHostURL;
-		TLSParams.pDeviceCertLocation = pParams->pDeviceCertLocation;
-		TLSParams.pDevicePrivateKeyLocation = pParams->pDevicePrivateKeyLocation;
-		TLSParams.pRootCALocation = pParams->pRootCALocation;
-		TLSParams.timeout_ms = pParams->tlsHandshakeTimeout_ms;
-		TLSParams.ServerVerificationFlag = pParams->isSSLHostnameVerify;
-
-		rc = iot_tls_connect(&n, TLSParams);
-
-		if (NONE_ERROR == rc) {
-			// This implementation assumes you are not going to switch between cleansession 1 to 0
-			// As we don't have a default subscription handler support in the MQTT client every time a device power cycles it has to re-subscribe to let the MQTT client to pass the message up to the application callback.
-			// The default message handler will be implemented in the future revisions.
-			if(pParams->isCleansession || isPowerCycle){
-				MQTTClient(&c, &n, (unsigned int)(pParams->mqttCommandTimeout_ms), writebuf, AWS_IOT_MQTT_TX_BUF_LEN, readbuf, AWS_IOT_MQTT_RX_BUF_LEN);
-				isPowerCycle = false;
-			}
-
-			MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
-
-			data.willFlag = pParams->isWillMsgPresent;
-			// compatible type for MQTT_Ver_t
-			switch (pParams->MQTTVersion) {
-			case MQTT_3_1:
-				data.MQTTVersion = (unsigned char) (3);
-				break;
-			case MQTT_3_1_1:
-				data.MQTTVersion = (unsigned char) (4);
-				break;
-			default:
-				data.MQTTVersion = (unsigned char) (4); // default MQTT version = 3.1.1
-			}
-
-			// register our disconnect handler, save customer's handler
-			setDisconnectHandler(&c, pahoDisconnectHandler);
-			clientDisconnectHandler = pParams->disconnectHandler;
-
-			data.clientID.cstring = pParams->pClientID;
-			data.username.cstring = pParams->pUserName;
-			data.password.cstring = pParams->pPassword;
-			data.will.topicName.cstring = (char*)pParams->will.pTopicName;
-			data.will.message.cstring = (char*)pParams->will.pMessage;
-			data.will.qos = pParams->will.qos;
-			data.will.retained = pParams->will.isRetained;
-			data.keepAliveInterval = pParams->KeepAliveInterval_sec;
-			data.cleansession = pParams->isCleansession;
-			if (0 != MQTTConnect(&c, &data)) {
-				rc = CONNECTION_ERROR;
-			}
+	// This implementation assumes you are not going to switch between cleansession 1 to 0
+	// As we don't have a default subscription handler support in the MQTT client every time a device power cycles it has to re-subscribe to let the MQTT client to pass the message up to the application callback.
+	// The default message handler will be implemented in the future revisions.
+	if(pParams->isCleansession || isPowerCycle){
+		pahoRc = MQTTClient(&c, (unsigned int)(pParams->mqttCommandTimeout_ms), writebuf,
+				   AWS_IOT_MQTT_TX_BUF_LEN, readbuf, AWS_IOT_MQTT_RX_BUF_LEN,
+				   pParams->enableAutoReconnect, iot_tls_init, &TLSParams);
+		if(SUCCESS != pahoRc) {
+			return CONNECTION_ERROR;
 		}
+		isPowerCycle = false;
+	}
+
+	MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+
+	data.willFlag = pParams->isWillMsgPresent;
+	// compatible type for MQTT_Ver_t
+	switch (pParams->MQTTVersion) {
+	case MQTT_3_1:
+		data.MQTTVersion = (unsigned char) (3);
+		break;
+	case MQTT_3_1_1:
+		data.MQTTVersion = (unsigned char) (4);
+		break;
+	default:
+		data.MQTTVersion = (unsigned char) (4); // default MQTT version = 3.1.1
+	}
+
+	// register our disconnect handler, save customer's handler
+	setDisconnectHandler(&c, pahoDisconnectHandler);
+	clientDisconnectHandler = pParams->disconnectHandler;
+
+	data.clientID.cstring = pParams->pClientID;
+	data.username.cstring = pParams->pUserName;
+	data.password.cstring = pParams->pPassword;
+	data.will.topicName.cstring = (char*)pParams->will.pTopicName;
+	data.will.message.cstring = (char*)pParams->will.pMessage;
+	data.will.qos = pParams->will.qos;
+	data.will.retained = pParams->will.isRetained;
+	data.keepAliveInterval = pParams->KeepAliveInterval_sec;
+	data.cleansession = pParams->isCleansession;
+
+	pahoRc = MQTTConnect(&c, &data);
+	if(MQTT_NETWORK_ALREADY_CONNECTED_ERROR == pahoRc) {
+		rc = NETWORK_ALREADY_CONNECTED;
+	} else if(SUCCESS != pahoRc) {
+		rc = CONNECTION_ERROR;
 	}
 
 	return rc;
@@ -226,28 +220,83 @@ IoT_Error_t aws_iot_mqtt_disconnect() {
 	if(0 != MQTTDisconnect(&c)){
 		rc = DISCONNECT_ERROR;
 	}
-	iot_tls_disconnect(&n);
+
 	return rc;
 }
 
 IoT_Error_t aws_iot_mqtt_yield(int timeout) {
+	MQTTReturnCode pahoRc = MQTTYield(&c, timeout);
 	IoT_Error_t rc = NONE_ERROR;
-	if(0 != MQTTYield(&c, timeout)){
+	if(MQTT_NETWORK_RECONNECTED == pahoRc){
+		rc = RECONNECT_SUCCESSFUL;
+	} else if(SUCCESS == pahoRc){
+		rc = NONE_ERROR;
+	} else if(MQTT_NULL_VALUE_ERROR == pahoRc) {
+		rc = NULL_VALUE_ERROR;
+	} else if(MQTT_NETWORK_DISCONNECTED_ERROR == pahoRc) {
+		rc = NETWORK_DISCONNECTED;
+	} else if(MQTT_RECONNECT_TIMED_OUT == pahoRc) {
+		rc = NETWORK_RECONNECT_TIMED_OUT;
+	} else if(MQTT_ATTEMPTING_RECONNECT == pahoRc) {
+		rc = NETWORK_ATTEMPTING_RECONNECT;
+	} else if(MQTT_BUFFER_RX_MESSAGE_INVALID == pahoRc){
+		rc = RX_MESSAGE_INVALID;
+	} else if(MQTTPACKET_BUFFER_TOO_SHORT == pahoRc){
+		rc = RX_MESSAGE_BIGGER_THAN_MQTT_RX_BUF;
+	} else {
 		rc = YIELD_ERROR;
 	}
+
 	return rc;
 }
 
+IoT_Error_t aws_iot_mqtt_attempt_reconnect() {
+	MQTTReturnCode pahoRc = MQTTAttemptReconnect(&c);
+	IoT_Error_t rc = RECONNECT_SUCCESSFUL;
+	if(MQTT_NETWORK_RECONNECTED == pahoRc){
+		rc = RECONNECT_SUCCESSFUL;
+	} else if(MQTT_NULL_VALUE_ERROR == pahoRc) {
+		rc = NULL_VALUE_ERROR;
+	} else if(MQTT_NETWORK_DISCONNECTED_ERROR == pahoRc) {
+		rc = NETWORK_DISCONNECTED;
+	} else if(MQTT_RECONNECT_TIMED_OUT == pahoRc) {
+		rc = NETWORK_RECONNECT_TIMED_OUT;
+	} else if(MQTT_NETWORK_ALREADY_CONNECTED_ERROR == pahoRc) {
+		rc = NETWORK_ALREADY_CONNECTED;
+	} else {
+		rc = GENERIC_ERROR;
+	}
+
+	return rc;
+}
+
+IoT_Error_t aws_iot_mqtt_autoreconnect_set_status(bool value) {
+	MQTTReturnCode rc = setAutoReconnectEnabled(&c, (uint8_t) value);
+
+	if(MQTT_NULL_VALUE_ERROR == rc) {
+		return NULL_VALUE_ERROR;
+	}
+
+	return NONE_ERROR;
+}
+
 bool aws_iot_is_mqtt_connected(void) {
-	return c.isconnected;
+	return MQTTIsConnected(&c);
+}
+
+bool aws_iot_is_autoreconnect_enabled(void) {
+	return MQTTIsAutoReconnectEnabled(&c);
 }
 
 void aws_iot_mqtt_init(MQTTClient_t *pClient){
 	pClient->connect = aws_iot_mqtt_connect;
 	pClient->disconnect = aws_iot_mqtt_disconnect;
 	pClient->isConnected = aws_iot_is_mqtt_connected;
+	pClient->reconnect = aws_iot_mqtt_attempt_reconnect;
 	pClient->publish = aws_iot_mqtt_publish;
 	pClient->subscribe = aws_iot_mqtt_subscribe;
 	pClient->unsubscribe = aws_iot_mqtt_unsubscribe;
 	pClient->yield = aws_iot_mqtt_yield;
+	pClient->isAutoReconnectEnabled = aws_iot_is_autoreconnect_enabled;
+	pClient->setAutoReconnectStatus = aws_iot_mqtt_autoreconnect_set_status;
 }

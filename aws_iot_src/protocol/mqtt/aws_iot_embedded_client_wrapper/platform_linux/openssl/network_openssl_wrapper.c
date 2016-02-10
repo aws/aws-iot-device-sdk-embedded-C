@@ -65,11 +65,19 @@ int iot_tls_init(Network *pNetwork) {
 	}
 
 	pNetwork->my_socket = 0;
+	pNetwork->connect = iot_tls_connect;
 	pNetwork->mqttread = iot_tls_read;
 	pNetwork->mqttwrite = iot_tls_write;
 	pNetwork->disconnect = iot_tls_disconnect;
+	pNetwork->isConnected = iot_tls_is_connected;
+	pNetwork->destroy = iot_tls_destroy;
 
 	return ret_val;
+}
+
+int iot_tls_is_connected(Network *pNetwork) {
+	/* Use this to add implementation which can check for physical layer disconnect */
+	return 1;
 }
 
 int tls_server_certificate_verify(int preverify_ok, X509_STORE_CTX *pX509CTX){
@@ -172,6 +180,7 @@ int iot_tls_read(Network *pNetwork, unsigned char *pMsg, int len, int timeout_ms
 }
 
 void iot_tls_disconnect(Network *pNetwork){
+	SSL_shutdown(pSSLHandle);
 	close(server_TCPSocket);
 }
 
@@ -242,7 +251,7 @@ IoT_Error_t ConnectOrTimeoutOrExitOnError(SSL *pSSL, int timeout_ms){
 	int rc = 0;
 	fd_set readFds;
 	fd_set writeFds;
-	struct timeval timeout = {0, timeout_ms*1000};
+	struct timeval timeout = { timeout_ms / 1000, (timeout_ms % 1000) * 1000 };
 	int errorCode = 0;
 	int select_retCode = SELECT_TIMEOUT;
 
@@ -306,7 +315,7 @@ IoT_Error_t WriteOrTimeoutOrExitOnError(SSL *pSSL, unsigned char *msg, int total
 	int writtenLength = 0;
 	int rc = 0;
 	int returnCode = 0;
-	struct timeval timeout = {0, timeout_ms*1000};
+	struct timeval timeout = { timeout_ms / 1000, (timeout_ms % 1000) * 1000 };
 
 	do{
 		rc = SSL_write(pSSL, msg, totalLen);
@@ -359,7 +368,7 @@ IoT_Error_t ReadOrTimeoutOrExitOnError(SSL *pSSL, unsigned char *msg, int totalL
 	int readLength = 0;
 	int rc = 0;
 	int returnCode = 0;
-	struct timeval timeout = {0, timeout_ms*1000};
+	struct timeval timeout = { timeout_ms / 1000, (timeout_ms % 1000) * 1000 };
 
 	do{
 		rc = SSL_read(pSSL, msg, totalLen);

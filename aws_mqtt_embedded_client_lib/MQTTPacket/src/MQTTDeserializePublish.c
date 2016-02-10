@@ -18,8 +18,6 @@
 #include "MQTTPacket.h"
 #include <string.h>
 
-#define min(a, b) ((a < b) ? 1 : 0)
-
 /**
   * Deserializes the supplied (wire) buffer into publish data
   * @param dup returned integer - the MQTT dup flag
@@ -33,42 +31,69 @@
   * @param buflen the length in bytes of the data in the supplied buffer
   * @return error code.  1 is success
   */
-int MQTTDeserialize_publish(unsigned char* dup, int* qos, unsigned char* retained, unsigned short* packetid, MQTTString* topicName,
-		unsigned char** payload, int* payloadlen, unsigned char* buf, int buflen)
-{
-	MQTTHeader header = {0};
-	unsigned char* curdata = buf;
-	unsigned char* enddata = NULL;
-	int rc = 0;
-	int mylen = 0;
-
+MQTTReturnCode MQTTDeserialize_publish(unsigned char *dup, QoS *qos,
+									   unsigned char *retained, uint16_t *packetid,
+									   MQTTString* topicName, unsigned char **payload,
+									   uint32_t *payloadlen, unsigned char *buf, size_t buflen) {
 	FUNC_ENTRY;
+	if(NULL == dup || NULL == qos || NULL == retained || NULL == packetid) {
+		FUNC_EXIT_RC(FAILURE);
+		return FAILURE;
+	}
+
+	/* Publish header size is at least four bytes.
+	 * Fixed header is two bytes.
+	 * Variable header size depends on QoS And Topic Name.
+	 * QoS level 0 doesn't have a message identifier (0 - 2 bytes)
+	 * Topic Name length fields decide size of topic name field (at least 2 bytes)
+	 * MQTT v3.1.1 Specification 3.3.1 */
+	if(4 > buflen) {
+		FUNC_EXIT_RC(MQTTPACKET_BUFFER_TOO_SHORT);
+		return MQTTPACKET_BUFFER_TOO_SHORT;
+	}
+
+	MQTTHeader header = {0};
+	unsigned char *curdata = buf;
+	unsigned char *enddata = NULL;
+	MQTTReturnCode rc = FAILURE;
+	uint32_t decodedLen = 0;
+	uint32_t readBytesLen = 0;
+
 	header.byte = readChar(&curdata);
-	if (header.bits.type != PUBLISH)
-		goto exit;
+	if(PUBLISH != header.bits.type) {
+		FUNC_EXIT_RC(FAILURE);
+		return FAILURE;
+	}
+
 	*dup = header.bits.dup;
-	*qos = header.bits.qos;
+	*qos = (QoS)header.bits.qos;
 	*retained = header.bits.retain;
 
-	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
-	enddata = curdata + mylen;
+	/* read remaining length */
+	rc = MQTTPacket_decodeBuf(curdata, &decodedLen, &readBytesLen);
+	if(SUCCESS != rc) {
+		FUNC_EXIT_RC(rc);
+		return rc;
+	}
+	curdata += (readBytesLen);
+	enddata = curdata + decodedLen;
 
-	if (!readMQTTLenString(topicName, &curdata, enddata) ||
-		enddata - curdata < 0) /* do we have enough data to read the protocol version byte? */
-		goto exit;
+	/* do we have enough data to read the protocol version byte? */
+	if(SUCCESS != readMQTTLenString(topicName, &curdata, enddata) || (0 > (enddata - curdata))) {
+		FUNC_EXIT_RC(FAILURE);
+		return FAILURE;
+	}
 
-	if (*qos > 0)
-		*packetid = readInt(&curdata);
+	if(QOS0 != *qos) {
+		*packetid = readPacketId(&curdata);
+	}
 
-	*payloadlen = enddata - curdata;
+	*payloadlen = (uint32_t)(enddata - curdata);
 	*payload = curdata;
-	rc = 1;
-exit:
-	FUNC_EXIT_RC(rc);
-	return rc;
+
+	FUNC_EXIT_RC(SUCCESS);
+	return SUCCESS;
 }
-
-
 
 /**
   * Deserializes the supplied (wire) buffer into an ack
@@ -79,29 +104,48 @@ exit:
   * @param buflen the length in bytes of the data in the supplied buffer
   * @return error code.  1 is success, 0 is failure
   */
-int MQTTDeserialize_ack(unsigned char* packettype, unsigned char* dup, unsigned short* packetid, unsigned char* buf, int buflen)
-{
-	MQTTHeader header = {0};
-	unsigned char* curdata = buf;
-	unsigned char* enddata = NULL;
-	int rc = 0;
-	int mylen;
-
+MQTTReturnCode MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup,
+								   uint16_t *packetid, unsigned char *buf,
+								   size_t buflen) {
 	FUNC_ENTRY;
+	if(NULL == packettype || NULL == dup || NULL == packetid || NULL == buf) {
+		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
+		return MQTT_NULL_VALUE_ERROR;
+	}
+
+	/* PUBACK fixed header size is two bytes, variable header is 2 bytes, MQTT v3.1.1 Specification 3.4.1 */
+	if(4 > buflen) {
+		FUNC_EXIT_RC(MQTTPACKET_BUFFER_TOO_SHORT);
+		return MQTTPACKET_BUFFER_TOO_SHORT;
+	}
+
+	MQTTReturnCode rc = FAILURE;
+	MQTTHeader header = {0};
+	unsigned char *curdata = buf;
+	unsigned char *enddata = NULL;
+	uint32_t decodedLen = 0;
+	uint32_t readBytesLen = 0;
+
 	header.byte = readChar(&curdata);
 	*dup = header.bits.dup;
 	*packettype = header.bits.type;
 
-	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
-	enddata = curdata + mylen;
+	/* read remaining length */
+	rc = MQTTPacket_decodeBuf(curdata, &decodedLen, &readBytesLen);
+	if(SUCCESS != rc) {
+		FUNC_EXIT_RC(rc);
+		return rc;
+	}
+	curdata += (readBytesLen);
+	enddata = curdata + decodedLen;
 
-	if (enddata - curdata < 2)
-		goto exit;
-	*packetid = readInt(&curdata);
+	if(enddata - curdata < 2) {
+		FUNC_EXIT_RC(FAILURE);
+		return FAILURE;
+	}
 
-	rc = 1;
-exit:
-	FUNC_EXIT_RC(rc);
-	return rc;
+	*packetid = readPacketId(&curdata);
+
+	FUNC_EXIT_RC(SUCCESS);
+	return SUCCESS;
 }
-

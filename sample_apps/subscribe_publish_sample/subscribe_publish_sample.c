@@ -52,6 +52,18 @@ int MQTTcallbackHandler(MQTTCallbackParams params) {
 
 void disconnectCallbackHandler(void) {
 	WARN("MQTT Disconnect");
+	IoT_Error_t rc = NONE_ERROR;
+	if(aws_iot_is_autoreconnect_enabled()){
+		INFO("Auto Reconnect is enabled, Reconnecting attempt will start now");
+	}else{
+		WARN("Auto Reconnect not enabled. Starting manual reconnect...");
+		rc = aws_iot_mqtt_attempt_reconnect();
+		if(RECONNECT_SUCCESSFUL == rc){
+			WARN("Manual Reconnect Successful");
+		}else{
+			WARN("Manual Reconnect Failed - %d", rc);
+		}
+	}
 }
 
 /**
@@ -98,11 +110,9 @@ void parseInputArgsForConnectParams(int argc, char** argv) {
 		case '?':
 			if (optopt == 'c') {
 				ERROR("Option -%c requires an argument.", optopt);
-			}
-			else if (isprint(optopt)) {
+			} else if (isprint(optopt)) {
 				WARN("Unknown option `-%c'.", optopt);
-			}
-			else {
+			} else {
 				WARN("Unknown option character `\\x%x'.", optopt);
 			}
 			break;
@@ -129,9 +139,7 @@ int main(int argc, char** argv) {
 
 	parseInputArgsForConnectParams(argc, argv);
 
-
 	INFO("\nAWS IoT SDK Version %d.%d.%d-%s\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_TAG);
-
 
 	getcwd(CurrentWD, sizeof(CurrentWD));
 	sprintf(rootCA, "%s/%s/%s", CurrentWD, certDirectory, cafileName);
@@ -156,13 +164,23 @@ int main(int argc, char** argv) {
 	connectParams.pDevicePrivateKeyLocation = clientKey;
 	connectParams.mqttCommandTimeout_ms = 2000;
 	connectParams.tlsHandshakeTimeout_ms = 5000;
-	connectParams.isSSLHostnameVerify = true;// ensure this is set to true for production
+	connectParams.isSSLHostnameVerify = true; // ensure this is set to true for production
 	connectParams.disconnectHandler = disconnectCallbackHandler;
 
 	INFO("Connecting...");
 	rc = aws_iot_mqtt_connect(&connectParams);
 	if (NONE_ERROR != rc) {
 		ERROR("Error(%d) connecting to %s:%d", rc, connectParams.pHostURL, connectParams.port);
+	}
+	/*
+	 * Enable Auto Reconnect functionality. Minimum and Maximum time of Exponential backoff are set in aws_iot_config.h
+	 *  #AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL
+	 *  #AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL
+	 */
+	rc = aws_iot_mqtt_autoreconnect_set_status(true);
+	if (NONE_ERROR != rc) {
+		ERROR("Unable to set Auto Reconnect to true - %d", rc);
+		return rc;
 	}
 
 	MQTTSubscribeParams subParams = MQTTSubscribeParamsDefault;
@@ -184,34 +202,38 @@ int main(int argc, char** argv) {
 	sprintf(cPayload, "%s : %d ", "hello from SDK", i);
 	Msg.pPayload = (void *) cPayload;
 
-
 	MQTTPublishParams Params = MQTTPublishParamsDefault;
 	Params.pTopic = "sdkTest/sub";
 
-
-	if(publishCount != 0){
+	if (publishCount != 0) {
 		infinitePublishFlag = false;
 	}
 
-	while (NONE_ERROR == rc && (publishCount > 0 || infinitePublishFlag)) {
+	while ((NETWORK_ATTEMPTING_RECONNECT == rc || RECONNECT_SUCCESSFUL == rc || NONE_ERROR == rc)
+			&& (publishCount > 0 || infinitePublishFlag)) {
 
 		//Max time the yield function will wait for read messages
 		rc = aws_iot_mqtt_yield(100);
+		if(NETWORK_ATTEMPTING_RECONNECT == rc){
+			INFO("-->sleep");
+			sleep(1);
+			// If the client is attempting to reconnect we will skip the rest of the loop.
+			continue;
+		}
 		INFO("-->sleep");
 		sleep(1);
 		sprintf(cPayload, "%s : %d ", "hello from SDK", i++);
 		Msg.PayloadLen = strlen(cPayload) + 1;
 		Params.MessageParams = Msg;
 		rc = aws_iot_mqtt_publish(&Params);
-		if(publishCount > 0){
+		if (publishCount > 0) {
 			publishCount--;
 		}
 	}
 
-	if(NONE_ERROR != rc){
+	if (NONE_ERROR != rc) {
 		ERROR("An error occurred in the loop.\n");
-	}
-	else{
+	} else {
 		INFO("Publish done\n");
 	}
 

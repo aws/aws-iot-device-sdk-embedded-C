@@ -26,24 +26,23 @@
  * @param length the length to be encoded
  * @return the number of bytes written to buffer
  */
-int MQTTPacket_encode(unsigned char* buf, int length)
-{
-	int rc = 0;
+uint32_t MQTTPacket_encode(unsigned char *buf, size_t length) {
+	uint32_t outLen = 0;
 
 	FUNC_ENTRY;
-	do
-	{
-		char d = length % 128;
+	do {
+		int16_t d = length % 128;
 		length /= 128;
 		/* if there are more digits to encode, set the top bit of this digit */
-		if (length > 0)
+		if(length > 0) {
 			d |= 0x80;
-		buf[rc++] = d;
-	} while (length > 0);
-	FUNC_EXIT_RC(rc);
-	return rc;
-}
+		}
+		buf[outLen++] = (unsigned char)d;
+	}while(length > 0);
 
+	FUNC_EXIT_RC(outLen);
+	return outLen;
+}
 
 /**
  * Decodes the message length according to the MQTT algorithm
@@ -51,205 +50,233 @@ int MQTTPacket_encode(unsigned char* buf, int length)
  * @param value the decoded length returned
  * @return the number of bytes read from the socket
  */
-int MQTTPacket_decode(int (*getcharfn)(unsigned char*, int), int* value)
-{
+MQTTReturnCode MQTTPacket_decode(uint32_t (*getcharfn)(unsigned char *, uint32_t), uint32_t *value, uint32_t *readBytesLen) {
 	unsigned char c;
-	int multiplier = 1;
-	int len = 0;
+	uint32_t multiplier = 1;
+	uint32_t len = 0;
+	uint32_t getLen = 0;
 #define MAX_NO_OF_REMAINING_LENGTH_BYTES 4
 
 	FUNC_ENTRY;
 	*value = 0;
-	do
-	{
-		int rc = MQTTPACKET_READ_ERROR;
-
-		if (++len > MAX_NO_OF_REMAINING_LENGTH_BYTES)
-		{
-			rc = MQTTPACKET_READ_ERROR;	/* bad data */
-			goto exit;
+	do {
+		if(++len > MAX_NO_OF_REMAINING_LENGTH_BYTES) {
+			/* bad data */
+			FUNC_EXIT_RC(MQTTPACKET_READ_ERROR);
+			return MQTTPACKET_READ_ERROR;
 		}
-		rc = (*getcharfn)(&c, 1);
-		if (rc != 1)
-			goto exit;
+		getLen = (*getcharfn)(&c, 1);
+		if(1 != getLen) {
+			FUNC_EXIT_RC(FAILURE);
+			return FAILURE;
+		}
 		*value += (c & 127) * multiplier;
 		multiplier *= 128;
-	} while ((c & 128) != 0);
-exit:
-	FUNC_EXIT_RC(len);
-	return len;
+	}while((c & 128) != 0);
+
+	*readBytesLen = len;
+
+	FUNC_EXIT_RC(SUCCESS);
+	return SUCCESS;
 }
 
-
-int MQTTPacket_len(int rem_len)
-{
+size_t MQTTPacket_len(size_t rem_len) {
 	rem_len += 1; /* header byte */
 
 	/* now remaining_length field */
-	if (rem_len < 128)
+	if(rem_len < 128) {
 		rem_len += 1;
-	else if (rem_len < 16384)
+	} else if (rem_len < 16384) {
 		rem_len += 2;
-	else if (rem_len < 2097151)
+	} else if (rem_len < 2097151) {
 		rem_len += 3;
-	else
+	} else {
 		rem_len += 4;
+	}
+
 	return rem_len;
 }
 
+static unsigned char *bufptr;
 
-static unsigned char* bufptr;
+uint32_t bufchar(unsigned char *c, uint32_t count) {
+	uint32_t i;
 
-int bufchar(unsigned char* c, int count)
-{
-	int i;
-
-	for (i = 0; i < count; ++i)
+	for(i = 0; i < count; ++i) {
 		*c = *bufptr++;
+	}
+
 	return count;
 }
 
-
-int MQTTPacket_decodeBuf(unsigned char* buf, int* value)
-{
+MQTTReturnCode MQTTPacket_decodeBuf(unsigned char *buf, uint32_t *value, uint32_t *readBytesLen) {
 	bufptr = buf;
-	return MQTTPacket_decode(bufchar, value);
+	return MQTTPacket_decode(bufchar, value, readBytesLen);
 }
-
 
 /**
  * Calculates an integer from two bytes read from the input buffer
  * @param pptr pointer to the input buffer - incremented by the number of bytes used & returned
  * @return the integer value calculated
  */
-int readInt(unsigned char** pptr)
-{
-	unsigned char* ptr = *pptr;
-	int len = 256*(*ptr) + (*(ptr+1));
+int32_t readInt(unsigned char **pptr) {
+	unsigned char *ptr = *pptr;
+	int32_t len = 256*(*ptr) + (*(ptr+1));
 	*pptr += 2;
 	return len;
 }
 
+/**
+ * Calculates an integer from two bytes read from the input buffer
+ * @param pptr pointer to the input buffer - incremented by the number of bytes used & returned
+ * @return the integer value calculated
+ */
+size_t readSizeT(unsigned char **pptr) {
+	unsigned char *ptr = *pptr;
+	size_t firstByte = (size_t)(*ptr);
+	size_t secondByte = (size_t)(*(ptr+1));
+	size_t size = 256 * firstByte + secondByte;
+	*pptr += 2;
+	return size;
+}
+
+/**
+ * Calculates uint16 packet id from two bytes read from the input buffer
+ * @param pptr pointer to the input buffer - incremented by the number of bytes used & returned
+ * @return the value calculated
+ */
+uint16_t readPacketId(unsigned char **pptr) {
+	unsigned char *ptr = *pptr;
+	uint8_t firstByte = (uint8_t)(*ptr);
+	uint8_t secondByte = (uint8_t)(*(ptr + 1));
+	uint16_t len = (uint16_t)(secondByte + (256 * firstByte));
+	*pptr += 2;
+	return len;
+}
 
 /**
  * Reads one character from the input buffer.
  * @param pptr pointer to the input buffer - incremented by the number of bytes used & returned
  * @return the character read
  */
-char readChar(unsigned char** pptr)
-{
-	char c = **pptr;
+unsigned char readChar(unsigned char **pptr) {
+	unsigned char c = **pptr;
 	(*pptr)++;
 	return c;
 }
-
 
 /**
  * Writes one character to an output buffer.
  * @param pptr pointer to the output buffer - incremented by the number of bytes used & returned
  * @param c the character to write
  */
-void writeChar(unsigned char** pptr, char c)
-{
+void writeChar(unsigned char **pptr, unsigned char c) {
 	**pptr = c;
 	(*pptr)++;
 }
-
 
 /**
  * Writes an integer as 2 bytes to an output buffer.
  * @param pptr pointer to the output buffer - incremented by the number of bytes used & returned
  * @param anInt the integer to write
  */
-void writeInt(unsigned char** pptr, int anInt)
-{
+void writePacketId(unsigned char** pptr, uint16_t anInt) {
 	**pptr = (unsigned char)(anInt / 256);
 	(*pptr)++;
 	**pptr = (unsigned char)(anInt % 256);
 	(*pptr)++;
 }
 
+/**
+ * Writes an integer as 2 bytes to an output buffer.
+ * @param pptr pointer to the output buffer - incremented by the number of bytes used & returned
+ * @param anInt the integer to write
+ */
+void writeInt(unsigned char **pptr, int32_t anInt) {
+	**pptr = (unsigned char)(anInt / 256);
+	(*pptr)++;
+	**pptr = (unsigned char)(anInt % 256);
+	(*pptr)++;
+}
+
+/**
+ * Writes size as 2 bytes to an output buffer.
+ * @param pptr pointer to the output buffer - incremented by the number of bytes used & returned
+ * @param anInt the integer to write
+ */
+void writeSizeT(unsigned char **pptr, size_t size) {
+	**pptr = (unsigned char)(size / 256);
+	(*pptr)++;
+	**pptr = (unsigned char)(size % 256);
+	(*pptr)++;
+}
 
 /**
  * Writes a "UTF" string to an output buffer.  Converts C string to length-delimited.
  * @param pptr pointer to the output buffer - incremented by the number of bytes used & returned
  * @param string the C string to write
  */
-void writeCString(unsigned char** pptr, const char* string)
-{
-	int len = strlen(string);
-	writeInt(pptr, len);
+void writeCString(unsigned char **pptr, const char *string) {
+	size_t len = strlen(string);
+	writeSizeT(pptr, len);
 	memcpy(*pptr, string, len);
 	*pptr += len;
 }
 
-
-int getLenStringLen(char* ptr)
-{
-	int len = 256*((unsigned char)(*ptr)) + (unsigned char)(*(ptr+1));
-	return len;
-}
-
-
-void writeMQTTString(unsigned char** pptr, MQTTString mqttstring)
-{
-	if (mqttstring.lenstring.len > 0)
-	{
-		writeInt(pptr, mqttstring.lenstring.len);
+void writeMQTTString(unsigned char **pptr, MQTTString mqttstring) {
+	if(mqttstring.lenstring.len > 0) {
+		writeSizeT(pptr, mqttstring.lenstring.len);
 		memcpy(*pptr, mqttstring.lenstring.data, mqttstring.lenstring.len);
 		*pptr += mqttstring.lenstring.len;
-	}
-	else if (mqttstring.cstring)
+	} else if (mqttstring.cstring) {
 		writeCString(pptr, mqttstring.cstring);
-	else
+	} else {
 		writeInt(pptr, 0);
+	}
 }
-
 
 /**
  * @param mqttstring the MQTTString structure into which the data is to be read
  * @param pptr pointer to the output buffer - incremented by the number of bytes used & returned
  * @param enddata pointer to the end of the data: do not read beyond
- * @return 1 if successful, 0 if not
+ * @return SUCCESS if successful, FAILURE if not
  */
-int readMQTTLenString(MQTTString* mqttstring, unsigned char** pptr, unsigned char* enddata)
-{
-	int rc = 0;
+MQTTReturnCode readMQTTLenString(MQTTString *mqttstring, unsigned char **pptr, unsigned char *enddata) {
+	MQTTReturnCode rc = FAILURE;
 
 	FUNC_ENTRY;
 	/* the first two bytes are the length of the string */
-	if (enddata - (*pptr) > 1) /* enough length to read the integer? */
-	{
-		mqttstring->lenstring.len = readInt(pptr); /* increments pptr to point past length */
-		if (&(*pptr)[mqttstring->lenstring.len] <= enddata)
-		{
+	/* enough length to read the integer? */
+	if(enddata - (*pptr) > 1) {
+		mqttstring->lenstring.len = readSizeT(pptr); /* increments pptr to point past length */
+		if(&(*pptr)[mqttstring->lenstring.len] <= enddata) {
 			mqttstring->lenstring.data = (char*)*pptr;
 			*pptr += mqttstring->lenstring.len;
-			rc = 1;
+			rc = SUCCESS;
 		}
 	}
 	mqttstring->cstring = NULL;
+
 	FUNC_EXIT_RC(rc);
 	return rc;
 }
-
 
 /**
  * Return the length of the MQTTstring - C string if there is one, otherwise the length delimited string
  * @param mqttstring the string to return the length of
  * @return the length of the string
  */
-int MQTTstrlen(MQTTString mqttstring)
-{
-	int rc = 0;
+size_t MQTTstrlen(MQTTString mqttstring) {
+	size_t len = 0;
 
-	if (mqttstring.cstring)
-		rc = strlen(mqttstring.cstring);
-	else
-		rc = mqttstring.lenstring.len;
-	return rc;
+	if(mqttstring.cstring) {
+		len = strlen(mqttstring.cstring);
+	} else {
+		len = mqttstring.lenstring.len;
+	}
+
+	return len;
 }
-
 
 /**
  * Compares an MQTTString to a C string
@@ -257,19 +284,15 @@ int MQTTstrlen(MQTTString mqttstring)
  * @param bptr the C string to compare
  * @return boolean - equal or not
  */
-int MQTTPacket_equals(MQTTString* a, char* bptr)
-{
-	int alen = 0,
-		blen = 0;
+uint8_t MQTTPacket_equals(MQTTString *a, char *bptr) {
+	size_t alen = 0;
+	size_t	blen = 0;
 	char *aptr;
 	
-	if (a->cstring)
-	{
+	if(a->cstring) {
 		aptr = a->cstring;
 		alen = strlen(a->cstring);
-	}
-	else
-	{
+	} else {
 		aptr = a->lenstring.data;
 		alen = a->lenstring.len;
 	}
@@ -278,133 +301,89 @@ int MQTTPacket_equals(MQTTString* a, char* bptr)
 	return (alen == blen) && (strncmp(aptr, bptr, alen) == 0);
 }
 
-
 /**
- * Helper function to read packet data from some source into a buffer
- * @param buf the buffer into which the packet will be serialized
- * @param buflen the length in bytes of the supplied buffer
- * @param getfn pointer to a function which will read any number of bytes from the needed source
- * @return integer MQTT packet type, or -1 on error
- * @note  the whole message must fit into the caller's buffer
+ * Initialize the MQTTHeader structure. Used to ensure that Header bits are
+ * always initialized using the proper mappings. No Endianness issues here since
+ * the individual fields are all less than a byte. Also generates no warnings since
+ * all fields are initialized using hex constants
  */
-int MQTTPacket_read(unsigned char* buf, int buflen, int (*getfn)(unsigned char*, int))
-{
-	int rc = -1;
-	MQTTHeader header = {0};
-	int len = 0;
-	int rem_len = 0;
-
-	/* 1. read the header byte.  This has the packet type in it */
-	if ((*getfn)(buf, 1) != 1)
-		goto exit;
-
-	len = 1;
-	/* 2. read the remaining length.  This is variable in itself */
-	MQTTPacket_decode(getfn, &rem_len);
-	len += MQTTPacket_encode(buf + 1, rem_len); /* put the original remaining length back into the buffer */
-
-	/* 3. read the rest of the buffer using a callback to supply the rest of the data */
-	if((rem_len + len) > buflen)
-		goto exit;
-	if ((*getfn)(buf + len, rem_len) != rem_len)
-		goto exit;
-
-	header.byte = buf[0];
-	rc = header.bits.type;
-exit:
-	return rc;
-}
-
-/**
- * Decodes the message length according to the MQTT algorithm, non-blocking
- * @param trp pointer to a transport structure holding what is needed to solve getting data from it
- * @param value the decoded length returned
- * @return integer the number of bytes read from the socket, 0 for call again, or -1 on error
- */
-static int MQTTPacket_decodenb(MQTTTransport *trp)
-{
-	unsigned char c;
-	int rc = MQTTPACKET_READ_ERROR;
-
-	FUNC_ENTRY;
-	if(trp->len == 0){		/* initialize on first call */
-		trp->multiplier = 1;
-		trp->rem_len = 0;
-	}
-	do {
-		int frc;
-		if (++(trp->len) > MAX_NO_OF_REMAINING_LENGTH_BYTES)
-			goto exit;
-		if ((frc=(*trp->getfn)(trp->sck, &c, 1)) == -1)
-			goto exit;
-		if (frc == 0){
-			rc = 0;
-			goto exit;
-		}
-		trp->rem_len += (c & 127) * trp->multiplier;
-		trp->multiplier *= 128;
-	} while ((c & 128) != 0);
-	rc = trp->len;
-exit:
-	FUNC_EXIT_RC(rc);
-	return rc;
-}
-
-/**
- * Helper function to read packet data from some source into a buffer, non-blocking
- * @param buf the buffer into which the packet will be serialized
- * @param buflen the length in bytes of the supplied buffer
- * @param trp pointer to a transport structure holding what is needed to solve getting data from it
- * @return integer MQTT packet type, 0 for call again, or -1 on error
- * @note  the whole message must fit into the caller's buffer
- */
-int MQTTPacket_readnb(unsigned char* buf, int buflen, MQTTTransport *trp)
-{
-	int rc = -1, frc;
-	MQTTHeader header = {0};
-
-	switch(trp->state){
-	default:
-		trp->state = 0;
-		/*FALLTHROUGH*/
-	case 0:
-		/* read the header byte.  This has the packet type in it */
-		if ((frc=(*trp->getfn)(trp->sck, buf, 1)) == -1)
-			goto exit;
-		if (frc == 0)
-			return 0;
-		trp->len = 0;
-		++trp->state;
-		/*FALLTHROUGH*/
-		/* read the remaining length.  This is variable in itself */
-	case 1:
-		if((frc=MQTTPacket_decodenb(trp)) == MQTTPACKET_READ_ERROR)
-			goto exit;
-		if(frc == 0)
-			return 0;
-		trp->len = 1 + MQTTPacket_encode(buf + 1, trp->rem_len); /* put the original remaining length back into the buffer */
-		if((trp->rem_len + trp->len) > buflen)
-			goto exit;
-		++trp->state;
-		/*FALLTHROUGH*/
-	case 2:
-		/* read the rest of the buffer using a callback to supply the rest of the data */
-		if ((frc=(*trp->getfn)(trp->sck, buf + trp->len, trp->rem_len)) == -1)
-			goto exit;
-		if (frc == 0)
-			return 0;
-		trp->rem_len -= frc;
-		trp->len += frc;
-		if(trp->rem_len)
-			return 0;
-
-		header.byte = buf[0];
-		rc = header.bits.type;
-		break;
+MQTTReturnCode MQTTPacket_InitHeader(MQTTHeader *header, MessageTypes message_type,
+						   QoS qos, uint8_t dup, uint8_t retained) {
+	if(NULL == header) {
+		return MQTT_NULL_VALUE_ERROR;
 	}
 
-exit:
-	trp->state = 0;
-	return rc;
-}
+	/* Set all bits to zero */
+	header->byte = 0;
+	switch(message_type) {
+		case UNKNOWN:
+			/* Should never happen */
+			return MQTT_UNKNOWN_ERROR;
+		case CONNECT:
+			header->bits.type = 0x01;
+			break;
+		case CONNACK:
+			header->bits.type = 0x02;
+			break;
+		case PUBLISH:
+			header->bits.type = 0x03;
+			break;
+		case PUBACK:
+			header->bits.type = 0x04;
+			break;
+		case PUBREC:
+			header->bits.type = 0x05;
+			break;
+		case PUBREL:
+			header->bits.type = 0x06;
+			break;
+		case PUBCOMP:
+			header->bits.type = 0x07;
+			break;
+		case SUBSCRIBE:
+			header->bits.type = 0x08;
+			break;
+		case SUBACK:
+			header->bits.type = 0x09;
+			break;
+		case UNSUBSCRIBE:
+			header->bits.type = 0x0A;
+			break;
+		case UNSUBACK:
+			header->bits.type = 0x0B;
+			break;
+		case PINGREQ:
+			header->bits.type = 0x0C;
+			break;
+		case PINGRESP:
+			header->bits.type = 0x0D;
+			break;
+		case DISCONNECT:
+			header->bits.type = 0x0E;
+			break;
+		default:
+			/* Should never happen */
+			return MQTT_UNKNOWN_ERROR;
+	}
 
+	header->bits.dup = (1 == dup) ? 0x01 : 0x00;
+	switch(qos) {
+		case QOS0:
+			header->bits.qos = 0x00;
+			break;
+		case QOS1:
+			header->bits.qos = 0x01;
+			break;
+		case QOS2:
+			header->bits.qos = 0x02;
+			break;
+		default:
+			/* Using QOS0 as default */
+			header->bits.qos = 0x00;
+			break;
+	}
+
+	header->bits.retain = (1 == retained) ? 0x01 : 0x00;
+
+	return SUCCESS;
+}

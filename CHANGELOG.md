@@ -1,3 +1,14 @@
+#Change Log
+## [1.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v1.1.0) (February  10,2016)
+Features:
+  - Auto Reconnect and Resubscribe
+Bugfixes/Improvements:
+  - MQTT buffer handling incase of bigger message
+  - Large timeout values converted to seconds and milliseconds
+  - Dynamic loading of Shadow parameters. Client ID and Thing Name are not hard-coded
+  - MQTT Library refactored
+
+
 ## [1.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v1.0.1) (October 21,2015)
 
 Bugfixes/Improvements:

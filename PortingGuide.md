@@ -6,8 +6,8 @@ The scope of this document is to provide instructions to modify the provided sou
 ##Contents of the SDK
 
 The SDK ported for linux can be downloaded from the below links.
- * [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.0.1.tar)
- * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.0.1.tar)
+ * [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.1.0.tar)
+ * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.1.0.tar)
 
 The C-code files of this SDK are delivered via the following directory structure (see comment behind folder name for an explanation of its content).  
 
@@ -52,22 +52,21 @@ A timer implementation is necessary to handle request timeouts (sending MQTT con
 
 Define the `Timer` Struct as in `timer_linux.h`
 
-```
-void InitTimer(Timer*);
+`void InitTimer(Timer*);`
 InitTimer - A timer structure is initialized to a clean state.
 
-char expired(Timer*);
+`char expired(Timer*);`
 expired - a poling function to determine if the timer has expired.
 
-void countdown_ms(Timer*, unsigned int);
+`void countdown_ms(Timer*, unsigned int);`
 countdown_ms - set the timer to expire in x milliseconds and start the timer.
 
-void countdown(Timer*, unsigned int);
+`void countdown(Timer*, unsigned int);`
 countdown - set the timer to expire in x seconds and start the timer.
 
-int left_ms(Timer*);
+`int left_ms(Timer*);`
 left_ms - query time in milliseconds left on the timer.
-```
+
 
 ###Network Functions
 
@@ -75,26 +74,26 @@ In order for the MQTT client stack to be able to communicate via the TCP/IP netw
 
 For additional details about API parameters refer to the [API documentation](http://aws-iot-device-sdk-embedded-c-docs.s3-website-us-east-1.amazonaws.com/index.html).
 
-```
-int iot_tls_init(Network *pNetwork);
+
+`int iot_tls_init(Network *pNetwork);`
 Initialize the network client / structure.  
 
-int iot_tls_connect(Network *pNetwork, TLSConnectParams TLSParams);
+`int iot_tls_connect(Network *pNetwork, TLSConnectParams TLSParams);`
 Create a TLS TCP socket to the configure address using the credentials provided via the NewNetwork API call. This will include setting up certificate locations / arrays.
 
 
-int iot_tls_read(Network*, unsigned char*, int, int);
+`int iot_tls_read(Network*, unsigned char*, int, int);`
 Read from the TLS network buffer.
 
-int iot_tls_write(Network*, unsigned char*, int, int);
+`int iot_tls_write(Network*, unsigned char*, int, int);`
 Write to the TLS network buffer.
 
-void iot_tls_disconnect(Network *pNetwork);
+`void iot_tls_disconnect(Network *pNetwork);`
 Disconnect API
 
-int iot_tls_destroy(Network *pNetwork);
+`int iot_tls_destroy(Network *pNetwork);`
 Clean up the connection
-```
+
 The TLS library generally provides the API for the underlying TCP socket.
 
 ##Time source for certificate validation
@@ -102,7 +101,7 @@ As part of the TLS handshake the device (client) needs to validate the server ce
 
 ##Integration into operating system
 ###Single-Threaded implementation
-The single threaded implementation implies that the sample application code (SDK + MQTT client) is called periodically by the firmware application running on the main thread. This is done by calling the function `iot_mqtt_yield` (in the simple pub-sub example) and by calling `iot_shadow_yield` (in the device shadow example). In both cases the keep-alive time is set to 10 seconds. This means that the yield functions need to be called at a minimum frequency of once every 10 seconds. Note however that the `iot_mqtt_yield` function takes care of reading incoming MQTT messages from the IoT service as well and hence should be called more frequently depending on the timing requirements of an application. All incoming messages can only be processed at the frequency at which `yield` is called.
+The single threaded implementation implies that the sample application code (SDK + MQTT client) is called periodically by the firmware application running on the main thread. This is done by calling the function `iot_mqtt_yield` (in the simple pub-sub example) and by calling `iot_shadow_yield()` (in the device shadow example). In both cases the keep-alive time is set to 10 seconds. This means that the yield functions need to be called at a minimum frequency of once every 10 seconds. Note however that the `iot_mqtt_yield()` function takes care of reading incoming MQTT messages from the IoT service as well and hence should be called more frequently depending on the timing requirements of an application. All incoming messages can only be processed at the frequency at which `yield` is called.
 
 ###Multi-Threaded implementation
 In the simple multithreaded case the yield() function can be moved to a background thread. Ensure this task runs at the frequency described above. In this case, depending on the OS mechanism, a message queue or mailbox could be used to proxy incoming MQTT messages from the callback to the worker task responsible for responding to or dispatching messages. A similar mechanism could be employed to queue publish messages from threads into a publish queue that are processed by a publishing task.

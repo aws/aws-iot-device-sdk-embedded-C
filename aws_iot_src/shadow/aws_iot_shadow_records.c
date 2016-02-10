@@ -56,7 +56,10 @@ ToBeReceivedAckRecord_t AckWaitList[MAX_ACKS_TO_COMEIN_AT_ANY_GIVEN_TIME];
 
 MQTTClient_t *pMqttClient;
 
-#define SHADOW_DELTA_TOPIC_WITH_THING_NAME "$aws/things/" AWS_IOT_MY_THING_NAME "/shadow/update/delta"
+char myThingName[MAX_SIZE_OF_THING_NAME];
+char mqttClientID[MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES];
+
+char shadowDeltaTopic[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 
 #define MAX_TOPICS_AT_ANY_GIVEN_TIME 2*MAX_THINGNAME_HANDLED_AT_ANY_GIVEN_TIME
 SubscriptionRecord_t SubscriptionList[MAX_TOPICS_AT_ANY_GIVEN_TIME];
@@ -94,10 +97,11 @@ IoT_Error_t registerJsonTokenOnDelta(jsonStruct_t *pStruct) {
 	if (!deltaTopicSubscribedFlag) {
 		MQTTSubscribeParams subParams;
 		subParams.mHandler = shadow_delta_callback;
-		subParams.pTopic = SHADOW_DELTA_TOPIC_WITH_THING_NAME;
+		snprintf(shadowDeltaTopic,MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/update/delta", myThingName);
+		subParams.pTopic = shadowDeltaTopic;
 		subParams.qos = QOS_0;
 		rc = pMqttClient->subscribe(&subParams);
-		DEBUG("delta topic %s", SHADOW_DELTA_TOPIC_WITH_THING_NAME);
+		DEBUG("delta topic %s", shadowDeltaTopic);
 		deltaTopicSubscribedFlag = true;
 	}
 
@@ -153,7 +157,7 @@ static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, Sh
 }
 
 static bool isAckForMyThingName(const char *pTopicName) {
-	if (strstr(pTopicName, AWS_IOT_MY_THING_NAME) != NULL && ((strstr(pTopicName, "get/accepted") != NULL) || (strstr(pTopicName, "delta") != NULL))) {
+	if (strstr(pTopicName, myThingName) != NULL && ((strstr(pTopicName, "get/accepted") != NULL) || (strstr(pTopicName, "delta") != NULL))) {
 		return true;
 	}
 	return false;
@@ -349,7 +353,7 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 			SubscriptionList[indexRejectedSubList].isFree = true;
 		}
 		if (SubscriptionList[indexAcceptedSubList].count == 1) {
-			ret_val = pMqttClient->unsubscribe(SubscriptionList[indexAcceptedSubList].Topic);
+			pMqttClient->unsubscribe(SubscriptionList[indexAcceptedSubList].Topic);
 		}
 	}
 

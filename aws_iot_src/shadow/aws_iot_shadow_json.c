@@ -23,6 +23,8 @@
 #include "aws_iot_shadow_key.h"
 #include "aws_iot_config.h"
 
+extern char mqttClientID[MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES];
+
 static uint32_t clientTokenNum = 0;
 
 //helper functions
@@ -201,7 +203,7 @@ IoT_Error_t aws_iot_shadow_add_reported(char *pJsonDocument, size_t maxSizeOfJso
 
 int32_t FillWithClientTokenSize(char *pBufferToBeUpdatedWithClientToken, size_t maxSizeOfJsonDocument) {
 	int32_t snPrintfReturn;
-	snPrintfReturn = snprintf(pBufferToBeUpdatedWithClientToken, maxSizeOfJsonDocument, "%s-%d", AWS_IOT_MQTT_CLIENT_ID,
+	snPrintfReturn = snprintf(pBufferToBeUpdatedWithClientToken, maxSizeOfJsonDocument, "%s-%d", mqttClientID,
 			clientTokenNum++);
 
 	return snPrintfReturn;
@@ -267,7 +269,7 @@ IoT_Error_t aws_iot_finalize_json_document(char *pJsonDocument, size_t maxSizeOf
 }
 
 void FillWithClientToken(char *pBufferToBeUpdatedWithClientToken) {
-	sprintf(pBufferToBeUpdatedWithClientToken, "%s-%d", AWS_IOT_MQTT_CLIENT_ID, clientTokenNum++);
+	sprintf(pBufferToBeUpdatedWithClientToken, "%s-%d", mqttClientID, clientTokenNum++);
 }
 
 static IoT_Error_t convertDataToString(char *pStringBuffer, size_t maxSizoStringBuffer, JsonPrimitiveType type,

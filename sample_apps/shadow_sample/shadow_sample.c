@@ -28,7 +28,6 @@
 #include <sys/time.h>
 #include <limits.h>
 
-
 #include "aws_iot_log.h"
 #include "aws_iot_version.h"
 #include "aws_iot_shadow_interface.h"
@@ -201,6 +200,16 @@ int main(int argc, char** argv) {
 	if (NONE_ERROR != rc) {
 		ERROR("Shadow Connection Error %d", rc);
 	}
+	/*
+	 * Enable Auto Reconnect functionality. Minimum and Maximum time of Exponential backoff are set in aws_iot_config.h
+	 *  #AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL
+	 *  #AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL
+	 */
+	rc = mqttClient.setAutoReconnectStatus(true);
+	if (NONE_ERROR != rc) {
+		ERROR("Unable to set Auto Reconnect to true - %d", rc);
+		return rc;
+	}
 
 	rc = aws_iot_shadow_register_delta(&mqttClient, &windowActuator);
 
@@ -210,8 +219,13 @@ int main(int argc, char** argv) {
 	temperature = STARTING_ROOMTEMPERATURE;
 
 	// loop and publish a change in temperature
-	while (NONE_ERROR == rc) {
+	while (NETWORK_ATTEMPTING_RECONNECT == rc || RECONNECT_SUCCESSFUL == rc || NONE_ERROR == rc) {
 		rc = aws_iot_shadow_yield(&mqttClient, 200);
+		if (NETWORK_ATTEMPTING_RECONNECT == rc) {
+			sleep(1);
+			// If the client is attempting to reconnect we will skip the rest of the loop.
+			continue;
+		}
 		INFO("\n=======================================================================================\n");
 		INFO("On Device: window state %s", windowOpen?"true":"false");
 		simulateRoomTemperature(&temperature);
@@ -224,8 +238,8 @@ int main(int argc, char** argv) {
 				rc = aws_iot_finalize_json_document(JsonDocumentBuffer, sizeOfJsonDocumentBuffer);
 				if (rc == NONE_ERROR) {
 					INFO("Update Shadow: %s", JsonDocumentBuffer);
-					rc = aws_iot_shadow_update(&mqttClient, AWS_IOT_MY_THING_NAME, JsonDocumentBuffer, ShadowUpdateStatusCallback,
-					NULL, 4, true);
+					rc = aws_iot_shadow_update(&mqttClient, AWS_IOT_MY_THING_NAME, JsonDocumentBuffer,
+							ShadowUpdateStatusCallback, NULL, 4, true);
 				}
 			}
 		}
