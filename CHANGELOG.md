@@ -2,6 +2,7 @@
 ## [1.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v1.1.0) (February  10,2016)
 Features:
   - Auto Reconnect and Resubscribe
+
 Bugfixes/Improvements:
   - MQTT buffer handling incase of bigger message
   - Large timeout values converted to seconds and milliseconds
