@@ -51,23 +51,22 @@ MQTTReturnCode MQTTSerialize_subscribe(unsigned char *buf, size_t buflen,
 									   unsigned char dup, uint16_t packetid, uint32_t count,
 									   MQTTString topicFilters[], QoS requestedQoSs[],
 									   uint32_t *serialized_len) {
+        unsigned char *ptr = buf;
+        MQTTHeader header = {0};
+        size_t rem_len = 0;
+        uint32_t i = 0;
+        MQTTReturnCode rc = MQTTPacket_InitHeader(&header, SUBSCRIBE, 1, dup, 0);
 	FUNC_ENTRY;
 	if(NULL == buf || NULL == serialized_len) {
 		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
 		return MQTT_NULL_VALUE_ERROR;
 	}
 
-	unsigned char *ptr = buf;
-	MQTTHeader header = {0};
-	size_t rem_len = 0;
-	uint32_t i = 0;
-
 	if(MQTTPacket_len(rem_len = MQTTSerialize_GetSubscribePacketLength(count, topicFilters)) > buflen) {
 		FUNC_EXIT_RC(MQTTPACKET_BUFFER_TOO_SHORT);
 		return MQTTPACKET_BUFFER_TOO_SHORT;
 	}
 
-	MQTTReturnCode rc = MQTTPacket_InitHeader(&header, SUBSCRIBE, 1, dup, 0);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 		return rc;
@@ -104,18 +103,18 @@ MQTTReturnCode MQTTSerialize_subscribe(unsigned char *buf, size_t buflen,
 MQTTReturnCode MQTTDeserialize_suback(uint16_t *packetid, uint32_t maxcount,
 									  uint32_t *count, QoS grantedQoSs[],
 									  unsigned char *buf, size_t buflen) {
+        MQTTHeader header = {0};
+        unsigned char *curdata = buf;
+        unsigned char *enddata = NULL;
+        MQTTReturnCode decodeRc = FAILURE;
+        uint32_t decodedLen = 0;
+        uint32_t readBytesLen = 0;
+
 	FUNC_ENTRY;
 	if(NULL == packetid || NULL == count || NULL == grantedQoSs) {
 		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
 		return MQTT_NULL_VALUE_ERROR;
 	}
-
-	MQTTHeader header = {0};
-	unsigned char *curdata = buf;
-	unsigned char *enddata = NULL;
-	MQTTReturnCode decodeRc = FAILURE;
-	uint32_t decodedLen = 0;
-	uint32_t readBytesLen = 0;
 
 	/* SUBACK header size is 4 bytes for header and at least one byte for QoS payload
 	 * Need at least a 5 bytes buffer. MQTT3.1.1 specification 3.9

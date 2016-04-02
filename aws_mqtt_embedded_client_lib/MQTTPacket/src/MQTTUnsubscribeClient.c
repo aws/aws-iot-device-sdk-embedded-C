@@ -51,16 +51,17 @@ MQTTReturnCode MQTTSerialize_unsubscribe(unsigned char* buf, size_t buflen,
 								   uint8_t dup, uint16_t packetid,
 								   uint32_t count, MQTTString topicFilters[],
 								   uint32_t *serialized_len) {
+        unsigned char *ptr = buf;
+        MQTTHeader header = {0};
+        size_t rem_len = 0;
+        uint32_t i = 0;
+        MQTTReturnCode rc = MQTTPacket_InitHeader(&header, UNSUBSCRIBE, 1, dup, 0);
+
 	FUNC_ENTRY;
 	if(NULL == buf || NULL == serialized_len) {
 		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
 		return MQTT_NULL_VALUE_ERROR;
 	}
-
-	unsigned char *ptr = buf;
-	MQTTHeader header = {0};
-	size_t rem_len = 0;
-	uint32_t i = 0;
 
 	rem_len = MQTTSerialize_GetUnsubscribePacketLength(count, topicFilters);
 	if(MQTTPacket_len(rem_len) > buflen) {
@@ -68,7 +69,6 @@ MQTTReturnCode MQTTSerialize_unsubscribe(unsigned char* buf, size_t buflen,
 		return MQTTPACKET_BUFFER_TOO_SHORT;
 	}
 
-	MQTTReturnCode rc = MQTTPacket_InitHeader(&header, UNSUBSCRIBE, 1, dup, 0);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 		return rc;
@@ -98,15 +98,15 @@ MQTTReturnCode MQTTSerialize_unsubscribe(unsigned char* buf, size_t buflen,
   * @return MQTTReturnCode indicating function execution status
   */
 MQTTReturnCode MQTTDeserialize_unsuback(uint16_t *packetid, unsigned char *buf, size_t buflen) {
+        unsigned char type = 0;
+        unsigned char dup = 0;
+        MQTTReturnCode rc = FAILURE;
+
 	FUNC_ENTRY;
 	if(NULL == packetid || NULL == buf) {
 		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
 		return MQTT_NULL_VALUE_ERROR;
 	}
-
-	unsigned char type = 0;
-	unsigned char dup = 0;
-	MQTTReturnCode rc = FAILURE;
 
 	rc = MQTTDeserialize_ack(&type, &dup, packetid, buf, buflen);
 	if(SUCCESS == rc && UNSUBACK != type) {

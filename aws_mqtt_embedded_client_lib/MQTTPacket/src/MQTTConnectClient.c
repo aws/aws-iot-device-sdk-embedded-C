@@ -26,9 +26,9 @@
   * @return MQTTReturnCode indicating function execution status
   */
 size_t MQTTSerialize_GetConnectLength(MQTTPacket_connectData *options) {
+        size_t len = 0;
 	FUNC_ENTRY;
 
-	size_t len = 0;
 	/* variable depending on MQTT or MQIsdp */
 	if(3 == options->MQTTVersion) {
 		len = 12;
@@ -65,16 +65,17 @@ size_t MQTTSerialize_GetConnectLength(MQTTPacket_connectData *options) {
 MQTTReturnCode MQTTSerialize_connect(unsigned char *buf, size_t buflen,
 									 MQTTPacket_connectData *options,
 									 uint32_t *serialized_len) {
+        unsigned char *ptr = buf;
+        MQTTHeader header = {0};
+        MQTTConnectFlags flags = {0};
+        size_t len = 0;
+        MQTTReturnCode rc = MQTTPacket_InitHeader(&header, CONNECT, QOS0, 0, 0);
+
 	FUNC_ENTRY;
 	if(NULL == buf || NULL == options || NULL == serialized_len) {
 		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
 		return MQTT_NULL_VALUE_ERROR;
 	}
-
-	unsigned char *ptr = buf;
-	MQTTHeader header = {0};
-	MQTTConnectFlags flags = {0};
-	size_t len = 0;
 
 	len = MQTTSerialize_GetConnectLength(options);
 	if(MQTTPacket_len(len) > buflen) {
@@ -82,7 +83,6 @@ MQTTReturnCode MQTTSerialize_connect(unsigned char *buf, size_t buflen,
 		return MQTTPACKET_BUFFER_TOO_SHORT;
 	}
 
-	MQTTReturnCode rc = MQTTPacket_InitHeader(&header, CONNECT, QOS0, 0, 0);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 		return rc;
@@ -149,6 +149,14 @@ MQTTReturnCode MQTTSerialize_connect(unsigned char *buf, size_t buflen,
 MQTTReturnCode MQTTDeserialize_connack(unsigned char *sessionPresent,
 									   MQTTReturnCode *connack_rc,
 									   unsigned char *buf, size_t buflen) {
+        MQTTHeader header = {0};
+        unsigned char *curdata = buf;
+        unsigned char *enddata = NULL;
+        MQTTReturnCode rc = FAILURE;
+        uint32_t decodedLen = 0;
+        uint32_t readBytesLen = 0;
+        MQTTConnackFlags flags = {0};
+        unsigned char connack_rc_char;
 	FUNC_ENTRY;
 	if(NULL == sessionPresent || NULL == connack_rc || NULL == buf) {
 		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
@@ -162,14 +170,6 @@ MQTTReturnCode MQTTDeserialize_connack(unsigned char *sessionPresent,
 		FUNC_EXIT_RC(MQTTPACKET_BUFFER_TOO_SHORT);
 		return MQTTPACKET_BUFFER_TOO_SHORT;
 	}
-
-	MQTTHeader header = {0};
-	unsigned char *curdata = buf;
-	unsigned char *enddata = NULL;
-	MQTTReturnCode rc = FAILURE;
-	uint32_t decodedLen = 0;
-	uint32_t readBytesLen = 0;
-	MQTTConnackFlags flags = {0};
 
 	header.byte = readChar(&curdata);
 	if(CONNACK != header.bits.type) {
@@ -193,7 +193,8 @@ MQTTReturnCode MQTTDeserialize_connack(unsigned char *sessionPresent,
 
 	flags.all = readChar(&curdata);
 	*sessionPresent = flags.bits.sessionpresent;
-	unsigned char connack_rc_char = readChar(&curdata);
+	
+	connack_rc_char = readChar(&curdata);
 	switch(connack_rc_char) {
 		case CONNACK_CONNECTION_ACCEPTED:
 			*connack_rc = MQTT_CONNACK_CONNECTION_ACCEPTED;
@@ -233,6 +234,10 @@ MQTTReturnCode MQTTDeserialize_connack(unsigned char *sessionPresent,
 MQTTReturnCode MQTTSerialize_zero(unsigned char *buf, size_t buflen,
 								  unsigned char packetType,
 								  uint32_t *serialized_length) {
+        MQTTHeader header = {0};
+        unsigned char *ptr = buf;
+        MQTTReturnCode rc = MQTTPacket_InitHeader(&header, packetType, QOS0, 0, 0);
+
 	FUNC_ENTRY;
 	if(NULL == buf || NULL == serialized_length) {
 		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
@@ -245,10 +250,6 @@ MQTTReturnCode MQTTSerialize_zero(unsigned char *buf, size_t buflen,
 		return MQTTPACKET_BUFFER_TOO_SHORT;
 	}
 
-	MQTTHeader header = {0};
-	unsigned char *ptr = buf;
-
-	MQTTReturnCode rc = MQTTPacket_InitHeader(&header, packetType, QOS0, 0, 0);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 		return rc;

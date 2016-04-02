@@ -1,8 +1,15 @@
 #Change Log
+## [1.1.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v1.1.1) (April  1,2016)
+
+Bugfixes/Improvements:
+  - Removing the Executable bit from all the files in the repository. Fixing [this](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/14) issue
+  - Refactoring MQTT client to remove declaration after statement warnings
+  - Fixing [this](https://forums.aws.amazon.com/thread.jspa?threadID=222467&tstart=0) bug
+ 
+
 ## [1.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v1.1.0) (February  10,2016)
 Features:
   - Auto Reconnect and Resubscribe
-
 Bugfixes/Improvements:
   - MQTT buffer handling incase of bigger message
   - Large timeout values converted to seconds and milliseconds

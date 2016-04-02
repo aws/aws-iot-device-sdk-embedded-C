@@ -30,12 +30,12 @@ uint16_t getNextPacketId(Client *c) {
 }
 
 MQTTReturnCode sendPacket(Client *c, uint32_t length, Timer *timer) {
+    int32_t sentLen = 0;
+    uint32_t sent = 0;
+
     if(NULL == c || NULL == timer) {
         return MQTT_NULL_VALUE_ERROR;
     }
-
-    int32_t sentLen = 0;
-    uint32_t sent = 0;
 
     if(length >= c->bufSize) {
     	return MQTTPACKET_BUFFER_TOO_SHORT;
@@ -81,13 +81,13 @@ MQTTReturnCode MQTTClient(Client *c, uint32_t commandTimeoutMs,
                           size_t readBufSize, uint8_t enableAutoReconnect,
                           networkInitHandler_t networkInitHandler,
                           TLSConnectParams *tlsConnectParams) {
+    uint32_t i;
+    MQTTPacket_connectData default_options = MQTTPacket_connectData_initializer;
+
     if(NULL == c || NULL == tlsConnectParams || NULL == buf || NULL == readbuf
        || NULL == networkInitHandler) {
         return MQTT_NULL_VALUE_ERROR;
     }
-
-    uint32_t i;
-    MQTTPacket_connectData default_options = MQTTPacket_connectData_initializer;
 
     for(i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
         c->messageHandlers[i].topicFilter = NULL;
@@ -111,7 +111,6 @@ MQTTReturnCode MQTTClient(Client *c, uint32_t commandTimeoutMs,
     copyMQTTConnectData(&(c->options), &default_options);
 
     c->networkInitHandler = networkInitHandler;
-
     c->tlsConnectParams.DestinationPort = tlsConnectParams->DestinationPort;
     c->tlsConnectParams.pDestinationURL = tlsConnectParams->pDestinationURL;
     c->tlsConnectParams.pDeviceCertLocation = tlsConnectParams->pDeviceCertLocation;
@@ -127,14 +126,14 @@ MQTTReturnCode MQTTClient(Client *c, uint32_t commandTimeoutMs,
 }
 
 MQTTReturnCode decodePacket(Client *c, uint32_t *value, uint32_t timeout) {
-    if(NULL == c || NULL == value) {
-        return MQTT_NULL_VALUE_ERROR;
-    }
-
     unsigned char i;
     uint32_t multiplier = 1;
     uint32_t len = 0;
     const uint32_t MAX_NO_OF_REMAINING_LENGTH_BYTES = 4;
+
+    if(NULL == c || NULL == value) {
+        return MQTT_NULL_VALUE_ERROR;
+    }
 
     *value = 0;
 
@@ -160,16 +159,17 @@ MQTTReturnCode decodePacket(Client *c, uint32_t *value, uint32_t timeout) {
 }
 
 MQTTReturnCode readPacket(Client *c, Timer *timer, uint8_t *packet_type) {
-    if(NULL == c || NULL == timer) {
-        return MQTT_NULL_VALUE_ERROR;
-    }
-
     MQTTHeader header = {0};
     uint32_t len = 0;
     uint32_t rem_len = 0;
     uint32_t total_bytes_read = 0;
     uint32_t bytes_to_be_read = 0;
-	int32_t ret_val = 0;
+    int32_t ret_val = 0;
+    MQTTReturnCode rc;
+
+    if(NULL == c || NULL == timer) {
+        return MQTT_NULL_VALUE_ERROR;
+    }
 
     /* 1. read the header byte.  This has the packet type in it */
     if(1 != c->networkStack.mqttread(&(c->networkStack), c->readbuf, 1, left_ms(timer))) {
@@ -182,7 +182,7 @@ MQTTReturnCode readPacket(Client *c, Timer *timer, uint8_t *packet_type) {
 
     len = 1;
     /* 2. read the remaining length.  This is variable in itself */
-    MQTTReturnCode rc = decodePacket(c, &rem_len, (uint32_t)left_ms(timer));
+    rc = decodePacket(c, &rem_len, (uint32_t)left_ms(timer));
     if(SUCCESS != rc) {
         return rc;
     }
@@ -223,13 +223,17 @@ MQTTReturnCode readPacket(Client *c, Timer *timer, uint8_t *packet_type) {
 // # can only be at end
 // + and # can only be next to separator
 char isTopicMatched(char *topicFilter, MQTTString *topicName) {
+    char *curf = NULL;
+    char *curn = NULL;
+    char *curn_end = NULL;
+
     if(NULL == topicFilter || NULL == topicName) {
         return MQTT_NULL_VALUE_ERROR;
     }
 
-    char *curf = topicFilter;
-    char *curn = topicName->lenstring.data;
-    char *curn_end = curn + topicName->lenstring.len;
+    curf = topicFilter;
+    curn = topicName->lenstring.data;
+    curn_end = curn + topicName->lenstring.len;
 
     while(*curf && (curn < curn_end)) {
         if(*curn == '/' && *curf != '/') {
@@ -256,12 +260,12 @@ char isTopicMatched(char *topicFilter, MQTTString *topicName) {
 }
 
 MQTTReturnCode deliverMessage(Client *c, MQTTString *topicName, MQTTMessage *message) {
+    uint32_t i;
+    MessageData md;
+
     if(NULL == c || NULL == topicName || NULL == message) {
         return MQTT_NULL_VALUE_ERROR;
     }
-
-    uint32_t i;
-    MessageData md;
 
     // we have to find the right message handler - indexed by topic
     for(i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
@@ -287,11 +291,13 @@ MQTTReturnCode deliverMessage(Client *c, MQTTString *topicName, MQTTMessage *mes
 }
 
 MQTTReturnCode handleDisconnect(Client *c) {
+    MQTTReturnCode rc;
+
     if(NULL == c) {
         return MQTT_NULL_VALUE_ERROR;
     }
 
-    MQTTReturnCode rc = MQTTDisconnect(c);
+    rc = MQTTDisconnect(c);
     if(rc != SUCCESS){
     	// If the sendPacket prevents us from sending a disconnect packet then we have to clean the stack
     	MQTTForceDisconnect(c);
@@ -307,6 +313,8 @@ MQTTReturnCode handleDisconnect(Client *c) {
 }
 
 MQTTReturnCode MQTTAttemptReconnect(Client *c) {
+    MQTTReturnCode rc = MQTT_ATTEMPTING_RECONNECT;
+
     if(NULL == c) {
         return MQTT_NULL_VALUE_ERROR;
     }
@@ -314,8 +322,6 @@ MQTTReturnCode MQTTAttemptReconnect(Client *c) {
     if(1 == c->isConnected) {
         return MQTT_NETWORK_ALREADY_CONNECTED_ERROR;
     }
-
-    MQTTReturnCode rc = MQTT_ATTEMPTING_RECONNECT;
 
     /* Ignoring return code. failures expected if network is disconnected */
     rc = MQTTConnect(c, NULL);
@@ -334,6 +340,9 @@ MQTTReturnCode MQTTAttemptReconnect(Client *c) {
 }
 
 MQTTReturnCode handleReconnect(Client *c) {
+    int8_t isPhysicalLayerConnected = 1;
+    MQTTReturnCode rc = MQTT_NETWORK_RECONNECTED;
+
     if(NULL == c) {
         return MQTT_NULL_VALUE_ERROR;
     }
@@ -344,12 +353,10 @@ MQTTReturnCode handleReconnect(Client *c) {
         return MQTT_ATTEMPTING_RECONNECT;
     }
 
-    int8_t isPhysicalLayerConnected = 1;
     if(NULL != c->networkStack.isConnected) {
         isPhysicalLayerConnected = (int8_t)c->networkStack.isConnected(&(c->networkStack));
     }
 
-    MQTTReturnCode rc = MQTT_NETWORK_RECONNECTED;
     if(isPhysicalLayerConnected) {
         rc = MQTTAttemptReconnect(c);
         if(MQTT_NETWORK_RECONNECTED == rc) {
@@ -367,6 +374,10 @@ MQTTReturnCode handleReconnect(Client *c) {
 }
 
 MQTTReturnCode keepalive(Client *c) {
+    MQTTReturnCode rc = SUCCESS;
+    Timer timer;
+    uint32_t serialized_len = 0;
+
     if(NULL == c) {
         return MQTT_NULL_VALUE_ERROR;
     }
@@ -384,11 +395,8 @@ MQTTReturnCode keepalive(Client *c) {
     }
 
     /* there is no ping outstanding - send one */
-    MQTTReturnCode rc = SUCCESS;
-    Timer timer;
     InitTimer(&timer);
     countdown_ms(&timer, c->commandTimeoutMs);
-    uint32_t serialized_len = 0;
     rc = MQTTSerialize_pingreq(c->buf, c->bufSize, &serialized_len);
     if(SUCCESS != rc) {
         return rc;
@@ -454,12 +462,13 @@ MQTTReturnCode handlePubrec(Client *c, Timer *timer) {
     uint16_t packet_id;
     unsigned char dup, type;
     MQTTReturnCode rc;
+    uint32_t len;
+
     rc = MQTTDeserialize_ack(&type, &dup, &packet_id, c->readbuf, c->readBufSize);
     if(SUCCESS != rc) {
         return rc;
     }
 
-    uint32_t len;
     rc = MQTTSerialize_ack(c->buf, c->bufSize, PUBREL, 0, packet_id, &len);
     if(SUCCESS != rc) {
         return rc;
@@ -476,12 +485,13 @@ MQTTReturnCode handlePubrec(Client *c, Timer *timer) {
 }
 
 MQTTReturnCode cycle(Client *c, Timer *timer, uint8_t *packet_type) {
+    MQTTReturnCode rc;
     if(NULL == c || NULL == timer) {
         return MQTT_NULL_VALUE_ERROR;
     }
 
     /* read the socket, see what work is due */
-    MQTTReturnCode rc = readPacket(c, timer, packet_type);
+    rc = readPacket(c, timer, packet_type);
     if(MQTT_NOTHING_TO_READ == rc) {
         /* Nothing to read, not a cycle failure */
         return SUCCESS;
@@ -523,6 +533,10 @@ MQTTReturnCode cycle(Client *c, Timer *timer, uint8_t *packet_type) {
 }
 
 MQTTReturnCode MQTTYield(Client *c, uint32_t timeout_ms) {
+    MQTTReturnCode rc = SUCCESS;
+    Timer timer;
+    uint8_t packet_type;
+
     if(NULL == c) {
         return MQTT_NULL_VALUE_ERROR;
     }
@@ -537,10 +551,7 @@ MQTTReturnCode MQTTYield(Client *c, uint32_t timeout_ms) {
         return MQTT_NETWORK_DISCONNECTED_ERROR;
     }
 
-    MQTTReturnCode rc = SUCCESS;
-    Timer timer;
     InitTimer(&timer);
-    uint8_t packet_type;
     countdown_ms(&timer, timeout_ms);
 
     while(!expired(&timer)) {
@@ -579,12 +590,12 @@ MQTTReturnCode MQTTYield(Client *c, uint32_t timeout_ms) {
 
 /* only used in single-threaded mode where one command at a time is in process */
 MQTTReturnCode waitfor(Client *c, uint8_t packet_type, Timer *timer) {
+    MQTTReturnCode rc = FAILURE;
+    uint8_t read_packet_type = 0;
     if(NULL == c || NULL == timer) {
         return MQTT_NULL_VALUE_ERROR;
     }
 
-    MQTTReturnCode rc = FAILURE;
-    uint8_t read_packet_type = 0;
     do {
         if(expired(timer)) {
             /* we timed out */
@@ -602,15 +613,15 @@ MQTTReturnCode waitfor(Client *c, uint8_t packet_type, Timer *timer) {
 }
 
 MQTTReturnCode MQTTConnect(Client *c, MQTTPacket_connectData *options) {
-    if(NULL == c) {
-        return MQTT_NULL_VALUE_ERROR;
-    }
-
     Timer connect_timer;
     MQTTReturnCode connack_rc = FAILURE;
     char sessionPresent = 0;
     uint32_t len = 0;
     MQTTReturnCode rc = FAILURE;
+
+    if(NULL == c) {
+        return MQTT_NULL_VALUE_ERROR;
+    }
 
     InitTimer(&connect_timer);
     countdown_ms(&connect_timer, c->commandTimeoutMs);
@@ -682,6 +693,15 @@ uint32_t GetFreeMessageHandlerIndex(Client *c) {
 
 MQTTReturnCode MQTTSubscribe(Client *c, const char *topicFilter, QoS qos,
                   messageHandler messageHandler, pApplicationHandler_t applicationHandler) {
+    MQTTReturnCode rc = FAILURE;
+    Timer timer;
+    uint32_t len = 0;
+    uint32_t indexOfFreeMessageHandler;
+    uint32_t count = 0;
+    QoS grantedQoS[3] = {QOS0, QOS0, QOS0};
+    uint16_t packetId;
+    MQTTString topic = MQTTString_initializer;
+
     if(NULL == c || NULL == topicFilter
        || NULL == messageHandler || NULL == applicationHandler) {
         return MQTT_NULL_VALUE_ERROR;
@@ -691,15 +711,6 @@ MQTTReturnCode MQTTSubscribe(Client *c, const char *topicFilter, QoS qos,
         return MQTT_NETWORK_DISCONNECTED_ERROR;
     }
 
-    MQTTReturnCode rc = FAILURE;
-    Timer timer;
-    uint32_t len = 0;
-    uint32_t indexOfFreeMessageHandler;
-    uint32_t count = 0;
-    QoS grantedQoS[3] = {QOS0, QOS0, QOS0};
-    uint16_t packetId;
-
-    MQTTString topic = MQTTString_initializer;
     topic.cstring = (char *)topicFilter;
 
     InitTimer(&timer);
@@ -744,6 +755,15 @@ MQTTReturnCode MQTTSubscribe(Client *c, const char *topicFilter, QoS qos,
 }
 
 MQTTReturnCode MQTTResubscribe(Client *c) {
+    MQTTReturnCode rc = FAILURE;
+    Timer timer;
+    uint32_t len = 0;
+    uint32_t count = 0;
+    QoS grantedQoS[3] = {QOS0, QOS0, QOS0};
+    uint16_t packetId;
+    uint32_t existingSubCount = 0;
+    uint32_t itr = 0;
+
     if(NULL == c) {
         return MQTT_NULL_VALUE_ERROR;
     }
@@ -752,14 +772,7 @@ MQTTReturnCode MQTTResubscribe(Client *c) {
         return MQTT_NETWORK_DISCONNECTED_ERROR;
     }
 
-    MQTTReturnCode rc = FAILURE;
-    Timer timer;
-    uint32_t len = 0;
-    uint32_t count = 0;
-    QoS grantedQoS[3] = {QOS0, QOS0, QOS0};
-    uint16_t packetId;
-    uint32_t existingSubCount = GetFreeMessageHandlerIndex(c);
-    uint32_t itr = 0;
+    existingSubCount = GetFreeMessageHandlerIndex(c);
 
     for(itr = 0; itr < existingSubCount; itr++) {
         MQTTString topic = MQTTString_initializer;
@@ -797,20 +810,22 @@ MQTTReturnCode MQTTResubscribe(Client *c) {
 }
 
 MQTTReturnCode MQTTUnsubscribe(Client *c, const char *topicFilter) {
+    MQTTReturnCode rc = FAILURE;
+    Timer timer;
+    MQTTString topic = MQTTString_initializer;
+    uint32_t len = 0;
+    uint32_t i = 0;
+    uint16_t packet_id;
+
     if(NULL == c || NULL == topicFilter) {
         return MQTT_NULL_VALUE_ERROR;
     }
 
+    topic.cstring = (char *)topicFilter;
+
     if(!c->isConnected) {
         return MQTT_NETWORK_DISCONNECTED_ERROR;
     }
-
-    MQTTReturnCode rc = FAILURE;
-    Timer timer;
-    MQTTString topic = MQTTString_initializer;
-    topic.cstring = (char *)topicFilter;
-    uint32_t len = 0;
-    uint32_t i = 0;
 
     InitTimer(&timer);
     countdown_ms(&timer, c->commandTimeoutMs);
@@ -831,7 +846,6 @@ MQTTReturnCode MQTTUnsubscribe(Client *c, const char *topicFilter) {
         return rc;
     }
 
-    uint16_t packet_id;
     rc = MQTTDeserialize_unsuback(&packet_id, c->readbuf, c->readBufSize);
     if(SUCCESS != rc) {
         return rc;
@@ -851,23 +865,24 @@ MQTTReturnCode MQTTUnsubscribe(Client *c, const char *topicFilter) {
 }
 
 MQTTReturnCode MQTTPublish(Client *c, const char *topicName, MQTTMessage *message) {
-    if(NULL == c || NULL == topicName || NULL == message) {
-        return MQTT_NULL_VALUE_ERROR;
-    }
-
-    if(!c->isConnected) {
-        return MQTT_NETWORK_DISCONNECTED_ERROR;
-    }
-
     Timer timer;
     MQTTString topic = MQTTString_initializer;
-    topic.cstring = (char *)topicName;
     uint32_t len = 0;
     uint8_t waitForAck = 0;
     uint8_t packetType = PUBACK;
     uint16_t packet_id;
     unsigned char dup, type;
     MQTTReturnCode rc = FAILURE;
+
+    if(NULL == c || NULL == topicName || NULL == message) {
+        return MQTT_NULL_VALUE_ERROR;
+    }
+
+    topic.cstring = (char *)topicName;
+
+    if(!c->isConnected) {
+        return MQTT_NETWORK_DISCONNECTED_ERROR;
+    }
 
     InitTimer(&timer);
     countdown_ms(&timer, c->commandTimeoutMs);
@@ -917,6 +932,11 @@ static void MQTTForceDisconnect(Client *c){
 }
 
 MQTTReturnCode MQTTDisconnect(Client *c) {
+    MQTTReturnCode rc = FAILURE;
+    /* We might wait for incomplete incoming publishes to complete */
+    Timer timer;
+    uint32_t serialized_len = 0;
+
     if(NULL == c) {
         return MQTT_NULL_VALUE_ERROR;
     }
@@ -926,10 +946,6 @@ MQTTReturnCode MQTTDisconnect(Client *c) {
         return MQTT_NETWORK_DISCONNECTED_ERROR;
     }
 
-    MQTTReturnCode rc = FAILURE;
-    /* We might wait for incomplete incoming publishes to complete */
-    Timer timer;
-    uint32_t serialized_len = 0;
     rc = MQTTSerialize_disconnect(c->buf, c->bufSize, &serialized_len);
     if(SUCCESS != rc) {
         return rc;

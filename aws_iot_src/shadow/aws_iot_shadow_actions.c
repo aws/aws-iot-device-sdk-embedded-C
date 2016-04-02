@@ -38,7 +38,7 @@ IoT_Error_t iot_shadow_action(MQTTClient_t *pClient, const char *pThingName, Sha
 		isCallbackPresent = true;
 	}
 
-	char extractedClientToken[MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE];
+	char extractedClientToken[MAX_SIZE_CLIENT_ID_WITH_SEQUENCE];
 	isClientTokenPresent = extractClientToken(pJsonDocumentToBeSent, extractedClientToken);
 
 	if (isClientTokenPresent && isCallbackPresent) {

@@ -56,15 +56,16 @@ MQTTReturnCode MQTTSerialize_publish(unsigned char *buf, size_t buflen, uint8_t 
 						  QoS qos, uint8_t retained, uint16_t packetid,
 						  MQTTString topicName, unsigned char *payload, size_t payloadlen,
 						  uint32_t *serialized_len) {
+        unsigned char *ptr = buf;
+        MQTTHeader header = {0};
+        size_t rem_len = 0;
+        MQTTReturnCode rc = MQTTPacket_InitHeader(&header, PUBLISH, qos, dup, retained);
+
 	FUNC_ENTRY;
 	if(NULL == buf || NULL == payload || NULL == serialized_len) {
 		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
 		return MQTT_NULL_VALUE_ERROR;
 	}
-
-	unsigned char *ptr = buf;
-	MQTTHeader header = {0};
-	size_t rem_len = 0;
 
 	rem_len = MQTTSerialize_GetPublishLength(qos, topicName, payloadlen);
 	if(MQTTPacket_len(rem_len) > buflen) {
@@ -72,7 +73,6 @@ MQTTReturnCode MQTTSerialize_publish(unsigned char *buf, size_t buflen, uint8_t 
 		return MQTTPACKET_BUFFER_TOO_SHORT;
 	}
 
-	MQTTReturnCode rc = MQTTPacket_InitHeader(&header, PUBLISH, qos, dup, retained);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 		return rc;
@@ -108,14 +108,16 @@ MQTTReturnCode MQTTSerialize_publish(unsigned char *buf, size_t buflen, uint8_t 
 MQTTReturnCode MQTTSerialize_ack(unsigned char *buf, size_t buflen,
 					  unsigned char type, uint8_t dup, uint16_t packetid,
 					  uint32_t *serialized_len) {
+        MQTTHeader header = {0};
+        unsigned char *ptr = buf;
+        QoS requestQoS = (PUBREL == type) ? QOS1 : QOS0;
+        MQTTReturnCode rc = MQTTPacket_InitHeader(&header, type, requestQoS, dup, 0);
+
 	FUNC_ENTRY;
 	if(NULL == buf || serialized_len == NULL) {
 		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
 		return MQTT_NULL_VALUE_ERROR;
 	}
-
-	MQTTHeader header = {0};
-	unsigned char *ptr = buf;
 
 	/* Minimum byte length required by ACK headers is
 	 * 2 for fixed and 2 for variable part */
@@ -124,8 +126,6 @@ MQTTReturnCode MQTTSerialize_ack(unsigned char *buf, size_t buflen,
 		return MQTTPACKET_BUFFER_TOO_SHORT;
 	}
 
-	QoS requestQoS = (PUBREL == type) ? QOS1 : QOS0;
-	MQTTReturnCode rc = MQTTPacket_InitHeader(&header, type, requestQoS, dup, 0);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 		return rc;

@@ -35,6 +35,13 @@ MQTTReturnCode MQTTDeserialize_publish(unsigned char *dup, QoS *qos,
 									   unsigned char *retained, uint16_t *packetid,
 									   MQTTString* topicName, unsigned char **payload,
 									   uint32_t *payloadlen, unsigned char *buf, size_t buflen) {
+        MQTTHeader header = {0};
+        unsigned char *curdata = buf;
+        unsigned char *enddata = NULL;
+        MQTTReturnCode rc = FAILURE;
+        uint32_t decodedLen = 0;
+        uint32_t readBytesLen = 0;
+
 	FUNC_ENTRY;
 	if(NULL == dup || NULL == qos || NULL == retained || NULL == packetid) {
 		FUNC_EXIT_RC(FAILURE);
@@ -51,13 +58,6 @@ MQTTReturnCode MQTTDeserialize_publish(unsigned char *dup, QoS *qos,
 		FUNC_EXIT_RC(MQTTPACKET_BUFFER_TOO_SHORT);
 		return MQTTPACKET_BUFFER_TOO_SHORT;
 	}
-
-	MQTTHeader header = {0};
-	unsigned char *curdata = buf;
-	unsigned char *enddata = NULL;
-	MQTTReturnCode rc = FAILURE;
-	uint32_t decodedLen = 0;
-	uint32_t readBytesLen = 0;
 
 	header.byte = readChar(&curdata);
 	if(PUBLISH != header.bits.type) {
@@ -107,6 +107,12 @@ MQTTReturnCode MQTTDeserialize_publish(unsigned char *dup, QoS *qos,
 MQTTReturnCode MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup,
 								   uint16_t *packetid, unsigned char *buf,
 								   size_t buflen) {
+        MQTTReturnCode rc = FAILURE;
+        MQTTHeader header = {0};
+        unsigned char *curdata = buf;
+        unsigned char *enddata = NULL;
+        uint32_t decodedLen = 0;
+        uint32_t readBytesLen = 0;
 	FUNC_ENTRY;
 	if(NULL == packettype || NULL == dup || NULL == packetid || NULL == buf) {
 		FUNC_EXIT_RC(MQTT_NULL_VALUE_ERROR);
@@ -118,13 +124,6 @@ MQTTReturnCode MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup
 		FUNC_EXIT_RC(MQTTPACKET_BUFFER_TOO_SHORT);
 		return MQTTPACKET_BUFFER_TOO_SHORT;
 	}
-
-	MQTTReturnCode rc = FAILURE;
-	MQTTHeader header = {0};
-	unsigned char *curdata = buf;
-	unsigned char *enddata = NULL;
-	uint32_t decodedLen = 0;
-	uint32_t readBytesLen = 0;
 
 	header.byte = readChar(&curdata);
 	*dup = header.bits.dup;
@@ -149,3 +148,4 @@ MQTTReturnCode MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup
 	FUNC_EXIT_RC(SUCCESS);
 	return SUCCESS;
 }
+

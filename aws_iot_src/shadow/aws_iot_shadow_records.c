@@ -167,7 +167,7 @@ static int AckStatusCallback(MQTTCallbackParams params) {
 	int32_t tokenCount;
 	int32_t i;
 	void *pJsonHandler;
-	char temporaryClientToken[MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE];
+	char temporaryClientToken[MAX_SIZE_CLIENT_ID_WITH_SEQUENCE];
 
 	if (params.MessageParams.PayloadLen > SHADOW_MAX_SIZE_OF_RX_BUFFER) {
 		return GENERIC_ERROR;
@@ -412,7 +412,7 @@ void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, ShadowAc
 		const char *pExtractedClientToken, fpActionCallback_t callback, void *pCallbackContext,
 		uint32_t timeout_seconds) {
 	AckWaitList[indexAckWaitList].callback = callback;
-	strncpy(AckWaitList[indexAckWaitList].clientTokenID, pExtractedClientToken, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE);
+	strncpy(AckWaitList[indexAckWaitList].clientTokenID, pExtractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE);
 	strncpy(AckWaitList[indexAckWaitList].thingName, pThingName, MAX_SIZE_OF_THING_NAME);
 	AckWaitList[indexAckWaitList].pCallbackContext = pCallbackContext;
 	AckWaitList[indexAckWaitList].action = action;

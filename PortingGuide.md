@@ -1,13 +1,13 @@
 #Porting Guide
 
 ##Scope
-The scope of this document is to provide instructions to modify the provided source files and functions in of this SDK to run in a variety of embedded C–based environments (e.g. real-time OS, embedded Linux) and to be adjusted to use a specific TLS implementation as available with specific hardware platforms.
+The scope of this document is to provide instructions to modify the provided source files and functions in this SDK to run in a variety of embedded C–based environments (e.g. real-time OS, embedded Linux) and to be adjusted to use a specific TLS implementation as available with specific hardware platforms.
 
 ##Contents of the SDK
 
 The SDK ported for linux can be downloaded from the below links.
- * [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.1.0.tar)
- * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.1.0.tar)
+ * [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.1.1.tar)
+ * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.1.1.tar)
 
 The C-code files of this SDK are delivered via the following directory structure (see comment behind folder name for an explanation of its content).  
 
@@ -31,7 +31,7 @@ Current SDK Directory Layout (mbedTLS)
 All makefiles in this SDK were configured using the documented folder structure above, so moving or renaming folders will require modifications to makefiles.
 
 ##Explanation of folders and their content
-`iot_src` : This directory contains the SDK source code including wrappers around the MQTT library, device shadow code and utilities.
+`aws_iot_src` : This directory contains the SDK source code including wrappers around the MQTT library, device shadow code and utilities.
 
 `aws_mqtt_embedded_client_lib` : The source code for the Embedded C MQTT client. This client is a modified version of the [Eclipse Paho](http://www.eclipse.org/paho/clients/c/embedded/) Embedded C client. The modifications include improved keep alive handling (callback on disconnect), a fix for unsubscribe functionality, buffer protection against too large MQTT messages and additional callback context to allow for a better layered architecture of the AWS IoT SDK.
 
@@ -96,24 +96,47 @@ Clean up the connection
 
 The TLS library generally provides the API for the underlying TCP socket.
 
+###Sample Porting:
+Marvell has ported the SDK to its IoT Starter kit. [These](https://github.com/marvell-iot/aws_starter_sdk/tree/master/wmsdk/external/aws_iot/aws_iot_src/protocol/mqtt/aws_iot_embedded_client_wrapper/platform_wmsdk) files are example implementations of the above mentioned functions. 
+
 ##Time source for certificate validation
 As part of the TLS handshake the device (client) needs to validate the server certificate which includes validation of the certificate lifetime requiring that the device is aware of the actual time. Devices should be equipped with a real time clock or should be able to obtain the current time via NTP. Bypassing validation of the lifetime of a certificate is not recommended as it exposes the device to a security vulnerability, as it will still accept server certificates even when they have already expired.
 
 ##Integration into operating system
 ###Single-Threaded implementation
-The single threaded implementation implies that the sample application code (SDK + MQTT client) is called periodically by the firmware application running on the main thread. This is done by calling the function `iot_mqtt_yield` (in the simple pub-sub example) and by calling `iot_shadow_yield()` (in the device shadow example). In both cases the keep-alive time is set to 10 seconds. This means that the yield functions need to be called at a minimum frequency of once every 10 seconds. Note however that the `iot_mqtt_yield()` function takes care of reading incoming MQTT messages from the IoT service as well and hence should be called more frequently depending on the timing requirements of an application. All incoming messages can only be processed at the frequency at which `yield` is called.
+The single threaded implementation implies that the sample application code (SDK + MQTT client) is called periodically by the firmware application running on the main thread. This is done by calling the function `aws_iot_mqtt_yield` (in the simple pub-sub example) and by calling `aws_iot_shadow_yield()` (in the device shadow example). In both cases the keep-alive time is set to 10 seconds. This means that the yield functions need to be called at a minimum frequency of once every 10 seconds. Note however that the `iot_mqtt_yield()` function takes care of reading incoming MQTT messages from the IoT service as well and hence should be called more frequently depending on the timing requirements of an application. All incoming messages can only be processed at the frequency at which `yield` is called.
 
 ###Multi-Threaded implementation
-In the simple multithreaded case the yield() function can be moved to a background thread. Ensure this task runs at the frequency described above. In this case, depending on the OS mechanism, a message queue or mailbox could be used to proxy incoming MQTT messages from the callback to the worker task responsible for responding to or dispatching messages. A similar mechanism could be employed to queue publish messages from threads into a publish queue that are processed by a publishing task.
+In the simple multithreaded case the `yield` function can be moved to a background thread. Ensure this task runs at the frequency described above. In this case, depending on the OS mechanism, a message queue or mailbox could be used to proxy incoming MQTT messages from the callback to the worker task responsible for responding to or dispatching messages. A similar mechanism could be employed to queue publish messages from threads into a publish queue that are processed by a publishing task. Ensure a synchronization primitive like mutex is used, as the library is not thread safe.
 
 ##Sample applications
 
-The sample apps in this SDK provide a working implementation for either openSSL or mbedTLS, meaning that the function calls explained above are already implemented for these environments.
+The sample apps in this SDK provide a working implementation for either openSSL or mbedTLS, meaning that the function calls explained above are already implemented for these TLS libraries for linux.
 
 ###Memory Requirements
-Building the SDK shadow example using the Keil ARM toolchain on a Windows box.<br>
-Target is an ARM Cortex M4.<br>
-Code: ~8kb code+const<br>
-RAM: ~12kb<br>
-These numbers are with TLS and TCP/IP code stubbed out. This is just the SDK.
 
+These numbers do not include TLS and TCP/IP code. This is just the AWS IoT SDK.
+
+####Marvell Example
+The following sizes are of AWS IoT sample compiled for [Marvell AWS IoT](https://github.com/marvell-iot/aws_starter_sdk) platform. 
+#####Size of Certificates
+
+- Private key - 1733 bytes
+- Signed Certificate from AWS IoT - 1225 bytes
+- Root CA - 1680 bytes
+
+#####Size of SDK with MQTT subscribe publish sample
+All sizes are in bytes
+
+| Name  | Text | RO Data  | Data  | BSS | Common | Total|
+|---|---|---|---|---|---|---|
+|MQTT Buffer: 512 bytes |  4436 | 304  |  1 | 1200  | 0 | 5941 |
+|MQTT Buffer: 256 bytes |  4436 | 304  |  1 | 688  | 0 | 5429 |
+
+#####Size of SDK with Shadow sample
+All sizes are in bytes
+
+| Name  | Text | RO Data  | Data  | BSS | Common | Total|
+|---|---|---|---|---|---|---|
+|Shadow Sample with default `aws_iot_config.h` values |  9016 | 618  | 2 | 7792   | 0 | 17428 |
+| Shadow Sample with reduced JSON keys and less number of message handling at any given time | 9020  |      618    |      2     |  5322    |      0   |   14962 |
