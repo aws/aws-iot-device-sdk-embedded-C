@@ -163,7 +163,7 @@ IoT_Error_t aws_iot_mqtt_connect(MQTTConnectParams *pParams) {
 	data.password.cstring = pParams->pPassword;
 	data.will.topicName.cstring = (char*)pParams->will.pTopicName;
 	data.will.message.cstring = (char*)pParams->will.pMessage;
-	data.will.qos = pParams->will.qos;
+	data.will.qos = (enum QoS)pParams->will.qos;
 	data.will.retained = pParams->will.isRetained;
 	data.keepAliveInterval = pParams->KeepAliveInterval_sec;
 	data.cleansession = pParams->isCleansession;

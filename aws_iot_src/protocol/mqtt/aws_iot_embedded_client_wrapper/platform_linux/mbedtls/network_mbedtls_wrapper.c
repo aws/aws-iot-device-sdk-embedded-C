@@ -81,7 +81,7 @@ int iot_tls_init(Network *pNetwork) {
 	if ((ret_val = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *) pers,
 			strlen(pers))) != 0) {
 		ERROR(" failed\n  ! mbedtls_ctr_drbg_seed returned -0x%x\n", -ret);
-		return ret;
+		return ret_val;
 	} DEBUG("ok\n");
 
 	pNetwork->my_socket = 0;

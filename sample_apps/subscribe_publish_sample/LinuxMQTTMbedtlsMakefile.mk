@@ -1,3 +1,7 @@
+.prevent_execution:
+	exit 0
+#This target is to ensure accidental execution of Makefile as a bash script will not execute commands like rm in unexpected directories and exit gracefully.
+
 CC = gcc
 
 #remove @ for no make command prints
@@ -76,5 +80,5 @@ all:
 	$(POST_MAKE_CMD)
 
 clean:
-	rm -rf $(APP_DIR)/$(APP_NAME)
+	rm -f $(APP_DIR)/$(APP_NAME)
 	$(MBED_TLS_MAKE_CMD) clean

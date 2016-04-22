@@ -6,8 +6,8 @@ The scope of this document is to provide instructions to modify the provided sou
 ##Contents of the SDK
 
 The SDK ported for linux can be downloaded from the below links.
- * [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.1.1.tar)
- * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.1.1.tar)
+ * [OpenSSL](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_openssl-1.1.2.tar)
+ * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-1.1.2.tar)
 
 The C-code files of this SDK are delivered via the following directory structure (see comment behind folder name for an explanation of its content).  
 

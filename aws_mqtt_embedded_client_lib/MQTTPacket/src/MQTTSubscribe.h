@@ -27,8 +27,8 @@
 
 DLLExport MQTTReturnCode MQTTSerialize_subscribe(unsigned char *buf, size_t buflen,
                                                  unsigned char dup, uint16_t packetid, uint32_t count,
-                                                 MQTTString topicFilters[], uint32_t requestedQoSs[],
-                                                 uint32_t *serialized_len);
+                                                 MQTTString topicFilters[], QoS requestedQoSs[], 
+						 uint32_t *serialized_len);
 
 DLLExport MQTTReturnCode MQTTDeserialize_suback(uint16_t *packetid, uint32_t maxcount,
                                                 uint32_t *count, QoS grantedQoSs[],

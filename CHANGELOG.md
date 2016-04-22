@@ -1,4 +1,10 @@
 #Change Log
+## [1.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v1.1.2) (April 22,2016)
+
+Bugfixes/Improvements:
+  - Signature mismatch in MQTT library file fixed
+  - Makefiles have a protective target on the top to prevent accidental execution
+
 ## [1.1.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v1.1.1) (April  1,2016)
 
 Bugfixes/Improvements:
