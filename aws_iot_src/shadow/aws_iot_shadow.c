@@ -27,7 +27,8 @@ const ShadowParameters_t ShadowParametersDefault = {
 		.port = AWS_IOT_MQTT_PORT,
 		.pRootCA = NULL,
 		.pClientCRT = NULL,
-		.pClientKey = NULL
+		.pClientKey = NULL,
+		.disconnectHandler = NULL
 };
 
 void aws_iot_shadow_reset_last_received_version(void) {
@@ -92,7 +93,7 @@ IoT_Error_t aws_iot_shadow_connect(MQTTClient_t *pClient, ShadowParameters_t *pP
 	ConnectParams.pUserName = NULL;
 	ConnectParams.pHostURL = pParams->pHost;
 	ConnectParams.port = pParams->port;
-	ConnectParams.disconnectHandler = NULL;
+	ConnectParams.disconnectHandler = pParams->disconnectHandler;
 
 	rc = pClient->connect(&ConnectParams);
 
