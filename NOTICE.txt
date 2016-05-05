@@ -7,11 +7,10 @@ Amazon Inc (http://www.amazon.com/).
 **********************
 THIRD PARTY COMPONENTS
 **********************
-This software includes third party software subject to the following copyrights:
+This software includes third party software subject to the following licensing:
 - Embedded C MQTT Client - From the Eclipse Paho Project - EPL v1.0
-- mbedTLS
-- jsmn (JSON Parsing)
-- cURL (hostname verification)
-- SSL Conservatory (hostname verification)
+- mbedTLS (external library, included in tarball or downloaded separately)  - Apache 2.0
+- jsmn (JSON Parsing) - MIT
+- cURL (hostname verification) - MIT
 
 The licenses for these third party components are included in LICENSE.txt
