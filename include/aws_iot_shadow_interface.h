@@ -88,9 +88,9 @@ extern const ShadowConnectParameters_t ShadowConnectParametersDefault;
 /**
  * @brief Initialize the Thing Shadow before use
  *
- * This function takes care of initializing the internal book-keeping data structures
+ * This function takes care of initializing the internal book-keeping data structures and initializing the IoT client.
  *
- * @param pClient	MQTT Client used as the protocol layer
+ * @param pClient	A new MQTT Client to be used as the protocol layer. Will be initialized with pParams.
  * @return An IoT Error Type defining successful/failed Initialization
  */
 IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t *pParams);
