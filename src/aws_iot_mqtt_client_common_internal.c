@@ -343,7 +343,6 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, T
 	IoT_Error_t rc;
 	MQTTHeader header = {0};
 
-	len = 0;
 	rem_len = 0;
 	total_bytes_read = 0;
 	bytes_to_be_read = 0;
