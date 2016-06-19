@@ -453,7 +453,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_deliver_message(AWS_IoT_Client *pClien
 	 * But while callback return is in progress, Yield should not be called.
 	 * The state for CB_RETURN accomplishes that, as yield cannot be called while in that state */
 	clientState = aws_iot_mqtt_get_client_state(pClient);
-	rc = aws_iot_mqtt_set_client_state(pClient, clientState, CLIENT_STATE_CONNECTED_WAIT_FOR_CB_RETURN);
+	aws_iot_mqtt_set_client_state(pClient, clientState, CLIENT_STATE_CONNECTED_WAIT_FOR_CB_RETURN);
 
 	/* Find the right message handler - indexed by topic */
 	for(itr = 0; itr < AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS; ++itr) {
