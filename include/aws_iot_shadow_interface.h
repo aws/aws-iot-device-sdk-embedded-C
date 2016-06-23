@@ -15,6 +15,10 @@
 #ifndef AWS_IOT_SDK_SRC_IOT_SHADOW_H_
 #define AWS_IOT_SDK_SRC_IOT_SHADOW_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /**
  * @file aws_iot_shadow_interface.h
@@ -51,8 +55,8 @@ typedef struct {
 	char *pRootCA; ///< Location with the Filename of the Root CA
 	char *pClientCRT; ///< Location of Device certs signed by AWS IoT service
 	char *pClientKey; ///< Location of Device private key
-	bool enableAutoReconnect;		///< Set to true to enable auto reconnect
-	iot_disconnect_handler disconnectHandler;	///< Callback to be invoked upon connection loss.
+	bool enableAutoReconnect;        ///< Set to true to enable auto reconnect
+	iot_disconnect_handler disconnectHandler;    ///< Callback to be invoked upon connection loss.
 } ShadowInitParameters_t;
 
 /*!
@@ -67,6 +71,8 @@ typedef struct {
 typedef struct {
 	char *pMyThingName; ///< Every device has a Thing Shadow and this is the placeholder for name
 	char *pMqttClientId; ///< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id
+	uint16_t mqttClientIdLen; ///< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id
+	pApplicationHandler_t deleteActionHandler;	///< Callback to be invoked when Thing shadow for this device is deleted
 } ShadowConnectParameters_t;
 
 /*!
@@ -79,6 +85,9 @@ extern const ShadowInitParameters_t ShadowInitParametersDefault;
 
 /*!
  * @brief This is set to defaults from the configuration file
+ * The length of the client id is initialized as 0. This is due to C language limitations of using constant literals
+ * only for creating const variables. The client id will be assigned using the value from aws_iot_config.h but the
+ * length needs to be assigned in code. shadow_sample.c file demonstrates this.
  *
  * \relates ShadowConnectParameters_t
  */
@@ -88,12 +97,13 @@ extern const ShadowConnectParameters_t ShadowConnectParametersDefault;
 /**
  * @brief Initialize the Thing Shadow before use
  *
- * This function takes care of initializing the internal book-keeping data structures
+ * This function takes care of initializing the internal book-keeping data structures and initializing the IoT client.
  *
- * @param pClient	MQTT Client used as the protocol layer
+ * @param pClient A new MQTT Client to be used as the protocol layer. Will be initialized with pParams.
  * @return An IoT Error Type defining successful/failed Initialization
  */
 IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t *pParams);
+
 /**
  * @brief Connect to the AWS IoT Thing Shadow service over MQTT
  *
@@ -104,6 +114,7 @@ IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t 
  * @return An IoT Error Type defining successful/failed Connection
  */
 IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams);
+
 /**
  * @brief Yield function to let the background tasks of MQTT and Shadow
  *
@@ -116,6 +127,7 @@ IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParamet
  * @return An IoT Error Type defining successful/failed Yield
  */
 IoT_Error_t aws_iot_shadow_yield(AWS_IoT_Client *pClient, uint32_t timeout);
+
 /**
  * @brief Disconnect from the AWS IoT Thing Shadow service over MQTT
  *
@@ -160,7 +172,7 @@ typedef enum {
  *
  */
 typedef void (*fpActionCallback_t)(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
-		const char *pReceivedJsonDocument, void *pContextData);
+								   const char *pReceivedJsonDocument, void *pContextData);
 
 /**
  * @brief This function is the one used to perform an Update action to a Thing Name's Shadow.
@@ -186,7 +198,8 @@ typedef void (*fpActionCallback_t)(const char *pThingName, ShadowActions_t actio
  * @return An IoT Error Type defining successful/failed update action
  */
 IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingName, char *pJsonString,
-		fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe);
+								  fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds,
+								  bool isPersistentSubscribe);
 
 /**
  * @brief This function is the one used to perform an Get action to a Thing Name's Shadow.
@@ -203,7 +216,8 @@ IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingNam
  * @return An IoT Error Type defining successful/failed get action
  */
 IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
-		void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe);
+							   void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe);
+
 /**
  * @brief This function is the one used to perform an Delete action to a Thing Name's Shadow.
  *
@@ -219,7 +233,7 @@ IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, 
  * @return An IoT Error Type defining successful/failed delete action
  */
 IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
-		void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscriptions);
+								  void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscriptions);
 
 /**
  * @brief This function is used to listen on the delta topic of #AWS_IOT_MY_THING_NAME mentioned in the aws_iot_config.h file.
@@ -274,5 +288,9 @@ void aws_iot_shadow_disable_discard_old_delta_msgs(void);
  * @return An IoT Error Type defining successful/failed operation
  */
 IoT_Error_t aws_iot_shadow_set_autoreconnect_status(AWS_IoT_Client *pClient, bool newStatus);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //AWS_IOT_SDK_SRC_IOT_SHADOW_H_

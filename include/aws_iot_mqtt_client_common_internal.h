@@ -39,6 +39,10 @@
 #ifndef AWS_IOT_SDK_SRC_IOT_COMMON_INTERNAL_H
 #define AWS_IOT_SDK_SRC_IOT_COMMON_INTERNAL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -63,26 +67,26 @@ typedef enum msgTypes {
 	PINGREQ = 12,
 	PINGRESP = 13,
 	DISCONNECT = 14
-}MessageTypes;
+} MessageTypes;
 
 /**
  * Bitfields for the MQTT header byte.
  */
 typedef union {
-	unsigned char byte;	                /**< the whole byte */
+	unsigned char byte;				/**< the whole byte */
 #if defined(REVERSED)
 	struct {
-		unsigned int type : 4;			/**< message type nibble */
-		unsigned int dup : 1;				/**< DUP flag bit */
-		unsigned int qos : 2;				/**< QoS value, 0, 1 or 2 */
-		unsigned int retain : 1;		/**< retained flag bit */
+		unsigned int type : 4;		/**< message type nibble */
+		unsigned int dup : 1;		/**< DUP flag bit */
+		unsigned int qos : 2;		/**< QoS value, 0, 1 or 2 */
+		unsigned int retain : 1;	/**< retained flag bit */
 	} bits;
 #else
 	struct {
-		unsigned int retain : 1;		/**< retained flag bit */
-		unsigned int qos : 2;				/**< QoS value, 0, 1 or 2 */
-		unsigned int dup : 1;				/**< DUP flag bit */
-		unsigned int type : 4;			/**< message type nibble */
+		unsigned int retain : 1;	/**< retained flag bit */
+		unsigned int qos : 2;		/**< QoS value, 0, 1 or 2 */
+		unsigned int dup : 1;		/**< DUP flag bit */
+		unsigned int type : 4;		/**< message type nibble */
 	} bits;
 #endif
 } MQTTHeader;
@@ -129,6 +133,10 @@ IoT_Error_t aws_iot_mqtt_client_lock_mutex(AWS_IoT_Client *pClient, IoT_Mutex_t 
 
 IoT_Error_t aws_iot_mqtt_client_unlock_mutex(AWS_IoT_Client *pClient, IoT_Mutex_t *pMutex);
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* AWS_IOT_SDK_SRC_IOT_COMMON_INTERNAL_H */

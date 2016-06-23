@@ -61,12 +61,12 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 		if(((tempRow - 1) < MAX_PUB_THREAD_COUNT) && (tempCol < PUBLISH_COUNT)) {
 			countArray[tempRow - 1][tempCol]++;
 		} else {
-			WARN(" \nUnexpected Thread : %d, Message : %d ", tempRow, tempCol);
+			IOT_WARN(" \nUnexpected Thread : %d, Message : %d ", tempRow, tempCol);
 			rxUnexpectedNumberCounter++;
 		}
 		rc = aws_iot_mqtt_yield(pClient, 10);
 		if(MQTT_CLIENT_NOT_IDLE_ERROR != rc) {
-			ERROR("\n Yield succeeded in callback!!! Client state : %d Rc : %d\n",
+			IOT_ERROR("\n Yield succeeded in callback!!! Client state : %d Rc : %d\n",
 				  aws_iot_mqtt_get_client_state(pClient), rc);
 			wrongYieldCount++;
 		}
@@ -87,7 +87,7 @@ static IoT_Error_t aws_iot_mqtt_tests_subscribe_to_test_topic(AWS_IoT_Client *pC
 	gettimeofday(&start, NULL);
 	rc = aws_iot_mqtt_subscribe(pClient, INTEGRATION_TEST_TOPIC, strlen(INTEGRATION_TEST_TOPIC), qos,
 								aws_iot_mqtt_tests_message_aggregator, NULL);
-	DEBUG(" Sub response : %d\n", rc);
+	IOT_DEBUG(" Sub response : %d\n", rc);
 	gettimeofday(&end, NULL);
 
 	timersub(&end, &start, pSubscribeTime);
@@ -106,7 +106,7 @@ static void *aws_iot_mqtt_tests_yield_thread_runner(void *ptr) {
 		} while(MQTT_CLIENT_NOT_IDLE_ERROR == rc);
 
 		if(SUCCESS != rc) {
-			ERROR("\nYield Returned : %d ", rc);
+			IOT_ERROR("\nYield Returned : %d ", rc);
 		}
 	}
 }
@@ -133,7 +133,7 @@ static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 			usleep(THREAD_SLEEP_INTERVAL_USEC);
 		} while(MUTEX_LOCK_ERROR == rc || MQTT_CLIENT_NOT_IDLE_ERROR == rc);
 		if(SUCCESS != rc) {
-			WARN("\nFailed attempt 1 Publishing Thread : %d, Msg : %d, cs : %d --> %d\n ", threadId, itr, rc,
+			IOT_WARN("\nFailed attempt 1 Publishing Thread : %d, Msg : %d, cs : %d --> %d\n ", threadId, itr, rc,
 				 aws_iot_mqtt_get_client_state(pClient));
 			do {
 				rc = aws_iot_mqtt_publish(pClient, INTEGRATION_TEST_TOPIC, strlen(INTEGRATION_TEST_TOPIC), &params);
@@ -141,7 +141,7 @@ static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 			} while(MUTEX_LOCK_ERROR == rc || MQTT_CLIENT_NOT_IDLE_ERROR == rc);
 			rePublishCount++;
 			if(SUCCESS != rc) {
-				ERROR("\nFailed attempt 2 Publishing Thread : %d, Msg : %d, cs : %d --> %d Second Attempt \n", threadId,
+				IOT_ERROR("\nFailed attempt 2 Publishing Thread : %d, Msg : %d, cs : %d --> %d Second Attempt \n", threadId,
 					  itr, rc, aws_iot_mqtt_get_client_state(pClient));
 			}
 		}
@@ -164,7 +164,7 @@ static void *aws_iot_mqtt_tests_sub_unsub_thread_runner(void *ptr) {
 		} while(MQTT_CLIENT_NOT_IDLE_ERROR == rc);
 
 		if(SUCCESS != rc) {
-			ERROR("Subscribe Returned : %d ", rc);
+			IOT_ERROR("Subscribe Returned : %d ", rc);
 		}
 
 		do {
@@ -173,7 +173,7 @@ static void *aws_iot_mqtt_tests_sub_unsub_thread_runner(void *ptr) {
 		} while(MQTT_CLIENT_NOT_IDLE_ERROR == rc);
 
 		if(SUCCESS != rc) {
-			ERROR("Unsubscribe Returned : %d ", rc);
+			IOT_ERROR("Unsubscribe Returned : %d ", rc);
 		}
 	}
 }
@@ -223,7 +223,7 @@ int aws_iot_mqtt_tests_multi_threading_validation() {
 		srand((unsigned int)time(NULL));
 		snprintf(clientId, 50, "%s_%d", INTEGRATION_TEST_CLIENT_ID, rand() % 10000);
 
-		DEBUG(" Root CA Path : %s\n clientCRT : %s\n clientKey : %s\n", root_CA, clientCRT, clientKey);
+		IOT_DEBUG(" Root CA Path : %s\n clientCRT : %s\n clientKey : %s\n", root_CA, clientCRT, clientKey);
 		initParams.pHostURL = AWS_IOT_MQTT_HOST;
 		initParams.port = 8883;
 		initParams.pRootCALocation = root_CA;
@@ -249,7 +249,7 @@ int aws_iot_mqtt_tests_multi_threading_validation() {
 
 		rc = aws_iot_mqtt_connect(&client, &connectParams);
 		if(SUCCESS != rc) {
-			ERROR("ERROR Connecting %d\n", rc);
+			IOT_ERROR("ERROR Connecting %d\n", rc);
 			return -1;
 		}
 
@@ -259,7 +259,7 @@ int aws_iot_mqtt_tests_multi_threading_validation() {
 	if(SUCCESS == rc) {
 		printf("\n## Connect Success. Time sec: %d, usec: %d\n", connectTime.tv_sec, connectTime.tv_usec);
 	} else {
-		ERROR("## Connect Failed. error code %d\n", rc);
+		IOT_ERROR("## Connect Failed. error code %d\n", rc);
 		return -1;
 	}
 

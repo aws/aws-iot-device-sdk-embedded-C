@@ -35,6 +35,10 @@
  * @brief MQTT client unsubscribe API definitions
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "aws_iot_mqtt_client_common_internal.h"
 
 /**
@@ -61,7 +65,7 @@ static IoT_Error_t _aws_iot_mqtt_serialize_unsubscribe(unsigned char *pTxBuf, si
 	FUNC_ENTRY;
 
 	for(i = 0; i < count; ++i) {
-		rem_len += (uint32_t)(pTopicNameLenList[i] + 2); /* topic + length */
+		rem_len += (uint32_t) (pTopicNameLenList[i] + 2); /* topic + length */
 	}
 
 	if(aws_iot_mqtt_internal_get_final_packet_length_from_remaining_length(rem_len) > txBufLen) {
@@ -82,7 +86,7 @@ static IoT_Error_t _aws_iot_mqtt_serialize_unsubscribe(unsigned char *pTxBuf, si
 		aws_iot_mqtt_internal_write_utf8_string(&ptr, pTopicNameList[i], pTopicNameLenList[i]);
 	}
 
-	*pSerializedLen = (uint32_t)(ptr - pTxBuf);
+	*pSerializedLen = (uint32_t) (ptr - pTxBuf);
 
 	FUNC_EXIT_RC(SUCCESS);
 }
@@ -125,7 +129,8 @@ static IoT_Error_t _aws_iot_mqtt_deserialize_unsuback(uint16_t *pPacketId, unsig
  *
  * @return An IoT Error Type defining successful/failed unsubscribe call
  */
-static IoT_Error_t _aws_iot_mqtt_internal_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen) {
+static IoT_Error_t _aws_iot_mqtt_internal_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter,
+													  uint16_t topicFilterLen) {
 	/* No NULL checks because this is a static internal function */
 
 	Timer timer;
@@ -133,8 +138,21 @@ static IoT_Error_t _aws_iot_mqtt_internal_unsubscribe(AWS_IoT_Client *pClient, c
 	uint32_t serializedLen = 0;
 	uint32_t i = 0;
 	IoT_Error_t rc;
+	bool subscriptionExists = false;
 
 	FUNC_ENTRY;
+
+	/* Remove from message handler array */
+	for(i = 0; i < AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS; ++i) {
+		if(pClient->clientData.messageHandlers[i].topicName != NULL &&
+		   (strcmp(pClient->clientData.messageHandlers[i].topicName, pTopicFilter) == 0)) {
+			subscriptionExists = true;
+		}
+	}
+
+	if(false == subscriptionExists) {
+		FUNC_EXIT_RC(FAILURE);
+	}
 
 	init_timer(&timer);
 	countdown_ms(&timer, pClient->clientData.commandTimeoutMs);
@@ -200,12 +218,13 @@ IoT_Error_t aws_iot_mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopic
 		return NETWORK_DISCONNECTED_ERROR;
 	}
 
-	ClientState clientState =  aws_iot_mqtt_get_client_state(pClient);
+	ClientState clientState = aws_iot_mqtt_get_client_state(pClient);
 	if(CLIENT_STATE_CONNECTED_IDLE != clientState && CLIENT_STATE_CONNECTED_WAIT_FOR_CB_RETURN != clientState) {
 		return MQTT_CLIENT_NOT_IDLE_ERROR;
 	}
 
-	IoT_Error_t rc = aws_iot_mqtt_set_client_state(pClient, clientState, CLIENT_STATE_CONNECTED_UNSUBSCRIBE_IN_PROGRESS);
+	IoT_Error_t rc = aws_iot_mqtt_set_client_state(pClient, clientState,
+												   CLIENT_STATE_CONNECTED_UNSUBSCRIBE_IN_PROGRESS);
 	if(SUCCESS != rc) {
 		rc = aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_UNSUBSCRIBE_IN_PROGRESS, clientState);
 		return rc;
@@ -220,4 +239,8 @@ IoT_Error_t aws_iot_mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopic
 
 	return unsubRc;
 }
+
+#ifdef __cplusplus
+}
+#endif
 

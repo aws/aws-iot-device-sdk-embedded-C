@@ -4,15 +4,18 @@ This folder contains several samples that demonstrate various SDK functions. The
  * Explore the makefile. The makefile for each sample provides a reference on how to set up makefiles for client applications
  * Explore the example.  It connects to AWS IoT platform using MQTT and demonstrates few actions that can be performed by the SDK
  * Download certificate authority CA file from [Symantec](https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem) and place in location referenced in the example (certs/)
+ * Ensure you have [created a thing](https://docs.aws.amazon.com/iot/latest/developerguide/create-thing.html) through your AWS IoT Console with name matching the definition AWS_IOT_MY_THING_NAME in the `aws_iot_config.h` file
  * Place device identity cert and private key in locations referenced in the example (certs/)
  * Ensure the names of the cert files are the same as in the `aws_iot_config.h` file
  * Ensure the certificate has an attached policy which allows the proper permissions for AWS IoT
  * Build the example using make (`make`)
  * Run sample application (./subscribe_publish_sample or ./shadow_sample).  The sample will print status messages to stdout
- * The following sample applications are included:
- 	* `subscribe_publish_sample` - a simple pub/sub MQTT example
- 	* `shadow_sample` - a simple device shadow example using a connected window example
- 	* `shadow_sample_console_echo` - a sample to work with the AWS IoT Console interactive guide
+ * All samples are written in C unless otherwise mentioned. The following sample applications are included:
+	* `subscribe_publish_sample` - a simple pub/sub MQTT example
+	* `subscribe_publish_cpp_sample` - a simple pub/sub MQTT example written in C++
+	* `subscribe_publish_library_sample` - a simple pub/sub MQTT example which builds the SDK as a separate library
+	* `shadow_sample` - a simple device shadow example using a connected window example
+	* `shadow_sample_console_echo` - a sample to work with the AWS IoT Console interactive guide
 
 ## Subscribe Publish Sample
 This is a simple pub/sub MQTT example. It connects a single MQTT client to the server and subscribes to a test topic. Then it proceeds to publish messages on this topic and yields after each publish to ensure that the message was received.
@@ -31,3 +34,9 @@ This is a simple pub/sub MQTT example. It connects a single MQTT client to the s
  * The sample sends out messages equal to the value set in publish count unless infinite publishing flag is set
 
 For further information on each API please read the API documentation.
+
+## Subscribe Publish Cpp Sample
+This is the same sample as above but it is built using a C++ compiler. It demonstrates how the SDK can be used in a C++ program.
+
+## Subscribe Publish Library Sample
+This is also the same code as the Subscribe Publish sample. In this case, the SDK is built as a separate library and then used in the sample program.

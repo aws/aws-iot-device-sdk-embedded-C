@@ -13,6 +13,15 @@
  * permissions and limitations under the License.
  */
 
+/**
+ * @file aws_iot_mqtt_client_subscribe.c
+ * @brief MQTT client subscribe API definitions
+ */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "aws_iot_shadow_records.h"
 
 #include <string.h>
@@ -104,7 +113,6 @@ IoT_Error_t registerJsonTokenOnDelta(jsonStruct_t *pStruct) {
 		snprintf(shadowDeltaTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/update/delta", myThingName);
 		rc = aws_iot_mqtt_subscribe(pMqttClient, shadowDeltaTopic, (uint16_t) strlen(shadowDeltaTopic), QOS0,
 									shadow_delta_callback, NULL);
-		DEBUG("delta topic %s", shadowDeltaTopic);
 		deltaTopicSubscribedFlag = true;
 	}
 
@@ -138,30 +146,32 @@ static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, Sh
 	char actionBuf[10];
 	char ackTypeBuf[10];
 
-	if(action == SHADOW_GET) {
-		strcpy(actionBuf, "get");
-	} else if(action == SHADOW_UPDATE) {
-		strcpy(actionBuf, "update");
-	} else if(action == SHADOW_DELETE) {
-		strcpy(actionBuf, "delete");
+	if(SHADOW_GET == action) {
+		strncpy(actionBuf, "get", 10);
+	} else if(SHADOW_UPDATE == action) {
+		strncpy(actionBuf, "update", 10);
+	} else if(SHADOW_DELETE == action) {
+		strncpy(actionBuf, "delete", 10);
 	}
 
-	if(ackType == SHADOW_ACCEPTED) {
-		strcpy(ackTypeBuf, "accepted");
-	} else if(ackType == SHADOW_REJECTED) {
-		strcpy(ackTypeBuf, "rejected");
+	if(SHADOW_ACCEPTED == ackType) {
+		strncpy(ackTypeBuf, "accepted", 10);
+	} else if(SHADOW_REJECTED == ackType) {
+		strncpy(ackTypeBuf, "rejected", 10);
 	}
 
-	if(ackType == SHADOW_ACTION) {
-		sprintf(pTopic, "$aws/things/%s/shadow/%s", pThingName, actionBuf);
+	if(SHADOW_ACTION == ackType) {
+		snprintf(pTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/%s", pThingName, actionBuf);
 	} else {
-		sprintf(pTopic, "$aws/things/%s/shadow/%s/%s", pThingName, actionBuf, ackTypeBuf);
+		snprintf(pTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, "$aws/things/%s/shadow/%s/%s", pThingName, actionBuf,
+				 ackTypeBuf);
 	}
 }
 
 static bool isAckForMyThingName(const char *pTopicName) {
 	if(strstr(pTopicName, myThingName) != NULL &&
-	   ((strstr(pTopicName, "get/accepted") != NULL) || (strstr(pTopicName, "delta") != NULL))) {
+	   ((strstr(pTopicName, "get/accepted") != NULL) || (strstr(pTopicName, "update/accepted") != NULL) ||
+		(strstr(pTopicName, "delta") != NULL))) {
 		return true;
 	}
 	return false;
@@ -179,7 +189,7 @@ static void AckStatusCallback(AWS_IoT_Client *pClient, char *topicName, uint16_t
 	IOT_UNUSED(pData);
 
 	if(params->payloadLen > SHADOW_MAX_SIZE_OF_RX_BUFFER) {
-		WARN("Payload larger than RX Buffer");
+		IOT_WARN("Payload larger than RX Buffer");
 		return;
 	}
 
@@ -187,7 +197,7 @@ static void AckStatusCallback(AWS_IoT_Client *pClient, char *topicName, uint16_t
 	shadowRxBuf[params->payloadLen] = '\0';    // jsmn_parse relies on a string
 
 	if(!isJsonValidAndParse(shadowRxBuf, pJsonHandler, &tokenCount)) {
-		WARN("Received JSON is not valid");
+		IOT_WARN("Received JSON is not valid");
 		return;
 	}
 
@@ -254,7 +264,7 @@ static void unsubscribeFromAcceptedAndRejected(uint8_t index) {
 	if((indexSubList >= 0)) {
 		if(!SubscriptionList[indexSubList].isSticky && (SubscriptionList[indexSubList].count == 1)) {
 			ret_val = aws_iot_mqtt_unsubscribe(pMqttClient, TemporaryTopicNameAccepted,
-											   (uint16_t)strlen(TemporaryTopicNameAccepted));
+											   (uint16_t) strlen(TemporaryTopicNameAccepted));
 			if(ret_val == SUCCESS) {
 				SubscriptionList[indexSubList].isFree = true;
 			}
@@ -267,7 +277,7 @@ static void unsubscribeFromAcceptedAndRejected(uint8_t index) {
 	if((indexSubList >= 0)) {
 		if(!SubscriptionList[indexSubList].isSticky && (SubscriptionList[indexSubList].count == 1)) {
 			ret_val = aws_iot_mqtt_unsubscribe(pMqttClient, TemporaryTopicNameRejected,
-											   (uint16_t)strlen(TemporaryTopicNameRejected));
+											   (uint16_t) strlen(TemporaryTopicNameRejected));
 			if(ret_val == SUCCESS) {
 				SubscriptionList[indexSubList].isFree = true;
 			}
@@ -331,7 +341,7 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 	if(indexAcceptedSubList >= 0 && indexRejectedSubList >= 0) {
 		topicNameFromThingAndAction(SubscriptionList[indexAcceptedSubList].Topic, pThingName, action, SHADOW_ACCEPTED);
 		ret_val = aws_iot_mqtt_subscribe(pMqttClient, SubscriptionList[indexAcceptedSubList].Topic,
-										 (uint16_t)strlen(SubscriptionList[indexAcceptedSubList].Topic), QOS0,
+										 (uint16_t) strlen(SubscriptionList[indexAcceptedSubList].Topic), QOS0,
 										 AckStatusCallback, NULL);
 		if(ret_val == SUCCESS) {
 			SubscriptionList[indexAcceptedSubList].count = 1;
@@ -339,7 +349,7 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 			topicNameFromThingAndAction(SubscriptionList[indexRejectedSubList].Topic, pThingName, action,
 										SHADOW_REJECTED);
 			ret_val = aws_iot_mqtt_subscribe(pMqttClient, SubscriptionList[indexRejectedSubList].Topic,
-											 (uint16_t)strlen(SubscriptionList[indexRejectedSubList].Topic), QOS0,
+											 (uint16_t) strlen(SubscriptionList[indexRejectedSubList].Topic), QOS0,
 											 AckStatusCallback, NULL);
 			if(ret_val == SUCCESS) {
 				SubscriptionList[indexRejectedSubList].count = 1;
@@ -364,7 +374,7 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 		}
 		if(SubscriptionList[indexAcceptedSubList].count == 1) {
 			aws_iot_mqtt_unsubscribe(pMqttClient, SubscriptionList[indexAcceptedSubList].Topic,
-									 (uint16_t)strlen(SubscriptionList[indexAcceptedSubList].Topic));
+									 (uint16_t) strlen(SubscriptionList[indexAcceptedSubList].Topic));
 		}
 	}
 
@@ -392,28 +402,39 @@ void incrementSubscriptionCnt(const char *pThingName, ShadowActions_t action, bo
 IoT_Error_t publishToShadowAction(const char *pThingName, ShadowActions_t action, const char *pJsonDocumentToBeSent) {
 	IoT_Error_t ret_val = SUCCESS;
 	char TemporaryTopicName[MAX_SHADOW_TOPIC_LENGTH_BYTES];
+	IoT_Publish_Message_Params msgParams;
+
+	if(NULL == pThingName || NULL == pJsonDocumentToBeSent) {
+		return NULL_VALUE_ERROR;
+	}
+
 	topicNameFromThingAndAction(TemporaryTopicName, pThingName, action, SHADOW_ACTION);
 
-	IoT_Publish_Message_Params msgParams;// = MQTTMessageParamsDefault;
 	msgParams.qos = QOS0;
-	msgParams.payloadLen = strlen(pJsonDocumentToBeSent) + 1;
+	msgParams.payloadLen = strlen(pJsonDocumentToBeSent);
 	msgParams.payload = (char *) pJsonDocumentToBeSent;
-	ret_val = aws_iot_mqtt_publish(pMqttClient, TemporaryTopicName, (uint16_t)strlen(TemporaryTopicName), &msgParams);
+	ret_val = aws_iot_mqtt_publish(pMqttClient, TemporaryTopicName, (uint16_t) strlen(TemporaryTopicName), &msgParams);
 
 	return ret_val;
 }
 
 bool getNextFreeIndexOfAckWaitList(uint8_t *pIndex) {
 	uint8_t i;
-	if(pIndex != NULL) {
-		for(i = 0; i < MAX_ACKS_TO_COMEIN_AT_ANY_GIVEN_TIME; i++) {
-			if(AckWaitList[i].isFree) {
-				*pIndex = i;
-				return true;
-			}
+	bool rc = false;
+
+	if(NULL == pIndex) {
+		return false;
+	}
+
+	for(i = 0; i < MAX_ACKS_TO_COMEIN_AT_ANY_GIVEN_TIME; i++) {
+		if(AckWaitList[i].isFree) {
+			*pIndex = i;
+			rc = true;
+			break;
 		}
 	}
-	return false;
+
+	return rc;
 }
 
 void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, ShadowActions_t action,
@@ -452,6 +473,9 @@ static void shadow_delta_callback(AWS_IoT_Client *pClient, char *topicName,
 	void *pJsonHandler = NULL;
 	int32_t DataPosition;
 	uint32_t dataLength;
+	uint32_t tempVersionNumber = 0;
+
+	FUNC_ENTRY;
 
 	IOT_UNUSED(pClient);
 	IOT_UNUSED(topicName);
@@ -459,7 +483,7 @@ static void shadow_delta_callback(AWS_IoT_Client *pClient, char *topicName,
 	IOT_UNUSED(pData);
 
 	if(params->payloadLen > SHADOW_MAX_SIZE_OF_RX_BUFFER) {
-		WARN("Payload larger than RX Buffer");
+		IOT_WARN("Payload larger than RX Buffer");
 		return;
 	}
 
@@ -467,18 +491,17 @@ static void shadow_delta_callback(AWS_IoT_Client *pClient, char *topicName,
 	shadowRxBuf[params->payloadLen] = '\0';    // jsmn_parse relies on a string
 
 	if(!isJsonValidAndParse(shadowRxBuf, pJsonHandler, &tokenCount)) {
-		WARN("Received JSON is not valid");
+		IOT_WARN("Received JSON is not valid");
 		return;
 	}
 
 	if(shadowDiscardOldDeltaFlag) {
-		uint32_t tempVersionNumber = 0;
 		if(extractVersionNumber(shadowRxBuf, pJsonHandler, tokenCount, &tempVersionNumber)) {
 			if(tempVersionNumber > shadowJsonVersionNum) {
 				shadowJsonVersionNum = tempVersionNumber;
-				DEBUG("New Version number: %d", shadowJsonVersionNum);
 			} else {
-				WARN("Old Delta Message received - Ignoring rx: %d local: %d", tempVersionNumber, shadowJsonVersionNum);
+				IOT_WARN("Old Delta Message received - Ignoring rx: %d local: %d", tempVersionNumber,
+						 shadowJsonVersionNum);
 				return;
 			}
 		}
@@ -486,12 +509,17 @@ static void shadow_delta_callback(AWS_IoT_Client *pClient, char *topicName,
 
 	for(i = 0; i < tokenTableIndex; i++) {
 		if(!tokenTable[i].isFree) {
-			if(isJsonKeyMatchingAndUpdateValue(shadowRxBuf, pJsonHandler, tokenCount, tokenTable[i].pStruct,
-											   &dataLength, &DataPosition)) {
+			if(isJsonKeyMatchingAndUpdateValue(shadowRxBuf, pJsonHandler, tokenCount,
+											   (jsonStruct_t *) tokenTable[i].pStruct, &dataLength, &DataPosition)) {
 				if(tokenTable[i].callback != NULL) {
-					tokenTable[i].callback(shadowRxBuf + DataPosition, dataLength, tokenTable[i].pStruct);
+					tokenTable[i].callback(shadowRxBuf + DataPosition, dataLength,
+										   (jsonStruct_t *) tokenTable[i].pStruct);
 				}
 			}
 		}
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif

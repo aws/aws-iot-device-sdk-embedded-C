@@ -35,12 +35,16 @@
  * @brief MQTT client connect API definition and related functions
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <aws_iot_mqtt_client.h>
 #include "aws_iot_mqtt_client_interface.h"
 #include "aws_iot_mqtt_client_common_internal.h"
 
 typedef union {
-	uint8_t all;	/**< all connect flags */
+	uint8_t all;    /**< all connect flags */
 #if defined(REVERSED)
 	struct
 	{
@@ -53,21 +57,27 @@ typedef union {
 		unsigned int : 1;				/**< unused */
 	} bits;
 #else
-	struct
-	{
-		unsigned int : 1;				/**< unused */
-		unsigned int cleansession : 1;	/**< cleansession flag */
-		unsigned int will : 1;			/**< will flag */
-		unsigned int willQoS : 2;		/**< will QoS value */
-		unsigned int willRetain : 1;	/**< will retain setting */
-		unsigned int password : 1;		/**< 3.1 password */
-		unsigned int username : 1;		/**< 3.1 user name */
+	struct {
+		unsigned int : 1;
+		/**< unused */
+		unsigned int cleansession : 1;
+		/**< cleansession flag */
+		unsigned int will : 1;
+		/**< will flag */
+		unsigned int willQoS : 2;
+		/**< will QoS value */
+		unsigned int willRetain : 1;
+		/**< will retain setting */
+		unsigned int password : 1;
+		/**< 3.1 password */
+		unsigned int username : 1;        /**< 3.1 user name */
 	} bits;
 #endif
-} MQTT_Connect_Header_Flags;		/**< connect flags byte */
+} MQTT_Connect_Header_Flags;
+/**< connect flags byte */
 
 typedef union {
-	uint8_t all;							/**< all connack flags */
+	uint8_t all;                            /**< all connack flags */
 #if defined(REVERSED)
 	struct
 	{
@@ -75,22 +85,23 @@ typedef union {
 		unsigned int : 7;					/**< unused */
 	} bits;
 #else
-	struct
-	{
-		unsigned int : 7;	     			/**< unused */
+	struct {
+		unsigned int : 7;
+		/**< unused */
 		unsigned int sessionpresent : 1;    /**< session present flag */
 	} bits;
 #endif
-} MQTT_Connack_Header_Flags;		/**< connack flags byte */
+} MQTT_Connack_Header_Flags;
+/**< connack flags byte */
 
 typedef enum {
 	CONNACK_CONNECTION_ACCEPTED = 0,
-	CONANCK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR = 1,
+	CONNACK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR = 1,
 	CONNACK_IDENTIFIER_REJECTED_ERROR = 2,
 	CONNACK_SERVER_UNAVAILABLE_ERROR = 3,
 	CONNACK_BAD_USERDATA_ERROR = 4,
 	CONNACK_NOT_AUTHORIZED_ERROR = 5
-} MQTT_Connack_Return_Codes;	/**< Connect request response codes from server */
+} MQTT_Connack_Return_Codes;    /**< Connect request response codes from server */
 
 
 /**
@@ -147,8 +158,18 @@ static IoT_Error_t _aws_iot_mqtt_serialize_connect(unsigned char *pTxBuf, size_t
 
 	FUNC_ENTRY;
 
-	if(NULL == pTxBuf || NULL == pConnectParams || NULL == pSerializedLen) {
+	if(NULL == pTxBuf || NULL == pConnectParams || NULL == pSerializedLen ||
+	   (NULL == pConnectParams->pClientID && 0 != pConnectParams->clientIDLen) ||
+	   (NULL != pConnectParams->pClientID && 0 == pConnectParams->clientIDLen)) {
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);
+	}
+
+	/* Check needed here before we start writing to the Tx buffer */
+	switch(pConnectParams->MQTTVersion) {
+		case MQTT_3_1_1:
+			break;
+		default:
+			return MQTT_CONNACK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR;
 	}
 
 	ptr = pTxBuf;
@@ -168,8 +189,8 @@ static IoT_Error_t _aws_iot_mqtt_serialize_connect(unsigned char *pTxBuf, size_t
 
 	// Enable if adding support for more versions
 	//if(MQTT_3_1_1 == pConnectParams->MQTTVersion) {
-		aws_iot_mqtt_internal_write_utf8_string(&ptr, "MQTT", 4);
-		aws_iot_mqtt_internal_write_char(&ptr, (char) 4);
+	aws_iot_mqtt_internal_write_utf8_string(&ptr, "MQTT", 4);
+	aws_iot_mqtt_internal_write_char(&ptr, (unsigned char) pConnectParams->MQTTVersion);
 	//}
 
 	flags.all = 0;
@@ -190,9 +211,17 @@ static IoT_Error_t _aws_iot_mqtt_serialize_connect(unsigned char *pTxBuf, size_t
 
 	aws_iot_mqtt_internal_write_char(&ptr, flags.all);
 	aws_iot_mqtt_internal_write_uint_16(&ptr, pConnectParams->keepAliveIntervalInSec);
-	aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->pClientID, pConnectParams->clientIDLen);
+
+	/* If the code have passed the check for incorrect values above, no client id was passed as argument */
+	if(NULL == pConnectParams->pClientID) {
+		aws_iot_mqtt_internal_write_uint_16(&ptr, 0);
+	} else {
+		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->pClientID, pConnectParams->clientIDLen);
+	}
+
 	if(pConnectParams->isWillMsgPresent) {
-		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->will.pTopicName, pConnectParams->will.topicNameLen);
+		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->will.pTopicName,
+												pConnectParams->will.topicNameLen);
 		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->will.pMessage, pConnectParams->will.msgLen);
 	}
 
@@ -204,7 +233,7 @@ static IoT_Error_t _aws_iot_mqtt_serialize_connect(unsigned char *pTxBuf, size_t
 		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->pPassword, pConnectParams->passwordLen);
 	}
 
-	*pSerializedLen = (size_t)(ptr - pTxBuf);
+	*pSerializedLen = (size_t) (ptr - pTxBuf);
 
 	FUNC_EXIT_RC(SUCCESS);
 }
@@ -255,10 +284,11 @@ static IoT_Error_t _aws_iot_mqtt_deserialize_connack(unsigned char *pSessionPres
 		FUNC_EXIT_RC(rc);
 	}
 
+	/* CONNACK remaining length should always be 2 as per MQTT 3.1.1 spec */
 	curdata += (readBytesLen);
 	enddata = curdata + decodedLen;
-	if(enddata - curdata < 2) {
-		FUNC_EXIT_RC(FAILURE);
+	if(2 != (enddata - curdata)) {
+		FUNC_EXIT_RC(MQTT_DECODE_REMAINING_LENGTH_ERROR);
 	}
 
 	flags.all = aws_iot_mqtt_internal_read_char(&curdata);
@@ -268,8 +298,8 @@ static IoT_Error_t _aws_iot_mqtt_deserialize_connack(unsigned char *pSessionPres
 		case CONNACK_CONNECTION_ACCEPTED:
 			*pConnackRc = MQTT_CONNACK_CONNECTION_ACCEPTED;
 			break;
-		case CONANCK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR:
-			*pConnackRc = MQTT_CONANCK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR;
+		case CONNACK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR:
+			*pConnackRc = MQTT_CONNACK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR;
 			break;
 		case CONNACK_IDENTIFIER_REJECTED_ERROR:
 			*pConnackRc = MQTT_CONNACK_IDENTIFIER_REJECTED_ERROR;
@@ -353,9 +383,6 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 
 	FUNC_ENTRY;
 
-	init_timer(&connect_timer);
-	countdown_ms(&connect_timer, pClient->clientData.commandTimeoutMs);
-
 	if(NULL != pConnectParams) {
 		/* override default options if new options were supplied */
 		rc = aws_iot_mqtt_set_connect_params(pClient, pConnectParams);
@@ -370,10 +397,14 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 		FUNC_EXIT_RC(rc);
 	}
 
+	init_timer(&connect_timer);
+	countdown_ms(&connect_timer, pClient->clientData.commandTimeoutMs);
+
 	pClient->clientData.keepAliveInterval = pClient->clientData.options.keepAliveIntervalInSec;
-	rc = _aws_iot_mqtt_serialize_connect(pClient->clientData.writeBuf, pClient->clientData.writeBufSize, &(pClient->clientData.options), &len);
+	rc = _aws_iot_mqtt_serialize_connect(pClient->clientData.writeBuf, pClient->clientData.writeBufSize,
+										 &(pClient->clientData.options), &len);
 	if(SUCCESS != rc || 0 >= len) {
-		FUNC_EXIT_RC(MQTT_CONNECTION_ERROR);
+		FUNC_EXIT_RC(rc);
 	}
 
 	/* send the connect packet */
@@ -389,7 +420,8 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 	}
 
 	/* Received CONNACK, check the return code */
-	rc = _aws_iot_mqtt_deserialize_connack((unsigned char *)&sessionPresent, &connack_rc, pClient->clientData.readBuf, pClient->clientData.readBufSize);
+	rc = _aws_iot_mqtt_deserialize_connack((unsigned char *) &sessionPresent, &connack_rc, pClient->clientData.readBuf,
+										   pClient->clientData.readBufSize);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
@@ -398,8 +430,8 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 		FUNC_EXIT_RC(connack_rc);
 	}
 
-	pClient->clientStatus.isPingOutstanding = 0;
-	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval);
+	pClient->clientStatus.isPingOutstanding = false;
+	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval / (uint32_t) 2);
 
 	FUNC_EXIT_RC(SUCCESS);
 }
@@ -468,8 +500,9 @@ IoT_Error_t _aws_iot_mqtt_internal_disconnect(AWS_IoT_Client *pClient) {
 
 	FUNC_ENTRY;
 
-	rc = aws_iot_mqtt_internal_serialize_zero(pClient->clientData.writeBuf, pClient->clientData.writeBufSize, DISCONNECT,
-														  &serialized_len);
+	rc = aws_iot_mqtt_internal_serialize_zero(pClient->clientData.writeBuf, pClient->clientData.writeBufSize,
+											  DISCONNECT,
+											  &serialized_len);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
@@ -583,3 +616,6 @@ IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient) {
 	FUNC_EXIT_RC(NETWORK_RECONNECTED);
 }
 
+#ifdef __cplusplus
+}
+#endif

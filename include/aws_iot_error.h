@@ -21,6 +21,10 @@
 #ifndef AWS_IOT_SDK_SRC_IOT_ERROR_H_
 #define AWS_IOT_SDK_SRC_IOT_ERROR_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Used to avoid warnings in case of unused parameters in function pointers */
 #define IOT_UNUSED(x) (void)(x)
 
@@ -57,7 +61,7 @@ typedef enum {
 	/** The TLS handshake failed */
 			SSL_CONNECTION_ERROR = -4,
 	/** Error associated with setting up the parameters of a Socket */
-			TCP_SETUP_ERROR =-5,
+			TCP_SETUP_ERROR = -5,
 	/** A timeout occurred while waiting for the TLS handshake to complete. */
 			NETWORK_SSL_CONNECT_TIMEOUT_ERROR = -6,
 	/** A Generic write error based on the platform used */
@@ -65,7 +69,7 @@ typedef enum {
 	/** SSL initialization error at the TLS layer */
 			NETWORK_SSL_INIT_ERROR = -8,
 	/** An error occurred when loading the certificates.  The certificates could not be located or are incorrectly formatted. */
-			NETWORK_SSL_CERT_ERROR= -9,
+			NETWORK_SSL_CERT_ERROR = -9,
 	/** SSL Write times out */
 			NETWORK_SSL_WRITE_TIMEOUT_ERROR = -10,
 	/** SSL Read times out */
@@ -122,7 +126,7 @@ typedef enum {
 	/** Connect request failed with the server returning an unknown error */
 			MQTT_CONNACK_UNKNOWN_ERROR = -36,
 	/** Connect request failed with the server returning an unacceptable protocol version error */
-			MQTT_CONANCK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR = -37,
+			MQTT_CONNACK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR = -37,
 	/** Connect request failed with the server returning an identifier rejected error */
 			MQTT_CONNACK_IDENTIFIER_REJECTED_ERROR = -38,
 	/** Connect request failed with the server returning an unavailable error */
@@ -147,6 +151,10 @@ typedef enum {
 			MUTEX_UNLOCK_ERROR = -48,
 	/** Mutex destroy failed */
 			MUTEX_DESTROY_ERROR = -49,
-}IoT_Error_t;
+} IoT_Error_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* AWS_IOT_SDK_SRC_IOT_ERROR_H_ */

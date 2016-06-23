@@ -22,9 +22,14 @@
  */
 
 #include "aws_iot_config.h"
+
 #ifdef _ENABLE_THREAD_SUPPORT_
 #ifndef __THREADS_INTERFACE_H_
 #define __THREADS_INTERFACE_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * The platform specific timer header that defines the Timer struct
@@ -94,6 +99,10 @@ IoT_Error_t aws_iot_thread_mutex_unlock(IoT_Mutex_t *);
  * @return IoT_Error_t - error code indicating result of operation
  */
 IoT_Error_t aws_iot_thread_mutex_destroy(IoT_Mutex_t *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*__THREADS_INTERFACE_H_*/
 #endif /*_ENABLE_THREAD_SUPPORT_*/

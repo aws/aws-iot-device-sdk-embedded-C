@@ -18,6 +18,10 @@
  * @brief Linux implementation of the timer interface.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include <sys/types.h>
 #include <stdint.h>
@@ -32,20 +36,24 @@ bool has_timer_expired(Timer *timer) {
 	return res.tv_sec < 0 || (res.tv_sec == 0 && res.tv_usec <= 0);
 }
 
-void countdown_ms(Timer* timer, uint32_t timeout) {
+void countdown_ms(Timer *timer, uint32_t timeout) {
 	struct timeval now;
 	gettimeofday(&now, NULL);
-	struct timeval interval = { timeout / 1000, (timeout % 1000) * 1000 };
+#ifdef __cplusplus
+	struct timeval interval = {timeout / 1000, static_cast<int>((timeout % 1000) * 1000)};
+#else
+	struct timeval interval = {timeout / 1000, (int)((timeout % 1000) * 1000)};
+#endif
 	timeradd(&now, &interval, &timer->end_time);
 }
 
-uint32_t left_ms(Timer* timer) {
+uint32_t left_ms(Timer *timer) {
 	struct timeval now, res;
 	gettimeofday(&now, NULL);
 	timersub(&timer->end_time, &now, &res);
 	uint32_t result_ms = 0;
 	if(res.tv_sec >= 0) {
-		result_ms = (uint32_t)(res.tv_sec * 1000 + res.tv_usec / 1000);
+		result_ms = (uint32_t) (res.tv_sec * 1000 + res.tv_usec / 1000);
 	}
 	return result_ms;
 }
@@ -53,10 +61,14 @@ uint32_t left_ms(Timer* timer) {
 void countdown_sec(Timer *timer, uint32_t timeout) {
 	struct timeval now;
 	gettimeofday(&now, NULL);
-	struct timeval interval = { timeout, 0 };
+	struct timeval interval = {timeout, 0};
 	timeradd(&now, &interval, &timer->end_time);
 }
 
 void init_timer(Timer *timer) {
-	timer->end_time = (struct timeval) { 0, 0 };
+	timer->end_time = (struct timeval) {0, 0};
 }
+
+#ifdef __cplusplus
+}
+#endif

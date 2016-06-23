@@ -39,6 +39,10 @@
 #ifndef AWS_IOT_SDK_SRC_IOT_MQTT_INTERFACE_H
 #define AWS_IOT_SDK_SRC_IOT_MQTT_INTERFACE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Library Header files */
 #include "stdio.h"
 #include "stdbool.h"
@@ -187,5 +191,9 @@ IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms);
  * @return An IoT Error Type defining successful/failed connection
  */
 IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

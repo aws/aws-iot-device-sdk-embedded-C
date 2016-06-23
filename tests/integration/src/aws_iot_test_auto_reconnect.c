@@ -31,7 +31,7 @@ bool captureYieldReturnCode = false;
  * This function renames the rootCA.crt file to a temporary name to cause connect failure
  */
 int aws_iot_mqtt_tests_block_tls_connect() {
-	char replaceFileName[] = { "rootCATemp.crt" };
+	char replaceFileName[] = {"rootCATemp.crt"};
 	char *pFileNamePosition = NULL;
 
 	char mvCommand[2 * PATH_MAX + 10];
@@ -56,7 +56,7 @@ void *aws_iot_mqtt_tests_yield_with_rc(void *ptr) {
 
 	struct timeval start, end, result;
 	static int cntr = 0;
-	AWS_IoT_Client *pClient = (AWS_IoT_Client *)ptr;
+	AWS_IoT_Client *pClient = (AWS_IoT_Client *) ptr;
 
 	while(terminate_yield_with_rc_thread == false
 		  && (NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc || SUCCESS == rc)) {
@@ -73,6 +73,7 @@ void *aws_iot_mqtt_tests_yield_with_rc(void *ptr) {
 }
 
 unsigned int disconnectedCounter = 0;
+
 void aws_iot_mqtt_tests_disconnect_callback_handler(AWS_IoT_Client *pClient, void *param) {
 	disconnectedCounter++;
 }
@@ -94,7 +95,7 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 	snprintf(root_CA, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_ROOT_CA_FILENAME);
 	snprintf(clientCRT, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_CERTIFICATE_FILENAME);
 	snprintf(clientKey, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_PRIVATE_KEY_FILENAME);
-	srand((unsigned int)time(NULL));
+	srand((unsigned int) time(NULL));
 	snprintf(clientId, 50, "%s_%d", INTEGRATION_TEST_CLIENT_ID, rand() % 10000);
 
 	printf(" Root CA Path : %s\n clientCRT : %s\n clientKey : %s\n", root_CA, clientCRT, clientKey);
@@ -104,8 +105,8 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 	initParams.pRootCALocation = root_CA;
 	initParams.pDeviceCertLocation = clientCRT;
 	initParams.pDevicePrivateKeyLocation = clientKey;
-	initParams.mqttCommandTimeout_ms = 5000;
-	initParams.tlsHandshakeTimeout_ms = 2000;
+	initParams.mqttCommandTimeout_ms = 20000;
+	initParams.tlsHandshakeTimeout_ms = 5000;
 	initParams.disconnectHandler = aws_iot_mqtt_tests_disconnect_callback_handler;
 	initParams.enableAutoReconnect = false;
 	aws_iot_mqtt_init(&client, &initParams);
@@ -114,7 +115,7 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 	connectParams.keepAliveIntervalInSec = 5;
 	connectParams.isCleanSession = true;
 	connectParams.MQTTVersion = MQTT_3_1_1;
-	connectParams.pClientID = (char *)&clientId;
+	connectParams.pClientID = (char *) &clientId;
 	connectParams.clientIDLen = strlen(clientId);
 	connectParams.isWillMsgPresent = 0;
 	connectParams.pUsername = NULL;
@@ -123,7 +124,7 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 	connectParams.passwordLen = 0;
 
 	rc = aws_iot_mqtt_connect(&client, &connectParams);
-	if (rc != SUCCESS) {
+	if(rc != SUCCESS) {
 		printf("ERROR Connecting %d\n", rc);
 		return -1;
 	}
@@ -136,8 +137,8 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 	printf("1. Test Disconnect Handler\n");
 	aws_iot_mqtt_tests_block_tls_connect();
 	iot_tls_disconnect(&(client.networkStack));
-	sleep(10);
-	if (disconnectedCounter == 1) {
+	sleep(connectParams.keepAliveIntervalInSec + 1);
+	if(disconnectedCounter == 1) {
 		printf("Success invoking Disconnect Handler\n");
 	} else {
 		aws_iot_mqtt_tests_unblock_tls_connect();
@@ -153,7 +154,7 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 	 */
 	printf("2. Test Manual Reconnect, Current Client state : %d \n", aws_iot_mqtt_get_client_state(&client));
 	rc = aws_iot_mqtt_attempt_reconnect(&client);
-	if (rc != NETWORK_RECONNECTED) {
+	if(rc != NETWORK_RECONNECTED) {
 		printf("ERROR reconnecting manually %d\n", rc);
 		return -4;
 	}
@@ -165,8 +166,8 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 
 	// ensure atleast 1 cycle of yield is executed to get the yield status to SUCCESS
 	sleep(1);
-	if (!captureYieldReturnCode) {
-		if (yieldRC == NETWORK_ATTEMPTING_RECONNECT) {
+	if(!captureYieldReturnCode) {
+		if(yieldRC == NETWORK_ATTEMPTING_RECONNECT) {
 			printf("Success reconnecting manually\n");
 		} else {
 			printf("Failure to reconnect manually\n");
@@ -182,7 +183,7 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 	printf("3. Test Auto_reconnect \n");
 
 	rc = aws_iot_mqtt_autoreconnect_set_status(&client, true);
-	if (rc != SUCCESS) {
+	if(rc != SUCCESS) {
 		printf("Error: Failed to enable auto-reconnect %d \n", rc);
 	}
 
@@ -196,36 +197,36 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 	terminate_yield_with_rc_thread = false;
 	yieldThreadReturn = pthread_create(&yield_thread, NULL, aws_iot_mqtt_tests_yield_with_rc, &client);
 
-	sleep(10);
-	if (!captureYieldReturnCode) {
-		if (yieldRC == NETWORK_ATTEMPTING_RECONNECT) {
+	sleep(connectParams.keepAliveIntervalInSec + 1);
+	if(!captureYieldReturnCode) {
+		if(yieldRC == NETWORK_ATTEMPTING_RECONNECT) {
 			printf("Success attempting reconnect\n");
 		} else {
 			printf("Failure to attempt to reconnect\n");
 			return -6;
 		}
 	}
-	if(disconnectedCounter == 2){
+	if(disconnectedCounter == 2) {
 		printf("Success: disconnect handler invoked on enabling auto-reconnect\n");
-	} else{
+	} else {
 		printf("Failure: disconnect handler not invoked on enabling auto-reconnect : %d\n", disconnectedCounter);
 		return -7;
 	}
 	aws_iot_mqtt_tests_unblock_tls_connect();
-	sleep(10);
+	sleep(connectParams.keepAliveIntervalInSec + 1);
 	captureYieldReturnCode = true;
-	sleep(5);
-	if (!captureYieldReturnCode) {
-		if (yieldRC == SUCCESS) {
+	sleep(connectParams.keepAliveIntervalInSec + 1);
+	if(!captureYieldReturnCode) {
+		if(yieldRC == SUCCESS) {
 			printf("Success attempting reconnect\n");
 		} else {
 			printf("Failure to attempt to reconnect\n");
 			return -6;
 		}
 	}
-	if(true == aws_iot_mqtt_is_client_connected(&client)){
+	if(true == aws_iot_mqtt_is_client_connected(&client)) {
 		printf("Success: is Mqtt connected api\n");
-	} else{
+	} else {
 		printf("Failure: is Mqtt Connected api\n");
 		return -7;
 	}

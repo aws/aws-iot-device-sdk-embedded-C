@@ -17,6 +17,7 @@
 
 #include "mbedtls/config.h"
 
+#include "mbedtls/platform.h"
 #include "mbedtls/net.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"
@@ -26,6 +27,10 @@
 #include "mbedtls/error.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/timing.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief TLS Connection Parameters
@@ -46,5 +51,9 @@ typedef struct _TLSDataParams {
 }TLSDataParams;
 
 #define IOTSDKC_NETWORK_MBEDTLS_PLATFORM_H_H
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //IOTSDKC_NETWORK_MBEDTLS_PLATFORM_H_H

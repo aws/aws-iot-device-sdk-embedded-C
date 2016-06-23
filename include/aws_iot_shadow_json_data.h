@@ -16,6 +16,10 @@
 #ifndef SRC_SHADOW_AWS_IOT_SHADOW_JSON_DATA_H_
 #define SRC_SHADOW_AWS_IOT_SHADOW_JSON_DATA_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @file aws_iot_shadow_json_data.h
  * @brief This file is the interface for all the Shadow related JSON functions.
@@ -28,6 +32,7 @@
  *
  */
 typedef struct jsonStruct jsonStruct_t;
+
 /**
  * @brief Every JSON name value can have a callback. The callback should follow this signature
  */
@@ -136,5 +141,9 @@ IoT_Error_t aws_iot_finalize_json_document(char *pJsonDocument, size_t maxSizeOf
  */
 
 IoT_Error_t aws_iot_fill_with_client_token(char *pBufferToBeUpdatedWithClientToken, size_t maxSizeOfJsonDocument);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SRC_SHADOW_AWS_IOT_SHADOW_JSON_DATA_H_ */

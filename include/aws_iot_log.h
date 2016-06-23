@@ -28,6 +28,10 @@
 #ifndef _IOT_LOG_H
 #define _IOT_LOG_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -36,15 +40,15 @@
  *
  * Macro to expose function, line number as well as desired log message.
  */
-#ifdef IOT_DEBUG
-#define DEBUG(...)    \
-    {\
-    printf("DEBUG:   %s L#%d ", __PRETTY_FUNCTION__, __LINE__);  \
-    printf(__VA_ARGS__); \
-    printf("\n"); \
-    }
+#ifdef ENABLE_IOT_DEBUG
+#define IOT_DEBUG(...)    \
+	{\
+	printf("DEBUG:   %s L#%d ", __PRETTY_FUNCTION__, __LINE__);  \
+	printf(__VA_ARGS__); \
+	printf("\n"); \
+	}
 #else
-#define DEBUG(...)
+#define IOT_DEBUG(...)
 #endif
 
 /**
@@ -52,22 +56,23 @@
  *
  * Macro to print message function entry and exit
  */
-#ifdef IOT_TRACE
+#ifdef ENABLE_IOT_TRACE
 #define FUNC_ENTRY    \
-    {\
-    printf("FUNC_ENTRY:   %s L#%d \n", __PRETTY_FUNCTION__, __LINE__);  \
-    }
+	{\
+	printf("FUNC_ENTRY:   %s L#%d \n", __PRETTY_FUNCTION__, __LINE__);  \
+	}
 #define FUNC_EXIT    \
-    {\
-    printf("FUNC_EXIT:   %s L#%d \n", __PRETTY_FUNCTION__, __LINE__);  \
-    }
+	{\
+	printf("FUNC_EXIT:   %s L#%d \n", __PRETTY_FUNCTION__, __LINE__);  \
+	}
 #define FUNC_EXIT_RC(x)    \
-    {\
-    printf("FUNC_EXIT:   %s L#%d Return Code : %d \n", __PRETTY_FUNCTION__, __LINE__, x);  \
-    return x; \
-    }
+	{\
+	printf("FUNC_EXIT:   %s L#%d Return Code : %d \n", __PRETTY_FUNCTION__, __LINE__, x);  \
+	return x; \
+	}
 #else
 #define FUNC_ENTRY
+
 #define FUNC_EXIT
 #define FUNC_EXIT_RC(x) { return x; }
 #endif
@@ -77,14 +82,14 @@
  *
  * Macro to expose desired log message.  Info messages do not include automatic function names and line numbers.
  */
-#ifdef IOT_INFO
-#define INFO(...)    \
-    {\
-    printf(__VA_ARGS__); \
-    printf("\n"); \
-    }
+#ifdef ENABLE_IOT_INFO
+#define IOT_INFO(...)    \
+	{\
+	printf(__VA_ARGS__); \
+	printf("\n"); \
+	}
 #else
-#define INFO(...)
+#define IOT_INFO(...)
 #endif
 
 /**
@@ -92,15 +97,15 @@
  *
  * Macro to expose function, line number as well as desired log message.
  */
-#ifdef IOT_WARN
-#define WARN(...)   \
-    { \
-    printf("WARN:  %s L#%d ", __PRETTY_FUNCTION__, __LINE__);  \
-    printf(__VA_ARGS__); \
-    printf("\n"); \
-    }
+#ifdef ENABLE_IOT_WARN
+#define IOT_WARN(...)   \
+	{ \
+	printf("WARN:  %s L#%d ", __PRETTY_FUNCTION__, __LINE__);  \
+	printf(__VA_ARGS__); \
+	printf("\n"); \
+	}
 #else
-#define WARN(...)
+#define IOT_WARN(...)
 #endif
 
 /**
@@ -108,17 +113,19 @@
  *
  * Macro to expose function, line number as well as desired log message.
  */
-#ifdef IOT_ERROR
-#define ERROR(...)  \
-    { \
-    printf("ERROR: %s L#%d ", __PRETTY_FUNCTION__, __LINE__); \
-    printf(__VA_ARGS__); \
-    printf("\n"); \
-    }
+#ifdef ENABLE_IOT_ERROR
+#define IOT_ERROR(...)  \
+	{ \
+	printf("ERROR: %s L#%d ", __PRETTY_FUNCTION__, __LINE__); \
+	printf(__VA_ARGS__); \
+	printf("\n"); \
+	}
 #else
-#define ERROR(...)
+#define IOT_ERROR(...)
 #endif
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _IOT_LOG_H

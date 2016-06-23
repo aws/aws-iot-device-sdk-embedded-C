@@ -36,6 +36,10 @@
  * @brief MQTT client publish API definitions
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "aws_iot_mqtt_client_common_internal.h"
 
 /**
@@ -55,7 +59,7 @@ static IoT_Error_t _aws_iot_mqtt_read_string_with_len(char **stringVar, uint16_t
 	if(enddata - (*pptr) > 1) {
 		*stringLen = aws_iot_mqtt_internal_read_uint16_t(pptr); /* increments pptr to point past length */
 		if(&(*pptr)[*stringLen] <= enddata) {
-			*stringVar = (char*)*pptr;
+			*stringVar = (char *) *pptr;
 			*pptr += *stringLen;
 			rc = SUCCESS;
 		}
@@ -97,7 +101,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_serialize_publish(unsigned char *pTxBu
 	ptr = pTxBuf;
 	rem_len = 0;
 
-	rem_len += (uint32_t)(topicNameLen + payloadLen + 2);
+	rem_len += (uint32_t) (topicNameLen + payloadLen + 2);
 	if(qos > 0) {
 		rem_len += 2; /* packetId */
 	}
@@ -122,7 +126,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_serialize_publish(unsigned char *pTxBu
 	memcpy(ptr, pPayload, payloadLen);
 	ptr += payloadLen;
 
-	*pSerializedLen = (uint32_t)(ptr - pTxBuf);
+	*pSerializedLen = (uint32_t) (ptr - pTxBuf);
 
 	FUNC_EXIT_RC(SUCCESS);
 }
@@ -167,7 +171,7 @@ IoT_Error_t aws_iot_mqtt_internal_serialize_ack(unsigned char *pTxBuf, size_t tx
 
 	ptr += aws_iot_mqtt_internal_write_len_to_buffer(ptr, 2); /* write remaining length */
 	aws_iot_mqtt_internal_write_uint_16(&ptr, packetId);
-	*pSerializedLen = (uint32_t)(ptr - pTxBuf);
+	*pSerializedLen = (uint32_t) (ptr - pTxBuf);
 
 	FUNC_EXIT_RC(SUCCESS);
 }
@@ -261,7 +265,7 @@ IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName
 
 	FUNC_ENTRY;
 
-	if(NULL == pClient || NULL == pTopicName || NULL == pParams) {
+	if(NULL == pClient || NULL == pTopicName || 0 == topicNameLen || NULL == pParams) {
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);
 	}
 
@@ -338,7 +342,7 @@ IoT_Error_t aws_iot_mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 	}
 
 	*dup = header.bits.dup;
-	*qos = (QoS)header.bits.qos;
+	*qos = (QoS) header.bits.qos;
 	*retained = header.bits.retain;
 
 	/* read remaining length */
@@ -360,7 +364,7 @@ IoT_Error_t aws_iot_mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 		*pPacketId = aws_iot_mqtt_internal_read_uint16_t(&curData);
 	}
 
-	*payloadLen = (size_t)(endData - curData);
+	*payloadLen = (size_t) (endData - curData);
 	*payload = curData;
 
 	FUNC_EXIT_RC(SUCCESS);
@@ -418,3 +422,7 @@ IoT_Error_t aws_iot_mqtt_internal_deserialize_ack(unsigned char *pPacketType, un
 
 	FUNC_EXIT_RC(SUCCESS);
 }
+
+#ifdef __cplusplus
+}
+#endif

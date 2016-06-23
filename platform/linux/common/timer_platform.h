@@ -16,6 +16,10 @@
 #ifndef SRC_PROTOCOL_MQTT_AWS_IOT_EMBEDDED_CLIENT_WRAPPER_PLATFORM_LINUX_COMMON_TIMER_PLATFORM_H_
 #define SRC_PROTOCOL_MQTT_AWS_IOT_EMBEDDED_CLIENT_WRAPPER_PLATFORM_LINUX_COMMON_TIMER_PLATFORM_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @file timer_platform.h
  */
@@ -30,5 +34,8 @@ struct Timer {
 	struct timeval end_time;
 };
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SRC_PROTOCOL_MQTT_AWS_IOT_EMBEDDED_CLIENT_WRAPPER_PLATFORM_LINUX_COMMON_TIMER_PLATFORM_H_ */

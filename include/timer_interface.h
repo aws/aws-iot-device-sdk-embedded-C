@@ -27,6 +27,10 @@
 #ifndef __TIMER_INTERFACE_H_
 #define __TIMER_INTERFACE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * The platform specific timer header that defines the Timer struct
  */
@@ -93,5 +97,9 @@ uint32_t left_ms(Timer *);
  * @param Timer - pointer to the timer to be initialized
  */
 void init_timer(Timer *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //__TIMER_INTERFACE_H_

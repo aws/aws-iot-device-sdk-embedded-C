@@ -59,12 +59,12 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 		if(tempCol > 0 && tempCol <= PUBLISH_COUNT) {
 			countArray[tempCol - 1]++;
 		} else {
-			WARN(" \n Thread : %d, Msg : %d ", tempRow, tempCol);
+			IOT_WARN(" \n Thread : %d, Msg : %d ", tempRow, tempCol);
 			rxUnexpectedNumberCounter++;
 		}
 		rc = aws_iot_mqtt_yield(pClient, 10);
 		if(MQTT_CLIENT_NOT_IDLE_ERROR != rc) {
-			ERROR("\n Yield succeeded in callback!!! Client state : %d Rc : %d\n",
+			IOT_ERROR("\n Yield succeeded in callback!!! Client state : %d Rc : %d\n",
 				  aws_iot_mqtt_get_client_state(pClient), rc);
 			wrongYieldCount++;
 		}
@@ -84,7 +84,7 @@ static IoT_Error_t aws_iot_mqtt_tests_subscribe_to_test_topic(AWS_IoT_Client *pC
 	gettimeofday(&start, NULL);
 	rc = aws_iot_mqtt_subscribe(pClient, INTEGRATION_TEST_TOPIC, strlen(INTEGRATION_TEST_TOPIC), qos,
 								aws_iot_mqtt_tests_message_aggregator, NULL);
-	DEBUG("Sub response : %d\n", rc);
+	IOT_DEBUG("Sub response : %d\n", rc);
 	gettimeofday(&end, NULL);
 
 	timersub(&end, &start, pSubscribeTime);
@@ -102,7 +102,7 @@ static void *aws_iot_mqtt_tests_yield_thread_runner(void *ptr) {
 		} while(MQTT_CLIENT_NOT_IDLE_ERROR == rc); // Client is busy, wait to get lock
 
 		if(SUCCESS != rc) {
-			DEBUG("\nYield Returned : %d ", rc);
+			IOT_DEBUG("\nYield Returned : %d ", rc);
 		}
 	}
 }
@@ -129,14 +129,14 @@ static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 			usleep(THREAD_SLEEP_INTERVAL_USEC);
 		} while(MUTEX_LOCK_ERROR == rc || MQTT_CLIENT_NOT_IDLE_ERROR == rc);
 		if(rc != SUCCESS) {
-			WARN("Error Publishing #%d --> %d\n ", i, rc);
+			IOT_WARN("Error Publishing #%d --> %d\n ", i, rc);
 			do {
 				rc = aws_iot_mqtt_publish(pClient, INTEGRATION_TEST_TOPIC, strlen(INTEGRATION_TEST_TOPIC), &params);
 				usleep(THREAD_SLEEP_INTERVAL_USEC);
 			} while(MUTEX_LOCK_ERROR == rc || MQTT_CLIENT_NOT_IDLE_ERROR == rc);
 			rePublishCount++;
 			if(rc != SUCCESS) {
-				ERROR("Error Publishing #%d --> %d Second Attempt \n", i, rc);
+				IOT_ERROR("Error Publishing #%d --> %d Second Attempt \n", i, rc);
 			}
 		}
 	}
@@ -160,6 +160,7 @@ int aws_iot_mqtt_tests_basic_connectivity() {
 	IoT_Error_t rc = SUCCESS;
 	int i, rxMsgCount = 0, j = 0;
 	struct timeval connectTime, subscribeTopic;
+	struct timeval start, end;
 	unsigned int connectCounter = 0;
 	int test_result = 0;
 	ThreadData threadData;
@@ -176,7 +177,7 @@ int aws_iot_mqtt_tests_basic_connectivity() {
 		countArray[i] = 0;
 	}
 
-	DEBUG("\nConnecting Client ");
+	IOT_DEBUG("\nConnecting Client ");
 	do {
 		getcwd(CurrentWD, sizeof(CurrentWD));
 		snprintf(root_CA, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_ROOT_CA_FILENAME);
@@ -187,7 +188,7 @@ int aws_iot_mqtt_tests_basic_connectivity() {
 
 		printf("\n\nClient ID : %s \n", clientId);
 
-		DEBUG("Root CA Path : %s\n clientCRT : %s\n clientKey : %s\n", root_CA, clientCRT, clientKey);
+		IOT_DEBUG("Root CA Path : %s\n clientCRT : %s\n clientKey : %s\n", root_CA, clientCRT, clientKey);
 		initParams.pHostURL = AWS_IOT_MQTT_HOST;
 		initParams.port = 8883;
 		initParams.pRootCALocation = root_CA;
@@ -210,19 +211,18 @@ int aws_iot_mqtt_tests_basic_connectivity() {
 		connectParams.pPassword = NULL;
 		connectParams.passwordLen = 0;
 
+		gettimeofday(&connectTime, NULL);
 		rc = aws_iot_mqtt_connect(&client, &connectParams);
-		if(rc != SUCCESS) {
-			ERROR("\nERROR Connecting %d\n", rc);
-			return -1;
-		}
+		gettimeofday(&end, NULL);
+		timersub(&end, &start, &connectTime);
 
 		connectCounter++;
 	} while(rc != SUCCESS && connectCounter < CONNECT_MAX_ATTEMPT_COUNT);
 
-	if(rc == SUCCESS) {
-		DEBUG("## Connect Success. Time sec: %d, usec: %d\n", connectTime.tv_sec, connectTime.tv_usec);
+	if(SUCCESS == rc) {
+		IOT_DEBUG("## Connect Success. Time sec: %d, usec: %d\n", connectTime.tv_sec, connectTime.tv_usec);
 	} else {
-		ERROR("## Connect Failed. error code %d\n", rc);
+		IOT_ERROR("## Connect Failed. error code %d\n", rc);
 		return -1;
 	}
 
@@ -254,21 +254,21 @@ int aws_iot_mqtt_tests_basic_connectivity() {
 		}
 	}
 
-	DEBUG("\n\nResult : \n");
+	IOT_DEBUG("\n\nResult : \n");
 	percentOfRxMsg = (float) rxMsgCount * 100 / PUBLISH_COUNT;
 	if(percentOfRxMsg >= RX_RECEIVE_PERCENTAGE && rxMsgBufferTooBigCounter == 0 && rxUnexpectedNumberCounter == 0 &&
 	   wrongYieldCount == 0) {
-		DEBUG("\n\nSuccess: %f \%\n", percentOfRxMsg);
-		DEBUG("Published Messages: %d , Received Messages: %d \n", PUBLISH_COUNT, rxMsgCount);
-		DEBUG("QoS 1 re publish count %d\n", rePublishCount);
-		DEBUG("Connection Attempts %d\n", connectCounter);
-		DEBUG("Yield count without error during callback %d\n", wrongYieldCount);
+		IOT_DEBUG("\n\nSuccess: %f \%\n", percentOfRxMsg);
+		IOT_DEBUG("Published Messages: %d , Received Messages: %d \n", PUBLISH_COUNT, rxMsgCount);
+		IOT_DEBUG("QoS 1 re publish count %d\n", rePublishCount);
+		IOT_DEBUG("Connection Attempts %d\n", connectCounter);
+		IOT_DEBUG("Yield count without error during callback %d\n", wrongYieldCount);
 		test_result = 0;
 	} else {
-		ERROR("\n\nFailure: %f\n", percentOfRxMsg);
-		ERROR("\"Received message was too big than anything sent\" count: %d\n", rxMsgBufferTooBigCounter);
-		ERROR("\"The number received is out of the range\" count: %d\n", rxUnexpectedNumberCounter);
-		ERROR("Yield count without error during callback %d\n", wrongYieldCount);
+		IOT_ERROR("\n\nFailure: %f\n", percentOfRxMsg);
+		IOT_ERROR("\"Received message was too big than anything sent\" count: %d\n", rxMsgBufferTooBigCounter);
+		IOT_ERROR("\"The number received is out of the range\" count: %d\n", rxUnexpectedNumberCounter);
+		IOT_ERROR("Yield count without error during callback %d\n", wrongYieldCount);
 		test_result = -2;
 	}
 	aws_iot_mqtt_disconnect(&client);

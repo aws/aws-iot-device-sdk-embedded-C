@@ -39,6 +39,10 @@
 #ifndef AWS_IOT_SDK_SRC_IOT_MQTT_CLIENT_H
 #define AWS_IOT_SDK_SRC_IOT_MQTT_CLIENT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Library Header files */
 #include "stdio.h"
 #include "stdbool.h"
@@ -166,15 +170,21 @@ typedef struct {
 	char *pDeviceCertLocation;			///< Pointer to a string defining the device identity certificate file (full file, not path)
 	char *pDevicePrivateKeyLocation;        	///< Pointer to a string defining the device private key file (full file, not path)
 	uint32_t mqttCommandTimeout_ms;			///< Timeout for MQTT blocking calls. In milliseconds
-#ifdef _ENABLE_THREAD_SUPPORT_
-	bool isBlockOnThreadLockEnabled;		///< Timeout for Thread blocking calls. Set to 0 to block until lock is obtained. In milliseconds
-#endif
 	uint32_t tlsHandshakeTimeout_ms;		///< TLS handshake timeout.  In milliseconds
 	bool isSSLHostnameVerify;			///< Client should perform server certificate hostname validation
 	iot_disconnect_handler disconnectHandler;	///< Callback to be invoked upon connection loss
 	void *disconnectHandlerData;			///< Data to pass as argument when disconnect handler is called
+#ifdef _ENABLE_THREAD_SUPPORT_
+	bool isBlockOnThreadLockEnabled;		///< Timeout for Thread blocking calls. Set to 0 to block until lock is obtained. In milliseconds
+#endif
 } IoT_Client_Init_Params;
 extern const IoT_Client_Init_Params iotClientInitParamsDefault;
+
+#ifdef _ENABLE_THREAD_SUPPORT_
+#define IoT_Client_Init_Params_initializer { true, NULL, 0, NULL, NULL, NULL, 20000, 5000, true, NULL, NULL, false }
+#else
+#define IoT_Client_Init_Params_initializer { true, NULL, 0, NULL, NULL, NULL, 20000, 5000, true, NULL, NULL }
+#endif
 
 /**
  * @brief MQTT Client State Type
@@ -398,5 +408,9 @@ uint32_t aws_iot_mqtt_get_network_disconnected_count(AWS_IoT_Client *pClient);
  * @param pClient Reference to the IoT Client
  */
 void aws_iot_mqtt_reset_network_disconnected_count(AWS_IoT_Client *pClient);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

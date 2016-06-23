@@ -13,6 +13,15 @@
  * permissions and limitations under the License.
  */
 
+/**
+ * @file aws_iot_shadow_actions.c
+ * @brief Shadow client Action API definitions
+ */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "aws_iot_shadow_actions.h"
 
 #include "aws_iot_log.h"
@@ -20,34 +29,30 @@
 #include "aws_iot_shadow_records.h"
 #include "aws_iot_config.h"
 
-IoT_Error_t iot_shadow_action(const char *pThingName, ShadowActions_t action,
-		const char *pJsonDocumentToBeSent, fpActionCallback_t callback, void *pCallbackContext,
-		uint32_t timeout_seconds, bool isSticky) {
-
+IoT_Error_t aws_iot_shadow_internal_action(const char *pThingName, ShadowActions_t action,
+										   const char *pJsonDocumentToBeSent, fpActionCallback_t callback,
+										   void *pCallbackContext, uint32_t timeout_seconds, bool isSticky) {
 	IoT_Error_t ret_val = SUCCESS;
-	bool isCallbackPresent = false;
 	bool isClientTokenPresent = false;
 	bool isAckWaitListFree = false;
 	uint8_t indexAckWaitList;
-
-	if(pThingName == NULL || pJsonDocumentToBeSent == NULL){
-		return NULL_VALUE_ERROR;
-	}
-
-	if (callback != NULL) {
-		isCallbackPresent = true;
-	}
-
 	char extractedClientToken[MAX_SIZE_CLIENT_ID_WITH_SEQUENCE];
+
+	FUNC_ENTRY;
+
+	if(NULL == pThingName || NULL == pJsonDocumentToBeSent) {
+		FUNC_EXIT_RC(NULL_VALUE_ERROR);
+	}
+
 	isClientTokenPresent = extractClientToken(pJsonDocumentToBeSent, extractedClientToken);
 
-	if (isClientTokenPresent && isCallbackPresent) {
-		if (getNextFreeIndexOfAckWaitList(&indexAckWaitList)) {
+	if(isClientTokenPresent && (NULL != callback)) {
+		if(getNextFreeIndexOfAckWaitList(&indexAckWaitList)) {
 			isAckWaitListFree = true;
 		}
 
 		if(isAckWaitListFree) {
-			if (!isSubscriptionPresent(pThingName, action)) {
+			if(!isSubscriptionPresent(pThingName, action)) {
 				ret_val = subscribeToShadowActionAcks(pThingName, action, isSticky);
 			} else {
 				incrementSubscriptionCnt(pThingName, action, isSticky);
@@ -58,14 +63,18 @@ IoT_Error_t iot_shadow_action(const char *pThingName, ShadowActions_t action,
 		}
 	}
 
-
-	if (ret_val == SUCCESS) {
+	if(SUCCESS == ret_val) {
 		ret_val = publishToShadowAction(pThingName, action, pJsonDocumentToBeSent);
 	}
 
-	if (isClientTokenPresent && isCallbackPresent && ret_val == SUCCESS && isAckWaitListFree) {
+	if(isClientTokenPresent && (NULL != callback) && (SUCCESS == ret_val) && isAckWaitListFree) {
 		addToAckWaitList(indexAckWaitList, pThingName, action, extractedClientToken, callback, pCallbackContext,
-				timeout_seconds);
+						 timeout_seconds);
 	}
-	return ret_val;
+
+	FUNC_EXIT_RC(ret_val);
 }
+
+#ifdef __cplusplus
+}
+#endif

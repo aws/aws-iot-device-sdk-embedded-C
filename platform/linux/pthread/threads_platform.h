@@ -18,6 +18,10 @@
 #ifndef IOTSDKC_THREADS_PLATFORM_H_H
 #define IOTSDKC_THREADS_PLATFORM_H_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <pthread.h>
 
 /**
@@ -29,6 +33,10 @@
 struct _IoT_Mutex_t {
 	pthread_mutex_t lock;
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* IOTSDKC_THREADS_PLATFORM_H_H */
 #endif /* _ENABLE_THREAD_SUPPORT_ */

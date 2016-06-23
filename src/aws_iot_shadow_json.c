@@ -13,11 +13,25 @@
  * permissions and limitations under the License.
  */
 
+/**
+ * @file aws_iot_shadow_json.c
+ * @brief Shadow client JSON parsing API definitions
+ */
+
+#ifdef __cplusplus
+extern "C" {
+#include <cinttypes>
+#else
+
+#include <inttypes.h>
+
+#endif
+
 #include "aws_iot_shadow_json.h"
 
 #include <string.h>
 #include <stdbool.h>
-#include <inttypes.h>
+
 #include "aws_iot_json_utils.h"
 #include "aws_iot_log.h"
 #include "aws_iot_shadow_key.h"
@@ -41,18 +55,18 @@ static void emptyJsonWithClientToken(char *pJsonDocument) {
 	sprintf(pJsonDocument + strlen(pJsonDocument), "\"}");
 }
 
-void iot_shadow_get_request_json(char *pJsonDocument) {
+void aws_iot_shadow_internal_get_request_json(char *pJsonDocument) {
 	emptyJsonWithClientToken(pJsonDocument);
 }
 
-void iot_shadow_delete_request_json(char *pJsonDocument) {
+void aws_iot_shadow_internal_delete_request_json(char *pJsonDocument) {
 	emptyJsonWithClientToken(pJsonDocument);
 }
 
 static inline IoT_Error_t checkReturnValueOfSnPrintf(int32_t snPrintfReturn, size_t maxSizeOfJsonDocument) {
 	if(snPrintfReturn < 0) {
 		return SHADOW_JSON_ERROR;
-	} else if((size_t)snPrintfReturn >= maxSizeOfJsonDocument) {
+	} else if((size_t) snPrintfReturn >= maxSizeOfJsonDocument) {
 		return SHADOW_JSON_BUFFER_TRUNCATED;
 	}
 	return SUCCESS;
@@ -281,17 +295,17 @@ static IoT_Error_t convertDataToString(char *pStringBuffer, size_t maxSizoString
 	}
 
 	if(type == SHADOW_JSON_INT32) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%"PRIi32",", *(int32_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIi32",", *(int32_t *) (pData));
 	} else if(type == SHADOW_JSON_INT16) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%"PRIi16",", *(int16_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIi16",", *(int16_t *) (pData));
 	} else if(type == SHADOW_JSON_INT8) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%"PRIi8",", *(int8_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIi8",", *(int8_t *) (pData));
 	} else if(type == SHADOW_JSON_UINT32) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%"PRIu32",", *(uint32_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIu32",", *(uint32_t *) (pData));
 	} else if(type == SHADOW_JSON_UINT16) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%"PRIu16",", *(uint16_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIu16",", *(uint16_t *) (pData));
 	} else if(type == SHADOW_JSON_UINT8) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%"PRIu8",", *(uint8_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIu8",", *(uint8_t *) (pData));
 	} else if(type == SHADOW_JSON_DOUBLE) {
 		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%f,", *(double *) (pData));
 	} else if(type == SHADOW_JSON_FLOAT) {
@@ -319,13 +333,13 @@ bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t 
 							sizeof(jsonTokenStruct) / sizeof(jsonTokenStruct[0]));
 
 	if(tokenCount < 0) {
-		WARN("Failed to parse JSON: %d\n", tokenCount);
+		IOT_WARN("Failed to parse JSON: %d\n", tokenCount);
 		return false;
 	}
 
 	/* Assume the top-level element is an object */
 	if(tokenCount < 1 || jsonTokenStruct[0].type != JSMN_OBJECT) {
-		WARN("Top Level is not an object\n");
+		IOT_WARN("Top Level is not an object\n");
 		return false;
 	}
 
@@ -338,23 +352,23 @@ bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t 
 static IoT_Error_t UpdateValueIfNoObject(const char *pJsonString, jsonStruct_t *pDataStruct, jsmntok_t token) {
 	IoT_Error_t ret_val = SUCCESS;
 	if(pDataStruct->type == SHADOW_JSON_BOOL) {
-		ret_val = parseBooleanValue(pDataStruct->pData, pJsonString, &token);
+		ret_val = parseBooleanValue((bool *) pDataStruct->pData, pJsonString, &token);
 	} else if(pDataStruct->type == SHADOW_JSON_INT32) {
-		ret_val = parseInteger32Value(pDataStruct->pData, pJsonString, &token);
+		ret_val = parseInteger32Value((int32_t *) pDataStruct->pData, pJsonString, &token);
 	} else if(pDataStruct->type == SHADOW_JSON_INT16) {
-		ret_val = parseInteger16Value(pDataStruct->pData, pJsonString, &token);
+		ret_val = parseInteger16Value((int16_t *) pDataStruct->pData, pJsonString, &token);
 	} else if(pDataStruct->type == SHADOW_JSON_INT8) {
-		ret_val = parseInteger8Value(pDataStruct->pData, pJsonString, &token);
+		ret_val = parseInteger8Value((int8_t *) pDataStruct->pData, pJsonString, &token);
 	} else if(pDataStruct->type == SHADOW_JSON_UINT32) {
-		ret_val = parseUnsignedInteger32Value(pDataStruct->pData, pJsonString, &token);
+		ret_val = parseUnsignedInteger32Value((uint32_t *) pDataStruct->pData, pJsonString, &token);
 	} else if(pDataStruct->type == SHADOW_JSON_UINT16) {
-		ret_val = parseUnsignedInteger16Value(pDataStruct->pData, pJsonString, &token);
+		ret_val = parseUnsignedInteger16Value((uint16_t *) pDataStruct->pData, pJsonString, &token);
 	} else if(pDataStruct->type == SHADOW_JSON_UINT8) {
-		ret_val = parseUnsignedInteger8Value(pDataStruct->pData, pJsonString, &token);
+		ret_val = parseUnsignedInteger8Value((uint8_t *) pDataStruct->pData, pJsonString, &token);
 	} else if(pDataStruct->type == SHADOW_JSON_FLOAT) {
-		ret_val = parseFloatValue(pDataStruct->pData, pJsonString, &token);
+		ret_val = parseFloatValue((float *) pDataStruct->pData, pJsonString, &token);
 	} else if(pDataStruct->type == SHADOW_JSON_DOUBLE) {
-		ret_val = parseDoubleValue(pDataStruct->pData, pJsonString, &token);
+		ret_val = parseDoubleValue((double *) pDataStruct->pData, pJsonString, &token);
 	}
 
 	return ret_val;
@@ -371,7 +385,7 @@ bool isJsonKeyMatchingAndUpdateValue(const char *pJsonDocument, void *pJsonHandl
 	for(i = 1; i < tokenCount; i++) {
 		if(jsoneq(pJsonDocument, &(jsonTokenStruct[i]), pDataStruct->pKey) == 0) {
 			dataToken = jsonTokenStruct[i + 1];
-			dataLength = (uint32_t)(dataToken.end - dataToken.start);
+			dataLength = (uint32_t) (dataToken.end - dataToken.start);
 			UpdateValueIfNoObject(pJsonDocument, pDataStruct, dataToken);
 			*pDataPosition = dataToken.start;
 			*pDataLength = dataLength;
@@ -390,7 +404,7 @@ bool isReceivedJsonValid(const char *pJsonDocument) {
 							sizeof(jsonTokenStruct) / sizeof(jsonTokenStruct[0]));
 
 	if(tokenCount < 0) {
-		WARN("Failed to parse JSON: %d\n", tokenCount);
+		IOT_WARN("Failed to parse JSON: %d\n", tokenCount);
 		return false;
 	}
 
@@ -412,7 +426,7 @@ bool extractClientToken(const char *pJsonDocument, char *pExtractedClientToken) 
 							sizeof(jsonTokenStruct) / sizeof(jsonTokenStruct[0]));
 
 	if(tokenCount < 0) {
-		WARN("Failed to parse JSON: %d\n", tokenCount);
+		IOT_WARN("Failed to parse JSON: %d\n", tokenCount);
 		return false;
 	}
 
@@ -424,7 +438,7 @@ bool extractClientToken(const char *pJsonDocument, char *pExtractedClientToken) 
 	for(i = 1; i < tokenCount; i++) {
 		if(jsoneq(pJsonDocument, &jsonTokenStruct[i], SHADOW_CLIENT_TOKEN_STRING) == 0) {
 			ClientJsonToken = jsonTokenStruct[i + 1];
-			length = (uint8_t)(ClientJsonToken.end - ClientJsonToken.start);
+			length = (uint8_t) (ClientJsonToken.end - ClientJsonToken.start);
 			strncpy(pExtractedClientToken, pJsonDocument + ClientJsonToken.start, length);
 			pExtractedClientToken[length] = '\0';
 			return true;
@@ -450,4 +464,8 @@ bool extractVersionNumber(const char *pJsonDocument, void *pJsonHandler, int32_t
 	}
 	return false;
 }
+
+#ifdef __cplusplus
+}
+#endif
 

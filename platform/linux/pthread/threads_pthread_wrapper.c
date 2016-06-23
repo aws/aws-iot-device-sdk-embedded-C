@@ -16,6 +16,10 @@
 #include "threads_platform.h"
 #ifdef _ENABLE_THREAD_SUPPORT_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Initialize the provided mutex
  *
@@ -99,5 +103,10 @@ IoT_Error_t aws_iot_thread_mutex_destroy(IoT_Mutex_t *pMutex) {
 
 	return SUCCESS;
 }
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* _ENABLE_THREAD_SUPPORT_ */
 

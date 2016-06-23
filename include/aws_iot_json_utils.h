@@ -25,6 +25,10 @@
 #ifndef AWS_IOT_SDK_SRC_JSON_UTILS_H_
 #define AWS_IOT_SDK_SRC_JSON_UTILS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -185,5 +189,9 @@ IoT_Error_t parseBooleanValue(bool *b, const char *jsonString, jsmntok_t *token)
  * @return				JSON_PARSE_ERROR - error parsing value
  */
 IoT_Error_t parseStringValue(char *buf, const char *jsonString, jsmntok_t *token);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* AWS_IOT_SDK_SRC_JSON_UTILS_H_ */

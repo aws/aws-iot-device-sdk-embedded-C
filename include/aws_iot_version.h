@@ -35,7 +35,7 @@
 /**
  * @brief MINOR version when functionality is added in a backwards-compatible manner.
  */
-#define VERSION_MINOR 0
+#define VERSION_MINOR 1
 /**
  * @brief PATCH version when backwards-compatible bug fixes are made.
  */

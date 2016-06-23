@@ -1,4 +1,23 @@
 #Change Log
+## [2.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.1.0) (Jun 15, 2016)
+
+New features:
+
+  - Added unit tests, further details can be found in the testing readme [here](https://github.com/aws/aws-iot-device-sdk-embedded-c/blob/master/tests/README.md)
+  - Added sample to demonstrate building the SDK as library
+  - Added sample to demonstrate building the SDK in C++
+
+Bugfixes/Improvements:
+
+  - Increased default value of Maximum Reconnect Wait interval to 128 secs
+  - Increased default value of MQTT Command Timeout in Shadow Connect to 20 secs
+  - Shadow null/length checks
+  - Client Id Length not passed correctly in shadow connect
+  - Add extern C to headers and source files, added sample to demonstrate usage with C++ 
+  - Delete/Accepted not being reported, callback added for delete/accepted
+  - Append IOT_ to all Debug macros (eg. DEBUG is now IOT_DEBUG)
+  - Fixed exit on error for subscribe_publish_sample
+
 ## [2.0.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.0.0) (April 28, 2016)
 
 New features:

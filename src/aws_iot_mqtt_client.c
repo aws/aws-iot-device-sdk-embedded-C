@@ -35,6 +35,10 @@
  * @brief MQTT client API definitions
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "aws_iot_log.h"
 #include "aws_iot_mqtt_client_interface.h"
 
@@ -42,6 +46,7 @@
 #include "threads_interface.h"
 #endif
 
+const IoT_Client_Init_Params iotClientInitParamsDefault = IoT_Client_Init_Params_initializer;
 const IoT_MQTT_Will_Options iotMqttWillOptionsDefault = IoT_MQTT_Will_Options_Initializer;
 const IoT_Client_Connect_Params iotClientConnectParamsDefault = IoT_Client_Connect_Params_initializer;
 
@@ -154,7 +159,9 @@ IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *p
 
 	FUNC_ENTRY;
 
-	if(NULL == pClient || NULL == pInitParams || NULL == pInitParams->pHostURL || pInitParams->port == 0) {
+	if(NULL == pClient || NULL == pInitParams || NULL == pInitParams->pHostURL || 0 == pInitParams->port ||
+	   NULL == pInitParams->pRootCALocation || NULL == pInitParams->pDevicePrivateKeyLocation ||
+	   NULL == pInitParams->pDeviceCertLocation) {
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);
 	}
 
@@ -171,6 +178,7 @@ IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *p
 	pClient->clientData.counterNetworkDisconnected = 0;
 	pClient->clientData.disconnectHandler = pInitParams->disconnectHandler;
 	pClient->clientData.disconnectHandlerData = pInitParams->disconnectHandlerData;
+	pClient->clientData.nextPacketId = 1;
 
 	/* Initialize default connection options */
 	rc = aws_iot_mqtt_set_connect_params(pClient, &default_options);
@@ -215,7 +223,7 @@ IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *p
 }
 
 uint16_t aws_iot_mqtt_get_next_packet_id(AWS_IoT_Client *pClient) {
-	return pClient->clientData.nextPacketId = (uint16_t)((MAX_PACKET_ID == pClient->clientData.nextPacketId) ? 1 : (
+	return pClient->clientData.nextPacketId = (uint16_t) ((MAX_PACKET_ID == pClient->clientData.nextPacketId) ? 1 : (
 			pClient->clientData.nextPacketId + 1));
 }
 
@@ -225,7 +233,7 @@ bool aws_iot_mqtt_is_client_connected(AWS_IoT_Client *pClient) {
 	FUNC_ENTRY;
 
 	if(NULL == pClient) {
-		WARN(" Client is null! ");
+		IOT_WARN(" Client is null! ");
 		FUNC_EXIT_RC(false);
 	}
 
@@ -259,7 +267,7 @@ bool aws_iot_mqtt_is_client_connected(AWS_IoT_Client *pClient) {
 bool aws_iot_is_autoreconnect_enabled(AWS_IoT_Client *pClient) {
 	FUNC_ENTRY;
 	if(NULL == pClient) {
-		WARN(" Client is null! ");
+		IOT_WARN(" Client is null! ");
 		FUNC_EXIT_RC(false);
 	}
 
@@ -294,4 +302,8 @@ uint32_t aws_iot_mqtt_get_network_disconnected_count(AWS_IoT_Client *pClient) {
 void aws_iot_mqtt_reset_network_disconnected_count(AWS_IoT_Client *pClient) {
 	pClient->clientData.counterNetworkDisconnected = 0;
 }
+
+#ifdef __cplusplus
+}
+#endif
 

@@ -40,6 +40,7 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 
 	if(10 >= params->payloadLen) {
 		snprintf(tempBuf, params->payloadLen, params->payload);
+		printf("\nMsg received : %s", tempBuf);
 		tempInt = atoi(tempBuf);
 		if(0 < tempInt && PUBLISH_COUNT >= tempInt) {
 			countArray[tempInt - 1]++;
@@ -115,13 +116,15 @@ static IoT_Error_t aws_iot_mqtt_tests_subscribe_to_test_topic(AWS_IoT_Client *pC
 
 static void *aws_iot_mqtt_tests_yield_thread_runner(void *ptr) {
 	IoT_Error_t rc = SUCCESS;
-	static int cntr = 0;
 	AWS_IoT_Client *pClient = (AWS_IoT_Client *) ptr;
 	while(SUCCESS == rc && false == terminate_yield_thread) {
-		usleep(500000);
-		rc = aws_iot_mqtt_yield(pClient, 100);
+		do {
+			usleep(THREAD_SLEEP_INTERVAL_USEC);
+			rc = aws_iot_mqtt_yield(pClient, 100);
+		} while(MQTT_CLIENT_NOT_IDLE_ERROR == rc);
+
 		if(SUCCESS != rc) {
-			printf("\nYield Returned : %d ", rc);
+			IOT_ERROR("\nYield Returned : %d ", rc);
 		}
 	}
 }
