@@ -50,11 +50,11 @@ extern "C" {
  *
  */
 typedef struct {
-	char *pHost; ///< This will be unique to a customer and can be retrieved from the console
+	const char *pHost; ///< This will be unique to a customer and can be retrieved from the console
 	uint16_t port; ///< By default the port is 8883
-	char *pRootCA; ///< Location with the Filename of the Root CA
-	char *pClientCRT; ///< Location of Device certs signed by AWS IoT service
-	char *pClientKey; ///< Location of Device private key
+	const char *pRootCA; ///< Location with the Filename of the Root CA
+	const char *pClientCRT; ///< Location of Device certs signed by AWS IoT service
+	const char *pClientKey; ///< Location of Device private key
 	bool enableAutoReconnect;        ///< Set to true to enable auto reconnect
 	iot_disconnect_handler disconnectHandler;    ///< Callback to be invoked upon connection loss.
 } ShadowInitParameters_t;
@@ -69,8 +69,8 @@ typedef struct {
  *
  */
 typedef struct {
-	char *pMyThingName; ///< Every device has a Thing Shadow and this is the placeholder for name
-	char *pMqttClientId; ///< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id
+	const char *pMyThingName; ///< Every device has a Thing Shadow and this is the placeholder for name
+	const char *pMqttClientId; ///< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id
 	uint16_t mqttClientIdLen; ///< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id
 	pApplicationHandler_t deleteActionHandler;	///< Callback to be invoked when Thing shadow for this device is deleted
 } ShadowConnectParameters_t;
