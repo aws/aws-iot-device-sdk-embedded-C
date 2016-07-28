@@ -284,6 +284,11 @@ IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName
 	}
 
 	pubRc = _aws_iot_mqtt_internal_publish(pClient, pTopicName, topicNameLen, pParams);
+	if(NETWORK_DISCONNECTED_ERROR == pubRc)
+	{
+		pubRc = aws_iot_mqtt_internal_handle_disconnect_event(pClient);
+		FUNC_EXIT_RC(pubRc);
+	}
 
 	rc = aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_PUBLISH_IN_PROGRESS, clientState);
 	if(SUCCESS == pubRc && SUCCESS != rc) {
