@@ -267,7 +267,7 @@ IoT_Error_t aws_iot_mqtt_internal_init_header(MQTTHeader *pHeader, MessageTypes 
 IoT_Error_t aws_iot_mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t length, Timer *pTimer) {
 
 	size_t sentLen, sent;
-	IoT_Error_t rc;
+	IoT_Error_t rc = FAILURE;
 
 	FUNC_ENTRY;
 
@@ -312,7 +312,7 @@ IoT_Error_t aws_iot_mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t le
 		FUNC_EXIT_RC(SUCCESS);
 	}
 
-	FUNC_EXIT_RC(FAILURE);
+	FUNC_EXIT_RC(rc);
 }
 
 static IoT_Error_t _aws_iot_mqtt_internal_decode_packet_remaining_len(AWS_IoT_Client *pClient,
@@ -358,8 +358,14 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, T
 
 	rc = pClient->networkStack.read(&(pClient->networkStack), pClient->clientData.readBuf, 1, pTimer, &read_len);
 	/* 1. read the header byte.  This has the packet type in it */
-	if(NETWORK_SSL_NOTHING_TO_READ == rc) {
-		return MQTT_NOTHING_TO_READ;
+	if(SUCCESS != rc) {
+		// Note: Only here are we passing out the MQTT_NOTHING_TO_READ return
+		// value since it's sort of the "initial" entry.  If this supported
+		// caching of partially read packets, it'd be good to return this error
+		// code elsewhere in this function with partial reads as well.
+		if(rc == NETWORK_SSL_NOTHING_TO_READ)
+			return MQTT_NOTHING_TO_READ;
+		FUNC_EXIT_RC(rc);
 	}
 
 	len = 1;
@@ -383,6 +389,8 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, T
 				} else {
 					bytes_to_be_read = rem_len - total_bytes_read;
 				}
+			} else {
+				FUNC_EXIT_RC(rc);
 			}
 		} while(total_bytes_read < rem_len && SUCCESS == rc);
 		return MQTT_RX_BUFFER_TOO_SHORT_ERROR;
@@ -395,8 +403,11 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, T
 	if(rem_len > 0) {
 		rc = pClient->networkStack.read(&(pClient->networkStack), pClient->clientData.readBuf + len, rem_len, pTimer,
 										&read_len);
-		if(SUCCESS != rc || read_len != rem_len) {
-			return FAILURE;
+		if(SUCCESS != rc) {
+			FUNC_EXIT_RC(rc);
+		}
+		if(read_len != rem_len) {
+			FUNC_EXIT_RC(FAILURE);
 		}
 	}
 
