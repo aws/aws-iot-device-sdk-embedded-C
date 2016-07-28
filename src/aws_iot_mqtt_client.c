@@ -303,6 +303,35 @@ void aws_iot_mqtt_reset_network_disconnected_count(AWS_IoT_Client *pClient) {
 	pClient->clientData.counterNetworkDisconnected = 0;
 }
 
+/**
+  * This is for the case when the aws_iot_mqtt_internal_send_packet Fails.
+  */
+static void _aws_iot_mqtt_force_client_disconnect(AWS_IoT_Client *pClient) {
+	pClient->clientStatus.clientState = CLIENT_STATE_DISCONNECTED_ERROR;
+	pClient->networkStack.disconnect(&(pClient->networkStack));
+	pClient->networkStack.destroy(&(pClient->networkStack));
+}
+
+IoT_Error_t _aws_iot_mqtt_handle_disconnect(AWS_IoT_Client *pClient) {
+	IoT_Error_t rc;
+
+	FUNC_ENTRY;
+
+	rc = aws_iot_mqtt_disconnect(pClient);
+	if(rc != SUCCESS) {
+		// If the aws_iot_mqtt_internal_send_packet prevents us from sending a disconnect packet then we have to clean the stack
+		_aws_iot_mqtt_force_client_disconnect(pClient);
+	}
+
+	if(NULL != pClient->clientData.disconnectHandler) {
+		pClient->clientData.disconnectHandler(pClient, pClient->clientData.disconnectHandlerData);
+	}
+
+	/* Reset to 0 since this was not a manual disconnect */
+	pClient->clientStatus.clientState = CLIENT_STATE_DISCONNECTED_ERROR;
+	FUNC_EXIT_RC(NETWORK_DISCONNECTED_ERROR);
+}
+
 #ifdef __cplusplus
 }
 #endif
