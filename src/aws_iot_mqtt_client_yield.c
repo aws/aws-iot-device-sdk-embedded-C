@@ -128,8 +128,7 @@ static IoT_Error_t _aws_iot_mqtt_keep_alive(AWS_IoT_Client *pClient) {
 	}
 
 	if(pClient->clientStatus.isPingOutstanding) {
-		rc = _aws_iot_mqtt_handle_disconnect(pClient);
-		FUNC_EXIT_RC(rc);
+		FUNC_EXIT_RC(NETWORK_DISCONNECTED_ERROR);
 	}
 
 	/* there is no ping outstanding - send one */
@@ -145,9 +144,10 @@ static IoT_Error_t _aws_iot_mqtt_keep_alive(AWS_IoT_Client *pClient) {
 	/* send the ping packet */
 	rc = aws_iot_mqtt_internal_send_packet(pClient, serialized_len, &timer);
 	if(SUCCESS != rc) {
-		//If sending a PING fails we can no longer determine if we are connected.  In this case we decide we are disconnected and begin reconnection attempts
-		rc = _aws_iot_mqtt_handle_disconnect(pClient);
-		FUNC_EXIT_RC(rc);
+		// If sending a PING fails we can no longer determine if we are
+		// connected.  In this case we decide we are disconnected and
+		// inform the callee of this error.
+		FUNC_EXIT_RC(NETWORK_DISCONNECTED_ERROR);
 	}
 
 	pClient->clientStatus.isPingOutstanding = true;
@@ -201,12 +201,12 @@ static IoT_Error_t _aws_iot_mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_
 		}
 
 		yieldRc = aws_iot_mqtt_internal_cycle_read(pClient, &timer, &packet_type);
-		if(SUCCESS != yieldRc) {
-			break;
-		}
 
-		yieldRc = _aws_iot_mqtt_keep_alive(pClient);
+		if(SUCCESS == yieldRc)
+			yieldRc = _aws_iot_mqtt_keep_alive(pClient);
+
 		if(NETWORK_DISCONNECTED_ERROR == yieldRc) {
+			_aws_iot_mqtt_handle_disconnect(pClient);
 			pClient->clientData.counterNetworkDisconnected++;
 			if(1 == pClient->clientStatus.isAutoReconnectEnabled) {
 				yieldRc = aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_DISCONNECTED_ERROR,
