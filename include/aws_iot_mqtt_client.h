@@ -415,9 +415,12 @@ void aws_iot_mqtt_reset_network_disconnected_count(AWS_IoT_Client *pClient);
  * Called to cleanup and potentially schedule a reconnect when a TLS disconnect
  * occurs
  *
+ * Note: Returns NETWORK_ATTEMPTING_RECONNECT when transitioned to reconnect
+ *       state, or returns NETWORK_DISCONNECTED_ERROR.
+ *
  * @param pClient Reference to the IoT Client
  */
-IoT_Error_t _aws_iot_mqtt_handle_disconnect(AWS_IoT_Client *pClient);
+IoT_Error_t aws_iot_mqtt_internal_handle_disconnect_event(AWS_IoT_Client *pClient);
 
 #ifdef __cplusplus
 }

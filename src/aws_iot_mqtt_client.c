@@ -312,7 +312,7 @@ static void _aws_iot_mqtt_force_client_disconnect(AWS_IoT_Client *pClient) {
 	pClient->networkStack.destroy(&(pClient->networkStack));
 }
 
-IoT_Error_t _aws_iot_mqtt_handle_disconnect(AWS_IoT_Client *pClient) {
+static IoT_Error_t _aws_iot_mqtt_handle_disconnect(AWS_IoT_Client *pClient) {
 	IoT_Error_t rc;
 
 	FUNC_ENTRY;
@@ -330,6 +330,30 @@ IoT_Error_t _aws_iot_mqtt_handle_disconnect(AWS_IoT_Client *pClient) {
 	/* Reset to 0 since this was not a manual disconnect */
 	pClient->clientStatus.clientState = CLIENT_STATE_DISCONNECTED_ERROR;
 	FUNC_EXIT_RC(NETWORK_DISCONNECTED_ERROR);
+}
+
+IoT_Error_t aws_iot_mqtt_internal_handle_disconnect_event(AWS_IoT_Client* pClient)
+{
+	IoT_Error_t rc;
+	_aws_iot_mqtt_handle_disconnect(pClient);
+	pClient->clientData.counterNetworkDisconnected++;
+	if(1 == pClient->clientStatus.isAutoReconnectEnabled) {
+		rc = aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_DISCONNECTED_ERROR,
+		                                   CLIENT_STATE_PENDING_RECONNECT);
+		if(SUCCESS != rc) {
+			FUNC_EXIT_RC(rc);
+		}
+
+		pClient->clientData.currentReconnectWaitInterval = AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL;
+		countdown_ms(&(pClient->reconnectDelayTimer), pClient->clientData.currentReconnectWaitInterval);
+		/* Depending on timer values, it is possible that yield timer has expired
+			* Set to rc to attempting reconnect to inform client that autoreconnect
+			* attempt has started */
+		rc = NETWORK_ATTEMPTING_RECONNECT;
+	} else {
+		rc = NETWORK_DISCONNECTED_ERROR;
+	}
+	return rc;
 }
 
 #ifdef __cplusplus
