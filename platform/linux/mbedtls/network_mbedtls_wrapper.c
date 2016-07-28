@@ -284,6 +284,9 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 
 	*written_len = written_so_far;
 
+	if(ret == MBEDTLS_ERR_NET_CONN_RESET)
+		return NETWORK_DISCONNECTED_ERROR;
+
 	if(isErrorFlag) {
 		return NETWORK_SSL_WRITE_ERROR;
 	} else if(has_timer_expired(timer) && written_so_far != len) {
@@ -320,6 +323,9 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 	} while(!isErrorFlag && !isCompleteFlag && timerLeftVal > 0);
 
 	*read_len = rxLen;
+
+	if(ret == MBEDTLS_ERR_NET_CONN_RESET)
+		return NETWORK_DISCONNECTED_ERROR;
 
 	if(0 == rxLen && isErrorFlag) {
 		return NETWORK_SSL_NOTHING_TO_READ;
