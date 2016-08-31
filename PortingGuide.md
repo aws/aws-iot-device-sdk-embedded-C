@@ -128,7 +128,7 @@ The threading layer provides the implementation of mutexes used for thread-safe 
 
 ###Sample Porting:
 
-Marvell has ported an older version of the SDK to its IoT Starter kit. [These](https://github.com/marvell-iot/aws_starter_sdk/tree/master/sdk/external/aws_iot/aws_iot_src/protocol/mqtt/aws_iot_embedded_client_wrapper/platform_wmsdk) files are example implementations of the above mentioned functions. 
+Marvell has ported the SDK to for their development boards. [These](https://github.com/marvell-iot/aws_starter_sdk/tree/master/sdk/external/aws_iot/platform/wmsdk) files are example implementations of the above mentioned functions. 
 This provides a port of the timer and network layer. The threading layer is not a part of this port.
 
 ##Time source for certificate validation
