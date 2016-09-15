@@ -61,6 +61,7 @@ static IoT_Error_t _aws_iot_mqtt_serialize_subscribe(unsigned char *pTxBuf, size
 													 QoS *pRequestedQoSs, uint32_t *pSerializedLen) {
 	unsigned char *ptr;
 	uint32_t itr, rem_len;
+	IoT_Error_t rc;
 	MQTTHeader header = {0};
 
 	FUNC_ENTRY;
@@ -79,7 +80,7 @@ static IoT_Error_t _aws_iot_mqtt_serialize_subscribe(unsigned char *pTxBuf, size
 		FUNC_EXIT_RC(MQTT_TX_BUFFER_TOO_SHORT_ERROR);
 	}
 
-	IoT_Error_t rc = aws_iot_mqtt_internal_init_header(&header, SUBSCRIBE, QOS1, dup, 0);
+	rc = aws_iot_mqtt_internal_init_header(&header, SUBSCRIBE, QOS1, dup, 0);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}

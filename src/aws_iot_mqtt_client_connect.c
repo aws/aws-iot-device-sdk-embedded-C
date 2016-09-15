@@ -431,7 +431,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 	}
 
 	pClient->clientStatus.isPingOutstanding = false;
-	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval / (uint32_t) 2);
+	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval);
 
 	FUNC_EXIT_RC(SUCCESS);
 }

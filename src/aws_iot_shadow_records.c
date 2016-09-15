@@ -253,12 +253,12 @@ static void unsubscribeFromAcceptedAndRejected(uint8_t index) {
 	char TemporaryTopicNameRejected[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 	IoT_Error_t ret_val = SUCCESS;
 
+	int16_t indexSubList;
+
 	topicNameFromThingAndAction(TemporaryTopicNameAccepted, AckWaitList[index].thingName, AckWaitList[index].action,
 								SHADOW_ACCEPTED);
 	topicNameFromThingAndAction(TemporaryTopicNameRejected, AckWaitList[index].thingName, AckWaitList[index].action,
 								SHADOW_REJECTED);
-
-	int16_t indexSubList;
 
 	indexSubList = findIndexOfSubscriptionList(TemporaryTopicNameAccepted);
 	if((indexSubList >= 0)) {
@@ -335,6 +335,7 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 	bool clearBothEntriesFromList = true;
 	int16_t indexAcceptedSubList = 0;
 	int16_t indexRejectedSubList = 0;
+	Timer subSettlingtimer;
 	indexAcceptedSubList = getNextFreeIndexOfSubscriptionList();
 	indexRejectedSubList = getNextFreeIndexOfSubscriptionList();
 
@@ -357,7 +358,6 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 				clearBothEntriesFromList = false;
 
 				// wait for SUBSCRIBE_SETTLING_TIME seconds to let the subscription take effect
-				Timer subSettlingtimer;
 				init_timer(&subSettlingtimer);
 				countdown_sec(&subSettlingtimer, SUBSCRIBE_SETTLING_TIME);
 				while(!has_timer_expired(&subSettlingtimer));

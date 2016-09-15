@@ -134,6 +134,7 @@ static IoT_Error_t _aws_iot_mqtt_keep_alive(AWS_IoT_Client *pClient) {
 
 	/* there is no ping outstanding - send one */
 	init_timer(&timer);
+
 	countdown_ms(&timer, pClient->clientData.commandTimeoutMs);
 	serialized_len = 0;
 	rc = aws_iot_mqtt_internal_serialize_zero(pClient->clientData.writeBuf, pClient->clientData.writeBufSize,
@@ -152,7 +153,7 @@ static IoT_Error_t _aws_iot_mqtt_keep_alive(AWS_IoT_Client *pClient) {
 
 	pClient->clientStatus.isPingOutstanding = true;
 	/* start a timer to wait for PINGRESP from server */
-	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval / (uint32_t) 2);
+	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval);
 
 	FUNC_EXIT_RC(SUCCESS);
 }
@@ -187,7 +188,8 @@ static IoT_Error_t _aws_iot_mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_
 
 	FUNC_ENTRY;
 
-	while(!has_timer_expired(&timer)) {
+	// evaluate timeout at the end of the loop to make sure the actual yield runs at least once
+	do {
 		clientState = aws_iot_mqtt_get_client_state(pClient);
 		if(CLIENT_STATE_PENDING_RECONNECT == clientState) {
 			if(AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL < pClient->clientData.currentReconnectWaitInterval) {
@@ -201,11 +203,16 @@ static IoT_Error_t _aws_iot_mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_
 		}
 
 		yieldRc = aws_iot_mqtt_internal_cycle_read(pClient, &timer, &packet_type);
-		if(SUCCESS != yieldRc) {
-			break;
+		if(SUCCESS == yieldRc) {
+			yieldRc = _aws_iot_mqtt_keep_alive(pClient);
+		} else {
+			// SSL read and write errors are terminal, connection must be closed and retried
+			if(NETWORK_SSL_READ_ERROR == yieldRc || NETWORK_SSL_READ_TIMEOUT_ERROR == yieldRc
+				|| NETWORK_SSL_WRITE_ERROR == yieldRc || NETWORK_SSL_WRITE_TIMEOUT_ERROR == yieldRc) {
+				yieldRc = _aws_iot_mqtt_handle_disconnect(pClient);
+			}
 		}
 
-		yieldRc = _aws_iot_mqtt_keep_alive(pClient);
 		if(NETWORK_DISCONNECTED_ERROR == yieldRc) {
 			pClient->clientData.counterNetworkDisconnected++;
 			if(1 == pClient->clientStatus.isAutoReconnectEnabled) {
@@ -227,7 +234,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_
 		} else if(SUCCESS != yieldRc) {
 			break;
 		}
-	}
+	} while(!has_timer_expired(&timer));
 
 	FUNC_EXIT_RC(yieldRc);
 }

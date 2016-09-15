@@ -6,7 +6,7 @@ The scope of this document is to provide instructions to modify the provided sou
 ##Contents of the SDK
 
 The SDK ported for linux can be downloaded from the below link:
- * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-2.1.0.tar)
+ * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-2.0.0.tar)
 
 The C-code files of this SDK are delivered via the following directory structure (see comment behind folder name for an explanation of its content).
 
@@ -128,7 +128,7 @@ The threading layer provides the implementation of mutexes used for thread-safe 
 
 ###Sample Porting:
 
-Marvell has ported an older version of the SDK to its IoT Starter kit. [These](https://github.com/marvell-iot/aws_starter_sdk/tree/master/sdk/external/aws_iot/aws_iot_src/protocol/mqtt/aws_iot_embedded_client_wrapper/platform_wmsdk) files are example implementations of the above mentioned functions. 
+Marvell has ported the SDK for their development boards. [These](https://github.com/marvell-iot/aws_starter_sdk/tree/master/sdk/external/aws_iot/platform/wmsdk) files are example implementations of the above mentioned functions. 
 This provides a port of the timer and network layer. The threading layer is not a part of this port.
 
 ##Time source for certificate validation

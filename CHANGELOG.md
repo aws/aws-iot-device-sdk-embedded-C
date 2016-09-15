@@ -1,4 +1,12 @@
 #Change Log
+## [2.1.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.1.1) (Sep 5, 2016)
+
+Bugfixes/Improvements:
+
+  - Network layer interface improvements to address reported issues
+  - Incorporated GitHub pull request [#41](https://github.com/aws/aws-iot-device-sdk-embedded-c/pull/41) 
+  - Bugfixes for issues [#36](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/36) and [#33](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/33)
+
 ## [2.1.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.1.0) (Jun 15, 2016)
 
 New features:

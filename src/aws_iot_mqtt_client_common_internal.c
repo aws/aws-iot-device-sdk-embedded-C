@@ -349,6 +349,9 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, T
 	size_t len, rem_len, total_bytes_read, bytes_to_be_read, read_len;
 	IoT_Error_t rc;
 	MQTTHeader header = {0};
+	Timer packetTimer;
+	init_timer(&packetTimer);
+	countdown_ms(&packetTimer, pClient->clientData.packetTimeoutMs);
 
 	len = 0;
 	rem_len = 0;
@@ -360,9 +363,17 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, T
 	/* 1. read the header byte.  This has the packet type in it */
 	if(NETWORK_SSL_NOTHING_TO_READ == rc) {
 		return MQTT_NOTHING_TO_READ;
+	} else if(SUCCESS != rc) {
+		return rc;
 	}
 
 	len = 1;
+
+	/* Use the constant packet receive timeout, instead of the variable (remaining) pTimer time, to
+	 * determine packet receiving timeout. This is done so we don't prematurely time out packet receiving
+	 * if the remaining time in pTimer is too short.
+	 */
+	pTimer = &packetTimer;
 
 	/* 2. read the remaining length.  This is variable in itself */
 	rc = _aws_iot_mqtt_internal_decode_packet_remaining_len(pClient, &rem_len, pTimer);

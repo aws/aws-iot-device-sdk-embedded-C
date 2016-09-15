@@ -68,7 +68,7 @@ struct Network {
 	IoT_Error_t (*read)(Network *, unsigned char *, size_t, Timer *, size_t *);    ///< Function pointer pointing to the network function to read from the network
 	IoT_Error_t (*write)(Network *, unsigned char *, size_t, Timer *, size_t *);    ///< Function pointer pointing to the network function to write to the network
 	IoT_Error_t (*disconnect)(Network *);    ///< Function pointer pointing to the network function to disconnect from the network
-	IoT_Error_t (*isConnected)(Network *);    ///< Function pointer pointing to the network function to check if physical layer is connected
+	IoT_Error_t (*isConnected)(Network *);    ///< Function pointer pointing to the network function to check if TLS is connected
 	IoT_Error_t (*destroy)(Network *);        ///< Function pointer pointing to the network function to destroy the network object
 
 	TLSConnectParams tlsConnectParams;        ///< TLSConnect params structure containing the common connection parameters

@@ -172,6 +172,7 @@ IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *p
 		pClient->clientData.messageHandlers[i].qos = QOS0;
 	}
 
+	pClient->clientData.packetTimeoutMs = pInitParams->mqttPacketTimeout_ms;
 	pClient->clientData.commandTimeoutMs = pInitParams->mqttCommandTimeout_ms;
 	pClient->clientData.writeBufSize = AWS_IOT_MQTT_TX_BUF_LEN;
 	pClient->clientData.readBufSize = AWS_IOT_MQTT_RX_BUF_LEN;

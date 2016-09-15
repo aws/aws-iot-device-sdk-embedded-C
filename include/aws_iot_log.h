@@ -43,7 +43,7 @@ extern "C" {
 #ifdef ENABLE_IOT_DEBUG
 #define IOT_DEBUG(...)    \
 	{\
-	printf("DEBUG:   %s L#%d ", __PRETTY_FUNCTION__, __LINE__);  \
+	printf("DEBUG:   %s L#%d ", __func__, __LINE__);  \
 	printf(__VA_ARGS__); \
 	printf("\n"); \
 	}
@@ -59,15 +59,15 @@ extern "C" {
 #ifdef ENABLE_IOT_TRACE
 #define FUNC_ENTRY    \
 	{\
-	printf("FUNC_ENTRY:   %s L#%d \n", __PRETTY_FUNCTION__, __LINE__);  \
+	printf("FUNC_ENTRY:   %s L#%d \n", __func__, __LINE__);  \
 	}
 #define FUNC_EXIT    \
 	{\
-	printf("FUNC_EXIT:   %s L#%d \n", __PRETTY_FUNCTION__, __LINE__);  \
+	printf("FUNC_EXIT:   %s L#%d \n", __func__, __LINE__);  \
 	}
 #define FUNC_EXIT_RC(x)    \
 	{\
-	printf("FUNC_EXIT:   %s L#%d Return Code : %d \n", __PRETTY_FUNCTION__, __LINE__, x);  \
+	printf("FUNC_EXIT:   %s L#%d Return Code : %d \n", __func__, __LINE__, x);  \
 	return x; \
 	}
 #else
@@ -100,7 +100,7 @@ extern "C" {
 #ifdef ENABLE_IOT_WARN
 #define IOT_WARN(...)   \
 	{ \
-	printf("WARN:  %s L#%d ", __PRETTY_FUNCTION__, __LINE__);  \
+	printf("WARN:  %s L#%d ", __func__, __LINE__);  \
 	printf(__VA_ARGS__); \
 	printf("\n"); \
 	}
@@ -116,7 +116,7 @@ extern "C" {
 #ifdef ENABLE_IOT_ERROR
 #define IOT_ERROR(...)  \
 	{ \
-	printf("ERROR: %s L#%d ", __PRETTY_FUNCTION__, __LINE__); \
+	printf("ERROR: %s L#%d ", __func__, __LINE__); \
 	printf(__VA_ARGS__); \
 	printf("\n"); \
 	}

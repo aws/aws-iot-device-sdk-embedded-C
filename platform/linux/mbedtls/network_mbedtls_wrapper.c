@@ -88,6 +88,15 @@ IoT_Error_t iot_tls_is_connected(Network *pNetwork) {
 }
 
 IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
+	int ret = 0;
+	const char *pers = "aws_iot_tls_wrapper";
+	TLSDataParams *tlsDataParams = NULL;
+	char portBuffer[6];
+	char vrfy_buf[512];
+#ifdef IOT_DEBUG
+	unsigned char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
+#endif
+
 	if(NULL == pNetwork) {
 		return NULL_VALUE_ERROR;
 	}
@@ -98,12 +107,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 									params->DestinationPort, params->timeout_ms, params->ServerVerificationFlag);
 	}
 
-	int ret = 0;
-	const char *pers = "aws_iot_tls_wrapper";
-#ifdef IOT_DEBUG
-	unsigned char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
-#endif
-	TLSDataParams *tlsDataParams = &(pNetwork->tlsDataParams);
+	tlsDataParams = &(pNetwork->tlsDataParams);
 
 	mbedtls_net_init(&(tlsDataParams->server_fd));
 	mbedtls_ssl_init(&(tlsDataParams->ssl));
@@ -143,7 +147,6 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 		return NETWORK_PK_PRIVATE_KEY_PARSE_ERROR;
 	}
 	IOT_DEBUG(" ok\n");
-	char portBuffer[6];
 	snprintf(portBuffer, 6, "%d", pNetwork->tlsConnectParams.DestinationPort);
 	IOT_DEBUG("  . Connecting to %s/%s...", pNetwork->tlsConnectParams.pDestinationURL, portBuffer);
 	if((ret = mbedtls_net_connect(&(tlsDataParams->server_fd), pNetwork->tlsConnectParams.pDestinationURL,
@@ -232,7 +235,6 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 
 	if(pNetwork->tlsConnectParams.ServerVerificationFlag == true) {
 		if((tlsDataParams->flags = mbedtls_ssl_get_verify_result(&(tlsDataParams->ssl))) != 0) {
-			char vrfy_buf[512];
 			IOT_ERROR(" failed\n");
 			mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "  ! ", tlsDataParams->flags);
 			IOT_ERROR("%s\n", vrfy_buf);
@@ -294,40 +296,37 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 }
 
 IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer, size_t *read_len) {
+	mbedtls_ssl_context *ssl = &(pNetwork->tlsDataParams.ssl);
 	size_t rxLen = 0;
-	bool isErrorFlag = false;
-	bool isCompleteFlag = false;
-	uint32_t timerLeftVal = left_ms(timer);
-	TLSDataParams *tlsDataParams = &(pNetwork->tlsDataParams);
-	int ret = 0;
+	int ret;
 
-	do {
-		//mbedtls_ssl_conf_read_timeout(&(tlsDataParams->conf), timerLeftVal);
-		ret = mbedtls_ssl_read(&(tlsDataParams->ssl), pMsg, len);
-		if(ret >= 0) { /* 0 is for EOF */
+	while (len > 0) {
+		// This read will timeout after IOT_SSL_READ_TIMEOUT if there's no data to be read
+		ret = mbedtls_ssl_read(ssl, pMsg, len);
+		if (ret > 0) {
 			rxLen += ret;
-		} else if(ret != MBEDTLS_ERR_SSL_WANT_READ) {
-			isErrorFlag = true;
+			pMsg += ret;
+			len -= ret;
+		} else if (ret == 0 || (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != MBEDTLS_ERR_SSL_TIMEOUT)) {
+			return NETWORK_SSL_READ_ERROR;
 		}
 
-		/* All other negative return values indicate connection needs to be reset.
-		 * Will be caught in ping request so ignored here */
-
-		if(rxLen >= len) {
-			isCompleteFlag = true;
+		// Evaluate timeout after the read to make sure read is done at least once
+		if (has_timer_expired(timer)) {
+			break;
 		}
-		timerLeftVal = left_ms(timer);
-	} while(!isErrorFlag && !isCompleteFlag && timerLeftVal > 0);
-
-	*read_len = rxLen;
-
-	if(0 == rxLen && isErrorFlag) {
-		return NETWORK_SSL_NOTHING_TO_READ;
-	} else if(has_timer_expired(timer) && !isCompleteFlag) {
-		return NETWORK_SSL_READ_TIMEOUT_ERROR;
 	}
 
-	return SUCCESS;
+	if (len == 0) {
+		*read_len = rxLen;
+		return SUCCESS;
+	}
+
+	if (rxLen == 0) {
+		return NETWORK_SSL_NOTHING_TO_READ;
+	} else {
+		return NETWORK_SSL_READ_TIMEOUT_ERROR;
+	}
 }
 
 IoT_Error_t iot_tls_disconnect(Network *pNetwork) {

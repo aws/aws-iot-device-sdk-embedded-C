@@ -182,18 +182,18 @@ TEST_C(YieldTests, disconnectNoAutoReconnect) {
 
 	/* Disable Autoreconnect, then let ping request time out and call yield */
 	aws_iot_mqtt_autoreconnect_set_status(&iotClient, false);
-	sleep((uint16_t)(iotClient.clientData.keepAliveInterval / 2));
+	sleep((uint16_t)(iotClient.clientData.keepAliveInterval));
 
 	ResetTLSBuffer();
 
-	/* Sleep for half keep alive interval to allow the first ping to be sent out */
-	sleep(iotClient.clientData.keepAliveInterval / (uint32_t)2);
+	/* Sleep for keep alive interval to allow the first ping to be sent out */
+	sleep(iotClient.clientData.keepAliveInterval);
 	rc = aws_iot_mqtt_yield(&iotClient, 100);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
 	CHECK_EQUAL_C_INT(true, isLastTLSTxMessagePingreq());
 
 	/* Let ping request time out and call yield */
-	sleep(iotClient.clientData.keepAliveInterval / (uint32_t)2 + 1);
+	sleep(iotClient.clientData.keepAliveInterval + 1);
 	rc = aws_iot_mqtt_yield(&iotClient, 100);
 	CHECK_EQUAL_C_INT(NETWORK_DISCONNECTED_ERROR, rc);
 	CHECK_EQUAL_C_INT(1, isLastTLSTxMessageDisconnect());
@@ -273,14 +273,14 @@ TEST_C(YieldTests, disconnectAutoReconnectTimeout) {
 
 	ResetTLSBuffer();
 
-	/* Sleep for half keep alive interval to allow the first ping to be sent out */
-	sleep(iotClient.clientData.keepAliveInterval / (uint32_t)2);
+	/* Sleep for keep alive interval to allow the first ping to be sent out */
+	sleep(iotClient.clientData.keepAliveInterval);
 	rc = aws_iot_mqtt_yield(&iotClient, 100);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
 	CHECK_EQUAL_C_INT(true, isLastTLSTxMessagePingreq());
 
 	/* Let ping request time out and call yield */
-	sleep(iotClient.clientData.keepAliveInterval / (uint32_t)2 + 1);
+	sleep(iotClient.clientData.keepAliveInterval + 1);
 	rc = aws_iot_mqtt_yield(&iotClient, 100);
 	CHECK_EQUAL_C_INT(NETWORK_ATTEMPTING_RECONNECT, rc);
 	CHECK_EQUAL_C_INT(0, aws_iot_mqtt_is_client_connected(&iotClient));
@@ -302,14 +302,14 @@ TEST_C(YieldTests, disconnectAutoReconnectSuccess) {
 	CHECK_EQUAL_C_INT(true, aws_iot_mqtt_is_client_connected(&iotClient));
 	CHECK_EQUAL_C_INT(true, aws_iot_is_autoreconnect_enabled(&iotClient));
 
-	/* Sleep for half keep alive interval to allow the first ping to be sent out */
-	sleep(iotClient.clientData.keepAliveInterval / (uint32_t)2);
+	/* Sleep for keep alive interval to allow the first ping to be sent out */
+	sleep(iotClient.clientData.keepAliveInterval);
 	rc = aws_iot_mqtt_yield(&iotClient, 100);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
 	CHECK_EQUAL_C_INT(true, isLastTLSTxMessagePingreq());
 
 	/* Let ping request time out and call yield */
-	sleep(iotClient.clientData.keepAliveInterval / (uint32_t)2 + 1);
+	sleep(iotClient.clientData.keepAliveInterval + 1);
 	rc = aws_iot_mqtt_yield(&iotClient, 100);
 	CHECK_EQUAL_C_INT(NETWORK_ATTEMPTING_RECONNECT, rc);
 
@@ -341,14 +341,14 @@ TEST_C(YieldTests, disconnectManualAutoReconnect) {
 	aws_iot_mqtt_autoreconnect_set_status(&iotClient, false);
 	CHECK_C(!aws_iot_is_autoreconnect_enabled(&iotClient));
 
-	/* Sleep for half keep alive interval to allow the first ping to be sent out */
-	sleep(iotClient.clientData.keepAliveInterval / (uint32_t)2);
+	/* Sleep for keep alive interval to allow the first ping to be sent out */
+	sleep(iotClient.clientData.keepAliveInterval);
 	rc = aws_iot_mqtt_yield(&iotClient, 100);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
 	CHECK_EQUAL_C_INT(true, isLastTLSTxMessagePingreq());
 
 	/* Let ping request time out and call yield */
-	sleep(iotClient.clientData.keepAliveInterval / (uint32_t)2 + 1);
+	sleep(iotClient.clientData.keepAliveInterval + 1);
 	rc = aws_iot_mqtt_yield(&iotClient, 100);
 	CHECK_EQUAL_C_INT(NETWORK_DISCONNECTED_ERROR, rc);
 	CHECK_EQUAL_C_INT(1, isLastTLSTxMessageDisconnect());
@@ -415,14 +415,14 @@ TEST_C(YieldTests, resubscribeSuccessfulReconnect) {
 	autoReconnectEnabled = aws_iot_is_autoreconnect_enabled(&iotClient);
 	CHECK_EQUAL_C_INT(1, autoReconnectEnabled);
 
-	/* Sleep for half keep alive interval to allow the first ping to be sent out */
-	sleep(iotClient.clientData.keepAliveInterval / (uint32_t)2);
+	/* Sleep for keep alive interval to allow the first ping to be sent out */
+	sleep(iotClient.clientData.keepAliveInterval);
 	rc = aws_iot_mqtt_yield(&iotClient, 100);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
 	CHECK_EQUAL_C_INT(true, isLastTLSTxMessagePingreq());
 
 	/* Let ping request time out and call yield */
-	sleep(iotClient.clientData.keepAliveInterval / (uint32_t)2 + 1);
+	sleep(iotClient.clientData.keepAliveInterval + 1);
 	rc = aws_iot_mqtt_yield(&iotClient, 100);
 	CHECK_EQUAL_C_INT(NETWORK_ATTEMPTING_RECONNECT, rc);
 

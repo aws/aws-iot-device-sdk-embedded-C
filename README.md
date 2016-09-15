@@ -27,7 +27,7 @@ Ensure you understand the AWS IoT platform and create the necessary certificates
 
 In order to quickly get started with the AWS IoT platform, we have ported the SDK for POSIX type Operating Systems like Ubuntu, OS X and RHEL. The SDK is configured for the mbedTLS library and can be built out of the box with *GCC* using *make utility*. The tarball can be downloaded from the below link:
 
-* [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-2.1.0.tar)
+* [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-2.1.1.tar)
 
 ##Installation
 This section explains the individual steps to retrieve the necessary files and be able to build your first application using the AWS IoT device SDK for embedded C.
