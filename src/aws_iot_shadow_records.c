@@ -219,16 +219,17 @@ static void AckStatusCallback(AWS_IoT_Client *pClient, char *topicName, uint16_t
 						status = SHADOW_ACK_ACCEPTED;
 					} else if(strstr(topicName, "rejected") != NULL) {
 						status = SHADOW_ACK_REJECTED;
+					} else {
+						continue;
 					}
-					if(status == SHADOW_ACK_ACCEPTED || status == SHADOW_ACK_REJECTED) {
-						if(AckWaitList[i].callback != NULL) {
-							AckWaitList[i].callback(AckWaitList[i].thingName, AckWaitList[i].action, status,
-													shadowRxBuf, AckWaitList[i].pCallbackContext);
-						}
-						unsubscribeFromAcceptedAndRejected(i);
-						AckWaitList[i].isFree = true;
-						return;
+					/* status == SHADOW_ACK_ACCEPTED || status == SHADOW_ACK_REJECTED */
+					if(AckWaitList[i].callback != NULL) {
+						AckWaitList[i].callback(AckWaitList[i].thingName, AckWaitList[i].action, status,
+												shadowRxBuf, AckWaitList[i].pCallbackContext);
 					}
+					unsubscribeFromAcceptedAndRejected(i);
+					AckWaitList[i].isFree = true;
+					return;
 				}
 			}
 		}
