@@ -449,7 +449,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
  * @return An IoT Error Type defining successful/failed connection
  */
 IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams) {
-	IoT_Error_t rc, disconRc;
+	IoT_Error_t rc;
 	ClientState clientState;
 
 	FUNC_ENTRY;
@@ -472,7 +472,7 @@ IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Par
 
 	if(SUCCESS != rc) {
 		pClient->networkStack.disconnect(&(pClient->networkStack));
-		disconRc = pClient->networkStack.destroy(&(pClient->networkStack));
+		pClient->networkStack.destroy(&(pClient->networkStack));
 		aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTING, CLIENT_STATE_DISCONNECTED_ERROR);
 	} else {
 		aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTING, CLIENT_STATE_CONNECTED_IDLE);
