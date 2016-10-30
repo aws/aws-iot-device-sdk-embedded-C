@@ -374,7 +374,7 @@ static bool _aws_iot_mqtt_is_client_state_valid_for_connect(ClientState clientSt
  *
  * @return An IoT Error Type defining successful/failed connection
  */
-static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams) {
+static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, const IoT_Client_Connect_Params *pConnectParams) {
 	Timer connect_timer;
 	IoT_Error_t connack_rc = FAILURE;
 	char sessionPresent = 0;
@@ -448,7 +448,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
  *
  * @return An IoT Error Type defining successful/failed connection
  */
-IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams) {
+IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, const IoT_Client_Connect_Params *pConnectParams) {
 	IoT_Error_t rc;
 	ClientState clientState;
 

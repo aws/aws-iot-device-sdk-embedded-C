@@ -126,7 +126,7 @@ IoT_Error_t aws_iot_mqtt_set_client_state(AWS_IoT_Client *pClient, ClientState e
 	FUNC_EXIT_RC(rc);
 }
 
-IoT_Error_t aws_iot_mqtt_set_connect_params(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pNewConnectParams) {
+IoT_Error_t aws_iot_mqtt_set_connect_params(AWS_IoT_Client *pClient, const IoT_Client_Connect_Params *pNewConnectParams) {
 	FUNC_ENTRY;
 	if(NULL == pClient || NULL == pNewConnectParams) {
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);
@@ -152,7 +152,7 @@ IoT_Error_t aws_iot_mqtt_set_connect_params(AWS_IoT_Client *pClient, IoT_Client_
 	FUNC_EXIT_RC(SUCCESS);
 }
 
-IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitParams) {
+IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, const IoT_Client_Init_Params *pInitParams) {
 	uint32_t i;
 	IoT_Error_t rc;
 	IoT_Client_Connect_Params default_options = IoT_Client_Connect_Params_initializer;

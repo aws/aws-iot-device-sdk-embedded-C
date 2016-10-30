@@ -54,7 +54,7 @@ void aws_iot_shadow_disable_discard_old_delta_msgs(void) {
 	shadowDiscardOldDeltaFlag = false;
 }
 
-IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t *pParams) {
+IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, const ShadowInitParameters_t *pParams) {
 	IoT_Client_Init_Params mqttInitParams;
 	IoT_Error_t rc;
 
@@ -87,7 +87,7 @@ IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t 
 	FUNC_EXIT_RC(SUCCESS);
 }
 
-IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams) {
+IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, const ShadowConnectParameters_t *pParams) {
 	IoT_Error_t rc = SUCCESS;
 	char deleteAcceptedTopic[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 	uint16_t deleteAcceptedTopicLen;
