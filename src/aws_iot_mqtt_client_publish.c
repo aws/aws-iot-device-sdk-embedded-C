@@ -259,7 +259,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_publish(AWS_IoT_Client *pClient, const
  *
  * @return An IoT Error Type defining successful/failed publish
  */
-IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
 								 IoT_Publish_Message_Params *pParams) {
 	IoT_Error_t rc, pubRc;
 	ClientState clientState;

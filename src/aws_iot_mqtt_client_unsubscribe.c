@@ -210,7 +210,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_unsubscribe(AWS_IoT_Client *pClient, c
  *
  * @return An IoT Error Type defining successful/failed unsubscribe call
  */
-IoT_Error_t aws_iot_mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen) {
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen) {
 	IoT_Error_t rc, unsubRc;
 	ClientState clientState;
 

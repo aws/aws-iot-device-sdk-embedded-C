@@ -1,0 +1,363 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>awsiotsdkdll</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>aws-iot-sdk</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;AWSIOTSDK_EXPORTS;_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;AWSIOTSDKDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <ExceptionHandling>false</ExceptionHandling>
+      <PrecompiledHeaderFile />
+      <PrecompiledHeaderOutputFile />
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\..\external_libs;..\..\..\external_libs\mbedTLS;..\..\..\external_libs\jsmn;..\..\..\external_libs\CppUTest;..\..\win32\pthread;..\..\win32\mbedtls;..\..\win32\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;AWSIOTSDKDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;AWSIOTSDK_EXPORTS;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;AWSIOTSDKDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <ExceptionHandling>false</ExceptionHandling>
+      <PrecompiledHeaderFile />
+      <PrecompiledHeaderOutputFile />
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\..\external_libs;..\..\..\external_libs\mbedTLS;..\..\..\external_libs\jsmn;..\..\..\external_libs\CppUTest;..\..\win32\pthread;..\..\win32\mbedtls;..\..\win32\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;AWSIOTSDKDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\external_libs\jsmn\jsmn.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\aes.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\aesni.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\arc4.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\asn1.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\asn1write.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\base64.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\bignum.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\blowfish.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\bn_mul.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\camellia.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ccm.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\certs.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\check_config.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\cipher.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\cipher_internal.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\cmac.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\compat-1.3.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\config.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ctr_drbg.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\debug.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\des.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\dhm.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ecdh.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ecdsa.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ecjpake.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ecp.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\entropy.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\entropy_poll.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\error.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\gcm.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\havege.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\hmac_drbg.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\md.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\md2.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\md4.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\md5.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\md_internal.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\memory_buffer_alloc.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\net.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\net_sockets.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\oid.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\padlock.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pem.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pk.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pkcs11.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pkcs12.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pkcs5.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pk_internal.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\platform.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\platform_time.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ripemd160.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\rsa.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\sha1.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\sha256.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\sha512.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl_cache.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl_ciphersuites.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl_cookie.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl_internal.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl_ticket.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\threading.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\timing.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\version.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\x509.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\x509_crl.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\x509_crt.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\x509_csr.h" />
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\xtea.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_config.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_error.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_json_utils.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_log.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_mqtt_client.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_mqtt_client_common_internal.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_mqtt_client_interface.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_actions.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_interface.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_json.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_json_data.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_key.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_records.h" />
+    <ClInclude Include="..\..\..\include\aws_iot_version.h" />
+    <ClInclude Include="..\..\..\include\network_interface.h" />
+    <ClInclude Include="..\..\..\include\threads_interface.h" />
+    <ClInclude Include="..\..\..\include\timer_interface.h" />
+    <ClInclude Include="..\common\timer_platform.h" />
+    <ClInclude Include="..\mbedtls\network_platform.h" />
+    <ClInclude Include="..\pthread\threads_platform.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\external_libs\jsmn\jsmn.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\aes.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\aesni.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\arc4.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\asn1parse.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\asn1write.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\base64.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\bignum.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\blowfish.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\camellia.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ccm.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\certs.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\cipher.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\cipher_wrap.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\cmac.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ctr_drbg.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\debug.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\des.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\dhm.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ecdh.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ecdsa.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ecjpake.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ecp.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ecp_curves.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\entropy.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\entropy_poll.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\error.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\gcm.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\havege.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\hmac_drbg.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\md.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\md2.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\md4.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\md5.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\md_wrap.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\memory_buffer_alloc.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\net_sockets.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\oid.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\padlock.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pem.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pk.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pkcs11.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pkcs12.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pkcs5.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pkparse.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pkwrite.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pk_wrap.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\platform.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ripemd160.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\rsa.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\sha1.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\sha256.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\sha512.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_cache.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_ciphersuites.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_cli.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_cookie.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_srv.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_ticket.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_tls.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\threading.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\timing.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\version.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\version_features.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509write_crt.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509write_csr.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509_create.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509_crl.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509_crt.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509_csr.c" />
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\xtea.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_json_utils.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_common_internal.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_connect.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_publish.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_subscribe.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_unsubscribe.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_yield.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_shadow.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_shadow_actions.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_shadow_json.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_shadow_records.c" />
+    <ClCompile Include="..\common\timer.c" />
+    <ClCompile Include="..\mbedtls\network_mbedtls_wrapper.c" />
+    <ClCompile Include="..\pthread\threads_pthread_wrapper.c" />
+    <ClCompile Include="dllmain.c">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </PrecompiledHeader>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\external_libs\CppUTest\README.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </Text>
+    <Text Include="..\..\..\external_libs\mbedTLS\README.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

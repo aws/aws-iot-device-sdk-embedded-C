@@ -47,7 +47,9 @@ extern "C" {
  * in "timer_<platform>.h" and include that file above.
  *
  */
+#ifndef WIN32
 typedef struct Timer Timer;
+#endif
 
 /**
  * @brief Check if a timer is expired

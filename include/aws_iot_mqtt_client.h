@@ -43,6 +43,16 @@
 extern "C" {
 #endif
 
+#ifndef WIN32
+#define AWSIOTSDK_API
+#else
+#ifdef AWSIOTSDK_EXPORTS
+#define AWSIOTSDK_API __declspec(dllexport)
+#else
+#define AWSIOTSDK_API __declspec(dllimport)
+#endif
+#endif
+
 /* Library Header files */
 #include "stdio.h"
 #include "stdbool.h"
@@ -362,7 +372,7 @@ ClientState aws_iot_mqtt_get_client_state(AWS_IoT_Client *pClient);
  *
  * @return true = enabled, false = disabled
  */
-bool aws_iot_is_autoreconnect_enabled(AWS_IoT_Client *pClient);
+AWSIOTSDK_API bool aws_iot_is_autoreconnect_enabled(AWS_IoT_Client *pClient);
 
 /**
  * @brief Set the IoT Client disconnect handler
@@ -389,7 +399,7 @@ IoT_Error_t aws_iot_mqtt_set_disconnect_handler(AWS_IoT_Client *pClient, iot_dis
  *
  * @return IoT_Error_t Type defining successful/failed API call
  */
-IoT_Error_t aws_iot_mqtt_autoreconnect_set_status(AWS_IoT_Client *pClient, bool newStatus);
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_autoreconnect_set_status(AWS_IoT_Client *pClient, bool newStatus);
 
 /**
  * @brief Get count of Network Disconnects

@@ -102,7 +102,7 @@ extern const ShadowConnectParameters_t ShadowConnectParametersDefault;
  * @param pClient A new MQTT Client to be used as the protocol layer. Will be initialized with pParams.
  * @return An IoT Error Type defining successful/failed Initialization
  */
-IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t *pParams);
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t *pParams);
 
 /**
  * @brief Connect to the AWS IoT Thing Shadow service over MQTT
@@ -113,7 +113,7 @@ IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t 
  * @param pParams	Shadow Conenction parameters like TLS cert location
  * @return An IoT Error Type defining successful/failed Connection
  */
-IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams);
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams);
 
 /**
  * @brief Yield function to let the background tasks of MQTT and Shadow
@@ -126,7 +126,7 @@ IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParamet
  * @param timeout	in milliseconds, This is the maximum time the yield function will wait for a message and/or read the messages from the TLS buffer
  * @return An IoT Error Type defining successful/failed Yield
  */
-IoT_Error_t aws_iot_shadow_yield(AWS_IoT_Client *pClient, uint32_t timeout);
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_yield(AWS_IoT_Client *pClient, uint32_t timeout);
 
 /**
  * @brief Disconnect from the AWS IoT Thing Shadow service over MQTT
@@ -136,7 +136,7 @@ IoT_Error_t aws_iot_shadow_yield(AWS_IoT_Client *pClient, uint32_t timeout);
  * @param pClient	MQTT Client used as the protocol layer
  * @return An IoT Error Type defining successful/failed disconnect status
  */
-IoT_Error_t aws_iot_shadow_disconnect(AWS_IoT_Client *pClient);
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_disconnect(AWS_IoT_Client *pClient);
 
 /**
  * @brief Thing Shadow Acknowledgment enum
@@ -197,7 +197,7 @@ typedef void (*fpActionCallback_t)(const char *pThingName, ShadowActions_t actio
  * @param isPersistentSubscribe As mentioned above, every  time if a device updates the same shadow then this should be set to true to avoid repeated subscription and unsubscription. If the Thing Name is one off update then this should be set to false
  * @return An IoT Error Type defining successful/failed update action
  */
-IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingName, char *pJsonString,
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingName, char *pJsonString,
 								  fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds,
 								  bool isPersistentSubscribe);
 
@@ -215,7 +215,7 @@ IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingNam
  * @param isPersistentSubscribe As mentioned above, every  time if a device gets the same Sahdow (JSON document) then this should be set to true to avoid repeated subscription and un-subscription. If the Thing Name is one off get then this should be set to false
  * @return An IoT Error Type defining successful/failed get action
  */
-IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
 							   void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe);
 
 /**
@@ -232,7 +232,7 @@ IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, 
  * @param isPersistentSubscribe As mentioned above, every  time if a device deletes the same Shadow (JSON document) then this should be set to true to avoid repeated subscription and un-subscription. If the Thing Name is one off delete then this should be set to false
  * @return An IoT Error Type defining successful/failed delete action
  */
-IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback,
 								  void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscriptions);
 
 /**
@@ -244,7 +244,7 @@ IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingNam
  * @param pStruct The struct used to parse JSON value
  * @return An IoT Error Type defining successful/failed delta registering
  */
-IoT_Error_t aws_iot_shadow_register_delta(AWS_IoT_Client *pClient, jsonStruct_t *pStruct);
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_register_delta(AWS_IoT_Client *pClient, jsonStruct_t *pStruct);
 
 /**
  * @brief Reset the last received version number to zero.
@@ -287,7 +287,39 @@ void aws_iot_shadow_disable_discard_old_delta_msgs(void);
  *
  * @return An IoT Error Type defining successful/failed operation
  */
-IoT_Error_t aws_iot_shadow_set_autoreconnect_status(AWS_IoT_Client *pClient, bool newStatus);
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_set_autoreconnect_status(AWS_IoT_Client *pClient, bool newStatus);
+
+
+/**
+*  For dynamically linking this DLL
+*
+* EXAMPLE:
+*
+*    HMODULE hModule = ::LoadLibraryA("AwsIotSdk.dll");
+*
+*    AWS_IOT_SHADOW_INIT aws_iot_shadow_init_ptr = (AWS_IOT_SHADOW_INIT)::GetProcAddress(hModule, "aws_iot_shadow_init");
+*
+*    ShadowInitParameters_t parms;
+*    AWS_IoT_Client client;
+*
+*    IoT_Error_t res = (aws_iot_shadow_init_ptr)(&client, &parms);
+*
+*/
+#ifdef WIN32
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_INIT)(AWS_IoT_Client *pClient, ShadowInitParameters_t *pParams);
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_CONNECT)(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams);
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_YIELD)(AWS_IoT_Client *pClient, uint32_t timeout);
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_DISCONNECT)(AWS_IoT_Client *pClient);
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_UPDATE)(AWS_IoT_Client *pClient, const char *pThingName, char *pJsonString, fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe);
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_GET)(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe);
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_DELETE)(AWS_IoT_Client *pClient, const char *pThingName, fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscriptions);
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_REGISTER_DELTA)(AWS_IoT_Client *pClient, jsonStruct_t *pStruct);
+typedef void(__cdecl *AWS_IOT_SHADOW_RESET_LAST_RECEIVED_VERSION)();
+typedef uint32_t(__cdecl *AWS_IOT_SHADOW_GET_LAST_RECEIVED_VERSION)();
+typedef void(__cdecl *AWS_IOT_SHADOW_ENABLE_DISCARD_OLD_DELTA_MSGS)();
+typedef void(__cdecl *AWS_IOT_SHADOW_DISABLE_DISCARD_OLD_DELTA_MSGS)();
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_SET_AUTORECONNECT_STATUS)(AWS_IoT_Client *pClient, bool newStatus);
+#endif
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,583 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="..\common\timer_platform.h">
+      <Filter>platform\win32\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mbedtls\network_platform.h">
+      <Filter>platform\win32\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pthread\threads_platform.h">
+      <Filter>platform\win32\pthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_error.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_json_utils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_log.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_mqtt_client.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_mqtt_client_common_internal.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_mqtt_client_interface.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_actions.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_interface.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_json.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_json_data.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_key.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_shadow_records.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_version.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\network_interface.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\threads_interface.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\timer_interface.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\aws_iot_config.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\jsmn\jsmn.h">
+      <Filter>external_libs\jsmn</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\aes.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\aesni.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\arc4.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\asn1.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\asn1write.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\base64.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\bignum.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\blowfish.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\bn_mul.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\camellia.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ccm.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\certs.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\check_config.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\cipher.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\cipher_internal.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\cmac.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\compat-1.3.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\config.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ctr_drbg.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\debug.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\des.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\dhm.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ecdh.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ecdsa.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ecjpake.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ecp.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\entropy.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\entropy_poll.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\error.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\gcm.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\havege.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\hmac_drbg.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\md.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\md_internal.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\md2.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\md4.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\md5.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\memory_buffer_alloc.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\net.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\net_sockets.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\oid.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\padlock.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pem.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pk.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pk_internal.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pkcs5.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pkcs11.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\pkcs12.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\platform.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\platform_time.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ripemd160.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\rsa.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\sha1.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\sha256.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\sha512.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl_cache.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl_ciphersuites.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl_cookie.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl_internal.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\ssl_ticket.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\threading.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\timing.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\version.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\x509.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\x509_crl.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\x509_crt.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\x509_csr.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\external_libs\mbedTLS\xtea.h">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.c" />
+    <ClCompile Include="..\..\..\src\aws_iot_json_utils.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_common_internal.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_connect.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_publish.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_subscribe.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_unsubscribe.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_mqtt_client_yield.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_shadow.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_shadow_actions.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_shadow_json.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\aws_iot_shadow_records.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\timer.c">
+      <Filter>platform\win32\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mbedtls\network_mbedtls_wrapper.c">
+      <Filter>platform\win32\mbedtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pthread\threads_pthread_wrapper.c">
+      <Filter>platform\win32\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\jsmn\jsmn.c">
+      <Filter>external_libs\jsmn</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\aes.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\aesni.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\arc4.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\asn1parse.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\asn1write.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\base64.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\bignum.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\blowfish.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\camellia.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ccm.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\certs.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\cipher.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\cipher_wrap.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\cmac.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ctr_drbg.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\debug.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\des.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\dhm.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ecdh.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ecdsa.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ecjpake.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ecp.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ecp_curves.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\entropy.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\entropy_poll.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\error.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\gcm.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\havege.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\hmac_drbg.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\md.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\md_wrap.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\md2.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\md4.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\md5.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\memory_buffer_alloc.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\net_sockets.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\oid.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\padlock.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pem.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pk.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pk_wrap.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pkcs5.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pkcs11.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pkcs12.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pkparse.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\pkwrite.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\platform.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ripemd160.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\rsa.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\sha1.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\sha256.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\sha512.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_cache.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_ciphersuites.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_cli.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_cookie.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_srv.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_ticket.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\ssl_tls.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\threading.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\timing.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\version.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\version_features.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509_create.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509_crl.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509_crt.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509_csr.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509write_crt.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\x509write_csr.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\external_libs\mbedTLS\xtea.c">
+      <Filter>external_libs\mbedTLS</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{cb160a44-38f8-4a8d-9c08-d667b74be0fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform">
+      <UniqueIdentifier>{e5161367-0549-477d-9a76-bda1813312a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\win32">
+      <UniqueIdentifier>{bb8b779b-8c4b-4366-985f-da0f2eadf20d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\win32\common">
+      <UniqueIdentifier>{bc8fa089-9224-45e7-8c2d-1199c9d591b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\win32\mbedtls">
+      <UniqueIdentifier>{40dc14e0-3e5b-4887-be87-e9d1dce76a10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\win32\pthread">
+      <UniqueIdentifier>{710199de-1935-4d48-b9ec-e8557295503d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{5ba441ce-a2c9-4706-b9de-6dcee4b675f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external_libs">
+      <UniqueIdentifier>{9c978f7e-dcc6-4535-aec9-04aae65f2a0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external_libs\CppUTest">
+      <UniqueIdentifier>{f659f6fb-9283-44e2-9c85-6607c247fc55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external_libs\jsmn">
+      <UniqueIdentifier>{0d446823-b490-4a52-942c-bb1c01706f95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external_libs\mbedTLS">
+      <UniqueIdentifier>{fbf86946-c476-466f-a8dd-0a0f923290b5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\external_libs\mbedTLS\README.txt">
+      <Filter>external_libs\mbedTLS</Filter>
+    </Text>
+    <Text Include="..\..\..\external_libs\CppUTest\README.txt">
+      <Filter>external_libs\CppUTest</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

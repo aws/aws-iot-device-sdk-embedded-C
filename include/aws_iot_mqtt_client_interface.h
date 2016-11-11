@@ -68,7 +68,7 @@ extern "C" {
  *
  * @return IoT_Error_t Type defining successful/failed API call
  */
-IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitParams);
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitParams);
 
 /**
  * @brief MQTT Connection Function
@@ -80,7 +80,7 @@ IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *p
  *
  * @return An IoT Error Type defining successful/failed connection
  */
-IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams);
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams);
 
 /**
  * @brief Publish an MQTT message on a topic
@@ -97,7 +97,7 @@ IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Par
  *
  * @return An IoT Error Type defining successful/failed publish
  */
-IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
 								 IoT_Publish_Message_Params *pParams);
 
 /**
@@ -115,7 +115,7 @@ IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
-IoT_Error_t aws_iot_mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
 								   QoS qos, pApplicationHandler_t pApplicationHandler, void *pApplicationHandlerData);
 
 /**
@@ -130,7 +130,7 @@ IoT_Error_t aws_iot_mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicNa
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
-IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient);
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient);
 
 /**
  * @brief Unsubscribe to an MQTT topic.
@@ -145,7 +145,7 @@ IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient);
  *
  * @return An IoT Error Type defining successful/failed unsubscribe call
  */
-IoT_Error_t aws_iot_mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen);
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen);
 
 /**
  * @brief Disconnect an MQTT Connection
@@ -156,7 +156,7 @@ IoT_Error_t aws_iot_mqtt_unsubscribe(AWS_IoT_Client *pClient, const char *pTopic
  *
  * @return An IoT Error Type defining successful/failed send of the disconnect control packet.
  */
-IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient);
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient);
 
 /**
  * @brief Yield to the MQTT client
@@ -175,7 +175,7 @@ IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient);
  *         If this call results in an error it is likely the MQTT connection has dropped.
  *         iot_is_mqtt_connected can be called to confirm.
  */
-IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms);
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms);
 
 /**
  * @brief MQTT Manual Re-Connection Function
@@ -190,7 +190,39 @@ IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms);
  *
  * @return An IoT Error Type defining successful/failed connection
  */
-IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient);
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient);
+
+
+
+
+/**
+*  For dynamically linking this DLL
+*
+* EXAMPLE:
+*
+*    HMODULE hModule = ::LoadLibraryA("AwsIotSdk.dll");
+*
+*    AWS_IOT_MQTT_INIT aws_iot_mqtt_init_ptr = (AWS_IOT_MQTT_INIT)::GetProcAddress(hModule, "aws_iot_mqtt_init");
+*
+*    IoT_Client_Init_Params iotInitParams;
+*    AWS_IoT_Client client;
+*
+*    IoT_Error_t res = (aws_iot_mqtt_init_ptr)(&client, &iotInitParams);
+*
+*/
+#ifdef WIN32
+typedef IoT_Error_t(__cdecl *AWS_IOT_MQTT_INIT)(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitParams);
+typedef IoT_Error_t(__cdecl *AWS_IOT_MQTT_CONNECT)(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams);
+typedef IoT_Error_t(__cdecl *AWS_IOT_MQTT_PUBLISH)(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen, IoT_Publish_Message_Params *pParams);
+typedef IoT_Error_t(__cdecl *AWS_IOT_MQTT_SUBSCRIBE)(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen, QoS qos, pApplicationHandler_t pApplicationHandler, void *pApplicationHandlerData);
+typedef IoT_Error_t(__cdecl *AWS_IOT_MQTT_RESUBSCRIBE)(AWS_IoT_Client *pClient);
+typedef IoT_Error_t(__cdecl *AWS_IOT_MQTT_UNSUBSCRIBE)(AWS_IoT_Client *pClient, const char *pTopicFilter, uint16_t topicFilterLen);;
+typedef IoT_Error_t(__cdecl *AWS_IOT_MQTT_DISCONNECT)(AWS_IoT_Client *pClient);
+typedef IoT_Error_t(__cdecl *AWS_IOT_MQTT_YIELD)(AWS_IoT_Client *pClient, uint32_t timeout_ms);
+typedef IoT_Error_t(__cdecl *AWS_IOT_MQTT_ATTEMPT_RECONNECT)(AWS_IoT_Client *pClient);
+typedef bool(__cdecl *AWS_IOT_MQTT_AUTORECONNECT_ENABLED)(AWS_IoT_Client *pClient);
+typedef IoT_Error_t(__cdecl *AWS_IOT_MQTT_AUTORECONNECT_SET_STATUS)(AWS_IoT_Client *pClient, bool newStatus);
+#endif
 
 #ifdef __cplusplus
 }

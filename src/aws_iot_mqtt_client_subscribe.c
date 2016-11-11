@@ -285,7 +285,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_subscribe(AWS_IoT_Client *pClient, con
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
-IoT_Error_t aws_iot_mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_subscribe(AWS_IoT_Client *pClient, const char *pTopicName, uint16_t topicNameLen,
 								   QoS qos, pApplicationHandler_t pApplicationHandler, void *pApplicationHandlerData) {
 	ClientState clientState;
 	IoT_Error_t rc, subRc;
@@ -397,7 +397,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_resubscribe(AWS_IoT_Client *pClient) {
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
-IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient) {
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient) {
 	IoT_Error_t rc, resubRc;
 
 	FUNC_ENTRY;

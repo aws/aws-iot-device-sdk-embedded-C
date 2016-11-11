@@ -1,0 +1,5 @@
+platform/win32/aws-iot-sdk-dll/.vs
+platform/win32/aws-iot-sdk-dll/Debug
+platform/win32/aws-iot-sdk-dll/Release
+platform/win32/aws-iot-sdk-dll/*.VC.db
+platform/win32/aws-iot-sdk-dll/*.user

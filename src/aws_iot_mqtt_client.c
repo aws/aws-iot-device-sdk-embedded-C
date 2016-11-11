@@ -152,7 +152,7 @@ IoT_Error_t aws_iot_mqtt_set_connect_params(AWS_IoT_Client *pClient, IoT_Client_
 	FUNC_EXIT_RC(SUCCESS);
 }
 
-IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitParams) {
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitParams) {
 	uint32_t i;
 	IoT_Error_t rc;
 	IoT_Client_Connect_Params default_options = IoT_Client_Connect_Params_initializer;
@@ -265,7 +265,7 @@ bool aws_iot_mqtt_is_client_connected(AWS_IoT_Client *pClient) {
 	FUNC_EXIT_RC(isConnected);
 }
 
-bool aws_iot_is_autoreconnect_enabled(AWS_IoT_Client *pClient) {
+AWSIOTSDK_API bool aws_iot_is_autoreconnect_enabled(AWS_IoT_Client *pClient) {
 	FUNC_ENTRY;
 	if(NULL == pClient) {
 		IOT_WARN(" Client is null! ");
@@ -275,7 +275,7 @@ bool aws_iot_is_autoreconnect_enabled(AWS_IoT_Client *pClient) {
 	FUNC_EXIT_RC(pClient->clientStatus.isAutoReconnectEnabled);
 }
 
-IoT_Error_t aws_iot_mqtt_autoreconnect_set_status(AWS_IoT_Client *pClient, bool newStatus) {
+AWSIOTSDK_API IoT_Error_t aws_iot_mqtt_autoreconnect_set_status(AWS_IoT_Client *pClient, bool newStatus) {
 	FUNC_ENTRY;
 	if(NULL == pClient) {
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);

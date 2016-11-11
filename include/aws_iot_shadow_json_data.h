@@ -20,6 +20,16 @@
 extern "C" {
 #endif
 
+#ifndef WIN32
+#define AWSIOTSDK_API
+#else
+#ifdef AWSIOTSDK_EXPORTS
+#define AWSIOTSDK_API __declspec(dllexport)
+#else
+#define AWSIOTSDK_API __declspec(dllimport)
+#endif
+#endif
+
 /**
  * @file aws_iot_shadow_json_data.h
  * @brief This file is the interface for all the Shadow related JSON functions.
@@ -81,7 +91,7 @@ struct jsonStruct {
  * @param maxSizeOfJsonDocument maximum size of the pJsonDocument that can be used to fill the JSON document
  * @return An IoT Error Type defining if the buffer was null or the entire string was not filled up
  */
-IoT_Error_t aws_iot_shadow_init_json_document(char *pJsonDocument, size_t maxSizeOfJsonDocument);
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_init_json_document(char *pJsonDocument, size_t maxSizeOfJsonDocument);
 
 /**
  * @brief Add the reported section of the JSON document of jsonStruct_t
@@ -97,7 +107,7 @@ IoT_Error_t aws_iot_shadow_init_json_document(char *pJsonDocument, size_t maxSiz
  * @param count total number of arguments(jsonStruct_t object) passed in the arguments
  * @return An IoT Error Type defining if the buffer was null or the entire string was not filled up
  */
-IoT_Error_t aws_iot_shadow_add_reported(char *pJsonDocument, size_t maxSizeOfJsonDocument, uint8_t count, ...);
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_add_reported(char *pJsonDocument, size_t maxSizeOfJsonDocument, uint8_t count, ...);
 
 /**
  * @brief Add the desired section of the JSON document of jsonStruct_t
@@ -113,7 +123,7 @@ IoT_Error_t aws_iot_shadow_add_reported(char *pJsonDocument, size_t maxSizeOfJso
  * @param count total number of arguments(jsonStruct_t object) passed in the arguments
  * @return An IoT Error Type defining if the buffer was null or the entire string was not filled up
  */
-IoT_Error_t aws_iot_shadow_add_desired(char *pJsonDocument, size_t maxSizeOfJsonDocument, uint8_t count, ...);
+AWSIOTSDK_API IoT_Error_t aws_iot_shadow_add_desired(char *pJsonDocument, size_t maxSizeOfJsonDocument, uint8_t count, ...);
 
 /**
  * @brief Finalize the JSON document with Shadow expected client Token.
@@ -127,7 +137,7 @@ IoT_Error_t aws_iot_shadow_add_desired(char *pJsonDocument, size_t maxSizeOfJson
  * @param maxSizeOfJsonDocument maximum size of the pJsonDocument that can be used to fill the JSON document
  * @return An IoT Error Type defining if the buffer was null or the entire string was not filled up
  */
-IoT_Error_t aws_iot_finalize_json_document(char *pJsonDocument, size_t maxSizeOfJsonDocument);
+AWSIOTSDK_API IoT_Error_t aws_iot_finalize_json_document(char *pJsonDocument, size_t maxSizeOfJsonDocument);
 
 /**
  * @brief Fill the given buffer with client token for tracking the Repsonse.
@@ -140,7 +150,30 @@ IoT_Error_t aws_iot_finalize_json_document(char *pJsonDocument, size_t maxSizeOf
  * @return An IoT Error Type defining if the buffer was null or the entire string was not filled up
  */
 
-IoT_Error_t aws_iot_fill_with_client_token(char *pBufferToBeUpdatedWithClientToken, size_t maxSizeOfJsonDocument);
+AWSIOTSDK_API IoT_Error_t aws_iot_fill_with_client_token(char *pBufferToBeUpdatedWithClientToken, size_t maxSizeOfJsonDocument);
+
+/**
+*  For dynamically linking this DLL
+*
+* EXAMPLE:
+*
+*    HMODULE hModule = ::LoadLibraryA("AwsIotSdk.dll");
+*
+*    AWS_IOT_SHADOW_INIT_JSON_DOCUMENT aws_iot_shadow_init_json_document_ptr = (AWS_IOT_SHADOW_INIT_JSON_DOCUMENT)::GetProcAddress(hModule, "aws_iot_shadow_init_json_document");
+*
+*    char JsonDocumentBuffer[MAX_LENGTH_OF_UPDATE_JSON_BUFFER];
+*    size_t sizeOfJsonDocumentBuffer = sizeof(JsonDocumentBuffer) / sizeof(JsonDocumentBuffer[0]);
+*
+*    IoT_Error_t res = (aws_iot_shadow_init_json_document_ptr)(&JsonDocumentBuffer, sizeOfJsonDocumentBuffer);
+*
+*/
+#ifdef WIN32
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_INIT_JSON_DOCUMENT)(char *pJsonDocument, size_t maxSizeOfJsonDocument);
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_ADD_DESIRED)(char *pJsonDocument, size_t maxSizeOfJsonDocument, uint8_t count, ...);
+typedef IoT_Error_t(__cdecl *AWS_IOT_SHADOW_ADD_REPORTED)(char *pJsonDocument, size_t maxSizeOfJsonDocument, uint8_t count, ...);
+typedef IoT_Error_t(__cdecl *AWS_IOT_FINALIZE_JSON_DOCUMENT)(char *pJsonDocument, size_t maxSizeOfJsonDocument);
+typedef IoT_Error_t(__cdecl *AWS_IOT_FILL_WITH_CLIENT_TOKEN)(char *pBufferToBeUpdatedWithClientToken, size_t maxSizeOfJsonDocument);
+#endif
 
 #ifdef __cplusplus
 }
