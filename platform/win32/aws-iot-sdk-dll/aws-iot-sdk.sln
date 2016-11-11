@@ -5,6 +5,11 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "aws-iot-sdk", "aws-iot-sdk.vcxproj", "{A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shadow_sample_console", "..\..\..\samples\win32\shadow_sample\shadow_sample_console\shadow_sample_console.vcxproj", "{602AFFEB-E907-425A-955E-35E0344915CB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1} = {A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +26,14 @@ Global
 		{A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1}.Release|x64.Build.0 = Release|x64
 		{A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1}.Release|x86.ActiveCfg = Release|Win32
 		{A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1}.Release|x86.Build.0 = Release|Win32
+		{602AFFEB-E907-425A-955E-35E0344915CB}.Debug|x64.ActiveCfg = Debug|x64
+		{602AFFEB-E907-425A-955E-35E0344915CB}.Debug|x64.Build.0 = Debug|x64
+		{602AFFEB-E907-425A-955E-35E0344915CB}.Debug|x86.ActiveCfg = Debug|Win32
+		{602AFFEB-E907-425A-955E-35E0344915CB}.Debug|x86.Build.0 = Debug|Win32
+		{602AFFEB-E907-425A-955E-35E0344915CB}.Release|x64.ActiveCfg = Release|x64
+		{602AFFEB-E907-425A-955E-35E0344915CB}.Release|x64.Build.0 = Release|x64
+		{602AFFEB-E907-425A-955E-35E0344915CB}.Release|x86.ActiveCfg = Release|Win32
+		{602AFFEB-E907-425A-955E-35E0344915CB}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

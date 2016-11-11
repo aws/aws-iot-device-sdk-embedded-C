@@ -81,7 +81,11 @@ typedef struct {
  *
  * \relates ShadowInitParameters_t
  */
+#ifndef WIN32
 extern const ShadowInitParameters_t ShadowInitParametersDefault;
+#else
+const ShadowInitParameters_t ShadowInitParametersDefault;
+#endif
 
 /*!
  * @brief This is set to defaults from the configuration file
@@ -91,8 +95,11 @@ extern const ShadowInitParameters_t ShadowInitParametersDefault;
  *
  * \relates ShadowConnectParameters_t
  */
+#ifndef WIN32
 extern const ShadowConnectParameters_t ShadowConnectParametersDefault;
-
+#else
+const ShadowConnectParameters_t ShadowConnectParametersDefault;
+#endif
 
 /**
  * @brief Initialize the Thing Shadow before use
