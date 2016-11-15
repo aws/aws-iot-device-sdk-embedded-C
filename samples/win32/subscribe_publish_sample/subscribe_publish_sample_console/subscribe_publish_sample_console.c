@@ -62,7 +62,7 @@ int main()
 	IoT_Publish_Message_Params paramsQOS0;
 	IoT_Publish_Message_Params paramsQOS1;
 
-	uint32_t publishCount = 2;
+	uint32_t publishCount = 0;
 	bool infinitePublishFlag = true;
 
 	char rootCA[PATH_MAX + 1];
@@ -176,19 +176,20 @@ int main()
 		}
 
 		IOT_INFO("-->sleep");
-		Sleep(1);
+		Sleep(1000);
 		sprintf_s(cPayload, 100, "%s : %d ", "Hello from Win32 subscribe_publish_sample QOS0", i++);
 		IOT_INFO(cPayload);
 		paramsQOS0.payloadLen = strlen(cPayload);
-		rc = aws_iot_mqtt_publish_ptr(&client, "WIN32_SUB_PUB", 11, &paramsQOS0);
+		rc = aws_iot_mqtt_publish_ptr(&client, "WIN32_SUB_PUB", 13, &paramsQOS0);
 		if (publishCount > 0) 
 		{
 			publishCount--;
 		}
 
 		sprintf_s(cPayload, 100, "%s : %d ", "Hello from Win32 subscribe_publish_sample QOS1", i++);
+		IOT_INFO(cPayload);
 		paramsQOS1.payloadLen = strlen(cPayload);
-		rc = aws_iot_mqtt_publish_ptr(&client, "WIN32_SUB-_PUB", 11, &paramsQOS1);
+		rc = aws_iot_mqtt_publish_ptr(&client, "WIN32_SUB_PUB", 13, &paramsQOS1);
 		if (rc == MQTT_REQUEST_TIMEOUT_ERROR) 
 		{
 			IOT_WARN("QOS1 publish ack not received.\n");
