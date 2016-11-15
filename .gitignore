@@ -1,9 +1,18 @@
+certs
+external_libs/mbedTLS
+
 platform/win32/aws-iot-sdk-dll/.vs
 platform/win32/aws-iot-sdk-dll/Debug
 platform/win32/aws-iot-sdk-dll/Release
 platform/win32/aws-iot-sdk-dll/*.VC.db
+platform/win32/aws-iot-sdk-dll/*.VC.opendb
 platform/win32/aws-iot-sdk-dll/*.user
 
 samples/win32/shadow_sample/shadow_sample_console/Debug
 samples/win32/shadow_sample/shadow_sample_console/Release
+
+samples/win32/subscribe_publish_sample/subscribe_publish_sample_console/Debug
+samples/win32/subscribe_publish_sample/subscribe_publish_sample_console/Release
+
+
 

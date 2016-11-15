@@ -10,6 +10,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shadow_sample_console", "..
 		{A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1} = {A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subscribe_publish_sample_console", "..\..\..\samples\win32\subscribe_publish_sample\subscribe_publish_sample_console\subscribe_publish_sample_console.vcxproj", "{4367393A-0814-476A-B13B-ABCD6C16EFCA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1} = {A7390FB7-2E36-4B8A-A794-F69D2BB7BFA1}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -34,6 +39,14 @@ Global
 		{602AFFEB-E907-425A-955E-35E0344915CB}.Release|x64.Build.0 = Release|x64
 		{602AFFEB-E907-425A-955E-35E0344915CB}.Release|x86.ActiveCfg = Release|Win32
 		{602AFFEB-E907-425A-955E-35E0344915CB}.Release|x86.Build.0 = Release|Win32
+		{4367393A-0814-476A-B13B-ABCD6C16EFCA}.Debug|x64.ActiveCfg = Debug|x64
+		{4367393A-0814-476A-B13B-ABCD6C16EFCA}.Debug|x64.Build.0 = Debug|x64
+		{4367393A-0814-476A-B13B-ABCD6C16EFCA}.Debug|x86.ActiveCfg = Debug|Win32
+		{4367393A-0814-476A-B13B-ABCD6C16EFCA}.Debug|x86.Build.0 = Debug|Win32
+		{4367393A-0814-476A-B13B-ABCD6C16EFCA}.Release|x64.ActiveCfg = Release|x64
+		{4367393A-0814-476A-B13B-ABCD6C16EFCA}.Release|x64.Build.0 = Release|x64
+		{4367393A-0814-476A-B13B-ABCD6C16EFCA}.Release|x86.ActiveCfg = Release|Win32
+		{4367393A-0814-476A-B13B-ABCD6C16EFCA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

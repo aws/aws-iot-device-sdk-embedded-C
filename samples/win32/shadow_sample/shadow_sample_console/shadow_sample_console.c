@@ -129,7 +129,8 @@ int main()
 
 	IOT_INFO("Shadow Init");
 	rc = aws_iot_shadow_init_ptr(&mqttClient, &sp);
-	if (SUCCESS != rc) {
+	if (SUCCESS != rc) 
+	{
 		IOT_ERROR("Shadow Connection Error");
 		return rc;
 	}
@@ -141,7 +142,8 @@ int main()
 
 	IOT_INFO("Shadow Connect");
 	rc = aws_iot_shadow_connect_ptr(&mqttClient, &scp);
-	if (SUCCESS != rc) {
+	if (SUCCESS != rc) 
+	{
 		IOT_ERROR("Shadow Connection Error");
 		return rc;
 	}
@@ -152,37 +154,46 @@ int main()
 	*  #AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL
 	*/
 	rc = aws_iot_shadow_set_autoreconnect_status_ptr(&mqttClient, true);
-	if (SUCCESS != rc) {
+	if (SUCCESS != rc) 
+	{
 		IOT_ERROR("Unable to set Auto Reconnect to true - %d", rc);
 		return rc;
 	}
 
 	rc = aws_iot_shadow_register_delta_ptr(&mqttClient, &windowActuator);
 
-	if (SUCCESS != rc) {
+	if (SUCCESS != rc) 
+	{
 		IOT_ERROR("Shadow Register Delta Error");
 	}
 	temperature = STARTING_ROOMTEMPERATURE;
 
 	// loop and publish a change in temperature
-	while (NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc || SUCCESS == rc) {
+	while (NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc || SUCCESS == rc) 
+	{
 		rc = aws_iot_shadow_yield_ptr(&mqttClient, 200);
-		if (NETWORK_ATTEMPTING_RECONNECT == rc) {
+		if (NETWORK_ATTEMPTING_RECONNECT == rc) 
+		{
 			Sleep(1);
 			// If the client is attempting to reconnect we will skip the rest of the loop.
 			continue;
 		}
+
 		IOT_INFO("\n=======================================================================================\n");
 		IOT_INFO("On Device: window state %s", windowOpen ? "true" : "false");
+
 		simulateRoomTemperature(&temperature);
 
 		rc = aws_iot_shadow_init_json_document_ptr(JsonDocumentBuffer, sizeOfJsonDocumentBuffer);
-		if (SUCCESS == rc) {
+		if (SUCCESS == rc) 
+		{
 			rc = aws_iot_shadow_add_reported_ptr(JsonDocumentBuffer, sizeOfJsonDocumentBuffer, 2, &temperatureHandler,
 				&windowActuator);
-			if (SUCCESS == rc) {
+			if (SUCCESS == rc) 
+			{
 				rc = aws_iot_finalize_json_document_ptr(JsonDocumentBuffer, sizeOfJsonDocumentBuffer);
-				if (SUCCESS == rc) {
+				if (SUCCESS == rc) 
+				{
 					IOT_INFO("Update Shadow: %s", JsonDocumentBuffer);
 					rc = aws_iot_shadow_update_ptr(&mqttClient, AWS_IOT_MY_THING_NAME, JsonDocumentBuffer, shadowUpdateStatusCallback, NULL, 4, true);
 				}
@@ -192,14 +203,16 @@ int main()
 		Sleep(3 * 1000);
 	}
 
-	if (SUCCESS != rc) {
+	if (SUCCESS != rc) 
+	{
 		IOT_ERROR("An error occurred in the loop %d", rc);
 	}
 
 	IOT_INFO("Disconnecting");
 	rc = aws_iot_shadow_disconnect_ptr(&mqttClient);
 
-	if (SUCCESS != rc) {
+	if (SUCCESS != rc) 
+	{
 		IOT_ERROR("Disconnect error %d", rc);
 	}
 
@@ -214,13 +227,16 @@ static void shadowUpdateStatusCallback(const char *pThingName, ShadowActions_t a
 	IOT_UNUSED(pReceivedJsonDocument);
 	IOT_UNUSED(pContextData);
 
-	if (SHADOW_ACK_TIMEOUT == status) {
+	if (SHADOW_ACK_TIMEOUT == status) 
+	{
 		IOT_INFO("Update Timeout--");
 	}
-	else if (SHADOW_ACK_REJECTED == status) {
+	else if (SHADOW_ACK_REJECTED == status) 
+	{
 		IOT_INFO("Update RejectedXX");
 	}
-	else if (SHADOW_ACK_ACCEPTED == status) {
+	else if (SHADOW_ACK_ACCEPTED == status) 
+	{
 		IOT_INFO("Update Accepted !!");
 	}
 }
@@ -228,10 +244,12 @@ static void shadowUpdateStatusCallback(const char *pThingName, ShadowActions_t a
 static void simulateRoomTemperature(float *pRoomTemperature) {
 	static float deltaChange;
 
-	if (*pRoomTemperature >= ROOMTEMPERATURE_UPPERLIMIT) {
+	if (*pRoomTemperature >= ROOMTEMPERATURE_UPPERLIMIT) 
+	{
 		deltaChange = -0.5f;
 	}
-	else if (*pRoomTemperature <= ROOMTEMPERATURE_LOWERLIMIT) {
+	else if (*pRoomTemperature <= ROOMTEMPERATURE_LOWERLIMIT) 
+	{
 		deltaChange = 0.5f;
 	}
 
@@ -242,7 +260,8 @@ static void windowActuate_Callback(const char *pJsonString, uint32_t JsonStringD
 	IOT_UNUSED(pJsonString);
 	IOT_UNUSED(JsonStringDataLen);
 
-	if (pContext != NULL) {
+	if (pContext != NULL) 
+	{
 		IOT_INFO("Delta - Window state changed to %d", *(bool *)(pContext->pData));
 	}
 }

@@ -152,7 +152,12 @@ typedef struct {
 	char *pPassword;			///< Not used in the AWS IoT Service, will need to be cstring if used
 	uint16_t passwordLen;			///< Password Length. 16 bit unsigned integer
 } IoT_Client_Connect_Params;
+
+#ifndef WIN32
 extern const IoT_Client_Connect_Params iotClientConnectParamsDefault;
+#else
+const IoT_Client_Connect_Params iotClientConnectParamsDefault;
+#endif
 
 #define IoT_Client_Connect_Params_initializer { {'M', 'Q', 'T', 'C'}, MQTT_3_1_1, NULL, 0, 60, true, false, \
         IoT_MQTT_Will_Options_Initializer, NULL, 0, NULL, 0 }
@@ -189,7 +194,12 @@ typedef struct {
 	bool isBlockOnThreadLockEnabled;		///< Timeout for Thread blocking calls. Set to 0 to block until lock is obtained. In milliseconds
 #endif
 } IoT_Client_Init_Params;
+
+#ifndef WIN32
 extern const IoT_Client_Init_Params iotClientInitParamsDefault;
+#else
+const IoT_Client_Init_Params iotClientInitParamsDefault;
+#endif
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 #define IoT_Client_Init_Params_initializer { true, NULL, 0, NULL, NULL, NULL, 2000, 20000, 5000, true, NULL, NULL, false }
