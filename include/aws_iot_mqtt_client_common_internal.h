@@ -69,26 +69,17 @@ typedef enum msgTypes {
 	DISCONNECT = 14
 } MessageTypes;
 
+/* Macros for parsing header fields from incoming MQTT frame. */
+#define MQTT_HEADER_FIELD_TYPE(_byte)	((_byte >> 4) & 0x0F)
+#define MQTT_HEADER_FIELD_DUP(_byte)	((_byte & (1 << 3)) >> 3)
+#define MQTT_HEADER_FIELD_QOS(_byte)	((_byte & (3 << 1)) >> 1)
+#define MQTT_HEADER_FIELD_RETAIN(_byte)	((_byte & (1 << 0)) >> 0)
+
 /**
  * Bitfields for the MQTT header byte.
  */
 typedef union {
 	unsigned char byte;				/**< the whole byte */
-#if defined(REVERSED)
-	struct {
-		unsigned int type : 4;		/**< message type nibble */
-		unsigned int dup : 1;		/**< DUP flag bit */
-		unsigned int qos : 2;		/**< QoS value, 0, 1 or 2 */
-		unsigned int retain : 1;	/**< retained flag bit */
-	} bits;
-#else
-	struct {
-		unsigned int retain : 1;	/**< retained flag bit */
-		unsigned int qos : 2;		/**< QoS value, 0, 1 or 2 */
-		unsigned int dup : 1;		/**< DUP flag bit */
-		unsigned int type : 4;		/**< message type nibble */
-	} bits;
-#endif
 } MQTTHeader;
 
 IoT_Error_t aws_iot_mqtt_internal_init_header(MQTTHeader *pHeader, MessageTypes message_type,

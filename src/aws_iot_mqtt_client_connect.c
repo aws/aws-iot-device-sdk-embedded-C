@@ -194,19 +194,24 @@ static IoT_Error_t _aws_iot_mqtt_serialize_connect(unsigned char *pTxBuf, size_t
 	//}
 
 	flags.all = 0;
-	flags.bits.cleansession = (pConnectParams->isCleanSession) ? 1 : 0;
-	flags.bits.will = (pConnectParams->isWillMsgPresent) ? 1 : 0;
-	if(flags.bits.will) {
-		flags.bits.willQoS = pConnectParams->will.qos;
-		flags.bits.willRetain = (pConnectParams->will.isRetained) ? 1 : 0;
+	if (pConnectParams->isCleanSession)
+	{
+		flags.all |= 1 << 1;
 	}
 
-	if(pConnectParams->pUsername) {
-		flags.bits.username = 1;
+	if (pConnectParams->isWillMsgPresent)
+	{
+		flags.all |= 1 << 2;
+		flags.all |= pConnectParams->will.qos << 3;
+		flags.all |= pConnectParams->will.isRetained << 5;
 	}
 
 	if(pConnectParams->pPassword) {
-		flags.bits.password = 1;
+		flags.all |= 1 << 6;
+	}
+
+	if(pConnectParams->pUsername) {
+		flags.all |= 1 << 7;
 	}
 
 	aws_iot_mqtt_internal_write_char(&ptr, flags.all);
@@ -225,11 +230,11 @@ static IoT_Error_t _aws_iot_mqtt_serialize_connect(unsigned char *pTxBuf, size_t
 		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->will.pMessage, pConnectParams->will.msgLen);
 	}
 
-	if(flags.bits.username) {
+	if(pConnectParams->pUsername) {
 		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->pUsername, pConnectParams->usernameLen);
 	}
 
-	if(flags.bits.password) {
+	if(pConnectParams->pPassword) {
 		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->pPassword, pConnectParams->passwordLen);
 	}
 
@@ -274,7 +279,7 @@ static IoT_Error_t _aws_iot_mqtt_deserialize_connack(unsigned char *pSessionPres
 	readBytesLen = 0;
 
 	header.byte = aws_iot_mqtt_internal_read_char(&curdata);
-	if(CONNACK != header.bits.type) {
+	if(CONNACK != MQTT_HEADER_FIELD_TYPE(header.byte)) {
 		FUNC_EXIT_RC(FAILURE);
 	}
 
