@@ -290,7 +290,7 @@ IoT_Error_t aws_iot_mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t le
 	sent = 0;
 
 	while(sent < length && !has_timer_expired(pTimer)) {
-		rc = pClient->networkStack.write(&(pClient->networkStack), &pClient->clientData.writeBuf[sent], length, pTimer,
+		rc = pClient->networkStack.write(&(pClient->networkStack), &pClient->clientData.writeBuf[sent], length - sent, pTimer,
 										 &sentLen);
 		if(SUCCESS != rc) {
 			/* there was an error writing the data */
