@@ -327,6 +327,8 @@ static jsmntok_t jsonTokenStruct[MAX_JSON_TOKEN_EXPECTED];
 bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t *pTokenCount) {
 	int32_t tokenCount;
 
+	IOT_UNUSED(pJsonHandler);
+
 	jsmn_init(&shadowJsonParser);
 
 	tokenCount = jsmn_parse(&shadowJsonParser, pJsonDocument, strlen(pJsonDocument), jsonTokenStruct,
@@ -343,7 +345,6 @@ bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t 
 		return false;
 	}
 
-	pJsonHandler = (void *) jsonTokenStruct;
 	*pTokenCount = tokenCount;
 
 	return true;
