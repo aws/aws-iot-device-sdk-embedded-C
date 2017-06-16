@@ -138,7 +138,7 @@ IoT_Error_t aws_iot_mqtt_set_connect_params(AWS_IoT_Client *pClient, IoT_Client_
 	pClient->clientData.options.clientIDLen = pNewConnectParams->clientIDLen;
 	pClient->clientData.options.pUsername = pNewConnectParams->pUsername;
 	pClient->clientData.options.usernameLen = pNewConnectParams->usernameLen;
-	pClient->clientData.options.pPassword = pNewConnectParams->pUsername;
+	pClient->clientData.options.pPassword = pNewConnectParams->pPassword;
 	pClient->clientData.options.passwordLen = pNewConnectParams->passwordLen;
 	pClient->clientData.options.will.pTopicName = pNewConnectParams->will.pTopicName;
 	pClient->clientData.options.will.topicNameLen = pNewConnectParams->will.topicNameLen;
