@@ -349,6 +349,10 @@ static IoT_Error_t _aws_iot_mqtt_internal_resubscribe(AWS_IoT_Client *pClient) {
 	existingSubCount = _aws_iot_mqtt_get_free_message_handler_index(pClient);
 
 	for(itr = 0; itr < existingSubCount; itr++) {
+		if(pClient->clientData.messageHandlers[itr].topicName == NULL) {
+			continue;
+		}
+
 		init_timer(&timer);
 		countdown_ms(&timer, pClient->clientData.commandTimeoutMs);
 

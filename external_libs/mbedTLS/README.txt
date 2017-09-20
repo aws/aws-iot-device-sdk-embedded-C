@@ -1,2 +1,5 @@
 # Copy source code for mbedTLS into this directory
-# The SDK was tested internally with mbedTLS v2.1.1 which can be found here - https://github.com/ARMmbed/mbedtls/releases/tag/mbedtls-2.1.1
+#
+# You'll need to download mbedTLS from the official ARMmbed repository and
+# place the files here. We recommend that you pick the latest version in
+# order to have up-to-date security fixes.
