@@ -5,9 +5,6 @@ The scope of this document is to provide instructions to modify the provided sou
 
 ##Contents of the SDK
 
-The SDK ported for linux can be downloaded from the below link:
- * [mbedTLS from ARM](https://s3.amazonaws.com/aws-iot-device-sdk-embedded-c/linux_mqtt_mbedtls-2.0.0.tar)
-
 The C-code files of this SDK are delivered via the following directory structure (see comment behind folder name for an explanation of its content).
 
 Current SDK Directory Layout (mbedTLS)

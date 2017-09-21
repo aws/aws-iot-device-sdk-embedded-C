@@ -113,9 +113,11 @@ IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParamet
 
 	rc = aws_iot_mqtt_connect(pClient, &ConnectParams);
 
-	if(SUCCESS == rc) {
-		initializeRecords(pClient);
+	if(SUCCESS != rc) {
+		FUNC_EXIT_RC(rc);
 	}
+
+	initializeRecords(pClient);
 
 	if(NULL != pParams->deleteActionHandler) {
 		snprintf(deleteAcceptedTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES,

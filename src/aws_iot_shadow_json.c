@@ -314,7 +314,10 @@ static IoT_Error_t convertDataToString(char *pStringBuffer, size_t maxSizoString
 		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%s,", *(bool *) (pData) ? "true" : "false");
 	} else if(type == SHADOW_JSON_STRING) {
 		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "\"%s\",", (char *) (pData));
+	} else if(type == SHADOW_JSON_OBJECT) {
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%s,", (char *) (pData));
 	}
+
 
 	ret_val = checkReturnValueOfSnPrintf(snPrintfReturn, maxSizoStringBuffer);
 
@@ -369,7 +372,9 @@ static IoT_Error_t UpdateValueIfNoObject(const char *pJsonString, jsonStruct_t *
 		ret_val = parseFloatValue((float *) pDataStruct->pData, pJsonString, &token);
 	} else if(pDataStruct->type == SHADOW_JSON_DOUBLE) {
 		ret_val = parseDoubleValue((double *) pDataStruct->pData, pJsonString, &token);
-	}
+	} else if(pDataStruct->type == SHADOW_JSON_STRING) {
+		ret_val = parseStringValue((char *) pDataStruct->pData, pJsonString, &token);
+        }
 
 	return ret_val;
 }

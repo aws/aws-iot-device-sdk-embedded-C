@@ -33,8 +33,8 @@
 #include <sys/time.h>
 #include "aws_iot_mqtt_client_interface.h"
 #include "aws_iot_log.h"
-
 #include "aws_iot_integ_tests_config.h"
+#include "aws_iot_config.h"
 
 int aws_iot_mqtt_tests_basic_connectivity();
 int aws_iot_mqtt_tests_multiple_clients();

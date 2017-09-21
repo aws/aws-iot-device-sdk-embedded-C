@@ -15,6 +15,7 @@
 #include "aws_iot_log.h"
 
 #include "aws_iot_integ_tests_config.h"
+#include "aws_iot_config.h"
 
 static bool terminate_yield_thread;
 static bool terminate_subUnsub_thread;
