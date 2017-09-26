@@ -473,6 +473,9 @@ IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Par
 	if(SUCCESS != rc) {
 		pClient->networkStack.disconnect(&(pClient->networkStack));
 		disconRc = pClient->networkStack.destroy(&(pClient->networkStack));
+		if (disconRc != SUCCESS) {
+			FUNC_EXIT_RC(NETWORK_DISCONNECTED_ERROR);
+		}
 		aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTING, CLIENT_STATE_DISCONNECTED_ERROR);
 	} else {
 		aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTING, CLIENT_STATE_CONNECTED_IDLE);
