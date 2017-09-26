@@ -395,6 +395,8 @@ bool isJsonKeyMatchingAndUpdateValue(const char *pJsonDocument, void *pJsonHandl
 			*pDataPosition = dataToken.start;
 			*pDataLength = dataLength;
 			return true;
+		} else if(jsoneq(pJsonDocument, &(jsonTokenStruct[i]), "metadata") == 0) {
+			return false;
 		}
 	}
 	return false;
