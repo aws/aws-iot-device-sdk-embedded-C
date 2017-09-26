@@ -194,19 +194,24 @@ static IoT_Error_t _aws_iot_mqtt_serialize_connect(unsigned char *pTxBuf, size_t
 	//}
 
 	flags.all = 0;
-	flags.bits.cleansession = (pConnectParams->isCleanSession) ? 1 : 0;
-	flags.bits.will = (pConnectParams->isWillMsgPresent) ? 1 : 0;
-	if(flags.bits.will) {
-		flags.bits.willQoS = pConnectParams->will.qos;
-		flags.bits.willRetain = (pConnectParams->will.isRetained) ? 1 : 0;
+	if (pConnectParams->isCleanSession)
+	{
+		flags.all |= 1 << 1;
 	}
 
-	if(pConnectParams->pUsername) {
-		flags.bits.username = 1;
+	if (pConnectParams->isWillMsgPresent)
+	{
+		flags.all |= 1 << 2;
+		flags.all |= pConnectParams->will.qos << 3;
+		flags.all |= pConnectParams->will.isRetained << 5;
 	}
 
 	if(pConnectParams->pPassword) {
-		flags.bits.password = 1;
+		flags.all |= 1 << 6;
+	}
+
+	if(pConnectParams->pUsername) {
+		flags.all |= 1 << 7;
 	}
 
 	aws_iot_mqtt_internal_write_char(&ptr, flags.all);
@@ -225,11 +230,11 @@ static IoT_Error_t _aws_iot_mqtt_serialize_connect(unsigned char *pTxBuf, size_t
 		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->will.pMessage, pConnectParams->will.msgLen);
 	}
 
-	if(flags.bits.username) {
+	if(pConnectParams->pUsername) {
 		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->pUsername, pConnectParams->usernameLen);
 	}
 
-	if(flags.bits.password) {
+	if(pConnectParams->pPassword) {
 		aws_iot_mqtt_internal_write_utf8_string(&ptr, pConnectParams->pPassword, pConnectParams->passwordLen);
 	}
 
@@ -274,7 +279,7 @@ static IoT_Error_t _aws_iot_mqtt_deserialize_connack(unsigned char *pSessionPres
 	readBytesLen = 0;
 
 	header.byte = aws_iot_mqtt_internal_read_char(&curdata);
-	if(CONNACK != header.bits.type) {
+	if(CONNACK != MQTT_HEADER_FIELD_TYPE(header.byte)) {
 		FUNC_EXIT_RC(FAILURE);
 	}
 
@@ -391,6 +396,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 		}
 	}
 
+	IOT_DEBUG("1\n");
 	rc = pClient->networkStack.connect(&(pClient->networkStack), NULL);
 	if(SUCCESS != rc) {
 		/* TLS Connect failed, return error */
@@ -403,18 +409,30 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 	pClient->clientData.keepAliveInterval = pClient->clientData.options.keepAliveIntervalInSec;
 	rc = _aws_iot_mqtt_serialize_connect(pClient->clientData.writeBuf, pClient->clientData.writeBufSize,
 										 &(pClient->clientData.options), &len);
+	IOT_DEBUG("2\n");
 	if(SUCCESS != rc || 0 >= len) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	/* send the connect packet */
+	IOT_DEBUG("3.1\n");
+	uint32_t i = 0;
+	printf("serialize_connect_packet %d: ", len);
+	for (i = 0; i < len; i++)
+	{
+		printf("%02X ", pClient->clientData.writeBuf[i]);
+	}
+	printf("\n");
 	rc = aws_iot_mqtt_internal_send_packet(pClient, len, &connect_timer);
+	IOT_DEBUG("3.2\n");
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
 	/* this will be a blocking call, wait for the CONNACK */
+	IOT_DEBUG("4.1\n");
 	rc = aws_iot_mqtt_internal_wait_for_read(pClient, CONNACK, &connect_timer);
+	IOT_DEBUG("4.2\n");
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
@@ -422,14 +440,17 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 	/* Received CONNACK, check the return code */
 	rc = _aws_iot_mqtt_deserialize_connack((unsigned char *) &sessionPresent, &connack_rc, pClient->clientData.readBuf,
 										   pClient->clientData.readBufSize);
+	IOT_DEBUG("5\n");
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
 
+	IOT_DEBUG("6\n");
 	if(MQTT_CONNACK_CONNECTION_ACCEPTED != connack_rc) {
 		FUNC_EXIT_RC(connack_rc);
 	}
 
+	IOT_DEBUG("7\n");
 	pClient->clientStatus.isPingOutstanding = false;
 	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval);
 
@@ -468,7 +489,9 @@ IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Par
 
 	aws_iot_mqtt_set_client_state(pClient, clientState, CLIENT_STATE_CONNECTING);
 
+	IOT_DEBUG("calling _aws_iot_mqtt_internal_connect\n");
 	rc = _aws_iot_mqtt_internal_connect(pClient, pConnectParams);
+	IOT_DEBUG("_aws_iot_mqtt_internal_connect ret %d\n", rc);
 
 	if(SUCCESS != rc) {
 		pClient->networkStack.disconnect(&(pClient->networkStack));

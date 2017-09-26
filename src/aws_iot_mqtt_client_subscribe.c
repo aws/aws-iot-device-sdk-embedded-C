@@ -140,7 +140,7 @@ static IoT_Error_t _aws_iot_mqtt_deserialize_suback(uint16_t *pPacketId, uint32_
 	}
 
 	header.byte = aws_iot_mqtt_internal_read_char(&curData);
-	if(SUBACK != header.bits.type) {
+	if(SUBACK != MQTT_HEADER_FIELD_TYPE(header.byte)) {
 		FUNC_EXIT_RC(FAILURE);
 	}
 

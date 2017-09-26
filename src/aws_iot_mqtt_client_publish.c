@@ -338,13 +338,13 @@ IoT_Error_t aws_iot_mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 	}
 
 	header.byte = aws_iot_mqtt_internal_read_char(&curData);
-	if(PUBLISH != header.bits.type) {
+	if(PUBLISH != MQTT_HEADER_FIELD_TYPE(header.byte)) {
 		FUNC_EXIT_RC(FAILURE);
 	}
 
-	*dup = header.bits.dup;
-	*qos = (QoS) header.bits.qos;
-	*retained = header.bits.retain;
+	*dup = MQTT_HEADER_FIELD_DUP(header.byte);
+	*qos = (QoS) MQTT_HEADER_FIELD_QOS(header.byte);
+	*retained = MQTT_HEADER_FIELD_RETAIN(header.byte);
 
 	/* read remaining length */
 	rc = aws_iot_mqtt_internal_decode_remaining_length_from_buffer(curData, &decodedLen, &readBytesLen);
@@ -404,8 +404,8 @@ IoT_Error_t aws_iot_mqtt_internal_deserialize_ack(unsigned char *pPacketType, un
 
 
 	header.byte = aws_iot_mqtt_internal_read_char(&curdata);
-	*dup = header.bits.dup;
-	*pPacketType = header.bits.type;
+	*dup = MQTT_HEADER_FIELD_DUP(header.byte);
+	*pPacketType = MQTT_HEADER_FIELD_TYPE(header.byte);
 
 	/* read remaining length */
 	rc = aws_iot_mqtt_internal_decode_remaining_length_from_buffer(curdata, &decodedLen, &readBytesLen);
