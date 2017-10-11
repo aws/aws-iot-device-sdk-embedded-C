@@ -520,10 +520,7 @@ IoT_Error_t _aws_iot_mqtt_internal_disconnect(AWS_IoT_Client *pClient) {
 
 	/* send the disconnect packet */
 	if(serialized_len > 0) {
-		rc = aws_iot_mqtt_internal_send_packet(pClient, serialized_len, &timer);
-		if(SUCCESS != rc) {
-			FUNC_EXIT_RC(rc);
-		}
+		aws_iot_mqtt_internal_send_packet(pClient, serialized_len, &timer);
 	}
 
 	/* Clean network stack */
