@@ -240,6 +240,10 @@ int main(int argc, char **argv) {
 			publishCount--;
 		}
 
+		if(publishCount == 0) {
+			break;
+		}
+
 		sprintf(cPayload, "%s : %d ", "hello from SDK QOS1", i++);
 		paramsQOS1.payloadLen = strlen(cPayload);
 		rc = aws_iot_mqtt_publish(&client, "sdkTest/sub", 11, &paramsQOS1);
@@ -251,6 +255,9 @@ int main(int argc, char **argv) {
 			publishCount--;
 		}
 	}
+
+	// Wait for all the messages to be received
+	aws_iot_mqtt_yield(&client, 100);
 
 	if(SUCCESS != rc) {
 		IOT_ERROR("An error occurred in the loop.\n");
