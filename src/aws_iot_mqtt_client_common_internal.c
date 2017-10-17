@@ -422,12 +422,12 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, T
 // assume topic filter and name is in correct format
 // # can only be at end
 // + and # can only be next to separator
-static char _aws_iot_mqtt_internal_is_topic_matched(char *pTopicFilter, char *pTopicName, uint16_t topicNameLen) {
+static bool _aws_iot_mqtt_internal_is_topic_matched(char *pTopicFilter, char *pTopicName, uint16_t topicNameLen) {
 
 	char *curf, *curn, *curn_end;
 
 	if(NULL == pTopicFilter || NULL == pTopicName) {
-		return NULL_VALUE_ERROR;
+		return false;
 	}
 
 	curf = pTopicFilter;
