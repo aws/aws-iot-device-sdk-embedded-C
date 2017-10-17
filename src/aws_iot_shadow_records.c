@@ -369,7 +369,8 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 	if(clearBothEntriesFromList) {
 		if(indexAcceptedSubList >= 0) {
 			SubscriptionList[indexAcceptedSubList].isFree = true;
-		} else if(indexRejectedSubList >= 0) {
+		}
+		if(indexRejectedSubList >= 0) {
 			SubscriptionList[indexRejectedSubList].isFree = true;
 		}
 		if(SubscriptionList[indexAcceptedSubList].count == 1) {
