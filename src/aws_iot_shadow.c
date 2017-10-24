@@ -38,6 +38,8 @@ const ShadowInitParameters_t ShadowInitParametersDefault = {(char *) AWS_IOT_MQT
 const ShadowConnectParameters_t ShadowConnectParametersDefault = {(char *) AWS_IOT_MY_THING_NAME,
 								  (char *) AWS_IOT_MQTT_CLIENT_ID, 0, NULL};
 
+static char deleteAcceptedTopic[MAX_SHADOW_TOPIC_LENGTH_BYTES];
+
 void aws_iot_shadow_reset_last_received_version(void) {
 	shadowJsonVersionNum = 0;
 }
@@ -89,7 +91,6 @@ IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t 
 
 IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams) {
 	IoT_Error_t rc = SUCCESS;
-	char deleteAcceptedTopic[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 	uint16_t deleteAcceptedTopicLen;
 	IoT_Client_Connect_Params ConnectParams = iotClientConnectParamsDefault;
 
