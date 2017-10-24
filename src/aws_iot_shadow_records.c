@@ -168,9 +168,9 @@ static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, Sh
 	}
 }
 
-static bool isAckForMyThingName(const char *pTopicName) {
+static bool isValidShadowVersionUpdate(const char *pTopicName) {
 	if(strstr(pTopicName, myThingName) != NULL &&
-	   ((strstr(pTopicName, "get/accepted") != NULL) || (strstr(pTopicName, "update/accepted") != NULL) ||
+	   ((strstr(pTopicName, "get/accepted") != NULL) ||
 		(strstr(pTopicName, "delta") != NULL))) {
 		return true;
 	}
@@ -201,7 +201,7 @@ static void AckStatusCallback(AWS_IoT_Client *pClient, char *topicName, uint16_t
 		return;
 	}
 
-	if(isAckForMyThingName(topicName)) {
+	if(isValidShadowVersionUpdate(topicName)) {
 		uint32_t tempVersionNumber = 0;
 		if(extractVersionNumber(shadowRxBuf, pJsonHandler, tokenCount, &tempVersionNumber)) {
 			if(tempVersionNumber > shadowJsonVersionNum) {
