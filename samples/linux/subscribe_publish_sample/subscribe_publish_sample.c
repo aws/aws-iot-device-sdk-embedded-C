@@ -240,7 +240,7 @@ int main(int argc, char **argv) {
 			publishCount--;
 		}
 
-		if(publishCount == 0) {
+		if(publishCount == 0 && !infinitePublishFlag) {
 			break;
 		}
 
