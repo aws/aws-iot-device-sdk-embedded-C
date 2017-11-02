@@ -350,7 +350,6 @@ IoT_Error_t aws_iot_mqtt_internal_deserialize_publish(uint8_t *dup, QoS *qos,
 	rc = aws_iot_mqtt_internal_decode_remaining_length_from_buffer(curData, &decodedLen, &readBytesLen);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
-		return rc;
 	}
 	curData += (readBytesLen);
 	endData = curData + decodedLen;
