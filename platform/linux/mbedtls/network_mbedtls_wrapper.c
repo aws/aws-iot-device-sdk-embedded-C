@@ -27,8 +27,16 @@ extern "C" {
 #include "network_interface.h"
 #include "network_platform.h"
 
+
 /* This is the value used for ssl read timeout */
 #define IOT_SSL_READ_TIMEOUT 10
+
+/* This defines the value of the debug buffer that gets allocated.
+ * The value can be altered based on memory constraints
+ */
+#ifdef ENABLE_IOT_DEBUG
+#define MBEDTLS_DEBUG_BUFFER_SIZE 2048
+#endif
 
 /*
  * This is a function to do further verification if needed on the cert received
@@ -93,8 +101,9 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 	TLSDataParams *tlsDataParams = NULL;
 	char portBuffer[6];
 	char vrfy_buf[512];
-#ifdef IOT_DEBUG
-	unsigned char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];
+
+#ifdef ENABLE_IOT_DEBUG
+	unsigned char buf[MBEDTLS_DEBUG_BUFFER_SIZE];
 #endif
 
 	if(NULL == pNetwork) {
@@ -248,7 +257,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 		ret = SUCCESS;
 	}
 
-#ifdef IOT_DEBUG
+#ifdef ENABLE_IOT_DEBUG
 	if (mbedtls_ssl_get_peer_cert(&(tlsDataParams->ssl)) != NULL) {
 		IOT_DEBUG("  . Peer certificate information    ...\n");
 		mbedtls_x509_crt_info((char *) buf, sizeof(buf) - 1, "      ", mbedtls_ssl_get_peer_cert(&(tlsDataParams->ssl)));
