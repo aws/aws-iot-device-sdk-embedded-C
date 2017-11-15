@@ -176,7 +176,7 @@ int main(int argc, char **argv) {
 		return rc;
 	}
 
-	connectParams.keepAliveIntervalInSec = 10;
+	connectParams.keepAliveIntervalInSec = 600;
 	connectParams.isCleanSession = true;
 	connectParams.MQTTVersion = MQTT_3_1_1;
 	connectParams.pClientID = AWS_IOT_MQTT_CLIENT_ID;
@@ -240,9 +240,9 @@ int main(int argc, char **argv) {
 			publishCount--;
 		}
 
-		if(publishCount == 0 && !infinitePublishFlag) {
-			break;
-		}
+                if(publishCount == 0) {
+                    break;
+                }
 
 		sprintf(cPayload, "%s : %d ", "hello from SDK QOS1", i++);
 		paramsQOS1.payloadLen = strlen(cPayload);
@@ -256,8 +256,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	// Wait for all the messages to be received
-	aws_iot_mqtt_yield(&client, 100);
+        // Wait for all the messages to be received
+        aws_iot_mqtt_yield(&client, 100);
 
 	if(SUCCESS != rc) {
 		IOT_ERROR("An error occurred in the loop.\n");

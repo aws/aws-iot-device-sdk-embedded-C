@@ -176,7 +176,7 @@ int main(int argc, char **argv) {
 		return rc;
 	}
 
-	connectParams.keepAliveIntervalInSec = 10;
+	connectParams.keepAliveIntervalInSec = 600;
 	connectParams.isCleanSession = true;
 	connectParams.MQTTVersion = MQTT_3_1_1;
 	connectParams.pClientID = (char *)AWS_IOT_MQTT_CLIENT_ID;
