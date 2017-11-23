@@ -48,4 +48,6 @@
 #define AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL 1000		///< Minimum time before the First reconnect attempt is made as part of the exponential back-off algorithm
 #define AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL 128000		///< Maximum time interval after which exponential back-off will stop attempting to reconnect.
 
+#define DISABLE_METRICS false ///< Disable the collection of metrics by setting this to true
+
 #endif /* SRC_SHADOW_IOT_SHADOW_CONFIG_H_ */

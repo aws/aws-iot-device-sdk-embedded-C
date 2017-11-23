@@ -39,9 +39,17 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
+
 #include <aws_iot_mqtt_client.h>
 #include "aws_iot_mqtt_client_interface.h"
 #include "aws_iot_mqtt_client_common_internal.h"
+#include "aws_iot_version.h"
+
+#if !DISABLE_METRICS
+#define SDK_METRICS_LEN 25
+#define SDK_METRICS_TEMPLATE "?SDK=C&Version=%d.%d.%d"
+#endif
 
 typedef union {
 	uint8_t all;    /**< all connect flags */
@@ -456,7 +464,9 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Params *pConnectParams) {
 	IoT_Error_t rc, disconRc;
 	ClientState clientState;
-
+#if !DISABLE_METRICS
+	char pUsernameTemp[SDK_METRICS_LEN] = {0};
+#endif
 	FUNC_ENTRY;
 
 	if(NULL == pClient) {
@@ -472,6 +482,13 @@ IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Par
 	}
 
 	aws_iot_mqtt_set_client_state(pClient, clientState, CLIENT_STATE_CONNECTING);
+
+#if !DISABLE_METRICS
+	if (NULL != pConnectParams) {
+		pConnectParams->usernameLen = snprintf(pUsernameTemp, SDK_METRICS_LEN, SDK_METRICS_TEMPLATE, VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+		pConnectParams->pUsername = (char*)&pUsernameTemp;
+	}
+#endif
 
 	rc = _aws_iot_mqtt_internal_connect(pClient, pConnectParams);
 
