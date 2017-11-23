@@ -1,4 +1,36 @@
 #Change Log
+## [2.2.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.2.0) (Nov 22, 2017)
+Bugfixes/Improvements:
+  - Bugfixes/Improvements:
+    - [#49](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/49) - Add support for SHADOW_JSON_STRING as supported value
+    - [#57](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/57) - remove unistd.h
+    - [#58](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/58) - Fix return type of _aws_iot_mqtt_internal_is_
+    - [#59](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/95) - Fix extraneous assignmenttopic_matched
+    - [#62](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/62) - Clearing SubscriptionList entries in shadowActionAcks after subscription failure
+    - [#63](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/63) - Stack overflow when IOT_DEBUG is enabled
+    - [#66](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/66) - Bug in send packet function
+    - [#69](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/69) - Fix for broken deleteActionHandler in shadow API
+    - [#71](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/71) - Prevent messages on /update/accepted from incrementing shadowJsonVersionNum in delta
+    - [#73](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/73) - wait for all messages to be received in subscribe publish sample
+    - [#96](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/96) - destroy TLS instance even if disconnect send fails
+    - Fix for aws_iot_mqtt_resubscribe not properly resubscribing to all topics
+    - Update MbedTLS Network layer Readme to remove specific version link
+    - Fix for not Passing througheError code on aws_iot_shadow_connect failure
+    - Allow sending of SHADOW_JSON_OBJECT to the shadow
+    - Ignore delta token callback for metadata
+    - Fix infinite publish exiting early in subscribe publish sample
+   - Improvements:
+    - Updated jsmn to latest commit
+    - Pull requests:
+      - [#29](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/29) - three small fixes
+      - [#59](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/59) - Fixed MQTT header constructing and parsing
+      - [#88](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/88) - Fix username and password are confused
+      - [#78](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/78) - Fixed compilation warnings
+      - [#102](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/102) - Corrected markdown headers
+      - [#105](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/105) - Fixed warnings when compiling
+    - Change default keepalive interval to 600 seconds
+    - Added SDK metrics string into connect packet
+
 ## [2.1.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.1.1) (Sep 5, 2016)
 
 Bugfixes/Improvements:

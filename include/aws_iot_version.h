@@ -35,11 +35,11 @@
 /**
  * @brief MINOR version when functionality is added in a backwards-compatible manner.
  */
-#define VERSION_MINOR 1
+#define VERSION_MINOR 2
 /**
  * @brief PATCH version when backwards-compatible bug fixes are made.
  */
-#define VERSION_PATCH 1
+#define VERSION_PATCH 0
 /**
  * @brief TAG is an (optional) tag appended to the version if a more descriptive verion is needed.
  */
