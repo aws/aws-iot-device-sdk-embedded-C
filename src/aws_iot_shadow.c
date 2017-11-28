@@ -33,10 +33,10 @@ extern "C" {
 #include "aws_iot_shadow_records.h"
 
 const ShadowInitParameters_t ShadowInitParametersDefault = {(char *) AWS_IOT_MQTT_HOST, AWS_IOT_MQTT_PORT, NULL, NULL,
-															NULL, false, NULL};
+															NULL, false};
 
 const ShadowConnectParameters_t ShadowConnectParametersDefault = {(char *) AWS_IOT_MY_THING_NAME,
-								  (char *) AWS_IOT_MQTT_CLIENT_ID, 0, NULL};
+								  (char *) AWS_IOT_MQTT_CLIENT_ID, 0, NULL, 600};
 
 static char deleteAcceptedTopic[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 
@@ -103,7 +103,7 @@ IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParamet
 	snprintf(myThingName, MAX_SIZE_OF_THING_NAME, "%s", pParams->pMyThingName);
 	snprintf(mqttClientID, MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES, "%s", pParams->pMqttClientId);
 
-	ConnectParams.keepAliveIntervalInSec = 600; // NOTE: Temporary fix
+	ConnectParams.keepAliveIntervalInSec = pParams->keepAliveIntervalInSec; // NOTE: Temporary fix 600 seconds does not always work.  Adjust as necessary
 	ConnectParams.MQTTVersion = MQTT_3_1_1;
 	ConnectParams.isCleanSession = true;
 	ConnectParams.isWillMsgPresent = false;
