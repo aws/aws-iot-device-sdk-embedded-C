@@ -412,6 +412,7 @@ IoT_Error_t publishToShadowAction(const char *pThingName, ShadowActions_t action
 	topicNameFromThingAndAction(TemporaryTopicName, pThingName, action, SHADOW_ACTION);
 
 	msgParams.qos = QOS0;
+	msgParams.isRetained = 0;
 	msgParams.payloadLen = strlen(pJsonDocumentToBeSent);
 	msgParams.payload = (char *) pJsonDocumentToBeSent;
 	ret_val = aws_iot_mqtt_publish(pMqttClient, TemporaryTopicName, (uint16_t) strlen(TemporaryTopicName), &msgParams);
