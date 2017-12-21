@@ -39,8 +39,17 @@
 extern "C" {
 #endif
 
+#include <string.h>
+
 #include "aws_iot_log.h"
 #include "aws_iot_mqtt_client_interface.h"
+#include "aws_iot_version.h"
+
+#if !DISABLE_METRICS
+#define SDK_METRICS_LEN 25
+#define SDK_METRICS_TEMPLATE "?SDK=C&Version=%d.%d.%d"
+static char pUsernameTemp[SDK_METRICS_LEN] = {0};
+#endif
 
 #ifdef _ENABLE_THREAD_SUPPORT_
 #include "threads_interface.h"
@@ -136,8 +145,16 @@ IoT_Error_t aws_iot_mqtt_set_connect_params(AWS_IoT_Client *pClient, IoT_Client_
 	pClient->clientData.options.MQTTVersion = pNewConnectParams->MQTTVersion;
 	pClient->clientData.options.pClientID = pNewConnectParams->pClientID;
 	pClient->clientData.options.clientIDLen = pNewConnectParams->clientIDLen;
+#if !DISABLE_METRICS
+	if (0 == strlen(pUsernameTemp)) {
+		snprintf(pUsernameTemp, SDK_METRICS_LEN, SDK_METRICS_TEMPLATE, VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+	}
+	pClient->clientData.options.pUsername = (char*)&pUsernameTemp[0];
+	pClient->clientData.options.usernameLen = strlen(pUsernameTemp);
+#else
 	pClient->clientData.options.pUsername = pNewConnectParams->pUsername;
 	pClient->clientData.options.usernameLen = pNewConnectParams->usernameLen;
+#endif
 	pClient->clientData.options.pPassword = pNewConnectParams->pPassword;
 	pClient->clientData.options.passwordLen = pNewConnectParams->passwordLen;
 	pClient->clientData.options.will.pTopicName = pNewConnectParams->will.pTopicName;

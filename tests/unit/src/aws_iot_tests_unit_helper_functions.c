@@ -23,6 +23,13 @@
 #include "aws_iot_mqtt_client.h"
 #include "aws_iot_tests_unit_mock_tls_params.h"
 #include "aws_iot_tests_unit_helper_functions.h"
+#include "aws_iot_version.h"
+
+#if !DISABLE_METRICS
+#define SDK_METRICS_LEN 25
+#define SDK_METRICS_TEMPLATE "?SDK=C&Version=%d.%d.%d"
+static char pUsernameTemp[SDK_METRICS_LEN] = {0};
+#endif
 
 #define CONNACK_SUBACK_PACKET_SIZE 9
 #define PUBACK_PACKET_SIZE 4
@@ -402,7 +409,11 @@ bool isConnectTxBufFlagCorrect(IoT_Client_Connect_Params *settings, ConnectBuffe
 	bool ret = true;
 	int i;
 	unsigned char myByte[8]; // Construct our own connect flag byte according to the settings
+#if !DISABLE_METRICS
+	myByte[0] = (unsigned char) (1); // User Name Flag
+#else
 	myByte[0] = (unsigned char) (settings->pUsername == NULL ? 0 : 1); // User Name Flag
+#endif
 	myByte[1] = (unsigned char) (settings->pPassword == NULL ? 0 : 1); // Password Flag
 	myByte[2] = 0; // Will Retain
 	// QoS
@@ -433,7 +444,15 @@ bool isConnectTxBufPayloadCorrect(IoT_Client_Connect_Params *settings, unsigned 
 	unsigned int ClientIDLen = (unsigned int) strlen(settings->pClientID);
 	unsigned int WillTopicLen = (unsigned int) strlen(settings->will.pTopicName);
 	unsigned int WillMsgLen = (unsigned int) strlen(settings->will.pMessage);
+#if !DISABLE_METRICS
+	if (0 == strlen(pUsernameTemp)) {
+		snprintf(pUsernameTemp, SDK_METRICS_LEN, SDK_METRICS_TEMPLATE,
+			 VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+	}
+	unsigned int UsernameLen = (unsigned int)strlen(pUsernameTemp);
+#else
 	unsigned int UsernameLen = (unsigned int) settings->usernameLen;
+#endif
 	unsigned int PasswordLen = (unsigned int) settings->passwordLen;
 	unsigned int myPayloadLen = ClientIDLen + 2 + WillTopicLen + 2 + WillMsgLen + UsernameLen + 2 + PasswordLen;
 	char *myPayload = (char *) malloc(sizeof(char) * (myPayloadLen + 1)); // reserve 1 byte for '\0'
@@ -468,12 +487,20 @@ bool isConnectTxBufPayloadCorrect(IoT_Client_Connect_Params *settings, unsigned 
 		}
 	}
 	// Username
+#if !DISABLE_METRICS
+	for(i = 0; i < strlen(pUsernameTemp); i++)
+	{
+		*op = pUsernameTemp[i];
+		op++;
+	}
+#else
 	if(NULL != settings->pUsername) {
 		for(i = 0; i < UsernameLen; i++) {
 			*op = settings->pUsername[i];
 			op++;
 		}
 	}
+#endif
 	// PasswordLen + Password
 	if(NULL != settings->pPassword) {
 		*op = (char) (PasswordLen & 0x0FF00); // MSB
