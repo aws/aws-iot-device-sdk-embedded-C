@@ -39,7 +39,7 @@
 /**
  * @brief PATCH version when backwards-compatible bug fixes are made.
  */
-#define VERSION_PATCH 0
+#define VERSION_PATCH 1
 /**
  * @brief TAG is an (optional) tag appended to the version if a more descriptive verion is needed.
  */

@@ -1,4 +1,15 @@
 # Change Log
+## [2.2.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.2.1) (Dec 26, 2017)
+
+Bugfixes:
+
+  - [#115](https://github.com/aws/aws-iot-device-sdk-embedded-C/issues/115) - Issue with new client metrics
+
+Pull requests:
+
+  - [#112](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/112) - Initialize msqParams.isRetained to 0 in publishToShadowAction()
+  - [#118](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/118) - mqttInitParams.mqttPacketTimeout_ms initialized
+
 ## [2.2.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.2.0) (Nov 22, 2017)
 
 New Features:
