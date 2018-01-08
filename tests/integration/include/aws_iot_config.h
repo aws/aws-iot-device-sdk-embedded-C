@@ -33,7 +33,7 @@
 #define AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS 5	///< Maximum number of topic filters the MQTT client can handle at any given time. This should be increased appropriately when using Thing Shadow
 
 // Thing Shadow specific configs
-#define SHADOW_MAX_SIZE_OF_RX_BUFFER AWS_IOT_MQTT_RX_BUF_LEN+1						///< Maximum size of the SHADOW buffer to store the received Shadow message
+#define SHADOW_MAX_SIZE_OF_RX_BUFFER (AWS_IOT_MQTT_RX_BUF_LEN+1)					///< Maximum size of the SHADOW buffer to store the received Shadow message, including terminating NULL byte.
 #define MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES 80										///< Maximum size of the Unique Client Id. For More info on the Client Id refer \ref response "Acknowledgments"
 #define MAX_SIZE_CLIENT_ID_WITH_SEQUENCE MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES + 10	///< This is size of the extra sequence number that will be appended to the Unique client Id
 #define MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE MAX_SIZE_CLIENT_ID_WITH_SEQUENCE + 20	///< This is size of the the total clientToken key and value pair in the JSON
