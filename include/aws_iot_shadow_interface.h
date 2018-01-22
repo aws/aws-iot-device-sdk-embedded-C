@@ -73,6 +73,7 @@ typedef struct {
 	char *pMqttClientId; ///< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id
 	uint16_t mqttClientIdLen; ///< Currently the Shadow uses MQTT to connect and it is important to ensure we have unique client id
 	pApplicationHandler_t deleteActionHandler;	///< Callback to be invoked when Thing shadow for this device is deleted
+	uint16_t keepAliveIntervalInSec;	///< MQTT keep alive interval in seconds.
 } ShadowConnectParameters_t;
 
 /*!

@@ -43,7 +43,7 @@ extern "C" {
 #include "aws_iot_log.h"
 
 int8_t jsoneq(const char *json, jsmntok_t *tok, const char *s) {
-	if(tok->type == JSMN_STRING) {
+	if(tok->type == JSMN_STRING || tok->type == JSMN_ARRAY || tok->type == JSMN_OBJECT) {
 		if((int) strlen(s) == tok->end - tok->start) {
 			if(strncmp(json + tok->start, s, (size_t) (tok->end - tok->start)) == 0) {
 				return 0;
@@ -185,15 +185,21 @@ IoT_Error_t parseBooleanValue(bool *b, const char *jsonString, jsmntok_t *token)
 }
 
 IoT_Error_t parseStringValue(char *buf, const char *jsonString, jsmntok_t *token) {
-	uint16_t size = 0;
-	if(token->type != JSMN_STRING) {
-		IOT_WARN("Token was not a string.");
-		return JSON_PARSE_ERROR;
+
+	IoT_Error_t ret_val = JSON_PARSE_ERROR;
+	if(token->type == JSMN_STRING || token->type == JSMN_ARRAY || token->type == JSMN_OBJECT) 
+	{
+		uint16_t size = token->end - token->start;
+		memcpy(buf, jsonString + token->start, size);
+		buf[size] = '\0';
+		ret_val = SUCCESS;
 	}
-	size = (uint16_t) (token->end - token->start);
-	memcpy(buf, jsonString + token->start, size);
-	buf[size] = '\0';
-	return SUCCESS;
+	else
+	{
+ 		IOT_WARN("Token was not a string.");
+		ret_val = JSON_PARSE_ERROR;
+	}
+	return ret_val;
 }
 
 #ifdef __cplusplus
