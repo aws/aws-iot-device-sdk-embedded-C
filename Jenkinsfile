@@ -3,5 +3,7 @@ node {
     checkout scm
     
   stage 'Build'
-    echo 'Building'
+    echo 'Building shadow sample...'
+    sh 'make'
+    echo 'Done.'
 }
