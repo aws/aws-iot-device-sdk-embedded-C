@@ -4,7 +4,7 @@ node {
     
   stage 'Build'
     echo 'Building shadow sample...'
-    sh 'cd samples/linux/shadow_sample'
+    dir 'samples/linux/shadow_sample'
     sh 'make'
     echo 'Done.'
 }
