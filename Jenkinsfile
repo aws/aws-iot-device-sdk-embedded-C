@@ -5,9 +5,8 @@ node {
   stage 'Cloning dependencies...'
     dir('external_libs/mbedTLS')
     {
-      sh 'ls'
-      sh 'rm README.txt'
-      sh 'ls'
+      sh 'ls -all'
+      sh 'rm -rf *'
       sh 'git clone https://github.com/ARMmbed/mbedtls .'
     }
     echo 'Done.'
