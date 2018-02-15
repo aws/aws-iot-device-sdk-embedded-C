@@ -6,6 +6,7 @@ node {
     dir('external_libs/mbedTLS')
     {
       sh 'rm README.txt'
+      sh 'ls'
       sh 'git clone https://github.com/ARMmbed/mbedtls .'
     }
     echo 'Done.'
