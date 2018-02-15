@@ -2,7 +2,7 @@ node {
   stage 'Checkout'
     checkout scm
   
-  stage 'Cloning dependencies...'
+  stage 'Get dependencies'
     sh 'rm -rf external_libs/mbedTLS'
     sh 'git clone https://github.com/ARMmbed/mbedtls external_libs/mbedTLS'
     sh 'rm -rf external_libs/CppUTest'
@@ -10,7 +10,7 @@ node {
     sh 'unzip cpputest.zip -d external_libs/CppUTest'
     echo 'Done.'
   
-  stage 'Build'
+  stage 'Build samples'
     echo 'Building samples'
     dir('samples/linux/shadow_sample')
     {
@@ -33,4 +33,7 @@ node {
       sh 'make -j8'
     }
     echo 'Done.'
+  
+    stage 'Run unit tests'
+      sh 'make run-unit-tests -j8'
 }
