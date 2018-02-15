@@ -2,13 +2,9 @@ node {
   stage 'Checkout'
     checkout scm
   
-  stage 'Cloning dependencies...'
-    dir('external_libs/mbedTLS')
-    {
-      sh 'ls -all'
-      sh 'rm -rf *'
-      sh 'git clone https://github.com/ARMmbed/mbedtls .'
-    }
+  stage 'Cloning dependencies..."
+    sh 'rm -rf external_libs/mbedTLS'
+    sh 'git clone https://github.com/ARMmbed/mbedtls external_libs/mbedTLS'
     echo 'Done.'
   
   stage 'Build'
