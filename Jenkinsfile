@@ -7,7 +7,8 @@ node {
     sh 'git clone https://github.com/ARMmbed/mbedtls external_libs/mbedTLS'
     sh 'rm -rf external_libs/CppUTest'
     sh 'wget https://github.com/cpputest/cpputest/archive/v3.6.zip -O cpputest.zip'
-    sh 'unzip cpputest.zip -d external_libs/CppUTest'
+    sh 'unzip cpputest.zip -d external_libs/'
+    sh 'mv external_libs/cpputest-3.6/ external_libs/CppUTest'
     echo 'Done.'
   
   stage 'Build samples'
