@@ -12,8 +12,24 @@ node {
     echo 'Done.'
   
   stage 'Build'
-    echo 'Building shadow sample...'
+    echo 'Building samples'
     dir('samples/linux/shadow_sample')
+    {
+      sh 'make -j8'
+    }
+    dir('samples/linux/shadow_sample_console_echo')
+    {
+      sh 'make -j8'
+    }
+    dir('samples/linux/subscribe_publish_cpp_sample')
+    {
+      sh 'make -j8'
+    }
+    dir('samples/linux/subscribe_publish_library_sample')
+    {
+      sh 'make -j8'
+    }
+    dir('samples/linux/subscribe_publish_sample')
     {
       sh 'make -j8'
     }
