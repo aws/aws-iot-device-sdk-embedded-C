@@ -36,5 +36,5 @@ node {
     echo 'Done.'
   
     stage 'Run unit tests'
-      sh 'make run-unit-tests -j8'
+      sh 'make run-unit-tests'
 }
