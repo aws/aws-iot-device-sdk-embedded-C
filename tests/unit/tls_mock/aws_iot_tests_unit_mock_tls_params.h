@@ -25,8 +25,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <aws_iot_mqtt_client.h>
 
-#define TLSMaxBufferSize 1024
+#define TLSMaxBufferSize 2560
 #define NO_MSG_LENGTH_MENTIONED -1
 
 typedef struct {
@@ -48,6 +49,14 @@ extern char LastSubscribeMessage[TLSMaxBufferSize];
 extern size_t lastSubscribeMsgLen;
 extern char SecondLastSubscribeMessage[TLSMaxBufferSize];
 extern size_t secondLastSubscribeMsgLen;
+
+extern char LastUnsubscribeMessage[TLSMaxBufferSize];
+extern size_t lastUnsubscribeMsgLen;
+
+extern char LastPublishMessageTopic[TLSMaxBufferSize];
+extern size_t lastPublishMessageTopicLen;
+extern char LastPublishMessagePayload[TLSMaxBufferSize];
+extern size_t lastPublishMessagePayloadLen;
 
 extern char hostAddress[512];
 extern uint16_t port;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2010-2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -151,6 +151,12 @@ typedef enum {
 			MUTEX_UNLOCK_ERROR = -48,
 	/** Mutex destroy failed */
 			MUTEX_DESTROY_ERROR = -49,
+	/** Input argument exceeded the allowed maximum size */
+			MAX_SIZE_ERROR = -50,
+	/** Some limit has been exceeded, e.g. the maximum number of subscriptions has been reached */
+			LIMIT_EXCEEDED_ERROR = -51,
+	/** Invalid input topic type */
+			INVALID_TOPIC_TYPE_ERROR = -52
 } IoT_Error_t;
 
 #ifdef __cplusplus

@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include "aws_iot_mqtt_client_interface.h"
+#include "aws_iot_jobs_topics.h"
 
 typedef struct {
 	unsigned char PacketType;
@@ -91,5 +92,9 @@ bool isConnectTxBufFlagCorrect(IoT_Client_Connect_Params *settings, ConnectBuffe
 bool isConnectTxBufPayloadCorrect(IoT_Client_Connect_Params *settings, unsigned char *payloadBuf);
 
 void printPrfrdParams(ConnectBufferProofread *params);
+
+const char *getJobTopicTypeName(AwsIotJobExecutionTopicType topicType);
+
+const char *getJobReplyTypeName(AwsIotJobExecutionTopicReplyType replyType);
 
 #endif /* IOT_TESTS_UNIT_HELPER_FUNCTIONS_H_ */
