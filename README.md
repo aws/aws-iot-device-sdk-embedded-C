@@ -16,6 +16,9 @@ The Device SDK provides functionality to create and maintain a mutually authenti
 ### Thing Shadow
 The Device SDK implements the specific protocol for Thing Shadows to retrieve, update and delete Thing Shadows adhering to the protocol that is implemented to ensure correct versioning and support for client tokens. It abstracts the necessary MQTT topic subscriptions by automatically subscribing to and unsubscribing from the reserved topics as needed for each API call. Inbound state change requests are automatically signalled via a configurable callback.
 
+### Jobs
+The Device SDK implements features to facilitate use of the AWS Jobs service. The Jobs service can be used for device management tasks such as updating program files, rotating device certificates, or running other maintenance tasks such are restoring device settings or restarting devices.
+
 ## Design Goals of this SDK
 The embedded C SDK was specifically designed for resource constrained devices (running on micro-controllers and RTOS).
 
