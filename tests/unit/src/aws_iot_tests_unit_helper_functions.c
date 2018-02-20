@@ -536,3 +536,28 @@ void printPrfrdParams(ConnectBufferProofread *params) {
 	printf("KeepAliveInterval: %u\n", params->KeepAlive);
 	printf("----------------\n");
 }
+
+const char *getJobTopicTypeName(AwsIotJobExecutionTopicType topicType) {
+	switch (topicType) {
+	case JOB_UPDATE_TOPIC:			return "JOB_UPDATE_TOPIC";
+	case JOB_NOTIFY_TOPIC:			return "JOB_NOTIFY_TOPIC";
+	case JOB_NOTIFY_NEXT_TOPIC:		return "JOB_NOTIFY_NEXT_TOPIC";
+	case JOB_GET_PENDING_TOPIC:		return "JOB_GET_PENDING_TOPIC";
+	case JOB_DESCRIBE_TOPIC:		return "JOB_DESCRIBE_TOPIC";
+	case JOB_START_NEXT_TOPIC:		return "JOB_START_NEXT_TOPIC";
+	case JOB_WILDCARD_TOPIC:		return "JOB_WILDCARD_TOPIC";
+	case JOB_UNRECOGNIZED_TOPIC:	return "JOB_UNRECOGNIZED_TOPIC";
+	default:						return "invalid";
+	}
+}
+
+const char *getJobReplyTypeName(AwsIotJobExecutionTopicReplyType replyType) {
+	switch (replyType) {
+	case JOB_REQUEST_TYPE:				return "JOB_REQUEST_TYPE";
+	case JOB_ACCEPTED_REPLY_TYPE:		return "JOB_ACCEPTED_REPLY_TYPE";
+	case JOB_REJECTED_REPLY_TYPE:		return "JOB_REJECTED_REPLY_TYPE";
+	case JOB_WILDCARD_REPLY_TYPE:		return "JOB_WILDCARD_REPLY_TYPE";
+	case JOB_UNRECOGNIZED_TOPIC_TYPE:	return "JOB_UNRECOGNIZED_TOPIC_TYPE";
+	default:							return "invalid";
+	}
+}

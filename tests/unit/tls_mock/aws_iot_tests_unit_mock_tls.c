@@ -72,10 +72,45 @@ IoT_Error_t iot_tls_is_connected(Network *pNetwork) {
 	return NETWORK_PHYSICAL_LAYER_CONNECTED;
 }
 
+static size_t iot_tls_mqtt_read_variable_length_int(const unsigned char *buffer, size_t startPos) {
+	size_t result = 0;
+	size_t pos = startPos;
+	size_t multiplier = 1;
+	do {
+		result = (buffer[pos] & 0x7f) * multiplier;
+		multiplier *= 0x80;
+		pos++;
+	} while ((buffer[pos - 1] & 0x80) && pos - startPos < 4);
+
+	return result;
+}
+
+static size_t iot_tls_mqtt_get_end_of_variable_length_int(const unsigned char *buffer, size_t startPos) {
+	size_t pos = startPos;
+	while ((buffer[pos] & 0x80) && pos - startPos < 3) pos++;
+	pos++;
+
+	return pos;
+}
+
+static uint16_t iot_tls_mqtt_get_fixed_uint16_from_message(const unsigned char *msgBuffer, size_t startPos) {
+	uint8_t firstByte = (uint8_t)(msgBuffer[startPos]);
+	uint8_t secondByte = (uint8_t)(msgBuffer[startPos + 1]);
+	return (uint16_t) (secondByte + (256 * firstByte));
+}
+
+static uint16_t iot_tls_mqtt_copy_string_from_message(char *dest, const unsigned char *msgBuffer, size_t startPos) {
+	uint16_t length = iot_tls_mqtt_get_fixed_uint16_from_message(msgBuffer, startPos);
+
+	snprintf(dest, length + 1u, "%s", &(msgBuffer[startPos + 2])); // Added one for null character
+	return length;
+}
+
 IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer, size_t *written_len) {
 	size_t i = 0;
-	uint8_t firstByte, secondByte;
-	uint16_t topicNameLen;
+	uint8_t firstPacketByte;
+	size_t mqttPacketLength;
+	size_t variableHeaderStart;
 	IOT_UNUSED(pNetwork);
 	IOT_UNUSED(timer);
 
@@ -85,17 +120,35 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
 	TxBuffer.len = len;
 	*written_len = len;
 
+	mqttPacketLength = iot_tls_mqtt_read_variable_length_int(TxBuffer.pBuffer, 1);
+	variableHeaderStart = iot_tls_mqtt_get_end_of_variable_length_int(TxBuffer.pBuffer, 1);
+
+	firstPacketByte = TxBuffer.pBuffer[0];
 	/* Save last two subscribed topics */
-	if((TxBuffer.pBuffer[0] == 0x82 ? true : false)) {
-		snprintf(SecondLastSubscribeMessage, lastSubscribeMsgLen, "%s", LastSubscribeMessage);
+	if((firstPacketByte == 0x82 ? true : false)) {
+		snprintf(SecondLastSubscribeMessage, lastSubscribeMsgLen + 1u, "%s", LastSubscribeMessage);
 		secondLastSubscribeMsgLen = lastSubscribeMsgLen;
 
-		firstByte = (uint8_t)(TxBuffer.pBuffer[4]);
-		secondByte = (uint8_t)(TxBuffer.pBuffer[5]);
-		topicNameLen = (uint16_t) (secondByte + (256 * firstByte));
+		lastSubscribeMsgLen = iot_tls_mqtt_copy_string_from_message(
+				LastSubscribeMessage, TxBuffer.pBuffer, variableHeaderStart + 2);
+	} else if (firstPacketByte == 0xA2) {
+		lastUnsubscribeMsgLen = iot_tls_mqtt_copy_string_from_message(
+						LastUnsubscribeMessage, TxBuffer.pBuffer, variableHeaderStart + 2);
+	} else if ((firstPacketByte & 0x30) == 0x30) {
+		QoS qos = (QoS) (firstPacketByte & 0x6 >> 1);
 
-		snprintf(LastSubscribeMessage, topicNameLen + 1u, "%s", &(TxBuffer.pBuffer[6])); // Added one for null character
-		lastSubscribeMsgLen = topicNameLen + 1u;
+		lastPublishMessageTopicLen =
+				iot_tls_mqtt_copy_string_from_message(LastPublishMessageTopic, TxBuffer.pBuffer, variableHeaderStart);
+
+		size_t payloadStart = variableHeaderStart + 2 + lastPublishMessageTopicLen;
+
+		if (qos > QOS0) {
+			payloadStart += 2;
+		}
+
+		lastPublishMessagePayloadLen = mqttPacketLength - payloadStart + 2; /* + 2 as the first two bytes don't count towards the length */
+		memcpy(LastPublishMessagePayload, TxBuffer.pBuffer + payloadStart, lastPublishMessagePayloadLen);
+		LastPublishMessagePayload[lastPublishMessagePayloadLen] = 0;
 	}
 
 	return SUCCESS;

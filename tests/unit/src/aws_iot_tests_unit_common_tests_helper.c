@@ -131,7 +131,7 @@ TEST_C(CommonTests, UnexpectedAckFiltering) {
 TEST_C(CommonTests, BigMQTTRxMessageIgnore) {
 	uint32_t i = 0;
 	IoT_Error_t rc = FAILURE;
-	char expectedCallbackString[AWS_IOT_MQTT_TX_BUF_LEN + 2];
+	char expectedCallbackString[AWS_IOT_MQTT_RX_BUF_LEN + 2];
 
 	IOT_DEBUG("\n-->Running CommonTests - Ignore Large Incoming Message \n");
 
@@ -139,7 +139,7 @@ TEST_C(CommonTests, BigMQTTRxMessageIgnore) {
 	rc = aws_iot_mqtt_subscribe(&iotClient, "limitTest/topic1", 16, QOS0, iot_tests_unit_common_subscribe_callback_handler, NULL);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
 
-	for(i = 0; i < AWS_IOT_MQTT_TX_BUF_LEN; i++) {
+	for(i = 0; i < AWS_IOT_MQTT_RX_BUF_LEN; i++) {
 		expectedCallbackString[i] = 'X';
 	}
 	expectedCallbackString[i + 1] = '\0';
@@ -156,7 +156,7 @@ TEST_C(CommonTests, BigMQTTRxMessageIgnore) {
 TEST_C(CommonTests, BigMQTTRxMessageReadNextMessage) {
 	uint32_t i = 0;
 	IoT_Error_t rc = FAILURE;
-	char expectedCallbackString[AWS_IOT_MQTT_TX_BUF_LEN + 2];
+	char expectedCallbackString[AWS_IOT_MQTT_RX_BUF_LEN + 2];
 
 	IOT_DEBUG("\n-->Running CommonTests - Clear Buffer when large message received and continue reading \n");
 
@@ -164,7 +164,7 @@ TEST_C(CommonTests, BigMQTTRxMessageReadNextMessage) {
 	rc = aws_iot_mqtt_subscribe(&iotClient, "limitTest/topic1", 16, QOS0, iot_tests_unit_common_subscribe_callback_handler, NULL);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
 
-	for(i = 0; i < AWS_IOT_MQTT_TX_BUF_LEN; i++) {
+	for(i = 0; i < AWS_IOT_MQTT_RX_BUF_LEN; i++) {
 		expectedCallbackString[i] = 'X';
 	}
 	expectedCallbackString[i + 1] = '\0';

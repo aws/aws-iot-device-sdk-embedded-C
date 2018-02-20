@@ -1,37 +1,35 @@
 /*
-* Copyright 2015-2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License").
-* You may not use this file except in compliance with the License.
-* A copy of the License is located at
-*
-* http://aws.amazon.com/apache2.0
-*
-* or in the "license" file accompanying this file. This file is distributed
-* on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-* express or implied. See the License for the specific language governing
-* permissions and limitations under the License.
-*/
+ * Copyright 2010-2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 
 /**
  * @file aws_iot_config.h
- * @brief IoT Client Unit Testing - IoT Config
+ * @brief AWS IoT specific configuration file
  */
 
-#ifndef IOT_TESTS_UNIT_CONFIG_H_
-#define IOT_TESTS_UNIT_CONFIG_H_
+#ifndef SRC_JOBS_IOT_JOB_CONFIG_H_
+#define SRC_JOBS_IOT_JOB_CONFIG_H_
 
 // Get from console
 // =================================================
-#define AWS_IOT_MQTT_HOST              "localhost"
-#define AWS_IOT_MQTT_PORT              8883
-#define AWS_IOT_MQTT_CLIENT_ID         "C-SDK_UnitTestClient"
-#define AWS_IOT_MY_THING_NAME          "C-SDK_UnitTestThing"
-#define AWS_IOT_ROOT_CA_FILENAME       "rootCA.crt"
-#define AWS_IOT_CERTIFICATE_FILENAME   "cert.crt"
-#define AWS_IOT_PRIVATE_KEY_FILENAME   "privkey.pem"
-// =================================================
-
+#define AWS_IOT_MQTT_HOST              "" ///< Customer specific MQTT HOST. The same will be used for Thing Shadow
+#define AWS_IOT_MQTT_PORT              8883 ///< default port for MQTT/S
+#define AWS_IOT_MQTT_CLIENT_ID         "c-sdk-client-id" ///< MQTT client ID should be unique for every device
+#define AWS_IOT_MY_THING_NAME          "AWS-IoT-C-SDK" ///< Thing Name of the Shadow this device is associated with
+#define AWS_IOT_ROOT_CA_FILENAME       "rootCA.crt" ///< Root CA file name
+#define AWS_IOT_CERTIFICATE_FILENAME   "cert.pem" ///< device signed certificate file name
+#define AWS_IOT_PRIVATE_KEY_FILENAME   "privkey.pem" ///< Device private key filename
 
 // MQTT PubSub
 #ifndef DISABLE_IOT_JOBS
@@ -70,4 +68,6 @@
 #define AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL 1000 ///< Minimum time before the First reconnect attempt is made as part of the exponential back-off algorithm
 #define AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL 128000 ///< Maximum time interval after which exponential back-off will stop attempting to reconnect.
 
-#endif /* IOT_TESTS_UNIT_CONFIG_H_ */
+#define DISABLE_METRICS false ///< Disable the collection of metrics by setting this to true
+
+#endif /* SRC_JOBS_IOT_JOB_CONFIG_H_ */

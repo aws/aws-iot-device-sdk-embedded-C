@@ -1,5 +1,5 @@
 /*
-* Copyright 2015-2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+* Copyright 2015-2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 *
 * Licensed under the Apache License, Version 2.0 (the "License").
 * You may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 
 int main() {
 	int rc = 0;
+
 	printf("\n\n");
 	printf("*************************************************************************************************\n");
 	printf("* Starting TEST 1 MQTT Version 3.1.1 Basic Subscribe QoS 1 Publish QoS 1 with Single Client     *\n");
@@ -34,7 +35,7 @@ int main() {
 		return 1;
 	}
 	printf("\n*************************************************************************************************\n");
-	printf("* Test 1 MQTT Version 3.1.1 Basic Subscribe QoS 1 Publish QoS 1 with Single Client SUCCESS!!    *\n");
+	printf("* TEST 1 MQTT Version 3.1.1 Basic Subscribe QoS 1 Publish QoS 1 with Single Client SUCCESS!!    *\n");
 	printf("*************************************************************************************************\n");
 
 	printf("\n\n");
@@ -66,6 +67,25 @@ int main() {
 	printf("\n**********************************************************\n");
 	printf("* TEST 3 MQTT Version 3.1.1 Auto Reconnect SUCCESS!!     *\n");
 	printf("**********************************************************\n");
+
+#ifndef DISABLE_IOT_JOBS
+#ifndef DISABLE_IOT_JOBS_INTERFACE
+	printf("\n\n");
+	printf("*************************************************************************************************\n");
+	printf("* Starting TEST 4 Jobs API Test                                                                 *\n");
+	printf("*************************************************************************************************\n");
+	rc = aws_iot_jobs_basic_test();
+	if(0 != rc) {
+		printf("\n********************************************************************************************************\n");
+		printf("* TEST 4 Jobs API Test  FAILED! RC : %4d                                                              *\n", rc);
+		printf("********************************************************************************************************\n");
+		return 1;
+	}
+	printf("\n*************************************************************************************************\n");
+	printf("* TEST 4 Jobs API Test SUCCESS!!                                                                *\n");
+	printf("*************************************************************************************************\n");
+#endif
+#endif
 
 	return 0;
 }
