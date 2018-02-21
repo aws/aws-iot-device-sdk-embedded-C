@@ -273,7 +273,8 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer, size_t *written_len) {
 	size_t written_so_far;
 	bool isErrorFlag = false;
-	int frags, ret;
+	int frags;
+	int ret = 0;
 	TLSDataParams *tlsDataParams = &(pNetwork->tlsDataParams);
 
 	for(written_so_far = 0, frags = 0;
