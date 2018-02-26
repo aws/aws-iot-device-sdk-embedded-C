@@ -179,7 +179,7 @@ TEST_C(DisconnectTests, SetHandlerAndInvokedOnDisconnect) {
 	IOT_DEBUG("-->Running Disconnect Tests - F:7 - Disconnect, with set handler and invoked on disconnect \n");
 
 	handlerInvoked = false;
-	InitMQTTParamsSetup(&initParams, "localhost", 8883, false, NULL);
+	InitMQTTParamsSetup(&initParams, "localhost", AWS_IOT_MQTT_PORT, false, NULL);
 	rc = aws_iot_mqtt_init(&iotClient, &initParams);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
 
