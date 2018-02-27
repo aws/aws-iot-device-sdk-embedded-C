@@ -24,7 +24,7 @@
 // Get from console
 // =================================================
 #define AWS_IOT_MQTT_HOST              "localhost"
-#define AWS_IOT_MQTT_PORT              8883
+#define AWS_IOT_MQTT_PORT              443
 #define AWS_IOT_MQTT_CLIENT_ID         "C-SDK_UnitTestClient"
 #define AWS_IOT_MY_THING_NAME          "C-SDK_UnitTestThing"
 #define AWS_IOT_ROOT_CA_FILENAME       "rootCA.crt"

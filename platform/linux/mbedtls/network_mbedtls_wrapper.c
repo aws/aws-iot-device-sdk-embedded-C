@@ -101,6 +101,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 	TLSDataParams *tlsDataParams = NULL;
 	char portBuffer[6];
 	char vrfy_buf[512];
+	const char *alpnProtocols[] = { "x-amzn-mqtt-ca", NULL };
 
 #ifdef ENABLE_IOT_DEBUG
 	unsigned char buf[MBEDTLS_DEBUG_BUFFER_SIZE];
@@ -202,6 +203,15 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 
 	mbedtls_ssl_conf_read_timeout(&(tlsDataParams->conf), pNetwork->tlsConnectParams.timeout_ms);
 
+	/* Use the AWS IoT ALPN extension for MQTT if port 443 is requested. */
+	if(443 == pNetwork->tlsConnectParams.DestinationPort) {
+		if((ret = mbedtls_ssl_conf_alpn_protocols(&(tlsDataParams->conf), alpnProtocols)) != 0) {
+			IOT_ERROR(" failed\n  ! mbedtls_ssl_conf_alpn_protocols returned -0x%x\n\n", -ret);
+			return SSL_CONNECTION_ERROR;
+		}
+	}
+
+	/* Assign the resulting configuration to the SSL context. */
 	if((ret = mbedtls_ssl_setup(&(tlsDataParams->ssl), &(tlsDataParams->conf))) != 0) {
 		IOT_ERROR(" failed\n  ! mbedtls_ssl_setup returned -0x%x\n\n", -ret);
 		return SSL_CONNECTION_ERROR;

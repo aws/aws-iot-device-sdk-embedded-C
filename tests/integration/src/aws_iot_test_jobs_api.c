@@ -191,7 +191,7 @@ int aws_iot_jobs_basic_test() {
 
 		IOT_DEBUG("Root CA Path : %s\n clientCRT : %s\n clientKey : %s\n", root_CA, clientCRT, clientKey);
 		initParams.pHostURL = AWS_IOT_MQTT_HOST;
-		initParams.port = 8883;
+		initParams.port = AWS_IOT_MQTT_PORT;
 		initParams.pRootCALocation = root_CA;
 		initParams.pDeviceCertLocation = clientCRT;
 		initParams.pDevicePrivateKeyLocation = clientKey;
