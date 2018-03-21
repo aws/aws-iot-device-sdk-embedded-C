@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2010-2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -194,6 +194,35 @@ IoT_Error_t parseStringValue(char *buf, const char *jsonString, jsmntok_t *token
 	memcpy(buf, jsonString + token->start, size);
 	buf[size] = '\0';
 	return SUCCESS;
+}
+
+jsmntok_t *findToken(const char *key, const char *jsonString, jsmntok_t *token) {
+	jsmntok_t *result = token;
+	int i;
+
+	if(token->type != JSMN_OBJECT) {
+		IOT_WARN("Token was not an object.");
+		return NULL;
+	}
+
+	if(token->size == 0) {
+		return NULL;
+	}
+
+	result = token + 1;
+
+	for (i = 0; i < token->size; i++) {
+		if (0 == jsoneq(jsonString, result, key)) {
+			return result + 1;
+		}
+
+		int propertyEnd = (result + 1)->end;
+		result += 2;
+		while (result->start < propertyEnd)
+			result++;
+	}
+
+	return NULL;
 }
 
 #ifdef __cplusplus

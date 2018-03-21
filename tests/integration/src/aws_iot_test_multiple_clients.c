@@ -66,7 +66,7 @@ static IoT_Error_t aws_iot_mqtt_tests_connect_client_to_service(AWS_IoT_Client *
 	struct timeval start, end;
 
 	initParams.pHostURL = AWS_IOT_MQTT_HOST;
-	initParams.port = 8883;
+	initParams.port = AWS_IOT_MQTT_PORT;
 	initParams.pRootCALocation = rootCA;
 	initParams.pDeviceCertLocation = clientCRT;
 	initParams.pDevicePrivateKeyLocation = clientKey;
