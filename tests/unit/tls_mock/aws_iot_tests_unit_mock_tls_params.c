@@ -27,6 +27,14 @@ size_t lastSubscribeMsgLen;
 char SecondLastSubscribeMessage[TLSMaxBufferSize];
 size_t secondLastSubscribeMsgLen;
 
+char LastUnsubscribeMessage[TLSMaxBufferSize];
+size_t lastUnsubscribeMsgLen;
+
+char LastPublishMessageTopic[TLSMaxBufferSize];
+size_t lastPublishMessageTopicLen;
+char LastPublishMessagePayload[TLSMaxBufferSize];
+size_t lastPublishMessagePayloadLen;
+
 TlsBuffer RxBuffer = {.pBuffer = RxBuf,.len = 512, .NoMsgFlag=1, .expiry_time = {0, 0}, .BufMaxSize = TLSMaxBufferSize};
 TlsBuffer TxBuffer = {.pBuffer = TxBuf,.len = 512, .NoMsgFlag=1, .expiry_time = {0, 0}, .BufMaxSize = TLSMaxBufferSize};
 

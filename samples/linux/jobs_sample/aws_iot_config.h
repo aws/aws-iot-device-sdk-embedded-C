@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2010-2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,8 +13,13 @@
  * permissions and limitations under the License.
  */
 
-#ifndef SRC_SHADOW_IOT_SHADOW_CONFIG_H_
-#define SRC_SHADOW_IOT_SHADOW_CONFIG_H_
+/**
+ * @file aws_iot_config.h
+ * @brief AWS IoT specific configuration file
+ */
+
+#ifndef SRC_JOBS_IOT_JOB_CONFIG_H_
+#define SRC_JOBS_IOT_JOB_CONFIG_H_
 
 // Get from console
 // =================================================
@@ -65,4 +70,4 @@
 
 #define DISABLE_METRICS false ///< Disable the collection of metrics by setting this to true
 
-#endif /* SRC_SHADOW_IOT_SHADOW_CONFIG_H_ */
+#endif /* SRC_JOBS_IOT_JOB_CONFIG_H_ */

@@ -188,7 +188,7 @@ static void AckStatusCallback(AWS_IoT_Client *pClient, char *topicName, uint16_t
 	IOT_UNUSED(topicNameLen);
 	IOT_UNUSED(pData);
 
-	if(params->payloadLen > SHADOW_MAX_SIZE_OF_RX_BUFFER) {
+	if(params->payloadLen >= SHADOW_MAX_SIZE_OF_RX_BUFFER) {
 		IOT_WARN("Payload larger than RX Buffer");
 		return;
 	}
@@ -484,7 +484,7 @@ static void shadow_delta_callback(AWS_IoT_Client *pClient, char *topicName,
 	IOT_UNUSED(topicNameLen);
 	IOT_UNUSED(pData);
 
-	if(params->payloadLen > SHADOW_MAX_SIZE_OF_RX_BUFFER) {
+	if(params->payloadLen >= SHADOW_MAX_SIZE_OF_RX_BUFFER) {
 		IOT_WARN("Payload larger than RX Buffer");
 		return;
 	}

@@ -759,12 +759,12 @@ TEST_C(ShadowActionTests, ACKWaitingMoreThanAllowed) {
 	IOT_DEBUG("-->Success - Ack waiting more than allowed wait time \n");
 }
 
-#define JSON_SIZE_OVERFLOW "{\"state\":{\"reported\":{\"file\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}}, \"clientToken\":\"" AWS_IOT_MQTT_CLIENT_ID "-0\"}"
-
 TEST_C(ShadowActionTests, InboundDataTooBigForBuffer) {
+	uint32_t i = 0;
 	IoT_Error_t ret_val = SUCCESS;
 	char getRequestJson[120];
 	IoT_Publish_Message_Params params;
+	char expectedCallbackString[AWS_IOT_MQTT_RX_BUF_LEN + 2];
 
 	IOT_DEBUG("-->Running Shadow Action Tests - Inbound data too big for buffer \n");
 
@@ -775,8 +775,13 @@ TEST_C(ShadowActionTests, InboundDataTooBigForBuffer) {
 											 false);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
-	params.payloadLen = strlen(JSON_SIZE_OVERFLOW);
-	params.payload = JSON_SIZE_OVERFLOW;
+	for(i = 0; i < AWS_IOT_MQTT_RX_BUF_LEN; i++) {
+		expectedCallbackString[i] = 'X';
+	}
+	expectedCallbackString[i + 1] = '\0';
+
+	params.payloadLen = strlen(expectedCallbackString);
+	params.payload = expectedCallbackString;
 	params.qos = QOS0;
 	setTLSRxBufferWithMsgOnSubscribedTopic(GET_ACCEPTED_TOPIC, strlen(GET_ACCEPTED_TOPIC), QOS0, params,
 										   params.payload);

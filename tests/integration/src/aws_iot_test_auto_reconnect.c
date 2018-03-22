@@ -101,7 +101,7 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 	printf(" Root CA Path : %s\n clientCRT : %s\n clientKey : %s\n", root_CA, clientCRT, clientKey);
 	IoT_Client_Init_Params initParams;
 	initParams.pHostURL = AWS_IOT_MQTT_HOST;
-	initParams.port = 8883;
+	initParams.port = AWS_IOT_MQTT_PORT;
 	initParams.pRootCALocation = root_CA;
 	initParams.pDeviceCertLocation = clientCRT;
 	initParams.pDevicePrivateKeyLocation = clientKey;
@@ -145,10 +145,11 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 		printf("Failure to invoke Disconnect Handler\n");
 		return -1;
 	}
-	aws_iot_mqtt_tests_unblock_tls_connect();
+
 	terminate_yield_with_rc_thread = true;
 	pthread_join(yield_thread, NULL);
-
+	aws_iot_mqtt_tests_unblock_tls_connect();
+	
 	/*
 	 * Manual Reconnect Test
 	 */
@@ -175,7 +176,8 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 		}
 	}
 	terminate_yield_with_rc_thread = true;
-
+	pthread_join(yield_thread, NULL);
+	
 	/*
 	 * Auto Reconnect Test
 	 */
@@ -224,6 +226,10 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 			return -6;
 		}
 	}
+	
+	terminate_yield_with_rc_thread = true;
+	pthread_join(yield_thread, NULL);
+	
 	if(true == aws_iot_mqtt_is_client_connected(&client)) {
 		printf("Success: is Mqtt connected api\n");
 	} else {
