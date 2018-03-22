@@ -315,7 +315,7 @@ IoT_Error_t aws_iot_mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t le
 		FUNC_EXIT_RC(SUCCESS);
 	}
 
-	FUNC_EXIT_RC(FAILURE);
+	FUNC_EXIT_RC(rc) 
 }
 
 static IoT_Error_t _aws_iot_mqtt_internal_decode_packet_remaining_len(AWS_IoT_Client *pClient,

@@ -1,4 +1,17 @@
 # Change Log
+## [2.3.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.3.0) (Mar 21, 2018)
+
+New Features:
+
+  - Add [AWS IoT Jobs](https://docs.aws.amazon.com/iot/latest/developerguide/iot-jobs.html) support.
+  - Use AWS IoT Core support for MQTT over port 443. MQTT connection now defaults to port 443.
+
+Pull requests:
+
+  - [#124](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/124) - Thing Shadow: Fix potential shadow buffer overflow
+  - [#135](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/135) - mbedtls_wrap: Fix unintialized variable usage
+  - Fix bugs in long-running integration tests.
+
 ## [2.2.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.2.1) (Dec 26, 2017)
 
 Bugfixes:
