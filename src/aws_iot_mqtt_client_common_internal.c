@@ -631,13 +631,10 @@ IoT_Error_t aws_iot_mqtt_internal_wait_for_read(AWS_IoT_Client *pClient, uint8_t
 			break;
 		}
 		rc = aws_iot_mqtt_internal_cycle_read(pClient, pTimer, &read_packet_type);
-	} while(NETWORK_DISCONNECTED_ERROR != rc && read_packet_type != packetType);
+	} while(((SUCCESS == rc) || (MQTT_NOTHING_TO_READ == rc)) && (read_packet_type != packetType));
 
-	if(MQTT_REQUEST_TIMEOUT_ERROR != rc && NETWORK_DISCONNECTED_ERROR != rc && read_packet_type != packetType) {
-		FUNC_EXIT_RC(FAILURE);
-	}
-
-	/* Something failed or we didn't receive the expected packet, return error code */
+	/* If rc is SUCCESS, we have received the expected
+	 * MQTT packet. Otherwise rc tells the error. */
 	FUNC_EXIT_RC(rc);
 }
 
