@@ -104,7 +104,7 @@ IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParamet
 	snprintf(myThingName, MAX_SIZE_OF_THING_NAME, "%s", pParams->pMyThingName);
 	snprintf(mqttClientID, MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES, "%s", pParams->pMqttClientId);
 
-	ConnectParams.keepAliveIntervalInSec = 600; // NOTE: Temporary fix
+	ConnectParams.keepAliveIntervalInSec = pParams->keepAliveIntervalInSec;;
 	ConnectParams.MQTTVersion = MQTT_3_1_1;
 	ConnectParams.isCleanSession = true;
 	ConnectParams.isWillMsgPresent = false;

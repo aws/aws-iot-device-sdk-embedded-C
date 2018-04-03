@@ -353,29 +353,77 @@ bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t 
 	return true;
 }
 
-static IoT_Error_t UpdateValueIfNoObject(const char *pJsonString, jsonStruct_t *pDataStruct, jsmntok_t token) {
+static IoT_Error_t UpdateValueIfNoObject(const char *pJsonString, jsonStruct_t *pDataStruct, jsmntok_t token, bool *valueChanged) {
 	IoT_Error_t ret_val = SUCCESS;
 	if(pDataStruct->type == SHADOW_JSON_BOOL) {
+		bool oldVal = *(bool *) pDataStruct->pData;
 		ret_val = parseBooleanValue((bool *) pDataStruct->pData, pJsonString, &token);
+		if(valueChanged != NULL  && oldVal != *(bool *) pDataStruct->pData)
+		{
+			*valueChanged = true;
+		}
 	} else if(pDataStruct->type == SHADOW_JSON_INT32) {
+		int32_t oldVal = *(int32_t *) pDataStruct->pData;
 		ret_val = parseInteger32Value((int32_t *) pDataStruct->pData, pJsonString, &token);
+		if(valueChanged != NULL && oldVal != *(int32_t *) pDataStruct->pData)
+		{
+		*valueChanged = true;
+		}
 	} else if(pDataStruct->type == SHADOW_JSON_INT16) {
+		int16_t oldVal = *(int16_t *) pDataStruct->pData;
 		ret_val = parseInteger16Value((int16_t *) pDataStruct->pData, pJsonString, &token);
+		if(valueChanged != NULL && oldVal != *(int16_t *) pDataStruct->pData)
+		{
+			*valueChanged = true;
+		}
 	} else if(pDataStruct->type == SHADOW_JSON_INT8) {
+		int8_t oldVal = *(int8_t *) pDataStruct->pData;
 		ret_val = parseInteger8Value((int8_t *) pDataStruct->pData, pJsonString, &token);
+		if(valueChanged != NULL && oldVal != *(int8_t *) pDataStruct->pData)
+		{
+			*valueChanged = true;
+		}
 	} else if(pDataStruct->type == SHADOW_JSON_UINT32) {
+		uint32_t oldVal = *(uint32_t *) pDataStruct->pData;
 		ret_val = parseUnsignedInteger32Value((uint32_t *) pDataStruct->pData, pJsonString, &token);
+		if(valueChanged != NULL && oldVal != *(uint32_t *) pDataStruct->pData)
+		{
+			*valueChanged = true;
+		}
 	} else if(pDataStruct->type == SHADOW_JSON_UINT16) {
+		uint16_t oldVal = *(uint16_t *) pDataStruct->pData;
 		ret_val = parseUnsignedInteger16Value((uint16_t *) pDataStruct->pData, pJsonString, &token);
+		if(valueChanged != NULL && oldVal != *(uint16_t *) pDataStruct->pData)
+		{
+			*valueChanged = true;
+		}
 	} else if(pDataStruct->type == SHADOW_JSON_UINT8) {
+		uint8_t oldVal = *(uint8_t *) pDataStruct->pData;
 		ret_val = parseUnsignedInteger8Value((uint8_t *) pDataStruct->pData, pJsonString, &token);
+		if(valueChanged != NULL && oldVal != *(uint8_t *) pDataStruct->pData)
+		{
+			*valueChanged = true;
+		}
 	} else if(pDataStruct->type == SHADOW_JSON_FLOAT) {
+		float oldVal = *(float *) pDataStruct->pData;
 		ret_val = parseFloatValue((float *) pDataStruct->pData, pJsonString, &token);
+		if(valueChanged != NULL && oldVal != *(float *) pDataStruct->pData)
+		{
+			*valueChanged = true;
+		}
 	} else if(pDataStruct->type == SHADOW_JSON_DOUBLE) {
+		double oldVal = *(double *) pDataStruct->pData;
 		ret_val = parseDoubleValue((double *) pDataStruct->pData, pJsonString, &token);
-	} else if(pDataStruct->type == SHADOW_JSON_STRING) {
+		if(valueChanged != NULL && oldVal != *(double *) pDataStruct->pData)
+		{
+			*valueChanged = true;
+		}
+	} else if(pDataStruct->type == SHADOW_JSON_STRING || pDataStruct->type == SHADOW_JSON_OBJECT) {
+		//FIXME - Need strcmp or something.
+		*valueChanged = true;
+        //FIXME - FN name is not quite right anymore
 		ret_val = parseStringValue((char *) pDataStruct->pData, pJsonString, &token);
-        }
+	}
 
 	return ret_val;
 }
@@ -390,12 +438,13 @@ bool isJsonKeyMatchingAndUpdateValue(const char *pJsonDocument, void *pJsonHandl
 
 	for(i = 1; i < tokenCount; i++) {
 		if(jsoneq(pJsonDocument, &(jsonTokenStruct[i]), pDataStruct->pKey) == 0) {
+			bool valueChanged = false;
 			dataToken = jsonTokenStruct[i + 1];
 			dataLength = (uint32_t) (dataToken.end - dataToken.start);
-			UpdateValueIfNoObject(pJsonDocument, pDataStruct, dataToken);
+			UpdateValueIfNoObject(pJsonDocument, pDataStruct, dataToken, &valueChanged);
 			*pDataPosition = dataToken.start;
 			*pDataLength = dataLength;
-			return true;
+			return valueChanged;
 		} else if(jsoneq(pJsonDocument, &(jsonTokenStruct[i]), "metadata") == 0) {
 			return false;
 		}
