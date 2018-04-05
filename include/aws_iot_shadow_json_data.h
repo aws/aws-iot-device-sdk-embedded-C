@@ -63,6 +63,7 @@ typedef enum {
 struct jsonStruct {
 	const char *pKey; ///< JSON key
 	void *pData; ///< pointer to the data (JSON value)
+	size_t dataLength; ///< Length (in bytes) of pData
 	JsonPrimitiveType type; ///< type of JSON
 	jsonStructCallback_t cb; ///< callback to be executed on receiving the Key value pair
 };

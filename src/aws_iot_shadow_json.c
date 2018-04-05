@@ -354,28 +354,28 @@ bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t 
 }
 
 static IoT_Error_t UpdateValueIfNoObject(const char *pJsonString, jsonStruct_t *pDataStruct, jsmntok_t token) {
-	IoT_Error_t ret_val = SUCCESS;
-	if(pDataStruct->type == SHADOW_JSON_BOOL) {
+	IoT_Error_t ret_val = SHADOW_JSON_ERROR;
+	if(pDataStruct->type == SHADOW_JSON_BOOL && pDataStruct->dataLength >= sizeof(bool)) {
 		ret_val = parseBooleanValue((bool *) pDataStruct->pData, pJsonString, &token);
-	} else if(pDataStruct->type == SHADOW_JSON_INT32) {
+	} else if(pDataStruct->type == SHADOW_JSON_INT32 && pDataStruct->dataLength >= sizeof(int32_t)) {
 		ret_val = parseInteger32Value((int32_t *) pDataStruct->pData, pJsonString, &token);
-	} else if(pDataStruct->type == SHADOW_JSON_INT16) {
+	} else if(pDataStruct->type == SHADOW_JSON_INT16 && pDataStruct->dataLength >= sizeof(int16_t)) {
 		ret_val = parseInteger16Value((int16_t *) pDataStruct->pData, pJsonString, &token);
-	} else if(pDataStruct->type == SHADOW_JSON_INT8) {
+	} else if(pDataStruct->type == SHADOW_JSON_INT8 && pDataStruct->dataLength >= sizeof(int8_t)) {
 		ret_val = parseInteger8Value((int8_t *) pDataStruct->pData, pJsonString, &token);
-	} else if(pDataStruct->type == SHADOW_JSON_UINT32) {
+	} else if(pDataStruct->type == SHADOW_JSON_UINT32 && pDataStruct->dataLength >= sizeof(uint32_t)) {
 		ret_val = parseUnsignedInteger32Value((uint32_t *) pDataStruct->pData, pJsonString, &token);
-	} else if(pDataStruct->type == SHADOW_JSON_UINT16) {
+	} else if(pDataStruct->type == SHADOW_JSON_UINT16 && pDataStruct->dataLength >= sizeof(uint16_t)) {
 		ret_val = parseUnsignedInteger16Value((uint16_t *) pDataStruct->pData, pJsonString, &token);
-	} else if(pDataStruct->type == SHADOW_JSON_UINT8) {
+	} else if(pDataStruct->type == SHADOW_JSON_UINT8 && pDataStruct->dataLength >= sizeof(uint8_t)) {
 		ret_val = parseUnsignedInteger8Value((uint8_t *) pDataStruct->pData, pJsonString, &token);
-	} else if(pDataStruct->type == SHADOW_JSON_FLOAT) {
+	} else if(pDataStruct->type == SHADOW_JSON_FLOAT && pDataStruct->dataLength >= sizeof(float)) {
 		ret_val = parseFloatValue((float *) pDataStruct->pData, pJsonString, &token);
-	} else if(pDataStruct->type == SHADOW_JSON_DOUBLE) {
+	} else if(pDataStruct->type == SHADOW_JSON_DOUBLE && pDataStruct->dataLength >= sizeof(double)) {
 		ret_val = parseDoubleValue((double *) pDataStruct->pData, pJsonString, &token);
 	} else if(pDataStruct->type == SHADOW_JSON_STRING) {
-		ret_val = parseStringValue((char *) pDataStruct->pData, pJsonString, &token);
-        }
+		ret_val = parseStringValue((char *) pDataStruct->pData, pDataStruct->dataLength, pJsonString, &token);
+	}
 
 	return ret_val;
 }

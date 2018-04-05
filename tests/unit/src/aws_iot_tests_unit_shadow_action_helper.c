@@ -187,16 +187,19 @@ TEST_C(ShadowActionTests, UpdateTheJSONDocument) {
 
 	dataFloatHandler.cb = NULL;
 	dataFloatHandler.pData = &floatData;
+	dataFloatHandler.dataLength = sizeof(float);
 	dataFloatHandler.pKey = "floatData";
 	dataFloatHandler.type = SHADOW_JSON_FLOAT;
 
 	dataDoubleHandler.cb = NULL;
 	dataDoubleHandler.pData = &doubleData;
+	dataDoubleHandler.dataLength = sizeof(double);
 	dataDoubleHandler.pKey = "doubleData";
 	dataDoubleHandler.type = SHADOW_JSON_DOUBLE;
 
 	dataBoolHandler.cb = NULL;
 	dataBoolHandler.pData = &boolData;
+	dataBoolHandler.dataLength = sizeof(bool);
 	dataBoolHandler.pKey = "boolData";
 	dataBoolHandler.type = SHADOW_JSON_BOOL;
 

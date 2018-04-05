@@ -27,6 +27,8 @@
 #include "aws_iot_tests_unit_helper_functions.h"
 #include "aws_iot_log.h"
 
+#define STRING_BUFFER_LENGTH (50)
+
 static IoT_Error_t rc = SUCCESS;
 
 static jsmn_parser test_parser;
@@ -43,12 +45,12 @@ TEST_GROUP_C_TEARDOWN(JsonUtils) {
 TEST_C(JsonUtils, ParseStringBasic) {
 	int r;
 	const char *json = "{\"x\":\"test1\"}";
-	char parsedString[50];
+	char parsedString[STRING_BUFFER_LENGTH];
 
 	IOT_DEBUG("\n-->Running Json Utils Tests -  Basic String Parsing \n");
 
 	r = jsmn_parse(&test_parser, json, strlen(json), t, sizeof(t) / sizeof(t[0]));
-	rc = parseStringValue(parsedString, json, t + 2);
+	rc = parseStringValue(parsedString, STRING_BUFFER_LENGTH, json, t + 2);
 
 	CHECK_EQUAL_C_INT(3, r);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
@@ -58,26 +60,48 @@ TEST_C(JsonUtils, ParseStringBasic) {
 TEST_C(JsonUtils, ParseStringLongerStringIsValid) {
 	int r;
 	const char *json = "{\"x\":\"this is a longer string for test 2\"}";
-	char parsedString[50];
+	char parsedString[STRING_BUFFER_LENGTH];
 
 	IOT_DEBUG("\n-->Running Json Utils Tests - Parse long string \n");
 
 	r = jsmn_parse(&test_parser, json, strlen(json), t, sizeof(t) / sizeof(t[0]));
-	rc = parseStringValue(parsedString, json, t + 2);
+	rc = parseStringValue(parsedString, STRING_BUFFER_LENGTH, json, t + 2);
 
 	CHECK_EQUAL_C_INT(3, r);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
 	CHECK_EQUAL_C_STRING("this is a longer string for test 2", parsedString);
 }
 
+/* Test that parsing a string doesn't overflow the given buffer. */
+TEST_C(JsonUtils, ParseStringWithBufferTooSmall) {
+	static const char* const pJsonString = "{\"key\":\"This value is longer than JSON_BUFFER_LENGTH, which should be 50.\"}";
+	char parsedString[STRING_BUFFER_LENGTH] = {0};
+	int jsmnReturn, i;
+
+	IOT_DEBUG("\n-->Running Json Utils Tests -  String parsing with buffer too small. \n");
+
+	jsmnReturn = jsmn_parse(&test_parser, pJsonString, strlen(pJsonString), t, sizeof(t)/sizeof(t[0]));
+	CHECK_EQUAL_C_INT(3, jsmnReturn);
+
+	rc = parseStringValue(parsedString, STRING_BUFFER_LENGTH, pJsonString, t + 2);
+
+	CHECK_EQUAL_C_INT(SHADOW_JSON_ERROR, rc);
+
+	/* Ensure there was no attempt to write to a buffer that's too small. */
+	for(i = 0; i < STRING_BUFFER_LENGTH; i++)
+	{
+		CHECK_EQUAL_C_CHAR(0, parsedString[i]);
+	}
+}
+
 TEST_C(JsonUtils, ParseStringEmptyStringIsValid) {	int r;
 	const char *json = "{\"x\":\"\"}";
-	char parsedString[50];
+	char parsedString[STRING_BUFFER_LENGTH];
 
 	IOT_DEBUG("\n-->Running Json Utils Tests - Parse empty string \n");
 
 	r = jsmn_parse(&test_parser, json, strlen(json), t, sizeof(t) / sizeof(t[0]));
-	rc = parseStringValue(parsedString, json, t + 2);
+	rc = parseStringValue(parsedString, STRING_BUFFER_LENGTH, json, t + 2);
 
 	CHECK_EQUAL_C_INT(3, r);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
@@ -87,12 +111,12 @@ TEST_C(JsonUtils, ParseStringEmptyStringIsValid) {	int r;
 TEST_C(JsonUtils, ParseStringErrorOnInteger) {
 	int r;
 	const char *json = "{\"x\":3}";
-	char parsedString[50];
+	char parsedString[STRING_BUFFER_LENGTH];
 
 	IOT_DEBUG("\n-->Running Json Utils Tests - parse integer as string returns error \n");
 
 	r = jsmn_parse(&test_parser, json, strlen(json), t, sizeof(t) / sizeof(t[0]));
-	rc = parseStringValue(parsedString, json, t + 2);
+	rc = parseStringValue(parsedString, STRING_BUFFER_LENGTH, json, t + 2);
 
 	CHECK_EQUAL_C_INT(3, r);
 	CHECK_EQUAL_C_INT(JSON_PARSE_ERROR, rc);
@@ -101,12 +125,12 @@ TEST_C(JsonUtils, ParseStringErrorOnInteger) {
 TEST_C(JsonUtils, ParseStringErrorOnBoolean) {
 	int r;
 	const char *json = "{\"x\":true}";
-	char parsedString[50];
+	char parsedString[STRING_BUFFER_LENGTH];
 
 	IOT_DEBUG("\n-->Running Json Utils Tests - parse boolean as string returns error \n");
 
 	r = jsmn_parse(&test_parser, json, strlen(json), t, sizeof(t) / sizeof(t[0]));
-	rc = parseStringValue(parsedString, json, t + 2);
+	rc = parseStringValue(parsedString, STRING_BUFFER_LENGTH, json, t + 2);
 
 	CHECK_EQUAL_C_INT(3, r);
 	CHECK_EQUAL_C_INT(JSON_PARSE_ERROR, rc);

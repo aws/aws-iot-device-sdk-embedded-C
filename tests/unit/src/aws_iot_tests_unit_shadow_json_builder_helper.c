@@ -60,11 +60,13 @@ TEST_GROUP_C_SETUP(ShadowJsonBuilderTests) {
 	dataFloatHandler.pData = &floatData;
 	dataFloatHandler.pKey = "floatData";
 	dataFloatHandler.type = SHADOW_JSON_FLOAT;
+	dataFloatHandler.dataLength = sizeof(float);
 
 	dataDoubleHandler.cb = NULL;
 	dataDoubleHandler.pData = &doubleData;
 	dataDoubleHandler.pKey = "doubleData";
 	dataDoubleHandler.type = SHADOW_JSON_DOUBLE;
+	dataDoubleHandler.dataLength = sizeof(double);
 }
 
 TEST_GROUP_C_TEARDOWN(ShadowJsonBuilderTests) {

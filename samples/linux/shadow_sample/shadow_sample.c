@@ -152,6 +152,7 @@ int main(int argc, char **argv) {
 	jsonStruct_t windowActuator;
 	windowActuator.cb = windowActuate_Callback;
 	windowActuator.pData = &windowOpen;
+	windowActuator.dataLength = sizeof(bool);
 	windowActuator.pKey = "windowOpen";
 	windowActuator.type = SHADOW_JSON_BOOL;
 
@@ -159,6 +160,7 @@ int main(int argc, char **argv) {
 	temperatureHandler.cb = NULL;
 	temperatureHandler.pKey = "temperature";
 	temperatureHandler.pData = &temperature;
+	temperatureHandler.dataLength = sizeof(float);
 	temperatureHandler.type = SHADOW_JSON_FLOAT;
 
 	char rootCA[PATH_MAX + 1];
