@@ -28,6 +28,7 @@ TEST_GROUP_C(JsonUtils) {
 
 TEST_GROUP_C_WRAPPER(JsonUtils, ParseStringBasic)
 TEST_GROUP_C_WRAPPER(JsonUtils, ParseStringLongerStringIsValid)
+TEST_GROUP_C_WRAPPER(JsonUtils, ParseStringWithBufferTooSmall)
 TEST_GROUP_C_WRAPPER(JsonUtils, ParseStringEmptyStringIsValid)
 TEST_GROUP_C_WRAPPER(JsonUtils, ParseStringErrorOnInteger)
 TEST_GROUP_C_WRAPPER(JsonUtils, ParseStringErrorOnBoolean)

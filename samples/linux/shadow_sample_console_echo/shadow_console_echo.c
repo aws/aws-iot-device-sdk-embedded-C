@@ -139,6 +139,7 @@ int main(int argc, char** argv) {
 
 	jsonStruct_t deltaObject;
 	deltaObject.pData = stringToEchoDelta;
+	deltaObject.dataLength = SHADOW_MAX_SIZE_OF_RX_BUFFER;
 	deltaObject.pKey = "state";
 	deltaObject.type = SHADOW_JSON_OBJECT;
 	deltaObject.cb = DeltaCallback;

@@ -181,14 +181,15 @@ IoT_Error_t parseBooleanValue(bool *b, const char *jsonString, jsmntok_t *token)
  *
  * Given a JSON node parse the string value from the value.
  *
- * @param jsonString	json string
- * @param tok     		json token - pointer to JSON node
- * @param s				address of string to be updated
+ * @param buf           address of string to be updated
+ * @param bufLen        length of buf in bytes
+ * @param jsonString    json string
+ * @param token         json token - pointer to JSON node
  *
- * @return         		SUCCESS - success
- * @return				JSON_PARSE_ERROR - error parsing value
+ * @return              SUCCESS - success
+ * @return              JSON_PARSE_ERROR - error parsing value
  */
-IoT_Error_t parseStringValue(char *buf, const char *jsonString, jsmntok_t *token);
+IoT_Error_t parseStringValue(char *buf, size_t bufLen, const char *jsonString, jsmntok_t *token);
 
 /**
  * @brief          Find the JSON node associated with the given key in the given object.

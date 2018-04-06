@@ -170,12 +170,9 @@ IoT_Error_t parseBooleanValue(bool *b, const char *jsonString, jsmntok_t *token)
 		IOT_WARN("Token was not a primitive.");
 		return JSON_PARSE_ERROR;
 	}
-	if(jsonString[token->start] == 't' && jsonString[token->start + 1] == 'r' && jsonString[token->start + 2] == 'u'
-	   && jsonString[token->start + 3] == 'e') {
+	if(strncmp(jsonString + token->start, "true", 4) == 0) {
 		*b = true;
-	} else if(jsonString[token->start] == 'f' && jsonString[token->start + 1] == 'a'
-			  && jsonString[token->start + 2] == 'l' && jsonString[token->start + 3] == 's'
-			  && jsonString[token->start + 4] == 'e') {
+	} else if(strncmp(jsonString + token->start, "false", 5) == 0) {
 		*b = false;
 	} else {
 		IOT_WARN("Token was not a bool.");
@@ -184,15 +181,23 @@ IoT_Error_t parseBooleanValue(bool *b, const char *jsonString, jsmntok_t *token)
 	return SUCCESS;
 }
 
-IoT_Error_t parseStringValue(char *buf, const char *jsonString, jsmntok_t *token) {
-	uint16_t size = 0;
+IoT_Error_t parseStringValue(char *buf, size_t bufLen, const char *jsonString, jsmntok_t *token) {
+	/* This length does not include a null-terminator. */
+	size_t stringLength = (size_t)(token->end - token->start);
+
 	if(token->type != JSMN_STRING) {
 		IOT_WARN("Token was not a string.");
 		return JSON_PARSE_ERROR;
 	}
-	size = (uint16_t) (token->end - token->start);
-	memcpy(buf, jsonString + token->start, size);
-	buf[size] = '\0';
+
+	if (stringLength+1 > bufLen) {
+		IOT_WARN("Buffer too small to hold string value.");
+		return SHADOW_JSON_ERROR;
+	}
+
+	strncpy(buf, jsonString + token->start, stringLength);
+	buf[stringLength] = '\0';
+
 	return SUCCESS;
 }
 

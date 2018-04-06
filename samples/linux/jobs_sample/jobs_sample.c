@@ -142,7 +142,7 @@ void iot_next_job_callback_handler(AWS_IoT_Client *pClient, char *topicName, uin
 			char jobId[MAX_SIZE_OF_JOB_ID + 1];
 			AwsIotJobExecutionUpdateRequest updateRequest;
 
-			rc = parseStringValue(jobId, params->payload, tok);			
+			rc = parseStringValue(jobId, MAX_SIZE_OF_JOB_ID + 1, params->payload, tok);			
 			if(SUCCESS != rc) {
 				IOT_ERROR("parseStringValue returned error : %d ", rc);
 				return;
