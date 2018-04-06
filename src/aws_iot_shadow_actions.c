@@ -30,7 +30,7 @@ extern "C" {
 #include "aws_iot_config.h"
 
 IoT_Error_t aws_iot_shadow_internal_action(const char *pThingName, ShadowActions_t action,
-										   const char *pJsonDocumentToBeSent, fpActionCallback_t callback,
+										   const char *pJsonDocumentToBeSent, size_t jsonSize, fpActionCallback_t callback,
 										   void *pCallbackContext, uint32_t timeout_seconds, bool isSticky) {
 	IoT_Error_t ret_val = SUCCESS;
 	bool isClientTokenPresent = false;
@@ -44,7 +44,7 @@ IoT_Error_t aws_iot_shadow_internal_action(const char *pThingName, ShadowActions
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);
 	}
 
-	isClientTokenPresent = extractClientToken(pJsonDocumentToBeSent, extractedClientToken);
+	isClientTokenPresent = extractClientToken(pJsonDocumentToBeSent, jsonSize, extractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE );
 
 	if(isClientTokenPresent && (NULL != callback)) {
 		if(getNextFreeIndexOfAckWaitList(&indexAckWaitList)) {

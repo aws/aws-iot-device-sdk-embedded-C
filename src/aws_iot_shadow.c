@@ -56,6 +56,19 @@ void aws_iot_shadow_disable_discard_old_delta_msgs(void) {
 	shadowDiscardOldDeltaFlag = false;
 }
 
+IoT_Error_t aws_iot_shadow_free(AWS_IoT_Client *pClient)
+{
+    IoT_Error_t rc;
+
+    if (NULL == pClient) {
+        FUNC_EXIT_RC( NULL_VALUE_ERROR );
+    }
+
+    rc = aws_iot_mqtt_free(pClient);
+
+    return rc;
+}
+
 IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t *pParams) {
 	IoT_Client_Init_Params mqttInitParams;
 	IoT_Error_t rc;
@@ -170,7 +183,7 @@ IoT_Error_t aws_iot_shadow_update(AWS_IoT_Client *pClient, const char *pThingNam
 		FUNC_EXIT_RC(MQTT_CONNECTION_ERROR);
 	}
 
-	rc = aws_iot_shadow_internal_action(pThingName, SHADOW_UPDATE, pJsonString, callback, pContextData,
+	rc = aws_iot_shadow_internal_action(pThingName, SHADOW_UPDATE, pJsonString, strlen(pJsonString), callback, pContextData,
 										timeout_seconds, isPersistentSubscribe);
 
 	FUNC_EXIT_RC(rc);
@@ -191,8 +204,12 @@ IoT_Error_t aws_iot_shadow_delete(AWS_IoT_Client *pClient, const char *pThingNam
 		FUNC_EXIT_RC(MQTT_CONNECTION_ERROR);
 	}
 
-	aws_iot_shadow_internal_delete_request_json(deleteRequestJsonBuf);
-	rc = aws_iot_shadow_internal_action(pThingName, SHADOW_DELETE, deleteRequestJsonBuf, callback, pContextData,
+	rc = aws_iot_shadow_internal_delete_request_json(deleteRequestJsonBuf, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE );
+    if ( SUCCESS != rc ) {
+        FUNC_EXIT_RC( rc );
+    }
+
+	rc = aws_iot_shadow_internal_action(pThingName, SHADOW_DELETE, deleteRequestJsonBuf, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE, callback, pContextData,
 										timeout_seconds, isPersistentSubscribe);
 
 	FUNC_EXIT_RC(rc);
@@ -213,8 +230,12 @@ IoT_Error_t aws_iot_shadow_get(AWS_IoT_Client *pClient, const char *pThingName, 
 		FUNC_EXIT_RC(MQTT_CONNECTION_ERROR);
 	}
 
-	aws_iot_shadow_internal_get_request_json(getRequestJsonBuf);
-	rc = aws_iot_shadow_internal_action(pThingName, SHADOW_GET, getRequestJsonBuf, callback, pContextData,
+    rc = aws_iot_shadow_internal_get_request_json(getRequestJsonBuf, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE );
+    if (SUCCESS != rc) {
+        FUNC_EXIT_RC(rc);
+    }
+
+	rc = aws_iot_shadow_internal_action(pThingName, SHADOW_GET, getRequestJsonBuf, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE, callback, pContextData,
 										timeout_seconds, isPersistentSubscribe);
 	FUNC_EXIT_RC(rc);
 }

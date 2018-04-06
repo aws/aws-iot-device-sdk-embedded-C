@@ -169,6 +169,34 @@ IoT_Error_t aws_iot_mqtt_set_connect_params(AWS_IoT_Client *pClient, IoT_Client_
 	FUNC_EXIT_RC(SUCCESS);
 }
 
+IoT_Error_t aws_iot_mqtt_free(AWS_IoT_Client *pClient)
+{
+    IoT_Error_t rc = SUCCESS;
+
+    if (NULL == pClient) {
+        rc = NULL_VALUE_ERROR;
+    }
+
+#ifdef _ENABLE_THREAD_SUPPORT_
+    if ((&(pClient->clientData.state_change_mutex) != NULL)&&(rc == SUCCESS))
+    {
+        rc = aws_iot_thread_mutex_destroy(&(pClient->clientData.state_change_mutex));
+    }
+
+    if ((&(pClient->clientData.state_change_mutex) != NULL)&&(rc == SUCCESS))
+    {
+        rc = aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_read_mutex));
+    }
+
+    if ((&(pClient->clientData.state_change_mutex) != NULL)&&(rc == SUCCESS))
+    {
+        rc = aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_write_mutex));
+    }
+#endif
+
+    return rc;
+}
+
 IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitParams) {
 	uint32_t i;
 	IoT_Error_t rc;
