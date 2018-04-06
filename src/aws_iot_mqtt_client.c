@@ -194,7 +194,7 @@ IoT_Error_t aws_iot_mqtt_free(AWS_IoT_Client *pClient)
     }
 #endif
 
-    return rc;
+    FUNC_EXIT_RC(rc);
 }
 
 IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *pInitParams) {

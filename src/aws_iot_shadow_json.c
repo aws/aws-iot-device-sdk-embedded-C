@@ -51,43 +51,50 @@ void resetClientTokenSequenceNum(void) {
 
 static IoT_Error_t emptyJsonWithClientToken(char *pBuffer, size_t bufferSize) {
 
-    IoT_Error_t rc = FAILURE;
+    IoT_Error_t rc = SUCCESS;
     size_t dataLenInBuffer = 0;
 
-
-    dataLenInBuffer = (size_t)snprintf(pBuffer, bufferSize, AWS_IOT_SHADOW_CLIENT_TOKEN_KEY);
-
-    if ( dataLenInBuffer < bufferSize )
+	if(pBuffer != NULL)
     {
-        dataLenInBuffer += (size_t)snprintf(pBuffer + dataLenInBuffer, bufferSize - dataLenInBuffer, "%s-%d", mqttClientID, ( int )clientTokenNum++);
-        rc = SUCCESS;
-    }
-    else
-    {
+        dataLenInBuffer = (size_t)snprintf(pBuffer, bufferSize, AWS_IOT_SHADOW_CLIENT_TOKEN_KEY);
+    }else
+	{
+	    IOT_ERROR("NULL buffer in emptyJsonWithClientToken\n");
         rc = FAILURE;
-        IOT_ERROR("Supplied buffer too small to create JSON file\n");
+	}
+
+	if(rc == SUCCESS)
+	{
+	    if ( dataLenInBuffer < bufferSize )
+	    {
+	        dataLenInBuffer += (size_t)snprintf(pBuffer + dataLenInBuffer, bufferSize - dataLenInBuffer, "%s-%d", mqttClientID, ( int )clientTokenNum++);
+	    }
+	    else
+	    {
+	        rc = FAILURE;
+	        IOT_ERROR("Supplied buffer too small to create JSON file\n");
+	    }
     }
 
-    if ( dataLenInBuffer < bufferSize )
-    {
-        dataLenInBuffer += (size_t)snprintf( pBuffer + dataLenInBuffer, bufferSize - dataLenInBuffer, "\"}" );
-        if ( dataLenInBuffer <= bufferSize )
-        {
-            rc = SUCCESS;
-        }
-        else
-        {
-            rc = FAILURE;
-            IOT_ERROR( "Supplied buffer too small to create JSON file\n" );
-        }
-    }
-    else
-    {
-        rc = FAILURE;
-        IOT_ERROR( "Supplied buffer too small to create JSON file\n" );
+	if(rc == SUCCESS)
+	{
+	    if ( dataLenInBuffer < bufferSize )
+	    {
+	        dataLenInBuffer += (size_t)snprintf( pBuffer + dataLenInBuffer, bufferSize - dataLenInBuffer, "\"}" );
+	        if ( dataLenInBuffer > bufferSize )
+	        {
+	            rc = FAILURE;
+	            IOT_ERROR( "Supplied buffer too small to create JSON file\n" );
+	        }
+	    }
+	    else
+	    {
+	        rc = FAILURE;
+	        IOT_ERROR( "Supplied buffer too small to create JSON file\n" );
+	    }
     }
 
-    return rc;
+    FUNC_EXIT_RC(rc);
 }
 
 IoT_Error_t aws_iot_shadow_internal_get_request_json(char *pBuffer, size_t bufferSize) {
@@ -360,29 +367,16 @@ static jsmntok_t jsonTokenStruct[MAX_JSON_TOKEN_EXPECTED];
 
 bool isJsonValidAndParse(const char *pJsonDocument, size_t jsonSize, void *pJsonHandler, int32_t *pTokenCount) {
 	int32_t tokenCount;
+	bool reVal;
 
 	IOT_UNUSED(pJsonHandler);
 
-	jsmn_init(&shadowJsonParser);
-
-	tokenCount = jsmn_parse(&shadowJsonParser, pJsonDocument, jsonSize, jsonTokenStruct,
-							sizeof(jsonTokenStruct) / sizeof(jsonTokenStruct[0]));
-
-	if(tokenCount < 0) {
-		IOT_WARN("Failed to parse JSON: %d\n", tokenCount);
-		return false;
-	}
-
-	/* Assume the top-level element is an object */
-	if(tokenCount < 1 || jsonTokenStruct[0].type != JSMN_OBJECT) {
-		IOT_WARN("Top Level is not an object\n");
-		return false;
-	}
+	reVal = isReceivedJsonValid(pJsonDocument, jsonSize);
 
 	*pTokenCount = tokenCount;
 
-	return true;
-}
+	return reVal;
+}	
 
 static IoT_Error_t UpdateValueIfNoObject(const char *pJsonString, jsonStruct_t *pDataStruct, jsmntok_t token) {
 	IoT_Error_t ret_val = SHADOW_JSON_ERROR;
