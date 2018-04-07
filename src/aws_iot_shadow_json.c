@@ -388,7 +388,7 @@ bool isJsonValidAndParse(const char *pJsonDocument, size_t jsonSize, void *pJson
 
 	*pTokenCount = tokenCount;
 
-	return reVal;
+	return true;
 }	
 
 static IoT_Error_t UpdateValueIfNoObject(const char *pJsonString, jsonStruct_t *pDataStruct, jsmntok_t token) {
