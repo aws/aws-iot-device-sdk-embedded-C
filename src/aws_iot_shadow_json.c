@@ -367,11 +367,24 @@ static jsmntok_t jsonTokenStruct[MAX_JSON_TOKEN_EXPECTED];
 
 bool isJsonValidAndParse(const char *pJsonDocument, size_t jsonSize, void *pJsonHandler, int32_t *pTokenCount) {
 	int32_t tokenCount;
-	bool reVal;
 
 	IOT_UNUSED(pJsonHandler);
 
-	reVal = isReceivedJsonValid(pJsonDocument, jsonSize);
+	jsmn_init(&shadowJsonParser);
+
+	tokenCount = jsmn_parse(&shadowJsonParser, pJsonDocument, strlen(pJsonDocument), jsonTokenStruct,
+							sizeof(jsonTokenStruct) / sizeof(jsonTokenStruct[0]));
+
+	if(tokenCount < 0) {
+		IOT_WARN("Failed to parse JSON: %d\n", tokenCount);
+		return false;
+	}
+
+	/* Assume the top-level element is an object */
+	if(tokenCount < 1 || jsonTokenStruct[0].type != JSMN_OBJECT) {
+		IOT_WARN("Top Level is not an object\n");
+		return false;
+	}
 
 	*pTokenCount = tokenCount;
 
