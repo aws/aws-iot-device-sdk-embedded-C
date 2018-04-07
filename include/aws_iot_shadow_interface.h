@@ -93,6 +93,15 @@ extern const ShadowInitParameters_t ShadowInitParametersDefault;
  */
 extern const ShadowConnectParameters_t ShadowConnectParametersDefault;
 
+/**
+* @brief Clean shadow client from all dynamic memory allocate
+*
+* This function will free up memory that was dynamically allocated for the client. 
+*
+* @param pClient MQTT Client that was previously created by calling aws_iot_shadow_init
+* @return An IoT Error Type defining successful/failed freeing
+*/
+IoT_Error_t aws_iot_shadow_free(AWS_IoT_Client *pClient);
 
 /**
  * @brief Initialize the Thing Shadow before use

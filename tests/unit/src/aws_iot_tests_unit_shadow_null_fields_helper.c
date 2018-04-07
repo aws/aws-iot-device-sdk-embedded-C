@@ -111,7 +111,7 @@ TEST_C(ShadowNullFields, NullClientConnect) {
 }
 
 TEST_C(ShadowNullFields, NullUpdateDocument) {
-	IoT_Error_t rc = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_UPDATE, NULL, actionCallbackNullTest,
+	IoT_Error_t rc = aws_iot_shadow_internal_action(AWS_IOT_MY_THING_NAME, SHADOW_UPDATE, NULL, 0, actionCallbackNullTest,
 													NULL, 4, false);
 	CHECK_EQUAL_C_INT(NULL_VALUE_ERROR, rc);
 }

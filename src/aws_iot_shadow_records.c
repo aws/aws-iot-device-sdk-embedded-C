@@ -196,7 +196,7 @@ static void AckStatusCallback(AWS_IoT_Client *pClient, char *topicName, uint16_t
 	memcpy(shadowRxBuf, params->payload, params->payloadLen);
 	shadowRxBuf[params->payloadLen] = '\0';    // jsmn_parse relies on a string
 
-	if(!isJsonValidAndParse(shadowRxBuf, pJsonHandler, &tokenCount)) {
+	if(!isJsonValidAndParse(shadowRxBuf, SHADOW_MAX_SIZE_OF_RX_BUFFER, pJsonHandler, &tokenCount)) {
 		IOT_WARN("Received JSON is not valid");
 		return;
 	}
@@ -210,7 +210,7 @@ static void AckStatusCallback(AWS_IoT_Client *pClient, char *topicName, uint16_t
 		}
 	}
 
-	if(extractClientToken(shadowRxBuf, temporaryClientToken)) {
+	if(extractClientToken(shadowRxBuf, SHADOW_MAX_SIZE_OF_RX_BUFFER, temporaryClientToken, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE)) {
 		for(i = 0; i < MAX_ACKS_TO_COMEIN_AT_ANY_GIVEN_TIME; i++) {
 			if(!AckWaitList[i].isFree) {
 				if(strcmp(AckWaitList[i].clientTokenID, temporaryClientToken) == 0) {
@@ -492,7 +492,7 @@ static void shadow_delta_callback(AWS_IoT_Client *pClient, char *topicName,
 	memcpy(shadowRxBuf, params->payload, params->payloadLen);
 	shadowRxBuf[params->payloadLen] = '\0';    // jsmn_parse relies on a string
 
-	if(!isJsonValidAndParse(shadowRxBuf, pJsonHandler, &tokenCount)) {
+	if(!isJsonValidAndParse(shadowRxBuf, SHADOW_MAX_SIZE_OF_RX_BUFFER, pJsonHandler, &tokenCount)) {
 		IOT_WARN("Received JSON is not valid");
 		return;
 	}
