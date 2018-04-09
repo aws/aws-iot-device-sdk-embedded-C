@@ -175,24 +175,29 @@ IoT_Error_t aws_iot_mqtt_free(AWS_IoT_Client *pClient)
 
     if (NULL == pClient) {
         rc = NULL_VALUE_ERROR;
-    }
+    }else
+	{
+	#ifdef _ENABLE_THREAD_SUPPORT_
+		if (rc == SUCCESS)
+		{
+			rc = aws_iot_thread_mutex_destroy(&(pClient->clientData.state_change_mutex));
+		}
 
-#ifdef _ENABLE_THREAD_SUPPORT_
-    if (rc == SUCCESS)
-    {
-        rc = aws_iot_thread_mutex_destroy(&(pClient->clientData.state_change_mutex));
-    }
+		if (rc == SUCCESS)
+		{
+			rc = aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_read_mutex));
+		}else{
+			(void)aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_read_mutex));
+		}
 
-    if (rc == SUCCESS)
-    {
-        rc = aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_read_mutex));
-    }
-
-    if (rc == SUCCESS)
-    {
-        rc = aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_write_mutex));
-    }
-#endif
+		if (rc == SUCCESS)
+		{
+			rc = aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_write_mutex));
+		}else{
+			(void)aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_read_mutex));
+		}
+	#endif
+	}
 
     FUNC_EXIT_RC(rc);
 }
