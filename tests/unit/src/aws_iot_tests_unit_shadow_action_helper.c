@@ -838,7 +838,7 @@ TEST_C(ShadowActionTests, NoClientTokenForShadowAction) {
 	IOT_DEBUG("-->Success - No client token for shadow action \n");
 }
 
-TEST_C(ShadowActionTests, IsJsonValid)
+TEST_C(ShadowActionTests, IsReceivedJsonValid)
 {
 	bool ret_val;
 	char getRequestJson[TEST_JSON_SIZE];
@@ -855,7 +855,7 @@ TEST_C(ShadowActionTests, IsJsonValid)
 	ret_val = isReceivedJsonValid(getRequestJson, TEST_JSON_SIZE);
 	CHECK_EQUAL_C_INT(true, ret_val);
 	
-	IOT_DEBUG("-->Success - sReceivedJsonValid");
+	IOT_DEBUG("-->Success - IsReceivedJsonValid");
 }
 
 TEST_C(ShadowActionTests, ExtractClientToken)
@@ -864,7 +864,7 @@ TEST_C(ShadowActionTests, ExtractClientToken)
 	char getRequestJson[TEST_JSON_SIZE];
 	char extractedClientToken[MAX_SIZE_CLIENT_ID_WITH_SEQUENCE];
 	
-	IOT_DEBUG("-->Running Shadow Action Tests - extractClientToken \n");
+	IOT_DEBUG("-->Running Shadow Action Tests - ExtractClientToken \n");
 
 	//Try JSON with no token
 	snprintf(getRequestJson, TEST_JSON_SIZE, "{}");
@@ -880,14 +880,14 @@ TEST_C(ShadowActionTests, ExtractClientToken)
 	ret_val = extractClientToken(getRequestJson, TEST_JSON_SIZE, extractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE );
 	CHECK_EQUAL_C_INT(true, ret_val);
 	
-	IOT_DEBUG("-->Success - getAndDeleteRequest");
+	IOT_DEBUG("-->Success - ExtractClientToken");
 }
 
 TEST_C(ShadowActionTests, GetAndDeleteRequest) {
 	IoT_Error_t ret_val = SUCCESS;
 	char getRequestJson[TEST_JSON_SIZE];
 	
-	IOT_DEBUG("-->Running Shadow Action Tests - getAndDeleteRequest \n");
+	IOT_DEBUG("-->Running Shadow Action Tests - GetAndDeleteRequest \n");
 		
 	ret_val = aws_iot_shadow_internal_get_request_json(NULL, TEST_JSON_SIZE);
 	CHECK_EQUAL_C_INT(FAILURE, ret_val);
@@ -901,7 +901,7 @@ TEST_C(ShadowActionTests, GetAndDeleteRequest) {
 	ret_val = aws_iot_shadow_internal_delete_request_json(getRequestJson, 1);
 	CHECK_EQUAL_C_INT(FAILURE, ret_val);
 	
-	IOT_DEBUG("-->Success - getAndDeleteRequest");
+	IOT_DEBUG("-->Success - GetAndDeleteRequest");
 }
 
 TEST_C(ShadowActionTests, NoCallbackForShadowAction) {

@@ -372,7 +372,7 @@ bool isJsonValidAndParse(const char *pJsonDocument, size_t jsonSize, void *pJson
 
 	jsmn_init(&shadowJsonParser);
 
-	tokenCount = jsmn_parse(&shadowJsonParser, pJsonDocument, strlen(pJsonDocument), jsonTokenStruct,
+	tokenCount = jsmn_parse(&shadowJsonParser, pJsonDocument, jsonSize, jsonTokenStruct,
 							sizeof(jsonTokenStruct) / sizeof(jsonTokenStruct[0]));
 
 	if(tokenCount < 0) {
