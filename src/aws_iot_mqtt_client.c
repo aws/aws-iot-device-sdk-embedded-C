@@ -264,6 +264,9 @@ IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *p
 					  pInitParams->tlsHandshakeTimeout_ms, pInitParams->isSSLHostnameVerify);
 
 	if(SUCCESS != rc) {
+		(void)aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_read_mutex));
+		(void)aws_iot_thread_mutex_destroy(&(pClient->clientData.state_change_mutex));
+		(void)aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_write_mutex));
 		pClient->clientStatus.clientState = CLIENT_STATE_INVALID;
 		FUNC_EXIT_RC(rc);
 	}
