@@ -21,7 +21,6 @@
 #include "aws_iot_test_integration_common.h"
 
 static bool terminate_yield_thread;
-static bool isPubThreadFinished;
 
 static unsigned int countArray[PUBLISH_COUNT];
 static unsigned int rxMsgBufferTooBigCounter;
@@ -140,7 +139,6 @@ static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 			}
 		}
 	}
-	isPubThreadFinished = true;
 	return 0;
 }
 
@@ -235,15 +233,12 @@ int aws_iot_mqtt_tests_basic_connectivity() {
 	threadData.threadId = 1;
 	pubThreadReturn = pthread_create(&publish_thread, NULL, aws_iot_mqtt_tests_publish_thread_runner, &threadData);
 
-	do {
-		sleep(1); //Let all threads run
-	} while(!isPubThreadFinished);
-
+	pthread_join(publish_thread, NULL);
 	// This sleep is to ensure that the last publish message has enough time to be received by us
 	sleep(1);
 
 	terminate_yield_thread = true;
-	sleep(1);
+	pthread_join(yield_thread, NULL);
 
 	/* Not using pthread_join because all threads should have terminated gracefully at this point. If they haven't,
 	 * which should not be possible, something below will fail. */

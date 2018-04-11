@@ -290,10 +290,9 @@ int aws_iot_mqtt_tests_multi_threading_validation() {
 
 	terminate_yield_thread = true;
 	terminate_subUnsub_thread = true;
-
-	/* Allow time for yield_thread and sub_sunsub thread to exit */
-	sleep(1);
-
+	pthread_join(yield_thread, NULL);
+	pthread_join(sub_unsub_thread, NULL);	
+	
 	/* Not using pthread_join because all threads should have terminated gracefully at this point. If they haven't,
 	 * which should not be possible, something below will fail. */
 
