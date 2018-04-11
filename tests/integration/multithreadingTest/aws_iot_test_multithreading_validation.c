@@ -34,7 +34,7 @@ typedef struct ThreadData {
 
 static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char *topicName,
 							  uint16_t topicNameLen, IoT_Publish_Message_Params *params, void *pData) {
-	char tempBuf[30];
+	char tempBuf[100];
 	char *temp = NULL;
 	unsigned int tempRow = 0, tempCol = 0;
 	IoT_Error_t rc;
@@ -44,7 +44,7 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 	IOT_UNUSED(topicNameLen);
 	IOT_UNUSED(pData);
 
-	if(30 >= params->payloadLen) {
+	if(100 >= params->payloadLen) {
 		snprintf(tempBuf, params->payloadLen, params->payload);
 		printf("\n Message received : %s", tempBuf);
 		temp = strtok(tempBuf, " ,:");
