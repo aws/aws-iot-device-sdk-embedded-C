@@ -165,7 +165,6 @@ int aws_iot_mqtt_tests_basic_connectivity() {
 	AWS_IoT_Client client;
 
 	terminate_yield_thread = false;
-	isPubThreadFinished = false;
 
 	rxMsgBufferTooBigCounter = 0;
 	rxUnexpectedNumberCounter = 0;
