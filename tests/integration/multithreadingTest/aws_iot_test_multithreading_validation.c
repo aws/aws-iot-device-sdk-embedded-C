@@ -39,8 +39,9 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 	char tempBuf[BUFFER_SIZE];
 	size_t buffSize = BUFFER_SIZE;
 	char *temp = NULL;
-	unsigned int tempRow = 0, tempCol = 0;
 	char *next_token;
+	unsigned int tempRow = 0, tempCol = 0;
+
 	IoT_Error_t rc;
 
 	IOT_UNUSED(pClient);
