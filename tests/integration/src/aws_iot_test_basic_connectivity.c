@@ -116,7 +116,7 @@ static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 	int threadId = threadData->threadId;
 
 	for(i = 0; i < PUBLISH_COUNT; i++) {
-		snprintf(cPayload, 100, "Thread : %d, Msg : %d", threadId, i + 1);
+		snprintf(cPayload, 100, "%s Thread : %d, Msg : %d", AWS_IOT_MY_THING_NAME, threadId, i + 1);
 		printf("\nMsg being published: %s \n", cPayload);
 		params.payload = (void *) cPayload;
 		params.payloadLen = strlen(cPayload) + 1;

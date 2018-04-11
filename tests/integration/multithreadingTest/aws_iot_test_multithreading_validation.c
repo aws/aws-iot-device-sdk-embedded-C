@@ -114,7 +114,7 @@ static void *aws_iot_mqtt_tests_yield_thread_runner(void *ptr) {
 
 static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 	int itr = 0;
-	char cPayload[30];
+	char cPayload[100];
 	IoT_Publish_Message_Params params;
 	IoT_Error_t rc = SUCCESS;
 	ThreadData *threadData = (ThreadData *) ptr;
@@ -122,7 +122,7 @@ static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 	int threadId = threadData->threadId;
 
 	for(itr = 0; itr < PUBLISH_COUNT; itr++) {
-		snprintf(cPayload, 30, "Thread : %d, Msg : %d", threadId, itr);
+		snprintf(cPayload, 100, "%s Thread : %d, Msg : %d", AWS_IOT_MY_THING_NAME, threadId, itr);
 		printf("\nMsg being published: %s \n", cPayload);
 		params.payload = (void *) cPayload;
 		params.payloadLen = strlen(cPayload) + 1;
@@ -292,6 +292,10 @@ int aws_iot_mqtt_tests_multi_threading_validation() {
 	terminate_subUnsub_thread = true;
 	pthread_join(yield_thread, NULL);
 	pthread_join(sub_unsub_thread, NULL);	
+	
+	for(i = 0; i < MAX_PUB_THREAD_COUNT; i++) {
+	    pthread_join(publish_thread[i], NULL);
+	}	
 	
 	/* Not using pthread_join because all threads should have terminated gracefully at this point. If they haven't,
 	 * which should not be possible, something below will fail. */
