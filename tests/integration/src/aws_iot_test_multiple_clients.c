@@ -52,10 +52,10 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 		if( params->payloadLen > MAX_ERROR_DISPLAY)
 		{
 			params->payload[MAX_ERROR_DISPLAY-1] = '\0';
-			printf("\nMsg received : %s", params->payload);
+			printf("\nWrong Msg received : %s", params->payload);
 		}else
 		{
-			printf("\nMsg received : %s", params->payload);			
+			printf("\nWrong Msg received : %s", params->payload);			
 		}
 		rxMsgBufferTooBigCounter++;
 	}
