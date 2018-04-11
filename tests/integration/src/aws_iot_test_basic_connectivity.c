@@ -20,6 +20,8 @@
 
 #include "aws_iot_test_integration_common.h"
 
+#define BUFFER_SIZE 100
+
 static bool terminate_yield_thread;
 
 static unsigned int countArray[PUBLISH_COUNT];
@@ -35,22 +37,23 @@ typedef struct ThreadData {
 
 static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char *topicName,
 							  uint16_t topicNameLen, IoT_Publish_Message_Params *params, void *pData) {
-	char tempBuf[100];
+	char tempBuf[BUFFER_SIZE];
+	size_t buffSize = BUFFER_SIZE;
 	char *temp = NULL;
 	unsigned int tempRow = 0, tempCol = 0;
 	IoT_Error_t rc;
 
-	if(params->payloadLen <= 100) {
+	if(params->payloadLen <= BUFFER_SIZE) {
 		snprintf(tempBuf, params->payloadLen, params->payload);
 		printf("\nMsg received : %s", tempBuf);
-		temp = strtok(tempBuf, " ,:");
-		temp = strtok(NULL, " ,:");
+		temp = strtok(tempBuf, " ,:", &buffSize, next_token);
+		temp = strtok(NULL, " ,:", &buffSize, next_token);
 		if(NULL == temp) {
 			return;
 		}
 		tempRow = atoi(temp);
-		temp = strtok(NULL, " ,:");
-		temp = strtok(NULL, " ,:");
+		temp = strtok(NULL, " ,:", &buffSize, next_token);
+		temp = strtok(NULL, " ,:", &buffSize, next_token);
 		tempCol = atoi(temp);
 		if(NULL == temp) {
 			return;
@@ -116,7 +119,7 @@ static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 	int threadId = threadData->threadId;
 
 	for(i = 0; i < PUBLISH_COUNT; i++) {
-		snprintf(cPayload, 100, "%s Thread : %d, Msg : %d", AWS_IOT_MY_THING_NAME, threadId, i + 1);
+		snprintf(cPayload, 100, "%s_Thread : %d, Msg : %d", AWS_IOT_MY_THING_NAME, threadId, i + 1);
 		printf("\nMsg being published: %s \n", cPayload);
 		params.payload = (void *) cPayload;
 		params.payloadLen = strlen(cPayload) + 1;
