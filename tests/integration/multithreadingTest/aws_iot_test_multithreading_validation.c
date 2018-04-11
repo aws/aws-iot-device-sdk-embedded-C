@@ -62,7 +62,7 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 		if(((tempRow - 1) < MAX_PUB_THREAD_COUNT) && (tempCol < PUBLISH_COUNT)) {
 			countArray[tempRow - 1][tempCol]++;
 		} else {
-			IOT_WARN(" \nUnexpected Thread : %d, Message : %d ", tempRow, tempCol);
+			IOT_ERROR(" \nUnexpected Thread : %d, Message : %d ", tempRow, tempCol);
 			rxUnexpectedNumberCounter++;
 		}
 		rc = aws_iot_mqtt_yield(pClient, 10);
