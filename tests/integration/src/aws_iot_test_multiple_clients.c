@@ -20,6 +20,8 @@
 
 #include "aws_iot_test_integration_common.h"
 
+
+#define MAX_ERROR_DISPLAY 50
 static bool terminate_yield_thread;
 
 static unsigned int countArray[PUBLISH_COUNT];
@@ -47,6 +49,14 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 			rxUnexpectedNumberCounter++;
 		}
 	} else {
+		if( params->payloadLen > MAX_ERROR_DISPLAY)
+		{
+			params->payload[MAX_ERROR_DISPLAY-1] = '\0';
+			printf("\nMsg received : %s", params->payload);
+		}else
+		{
+			printf("\nMsg received : %s", params->payload);			
+		}
 		rxMsgBufferTooBigCounter++;
 	}
 }
