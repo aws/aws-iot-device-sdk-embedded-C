@@ -49,7 +49,7 @@ node {
       cd ../../
       
       while [ $(date +%s) -lt "$timeLimit" ]; do 
-      make run-unit-tests 
+      #make run-unit-tests 
       cd ./tests/integration/
       make tests
       cd ../../
