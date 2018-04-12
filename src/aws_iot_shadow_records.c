@@ -369,14 +369,16 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 	if(clearBothEntriesFromList) {
 		if(indexAcceptedSubList >= 0) {
 			SubscriptionList[indexAcceptedSubList].isFree = true;
+			
+			if(SubscriptionList[indexAcceptedSubList].count == 1) {
+			    aws_iot_mqtt_unsubscribe(pMqttClient, SubscriptionList[indexAcceptedSubList].Topic,
+				(uint16_t) strlen(SubscriptionList[indexAcceptedSubList].Topic));
+		    }
 		}
 		if(indexRejectedSubList >= 0) {
 			SubscriptionList[indexRejectedSubList].isFree = true;
 		}
-		if(SubscriptionList[indexAcceptedSubList].count == 1) {
-			aws_iot_mqtt_unsubscribe(pMqttClient, SubscriptionList[indexAcceptedSubList].Topic,
-									 (uint16_t) strlen(SubscriptionList[indexAcceptedSubList].Topic));
-		}
+
 	}
 
 	return ret_val;
@@ -443,8 +445,8 @@ void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, ShadowAc
 					  const char *pExtractedClientToken, fpActionCallback_t callback, void *pCallbackContext,
 					  uint32_t timeout_seconds) {
 	AckWaitList[indexAckWaitList].callback = callback;
-	strncpy(AckWaitList[indexAckWaitList].clientTokenID, pExtractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE);
-	strncpy(AckWaitList[indexAckWaitList].thingName, pThingName, MAX_SIZE_OF_THING_NAME);
+	memcpy(AckWaitList[indexAckWaitList].clientTokenID, pExtractedClientToken, MAX_SIZE_CLIENT_ID_WITH_SEQUENCE);
+	memcpy(AckWaitList[indexAckWaitList].thingName, pThingName, MAX_SIZE_OF_THING_NAME);
 	AckWaitList[indexAckWaitList].pCallbackContext = pCallbackContext;
 	AckWaitList[indexAckWaitList].action = action;
 	init_timer(&(AckWaitList[indexAckWaitList].timer));

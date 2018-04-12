@@ -37,6 +37,7 @@
 #include "aws_iot_version.h"
 #include "aws_iot_mqtt_client_interface.h"
 
+#define HOST_ADDRESS_SIZE 255
 /**
  * @brief Default cert location
  */
@@ -45,7 +46,7 @@ char certDirectory[PATH_MAX + 1] = "../../../certs";
 /**
  * @brief Default MQTT HOST URL is pulled from the aws_iot_config.h
  */
-char HostAddress[255] = AWS_IOT_MQTT_HOST;
+char HostAddress[HOST_ADDRESS_SIZE] = AWS_IOT_MQTT_HOST;
 
 /**
  * @brief Default MQTT port is pulled from the aws_iot_config.h
@@ -94,7 +95,7 @@ void parseInputArgsForConnectParams(int argc, char **argv) {
 	while(-1 != (opt = getopt(argc, argv, "h:p:c:x:"))) {
 		switch(opt) {
 			case 'h':
-				strcpy(HostAddress, optarg);
+				strncpy(HostAddress, optarg, HOST_ADDRESS_SIZE);
 				IOT_DEBUG("Host %s", optarg);
 				break;
 			case 'p':
@@ -102,7 +103,7 @@ void parseInputArgsForConnectParams(int argc, char **argv) {
 				IOT_DEBUG("arg %s", optarg);
 				break;
 			case 'c':
-				strcpy(certDirectory, optarg);
+				strncpy(certDirectory, optarg, PATH_MAX + 1);
 				IOT_DEBUG("cert root directory %s", optarg);
 				break;
 			case 'x':

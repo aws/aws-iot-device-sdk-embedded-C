@@ -57,6 +57,7 @@ TEST_GROUP_C_TEARDOWN(ShadowNullFields) { }
 TEST_C(ShadowNullFields, NullHost) {
 	shadowInitParams.pHost = NULL;
 	shadowInitParams.port = AWS_IOT_MQTT_PORT;
+	shadowInitParams.disconnectHandler = NULL;
 	IoT_Error_t rc = aws_iot_shadow_init(&client, &shadowInitParams);
 	CHECK_EQUAL_C_INT(NULL_VALUE_ERROR, rc);
 }
@@ -64,6 +65,7 @@ TEST_C(ShadowNullFields, NullHost) {
 TEST_C(ShadowNullFields, NullPort) {
 	shadowInitParams.pHost = AWS_IOT_MQTT_HOST;
 	shadowInitParams.port = 0;
+	shadowInitParams.disconnectHandler = NULL;
 	IoT_Error_t rc = aws_iot_shadow_init(&client, &shadowInitParams);
 	CHECK_EQUAL_C_INT(NULL_VALUE_ERROR, rc);
 }
@@ -88,6 +90,7 @@ TEST_C(ShadowNullFields, NullClientID) {
 TEST_C(ShadowNullFields, NullClientInit) {
 	shadowInitParams.pHost = AWS_IOT_MQTT_HOST;
 	shadowInitParams.port = AWS_IOT_MQTT_PORT;
+	shadowInitParams.disconnectHandler = NULL;
 	IoT_Error_t rc = aws_iot_shadow_init(NULL, &shadowInitParams);
 	CHECK_EQUAL_C_INT(NULL_VALUE_ERROR, rc);
 }
