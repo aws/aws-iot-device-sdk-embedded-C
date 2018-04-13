@@ -843,7 +843,7 @@ TEST_C(ShadowActionTests, IsReceivedJsonValid)
 	bool ret_val;
 	char getRequestJson[TEST_JSON_SIZE];
 	
-	IOT_DEBUG("-->Running Shadow Action Tests - sReceivedJsonValid \n");
+	IOT_DEBUG("-->Running Shadow Action Tests - IsReceivedJsonValid \n");
 		
 	snprintf(getRequestJson, TEST_JSON_SIZE, TEST_JSON_RESPONSE_FULL_DOCUMENT);	
 	

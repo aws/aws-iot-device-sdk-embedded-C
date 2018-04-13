@@ -480,7 +480,7 @@ bool isReceivedJsonValid(const char *pJsonDocument, size_t jsonSize ) {
 
 bool extractClientToken(const char *pJsonDocument, size_t jsonSize, char *pExtractedClientToken, size_t clientTokenSize) {
 	int32_t tokenCount, i;
-	uint8_t length;
+	size_t length;
 	jsmntok_t ClientJsonToken;
 	jsmn_init(&shadowJsonParser);
 
