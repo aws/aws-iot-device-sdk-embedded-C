@@ -17,6 +17,8 @@
 #include "aws_iot_integ_tests_config.h"
 #include "aws_iot_config.h"
 
+#define BUFFER_SIZE 100
+
 static bool terminate_yield_thread;
 static bool terminate_subUnsub_thread;
 
@@ -34,9 +36,11 @@ typedef struct ThreadData {
 
 static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char *topicName,
 							  uint16_t topicNameLen, IoT_Publish_Message_Params *params, void *pData) {
-	char tempBuf[30];
+	char tempBuf[BUFFER_SIZE];
 	char *temp = NULL;
+	char *next_token;
 	unsigned int tempRow = 0, tempCol = 0;
+
 	IoT_Error_t rc;
 
 	IOT_UNUSED(pClient);
@@ -44,17 +48,17 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 	IOT_UNUSED(topicNameLen);
 	IOT_UNUSED(pData);
 
-	if(30 >= params->payloadLen) {
+	if(BUFFER_SIZE >= params->payloadLen) {
 		snprintf(tempBuf, params->payloadLen, params->payload);
 		printf("\n Message received : %s", tempBuf);
-		temp = strtok(tempBuf, " ,:");
-		temp = strtok(NULL, " ,:");
+		temp = strtok_r(tempBuf, " ,:", &next_token);
+		temp = strtok_r(NULL, " ,:", &next_token);
 		if(NULL == temp) {
 			return;
 		}
 		tempRow = atoi(temp);
-		temp = strtok(NULL, " ,:");
-		temp = strtok(NULL, " ,:");
+		temp = strtok_r(NULL, " ,:", &next_token);
+		temp = strtok_r(NULL, " ,:", &next_token);
 		tempCol = atoi(temp);
 		if(NULL == temp) {
 			return;
@@ -62,7 +66,7 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 		if(((tempRow - 1) < MAX_PUB_THREAD_COUNT) && (tempCol < PUBLISH_COUNT)) {
 			countArray[tempRow - 1][tempCol]++;
 		} else {
-			IOT_WARN(" \nUnexpected Thread : %d, Message : %d ", tempRow, tempCol);
+			IOT_ERROR(" \nUnexpected Thread : %d, Message : %d ", tempRow, tempCol);
 			rxUnexpectedNumberCounter++;
 		}
 		rc = aws_iot_mqtt_yield(pClient, 10);
@@ -114,7 +118,7 @@ static void *aws_iot_mqtt_tests_yield_thread_runner(void *ptr) {
 
 static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 	int itr = 0;
-	char cPayload[30];
+	char cPayload[100];
 	IoT_Publish_Message_Params params;
 	IoT_Error_t rc = SUCCESS;
 	ThreadData *threadData = (ThreadData *) ptr;
@@ -122,7 +126,7 @@ static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 	int threadId = threadData->threadId;
 
 	for(itr = 0; itr < PUBLISH_COUNT; itr++) {
-		snprintf(cPayload, 30, "Thread : %d, Msg : %d", threadId, itr);
+		snprintf(cPayload, 100, "%s_Thread : %d, Msg : %d", AWS_IOT_MY_THING_NAME, threadId, itr);
 		printf("\nMsg being published: %s \n", cPayload);
 		params.payload = (void *) cPayload;
 		params.payloadLen = strlen(cPayload) + 1;
@@ -290,10 +294,13 @@ int aws_iot_mqtt_tests_multi_threading_validation() {
 
 	terminate_yield_thread = true;
 	terminate_subUnsub_thread = true;
-
-	/* Allow time for yield_thread and sub_sunsub thread to exit */
-	sleep(1);
-
+	pthread_join(yield_thread, NULL);
+	pthread_join(sub_unsub_thread, NULL);	
+	
+	for(i = 0; i < MAX_PUB_THREAD_COUNT; i++) {
+	    pthread_join(publish_thread[i], NULL);
+	}	
+	
 	/* Not using pthread_join because all threads should have terminated gracefully at this point. If they haven't,
 	 * which should not be possible, something below will fail. */
 

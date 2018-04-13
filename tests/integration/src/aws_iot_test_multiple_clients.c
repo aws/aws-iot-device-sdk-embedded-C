@@ -20,8 +20,9 @@
 
 #include "aws_iot_test_integration_common.h"
 
+
+#define MAX_ERROR_DISPLAY 50
 static bool terminate_yield_thread;
-static bool isPubThreadFinished;
 
 static unsigned int countArray[PUBLISH_COUNT];
 static unsigned int rxMsgBufferTooBigCounter;
@@ -48,6 +49,14 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 			rxUnexpectedNumberCounter++;
 		}
 	} else {
+		if( params->payloadLen > MAX_ERROR_DISPLAY)
+		{
+			((char *)params->payload)[MAX_ERROR_DISPLAY-1] = '\0';
+			IOT_ERROR("\nWrong Msg received : %s", params->payload);
+		}else
+		{
+			IOT_ERROR("\nWrong Msg received : %s", params->payload);			
+		}
 		rxMsgBufferTooBigCounter++;
 	}
 }
@@ -155,7 +164,6 @@ static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 		}
 		usleep(300000);
 	}
-	isPubThreadFinished = true;
 }
 
 
@@ -187,7 +195,6 @@ int aws_iot_mqtt_tests_multiple_clients() {
 	AWS_IoT_Client subClient;
 
 	terminate_yield_thread = false;
-	isPubThreadFinished = false;
 	rxMsgBufferTooBigCounter = 0;
 	rxUnexpectedNumberCounter = 0;
 	rePublishCount = 0;
@@ -239,14 +246,11 @@ int aws_iot_mqtt_tests_multiple_clients() {
 	yieldThreadReturn = pthread_create(&yield_thread, NULL, aws_iot_mqtt_tests_yield_thread_runner, &subClient);
 	pubThreadReturn = pthread_create(&publish_thread, NULL, aws_iot_mqtt_tests_publish_thread_runner, &pubClient);
 
-	/* This sleep is to ensure that the last publish message has enough time to be received by us */
-	do {
-		sleep(1);
-	} while(!isPubThreadFinished);
+	pthread_join(publish_thread, NULL);
 
 	/* Kill yield thread */
 	terminate_yield_thread = true;
-	sleep(1);
+	pthread_join(yield_thread, NULL);
 
 	aws_iot_mqtt_disconnect(&pubClient);
 	aws_iot_mqtt_disconnect(&subClient);

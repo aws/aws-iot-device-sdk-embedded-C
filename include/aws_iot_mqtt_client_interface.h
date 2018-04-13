@@ -58,6 +58,17 @@ extern "C" {
 #include "network_interface.h"
 #include "timer_interface.h"
 
+
+/**
+* @brief Clean mqtt client from all dynamic memory allocate
+*
+* This function will free up memory that was dynamically allocated for the client.
+*
+* @param pClient MQTT Client that was previously created by calling aws_iot_mqtt_init
+* @return An IoT Error Type defining successful/failed freeing
+*/
+ IoT_Error_t aws_iot_mqtt_free( AWS_IoT_Client *pClient );
+
 /**
  * @brief MQTT Client Initialization Function
  *
