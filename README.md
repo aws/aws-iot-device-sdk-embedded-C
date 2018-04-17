@@ -85,6 +85,156 @@ The 2.x branch makes several changes to the SDK. This section provides informati
 
 You can find more information on how to use the new APIs in the Readme file for samples that can be found [here](https://github.com/aws/aws-iot-device-sdk-embedded-c/blob/master/samples/README.md)
 
+## Migrating from 2.x to 3.x
+AWS IoT Device SDK for Embedded C v3.0.0 fixes two bugs (see #152 and #155) that create a potential buffer overflows. This version is not backward compatible with previous versions, so users will need to recompile their applications with the new version.
+
+Users of AWS IoT Device Shadows or Json utility functions such as `extractClientToken`, `emptyJsonWithClientToken`, `isJsonValidAndParse` and `isReceivedJsonValid` are encouraged to upgrade to version v3.0.0. For users who cannot upgrade, review all parts of your solution where user input can be sent to the device, and ensure sufficient authorization of these operations is enforced.
+
+Details of the required changes to public functions and data structures are shown below:
+
+### Changes in the `jsonStruct` data structure:
+The member `dataLength` has been added to struct `jsonStruct`, which is declared in [include/aws_iot_shadow_json_data.h](include/aws_iot_shadow_json_data.h#L60).
+
+```c
+struct jsonStruct {
+    const char *         pKey;
+    void *               pData;
+    size_t               dataLength;
+    JsonPrimitiveType    type;
+    JsonStructCallback_t cb;
+};
+```
+
+The size of the buffer `pData` must now be specified by `dataLength`. **Failure to do so may result in undefined behavior**. Below are examples of the code changes required to use the new jsonStruct.
+
+With a primitive data type, such as `int32_t`:
+
+```c
+…
+jsonStruct_t exampleJsonStruct;
+int32_t value = 0L;
+
+/* Set the members of exampleJsonStruct. */
+exampleJsonStruct.pKey = “exampleKey”;
+exampleJsonStruct.pData = &value;
+exampleJsonStruct.type = SHADOW_JSON_INT32;
+exampleJsonStruct.cb = exampleCallback;
+
+/* Register a delta callback using example JsonStruct. */
+aws_iot_shadow_register_delta(&mqttClient, &exampleJsonStruct); 
+…
+```
+
+Version 3.0.0 will require the following code:
+
+```c
+…
+jsonStruct_t exampleJsonStruct;
+int32_t value = 0L;
+
+/* Set the members of exampleJsonStruct. */
+exampleJsonStruct.pKey = “exampleKey”;
+exampleJsonStruct.pData = &value;
+exampleJsonStruct.dataLength = sizeof(int32_t); /* sizeof(value) also OK.*/
+exampleJsonStruct.type = SHADOW_JSON_INT32;
+exampleJsonStruct.cb = exampleCallback;
+
+/* Register a delta callback using example JsonStruct. */
+aws_iot_shadow_register_delta(&mqttClient, &exampleJsonStruct);
+…
+```
+
+With a string, versions up to v2.3.0 would require the following code:
+
+```c
+…
+jsonStruct_t exampleJsonStruct;
+char stringBuffer[SIZE_OF_BUFFER];
+/* Set the members of exampleJsonStruct. */
+exampleJsonStruct.pKey = “exampleKey”;
+exampleJsonStruct.pData = stringBuffer;
+exampleJsonStruct.type = SHADOW_JSON_STRING;
+exampleJsonStruct.cb = exampleCallback;
+/* Register a delta callback using example JsonStruct. */
+aws_iot_shadow_register_delta(&mqttClient, &exampleJsonStruct);
+…
+```
+
+Version 3.0.0 will require the following code:
+
+```c
+…
+jsonStruct_t exampleJsonStruct;
+char stringBuffer[SIZE_OF_BUFFER];
+/* Set the members of exampleJsonStruct. */
+exampleJsonStruct.pKey = “exampleKey”;
+exampleJsonStruct.pData = stringBuffer;
+exampleJsonStruct.dataLength = SIZE_OF_BUFFER;
+exampleJsonStruct.type = SHADOW_JSON_STRING;
+exampleJsonStruct.cb = exampleCallback;
+/* Register a delta callback using example JsonStruct. */
+aws_iot_shadow_register_delta(&mqttClient, &exampleJsonStruct);
+…
+```
+
+### Changes in parseStringValue:
+The function `parseStringValue`, declared in [include/aws_iot_json_utils.h](include/aws_iot_json_utils.h#L179) and implemented in [src/aws_iot_json_utils.c](src/aws_iot_json_utils.c#L184), now requires the inclusion of a buffer length. Its new function signature is:
+
+```c
+IoT_Error_t parseStringValue(char *buf, size_t bufLen, const char *jsonString, jsmntok_t *token);
+```
+
+Below is an example of code changes required to use the new parseStringValue.
+
+With up to version v2.3.0:
+
+```c
+…
+char* jsonString = “…”;
+jsmntok_t jsmnTokens[NUMBER_OF_JSMN_TOKENS];
+char stringBuffer[SIZE_OF_BUFFER];
+parseStringValue(stringBuffer, jsonString, jsmnTokens);
+…
+```
+
+Version 3.0.0 will require the following code:
+
+```c
+…
+char* jsonString = “…”;
+jsmntok_t jsmnTokens[NUMBER_OF_JSMN_TOKENS];
+char stringBuffer[SIZE_OF_BUFFER];
+parseStringValue(stringBuffer, SIZE_OF_BUFFER, jsonString, jsmnTokens);
+…
+```
+
+### Changes to functions intended for internal usage:
+Version 3.0.0 changes the signature of four functions intended for internal usage. The new signatures explicitly carry the information for the size of the buffer or JSON document passed as a parameter to the functions. Users of the SDK may need to change their code and recompile to ingest the changes. We report the old and new signatures below.
+
+#### Old signatures:
+
+```c
+bool extractClientToken(const char *pJsonDocument, char *pExtractedClientToken); 
+
+static void emptyJsonWithClientToken(char *pBuffer);
+
+bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t *pTokenCount); 
+
+bool isReceivedJsonValid(const char *pJsonDocument);
+```
+
+#### New signatures:
+
+```c
+bool extractClientToken(const char *pJsonDocument, size_t jsonSize, char *pExtractedClientToken, size_t clientTokenSize); 
+
+static void emptyJsonWithClientToken(char *pBuffer, size_t bufferSize);
+
+bool isJsonValidAndParse(const char *pJsonDocument, size_t jsonSize, void *pJsonHandler, int32_t *pTokenCount);
+
+bool isReceivedJsonValid(const char *pJsonDocument, size_t jsonSize);
+```
+
 ## Resources
 [API Documentation](http://aws-iot-device-sdk-embedded-c-docs.s3-website-us-east-1.amazonaws.com/index.html)
 

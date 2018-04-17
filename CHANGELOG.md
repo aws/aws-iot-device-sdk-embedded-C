@@ -1,4 +1,13 @@
 # Change Log
+## [3.0.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.0.0) (Apr 17, 2018)
+
+Bugfixes:
+
+  - [#152] Fixes potential buffer overflows in `parseStringValue` by requiring a size parameter in `jsonStruct_t`.
+  - [#155] Fixes other memory corruption bugs; also improves stability.
+
+The two bug fixes above are not backwards compatible with v2.3.0.  Please see [README.md](README.md#migrating-from-2x-to-3x) for details on migrating to v3.0.0.
+
 ## [2.3.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v2.3.0) (Mar 21, 2018)
 
 New Features:
