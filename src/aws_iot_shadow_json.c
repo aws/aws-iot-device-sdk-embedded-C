@@ -507,7 +507,7 @@ bool extractClientToken(const char *pJsonDocument, size_t jsonSize, char *pExtra
                 pExtractedClientToken[length] = '\0';
                 return true;
             }else{
-                IOT_WARN( "Token size %d too small for string %d \n", clientTokenSize, length);
+                IOT_WARN( "Token size %zu too small for string %zu \n", clientTokenSize, length);
                 return false; 
             }
 		}
