@@ -31,11 +31,11 @@
 /**
  * @brief MAJOR version, incremented when incompatible API changes are made.
  */
-#define VERSION_MAJOR 2
+#define VERSION_MAJOR 3
 /**
  * @brief MINOR version when functionality is added in a backwards-compatible manner.
  */
-#define VERSION_MINOR 3
+#define VERSION_MINOR 0
 /**
  * @brief PATCH version when backwards-compatible bug fixes are made.
  */
