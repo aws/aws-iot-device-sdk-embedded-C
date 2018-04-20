@@ -1,3 +1,11 @@
+
+[![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=master)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
+
+<a href="https://scan.coverity.com/projects/aws-iot-device-sdk-embedded-c">
+  <img alt="Coverity Scan Build Status"
+       src="https://scan.coverity.com/projects/15543/badge.svg"/>
+</a>
+
 ## ***** NOTICE *****
 This repository is moving to a new branching system. The master branch will now contain bug fixes/features that have been minimally tested to ensure nothing major is broken. The release branch will contain new releases for the SDK that have been tested thoroughly on all supported platforms. Please ensure that you are tracking the release branch for all production work.
 
