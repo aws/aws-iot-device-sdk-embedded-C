@@ -54,10 +54,12 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 		tempRow = atoi(temp);
 		temp = strtok_r(NULL, " ,:", &next_token);
 		temp = strtok_r(NULL, " ,:", &next_token);
-		tempCol = atoi(temp);
 		if(NULL == temp) {
 			return;
 		}
+		
+		tempCol = atoi(temp);
+
 		if(tempCol > 0 && tempCol <= PUBLISH_COUNT) {
 			countArray[tempCol - 1]++;
 		} else {
@@ -196,6 +198,10 @@ int aws_iot_mqtt_tests_basic_connectivity() {
 		initParams.pDevicePrivateKeyLocation = clientKey;
 		initParams.mqttCommandTimeout_ms = 10000;
 		initParams.tlsHandshakeTimeout_ms = 10000;
+		initParams.mqttPacketTimeout_ms = 5000;
+		initParams.isSSLHostnameVerify = true;
+		initParams.disconnectHandlerData = NULL;
+		initParams.isBlockOnThreadLockEnabled = true;
 		initParams.disconnectHandler = aws_iot_mqtt_tests_disconnect_callback_handler;
 		initParams.enableAutoReconnect = false;
 		aws_iot_mqtt_init(&client, &initParams);
@@ -211,7 +217,7 @@ int aws_iot_mqtt_tests_basic_connectivity() {
 		connectParams.pPassword = NULL;
 		connectParams.passwordLen = 0;
 
-		gettimeofday(&connectTime, NULL);
+		gettimeofday(&start, NULL);
 		rc = aws_iot_mqtt_connect(&client, &connectParams);
 		gettimeofday(&end, NULL);
 		timersub(&end, &start, &connectTime);

@@ -174,7 +174,7 @@ int aws_iot_jobs_basic_test() {
 	IoT_Client_Connect_Params connectParams;
 	IoT_Publish_Message_Params paramsQOS0;
 	IoT_Error_t rc = SUCCESS;
-	struct timeval connectTime;
+	struct timeval connectTime, waitCallBackTime;
 	struct timeval start, end;
 	unsigned int connectCounter = 0;
 
@@ -212,7 +212,7 @@ int aws_iot_jobs_basic_test() {
 		connectParams.pPassword = NULL;
 		connectParams.passwordLen = 0;
 
-		gettimeofday(&connectTime, NULL);
+		gettimeofday(&start, NULL);
 		rc = aws_iot_mqtt_connect(&client, &connectParams);
 		gettimeofday(&end, NULL);
 		timersub(&end, &start, &connectTime);
@@ -221,7 +221,7 @@ int aws_iot_jobs_basic_test() {
 	} while(rc != SUCCESS && connectCounter < CONNECT_MAX_ATTEMPT_COUNT);
 
 	if(SUCCESS == rc) {
-		IOT_DEBUG("## Connect Success. Time sec: %d, usec: %d\n", connectTime.tv_sec, connectTime.tv_usec);
+		IOT_DEBUG("## Connect Success. Time sec: %ld, usec: %ld\n", (long int)connectTime.tv_sec, (long int)connectTime.tv_usec);
 	} else {
 		IOT_ERROR("## Connect Failed. error code %d\n", rc);
 		return -1;
@@ -267,9 +267,14 @@ int aws_iot_jobs_basic_test() {
 	paramsQOS0.payloadLen = strlen(cPayload);
 
 	rc = aws_iot_jobs_send_query(&client, QOS0, AWS_IOT_MY_THING_NAME, NULL, NULL, topicToPublishGetPending, sizeof(topicToPublishGetPending), NULL, 0, JOB_GET_PENDING_TOPIC);
-
+	gettimeofday(&start, NULL);
 	while (!callbackDone) {
 		aws_iot_mqtt_yield(&client, 5000);
+		
+		gettimeofday(&end, NULL);
+		timersub(&end, &start, &waitCallBackTime);
+		
+		if(waitCallBackTime.tv_sec > 10) break;
 	}
 
 	return 0;
