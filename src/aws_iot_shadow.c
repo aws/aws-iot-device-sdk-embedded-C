@@ -70,7 +70,7 @@ IoT_Error_t aws_iot_shadow_free(AWS_IoT_Client *pClient)
 }
 
 IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t *pParams) {
-	IoT_Client_Init_Params mqttInitParams;
+	IoT_Client_Init_Params mqttInitParams = IoT_Client_Init_Params_initializer;
 	IoT_Error_t rc;
 
 	FUNC_ENTRY;
