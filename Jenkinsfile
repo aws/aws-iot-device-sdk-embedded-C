@@ -40,7 +40,7 @@ node {
 
     stage 'Run Tests'
       sh '''
-      timeLimit=$(( $(date +%s) + 1 )) #run for 3 days
+      timeLimit=$(( $(date +%s) + 300 )) #run for 3 days
       cp /home/jenkins/certs/* certs/
       rm tests/integration/include/aws_iot_config.h
       cp /home/jenkins/aws_iot_config.h tests/integration/include/
