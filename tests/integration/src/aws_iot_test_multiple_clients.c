@@ -52,10 +52,10 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 		if( params->payloadLen > MAX_ERROR_DISPLAY)
 		{
 			((char *)params->payload)[MAX_ERROR_DISPLAY-1] = '\0';
-			IOT_ERROR("\nWrong Msg received : %s", params->payload);
+			IOT_ERROR("\nWrong Msg received : %s", (char *)params->payload);
 		}else
 		{
-			IOT_ERROR("\nWrong Msg received : %s", params->payload);			
+			IOT_ERROR("\nWrong Msg received : %s", (char *)params->payload);			
 		}
 		rxMsgBufferTooBigCounter++;
 	}
@@ -81,6 +81,10 @@ static IoT_Error_t aws_iot_mqtt_tests_connect_client_to_service(AWS_IoT_Client *
 	initParams.pDevicePrivateKeyLocation = clientKey;
 	initParams.mqttCommandTimeout_ms = 5000;
 	initParams.tlsHandshakeTimeout_ms = 2000;
+	initParams.mqttPacketTimeout_ms = 5000;
+	initParams.isSSLHostnameVerify = true;
+	initParams.disconnectHandlerData = NULL;
+	initParams.isBlockOnThreadLockEnabled = true;
 	initParams.disconnectHandler = aws_iot_mqtt_tests_disconnect_callback_handler;
 	initParams.enableAutoReconnect = false;
 	rc = aws_iot_mqtt_init(pClient, &initParams);
@@ -136,6 +140,8 @@ static void *aws_iot_mqtt_tests_yield_thread_runner(void *ptr) {
 			IOT_ERROR("\nYield Returned : %d ", rc);
 		}
 	}
+	
+	return NULL;
 }
 
 static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
@@ -164,6 +170,8 @@ static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
 		}
 		usleep(300000);
 	}
+	
+	return NULL;
 }
 
 
@@ -221,7 +229,7 @@ int aws_iot_mqtt_tests_multiple_clients() {
 	} while(SUCCESS != rc && CONNECT_MAX_ATTEMPT_COUNT > connectCounter);
 
 	if(SUCCESS == rc) {
-		printf("\n## Connect Success. Time sec: %d, usec: %d\n", connectTime.tv_sec, connectTime.tv_usec);
+		printf("\n## Connect Success. Time sec: %ld, usec: %ld\n", (long int)connectTime.tv_sec, (long int)connectTime.tv_usec);
 	} else {
 		printf("\n## Connect Failed. error code %d\n", rc);
 		return -1;
@@ -235,7 +243,7 @@ int aws_iot_mqtt_tests_multiple_clients() {
 	} while(SUCCESS != rc && connectCounter < CONNECT_MAX_ATTEMPT_COUNT);
 
 	if(SUCCESS == rc) {
-		printf("## Connect Success. Time sec: %d, usec: %d\n", connectTime.tv_sec, connectTime.tv_usec);
+		printf("## Connect Success. Time sec: %ld, usec: %ld\n", (long int)connectTime.tv_sec, (long int)connectTime.tv_usec);
 	} else {
 		printf("## Connect Failed. error code %d\n", rc);
 		return -1;

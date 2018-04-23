@@ -194,7 +194,7 @@ IoT_Error_t aws_iot_mqtt_free(AWS_IoT_Client *pClient)
 		{
 			rc = aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_write_mutex));
 		}else{
-			(void)aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_read_mutex));
+			(void)aws_iot_thread_mutex_destroy(&(pClient->clientData.tls_write_mutex));
 		}
 	#endif
 	}

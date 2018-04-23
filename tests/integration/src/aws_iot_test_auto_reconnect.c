@@ -39,7 +39,7 @@ void aws_iot_mqtt_tests_block_tls_connect(AWS_IoT_Client *pClient) {
 /**
  * Always ensure this function is called after block_tls_connect
  */
-int aws_iot_mqtt_tests_unblock_tls_connect(AWS_IoT_Client *pClient) {
+void aws_iot_mqtt_tests_unblock_tls_connect(AWS_IoT_Client *pClient) {
 	pClient->networkStack.tlsConnectParams.pRootCALocation = savedLocation;
 }
 
@@ -62,6 +62,8 @@ void *aws_iot_mqtt_tests_yield_with_rc(void *ptr) {
 			yieldRC = rc;
 		}
 	}
+
+	return NULL;
 }
 
 unsigned int disconnectedCounter = 0;
@@ -91,7 +93,7 @@ int aws_iot_mqtt_tests_auto_reconnect() {
 	snprintf(clientId, 50, "%s_%d", INTEGRATION_TEST_CLIENT_ID, rand() % 10000);
 
 	printf(" Root CA Path : %s\n clientCRT : %s\n clientKey : %s\n", root_CA, clientCRT, clientKey);
-	IoT_Client_Init_Params initParams;
+	IoT_Client_Init_Params initParams = IoT_Client_Init_Params_initializer;
 	initParams.pHostURL = AWS_IOT_MQTT_HOST;
 	initParams.port = AWS_IOT_MQTT_PORT;
 	initParams.pRootCALocation = root_CA;

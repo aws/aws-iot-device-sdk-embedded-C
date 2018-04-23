@@ -59,10 +59,13 @@ static void aws_iot_mqtt_tests_message_aggregator(AWS_IoT_Client *pClient, char 
 		tempRow = atoi(temp);
 		temp = strtok_r(NULL, " ,:", &next_token);
 		temp = strtok_r(NULL, " ,:", &next_token);
-		tempCol = atoi(temp);
+
 		if(NULL == temp) {
 			return;
 		}
+
+		tempCol = atoi(temp);
+
 		if(((tempRow - 1) < MAX_PUB_THREAD_COUNT) && (tempCol < PUBLISH_COUNT)) {
 			countArray[tempRow - 1][tempCol]++;
 		} else {
@@ -114,6 +117,8 @@ static void *aws_iot_mqtt_tests_yield_thread_runner(void *ptr) {
 			IOT_ERROR("\nYield Returned : %d ", rc);
 		}
 	}
+
+	return NULL;
 }
 
 static void *aws_iot_mqtt_tests_publish_thread_runner(void *ptr) {
@@ -181,6 +186,8 @@ static void *aws_iot_mqtt_tests_sub_unsub_thread_runner(void *ptr) {
 			IOT_ERROR("Unsubscribe Returned : %d ", rc);
 		}
 	}
+
+	return NULL;
 }
 
 int aws_iot_mqtt_tests_multi_threading_validation() {
@@ -192,7 +199,7 @@ int aws_iot_mqtt_tests_multi_threading_validation() {
 	char root_CA[PATH_MAX + 1];
 
 	char clientId[50];
-	IoT_Client_Init_Params initParams;
+	IoT_Client_Init_Params initParams = IoT_Client_Init_Params_initializer;
 	IoT_Client_Connect_Params connectParams;
 	int threadId[MAX_PUB_THREAD_COUNT];
 	int pubThreadReturn[MAX_PUB_THREAD_COUNT];
@@ -201,7 +208,7 @@ int aws_iot_mqtt_tests_multi_threading_validation() {
 	int finishedThreadCount = 0;
 	IoT_Error_t rc = SUCCESS;
 	int i, rxMsgCount = 0, j = 0;
-	struct timeval connectTime, subscribeTopic;
+	struct timeval subscribeTopic;
 	unsigned int connectCounter = 0;
 	int test_result = 0;
 	ThreadData threadData[MAX_PUB_THREAD_COUNT];
@@ -262,7 +269,7 @@ int aws_iot_mqtt_tests_multi_threading_validation() {
 	} while(SUCCESS != rc && connectCounter < CONNECT_MAX_ATTEMPT_COUNT);
 
 	if(SUCCESS == rc) {
-		printf("\n## Connect Success. Time sec: %d, usec: %d\n", connectTime.tv_sec, connectTime.tv_usec);
+		printf("\n## Connect Success.\n");
 	} else {
 		IOT_ERROR("## Connect Failed. error code %d\n", rc);
 		return -1;
