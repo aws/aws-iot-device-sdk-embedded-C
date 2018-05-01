@@ -20,11 +20,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#include <cinttypes>
-#else
-
-#include <inttypes.h>
-
 #endif
 
 #include "aws_iot_shadow_json.h"
@@ -349,17 +344,17 @@ static IoT_Error_t convertDataToString(char *pStringBuffer, size_t maxSizoString
 	}
 
 	if(type == SHADOW_JSON_INT32) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIi32",", *(int32_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%i,", *(int32_t *) (pData));
 	} else if(type == SHADOW_JSON_INT16) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIi16",", *(int16_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%hi,", *(int16_t *) (pData));
 	} else if(type == SHADOW_JSON_INT8) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIi8",", *(int8_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%hhi,", *(int8_t *) (pData));
 	} else if(type == SHADOW_JSON_UINT32) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIu32",", *(uint32_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%u,", *(uint32_t *) (pData));
 	} else if(type == SHADOW_JSON_UINT16) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIu16",", *(uint16_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%hu,", *(uint16_t *) (pData));
 	} else if(type == SHADOW_JSON_UINT8) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%" PRIu8",", *(uint8_t *) (pData));
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%hhu,", *(uint8_t *) (pData));
 	} else if(type == SHADOW_JSON_DOUBLE) {
 		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%f,", *(double *) (pData));
 	} else if(type == SHADOW_JSON_FLOAT) {

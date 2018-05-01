@@ -24,7 +24,6 @@ extern "C" {
 #include <stddef.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <inttypes.h>
 
 #include "jsmn.h"
 #include "aws_iot_jobs_json.h"
@@ -75,7 +74,7 @@ static void _printStringValue(struct _SerializeState *state, const char *value) 
 }
 
 static void _printLongValue(struct _SerializeState *state, int64_t value) {
-	_printToBuffer(state, "%" PRId64, value);
+	_printToBuffer(state, "%lld", value);
 }
 
 static void _printBooleanValue(struct _SerializeState *state, bool value) {
