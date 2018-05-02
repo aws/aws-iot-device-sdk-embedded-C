@@ -117,12 +117,15 @@ IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName
  * Called to send a subscribe message to the broker requesting a subscription
  * to an MQTT topic.
  * @note Call is blocking.  The call returns after the receipt of the SUBACK control packet.
+ * @warning pTopicName and pApplicationHandlerData need to be static in memory.
  *
  * @param pClient Reference to the IoT Client
- * @param pTopicName Topic Name to publish to
+ * @param pTopicName Topic Name to publish to. pTopicName needs to be static in memory since 
+ *     no malloc are performed by the SDK
  * @param topicNameLen Length of the topic name
  * @param pApplicationHandler_t Reference to the handler function for this subscription
- * @param pApplicationHandlerData Data to be passed as argument to the application handler callback
+ * @param pApplicationHandlerData Point to data passed to the callback. 
+ *    pApplicationHandlerData also needs to be static in memory  since no malloc are performed by the SDK
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
