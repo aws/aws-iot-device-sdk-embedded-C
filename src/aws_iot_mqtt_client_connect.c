@@ -463,7 +463,7 @@ IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Par
 	if(NULL == pClient) {
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);
 	}
-
+    aws_iot_mqtt_internal_flushBuffers( pClient );
 	clientState = aws_iot_mqtt_get_client_state(pClient);
 
 	if(false == _aws_iot_mqtt_is_client_state_valid_for_connect(clientState)) {
