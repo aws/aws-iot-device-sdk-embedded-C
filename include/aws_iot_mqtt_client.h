@@ -269,7 +269,7 @@ typedef struct _ClientData {
 	 * afterwards */
 	size_t writeBufSize;
 	size_t readBufSize;
-
+    size_t readBufIndex;
 	unsigned char writeBuf[AWS_IOT_MQTT_TX_BUF_LEN];
 	unsigned char readBuf[AWS_IOT_MQTT_RX_BUF_LEN];
 

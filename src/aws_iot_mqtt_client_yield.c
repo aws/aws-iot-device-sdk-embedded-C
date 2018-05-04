@@ -177,6 +177,7 @@ static IoT_Error_t _aws_iot_mqtt_keep_alive(AWS_IoT_Client *pClient) {
  *         If this call results in an error it is likely the MQTT connection has dropped.
  *         iot_is_mqtt_connected can be called to confirm.
  */
+
 static IoT_Error_t _aws_iot_mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms) {
 	IoT_Error_t yieldRc = SUCCESS;
 
@@ -207,8 +208,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_
 			yieldRc = _aws_iot_mqtt_keep_alive(pClient);
 		} else {
 			// SSL read and write errors are terminal, connection must be closed and retried
-			if(NETWORK_SSL_READ_ERROR == yieldRc || NETWORK_SSL_READ_TIMEOUT_ERROR == yieldRc
-				|| NETWORK_SSL_WRITE_ERROR == yieldRc || NETWORK_SSL_WRITE_TIMEOUT_ERROR == yieldRc) {
+			if(NETWORK_SSL_READ_ERROR == yieldRc || NETWORK_SSL_WRITE_ERROR == yieldRc || NETWORK_SSL_WRITE_TIMEOUT_ERROR == yieldRc) {
 				yieldRc = _aws_iot_mqtt_handle_disconnect(pClient);
 			}
 		}
