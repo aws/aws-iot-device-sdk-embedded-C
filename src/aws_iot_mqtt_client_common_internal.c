@@ -646,6 +646,7 @@ IoT_Error_t aws_iot_mqtt_internal_cycle_read(AWS_IoT_Client *pClient, Timer *pTi
 
 IoT_Error_t aws_iot_mqtt_internal_flushBuffers( AWS_IoT_Client *pClient ) {
     pClient->clientData.readBufIndex = 0;
+    return SUCCESS;
 }
 
 /* only used in single-threaded mode where one command at a time is in process */
