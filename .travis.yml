@@ -34,8 +34,6 @@ script:
   - make
   - cd ../shadow_sample_console_echo
   - make
-  - cd ../subscribe_publish_cpp_sample
-  - make
   - cd ../subscribe_publish_library_sample
   - make
   - cd ../subscribe_publish_sample
