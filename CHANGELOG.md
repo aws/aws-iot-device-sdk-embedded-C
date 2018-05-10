@@ -1,4 +1,19 @@
 # Change Log
+
+## [3.0.1](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.0.1) (May 10, 2018)
+
+Bugfixes:
+
+  - [#167], [#168] Fixed issues reported by Coverity Scan.
+  - [#177] Fixes a memory corruption bug and handling of timeouts.
+
+Other:
+
+  - Add .travis.yml for Travis CI.
+  - Removed C++ sample.
+  - Removed includes of `inttypes.h`, which doesn't exist on some systems.
+  - [#175] Added comments on static allocation of MQTT topics.
+
 ## [3.0.0](https://github.com/aws/aws-iot-device-sdk-embedded-C/releases/tag/v3.0.0) (Apr 17, 2018)
 
 Bugfixes:
