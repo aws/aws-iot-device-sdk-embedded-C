@@ -187,7 +187,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_unsubscribe(AWS_IoT_Client *pClient, c
 	for(i = 0; i < AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS; ++i) {
 		if(pClient->clientData.messageHandlers[i].topicName != NULL &&
 		   (strcmp(pClient->clientData.messageHandlers[i].topicName, pTopicFilter) == 0)) {
-			pClient->clientData.messageHandlers[i].topicName = NULL;
+			free(pClient->clientData.messageHandlers[i].topicName);
 			/* We don't want to break here, in case the same topic is registered
              * with 2 callbacks. Unlikely scenario */
 		}

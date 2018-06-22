@@ -260,8 +260,10 @@ static IoT_Error_t _aws_iot_mqtt_internal_subscribe(AWS_IoT_Client *pClient, con
 	//	return RX_MESSAGE_INVALID_ERROR;
 	//}
 
+	char *ptr =  calloc(topicNameLen+1, sizeof (char));
+	strncpy(ptr, pTopicName, topicNameLen);
 	pClient->clientData.messageHandlers[indexOfFreeMessageHandler].topicName =
-			pTopicName;
+			ptr;
 	pClient->clientData.messageHandlers[indexOfFreeMessageHandler].topicNameLen =
 			topicNameLen;
 	pClient->clientData.messageHandlers[indexOfFreeMessageHandler].pApplicationHandler =
