@@ -62,6 +62,7 @@ extern "C" {
 #endif
 
 #define MAX_PACKET_ID 65535
+#define TOPIC_NAME_MAX_LEN 256
 
 typedef struct _Client AWS_IoT_Client;
 
@@ -228,7 +229,7 @@ typedef void (*pApplicationHandler_t)(AWS_IoT_Client *pClient, char *pTopicName,
  *
  */
 typedef struct _MessageHandlers {
-	const char *topicName;
+	char topicName[TOPIC_NAME_MAX_LEN];
 	uint16_t topicNameLen;
 	QoS qos;
 	pApplicationHandler_t pApplicationHandler;

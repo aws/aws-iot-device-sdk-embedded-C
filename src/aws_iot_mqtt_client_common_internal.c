@@ -510,7 +510,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_deliver_message(AWS_IoT_Client *pClien
 
 	/* Find the right message handler - indexed by topic */
 	for(itr = 0; itr < AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS; ++itr) {
-		if(NULL != pClient->clientData.messageHandlers[itr].topicName) {
+		if(pClient->clientData.messageHandlers[itr].topicNameLen != 0) {
 			if(((topicNameLen == pClient->clientData.messageHandlers[itr].topicNameLen)
 				&&
 				(strncmp(pTopicName, (char *) pClient->clientData.messageHandlers[itr].topicName, topicNameLen) == 0))

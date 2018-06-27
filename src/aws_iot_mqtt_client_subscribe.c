@@ -176,7 +176,7 @@ static uint32_t _aws_iot_mqtt_get_free_message_handler_index(AWS_IoT_Client *pCl
 	FUNC_ENTRY;
 
 	for(itr = 0; itr < AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS; itr++) {
-		if(pClient->clientData.messageHandlers[itr].topicName == NULL) {
+		if(pClient->clientData.messageHandlers[itr].topicNameLen == 0) {
 			break;
 		}
 	}
@@ -260,8 +260,8 @@ static IoT_Error_t _aws_iot_mqtt_internal_subscribe(AWS_IoT_Client *pClient, con
 	//	return RX_MESSAGE_INVALID_ERROR;
 	//}
 
-	pClient->clientData.messageHandlers[indexOfFreeMessageHandler].topicName =
-			pTopicName;
+	memcpy(pClient->clientData.messageHandlers[indexOfFreeMessageHandler].topicName,
+			pTopicName, topicNameLen);
 	pClient->clientData.messageHandlers[indexOfFreeMessageHandler].topicNameLen =
 			topicNameLen;
 	pClient->clientData.messageHandlers[indexOfFreeMessageHandler].pApplicationHandler =
@@ -357,7 +357,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_resubscribe(AWS_IoT_Client *pClient) {
 	existingSubCount = _aws_iot_mqtt_get_free_message_handler_index(pClient);
 
 	for(itr = 0; itr < existingSubCount; itr++) {
-		if(pClient->clientData.messageHandlers[itr].topicName == NULL) {
+		if(pClient->clientData.messageHandlers[itr].topicNameLen == 0) {
 			continue;
 		}
 
@@ -366,7 +366,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_resubscribe(AWS_IoT_Client *pClient) {
 
 		rc = _aws_iot_mqtt_serialize_subscribe(pClient->clientData.writeBuf, pClient->clientData.writeBufSize, 0,
 											   aws_iot_mqtt_get_next_packet_id(pClient), 1,
-											   &(pClient->clientData.messageHandlers[itr].topicName),
+											   (const char **)&(pClient->clientData.messageHandlers[itr].topicName),
 											   &(pClient->clientData.messageHandlers[itr].topicNameLen),
 											   &(pClient->clientData.messageHandlers[itr].qos), &len);
 		if(SUCCESS != rc) {

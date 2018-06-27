@@ -216,7 +216,8 @@ IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *p
 	}
 
 	for(i = 0; i < AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS; ++i) {
-		pClient->clientData.messageHandlers[i].topicName = NULL;
+		memset(pClient->clientData.messageHandlers[i].topicName, 0x0, TOPIC_NAME_MAX_LEN);
+		pClient->clientData.messageHandlers[i].topicNameLen = 0;
 		pClient->clientData.messageHandlers[i].pApplicationHandler = NULL;
 		pClient->clientData.messageHandlers[i].pApplicationHandlerData = NULL;
 		pClient->clientData.messageHandlers[i].qos = QOS0;

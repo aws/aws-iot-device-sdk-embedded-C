@@ -146,10 +146,10 @@ static IoT_Error_t _aws_iot_mqtt_internal_unsubscribe(AWS_IoT_Client *pClient, c
 
 	/* Remove from message handler array */
 	for(i = 0; i < AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS; ++i) {
-		if(pClient->clientData.messageHandlers[i].topicName != NULL &&
+		if(pClient->clientData.messageHandlers[i].topicNameLen != 0 &&
 		   (strcmp(pClient->clientData.messageHandlers[i].topicName, pTopicFilter) == 0)) {
 			subscriptionExists = true;
-            break;
+			break;
 		}
 	}
 
@@ -185,9 +185,10 @@ static IoT_Error_t _aws_iot_mqtt_internal_unsubscribe(AWS_IoT_Client *pClient, c
 
 	/* Remove from message handler array */
 	for(i = 0; i < AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS; ++i) {
-		if(pClient->clientData.messageHandlers[i].topicName != NULL &&
+		if(pClient->clientData.messageHandlers[i].topicNameLen != 0 &&
 		   (strcmp(pClient->clientData.messageHandlers[i].topicName, pTopicFilter) == 0)) {
-			pClient->clientData.messageHandlers[i].topicName = NULL;
+			pClient->clientData.messageHandlers[i].topicNameLen = 0;
+			memset(pClient->clientData.messageHandlers[i].topicName, 0x0, TOPIC_NAME_MAX_LEN);
 			/* We don't want to break here, in case the same topic is registered
              * with 2 callbacks. Unlikely scenario */
 		}
