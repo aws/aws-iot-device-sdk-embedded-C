@@ -43,6 +43,7 @@ extern "C" {
 
 #include "aws_iot_log.h"
 #include "aws_iot_mqtt_client_interface.h"
+#include "aws_iot_mqtt_client_common_internal.h"
 #include "aws_iot_version.h"
 
 #if !DISABLE_METRICS
