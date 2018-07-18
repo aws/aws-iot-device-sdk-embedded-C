@@ -501,7 +501,7 @@ IoT_Error_t aws_iot_mqtt_connect(AWS_IoT_Client *pClient, IoT_Client_Connect_Par
  *
  * @return An IoT Error Type defining successful/failed send of the disconnect control packet.
  */
-IoT_Error_t _aws_iot_mqtt_internal_disconnect(AWS_IoT_Client *pClient) {
+static IoT_Error_t _aws_iot_mqtt_internal_disconnect(AWS_IoT_Client *pClient) {
 	/* We might wait for incomplete incoming publishes to complete */
 	Timer timer;
 	size_t serialized_len = 0;
