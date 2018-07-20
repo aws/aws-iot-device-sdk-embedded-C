@@ -142,11 +142,9 @@ void parseInputArgsForConnectParams(int argc, char **argv) {
 
 int main(int argc, char **argv) {
 	IoT_Error_t rc = FAILURE;
-	int32_t i = 0;
 
 	char JsonDocumentBuffer[MAX_LENGTH_OF_UPDATE_JSON_BUFFER];
 	size_t sizeOfJsonDocumentBuffer = sizeof(JsonDocumentBuffer) / sizeof(JsonDocumentBuffer[0]);
-	char *pJsonStringToUpdate;
 	float temperature = 0.0;
 
 	bool windowOpen = false;

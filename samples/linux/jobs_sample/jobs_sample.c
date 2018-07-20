@@ -15,16 +15,16 @@
 
 /**
  *
- * This example takes the parameters from the aws_iot_config.h file and establishes 
- * a connection to the AWS IoT MQTT Platform. It performs several operations to 
+ * This example takes the parameters from the aws_iot_config.h file and establishes
+ * a connection to the AWS IoT MQTT Platform. It performs several operations to
  * demonstrate the basic capabilities of the AWS IoT Jobs platform.
  *
- * If all the certs are correct, you should see the list of pending Job Executions 
- * printed out by the iot_get_pending_callback_handler. If there are any existing pending 
+ * If all the certs are correct, you should see the list of pending Job Executions
+ * printed out by the iot_get_pending_callback_handler. If there are any existing pending
  * job executions each will be processed one at a time in the iot_next_job_callback_handler.
  * After all of the pending jobs have been processed the program will wait for
  * notifications for new pending jobs and process them one at a time as they come in.
- * 
+ *
  * In the main body you can see how each callback is registered for each corresponding
  * Jobs topic.
  *
@@ -91,7 +91,7 @@ void iot_get_pending_callback_handler(AWS_IoT_Client *pClient, char *topicName, 
 
 	if (jobs) {
 		IOT_INFO("inProgressJobs: %.*s", jobs->end - jobs->start, (char *)params->payload + jobs->start);
-	}	
+	}
 
 	jobs = findToken("queuedJobs", params->payload, jsonTokenStruct);
 
@@ -142,7 +142,7 @@ void iot_next_job_callback_handler(AWS_IoT_Client *pClient, char *topicName, uin
 			char jobId[MAX_SIZE_OF_JOB_ID + 1];
 			AwsIotJobExecutionUpdateRequest updateRequest;
 
-			rc = parseStringValue(jobId, MAX_SIZE_OF_JOB_ID + 1, params->payload, tok);			
+			rc = parseStringValue(jobId, MAX_SIZE_OF_JOB_ID + 1, params->payload, tok);
 			if(SUCCESS != rc) {
 				IOT_ERROR("parseStringValue returned error : %d ", rc);
 				return;
@@ -172,11 +172,11 @@ void iot_next_job_callback_handler(AWS_IoT_Client *pClient, char *topicName, uin
 			updateRequest.includeJobDocument = false;
 			updateRequest.clientToken = NULL;
 
-			rc = aws_iot_jobs_send_update(pClient, QOS0, AWS_IOT_MY_THING_NAME, jobId, &updateRequest, 
+			rc = aws_iot_jobs_send_update(pClient, QOS0, AWS_IOT_MY_THING_NAME, jobId, &updateRequest,
 					topicToPublishUpdate, sizeof(topicToPublishUpdate), messageBuffer, sizeof(messageBuffer));
 		}
 	} else {
-		IOT_INFO("execution property not found, nothing to do");		
+		IOT_INFO("execution property not found, nothing to do");
 	}
 }
 
@@ -229,8 +229,6 @@ int main(int argc, char **argv) {
 	char clientKey[PATH_MAX + 1];
 	char CurrentWD[PATH_MAX + 1];
 	char cPayload[100];
-
-	int32_t i = 0;
 
 	IoT_Error_t rc = FAILURE;
 
