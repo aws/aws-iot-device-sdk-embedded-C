@@ -76,7 +76,6 @@ void UpdateStatusCallback(const char *pThingName, ShadowActions_t action, Shadow
 
 int main(int argc, char** argv) {
 	IoT_Error_t rc = SUCCESS;
-	int32_t i = 0;
 
 	char rootCA[PATH_MAX + 1];
 	char clientCRT[PATH_MAX + 1];
