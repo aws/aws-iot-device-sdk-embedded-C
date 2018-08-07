@@ -57,7 +57,7 @@ char certDirectory[PATH_MAX + 1] = "../../../certs";
 #define HOST_ADDRESS_SIZE 255
 char HostAddress[HOST_ADDRESS_SIZE] = AWS_IOT_MQTT_HOST;
 uint32_t port = AWS_IOT_MQTT_PORT;
-bool messageArrivedOnDelta = false;
+bool messageArrivedOnDelta;
 
 /*
  * @note The delta message is always sent on the "state" key in the json
