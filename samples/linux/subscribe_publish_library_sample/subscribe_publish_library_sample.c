@@ -57,7 +57,7 @@ uint32_t port = AWS_IOT_MQTT_PORT;
 /**
  * @brief This parameter will avoid infinite loop of publish and exit the program after certain number of publishes
  */
-uint32_t publishCount = 0;
+uint32_t publishCount;
 
 void iot_subscribe_callback_handler(AWS_IoT_Client *pClient, char *topicName, uint16_t topicNameLen,
 									IoT_Publish_Message_Params *params, void *pData) {
