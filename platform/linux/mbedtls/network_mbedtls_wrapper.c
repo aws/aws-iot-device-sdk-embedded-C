@@ -27,6 +27,9 @@ extern "C" {
 #include "network_interface.h"
 #include "network_platform.h"
 
+#if !defined(MBEDTLS_FS_IO)
+#include "certData.h"
+#endif
 
 /* This is the value used for ssl read timeout */
 #define IOT_SSL_READ_TIMEOUT 10
@@ -136,7 +139,11 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 	}
 
 	IOT_DEBUG("  . Loading the CA root certificate ...");
+#if defined(MBEDTLS_FS_IO)
 	ret = mbedtls_x509_crt_parse_file(&(tlsDataParams->cacert), pNetwork->tlsConnectParams.pRootCALocation);
+#else
+	ret = mbedtls_x509_crt_parse(&(tlsDataParams->cacert), root_ca_pem, rootCaLen);
+#endif
 	if(ret < 0) {
 		IOT_ERROR(" failed\n  !  mbedtls_x509_crt_parse returned -0x%x while parsing root cert\n\n", -ret);
 		return NETWORK_X509_ROOT_CRT_PARSE_ERROR;
@@ -144,13 +151,21 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 	IOT_DEBUG(" ok (%d skipped)\n", ret);
 
 	IOT_DEBUG("  . Loading the client cert. and key...");
+#if defined(MBEDTLS_FS_IO)
 	ret = mbedtls_x509_crt_parse_file(&(tlsDataParams->clicert), pNetwork->tlsConnectParams.pDeviceCertLocation);
+#else
+	ret = mbedtls_x509_crt_parse(&(tlsDataParams->clicert), client_cert_pem, clientCertLen);
+#endif
 	if(ret != 0) {
 		IOT_ERROR(" failed\n  !  mbedtls_x509_crt_parse returned -0x%x while parsing device cert\n\n", -ret);
 		return NETWORK_X509_DEVICE_CRT_PARSE_ERROR;
 	}
 
+#if defined(MBEDTLS_FS_IO)
 	ret = mbedtls_pk_parse_keyfile(&(tlsDataParams->pkey), pNetwork->tlsConnectParams.pDevicePrivateKeyLocation, "");
+#else
+	ret = mbedtls_pk_parse_key(&(tlsDataParams->pkey), client_private_key_pem, clientPrivateKeyLen, NULL, 0);
+#endif
 	if(ret != 0) {
 		IOT_ERROR(" failed\n  !  mbedtls_pk_parse_key returned -0x%x while parsing private key\n\n", -ret);
 		IOT_DEBUG(" path : %s ", pNetwork->tlsConnectParams.pDevicePrivateKeyLocation);
