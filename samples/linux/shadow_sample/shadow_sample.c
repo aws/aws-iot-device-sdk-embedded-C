@@ -77,7 +77,7 @@ static void simulateRoomTemperature(float *pRoomTemperature) {
 	*pRoomTemperature += deltaChange;
 }
 
-void ShadowUpdateStatusCallback(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
+static void ShadowUpdateStatusCallback(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
 								const char *pReceivedJsonDocument, void *pContextData) {
 	IOT_UNUSED(pThingName);
 	IOT_UNUSED(action);
@@ -93,7 +93,7 @@ void ShadowUpdateStatusCallback(const char *pThingName, ShadowActions_t action, 
 	}
 }
 
-void windowActuate_Callback(const char *pJsonString, uint32_t JsonStringDataLen, jsonStruct_t *pContext) {
+static void windowActuate_Callback(const char *pJsonString, uint32_t JsonStringDataLen, jsonStruct_t *pContext) {
 	IOT_UNUSED(pJsonString);
 	IOT_UNUSED(JsonStringDataLen);
 
@@ -102,7 +102,7 @@ void windowActuate_Callback(const char *pJsonString, uint32_t JsonStringDataLen,
 	}
 }
 
-void parseInputArgsForConnectParams(int argc, char **argv) {
+static void parseInputArgsForConnectParams(int argc, char **argv) {
 	int opt;
 
 	while(-1 != (opt = getopt(argc, argv, "h:p:c:n:"))) {
