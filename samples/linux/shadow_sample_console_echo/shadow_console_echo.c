@@ -53,25 +53,25 @@
  * @note Ensure the buffer sizes in aws_iot_config.h are big enough to receive the delta message. The delta message will also contain the metadata with the timestamps
  */
 
-char certDirectory[PATH_MAX + 1] = "../../../certs";
+static char certDirectory[PATH_MAX + 1] = "../../../certs";
 #define HOST_ADDRESS_SIZE 255
-char HostAddress[HOST_ADDRESS_SIZE] = AWS_IOT_MQTT_HOST;
-uint32_t port = AWS_IOT_MQTT_PORT;
-bool messageArrivedOnDelta = false;
+static char HostAddress[HOST_ADDRESS_SIZE] = AWS_IOT_MQTT_HOST;
+static uint32_t port = AWS_IOT_MQTT_PORT;
+static bool messageArrivedOnDelta = false;
 
 /*
  * @note The delta message is always sent on the "state" key in the json
  * @note Any time messages are bigger than AWS_IOT_MQTT_RX_BUF_LEN the underlying MQTT library will ignore it. The maximum size of the message that can be received is limited to the AWS_IOT_MQTT_RX_BUF_LEN
  */
-char stringToEchoDelta[SHADOW_MAX_SIZE_OF_RX_BUFFER];
+static char stringToEchoDelta[SHADOW_MAX_SIZE_OF_RX_BUFFER];
 
 // Helper functions
-void parseInputArgsForConnectParams(int argc, char** argv);
+static void parseInputArgsForConnectParams(int argc, char** argv);
 
 // Shadow Callback for receiving the delta
-void DeltaCallback(const char *pJsonValueBuffer, uint32_t valueLength, jsonStruct_t *pJsonStruct_t);
+static void DeltaCallback(const char *pJsonValueBuffer, uint32_t valueLength, jsonStruct_t *pJsonStruct_t);
 
-void UpdateStatusCallback(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
+static void UpdateStatusCallback(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
 		const char *pReceivedJsonDocument, void *pContextData);
 
 int main(int argc, char** argv) {
@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
  * @param pReceivedDeltaData This is the data that will be embedded in the reported section of the JSON document
  * @param lengthDelta Length of the data
  */
-bool buildJSONForReported(char *pJsonDocument, size_t maxSizeOfJsonDocument, const char *pReceivedDeltaData, uint32_t lengthDelta) {
+static bool buildJSONForReported(char *pJsonDocument, size_t maxSizeOfJsonDocument, const char *pReceivedDeltaData, uint32_t lengthDelta) {
 	int32_t ret;
 
 	if (NULL == pJsonDocument) {
@@ -215,7 +215,7 @@ bool buildJSONForReported(char *pJsonDocument, size_t maxSizeOfJsonDocument, con
 	return true;
 }
 
-void parseInputArgsForConnectParams(int argc, char** argv) {
+static void parseInputArgsForConnectParams(int argc, char** argv) {
 	int opt;
 
 	while (-1 != (opt = getopt(argc, argv, "h:p:c:"))) {
@@ -250,7 +250,7 @@ void parseInputArgsForConnectParams(int argc, char** argv) {
 }
 
 
-void DeltaCallback(const char *pJsonValueBuffer, uint32_t valueLength, jsonStruct_t *pJsonStruct_t) {
+static void DeltaCallback(const char *pJsonValueBuffer, uint32_t valueLength, jsonStruct_t *pJsonStruct_t) {
 	IOT_UNUSED(pJsonStruct_t);
 
 	IOT_DEBUG("Received Delta message %.*s", valueLength, pJsonValueBuffer);
@@ -260,7 +260,7 @@ void DeltaCallback(const char *pJsonValueBuffer, uint32_t valueLength, jsonStruc
 	}
 }
 
-void UpdateStatusCallback(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
+static void UpdateStatusCallback(const char *pThingName, ShadowActions_t action, Shadow_Ack_Status_t status,
 		const char *pReceivedJsonDocument, void *pContextData) {
 	IOT_UNUSED(pThingName);
 	IOT_UNUSED(action);
