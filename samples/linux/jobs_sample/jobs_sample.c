@@ -174,6 +174,10 @@ void iot_next_job_callback_handler(AWS_IoT_Client *pClient, char *topicName, uin
 
 			rc = aws_iot_jobs_send_update(pClient, QOS0, AWS_IOT_MY_THING_NAME, jobId, &updateRequest,
 					topicToPublishUpdate, sizeof(topicToPublishUpdate), messageBuffer, sizeof(messageBuffer));
+			if(SUCCESS != rc) {
+				IOT_ERROR("aws_iot_jobs_send_update returned error : %d ", rc);
+				return;
+			}
 		}
 	} else {
 		IOT_INFO("execution property not found, nothing to do");
