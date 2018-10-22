@@ -113,7 +113,7 @@ static void parseInputArgsForConnectParams(int argc, char **argv) {
 				break;
 			case 'p':
 				port = atoi(optarg);
-				IOT_DEBUG("arg %s", optarg);
+				IOT_DEBUG("port %s", optarg);
 				break;
 			case 'c':
 				strncpy(certDirectory, optarg, PATH_MAX + 1);
@@ -169,23 +169,24 @@ int main(int argc, char **argv) {
 
 	IOT_INFO("\nAWS IoT SDK Version %d.%d.%d-%s\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_TAG);
 
-	getcwd(CurrentWD, sizeof(CurrentWD));
-	snprintf(rootCA, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_ROOT_CA_FILENAME);
-	snprintf(clientCRT, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_CERTIFICATE_FILENAME);
-	snprintf(clientKey, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_PRIVATE_KEY_FILENAME);
-
 	IOT_DEBUG("rootCA %s", rootCA);
 	IOT_DEBUG("clientCRT %s", clientCRT);
 	IOT_DEBUG("clientKey %s", clientKey);
 
 	parseInputArgsForConnectParams(argc, argv);
 
+	// generate the paths of the credentials
+	getcwd(CurrentWD, sizeof(CurrentWD));
+	snprintf(rootCA, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_ROOT_CA_FILENAME);
+	snprintf(clientCRT, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_CERTIFICATE_FILENAME);
+	snprintf(clientKey, PATH_MAX + 1, "%s/%s/%s", CurrentWD, certDirectory, AWS_IOT_PRIVATE_KEY_FILENAME);
+
 	// initialize the mqtt client
 	AWS_IoT_Client mqttClient;
 
 	ShadowInitParameters_t sp = ShadowInitParametersDefault;
-	sp.pHost = AWS_IOT_MQTT_HOST;
-	sp.port = AWS_IOT_MQTT_PORT;
+	sp.pHost = HostAddress;
+	sp.port = port;
 	sp.pClientCRT = clientCRT;
 	sp.pClientKey = clientKey;
 	sp.pRootCA = rootCA;
