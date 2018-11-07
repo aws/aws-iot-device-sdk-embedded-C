@@ -520,7 +520,7 @@ bool extractClientToken(const char *pJsonDocument, size_t jsonSize, char *pExtra
 	for(i = 1; i < tokenCount; i++) {
 		if(jsoneq(pJsonDocument, &jsonTokenStruct[i], SHADOW_CLIENT_TOKEN_STRING) == 0) {
 			ClientJsonToken = jsonTokenStruct[i + 1];
-			length = (uint8_t) (ClientJsonToken.end - ClientJsonToken.start);
+			length = (size_t) (ClientJsonToken.end - ClientJsonToken.start);
             if (clientTokenSize >= length + 1)
             {
                 strncpy( pExtractedClientToken, pJsonDocument + ClientJsonToken.start, length);
