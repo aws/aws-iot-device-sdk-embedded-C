@@ -1,0 +1,38 @@
+@startuml
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+participant "System" as system
+participant "MQTT Receive Callback" as mqtt_receive
+participant "Other MQTT functions" as mqtt_other
+
+-> system: Incoming bytes\nfrom network
+activate system
+system -> system: Allocate pReceivedData
+group pReceivedData owned by system
+system -> system: Read network bytes\ninto pReceivedData
+end
+
+group pReceivedData owned by the MQTT library
+system -> mqtt_receive: Call MQTT receive\ncallback
+deactivate system
+
+activate mqtt_receive
+mqtt_receive -> mqtt_receive: Process all bytes\nin pReceivedData
+mqtt_receive -> mqtt_other: Pass processed data
+activate mqtt_other
+mqtt_receive -> system: Receive callback returns
+deactivate mqtt_receive
+activate system
+
+mqtt_other -> mqtt_other: Handle processed data
+mqtt_other -> system: Call freeReceivedData
+deactivate mqtt_other
+end
+
+group pReceivedData owned by system
+system -> system: Free pReceivedData
+deactivate system
+end
+@enduml

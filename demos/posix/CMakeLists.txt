@@ -1,0 +1,31 @@
+# Common demo files.
+set( DEMO_COMMON_INCLUDE_FILES ".;${CMAKE_SOURCE_DIR}/demos" )
+set( DEMO_COMMON_SOURCE_FILES aws_iot_demo_common_posix.c )
+
+# MQTT demo source files.
+add_executable( aws_iot_demo_mqtt
+                ${CMAKE_SOURCE_DIR}/demos/aws_iot_demo_mqtt.c
+                aws_iot_demo_mqtt_posix.c
+                ${DEMO_COMMON_SOURCE_FILES} )
+
+# MQTT demo include files.
+target_include_directories( aws_iot_demo_mqtt
+                            PRIVATE
+                            ${DEMO_COMMON_INCLUDE_FILES} )
+
+# MQTT demo library dependencies.
+target_link_libraries( aws_iot_demo_mqtt awsiotplatform awsiotmqtt )
+
+# Shadow demo source files.
+add_executable( aws_iot_demo_shadow
+                ${CMAKE_SOURCE_DIR}/demos/aws_iot_demo_shadow.c
+                aws_iot_demo_shadow_posix.c
+                ${DEMO_COMMON_SOURCE_FILES} )
+
+# Shadow demo include files.
+target_include_directories( aws_iot_demo_mqtt
+                            PRIVATE
+                            ${DEMO_COMMON_INCLUDE_FILES} )
+
+# Shadow demo library dependencies.
+target_link_libraries( aws_iot_demo_shadow awsiotplatform awsiotmqtt awsiotshadow )

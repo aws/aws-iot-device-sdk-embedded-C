@@ -47,11 +47,15 @@ h2 + p {
 h3 {
 	font-size: 100%;
 	margin-bottom: 0px;
+	margin-left: 2em;
+	margin-right: 2em;
 }
 
 /* Style of paragraphs immediately after subsubsection headings. */
 h3 + p {
 	margin-top: 0px;
+	margin-left: 2em;
+	margin-right: 2em;
 }
 
 /* Style of the prefix "AWS IoT Device SDK C" that appears in the header. */

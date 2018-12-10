@@ -1,0 +1,63 @@
+/**
+@mainpage
+@anchor queue
+@brief Queue and linked list data structures and functions. <br><br>
+
+This library provides queue and linked list data structures which other libraries use for organizing data. Features of this library include:
+- Double-ended notification queue that may also function as a doubly-linked list.
+- Simple doubly-linked list.
+- Queues and lists may hold any data types.
+
+@section queue_vs_list Queue vs List
+@brief Comparison between #AwsIotQueue_t and #AwsIotList_t.
+
+This library provides two similar data structures, #AwsIotQueue_t (queue) and #AwsIotList_t (list).
+
+#AwsIotQueue_t is a double-ended "notify queue" that can create threads to process queued data. It may also be searched linearly, allowing it to function as a doubly-linked list. All functions that operate on an #AwsIotQueue_t provide thread safety.
+
+#AwsIotList_t implements a simpler doubly-linked list for storing data. It requires less memory than an #AwsIotQueue_t. However, unlike #AwsIotQueue_t, most of its functions do not provide thread safety. Only @ref list_function_removeallmatches provides thread safety. For all other list functions, #AwsIotList_t.mutex must be locked before the function call if thread safety is required.
+
+A comparison of these two data structures is below.
+@anchor queue_vs_list_table | Queue                                | List
+--------------------------- | ------------------------------------ | ----
+Thread safety               | All queue functions are thread safe. | Only @ref list_function_removeallmatches is thread safe.<br>#AwsIotList_t.mutex must be locked before calling any other function if thread safety is required.
+Data insertion              | Data may only be [inserted at the head.](@ref queue_function_inserthead) | Data may be inserted [at the head](@ref list_function_inserthead) or [sorted into place.](@ref list_function_insertsorted)
+Data searching              | No in-place searches. Data can only be [search-and-removed.](@ref queue_function_removefirstmatch) | [Search function](@ref list_function_findfirstmatch) does not remove data.
+Data removal                | [Remove tail (FIFO)](@ref queue_function_removetail), [search and remove first matching data](@ref queue_function_removefirstmatch), or [search and remove all matching data](@ref queue_function_removeallmatches). | Remove data <i>after</i> [searching](@ref list_function_findfirstmatch) or [search and remove all matching data.](@ref list_function_removeallmatches)
+Other                       | [Can provide notifications](@ref AwsIotQueueNotifyParams_t.notifyRoutine) when data is inserted. | Uses less memory than queue.
+
+@dependencies{queue,queue library}
+@dot "Queue direct dependencies"
+digraph queue_dependencies
+{
+    node[shape=box, fontname=Helvetica, fontsize=10, style=filled];
+    queue[label="Queue", fillcolor="#aed8a9ff"];
+    platform_threads[label="Thread management", fillcolor="#e89025ff", URL="@ref platform_threads"];
+    standard_library[label="Standard library\nstdbool, stddef, stdint, string", fillcolor="#d15555ff"];
+    queue -> platform_threads;
+    queue -> standard_library;
+}
+@enddot
+
+Currently, the queue library has the following dependencies:
+- The [platform thread management component](@ref platform_threads) for creating notification threads when data is [inserted into a queue](@ref queue_function_inserthead). The queue library also depends on the mutexes provided by this component.
+*/
+
+/**
+@configpage{queue,queue library}
+
+@section AWS_IOT_QUEUE_ENABLE_ASSERTS
+@brief Set this to `1` to perform sanity checks when using queues and lists.
+
+Asserts are useful for debugging, but should be disabled in production code. If this is set to `1`, @ref AwsIotQueue_Assert can be defined to set the assert function; otherwise, the standard library's [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function will be used.
+
+@configpossible `0` (asserts disabled) or `1` (asserts enabled)<br>
+@configrecommended `1` when debugging; `0` in production code.<br>
+@configdefault `0`
+
+@section AwsIotQueue_Assert
+@brief Assertion function used when @ref AWS_IOT_QUEUE_ENABLE_ASSERTS is `1`.
+
+@configpossible Any function with the same signature as the standard library's [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function.<br>
+@configdefault Standard library [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function if @ref AWS_IOT_QUEUE_ENABLE_ASSERTS is `1`; otherwise, nothing.
+*/
