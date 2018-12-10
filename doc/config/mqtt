@@ -1,0 +1,34 @@
+# Include common configuration options.
+@INCLUDE_PATH = doc/config
+@INCLUDE = common
+
+# Basic project information.
+PROJECT_NAME = "MQTT"
+PROJECT_BRIEF = "MQTT 3.1.1 client library"
+
+# Library documentation output directory.
+HTML_OUTPUT = mqtt
+
+# Generate Doxygen tag file for this library.
+GENERATE_TAGFILE = doc/tag/mqtt.tag
+
+# Directories containing library source code.
+INPUT = doc \
+        doc/lib \
+        lib/include \
+        lib/include/private \
+        lib/source/mqtt \
+        demos/ \
+        tests/ \
+        tests/mqtt/unit \
+        tests/mqtt/access \
+        tests/mqtt/system
+
+# Library file names.
+FILE_PATTERNS = *mqtt*.c *mqtt*.h *mqtt*.txt aws_iot_tests_network.c
+
+# External tag files required by this library.
+TAGFILES = doc/tag/main.tag=../main \
+           doc/tag/queue.tag=../queue \
+           doc/tag/logging.tag=../logging \
+           doc/tag/platform.tag=../platform \
