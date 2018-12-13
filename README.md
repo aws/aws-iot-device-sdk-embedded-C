@@ -6,10 +6,19 @@
        src="https://scan.coverity.com/projects/15543/badge.svg"/>
 </a>
 
-## ***** NOTICE *****
-This repository is moving to a new branching system. The master branch will now contain bug fixes/features that have been minimally tested to ensure nothing major is broken. The release branch will contain new releases for the SDK that have been tested thoroughly on all supported platforms. Please ensure that you are tracking the release branch for all production work.
+**We have released version 4.0.0 beta 1 of this SDK on the [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch and encourage everyone to give it a try.**
 
-This change will allow us to push out bug fixes quickly and avoid having situations where issues stay open for a very long time.
+Version 4 is a new design, and therefore **NOT** backwards compatible with version 3.0.1. We will continue to fix bugs in v3.0.1 even after v4.0.0 is released, but we may not add new features to v3.0.1.
+
+Please be aware that v4 beta may have bugs and performance issues. Additionally, there are currently missing features compared to v3.0.1. See the [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta/README.md) on the v4_beta branch for more information.
+
+## Branches
+
+### Master branch
+The master branch will now contain bug fixes/features that have been minimally tested to ensure nothing major is broken. The current version on the master branch is v3.0.1. Eventually, we will move v4.0.0 to the master branch and move v3.0.1 to a legacy branch.
+
+### Release branch
+The release branch will contain new releases for the SDK that have been tested thoroughly on all supported platforms. Please ensure that you are tracking the release branch for all production work. The current version on the release branch is v3.0.1. Eventually, we will move v4.0.0 to the release branch and move v3.0.1 to a legacy branch.
 
 ## Overview
 
@@ -35,7 +44,7 @@ Primary aspects are:
  * Static memory only (no malloc’s)
  * Configurable resource usage(JSON tokens, MQTT subscription handlers, etc…)
  * Can be ported to a different RTOS, uses wrappers for OS specific functions
- 
+
 For more information on the Architecture of the SDK refer [here](http://aws-iot-device-sdk-embedded-c-docs.s3-website-us-east-1.amazonaws.com/index.html)
 
 ## Collection of Metrics
@@ -65,7 +74,7 @@ Steps:
     * `src` - The AWS IoT SDK source files
     * `tests` - Contains tests for verifying that the SDK is functioning as expected. More information can be found [here](https://github.com/aws/aws-iot-device-sdk-embedded-c/blob/master/tests/README.md)
  * View further information on how to use the SDK in the Readme file for samples that can be found [here](https://github.com/aws/aws-iot-device-sdk-embedded-c/blob/master/samples/README.md)
- 	
+
 Also, for a guided example on getting started with the Thing Shadow, visit the AWS IoT Console's [Interactive Guide](https://console.aws.amazon.com/iot).
 
 ## Porting to different platforms
@@ -78,7 +87,7 @@ The 2.x branch makes several changes to the SDK. This section provides informati
  * All the SDK headers are in the `include` folder. These need to be added to the makefile as include directories
  * The source files are in the `src` folder. These need to be added to the makefile as one of the source directories
  * Similar to 1.x, the platform folder contains the platform specific headers and source files. These need to be added to the makefile as well
- * The `platform/threading` folder only needs to be added if multi-threading is required, and the `_ENABLE_THREAD_SUPPORT_` macro is defined in config 
+ * The `platform/threading` folder only needs to be added if multi-threading is required, and the `_ENABLE_THREAD_SUPPORT_` macro is defined in config
  * The list below provides a mapping for migrating from the major APIs used in 1.x to the new APIs:
 
     | Description | 1.x | 2.x |
@@ -129,7 +138,7 @@ exampleJsonStruct.type = SHADOW_JSON_INT32;
 exampleJsonStruct.cb = exampleCallback;
 
 /* Register a delta callback using example JsonStruct. */
-aws_iot_shadow_register_delta(&mqttClient, &exampleJsonStruct); 
+aws_iot_shadow_register_delta(&mqttClient, &exampleJsonStruct);
 …
 ```
 
@@ -222,11 +231,11 @@ Version 3.0.0 changes the signature of four functions intended for internal usag
 #### Old signatures:
 
 ```c
-bool extractClientToken(const char *pJsonDocument, char *pExtractedClientToken); 
+bool extractClientToken(const char *pJsonDocument, char *pExtractedClientToken);
 
 static void emptyJsonWithClientToken(char *pBuffer);
 
-bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t *pTokenCount); 
+bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t *pTokenCount);
 
 bool isReceivedJsonValid(const char *pJsonDocument);
 ```
@@ -234,7 +243,7 @@ bool isReceivedJsonValid(const char *pJsonDocument);
 #### New signatures:
 
 ```c
-bool extractClientToken(const char *pJsonDocument, size_t jsonSize, char *pExtractedClientToken, size_t clientTokenSize); 
+bool extractClientToken(const char *pJsonDocument, size_t jsonSize, char *pExtractedClientToken, size_t clientTokenSize);
 
 static void emptyJsonWithClientToken(char *pBuffer, size_t bufferSize);
 
@@ -272,7 +281,7 @@ rc = aws_iot_mqtt_subscribe(&client, "sdkTest/sub", 11, QOS0, iot_subscribe_call
 
 Update Thing Shadow from a device
 
-``` 
+```
 rc = aws_iot_shadow_update(&mqttClient, AWS_IOT_MY_THING_NAME, pJsonDocumentBuffer, ShadowUpdateStatusCallback,
                             pCallbackContext, TIMEOUT_4SEC, persistenSubscription);
 ```
