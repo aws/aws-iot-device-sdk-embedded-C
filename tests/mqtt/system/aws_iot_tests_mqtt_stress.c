@@ -122,7 +122,11 @@
 /**
  * @brief The maximum length of an MQTT client identifier.
  */
-#define _CLIENT_IDENTIFIER_MAX_LENGTH    ( 23 )
+#ifdef AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER
+    #define _CLIENT_IDENTIFIER_MAX_LENGTH    ( sizeof( AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER ) )
+#else
+    #define _CLIENT_IDENTIFIER_MAX_LENGTH    ( 24 )
+#endif
 
 /*-----------------------------------------------------------*/
 
@@ -444,11 +448,18 @@ TEST_SETUP( MQTT_Stress )
         TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
     }
 
-    /* Generate a new, unique client identifier based on the time. */
-    ( void ) snprintf( _pClientIdentifier,
-                       _CLIENT_IDENTIFIER_MAX_LENGTH,
-                       "aws%llu",
-                       ( long long unsigned int ) AwsIotClock_GetTimeMs() );
+    /* Generate a new, unique client identifier based on the time if no client
+     * identifier is defined. Otherwise, copy the provided client identifier. */
+    #ifndef AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER
+        ( void ) snprintf( _pClientIdentifier,
+                           _CLIENT_IDENTIFIER_MAX_LENGTH,
+                           "aws%llu",
+                           ( long long unsigned int ) AwsIotClock_GetTimeMs() );
+    #else
+        ( void ) strncpy( _pClientIdentifier,
+                          AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER,
+                          _CLIENT_IDENTIFIER_MAX_LENGTH );
+    #endif
 
     /* Set the members of the connect info. */
     connectInfo.cleanSession = true;
