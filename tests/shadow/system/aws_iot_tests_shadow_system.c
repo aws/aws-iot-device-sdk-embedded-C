@@ -86,11 +86,6 @@ extern int snprintf( char *,
 #endif
 
 /**
- * @brief The maximum length of an MQTT client identifier.
- */
-#define _CLIENT_IDENTIFIER_MAX_LENGTH    ( 23 )
-
-/**
  * @brief The length of @ref AWS_IOT_TEST_SHADOW_THING_NAME.
  */
 #define _THING_NAME_LENGTH               ( sizeof( AWS_IOT_TEST_SHADOW_THING_NAME ) - 1 )

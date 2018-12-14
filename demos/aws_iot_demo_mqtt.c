@@ -92,9 +92,10 @@ extern int snprintf( char *,
 
 /**
  * @brief The longest client identifier that an MQTT server must accept (as defined
- * by the MQTT 3.1.1 spec) is 23 characters.
+ * by the MQTT 3.1.1 spec) is 23 characters. Add 1 to include the length of the NULL
+ * terminator.
  */
-#define _CLIENT_IDENTIFIER_MAX_LENGTH             ( 23 )
+#define _CLIENT_IDENTIFIER_MAX_LENGTH             ( 24 )
 
 /**
  * @brief The keep-alive interval used for this demo.

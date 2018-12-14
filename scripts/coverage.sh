@@ -14,7 +14,7 @@ cd build
 rm -rf *
 
 # Build tests and demos against AWS IoT with gcov.
-cmake .. -DAWS_IOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DAWS_IOT_TEST_PORT=443 -DAWS_IOT_TEST_ROOT_CA=\"\\\"../credentials/AmazonRootCA1.pem\\\"\" -DAWS_IOT_TEST_CLIENT_CERT=\"\\\"../credentials/clientCert.pem\\\"\" -DAWS_IOT_TEST_PRIVATE_KEY=\"\\\"../credentials/privateKey.pem\\\"\" -DAWS_IOT_TEST_SHADOW_THING_NAME=\"\\\"$AWS_IOT_THING_NAME\\\"\" -DAWS_IOT_LOG_LEVEL_DEMO=AWS_IOT_LOG_INFO -DAWS_IOT_TEST_MQTT_TOPIC_PREFIX=\"\\\"$AWS_IOT_THING_NAME\\\"\" -DAWS_IOT_DEMO_MQTT_TOPIC_PREFIX=\"\\\"$AWS_IOT_THING_NAME\\\"\" --coverage"
+cmake .. -DAWS_IOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DAWS_IOT_TEST_PORT=443 -DAWS_IOT_TEST_ROOT_CA=\"\\\"../credentials/AmazonRootCA1.pem\\\"\" -DAWS_IOT_TEST_CLIENT_CERT=\"\\\"../credentials/clientCert.pem\\\"\" -DAWS_IOT_TEST_PRIVATE_KEY=\"\\\"../credentials/privateKey.pem\\\"\" -DAWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER=\"\\\"$AWS_IOT_THING_NAME\\\"\" -DAWS_IOT_TEST_SHADOW_THING_NAME=\"\\\"$AWS_IOT_THING_NAME\\\"\" -DAWS_IOT_TEST_MQTT_TOPIC_PREFIX=\"\\\"$AWS_IOT_THING_NAME\\\"\" -DAWS_IOT_LOG_LEVEL_DEMO=AWS_IOT_LOG_INFO -DAWS_IOT_DEMO_MQTT_TOPIC_PREFIX=\"\\\"$AWS_IOT_THING_NAME\\\"\" --coverage"
 make
 
 # Run MQTT tests and demo against AWS IoT with code coverage.

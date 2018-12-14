@@ -6,16 +6,13 @@
 # Exit on any nonzero return code.
 set -e
 
-# Set Thing Name.
-AWS_IOT_THING_NAME="$AWS_IOT_THING_NAME_PREFIX$CC"
-
 # Create build directory.
 mkdir -p build
 cd build
 rm -rf *
 
 # Build tests and demos against Mosquitto broker with ThreadSanitizer.
-cmake .. -DAWS_IOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_MQTT_MOSQUITTO=1 -DAWS_IOT_TEST_MQTT_TOPIC_PREFIX=\"\\\"$AWS_IOT_THING_NAME\\\"\" -DAWS_IOT_DEMO_MQTT_TOPIC_PREFIX=\"\\\"$AWS_IOT_THING_NAME\\\"\" -fsanitize=thread"
+cmake .. -DAWS_IOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_MQTT_MOSQUITTO=1 -fsanitize=thread"
 make
 
 # Run MQTT tests and demos against Mosquitto.
@@ -27,7 +24,7 @@ make
 
 # Rebuild in static memory mode.
 rm -rf *
-cmake .. -DAWS_IOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_MQTT_MOSQUITTO=1 -DAWS_IOT_STATIC_MEMORY_ONLY=1 -DAWS_IOT_TEST_MQTT_TOPIC_PREFIX=\"\\\"$AWS_IOT_THING_NAME\\\"\" -DAWS_IOT_DEMO_MQTT_TOPIC_PREFIX=\"\\\"$AWS_IOT_THING_NAME\\\"\" -fsanitize=thread"
+cmake .. -DAWS_IOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_MQTT_MOSQUITTO=1 -DAWS_IOT_STATIC_MEMORY_ONLY=1 -fsanitize=thread"
 make
 
 # Run MQTT tests and no-network Shadow tests in static memory mode.
