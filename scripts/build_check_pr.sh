@@ -6,9 +6,6 @@
 # Exit on any nonzero return code.
 set -e
 
-# Set Thing Name.
-AWS_IOT_THING_NAME="$AWS_IOT_THING_NAME_PREFIX$CC"
-
 # Create build directory.
 mkdir -p build
 cd build

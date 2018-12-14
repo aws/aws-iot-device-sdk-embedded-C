@@ -72,9 +72,6 @@ extern int snprintf( char *,
  *
  * Provide default values of test configuration constants.
  */
-#ifndef AWS_IOT_TEST_MQTT_TOPIC_PREFIX
-    #define AWS_IOT_TEST_MQTT_TOPIC_PREFIX                  "awsiotmqtttest"
-#endif
 #ifndef AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
     #define AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S    ( 30 )
 #endif
@@ -87,11 +84,6 @@ extern int snprintf( char *,
 #ifndef AWS_IOT_TEST_SHADOW_THING_NAME
     #error "Please define AWS_IOT_TEST_SHADOW_THING_NAME."
 #endif
-
-/**
- * @brief The maximum length of an MQTT client identifier.
- */
-#define _CLIENT_IDENTIFIER_MAX_LENGTH    ( 23 )
 
 /**
  * @brief The length of @ref AWS_IOT_TEST_SHADOW_THING_NAME.
@@ -135,13 +127,6 @@ extern void AwsIotTest_NetworkDestroy( void * pConnection );
  * function files. */
 extern AwsIotMqttNetIf_t _AwsIotTestNetworkInterface;
 extern AwsIotMqttConnection_t _AwsIotTestMqttConnection;
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Buffer holding the MQTT client identifier used for the tests.
- */
-static char _pClientIdentifier[ _CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
 
 /*-----------------------------------------------------------*/
 
@@ -437,7 +422,6 @@ TEST_GROUP( Shadow_System );
  */
 TEST_SETUP( Shadow_System )
 {
-    int clientIdentifierLength = 0;
     AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
 
@@ -453,20 +437,10 @@ TEST_SETUP( Shadow_System )
         TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
     }
 
-    /* Generate a new, unique client identifier based on the time. */
-    clientIdentifierLength = snprintf( _pClientIdentifier,
-                                       _CLIENT_IDENTIFIER_MAX_LENGTH,
-                                       "aws%llu",
-                                       ( long long unsigned int ) AwsIotClock_GetTimeMs() );
-
-    if( clientIdentifierLength <= 0 )
-    {
-        TEST_FAIL_MESSAGE( "Failed to generate MQTT client identifier." );
-    }
-
-    /* Set the members of the connect info. */
-    connectInfo.pClientIdentifier = _pClientIdentifier;
-    connectInfo.clientIdentifierLength = ( uint16_t ) clientIdentifierLength;
+    /* Set the members of the connect info. Use the Shadow Thing Name as the MQTT
+     * client identifier. */
+    connectInfo.pClientIdentifier = AWS_IOT_TEST_SHADOW_THING_NAME;
+    connectInfo.clientIdentifierLength = ( uint16_t ) ( sizeof( AWS_IOT_TEST_SHADOW_THING_NAME ) - 1 );
     connectInfo.keepAliveSeconds = AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
     /* Establish an MQTT connection. */
