@@ -619,6 +619,17 @@ void AwsIotMqttInternal_DestroyOperation( void * pData )
 
 void AwsIotMqttInternal_Notify( _mqttOperation_t * const pOperation )
 {
+    /* Remove any lingering subscriptions if a SUBSCRIBE failed. Rejected
+     * subscriptions are removed by the deserializer, so not removed here. */
+    if( ( pOperation->operation == AWS_IOT_MQTT_SUBSCRIBE ) &&
+        ( pOperation->status != AWS_IOT_MQTT_SUCCESS ) && 
+        ( pOperation->status != AWS_IOT_MQTT_SERVER_REFUSED ) )
+    {
+        AwsIotMqttInternal_RemoveSubscriptionByPacket( pOperation->pMqttConnection,
+                                                       pOperation->packetIdentifier,
+                                                       -1 );
+    }
+
     /* If the operation is waiting, post to its wait semaphore and return. */
     if( ( pOperation->flags & AWS_IOT_MQTT_FLAG_WAITABLE ) == AWS_IOT_MQTT_FLAG_WAITABLE )
     {
