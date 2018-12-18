@@ -2193,9 +2193,11 @@ AwsIotMqttError_t AwsIotMqtt_Wait( AwsIotMqttReference_t reference,
     AwsIotMqtt_Assert( pOperation->link.pNext == NULL );
     AwsIotMqtt_Assert( pOperation->link.pPrevious == NULL );
 
-    /* Remove any lingering subscriptions if SUBSCRIBE failed. */
-    if( ( status != AWS_IOT_MQTT_SUCCESS ) &&
-        ( pOperation->operation == AWS_IOT_MQTT_SUBSCRIBE ) )
+    /* Remove any lingering subscriptions from a timed out SUBSCRIBE. If
+     * a SUBSCRIBE fails for any other reason, its subscription have already
+     * been removed. */
+    if( ( pOperation->operation == AWS_IOT_MQTT_SUBSCRIBE ) &&
+        ( status == AWS_IOT_MQTT_TIMEOUT ) )
     {
         AwsIotMqttInternal_RemoveSubscriptionByPacket( pOperation->pMqttConnection,
                                                        pOperation->packetIdentifier,
