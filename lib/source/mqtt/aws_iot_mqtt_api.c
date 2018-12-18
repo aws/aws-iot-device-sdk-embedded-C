@@ -169,6 +169,21 @@ static AwsIotMqttError_t _connectCommon( AwsIotMqttConnection_t * pMqttConnectio
                                          uint64_t timeoutMs );
 
 /**
+ * @brief The common component of both @ref mqtt_function_subscribe and @ref
+ * mqtt_function_unsubscribe.
+ *
+ * See @ref mqtt_function_subscribe or @ref mqtt_function_unsubscribe for a
+ * description of the parameters and return values.
+ */
+static AwsIotMqttError_t _subscriptionCommon( AwsIotMqttOperationType_t operation,
+                                              AwsIotMqttConnection_t mqttConnection,
+                                              const AwsIotMqttSubscription_t * const pSubscriptionList,
+                                              size_t subscriptionCount,
+                                              uint32_t flags,
+                                              const AwsIotMqttCallbackInfo_t * const pCallbackInfo,
+                                              AwsIotMqttReference_t * const pSubscriptionRef );
+
+/**
  * @brief Send a PUBACK for a received QoS 1 PUBLISH packet.
  *
  * @param[in] pMqttConnection Which connection the PUBACK should be sent over.
@@ -870,6 +885,169 @@ static AwsIotMqttError_t _connectCommon( AwsIotMqttConnection_t * pMqttConnectio
     }
 
     return connectStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static AwsIotMqttError_t _subscriptionCommon( AwsIotMqttOperationType_t operation,
+                                              AwsIotMqttConnection_t mqttConnection,
+                                              const AwsIotMqttSubscription_t * const pSubscriptionList,
+                                              size_t subscriptionCount,
+                                              uint32_t flags,
+                                              const AwsIotMqttCallbackInfo_t * const pCallbackInfo,
+                                              AwsIotMqttReference_t * const pSubscriptionRef )
+{
+    AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
+    _mqttOperation_t * pSubscriptionOperation = NULL;
+    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
+
+    /* Subscription serializer function. */
+    AwsIotMqttError_t ( * serializeSubscription )( const AwsIotMqttSubscription_t * const,
+                                                   size_t,
+                                                   uint8_t ** const,
+                                                   size_t * const,
+                                                   uint16_t * const ) = NULL;
+
+    /* This function should only be called for subscribe or unsubscribe. */
+    AwsIotMqtt_Assert( ( operation == AWS_IOT_MQTT_SUBSCRIBE ) ||
+                       ( operation == AWS_IOT_MQTT_UNSUBSCRIBE ) );
+
+    /* Choose a subscription serialize function. */
+    if( operation == AWS_IOT_MQTT_SUBSCRIBE )
+    {
+        serializeSubscription = AwsIotMqttInternal_SerializeSubscribe;
+
+        #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            if( pMqttConnection->network.serialize.subscribe != NULL )
+            {
+                serializeSubscription = pMqttConnection->network.serialize.subscribe;
+            }
+        #endif
+    }
+    else
+    {
+        serializeSubscription = AwsIotMqttInternal_SerializeUnsubscribe;
+
+        #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            if( pMqttConnection->network.serialize.unsubscribe != NULL )
+            {
+                serializeSubscription = pMqttConnection->network.serialize.unsubscribe;
+            }
+        #endif
+    }
+
+    /* Check that a reference pointer is provided for a waitable operation. */
+    if( ( ( flags & AWS_IOT_MQTT_FLAG_WAITABLE ) == AWS_IOT_MQTT_FLAG_WAITABLE ) &&
+        ( pSubscriptionRef == NULL ) )
+    {
+        AwsIotLogError( "Reference must be provided for a waitable %s.",
+                        AwsIotMqtt_OperationType( operation ) );
+
+        return AWS_IOT_MQTT_BAD_PARAMETER;
+    }
+
+    /* Check that all elements in the subscription list are valid. */
+    if( AwsIotMqttInternal_ValidateSubscriptionList( operation,
+                                                     pMqttConnection->awsIotMqttMode,
+                                                     pSubscriptionList,
+                                                     subscriptionCount ) == false )
+    {
+        return AWS_IOT_MQTT_BAD_PARAMETER;
+    }
+
+    /* Create a subscription operation. */
+    status = AwsIotMqttInternal_CreateOperation( &pSubscriptionOperation,
+                                                 flags,
+                                                 pCallbackInfo );
+
+    if( status != AWS_IOT_MQTT_SUCCESS )
+    {
+        return status;
+    }
+
+    /* Check the subscription operation data and set the remaining members. */
+    AwsIotMqtt_Assert( pSubscriptionOperation->pPublishRetry == NULL );
+    AwsIotMqtt_Assert( pSubscriptionOperation->status == AWS_IOT_MQTT_STATUS_PENDING );
+    pSubscriptionOperation->operation = operation;
+    pSubscriptionOperation->pMqttConnection = pMqttConnection;
+
+    /* Generate a subscription packet from the subscription list. */
+    status = serializeSubscription( pSubscriptionList,
+                                    subscriptionCount,
+                                    &( pSubscriptionOperation->pMqttPacket ),
+                                    &( pSubscriptionOperation->packetSize ),
+                                    &( pSubscriptionOperation->packetIdentifier ) );
+
+    if( status != AWS_IOT_MQTT_SUCCESS )
+    {
+        AwsIotMqttInternal_DestroyOperation( pSubscriptionOperation );
+
+        return status;
+    }
+
+    /* Check the serialized MQTT packet. */
+    AwsIotMqtt_Assert( pSubscriptionOperation->pMqttPacket != NULL );
+    AwsIotMqtt_Assert( pSubscriptionOperation->packetSize > 0 );
+
+    /* Add or remove the subscription list depending on the operation type. */
+    if( operation == AWS_IOT_MQTT_SUBSCRIBE )
+    {
+        status = AwsIotMqttInternal_AddSubscriptions( pMqttConnection,
+                                                      pSubscriptionOperation->packetIdentifier,
+                                                      pSubscriptionList,
+                                                      subscriptionCount );
+    }
+    else
+    {
+        AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( pMqttConnection,
+                                                            pSubscriptionList,
+                                                            subscriptionCount );
+    }
+
+    if( status != AWS_IOT_MQTT_SUCCESS )
+    {
+        AwsIotMqttInternal_DestroyOperation( pSubscriptionOperation );
+
+        return status;
+    }
+
+    /* Set the reference, if provided. This must be set before the subscription
+     * is pushed to the network queue to avoid a race condition. */
+    if( pSubscriptionRef != NULL )
+    {
+        *pSubscriptionRef = pSubscriptionOperation;
+    }
+
+    /* Add the subscription operation to the send queue. */
+    if( AwsIotQueue_InsertHead( &_AwsIotMqttSendQueue,
+                                &( pSubscriptionOperation->link ) ) == false )
+    {
+        AwsIotLogError( "Failed to add %s to send queue.",
+                        AwsIotMqtt_OperationType( operation ) );
+
+        if( operation == AWS_IOT_MQTT_SUBSCRIBE )
+        {
+            AwsIotMqttInternal_RemoveSubscriptionByPacket( pMqttConnection,
+                                                           pSubscriptionOperation->packetIdentifier,
+                                                           -1 );
+        }
+
+        AwsIotMqttInternal_DestroyOperation( pSubscriptionOperation );
+
+        /* Clear the previously set (and now invalid) reference. */
+        if( pSubscriptionRef != NULL )
+        {
+            *pSubscriptionRef = AWS_IOT_MQTT_REFERENCE_INITIALIZER;
+        }
+
+        return AWS_IOT_MQTT_NO_MEMORY;
+    }
+
+    AwsIotLogInfo( "MQTT %s operation queued.",
+                   AwsIotMqtt_OperationType( operation ) );
+
+    /* The subscription operation is waiting for a network response. */
+    return AWS_IOT_MQTT_STATUS_PENDING;
 }
 
 /*-----------------------------------------------------------*/
@@ -1607,121 +1785,13 @@ AwsIotMqttError_t AwsIotMqtt_Subscribe( AwsIotMqttConnection_t mqttConnection,
                                         const AwsIotMqttCallbackInfo_t * const pCallbackInfo,
                                         AwsIotMqttReference_t * const pSubscribeRef )
 {
-    AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
-    _mqttOperation_t * pSubscribeOperation = NULL;
-    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
-
-    /* Default SUBSCRIBE serializer function. */
-    AwsIotMqttError_t ( * serializeSubscribe )( const AwsIotMqttSubscription_t * const,
-                                                size_t,
-                                                uint8_t ** const,
-                                                size_t * const,
-                                                uint16_t * const ) = AwsIotMqttInternal_SerializeSubscribe;
-
-    /* Choose a SUBSCRIBE serializer function. */
-    #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pMqttConnection->network.serialize.subscribe != NULL )
-        {
-            serializeSubscribe = pMqttConnection->network.serialize.subscribe;
-        }
-    #endif
-
-    /* Check that a reference pointer is provided for a waitable operation. */
-    if( ( ( flags & AWS_IOT_MQTT_FLAG_WAITABLE ) == AWS_IOT_MQTT_FLAG_WAITABLE ) &&
-        ( pSubscribeRef == NULL ) )
-    {
-        AwsIotLogError( "Reference must be provided for a waitable SUBSCRIBE." );
-
-        return AWS_IOT_MQTT_BAD_PARAMETER;
-    }
-
-    /* Check that all elements in the subscription list are valid. */
-    if( AwsIotMqttInternal_ValidateSubscriptionList( AWS_IOT_MQTT_SUBSCRIBE,
-                                                     pMqttConnection->awsIotMqttMode,
-                                                     pSubscriptionList,
-                                                     subscriptionCount ) == false )
-    {
-        return AWS_IOT_MQTT_BAD_PARAMETER;
-    }
-
-    /* Create a SUBSCRIBE operation. */
-    status = AwsIotMqttInternal_CreateOperation( &pSubscribeOperation,
-                                                 flags,
-                                                 pCallbackInfo );
-
-    if( status != AWS_IOT_MQTT_SUCCESS )
-    {
-        return status;
-    }
-
-    /* Check the SUBSCRIBE operation data and set the remaining members. */
-    AwsIotMqtt_Assert( pSubscribeOperation->pPublishRetry == NULL );
-    AwsIotMqtt_Assert( pSubscribeOperation->status == AWS_IOT_MQTT_STATUS_PENDING );
-    pSubscribeOperation->operation = AWS_IOT_MQTT_SUBSCRIBE;
-    pSubscribeOperation->pMqttConnection = pMqttConnection;
-
-    /* Generate a SUBSCRIBE packet from the subscription list. */
-    status = serializeSubscribe( pSubscriptionList,
-                                 subscriptionCount,
-                                 &( pSubscribeOperation->pMqttPacket ),
-                                 &( pSubscribeOperation->packetSize ),
-                                 &( pSubscribeOperation->packetIdentifier ) );
-
-    if( status != AWS_IOT_MQTT_SUCCESS )
-    {
-        AwsIotMqttInternal_DestroyOperation( pSubscribeOperation );
-
-        return status;
-    }
-
-    /* Check the serialized MQTT packet. */
-    AwsIotMqtt_Assert( pSubscribeOperation->pMqttPacket != NULL );
-    AwsIotMqtt_Assert( pSubscribeOperation->packetSize > 0 );
-
-    /* Add the subscription list to the MQTT connection. */
-    status = AwsIotMqttInternal_AddSubscriptions( pMqttConnection,
-                                                  pSubscribeOperation->packetIdentifier,
-                                                  pSubscriptionList,
-                                                  subscriptionCount );
-
-    if( status != AWS_IOT_MQTT_SUCCESS )
-    {
-        AwsIotMqttInternal_DestroyOperation( pSubscribeOperation );
-
-        return status;
-    }
-
-    /* Set the reference, if provided. This must be set before the subscribe
-     * is pushed to the network queue to avoid a race condition. */
-    if( pSubscribeRef != NULL )
-    {
-        *pSubscribeRef = pSubscribeOperation;
-    }
-
-    /* Add the SUBSCRIBE operation to the send queue. */
-    if( AwsIotQueue_InsertHead( &_AwsIotMqttSendQueue,
-                                &( pSubscribeOperation->link ) ) == false )
-    {
-        AwsIotLogError( "Failed to add SUBSCRIBE to send queue." );
-
-        AwsIotMqttInternal_RemoveSubscriptionByPacket( pMqttConnection,
-                                                       pSubscribeOperation->packetIdentifier,
-                                                       -1 );
-        AwsIotMqttInternal_DestroyOperation( pSubscribeOperation );
-
-        /* Clear the previously set (and now invalid) reference. */
-        if( pSubscribeRef != NULL )
-        {
-            *pSubscribeRef = AWS_IOT_MQTT_REFERENCE_INITIALIZER;
-        }
-
-        return AWS_IOT_MQTT_NO_MEMORY;
-    }
-
-    AwsIotLogInfo( "MQTT SUBSCRIBE operation queued." );
-
-    /* The SUBSCRIBE operation is waiting for a network response. */
-    return AWS_IOT_MQTT_STATUS_PENDING;
+    return _subscriptionCommon( AWS_IOT_MQTT_SUBSCRIBE,
+                                mqttConnection,
+                                pSubscriptionList,
+                                subscriptionCount,
+                                flags,
+                                pCallbackInfo,
+                                pSubscribeRef );
 }
 
 /*-----------------------------------------------------------*/
@@ -1767,110 +1837,13 @@ AwsIotMqttError_t AwsIotMqtt_Unsubscribe( AwsIotMqttConnection_t mqttConnection,
                                           const AwsIotMqttCallbackInfo_t * const pCallbackInfo,
                                           AwsIotMqttReference_t * const pUnsubscribeRef )
 {
-    AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
-    _mqttOperation_t * pUnsubscribeOperation = NULL;
-    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
-
-    /* Default UNSUBSCRIBE serializer function. */
-    AwsIotMqttError_t ( * serializeUnsubscribe )( const AwsIotMqttSubscription_t * const,
-                                                  size_t,
-                                                  uint8_t ** const,
-                                                  size_t * const,
-                                                  uint16_t * const ) = AwsIotMqttInternal_SerializeUnsubscribe;
-
-    /* Choose an UNSUBSCRIBE serializer function. */
-    #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pMqttConnection->network.serialize.unsubscribe != NULL )
-        {
-            serializeUnsubscribe = pMqttConnection->network.serialize.unsubscribe;
-        }
-    #endif
-
-    /* Check that a reference pointer is provided for a waitable operation. */
-    if( ( ( flags & AWS_IOT_MQTT_FLAG_WAITABLE ) == AWS_IOT_MQTT_FLAG_WAITABLE ) &&
-        ( pUnsubscribeRef == NULL ) )
-    {
-        AwsIotLogError( "Reference must be provided for a waitable UNSUBSCRIBE." );
-
-        return AWS_IOT_MQTT_BAD_PARAMETER;
-    }
-
-    /* Check that all elements in the subscription list are valid. */
-    if( AwsIotMqttInternal_ValidateSubscriptionList( AWS_IOT_MQTT_UNSUBSCRIBE,
-                                                     pMqttConnection->awsIotMqttMode,
-                                                     pSubscriptionList,
-                                                     subscriptionCount ) == false )
-    {
-        return AWS_IOT_MQTT_BAD_PARAMETER;
-    }
-
-    /* Remove the given subsriptions from the MQTT connection. */
-    AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( pMqttConnection,
-                                                        pSubscriptionList,
-                                                        subscriptionCount );
-
-    /* Create an UNSUBSCRIBE operation. */
-    status = AwsIotMqttInternal_CreateOperation( &pUnsubscribeOperation,
-                                                 flags,
-                                                 pCallbackInfo );
-
-    if( status != AWS_IOT_MQTT_SUCCESS )
-    {
-        return status;
-    }
-
-    /* Check the UNSUBSCRIBE operation data and set the remaining members. */
-    AwsIotMqtt_Assert( pUnsubscribeOperation->pPublishRetry == NULL );
-    AwsIotMqtt_Assert( pUnsubscribeOperation->status == AWS_IOT_MQTT_STATUS_PENDING );
-    pUnsubscribeOperation->operation = AWS_IOT_MQTT_UNSUBSCRIBE;
-    pUnsubscribeOperation->pMqttConnection = pMqttConnection;
-
-    /* Generate an UNSUBSCRIBE packet from the subscription list. */
-    status = serializeUnsubscribe( pSubscriptionList,
-                                   subscriptionCount,
-                                   &( pUnsubscribeOperation->pMqttPacket ),
-                                   &( pUnsubscribeOperation->packetSize ),
-                                   &( pUnsubscribeOperation->packetIdentifier ) );
-
-    if( status != AWS_IOT_MQTT_SUCCESS )
-    {
-        AwsIotMqttInternal_DestroyOperation( pUnsubscribeOperation );
-
-        return status;
-    }
-
-    /* Check the serialized MQTT packet. */
-    AwsIotMqtt_Assert( pUnsubscribeOperation->pMqttPacket != NULL );
-    AwsIotMqtt_Assert( pUnsubscribeOperation->packetSize > 0 );
-
-    /* Set the reference, if provided. This is set before the unsubscribe
-     * is pushed to the network queue. */
-    if( pUnsubscribeRef != NULL )
-    {
-        *pUnsubscribeRef = pUnsubscribeOperation;
-    }
-
-    /* Add the UNSUBSCRIBE operation to the send queue. */
-    if( AwsIotQueue_InsertHead( &_AwsIotMqttSendQueue,
-                                &( pUnsubscribeOperation->link ) ) == false )
-    {
-        AwsIotLogError( "Failed to add UNSUBSCRIBE to send queue." );
-
-        AwsIotMqttInternal_DestroyOperation( pUnsubscribeOperation );
-
-        /* Clear the previously set (and now invalid) reference. */
-        if( pUnsubscribeRef != NULL )
-        {
-            *pUnsubscribeRef = AWS_IOT_MQTT_REFERENCE_INITIALIZER;
-        }
-
-        return AWS_IOT_MQTT_NO_MEMORY;
-    }
-
-    AwsIotLogInfo( "MQTT UNSUBSCRIBE operation queued." );
-
-    /* The UNSUBSCRIBE operation is waiting for a network response. */
-    return AWS_IOT_MQTT_STATUS_PENDING;
+    return _subscriptionCommon( AWS_IOT_MQTT_UNSUBSCRIBE,
+                                mqttConnection,
+                                pSubscriptionList,
+                                subscriptionCount,
+                                flags,
+                                pCallbackInfo,
+                                pUnsubscribeRef );
 }
 
 /*-----------------------------------------------------------*/
@@ -2259,16 +2232,16 @@ const char * AwsIotMqtt_strerror( AwsIotMqttError_t status )
     /* Lookup table of MQTT statuses. */
     static const char * pStatusNames[] =
     {
-        "SUCCESS",                   /* AWS_IOT_MQTT_SUCCESS */
-        "PENDING",                   /* AWS_IOT_MQTT_STATUS_PENDING */
-        "INIT FAILED",               /* AWS_IOT_MQTT_INIT_FAILED */
-        "BAD PARAMETER",             /* AWS_IOT_MQTT_BAD_PARAMETER */
-        "NO MEMORY",                 /* AWS_IOT_MQTT_NO_MEMORY */
-        "NETWORK SEND ERROR",        /* AWS_IOT_MQTT_SEND_ERROR */
-        "BAD RESPONSE RECEIVED",     /* AWS_IOT_MQTT_BAD_RESPONSE */
-        "TIMEOUT",                   /* AWS_IOT_MQTT_TIMEOUT */
-        "SERVER REFUSED",            /* AWS_IOT_MQTT_SERVER_REFUSED */
-        "NO RESPONSE"                /* AWS_IOT_MQTT_RETRY_NO_RESPONSE */
+        "SUCCESS",               /* AWS_IOT_MQTT_SUCCESS */
+        "PENDING",               /* AWS_IOT_MQTT_STATUS_PENDING */
+        "INIT FAILED",           /* AWS_IOT_MQTT_INIT_FAILED */
+        "BAD PARAMETER",         /* AWS_IOT_MQTT_BAD_PARAMETER */
+        "NO MEMORY",             /* AWS_IOT_MQTT_NO_MEMORY */
+        "NETWORK SEND ERROR",    /* AWS_IOT_MQTT_SEND_ERROR */
+        "BAD RESPONSE RECEIVED", /* AWS_IOT_MQTT_BAD_RESPONSE */
+        "TIMEOUT",               /* AWS_IOT_MQTT_TIMEOUT */
+        "SERVER REFUSED",        /* AWS_IOT_MQTT_SERVER_REFUSED */
+        "NO RESPONSE"            /* AWS_IOT_MQTT_RETRY_NO_RESPONSE */
     };
 
     /* Check that the parameter is valid. */
@@ -2290,13 +2263,13 @@ const char * AwsIotMqtt_OperationType( AwsIotMqttOperationType_t operation )
     /* Lookup table of MQTT operations. */
     static const char * pOperationTypes[] =
     {
-        "CONNECT",         /* AWS_IOT_MQTT_CONNECT */
-        "PUBLISH",         /* AWS_IOT_MQTT_PUBLISH_TO_SERVER */
-        "PUBACK",          /* AWS_IOT_MQTT_PUBACK */
-        "SUBSCRIBE",       /* AWS_IOT_MQTT_SUBSCRIBE */
-        "UNSUBSCRIBE",     /* AWS_IOT_MQTT_UNSUBSCRIBE */
-        "PINGREQ",         /* AWS_IOT_MQTT_PINGREQ */
-        "DISCONNECT"       /* AWS_IOT_MQTT_DISCONNECT */
+        "CONNECT",     /* AWS_IOT_MQTT_CONNECT */
+        "PUBLISH",     /* AWS_IOT_MQTT_PUBLISH_TO_SERVER */
+        "PUBACK",      /* AWS_IOT_MQTT_PUBACK */
+        "SUBSCRIBE",   /* AWS_IOT_MQTT_SUBSCRIBE */
+        "UNSUBSCRIBE", /* AWS_IOT_MQTT_UNSUBSCRIBE */
+        "PINGREQ",     /* AWS_IOT_MQTT_PINGREQ */
+        "DISCONNECT"   /* AWS_IOT_MQTT_DISCONNECT */
     };
 
     /* Check that the parameter is valid. */
