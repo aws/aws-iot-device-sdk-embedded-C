@@ -955,6 +955,14 @@ static AwsIotMqttError_t _subscriptionCommon( AwsIotMqttOperationType_t operatio
         return AWS_IOT_MQTT_BAD_PARAMETER;
     }
 
+    /* Remove the MQTT subscription list for an UNSUBSCRIBE. */
+    if( operation == AWS_IOT_MQTT_UNSUBSCRIBE )
+    {
+        AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( pMqttConnection,
+                                                            pSubscriptionList,
+                                                            subscriptionCount );
+    }
+
     /* Create a subscription operation. */
     status = AwsIotMqttInternal_CreateOperation( &pSubscriptionOperation,
                                                  flags,
@@ -989,26 +997,20 @@ static AwsIotMqttError_t _subscriptionCommon( AwsIotMqttOperationType_t operatio
     AwsIotMqtt_Assert( pSubscriptionOperation->pMqttPacket != NULL );
     AwsIotMqtt_Assert( pSubscriptionOperation->packetSize > 0 );
 
-    /* Add or remove the subscription list depending on the operation type. */
+    /* Add the subscription list for a SUBSCRIBE. */
     if( operation == AWS_IOT_MQTT_SUBSCRIBE )
     {
         status = AwsIotMqttInternal_AddSubscriptions( pMqttConnection,
                                                       pSubscriptionOperation->packetIdentifier,
                                                       pSubscriptionList,
                                                       subscriptionCount );
-    }
-    else
-    {
-        AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( pMqttConnection,
-                                                            pSubscriptionList,
-                                                            subscriptionCount );
-    }
 
-    if( status != AWS_IOT_MQTT_SUCCESS )
-    {
-        AwsIotMqttInternal_DestroyOperation( pSubscriptionOperation );
+        if( status != AWS_IOT_MQTT_SUCCESS )
+        {
+            AwsIotMqttInternal_DestroyOperation( pSubscriptionOperation );
 
-        return status;
+            return status;
+        }
     }
 
     /* Set the reference, if provided. This must be set before the subscription
@@ -2227,59 +2229,92 @@ AwsIotMqttError_t AwsIotMqtt_Wait( AwsIotMqttReference_t reference,
 
 const char * AwsIotMqtt_strerror( AwsIotMqttError_t status )
 {
-    /* The string returned if the parameter is invalid. */
-    static const char * pInvalidStatus = "INVALID STATUS";
-    /* Lookup table of MQTT statuses. */
-    static const char * pStatusNames[] =
+    switch( status )
     {
-        "SUCCESS",               /* AWS_IOT_MQTT_SUCCESS */
-        "PENDING",               /* AWS_IOT_MQTT_STATUS_PENDING */
-        "INIT FAILED",           /* AWS_IOT_MQTT_INIT_FAILED */
-        "BAD PARAMETER",         /* AWS_IOT_MQTT_BAD_PARAMETER */
-        "NO MEMORY",             /* AWS_IOT_MQTT_NO_MEMORY */
-        "NETWORK SEND ERROR",    /* AWS_IOT_MQTT_SEND_ERROR */
-        "BAD RESPONSE RECEIVED", /* AWS_IOT_MQTT_BAD_RESPONSE */
-        "TIMEOUT",               /* AWS_IOT_MQTT_TIMEOUT */
-        "SERVER REFUSED",        /* AWS_IOT_MQTT_SERVER_REFUSED */
-        "NO RESPONSE"            /* AWS_IOT_MQTT_RETRY_NO_RESPONSE */
-    };
+        case AWS_IOT_MQTT_SUCCESS:
 
-    /* Check that the parameter is valid. */
-    if( ( status < 0 ) ||
-        ( status >= ( sizeof( pStatusNames ) / sizeof( pStatusNames[ 0 ] ) ) ) )
-    {
-        return pInvalidStatus;
+            return "SUCCESS";
+
+        case AWS_IOT_MQTT_STATUS_PENDING:
+
+            return "PENDING";
+
+        case AWS_IOT_MQTT_INIT_FAILED:
+
+            return "INITIALIZATION FAILED";
+
+        case AWS_IOT_MQTT_BAD_PARAMETER:
+
+            return "BAD PARAMETER";
+
+        case AWS_IOT_MQTT_NO_MEMORY:
+
+            return "NO MEMORY";
+
+        case AWS_IOT_MQTT_SEND_ERROR:
+
+            return "NETWORK SEND ERROR";
+
+        case AWS_IOT_MQTT_BAD_RESPONSE:
+
+            return "BAD RESPONSE RECEIVED";
+
+        case AWS_IOT_MQTT_TIMEOUT:
+
+            return "TIMEOUT";
+
+        case AWS_IOT_MQTT_SERVER_REFUSED:
+
+            return "SERVER REFUSED";
+
+        case AWS_IOT_MQTT_RETRY_NO_RESPONSE:
+
+            return "NO RESPONSE";
+
+        default:
+
+            return "INVALID STATUS";
     }
-
-    return pStatusNames[ status ];
 }
 
 /*-----------------------------------------------------------*/
 
 const char * AwsIotMqtt_OperationType( AwsIotMqttOperationType_t operation )
 {
-    /* The string returned if the parameter is invalid. */
-    static const char * pInvalidOperation = "INVALID OPERATION";
-    /* Lookup table of MQTT operations. */
-    static const char * pOperationTypes[] =
+    switch( operation )
     {
-        "CONNECT",     /* AWS_IOT_MQTT_CONNECT */
-        "PUBLISH",     /* AWS_IOT_MQTT_PUBLISH_TO_SERVER */
-        "PUBACK",      /* AWS_IOT_MQTT_PUBACK */
-        "SUBSCRIBE",   /* AWS_IOT_MQTT_SUBSCRIBE */
-        "UNSUBSCRIBE", /* AWS_IOT_MQTT_UNSUBSCRIBE */
-        "PINGREQ",     /* AWS_IOT_MQTT_PINGREQ */
-        "DISCONNECT"   /* AWS_IOT_MQTT_DISCONNECT */
-    };
+        case AWS_IOT_MQTT_CONNECT:
 
-    /* Check that the parameter is valid. */
-    if( ( operation < 0 ) ||
-        ( operation >= ( sizeof( pOperationTypes ) / sizeof( pOperationTypes[ 0 ] ) ) ) )
-    {
-        return pInvalidOperation;
+            return "CONNECT";
+
+        case AWS_IOT_MQTT_PUBLISH_TO_SERVER:
+
+            return "PUBLISH";
+
+        case AWS_IOT_MQTT_PUBACK:
+
+            return "PUBACK";
+
+        case AWS_IOT_MQTT_SUBSCRIBE:
+
+            return "SUBSCRIBE";
+
+        case AWS_IOT_MQTT_UNSUBSCRIBE:
+
+            return "UNSUBSCRIBE";
+
+        case AWS_IOT_MQTT_PINGREQ:
+
+            return "PINGREQ";
+
+        case AWS_IOT_MQTT_DISCONNECT:
+
+            return "DISCONNECT";
+
+        default:
+
+            return "INVALID OPERATION";
     }
-
-    return pOperationTypes[ operation ];
 }
 
 /*-----------------------------------------------------------*/
