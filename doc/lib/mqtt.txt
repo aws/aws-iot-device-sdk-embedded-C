@@ -52,7 +52,7 @@ digraph mqtt_dependencies
 @enddot
 
 Currently, the MQTT library has the following dependencies:
-- The queue library for maintains the data structures for managing in-progress MQTT operations.
+- The queue library for maintaining the data structures for managing in-progress MQTT operations.
 - The logging library may be used if @ref AWS_IOT_LOG_LEVEL_MQTT is not @ref AWS_IOT_LOG_NONE.
 - The platform layer provides an interface to the operating system for thread management, clock functions, networking, etc.
 
