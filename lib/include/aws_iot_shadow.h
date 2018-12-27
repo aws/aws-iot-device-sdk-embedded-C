@@ -550,21 +550,73 @@ typedef struct AwsIotShadowDocumentInfo
 /**
  * @brief Maintain the subscriptions for the Shadow operation topics, even after
  * this function returns.
+ *
+ * This flag is only valid if passed to the functions @ref shadow_function_delete,
+ * @ref shadow_function_get, or @ref shadow_function_update.
+ *
+ * The Shadow service reports results of Shadow operations by publishing
+ * messages to MQTT topics. By default, the functions @ref shadow_function_delete,
+ * @ref shadow_function_get, and @ref shadow_function_update subscribe to the
+ * necessary topics, wait for the Shadow service to publish the result of the
+ * Shadow operation, then unsubscribe from those topics. This workflow is suitable
+ * for infrequent Shadow operations, but is inefficient for frequent, periodic
+ * Shadow operations (where subscriptions for the Shadow operation topics would be
+ * constantly added and removed).
+ *
+ * This flag causes @ref shadow_function_delete, @ref shadow_function_get, or
+ * @ref shadow_function_update to maintain Shadow operation topic subscriptions,
+ * even after the function returns. These subscriptions may then be used by a
+ * future call to the same function.
+ *
+ * This flags only needs to be set once, after which subscriptions are maintained
+ * and reused for a specific Thing Name and Shadow function. The function @ref
+ * shadow_function_removepersistentsubscriptions may be used to remove
+ * subscriptions maintained by this flag.
  */
 #define AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS             ( 0x00000002 )
 
 /**
  * @brief Remove the persistent subscriptions from a Shadow delete operation.
+ *
+ * This flag is only valid if passed to the function @ref
+ * shadow_function_removepersistentsubscriptions.
+ *
+ * This flag may be passed to @ref shadow_function_removepersistentsubscriptions
+ * to remove any subscriptions for a specific Thing Name maintained by a previous
+ * call to @ref shadow_function_delete.
+ *
+ * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
+ * this flag for Thing Names with any in-progress Shadow delete operations.
  */
 #define AWS_IOT_SHADOW_FLAG_REMOVE_DELETE_SUBSCRIPTIONS    ( 0x00000001 )
 
 /**
  * @brief Remove the persistent subscriptions from a Shadow get operation.
+ *
+ * This flag is only valid if passed to the function @ref
+ * shadow_function_removepersistentsubscriptions.
+ *
+ * This flag may be passed to @ref shadow_function_removepersistentsubscriptions
+ * to remove any subscriptions for a specific Thing Name maintained by a previous
+ * call to @ref shadow_function_get.
+ *
+ * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
+ * this flag for Thing Names with any in-progress Shadow get operations.
  */
 #define AWS_IOT_SHADOW_FLAG_REMOVE_GET_SUBSCRIPTIONS       ( 0x00000002 )
 
 /**
  * @brief Remove the persistent subscriptions from a Shadow update operation.
+ *
+ * This flag is only valid if passed to the function @ref
+ * shadow_function_removepersistentsubscriptions.
+ *
+ * This flag may be passed to @ref shadow_function_removepersistentsubscriptions
+ * to remove any subscriptions for a specific Thing Name maintained by a previous
+ * call to @ref shadow_function_update.
+ *
+ * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
+ * this flag for Thing Names with any in-progress Shadow update operations.
  */
 #define AWS_IOT_SHADOW_FLAG_REMOVE_UPDATE_SUBSCRIPTIONS    ( 0x00000004 )
 
