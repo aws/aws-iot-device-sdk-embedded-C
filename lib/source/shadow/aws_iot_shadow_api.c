@@ -1109,3 +1109,83 @@ AwsIotShadowError_t AwsIotShadow_SetUpdatedCallback( AwsIotMqttConnection_t mqtt
 }
 
 /*-----------------------------------------------------------*/
+
+const char * AwsIotShadow_strerror( AwsIotShadowError_t status )
+{
+    switch( status )
+    {
+        case AWS_IOT_SHADOW_SUCCESS:
+
+            return "SUCCESS";
+
+        case AWS_IOT_SHADOW_STATUS_PENDING:
+
+            return "STATUS PENDING";
+
+        case AWS_IOT_SHADOW_INIT_FAILED:
+
+            return "INITIALIZATION FAILED";
+
+        case AWS_IOT_SHADOW_BAD_PARAMETER:
+
+            return "BAD PARAMETER";
+
+        case AWS_IOT_SHADOW_NO_MEMORY:
+
+            return "NO MEMORY";
+
+        case AWS_IOT_SHADOW_MQTT_ERROR:
+
+            return "MQTT LIBRARY ERROR";
+
+        case AWS_IOT_SHADOW_BAD_RESPONSE:
+
+            return "BAD RESPONSE RECEIVED";
+
+        case AWS_IOT_SHADOW_TIMEOUT:
+
+            return "TIMEOUT";
+
+        case AWS_IOT_SHADOW_BAD_REQUEST:
+
+            return "REJECTED: 400 BAD REQUEST";
+
+        case AWS_IOT_SHADOW_UNAUTHORIZED:
+
+            return "REJECTED: 401 UNAUTHORIZED";
+
+        case AWS_IOT_SHADOW_FORBIDDEN:
+
+            return "REJECTED: 403 FORBIDDEN";
+
+        case AWS_IOT_SHADOW_NOT_FOUND:
+
+            return "REJECTED: 404 NOT FOUND";
+
+        case AWS_IOT_SHADOW_CONFLICT:
+
+            return "REJECTED: 409 VERSION CONFLICT";
+
+        case AWS_IOT_SHADOW_TOO_LARGE:
+
+            return "REJECTED: 413 PAYLOAD TOO LARGE";
+
+        case AWS_IOT_SHADOW_UNSUPPORTED:
+
+            return "REJECTED: 415 UNSUPPORTED ENCODING";
+
+        case AWS_IOT_SHADOW_TOO_MANY_REQUESTS:
+
+            return "REJECTED: 429 TOO MANY REQUESTS";
+
+        case AWS_IOT_SHADOW_SERVER_ERROR:
+
+            return "500 SERVER ERROR";
+
+        default:
+
+            return "INVALID STATUS";
+    }
+}
+
+/*-----------------------------------------------------------*/

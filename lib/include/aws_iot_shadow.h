@@ -810,6 +810,19 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( AwsIotMqttConnec
 
 /**
  * @brief Returns a string that describes an #AwsIotShadowError_t.
+ *
+ * Like POSIX's `strerror`, this function returns a string describing a return
+ * code. In this case, the return code is a Shadow library error code, `status`.
+ *
+ * The string returned by this function <b>MUST</b> be treated as read-only: any
+ * attempt to modify its contents may result in a crash. Therefore, this function
+ * is limited to usage in logging.
+ *
+ * @param[in] status The status to describe.
+ *
+ * @return A read-only string that describes `status`.
+ *
+ * @warning The string returned by this function must never be modified.
  */
 /* @[declare_shadow_strerror] */
 const char * AwsIotShadow_strerror( AwsIotShadowError_t status );
