@@ -1705,11 +1705,14 @@ AwsIotMqttError_t AwsIotMqtt_TimedPublish( AwsIotMqttConnection_t mqttConnection
  *
  * // Publish should have returned AWS_IOT_MQTT_STATUS_PENDING. The call to wait
  * // returns once the result of the publish is available or the timeout expires.
- * result = AwsIotMqtt_Wait( reference, timeoutMs );
+ * if( result == AWS_IOT_MQTT_STATUS_PENDING )
+ * {
+ *     result = AwsIotMqtt_Wait( reference, timeoutMs );
  *
- * // After the call to wait, the result of the publish is known
- * // (not AWS_IOT_MQTT_STATUS_PENDING).
- * assert( result != AWS_IOT_MQTT_STATUS_PENDING );
+ *     // After the call to wait, the result of the publish is known
+ *     // (not AWS_IOT_MQTT_STATUS_PENDING).
+ *     assert( result != AWS_IOT_MQTT_STATUS_PENDING );
+ * }
  * @endcode
  */
 /* @[declare_mqtt_wait] */

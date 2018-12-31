@@ -763,6 +763,117 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( AwsIotMqttConnection_t mqttConnect
 
 /**
  * @brief Wait for a Shadow operation to complete.
+ *
+ * This function blocks to wait for a [delete](@ref shadow_function_delete),
+ * [get](@ref shadow_function_get), or [update](@ref shadow_function_update) to
+ * complete. These operations are by default asynchronous; the function calls
+ * queue an operation for processing, and a callback is invoked once the operation
+ * is complete.
+ *
+ * To use this function, the flag #AWS_IOT_SHADOW_FLAG_WAITABLE must have been
+ * set in the operation's function call. Additionally, this function must always
+ * be called with any waitable operation to clean up resources.
+ *
+ * Regardless of its return value, this function always clean up resources used
+ * by the waitable operation. This means `reference` is invalidated as soon as
+ * this function returns, even if it returns #AWS_IOT_SHADOW_TIMEOUT or another
+ * error.
+ *
+ * @param[in] reference Reference to the Shadow operation to wait for. The flag
+ * #AWS_IOT_SHADOW_FLAG_WAITABLE must have been set for this operation.
+ * @param[in] timeoutMs How long to wait before returning #AWS_IOT_SHADOW_TIMEOUT.
+ * @param[out] pShadowDocument A pointer to a buffer containing the Shadow document
+ * retrieved by a [Shadow get](@ref shadow_function_get) is placed here. The buffer
+ * was allocated with the function #AwsIotShadowDocumentInfo_t.mallocDocument passed
+ * to @ref shadow_function_get. This parameter is only valid for a [Shadow get]
+ * (@ref shadow_function_get) and ignored for other Shadow operations. This output
+ * parameter is only valid if this function returns #AWS_IOT_SHADOW_SUCCESS.
+ * @param[out] pShadowDocumentLength The length of the Shadow document in
+ * `pShadowDocument` is placed here. This parameter is only valid for a [Shadow get]
+ * (@ref shadow_function_get) and ignored for other Shadow operations. This output
+ * parameter is only valid if this function returns #AWS_IOT_SHADOW_SUCCESS.
+ *
+ * @return One of the following:
+ * - #AWS_IOT_SHADOW_SUCCESS
+ * - #AWS_IOT_SHADOW_BAD_PARAMETER
+ * - #AWS_IOT_SHADOW_BAD_RESPONSE
+ * - #AWS_IOT_SHADOW_TIMEOUT
+ * - A Shadow service rejected reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
+ * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
+ *
+ * <b>Example 1 (Shadow Update)</b>
+ * @code{c}
+ * AwsIotShadowError_t result = AWS_IOT_SHADOW_STATUS_PENDING;
+ * AwsIotShadowDocumentInfo_t updateInfo = { ... };
+ *
+ * // Reference and timeout.
+ * AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
+ * uint64_t timeout = 5000; // 5 seconds
+ *
+ * // Shadow update operation.
+ * result = AwsIotShadow_Update( mqttConnection,
+ *                               &updateInfo,
+ *                               AWS_IOT_SHADOW_FLAG_WAITABLE,
+ *                               NULL,
+ *                               &reference );
+ *
+ * // Update should have returned AWS_IOT_SHADOW_STATUS_PENDING. The call to wait
+ * // returns once the result of the update is available or the timeout expires.
+ * if( result == AWS_IOT_SHADOW_STATUS_PENDING )
+ * {
+ *     // The last two parameters are ignored for a Shadow update.
+ *     result = AwsIotShadow_Wait( reference, timeout, NULL, NULL );
+ *
+ *     // After the call to wait, the result of the update is known
+ *     // (not AWS_IOT_SHADOW_STATUS_PENDING).
+ *     assert( result != AWS_IOT_SHADOW_STATUS_PENDING );
+ * }
+ * @endcode
+ *
+ * <b>Example 2 (Shadow Get)</b>
+ * @code{c}
+ * AwsIotShadowError_t result = AWS_IOT_SHADOW_STATUS_PENDING;
+ * AwsIotShadowDocumentInfo_t getInfo = { ... };
+ *
+ * // Reference and timeout.
+ * AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
+ * uint64_t timeout = 5000; // 5 seconds
+ *
+ * // Buffer pointer and size for retrieved Shadow document.
+ * const char * pShadowDocument = NULL;
+ * size_t documentLength = 0;
+ *
+ * // Buffer allocation function must be set for a waitable Shadow get.
+ * getInfo.get.mallocDocument = malloc;
+ *
+ * // Shadow get operation.
+ * result = AwsIotShadow_Get( mqttConnection,
+ *                            &getInfo,
+ *                            AWS_IOT_SHADOW_FLAG_WAITABLE,
+ *                            NULL,
+ *                            &reference );
+ *
+ * // Get should have returned AWS_IOT_SHADOW_STATUS_PENDING. The call to wait
+ * // returns once the result of the get is available or the timeout expires.
+ * if( result == AWS_IOT_SHADOW_STATUS_PENDING )
+ * {
+ *     // The last two parameters must be set for a Shadow get.
+ *     result = AwsIotShadow_Wait( reference, timeout, &pShadowDocument, &documentLength );
+ *
+ *     // After the call to wait, the result of the get is known
+ *     // (not AWS_IOT_SHADOW_STATUS_PENDING).
+ *     assert( result != AWS_IOT_SHADOW_STATUS_PENDING );
+ *
+ *     // The retrieved Shadow document is only valid for a successful Shadow get.
+ *     if( result == AWS_IOT_SHADOW_SUCCESS )
+ *     {
+ *         // Do something with the Shadow document...
+ *
+ *         // Free the Shadow document when finished.
+ *         free( pShadowDocument );
+ *     }
+ * }
+ * @endcode
  */
 /* @[declare_shadow_wait] */
 AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowReference_t reference,

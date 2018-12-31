@@ -1060,7 +1060,8 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowReference_t reference,
     AwsIotMutex_Unlock( &_AwsIotShadowSubscriptions.mutex );
 
     /* Set the output parameters for Shadow GET. */
-    if( pOperation->type == _SHADOW_GET )
+    if( ( pOperation->type == _SHADOW_GET ) &&
+        ( status == AWS_IOT_SHADOW_SUCCESS ) )
     {
         *pShadowDocument = pOperation->get.pDocument;
         *pShadowDocumentLength = pOperation->get.documentLength;
