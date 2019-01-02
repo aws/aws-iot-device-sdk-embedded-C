@@ -7,6 +7,8 @@
 
 <span style="float:right;margin-right:4em"> &mdash; <i>Description of Device Shadows from [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html)</i></span><br>
 
+Thing Shadows are the always-available device state in the AWS cloud. They are stored as JSON documents, and available via AWS even if the associated device goes offline. Common use cases for Thing Shadows include backing up device state, or sending commands to devices.
+
 This library provides an API for interacting with AWS IoT Thing Shadows. Features of this library include:
 - Both fully asynchronous and blocking API functions.
 - API functions for modifying Thing Shadows and for registering notifications of a Thing Shadow change.
