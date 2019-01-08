@@ -6,6 +6,49 @@
 > A device's shadow is a JSON document that is used to store and retrieve current state information for a device. The Device Shadow service maintains a shadow for each device you connect to AWS IoT. You can use the shadow to get and set the state of a device over MQTT or HTTP, regardless of whether the device is connected to the Internet. Each device's shadow is uniquely identified by the name of the corresponding thing.
 
 <span style="float:right;margin-right:4em"> &mdash; <i>Description of Device Shadows from [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html)</i></span><br>
+
+Thing Shadows are the always-available device state in the AWS cloud. They are stored as JSON documents, and available via AWS even if the associated device goes offline. Common use cases for Thing Shadows include backing up device state, or sending commands to devices.
+
+This library provides an API for interacting with AWS IoT Thing Shadows. Features of this library include:
+- Both fully asynchronous and blocking API functions.
+- API functions for modifying Thing Shadows and for registering notifications of a Thing Shadow change.
+
+@dependencies{shadow,Shadow library}
+@dot "Shadow direct dependencies"
+digraph shadow_dependencies
+{
+    node[shape=box, fontname=Helvetica, fontsize=10, style=filled];
+    edge[fontname=Helvetica, fontsize=10];
+    subgraph
+    {
+        shadow[label="Shadow", fillcolor="#cc00ccff"];
+        mqtt[label="MQTT", fillcolor="#cc00ccff", URL="@ref mqtt"];
+    }
+    subgraph
+    {
+        node[fillcolor="#aed8a9ff"];
+        rank = same;
+        queue[label="Queue", URL="@ref queue"];
+        logging[label="Logging", URL="@ref logging"];
+    }
+    subgraph
+    {
+        rank = same;
+        platform_static_memory[label="Static memory", fillcolor="#e89025ff", URL="@ref platform_static_memory"];
+    }
+    shadow -> mqtt;
+    shadow -> queue;
+    shadow -> logging [label=" if logging enabled", style="dashed"];
+    shadow -> platform_static_memory [label=" if static memory only", style="dashed"];
+}
+@enddot
+
+Currently, the Shadow library has the following dependencies:
+- The MQTT library for sending the messages that interact with the Thing Shadow service. See [this page](@ref mqtt_dependencies) for the dependencies of the MQTT library, which are not shown in the graph above.
+- The queue library for maintaining the data structures for managing in-progress Shadow operations.
+- The logging library may be used if @ref AWS_IOT_LOG_LEVEL_SHADOW is not @ref AWS_IOT_LOG_NONE.
+
+In addition to the components above, the Shadow library also depends on C standard library headers.
 */
 
 /**
