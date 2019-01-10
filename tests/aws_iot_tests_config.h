@@ -61,8 +61,8 @@
     #define AWS_IOT_TEST_SHADOW_THING_NAME     ""
 #endif
 
-/* Queue library configuration. */
-#define AWS_IOT_QUEUE_ENABLE_ASSERTS                ( 1 )
+/* Linear containers library configuration. */
+#define IOT_CONTAINERS_ENABLE_ASSERTS               ( 1 )
 
 /* Shadow library configuration. */
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS               ( 1 )

@@ -43,8 +43,8 @@
 #define AWS_IOT_DEMO_MQTT_PUBLISH_BURST_COUNT       ( 10 )
 #define AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE        ( 10 )
 
-/* Enable asserts in queues and MQTT. */
-#define AWS_IOT_QUEUE_ENABLE_ASSERTS                ( 1 )
+/* Enable asserts in linear containers and MQTT. */
+#define IOT_CONTAINERS_ENABLE_ASSERTS               ( 1 )
 #define AWS_IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
 
 /* Library logging configuration. */
