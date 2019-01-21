@@ -506,11 +506,7 @@ TEST_GROUP_RUNNER( MQTT_System )
     RUN_TEST_CASE( MQTT_System, SubscribePublishWaitQoS1 );
     RUN_TEST_CASE( MQTT_System, SubscribePublishAsync );
     RUN_TEST_CASE( MQTT_System, LastWillAndTestament );
-
-    /* Persistent sessions are currently unsupported by AWS IoT. */
-    #if _AWS_IOT_MQTT_SERVER == false
-        RUN_TEST_CASE( MQTT_System, RestorePreviousSession );
-    #endif
+    RUN_TEST_CASE( MQTT_System, RestorePreviousSession );
 }
 
 /*-----------------------------------------------------------*/

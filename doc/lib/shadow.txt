@@ -28,7 +28,7 @@ digraph shadow_dependencies
     {
         node[fillcolor="#aed8a9ff"];
         rank = same;
-        queue[label="Queue", URL="@ref queue"];
+        linear_containers[label="List/Queue", URL="@ref linear_containers"];
         logging[label="Logging", URL="@ref logging"];
     }
     subgraph
@@ -37,7 +37,7 @@ digraph shadow_dependencies
         platform_static_memory[label="Static memory", fillcolor="#e89025ff", URL="@ref platform_static_memory"];
     }
     shadow -> mqtt;
-    shadow -> queue;
+    shadow -> linear_containers;
     shadow -> logging [label=" if logging enabled", style="dashed"];
     shadow -> platform_static_memory [label=" if static memory only", style="dashed"];
 }
