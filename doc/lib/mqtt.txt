@@ -28,7 +28,7 @@ digraph mqtt_dependencies
     {
         node[fillcolor="#aed8a9ff"];
         rank = same;
-        queue[label="Queue", URL="@ref queue"];
+        linear_containers[label="List/Queue", URL="@ref linear_containers"];
         logging[label="Logging", URL="@ref logging"];
     }
     subgraph
@@ -39,13 +39,12 @@ digraph mqtt_dependencies
         platform_network[label="Network", fillcolor="#e89025ff", URL="@ref platform_network"];
         platform_static_memory[label="Static memory", fillcolor="#e89025ff", URL="@ref platform_static_memory"];
     }
-    mqtt -> queue;
+    mqtt -> linear_containers;
     mqtt -> logging [label=" if logging enabled", style="dashed"];
     mqtt -> platform_threads;
     mqtt -> platform_clock;
     mqtt -> platform_network;
     mqtt -> platform_static_memory [label=" if static memory only", style="dashed"];
-    queue -> platform_threads;
     logging -> platform_clock;
     logging -> platform_static_memory [label=" if static memory only", style="dashed"];
 }
@@ -62,17 +61,6 @@ In addition to the components above, the MQTT library also depends on C standard
 /**
 @page mqtt_design Design
 @brief Architecture behind the MQTT library.
-
-This library uses threads to process outgoing and incoming MQTT operations, and queues to store MQTT operations waiting to be processed.
-- [MQTT API functions](@ref mqtt_functions) only enqueue a waiting operation on the <b>Send Queue</b>. API functions return after successfully enqueuing an operation and do not block to wait for the result of the operation.
-- <b>Send threads</b> are created when operations arrive in the send queue. These threads remove operations from the send queue in FIFO order and transmit MQTT packets across the network. After transmitting the packet, send threads add operations awaiting responses from the server to the <b>Receive Queue</b>. The setting @ref AWS_IOT_MQTT_MAX_SEND_THREADS controls the maximum number of simultaneous send threads.
-- When a response is received from the server, the system's network stack invokes the [MQTT receive callback](@ref mqtt_function_receivecallback). This callback parses the server response, matches the incoming data with an operation in the receive queue, and enqueues the operation in the <b>Callback Queue</b>.
-- <b>Callback threads</b> are created when operations arrive in the callback queue. These threads handle notification of an MQTT operation's result. The notification is handled by a separate thread (not the [receive callback](@ref mqtt_function_receivecallback)) to allow [callback functions](@ref AwsIotMqttCallbackInfo_t.function) to block without slowing down the receive callback. The setting @ref AWS_IOT_MQTT_MAX_CALLBACK_THREADS controls the maximum number of simultaneous callback threads.
-- Periodically, <b>timer threads</b> will be created to send keep-alive packets and retransmit unacknowledged QoS 1 PUBLISH operations.
-
-Threads are created with @ref platform_threads_function_createdetachedthread. Because the platform layer may be re-implemented across systems, threads will be allocated for the MQTT library on-the-go on some systems, while other systems may use an always-allocated thread pool.
-
-The sequence diagram below illustrates the workflow described above. The application thread is able to continue executing while the MQTT library processes the operation.
 
 @image html mqtt_design_typicaloperation.png width=100%
 */
@@ -273,23 +261,14 @@ void AwsIotMqttInternal_CleanupSerializeAdditional( void );
 @configrecommended The default value is <b>strongly recommended</b>.<br>
 @configdefault The default value of this setting depends on the platform. For example, when running on FreeRTOS with BLE support, this setting will be automatically enabled. Conversely, when running on Linux, this setting will be disabled.
 
-@section AWS_IOT_MQTT_MAX_CALLBACK_THREADS
-@brief Set the maximum number of simultaneous callback threads.
+@section AWS_IOT_MQTT_MAX_THREADS
+@brief Set the maximum number of simultaneous threads the MQTT library may spawn.
 
-Callback threads process notifications from completed MQTT operations or incoming PUBLISH messages. Incoming notifications are queued, then removed from the queue and processed by any available callback threads. User callback functions are invoked from the callback threads. This means that user callback functions should avoid blocking, since blocking will make a callback thread unavailable and cause the queue of notifications to grow. A situation where all callback threads are blocked should certainly be avoided.
+Threads process MQTT operations, such as sending MQTT packets or invoking callbacks for completed operations. This setting limits the maximum number of threads the MQTT library may have active at any time.
 
 @configpossible Any positive integer.<br>
 @configrecommended In most use cases, this value can be `1` or `2`. In high-throughput use cases with many MQTT operations or incoming PUBLISH messages, this value can be increased for better performance.<br>
 @configdefault `2`
-
-@section AWS_IOT_MQTT_MAX_SEND_THREADS
-@brief Set the number of simultaneous send threads.
-
-Send threads process outgoing network packets. Packets are queued, then removed from the queue and sent over the network by any available send threads.
-
-@configpossible Any positive integer<br>
-@configrecommended `1`. Unless the [network interface send function](@ref AwsIotMqttNetIf_t.send) supports parallel sends, any value greater than `1` will not provide any performance benefit.<br>
-@configdefault `1`
 
 @section AWS_IOT_LOG_LEVEL_MQTT
 @brief Set the log level of the MQTT library.

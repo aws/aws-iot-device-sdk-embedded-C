@@ -305,13 +305,11 @@ static void * _networkReceiveThread( void * pArgument )
  * @brief Perform a DNS lookup of a host name and establish a TCP connection.
  *
  * @param[in] pHostName The host name to look up.
- * @param[in] hostNameLength Length of `pHostName`.
  * @param[in] port Remote server port (in host byte order) for the TCP connection.
  *
  * @return A connected TCP socket number; -1 if the DNS lookup failed.
  */
 static inline int _dnsLookup( const char * const pHostName,
-                              size_t hostNameLength,
                               uint16_t port )
 {
     int status = 0, tcpSocket = -1;
@@ -747,7 +745,6 @@ AwsIotNetworkError_t AwsIotNetwork_CreateConnection( AwsIotNetworkConnection_t *
 {
     int tcpSocket = -1;
     AwsIotNetworkError_t status = AWS_IOT_NETWORK_SUCCESS;
-    const size_t hostNameLength = strlen( pHostName );
     _connectionInfo_t * pConnectionInfo = NULL;
 
     /* Check parameters. */
@@ -779,7 +776,7 @@ AwsIotNetworkError_t AwsIotNetwork_CreateConnection( AwsIotNetworkConnection_t *
     }
 
     /* Perform a DNS lookup of pHostName. This also establishes a TCP socket. */
-    tcpSocket = _dnsLookup( pHostName, hostNameLength, port );
+    tcpSocket = _dnsLookup( pHostName, port );
 
     if( tcpSocket == -1 )
     {

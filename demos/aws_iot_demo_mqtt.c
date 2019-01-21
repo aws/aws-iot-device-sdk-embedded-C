@@ -201,6 +201,10 @@ static void _operationCompleteCallback( void * param1,
 {
     intptr_t publishCount = ( intptr_t ) param1;
 
+    /* Silence warnings about unused variables. publishCount will not be used if
+     * logging is disabled. */
+    ( void ) publishCount;
+
     /* Print the status of the completed operation. A PUBLISH operation is
      * successful when transmitted over the network. */
     if( pOperation->operation.result == AWS_IOT_MQTT_SUCCESS )
