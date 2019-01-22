@@ -226,8 +226,11 @@
 #ifndef AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES
     #define AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 0 )
 #endif
-#ifndef AWS_IOT_MQTT_MAX_THREADS
-    #define AWS_IOT_MQTT_MAX_THREADS                    ( 2 )
+#ifndef AWS_IOT_MQTT_MAX_CALLBACK_THREADS
+    #define AWS_IOT_MQTT_MAX_CALLBACK_THREADS           ( 2 )
+#endif
+#ifndef AWS_IOT_MQTT_MAX_SEND_THREADS
+    #define AWS_IOT_MQTT_MAX_SEND_THREADS               ( 1 )
 #endif
 #ifndef AWS_IOT_MQTT_TEST
     #define AWS_IOT_MQTT_TEST                           ( 0 )
@@ -420,13 +423,27 @@ typedef struct _mqttTimerEvent
     };
 } _mqttTimerEvent_t;
 
+/**
+ * @brief Holds waiting MQTT operations and manages threads that process them.
+ */
+typedef struct _mqttOperationQueue
+{
+    IotQueue_t queue; /**< @brief Queue of waiting MQTT operations. */
+
+    /**
+     * @brief Maintains a count of threads currently available to process this
+     * queue and provides a mechanism to wait for active callback threads to finish.
+     */
+    AwsIotSemaphore_t availableThreads;
+} _mqttOperationQueue_t;
+
 /* Declarations of the structures keeping track of MQTT operations for internal
  * files. */
-extern IotQueue_t _IotMqttPendingProcessing;
+extern _mqttOperationQueue_t _IotMqttCallback;
+extern _mqttOperationQueue_t _IotMqttSend;
+extern AwsIotMutex_t _IotMqttQueueMutex;
 extern IotListDouble_t _IotMqttPendingResponse;
-extern AwsIotMutex_t _IotMqttPendingProcessingMutex;
 extern AwsIotMutex_t _IotMqttPendingResponseMutex;
-extern AwsIotSemaphore_t _IotMqttAvailableThreads;
 
 /*-------------------- MQTT struct validation functions ---------------------*/
 
@@ -804,10 +821,12 @@ void AwsIotMqttInternal_DestroyOperation( void * pData );
  * @brief Enqueue an MQTT operation for processing.
  *
  * @param[in] pOperation The MQTT operation to enqueue.
+ * @param[in] pQueue The address of either #_IotMqttCallback or #_IotMqttSend.
  *
  * @return #AWS_IOT_MQTT_SUCCESS or #AWS_IOT_MQTT_NO_MEMORY.
  */
-AwsIotMqttError_t AwsIotMqttInternal_EnqueueOperation( _mqttOperation_t * const pOperation );
+AwsIotMqttError_t AwsIotMqttInternal_EnqueueOperation( _mqttOperation_t * const pOperation,
+                                                       _mqttOperationQueue_t * const pQueue );
 
 /**
  * @brief Search the list of MQTT operations pending responses using an operation

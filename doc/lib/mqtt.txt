@@ -261,14 +261,23 @@ void AwsIotMqttInternal_CleanupSerializeAdditional( void );
 @configrecommended The default value is <b>strongly recommended</b>.<br>
 @configdefault The default value of this setting depends on the platform. For example, when running on FreeRTOS with BLE support, this setting will be automatically enabled. Conversely, when running on Linux, this setting will be disabled.
 
-@section AWS_IOT_MQTT_MAX_THREADS
-@brief Set the maximum number of simultaneous threads the MQTT library may spawn.
+@section AWS_IOT_MQTT_MAX_CALLBACK_THREADS
+@brief Set the maximum number of simultaneous callback threads.
 
-Threads process MQTT operations, such as sending MQTT packets or invoking callbacks for completed operations. This setting limits the maximum number of threads the MQTT library may have active at any time.
+Callback threads process notifications from completed MQTT operations or incoming PUBLISH messages. Incoming notifications are queued, then removed from the queue and processed by any available callback threads. User callback functions are invoked from the callback threads. This means that user callback functions should avoid blocking, since blocking will make a callback thread unavailable and cause the queue of notifications to grow. A situation where all callback threads are blocked should certainly be avoided.
 
 @configpossible Any positive integer.<br>
 @configrecommended In most use cases, this value can be `1` or `2`. In high-throughput use cases with many MQTT operations or incoming PUBLISH messages, this value can be increased for better performance.<br>
 @configdefault `2`
+
+@section AWS_IOT_MQTT_MAX_SEND_THREADS
+@brief Set the number of simultaneous send threads.
+
+Send threads process outgoing network packets. Packets are queued, then removed from the queue and sent over the network by any available send threads.
+
+@configpossible Any positive integer<br>
+@configrecommended `1`. Unless the [network interface send function](@ref AwsIotMqttNetIf_t.send) supports parallel sends, any value greater than `1` will not provide any performance benefit.<br>
+@configdefault `1`
 
 @section AWS_IOT_LOG_LEVEL_MQTT
 @brief Set the log level of the MQTT library.
