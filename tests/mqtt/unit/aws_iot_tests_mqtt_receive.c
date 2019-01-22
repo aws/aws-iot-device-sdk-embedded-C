@@ -1051,12 +1051,12 @@ TEST( MQTT_Unit_Receive, PublishValid )
  */
 TEST( MQTT_Unit_Receive, PublishInvalid )
 {
-    /* Attempting to process a packet smaller than 9 bytes should result in no
-     * bytes processed. 9 bytes is the minimum size of a PUBLISH. */
+    /* Attempting to process a packet smaller than 5 bytes should result in no
+     * bytes processed. 5 bytes is the minimum size of a PUBLISH. */
     {
         _DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
         TEST_ASSERT_EQUAL_INT( true, _processPublish( pPublish,
-                                                      8,
+                                                      4,
                                                       0,
                                                       0 ) );
         _freeWrapper( pPublish );
