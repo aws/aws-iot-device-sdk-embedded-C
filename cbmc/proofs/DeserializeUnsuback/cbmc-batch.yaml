@@ -1,0 +1,4 @@
+jobos: ubuntu16
+cbmcflags:        '=--bounds-check;--pointer-check;--unwinding-assertions='
+goto: DeserializeUnsuback.goto
+expected: SUCCESSFUL
