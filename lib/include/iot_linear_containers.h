@@ -855,7 +855,7 @@ static inline void IotQueue_RemoveAll( IotQueue_t * const pQueue,
                                        size_t linkOffset )
 /* @[declare_linear_containers_queue_removeall] */
 {
-    return IotListDouble_RemoveAll( pQueue, freeElement, linkOffset );
+    IotListDouble_RemoveAll( pQueue, freeElement, linkOffset );
 }
 
 /**

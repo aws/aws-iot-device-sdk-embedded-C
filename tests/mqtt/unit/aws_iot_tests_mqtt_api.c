@@ -852,6 +852,7 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
     subscription.topicFilterLength = _TEST_TOPIC_NAME_LENGTH;
     subscription.callback.function = _SUBSCRIPTION_CALLBACK;
 
+    TEST_ASSERT_EQUAL_INT( true, AwsIotMutex_Create( &( mqttConnection.subscriptionMutex ) ) );
     IotListDouble_Create( &( mqttConnection.subscriptionList ) );
 
     if( TEST_PROTECT() )
@@ -889,6 +890,7 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
     IotListDouble_RemoveAll( &( mqttConnection.subscriptionList ),
                              AwsIotMqtt_FreeSubscription,
                              offsetof( _mqttSubscription_t, link ) );
+    AwsIotMutex_Destroy( &( mqttConnection.subscriptionMutex ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -911,6 +913,7 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
     subscription.topicFilterLength = _TEST_TOPIC_NAME_LENGTH;
     subscription.callback.function = _SUBSCRIPTION_CALLBACK;
 
+    TEST_ASSERT_EQUAL_INT( true, AwsIotMutex_Create( &( mqttConnection.subscriptionMutex ) ) );
     IotListDouble_Create( &( mqttConnection.subscriptionList ) );
 
     if( TEST_PROTECT() )
@@ -948,6 +951,7 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
     IotListDouble_RemoveAll( &( mqttConnection.subscriptionList ),
                              AwsIotMqtt_FreeSubscription,
                              offsetof( _mqttSubscription_t, link ) );
+    AwsIotMutex_Destroy( &( mqttConnection.subscriptionMutex ) );
 }
 
 /*-----------------------------------------------------------*/

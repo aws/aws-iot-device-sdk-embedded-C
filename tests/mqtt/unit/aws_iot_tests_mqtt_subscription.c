@@ -284,6 +284,7 @@ TEST_GROUP( MQTT_Unit_Subscription );
  */
 TEST_SETUP( MQTT_Unit_Subscription )
 {
+    TEST_ASSERT_EQUAL_INT( true, AwsIotMutex_Create( &( _connection.subscriptionMutex ) ) );
     IotListDouble_Create( &( _connection.subscriptionList ) );
 }
 
@@ -297,6 +298,7 @@ TEST_TEAR_DOWN( MQTT_Unit_Subscription )
     IotListDouble_RemoveAll( &( _connection.subscriptionList ),
                              AwsIotMqtt_FreeSubscription,
                              offsetof( _mqttSubscription_t, link ) );
+    AwsIotMutex_Destroy( &( _connection.subscriptionMutex ) );
 
     ( void ) memset( &_connection, 0x00, sizeof( _mqttConnection_t ) );
 }
