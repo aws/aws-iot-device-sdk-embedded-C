@@ -1,0 +1,189 @@
+SHELL=/bin/bash
+
+default: report
+
+################################################################
+# Define source location and cbmc binaries
+
+# MQTT source directory relative to proof subdirectories.
+MQTT ?= $(abspath ../../..)
+
+GOTO_CC ?= goto-cc
+GOTO_INSTRUMENT ?= goto-instrument
+GOTO_ANALYZER ?= goto-analyzer
+BATCH ?= cbmc-batch
+VIEWER ?= cbmc-viewer
+
+################################################################
+# Build goto binary for cbmc
+# Build goto binaries with options taken from top-level cmake
+
+INC = \
+	-I$(MQTT)/lib/include \
+	-I$(MQTT)/demos \
+
+DEF += \
+	-DIOT_CONFIG_FILE=\"iot_demo_config.h\" \
+	-DIOT_SDK_VERSION=\"4.0.0\" \
+	-Dawsiotmqtt_EXPORTS \
+
+CFLAGS += $(CFLAGS2) $(INC) $(DEF)
+
+%.goto : %.c
+	$(GOTO_CC) -o $@ $(CFLAGS) $<
+
+$(MQTT)/build:
+	(mkdir -p $(MQTT)/build; cd $(MQTT)/build; cmake ..) 2>&1 \
+		| tee $(ENTRY)0.txt \
+		; exit $${PIPESTATUS[0]}
+
+$(ENTRY)1.goto: $(MQTT)/build $(OBJS)
+	$(GOTO_CC) --function harness -o $@ $(OBJS) 2>&1 \
+		| tee $(ENTRY)1.txt \
+		; exit $${PIPESTATUS[0]}
+
+$(ENTRY)2.goto: $(ENTRY)1.goto
+	 $(GOTO_INSTRUMENT) \
+			$(ABSTRACTIONS) \
+			--drop-unused-functions \
+			--slice-global-inits $< $@ 2>&1 \
+		| tee $(ENTRY)2.txt \
+		; exit $${PIPESTATUS[0]}
+
+$(ENTRY).goto: $(ENTRY)2.goto
+	cp $< $@
+
+################################################################
+# Run cbmc and build html report
+
+CBMCFLAGS += \
+	$(UNWINDING) \
+	--bounds-check \
+	--pointer-check \
+	--unwinding-assertions \
+
+goto: $(ENTRY).goto
+
+cbmc.txt: $(ENTRY).goto
+	cbmc $(CBMCFLAGS) --trace $< 2>&1 | tee $@
+
+property.xml: $(ENTRY).goto
+	cbmc $(CBMCFLAGS) --show-properties --xml-ui $< 2>&1 > $@
+
+coverage.xml: $(ENTRY).goto
+	cbmc $(filter-out --unwinding-assertions,$(CBMCFLAGS)) \
+		--cover location --xml-ui $< 2>&1 > $@
+
+cbmc: cbmc.txt
+
+property: property.xml
+
+coverage: coverage.xml
+
+report: cbmc.txt property.xml coverage.xml
+	$(VIEWER) \
+	--goto $(ENTRY).goto \
+	--srcdir $(MQTT) \
+	--blddir $(MQTT) \
+	--htmldir html \
+	--srcexclude "(./verification|./tests|./tools|./lib/third_party)" \
+	--result cbmc.txt \
+	--property property.xml \
+	--block coverage.xml
+
+clean:
+	$(RM) $(OBJS) $(ENTRY).goto
+	$(RM) $(ENTRY)[0-9].goto $(ENTRY)[0-9].txt
+	$(RM) cbmc.txt property.xml coverage.xml TAGS
+	$(RM) *~ \#*
+
+veryclean: clean
+	$(RM) -r html
+
+.PHONY: cbmc property coverage report clean veryclean
+
+################################################################
+# Run cbmc under cbmc-batch
+
+BATCH ?= cbmc-batch
+WS ?= ws
+JOBOS ?= ubuntu16
+
+define encode_options
+       '=$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')='
+endef
+
+PROPMEM ?= 64000
+COVMEM ?= 64000
+CBMCPKG ?= cbmc
+BATCHPKG ?= cbmc-batch
+VIEWERPKG ?= cbmc-viewer
+
+SRC_ROOT ?= $(MQTT)
+SRC_TARFILE ?= s3://cbmc/mqtt.tar.gz
+
+BATCHFLAGS ?= \
+	--srcdir $(MQTT) \
+	--wsdir $(WS) \
+	--jobprefix $(ENTRY) \
+	--no-build \
+	--goto $(ENTRY).goto \
+	--cbmcflags $(call encode_options,$(CBMCFLAGS)) \
+	--property-memory $(PROPMEM) \
+	--coverage-memory $(COVMEM) \
+	--cbmcpkg $(CBMCPKG) \
+	--batchpkg $(BATCHPKG) \
+	--viewerpkg $(VIEWERPKG) \
+	--no-copysrc \
+	--srctarfile $(SRC_TARFILE) \
+	--blddir $(MQTT) \
+	--jobos $(JOBOS) \
+
+define yaml_encode_options
+       "$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')"
+endef
+
+$(ENTRY).yaml: $(ENTRY).goto Makefile
+	echo 'jobos: $(JOBOS)' > $@
+	echo 'cbmcpkg: $(CBMCPKG)' >> $@
+	echo 'batchpkg: $(BATCHPKG)' >> $@
+	echo 'viewerpkg: $(VIEWERPKG)' >> $@
+	echo 'goto: $(ENTRY).goto' >> $@
+	echo 'build: false' >> $@
+	echo 'cbmcflags: $(call yaml_encode_options,$(CBMCFLAGS))' >> $@
+	echo 'property_memory: $(PROPMEM)' >> $@
+	echo 'coverage_memory: $(COVMEM)' >> $@
+	echo 'expected: "SUCCESSFUL"' >> $@
+
+launch: $(ENTRY).goto Makefile
+	mkdir -p $(WS)
+	cp $(ENTRY).goto $(WS)
+	$(BATCH) $(BATCHFLAGS)
+
+launch-clean:
+	for d in $(ENTRY)*; do \
+	  if [ -d $$d ]; then \
+	    for f in $$d.json $$d.yaml Makefile-$$d; do \
+	      if [ -f $$f ]; then mv $$f $$d; fi \
+	    done\
+	  fi \
+	done
+	$(RM) Makefile-$(ENTRY)-[0-9]*-[0-9]*
+	$(RM) $(ENTRY)-[0-9]*-[0-9]*.json $(ENTRY)-[0-9]*-[0-9]*.yaml
+	$(RM) -r $(WS)
+
+launch-veryclean: launch-clean
+	$(RM) -r $(ENTRY)-[0-9]*-[0-9]*
+
+################################################################
+# Build configuration file to run cbmc under cbmc-batch in CI
+
+cbmc-batch.yaml: Makefile ../Makefile.common
+	@echo "Building $@"
+	@$(RM) $@
+	@echo "jobos: $(JOBOS)" >> $@
+	@echo "cbmcflags: $(call encode_options,$(CBMCFLAGS))" >> $@
+	@echo "goto: $(ENTRY).goto" >> $@
+	@echo "expected: SUCCESSFUL" >> $@
+
+################################################################
