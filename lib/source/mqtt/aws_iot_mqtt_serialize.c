@@ -119,7 +119,7 @@
  * Constants relating to PUBLISH and PUBACK packets, defined by MQTT
  * 3.1.1 spec.
  */
-#define _MQTT_PACKET_PUBLISH_MINIMUM_SIZE            ( 9 )               /**< @brief The size of the smallest valid PUBLISH packet. */
+#define _MQTT_PACKET_PUBLISH_MINIMUM_SIZE            ( 5 )               /**< @brief The size of the smallest valid PUBLISH packet. */
 #define _MQTT_PACKET_PUBACK_SIZE                     ( 4 )               /**< @brief A PUBACK packet is always 4 bytes in size. */
 #define _MQTT_PACKET_PUBACK_REMAINING_LENGTH         ( ( uint8_t ) 2 )   /**< @brief A PUBACK packet always has a "Remaining length" of 2. */
 
@@ -1122,7 +1122,7 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
     uint16_t packetIdentifier = 0;
     const uint8_t * pVariableHeader = NULL, * pPacketIdentifierHigh = NULL;
 
-    /* Ensure that at least 9 bytes are available. If not, this is an incomplete
+    /* Ensure that at least 5 bytes are available. If not, this is an incomplete
      * PUBLISH packet. */
     if( dataLength < _MQTT_PACKET_PUBLISH_MINIMUM_SIZE )
     {
