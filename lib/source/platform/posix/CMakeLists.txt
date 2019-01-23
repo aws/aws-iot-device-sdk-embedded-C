@@ -73,7 +73,7 @@ endif()
 
 # Platform libraries source files.
 add_library( awsiotplatform SHARED
-             aws_iot_clock_posix.c
+             iot_clock_posix.c
              iot_threads_posix.c
              ${NETWORK_SOURCE_FILE}
              static_memory/aws_iot_static_memory_common_posix.c

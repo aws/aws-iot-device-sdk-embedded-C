@@ -20,8 +20,8 @@
  */
 
 /**
- * @file aws_iot_clock_posix.c
- * @brief Implementation of the functions in aws_iot_clock.h for POSIX systems.
+ * @file iot_clock_posix.c
+ * @brief Implementation of the functions in iot_clock.h for POSIX systems.
  */
 
 /* Build using a config header, if provided. */
@@ -52,7 +52,7 @@
 #endif
 
 /* Platform clock include. */
-#include "platform/aws_iot_clock.h"
+#include "platform/iot_clock.h"
 
 /* Configure logs for the functions in this file. */
 #ifdef AWS_IOT_LOG_LEVEL_PLATFORM
@@ -68,29 +68,6 @@
 #define _LIBRARY_LOG_NAME    ( "CLOCK" )
 #include "aws_iot_logging_setup.h"
 
-/*
- * Provide default values for undefined memory allocation functions based on
- * the usage of dynamic memory allocation.
- */
-#ifndef AwsIotClock_Malloc
-    #include <stdlib.h>
-
-    /**
-     * @brief Memory allocation. This function should have the same signature as
-     * [malloc.](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
-     */
-    #define AwsIotClock_Malloc    malloc
-#endif
-#ifndef AwsIotClock_Free
-    #include <stdlib.h>
-
-    /**
-     * @brief Free memory. This function should have the same signature as
-     * [free.](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
-     */
-    #define AwsIotClock_Free    free
-#endif
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -99,7 +76,7 @@
  * For more information on timestring formats, see [this link.]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/strftime.html)
  */
-#define _TIMESTRING_FORMAT    ( "%F %R:%S" )
+#define _TIMESTRING_FORMAT              ( "%F %R:%S" )
 
 /*
  * Time conversion constants.
@@ -107,18 +84,6 @@
 #define _NANOSECONDS_PER_SECOND         ( 1000000000 ) /**< @brief Nanoseconds per second. */
 #define _NANOSECONDS_PER_MILLISECOND    ( 1000000 )    /**< @brief Nanoseconds per millisecond. */
 #define _MILLISECONDS_PER_SECOND        ( 1000 )       /**< @brief Milliseconds per second. */
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Holds information about an active timer.
- */
-typedef struct _timerInfo
-{
-    timer_t timer;                       /**< @brief Underlying POSIX timer. */
-    void * pArgument;                    /**< @brief First argument to threadRoutine. */
-    IotThreadRoutine_t threadRoutine;    /**< @brief Thread function to run on timer expiration. */
-} _timerInfo_t;
 
 /*-----------------------------------------------------------*/
 
@@ -133,65 +98,69 @@ static void _timerExpirationWrapper( union sigval argument );
  * @brief Convert a relative timeout in milliseconds to an absolute timeout
  * represented as a struct timespec.
  *
- * This function is not included in aws_iot_clock.h because it's platform-specific.
+ * This function is not included in iot_clock.h because it's platform-specific.
  * But it may be called by other POSIX platform files.
  * @param[in] timeoutMs The relative timeout.
  * @param[out] pOutput Where to store the resulting `timespec`.
  *
  * @return `true` if `timeoutMs` was successfully converted; `false` otherwise.
  */
-bool AwsIotClock_TimeoutToTimespec( uint64_t timeoutMs,
-                                    struct timespec * const pOutput );
+bool IotClock_TimeoutToTimespec( uint64_t timeoutMs,
+                                 struct timespec * const pOutput );
 
 /*-----------------------------------------------------------*/
 
 static void _timerExpirationWrapper( union sigval argument )
 {
-    _timerInfo_t * pTimerInfo = ( _timerInfo_t * ) argument.sival_ptr;
+    IotTimer_t * pTimer = ( IotTimer_t * ) argument.sival_ptr;
 
     /* Call the wrapped thread routine. */
-    pTimerInfo->threadRoutine( pTimerInfo->pArgument );
+    pTimer->threadRoutine( pTimer->pArgument );
 }
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotClock_TimeoutToTimespec( uint64_t timeoutMs,
-                                    struct timespec * const pOutput )
+bool IotClock_TimeoutToTimespec( uint64_t timeoutMs,
+                                 struct timespec * const pOutput )
 {
+    bool status = true;
     struct timespec systemTime = { 0 };
 
-    if( clock_gettime( CLOCK_REALTIME, &systemTime ) != 0 )
+    if( clock_gettime( CLOCK_REALTIME, &systemTime ) == 0 )
+    {
+        /* Add the nanoseconds value to the time. */
+        systemTime.tv_nsec += ( long ) ( ( timeoutMs % _MILLISECONDS_PER_SECOND ) * _NANOSECONDS_PER_MILLISECOND );
+
+        /* Check for overflow of nanoseconds value. */
+        if( systemTime.tv_nsec >= _NANOSECONDS_PER_SECOND )
+        {
+            systemTime.tv_nsec -= _NANOSECONDS_PER_SECOND;
+            systemTime.tv_sec++;
+        }
+
+        /* Add the seconds value to the timeout. */
+        systemTime.tv_sec += ( time_t ) ( timeoutMs / _MILLISECONDS_PER_SECOND );
+
+        /* Set the output parameter. */
+        *pOutput = systemTime;
+    }
+    else
     {
         AwsIotLogError( "Failed to read system time. errno=%d", errno );
 
-        return false;
+        status = false;
     }
 
-    /* Add the nanoseconds value to the time. */
-    systemTime.tv_nsec += ( long ) ( ( timeoutMs % _MILLISECONDS_PER_SECOND ) * _NANOSECONDS_PER_MILLISECOND );
-
-    /* Check for overflow of nanoseconds value. */
-    if( systemTime.tv_nsec >= _NANOSECONDS_PER_SECOND )
-    {
-        systemTime.tv_nsec -= _NANOSECONDS_PER_SECOND;
-        systemTime.tv_sec++;
-    }
-
-    /* Add the seconds value to the timeout. */
-    systemTime.tv_sec += ( time_t ) ( timeoutMs / _MILLISECONDS_PER_SECOND );
-
-    /* Set the output parameter. */
-    *pOutput = systemTime;
-
-    return true;
+    return status;
 }
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotClock_GetTimestring( char * const pBuffer,
-                                size_t bufferSize,
-                                size_t * const pTimestringLength )
+bool IotClock_GetTimestring( char * const pBuffer,
+                             size_t bufferSize,
+                             size_t * const pTimestringLength )
 {
+    bool status = true;
     const time_t unixTime = time( NULL );
     struct tm localTime = { 0 };
     size_t timestringLength = 0;
@@ -200,27 +169,32 @@ bool AwsIotClock_GetTimestring( char * const pBuffer,
      * should be the pointer to the localTime struct. */
     if( localtime_r( &unixTime, &localTime ) != &localTime )
     {
-        return false;
+        status = false;
     }
 
-    /* Convert the localTime struct to a string. */
-    timestringLength = strftime( pBuffer, bufferSize, _TIMESTRING_FORMAT, &localTime );
-
-    /* Check for error from strftime. */
-    if( timestringLength == 0 )
+    if( status == true )
     {
-        return false;
+        /* Convert the localTime struct to a string. */
+        timestringLength = strftime( pBuffer, bufferSize, _TIMESTRING_FORMAT, &localTime );
+
+        /* Check for error from strftime. */
+        if( timestringLength == 0 )
+        {
+            status = false;
+        }
+        else
+        {
+            /* Set the output parameter. */
+            *pTimestringLength = timestringLength;
+        }
     }
 
-    /* Set the output parameter. */
-    *pTimestringLength = timestringLength;
-
-    return true;
+    return status;
 }
 
 /*-----------------------------------------------------------*/
 
-uint64_t AwsIotClock_GetTimeMs( void )
+uint64_t IotClock_GetTimeMs( void )
 {
     struct timespec currentTime = { 0 };
 
@@ -236,80 +210,58 @@ uint64_t AwsIotClock_GetTimeMs( void )
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotClock_TimerCreate( AwsIotTimer_t * const pNewTimer,
-                              IotThreadRoutine_t expirationRoutine,
-                              void * pArgument )
+bool IotClock_TimerCreate( IotTimer_t * const pNewTimer,
+                           IotThreadRoutine_t expirationRoutine,
+                           void * pArgument )
 {
-    _timerInfo_t * pTimerInfo = NULL;
+    bool status = true;
     struct sigevent expirationNotification =
     {
         .sigev_notify            = SIGEV_THREAD,
         .sigev_signo             =                       0,
-        .sigev_value.sival_ptr   = NULL,
+        .sigev_value.sival_ptr   = pNewTimer,
         .sigev_notify_function   = _timerExpirationWrapper,
         .sigev_notify_attributes = NULL
     };
 
     AwsIotLogDebug( "Creating new timer %p.", pNewTimer );
 
-    /* Allocate memory to store the expiration routine and argument. */
-    pTimerInfo = AwsIotClock_Malloc( sizeof( _timerInfo_t ) );
-
-    if( pTimerInfo == NULL )
-    {
-        AwsIotLogError( "Failed to allocate memory for new timer %p.", pNewTimer );
-
-        return false;
-    }
-
     /* Set the timer expiration routine and argument. */
-    pTimerInfo->pArgument = pArgument;
-    pTimerInfo->threadRoutine = expirationRoutine;
-
-    expirationNotification.sigev_value.sival_ptr = pTimerInfo;
+    pNewTimer->threadRoutine = expirationRoutine;
+    pNewTimer->pArgument = pArgument;
 
     /* Create the underlying POSIX timer. */
     if( timer_create( CLOCK_REALTIME,
                       &expirationNotification,
-                      &( pTimerInfo->timer ) ) != 0 )
+                      &( pNewTimer->timer ) ) != 0 )
     {
         AwsIotLogError( "Failed to create new timer %p. errno=%d.", pNewTimer, errno );
-
-        AwsIotClock_Free( pTimerInfo );
-
-        return false;
+        status = false;
     }
 
-    /* Set the output parameter. */
-    *pNewTimer = pTimerInfo;
-
-    return true;
+    return status;
 }
 
 /*-----------------------------------------------------------*/
 
-void AwsIotClock_TimerDestroy( AwsIotTimer_t * const pTimer )
+void IotClock_TimerDestroy( IotTimer_t * const pTimer )
 {
-    _timerInfo_t * pTimerInfo = ( _timerInfo_t * ) *pTimer;
-
     AwsIotLogDebug( "Destroying timer %p.", pTimer );
 
     /* Destroy the underlying POSIX timer. */
-    if( timer_delete( pTimerInfo->timer ) != 0 )
+    if( timer_delete( pTimer->timer ) != 0 )
     {
         AwsIotLogWarn( "Failed to destroy timer %p. errno=%d.", pTimer, errno );
     }
-
-    AwsIotClock_Free( pTimerInfo );
 }
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotClock_TimerArm( AwsIotTimer_t * const pTimer,
-                           uint64_t relativeTimeoutMs,
-                           uint64_t periodMs )
+bool IotClock_TimerArm( IotTimer_t * const pTimer,
+                        uint64_t relativeTimeoutMs,
+                        uint64_t periodMs )
 {
-    _timerInfo_t * pTimerInfo = ( _timerInfo_t * ) *pTimer;
+    bool status = true;
     struct itimerspec timerExpiration =
     {
         .it_value    = { 0 },
@@ -322,30 +274,33 @@ bool AwsIotClock_TimerArm( AwsIotTimer_t * const pTimer,
                     periodMs );
 
     /* Calculate the initial timer expiration. */
-    if( AwsIotClock_TimeoutToTimespec( relativeTimeoutMs,
-                                       &( timerExpiration.it_value ) ) == false )
+    if( IotClock_TimeoutToTimespec( relativeTimeoutMs,
+                                    &( timerExpiration.it_value ) ) == false )
     {
         AwsIotLogError( "Invalid relative timeout." );
 
-        return false;
+        status = false;
     }
 
-    /* Calculate the timer expiration period. */
-    if( periodMs > 0 )
+    if( status == true )
     {
-        timerExpiration.it_interval.tv_sec = ( time_t ) ( periodMs / _MILLISECONDS_PER_SECOND );
-        timerExpiration.it_interval.tv_nsec = ( long ) ( ( periodMs % _MILLISECONDS_PER_SECOND ) * _NANOSECONDS_PER_MILLISECOND );
+        /* Calculate the timer expiration period. */
+        if( periodMs > 0 )
+        {
+            timerExpiration.it_interval.tv_sec = ( time_t ) ( periodMs / _MILLISECONDS_PER_SECOND );
+            timerExpiration.it_interval.tv_nsec = ( long ) ( ( periodMs % _MILLISECONDS_PER_SECOND ) * _NANOSECONDS_PER_MILLISECOND );
+        }
+
+        /* Arm the underlying POSIX timer. */
+        if( timer_settime( pTimer->timer, TIMER_ABSTIME, &timerExpiration, NULL ) != 0 )
+        {
+            AwsIotLogError( "Failed to arm timer %p. errno=%d.", pTimer, errno );
+
+            status = false;
+        }
     }
 
-    /* Arm the underlying POSIX timer. */
-    if( timer_settime( pTimerInfo->timer, TIMER_ABSTIME, &timerExpiration, NULL ) != 0 )
-    {
-        AwsIotLogError( "Failed to arm timer %p. errno=%d.", pTimer, errno );
-
-        return false;
-    }
-
-    return true;
+    return status;
 }
 
 /*-----------------------------------------------------------*/

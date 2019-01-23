@@ -36,7 +36,7 @@
 #include "private/aws_iot_mqtt_internal.h"
 
 /* Platform layer includes. */
-#include "platform/aws_iot_clock.h"
+#include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
 /*-----------------------------------------------------------*/
@@ -172,7 +172,7 @@ static bool _calculateNextPublishRetry( _mqttConnection_t * const pMqttConnectio
 
     /* Calculate when the PUBLISH retry event should expire relative to the current
      * time. */
-    pPublishRetry->expirationTime = AwsIotClock_GetTimeMs();
+    pPublishRetry->expirationTime = IotClock_GetTimeMs();
 
     if( pPublishRetry->retry.count > pPublishRetry->retry.limit )
     {
@@ -209,9 +209,9 @@ static bool _calculateNextPublishRetry( _mqttConnection_t * const pMqttConnectio
     if( ( pTimerListHead == NULL ) ||
         ( pTimerListHead->expirationTime > pPublishRetry->expirationTime ) )
     {
-        status = AwsIotClock_TimerArm( &( pMqttConnection->timer ),
-                                       pPublishRetry->expirationTime - AwsIotClock_GetTimeMs(),
-                                       0 );
+        status = IotClock_TimerArm( &( pMqttConnection->timer ),
+                                    pPublishRetry->expirationTime - IotClock_GetTimeMs(),
+                                    0 );
 
         if( status == false )
         {

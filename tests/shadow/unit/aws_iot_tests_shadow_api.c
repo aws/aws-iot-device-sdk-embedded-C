@@ -54,7 +54,7 @@
 #undef _LIBRARY_LOG_LEVEL
 
 /* Platform layer includes. */
-#include "platform/aws_iot_clock.h"
+#include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
 /* Test framework includes. */
@@ -104,7 +104,7 @@ static _mqttConnection_t * _pMqttConnection = NULL;
 /**
  * @brief Timer used to simulate a response from the network.
  */
-static AwsIotTimer_t _receiveTimer;
+static IotTimer_t _receiveTimer;
 
 /**
  * @brief Synchronizes the MQTT send and receive threads in these tests.
@@ -274,9 +274,9 @@ static size_t _sendSuccess( void * pSendContext,
         AwsIotShadow_Assert( status == AWS_IOT_MQTT_SUCCESS );
 
         /* Set the receive thread to run after a "network round-trip". */
-        AwsIotClock_TimerArm( &_receiveTimer,
-                              _NETWORK_ROUND_TRIP_TIME_MS,
-                              0 );
+        IotClock_TimerArm( &_receiveTimer,
+                           _NETWORK_ROUND_TRIP_TIME_MS,
+                           0 );
     }
 
     IotMutex_Unlock( &_lastPacketMutex );
@@ -309,9 +309,9 @@ TEST_SETUP( Shadow_Unit_API )
     TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &_lastPacketMutex ) );
 
     /* Create the receive thread timer. */
-    AwsIotClock_TimerCreate( &_receiveTimer,
-                             _receiveThread,
-                             NULL );
+    IotClock_TimerCreate( &_receiveTimer,
+                          _receiveThread,
+                          NULL );
 
     /* Initialize the MQTT library. */
     TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, AwsIotMqtt_Init() );
@@ -345,7 +345,7 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
     AwsIotMqtt_Cleanup();
 
     /* Destroy the receive thread timer. */
-    AwsIotClock_TimerDestroy( &_receiveTimer );
+    IotClock_TimerDestroy( &_receiveTimer );
 
     /* Wait for the receive thread to finish and release the last packet mutex. */
     IotMutex_Lock( &_lastPacketMutex );

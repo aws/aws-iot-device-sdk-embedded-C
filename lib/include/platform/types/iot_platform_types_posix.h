@@ -42,13 +42,21 @@
 /**
  * @brief The native mutex type on POSIX systems.
  */
-typedef pthread_mutex_t _IotSystemMutex_t;
+typedef pthread_mutex_t   _IotSystemMutex_t;
 
 /**
  * @brief The native semaphore type on POSIX systems.
  */
-typedef sem_t _IotSystemSemaphore_t;
+typedef sem_t             _IotSystemSemaphore_t;
 
-#define AWS_IOT_TIMER_TYPE void*
+/**
+ * @brief Represents an #IotTimer_t on POSIX systems.
+ */
+typedef struct _IotSystemTimer
+{
+    timer_t timer;                      /**< @brief Underlying POSIX timer. */
+    void * pArgument;                   /**< @brief First argument to threadRoutine. */
+    void ( * threadRoutine )( void * ); /**< @brief Thread function to run on timer expiration. */
+} _IotSystemTimer_t;
 
 #endif /* ifndef _IOT_PLATFORM_TYPES_POSIX_H_ */

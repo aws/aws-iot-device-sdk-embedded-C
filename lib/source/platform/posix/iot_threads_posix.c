@@ -102,8 +102,8 @@
 static void * _threadRoutineWrapper( void * pArgument );
 
 /* Platform-specific function implemented in iot_clock_posix.c */
-extern bool AwsIotClock_TimeoutToTimespec( uint64_t timeoutMs,
-                                           struct timespec * const pOutput );
+extern bool IotClock_TimeoutToTimespec( uint64_t timeoutMs,
+                                        struct timespec * const pOutput );
 
 /*-----------------------------------------------------------*/
 
@@ -427,7 +427,7 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * const pSemaphore,
     AwsIotLogDebug( "Attempting to wait on semaphore %p with timeout %llu.",
                     pSemaphore, timeoutMs );
 
-    if( AwsIotClock_TimeoutToTimespec( timeoutMs, &timeout ) == false )
+    if( IotClock_TimeoutToTimespec( timeoutMs, &timeout ) == false )
     {
         AwsIotLogError( "Invalid timeout." );
 

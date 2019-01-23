@@ -36,7 +36,7 @@
 #include "private/aws_iot_mqtt_internal.h"
 
 /* Platform layer includes. */
-#include "platform/aws_iot_clock.h"
+#include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
 /* Validate MQTT configuration settings. */
@@ -274,7 +274,7 @@ static bool _processKeepAliveEvent( _mqttConnection_t * const pMqttConnection,
         else
         {
             /* Check for a PINGRESP after AWS_IOT_MQTT_RESPONSE_WAIT_MS. */
-            pKeepAliveEvent->expirationTime = AwsIotClock_GetTimeMs() + AWS_IOT_MQTT_RESPONSE_WAIT_MS;
+            pKeepAliveEvent->expirationTime = IotClock_GetTimeMs() + AWS_IOT_MQTT_RESPONSE_WAIT_MS;
             pKeepAliveEvent->checkPingresp = true;
         }
     }
@@ -286,7 +286,7 @@ static bool _processKeepAliveEvent( _mqttConnection_t * const pMqttConnection,
             AwsIotLogDebug( "PINGRESP received." );
 
             /* The next keep-alive event should send another PINGREQ. */
-            pKeepAliveEvent->expirationTime = AwsIotClock_GetTimeMs() +
+            pKeepAliveEvent->expirationTime = IotClock_GetTimeMs() +
                                               pMqttConnection->keepAliveSeconds * 1000ULL;
             pKeepAliveEvent->checkPingresp = false;
         }
@@ -500,7 +500,7 @@ static void _timerThread( void * pArgument )
         if( pTimerEvent != NULL )
         {
             /* Check if the first event should be processed now. */
-            if( pTimerEvent->expirationTime <= AwsIotClock_GetTimeMs() + AWS_IOT_MQTT_TIMER_EVENT_THRESHOLD_MS )
+            if( pTimerEvent->expirationTime <= IotClock_GetTimeMs() + AWS_IOT_MQTT_TIMER_EVENT_THRESHOLD_MS )
             {
                 /*  Remove the timer event for immediate processing. */
                 IotListDouble_Remove( &( pTimerEvent->link ) );
@@ -509,9 +509,9 @@ static void _timerThread( void * pArgument )
             {
                 /* The first element in the timer queue shouldn't be processed yet.
                  * Arm the timer for when it should be processed. */
-                if( AwsIotClock_TimerArm( &( pMqttConnection->timer ),
-                                          pTimerEvent->expirationTime - AwsIotClock_GetTimeMs(),
-                                          0 ) == false )
+                if( IotClock_TimerArm( &( pMqttConnection->timer ),
+                                       pTimerEvent->expirationTime - IotClock_GetTimeMs(),
+                                       0 ) == false )
                 {
                     AwsIotLogWarn( "Failed to re-arm timer for connection %p.",
                                    pMqttConnection );
@@ -634,9 +634,9 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     IotListDouble_Create( &( pNewMqttConnection->timerEventList ) );
 
     /* Create the timer mutex for a new connection. */
-    if( AwsIotClock_TimerCreate( &( pNewMqttConnection->timer ),
-                                 _timerThread,
-                                 pNewMqttConnection ) == false )
+    if( IotClock_TimerCreate( &( pNewMqttConnection->timer ),
+                              _timerThread,
+                              pNewMqttConnection ) == false )
     {
         AwsIotLogError( "Failed to create timer for new connection." );
         IotMutex_Destroy( &( pNewMqttConnection->timerMutex ) );
@@ -701,7 +701,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
         /* Set the members of the keep-alive timer event. */
         ( void ) memset( pNewMqttConnection->pKeepAliveEvent, 0x00, sizeof( _mqttTimerEvent_t ) );
         pNewMqttConnection->pKeepAliveEvent->pOperation = pNewMqttConnection->pPingreqOperation;
-        pNewMqttConnection->pKeepAliveEvent->expirationTime = AwsIotClock_GetTimeMs() + keepAliveSeconds * 1000ULL;
+        pNewMqttConnection->pKeepAliveEvent->expirationTime = IotClock_GetTimeMs() + keepAliveSeconds * 1000ULL;
 
         /* Add the PINGREQ to the timer event list. */
         IotListDouble_InsertSorted( &( pNewMqttConnection->timerEventList ),
@@ -738,7 +738,7 @@ static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
     /* Destroy timer and mutexes. */
-    AwsIotClock_TimerDestroy( &( pMqttConnection->timer ) );
+    IotClock_TimerDestroy( &( pMqttConnection->timer ) );
     IotMutex_Destroy( &( pMqttConnection->timerMutex ) );
     IotMutex_Destroy( &( pMqttConnection->subscriptionMutex ) );
     AwsIotMqtt_FreeConnection( pMqttConnection );
@@ -906,9 +906,9 @@ static AwsIotMqttError_t _connectCommon( AwsIotMqttConnection_t * pMqttConnectio
     {
         AwsIotLogDebug( "Starting new MQTT connection timer." );
 
-        if( AwsIotClock_TimerArm( &( pNewMqttConnection->timer ),
-                                  pNewMqttConnection->pKeepAliveEvent->expirationTime - AwsIotClock_GetTimeMs(),
-                                  0 ) == false )
+        if( IotClock_TimerArm( &( pNewMqttConnection->timer ),
+                               pNewMqttConnection->pKeepAliveEvent->expirationTime - IotClock_GetTimeMs(),
+                               0 ) == false )
         {
             AwsIotLogError( "Failed to start connection timer for new MQTT connection" );
 
@@ -1775,7 +1775,7 @@ void AwsIotMqtt_Disconnect( AwsIotMqttConnection_t mqttConnection,
 
     /* Stop the connection timer. */
     AwsIotLogDebug( "Stopping connection timer." );
-    AwsIotClock_TimerDestroy( &( pMqttConnection->timer ) );
+    IotClock_TimerDestroy( &( pMqttConnection->timer ) );
 
     /* Only send a DISCONNECT packet if no error occurred and the "cleanup only"
      * option is false. */
@@ -2215,7 +2215,7 @@ AwsIotMqttError_t AwsIotMqtt_Wait( AwsIotMqttReference_t reference,
          * the wait begins for a PUBLISH with retry. */
         if( publishRetryActive == true )
         {
-            startTime = AwsIotClock_GetTimeMs();
+            startTime = IotClock_GetTimeMs();
             AwsIotMqtt_Assert( startTime > 0 );
         }
 
@@ -2228,7 +2228,7 @@ AwsIotMqttError_t AwsIotMqtt_Wait( AwsIotMqttReference_t reference,
             if( publishRetryActive == true )
             {
                 /* Get current time. */
-                currentTime = AwsIotClock_GetTimeMs();
+                currentTime = IotClock_GetTimeMs();
                 AwsIotMqtt_Assert( currentTime >= startTime );
 
                 /* Calculate elapsed time. */

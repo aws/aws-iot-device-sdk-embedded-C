@@ -215,14 +215,6 @@ This setting overrides @ref AWS_IOT_LOG_LEVEL_GLOBAL for the [platform networkin
 @configpossible One of the @ref logging_constants_levels.<br>
 @configdefault @ref AWS_IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #AWS_IOT_LOG_NONE.
 
-@section AWS_IOT_TIMER_TYPE
-@brief Set the type used to represent timers.
-
-@copydetails AwsIotTimer_t
-
-@configpossible Any C data type.<br>
-@configdefault No default value is provided, but this setting will be automatically configured during build.
-
 @section AWS_IOT_MESSAGE_BUFFERS
 @brief The number of statically-allocated [message buffers](@ref platform_static_memory_types_messagebuffers). This setting has no effect if @ref AWS_IOT_STATIC_MEMORY_ONLY is `0`.
 
@@ -285,7 +277,6 @@ This setting overrides @ref AWS_IOT_LOG_LEVEL_GLOBAL for the [platform networkin
 Some platform layers are not affected by @ref AWS_IOT_STATIC_MEMORY_ONLY. Currently, the following platform implementations require memory allocation:
 - POSIX <br>
   This implementation is not affected by @ref AWS_IOT_STATIC_MEMORY_ONLY. However, its memory allocation functions may be overridden by setting the following constants. All memory allocation functions must have the same signatures as [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) and [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
-  - #AwsIotClock_Malloc and #AwsIotClock_Free
   - #IotThreads_Malloc and #IotThreads_Free.
   - #AwsIotNetwork_Malloc and #AwsIotNetwork_Free.
 

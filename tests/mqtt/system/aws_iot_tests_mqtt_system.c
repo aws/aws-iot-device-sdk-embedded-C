@@ -36,7 +36,7 @@
 #include "private/aws_iot_mqtt_internal.h"
 
 /* Platform layer includes. */
-#include "platform/aws_iot_clock.h"
+#include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
 /* Test framework includes. */
@@ -473,7 +473,7 @@ TEST_SETUP( MQTT_System )
         ( void ) snprintf( _pClientIdentifier,
                            _CLIENT_IDENTIFIER_MAX_LENGTH,
                            "aws%llu",
-                           ( long long unsigned int ) AwsIotClock_GetTimeMs() );
+                           ( long long unsigned int ) IotClock_GetTimeMs() );
     #else
         ( void ) strncpy( _pClientIdentifier,
                           AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER,
@@ -674,7 +674,7 @@ TEST( MQTT_System, LastWillAndTestament )
         ( void ) snprintf( pLwtListenerClientIdentifier,
                            _CLIENT_IDENTIFIER_MAX_LENGTH,
                            "awslwt%llu",
-                           ( long long unsigned int ) AwsIotClock_GetTimeMs() );
+                           ( long long unsigned int ) IotClock_GetTimeMs() );
     #else
         ( void ) strncpy( pLwtListenerClientIdentifier,
                           AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER "LWT",

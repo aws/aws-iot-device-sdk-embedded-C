@@ -32,6 +32,8 @@
     #include IOT_CONFIG_FILE
 #endif
 
+/*------------------------- Thread management types -------------------------*/
+
 /**
  * @ingroup platform_datatypes_handles
  * @brief The type used to represent mutexes, configured with the type
@@ -83,9 +85,25 @@ typedef _IotSystemSemaphore_t   IotSemaphore_t;
  */
 typedef void ( * IotThreadRoutine_t )( void * );
 
+/*-------------------------- Clock and timer types --------------------------*/
+
 /**
- * @brief Temporary, will be removed shortly.
+ * @ingroup platform_datatypes_handles
+ * @brief The type used to represent timers, configured with the type
+ * `_IotSystemTimer_t`.
+ *
+ * <span style="color:red;font-weight:bold">
+ * `_IotSystemTimer_t` will be automatically configured during build and generally
+ * does not need to be defined.
+ * </span>
+ *
+ * <b>Example</b> <br>
+ * To change the type of #IotTimer_t to `long`:
+ * @code{c}
+ * typedef long _IotSystemTimer_t;
+ * #include "iot_clock.h"
+ * @endcode
  */
-typedef void * AwsIotTimer_t;
+typedef _IotSystemTimer_t IotTimer_t;
 
 #endif /* ifndef _IOT_PLATFORM_TYPES_H_ */

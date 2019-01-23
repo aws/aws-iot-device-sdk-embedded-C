@@ -43,7 +43,7 @@
 #include "private/aws_iot_mqtt_internal.h"
 
 /* Platform layer includes. */
-#include "platform/aws_iot_clock.h"
+#include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
 /* Test framework includes. */
@@ -62,7 +62,7 @@
 #else
     #define _AWS_IOT_MQTT_SERVER    false
 
-    /* Redefine the connect info initializer if not using an AWS IoT MQTT server. */
+/* Redefine the connect info initializer if not using an AWS IoT MQTT server. */
     #undef AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER
     #define AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER    { 0 }
 #endif
@@ -539,8 +539,8 @@ TEST( MQTT_Unit_API, DisconnectMallocFail )
 
         /* Create a new MQTT connection. */
         pMqttConnection = AwsIotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                &networkInterface,
-                                                                0 );
+                                                               &networkInterface,
+                                                               0 );
         TEST_ASSERT_NOT_EQUAL( NULL, pMqttConnection );
 
         /* Set malloc to eventually fail. */
@@ -653,8 +653,8 @@ TEST( MQTT_Unit_API, PublishQoS1 )
     /* Set the members of the network interface and create a new MQTT connection. */
     networkInterface.send = _sendSuccess;
     pMqttConnection = AwsIotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                            &networkInterface,
-                                                            0 );
+                                                           &networkInterface,
+                                                           0 );
     TEST_ASSERT_NOT_EQUAL( NULL, pMqttConnection );
 
     /* Set the publish info. */
@@ -734,8 +734,8 @@ TEST( MQTT_Unit_API, PublishDuplicates )
     networkInterface.send = _dupChecker;
     networkInterface.serialize.publishSetDup = _publishSetDup;
     pMqttConnection = AwsIotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                            &networkInterface,
-                                                            0 );
+                                                           &networkInterface,
+                                                           0 );
     TEST_ASSERT_NOT_EQUAL( NULL, pMqttConnection );
 
     /* Set the publish info. */
@@ -747,7 +747,7 @@ TEST( MQTT_Unit_API, PublishDuplicates )
     publishInfo.retryMs = _DUP_CHECK_RETRY_MS;
     publishInfo.retryLimit = _DUP_CHECK_RETRY_LIMIT;
 
-    startTime = AwsIotClock_GetTimeMs();
+    startTime = IotClock_GetTimeMs();
 
     if( TEST_PROTECT() )
     {
@@ -768,7 +768,7 @@ TEST( MQTT_Unit_API, PublishDuplicates )
         TEST_ASSERT_EQUAL_INT( true, dupCheckResult );
 
         /* Check that at least the minimum wait time elapsed. */
-        TEST_ASSERT_TRUE( startTime + _DUP_CHECK_MINIMUM_WAIT <= AwsIotClock_GetTimeMs() );
+        TEST_ASSERT_TRUE( startTime + _DUP_CHECK_MINIMUM_WAIT <= IotClock_GetTimeMs() );
     }
 
     /* Clean up MQTT connection. */

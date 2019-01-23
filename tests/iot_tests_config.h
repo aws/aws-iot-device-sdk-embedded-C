@@ -77,8 +77,6 @@
  * be affected by AWS_IOT_STATIC_MEMORY_ONLY. */
 #define AwsIotNetwork_Malloc    unity_malloc_mt
 #define AwsIotNetwork_Free      unity_free_mt
-#define AwsIotClock_Malloc      unity_malloc_mt
-#define AwsIotClock_Free        unity_free_mt
 #define IotThreads_Malloc       unity_malloc_mt
 #define IotThreads_Free         unity_free_mt
 #define AwsIotLogging_Malloc    unity_malloc_mt

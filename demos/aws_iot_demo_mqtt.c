@@ -37,7 +37,7 @@
 #include "aws_iot_demo.h"
 
 /* Platform layer includes. */
-#include "platform/aws_iot_clock.h"
+#include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
 /* MQTT include. */
@@ -408,7 +408,7 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
         status = snprintf( pClientIdentifierBuffer,
                            _CLIENT_IDENTIFIER_MAX_LENGTH,
                            _CLIENT_IDENTIFIER_PREFIX "%lu",
-                           ( long unsigned int ) AwsIotClock_GetTimeMs() );
+                           ( long unsigned int ) IotClock_GetTimeMs() );
 
         /* Check for errors from snprintf. */
         if( status < 0 )
