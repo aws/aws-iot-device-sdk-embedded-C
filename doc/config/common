@@ -71,7 +71,7 @@ EXCLUDE_SYMBOLS += "TEST_*_run"
 ALIASES += dependencies{2}="@section \1_dependencies Dependencies^^@brief Dependencies of the \2.^^^^"
 
 # Alias for starting a configuration settings page.
-ALIASES += describeconfig="Configuration settings are C proprocessor constants. They can be set with a @c #`define` in an @ref AWS_IOT_CONFIG_FILE or by using a compiler option such as `-D` in gcc. If a configuration setting is not defined, the library will use a \"sensible\" default value (unless otherwise noted). Because they are compile-time constants, a library must be rebuilt if a configuration setting is changed."
+ALIASES += describeconfig="Configuration settings are C proprocessor constants. They can be set with a @c #`define` in an @ref IOT_CONFIG_FILE or by using a compiler option such as `-D` in gcc. If a configuration setting is not defined, the library will use a \"sensible\" default value (unless otherwise noted). Because they are compile-time constants, a library must be rebuilt if a configuration setting is changed."
 ALIASES += configpage{2}="@page \1_config Configuration^^@brief Configuration settings of the \2.^^^^@describeconfig^^@par configpagemarker"
 ALIASES += configpage{4}="@page \1_config \3 Configuration^^@brief Configuration settings of the \2.^^^^@describeconfig^^^^The settings on this page only affect the [\2](@ref \1). In addition to the settings on this page, them \2 will also be affected by [settings that affect all \4](@ref global_\4_config).^^@par configpagemarker"
 ALIASES += globalconfigpage{3}="@page global_\1_config Global \2 Configuration^^^^@describeconfig^^@brief Configuration settings that affect all \3.^^@par configpagemarker"

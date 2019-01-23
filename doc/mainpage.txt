@@ -14,10 +14,10 @@ Design goals of this SDK include:
 /**
 @globalconfigpage{library,Library,libraries}
 
-@section AWS_IOT_CONFIG_FILE
+@section IOT_CONFIG_FILE
 @brief Configuration header for the AWS IoT libraries.
 
-Define a file to be included in all library source files before any other files. Unlike other settings, this one must be set using a compiler option, such as `-D` for gcc. The option should specify a filename that is in the include path; for example, `-DAWS_IOT_CONFIG_FILE="aws_iot_config.h"` (quotes may need to be escaped for some compilers).
+Define a file to be included in all library source files before any other files. Unlike other settings, this one must be set using a compiler option, such as `-D` for gcc. The option should specify a filename that is in the include path; for example, `-DIOT_CONFIG_FILE="iot_config.h"` (quotes may need to be escaped for some compilers).
 
 @configpossible A string representing a file name. This file must be in the compiler's include path.<br>
 @configdefault None. A configuration header will not be used if this value is undefined.

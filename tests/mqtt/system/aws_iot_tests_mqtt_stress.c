@@ -29,8 +29,8 @@
  */
 
 /* Build using a config header, if provided. */
-#ifdef AWS_IOT_CONFIG_FILE
-    #include AWS_IOT_CONFIG_FILE
+#ifdef IOT_CONFIG_FILE
+    #include IOT_CONFIG_FILE
 #endif
 
 /* Standard includes. */
@@ -42,6 +42,13 @@
 
 /* MQTT include. */
 #include "aws_iot_mqtt.h"
+
+/* POSIX includes. */
+#ifdef POSIX_PTHREAD_HEADER
+    #include POSIX_PTHREAD_HEADER
+#else
+    #include <pthread.h>
+#endif
 
 /* Platform layer include. */
 #include "platform/aws_iot_clock.h"

@@ -26,8 +26,8 @@
  */
 
 /* Build using a config header, if provided. */
-#ifdef AWS_IOT_CONFIG_FILE
-    #include AWS_IOT_CONFIG_FILE
+#ifdef IOT_CONFIG_FILE
+    #include IOT_CONFIG_FILE
 #endif
 
 /* The functions in this file should only exist in static memory only mode, hence

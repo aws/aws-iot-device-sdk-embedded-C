@@ -18,6 +18,6 @@ set_target_properties( awsiotcommon PROPERTIES PRIVATE_HEADER
 target_link_libraries( awsiotcommon awsiotplatform )
 
 # Link Unity test framework when building tests.
-if( ${AWS_IOT_BUILD_TESTS} )
+if( ${IOT_BUILD_TESTS} )
     target_link_libraries( awsiotcommon unity )
 endif()

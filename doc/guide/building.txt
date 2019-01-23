@@ -19,7 +19,7 @@ In addition, credentials and Things for AWS IoT must be provisioned before runni
 @section building_demo Building the demo applications
 @brief How to build the demo applications.
 
-Before building the demos, all desired configuration settings should be defined. Configuration settings include global [library](@ref global_library_config) and [demo](@ref global_demos_config) settings, as well as settings for specific libraries and demos. Settings for demo applications should be placed in `demos/aws_iot_demo_config.h`. Any undefined settings will use a default value when possible.
+Before building the demos, all desired configuration settings should be defined. Configuration settings include global [library](@ref global_library_config) and [demo](@ref global_demos_config) settings, as well as settings for specific libraries and demos. Settings for demo applications should be placed in `demos/iot_demo_config.h`. Any undefined settings will use a default value when possible.
 
 The demo applications build with CMake.
 
@@ -38,7 +38,7 @@ make
 
 Demo application executables will be placed in a `bin` directory of the CMake build directory, i.e. `build/bin` in the example above. The executables will be named `aws_iot_demo_library`. For example, the MQTT demo application will be named `aws_iot_demo_mqtt`.
 
-Configuration settings may also be set using CMake by setting `CMAKE_C_FLAGS`. However, placing configuration settings in `demos/aws_iot_demo_config.h` is recommended over setting them using CMake.
+Configuration settings may also be set using CMake by setting `CMAKE_C_FLAGS`. However, placing configuration settings in `demos/iot_demo_config.h` is recommended over setting them using CMake.
 @code{sh}
 # Example: Set AWS_IOT_STATIC_MEMORY_ONLY using CMake
 cmake .. -DCMAKE_C_FLAGS=-DAWS_IOT_STATIC_MEMORY_ONLY=1
@@ -103,16 +103,16 @@ See @ref AWS_IOT_DEMO_MQTT_CLIENT_IDENTIFIER (MQTT demo only) or @ref AWS_IOT_DE
 @section building_tests Building and running the tests
 @brief How to build and run the SDK tests.
 
-Like the demo applications, the tests also build with CMake. [Global test configuration settings](@ref global_tests_config), as well as specific library test settings, should be defined in `tests/aws_iot_tests_config.h`.
+Like the demo applications, the tests also build with CMake. [Global test configuration settings](@ref global_tests_config), as well as specific library test settings, should be defined in `tests/iot_tests_config.h`.
 
-Unlike the demos, the tests are currently only supported on POSIX systems that support all of the POSIX prerequisites. They are built by passing the option `AWS_IOT_BUILD_TESTS=1` to CMake.
+Unlike the demos, the tests are currently only supported on POSIX systems that support all of the POSIX prerequisites. They are built by passing the option `IOT_BUILD_TESTS=1` to CMake.
 @code{sh}
 # Create build directory and change to build directory.
 mkdir build
 cd build
 
 # Configure build using CMake.
-cmake .. -DAWS_IOT_BUILD_TESTS=1
+cmake .. -DIOT_BUILD_TESTS=1
 
 # Build both the demos and tests.
 make

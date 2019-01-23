@@ -28,8 +28,8 @@
 #define _AWS_IOT_THREADS_H_
 
 /* Build using a config header, if provided. */
-#ifdef AWS_IOT_CONFIG_FILE
-    #include AWS_IOT_CONFIG_FILE
+#ifdef IOT_CONFIG_FILE
+    #include IOT_CONFIG_FILE
 #endif
 
 /* Standard includes. */
@@ -165,7 +165,7 @@ bool AwsIot_CreateDetachedThread( AwsIotThreadRoutine_t threadRoutine,
  *
  * @see @ref platform_threads_function_mutexdestroy
  *
- * **Example**
+ * <b>Example</b>
  * @code{c}
  * AwsIotMutex_t mutex;
  *
@@ -260,7 +260,7 @@ void AwsIotMutex_Unlock( AwsIotMutex_t * const pMutex );
  *
  * @see @ref platform_threads_function_semaphoredestroy
  *
- * **Example**
+ * <b>Example</b>
  * @code{c}
  * AwsIotSemaphore_t sem;
  *

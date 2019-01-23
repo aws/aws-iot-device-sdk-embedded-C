@@ -21,8 +21,8 @@
 
 /* This file contains configuration settings for the demos. */
 
-#ifndef _AWS_IOT_DEMO_CONFIG_H_
-#define _AWS_IOT_DEMO_CONFIG_H_
+#ifndef _IOT_DEMO_CONFIG_H_
+#define _IOT_DEMO_CONFIG_H_
 
 /* Server endpoints used for the demos. May be overridden with command line
  * options. */
@@ -55,4 +55,11 @@
 #define AWS_IOT_LOG_LEVEL_SHADOW                    AWS_IOT_LOG_INFO
 #define AWS_IOT_LOG_LEVEL_DEMO                      AWS_IOT_LOG_INFO
 
-#endif /* ifndef _AWS_IOT_DEMO_CONFIG_H_ */
+#include <sys/types.h>
+#include <semaphore.h>
+
+#define AWS_IOT_MUTEX_TYPE pthread_mutex_t
+#define AWS_IOT_SEMAPHORE_TYPE sem_t
+#define AWS_IOT_TIMER_TYPE void*
+
+#endif /* ifndef _IOT_DEMO_CONFIG_H_ */
