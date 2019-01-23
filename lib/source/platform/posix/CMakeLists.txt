@@ -71,17 +71,6 @@ if( NOT DEFINED TLS_LIBRARY_LINKER_FLAG )
     message( FATAL_ERROR "No compatible TLS library was found." )
 endif()
 
-# Configure the platform layer for POSIX systems.
-set( CONFIG_MUTEX_HEADER "pthread.h" )
-set( CONFIG_MUTEX_TYPE pthread_mutex_t )
-set( CONFIG_SEMAPHORE_HEADER "semaphore.h" )
-set( CONFIG_SEMAPHORE_TYPE sem_t )
-set( CONFIG_TIMER_HEADER "time.h" )
-set( CONFIG_TIMER_TYPE void* )
-
-configure_file( ${CMAKE_SOURCE_DIR}/lib/config/aws_iot_config_build.h.in
-                ${CMAKE_BINARY_DIR}/config/aws_iot_config_build.h )
-
 # Platform libraries source files.
 add_library( awsiotplatform SHARED
              aws_iot_clock_posix.c
@@ -97,10 +86,6 @@ set_target_properties( awsiotplatform PROPERTIES VERSION ${PROJECT_VERSION} )
 # Library public headers.
 set_target_properties( awsiotplatform PROPERTIES PUBLIC_HEADER
                        "../../include/platform;../../include/platform/network" )
-
-# Set configuration file.
-target_compile_definitions( awsiotplatform PRIVATE
-                            AWS_IOT_CONFIG_FILE="aws_iot_config_build.h" )
 
 # Link required libraries.
 target_link_libraries( awsiotplatform Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )

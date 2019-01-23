@@ -21,6 +21,6 @@ set_target_properties( awsiotmqtt PROPERTIES PRIVATE_HEADER
 target_link_libraries( awsiotmqtt awsiotcommon awsiotplatform )
 
 # Link Unity test framework when building tests.
-if( ${AWS_IOT_BUILD_TESTS} )
+if( ${IOT_BUILD_TESTS} )
     target_link_libraries( awsiotmqtt unity )
 endif()

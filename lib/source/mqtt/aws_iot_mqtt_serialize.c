@@ -25,8 +25,8 @@
  */
 
 /* Build using a config header, if provided. */
-#ifdef AWS_IOT_CONFIG_FILE
-    #include AWS_IOT_CONFIG_FILE
+#ifdef IOT_CONFIG_FILE
+    #include IOT_CONFIG_FILE
 #endif
 
 /* Standard includes. */
@@ -147,11 +147,11 @@
  * Username for metrics with AWS IoT.
  */
 #if AWS_IOT_MQTT_ENABLE_METRICS == 1 || DOXYGEN == 1
-    #ifndef AWS_IOT_SDK_VERSION
-        #error "AWS_IOT_SDK_VERSION must be defined."
+    #ifndef IOT_SDK_VERSION
+        #error "IOT_SDK_VERSION must be defined."
     #endif
 
-    #define _AWS_IOT_METRICS_USERNAME           ( "?SDK=C&Version=" AWS_IOT_SDK_VERSION )                /**< @brief Specify "C SDK" and SDK version. */
+    #define _AWS_IOT_METRICS_USERNAME           ( "?SDK=C&Version=" IOT_SDK_VERSION )                    /**< @brief Specify "C SDK" and SDK version. */
     #define _AWS_IOT_METRICS_USERNAME_LENGTH    ( ( uint16_t ) sizeof( _AWS_IOT_METRICS_USERNAME ) - 1 ) /**< @brief Length of #_AWS_IOT_METRICS_USERNAME. */
 #endif
 
