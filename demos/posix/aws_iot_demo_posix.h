@@ -33,7 +33,7 @@
  * Each demo will use one of these structs to hold its arguments.
  *
  * The default values of this struct may be set using compile-time constants,
- * either through a [config file](@ref AWS_IOT_CONFIG_FILE) or a compiler option
+ * either through a [config file](@ref IOT_CONFIG_FILE) or a compiler option
  * like `-D`.
  *
  * The default values may be overridden using command line arguments. If a default

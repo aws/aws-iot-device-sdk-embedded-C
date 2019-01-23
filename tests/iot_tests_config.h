@@ -22,8 +22,8 @@
 /* This file contains configuration settings for the tests. Currently, the tests
  * must run on POSIX systems. */
 
-#ifndef _AWS_IOT_TESTS_CONFIG_H_
-#define _AWS_IOT_TESTS_CONFIG_H_
+#ifndef _IOT_TESTS_CONFIG_H_
+#define _IOT_TESTS_CONFIG_H_
 
 /* Test framework include. */
 #include "unity_fixture_malloc_overrides.h"
@@ -115,4 +115,11 @@
     #define AwsIotShadow_FreeSubscription      unity_free_mt
 #endif /* if AWS_IOT_STATIC_MEMORY_ONLY == 0 */
 
-#endif /* ifndef _AWS_IOT_TESTS_CONFIG_H_ */
+#include <sys/types.h>
+#include <semaphore.h>
+
+#define AWS_IOT_MUTEX_TYPE pthread_mutex_t
+#define AWS_IOT_SEMAPHORE_TYPE sem_t
+#define AWS_IOT_TIMER_TYPE void*
+
+#endif /* ifndef _IOT_TESTS_CONFIG_H_ */
