@@ -35,6 +35,9 @@
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
 
+/* Platform layer includes. */
+#include "platform/iot_threads.h"
+
 /* JSON utils include. */
 #include "aws_iot_json_utils.h"
 
@@ -144,7 +147,7 @@ IotListDouble_t _AwsIotShadowPendingOperations = { 0 };
 /**
  * @brief Protects #_AwsIotShadowPendingOperations from concurrent access.
  */
-AwsIotMutex_t _AwsIotShadowPendingOperationsMutex;
+IotMutex_t _AwsIotShadowPendingOperationsMutex;
 
 /*-----------------------------------------------------------*/
 
@@ -236,7 +239,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     }
 
     /* Lock the pending operations list for exclusive access. */
-    AwsIotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
+    IotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
 
     /* Search for a matching pending operation. */
     pOperation = IotLink_Container( _shadowOperation_t,
@@ -251,7 +254,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     {
         /* Operation is not pending. It may have already been processed. Return
          * without doing anything */
-        AwsIotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
+        IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
 
         AwsIotLogWarn( "Shadow %s callback received an unknown operation.",
                        _pAwsIotShadowOperationNames[ type ] );
@@ -264,7 +267,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
         if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0 )
         {
             IotListDouble_Remove( &( pOperation->link ) );
-            AwsIotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
+            IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
         }
     }
 
@@ -332,7 +335,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
      * this function's completion. */
     if( ( flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
     {
-        AwsIotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
+        IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
     }
 }
 
@@ -445,7 +448,7 @@ AwsIotShadowError_t AwsIotShadowInternal_CreateOperation( _shadowOperation_t ** 
      * wait on. */
     if( ( flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
     {
-        if( AwsIotSemaphore_Create( &( pOperation->notify.waitSemaphore ), 0, 1 ) == false )
+        if( IotSemaphore_Create( &( pOperation->notify.waitSemaphore ), 0, 1 ) == false )
         {
             AwsIotLogError( "Failed to create semaphore for waitable Shadow %s.",
                             _pAwsIotShadowOperationNames[ type ] );
@@ -492,7 +495,7 @@ void AwsIotShadowInternal_DestroyOperation( void * pData )
     if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
     {
         /* Destroy the wait semaphore */
-        AwsIotSemaphore_Destroy( &( pOperation->notify.waitSemaphore ) );
+        IotSemaphore_Destroy( &( pOperation->notify.waitSemaphore ) );
     }
 
     /* If this is a Shadow update, free any allocated client token. */
@@ -639,7 +642,7 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
     }
 
     /* Lock the subscription list mutex for exclusive access. */
-    AwsIotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
+    IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
 
     /* Check for an existing subscription. This function will attempt to allocate
      * a new subscription if not found. */
@@ -692,7 +695,7 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
     }
 
     /* Unlock the Shadow subscription list mutex. */
-    AwsIotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
+    IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
 
     /* Check that all memory allocation and subscriptions succeeded. */
     if( status == AWS_IOT_SHADOW_STATUS_PENDING )
@@ -737,10 +740,10 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
         }
 
         /* Add Shadow operation to the pending operations list. */
-        AwsIotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
+        IotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
         IotListDouble_InsertHead( &( _AwsIotShadowPendingOperations ),
                                   &( pOperation->link ) );
-        AwsIotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
+        IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
 
         /* Publish to the Shadow topic name. */
         publishStatus = AwsIotMqtt_TimedPublish( pOperation->mqttConnection,
@@ -771,17 +774,17 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
              * count. */
             if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS ) == 0 )
             {
-                AwsIotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
+                IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
                 AwsIotShadowInternal_DecrementReferences( pOperation,
                                                           pTopicBuffer,
                                                           NULL );
-                AwsIotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
+                IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
             }
 
             /* Remove Shadow operation from the pending operations list. */
-            AwsIotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
+            IotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
             IotListDouble_Remove( &( pOperation->link ) );
-            AwsIotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
+            IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
         }
         else
         {
@@ -817,18 +820,18 @@ void AwsIotShadowInternal_Notify( _shadowOperation_t * const pOperation )
     /* If the operation is waiting, post to its wait semaphore and return. */
     if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
     {
-        AwsIotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
+        IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
 
         return;
     }
 
     /* Decrement the reference count. This also removes subscriptions if the
      * count reaches 0. */
-    AwsIotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
+    IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
     AwsIotShadowInternal_DecrementReferences( pOperation,
                                               pSubscription->pTopicBuffer,
                                               &pRemovedSubscription );
-    AwsIotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
+    IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
 
     /* Set the subscription pointer used for the user callback based on whether
      * a subscription was removed from the list. */

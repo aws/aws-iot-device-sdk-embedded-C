@@ -32,6 +32,9 @@
 /* Standard includes. */
 #include <string.h>
 
+/* Platform layer includes. */
+#include "platform/iot_threads.h"
+
 /* MQTT internal include. */
 #include "private/aws_iot_mqtt_internal.h"
 
@@ -284,7 +287,7 @@ TEST_GROUP( MQTT_Unit_Subscription );
  */
 TEST_SETUP( MQTT_Unit_Subscription )
 {
-    TEST_ASSERT_EQUAL_INT( true, AwsIotMutex_Create( &( _connection.subscriptionMutex ) ) );
+    TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &( _connection.subscriptionMutex ) ) );
     IotListDouble_Create( &( _connection.subscriptionList ) );
 }
 
@@ -298,7 +301,7 @@ TEST_TEAR_DOWN( MQTT_Unit_Subscription )
     IotListDouble_RemoveAll( &( _connection.subscriptionList ),
                              AwsIotMqtt_FreeSubscription,
                              offsetof( _mqttSubscription_t, link ) );
-    AwsIotMutex_Destroy( &( _connection.subscriptionMutex ) );
+    IotMutex_Destroy( &( _connection.subscriptionMutex ) );
 
     ( void ) memset( &_connection, 0x00, sizeof( _mqttConnection_t ) );
 }

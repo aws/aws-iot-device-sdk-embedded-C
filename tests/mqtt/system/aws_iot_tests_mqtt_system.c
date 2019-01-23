@@ -37,6 +37,7 @@
 
 /* Platform layer includes. */
 #include "platform/aws_iot_clock.h"
+#include "platform/iot_threads.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -78,7 +79,7 @@ extern int snprintf( char *,
 #else
     #define _AWS_IOT_MQTT_SERVER    false
 
-    /* Redefine the connect info initializer if not using an AWS IoT MQTT server. */
+/* Redefine the connect info initializer if not using an AWS IoT MQTT server. */
     #undef AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER
     #define AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER    { 0 }
 #endif
@@ -106,7 +107,7 @@ extern int snprintf( char *,
 typedef struct _operationCompleteParams
 {
     AwsIotMqttOperationType_t expectedOperation; /**< @brief Expected completed operation. */
-    AwsIotSemaphore_t waitSem;                   /**< @brief Used to unblock waiting test thread. */
+    IotSemaphore_t waitSem;                      /**< @brief Used to unblock waiting test thread. */
     AwsIotMqttReference_t reference;             /**< @brief Reference to expected completed operation. */
 } _operationCompleteParams_t;
 
@@ -287,7 +288,7 @@ static AwsIotMqttError_t _serializeDisconnect( uint8_t ** const pDisconnectPacke
 static void _publishReceived( void * pArgument,
                               AwsIotMqttCallbackParam_t * const pPublish )
 {
-    AwsIotSemaphore_t * pWaitSem = ( AwsIotSemaphore_t * ) pArgument;
+    IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
 
     /* If the received messages matches what was sent, unblock the waiting thread. */
     if( ( pPublish->message.info.payloadLength == _samplePayloadLength ) &&
@@ -295,7 +296,7 @@ static void _publishReceived( void * pArgument,
                    _pSamplePayload,
                    _samplePayloadLength ) == 0 ) )
     {
-        AwsIotSemaphore_Post( pWaitSem );
+        IotSemaphore_Post( pWaitSem );
     }
 }
 
@@ -316,7 +317,7 @@ static void _operationComplete( void * pArgument,
         ( pParams->reference == pOperation->operation.reference ) &&
         ( pOperation->operation.result == AWS_IOT_MQTT_SUCCESS ) )
     {
-        AwsIotSemaphore_Post( &( pParams->waitSem ) );
+        IotSemaphore_Post( &( pParams->waitSem ) );
     }
 }
 
@@ -332,7 +333,7 @@ static void _subscribePublishWait( int QoS )
     AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
     AwsIotMqttSubscription_t subscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    AwsIotSemaphore_t waitSem;
+    IotSemaphore_t waitSem;
 
     /* Set the serializer overrides. */
     networkInterface.freePacket = _freePacket;
@@ -344,7 +345,7 @@ static void _subscribePublishWait( int QoS )
     networkInterface.serialize.disconnect = _serializeDisconnect;
 
     /* Create the wait semaphore. */
-    TEST_ASSERT_EQUAL_INT( true, AwsIotSemaphore_Create( &waitSem, 0, 1 ) );
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
     if( TEST_PROTECT() )
     {
@@ -393,8 +394,8 @@ static void _subscribePublishWait( int QoS )
                                               AWS_IOT_TEST_MQTT_TIMEOUT_MS );
 
             /* Wait for the message to be received. */
-            if( AwsIotSemaphore_TimedWait( &waitSem,
-                                           AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+            if( IotSemaphore_TimedWait( &waitSem,
+                                        AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
             {
                 TEST_FAIL_MESSAGE( "Timed out waiting for subscription." );
             }
@@ -412,7 +413,7 @@ static void _subscribePublishWait( int QoS )
         AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, false );
     }
 
-    AwsIotSemaphore_Destroy( &waitSem );
+    IotSemaphore_Destroy( &waitSem );
 
     /* Check that the serializer overrides were called. */
     if( TEST_PROTECT() )
@@ -542,7 +543,7 @@ TEST( MQTT_System, SubscribePublishAsync )
     AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     AwsIotMqttCallbackInfo_t callbackInfo = AWS_IOT_MQTT_CALLBACK_INFO_INITIALIZER;
     _operationCompleteParams_t callbackParam = { 0 };
-    AwsIotSemaphore_t publishWaitSem;
+    IotSemaphore_t publishWaitSem;
 
     /* Initialize members of the operation callback info. */
     callbackInfo.function = _operationComplete;
@@ -567,12 +568,12 @@ TEST( MQTT_System, SubscribePublishAsync )
     publishInfo.payloadLength = _samplePayloadLength;
 
     /* Create the wait semaphore for operations. */
-    TEST_ASSERT_EQUAL_INT( true, AwsIotSemaphore_Create( &( callbackParam.waitSem ), 0, 1 ) );
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( callbackParam.waitSem ), 0, 1 ) );
 
     if( TEST_PROTECT() )
     {
         /* Create the wait semaphore for subscriptions. */
-        TEST_ASSERT_EQUAL_INT( true, AwsIotSemaphore_Create( &publishWaitSem, 0, 1 ) );
+        TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &publishWaitSem, 0, 1 ) );
 
         if( TEST_PROTECT() )
         {
@@ -595,8 +596,8 @@ TEST( MQTT_System, SubscribePublishAsync )
                                                &callbackInfo,
                                                &( callbackParam.reference ) );
 
-                if( AwsIotSemaphore_TimedWait( &( callbackParam.waitSem ),
-                                               AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
+                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
                 {
                     TEST_FAIL_MESSAGE( "Timed out waiting for SUBSCRIBE to complete." );
                 }
@@ -609,15 +610,15 @@ TEST( MQTT_System, SubscribePublishAsync )
                                              &callbackInfo,
                                              &( callbackParam.reference ) );
 
-                if( AwsIotSemaphore_TimedWait( &( callbackParam.waitSem ),
-                                               AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
+                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
                 {
                     TEST_FAIL_MESSAGE( "Timed out waiting for PUBLISH to complete." );
                 }
 
                 /* Wait for the message to be received. */
-                if( AwsIotSemaphore_TimedWait( &publishWaitSem,
-                                               AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                if( IotSemaphore_TimedWait( &publishWaitSem,
+                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
                 {
                     TEST_FAIL_MESSAGE( "Timed out waiting for subscription." );
                 }
@@ -631,8 +632,8 @@ TEST( MQTT_System, SubscribePublishAsync )
                                                  &callbackInfo,
                                                  &( callbackParam.reference ) );
 
-                if( AwsIotSemaphore_TimedWait( &( callbackParam.waitSem ),
-                                               AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
+                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
                 {
                     TEST_FAIL_MESSAGE( "Timed out waiting for UNSUBSCRIBE to complete." );
                 }
@@ -641,10 +642,10 @@ TEST( MQTT_System, SubscribePublishAsync )
             AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, false );
         }
 
-        AwsIotSemaphore_Destroy( &publishWaitSem );
+        IotSemaphore_Destroy( &publishWaitSem );
     }
 
-    AwsIotSemaphore_Destroy( &( callbackParam.waitSem ) );
+    IotSemaphore_Destroy( &( callbackParam.waitSem ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -663,10 +664,10 @@ TEST( MQTT_System, LastWillAndTestament )
     AwsIotMqttSubscription_t willSubscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     AwsIotMqttPublishInfo_t willInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     void * pLwtListenerConnection = NULL;
-    AwsIotSemaphore_t waitSem;
+    IotSemaphore_t waitSem;
 
     /* Create the wait semaphore. */
-    TEST_ASSERT_EQUAL_INT( true, AwsIotSemaphore_Create( &waitSem, 0, 1 ) );
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
     /* Generate a client identifier for LWT listener. */
     #ifndef AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER
@@ -742,8 +743,8 @@ TEST( MQTT_System, LastWillAndTestament )
                 AwsIotTest_NetworkDestroy( NULL );
 
                 /* Check that the LWT was received. */
-                if( AwsIotSemaphore_TimedWait( &waitSem,
-                                               AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                if( IotSemaphore_TimedWait( &waitSem,
+                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
                 {
                     TEST_FAIL_MESSAGE( "Timed out waiting for Last Will and Testament." );
                 }
@@ -761,7 +762,7 @@ TEST( MQTT_System, LastWillAndTestament )
         }
     }
 
-    AwsIotSemaphore_Destroy( &waitSem );
+    IotSemaphore_Destroy( &waitSem );
 }
 
 /*-----------------------------------------------------------*/
@@ -775,10 +776,10 @@ TEST( MQTT_System, RestorePreviousSession )
     AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
     AwsIotMqttSubscription_t subscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    AwsIotSemaphore_t waitSem;
+    IotSemaphore_t waitSem;
 
     /* Create the wait semaphore for operations. */
-    TEST_ASSERT_EQUAL_INT( true, AwsIotSemaphore_Create( &waitSem, 0, 1 ) );
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
     /* Set the members of the connection info for a persistent session. */
     connectInfo.cleanSession = false;
@@ -839,8 +840,8 @@ TEST( MQTT_System, RestorePreviousSession )
         TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
 
         /* Wait for the message to be received. */
-        if( AwsIotSemaphore_TimedWait( &waitSem,
-                                       AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+        if( IotSemaphore_TimedWait( &waitSem,
+                                    AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
         {
             TEST_FAIL_MESSAGE( "Timed out waiting for message." );
         }
@@ -850,7 +851,7 @@ TEST( MQTT_System, RestorePreviousSession )
         AwsIotTest_NetworkCleanup();
     }
 
-    AwsIotSemaphore_Destroy( &waitSem );
+    IotSemaphore_Destroy( &waitSem );
 
     if( TEST_PROTECT() )
     {

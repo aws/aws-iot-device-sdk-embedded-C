@@ -55,6 +55,7 @@
 
 /* Platform layer includes. */
 #include "platform/aws_iot_clock.h"
+#include "platform/iot_threads.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -108,7 +109,7 @@ static AwsIotTimer_t _receiveTimer;
 /**
  * @brief Synchronizes the MQTT send and receive threads in these tests.
  */
-static AwsIotMutex_t _lastPacketMutex;
+static IotMutex_t _lastPacketMutex;
 
 /**
  * @brief The type of the last packet sent by the send thread.
@@ -138,7 +139,7 @@ static void _receiveThread( void * pArgument )
     ( void ) pArgument;
 
     /* Lock mutex to read and process the last packet sent. */
-    AwsIotMutex_Lock( &_lastPacketMutex );
+    IotMutex_Lock( &_lastPacketMutex );
 
     /* Ensure that the last packet type and identifier were set. */
     AwsIotShadow_Assert( _lastPacketType != 0 );
@@ -188,7 +189,7 @@ static void _receiveThread( void * pArgument )
                                                  NULL );
     AwsIotShadow_Assert( bytesProcessed == ( int32_t ) receivedDataLength );
 
-    AwsIotMutex_Unlock( &_lastPacketMutex );
+    IotMutex_Unlock( &_lastPacketMutex );
 }
 
 /*-----------------------------------------------------------*/
@@ -211,7 +212,7 @@ static size_t _sendSuccess( void * pSendContext,
     ( void ) pSendContext;
 
     /* Lock the mutex to modify the information on the last packet sent. */
-    AwsIotMutex_Lock( &_lastPacketMutex );
+    IotMutex_Lock( &_lastPacketMutex );
 
     /* Set the last packet type based on the outgoing message. */
     switch( AwsIotMqttInternal_GetPacketType( pMessage, messageLength ) )
@@ -278,7 +279,7 @@ static size_t _sendSuccess( void * pSendContext,
                               0 );
     }
 
-    AwsIotMutex_Unlock( &_lastPacketMutex );
+    IotMutex_Unlock( &_lastPacketMutex );
 
     /* Return the message length to simulate a successful send. */
     return messageLength;
@@ -305,7 +306,7 @@ TEST_SETUP( Shadow_Unit_API )
     _lastPacketIdentifier = 0;
 
     /* Create the mutex that synchronizes the receive callback and send thread. */
-    TEST_ASSERT_EQUAL_INT( true, AwsIotMutex_Create( &_lastPacketMutex ) );
+    TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &_lastPacketMutex ) );
 
     /* Create the receive thread timer. */
     AwsIotClock_TimerCreate( &_receiveTimer,
@@ -347,11 +348,11 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
     AwsIotClock_TimerDestroy( &_receiveTimer );
 
     /* Wait for the receive thread to finish and release the last packet mutex. */
-    AwsIotMutex_Lock( &_lastPacketMutex );
+    IotMutex_Lock( &_lastPacketMutex );
 
     /* Destroy the last packet mutex. */
-    AwsIotMutex_Unlock( &_lastPacketMutex );
-    AwsIotMutex_Destroy( &_lastPacketMutex );
+    IotMutex_Unlock( &_lastPacketMutex );
+    IotMutex_Destroy( &_lastPacketMutex );
 }
 
 /*-----------------------------------------------------------*/

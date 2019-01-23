@@ -33,14 +33,14 @@
     #include IOT_CONFIG_FILE
 #endif
 
-/* MQTT include. */
-#include "aws_iot_mqtt.h"
-
 /* Linear containers (lists and queues) include. */
 #include "iot_linear_containers.h"
 
-/* Platform clock include. */
-#include "platform/aws_iot_clock.h"
+/* Platform layer types include. */
+#include "platform/types/iot_platform_types.h"
+
+/* MQTT include. */
+#include "aws_iot_mqtt.h"
 
 /**
  * @def AwsIotMqtt_Assert( expression )
@@ -334,10 +334,10 @@ typedef struct _mqttConnection
     bool awsIotMqttMode;                  /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
     AwsIotMqttNetIf_t network;            /**< @brief Network interface provided to @ref mqtt_function_connect. */
     IotListDouble_t subscriptionList;     /**< @brief Holds subscriptions associated with this connection. */
-    AwsIotMutex_t subscriptionMutex;      /**< @brief Grants exclusive access to the #_mqttConnection_t.subscriptionList. */
+    IotMutex_t subscriptionMutex;         /**< @brief Grants exclusive access to the #_mqttConnection_t.subscriptionList. */
 
     AwsIotTimer_t timer;                         /**< @brief Expires when a timer event should be processed. */
-    AwsIotMutex_t timerMutex;                    /**< @brief Prevents concurrent access from timer thread and protects timer event list. */
+    IotMutex_t timerMutex;                       /**< @brief Prevents concurrent access from timer thread and protects timer event list. */
     IotListDouble_t timerEventList;              /**< @brief List of active timer events. */
     uint16_t keepAliveSeconds;                   /**< @brief Keep-alive interval. */
     struct _mqttOperation * pPingreqOperation;   /**< @brief PINGREQ operation. Only used if keep-alive is active. */
@@ -375,7 +375,7 @@ typedef struct _mqttOperation
             /* How to notify of an operation's completion. */
             union
             {
-                AwsIotSemaphore_t waitSemaphore;   /**< @brief Semaphore to be used with @ref mqtt_function_wait. */
+                IotSemaphore_t waitSemaphore;      /**< @brief Semaphore to be used with @ref mqtt_function_wait. */
                 AwsIotMqttCallbackInfo_t callback; /**< @brief User-provided callback function and parameter. */
             } notify;                              /**< @brief How to notify of this operation's completion. */
             AwsIotMqttError_t status;              /**< @brief Result of this operation. This is reported once a response is received. */
@@ -434,16 +434,16 @@ typedef struct _mqttOperationQueue
      * @brief Maintains a count of threads currently available to process this
      * queue and provides a mechanism to wait for active callback threads to finish.
      */
-    AwsIotSemaphore_t availableThreads;
+    IotSemaphore_t availableThreads;
 } _mqttOperationQueue_t;
 
 /* Declarations of the structures keeping track of MQTT operations for internal
  * files. */
 extern _mqttOperationQueue_t _IotMqttCallback;
 extern _mqttOperationQueue_t _IotMqttSend;
-extern AwsIotMutex_t _IotMqttQueueMutex;
+extern IotMutex_t _IotMqttQueueMutex;
 extern IotListDouble_t _IotMqttPendingResponse;
-extern AwsIotMutex_t _IotMqttPendingResponseMutex;
+extern IotMutex_t _IotMqttPendingResponseMutex;
 
 /*-------------------- MQTT struct validation functions ---------------------*/
 

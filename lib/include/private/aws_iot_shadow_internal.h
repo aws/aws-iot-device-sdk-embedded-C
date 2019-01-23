@@ -33,11 +33,14 @@
     #include IOT_CONFIG_FILE
 #endif
 
-/* Shadow include. */
-#include "aws_iot_shadow.h"
-
 /* Linear containers (lists and queues) include. */
 #include "iot_linear_containers.h"
+
+/* Platform layer types include. */
+#include "platform/types/iot_platform_types.h"
+
+/* Shadow include. */
+#include "aws_iot_shadow.h"
 
 /**
  * @def AwsIotShadow_Assert( expression )
@@ -412,7 +415,7 @@ typedef struct _shadowOperation
     /* How to notify of an operation's completion. */
     union
     {
-        AwsIotSemaphore_t waitSemaphore;     /**< @brief Semaphore to be used with @ref shadow_function_wait. */
+        IotSemaphore_t waitSemaphore;        /**< @brief Semaphore to be used with @ref shadow_function_wait. */
         AwsIotShadowCallbackInfo_t callback; /**< @brief User-provided callback function and parameter. */
     } notify;                                /**< @brief How to notify of an operation's completion. */
 } _shadowOperation_t;
@@ -451,8 +454,8 @@ typedef struct _shadowSubscription
 extern uint64_t _AwsIotShadowMqttTimeoutMs;
 extern IotListDouble_t _AwsIotShadowPendingOperations;
 extern IotListDouble_t _AwsIotShadowSubscriptions;
-extern AwsIotMutex_t _AwsIotShadowPendingOperationsMutex;
-extern AwsIotMutex_t _AwsIotShadowSubscriptionsMutex;
+extern IotMutex_t _AwsIotShadowPendingOperationsMutex;
+extern IotMutex_t _AwsIotShadowSubscriptionsMutex;
 
 /*----------------------- Shadow operation functions ------------------------*/
 

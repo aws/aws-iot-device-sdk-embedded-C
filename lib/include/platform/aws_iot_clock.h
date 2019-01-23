@@ -33,10 +33,12 @@
 #endif
 
 /* Standard includes. */
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
-/* Platform threads include. */
-#include "aws_iot_threads.h"
+/* Platform layer types include. */
+#include "platform/types/iot_platform_types.h"
 
 /**
  * @ingroup platform_datatypes_handles
@@ -144,7 +146,7 @@ uint64_t AwsIotClock_GetTimeMs( void );
  */
 /* @[declare_platform_clock_timercreate] */
 bool AwsIotClock_TimerCreate( AwsIotTimer_t * const pNewTimer,
-                              AwsIotThreadRoutine_t expirationRoutine,
+                              IotThreadRoutine_t expirationRoutine,
                               void * pArgument );
 /* @[declare_platform_clock_timercreate] */
 

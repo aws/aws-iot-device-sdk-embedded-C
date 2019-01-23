@@ -117,13 +117,13 @@ typedef struct _timerInfo
 {
     timer_t timer;                       /**< @brief Underlying POSIX timer. */
     void * pArgument;                    /**< @brief First argument to threadRoutine. */
-    AwsIotThreadRoutine_t threadRoutine; /**< @brief Thread function to run on timer expiration. */
+    IotThreadRoutine_t threadRoutine;    /**< @brief Thread function to run on timer expiration. */
 } _timerInfo_t;
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Wraps an AwsIotThreadRoutine_t with a POSIX-compliant one.
+ * @brief Wraps an #IotThreadRoutine_t with a POSIX-compliant one.
  *
  * @param[in] argument The value passed as `sigevent.sigev_value`.
  */
@@ -237,7 +237,7 @@ uint64_t AwsIotClock_GetTimeMs( void )
 /*-----------------------------------------------------------*/
 
 bool AwsIotClock_TimerCreate( AwsIotTimer_t * const pNewTimer,
-                              AwsIotThreadRoutine_t expirationRoutine,
+                              IotThreadRoutine_t expirationRoutine,
                               void * pArgument )
 {
     _timerInfo_t * pTimerInfo = NULL;

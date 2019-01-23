@@ -162,11 +162,11 @@ Currently, the platform static memory component has the following dependencies:
 
 /**
 @page platform_threads Thread Management
-@brief @copybrief aws_iot_threads.h
+@brief @copybrief iot_threads.h
 
 The platform thread management component provides other libraries with functions relating to threading and synchronization. It interfaces directly with the operating system to provide:
 - A function to create new threads.
-- Synchronization mechanisms such as [mutexes](@ref AwsIotMutex_t) and [counting semaphores](@ref AwsIotSemaphore_t).
+- Synchronization mechanisms such as [mutexes](@ref IotMutex_t) and [counting semaphores](@ref IotSemaphore_t).
 
 @dependencies{platform_threads,platform thread management component}
 @dot "Thread management direct dependencies"
@@ -214,22 +214,6 @@ This setting overrides @ref AWS_IOT_LOG_LEVEL_GLOBAL for the [platform networkin
 
 @configpossible One of the @ref logging_constants_levels.<br>
 @configdefault @ref AWS_IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #AWS_IOT_LOG_NONE.
-
-@section AWS_IOT_MUTEX_TYPE
-@brief Set the type used to represent mutexes.
-
-@copydetails AwsIotMutex_t
-
-@configpossible Any C data type.<br>
-@configdefault No default value is provided, but this setting will be automatically configured during build.
-
-@section AWS_IOT_SEMAPHORE_TYPE
-@brief Set the type used to represent semaphores.
-
-@copydetails AwsIotSemaphore_t
-
-@configpossible Any C data type.<br>
-@configdefault No default value is provided, but this setting will be automatically configured during build.
 
 @section AWS_IOT_TIMER_TYPE
 @brief Set the type used to represent timers.
@@ -298,11 +282,11 @@ This setting overrides @ref AWS_IOT_LOG_LEVEL_GLOBAL for the [platform networkin
 @section platform_config_memory Memory allocation
 @brief Memory allocation function overrides for the platform layer.
 
-Some platform layers are not affected by @ref AWS_IOT_STATIC_MEMORY_ONLY. Currently, the following platform clock implementations require memory allocation:
-- [POSIX](@ref aws_iot_clock_posix.c) <br>
+Some platform layers are not affected by @ref AWS_IOT_STATIC_MEMORY_ONLY. Currently, the following platform implementations require memory allocation:
+- POSIX <br>
   This implementation is not affected by @ref AWS_IOT_STATIC_MEMORY_ONLY. However, its memory allocation functions may be overridden by setting the following constants. All memory allocation functions must have the same signatures as [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) and [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
   - #AwsIotClock_Malloc and #AwsIotClock_Free
-  - #AwsIotThreads_Malloc and #AwsIotThreads_Free.
+  - #IotThreads_Malloc and #IotThreads_Free.
   - #AwsIotNetwork_Malloc and #AwsIotNetwork_Free.
 
 @section platform_config_posixheaders POSIX headers
@@ -317,6 +301,7 @@ Standard name | Setting
 [signal.h](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/signal.h.html) | `POSIX_SIGNAL_HEADER`
 [semaphore.h](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/semaphore.h.html) | `POSIX_SEMAPHORE_HEADER`
 [time.h](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/time.h.html) | `POSIX_TIME_HEADER`
+[sys/types.h](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/sys_types.h.html) | `POSIX_TYPES_HEADER`
 
 <b>Example:</b><br>
 To use a header named `custom_errno.h` instead of `errno.h`, the `POSIX_ERRNO_HEADER` setting should be defined.

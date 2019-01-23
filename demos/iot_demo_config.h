@@ -55,11 +55,8 @@
 #define AWS_IOT_LOG_LEVEL_SHADOW                    AWS_IOT_LOG_INFO
 #define AWS_IOT_LOG_LEVEL_DEMO                      AWS_IOT_LOG_INFO
 
-#include <sys/types.h>
-#include <semaphore.h>
-
-#define AWS_IOT_MUTEX_TYPE pthread_mutex_t
-#define AWS_IOT_SEMAPHORE_TYPE sem_t
-#define AWS_IOT_TIMER_TYPE void*
+/* The build system will choose the appropriate system types file for the platform
+ * layer based on the host operating system. */
+#include IOT_SYSTEM_TYPES_FILE
 
 #endif /* ifndef _IOT_DEMO_CONFIG_H_ */

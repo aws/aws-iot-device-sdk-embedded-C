@@ -52,6 +52,7 @@
 
 /* Platform layer include. */
 #include "platform/aws_iot_clock.h"
+#include "platform/iot_threads.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -70,7 +71,7 @@
 #else
     #define _AWS_IOT_MQTT_SERVER    false
 
-    /* Redefine the connect info initializer if not using an AWS IoT MQTT server. */
+/* Redefine the connect info initializer if not using an AWS IoT MQTT server. */
     #undef AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER
     #define AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER    { 0 }
 #endif
@@ -118,13 +119,13 @@
 /**
  * @brief Number of test topic names.
  */
-#define _TEST_TOPIC_NAME_COUNT           ( 8 )
+#define _TEST_TOPIC_NAME_COUNT    ( 8 )
 
 /**
  * @brief The maximum number of PUBLISH messages that will be received by a
  * single test.
  */
-#define _MAX_RECEIVED_PUBLISH            ( AWS_IOT_TEST_MQTT_THREADS * AWS_IOT_TEST_MQTT_PUBLISHES_PER_THREAD )
+#define _MAX_RECEIVED_PUBLISH     ( AWS_IOT_TEST_MQTT_THREADS * AWS_IOT_TEST_MQTT_PUBLISHES_PER_THREAD )
 
 /**
  * @brief The maximum length of an MQTT client identifier.
@@ -213,7 +214,7 @@ static const uint16_t _topicNameLength = ( uint16_t ) sizeof( AWS_IOT_TEST_MQTT_
  *
  * Used in conjunction with #_publishReceived.
  */
-static AwsIotSemaphore_t receivedPublishCounter;
+static IotSemaphore_t receivedPublishCounter;
 
 /**
  * @brief Buffer holding the client identifier used for the tests.
@@ -295,7 +296,7 @@ static void _publishReceived( void * pArgument,
         ( pPublish->message.info.topicNameLength == _topicNameLength ) &&
         ( pPublish->message.info.QoS == 1 ) )
     {
-        AwsIotSemaphore_Post( &receivedPublishCounter );
+        IotSemaphore_Post( &receivedPublishCounter );
     }
     else
     {
@@ -313,14 +314,14 @@ static void _publishReceived( void * pArgument,
 static void _blockingCallback( void * pArgument,
                                AwsIotMqttCallbackParam_t * const param )
 {
-    AwsIotSemaphore_t * pWaitSem = ( AwsIotSemaphore_t * ) pArgument;
+    IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
     const unsigned blockTime = 5 * AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
     ( void ) param;
 
     AwsIotLogInfo( "Callback blocking for %u seconds.", blockTime );
     sleep( blockTime );
-    AwsIotSemaphore_Post( pWaitSem );
+    IotSemaphore_Post( pWaitSem );
 }
 
 /*-----------------------------------------------------------*/
@@ -435,9 +436,9 @@ TEST_SETUP( MQTT_Stress )
     AwsIotLog( AWS_IOT_LOG_INFO, &logHideAll, " " );
 
     /* Create the publish counter semaphore. */
-    TEST_ASSERT_EQUAL_INT( true, AwsIotSemaphore_Create( &receivedPublishCounter,
-                                                         0,
-                                                         _MAX_RECEIVED_PUBLISH ) );
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &receivedPublishCounter,
+                                                      0,
+                                                      _MAX_RECEIVED_PUBLISH ) );
 
     /* Set the serializer overrides. */
     _AwsIotTestNetworkInterface.serialize.pingreq = _serializePingreq;
@@ -508,7 +509,7 @@ TEST_SETUP( MQTT_Stress )
 TEST_TEAR_DOWN( MQTT_Stress )
 {
     /* Destroy the PUBLISH counter semaphore. */
-    AwsIotSemaphore_Destroy( &receivedPublishCounter );
+    IotSemaphore_Destroy( &receivedPublishCounter );
 
     /* Disconnect the MQTT connection. Unsubscribe is not called; the subscriptions
      * should be cleaned up by Disconnect. */
@@ -568,7 +569,7 @@ TEST( MQTT_Stress, BlockingCallback )
 {
     AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     AwsIotMqttCallbackInfo_t callbackInfo = AWS_IOT_MQTT_CALLBACK_INFO_INITIALIZER;
-    AwsIotSemaphore_t waitSem;
+    IotSemaphore_t waitSem;
 
     callbackInfo.function = _blockingCallback;
     callbackInfo.param1 = &waitSem;
@@ -582,7 +583,7 @@ TEST( MQTT_Stress, BlockingCallback )
     publishInfo.retryLimit = AWS_IOT_TEST_MQTT_RETRY_LIMIT;
 
     /* Create the wait semaphore. */
-    TEST_ASSERT_EQUAL_INT( true, AwsIotSemaphore_Create( &waitSem, 0, 1 ) );
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
     if( TEST_PROTECT() )
     {
@@ -596,12 +597,12 @@ TEST( MQTT_Stress, BlockingCallback )
 
         /* Wait for the callback to return, then check that the connection is
          * still usable. */
-        AwsIotSemaphore_Wait( &waitSem );
+        IotSemaphore_Wait( &waitSem );
         AwsIotLogInfo( "BlockingCallback test checking MQTT connection." );
         TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, _checkConnection() );
     }
 
-    AwsIotSemaphore_Destroy( &waitSem );
+    IotSemaphore_Destroy( &waitSem );
 
     /* Check that the PINGREQ override was used. */
     TEST_ASSERT_EQUAL( true, _pingreqOverrideCalled );
