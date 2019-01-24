@@ -37,9 +37,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/* Platform threads include. */
-#include "platform/aws_iot_threads.h"
-
 /*---------------------------- MQTT handle types ----------------------------*/
 
 /**

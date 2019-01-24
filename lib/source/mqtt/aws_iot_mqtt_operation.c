@@ -35,6 +35,10 @@
 /* MQTT internal include. */
 #include "private/aws_iot_mqtt_internal.h"
 
+/* Platform layer includes. */
+#include "platform/iot_clock.h"
+#include "platform/iot_threads.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -116,11 +120,11 @@ static void _processOperation( void * pArgument );
  */
 _mqttOperationQueue_t _IotMqttCallback = { 0 }; /**< @brief Queue of MQTT operations waiting for their callback to be invoked. */
 _mqttOperationQueue_t _IotMqttSend = { 0 };     /**< @brief Queue of MQTT operations waiting to be sent. */
-AwsIotMutex_t _IotMqttQueueMutex;               /**< @brief Protects both #_IotMqttSend and #_IotMqttCallback from concurrent access. */
+IotMutex_t _IotMqttQueueMutex;                  /**< @brief Protects both #_IotMqttSend and #_IotMqttCallback from concurrent access. */
 
 /* List of MQTT operations awaiting a network response. */
 IotListDouble_t _IotMqttPendingResponse = { 0 }; /**< @brief List of MQTT operations awaiting a response from the MQTT server. */
-AwsIotMutex_t _IotMqttPendingResponseMutex;      /**< @brief Protects #_IotMqttPendingResponse from concurrent access. */
+IotMutex_t _IotMqttPendingResponseMutex;         /**< @brief Protects #_IotMqttPendingResponse from concurrent access. */
 
 /*-----------------------------------------------------------*/
 
@@ -168,7 +172,7 @@ static bool _calculateNextPublishRetry( _mqttConnection_t * const pMqttConnectio
 
     /* Calculate when the PUBLISH retry event should expire relative to the current
      * time. */
-    pPublishRetry->expirationTime = AwsIotClock_GetTimeMs();
+    pPublishRetry->expirationTime = IotClock_GetTimeMs();
 
     if( pPublishRetry->retry.count > pPublishRetry->retry.limit )
     {
@@ -194,7 +198,7 @@ static bool _calculateNextPublishRetry( _mqttConnection_t * const pMqttConnectio
     }
 
     /* Lock the connection timer mutex to block the timer thread. */
-    AwsIotMutex_Lock( &( pMqttConnection->timerMutex ) );
+    IotMutex_Lock( &( pMqttConnection->timerMutex ) );
 
     /* Peek the current head of the timer event list. If the PUBLISH retry expires
      * sooner, re-arm the timer to expire at the PUBLISH retry's expiration time. */
@@ -205,9 +209,9 @@ static bool _calculateNextPublishRetry( _mqttConnection_t * const pMqttConnectio
     if( ( pTimerListHead == NULL ) ||
         ( pTimerListHead->expirationTime > pPublishRetry->expirationTime ) )
     {
-        status = AwsIotClock_TimerArm( &( pMqttConnection->timer ),
-                                       pPublishRetry->expirationTime - AwsIotClock_GetTimeMs(),
-                                       0 );
+        status = IotClock_TimerArm( &( pMqttConnection->timer ),
+                                    pPublishRetry->expirationTime - IotClock_GetTimeMs(),
+                                    0 );
 
         if( status == false )
         {
@@ -224,7 +228,7 @@ static bool _calculateNextPublishRetry( _mqttConnection_t * const pMqttConnectio
                                     AwsIotMqttInternal_TimerEventCompare );
     }
 
-    AwsIotMutex_Unlock( &( pMqttConnection->timerMutex ) );
+    IotMutex_Unlock( &( pMqttConnection->timerMutex ) );
 
     return status;
 }
@@ -313,15 +317,15 @@ static void _invokeSend( _mqttOperation_t * const pOperation )
     /* Otherwise, add operation to the list of MQTT operations pending responses. */
     else
     {
-        AwsIotMutex_Lock( &( _IotMqttPendingResponseMutex ) );
+        IotMutex_Lock( &( _IotMqttPendingResponseMutex ) );
         IotListDouble_InsertTail( &( _IotMqttPendingResponse ), &( pOperation->link ) );
-        AwsIotMutex_Unlock( &( _IotMqttPendingResponseMutex ) );
+        IotMutex_Unlock( &( _IotMqttPendingResponseMutex ) );
     }
 
     /* Notify a waitable operation that it has been sent. */
     if( waitableOperation == true )
     {
-        AwsIotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
+        IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
     }
 }
 
@@ -407,7 +411,7 @@ static void _processOperation( void * pArgument )
         AwsIotLogDebug( "Removing oldest operation from MQTT pending operations." );
 
         /* Remove the oldest operation from the queue of pending MQTT operations. */
-        AwsIotMutex_Lock( &( _IotMqttQueueMutex ) );
+        IotMutex_Lock( &( _IotMqttQueueMutex ) );
 
         pOperation = IotLink_Container( _mqttOperation_t,
                                         IotQueue_Dequeue( &( pQueue->queue ) ),
@@ -417,10 +421,10 @@ static void _processOperation( void * pArgument )
          * number of available threads. */
         if( pOperation == NULL )
         {
-            AwsIotSemaphore_Post( &( pQueue->availableThreads ) );
+            IotSemaphore_Post( &( pQueue->availableThreads ) );
         }
 
-        AwsIotMutex_Unlock( &( _IotMqttQueueMutex ) );
+        IotMutex_Unlock( &( _IotMqttQueueMutex ) );
 
         /* Terminate thread if no operation was received. */
         if( pOperation == NULL )
@@ -517,7 +521,7 @@ AwsIotMqttError_t AwsIotMqttInternal_CreateOperation( _mqttOperation_t ** const 
     {
         /* The wait semaphore counts up to 2: once for when the send thread completes,
          * and once for when the entire operation completes. */
-        if( AwsIotSemaphore_Create( &( pOperation->notify.waitSemaphore ), 0, 2 ) == false )
+        if( IotSemaphore_Create( &( pOperation->notify.waitSemaphore ), 0, 2 ) == false )
         {
             AwsIotLogError( "Failed to create semaphore for waitable MQTT operation." );
 
@@ -576,7 +580,7 @@ void AwsIotMqttInternal_DestroyOperation( void * pData )
     if( ( pOperation->operation == AWS_IOT_MQTT_PUBLISH_TO_SERVER ) &&
         ( pOperation->pPublishRetry != NULL ) )
     {
-        AwsIotMutex_Lock( &( pOperation->pMqttConnection->timerMutex ) );
+        IotMutex_Lock( &( pOperation->pMqttConnection->timerMutex ) );
 
         /* Remove the timer event from the timer event list before freeing it.
          * The return value of this function is not checked because it always
@@ -586,7 +590,7 @@ void AwsIotMqttInternal_DestroyOperation( void * pData )
                                                  NULL,
                                                  pOperation->pPublishRetry );
 
-        AwsIotMutex_Unlock( &( pOperation->pMqttConnection->timerMutex ) );
+        IotMutex_Unlock( &( pOperation->pMqttConnection->timerMutex ) );
 
         AwsIotMqtt_FreeTimerEvent( pOperation->pPublishRetry );
     }
@@ -594,7 +598,7 @@ void AwsIotMqttInternal_DestroyOperation( void * pData )
     /* Check if a wait semaphore was created for this operation. */
     if( ( pOperation->flags & AWS_IOT_MQTT_FLAG_WAITABLE ) == AWS_IOT_MQTT_FLAG_WAITABLE )
     {
-        AwsIotSemaphore_Destroy( &( pOperation->notify.waitSemaphore ) );
+        IotSemaphore_Destroy( &( pOperation->notify.waitSemaphore ) );
     }
 
     /* Free the memory used to hold operation data. */
@@ -616,27 +620,27 @@ AwsIotMqttError_t AwsIotMqttInternal_EnqueueOperation( _mqttOperation_t * const 
                        ( pQueue == &( _IotMqttSend ) ) );
 
     /* Lock mutex for exclusive access to queues. */
-    AwsIotMutex_Lock( &( _IotMqttQueueMutex ) );
+    IotMutex_Lock( &( _IotMqttQueueMutex ) );
 
     /* Add operation to queue. */
     IotQueue_Enqueue( &( pQueue->queue ), &( pOperation->link ) );
 
     /* Check if a new thread can be created. */
-    if( AwsIotSemaphore_TryWait( &( pQueue->availableThreads ) ) == true )
+    if( IotSemaphore_TryWait( &( pQueue->availableThreads ) ) == true )
     {
         /* Create new thread. */
-        if( AwsIot_CreateDetachedThread( _processOperation,
-                                         pQueue ) == false )
+        if( Iot_CreateDetachedThread( _processOperation,
+                                      pQueue ) == false )
         {
             /* New thread could not be created. Remove enqueued operation and
              * report error. */
             IotQueue_Remove( &( pOperation->link ) );
-            AwsIotSemaphore_Post( &( pQueue->availableThreads ) );
+            IotSemaphore_Post( &( pQueue->availableThreads ) );
             status = AWS_IOT_MQTT_NO_MEMORY;
         }
     }
 
-    AwsIotMutex_Unlock( &( _IotMqttQueueMutex ) );
+    IotMutex_Unlock( &( _IotMqttQueueMutex ) );
 
     return status;
 }
@@ -662,14 +666,14 @@ _mqttOperation_t * AwsIotMqttInternal_FindOperation( AwsIotMqttOperationType_t o
     param.pPacketIdentifier = pPacketIdentifier;
 
     /* Find the first matching element in the list. */
-    AwsIotMutex_Lock( &( _IotMqttPendingResponseMutex ) );
+    IotMutex_Lock( &( _IotMqttPendingResponseMutex ) );
     pResult = IotLink_Container( _mqttOperation_t,
                                  IotListDouble_RemoveFirstMatch( &( _IotMqttPendingResponse ),
                                                                  NULL,
                                                                  _mqttOperation_match,
                                                                  &param ),
                                  link );
-    AwsIotMutex_Unlock( &( _IotMqttPendingResponseMutex ) );
+    IotMutex_Unlock( &( _IotMqttPendingResponseMutex ) );
 
     /* The result will be NULL if no corresponding operation was found in the
      * list. */
@@ -706,7 +710,7 @@ void AwsIotMqttInternal_Notify( _mqttOperation_t * const pOperation )
      * Otherwise, enqueue it for callback. */
     if( ( pOperation->flags & AWS_IOT_MQTT_FLAG_WAITABLE ) == AWS_IOT_MQTT_FLAG_WAITABLE )
     {
-        AwsIotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
+        IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
     }
     else
     {

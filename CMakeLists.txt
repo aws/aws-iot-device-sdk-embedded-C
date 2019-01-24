@@ -50,6 +50,7 @@ endif()
 
 # Platform libraries.
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
+    add_definitions( -DIOT_SYSTEM_TYPES_FILE="platform/types/iot_platform_types_posix.h" )
     add_subdirectory( lib/source/platform/posix )
 endif()
 

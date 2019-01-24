@@ -36,6 +36,9 @@
 /* MQTT internal include. */
 #include "private/aws_iot_mqtt_internal.h"
 
+/* Platform layer includes. */
+#include "platform/iot_threads.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -240,7 +243,7 @@ AwsIotMqttError_t AwsIotMqttInternal_AddSubscriptions( _mqttConnection_t * const
     _mqttSubscription_t * pNewSubscription = NULL;
     _topicMatchParams_t topicMatchParams = { .exactMatchOnly = true };
 
-    AwsIotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
 
     for( i = 0; i < subscriptionCount; i++ )
     {
@@ -273,7 +276,7 @@ AwsIotMqttError_t AwsIotMqttInternal_AddSubscriptions( _mqttConnection_t * const
             /* If memory allocation failed, remove all previously added subscriptions. */
             if( pNewSubscription == NULL )
             {
-                AwsIotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+                IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
                 AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( pMqttConnection,
                                                                     pSubscriptionList,
                                                                     i );
@@ -300,7 +303,7 @@ AwsIotMqttError_t AwsIotMqttInternal_AddSubscriptions( _mqttConnection_t * const
         }
     }
 
-    AwsIotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
     return AWS_IOT_MQTT_SUCCESS;
 }
@@ -325,7 +328,7 @@ void AwsIotMqttInternal_ProcessPublish( _mqttConnection_t * const pMqttConnectio
 
     /* Prevent any other thread from modifying the subscription list while this
      * function is searching. */
-    AwsIotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
     pStartPoint = IotListDouble_PeekHead( &( pMqttConnection->subscriptionList ) );
 
     /* Search the subscription list for all matching subscriptions. */
@@ -356,7 +359,7 @@ void AwsIotMqttInternal_ProcessPublish( _mqttConnection_t * const pMqttConnectio
         callbackFunction = pSubscription->callback.function;
 
         /* Unlock the subscription list mutex. */
-        AwsIotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+        IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
         /* Set the members of the callback parameter. */
         pCallbackParam->mqttConnection = pMqttConnection;
@@ -367,7 +370,7 @@ void AwsIotMqttInternal_ProcessPublish( _mqttConnection_t * const pMqttConnectio
         callbackFunction( pParam1, pCallbackParam );
 
         /* Lock the subscription list mutex to decrement the reference count. */
-        AwsIotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
+        IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
 
         /* Decrement the reference count. It must still be positive. */
         ( pSubscription->references )--;
@@ -385,7 +388,7 @@ void AwsIotMqttInternal_ProcessPublish( _mqttConnection_t * const pMqttConnectio
         }
     }
 
-    AwsIotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -419,7 +422,7 @@ void AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( _mqttConnection_t * con
 
     /* Prevent any other thread from modifying the subscription list while this
      * function is running. */
-    AwsIotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
 
     /* Find and remove each topic filter from the list. */
     for( i = 0; i < subscriptionCount; i++ )
@@ -457,7 +460,7 @@ void AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( _mqttConnection_t * con
         }
     }
 
-    AwsIotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -479,7 +482,7 @@ bool AwsIotMqtt_IsSubscribed( AwsIotMqttConnection_t mqttConnection,
 
     /* Prevent any other thread from modifying the subscription list while this
      * function is running. */
-    AwsIotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
 
     /* Search for a matching subscription. */
     pSubscription = IotLink_Container( _mqttSubscription_t,
@@ -504,7 +507,7 @@ bool AwsIotMqtt_IsSubscribed( AwsIotMqttConnection_t mqttConnection,
         status = true;
     }
 
-    AwsIotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
     return status;
 }

@@ -56,7 +56,7 @@
 #include "platform/aws_iot_network.h"
 
 /* Platform threads include. */
-#include "platform/aws_iot_threads.h"
+#include "platform/iot_threads.h"
 
 /* Configure logs for the functions in this file. */
 #ifdef AWS_IOT_LOG_LEVEL_NETWORK
@@ -116,7 +116,7 @@ typedef struct _connectionInfo
 {
     int tcpSocket;                                   /**< @brief Socket associated with connection. */
     SSL * pSSLConnectionContext;                     /**< @brief SSL context for connection. */
-    AwsIotMutex_t mutex;                             /**< @brief Synchronizes the various network threads. */
+    IotMutex_t mutex;                                /**< @brief Synchronizes the various network threads. */
     _threadStatus_t receiveThreadStatus;             /**< @brief Status of the receive thread for this connection. */
     pthread_t receiveThread;                         /**< @brief Thread that handles receiving on this connection. */
 
@@ -170,7 +170,7 @@ static void * _networkReceiveThread( void * pArgument )
     {
         /* Prevent this thread from being cancelled while running. But if the
          * connection mutex is locked, wait until it is available. */
-        if( AwsIotMutex_TryLock( &( pConnectionInfo->mutex ) ) == false )
+        if( IotMutex_TryLock( &( pConnectionInfo->mutex ) ) == false )
         {
             continue;
         }
@@ -193,7 +193,7 @@ static void * _networkReceiveThread( void * pArgument )
                             errno );
 
             /* Unlock the connection mutex before polling again. */
-            AwsIotMutex_Unlock( &( pConnectionInfo->mutex ) );
+            IotMutex_Unlock( &( pConnectionInfo->mutex ) );
 
             continue;
         }
@@ -220,7 +220,7 @@ static void * _networkReceiveThread( void * pArgument )
                             pConnectionInfo->tcpSocket );
 
             /* Unlock the connection mutex before polling again. */
-            AwsIotMutex_Unlock( &( pConnectionInfo->mutex ) );
+            IotMutex_Unlock( &( pConnectionInfo->mutex ) );
 
             continue;
         }
@@ -282,7 +282,7 @@ static void * _networkReceiveThread( void * pArgument )
         }
 
         /* Unlock the connection mutex before polling again. */
-        AwsIotMutex_Unlock( &( pConnectionInfo->mutex ) );
+        IotMutex_Unlock( &( pConnectionInfo->mutex ) );
     }
 
     AwsIotLogDebug( "Network receive thread for socket %d terminating.",
@@ -294,7 +294,7 @@ static void * _networkReceiveThread( void * pArgument )
     pConnectionInfo->pMqttConnection = NULL;
 
     /* Unlock the connection mutex before exiting. */
-    AwsIotMutex_Unlock( &( pConnectionInfo->mutex ) );
+    IotMutex_Unlock( &( pConnectionInfo->mutex ) );
 
     return NULL;
 }
@@ -767,7 +767,7 @@ AwsIotNetworkError_t AwsIotNetwork_CreateConnection( AwsIotNetworkConnection_t *
     }
 
     /* Create the network connection mutex. */
-    if( AwsIotMutex_Create( &( pConnectionInfo->mutex ) ) == false )
+    if( IotMutex_Create( &( pConnectionInfo->mutex ) ) == false )
     {
         AwsIotLogError( "Failed to create connection mutex." );
         AwsIotNetwork_Free( pConnectionInfo );
@@ -836,7 +836,7 @@ void AwsIotNetwork_CloseConnection( AwsIotNetworkConnection_t networkConnection 
     }
 
     /* Lock the connection mutex to block the receive thread. */
-    AwsIotMutex_Lock( &( pConnectionInfo->mutex ) );
+    IotMutex_Lock( &( pConnectionInfo->mutex ) );
 
     /* Check if a network receive thread was created. */
     if( pConnectionInfo->receiveThreadStatus != _NONE )
@@ -890,7 +890,7 @@ void AwsIotNetwork_CloseConnection( AwsIotNetworkConnection_t networkConnection 
     }
 
     /* Unlock the connection mutex. */
-    AwsIotMutex_Unlock( &( pConnectionInfo->mutex ) );
+    IotMutex_Unlock( &( pConnectionInfo->mutex ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -907,7 +907,7 @@ void AwsIotNetwork_DestroyConnection( AwsIotNetworkConnection_t networkConnectio
     }
 
     /* Destroy the connection data mutex. */
-    AwsIotMutex_Destroy( &( pConnectionInfo->mutex ) );
+    IotMutex_Destroy( &( pConnectionInfo->mutex ) );
 
     /* Free memory in use by the connection. */
     AwsIotNetwork_Free( pConnectionInfo );
@@ -924,7 +924,7 @@ AwsIotNetworkError_t AwsIotNetwork_SetMqttReceiveCallback( AwsIotNetworkConnecti
     _connectionInfo_t * pConnectionInfo = ( _connectionInfo_t * ) networkConnection;
 
     /* Lock the connection mutex before changing the callback and its parameter. */
-    AwsIotMutex_Lock( &( pConnectionInfo->mutex ) );
+    IotMutex_Lock( &( pConnectionInfo->mutex ) );
 
     /* Clean up any previously terminated receive thread. */
     if( pConnectionInfo->receiveThreadStatus == _TERMINATED )
@@ -971,7 +971,7 @@ AwsIotNetworkError_t AwsIotNetwork_SetMqttReceiveCallback( AwsIotNetworkConnecti
     }
 
     /* Unlock the connection mutex. */
-    AwsIotMutex_Unlock( &( pConnectionInfo->mutex ) );
+    IotMutex_Unlock( &( pConnectionInfo->mutex ) );
 
     return status;
 }
@@ -1004,7 +1004,7 @@ size_t AwsIotNetwork_Send( void * networkConnection,
 
     /* Lock the connection mutex to prevent the connection from being closed
      * while sending. */
-    AwsIotMutex_Lock( &( pConnectionInfo->mutex ) );
+    IotMutex_Lock( &( pConnectionInfo->mutex ) );
 
     /* Set the file descriptor for poll. */
     fileDescriptors.fd = pConnectionInfo->tcpSocket;
@@ -1030,7 +1030,7 @@ size_t AwsIotNetwork_Send( void * networkConnection,
     }
 
     /* Unlock the connection mutex. */
-    AwsIotMutex_Unlock( &( pConnectionInfo->mutex ) );
+    IotMutex_Unlock( &( pConnectionInfo->mutex ) );
 
     /* Check for errors. */
     if( bytesSent <= 0 )

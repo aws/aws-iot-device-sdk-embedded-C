@@ -15,6 +15,7 @@ GENERATE_TAGFILE = doc/tag/platform.tag
 # Directories containing library source code.
 INPUT = doc/lib \
         lib/include/platform \
+		lib/include/platform/types \
         lib/source/platform/posix \
         lib/source/platform/posix/static_memory \
         lib/source/platform/posix/network

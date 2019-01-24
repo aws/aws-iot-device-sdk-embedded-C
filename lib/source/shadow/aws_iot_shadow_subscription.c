@@ -36,6 +36,9 @@
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
 
+/* Platform layer includes. */
+#include "platform/iot_threads.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -90,7 +93,7 @@ IotListDouble_t _AwsIotShadowSubscriptions = { 0 };
 /**
  * @brief Protects #_AwsIotShadowSubscriptions from concurrent access.
  */
-AwsIotMutex_t _AwsIotShadowSubscriptionsMutex;
+IotMutex_t _AwsIotShadowSubscriptionsMutex;
 
 /*-----------------------------------------------------------*/
 
@@ -555,7 +558,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( AwsIotMqttConnec
                    thingNameLength,
                    pThingName );
 
-    AwsIotMutex_Lock( &( _AwsIotShadowSubscriptionsMutex ) );
+    IotMutex_Lock( &( _AwsIotShadowSubscriptionsMutex ) );
 
     /* Search the list for an existing subscription for Thing Name. */
     pSubscription = IotLink_Container( _shadowSubscription_t,
@@ -650,7 +653,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( AwsIotMqttConnec
                        pThingName );
     }
 
-    AwsIotMutex_Unlock( &( _AwsIotShadowSubscriptionsMutex ) );
+    IotMutex_Unlock( &( _AwsIotShadowSubscriptionsMutex ) );
 
     /* Check the results of the MQTT unsubscribes. */
     if( removeAcceptedStatus != AWS_IOT_SHADOW_STATUS_PENDING )
