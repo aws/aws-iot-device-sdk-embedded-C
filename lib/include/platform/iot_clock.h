@@ -20,12 +20,12 @@
  */
 
 /**
- * @file aws_iot_clock.h
- * @brief Time-related functions used by the AWS IoT libraries.
+ * @file iot_clock.h
+ * @brief Time-related functions used by libraries in this SDK.
  */
 
-#ifndef _AWS_IOT_CLOCK_H_
-#define _AWS_IOT_CLOCK_H_
+#ifndef _IOT_CLOCK_H_
+#define _IOT_CLOCK_H_
 
 /* Build using a config header, if provided. */
 #ifdef IOT_CONFIG_FILE
@@ -33,29 +33,12 @@
 #endif
 
 /* Standard includes. */
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
-/* Platform threads include. */
-#include "aws_iot_threads.h"
-
-/**
- * @ingroup platform_datatypes_handles
- * @brief The type used to represent timers. The constant @ref AWS_IOT_TIMER_TYPE
- * can be used to change the timer type.
- *
- * <span style="color:red;font-weight:bold">
- * This constant will be automatically configured during build and generally
- * does not need to be defined.
- * </span>
- *
- * <b>Example</b> <br>
- * To change the type of #AwsIotTimer_t to `long`:
- * @code{c}
- * #define AWS_IOT_TIMER_TYPE    long
- * #include "aws_iot_clock.h"
- * @endcode
- */
-typedef AWS_IOT_TIMER_TYPE AwsIotTimer_t;
+/* Platform layer types include. */
+#include "platform/types/iot_platform_types.h"
 
 /**
  * @functionspage{platform_clock,platform clock component,Clock}
@@ -67,11 +50,11 @@ typedef AWS_IOT_TIMER_TYPE AwsIotTimer_t;
  */
 
 /**
- * @functionpage{AwsIotClock_GetTimestring,platform_clock,gettimestring}
- * @functionpage{AwsIotClock_GetTimeMs,platform_clock,gettimems}
- * @functionpage{AwsIotClock_TimerCreate,platform_clock,timercreate}
- * @functionpage{AwsIotClock_TimerDestroy,platform_clock,timerdestroy}
- * @functionpage{AwsIotClock_TimerArm,platform_clock,timerarm}
+ * @functionpage{IotClock_GetTimestring,platform_clock,gettimestring}
+ * @functionpage{IotClock_GetTimeMs,platform_clock,gettimems}
+ * @functionpage{IotClock_TimerCreate,platform_clock,timercreate}
+ * @functionpage{IotClock_TimerDestroy,platform_clock,timerdestroy}
+ * @functionpage{IotClock_TimerArm,platform_clock,timerarm}
  */
 
 /**
@@ -95,16 +78,16 @@ typedef AWS_IOT_TIMER_TYPE AwsIotTimer_t;
  * char timestring[ 32 ];
  * size_t timestringLength = 0;
  *
- * if( AwsIotClock_GetTimestring( timestring, 32, &timestringLength ) == true )
+ * if( IotClock_GetTimestring( timestring, 32, &timestringLength ) == true )
  * {
  *     printf( "Timestring: %.*s", timestringLength, timestring );
  * }
  * @endcode
  */
 /* @[declare_platform_clock_gettimestring] */
-bool AwsIotClock_GetTimestring( char * const pBuffer,
-                                size_t bufferSize,
-                                size_t * const pTimestringLength );
+bool IotClock_GetTimestring( char * const pBuffer,
+                             size_t bufferSize,
+                             size_t * const pTimestringLength );
 /* @[declare_platform_clock_gettimestring] */
 
 /**
@@ -119,19 +102,18 @@ bool AwsIotClock_GetTimestring( char * const pBuffer,
  * <b>Example</b>
  * @code{c}
  * // Get current time.
- * uint64_t currentTime = AwsIotClock_GetTimeMs();
+ * uint64_t currentTime = IotClock_GetTimeMs();
  * @endcode
  */
 /* @[declare_platform_clock_gettimems] */
-uint64_t AwsIotClock_GetTimeMs( void );
+uint64_t IotClock_GetTimeMs( void );
 /* @[declare_platform_clock_gettimems] */
 
 /**
  * @brief Create a new timer.
  *
  * This function creates a new, unarmed timer. It must be called on an uninitialized
- * #AwsIotTimer_t. This function must not be called on an already-initialized
- * #AwsIotTimer_t.
+ * #IotTimer_t. This function must not be called on an already-initialized #IotTimer_t.
  *
  * @param[out] pNewTimer Set to a new timer handle on success.
  * @param[in] expirationRoutine The function to run when this timer expires. This
@@ -143,16 +125,16 @@ uint64_t AwsIotClock_GetTimeMs( void );
  * @see @ref platform_clock_function_timerdestroy, @ref platform_clock_function_timerarm
  */
 /* @[declare_platform_clock_timercreate] */
-bool AwsIotClock_TimerCreate( AwsIotTimer_t * const pNewTimer,
-                              AwsIotThreadRoutine_t expirationRoutine,
-                              void * pArgument );
+bool IotClock_TimerCreate( IotTimer_t * const pNewTimer,
+                           IotThreadRoutine_t expirationRoutine,
+                           void * pArgument );
 /* @[declare_platform_clock_timercreate] */
 
 /**
  * @brief Free resources used by a timer.
  *
  * This function frees resources used by a timer. It must be called on an initialized
- * #AwsIotTimer_t. No other timer functions should be called on `pTimer` after calling
+ * #IotTimer_t. No other timer functions should be called on `pTimer` after calling
  * this function (unless the timer is re-created).
  *
  * This function will stop the `pTimer` if it is armed.
@@ -162,7 +144,7 @@ bool AwsIotClock_TimerCreate( AwsIotTimer_t * const pNewTimer,
  * @see @ref platform_clock_function_timercreate, @ref platform_clock_function_timerarm
  */
 /* @[declare_platform_clock_timerdestroy] */
-void AwsIotClock_TimerDestroy( AwsIotTimer_t * const pTimer );
+void IotClock_TimerDestroy( IotTimer_t * const pTimer );
 /* @[declare_platform_clock_timerdestroy] */
 
 /**
@@ -195,25 +177,25 @@ void AwsIotClock_TimerDestroy( AwsIotTimer_t * const pTimer );
  *
  * void timerExample( void )
  * {
- *     AwsIotTimer_t timer;
+ *     IotTimer_t timer;
  *
- *     if( AwsIotClock_TimerCreate( &timer, timerExpirationRoutine, NULL ) == true )
+ *     if( IotClock_TimerCreate( &timer, timerExpirationRoutine, NULL ) == true )
  *     {
  *         // Set the timer to periodically expire every 10 seconds.
- *         if( AwsIotClock_TimerArm( &timer, 10000, 10000 ) == true )
+ *         if( IotClock_TimerArm( &timer, 10000, 10000 ) == true )
  *         {
  *             // Wait for timer to expire.
  *         }
  *
- *         AwsIotClock_TimerDestroy( &timer );
+ *         IotClock_TimerDestroy( &timer );
  *     }
  * }
  * @endcode
  */
 /* @[declare_platform_clock_timerarm] */
-bool AwsIotClock_TimerArm( AwsIotTimer_t * const pTimer,
-                           uint64_t relativeTimeoutMs,
-                           uint64_t periodMs );
+bool IotClock_TimerArm( IotTimer_t * const pTimer,
+                        uint64_t relativeTimeoutMs,
+                        uint64_t periodMs );
 /* @[declare_platform_clock_timerarm] */
 
-#endif /* ifndef _AWS_IOT_CLOCK_H_ */
+#endif /* ifndef _IOT_CLOCK_H_ */

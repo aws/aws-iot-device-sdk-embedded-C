@@ -77,10 +77,8 @@
  * be affected by AWS_IOT_STATIC_MEMORY_ONLY. */
 #define AwsIotNetwork_Malloc    unity_malloc_mt
 #define AwsIotNetwork_Free      unity_free_mt
-#define AwsIotClock_Malloc      unity_malloc_mt
-#define AwsIotClock_Free        unity_free_mt
-#define AwsIotThreads_Malloc    unity_malloc_mt
-#define AwsIotThreads_Free      unity_free_mt
+#define IotThreads_Malloc       unity_malloc_mt
+#define IotThreads_Free         unity_free_mt
 #define AwsIotLogging_Malloc    unity_malloc_mt
 #define AwsIotLogging_Free      unity_free_mt
 /* #define AwsIotLogging_StaticBufferSize */
@@ -115,11 +113,8 @@
     #define AwsIotShadow_FreeSubscription      unity_free_mt
 #endif /* if AWS_IOT_STATIC_MEMORY_ONLY == 0 */
 
-#include <sys/types.h>
-#include <semaphore.h>
-
-#define AWS_IOT_MUTEX_TYPE pthread_mutex_t
-#define AWS_IOT_SEMAPHORE_TYPE sem_t
-#define AWS_IOT_TIMER_TYPE void*
+/* The build system will choose the appropriate system types file for the platform
+ * layer based on the host operating system. */
+#include IOT_SYSTEM_TYPES_FILE
 
 #endif /* ifndef _IOT_TESTS_CONFIG_H_ */

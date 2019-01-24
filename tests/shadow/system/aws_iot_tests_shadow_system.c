@@ -39,7 +39,7 @@
 #include "aws_iot_json_utils.h"
 
 /* Platform layer includes. */
-#include "platform/aws_iot_clock.h"
+#include "platform/iot_threads.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -88,17 +88,17 @@ extern int snprintf( char *,
 /**
  * @brief The length of @ref AWS_IOT_TEST_SHADOW_THING_NAME.
  */
-#define _THING_NAME_LENGTH               ( sizeof( AWS_IOT_TEST_SHADOW_THING_NAME ) - 1 )
+#define _THING_NAME_LENGTH              ( sizeof( AWS_IOT_TEST_SHADOW_THING_NAME ) - 1 )
 
 /**
  * @brief The Shadow document used for these tests.
  */
-#define _TEST_SHADOW_DOCUMENT            "{\"state\":{\"reported\":{\"key\":\"value\"}},\"clientToken\":\"shadowtest\"}"
+#define _TEST_SHADOW_DOCUMENT           "{\"state\":{\"reported\":{\"key\":\"value\"}},\"clientToken\":\"shadowtest\"}"
 
 /**
  * @brief The length of #_TEST_SHADOW_DOCUMENT.
  */
-#define _TEST_SHADOW_DOCUMENT_LENGTH     ( sizeof( _TEST_SHADOW_DOCUMENT ) - 1 )
+#define _TEST_SHADOW_DOCUMENT_LENGTH    ( sizeof( _TEST_SHADOW_DOCUMENT ) - 1 )
 
 /*-----------------------------------------------------------*/
 
@@ -108,7 +108,7 @@ extern int snprintf( char *,
 typedef struct _operationCompleteParams
 {
     AwsIotShadowCallbackType_t expectedType; /**< @brief Expected callback type. */
-    AwsIotSemaphore_t waitSem;               /**< @brief Used to unblock waiting test thread. */
+    IotSemaphore_t waitSem;                  /**< @brief Used to unblock waiting test thread. */
     AwsIotShadowReference_t reference;       /**< @brief Reference to expected completed operation. */
 } _operationCompleteParams_t;
 
@@ -166,7 +166,7 @@ static void _operationComplete( void * pArgument,
     }
 
     /* Unblock the main test thread. */
-    AwsIotSemaphore_Post( &( pParams->waitSem ) );
+    IotSemaphore_Post( &( pParams->waitSem ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -178,7 +178,7 @@ static void _operationComplete( void * pArgument,
 static void _deltaCallback( void * pArgument,
                             AwsIotShadowCallbackParam_t * const pCallback )
 {
-    AwsIotSemaphore_t * pWaitSem = ( AwsIotSemaphore_t * ) pArgument;
+    IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
     const char * pValue = NULL, * pClientToken = NULL;
     size_t valueLength = 0, clientTokenLength = 0;
 
@@ -206,7 +206,7 @@ static void _deltaCallback( void * pArgument,
     AwsIotShadow_Assert( strncmp( "\"shadowtest\"", pClientToken, 12 ) == 0 );
 
     /* Unblock the main test thread. */
-    AwsIotSemaphore_Post( pWaitSem );
+    IotSemaphore_Post( pWaitSem );
 }
 
 /*-----------------------------------------------------------*/
@@ -218,7 +218,7 @@ static void _deltaCallback( void * pArgument,
 static void _updatedCallback( void * pArgument,
                               AwsIotShadowCallbackParam_t * const pCallback )
 {
-    AwsIotSemaphore_t * pWaitSem = ( AwsIotSemaphore_t * ) pArgument;
+    IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
     const char * pPrevious = NULL, * pCurrent = NULL, * pClientToken = NULL;
     size_t previousStateLength = 0, currentStateLength = 0, clientTokenLength = 0;
 
@@ -257,7 +257,7 @@ static void _updatedCallback( void * pArgument,
     AwsIotShadow_Assert( strncmp( "\"shadowtest\"", pClientToken, 12 ) == 0 );
 
     /* Unblock the main test thread. */
-    AwsIotSemaphore_Post( pWaitSem );
+    IotSemaphore_Post( pWaitSem );
 }
 
 /*-----------------------------------------------------------*/
@@ -282,7 +282,7 @@ static void _updateGetDeleteAsync( int QoS )
     documentInfo.QoS = QoS;
 
     /* Create the wait semaphore for operations. */
-    TEST_ASSERT_EQUAL_INT( true, AwsIotSemaphore_Create( &( callbackParam.waitSem ), 0, 1 ) );
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( callbackParam.waitSem ), 0, 1 ) );
 
     if( TEST_PROTECT() )
     {
@@ -300,8 +300,8 @@ static void _updateGetDeleteAsync( int QoS )
                                       &callbackInfo,
                                       &( callbackParam.reference ) );
 
-        if( AwsIotSemaphore_TimedWait( &( callbackParam.waitSem ),
-                                       AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
+        if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
+                                    AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
         {
             TEST_FAIL_MESSAGE( "Timed out waiting to update Shadow document." );
         }
@@ -317,8 +317,8 @@ static void _updateGetDeleteAsync( int QoS )
                                    &( callbackParam.reference ) );
         TEST_ASSERT_EQUAL_INT( AWS_IOT_SHADOW_STATUS_PENDING, status );
 
-        if( AwsIotSemaphore_TimedWait( &( callbackParam.waitSem ),
-                                       AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
+        if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
+                                    AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
         {
             TEST_FAIL_MESSAGE( "Timed out waiting to retrieve Shadow document." );
         }
@@ -334,14 +334,14 @@ static void _updateGetDeleteAsync( int QoS )
                                       &callbackInfo,
                                       &( callbackParam.reference ) );
 
-        if( AwsIotSemaphore_TimedWait( &( callbackParam.waitSem ),
-                                       AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
+        if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
+                                    AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
         {
             TEST_FAIL_MESSAGE( "Timed out waiting to delete Shadow document." );
         }
     }
 
-    AwsIotSemaphore_Destroy( &( callbackParam.waitSem ) );
+    IotSemaphore_Destroy( &( callbackParam.waitSem ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -560,10 +560,10 @@ TEST( Shadow_System, DeltaCallback )
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowCallbackInfo_t deltaCallback = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
     AwsIotShadowDocumentInfo_t updateDocument = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
-    AwsIotSemaphore_t waitSem;
+    IotSemaphore_t waitSem;
 
     /* Create a semaphore to wait on. */
-    TEST_ASSERT_EQUAL_INT( true, AwsIotSemaphore_Create( &waitSem, 0, 1 ) );
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
     /* Set the delta callback information. */
     deltaCallback.param1 = &waitSem;
@@ -604,7 +604,7 @@ TEST( Shadow_System, DeltaCallback )
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Block on the wait semaphore until the delta callback is invoked. */
-        if( AwsIotSemaphore_TimedWait( &waitSem, AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
+        if( IotSemaphore_TimedWait( &waitSem, AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
         {
             TEST_FAIL_MESSAGE( "Timed out waiting for delta callback." );
         }
@@ -625,7 +625,7 @@ TEST( Shadow_System, DeltaCallback )
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
     }
 
-    AwsIotSemaphore_Destroy( &waitSem );
+    IotSemaphore_Destroy( &waitSem );
 }
 
 /*-----------------------------------------------------------*/
@@ -635,10 +635,10 @@ TEST( Shadow_System, UpdatedCallback )
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowCallbackInfo_t updatedCallback = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
     AwsIotShadowDocumentInfo_t updateDocument = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
-    AwsIotSemaphore_t waitSem;
+    IotSemaphore_t waitSem;
 
     /* Create a semaphore to wait on. */
-    TEST_ASSERT_EQUAL_INT( true, AwsIotSemaphore_Create( &waitSem, 0, 1 ) );
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
     /* Set the delta callback information. */
     updatedCallback.param1 = &waitSem;
@@ -668,7 +668,7 @@ TEST( Shadow_System, UpdatedCallback )
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Block on the wait semaphore until the updated callback is invoked. */
-        if( AwsIotSemaphore_TimedWait( &waitSem, AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
+        if( IotSemaphore_TimedWait( &waitSem, AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
         {
             TEST_FAIL_MESSAGE( "Timed out waiting for updated callback." );
         }
@@ -682,7 +682,7 @@ TEST( Shadow_System, UpdatedCallback )
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
     }
 
-    AwsIotSemaphore_Destroy( &waitSem );
+    IotSemaphore_Destroy( &waitSem );
 }
 
 /*-----------------------------------------------------------*/

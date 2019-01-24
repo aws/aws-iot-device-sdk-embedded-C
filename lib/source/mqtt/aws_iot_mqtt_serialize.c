@@ -35,6 +35,9 @@
 /* MQTT internal includes. */
 #include "private/aws_iot_mqtt_internal.h"
 
+/* Platform layer includes. */
+#include "platform/iot_threads.h"
+
 /*-----------------------------------------------------------*/
 
 /*
@@ -295,7 +298,7 @@ static const AwsIotLogConfig_t _logHideAll =
  * Each packet should have a unique packet identifier. This mutex ensures that only
  * one thread at a time may read the global packet identifer.
  */
-static AwsIotMutex_t _packetIdentifierMutex;
+static IotMutex_t _packetIdentifierMutex;
 
 /*-----------------------------------------------------------*/
 
@@ -306,7 +309,7 @@ static uint16_t _nextPacketIdentifier( void )
 
     /* Lock the packet identifier mutex so that only one thread may read and
      * modify nextPacketIdentifier. */
-    AwsIotMutex_Lock( &_packetIdentifierMutex );
+    IotMutex_Lock( &_packetIdentifierMutex );
 
     /* Read the next packet identifier. */
     newPacketIdentifier = nextPacketIdentifier;
@@ -317,7 +320,7 @@ static uint16_t _nextPacketIdentifier( void )
     nextPacketIdentifier = ( uint16_t ) ( nextPacketIdentifier + ( ( uint16_t ) 2 ) );
 
     /* Unlock the packet identifier mutex. */
-    AwsIotMutex_Unlock( &_packetIdentifierMutex );
+    IotMutex_Unlock( &_packetIdentifierMutex );
 
     return newPacketIdentifier;
 }
@@ -612,7 +615,7 @@ static bool _subscriptionPacketSize( AwsIotMqttOperationType_t type,
 AwsIotMqttError_t AwsIotMqttInternal_InitSerialize( void )
 {
     /* Create the packet identifier mutex. */
-    if( AwsIotMutex_Create( &_packetIdentifierMutex ) == false )
+    if( IotMutex_Create( &_packetIdentifierMutex ) == false )
     {
         return AWS_IOT_MQTT_INIT_FAILED;
     }
@@ -623,7 +626,7 @@ AwsIotMqttError_t AwsIotMqttInternal_InitSerialize( void )
         #ifdef AwsIotMqttInternal_InitSerializeAdditional
             if( AwsIotMqttInternal_InitSerializeAdditional() == false )
             {
-                AwsIotMutex_Destroy( &_packetIdentifierMutex );
+                IotMutex_Destroy( &_packetIdentifierMutex );
 
                 return AWS_IOT_MQTT_INIT_FAILED;
             }
@@ -638,7 +641,7 @@ AwsIotMqttError_t AwsIotMqttInternal_InitSerialize( void )
 void AwsIotMqttInternal_CleanupSerialize( void )
 {
     /* Destroy the packet identifier mutex. */
-    AwsIotMutex_Destroy( &_packetIdentifierMutex );
+    IotMutex_Destroy( &_packetIdentifierMutex );
 
     /* Call any additional serializer cleanup initialization function is serializer
      * overrides are enabled. */

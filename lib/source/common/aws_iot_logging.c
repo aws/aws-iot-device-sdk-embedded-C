@@ -34,9 +34,9 @@
 #include <string.h>
 
 /* Platform clock include. */
-#include "platform/aws_iot_clock.h"
+#include "platform/iot_clock.h"
 
-/* AWS IoT library includes. */
+/* Logging includes. */
 #include "private/aws_iot_logging.h"
 
 /**
@@ -46,9 +46,17 @@
  * Including stdio.h also brings in unwanted (and conflicting) symbols on some
  * platforms. Therefore, any functions in stdio.h needed in this file have an
  * extern declaration here. */
-extern int sprintf( char *, const char *, ... );
-extern int snprintf( char *, size_t, const char *, ... );
-extern int vsnprintf( char *, size_t, const char *, va_list );
+extern int sprintf( char *,
+                    const char *,
+                    ... );
+extern int snprintf( char *,
+                     size_t,
+                     const char *,
+                     ... );
+extern int vsnprintf( char *,
+                      size_t,
+                      const char *,
+                      va_list );
 /** @endcond */
 
 /*-----------------------------------------------------------*/
@@ -80,10 +88,11 @@ extern int vsnprintf( char *, size_t, const char *, va_list );
  * function is used.
  */
 #ifndef AwsIotLogging_Puts
-    /**
-     * @cond DOXYGEN_IGNORE
-     * Doxygen should ignore this section.
-     */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ */
     extern int puts( const char * );
     /** @endcond */
 
@@ -98,26 +107,26 @@ extern int vsnprintf( char *, size_t, const char *, va_list );
     /* Static memory allocation header. */
     #include "platform/aws_iot_static_memory.h"
 
-    /**
-     * @brief Allocate a new logging buffer. This function must have the same
-     * signature as [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
-     */
+/**
+ * @brief Allocate a new logging buffer. This function must have the same
+ * signature as [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
+ */
     #ifndef AwsIotLogging_Malloc
         #define AwsIotLogging_Malloc    AwsIot_MallocMessageBuffer
     #endif
 
-    /**
-     * @brief Free a logging buffer. This function must have the same signature
-     * as [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
-     */
+/**
+ * @brief Free a logging buffer. This function must have the same signature
+ * as [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
     #ifndef AwsIotLogging_Free
         #define AwsIotLogging_Free    AwsIot_FreeMessageBuffer
     #endif
 
-    /**
-     * @brief Get the size of a logging buffer. Statically-allocated buffers
-     * should all have the same size.
-     */
+/**
+ * @brief Get the size of a logging buffer. Statically-allocated buffers
+ * should all have the same size.
+ */
     #ifndef AwsIotLogging_StaticBufferSize
         #define AwsIotLogging_StaticBufferSize    AwsIot_MessageBufferSize
     #endif
@@ -176,28 +185,28 @@ static const char * const _pLogLevelStrings[ 5 ] =
 /*-----------------------------------------------------------*/
 
 #if !defined( AWS_IOT_STATIC_MEMORY_ONLY ) || ( AWS_IOT_STATIC_MEMORY_ONLY == 0 )
-static bool _reallocLoggingBuffer( void ** pOldBuffer,
-                                    size_t newSize,
-                                    size_t oldSize )
-{
-    /* Allocate a new, larger buffer. */
-    void * pNewBuffer = AwsIotLogging_Malloc( newSize );
-
-    /* Ensure that memory allocation succeeded. */
-    if( pNewBuffer == NULL )
+    static bool _reallocLoggingBuffer( void ** pOldBuffer,
+                                       size_t newSize,
+                                       size_t oldSize )
     {
-        return false;
+        /* Allocate a new, larger buffer. */
+        void * pNewBuffer = AwsIotLogging_Malloc( newSize );
+
+        /* Ensure that memory allocation succeeded. */
+        if( pNewBuffer == NULL )
+        {
+            return false;
+        }
+
+        /* Copy the data from the old buffer to the new buffer. */
+        ( void ) memcpy( pNewBuffer, *pOldBuffer, oldSize );
+
+        /* Free the old buffer and update the pointer. */
+        AwsIotLogging_Free( *pOldBuffer );
+        *pOldBuffer = pNewBuffer;
+
+        return true;
     }
-
-    /* Copy the data from the old buffer to the new buffer. */
-    ( void ) memcpy( pNewBuffer, *pOldBuffer, oldSize );
-
-    /* Free the old buffer and update the pointer. */
-    AwsIotLogging_Free( *pOldBuffer );
-    *pOldBuffer = pNewBuffer;
-
-    return true;
-}
 #endif /* if !defined( AWS_IOT_STATIC_MEMORY_ONLY ) || ( AWS_IOT_STATIC_MEMORY_ONLY == 0 ) */
 
 /*-----------------------------------------------------------*/
@@ -320,9 +329,9 @@ void AwsIotLogGeneric( int libraryLogSetting,
         bufferPosition++;
 
         /* Generate the timestring and add it to the buffer. */
-        if( AwsIotClock_GetTimestring( pLoggingBuffer + bufferPosition,
-                                       bufferSize - bufferPosition,
-                                       &timestringLength ) == true )
+        if( IotClock_GetTimestring( pLoggingBuffer + bufferPosition,
+                                    bufferSize - bufferPosition,
+                                    &timestringLength ) == true )
         {
             /* If the timestring was successfully generated, add the closing "]". */
             bufferPosition += timestringLength;

@@ -37,8 +37,8 @@
 #include "aws_iot_demo.h"
 
 /* Platform layer includes. */
-#include "platform/aws_iot_clock.h"
-#include "platform/aws_iot_threads.h"
+#include "platform/iot_clock.h"
+#include "platform/iot_threads.h"
 
 /* Shadow include. */
 #include "aws_iot_shadow.h"

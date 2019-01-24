@@ -37,8 +37,8 @@
 #include "aws_iot_demo.h"
 
 /* Platform layer includes. */
-#include "platform/aws_iot_clock.h"
-#include "platform/aws_iot_threads.h"
+#include "platform/iot_clock.h"
+#include "platform/iot_threads.h"
 
 /* MQTT include. */
 #include "aws_iot_mqtt.h"
@@ -240,7 +240,7 @@ static void _mqttSubscriptionCallback( void * param1,
 {
     int acknowledgementLength = 0;
     size_t messageNumberIndex = 0, messageNumberLength = 1;
-    AwsIotSemaphore_t * pPublishesReceived = ( AwsIotSemaphore_t * ) param1;
+    IotSemaphore_t * pPublishesReceived = ( IotSemaphore_t * ) param1;
     const char * pPayload = pPublish->message.info.pPayload;
     char pAcknowledgementMessage[ _ACKNOWLEDGEMENT_MESSAGE_BUFFER_LENGTH ] = { 0 };
     AwsIotMqttPublishInfo_t acknowledgementInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
@@ -335,7 +335,7 @@ static void _mqttSubscriptionCallback( void * param1,
     }
 
     /* Increment the number of PUBLISH messages received. */
-    AwsIotSemaphore_Post( pPublishesReceived );
+    IotSemaphore_Post( pPublishesReceived );
 }
 
 /*-----------------------------------------------------------*/
@@ -371,7 +371,7 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
                             publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     AwsIotMqttSubscription_t pSubscriptions[ _TOPIC_FILTER_COUNT ] = { AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER };
     AwsIotMqttCallbackInfo_t publishComplete = AWS_IOT_MQTT_CALLBACK_INFO_INITIALIZER;
-    AwsIotSemaphore_t publishesReceived;
+    IotSemaphore_t publishesReceived;
     const char * pTopicFilters[ _TOPIC_FILTER_COUNT ] =
     {
         AWS_IOT_DEMO_MQTT_TOPIC_PREFIX "/topic/1",
@@ -408,7 +408,7 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
         status = snprintf( pClientIdentifierBuffer,
                            _CLIENT_IDENTIFIER_MAX_LENGTH,
                            _CLIENT_IDENTIFIER_PREFIX "%lu",
-                           ( long unsigned int ) AwsIotClock_GetTimeMs() );
+                           ( long unsigned int ) IotClock_GetTimeMs() );
 
         /* Check for errors from snprintf. */
         if( status < 0 )
@@ -522,9 +522,9 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
         publishInfo.retryLimit = _PUBLISH_RETRY_LIMIT;
 
         /* Create the semaphore that counts received PUBLISH messages.*/
-        if( AwsIotSemaphore_Create( &publishesReceived,
-                                    0,
-                                    AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE ) == true )
+        if( IotSemaphore_Create( &publishesReceived,
+                                 0,
+                                 AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE ) == true )
         {
             for( publishCount = 0;
                  publishCount < AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE * AWS_IOT_DEMO_MQTT_PUBLISH_BURST_COUNT;
@@ -592,8 +592,8 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
 
                     for( i = 0; i < AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE; i++ )
                     {
-                        if( AwsIotSemaphore_TimedWait( &publishesReceived,
-                                                       _MQTT_TIMEOUT_MS ) == false )
+                        if( IotSemaphore_TimedWait( &publishesReceived,
+                                                    _MQTT_TIMEOUT_MS ) == false )
                         {
                             AwsIotLogError( "Timed out waiting for incoming PUBLISH messages." );
                             status = -1;
@@ -620,8 +620,8 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
 
                 for( i = 0; i < AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE; i++ )
                 {
-                    if( AwsIotSemaphore_TimedWait( &publishesReceived,
-                                                   _MQTT_TIMEOUT_MS ) == false )
+                    if( IotSemaphore_TimedWait( &publishesReceived,
+                                                _MQTT_TIMEOUT_MS ) == false )
                     {
                         AwsIotLogError( "Timed out waiting for incoming PUBLISH messages." );
                         status = -1;
@@ -633,7 +633,7 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
             }
 
             /* Destroy the received message counter. */
-            AwsIotSemaphore_Destroy( &publishesReceived );
+            IotSemaphore_Destroy( &publishesReceived );
         }
         else
         {

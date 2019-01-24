@@ -33,14 +33,14 @@
     #include IOT_CONFIG_FILE
 #endif
 
-/* MQTT include. */
-#include "aws_iot_mqtt.h"
-
 /* Linear containers (lists and queues) include. */
 #include "iot_linear_containers.h"
 
-/* Platform clock include. */
-#include "platform/aws_iot_clock.h"
+/* Platform layer types include. */
+#include "platform/types/iot_platform_types.h"
+
+/* MQTT include. */
+#include "aws_iot_mqtt.h"
 
 /**
  * @def AwsIotMqtt_Assert( expression )
@@ -81,92 +81,92 @@
 #if AWS_IOT_STATIC_MEMORY_ONLY == 1
     #include "platform/aws_iot_static_memory.h"
 
-    /**
-     * @brief Allocate an #_mqttConnection_t. This function should have the same
-     * signature as [malloc]
-     * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
-     */
+/**
+ * @brief Allocate an #_mqttConnection_t. This function should have the same
+ * signature as [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
+ */
     #ifndef AwsIotMqtt_MallocConnection
         #define AwsIotMqtt_MallocConnection    AwsIot_MallocMqttConnection
     #endif
 
-    /**
-     * @brief Free an #_mqttConnection_t. This function should have the same
-     * signature as [free]
-     * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
-     */
+/**
+ * @brief Free an #_mqttConnection_t. This function should have the same
+ * signature as [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
     #ifndef AwsIotMqtt_FreeConnection
         #define AwsIotMqtt_FreeConnection    AwsIot_FreeMqttConnection
     #endif
 
-    /**
-     * @brief Allocate memory for an MQTT packet. This function should have the
-     * same signature as [malloc]
-     * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
-     */
+/**
+ * @brief Allocate memory for an MQTT packet. This function should have the
+ * same signature as [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
+ */
     #ifndef AwsIotMqtt_MallocMessage
         #define AwsIotMqtt_MallocMessage    AwsIot_MallocMessageBuffer
     #endif
 
-    /**
-     * @brief Free an MQTT packet. This function should have the same signature
-     * as [free]
-     * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
-     */
+/**
+ * @brief Free an MQTT packet. This function should have the same signature
+ * as [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
     #ifndef AwsIotMqtt_FreeMessage
         #define AwsIotMqtt_FreeMessage    AwsIot_FreeMessageBuffer
     #endif
 
-    /**
-     * @brief Allocate an #_mqttOperation_t. This function should have the same
-     * signature as [malloc]
-     * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
-     */
+/**
+ * @brief Allocate an #_mqttOperation_t. This function should have the same
+ * signature as [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
+ */
     #ifndef AwsIotMqtt_MallocOperation
         #define AwsIotMqtt_MallocOperation    AwsIot_MallocMqttOperation
     #endif
 
-    /**
-     * @brief Free an #_mqttOperation_t. This function should have the same
-     * signature as [free]
-     * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
-     */
+/**
+ * @brief Free an #_mqttOperation_t. This function should have the same
+ * signature as [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
     #ifndef AwsIotMqtt_FreeOperation
         #define AwsIotMqtt_FreeOperation    AwsIot_FreeMqttOperation
     #endif
 
-    /**
-     * @brief Allocate an #_mqttSubscription_t. This function should have the
-     * same signature as [malloc]
-     * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
-     */
+/**
+ * @brief Allocate an #_mqttSubscription_t. This function should have the
+ * same signature as [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
+ */
     #ifndef AwsIotMqtt_MallocSubscription
         #define AwsIotMqtt_MallocSubscription    AwsIot_MallocMqttSubscription
     #endif
 
-    /**
-     * @brief Free an #_mqttSubscription_t. This function should have the same
-     * signature as [free]
-     * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
-     */
+/**
+ * @brief Free an #_mqttSubscription_t. This function should have the same
+ * signature as [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
     #ifndef AwsIotMqtt_FreeSubscription
         #define AwsIotMqtt_FreeSubscription    AwsIot_FreeMqttSubscription
     #endif
 
-    /**
-     * @brief Allocate an #_mqttTimerEvent_t. This function should have the same
-     * signature as [malloc]
-     * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
-     */
+/**
+ * @brief Allocate an #_mqttTimerEvent_t. This function should have the same
+ * signature as [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
+ */
     #ifndef AwsIotMqtt_MallocTimerEvent
         #define AwsIotMqtt_MallocTimerEvent    AwsIot_MallocMqttTimerEvent
     #endif
 
-    /**
-     * @brief Free an #_mqttTimerEvent_t. This function should have the same
-     * signature as [free]
-     * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
-     */
+/**
+ * @brief Free an #_mqttTimerEvent_t. This function should have the same
+ * signature as [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
     #ifndef AwsIotMqtt_FreeTimerEvent
         #define AwsIotMqtt_FreeTimerEvent    AwsIot_FreeMqttTimerEvent
     #endif
@@ -298,9 +298,9 @@ struct _mqttTimerEvent;
  */
 typedef struct _mqttSubscription
 {
-    IotLink_t link;                  /**< @brief List link member. */
+    IotLink_t link; /**< @brief List link member. */
 
-    int references;                  /**< @brief How many subscription callbacks are using this subscription. */
+    int references; /**< @brief How many subscription callbacks are using this subscription. */
 
     /**
      * @brief Tracks whether @ref mqtt_function_unsubscribe has been called for
@@ -330,18 +330,18 @@ typedef struct _mqttSubscription
  */
 typedef struct _mqttConnection
 {
-    bool errorOccurred;                   /**< @brief Tracks if a protocol violation or other error occurred. */
-    bool awsIotMqttMode;                  /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
-    AwsIotMqttNetIf_t network;            /**< @brief Network interface provided to @ref mqtt_function_connect. */
-    IotListDouble_t subscriptionList;     /**< @brief Holds subscriptions associated with this connection. */
-    AwsIotMutex_t subscriptionMutex;      /**< @brief Grants exclusive access to the #_mqttConnection_t.subscriptionList. */
+    bool errorOccurred;                        /**< @brief Tracks if a protocol violation or other error occurred. */
+    bool awsIotMqttMode;                       /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
+    AwsIotMqttNetIf_t network;                 /**< @brief Network interface provided to @ref mqtt_function_connect. */
+    IotListDouble_t subscriptionList;          /**< @brief Holds subscriptions associated with this connection. */
+    IotMutex_t subscriptionMutex;              /**< @brief Grants exclusive access to the #_mqttConnection_t.subscriptionList. */
 
-    AwsIotTimer_t timer;                         /**< @brief Expires when a timer event should be processed. */
-    AwsIotMutex_t timerMutex;                    /**< @brief Prevents concurrent access from timer thread and protects timer event list. */
-    IotListDouble_t timerEventList;              /**< @brief List of active timer events. */
-    uint16_t keepAliveSeconds;                   /**< @brief Keep-alive interval. */
-    struct _mqttOperation * pPingreqOperation;   /**< @brief PINGREQ operation. Only used if keep-alive is active. */
-    struct _mqttTimerEvent * pKeepAliveEvent;    /**< @brief When to process a keep-alive. Only used if keep-alive is active. */
+    IotTimer_t timer;                          /**< @brief Expires when a timer event should be processed. */
+    IotMutex_t timerMutex;                     /**< @brief Prevents concurrent access from timer thread and protects timer event list. */
+    IotListDouble_t timerEventList;            /**< @brief List of active timer events. */
+    uint16_t keepAliveSeconds;                 /**< @brief Keep-alive interval. */
+    struct _mqttOperation * pPingreqOperation; /**< @brief PINGREQ operation. Only used if keep-alive is active. */
+    struct _mqttTimerEvent * pKeepAliveEvent;  /**< @brief When to process a keep-alive. Only used if keep-alive is active. */
 } _mqttConnection_t;
 
 /**
@@ -353,7 +353,7 @@ typedef struct _mqttConnection
 typedef struct _mqttOperation
 {
     /* Pointers to neighboring queue elements. */
-    IotLink_t link;                   /**< @brief List link member. */
+    IotLink_t link;                           /**< @brief List link member. */
 
     bool incomingPublish;                     /**< @brief Set to true if this operation an incoming PUBLISH. */
     struct _mqttConnection * pMqttConnection; /**< @brief MQTT connection associated with this operation. */
@@ -375,10 +375,10 @@ typedef struct _mqttOperation
             /* How to notify of an operation's completion. */
             union
             {
-                AwsIotSemaphore_t waitSemaphore;   /**< @brief Semaphore to be used with @ref mqtt_function_wait. */
-                AwsIotMqttCallbackInfo_t callback; /**< @brief User-provided callback function and parameter. */
-            } notify;                              /**< @brief How to notify of this operation's completion. */
-            AwsIotMqttError_t status;              /**< @brief Result of this operation. This is reported once a response is received. */
+                IotSemaphore_t waitSemaphore;       /**< @brief Semaphore to be used with @ref mqtt_function_wait. */
+                AwsIotMqttCallbackInfo_t callback;  /**< @brief User-provided callback function and parameter. */
+            } notify;                               /**< @brief How to notify of this operation's completion. */
+            AwsIotMqttError_t status;               /**< @brief Result of this operation. This is reported once a response is received. */
 
             struct _mqttTimerEvent * pPublishRetry; /**< @brief How an operation will be retried. Only used for QoS 1 publishes. */
         };
@@ -392,7 +392,7 @@ typedef struct _mqttOperation
             void ( * freeReceivedData )( void * ); /**< @brief Function called to free `pReceivedData`. */
         };
     };
- } _mqttOperation_t;
+} _mqttOperation_t;
 
 /**
  * @brief Represents an operation that is subject to a timer.
@@ -402,7 +402,7 @@ typedef struct _mqttOperation
  */
 typedef struct _mqttTimerEvent
 {
-    IotLink_t link;             /**< @brief List link member. */
+    IotLink_t link;                     /**< @brief List link member. */
 
     uint64_t expirationTime;            /**< @brief When this event should be processed. */
     struct _mqttOperation * pOperation; /**< @brief The MQTT operation associated with this event. */
@@ -434,16 +434,16 @@ typedef struct _mqttOperationQueue
      * @brief Maintains a count of threads currently available to process this
      * queue and provides a mechanism to wait for active callback threads to finish.
      */
-    AwsIotSemaphore_t availableThreads;
+    IotSemaphore_t availableThreads;
 } _mqttOperationQueue_t;
 
 /* Declarations of the structures keeping track of MQTT operations for internal
  * files. */
 extern _mqttOperationQueue_t _IotMqttCallback;
 extern _mqttOperationQueue_t _IotMqttSend;
-extern AwsIotMutex_t _IotMqttQueueMutex;
+extern IotMutex_t _IotMqttQueueMutex;
 extern IotListDouble_t _IotMqttPendingResponse;
-extern AwsIotMutex_t _IotMqttPendingResponseMutex;
+extern IotMutex_t _IotMqttPendingResponseMutex;
 
 /*-------------------- MQTT struct validation functions ---------------------*/
 
