@@ -20,9 +20,9 @@
  */
 
 /**
- * @file aws_iot_network_openssl.c
- * @brief Implementation of the network-related functions from aws_iot_network.h
- * for systems with OpenSSL on POSIX systems.
+ * @file iot_network_openssl.c
+ * @brief Implementation of the network interface functions in iot_network.h
+ * for POSIX systems with OpenSSL.
  */
 
 /* Build using a config header, if provided. */

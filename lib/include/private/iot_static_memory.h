@@ -20,9 +20,9 @@
  */
 
 /**
- * @file aws_iot_static_memory.h
+ * @file iot_static_memory.h
  * @brief Functions for managing static buffers. Only used when
- * @ref AWS_IOT_STATIC_MEMORY_ONLY is `1`.
+ * @ref IOT_STATIC_MEMORY_ONLY is `1`.
  */
 
 /* Build using a config header, if provided. */
@@ -31,58 +31,101 @@
 #endif
 
 /* The functions in this file should only exist in static memory only mode, hence
- * the check for AWS_IOT_STATIC_MEMORY_ONLY in the double inclusion guard. */
-#if !defined( _AWS_IOT_STATIC_MEMORY_H_ ) && ( AWS_IOT_STATIC_MEMORY_ONLY == 1 )
-#define _AWS_IOT_STATIC_MEMORY_H_
+ * the check for IOT_STATIC_MEMORY_ONLY in the double inclusion guard. */
+#if !defined( _IOT_STATIC_MEMORY_H_ ) && ( IOT_STATIC_MEMORY_ONLY == 1 )
+#define _IOT_STATIC_MEMORY_H_
 
 /* Standard includes. */
 #include <stdbool.h>
 #include <stddef.h>
 
 /**
- * @functionspage{platform_static_memory,platform static memory component,Static Memory}
- * - @functionname{platform_static_memory_function_messagebuffersize}
- * - @functionname{platform_static_memory_function_mallocmessagebuffer}
- * - @functionname{platform_static_memory_function_freemessagebuffer}
- * - @functionname{platform_static_memory_function_mallocmqttconnection}
- * - @functionname{platform_static_memory_function_freemqttconnection}
- * - @functionname{platform_static_memory_function_mallocmqttoperation}
- * - @functionname{platform_static_memory_function_freemqttoperation}
- * - @functionname{platform_static_memory_function_mallocmqtttimerevent}
- * - @functionname{platform_static_memory_function_freemqtttimerevent}
- * - @functionname{platform_static_memory_function_mallocmqttsubscription}
- * - @functionname{platform_static_memory_function_freemqttsubscription}
- * - @functionname{platform_static_memory_function_mallocshadowoperation}
- * - @functionname{platform_static_memory_function_freeshadowoperation}
- * - @functionname{platform_static_memory_function_mallocshadowsubscription}
- * - @functionname{platform_static_memory_function_freeshadowsubscription}
+ * @functionspage{static_memory,static memory component}
+ * - @functionname{static_memory_function_init}
+ * - @functionname{static_memory_function_cleanup}
+ * - @functionname{static_memory_function_messagebuffersize}
+ * - @functionname{static_memory_function_mallocmessagebuffer}
+ * - @functionname{static_memory_function_freemessagebuffer}
+ * - @functionname{static_memory_function_mallocmqttconnection}
+ * - @functionname{static_memory_function_freemqttconnection}
+ * - @functionname{static_memory_function_mallocmqttoperation}
+ * - @functionname{static_memory_function_freemqttoperation}
+ * - @functionname{static_memory_function_mallocmqtttimerevent}
+ * - @functionname{static_memory_function_freemqtttimerevent}
+ * - @functionname{static_memory_function_mallocmqttsubscription}
+ * - @functionname{static_memory_function_freemqttsubscription}
+ * - @functionname{static_memory_function_mallocshadowoperation}
+ * - @functionname{static_memory_function_freeshadowoperation}
+ * - @functionname{static_memory_function_mallocshadowsubscription}
+ * - @functionname{static_memory_function_freeshadowsubscription}
  */
+
+/*----------------------- Initialization and cleanup ------------------------*/
+
+/**
+ * @functionpage{IotStaticMemory_Init,static_memory,init}
+ * @functionpage{IotStaticMemory_Cleanup,static_memory,cleanup}
+ */
+
+/**
+ * @brief One-time initialization function for static memory.
+ *
+ * This function performs internal setup of static memory. <b>It must be called
+ * once (and only once) before calling any other static memory function.
+ * </b>Calling this function more than once without first calling
+ * @ref static_memory_function_cleanup may result in a crash.
+ *
+ * @return `true` if initialization succeeded; `false` otherwise.
+ *
+ * @warning No thread-safety guarantees are provided for this function.
+ *
+ * @see static_memory_function_cleanup
+ */
+/* @[declare_static_memory_init] */
+bool IotStaticMemory_Init( void );
+/* @[declare_static_memory_init] */
+
+/**
+ * @brief One-time deinitialization function for static memory.
+ *
+ * This function frees resources taken in @ref static_memory_function_init.
+ * It should be called after to clean up static memory. After this function
+ * returns, @ref static_memory_function_init must be called again before
+ * calling any other static memory function.
+ *
+ * @warning No thread-safety guarantees are provided for this function.
+ *
+ * @see static_memory_function_init
+ */
+/* @[declare_static_memory_cleanup] */
+void IotStaticMemory_Cleanup( void );
+/* @[declare_static_memory_cleanup] */
 
 /*------------------------ Message buffer management ------------------------*/
 
 /**
- * @functionpage{AwsIot_MessageBufferSize,platform_static_memory,messagebuffersize}
- * @functionpage{AwsIot_MallocMessageBuffer,platform_static_memory,mallocmessagebuffer}
- * @functionpage{AwsIot_FreeMessageBuffer,platform_static_memory,freemessagebuffer}
+ * @functionpage{Iot_MessageBufferSize,static_memory,messagebuffersize}
+ * @functionpage{Iot_MallocMessageBuffer,static_memory,mallocmessagebuffer}
+ * @functionpage{Iot_FreeMessageBuffer,static_memory,freemessagebuffer}
  */
 
 /**
  * @brief Get the fixed size of a [message buffer]
- * (@ref platform_static_memory_types_messagebuffers).
+ * (@ref static_memory_types_messagebuffers).
  *
  * The size of the message buffers are known at compile time, but it is a [constant]
- * (@ref AWS_IOT_MESSAGE_BUFFER_SIZE) that may not be visible to all source files.
+ * (@ref IOT_MESSAGE_BUFFER_SIZE) that may not be visible to all source files.
  * This function allows other source files to know the size of a message buffer.
  *
  * @return The size, in bytes, of a single message buffer.
  */
-/* @[declare_platform_static_memory_messagebuffersize] */
-size_t AwsIot_MessageBufferSize( void );
-/* @[declare_platform_static_memory_messagebuffersize] */
+/* @[declare_static_memory_messagebuffersize] */
+size_t Iot_MessageBufferSize( void );
+/* @[declare_static_memory_messagebuffersize] */
 
 /**
  * @brief Get an empty [message buffer]
- * (@ref platform_static_memory_types_messagebuffers).
+ * (@ref static_memory_types_messagebuffers).
  *
  * This function is the analog of [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
@@ -91,16 +134,16 @@ size_t AwsIot_MessageBufferSize( void );
  * @param[in] size Requested size for a message buffer.
  *
  * @return Pointer to the start of a message buffer. If the `size` argument is larger
- * than the [fixed size of a message buffer](@ref AWS_IOT_MESSAGE_BUFFER_SIZE)
+ * than the [fixed size of a message buffer](@ref IOT_MESSAGE_BUFFER_SIZE)
  * or no message buffers are available, `NULL` is returned.
  */
-/* @[declare_platform_static_memory_mallocmessagebuffer] */
-void * AwsIot_MallocMessageBuffer( size_t size );
-/* @[declare_platform_static_memory_mallocmessagebuffer] */
+/* @[declare_static_memory_mallocmessagebuffer] */
+void * Iot_MallocMessageBuffer( size_t size );
+/* @[declare_static_memory_mallocmessagebuffer] */
 
 /**
  * @brief Free an in-use [message buffer]
- * (@ref platform_static_memory_types_messagebuffers).
+ * (@ref static_memory_types_messagebuffers).
  *
  * This function is the analog of [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
@@ -108,20 +151,20 @@ void * AwsIot_MallocMessageBuffer( size_t size );
  *
  * @param[in] ptr Pointer to the message buffer to free.
  */
-/* @[declare_platform_static_memory_freemessagebuffer] */
-void AwsIot_FreeMessageBuffer( void * ptr );
-/* @[declare_platform_static_memory_freemessagebuffer] */
+/* @[declare_static_memory_freemessagebuffer] */
+void Iot_FreeMessageBuffer( void * ptr );
+/* @[declare_static_memory_freemessagebuffer] */
 
 /*----------------------- MQTT connection management ------------------------*/
 
 /**
- * @functionpage{AwsIot_MallocMqttConnection,platform_static_memory,mallocmqttconnection}
- * @functionpage{AwsIot_FreeMqttConnection,platform_static_memory,freemqttconnection}
+ * @functionpage{Iot_MallocMqttConnection,static_memory,mallocmqttconnection}
+ * @functionpage{Iot_FreeMqttConnection,static_memory,freemqttconnection}
  */
 
 /**
  * @brief Allocates memory to hold data for a new [MQTT connection]
- * (@ref platform_static_memory_types_mqttconnections).
+ * (@ref static_memory_types_mqttconnections).
  *
  * This function is the analog of [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
@@ -131,13 +174,13 @@ void AwsIot_FreeMessageBuffer( void * ptr );
  *
  * @return Pointer to an MQTT connection.
  */
-/* @[declare_platform_static_memory_mallocmqttconnection] */
-void * AwsIot_MallocMqttConnection( size_t size );
-/* @[declare_platform_static_memory_mallocmqttconnection] */
+/* @[declare_static_memory_mallocmqttconnection] */
+void * Iot_MallocMqttConnection( size_t size );
+/* @[declare_static_memory_mallocmqttconnection] */
 
 /**
  * @brief Frees an in-use [MQTT connection]
- * (@ref platform_static_memory_types_mqttconnections).
+ * (@ref static_memory_types_mqttconnections).
  *
  * This function is the analog of [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
@@ -145,20 +188,20 @@ void * AwsIot_MallocMqttConnection( size_t size );
  *
  * @param[in] ptr Pointer to an active MQTT connection to free.
  */
-/* @[declare_platform_static_memory_freemqttconnection] */
-void AwsIot_FreeMqttConnection( void * ptr );
-/* @[declare_platform_static_memory_freemqttconnection] */
+/* @[declare_static_memory_freemqttconnection] */
+void Iot_FreeMqttConnection( void * ptr );
+/* @[declare_static_memory_freemqttconnection] */
 
 /*------------------------ MQTT operation management ------------------------*/
 
 /**
- * @functionpage{AwsIot_MallocMqttOperation,platform_static_memory,mallocmqttoperation}
- * @functionpage{AwsIot_FreeMqttOperation,platform_static_memory,freemqttoperation}
+ * @functionpage{Iot_MallocMqttOperation,static_memory,mallocmqttoperation}
+ * @functionpage{Iot_FreeMqttOperation,static_memory,freemqttoperation}
  */
 
 /**
  * @brief Allocates memory to hold data for a new [MQTT operation]
- * (@ref platform_static_memory_types_mqttoperations).
+ * (@ref static_memory_types_mqttoperations).
  *
  * This function is the analog of [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
@@ -168,13 +211,13 @@ void AwsIot_FreeMqttConnection( void * ptr );
  *
  * @return Pointer to an MQTT operation.
  */
-/* @[declare_platform_static_memory_mallocmqttoperation] */
-void * AwsIot_MallocMqttOperation( size_t size );
-/* @[declare_platform_static_memory_mallocmqttoperation] */
+/* @[declare_static_memory_mallocmqttoperation] */
+void * Iot_MallocMqttOperation( size_t size );
+/* @[declare_static_memory_mallocmqttoperation] */
 
 /**
  * @brief Frees an in-use [MQTT operation]
- * (@ref platform_static_memory_types_mqttoperations).
+ * (@ref static_memory_types_mqttoperations).
  *
  * This function is the analog of [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
@@ -182,20 +225,20 @@ void * AwsIot_MallocMqttOperation( size_t size );
  *
  * @param[in] ptr Pointer to an active MQTT operation to free.
  */
-/* @[declare_platform_static_memory_freemqttoperation] */
-void AwsIot_FreeMqttOperation( void * ptr );
-/* @[declare_platform_static_memory_freemqttoperation] */
+/* @[declare_static_memory_freemqttoperation] */
+void Iot_FreeMqttOperation( void * ptr );
+/* @[declare_static_memory_freemqttoperation] */
 
 /*----------------------- MQTT timer event management -----------------------*/
 
 /**
- * @functionpage{AwsIot_MallocMqttTimerEvent,platform_static_memory,mallocmqtttimerevent}
- * @functionpage{AwsIot_FreeMqttTimerEvent,platform_static_memory,freemqtttimerevent}
+ * @functionpage{Iot_MallocMqttTimerEvent,static_memory,mallocmqtttimerevent}
+ * @functionpage{Iot_FreeMqttTimerEvent,static_memory,freemqtttimerevent}
  */
 
 /**
  * @brief Allocates memory to hold data for a new [MQTT timer event]
- * (@ref platform_static_memory_types_mqtttimerevents).
+ * (@ref static_memory_types_mqtttimerevents).
  *
  * This function is the analog of [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) for MQTT timer events.
@@ -204,13 +247,13 @@ void AwsIot_FreeMqttOperation( void * ptr );
  *
  * @return Pointer to an MQTT timer event.
  */
-/* @[declare_platform_static_memory_mallocmqtttimerevent] */
-void * AwsIot_MallocMqttTimerEvent( size_t size );
-/* @[declare_platform_static_memory_mallocmqtttimerevent] */
+/* @[declare_static_memory_mallocmqtttimerevent] */
+void * Iot_MallocMqttTimerEvent( size_t size );
+/* @[declare_static_memory_mallocmqtttimerevent] */
 
 /**
  * @brief Frees an in-use [MQTT timer event]
- * (@ref platform_static_memory_types_mqtttimerevents).
+ * (@ref static_memory_types_mqtttimerevents).
  *
  * This function is the analog of [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
@@ -218,20 +261,20 @@ void * AwsIot_MallocMqttTimerEvent( size_t size );
  *
  * @param[in] ptr Pointer to an active MQTT timer event to free.
  */
-/* @[declare_platform_static_memory_freemqtttimerevent] */
-void AwsIot_FreeMqttTimerEvent( void * ptr );
-/* @[declare_platform_static_memory_freemqtttimerevent] */
+/* @[declare_static_memory_freemqtttimerevent] */
+void Iot_FreeMqttTimerEvent( void * ptr );
+/* @[declare_static_memory_freemqtttimerevent] */
 
 /*---------------------- MQTT subscription management -----------------------*/
 
 /**
- * @functionpage{AwsIot_MallocMqttSubscription,platform_static_memory,mallocmqttsubscription}
- * @functionpage{AwsIot_FreeMqttSubscription,platform_static_memory,freemqttsubscription}
+ * @functionpage{Iot_MallocMqttSubscription,static_memory,mallocmqttsubscription}
+ * @functionpage{Iot_FreeMqttSubscription,static_memory,freemqttsubscription}
  */
 
 /**
  * @brief Allocates memory to hold data for a new [MQTT subscription]
- * (@ref platform_static_memory_types_mqttsubscriptions).
+ * (@ref static_memory_types_mqttsubscriptions).
  *
  * This function is the analog of [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
@@ -246,13 +289,13 @@ void AwsIot_FreeMqttTimerEvent( void * ptr );
  * the fixed size of an MQTT subscription object or no free MQTT subscriptions
  * are available, `NULL` is returned.
  */
-/* @[declare_platform_static_memory_mallocmqttsubscription] */
-void * AwsIot_MallocMqttSubscription( size_t size );
-/* @[declare_platform_static_memory_mallocmqttsubscription] */
+/* @[declare_static_memory_mallocmqttsubscription] */
+void * Iot_MallocMqttSubscription( size_t size );
+/* @[declare_static_memory_mallocmqttsubscription] */
 
 /**
  * @brief Frees an in-use [MQTT subscription]
- * (@ref platform_static_memory_types_mqttsubscriptions).
+ * (@ref static_memory_types_mqttsubscriptions).
  *
  * This function is the analog of [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
@@ -260,20 +303,20 @@ void * AwsIot_MallocMqttSubscription( size_t size );
  *
  * @param[in] ptr Pointer to an active MQTT subscription to free.
  */
-/* @[declare_platform_static_memory_freemqttsubscription] */
-void AwsIot_FreeMqttSubscription( void * ptr );
-/* @[declare_platform_static_memory_freemqttsubscription] */
+/* @[declare_static_memory_freemqttsubscription] */
+void Iot_FreeMqttSubscription( void * ptr );
+/* @[declare_static_memory_freemqttsubscription] */
 
 /*---------------------- Shadow operation management ------------------------*/
 
 /**
- * @functionpage{AwsIot_MallocShadowOperation,platform_static_memory,mallocshadowoperation}
- * @functionpage{AwsIot_FreeShadowOperation,platform_static_memory,freeshadowoperation}
+ * @functionpage{AwsIot_MallocShadowOperation,static_memory,mallocshadowoperation}
+ * @functionpage{AwsIot_FreeShadowOperation,static_memory,freeshadowoperation}
  */
 
 /**
  * @brief Allocates memory to hold data for a new [Shadow operation]
- * (@ref platform_static_memory_types_shadowoperations).
+ * (@ref static_memory_types_shadowoperations).
  *
  * This function is the analog of [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
@@ -283,13 +326,13 @@ void AwsIot_FreeMqttSubscription( void * ptr );
  *
  * @return Pointer to a Shadow operation.
  */
-/* @[declare_platform_static_memory_mallocshadowoperation] */
+/* @[declare_static_memory_mallocshadowoperation] */
 void * AwsIot_MallocShadowOperation( size_t size );
-/* @[declare_platform_static_memory_mallocshadowoperation] */
+/* @[declare_static_memory_mallocshadowoperation] */
 
 /**
  * @brief Frees an in-use [Shadow operation]
- * (@ref platform_static_memory_types_shadowoperations).
+ * (@ref static_memory_types_shadowoperations).
  *
  * This function is the analog of [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
@@ -297,20 +340,20 @@ void * AwsIot_MallocShadowOperation( size_t size );
  *
  * @param[in] ptr Pointer to an active Shadow operation to free.
  */
-/* @[declare_platform_static_memory_freeshadowoperation] */
+/* @[declare_static_memory_freeshadowoperation] */
 void AwsIot_FreeShadowOperation( void * ptr );
-/* @[declare_platform_static_memory_freeshadowoperation] */
+/* @[declare_static_memory_freeshadowoperation] */
 
 /*--------------------- Shadow subscription management ----------------------*/
 
 /**
- * @functionpage{AwsIot_MallocShadowSubscription,platform_static_memory,mallocshadowsubscription}
- * @functionpage{AwsIot_FreeShadowSubscription,platform_static_memory,freeshadowsubscription}
+ * @functionpage{AwsIot_MallocShadowSubscription,static_memory,mallocshadowsubscription}
+ * @functionpage{AwsIot_FreeShadowSubscription,static_memory,freeshadowsubscription}
  */
 
 /**
  * @brief Allocates memory to hold data for a new [Shadow subscription]
- * (@ref platform_static_memory_types_shadowsubscriptions).
+ * (@ref static_memory_types_shadowsubscriptions).
  *
  * This function is the analog of [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
@@ -325,13 +368,13 @@ void AwsIot_FreeShadowOperation( void * ptr );
  * the fixed size of a Shadow subscription object or no free Shadow subscriptions
  * are available, `NULL` is returned.
  */
-/* @[declare_platform_static_memory_mallocshadowsubscription] */
+/* @[declare_static_memory_mallocshadowsubscription] */
 void * AwsIot_MallocShadowSubscription( size_t size );
-/* @[declare_platform_static_memory_mallocshadowsubscription] */
+/* @[declare_static_memory_mallocshadowsubscription] */
 
 /**
  * @brief Frees an in-use [Shadow subscription]
- * (@ref platform_static_memory_types_shadowsubscriptions).
+ * (@ref static_memory_types_shadowsubscriptions).
  *
  * This function is the analog of [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
@@ -339,8 +382,8 @@ void * AwsIot_MallocShadowSubscription( size_t size );
  *
  * @param[in] ptr Pointer to an active Shadow subscription to free.
  */
-/* @[declare_platform_static_memory_freeshadowsubscription] */
+/* @[declare_static_memory_freeshadowsubscription] */
 void AwsIot_FreeShadowSubscription( void * ptr );
-/* @[declare_platform_static_memory_freeshadowsubscription] */
+/* @[declare_static_memory_freeshadowsubscription] */
 
-#endif /* if !defined( _AWS_IOT_STATIC_MEMORY_H_ ) && ( AWS_IOT_STATIC_MEMORY_ONLY == 1 ) */
+#endif /* if !defined( _IOT_STATIC_MEMORY_H_ ) && ( IOT_STATIC_MEMORY_ONLY == 1 ) */

@@ -37,7 +37,7 @@
 #include "iot_linear_containers.h"
 
 /* Platform layer types include. */
-#include "platform/types/iot_platform_types.h"
+#include "types/iot_platform_types.h"
 
 /* MQTT include. */
 #include "aws_iot_mqtt.h"
@@ -78,8 +78,8 @@
  * Provide default values for undefined memory allocation functions based on
  * the usage of dynamic memory allocation.
  */
-#if AWS_IOT_STATIC_MEMORY_ONLY == 1
-    #include "platform/aws_iot_static_memory.h"
+#if IOT_STATIC_MEMORY_ONLY == 1
+    #include "private/iot_static_memory.h"
 
 /**
  * @brief Allocate an #_mqttConnection_t. This function should have the same
@@ -87,7 +87,7 @@
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
     #ifndef AwsIotMqtt_MallocConnection
-        #define AwsIotMqtt_MallocConnection    AwsIot_MallocMqttConnection
+        #define AwsIotMqtt_MallocConnection    Iot_MallocMqttConnection
     #endif
 
 /**
@@ -96,7 +96,7 @@
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
     #ifndef AwsIotMqtt_FreeConnection
-        #define AwsIotMqtt_FreeConnection    AwsIot_FreeMqttConnection
+        #define AwsIotMqtt_FreeConnection    Iot_FreeMqttConnection
     #endif
 
 /**
@@ -105,7 +105,7 @@
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
     #ifndef AwsIotMqtt_MallocMessage
-        #define AwsIotMqtt_MallocMessage    AwsIot_MallocMessageBuffer
+        #define AwsIotMqtt_MallocMessage    Iot_MallocMessageBuffer
     #endif
 
 /**
@@ -114,7 +114,7 @@
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
     #ifndef AwsIotMqtt_FreeMessage
-        #define AwsIotMqtt_FreeMessage    AwsIot_FreeMessageBuffer
+        #define AwsIotMqtt_FreeMessage    Iot_FreeMessageBuffer
     #endif
 
 /**
@@ -123,7 +123,7 @@
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
     #ifndef AwsIotMqtt_MallocOperation
-        #define AwsIotMqtt_MallocOperation    AwsIot_MallocMqttOperation
+        #define AwsIotMqtt_MallocOperation    Iot_MallocMqttOperation
     #endif
 
 /**
@@ -132,7 +132,7 @@
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
     #ifndef AwsIotMqtt_FreeOperation
-        #define AwsIotMqtt_FreeOperation    AwsIot_FreeMqttOperation
+        #define AwsIotMqtt_FreeOperation    Iot_FreeMqttOperation
     #endif
 
 /**
@@ -141,7 +141,7 @@
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
     #ifndef AwsIotMqtt_MallocSubscription
-        #define AwsIotMqtt_MallocSubscription    AwsIot_MallocMqttSubscription
+        #define AwsIotMqtt_MallocSubscription    Iot_MallocMqttSubscription
     #endif
 
 /**
@@ -150,7 +150,7 @@
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
     #ifndef AwsIotMqtt_FreeSubscription
-        #define AwsIotMqtt_FreeSubscription    AwsIot_FreeMqttSubscription
+        #define AwsIotMqtt_FreeSubscription    Iot_FreeMqttSubscription
     #endif
 
 /**
@@ -159,7 +159,7 @@
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
     #ifndef AwsIotMqtt_MallocTimerEvent
-        #define AwsIotMqtt_MallocTimerEvent    AwsIot_MallocMqttTimerEvent
+        #define AwsIotMqtt_MallocTimerEvent    Iot_MallocMqttTimerEvent
     #endif
 
 /**
@@ -168,9 +168,9 @@
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
     #ifndef AwsIotMqtt_FreeTimerEvent
-        #define AwsIotMqtt_FreeTimerEvent    AwsIot_FreeMqttTimerEvent
+        #define AwsIotMqtt_FreeTimerEvent    Iot_FreeMqttTimerEvent
     #endif
-#else /* if AWS_IOT_STATIC_MEMORY_ONLY */
+#else /* if IOT_STATIC_MEMORY_ONLY */
     #include <stdlib.h>
 
     #ifndef AwsIotMqtt_MallocConnection
@@ -212,7 +212,7 @@
     #ifndef AwsIotMqtt_FreeTimerEvent
         #define AwsIotMqtt_FreeTimerEvent    free
     #endif
-#endif /* if AWS_IOT_STATIC_MEMORY_ONLY */
+#endif /* if IOT_STATIC_MEMORY_ONLY */
 
 /**
  * @cond DOXYGEN_IGNORE

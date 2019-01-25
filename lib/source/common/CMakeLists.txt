@@ -1,23 +1,18 @@
 # Common libraries source files.
-add_library( awsiotcommon SHARED
+add_library( iotcommon SHARED
              aws_iot_json_utils.c
-             aws_iot_logging.c )
+             aws_iot_logging.c
+             static_memory/iot_static_memory_common.c
+             static_memory/iot_static_memory_mqtt.c
+             static_memory/aws_iot_static_memory_shadow.c )
 
 # Library version.
-set_target_properties( awsiotcommon PROPERTIES VERSION ${PROJECT_VERSION} )
-
-# Library public headers.
-set_target_properties( awsiotcommon PROPERTIES PUBLIC_HEADER
-                       "../../include/aws_iot_json_utils.h;../../include/aws_iot_logging_setup.h" )
-
-# Library private headers.
-set_target_properties( awsiotcommon PROPERTIES PRIVATE_HEADER
-                       "../../include/private/aws_iot_logging.h" )
+set_target_properties( iotcommon PROPERTIES VERSION ${PROJECT_VERSION} )
 
 # Link required libraries.
-target_link_libraries( awsiotcommon awsiotplatform )
+target_link_libraries( iotcommon iotplatform )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
-    target_link_libraries( awsiotcommon unity )
+    target_link_libraries( iotcommon unity )
 endif()

@@ -63,7 +63,7 @@
  *
  * Provide default malloc and free functions in dynamic memory mode.
  */
-#if !defined( AWS_IOT_STATIC_MEMORY_ONLY ) || ( AWS_IOT_STATIC_MEMORY_ONLY == 0 )
+#if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 )
     #ifndef AwsIotTest_Malloc
         #include <stdlib.h>
         #define AwsIotTest_Malloc    malloc
@@ -72,7 +72,7 @@
         #include <stdlib.h>
         #define AwsIotTest_Free    free
     #endif
-#endif /* if !defined( AWS_IOT_STATIC_MEMORY_ONLY ) || ( AWS_IOT_STATIC_MEMORY_ONLY == 0 ) */
+#endif /* if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 ) */
 /** @endcond */
 
 /** @brief Default CONNACK packet for the receive tests. */
@@ -143,7 +143,7 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
 /**
  * @brief Declare a buffer holding a packet and its size.
  */
-#if AWS_IOT_STATIC_MEMORY_ONLY == 1
+#if IOT_STATIC_MEMORY_ONLY == 1
     #define _DECLARE_PACKET( pTemplate, bufferName, sizeName ) \
     uint8_t bufferName[ sizeof( pTemplate ) ] = { 0 };         \
     const size_t sizeName = sizeof( pTemplate );               \
@@ -155,7 +155,7 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
     TEST_ASSERT_NOT_EQUAL( NULL, bufferName );                    \
     const size_t sizeName = sizeof( pTemplate );                  \
     ( void ) memcpy( bufferName, pTemplate, sizeName );
-#endif /* if AWS_IOT_STATIC_MEMORY_ONLY == 1 */
+#endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
 /**
  * @brief Initializer for operations in the tests.
@@ -201,7 +201,7 @@ static void * _mallocWrapper( size_t size )
 
     ( void ) size;
 
-    #if !defined( AWS_IOT_STATIC_MEMORY_ONLY ) || ( AWS_IOT_STATIC_MEMORY_ONLY == 0 )
+    #if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 )
         pBuffer = AwsIotTest_Malloc( size );
 
         /* Decrement the malloc semaphore. */
@@ -242,7 +242,7 @@ static uint8_t _getPacketType( const uint8_t * const pPacket,
 static void _freeWrapper( void * ptr )
 {
     /* This function should do nothing in static memory mode. */
-    #if AWS_IOT_STATIC_MEMORY_ONLY == 1
+    #if IOT_STATIC_MEMORY_ONLY == 1
         ( void ) ptr;
     #else
         AwsIotTest_Free( ptr );
@@ -725,7 +725,7 @@ TEST( MQTT_Unit_Receive, DataStream )
     int32_t bytesProcessed = 0;
 
     /* Allocate the data stream depending on the memory allocation mode. */
-    #if AWS_IOT_STATIC_MEMORY_ONLY == 1
+    #if IOT_STATIC_MEMORY_ONLY == 1
         uint8_t pDataStream[ _DATA_STREAM_SIZE ] = { 0 };
         TEST_ASSERT_EQUAL_PTR( NULL, _mallocWrapper( 0 ) );
     #else
@@ -1165,7 +1165,7 @@ TEST( MQTT_Unit_Receive, PublishStream )
     size_t i = 0;
 
     /* Allocate the data stream depending on the memory allocation mode. */
-    #if AWS_IOT_STATIC_MEMORY_ONLY == 1
+    #if IOT_STATIC_MEMORY_ONLY == 1
         uint8_t pPublishStream[ _PUBLISH_STREAM_COUNT * sizeof( _pPublishTemplate ) ] = { 0 };
         TEST_ASSERT_EQUAL_PTR( NULL, _mallocWrapper( 0 ) );
     #else
@@ -1209,7 +1209,7 @@ TEST( MQTT_Unit_Receive, PublishInvalidStream )
     size_t i = 0;
 
     /* Allocate the data stream depending on the memory allocation mode. */
-    #if AWS_IOT_STATIC_MEMORY_ONLY == 1
+    #if IOT_STATIC_MEMORY_ONLY == 1
         uint8_t pPublishStream[ _PUBLISH_STREAM_COUNT * sizeof( _pPublishTemplate ) + 1 ] = { 0 };
         TEST_ASSERT_EQUAL_PTR( NULL, _mallocWrapper( 0 ) );
     #else

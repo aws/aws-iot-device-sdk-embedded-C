@@ -30,5 +30,6 @@ FILE_PATTERNS = *mqtt*.c *mqtt*.h *mqtt*.txt aws_iot_tests_network.c
 # External tag files required by this library.
 TAGFILES = doc/tag/main.tag=../main \
            doc/tag/logging.tag=../logging \
+           doc/tag/static_memory.tag=../static_memory \
            doc/tag/platform.tag=../platform \
            doc/tag/linear_containers.tag=../linear_containers

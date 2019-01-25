@@ -20,18 +20,18 @@ digraph logging_dependencies
     {
         rank = same;
         platform_clock[label="Clock", fillcolor="#e89025ff", URL="@ref platform_clock"];
-        platform_static_memory[label="Static memory", fillcolor="#e89025ff" URL="@ref platform_static_memory"];
+        static_memory[label="Static memory", fillcolor="#e89025ff" URL="@ref static_memory"];
     }
     standard_library[label="Standard library\nstdarg, stdbool, stddef,\nstdint, stdio, string", fillcolor="#d15555ff"];
     logging -> platform_clock;
-    logging -> platform_static_memory [style="dashed", label=" if static memory only"];
+    logging -> static_memory [style="dashed", label=" if static memory only"];
     logging -> standard_library;
 }
 @enddot
 
 Currently, the logging library has the following dependencies:
 - The [platform clock component](@ref platform_clock) for [generating the timestring](@ref platform_clock_function_gettimestring) to print in log messages.
-- When @ref AWS_IOT_STATIC_MEMORY_ONLY is `1`, the logging library depends on the [platform static memory component](@ref platform_static_memory) to allocate buffers for log messages. When @ref AWS_IOT_STATIC_MEMORY_ONLY is `0`, the logging library will default to using the standard library's [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) and [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html) functions. The logging library's memory allocation functions [may always be overridden](@ref logging_config_memory). Note that the logging library will silently discard logs if it fails to allocate memory for the message.
+- When @ref IOT_STATIC_MEMORY_ONLY is `1`, the logging library depends on the [platform static memory component](@ref static_memory) to allocate buffers for log messages. When @ref IOT_STATIC_MEMORY_ONLY is `0`, the logging library will default to using the standard library's [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) and [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html) functions. The logging library's memory allocation functions [may always be overridden](@ref logging_config_memory). Note that the logging library will silently discard logs if it fails to allocate memory for the message.
 
 @section logging_setup_use Setup and use
 @brief How to set up and use the logging library.
@@ -106,7 +106,7 @@ Although this function is supposed to return an `int`, the logging library does 
 @configdefault Standard library [puts](http://pubs.opengroup.org/onlinepubs/9699919799/functions/puts.html) function.
 
 @section logging_config_memory Memory allocation
-@brief If @ref AWS_IOT_STATIC_MEMORY_ONLY is `1`, then the following functions must be re-implemented for the logging library.
+@brief If @ref IOT_STATIC_MEMORY_ONLY is `1`, then the following functions must be re-implemented for the logging library.
 - #AwsIotLogging_Malloc <br>
   @copybrief AwsIotLogging_Malloc
 - #AwsIotLogging_Free <br>

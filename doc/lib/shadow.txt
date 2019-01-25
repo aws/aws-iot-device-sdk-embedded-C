@@ -30,16 +30,12 @@ digraph shadow_dependencies
         rank = same;
         linear_containers[label="List/Queue", URL="@ref linear_containers"];
         logging[label="Logging", URL="@ref logging"];
-    }
-    subgraph
-    {
-        rank = same;
-        platform_static_memory[label="Static memory", fillcolor="#e89025ff", URL="@ref platform_static_memory"];
+        static_memory[label="Static memory", URL="@ref static_memory"];
     }
     shadow -> mqtt;
     shadow -> linear_containers;
     shadow -> logging [label=" if logging enabled", style="dashed"];
-    shadow -> platform_static_memory [label=" if static memory only", style="dashed"];
+    shadow -> static_memory [label=" if static memory only", style="dashed"];
 }
 @enddot
 
@@ -92,7 +88,7 @@ Log messages from the Shadow library at or below this setting will be printed.
 @configdefault Standard library [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function if @ref AWS_IOT_SHADOW_ENABLE_ASSERTS is `1`; otherwise, nothing.
 
 @section shadow_config_memory Memory allocation
-@brief If @ref AWS_IOT_STATIC_MEMORY_ONLY is `1`, then the following functions must be re-implemented for the Shadow library.
+@brief If @ref IOT_STATIC_MEMORY_ONLY is `1`, then the following functions must be re-implemented for the Shadow library.
 - #AwsIotShadow_MallocOperation <br>
   @copybrief AwsIotShadow_MallocOperation
 - #AwsIotShadow_FreeOperation <br>
