@@ -71,11 +71,14 @@
  * @brief One-time initialization function for static memory.
  *
  * This function performs internal setup of static memory. <b>It must be called
- * once (and only once) before calling any other static memory function.
- * </b>Calling this function more than once without first calling
+ * once (and only once) before calling any other static memory function.</b>
+ * Calling this function more than once without first calling
  * @ref static_memory_function_cleanup may result in a crash.
  *
  * @return `true` if initialization succeeded; `false` otherwise.
+ *
+ * @attention This function is called by `IotCommon_Init` and does not need to be
+ * called by itself.
  *
  * @warning No thread-safety guarantees are provided for this function.
  *
@@ -92,6 +95,9 @@ bool IotStaticMemory_Init( void );
  * It should be called after to clean up static memory. After this function
  * returns, @ref static_memory_function_init must be called again before
  * calling any other static memory function.
+ *
+ * @attention This function is called by `IotCommon_Cleanup` and does not need
+ * to be called by itself.
  *
  * @warning No thread-safety guarantees are provided for this function.
  *

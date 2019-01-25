@@ -1,5 +1,6 @@
 # Common libraries source files.
 add_library( iotcommon SHARED
+             iot_common.c
              aws_iot_json_utils.c
              aws_iot_logging.c
              static_memory/iot_static_memory_common.c
