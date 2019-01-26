@@ -14,7 +14,7 @@ target_include_directories( aws_iot_demo_mqtt
                             ${DEMO_COMMON_INCLUDE_FILES} )
 
 # MQTT demo library dependencies.
-target_link_libraries( aws_iot_demo_mqtt awsiotplatform awsiotmqtt )
+target_link_libraries( aws_iot_demo_mqtt iotplatform iotmqtt )
 
 # Shadow demo source files.
 add_executable( aws_iot_demo_shadow
@@ -28,4 +28,4 @@ target_include_directories( aws_iot_demo_mqtt
                             ${DEMO_COMMON_INCLUDE_FILES} )
 
 # Shadow demo library dependencies.
-target_link_libraries( aws_iot_demo_shadow awsiotplatform awsiotmqtt awsiotshadow )
+target_link_libraries( aws_iot_demo_shadow iotplatform iotmqtt awsiotshadow )

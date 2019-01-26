@@ -33,6 +33,9 @@
 /* POSIX includes. */
 #include <signal.h>
 
+/* Common include. */
+#include "iot_common.h"
+
 /* Test framework includes. */
 #include "unity_fixture.h"
 
@@ -77,6 +80,12 @@ int main( int argc,
         return -1;
     }
 
+    /* Initialize the common libraries before running the tests. */
+    if( IotCommon_Init() == false )
+    {
+        return -1;
+    }
+
     /* Unity setup. */
     UnityFixture.Verbose = 1;
     UnityFixture.RepeatCount = 1;
@@ -97,6 +106,9 @@ int main( int argc,
     {
         RUN_TEST_GROUP( MQTT_Stress );
     }
+
+    /* Clean up common libraries. */
+    IotCommon_Cleanup();
 
     /* Return the number of test failures. This will cause a non-zero exit code
      * if any test fails. */

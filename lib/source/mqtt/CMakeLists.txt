@@ -1,5 +1,5 @@
 # MQTT library source files.
-add_library( awsiotmqtt SHARED
+add_library( iotmqtt SHARED
              aws_iot_mqtt_api.c
              aws_iot_mqtt_operation.c
              aws_iot_mqtt_serialize.c
@@ -7,20 +7,12 @@ add_library( awsiotmqtt SHARED
              aws_iot_mqtt_validate.c )
 
 # Library version.
-set_target_properties( awsiotmqtt PROPERTIES VERSION ${PROJECT_VERSION} )
-
-# Library public headers.
-set_target_properties( awsiotmqtt PROPERTIES PUBLIC_HEADER
-                       "../../include/aws_iot_mqtt.h" )
-
-# Library private headers.
-set_target_properties( awsiotmqtt PROPERTIES PRIVATE_HEADER
-                       "../../include/private/aws_iot_mqtt_internal.h" )
+set_target_properties( iotmqtt PROPERTIES VERSION ${PROJECT_VERSION} )
 
 # Link required libraries.
-target_link_libraries( awsiotmqtt awsiotcommon awsiotplatform )
+target_link_libraries( iotmqtt iotcommon iotplatform )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
-    target_link_libraries( awsiotmqtt unity )
+    target_link_libraries( iotmqtt unity )
 endif()

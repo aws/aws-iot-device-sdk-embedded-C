@@ -20,9 +20,8 @@
  */
 
 /**
- * @file aws_iot_static_memory_common_posix.c
- * @brief Implementation of common static memory functions in aws_iot_static_memory.h
- * for POSIX systems.
+ * @file iot_static_memory_common.c
+ * @brief Implementation of common static memory functions in iot_static_memory.h
  */
 
 /* Build using a config header, if provided. */
@@ -31,7 +30,7 @@
 #endif
 
 /* This file should only be compiled if dynamic memory allocation is forbidden. */
-#if AWS_IOT_STATIC_MEMORY_ONLY == 1
+#if IOT_STATIC_MEMORY_ONLY == 1
 
 /* Standard includes. */
 #include <stdbool.h>
@@ -39,15 +38,11 @@
 #include <stdint.h>
 #include <string.h>
 
-/* POSIX include. Allow it to be overridden. */
-#ifdef POSIX_PTHREAD_HEADER
-    #include POSIX_PTHREAD_HEADER
-#else
-    #include <pthread.h>
-#endif
+/* Platform layer includes. */
+#include "platform/iot_threads.h"
 
 /* Static memory include. */
-#include "platform/aws_iot_static_memory.h"
+#include "private/iot_static_memory.h"
 
 /*-----------------------------------------------------------*/
 
@@ -57,20 +52,20 @@
  *
  * Provide default values for undefined configuration constants.
  */
-#ifndef AWS_IOT_MESSAGE_BUFFERS
-    #define AWS_IOT_MESSAGE_BUFFERS        ( 8 )
+#ifndef IOT_MESSAGE_BUFFERS
+    #define IOT_MESSAGE_BUFFERS        ( 8 )
 #endif
-#ifndef AWS_IOT_MESSAGE_BUFFER_SIZE
-    #define AWS_IOT_MESSAGE_BUFFER_SIZE    ( 1024 )
+#ifndef IOT_MESSAGE_BUFFER_SIZE
+    #define IOT_MESSAGE_BUFFER_SIZE    ( 1024 )
 #endif
 /** @endcond */
 
 /* Validate static memory configuration settings. */
-#if AWS_IOT_MESSAGE_BUFFERS <= 0
-    #error "AWS_IOT_MESSAGE_BUFFERS cannot be 0 or negative."
+#if IOT_MESSAGE_BUFFERS <= 0
+    #error "IOT_MESSAGE_BUFFERS cannot be 0 or negative."
 #endif
-#if AWS_IOT_MESSAGE_BUFFER_SIZE <= 0
-    #error "AWS_IOT_MESSAGE_BUFFER_SIZE cannot be 0 or negative."
+#if IOT_MESSAGE_BUFFER_SIZE <= 0
+    #error "IOT_MESSAGE_BUFFER_SIZE cannot be 0 or negative."
 #endif
 
 /*-----------------------------------------------------------*/
@@ -79,20 +74,20 @@
  * @brief Find a free buffer using the "in-use" flags.
  *
  * If a free buffer is found, this function marks the buffer in-use. This function
- * is common to the static memory implementation on POSIX systems.
+ * is common to the static memory implementation.
  *
  * @param[in] pInUse The "in-use" flags to search.
  * @param[in] limit How many flags to check.
  *
  * @return The index of a free buffer; -1 if no free buffers are available.
  */
-int AwsIotStaticMemory_FindFree( bool * const pInUse,
-                                 int limit );
+int IotStaticMemory_FindFree( bool * const pInUse,
+                              int limit );
 
 /**
  * @brief Return an "in-use" buffer.
  *
- * This function is common to the static memory implementation on POSIX systems.
+ * This function is common to the static memory implementation.
  *
  * @param[in] ptr Pointer to the buffer to return.
  * @param[in] pPool The pool of buffers that the in-use buffer was allocation from.
@@ -100,37 +95,34 @@ int AwsIotStaticMemory_FindFree( bool * const pInUse,
  * @param[in] limit How many buffers (and flags) to check while searching for ptr.
  * @param[in] elementSize The size of a single element in pPool.
  */
-void AwsIotStaticMemory_ReturnInUse( void * ptr,
-                                     void * const pPool,
-                                     bool * const pInUse,
-                                     int limit,
-                                     size_t elementSize );
+void IotStaticMemory_ReturnInUse( void * ptr,
+                                  void * const pPool,
+                                  bool * const pInUse,
+                                  int limit,
+                                  size_t elementSize );
 
 /*-----------------------------------------------------------*/
 
 /**
  * @brief Guards access to critical sections.
  */
-static pthread_mutex_t _mutex = PTHREAD_MUTEX_INITIALIZER;
+static IotMutex_t _mutex;
 
 /*
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
-static bool _pInUseMessageBuffers[ AWS_IOT_MESSAGE_BUFFERS ] = { 0 };                               /**< @brief Message buffer in-use flags. */
-static char _pMessageBuffers[ AWS_IOT_MESSAGE_BUFFERS ][ AWS_IOT_MESSAGE_BUFFER_SIZE ] = { { 0 } }; /**< @brief Message buffers. */
+static bool _pInUseMessageBuffers[ IOT_MESSAGE_BUFFERS ] = { 0 };                           /**< @brief Message buffer in-use flags. */
+static char _pMessageBuffers[ IOT_MESSAGE_BUFFERS ][ IOT_MESSAGE_BUFFER_SIZE ] = { { 0 } }; /**< @brief Message buffers. */
 
 /*-----------------------------------------------------------*/
 
-int AwsIotStaticMemory_FindFree( bool * const pInUse,
-                                 int limit )
+int IotStaticMemory_FindFree( bool * const pInUse,
+                              int limit )
 {
     int i = 0, freeIndex = -1;
 
     /* Perform the search for a free buffer in a critical section. */
-    if( pthread_mutex_lock( &_mutex ) != 0 )
-    {
-        return -1;
-    }
+    IotMutex_Lock( &( _mutex ) );
 
     for( i = 0; i < limit; i++ )
     {
@@ -144,18 +136,18 @@ int AwsIotStaticMemory_FindFree( bool * const pInUse,
     }
 
     /* Exit the critical section. */
-    ( void ) pthread_mutex_unlock( &_mutex );
+    IotMutex_Unlock( &( _mutex ) );
 
     return freeIndex;
 }
 
 /*-----------------------------------------------------------*/
 
-void AwsIotStaticMemory_ReturnInUse( void * ptr,
-                                     void * const pPool,
-                                     bool * const pInUse,
-                                     int limit,
-                                     size_t elementSize )
+void IotStaticMemory_ReturnInUse( void * ptr,
+                                  void * const pPool,
+                                  bool * const pInUse,
+                                  int limit,
+                                  size_t elementSize )
 {
     int i = 0;
     uint8_t * element = NULL;
@@ -165,10 +157,7 @@ void AwsIotStaticMemory_ReturnInUse( void * ptr,
 
     /* Perform a search for ptr to make sure it's part of pPool. This search
      * is done in a critical section. */
-    if( pthread_mutex_lock( &_mutex ) != 0 )
-    {
-        return;
-    }
+    IotMutex_Lock( &( _mutex ) );
 
     for( i = 0; i < limit; i++ )
     {
@@ -185,29 +174,43 @@ void AwsIotStaticMemory_ReturnInUse( void * ptr,
     }
 
     /* Exit the critical section. */
-    ( void ) pthread_mutex_unlock( &_mutex );
+    IotMutex_Unlock( &( _mutex ) );
 }
 
 /*-----------------------------------------------------------*/
 
-size_t AwsIot_MessageBufferSize( void )
+bool IotStaticMemory_Init( void )
 {
-    return ( size_t ) AWS_IOT_MESSAGE_BUFFER_SIZE;
+    return IotMutex_Create( &( _mutex ) );
 }
 
 /*-----------------------------------------------------------*/
 
-void * AwsIot_MallocMessageBuffer( size_t size )
+void IotStaticMemory_Cleanup( void )
+{
+    IotMutex_Destroy( &( _mutex ) );
+}
+
+/*-----------------------------------------------------------*/
+
+size_t Iot_MessageBufferSize( void )
+{
+    return ( size_t ) IOT_MESSAGE_BUFFER_SIZE;
+}
+
+/*-----------------------------------------------------------*/
+
+void * Iot_MallocMessageBuffer( size_t size )
 {
     int freeIndex = -1;
     void * pNewBuffer = NULL;
 
     /* Check that size is within the fixed message buffer size. */
-    if( size <= AWS_IOT_MESSAGE_BUFFER_SIZE )
+    if( size <= IOT_MESSAGE_BUFFER_SIZE )
     {
         /* Get the index of a free message buffer. */
-        freeIndex = AwsIotStaticMemory_FindFree( _pInUseMessageBuffers,
-                                                 AWS_IOT_MESSAGE_BUFFERS );
+        freeIndex = IotStaticMemory_FindFree( _pInUseMessageBuffers,
+                                              IOT_MESSAGE_BUFFERS );
 
         if( freeIndex != -1 )
         {
@@ -220,14 +223,14 @@ void * AwsIot_MallocMessageBuffer( size_t size )
 
 /*-----------------------------------------------------------*/
 
-void AwsIot_FreeMessageBuffer( void * ptr )
+void Iot_FreeMessageBuffer( void * ptr )
 {
     /* Return the in-use message buffer. */
-    AwsIotStaticMemory_ReturnInUse( ptr,
-                                    _pMessageBuffers,
-                                    _pInUseMessageBuffers,
-                                    AWS_IOT_MESSAGE_BUFFERS,
-                                    AWS_IOT_MESSAGE_BUFFER_SIZE );
+    IotStaticMemory_ReturnInUse( ptr,
+                                 _pMessageBuffers,
+                                 _pInUseMessageBuffers,
+                                 IOT_MESSAGE_BUFFERS,
+                                 IOT_MESSAGE_BUFFER_SIZE );
 }
 
 /*-----------------------------------------------------------*/

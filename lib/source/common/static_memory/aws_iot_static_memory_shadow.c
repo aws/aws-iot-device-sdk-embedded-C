@@ -20,9 +20,8 @@
  */
 
 /**
- * @file aws_iot_static_memory_shadow_posix.c
- * @brief Implementation of Shadow static memory functions in aws_iot_static_memory.h
- * for POSIX systems.
+ * @file aws_iot_static_memory_shadow.c
+ * @brief Implementation of Shadow static memory functions in iot_static_memory.h
  */
 
 /* Build using a config header, if provided. */
@@ -31,7 +30,7 @@
 #endif
 
 /* This file should only be compiled if dynamic memory allocation is forbidden. */
-#if AWS_IOT_STATIC_MEMORY_ONLY == 1
+#if IOT_STATIC_MEMORY_ONLY == 1
 
 /* Standard includes. */
 #include <stdbool.h>
@@ -46,7 +45,7 @@
 #endif
 
 /* Static memory include. */
-#include "platform/aws_iot_static_memory.h"
+#include "private/iot_static_memory.h"
 
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
@@ -86,16 +85,16 @@
 
 /*-----------------------------------------------------------*/
 
-/* Extern declarations of common static memory functions in aws_iot_static_memory_common_posix.c
- * Because these functions are POSIX-platform-specific, they are not placed in
- * a platform header file. */
-extern int AwsIotStaticMemory_FindFree( bool * const pInUse,
-                                        int limit );
-extern void AwsIotStaticMemory_ReturnInUse( void * ptr,
-                                            void * const pPool,
-                                            bool * const pInUse,
-                                            int limit,
-                                            size_t elementSize );
+/* Extern declarations of common static memory functions in iot_static_memory_common.c
+ * Because these functions are specific to this static memory implementation, they are
+ * not placed in the common static memory header file. */
+extern int IotStaticMemory_FindFree( bool * const pInUse,
+                                     int limit );
+extern void IotStaticMemory_ReturnInUse( void * ptr,
+                                         void * const pPool,
+                                         bool * const pInUse,
+                                         int limit,
+                                         size_t elementSize );
 
 /*-----------------------------------------------------------*/
 
@@ -119,8 +118,8 @@ void * AwsIot_MallocShadowOperation( size_t size )
     if( size == sizeof( _shadowOperation_t ) )
     {
         /* Find a free Shadow operation. */
-        freeIndex = AwsIotStaticMemory_FindFree( _pInUseShadowOperations,
-                                                 AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS );
+        freeIndex = IotStaticMemory_FindFree( _pInUseShadowOperations,
+                                              AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS );
 
         if( freeIndex != -1 )
         {
@@ -136,11 +135,11 @@ void * AwsIot_MallocShadowOperation( size_t size )
 void AwsIot_FreeShadowOperation( void * ptr )
 {
     /* Return the in-use Shadow operation. */
-    AwsIotStaticMemory_ReturnInUse( ptr,
-                                    _pShadowOperations,
-                                    _pInUseShadowOperations,
-                                    AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS,
-                                    sizeof( _shadowOperation_t ) );
+    IotStaticMemory_ReturnInUse( ptr,
+                                 _pShadowOperations,
+                                 _pInUseShadowOperations,
+                                 AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS,
+                                 sizeof( _shadowOperation_t ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -153,8 +152,8 @@ void * AwsIot_MallocShadowSubscription( size_t size )
     if( size <= _SHADOW_SUBSCRIPTION_SIZE )
     {
         /* Get the index of a free Shadow subscription. */
-        freeIndex = AwsIotStaticMemory_FindFree( _pInUseShadowSubscriptions,
-                                                 AWS_IOT_SHADOW_SUBSCRIPTIONS );
+        freeIndex = IotStaticMemory_FindFree( _pInUseShadowSubscriptions,
+                                              AWS_IOT_SHADOW_SUBSCRIPTIONS );
 
         if( freeIndex != -1 )
         {
@@ -170,11 +169,11 @@ void * AwsIot_MallocShadowSubscription( size_t size )
 void AwsIot_FreeShadowSubscription( void * ptr )
 {
     /* Return the in-use Shadow subscription. */
-    AwsIotStaticMemory_ReturnInUse( ptr,
-                                    _pShadowSubscriptions,
-                                    _pInUseShadowSubscriptions,
-                                    AWS_IOT_SHADOW_SUBSCRIPTIONS,
-                                    _SHADOW_SUBSCRIPTION_SIZE );
+    IotStaticMemory_ReturnInUse( ptr,
+                                 _pShadowSubscriptions,
+                                 _pInUseShadowSubscriptions,
+                                 AWS_IOT_SHADOW_SUBSCRIPTIONS,
+                                 _SHADOW_SUBSCRIPTION_SIZE );
 }
 
 /*-----------------------------------------------------------*/

@@ -37,6 +37,9 @@
 /* Shadow include. */
 #include "aws_iot_shadow.h"
 
+/* Common libraries include. */
+#include "iot_common.h"
+
 /* Common demo includes. */
 #include "aws_iot_demo.h"
 #include "aws_iot_demo_posix.h"
@@ -49,6 +52,7 @@
 int main( int argc,
           char ** argv )
 {
+    bool commonInitialized = false;
     int status = 0;
     AwsIotDemoArguments_t demoArguments = AWS_IOT_DEMO_ARGUMENTS_INITIALIZER;
     AwsIotNetworkConnection_t networkConnection = AWS_IOT_NETWORK_CONNECTION_INITIALIZER;
@@ -73,10 +77,24 @@ int main( int argc,
     }
 
     /* Initialize the network. */
-    if( ( status == 0 ) &&
-        ( AwsIotNetwork_Init() != AWS_IOT_NETWORK_SUCCESS ) )
+    if( status == 0 )
     {
-        status = -1;
+        if( IotCommon_Init() == false )
+        {
+            status = -1;
+        }
+        else
+        {
+            if( AwsIotNetwork_Init() != AWS_IOT_NETWORK_SUCCESS )
+            {
+                IotCommon_Cleanup();
+                status = -1;
+            }
+            else
+            {
+                commonInitialized = true;
+            }
+        }
     }
 
     /* Thing Name must be set for this demo. */
@@ -167,7 +185,11 @@ int main( int argc,
     }
 
     /* Clean up the network. */
-    AwsIotNetwork_Cleanup();
+    if( commonInitialized == true )
+    {
+        IotCommon_Cleanup();
+        AwsIotNetwork_Cleanup();
+    }
 
     /* Log the demo status. */
     if( status == 0 )

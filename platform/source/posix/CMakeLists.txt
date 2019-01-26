@@ -60,7 +60,7 @@ if( ${OPENSSL_FOUND} )
     endif()
 
     # Choose OpenSSL network source file.
-    set( NETWORK_SOURCE_FILE network/aws_iot_network_openssl.c )
+    set( NETWORK_SOURCE_FILE network/iot_network_openssl.c )
 
     # Link OpenSSL.
     set( TLS_LIBRARY_LINKER_FLAG OpenSSL::SSL OpenSSL::Crypto )
@@ -72,20 +72,13 @@ if( NOT DEFINED TLS_LIBRARY_LINKER_FLAG )
 endif()
 
 # Platform libraries source files.
-add_library( awsiotplatform SHARED
+add_library( iotplatform SHARED
              iot_clock_posix.c
              iot_threads_posix.c
-             ${NETWORK_SOURCE_FILE}
-             static_memory/aws_iot_static_memory_common_posix.c
-             static_memory/aws_iot_static_memory_mqtt_posix.c
-             static_memory/aws_iot_static_memory_shadow_posix.c )
+             ${NETWORK_SOURCE_FILE} )
 
 # Library version.
-set_target_properties( awsiotplatform PROPERTIES VERSION ${PROJECT_VERSION} )
-
-# Library public headers.
-set_target_properties( awsiotplatform PROPERTIES PUBLIC_HEADER
-                       "../../include/platform;../../include/platform/network" )
+set_target_properties( iotplatform PROPERTIES VERSION ${PROJECT_VERSION} )
 
 # Link required libraries.
-target_link_libraries( awsiotplatform Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )
+target_link_libraries( iotplatform Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )

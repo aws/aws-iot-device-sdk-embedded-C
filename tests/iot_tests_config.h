@@ -74,7 +74,7 @@
 #define AWS_IOT_MQTT_TEST                           ( 1 )
 
 /* Memory allocation function configuration. Note that these functions will not
- * be affected by AWS_IOT_STATIC_MEMORY_ONLY. */
+ * be affected by IOT_STATIC_MEMORY_ONLY. */
 #define AwsIotNetwork_Malloc    unity_malloc_mt
 #define AwsIotNetwork_Free      unity_free_mt
 #define IotThreads_Malloc       unity_malloc_mt
@@ -87,14 +87,14 @@
 
 /* Static memory resource settings for the tests. These values must be large
  * enough to support the stress tests. */
-#if AWS_IOT_STATIC_MEMORY_ONLY == 1
-    #define AWS_IOT_MQTT_CONNECTIONS      ( 2 )
-    #define AWS_IOT_MQTT_SUBSCRIPTIONS    ( 80 )
+#if IOT_STATIC_MEMORY_ONLY == 1
+    #define IOT_MQTT_CONNECTIONS      ( 2 )
+    #define IOT_MQTT_SUBSCRIPTIONS    ( 80 )
 #endif
 
 /* Memory allocation function configuration for libraries affected by
- * AWS_IOT_STATIC_MEMORY_ONLY. */
-#if AWS_IOT_STATIC_MEMORY_ONLY == 0
+ * IOT_STATIC_MEMORY_ONLY. */
+#if IOT_STATIC_MEMORY_ONLY == 0
     #define AwsIotMqtt_MallocConnection        unity_malloc_mt
     #define AwsIotMqtt_FreeConnection          unity_free_mt
     #define AwsIotMqtt_MallocMessage           unity_malloc_mt
@@ -111,7 +111,7 @@
     #define AwsIotShadow_FreeString            unity_free_mt
     #define AwsIotShadow_MallocSubscription    unity_malloc_mt
     #define AwsIotShadow_FreeSubscription      unity_free_mt
-#endif /* if AWS_IOT_STATIC_MEMORY_ONLY == 0 */
+#endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
 
 /* The build system will choose the appropriate system types file for the platform
  * layer based on the host operating system. */

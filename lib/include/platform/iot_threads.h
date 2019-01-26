@@ -37,7 +37,7 @@
 #include <stdint.h>
 
 /* Platform layer types include. */
-#include "platform/types/iot_platform_types.h"
+#include "types/iot_platform_types.h"
 
 /**
  * @functionspage{platform_threads,platform thread management,Thread Management}

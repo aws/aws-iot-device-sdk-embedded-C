@@ -228,7 +228,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
 
 /*-----------------------------------------------------------*/
 
-bool IotMutex_Create( IotMutex_t * pNewMutex )
+bool IotMutex_Create( IotMutex_t * const pNewMutex )
 {
     bool status = true;
 

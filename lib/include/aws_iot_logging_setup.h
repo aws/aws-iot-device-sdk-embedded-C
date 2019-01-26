@@ -111,7 +111,7 @@
  * @see @ref logging_function_genericprintbuffer for the generic (not library-specific)
  * buffer logging function.
  *
- * **Example**
+ * <b>Example</b>
  * @code{c}
  * const uint8_t pBuffer[] = { 0x00, 0x01, 0x02, 0x03 };
  *

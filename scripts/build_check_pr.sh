@@ -6,13 +6,16 @@
 # Exit on any nonzero return code.
 set -e
 
+# Additional options for compilation.
+COMPILER_OPTIONS="-Wall -Wextra -fsanitize=thread"
+
 # Create build directory.
 mkdir -p build
 cd build
 rm -rf *
 
 # Build tests and demos against Mosquitto broker with ThreadSanitizer.
-cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_MQTT_MOSQUITTO=1 -fsanitize=thread"
+cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_MQTT_MOSQUITTO=1 $COMPILER_OPTIONS"
 make
 
 # Run MQTT tests and demos against Mosquitto.
@@ -24,7 +27,7 @@ make
 
 # Rebuild in static memory mode.
 rm -rf *
-cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_MQTT_MOSQUITTO=1 -DAWS_IOT_STATIC_MEMORY_ONLY=1 -fsanitize=thread"
+cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_MQTT_MOSQUITTO=1 -DIOT_STATIC_MEMORY_ONLY=1 $COMPILER_OPTIONS"
 make
 
 # Run MQTT tests and no-network Shadow tests in static memory mode.

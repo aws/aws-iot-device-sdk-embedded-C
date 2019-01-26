@@ -21,7 +21,7 @@ QUIET = YES
 
 # Define the following preprocessor constants when generating documentation.
 PREDEFINED = "DOXYGEN=1" \
-             "AWS_IOT_STATIC_MEMORY_ONLY=1" \
+             "IOT_STATIC_MEMORY_ONLY=1" \
              "_LIBRARY_LOG_LEVEL=AWS_IOT_LOG_DEBUG" \
              "_LIBRARY_LOG_NAME=\"DOXYGEN\""
 

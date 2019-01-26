@@ -40,8 +40,8 @@ Demo application executables will be placed in a `bin` directory of the CMake bu
 
 Configuration settings may also be set using CMake by setting `CMAKE_C_FLAGS`. However, placing configuration settings in `demos/iot_demo_config.h` is recommended over setting them using CMake.
 @code{sh}
-# Example: Set AWS_IOT_STATIC_MEMORY_ONLY using CMake
-cmake .. -DCMAKE_C_FLAGS=-DAWS_IOT_STATIC_MEMORY_ONLY=1
+# Example: Set IOT_STATIC_MEMORY_ONLY using CMake
+cmake .. -DCMAKE_C_FLAGS=-DIOT_STATIC_MEMORY_ONLY=1
 @endcode
 
 By default, CMake may build in `Release` configuration. To enable debugging symbols, set `CMAKE_BUILD_TYPE` to `Debug`.

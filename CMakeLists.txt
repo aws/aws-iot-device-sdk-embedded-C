@@ -25,8 +25,9 @@ endif()
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
-# SDK include path.
-include_directories( ${PROJECT_SOURCE_DIR}/lib/include )
+# SDK include paths.
+include_directories( ${PROJECT_SOURCE_DIR}/lib/include
+                     ${PROJECT_SOURCE_DIR}/platform/include )
 
 # Demo include path.
 include_directories( ${PROJECT_SOURCE_DIR}/demos )
@@ -50,8 +51,8 @@ endif()
 
 # Platform libraries.
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-    add_definitions( -DIOT_SYSTEM_TYPES_FILE="platform/types/iot_platform_types_posix.h" )
-    add_subdirectory( lib/source/platform/posix )
+    add_definitions( -DIOT_SYSTEM_TYPES_FILE="posix/iot_platform_types_posix.h" )
+    add_subdirectory( platform/source/posix )
 endif()
 
 # Common libraries (linear containers, logging, etc.)

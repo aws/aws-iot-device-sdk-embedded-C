@@ -12,6 +12,18 @@ Design goals of this SDK include:
 */
 
 /**
+@page global_config Global Configuration
+
+The following pages describe configuration settings that affect multiple components of this SDK.
+- @subpage global_library_config <br>
+  Settings that affect all libraries.
+- @subpage global_demos_config <br>
+  Settings that affect all demos.
+- @subpage global_tests_config <br>
+  Settings that affect all tests.
+*/
+
+/**
 @globalconfigpage{library,Library,libraries}
 
 @section IOT_CONFIG_FILE
@@ -30,8 +42,8 @@ Any libraries that do not define a log level will use this setting. If a both a 
 @configpossible One of the @ref logging_constants_levels.<br>
 @configdefault #AWS_IOT_LOG_NONE
 
-@section AWS_IOT_STATIC_MEMORY_ONLY
-@brief Set this to `1` to disable the usage of dynamic memory allocation ([malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) and [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)) throughout the AWS IoT libraries.
+@section IOT_STATIC_MEMORY_ONLY
+@brief Set this to `1` to disable the usage of dynamic memory allocation ([malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) and [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)) throughout the libraries in this SDK.
 
 When dynamic memory allocation is disabled, all of the memory allocation functions used in the libraries must be re-implemented. See each library's <i>Configuration/Memory allocation</i> section for a list of functions that must be re-implemented for that library.
 
@@ -39,7 +51,7 @@ When dynamic memory allocation is disabled, all of the memory allocation functio
 @configrecommended `0`<br>
 @configdefault `0`
 
-@attention This constant only affects the AWS IoT libraries. It has no effect on system calls or third-party libraries; it may also have no effect on [platform layer] (@ref platform) implementations.
+@attention This settings has no effect on system calls or third-party libraries; it may also have no effect on [platform layer] (@ref platform) implementations.
 */
 
 /**
