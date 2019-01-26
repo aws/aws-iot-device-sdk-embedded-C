@@ -7,4 +7,4 @@ add_executable( aws_iot_tests_shadow
                 system/aws_iot_tests_shadow_system.c )
 
 # Shadow tests library dependencies.
-target_link_libraries( aws_iot_tests_shadow awsiotcommon awsiotplatform awsiotmqtt awsiotshadow unity )
+target_link_libraries( aws_iot_tests_shadow iotcommon iotplatform iotmqtt awsiotshadow unity )

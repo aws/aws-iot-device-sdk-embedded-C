@@ -37,7 +37,7 @@
 #include "iot_linear_containers.h"
 
 /* Platform layer types include. */
-#include "platform/types/iot_platform_types.h"
+#include "types/iot_platform_types.h"
 
 /* Shadow include. */
 #include "aws_iot_shadow.h"
@@ -78,8 +78,8 @@
  * Provide default values for undefined memory allocation functions based on
  * the usage of dynamic memory allocation.
  */
-#if AWS_IOT_STATIC_MEMORY_ONLY == 1
-    #include "platform/aws_iot_static_memory.h"
+#if IOT_STATIC_MEMORY_ONLY == 1
+    #include "private/iot_static_memory.h"
 
     /**
      * @brief Allocate a #_shadowOperation_t. This function should have the same
@@ -105,7 +105,7 @@
      * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
      */
     #ifndef AwsIotShadow_MallocString
-        #define AwsIotShadow_MallocString    AwsIot_MallocMessageBuffer
+        #define AwsIotShadow_MallocString    Iot_MallocMessageBuffer
     #endif
 
     /**
@@ -114,7 +114,7 @@
      * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
      */
     #ifndef AwsIotShadow_FreeString
-        #define AwsIotShadow_FreeString    AwsIot_FreeMessageBuffer
+        #define AwsIotShadow_FreeString    Iot_FreeMessageBuffer
     #endif
 
     /**
@@ -134,7 +134,7 @@
     #ifndef AwsIotShadow_FreeSubscription
         #define AwsIotShadow_FreeSubscription    AwsIot_FreeShadowSubscription
     #endif
-#else /* if AWS_IOT_STATIC_MEMORY_ONLY == 1 */
+#else /* if IOT_STATIC_MEMORY_ONLY == 1 */
     #include <stdlib.h>
 
     #ifndef AwsIotShadow_MallocOperation
@@ -160,7 +160,7 @@
     #ifndef AwsIotShadow_FreeSubscription
         #define AwsIotShadow_FreeSubscription    free
     #endif
-#endif /* if AWS_IOT_STATIC_MEMORY_ONLY == 1 */
+#endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
 /**
  * @cond DOXYGEN_IGNORE

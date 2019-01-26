@@ -10,4 +10,4 @@ add_executable( aws_iot_tests_mqtt
                 system/aws_iot_tests_mqtt_stress.c )
 
 # MQTT tests library dependencies.
-target_link_libraries( aws_iot_tests_mqtt awsiotcommon awsiotplatform awsiotmqtt unity )
+target_link_libraries( aws_iot_tests_mqtt iotcommon iotplatform iotmqtt unity )

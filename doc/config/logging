@@ -23,4 +23,5 @@ FILE_PATTERNS = *logging*.c *logging*.h *logging*.txt
 
 # External tag files required by this library.
 TAGFILES = doc/tag/main.tag=../main \
+           doc/tag/static_memory.tag=../static_memory \
            doc/tag/platform.tag=../platform

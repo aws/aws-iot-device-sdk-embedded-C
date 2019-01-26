@@ -103,16 +103,16 @@ extern int vsnprintf( char *,
  * Provide default values for undefined memory allocation functions based on
  * the usage of dynamic memory allocation.
  */
-#if AWS_IOT_STATIC_MEMORY_ONLY == 1
+#if IOT_STATIC_MEMORY_ONLY == 1
     /* Static memory allocation header. */
-    #include "platform/aws_iot_static_memory.h"
+    #include "private/iot_static_memory.h"
 
 /**
  * @brief Allocate a new logging buffer. This function must have the same
  * signature as [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
     #ifndef AwsIotLogging_Malloc
-        #define AwsIotLogging_Malloc    AwsIot_MallocMessageBuffer
+        #define AwsIotLogging_Malloc    Iot_MallocMessageBuffer
     #endif
 
 /**
@@ -120,7 +120,7 @@ extern int vsnprintf( char *,
  * as [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
     #ifndef AwsIotLogging_Free
-        #define AwsIotLogging_Free    AwsIot_FreeMessageBuffer
+        #define AwsIotLogging_Free    Iot_FreeMessageBuffer
     #endif
 
 /**
@@ -128,9 +128,9 @@ extern int vsnprintf( char *,
  * should all have the same size.
  */
     #ifndef AwsIotLogging_StaticBufferSize
-        #define AwsIotLogging_StaticBufferSize    AwsIot_MessageBufferSize
+        #define AwsIotLogging_StaticBufferSize    Iot_MessageBufferSize
     #endif
-#else /* if AWS_IOT_STATIC_MEMORY_ONLY == 1 */
+#else /* if IOT_STATIC_MEMORY_ONLY == 1 */
     #ifndef AwsIotLogging_Malloc
         #include <stdlib.h>
         #define AwsIotLogging_Malloc    malloc
@@ -140,7 +140,7 @@ extern int vsnprintf( char *,
         #include <stdlib.h>
         #define AwsIotLogging_Free    free
     #endif
-#endif /* if AWS_IOT_STATIC_MEMORY_ONLY */
+#endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
 /**
  * @brief A guess of the maximum length of a timestring.
@@ -184,7 +184,7 @@ static const char * const _pLogLevelStrings[ 5 ] =
 
 /*-----------------------------------------------------------*/
 
-#if !defined( AWS_IOT_STATIC_MEMORY_ONLY ) || ( AWS_IOT_STATIC_MEMORY_ONLY == 0 )
+#if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 )
     static bool _reallocLoggingBuffer( void ** pOldBuffer,
                                        size_t newSize,
                                        size_t oldSize )
@@ -207,7 +207,7 @@ static const char * const _pLogLevelStrings[ 5 ] =
 
         return true;
     }
-#endif /* if !defined( AWS_IOT_STATIC_MEMORY_ONLY ) || ( AWS_IOT_STATIC_MEMORY_ONLY == 0 ) */
+#endif /* if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 ) */
 
 /*-----------------------------------------------------------*/
 
@@ -255,7 +255,7 @@ void AwsIotLogGeneric( int libraryLogSetting,
 
     /* In static memory mode, check that the log message will fit in the a
      * static buffer. */
-    #if AWS_IOT_STATIC_MEMORY_ONLY == 1
+    #if IOT_STATIC_MEMORY_ONLY == 1
         if( bufferSize >= AwsIotLogging_StaticBufferSize() )
         {
             /* If the static buffers are likely too small to fit the log message,
@@ -370,7 +370,7 @@ void AwsIotLogGeneric( int libraryLogSetting,
      * a larger logging buffer. */
     if( ( size_t ) requiredMessageSize >= bufferSize - bufferPosition )
     {
-        #if AWS_IOT_STATIC_MEMORY_ONLY == 1
+        #if IOT_STATIC_MEMORY_ONLY == 1
 
             /* There's no point trying to allocate a larger static buffer. Return
              * immediately. */
@@ -399,7 +399,7 @@ void AwsIotLogGeneric( int libraryLogSetting,
                                              pFormat,
                                              args );
             va_end( args );
-        #endif /* if AWS_IOT_STATIC_MEMORY_ONLY == 1 */
+        #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
     }
 
     /* Check for encoding errors. */

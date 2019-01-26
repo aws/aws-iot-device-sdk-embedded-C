@@ -30,6 +30,7 @@ digraph mqtt_dependencies
         rank = same;
         linear_containers[label="List/Queue", URL="@ref linear_containers"];
         logging[label="Logging", URL="@ref logging"];
+        static_memory[label="Static memory", URL="@ref static_memory"];
     }
     subgraph
     {
@@ -37,16 +38,15 @@ digraph mqtt_dependencies
         platform_threads[label="Thread management", fillcolor="#e89025ff", URL="@ref platform_threads"];
         platform_clock[label="Clock", fillcolor="#e89025ff", URL="@ref platform_clock"];
         platform_network[label="Network", fillcolor="#e89025ff", URL="@ref platform_network"];
-        platform_static_memory[label="Static memory", fillcolor="#e89025ff", URL="@ref platform_static_memory"];
     }
     mqtt -> linear_containers;
     mqtt -> logging [label=" if logging enabled", style="dashed"];
     mqtt -> platform_threads;
     mqtt -> platform_clock;
     mqtt -> platform_network;
-    mqtt -> platform_static_memory [label=" if static memory only", style="dashed"];
+    mqtt -> static_memory [label=" if static memory only", style="dashed"];
     logging -> platform_clock;
-    logging -> platform_static_memory [label=" if static memory only", style="dashed"];
+    logging -> static_memory [label=" if static memory only", style="dashed"];
 }
 @enddot
 
@@ -180,7 +180,7 @@ The number of threads to spawn for the stress tests. Up to @ref AWS_IOT_TEST_MQT
 Up to @ref AWS_IOT_TEST_MQTT_THREADS `*` @ref AWS_IOT_TEST_MQTT_PUBLISHES_PER_THREAD publish messages are sent by stress test.
 
 @configpossible Any non-negative integer. <br>
-@configdefault When @ref AWS_IOT_STATIC_MEMORY_ONLY is `1`, this value defaults to @ref AWS_IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS. Otherwise, it defaults to `100`.
+@configdefault When @ref IOT_STATIC_MEMORY_ONLY is `1`, this value defaults to @ref IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS. Otherwise, it defaults to `100`.
 */
 
 /**
@@ -349,7 +349,7 @@ If @ref AWS_IOT_MQTT_TIMER_EVENT_THRESHOLD_MS is `100`, then both `Event 1` and 
 @configdefault Standard library [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function if @ref AWS_IOT_MQTT_ENABLE_ASSERTS is `1`; otherwise, nothing.
 
 @section mqtt_config_memory Memory allocation
-@brief If @ref AWS_IOT_STATIC_MEMORY_ONLY is `1`, then the following functions must be re-implemented for the MQTT library.
+@brief If @ref IOT_STATIC_MEMORY_ONLY is `1`, then the following functions must be re-implemented for the MQTT library.
 - #AwsIotMqtt_MallocConnection <br>
   @copybrief AwsIotMqtt_MallocConnection
 - #AwsIotMqtt_FreeConnection <br>

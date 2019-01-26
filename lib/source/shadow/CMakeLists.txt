@@ -8,16 +8,8 @@ add_library( awsiotshadow SHARED
 # Library version.
 set_target_properties( awsiotshadow PROPERTIES VERSION ${PROJECT_VERSION} )
 
-# Library public headers.
-set_target_properties( awsiotshadow PROPERTIES PUBLIC_HEADER
-                       "../../include/aws_iot_shadow.h" )
-
-# Library private headers.
-set_target_properties( awsiotmqtt PROPERTIES PRIVATE_HEADER
-                       "../../include/private/aws_iot_shadow_internal.h" )
-
 # Link required libraries.
-target_link_libraries( awsiotshadow awsiotcommon awsiotplatform awsiotmqtt )
+target_link_libraries( awsiotshadow iotcommon iotplatform iotmqtt )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
