@@ -19,7 +19,7 @@ INPUT = doc/lib \
 
 # Library file names.
 FILE_PATTERNS = platform.txt \
-                aws_iot_network.h \
+                iot_network.h \
                 iot_clock.h \
                 iot_threads.h \
                 iot_platform_types.h
