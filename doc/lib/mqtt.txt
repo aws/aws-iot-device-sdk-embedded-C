@@ -52,7 +52,7 @@ digraph mqtt_dependencies
 
 Currently, the MQTT library has the following dependencies:
 - The queue library for maintaining the data structures for managing in-progress MQTT operations.
-- The logging library may be used if @ref AWS_IOT_LOG_LEVEL_MQTT is not @ref AWS_IOT_LOG_NONE.
+- The logging library may be used if @ref AWS_IOT_LOG_LEVEL_MQTT is not #IOT_LOG_NONE.
 - The platform layer provides an interface to the operating system for thread management, clock functions, networking, etc.
 
 In addition to the components above, the MQTT library also depends on C standard library headers.
@@ -285,7 +285,7 @@ Send threads process outgoing network packets. Packets are queued, then removed 
 Log messages from the MQTT library at or below this setting will be printed.
 
 @configpossible One of the @ref logging_constants_levels.<br>
-@configdefault @ref AWS_IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #AWS_IOT_LOG_NONE.
+@configdefault @ref IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #IOT_LOG_NONE.
 
 @section AWS_IOT_MQTT_RESPONSE_WAIT_MS
 @brief A "reasonable amount of time" to wait for keep-alive responses from the MQTT server.

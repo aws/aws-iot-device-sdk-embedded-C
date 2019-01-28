@@ -101,10 +101,10 @@ int AwsIotDemo_RunShadowDemo( const char * const pThingName,
     connectInfo.pClientIdentifier = pThingName;
     connectInfo.clientIdentifierLength = ( uint16_t ) strlen( pThingName );
 
-    AwsIotLogInfo( "Shadow Thing Name is %.*s (length %hu).",
-                   connectInfo.clientIdentifierLength,
-                   connectInfo.pClientIdentifier,
-                   connectInfo.clientIdentifierLength );
+    IotLogInfo( "Shadow Thing Name is %.*s (length %hu).",
+                connectInfo.clientIdentifierLength,
+                connectInfo.pClientIdentifier,
+                connectInfo.clientIdentifierLength );
 
     /* Establish the MQTT connection. */
     mqttStatus = AwsIotMqtt_Connect( pMqttConnection,
@@ -115,8 +115,8 @@ int AwsIotDemo_RunShadowDemo( const char * const pThingName,
 
     if( mqttStatus != AWS_IOT_MQTT_SUCCESS )
     {
-        AwsIotLogError( "MQTT CONNECT returned error %s.",
-                        AwsIotMqtt_strerror( mqttStatus ) );
+        IotLogError( "MQTT CONNECT returned error %s.",
+                     AwsIotMqtt_strerror( mqttStatus ) );
 
         status = -1;
     }

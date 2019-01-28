@@ -20,18 +20,18 @@
  */
 
 /**
- * @file aws_iot_logging.h
+ * @file iot_logging.h
  * @brief Generic logging function header file.
  *
  * Declares the generic logging function and the log levels. This file never
- * needs to be included in source code. The header aws_iot_logging_setup.h should
+ * needs to be included in source code. The header iot_logging_setup.h should
  * be included instead.
  *
- * @see aws_iot_logging_setup.h
+ * @see iot_logging_setup.h
  */
 
-#ifndef _AWS_IOT_LOGGING_H_
-#define _AWS_IOT_LOGGING_H_
+#ifndef _IOT_LOGGING_H_
+#define _IOT_LOGGING_H_
 
 /* Build using a config header, if provided. */
 #ifdef IOT_CONFIG_FILE
@@ -47,33 +47,33 @@
  * @constantspage{logging,logging library}
  *
  * @section logging_constants_levels Log levels
- * @brief Log levels for the AWS IoT libraries.
+ * @brief Log levels for the libraries in this SDK.
  *
  * Each library should specify a log level by setting @ref _LIBRARY_LOG_LEVEL.
  * All log messages with a level at or below the specified level will be printed
  * for that library.
  *
  * Currently, there are 4 log levels. In the order of lowest to highest, they are:
- * - #AWS_IOT_LOG_NONE <br>
- *   @copybrief AWS_IOT_LOG_NONE
- * - #AWS_IOT_LOG_ERROR <br>
- *   @copybrief AWS_IOT_LOG_ERROR
- * - #AWS_IOT_LOG_WARN <br>
- *   @copybrief AWS_IOT_LOG_WARN
- * - #AWS_IOT_LOG_INFO <br>
- *   @copybrief AWS_IOT_LOG_INFO
- * - #AWS_IOT_LOG_DEBUG <br>
- *   @copybrief AWS_IOT_LOG_DEBUG
+ * - #IOT_LOG_NONE <br>
+ *   @copybrief IOT_LOG_NONE
+ * - #IOT_LOG_ERROR <br>
+ *   @copybrief IOT_LOG_ERROR
+ * - #IOT_LOG_WARN <br>
+ *   @copybrief IOT_LOG_WARN
+ * - #IOT_LOG_INFO <br>
+ *   @copybrief IOT_LOG_INFO
+ * - #IOT_LOG_DEBUG <br>
+ *   @copybrief IOT_LOG_DEBUG
  */
 
 /**
  * @brief No log messages.
  *
  * Log messages with this level will be silently discarded. When @ref
- * _LIBRARY_LOG_LEVEL is #AWS_IOT_LOG_NONE, logging is disabled and no [logging functions]
+ * _LIBRARY_LOG_LEVEL is #IOT_LOG_NONE, logging is disabled and no [logging functions]
  * (@ref logging_functions) can be called.
  */
-#define AWS_IOT_LOG_NONE     0
+#define IOT_LOG_NONE     0
 
 /**
  * @brief Only critical, unrecoverable errors.
@@ -81,7 +81,7 @@
  * Log messages with this level will be printed when a library encounters an
  * error from which it cannot easily recover.
  */
-#define AWS_IOT_LOG_ERROR    1
+#define IOT_LOG_ERROR    1
 
 /**
  * @brief Message about an abnormal but recoverable event.
@@ -90,7 +90,7 @@
  * abnormal event that may be indicative of an error. Libraries should continue
  * execution after logging a warning.
  */
-#define AWS_IOT_LOG_WARN     2
+#define IOT_LOG_WARN     2
 
 /**
  * @brief A helpful, informational message.
@@ -98,7 +98,7 @@
  * Log messages with this level may indicate the normal status of a library
  * function. They should be used to track how far a program has executed.
  */
-#define AWS_IOT_LOG_INFO     3
+#define IOT_LOG_INFO     3
 
 /**
  * @brief Detailed and excessive debug information.
@@ -107,7 +107,7 @@
  * excessive information such as internal variables, buffers, or other specific
  * information.
  */
-#define AWS_IOT_LOG_DEBUG    4
+#define IOT_LOG_DEBUG    4
 
 /**
  * @paramstructs{logging,logging}
@@ -117,16 +117,16 @@
  * @ingroup logging_datatypes_paramstructs
  * @brief Log message configuration struct.
  *
- * @paramfor @ref logging_function_log, @ref logging_function_loggeneric
+ * @paramfor @ref logging_function_log, @ref logging_function_generic
  *
  * By default, log messages print the library name, log level, and a timestring.
- * This struct can be passed to @ref logging_function_loggeneric to disable one of
+ * This struct can be passed to @ref logging_function_generic to disable one of
  * the above components in the log message.
  *
- * **Example:**
+ * <b>Example:</b>
  *
  * @code{c}
- * AwsIotLogGeneric( AWS_IOT_LOG_DEBUG, "SAMPLE", AWS_IOT_LOG_DEBUG, NULL, "Hello world!" );
+ * IotLog_Generic( IOT_LOG_DEBUG, "SAMPLE", IOT_LOG_DEBUG, NULL, "Hello world!" );
  * @endcode
  * The code above prints the following message:
  * @code
@@ -135,33 +135,33 @@
  *
  * The timestring can be disabled as follows:
  * @code
- * AwsIotLogConfig_t logConfig = { .hideLogLevel = false, .hideLibraryName = false, .hideTimestring = true};
- * AwsIotLogGeneric( AWS_IOT_LOG_DEBUG, "SAMPLE", AWS_IOT_LOG_DEBUG, &logConfig, "Hello world!" );
+ * IotLogConfig_t logConfig = { .hideLogLevel = false, .hideLibraryName = false, .hideTimestring = true};
+ * IotLog_Generic( IOT_LOG_DEBUG, "SAMPLE", IOT_LOG_DEBUG, &logConfig, "Hello world!" );
  * @endcode
  * The resulting log message will be:
  * @code
  * [DEBUG][SAMPLE] Hello world!
  * @endcode
  */
-typedef struct AwsIotLogConfig
+typedef struct IotLogConfig
 {
     bool hideLogLevel;    /**< @brief Don't print the log level string for this message. */
     bool hideLibraryName; /**< @brief Don't print the library name for this message. */
     bool hideTimestring;  /**< @brief Don't print the timestring for this message. */
-} AwsIotLogConfig_t;
+} IotLogConfig_t;
 
 /**
  * @functionspage{logging,logging library}
  *
  * - @functionname{logging_function_log}
  * - @functionname{logging_function_printbuffer}
- * - @functionname{logging_function_loggeneric}
+ * - @functionname{logging_function_generic}
  * - @functionname{logging_function_genericprintbuffer}
  */
 
 /**
- * @functionpage{AwsIotLogGeneric,logging,loggeneric}
- * @functionpage{AwsIotLogGeneric_PrintBuffer,logging,genericprintbuffer}
+ * @functionpage{IotLog_Generic,logging,generic}
+ * @functionpage{IotLog_PrintBuffer,logging,genericprintbuffer}
  */
 
 /**
@@ -170,7 +170,7 @@ typedef struct AwsIotLogConfig
  * This function is the generic logging function shared across all libraries.
  * The library-specific logging function @ref logging_function_log is implemented
  * using this function. Like @ref logging_function_log, this function is only
- * available when @ref _LIBRARY_LOG_LEVEL is #AWS_IOT_LOG_NONE.
+ * available when @ref _LIBRARY_LOG_LEVEL is #IOT_LOG_NONE.
  *
  * In most cases, the library-specific logging function @ref logging_function_log
  * should be called instead of this function.
@@ -180,20 +180,20 @@ typedef struct AwsIotLogConfig
  * logging_constants_levels.
  * @param[in] pLibraryName The library name to print. See @ref _LIBRARY_LOG_NAME.
  * @param[in] messageLevel The log level of the this message. See @ref _LIBRARY_LOG_LEVEL.
- * @param[in] pLogConfig Pointer to a #AwsIotLogConfig_t. Optional; pass `NULL` to ignore.
+ * @param[in] pLogConfig Pointer to a #IotLogConfig_t. Optional; pass `NULL` to ignore.
  * @param[in] pFormat Format string for the log message.
  * @param[in] ... Arguments for format specification.
  *
  * @return No return value. On errors, it prints nothing.
  */
-/* @[declare_logging_loggeneric] */
-void AwsIotLogGeneric( int libraryLogSetting,
-                       const char * const pLibraryName,
-                       int messageLevel,
-                       const AwsIotLogConfig_t * const pLogConfig,
-                       const char * const pFormat,
-                       ... );
-/* @[declare_logging_loggeneric] */
+/* @[declare_logging_generic] */
+void IotLog_Generic( int libraryLogSetting,
+                     const char * const pLibraryName,
+                     int messageLevel,
+                     const IotLogConfig_t * const pLogConfig,
+                     const char * const pFormat,
+                     ... );
+/* @[declare_logging_generic] */
 
 /**
  * @brief Generic function to log the contents of a buffer as bytes.
@@ -201,7 +201,7 @@ void AwsIotLogGeneric( int libraryLogSetting,
  * This function is the generic buffer logging function shared across all libraries.
  * The library-specific buffer logging function @ref logging_function_printbuffer is
  * implemented using this function. Like @ref logging_function_printbuffer, this
- * function is only available when @ref _LIBRARY_LOG_LEVEL is #AWS_IOT_LOG_DEBUG.
+ * function is only available when @ref _LIBRARY_LOG_LEVEL is #IOT_LOG_DEBUG.
  *
  * In most cases, the library-specific buffer logging function @ref
  * logging_function_printbuffer should be called instead of this function.
@@ -218,10 +218,10 @@ void AwsIotLogGeneric( int libraryLogSetting,
  * appear "fragmented" if other threads are logging simultaneously.
  */
 /* @[declare_logging_genericprintbuffer] */
-void AwsIotLogGeneric_PrintBuffer( const char * const pLibraryName,
-                                   const char * const pHeader,
-                                   const uint8_t * const pBuffer,
-                                   size_t bufferSize );
+void IotLog_GenericPrintBuffer( const char * const pLibraryName,
+                                const char * const pHeader,
+                                const uint8_t * const pBuffer,
+                                size_t bufferSize );
 /* @[declare_logging_genericprintbuffer] */
 
-#endif /* ifndef _AWS_IOT_LOGGING_H_ */
+#endif /* ifndef _IOT_LOGGING_H_ */

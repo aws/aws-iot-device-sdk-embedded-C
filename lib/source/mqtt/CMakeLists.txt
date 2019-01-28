@@ -1,6 +1,7 @@
 # MQTT library source files.
 add_library( iotmqtt SHARED
              aws_iot_mqtt_api.c
+             iot_mqtt_network.c
              aws_iot_mqtt_operation.c
              aws_iot_mqtt_serialize.c
              aws_iot_mqtt_subscription.c

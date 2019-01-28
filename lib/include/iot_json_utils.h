@@ -20,22 +20,22 @@
  */
 
 /**
- * @file aws_iot_json_utils.h
+ * @file iot_json_utils.h
  * @brief Declares JSON utility functions.
  */
 
-#ifndef _AWS_IOT_JSON_UTILS_H_
-#define _AWS_IOT_JSON_UTILS_H_
+#ifndef _IOT_JSON_UTILS_H_
+#define _IOT_JSON_UTILS_H_
 
 /* Standard includes. */
 #include <stdbool.h>
 #include <stddef.h>
 
-bool AwsIotJsonUtils_FindJsonValue( const char * const pJsonDocument,
-                                    size_t jsonDocumentLength,
-                                    const char * const pJsonKey,
-                                    size_t jsonKeyLength,
-                                    const char ** const pJsonValue,
-                                    size_t * const pJsonValueLength );
+bool IotJsonUtils_FindJsonValue( const char * const pJsonDocument,
+                                 size_t jsonDocumentLength,
+                                 const char * const pJsonKey,
+                                 size_t jsonKeyLength,
+                                 const char ** const pJsonValue,
+                                 size_t * const pJsonValueLength );
 
-#endif /* ifndef _AWS_IOT_JSON_UTILS_H_ */
+#endif /* ifndef _IOT_JSON_UTILS_H_ */

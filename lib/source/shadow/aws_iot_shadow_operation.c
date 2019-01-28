@@ -39,7 +39,7 @@
 #include "platform/iot_threads.h"
 
 /* JSON utils include. */
-#include "aws_iot_json_utils.h"
+#include "iot_json_utils.h"
 
 /*-----------------------------------------------------------*/
 
@@ -123,7 +123,7 @@ static void _updateCallback( void * pArgument,
 
 /*-----------------------------------------------------------*/
 
-#if _LIBRARY_LOG_LEVEL > AWS_IOT_LOG_NONE
+#if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
 
 /**
  * @brief Printable names for each of the Shadow operations.
@@ -136,7 +136,7 @@ static void _updateCallback( void * pArgument,
         "SET DELTA",
         "SET UPDATED"
     };
-#endif /* if _LIBRARY_LOG_LEVEL > AWS_IOT_LOG_NONE */
+#endif /* if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
 
 /**
  * @brief List of active Shadow operations awaiting a response from the Shadow
@@ -178,15 +178,15 @@ static bool _shadowOperation_match( const IotLink_t * pOperationLink,
         AwsIotShadow_Assert( pOperation->update.pClientToken != NULL );
         AwsIotShadow_Assert( pOperation->update.clientTokenLength > 0 );
 
-        AwsIotLogDebug( "Verifying client tokens for Shadow UPDATE." );
+        IotLogDebug( "Verifying client tokens for Shadow UPDATE." );
 
         /* Check for the client token in the UPDATE response document. */
-        match = AwsIotJsonUtils_FindJsonValue( pParam->pDocument,
-                                               pParam->documentLength,
-                                               _CLIENT_TOKEN_KEY,
-                                               _CLIENT_TOKEN_KEY_LENGTH,
-                                               &pClientToken,
-                                               &clientTokenLength );
+        match = IotJsonUtils_FindJsonValue( pParam->pDocument,
+                                            pParam->documentLength,
+                                            _CLIENT_TOKEN_KEY,
+                                            _CLIENT_TOKEN_KEY_LENGTH,
+                                            &pClientToken,
+                                            &clientTokenLength );
 
         /* If the UPDATE response document has a client token, check that it
          * matches. */
@@ -199,10 +199,10 @@ static bool _shadowOperation_match( const IotLink_t * pOperationLink,
         }
         else
         {
-            AwsIotLogWarn( "Received a Shadow UPDATE response with no client token. "
-                           "This is possibly a response to a bad JSON document:\n%.*s",
-                           pParam->documentLength,
-                           pParam->pDocument );
+            IotLogWarn( "Received a Shadow UPDATE response with no client token. "
+                        "This is possibly a response to a bad JSON document:\n%.*s",
+                        pParam->documentLength,
+                        pParam->pDocument );
         }
     }
 
@@ -256,8 +256,8 @@ static void _commonOperationCallback( _shadowOperationType_t type,
          * without doing anything */
         IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
 
-        AwsIotLogWarn( "Shadow %s callback received an unknown operation.",
-                       _pAwsIotShadowOperationNames[ type ] );
+        IotLogWarn( "Shadow %s callback received an unknown operation.",
+                    _pAwsIotShadowOperationNames[ type ] );
 
         return;
     }
@@ -275,9 +275,9 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     AwsIotShadow_Assert( pOperation->type == type );
     AwsIotShadow_Assert( pOperation->status == AWS_IOT_SHADOW_STATUS_PENDING );
 
-    AwsIotLogDebug( "Received Shadow response on topic %.*s",
-                    pMessage->message.info.topicNameLength,
-                    pMessage->message.info.pTopicName );
+    IotLogDebug( "Received Shadow response on topic %.*s",
+                 pMessage->message.info.topicNameLength,
+                 pMessage->message.info.pTopicName );
 
     /* Parse the status from the topic name. */
     status = AwsIotShadowInternal_ParseShadowStatus( pMessage->message.info.pTopicName,
@@ -286,10 +286,10 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     switch( status )
     {
         case _SHADOW_ACCEPTED:
-            AwsIotLogInfo( "Shadow %s of %.*s was ACCEPTED.",
-                           _pAwsIotShadowOperationNames[ type ],
-                           pOperation->pSubscription->thingNameLength,
-                           pOperation->pSubscription->pThingName );
+            IotLogInfo( "Shadow %s of %.*s was ACCEPTED.",
+                        _pAwsIotShadowOperationNames[ type ],
+                        pOperation->pSubscription->thingNameLength,
+                        pOperation->pSubscription->pThingName );
 
             /* Process the retrieved document for a Shadow GET. Otherwise, set
              * status to success. */
@@ -306,20 +306,20 @@ static void _commonOperationCallback( _shadowOperationType_t type,
             break;
 
         case _SHADOW_REJECTED:
-            AwsIotLogWarn( "Shadow %s of %.*s was REJECTED.",
-                           _pAwsIotShadowOperationNames[ type ],
-                           pOperation->pSubscription->thingNameLength,
-                           pOperation->pSubscription->pThingName );
+            IotLogWarn( "Shadow %s of %.*s was REJECTED.",
+                        _pAwsIotShadowOperationNames[ type ],
+                        pOperation->pSubscription->thingNameLength,
+                        pOperation->pSubscription->pThingName );
 
             pOperation->status = AwsIotShadowInternal_ParseErrorDocument( pMessage->message.info.pPayload,
                                                                           pMessage->message.info.payloadLength );
             break;
 
         default:
-            AwsIotLogWarn( "Unknown status for %s of %.*s Shadow. Ignoring message.",
-                           _pAwsIotShadowOperationNames[ type ],
-                           pOperation->pSubscription->thingNameLength,
-                           pOperation->pSubscription->pThingName );
+            IotLogWarn( "Unknown status for %s of %.*s Shadow. Ignoring message.",
+                        _pAwsIotShadowOperationNames[ type ],
+                        pOperation->pSubscription->thingNameLength,
+                        pOperation->pSubscription->pThingName );
 
             pOperation->status = AWS_IOT_SHADOW_BAD_RESPONSE;
             break;
@@ -380,7 +380,7 @@ static AwsIotShadowError_t _processAcceptedGet( _shadowOperation_t * const pOper
     }
     else
     {
-        AwsIotLogDebug( "Allocating new buffer for waitable Shadow GET." );
+        IotLogDebug( "Allocating new buffer for waitable Shadow GET." );
 
         /* Parameter validation should not have allowed a NULL malloc function. */
         AwsIotShadow_Assert( pOperation->get.mallocDocument != NULL );
@@ -390,7 +390,7 @@ static AwsIotShadowError_t _processAcceptedGet( _shadowOperation_t * const pOper
 
         if( pOperation->get.pDocument == NULL )
         {
-            AwsIotLogError( "Failed to allocate buffer for retrieved Shadow document." );
+            IotLogError( "Failed to allocate buffer for retrieved Shadow document." );
 
             status = AWS_IOT_SHADOW_NO_MEMORY;
         }
@@ -427,16 +427,16 @@ AwsIotShadowError_t AwsIotShadowInternal_CreateOperation( _shadowOperation_t ** 
 {
     _shadowOperation_t * pOperation = NULL;
 
-    AwsIotLogDebug( "Creating operation record for Shadow %s.",
-                    _pAwsIotShadowOperationNames[ type ] );
+    IotLogDebug( "Creating operation record for Shadow %s.",
+                 _pAwsIotShadowOperationNames[ type ] );
 
     /* Allocate memory for a new Shadow operation. */
     pOperation = AwsIotShadow_MallocOperation( sizeof( _shadowOperation_t ) );
 
     if( pOperation == NULL )
     {
-        AwsIotLogError( "Failed to allocate memory for Shadow %s.",
-                        _pAwsIotShadowOperationNames[ type ] );
+        IotLogError( "Failed to allocate memory for Shadow %s.",
+                     _pAwsIotShadowOperationNames[ type ] );
 
         return AWS_IOT_SHADOW_NO_MEMORY;
     }
@@ -450,7 +450,7 @@ AwsIotShadowError_t AwsIotShadowInternal_CreateOperation( _shadowOperation_t ** 
     {
         if( IotSemaphore_Create( &( pOperation->notify.waitSemaphore ), 0, 1 ) == false )
         {
-            AwsIotLogError( "Failed to create semaphore for waitable Shadow %s.",
+            IotLogError( "Failed to create semaphore for waitable Shadow %s.",
                             _pAwsIotShadowOperationNames[ type ] );
 
             AwsIotShadow_FreeOperation( pOperation );
@@ -488,8 +488,8 @@ void AwsIotShadowInternal_DestroyOperation( void * pData )
     /* The Shadow operation pointer must not be NULL. */
     AwsIotShadow_Assert( pOperation != NULL );
 
-    AwsIotLogDebug( "Destroying Shadow operation %s.",
-                    _pAwsIotShadowOperationNames[ pOperation->type ] );
+    IotLogDebug( "Destroying Shadow operation %s.",
+                 _pAwsIotShadowOperationNames[ pOperation->type ] );
 
     /* Check if a wait semaphore was created for this operation. */
     if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
@@ -619,10 +619,10 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
         _updateCallback
     };
 
-    AwsIotLogDebug( "Processing Shadow operation %s for Thing %.*s.",
-                    _pAwsIotShadowOperationNames[ pOperation->type ],
-                    thingNameLength,
-                    pThingName );
+    IotLogDebug( "Processing Shadow operation %s for Thing %.*s.",
+                 _pAwsIotShadowOperationNames[ pOperation->type ],
+                 thingNameLength,
+                 pThingName );
 
     /* Set the operation's MQTT connection. */
     pOperation->mqttConnection = mqttConnection;
@@ -634,7 +634,7 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
                                                   &pTopicBuffer,
                                                   &operationTopicLength ) != AWS_IOT_SHADOW_SUCCESS )
     {
-        AwsIotLogError( "No memory for Shadow operation topic buffer." );
+        IotLogError( "No memory for Shadow operation topic buffer." );
 
         AwsIotShadowInternal_DestroyOperation( pOperation );
 
@@ -704,10 +704,10 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
         publishInfo.pTopicName = pTopicBuffer;
         publishInfo.topicNameLength = operationTopicLength;
 
-        AwsIotLogDebug( "Shadow %s message will be published to topic %.*s",
-                        _pAwsIotShadowOperationNames[ pOperation->type ],
-                        publishInfo.topicNameLength,
-                        publishInfo.pTopicName );
+        IotLogDebug( "Shadow %s message will be published to topic %.*s",
+                     _pAwsIotShadowOperationNames[ pOperation->type ],
+                     publishInfo.topicNameLength,
+                     publishInfo.pTopicName );
 
         /* Set the document info if this operation is not a Shadow DELETE. */
         if( pOperation->type != _SHADOW_DELETE )
@@ -716,12 +716,12 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
             publishInfo.retryLimit = pDocumentInfo->retryLimit;
             publishInfo.retryMs = pDocumentInfo->retryMs;
 
-            AwsIotLogDebug( "Shadow %s message will be published at QoS %d with "
-                            "retryLimit %d and retryMs %llu.",
-                            _pAwsIotShadowOperationNames[ pOperation->type ],
-                            publishInfo.QoS,
-                            publishInfo.retryLimit,
-                            publishInfo.retryMs );
+            IotLogDebug( "Shadow %s message will be published at QoS %d with "
+                         "retryLimit %d and retryMs %llu.",
+                         _pAwsIotShadowOperationNames[ pOperation->type ],
+                         publishInfo.QoS,
+                         publishInfo.retryLimit,
+                         publishInfo.retryMs );
         }
 
         /* Set the PUBLISH payload to the update document for Shadow UPDATE. */
@@ -754,11 +754,11 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
         /* Check for errors from the MQTT publish. */
         if( publishStatus != AWS_IOT_MQTT_SUCCESS )
         {
-            AwsIotLogError( "Failed to publish MQTT message to %s %.*s Shadow, error %s.",
-                            _pAwsIotShadowOperationNames[ pOperation->type ],
-                            thingNameLength,
-                            pThingName,
-                            AwsIotMqtt_strerror( publishStatus ) );
+            IotLogError( "Failed to publish MQTT message to %s %.*s Shadow, error %s.",
+                         _pAwsIotShadowOperationNames[ pOperation->type ],
+                         thingNameLength,
+                         pThingName,
+                         AwsIotMqtt_strerror( publishStatus ) );
 
             /* Convert the MQTT "NO MEMORY" error to a Shadow "NO MEMORY" error. */
             if( publishStatus == AWS_IOT_MQTT_NO_MEMORY )
@@ -788,8 +788,8 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
         }
         else
         {
-            AwsIotLogDebug( "Shadow %s PUBLISH message successfully sent.",
-                            _pAwsIotShadowOperationNames[ pOperation->type ] );
+            IotLogDebug( "Shadow %s PUBLISH message successfully sent.",
+                         _pAwsIotShadowOperationNames[ pOperation->type ] );
         }
     }
 
