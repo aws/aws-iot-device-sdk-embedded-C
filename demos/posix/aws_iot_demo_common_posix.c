@@ -81,7 +81,7 @@ bool AwsIotDemo_ParseArguments( int argc,
         pArguments->pPrivateKeyPath = AWS_IOT_DEMO_PRIVATE_KEY;
     #endif
 
-    AwsIotLogInfo( "Parsing command line arguments." );
+    IotLogInfo( "Parsing command line arguments." );
 
     /* Silence any error or warning messages printed by the system. The demos
      * will use the logging library instead. */
@@ -122,7 +122,7 @@ bool AwsIotDemo_ParseArguments( int argc,
                 /* Check that port is valid. */
                 if( ( port == 0 ) || ( port > UINT16_MAX ) )
                 {
-                    AwsIotLogWarn( "Ignoring invalid port '%lu'.", port );
+                    IotLogWarn( "Ignoring invalid port '%lu'.", port );
                 }
                 else
                 {
@@ -153,14 +153,14 @@ bool AwsIotDemo_ParseArguments( int argc,
 
             /* Unknown argument. */
             case ( int ) ( '?' ):
-                AwsIotLogWarn( "Ignoring unknown argument '-%c'.", ( char ) optopt );
+                IotLogWarn( "Ignoring unknown argument '-%c'.", ( char ) optopt );
                 break;
 
             /* Argument known, but missing value. */
             case ( int ) ( ':' ):
-                AwsIotLogWarn( "Ignoring invalid argument '-%c'. Option '-%c' requires a value.",
-                               ( char ) optopt,
-                               ( char ) optopt );
+                IotLogWarn( "Ignoring invalid argument '-%c'. Option '-%c' requires a value.",
+                            ( char ) optopt,
+                            ( char ) optopt );
                 break;
 
             /* The default case should not be executed. */
@@ -174,7 +174,7 @@ bool AwsIotDemo_ParseArguments( int argc,
     if( ( pArguments->pHostName == NULL ) ||
         ( strlen( pArguments->pHostName ) == 0 ) )
     {
-        AwsIotLogError( "MQTT server not set. Exiting." );
+        IotLogError( "MQTT server not set. Exiting." );
 
         return false;
     }
@@ -182,7 +182,7 @@ bool AwsIotDemo_ParseArguments( int argc,
     /* Check that a server port was set. */
     if( pArguments->port == 0 )
     {
-        AwsIotLogError( "MQTT server port not set. Exiting." );
+        IotLogError( "MQTT server port not set. Exiting." );
 
         return false;
     }
@@ -194,7 +194,7 @@ bool AwsIotDemo_ParseArguments( int argc,
         if( ( pArguments->pRootCaPath == NULL ) ||
             ( strlen( pArguments->pRootCaPath ) == 0 ) )
         {
-            AwsIotLogError( "Root CA path not set. Exiting." );
+            IotLogError( "Root CA path not set. Exiting." );
 
             return false;
         }
@@ -203,7 +203,7 @@ bool AwsIotDemo_ParseArguments( int argc,
         if( ( pArguments->pClientCertPath == NULL ) ||
             ( strlen( pArguments->pClientCertPath ) == 0 ) )
         {
-            AwsIotLogError( "Client certificate path not set. Exiting." );
+            IotLogError( "Client certificate path not set. Exiting." );
 
             return false;
         }
@@ -212,21 +212,21 @@ bool AwsIotDemo_ParseArguments( int argc,
         if( ( pArguments->pPrivateKeyPath == NULL ) ||
             ( strlen( pArguments->pPrivateKeyPath ) == 0 ) )
         {
-            AwsIotLogError( "Client certificate private key not set. Exiting." );
+            IotLogError( "Client certificate private key not set. Exiting." );
 
             return false;
         }
     }
 
-    AwsIotLogInfo( "Command line arguments successfully parsed." );
+    IotLogInfo( "Command line arguments successfully parsed." );
 
-    AwsIotLogDebug( "AWS IoT MQTT mode: %s", pArguments->awsIotMqttMode == true ? "true" : "false" );
-    AwsIotLogDebug( "Secured connection: %s", pArguments->securedConnection == true ? "true" : "false" );
-    AwsIotLogDebug( "Host: %s", pArguments->pHostName );
-    AwsIotLogDebug( "Port: %hu", pArguments->port );
-    AwsIotLogDebug( "Root CA: %s", pArguments->pRootCaPath );
-    AwsIotLogDebug( "Client certificate: %s", pArguments->pClientCertPath );
-    AwsIotLogDebug( "Private key: %s", pArguments->pPrivateKeyPath );
+    IotLogDebug( "AWS IoT MQTT mode: %s", pArguments->awsIotMqttMode == true ? "true" : "false" );
+    IotLogDebug( "Secured connection: %s", pArguments->securedConnection == true ? "true" : "false" );
+    IotLogDebug( "Host: %s", pArguments->pHostName );
+    IotLogDebug( "Port: %hu", pArguments->port );
+    IotLogDebug( "Root CA: %s", pArguments->pRootCaPath );
+    IotLogDebug( "Client certificate: %s", pArguments->pClientCertPath );
+    IotLogDebug( "Private key: %s", pArguments->pPrivateKeyPath );
 
     return true;
 }

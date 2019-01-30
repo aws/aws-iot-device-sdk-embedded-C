@@ -48,12 +48,12 @@
 #define AWS_IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
 
 /* Library logging configuration. */
-#define AWS_IOT_LOG_LEVEL_GLOBAL                    AWS_IOT_LOG_INFO
-#define AWS_IOT_LOG_LEVEL_PLATFORM                  AWS_IOT_LOG_INFO
-#define AWS_IOT_LOG_LEVEL_NETWORK                   AWS_IOT_LOG_INFO
-#define AWS_IOT_LOG_LEVEL_MQTT                      AWS_IOT_LOG_INFO
-#define AWS_IOT_LOG_LEVEL_SHADOW                    AWS_IOT_LOG_INFO
-#define AWS_IOT_LOG_LEVEL_DEMO                      AWS_IOT_LOG_INFO
+#define IOT_LOG_LEVEL_GLOBAL                    IOT_LOG_INFO
+#define IOT_LOG_LEVEL_PLATFORM                  IOT_LOG_INFO
+#define IOT_LOG_LEVEL_NETWORK                   IOT_LOG_INFO
+#define AWS_IOT_LOG_LEVEL_MQTT                  IOT_LOG_INFO
+#define AWS_IOT_LOG_LEVEL_SHADOW                IOT_LOG_INFO
+#define AWS_IOT_LOG_LEVEL_DEMO                  IOT_LOG_INFO
 
 /* The build system will choose the appropriate system types file for the platform
  * layer based on the host operating system. */

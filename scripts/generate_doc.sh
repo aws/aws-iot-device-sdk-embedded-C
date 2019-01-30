@@ -5,7 +5,7 @@ command -v doxygen > /dev/null || { echo "Doxygen not found. Exiting."; exit 1; 
 
 if [ $# -ne 1 ]; then
     echo "Usage: ./generate_doc.sh sdk_root_directory"
-    exit 1;
+    exit 1
 fi
 
 # Change to SDK root directory.
@@ -57,5 +57,5 @@ echo "Documentation written to doc/output"
 # Print any doxygen errors or warnings and exit with a nonzero value.
 if [ -s doxygen_warnings.txt ]; then
     cat doxygen_warnings.txt
-    exit 1;
+    exit 1
 fi

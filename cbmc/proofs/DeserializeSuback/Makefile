@@ -3,7 +3,7 @@ ENTRY=DeserializeSuback
 BUFFER_SIZE = 100
 
 ABSTRACTIONS = \
-	--remove-function-body AwsIotLogGeneric \
+	--remove-function-body IotLog_Generic \
 	--remove-function-body AwsIotMqttInternal_RemoveSubscriptionByPacket \
 
 UNWINDING = \

@@ -128,13 +128,13 @@ static bool _libraryStaticFunction( void * pArgument,
     int * pLocalPointer = ( int * ) pArgument;
 
     /* All functions make generous use of the logging library. */
-    AwsIotLogInfo( "Performing calculation..." );
+    IotLogInfo( "Performing calculation..." );
 
     /* Checking parameters at the beginning of functions and returning on bad
      * parameter values is encouraged. */
     if( ( pArgument == NULL ) || ( argumentLength == 0 ) ) /* Note the parentheses and spacing in if statements */
     {
-        AwsIotLogError( "Bad parameters." );
+        IotLogError( "Bad parameters." );
 
         return false;
     }
@@ -143,15 +143,15 @@ static bool _libraryStaticFunction( void * pArgument,
     {
         localVariable += AwsIotLibrary_ExternalFunction( pArgument );
 
-        AwsIotLogDebug( "Current value is %d.", localVariable );
+        IotLogDebug( "Current value is %d.", localVariable );
     }
 
     if( localVariable < 0 )
     {
-        AwsIotLogWarn( "Failed to calculate positive value." );
+        IotLogWarn( "Failed to calculate positive value." );
     }
 
-    AwsIotLogInfo( "Calculation done." );
+    IotLogInfo( "Calculation done." );
 
     return true;
 }

@@ -20,8 +20,8 @@
  */
 
 /**
- * @file aws_iot_logging.c
- * @brief Implementation of logging functions from aws_iot_logging.h
+ * @file iot_logging.c
+ * @brief Implementation of logging functions from iot_logging.h
  */
 
 /* Build using a config header, if provided. */
@@ -37,7 +37,7 @@
 #include "platform/iot_clock.h"
 
 /* Logging includes. */
-#include "private/aws_iot_logging.h"
+#include "private/iot_logging.h"
 
 /**
  * @cond DOXYGEN_IGNORE
@@ -63,40 +63,40 @@ extern int vsnprintf( char *,
 
 /* This implementation assumes the following values for the log level constants.
  * Ensure that the values have not been modified. */
-#if AWS_IOT_LOG_NONE != 0
-    #error "AWS_IOT_LOG_NONE must be 0."
+#if IOT_LOG_NONE != 0
+    #error "IOT_LOG_NONE must be 0."
 #endif
-#if AWS_IOT_LOG_ERROR != 1
-    #error "AWS_IOT_LOG_ERROR must be 1."
+#if IOT_LOG_ERROR != 1
+    #error "IOT_LOG_ERROR must be 1."
 #endif
-#if AWS_IOT_LOG_WARN != 2
-    #error "AWS_IOT_LOG_WARN must be 2."
+#if IOT_LOG_WARN != 2
+    #error "IOT_LOG_WARN must be 2."
 #endif
-#if AWS_IOT_LOG_INFO != 3
-    #error "AWS_IOT_LOG_INFO must be 3."
+#if IOT_LOG_INFO != 3
+    #error "IOT_LOG_INFO must be 3."
 #endif
-#if AWS_IOT_LOG_DEBUG != 4
-    #error "AWS_IOT_LOG_DEBUG must be 4."
+#if IOT_LOG_DEBUG != 4
+    #error "IOT_LOG_DEBUG must be 4."
 #endif
 
 /**
- * @def AwsIotLogging_Puts( message )
+ * @def IotLogging_Puts( message )
  * @brief Function the logging library uses to print a line.
  *
  * This function can be set by using a define. By default, the standard library
  * [puts](http://pubs.opengroup.org/onlinepubs/9699919799/functions/puts.html)
  * function is used.
  */
-#ifndef AwsIotLogging_Puts
+#ifndef IotLogging_Puts
 
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
  */
-    extern int puts( const char * );
-    /** @endcond */
+extern int puts( const char * );
+/** @endcond */
 
-    #define AwsIotLogging_Puts    puts
+    #define IotLogging_Puts    puts
 #endif
 
 /*
@@ -111,34 +111,34 @@ extern int vsnprintf( char *,
  * @brief Allocate a new logging buffer. This function must have the same
  * signature as [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotLogging_Malloc
-        #define AwsIotLogging_Malloc    Iot_MallocMessageBuffer
+    #ifndef IotLogging_Malloc
+        #define IotLogging_Malloc    Iot_MallocMessageBuffer
     #endif
 
 /**
  * @brief Free a logging buffer. This function must have the same signature
  * as [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotLogging_Free
-        #define AwsIotLogging_Free    Iot_FreeMessageBuffer
+    #ifndef IotLogging_Free
+        #define IotLogging_Free    Iot_FreeMessageBuffer
     #endif
 
 /**
  * @brief Get the size of a logging buffer. Statically-allocated buffers
  * should all have the same size.
  */
-    #ifndef AwsIotLogging_StaticBufferSize
-        #define AwsIotLogging_StaticBufferSize    Iot_MessageBufferSize
+    #ifndef IotLogging_StaticBufferSize
+        #define IotLogging_StaticBufferSize    Iot_MessageBufferSize
     #endif
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
-    #ifndef AwsIotLogging_Malloc
+    #ifndef IotLogging_Malloc
         #include <stdlib.h>
-        #define AwsIotLogging_Malloc    malloc
+        #define IotLogging_Malloc    malloc
     #endif
 
-    #ifndef AwsIotLogging_Free
+    #ifndef IotLogging_Free
         #include <stdlib.h>
-        #define AwsIotLogging_Free    free
+        #define IotLogging_Free    free
     #endif
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
@@ -175,11 +175,11 @@ extern int vsnprintf( char *,
  */
 static const char * const _pLogLevelStrings[ 5 ] =
 {
-    "",      /* AWS_IOT_LOG_NONE */
-    "ERROR", /* AWS_IOT_LOG_ERROR */
-    "WARN ", /* AWS_IOT_LOG_WARN */
-    "INFO ", /* AWS_IOT_LOG_INFO */
-    "DEBUG"  /* AWS_IOT_LOG_DEBUG */
+    "",      /* IOT_LOG_NONE */
+    "ERROR", /* IOT_LOG_ERROR */
+    "WARN ", /* IOT_LOG_WARN */
+    "INFO ", /* IOT_LOG_INFO */
+    "DEBUG"  /* IOT_LOG_DEBUG */
 };
 
 /*-----------------------------------------------------------*/
@@ -189,34 +189,36 @@ static const char * const _pLogLevelStrings[ 5 ] =
                                        size_t newSize,
                                        size_t oldSize )
     {
+        bool status = false;
+
         /* Allocate a new, larger buffer. */
-        void * pNewBuffer = AwsIotLogging_Malloc( newSize );
+        void * pNewBuffer = IotLogging_Malloc( newSize );
 
         /* Ensure that memory allocation succeeded. */
-        if( pNewBuffer == NULL )
+        if( pNewBuffer != NULL )
         {
-            return false;
+            /* Copy the data from the old buffer to the new buffer. */
+            ( void ) memcpy( pNewBuffer, *pOldBuffer, oldSize );
+
+            /* Free the old buffer and update the pointer. */
+            IotLogging_Free( *pOldBuffer );
+            *pOldBuffer = pNewBuffer;
+
+            status = true;
         }
 
-        /* Copy the data from the old buffer to the new buffer. */
-        ( void ) memcpy( pNewBuffer, *pOldBuffer, oldSize );
-
-        /* Free the old buffer and update the pointer. */
-        AwsIotLogging_Free( *pOldBuffer );
-        *pOldBuffer = pNewBuffer;
-
-        return true;
+        return status;
     }
 #endif /* if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 ) */
 
 /*-----------------------------------------------------------*/
 
-void AwsIotLogGeneric( int libraryLogSetting,
-                       const char * const pLibraryName,
-                       int messageLevel,
-                       const AwsIotLogConfig_t * const pLogConfig,
-                       const char * const pFormat,
-                       ... )
+void IotLog_Generic( int libraryLogSetting,
+                     const char * const pLibraryName,
+                     int messageLevel,
+                     const IotLogConfig_t * const pLogConfig,
+                     const char * const pFormat,
+                     ... )
 {
     int requiredMessageSize = 0;
     size_t bufferSize = 0,
@@ -256,7 +258,7 @@ void AwsIotLogGeneric( int libraryLogSetting,
     /* In static memory mode, check that the log message will fit in the a
      * static buffer. */
     #if IOT_STATIC_MEMORY_ONLY == 1
-        if( bufferSize >= AwsIotLogging_StaticBufferSize() )
+        if( bufferSize >= IotLogging_StaticBufferSize() )
         {
             /* If the static buffers are likely too small to fit the log message,
              * return. */
@@ -264,11 +266,11 @@ void AwsIotLogGeneric( int libraryLogSetting,
         }
 
         /* Otherwise, update the buffer size to the size of a static buffer. */
-        bufferSize = AwsIotLogging_StaticBufferSize();
+        bufferSize = IotLogging_StaticBufferSize();
     #endif
 
     /* Allocate memory for the logging buffer. */
-    pLoggingBuffer = ( char * ) AwsIotLogging_Malloc( bufferSize );
+    pLoggingBuffer = ( char * ) IotLogging_Malloc( bufferSize );
 
     if( pLoggingBuffer == NULL )
     {
@@ -279,7 +281,7 @@ void AwsIotLogGeneric( int libraryLogSetting,
     if( ( pLogConfig == NULL ) || ( pLogConfig->hideLogLevel == false ) )
     {
         /* Ensure that message level is valid. */
-        if( ( messageLevel >= AWS_IOT_LOG_NONE ) && ( messageLevel <= AWS_IOT_LOG_DEBUG ) )
+        if( ( messageLevel >= IOT_LOG_NONE ) && ( messageLevel <= IOT_LOG_DEBUG ) )
         {
             /* Add the log level string to the logging buffer. */
             requiredMessageSize = snprintf( pLoggingBuffer + bufferPosition,
@@ -290,7 +292,7 @@ void AwsIotLogGeneric( int libraryLogSetting,
             /* Check for encoding errors. */
             if( requiredMessageSize <= 0 )
             {
-                AwsIotLogging_Free( pLoggingBuffer );
+                IotLogging_Free( pLoggingBuffer );
 
                 return;
             }
@@ -312,7 +314,7 @@ void AwsIotLogGeneric( int libraryLogSetting,
         /* Check for encoding errors. */
         if( requiredMessageSize <= 0 )
         {
-            AwsIotLogging_Free( pLoggingBuffer );
+            IotLogging_Free( pLoggingBuffer );
 
             return;
         }
@@ -374,7 +376,7 @@ void AwsIotLogGeneric( int libraryLogSetting,
 
             /* There's no point trying to allocate a larger static buffer. Return
              * immediately. */
-            AwsIotLogging_Free( pLoggingBuffer );
+            IotLogging_Free( pLoggingBuffer );
 
             return;
         #else
@@ -383,7 +385,7 @@ void AwsIotLogGeneric( int libraryLogSetting,
                                        bufferSize ) == false )
             {
                 /* If buffer reallocation failed, return. */
-                AwsIotLogging_Free( pLoggingBuffer );
+                IotLogging_Free( pLoggingBuffer );
 
                 return;
             }
@@ -405,31 +407,31 @@ void AwsIotLogGeneric( int libraryLogSetting,
     /* Check for encoding errors. */
     if( requiredMessageSize <= 0 )
     {
-        AwsIotLogging_Free( pLoggingBuffer );
+        IotLogging_Free( pLoggingBuffer );
 
         return;
     }
 
     /* Print the logging buffer to stdout. */
-    AwsIotLogging_Puts( pLoggingBuffer );
+    IotLogging_Puts( pLoggingBuffer );
 
     /* Free the logging buffer. */
-    AwsIotLogging_Free( pLoggingBuffer );
+    IotLogging_Free( pLoggingBuffer );
 }
 
 /*-----------------------------------------------------------*/
 
-void AwsIotLogGeneric_PrintBuffer( const char * const pLibraryName,
-                                   const char * const pHeader,
-                                   const uint8_t * const pBuffer,
-                                   size_t bufferSize )
+void IotLog_GenericPrintBuffer( const char * const pLibraryName,
+                                const char * const pHeader,
+                                const uint8_t * const pBuffer,
+                                size_t bufferSize )
 {
     size_t i = 0, offset = 0;
 
     /* Allocate memory to hold each line of the log message. Since each byte
      * of pBuffer is printed in 4 characters (2 digits, a space, and a null-
      * terminator), the size of each line is 4 * _BYTES_PER_LINE. */
-    char * pMessageBuffer = AwsIotLogging_Malloc( 4 * _BYTES_PER_LINE );
+    char * pMessageBuffer = IotLogging_Malloc( 4 * _BYTES_PER_LINE );
 
     /* Exit if no memory is available. */
     if( pMessageBuffer == NULL )
@@ -440,11 +442,11 @@ void AwsIotLogGeneric_PrintBuffer( const char * const pLibraryName,
     /* Print pHeader before printing pBuffer. */
     if( pHeader != NULL )
     {
-        AwsIotLogGeneric( AWS_IOT_LOG_DEBUG,
-                          pLibraryName,
-                          AWS_IOT_LOG_DEBUG,
-                          NULL,
-                          pHeader );
+        IotLog_Generic( IOT_LOG_DEBUG,
+                        pLibraryName,
+                        IOT_LOG_DEBUG,
+                        NULL,
+                        pHeader );
     }
 
     /* Print each byte in pBuffer. */
@@ -454,7 +456,7 @@ void AwsIotLogGeneric_PrintBuffer( const char * const pLibraryName,
          * at the beginning (when i=0). */
         if( ( i % _BYTES_PER_LINE == 0 ) && ( i != 0 ) )
         {
-            AwsIotLogging_Puts( pMessageBuffer );
+            IotLogging_Puts( pMessageBuffer );
 
             /* Reset offset so that pMessageBuffer is filled from the beginning. */
             offset = 0;
@@ -470,10 +472,10 @@ void AwsIotLogGeneric_PrintBuffer( const char * const pLibraryName,
     }
 
     /* Print the final line of bytes. This line isn't printed by the for-loop above. */
-    AwsIotLogging_Puts( pMessageBuffer );
+    IotLogging_Puts( pMessageBuffer );
 
     /* Free memory used by this function. */
-    AwsIotLogging_Free( pMessageBuffer );
+    IotLogging_Free( pMessageBuffer );
 }
 
 /*-----------------------------------------------------------*/

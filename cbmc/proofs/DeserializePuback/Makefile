@@ -1,7 +1,7 @@
 ENTRY=DeserializePuback
 
 ABSTRACTIONS = \
-	--remove-function-body AwsIotLogGeneric \
+	--remove-function-body IotLog_Generic \
 
 OBJS = \
 	$(ENTRY)_harness.goto \

@@ -34,13 +34,13 @@ Define a file to be included in all library source files before any other files.
 @configpossible A string representing a file name. This file must be in the compiler's include path.<br>
 @configdefault None. A configuration header will not be used if this value is undefined.
 
-@section AWS_IOT_LOG_LEVEL_GLOBAL
+@section IOT_LOG_LEVEL_GLOBAL
 @brief Set a default log level.
 
 Any libraries that do not define a log level will use this setting. If a both a global log level and a library log level are defined, the library log level overrides the global one.
 
 @configpossible One of the @ref logging_constants_levels.<br>
-@configdefault #AWS_IOT_LOG_NONE
+@configdefault @ref IOT_LOG_NONE
 
 @section IOT_STATIC_MEMORY_ONLY
 @brief Set this to `1` to disable the usage of dynamic memory allocation ([malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) and [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)) throughout the libraries in this SDK.

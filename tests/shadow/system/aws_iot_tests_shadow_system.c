@@ -36,7 +36,7 @@
 #include "private/aws_iot_shadow_internal.h"
 
 /* JSON utilities include. */
-#include "aws_iot_json_utils.h"
+#include "iot_json_utils.h"
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
@@ -155,12 +155,12 @@ static void _operationComplete( void * pArgument,
     {
         AwsIotShadow_Assert( pOperation->operation.get.documentLength > 0 );
 
-        AwsIotShadow_Assert( AwsIotJsonUtils_FindJsonValue( pOperation->operation.get.pDocument,
-                                                            pOperation->operation.get.documentLength,
-                                                            "key",
-                                                            3,
-                                                            &pJsonValue,
-                                                            &jsonValueLength ) == true );
+        AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pOperation->operation.get.pDocument,
+                                                         pOperation->operation.get.documentLength,
+                                                         "key",
+                                                         3,
+                                                         &pJsonValue,
+                                                         &jsonValueLength ) == true );
         AwsIotShadow_Assert( jsonValueLength == 7 );
         AwsIotShadow_Assert( strncmp( pJsonValue, "\"value\"", 7 ) == 0 );
     }
@@ -186,22 +186,22 @@ static void _deltaCallback( void * pArgument,
     AwsIotShadow_Assert( pCallback->callbackType == AWS_IOT_SHADOW_DELTA_CALLBACK );
 
     /* Check delta document state. */
-    AwsIotShadow_Assert( AwsIotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
-                                                        pCallback->callback.documentLength,
-                                                        "key",
-                                                        3,
-                                                        &pValue,
-                                                        &valueLength ) == true );
+    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
+                                                     pCallback->callback.documentLength,
+                                                     "key",
+                                                     3,
+                                                     &pValue,
+                                                     &valueLength ) == true );
     AwsIotShadow_Assert( valueLength == 4 );
     AwsIotShadow_Assert( strncmp( pValue, "true", valueLength ) == 0 );
 
     /* Check delta document client token. */
-    AwsIotShadow_Assert( AwsIotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
-                                                        pCallback->callback.documentLength,
-                                                        "clientToken",
-                                                        11,
-                                                        &pClientToken,
-                                                        &clientTokenLength ) );
+    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
+                                                     pCallback->callback.documentLength,
+                                                     "clientToken",
+                                                     11,
+                                                     &pClientToken,
+                                                     &clientTokenLength ) );
     AwsIotShadow_Assert( clientTokenLength == 12 );
     AwsIotShadow_Assert( strncmp( "\"shadowtest\"", pClientToken, 12 ) == 0 );
 
@@ -223,36 +223,36 @@ static void _updatedCallback( void * pArgument,
     size_t previousStateLength = 0, currentStateLength = 0, clientTokenLength = 0;
 
     /* Check updated document previous state. */
-    AwsIotShadow_Assert( AwsIotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
-                                                        pCallback->callback.documentLength,
-                                                        "previous",
-                                                        8,
-                                                        &pPrevious,
-                                                        &previousStateLength ) == true );
+    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
+                                                     pCallback->callback.documentLength,
+                                                     "previous",
+                                                     8,
+                                                     &pPrevious,
+                                                     &previousStateLength ) == true );
     AwsIotShadow_Assert( previousStateLength > 0 );
     AwsIotShadow_Assert( strncmp( "{\"state\":{},\"metadata\":{},",
                                   pPrevious,
                                   26 ) == 0 );
 
     /* Check updated document current state. */
-    AwsIotShadow_Assert( AwsIotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
-                                                        pCallback->callback.documentLength,
-                                                        "current",
-                                                        7,
-                                                        &pCurrent,
-                                                        &currentStateLength ) == true );
+    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
+                                                     pCallback->callback.documentLength,
+                                                     "current",
+                                                     7,
+                                                     &pCurrent,
+                                                     &currentStateLength ) == true );
     AwsIotShadow_Assert( currentStateLength > 0 );
     AwsIotShadow_Assert( strncmp( "{\"state\":{\"desired\":{\"key\":true}}",
                                   pCurrent,
                                   33 ) == 0 );
 
     /* Check updated document client token. */
-    AwsIotShadow_Assert( AwsIotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
-                                                        pCallback->callback.documentLength,
-                                                        "clientToken",
-                                                        11,
-                                                        &pClientToken,
-                                                        &clientTokenLength ) );
+    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
+                                                     pCallback->callback.documentLength,
+                                                     "clientToken",
+                                                     11,
+                                                     &pClientToken,
+                                                     &clientTokenLength ) );
     AwsIotShadow_Assert( clientTokenLength == 12 );
     AwsIotShadow_Assert( strncmp( "\"shadowtest\"", pClientToken, 12 ) == 0 );
 
@@ -387,12 +387,12 @@ static void _updateGetDeleteBlocking( int QoS )
     /* Check the retrieved Shadow document. */
     TEST_ASSERT_GREATER_THAN( 0, shadowDocumentLength );
     TEST_ASSERT_NOT_NULL( pShadowDocument );
-    TEST_ASSERT_EQUAL_INT( true, AwsIotJsonUtils_FindJsonValue( pShadowDocument,
-                                                                shadowDocumentLength,
-                                                                "key",
-                                                                3,
-                                                                &pJsonValue,
-                                                                &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( pShadowDocument,
+                                                             shadowDocumentLength,
+                                                             "key",
+                                                             3,
+                                                             &pJsonValue,
+                                                             &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 7, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "\"value\"", pJsonValue, jsonValueLength );
 

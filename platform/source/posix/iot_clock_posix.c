@@ -55,18 +55,18 @@
 #include "platform/iot_clock.h"
 
 /* Configure logs for the functions in this file. */
-#ifdef AWS_IOT_LOG_LEVEL_PLATFORM
-    #define _LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_PLATFORM
+#ifdef IOT_LOG_LEVEL_PLATFORM
+    #define _LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_PLATFORM
 #else
-    #ifdef AWS_IOT_LOG_LEVEL_GLOBAL
-        #define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_LEVEL_GLOBAL
+    #ifdef IOT_LOG_LEVEL_GLOBAL
+        #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
     #else
-        #define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_NONE
+        #define _LIBRARY_LOG_LEVEL    IOT_LOG_NONE
     #endif
 #endif
 
 #define _LIBRARY_LOG_NAME    ( "CLOCK" )
-#include "aws_iot_logging_setup.h"
+#include "iot_logging_setup.h"
 
 /*-----------------------------------------------------------*/
 
@@ -146,7 +146,7 @@ bool IotClock_TimeoutToTimespec( uint64_t timeoutMs,
     }
     else
     {
-        AwsIotLogError( "Failed to read system time. errno=%d", errno );
+        IotLogError( "Failed to read system time. errno=%d", errno );
 
         status = false;
     }
@@ -200,8 +200,8 @@ uint64_t IotClock_GetTimeMs( void )
 
     if( clock_gettime( CLOCK_MONOTONIC, &currentTime ) != 0 )
     {
-        AwsIotLogWarn( "Failed to read time from CLOCK_MONOTONIC. errno=%d",
-                       errno );
+        IotLogWarn( "Failed to read time from CLOCK_MONOTONIC. errno=%d",
+                    errno );
     }
 
     return ( ( uint64_t ) currentTime.tv_sec ) * 1000ULL +
@@ -224,7 +224,7 @@ bool IotClock_TimerCreate( IotTimer_t * const pNewTimer,
         .sigev_notify_attributes = NULL
     };
 
-    AwsIotLogDebug( "Creating new timer %p.", pNewTimer );
+    IotLogDebug( "Creating new timer %p.", pNewTimer );
 
     /* Set the timer expiration routine and argument. */
     pNewTimer->threadRoutine = expirationRoutine;
@@ -235,7 +235,7 @@ bool IotClock_TimerCreate( IotTimer_t * const pNewTimer,
                       &expirationNotification,
                       &( pNewTimer->timer ) ) != 0 )
     {
-        AwsIotLogError( "Failed to create new timer %p. errno=%d.", pNewTimer, errno );
+        IotLogError( "Failed to create new timer %p. errno=%d.", pNewTimer, errno );
         status = false;
     }
 
@@ -246,12 +246,12 @@ bool IotClock_TimerCreate( IotTimer_t * const pNewTimer,
 
 void IotClock_TimerDestroy( IotTimer_t * const pTimer )
 {
-    AwsIotLogDebug( "Destroying timer %p.", pTimer );
+    IotLogDebug( "Destroying timer %p.", pTimer );
 
     /* Destroy the underlying POSIX timer. */
     if( timer_delete( pTimer->timer ) != 0 )
     {
-        AwsIotLogWarn( "Failed to destroy timer %p. errno=%d.", pTimer, errno );
+        IotLogWarn( "Failed to destroy timer %p. errno=%d.", pTimer, errno );
     }
 }
 
@@ -268,16 +268,16 @@ bool IotClock_TimerArm( IotTimer_t * const pTimer,
         .it_interval = { 0 }
     };
 
-    AwsIotLogDebug( "Arming timer %p with timeout %llu and period %llu.",
-                    pTimer,
-                    relativeTimeoutMs,
-                    periodMs );
+    IotLogDebug( "Arming timer %p with timeout %llu and period %llu.",
+                 pTimer,
+                 relativeTimeoutMs,
+                 periodMs );
 
     /* Calculate the initial timer expiration. */
     if( IotClock_TimeoutToTimespec( relativeTimeoutMs,
                                     &( timerExpiration.it_value ) ) == false )
     {
-        AwsIotLogError( "Invalid relative timeout." );
+        IotLogError( "Invalid relative timeout." );
 
         status = false;
     }
@@ -294,7 +294,7 @@ bool IotClock_TimerArm( IotTimer_t * const pTimer,
         /* Arm the underlying POSIX timer. */
         if( timer_settime( pTimer->timer, TIMER_ABSTIME, &timerExpiration, NULL ) != 0 )
         {
-            AwsIotLogError( "Failed to arm timer %p. errno=%d.", pTimer, errno );
+            IotLogError( "Failed to arm timer %p. errno=%d.", pTimer, errno );
 
             status = false;
         }
