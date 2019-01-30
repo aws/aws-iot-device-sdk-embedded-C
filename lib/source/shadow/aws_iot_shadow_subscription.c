@@ -135,10 +135,10 @@ static AwsIotShadowError_t _modifyOperationSubscriptions( AwsIotMqttConnection_t
     /* Per the AWS IoT documentation, Shadow topic subscriptions are QoS 1. */
     subscription.QoS = 1;
 
-    AwsIotLogDebug( "%s Shadow subscription for %.*s",
-                    mqttOperation == AwsIotMqtt_TimedSubscribe ? "Adding" : "Removing",
-                    topicFilterLength,
-                    pTopicFilter );
+    IotLogDebug( "%s Shadow subscription for %.*s",
+                 mqttOperation == AwsIotMqtt_TimedSubscribe ? "Adding" : "Removing",
+                 topicFilterLength,
+                 pTopicFilter );
 
     /* Set the members of the subscription parameter. */
     subscription.pTopicFilter = pTopicFilter;
@@ -156,11 +156,11 @@ static AwsIotShadowError_t _modifyOperationSubscriptions( AwsIotMqttConnection_t
     /* Check the result of the MQTT operation. */
     if( mqttStatus != AWS_IOT_MQTT_SUCCESS )
     {
-        AwsIotLogError( "Failed to %s %.*s, error %s.",
-                        mqttOperation == AwsIotMqtt_TimedSubscribe ? "subscribe to" : "unsubscribe from",
-                        topicFilterLength,
-                        pTopicFilter,
-                        AwsIotMqtt_strerror( mqttStatus ) );
+        IotLogError( "Failed to %s %.*s, error %s.",
+                     mqttOperation == AwsIotMqtt_TimedSubscribe ? "subscribe to" : "unsubscribe from",
+                     topicFilterLength,
+                     pTopicFilter,
+                     AwsIotMqtt_strerror( mqttStatus ) );
 
         /* Convert the MQTT "NO MEMORY" error to a Shadow "NO MEMORY" error. */
         if( mqttStatus == AWS_IOT_MQTT_NO_MEMORY )
@@ -172,10 +172,10 @@ static AwsIotShadowError_t _modifyOperationSubscriptions( AwsIotMqttConnection_t
     }
     else
     {
-        AwsIotLogDebug( "Successfully %s %.*s",
-                        mqttOperation == AwsIotMqtt_TimedSubscribe ? "subscribed to" : "unsubscribed from",
-                        topicFilterLength,
-                        pTopicFilter );
+        IotLogDebug( "Successfully %s %.*s",
+                     mqttOperation == AwsIotMqtt_TimedSubscribe ? "subscribed to" : "unsubscribed from",
+                     topicFilterLength,
+                     pTopicFilter );
     }
 
     return AWS_IOT_SHADOW_STATUS_PENDING;
@@ -220,22 +220,22 @@ _shadowSubscription_t * AwsIotShadowInternal_FindSubscription( const char * cons
             IotListDouble_InsertHead( &( _AwsIotShadowSubscriptions ),
                                       &( pSubscription->link ) );
 
-            AwsIotLogDebug( "Created new Shadow subscriptions object for %.*s.",
-                            thingNameLength,
-                            pThingName );
+            IotLogDebug( "Created new Shadow subscriptions object for %.*s.",
+                         thingNameLength,
+                         pThingName );
         }
         else
         {
-            AwsIotLogError( "Failed to allocate memory for %.*s Shadow subscriptions.",
-                            thingNameLength,
-                            pThingName );
+            IotLogError( "Failed to allocate memory for %.*s Shadow subscriptions.",
+                         thingNameLength,
+                         pThingName );
         }
     }
     else
     {
-        AwsIotLogDebug( "Found existing Shadow subscriptions object for %.*s.",
-                        thingNameLength,
-                        pThingName );
+        IotLogDebug( "Found existing Shadow subscriptions object for %.*s.",
+                     thingNameLength,
+                     pThingName );
     }
 
     return pSubscription;
@@ -248,9 +248,9 @@ void AwsIotShadowInternal_RemoveSubscription( _shadowSubscription_t * const pSub
 {
     int i = 0;
 
-    AwsIotLogDebug( "Checking if subscription object for %.*s can be removed.",
-                    pSubscription->thingNameLength,
-                    pSubscription->pThingName );
+    IotLogDebug( "Checking if subscription object for %.*s can be removed.",
+                 pSubscription->thingNameLength,
+                 pSubscription->pThingName );
 
     /* If any Shadow operation's subscription reference count is not 0, then the
      * subscription cannot be removed. */
@@ -258,20 +258,20 @@ void AwsIotShadowInternal_RemoveSubscription( _shadowSubscription_t * const pSub
     {
         if( pSubscription->references[ i ] > 0 )
         {
-            AwsIotLogDebug( "Reference count %d for %.*s subscription object. "
-                            "Subscription cannot be removed yet.",
-                            pSubscription->references[ i ],
-                            pSubscription->thingNameLength,
-                            pSubscription->pThingName );
+            IotLogDebug( "Reference count %d for %.*s subscription object. "
+                         "Subscription cannot be removed yet.",
+                         pSubscription->references[ i ],
+                         pSubscription->thingNameLength,
+                         pSubscription->pThingName );
 
             return;
         }
         else if( pSubscription->references[ i ] == _PERSISTENT_SUBSCRIPTION )
         {
-            AwsIotLogDebug( "Subscription object for %.*s has persistent subscriptions. "
-                            "Subscription will not be removed.",
-                            pSubscription->thingNameLength,
-                            pSubscription->pThingName );
+            IotLogDebug( "Subscription object for %.*s has persistent subscriptions. "
+                         "Subscription will not be removed.",
+                         pSubscription->thingNameLength,
+                         pSubscription->pThingName );
 
             return;
         }
@@ -282,11 +282,11 @@ void AwsIotShadowInternal_RemoveSubscription( _shadowSubscription_t * const pSub
     {
         if( pSubscription->callbacks[ i ].function != NULL )
         {
-            AwsIotLogDebug( "Found active Shadow %s callback for %.*s subscription object. "
-                            "Subscription cannot be removed yet.",
-                            _pAwsIotShadowCallbackNames[ i ],
-                            pSubscription->thingNameLength,
-                            pSubscription->pThingName );
+            IotLogDebug( "Found active Shadow %s callback for %.*s subscription object. "
+                         "Subscription cannot be removed yet.",
+                         _pAwsIotShadowCallbackNames[ i ],
+                         pSubscription->thingNameLength,
+                         pSubscription->pThingName );
 
             return;
         }
@@ -296,9 +296,9 @@ void AwsIotShadowInternal_RemoveSubscription( _shadowSubscription_t * const pSub
      * Remove the subscription object. */
     IotListDouble_Remove( &( pSubscription->link ) );
 
-    AwsIotLogDebug( "Removed subscription object for %.*s.",
-                    pSubscription->thingNameLength,
-                    pSubscription->pThingName );
+    IotLogDebug( "Removed subscription object for %.*s.",
+                 pSubscription->thingNameLength,
+                 pSubscription->pThingName );
 
     /* If the caller requested the removed subscription, set the output parameter.
      * Otherwise, free the memory used by the subscription. */
@@ -341,11 +341,11 @@ AwsIotShadowError_t AwsIotShadowInternal_IncrementReferences( _shadowOperation_t
     /* Do nothing if this operation has persistent subscriptions. */
     if( pSubscription->references[ type ] == _PERSISTENT_SUBSCRIPTION )
     {
-        AwsIotLogDebug( "Shadow %s for %.*s has persistent subscriptions. Reference "
-                        "count will not be incremented.",
-                        _pAwsIotShadowOperationNames[ type ],
-                        pSubscription->thingNameLength,
-                        pSubscription->pThingName );
+        IotLogDebug( "Shadow %s for %.*s has persistent subscriptions. Reference "
+                     "count will not be incremented.",
+                     _pAwsIotShadowOperationNames[ type ],
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName );
 
         return AWS_IOT_SHADOW_STATUS_PENDING;
     }
@@ -425,21 +425,21 @@ AwsIotShadowError_t AwsIotShadowInternal_IncrementReferences( _shadowOperation_t
     {
         ( pSubscription->references[ type ] )++;
 
-        AwsIotLogDebug( "Shadow %s subscriptions for %.*s now has count %d.",
-                        _pAwsIotShadowOperationNames[ type ],
-                        pSubscription->thingNameLength,
-                        pSubscription->pThingName,
-                        pSubscription->references[ type ] );
+        IotLogDebug( "Shadow %s subscriptions for %.*s now has count %d.",
+                     _pAwsIotShadowOperationNames[ type ],
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName,
+                     pSubscription->references[ type ] );
     }
     /* Otherwise, set the persistent subscriptions flag. */
     else
     {
         pSubscription->references[ type ] = _PERSISTENT_SUBSCRIPTION;
 
-        AwsIotLogDebug( "Set persistent subscriptions flag for Shadow %s of %.*s.",
-                        _pAwsIotShadowOperationNames[ type ],
-                        pSubscription->thingNameLength,
-                        pSubscription->pThingName );
+        IotLogDebug( "Set persistent subscriptions flag for Shadow %s of %.*s.",
+                     _pAwsIotShadowOperationNames[ type ],
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName );
     }
 
     return status;
@@ -459,11 +459,11 @@ void AwsIotShadowInternal_DecrementReferences( _shadowOperation_t * const pOpera
     /* Do nothing if this Shadow operation has persistent subscriptions. */
     if( pSubscription->references[ type ] == _PERSISTENT_SUBSCRIPTION )
     {
-        AwsIotLogDebug( "Shadow %s for %.*s has persistent subscriptions. Reference "
-                        "count will not be decremented.",
-                        _pAwsIotShadowOperationNames[ type ],
-                        pSubscription->thingNameLength,
-                        pSubscription->pThingName );
+        IotLogDebug( "Shadow %s for %.*s has persistent subscriptions. Reference "
+                     "count will not be decremented.",
+                     _pAwsIotShadowOperationNames[ type ],
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName );
 
         return;
     }
@@ -476,10 +476,10 @@ void AwsIotShadowInternal_DecrementReferences( _shadowOperation_t * const pOpera
     /* Check if the number of references has reached 0. */
     if( pSubscription->references[ type ] == 0 )
     {
-        AwsIotLogDebug( "Reference count for %.*s %s is 0. Unsubscribing.",
-                        pSubscription->thingNameLength,
-                        pSubscription->pThingName,
-                        _pAwsIotShadowOperationNames[ type ] );
+        IotLogDebug( "Reference count for %.*s %s is 0. Unsubscribing.",
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName,
+                     _pAwsIotShadowOperationNames[ type ] );
 
         /* Subscription must have a topic buffer. */
         AwsIotShadow_Assert( pSubscription->pTopicBuffer != NULL );
@@ -554,9 +554,9 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( AwsIotMqttConnec
         .thingNameLength = thingNameLength
     };
 
-    AwsIotLogInfo( "Removing persistent subscriptions for %.*s.",
-                   thingNameLength,
-                   pThingName );
+    IotLogInfo( "Removing persistent subscriptions for %.*s.",
+                thingNameLength,
+                pThingName );
 
     IotMutex_Lock( &( _AwsIotShadowSubscriptionsMutex ) );
 
@@ -571,19 +571,19 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( AwsIotMqttConnec
     /* Unsubscribe from operation subscriptions if found. */
     if( pSubscription != NULL )
     {
-        AwsIotLogDebug( "Found subscription object for %.*s. Checking for persistent "
-                        "subscriptions to remove.",
-                        thingNameLength,
-                        pThingName );
+        IotLogDebug( "Found subscription object for %.*s. Checking for persistent "
+                     "subscriptions to remove.",
+                     thingNameLength,
+                     pThingName );
 
         for( i = 0; i < _SHADOW_OPERATION_COUNT; i++ )
         {
             if( ( flags & ( 0x1UL << i ) ) != 0 )
             {
-                AwsIotLogDebug( "Removing %.*s %s persistent subscriptions.",
-                                thingNameLength,
-                                pThingName,
-                                _pAwsIotShadowOperationNames[ i ] );
+                IotLogDebug( "Removing %.*s %s persistent subscriptions.",
+                             thingNameLength,
+                             pThingName,
+                             _pAwsIotShadowOperationNames[ i ] );
 
                 /* Subscription must have a topic buffer. */
                 AwsIotShadow_Assert( pSubscription->pTopicBuffer != NULL );
@@ -638,19 +638,19 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( AwsIotMqttConnec
                 }
                 else
                 {
-                    AwsIotLogDebug( "%.*s %s does not have persistent subscriptions.",
-                                    thingNameLength,
-                                    pThingName,
-                                    _pAwsIotShadowOperationNames[ i ] );
+                    IotLogDebug( "%.*s %s does not have persistent subscriptions.",
+                                 thingNameLength,
+                                 pThingName,
+                                 _pAwsIotShadowOperationNames[ i ] );
                 }
             }
         }
     }
     else
     {
-        AwsIotLogWarn( "No subscription object found for %.*s",
-                       thingNameLength,
-                       pThingName );
+        IotLogWarn( "No subscription object found for %.*s",
+                    thingNameLength,
+                    pThingName );
     }
 
     IotMutex_Unlock( &( _AwsIotShadowSubscriptionsMutex ) );

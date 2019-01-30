@@ -184,11 +184,11 @@ int main( int argc,
     /* Log the demo status. */
     if( status == 0 )
     {
-        AwsIotLogInfo( "Demo completed successfully." );
+        IotLogInfo( "Demo completed successfully." );
     }
     else
     {
-        AwsIotLogError( "Error running demo, status %d.", status );
+        IotLogError( "Error running demo, status %d.", status );
     }
 
     return status;

@@ -3,7 +3,7 @@
 @anchor platform
 @brief The platform layer provides portability across different operating systems. <br><br>
 
-All system calls (including networking) used in the AWS IoT libraries go through a lightweight platform layer. The functions of the platform layer are intended to be easily implementable on a wide variety of operating systems. The current platform layer has the following components:
+All system calls (including networking) used in this SDK's libraries go through a lightweight platform layer. The functions of the platform layer are intended to be easily implementable on a wide variety of operating systems. The current platform layer has the following components:
 - @ref platform_clock <br>
   @copybrief platform_clock
 - @ref platform_threads <br>
@@ -53,12 +53,12 @@ digraph clock_dependencies
 
 Currently, the platform clock component has the following dependencies:
 - The operating system must provide the necessary APIs to implement the clock component's functions.
-- The logging library may be used if @ref AWS_IOT_LOG_LEVEL_PLATFORM is not @ref AWS_IOT_LOG_NONE.
+- The logging library may be used if @ref IOT_LOG_LEVEL_PLATFORM is not #IOT_LOG_NONE.
 */
 
 /**
 @page platform_network Networking
-@brief @copybrief aws_iot_network.h
+@brief @copybrief iot_network.h
 
 The platform networking component provides other libraries with functions for managing network connections. It interfaces directly with the operating system to provide:
 - Functions for opening and closing network connections; function for sending and receiving data.
@@ -97,7 +97,7 @@ digraph network_dependencies
 Currently, the networking component has the following dependencies:
 - The operating system must provide the necessary networking APIs, such as a sockets API.
 - A third-party security library is needed to encrypt secured connections.
-- The logging library may be used if @ref AWS_IOT_LOG_LEVEL_PLATFORM is not @ref AWS_IOT_LOG_NONE.
+- The logging library may be used if @ref IOT_LOG_LEVEL_PLATFORM is not @ref IOT_LOG_NONE.
 */
 
 /**
@@ -133,27 +133,27 @@ digraph threads_dependencies
 
 Currently, the platform thread management component has the following dependencies:
 - The operating system must provide the necessary APIs to implement the [thread management functions](@ref platform_threads_functions).
-- The logging library may be used if @ref AWS_IOT_LOG_LEVEL_PLATFORM is not @ref AWS_IOT_LOG_NONE.
+- The logging library may be used if @ref IOT_LOG_LEVEL_PLATFORM is not #IOT_LOG_NONE.
 */
 
 /**
 @configpage{platform,platform layer}
 
-@section AWS_IOT_LOG_LEVEL_PLATFORM
+@section IOT_LOG_LEVEL_PLATFORM
 @brief Set the log level of all platform components except the [networking component](@ref platform_network).
 
-This setting overrides @ref AWS_IOT_LOG_LEVEL_GLOBAL for the platform layer components that it affects. All log messages with a level at or below this setting will be printed. The [platform networking component](@ref platform_network) is generally more verbose than others, so its logging is controlled separately by @ref AWS_IOT_LOG_LEVEL_NETWORK.
+This setting overrides @ref IOT_LOG_LEVEL_GLOBAL for the platform layer components that it affects. All log messages with a level at or below this setting will be printed. The [platform networking component](@ref platform_network) is generally more verbose than others, so its logging is controlled separately by @ref IOT_LOG_LEVEL_NETWORK.
 
 @configpossible One of the @ref logging_constants_levels.<br>
-@configdefault @ref AWS_IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #AWS_IOT_LOG_NONE.
+@configdefault @ref IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #IOT_LOG_NONE.
 
-@section AWS_IOT_LOG_LEVEL_NETWORK
+@section IOT_LOG_LEVEL_NETWORK
 @brief Set the log level of the [platform networking component](@ref platform_network).
 
-This setting overrides @ref AWS_IOT_LOG_LEVEL_GLOBAL for the [platform networking component](@ref platform_network). All log messages with a level at or below this setting will be printed. See @ref AWS_IOT_LOG_LEVEL_PLATFORM to set the log level of other platform components.
+This setting overrides @ref IOT_LOG_LEVEL_GLOBAL for the [platform networking component](@ref platform_network). All log messages with a level at or below this setting will be printed. See @ref IOT_LOG_LEVEL_PLATFORM to set the log level of other platform components.
 
 @configpossible One of the @ref logging_constants_levels.<br>
-@configdefault @ref AWS_IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #AWS_IOT_LOG_NONE.
+@configdefault @ref IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #IOT_LOG_NONE.
 
 @section platform_config_memory Memory allocation
 @brief Memory allocation function overrides for the platform layer.
@@ -162,7 +162,7 @@ Some platform layers are not affected by @ref IOT_STATIC_MEMORY_ONLY. Currently,
 - POSIX <br>
   This implementation is not affected by @ref IOT_STATIC_MEMORY_ONLY. However, its memory allocation functions may be overridden by setting the following constants. All memory allocation functions must have the same signatures as [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) and [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
   - `IotThreads_Malloc` and `IotThreads_Free`.
-  - `AwsIotNetwork_Malloc` and `AwsIotNetwork_Free`.
+  - `IotNetwork_Malloc` and `IotNetwork_Free`.
 
 @section platform_config_posixheaders POSIX headers
 @brief The POSIX platform layer allows the standard POSIX header includes to be overridden. Overrides only affect the POSIX platform layer.

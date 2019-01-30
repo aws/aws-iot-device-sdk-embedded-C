@@ -209,16 +209,16 @@ static void _operationCompleteCallback( void * param1,
      * successful when transmitted over the network. */
     if( pOperation->operation.result == AWS_IOT_MQTT_SUCCESS )
     {
-        AwsIotLogInfo( "MQTT %s %d successfully sent.",
-                       AwsIotMqtt_OperationType( pOperation->operation.type ),
-                       ( int ) publishCount );
+        IotLogInfo( "MQTT %s %d successfully sent.",
+                    AwsIotMqtt_OperationType( pOperation->operation.type ),
+                    ( int ) publishCount );
     }
     else
     {
-        AwsIotLogError( "MQTT %s %d could not be sent. Error %s.",
-                        AwsIotMqtt_OperationType( pOperation->operation.type ),
-                        ( int ) publishCount,
-                        AwsIotMqtt_strerror( pOperation->operation.result ) );
+        IotLogError( "MQTT %s %d could not be sent. Error %s.",
+                     AwsIotMqtt_OperationType( pOperation->operation.type ),
+                     ( int ) publishCount,
+                     AwsIotMqtt_strerror( pOperation->operation.result ) );
     }
 }
 
@@ -246,20 +246,20 @@ static void _mqttSubscriptionCallback( void * param1,
     AwsIotMqttPublishInfo_t acknowledgementInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
     /* Print information about the incoming PUBLISH message. */
-    AwsIotLogInfo( "Incoming PUBLISH received:\n"
-                   "Subscription topic filter: %.*s\n"
-                   "Publish topic name: %.*s\n"
-                   "Publish retain flag: %d\n"
-                   "Publish QoS: %d\n"
-                   "Publish payload: %.*s",
-                   pPublish->message.topicFilterLength,
-                   pPublish->message.pTopicFilter,
-                   pPublish->message.info.topicNameLength,
-                   pPublish->message.info.pTopicName,
-                   pPublish->message.info.retain,
-                   pPublish->message.info.QoS,
-                   pPublish->message.info.payloadLength,
-                   pPayload );
+    IotLogInfo( "Incoming PUBLISH received:\n"
+                "Subscription topic filter: %.*s\n"
+                "Publish topic name: %.*s\n"
+                "Publish retain flag: %d\n"
+                "Publish QoS: %d\n"
+                "Publish payload: %.*s",
+                pPublish->message.topicFilterLength,
+                pPublish->message.pTopicFilter,
+                pPublish->message.info.topicNameLength,
+                pPublish->message.info.pTopicName,
+                pPublish->message.info.retain,
+                pPublish->message.info.QoS,
+                pPublish->message.info.payloadLength,
+                pPayload );
 
     /* Find the message number inside of the PUBLISH message. */
     for( messageNumberIndex = 0; messageNumberIndex < pPublish->message.info.payloadLength; messageNumberIndex++ )
@@ -294,9 +294,9 @@ static void _mqttSubscriptionCallback( void * param1,
         /* Check for errors from snprintf. */
         if( acknowledgementLength < 0 )
         {
-            AwsIotLogWarn( "Failed to generate acknowledgement message for PUBLISH *.*s.",
-                           ( int ) messageNumberLength,
-                           pPayload + messageNumberIndex );
+            IotLogWarn( "Failed to generate acknowledgement message for PUBLISH *.*s.",
+                        ( int ) messageNumberLength,
+                        pPayload + messageNumberIndex );
         }
         else
         {
@@ -321,15 +321,15 @@ static void _mqttSubscriptionCallback( void * param1,
                                     NULL,
                                     NULL ) == AWS_IOT_MQTT_STATUS_PENDING )
             {
-                AwsIotLogInfo( "Acknowledgment message for PUBLISH %.*s will be sent.",
-                               ( int ) messageNumberLength,
-                               pPayload + messageNumberIndex );
+                IotLogInfo( "Acknowledgment message for PUBLISH %.*s will be sent.",
+                            ( int ) messageNumberLength,
+                            pPayload + messageNumberIndex );
             }
             else
             {
-                AwsIotLogWarn( "Acknowledgment message for PUBLISH %.*s will NOT be sent.",
-                               ( int ) messageNumberLength,
-                               pPayload + messageNumberIndex );
+                IotLogWarn( "Acknowledgment message for PUBLISH %.*s will NOT be sent.",
+                            ( int ) messageNumberLength,
+                            pPayload + messageNumberIndex );
             }
         }
     }
@@ -413,7 +413,7 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
         /* Check for errors from snprintf. */
         if( status < 0 )
         {
-            AwsIotLogError( "Failed to generate unique client identifier for demo." );
+            IotLogError( "Failed to generate unique client identifier for demo." );
             status = -1;
         }
         else
@@ -428,10 +428,10 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
 
     if( status == 0 )
     {
-        AwsIotLogInfo( "MQTT demo client identifier is %.*s (length %hu).",
-                       connectInfo.clientIdentifierLength,
-                       connectInfo.pClientIdentifier,
-                       connectInfo.clientIdentifierLength );
+        IotLogInfo( "MQTT demo client identifier is %.*s (length %hu).",
+                    connectInfo.clientIdentifierLength,
+                    connectInfo.pClientIdentifier,
+                    connectInfo.clientIdentifierLength );
 
         /* Establish the MQTT connection. */
         mqttStatus = AwsIotMqtt_Connect( pMqttConnection,
@@ -442,8 +442,8 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
 
         if( mqttStatus != AWS_IOT_MQTT_SUCCESS )
         {
-            AwsIotLogError( "MQTT CONNECT returned error %s.",
-                            AwsIotMqtt_strerror( mqttStatus ) );
+            IotLogError( "MQTT CONNECT returned error %s.",
+                         AwsIotMqtt_strerror( mqttStatus ) );
 
             status = -1;
         }
@@ -473,7 +473,7 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
         switch( mqttStatus )
         {
             case AWS_IOT_MQTT_SUCCESS:
-                AwsIotLogInfo( "All demo topic filter subscriptions accepted." );
+                IotLogInfo( "All demo topic filter subscriptions accepted." );
                 break;
 
             case AWS_IOT_MQTT_SERVER_REFUSED:
@@ -486,15 +486,15 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
                                                  pSubscriptions[ i ].topicFilterLength,
                                                  NULL ) == true )
                     {
-                        AwsIotLogInfo( "Topic filter %.*s was accepted.",
-                                       pSubscriptions[ i ].topicFilterLength,
-                                       pSubscriptions[ i ].pTopicFilter );
+                        IotLogInfo( "Topic filter %.*s was accepted.",
+                                    pSubscriptions[ i ].topicFilterLength,
+                                    pSubscriptions[ i ].pTopicFilter );
                     }
                     else
                     {
-                        AwsIotLogInfo( "Topic filter %.*s was rejected.",
-                                       pSubscriptions[ i ].topicFilterLength,
-                                       pSubscriptions[ i ].pTopicFilter );
+                        IotLogInfo( "Topic filter %.*s was rejected.",
+                                    pSubscriptions[ i ].topicFilterLength,
+                                    pSubscriptions[ i ].pTopicFilter );
                     }
                 }
 
@@ -532,9 +532,9 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
             {
                 if( publishCount % AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE == 0 )
                 {
-                    AwsIotLogInfo( "Publishing messages %d to %d.",
-                                   publishCount,
-                                   publishCount + AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE - 1 );
+                    IotLogInfo( "Publishing messages %d to %d.",
+                                publishCount,
+                                publishCount + AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE - 1 );
                 }
 
                 /* Pass the PUBLISH number to the operation complete callback. */
@@ -552,8 +552,8 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
                 /* Check for errors from snprintf. */
                 if( status < 0 )
                 {
-                    AwsIotLogError( "Failed to generate MQTT PUBLISH payload for PUBLISH %d.",
-                                    ( int ) publishCount );
+                    IotLogError( "Failed to generate MQTT PUBLISH payload for PUBLISH %d.",
+                                 ( int ) publishCount );
                     status = -1;
 
                     break;
@@ -573,9 +573,9 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
 
                 if( mqttStatus != AWS_IOT_MQTT_STATUS_PENDING )
                 {
-                    AwsIotLogError( "MQTT PUBLISH %d returned error %s.",
-                                    ( int ) publishCount,
-                                    AwsIotMqtt_strerror( mqttStatus ) );
+                    IotLogError( "MQTT PUBLISH %d returned error %s.",
+                                 ( int ) publishCount,
+                                 AwsIotMqtt_strerror( mqttStatus ) );
                     status = -1;
                     break;
                 }
@@ -587,22 +587,22 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
                 if( ( publishCount > 0 ) &&
                     ( publishCount % AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE == 0 ) )
                 {
-                    AwsIotLogInfo( "Waiting for %d publishes to be received.",
-                                   AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE );
+                    IotLogInfo( "Waiting for %d publishes to be received.",
+                                AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE );
 
                     for( i = 0; i < AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE; i++ )
                     {
                         if( IotSemaphore_TimedWait( &publishesReceived,
                                                     _MQTT_TIMEOUT_MS ) == false )
                         {
-                            AwsIotLogError( "Timed out waiting for incoming PUBLISH messages." );
+                            IotLogError( "Timed out waiting for incoming PUBLISH messages." );
                             status = -1;
                             break;
                         }
                     }
 
-                    AwsIotLogInfo( "%d publishes received.",
-                                   AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE );
+                    IotLogInfo( "%d publishes received.",
+                                AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE );
                 }
 
                 /* Stop publishing if there was an error. */
@@ -616,20 +616,20 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
              * should also wait for all previously published messages. */
             if( status == 0 )
             {
-                AwsIotLogInfo( "Waiting for all publishes to be received." );
+                IotLogInfo( "Waiting for all publishes to be received." );
 
                 for( i = 0; i < AWS_IOT_DEMO_MQTT_PUBLISH_BURST_SIZE; i++ )
                 {
                     if( IotSemaphore_TimedWait( &publishesReceived,
                                                 _MQTT_TIMEOUT_MS ) == false )
                     {
-                        AwsIotLogError( "Timed out waiting for incoming PUBLISH messages." );
+                        IotLogError( "Timed out waiting for incoming PUBLISH messages." );
                         status = -1;
                         break;
                     }
                 }
 
-                AwsIotLogInfo( "All publishes received." );
+                IotLogInfo( "All publishes received." );
             }
 
             /* Destroy the received message counter. */
@@ -653,8 +653,8 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
 
         if( mqttStatus != AWS_IOT_MQTT_SUCCESS )
         {
-            AwsIotLogError( "MQTT UNSUBSCRIBE returned error %s.",
-                            AwsIotMqtt_strerror( mqttStatus ) );
+            IotLogError( "MQTT UNSUBSCRIBE returned error %s.",
+                         AwsIotMqtt_strerror( mqttStatus ) );
             status = -1;
         }
     }

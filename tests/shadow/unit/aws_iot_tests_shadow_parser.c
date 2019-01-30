@@ -50,7 +50,7 @@ extern int vsnprintf( char *,
 #include "private/aws_iot_shadow_internal.h"
 
 /* JSON utilities include. */
-#include "aws_iot_json_utils.h"
+#include "iot_json_utils.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -78,12 +78,12 @@ static void _parseJson( bool expectedResult,
     size_t jsonValueLength = 0;
 
     TEST_ASSERT_EQUAL_INT( expectedResult,
-                           AwsIotJsonUtils_FindJsonValue( pJsonDocument,
-                                                          jsonDocumentLength,
-                                                          pJsonKey,
-                                                          strlen( pJsonKey ),
-                                                          &pJsonValue,
-                                                          &jsonValueLength ) );
+                           IotJsonUtils_FindJsonValue( pJsonDocument,
+                                                       jsonDocumentLength,
+                                                       pJsonKey,
+                                                       strlen( pJsonKey ),
+                                                       &pJsonValue,
+                                                       &jsonValueLength ) );
 
     if( expectedResult == true )
     {

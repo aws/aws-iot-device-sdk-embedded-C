@@ -279,12 +279,12 @@ static bool _subscriptionPacketSize( AwsIotMqttOperationType_t type,
 
 /*-----------------------------------------------------------*/
 
-#if _LIBRARY_LOG_LEVEL > AWS_IOT_LOG_NONE
+#if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
 /**
  * @brief If logging is enabled, define a log configuration that only prints the log
  * string. This is used when printing out details of deserialized MQTT packets.
  */
-static const AwsIotLogConfig_t _logHideAll =
+static const IotLogConfig_t _logHideAll =
 {
     .hideLibraryName = true,
     .hideLogLevel    = true,
@@ -696,7 +696,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeConnect( const AwsIotMqttConnectIn
     /* Check that sufficient memory was allocated. */
     if( pBuffer == NULL )
     {
-        AwsIotLogError( "Failed to allocate memory for CONNECT packet." );
+        IotLogError( "Failed to allocate memory for CONNECT packet." );
 
         return AWS_IOT_MQTT_NO_MEMORY;
     }
@@ -808,8 +808,8 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeConnect( const AwsIotMqttConnectIn
     if( pConnectInfo->awsIotMqttMode == true )
     {
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            AwsIotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
-                           "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
+            IotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
+                        "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
 
             pBuffer = _encodeString( pBuffer,
                                      _AWS_IOT_METRICS_USERNAME,
@@ -841,7 +841,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeConnect( const AwsIotMqttConnectIn
     AwsIotMqtt_Assert( ( size_t ) ( pBuffer - *pConnectPacket ) == connectPacketSize );
 
     /* Print out the serialized CONNECT packet for debugging purposes. */
-    AwsIotLog_PrintBuffer( "MQTT CONNECT packet:", *pConnectPacket, connectPacketSize );
+    IotLog_PrintBuffer( "MQTT CONNECT packet:", *pConnectPacket, connectPacketSize );
 
     return AWS_IOT_MQTT_SUCCESS;
 }
@@ -854,7 +854,7 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeConnack( const uint8_t * const p
 {
     /* If logging is enabled, declare the CONNACK response code strings. The
      * fourth byte of CONNACK indexes into this array for the corresponding response. */
-    #if _LIBRARY_LOG_LEVEL > AWS_IOT_LOG_NONE
+    #if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
     static const char * pConnackResponses[ 6 ] =
     {
         "Connection accepted.",                               /* 0 */
@@ -870,10 +870,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeConnack( const uint8_t * const p
      * data stream has fewer than 4 bytes, then the CONNACK packet is incomplete. */
     if( dataLength < _MQTT_PACKET_CONNACK_SIZE )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "CONNACK less than %d bytes in size.",
-                   _MQTT_PACKET_CONNACK_SIZE );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "CONNACK less than %d bytes in size.",
+                _MQTT_PACKET_CONNACK_SIZE );
         *pBytesProcessed = 0;
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -885,10 +885,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeConnack( const uint8_t * const p
     /* Check that the control packet type is 0x20. */
     if( pConnackStart[ 0 ] != _MQTT_PACKET_TYPE_CONNACK )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "Bad control packet type 0x%02x.",
-                   pConnackStart[ 0 ] );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "Bad control packet type 0x%02x.",
+                pConnackStart[ 0 ] );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
@@ -897,10 +897,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeConnack( const uint8_t * const p
      * "Remaining length" of 2. */
     if( pConnackStart[ 1 ] != _MQTT_PACKET_CONNACK_REMAINING_LENGTH )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "CONNACK does not have remaining length of %d.",
-                   _MQTT_PACKET_CONNACK_REMAINING_LENGTH );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "CONNACK does not have remaining length of %d.",
+                _MQTT_PACKET_CONNACK_REMAINING_LENGTH );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
@@ -909,9 +909,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeConnack( const uint8_t * const p
      * in CONNACK must be 0. */
     if( ( pConnackStart[ 2 ] | 0x01 ) != 0x01 )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "Reserved bits in CONNACK incorrect." );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "Reserved bits in CONNACK incorrect." );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
@@ -921,9 +921,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeConnack( const uint8_t * const p
     if( ( pConnackStart[ 2 ] & _MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
         == _MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
     {
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "CONNACK session present bit set." );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "CONNACK session present bit set." );
 
         /* MQTT 3.1.1 specifies that the fourth byte in CONNACK must be 0 if the
          * "Session Present" bit is set. */
@@ -934,29 +934,29 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeConnack( const uint8_t * const p
     }
     else
     {
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "CONNACK session present bit not set." );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "CONNACK session present bit not set." );
     }
 
     /* In MQTT 3.1.1, only values 0 through 5 are valid CONNACK response codes. */
     if( pConnackStart[ 3 ] > 5 )
     {
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "CONNACK response %hhu is not valid.",
-                   pConnackStart[ 3 ] );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "CONNACK response %hhu is not valid.",
+                pConnackStart[ 3 ] );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
 
     /* Print the appropriate message for the CONNACK response code if logs are
      * enabled. */
-    #if _LIBRARY_LOG_LEVEL > AWS_IOT_LOG_NONE
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "%s",
-                   pConnackResponses[ pConnackStart[ 3 ] ] );
+    #if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "%s",
+                pConnackResponses[ pConnackStart[ 3 ] ] );
     #endif
 
     /* A nonzero CONNACK response code means the connection was refused. */
@@ -987,9 +987,9 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializePublish( const AwsIotMqttPublishIn
                             &remainingLength,
                             &publishPacketSize ) == false )
     {
-        AwsIotLogError( "Publish packet remaining length exceeds %d, which is the "
-                        "maximum size allowed by MQTT 3.1.1.",
-                        _MQTT_MAX_REMAINING_LENGTH );
+        IotLogError( "Publish packet remaining length exceeds %d, which is the "
+                     "maximum size allowed by MQTT 3.1.1.",
+                     _MQTT_MAX_REMAINING_LENGTH );
 
         return AWS_IOT_MQTT_NO_MEMORY;
     }
@@ -1004,7 +1004,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializePublish( const AwsIotMqttPublishIn
     /* Check that sufficient memory was allocated. */
     if( pBuffer == NULL )
     {
-        AwsIotLogError( "Failed to allocate memory for PUBLISH packet." );
+        IotLogError( "Failed to allocate memory for PUBLISH packet." );
 
         return AWS_IOT_MQTT_NO_MEMORY;
     }
@@ -1067,7 +1067,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializePublish( const AwsIotMqttPublishIn
     AwsIotMqtt_Assert( ( size_t ) ( pBuffer - *pPublishPacket ) == publishPacketSize );
 
     /* Print out the serialized PUBLISH packet for debugging purposes. */
-    AwsIotLog_PrintBuffer( "MQTT PUBLISH packet:", *pPublishPacket, publishPacketSize );
+    IotLog_PrintBuffer( "MQTT PUBLISH packet:", *pPublishPacket, publishPacketSize );
 
     return AWS_IOT_MQTT_SUCCESS;
 }
@@ -1096,9 +1096,9 @@ void AwsIotMqttInternal_PublishSetDup( bool awsIotMqttMode,
         topicNameLength = _UINT16_DECODE( pTopicNameLength );
         pPacketIdentifier = ( uint8_t * ) ( pTopicNameLength + topicNameLength + sizeof( uint16_t ) );
 
-        AwsIotLogDebug( "Changing PUBLISH packet identifier %hu to %hu.",
-                        *pPacketIdentifier,
-                        newPacketIdentifier );
+        IotLogDebug( "Changing PUBLISH packet identifier %hu to %hu.",
+                     *pPacketIdentifier,
+                     newPacketIdentifier );
 
         /* Replace the packet identifier. */
         *pPacketIdentifier = _UINT16_HIGH_BYTE( newPacketIdentifier );
@@ -1129,10 +1129,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
      * PUBLISH packet. */
     if( dataLength < _MQTT_PACKET_PUBLISH_MINIMUM_SIZE )
     {
-        AwsIotLogError( "PUBLISH size %lu is smaller than the smallest possible "
-                        "size %d.",
-                        ( unsigned long ) dataLength,
-                        _MQTT_PACKET_PUBLISH_MINIMUM_SIZE );
+        IotLogError( "PUBLISH size %lu is smaller than the smallest possible "
+                     "size %d.",
+                     ( unsigned long ) dataLength,
+                     _MQTT_PACKET_PUBLISH_MINIMUM_SIZE );
         *pBytesProcessed = 0;
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1143,9 +1143,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
                                 &pVariableHeader,
                                 &remainingLength ) != AWS_IOT_MQTT_SUCCESS )
     {
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "Bad remaining length." );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "Bad remaining length." );
 
         /* If the "Remaining length" couldn't be determined, invalidate the rest
          * of the data stream by marking it processed. */
@@ -1154,9 +1154,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
 
-    AwsIotLog( AWS_IOT_LOG_DEBUG,
-               &_logHideAll,
-               "Remaining length %lu.", ( unsigned long ) remainingLength );
+    IotLog( IOT_LOG_DEBUG,
+            &_logHideAll,
+            "Remaining length %lu.", ( unsigned long ) remainingLength );
 
     /* Calculate the packet size and set the output parameter. */
     packetSize = remainingLength + _remainingLengthEncodedSize( remainingLength ) + 1;
@@ -1166,11 +1166,11 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
      * then this is a partial packet. */
     if( packetSize > dataLength )
     {
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "PUBLISH packet size %lu exceeds data length %lu.",
-                   ( unsigned long ) packetSize,
-                   ( unsigned long ) dataLength );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "PUBLISH packet size %lu exceeds data length %lu.",
+                ( unsigned long ) packetSize,
+                ( unsigned long ) dataLength );
         *pBytesProcessed = 0;
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1182,9 +1182,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
     /* Parse the Retain bit. */
     pOutput->retain = _UINT8_CHECK_BIT( publishFlags, _MQTT_PUBLISH_FLAG_RETAIN );
 
-    AwsIotLog( AWS_IOT_LOG_DEBUG,
-               &_logHideAll,
-               "Retain bit is %d.", pOutput->retain );
+    IotLog( IOT_LOG_DEBUG,
+            &_logHideAll,
+            "Retain bit is %d.", pOutput->retain );
 
     /* Check for QoS 2. */
     if( _UINT8_CHECK_BIT( publishFlags, _MQTT_PUBLISH_FLAG_QOS2 ) == true )
@@ -1192,9 +1192,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
         /* PUBLISH packet is invalid if both QoS 1 and QoS 2 bits are set. */
         if( _UINT8_CHECK_BIT( publishFlags, _MQTT_PUBLISH_FLAG_QOS1 ) == true )
         {
-            AwsIotLog( AWS_IOT_LOG_DEBUG,
-                       &_logHideAll,
-                       "Bad QoS: 3." );
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "Bad QoS: 3." );
 
             return AWS_IOT_MQTT_BAD_RESPONSE;
         }
@@ -1212,22 +1212,22 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
         pOutput->QoS = 0;
     }
 
-    AwsIotLog( AWS_IOT_LOG_DEBUG,
-               &_logHideAll,
-               "QoS is %d.", pOutput->QoS );
+    IotLog( IOT_LOG_DEBUG,
+            &_logHideAll,
+            "QoS is %d.", pOutput->QoS );
 
     /* Parse the DUP bit. */
     if( _UINT8_CHECK_BIT( publishFlags, _MQTT_PUBLISH_FLAG_DUP ) == true )
     {
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "DUP is 1." );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "DUP is 1." );
     }
     else
     {
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "DUP is 0." );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "DUP is 0." );
     }
 
     /* Sanity checks for "Remaining length". */
@@ -1237,9 +1237,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
          * topic name length (2 bytes) and topic name (at least 1 byte). */
         if( remainingLength < 3 )
         {
-            AwsIotLog( AWS_IOT_LOG_DEBUG,
-                       &_logHideAll,
-                       "QoS 0 PUBLISH cannot have a remaining length less than 3." );
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "QoS 0 PUBLISH cannot have a remaining length less than 3." );
             *pBytesProcessed = dataLength;
 
             return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1252,9 +1252,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
          * topic name. */
         if( remainingLength < 5 )
         {
-            AwsIotLog( AWS_IOT_LOG_DEBUG,
-                       &_logHideAll,
-                       "QoS 1 or 2 PUBLISH cannot have a remaining length less than 5." );
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "QoS 1 or 2 PUBLISH cannot have a remaining length less than 5." );
             *pBytesProcessed = dataLength;
 
             return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1272,9 +1272,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
          * header. */
         if( remainingLength < pOutput->topicNameLength + sizeof( uint16_t ) )
         {
-            AwsIotLog( AWS_IOT_LOG_DEBUG,
-                       &_logHideAll,
-                       "Remaining length cannot be less than variable header length." );
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "Remaining length cannot be less than variable header length." );
             *pBytesProcessed = dataLength;
 
             return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1286,9 +1286,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
          * header. */
         if( remainingLength < pOutput->topicNameLength + 2 * sizeof( uint16_t ) )
         {
-            AwsIotLog( AWS_IOT_LOG_DEBUG,
-                       &_logHideAll,
-                       "Remaining length cannot be less than variable header length." );
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "Remaining length cannot be less than variable header length." );
             *pBytesProcessed = dataLength;
 
             return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1298,12 +1298,12 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
     /* Parse the topic. */
     pOutput->pTopicName = ( const char * ) ( pVariableHeader + sizeof( uint16_t ) );
 
-    AwsIotLog( AWS_IOT_LOG_DEBUG,
-               &_logHideAll,
-               "Topic name length %hu: %.*s",
-               pOutput->topicNameLength,
-               pOutput->topicNameLength,
-               pOutput->pTopicName );
+    IotLog( IOT_LOG_DEBUG,
+            &_logHideAll,
+            "Topic name length %hu: %.*s",
+            pOutput->topicNameLength,
+            pOutput->topicNameLength,
+            pOutput->pTopicName );
 
     /* Extract the packet identifier for QoS 1 or 2 PUBLISH packets. Packet
      * identifier starts immediately after the topic name. */
@@ -1314,9 +1314,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
         packetIdentifier = _UINT16_DECODE( pPacketIdentifierHigh );
         *pPacketIdentifier = packetIdentifier;
 
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "Packet identifier %hu.", packetIdentifier );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "Packet identifier %hu.", packetIdentifier );
 
         /* Packet identifier cannot be 0. */
         if( packetIdentifier == 0 )
@@ -1338,10 +1338,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
         pOutput->pPayload = pPacketIdentifierHigh + sizeof( uint16_t );
     }
 
-    AwsIotLog( AWS_IOT_LOG_DEBUG,
-               &_logHideAll,
-               "Payload length %hu. Payload:", pOutput->payloadLength );
-    AwsIotLog_PrintBuffer( NULL, pOutput->pPayload, pOutput->payloadLength );
+    IotLog( IOT_LOG_DEBUG,
+            &_logHideAll,
+            "Payload length %hu. Payload:", pOutput->payloadLength );
+    IotLog_PrintBuffer( NULL, pOutput->pPayload, pOutput->payloadLength );
 
     return AWS_IOT_MQTT_SUCCESS;
 }
@@ -1357,7 +1357,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializePuback( uint16_t packetIdentifier,
 
     if( pBuffer == NULL )
     {
-        AwsIotLogError( "Failed to allocate memory for PUBACK packet" );
+        IotLogError( "Failed to allocate memory for PUBACK packet" );
 
         return AWS_IOT_MQTT_NO_MEMORY;
     }
@@ -1373,7 +1373,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializePuback( uint16_t packetIdentifier,
     pBuffer[ 3 ] = _UINT16_LOW_BYTE( packetIdentifier );
 
     /* Print out the serialized PUBACK packet for debugging purposes. */
-    AwsIotLog_PrintBuffer( "MQTT PUBACK packet:", *pPubackPacket, _MQTT_PACKET_PUBACK_SIZE );
+    IotLog_PrintBuffer( "MQTT PUBACK packet:", *pPubackPacket, _MQTT_PACKET_PUBACK_SIZE );
 
     return AWS_IOT_MQTT_SUCCESS;
 }
@@ -1391,10 +1391,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePuback( const uint8_t * const pP
      * data stream has fewer than 4 bytes, then the PUBACK packet is incomplete. */
     if( dataLength < _MQTT_PACKET_PUBACK_SIZE )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "PUBACK less than %d bytes in size.",
-                   _MQTT_PACKET_PUBACK_SIZE );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "PUBACK less than %d bytes in size.",
+                _MQTT_PACKET_PUBACK_SIZE );
         *pBytesProcessed = 0;
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1407,9 +1407,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePuback( const uint8_t * const pP
     packetIdentifier = _UINT16_DECODE( pPubackStart + 2 );
     *pPacketIdentifier = packetIdentifier;
 
-    AwsIotLog( AWS_IOT_LOG_DEBUG,
-               &_logHideAll,
-               "Packet identifier %hu.", packetIdentifier );
+    IotLog( IOT_LOG_DEBUG,
+            &_logHideAll,
+            "Packet identifier %hu.", packetIdentifier );
 
     /* Packet identifier cannot be 0. */
     if( packetIdentifier == 0 )
@@ -1420,10 +1420,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePuback( const uint8_t * const pP
     /* Check that the control packet type is 0x40. */
     if( pPubackStart[ 0 ] != _MQTT_PACKET_TYPE_PUBACK )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "Bad control packet type 0x%02x.",
-                   pPubackStart[ 0 ] );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "Bad control packet type 0x%02x.",
+                pPubackStart[ 0 ] );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
@@ -1431,10 +1431,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePuback( const uint8_t * const pP
     /* Check the "Remaining length" (second byte) of the received PUBACK. */
     if( pPubackStart[ 1 ] != _MQTT_PACKET_PUBACK_REMAINING_LENGTH )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "PUBACK does not have remaining length of %d.",
-                   _MQTT_PACKET_PUBACK_REMAINING_LENGTH );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "PUBACK does not have remaining length of %d.",
+                _MQTT_PACKET_PUBACK_REMAINING_LENGTH );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
@@ -1462,9 +1462,9 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeSubscribe( const AwsIotMqttSubscri
                                  &remainingLength,
                                  &subscribePacketSize ) == false )
     {
-        AwsIotLogError( "Subscribe packet remaining length exceeds %d, which is the "
-                        "maximum size allowed by MQTT 3.1.1.",
-                        _MQTT_MAX_REMAINING_LENGTH );
+        IotLogError( "Subscribe packet remaining length exceeds %d, which is the "
+                     "maximum size allowed by MQTT 3.1.1.",
+                     _MQTT_MAX_REMAINING_LENGTH );
 
         return AWS_IOT_MQTT_NO_MEMORY;
     }
@@ -1479,7 +1479,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeSubscribe( const AwsIotMqttSubscri
     /* Check that sufficient memory was allocated. */
     if( pBuffer == NULL )
     {
-        AwsIotLogError( "Failed to allocate memory for SUBSCRIBE packet." );
+        IotLogError( "Failed to allocate memory for SUBSCRIBE packet." );
 
         return AWS_IOT_MQTT_NO_MEMORY;
     }
@@ -1522,7 +1522,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeSubscribe( const AwsIotMqttSubscri
     AwsIotMqtt_Assert( ( size_t ) ( pBuffer - *pSubscribePacket ) == subscribePacketSize );
 
     /* Print out the serialized SUBSCRIBE packet for debugging purposes. */
-    AwsIotLog_PrintBuffer( "MQTT SUBSCRIBE packet:", *pSubscribePacket, subscribePacketSize );
+    IotLog_PrintBuffer( "MQTT SUBSCRIBE packet:", *pSubscribePacket, subscribePacketSize );
 
     return AWS_IOT_MQTT_SUCCESS;
 }
@@ -1546,10 +1546,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeSuback( AwsIotMqttConnection_t m
      * SUBACK packet. */
     if( dataLength < _MQTT_PACKET_SUBACK_MINIMUM_SIZE )
     {
-        AwsIotLogError( "SUBACK size %lu is smaller than the smallest possible "
-                        "size %d.",
-                        ( unsigned long ) dataLength,
-                        _MQTT_PACKET_SUBACK_MINIMUM_SIZE );
+        IotLogError( "SUBACK size %lu is smaller than the smallest possible "
+                     "size %d.",
+                     ( unsigned long ) dataLength,
+                     _MQTT_PACKET_SUBACK_MINIMUM_SIZE );
         *pBytesProcessed = 0;
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1560,9 +1560,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeSuback( AwsIotMqttConnection_t m
                                 &pVariableHeader,
                                 &remainingLength ) != AWS_IOT_MQTT_SUCCESS )
     {
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "Bad remaining length." );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "Bad remaining length." );
 
         /* If the "Remaining length" couldn't be determined, invalidate the rest
          * of the data stream by marking it processed. */
@@ -1571,17 +1571,17 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeSuback( AwsIotMqttConnection_t m
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
 
-    AwsIotLog( AWS_IOT_LOG_DEBUG,
-               &_logHideAll,
-               "Remaining length %lu.", ( unsigned long ) remainingLength );
+    IotLog( IOT_LOG_DEBUG,
+            &_logHideAll,
+            "Remaining length %lu.", ( unsigned long ) remainingLength );
 
     /* A SUBACK must have a remaining length of at least 3 to accommodate the
      * packet identifer and at least 1 return code. */
     if( remainingLength < 3 )
     {
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "SUBACK cannot have a remaining length less than 3." );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "SUBACK cannot have a remaining length less than 3." );
         *pBytesProcessed = dataLength;
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1595,11 +1595,11 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeSuback( AwsIotMqttConnection_t m
      * then this is a partial packet. */
     if( packetSize > dataLength )
     {
-        AwsIotLog( AWS_IOT_LOG_DEBUG,
-                   &_logHideAll,
-                   "SUBACK packet size %lu exceeds data length %lu.",
-                   ( unsigned long ) packetSize,
-                   ( unsigned long ) dataLength );
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "SUBACK packet size %lu exceeds data length %lu.",
+                ( unsigned long ) packetSize,
+                ( unsigned long ) dataLength );
         *pBytesProcessed = 0;
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1609,17 +1609,17 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeSuback( AwsIotMqttConnection_t m
     packetIdentifier = _UINT16_DECODE( pVariableHeader );
     *pPacketIdentifier = packetIdentifier;
 
-    AwsIotLog( AWS_IOT_LOG_DEBUG,
-               &_logHideAll,
-               "Packet identifier %hu.", packetIdentifier );
+    IotLog( IOT_LOG_DEBUG,
+            &_logHideAll,
+            "Packet identifier %hu.", packetIdentifier );
 
     /* Check that the control packet type is 0x90. */
     if( pSubackStart[ 0 ] != _MQTT_PACKET_TYPE_SUBACK )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "Bad control packet type 0x%02x.",
-                   pSubackStart[ 0 ] );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "Bad control packet type 0x%02x.",
+                pSubackStart[ 0 ] );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
@@ -1636,16 +1636,16 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeSuback( AwsIotMqttConnection_t m
             case 0x00:
             case 0x01:
             case 0x02:
-                AwsIotLog( AWS_IOT_LOG_DEBUG,
-                           &_logHideAll,
-                           "Topic filter %lu accepted, max QoS %hhu.",
-                           ( unsigned long ) i, subscriptionStatus );
+                IotLog( IOT_LOG_DEBUG,
+                        &_logHideAll,
+                        "Topic filter %lu accepted, max QoS %hhu.",
+                        ( unsigned long ) i, subscriptionStatus );
                 break;
 
             case 0x80:
-                AwsIotLog( AWS_IOT_LOG_DEBUG,
-                           &_logHideAll,
-                           "Topic filter %lu refused.", ( unsigned long ) i );
+                IotLog( IOT_LOG_DEBUG,
+                        &_logHideAll,
+                        "Topic filter %lu refused.", ( unsigned long ) i );
 
                 /* Remove a rejected subscription from the subscription manager. */
                 AwsIotMqttInternal_RemoveSubscriptionByPacket( pMqttConnection,
@@ -1657,9 +1657,9 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeSuback( AwsIotMqttConnection_t m
                 break;
 
             default:
-                AwsIotLog( AWS_IOT_LOG_DEBUG,
-                           &_logHideAll,
-                           "Bad SUBSCRIBE status %hhu.", subscriptionStatus );
+                IotLog( IOT_LOG_DEBUG,
+                        &_logHideAll,
+                        "Bad SUBSCRIBE status %hhu.", subscriptionStatus );
 
                 status = AWS_IOT_MQTT_BAD_RESPONSE;
 
@@ -1696,9 +1696,9 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeUnsubscribe( const AwsIotMqttSubsc
                                  &remainingLength,
                                  &unsubscribePacketSize ) == false )
     {
-        AwsIotLogError( "Unsubscribe packet remaining length exceeds %d, which is the "
-                        "maximum size allowed by MQTT 3.1.1.",
-                        _MQTT_MAX_REMAINING_LENGTH );
+        IotLogError( "Unsubscribe packet remaining length exceeds %d, which is the "
+                     "maximum size allowed by MQTT 3.1.1.",
+                     _MQTT_MAX_REMAINING_LENGTH );
 
         return AWS_IOT_MQTT_NO_MEMORY;
     }
@@ -1713,7 +1713,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeUnsubscribe( const AwsIotMqttSubsc
     /* Check that sufficient memory was allocated. */
     if( pBuffer == NULL )
     {
-        AwsIotLogError( "Failed to allocate memory for UNSUBSCRIBE packet." );
+        IotLogError( "Failed to allocate memory for UNSUBSCRIBE packet." );
 
         return AWS_IOT_MQTT_NO_MEMORY;
     }
@@ -1752,7 +1752,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeUnsubscribe( const AwsIotMqttSubsc
     AwsIotMqtt_Assert( ( size_t ) ( pBuffer - *pUnsubscribePacket ) == unsubscribePacketSize );
 
     /* Print out the serialized UNSUBSCRIBE packet for debugging purposes. */
-    AwsIotLog_PrintBuffer( "MQTT UNSUBSCRIBE packet:", *pUnsubscribePacket, unsubscribePacketSize );
+    IotLog_PrintBuffer( "MQTT UNSUBSCRIBE packet:", *pUnsubscribePacket, unsubscribePacketSize );
 
     return AWS_IOT_MQTT_SUCCESS;
 }
@@ -1770,10 +1770,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeUnsuback( const uint8_t * const 
      * data stream has fewer than 4 bytes, then the UNSUBACK packet is incomplete. */
     if( dataLength < _MQTT_PACKET_UNSUBACK_SIZE )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "UNSUBACK less than %d bytes in size.",
-                   _MQTT_PACKET_UNSUBACK_SIZE );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "UNSUBACK less than %d bytes in size.",
+                _MQTT_PACKET_UNSUBACK_SIZE );
         *pBytesProcessed = 0;
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1795,10 +1795,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeUnsuback( const uint8_t * const 
     /* Check that the control packet type is 0xb0. */
     if( pUnsubackStart[ 0 ] != _MQTT_PACKET_TYPE_UNSUBACK )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "Bad control packet type 0x%02x.",
-                   pUnsubackStart[ 0 ] );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "Bad control packet type 0x%02x.",
+                pUnsubackStart[ 0 ] );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
@@ -1806,17 +1806,17 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeUnsuback( const uint8_t * const 
     /* Check the "Remaining length" (second byte) of the received UNSUBACK. */
     if( pUnsubackStart[ 1 ] != _MQTT_PACKET_UNSUBACK_REMAINING_LENGTH )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "UNSUBACK does not have remaining length of %d.",
-                   _MQTT_PACKET_UNSUBACK_REMAINING_LENGTH );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "UNSUBACK does not have remaining length of %d.",
+                _MQTT_PACKET_UNSUBACK_REMAINING_LENGTH );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
 
-    AwsIotLog( AWS_IOT_LOG_DEBUG,
-               &_logHideAll,
-               "Packet identifier %hu.", packetIdentifier );
+    IotLog( IOT_LOG_DEBUG,
+            &_logHideAll,
+            "Packet identifier %hu.", packetIdentifier );
 
     return AWS_IOT_MQTT_SUCCESS;
 }
@@ -1838,7 +1838,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializePingreq( uint8_t ** const pPingreq
     *pPacketSize = _MQTT_PACKET_PINGREQ_SIZE;
 
     /* Print out the PINGREQ packet for debugging purposes. */
-    AwsIotLog_PrintBuffer( "MQTT PINGREQ packet:", pPingreq, _MQTT_PACKET_PINGREQ_SIZE );
+    IotLog_PrintBuffer( "MQTT PINGREQ packet:", pPingreq, _MQTT_PACKET_PINGREQ_SIZE );
 
     return AWS_IOT_MQTT_SUCCESS;
 }
@@ -1853,10 +1853,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePingresp( const uint8_t * const 
      * data stream has fewer than 2 bytes, then the PINGRESP packet is incomplete. */
     if( dataLength < _MQTT_PACKET_PINGRESP_SIZE )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "PINGRESP less than %d bytes in size.",
-                   _MQTT_PACKET_PINGRESP_SIZE );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "PINGRESP less than %d bytes in size.",
+                _MQTT_PACKET_PINGRESP_SIZE );
         *pBytesProcessed = 0;
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
@@ -1868,10 +1868,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePingresp( const uint8_t * const 
     /* Check that the control packet type is 0xd0. */
     if( pPingrespStart[ 0 ] != _MQTT_PACKET_TYPE_PINGRESP )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "Bad control packet type 0x%02x.",
-                   pPingrespStart[ 0 ] );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "Bad control packet type 0x%02x.",
+                pPingrespStart[ 0 ] );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
@@ -1879,10 +1879,10 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePingresp( const uint8_t * const 
     /* Check the "Remaining length" (second byte) of the received PINGRESP. */
     if( pPingrespStart[ 1 ] != _MQTT_PACKET_PINGRESP_REMAINING_LENGTH )
     {
-        AwsIotLog( AWS_IOT_LOG_ERROR,
-                   &_logHideAll,
-                   "PINGRESP does not have remaining length of %d.",
-                   _MQTT_PACKET_PINGRESP_REMAINING_LENGTH );
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "PINGRESP does not have remaining length of %d.",
+                _MQTT_PACKET_PINGRESP_REMAINING_LENGTH );
 
         return AWS_IOT_MQTT_BAD_RESPONSE;
     }
@@ -1907,7 +1907,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeDisconnect( uint8_t ** const pDisc
     *pPacketSize = _MQTT_PACKET_DISCONNECT_SIZE;
 
     /* Print out the DISCONNECT packet for debugging purposes. */
-    AwsIotLog_PrintBuffer( "MQTT DISCONNECT packet:", pDisconnect, _MQTT_PACKET_DISCONNECT_SIZE );
+    IotLog_PrintBuffer( "MQTT DISCONNECT packet:", pDisconnect, _MQTT_PACKET_DISCONNECT_SIZE );
 
     return AWS_IOT_MQTT_SUCCESS;
 }

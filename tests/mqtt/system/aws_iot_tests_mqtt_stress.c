@@ -59,9 +59,9 @@
 
 /* The tests in this file run for a long time, so set up logging to track their
  * progress. */
-#define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_INFO
+#define _LIBRARY_LOG_LEVEL    IOT_LOG_INFO
 #define _LIBRARY_LOG_NAME     ( "MQTT_STRESS" )
-#include "aws_iot_logging_setup.h"
+#include "iot_logging_setup.h"
 
 /**
  * @brief Determine which MQTT server mode to test (AWS IoT or Mosquitto).
@@ -300,9 +300,9 @@ static void _publishReceived( void * pArgument,
     }
     else
     {
-        AwsIotLogWarn( "Received an unknown message on subscription %.*s: %.*s",
-                       pPublish->message.info.topicNameLength, pPublish->message.info.pTopicName,
-                       pPublish->message.info.payloadLength, pPublish->message.info.pPayload );
+        IotLogWarn( "Received an unknown message on subscription %.*s: %.*s",
+                    pPublish->message.info.topicNameLength, pPublish->message.info.pTopicName,
+                    pPublish->message.info.payloadLength, pPublish->message.info.pPayload );
     }
 }
 
@@ -319,7 +319,7 @@ static void _blockingCallback( void * pArgument,
 
     ( void ) param;
 
-    AwsIotLogInfo( "Callback blocking for %u seconds.", blockTime );
+    IotLogInfo( "Callback blocking for %u seconds.", blockTime );
     sleep( blockTime );
     IotSemaphore_Post( pWaitSem );
 }
@@ -367,19 +367,19 @@ static void * _publishThread( void * pArgument )
          * If no memory is available, wait some time for resources to be released. */
         if( status == AWS_IOT_MQTT_NO_MEMORY )
         {
-            AwsIotLogInfo( "Thread %d: no memory available on PUBLISH %d."
-                           " Sleeping for %d seconds.",
-                           pParams->threadNumber,
-                           i,
-                           AWS_IOT_TEST_MQTT_DECONGEST_S );
+            IotLogInfo( "Thread %d: no memory available on PUBLISH %d."
+                        " Sleeping for %d seconds.",
+                        pParams->threadNumber,
+                        i,
+                        AWS_IOT_TEST_MQTT_DECONGEST_S );
             sleep( AWS_IOT_TEST_MQTT_DECONGEST_S );
             continue;
         }
         /* If the PUBLISH failed, exit this thread. */
         else if( status != AWS_IOT_MQTT_STATUS_PENDING )
         {
-            AwsIotLogError( "Thread %d encountered error %d publishing message %d.",
-                            status, i );
+            IotLogError( "Thread %d encountered error %d publishing message %d.",
+                         status, i );
             break;
         }
 
@@ -391,14 +391,14 @@ static void * _publishThread( void * pArgument )
         if( ( i % 25 == 0 ) ||
             ( i == pParams->publishLimit ) )
         {
-            AwsIotLogInfo( "Thread %d has published %d of %d messages.",
-                           pParams->threadNumber, i, pParams->publishLimit );
+            IotLogInfo( "Thread %d has published %d of %d messages.",
+                        pParams->threadNumber, i, pParams->publishLimit );
         }
 
         /* Sleep until the next PUBLISH should be sent. */
         if( nanosleep( &sleepTime, NULL ) != 0 )
         {
-            AwsIotLogError( "Error in nanosleep." );
+            IotLogError( "Error in nanosleep." );
             status = AWS_IOT_MQTT_BAD_RESPONSE;
             break;
         }
@@ -427,13 +427,13 @@ TEST_SETUP( MQTT_Stress )
     int i = 0;
     AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
     AwsIotMqttSubscription_t pSubscriptions[ _TEST_TOPIC_NAME_COUNT ] = { AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER };
-    const AwsIotLogConfig_t logHideAll = { .hideLogLevel = true, .hideLibraryName = true, .hideTimestring = true };
+    const IotLogConfig_t logHideAll = { .hideLogLevel = true, .hideLibraryName = true, .hideTimestring = true };
 
     /* Clear the PINGREQ override flag. */
     _pingreqOverrideCalled = false;
 
     /* Empty log message to log a new line. */
-    AwsIotLog( AWS_IOT_LOG_INFO, &logHideAll, " " );
+    IotLog( IOT_LOG_INFO, &logHideAll, " " );
 
     /* Create the publish counter semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &receivedPublishCounter,
@@ -549,11 +549,11 @@ TEST( MQTT_Stress, KeepAlive )
 
     /* Send no MQTT packets for a long time. The keep-alive must be used to keep
      * the connection open. */
-    AwsIotLogInfo( "KeepAlive test sleeping for %u seconds.", sleepTime );
+    IotLogInfo( "KeepAlive test sleeping for %u seconds.", sleepTime );
     sleep( sleepTime );
 
     /* Send a PUBLISH to verify that the connection is still usable. */
-    AwsIotLogInfo( "KeepAlive test checking MQTT connection." );
+    IotLogInfo( "KeepAlive test checking MQTT connection." );
     TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, _checkConnection() );
 
     /* Check that the PINGREQ override was used. */
@@ -598,7 +598,7 @@ TEST( MQTT_Stress, BlockingCallback )
         /* Wait for the callback to return, then check that the connection is
          * still usable. */
         IotSemaphore_Wait( &waitSem );
-        AwsIotLogInfo( "BlockingCallback test checking MQTT connection." );
+        IotLogInfo( "BlockingCallback test checking MQTT connection." );
         TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, _checkConnection() );
     }
 
@@ -628,7 +628,7 @@ TEST( MQTT_Stress, ClientClosesConnection )
         publishThreadParams[ i ].publishLimit = AWS_IOT_TEST_MQTT_PUBLISHES_PER_THREAD;
     }
 
-    AwsIotLogInfo( "ClientClosesConnection test creating threads." );
+    IotLogInfo( "ClientClosesConnection test creating threads." );
 
     /* Spawn the threads for the test. */
     for( i = 0; i < AWS_IOT_TEST_MQTT_THREADS; i++ )

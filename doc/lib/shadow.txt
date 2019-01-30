@@ -42,7 +42,7 @@ digraph shadow_dependencies
 Currently, the Shadow library has the following dependencies:
 - The MQTT library for sending the messages that interact with the Thing Shadow service. See [this page](@ref mqtt_dependencies) for the dependencies of the MQTT library, which are not shown in the graph above.
 - The queue library for maintaining the data structures for managing in-progress Shadow operations.
-- The logging library may be used if @ref AWS_IOT_LOG_LEVEL_SHADOW is not @ref AWS_IOT_LOG_NONE.
+- The logging library may be used if @ref AWS_IOT_LOG_LEVEL_SHADOW is not #IOT_LOG_NONE.
 
 In addition to the components above, the Shadow library also depends on C standard library headers.
 */
@@ -79,7 +79,7 @@ If the `mqttTimeout` argument of @ref shadow_function_init is `0`, the Shadow li
 Log messages from the Shadow library at or below this setting will be printed.
 
 @configpossible One of the @ref logging_constants_levels.<br>
-@configdefault @ref AWS_IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #AWS_IOT_LOG_NONE.
+@configdefault @ref IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #IOT_LOG_NONE.
 
 @section AwsIotShadow_Assert
 @brief Assertion function used when @ref AWS_IOT_SHADOW_ENABLE_ASSERTS is `1`.

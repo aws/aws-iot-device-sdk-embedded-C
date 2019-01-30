@@ -55,18 +55,18 @@
 #include "platform/iot_threads.h"
 
 /* Configure logs for the functions in this file. */
-#ifdef AWS_IOT_LOG_LEVEL_PLATFORM
-    #define _LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_PLATFORM
+#ifdef IOT_LOG_LEVEL_PLATFORM
+    #define _LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_PLATFORM
 #else
-    #ifdef AWS_IOT_LOG_LEVEL_GLOBAL
-        #define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_LEVEL_GLOBAL
+    #ifdef IOT_LOG_LEVEL_GLOBAL
+        #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
     #else
-        #define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_NONE
+        #define _LIBRARY_LOG_LEVEL    IOT_LOG_NONE
     #endif
 #endif
 
 #define _LIBRARY_LOG_NAME    ( "THREAD" )
-#include "aws_iot_logging_setup.h"
+#include "iot_logging_setup.h"
 
 /*
  * Provide default values for undefined memory allocation functions.
@@ -144,14 +144,14 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
     pthread_t newThread;
     pthread_attr_t threadAttributes;
 
-    AwsIotLogDebug( "Creating new thread." );
+    IotLogDebug( "Creating new thread." );
 
     /* Allocate memory for the new thread. */
     _threadInfo_t * pThreadInfo = IotThreads_Malloc( sizeof( _threadInfo_t ) );
 
     if( pThreadInfo == NULL )
     {
-        AwsIotLogError( "Failed to allocate memory for new thread." );
+        IotLogError( "Failed to allocate memory for new thread." );
 
         status = false;
     }
@@ -164,8 +164,8 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
 
         if( posixErrno != 0 )
         {
-            AwsIotLogError( "Failed to initialize thread attributes. errno=%d.",
-                            posixErrno );
+            IotLogError( "Failed to initialize thread attributes. errno=%d.",
+                         posixErrno );
 
             status = false;
         }
@@ -177,8 +177,8 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
 
             if( posixErrno != 0 )
             {
-                AwsIotLogError( "Failed to set detached thread attribute. errno=%d.",
-                                posixErrno );
+                IotLogError( "Failed to set detached thread attribute. errno=%d.",
+                             posixErrno );
                 ( void ) pthread_attr_destroy( &threadAttributes );
 
                 status = false;
@@ -200,7 +200,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
 
         if( posixErrno != 0 )
         {
-            AwsIotLogError( "Failed to create new thread. errno=%d.", posixErrno );
+            IotLogError( "Failed to create new thread. errno=%d.", posixErrno );
 
             status = false;
         }
@@ -210,8 +210,8 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
 
         if( posixErrno != 0 )
         {
-            AwsIotLogWarn( "Failed to destroy thread attributes. errno=%d.",
-                           posixErrno );
+            IotLogWarn( "Failed to destroy thread attributes. errno=%d.",
+                        posixErrno );
         }
     }
 
@@ -232,15 +232,15 @@ bool IotMutex_Create( IotMutex_t * const pNewMutex )
 {
     bool status = true;
 
-    AwsIotLogDebug( "Creating new mutex %p.", pNewMutex );
+    IotLogDebug( "Creating new mutex %p.", pNewMutex );
 
     int mutexError = pthread_mutex_init( pNewMutex, NULL );
 
     if( mutexError != 0 )
     {
-        AwsIotLogError( "Failed to create new mutex %p. errno=%d.",
-                        pNewMutex,
-                        mutexError );
+        IotLogError( "Failed to create new mutex %p. errno=%d.",
+                     pNewMutex,
+                     mutexError );
 
         status = false;
     }
@@ -252,15 +252,15 @@ bool IotMutex_Create( IotMutex_t * const pNewMutex )
 
 void IotMutex_Destroy( IotMutex_t * const pMutex )
 {
-    AwsIotLogDebug( "Destroying mutex %p.", pMutex );
+    IotLogDebug( "Destroying mutex %p.", pMutex );
 
     int mutexError = pthread_mutex_destroy( pMutex );
 
     if( mutexError != 0 )
     {
-        AwsIotLogWarn( "Failed to destroy mutex %p. errno=%d.",
-                       pMutex,
-                       mutexError );
+        IotLogWarn( "Failed to destroy mutex %p. errno=%d.",
+                    pMutex,
+                    mutexError );
     }
 }
 
@@ -268,15 +268,15 @@ void IotMutex_Destroy( IotMutex_t * const pMutex )
 
 void IotMutex_Lock( IotMutex_t * const pMutex )
 {
-    AwsIotLogDebug( "Locking mutex %p.", pMutex );
+    IotLogDebug( "Locking mutex %p.", pMutex );
 
     int mutexError = pthread_mutex_lock( pMutex );
 
     if( mutexError != 0 )
     {
-        AwsIotLogWarn( "Failed to lock mutex %p. errno=%d.",
-                       pMutex,
-                       mutexError );
+        IotLogWarn( "Failed to lock mutex %p. errno=%d.",
+                    pMutex,
+                    mutexError );
     }
 }
 
@@ -286,15 +286,15 @@ bool IotMutex_TryLock( IotMutex_t * const pMutex )
 {
     bool status = true;
 
-    AwsIotLogDebug( "Attempting to lock mutex %p.", pMutex );
+    IotLogDebug( "Attempting to lock mutex %p.", pMutex );
 
     int mutexError = pthread_mutex_trylock( pMutex );
 
     if( mutexError != 0 )
     {
-        AwsIotLogDebug( "Mutex mutex %p is not available. errno=%d.",
-                        pMutex,
-                        mutexError );
+        IotLogDebug( "Mutex mutex %p is not available. errno=%d.",
+                     pMutex,
+                     mutexError );
 
         status = false;
     }
@@ -306,15 +306,15 @@ bool IotMutex_TryLock( IotMutex_t * const pMutex )
 
 void IotMutex_Unlock( IotMutex_t * const pMutex )
 {
-    AwsIotLogDebug( "Unlocking mutex %p.", pMutex );
+    IotLogDebug( "Unlocking mutex %p.", pMutex );
 
     int mutexError = pthread_mutex_unlock( pMutex );
 
     if( mutexError != 0 )
     {
-        AwsIotLogWarn( "Failed to unlock mutex %p. errno=%d.",
-                       pMutex,
-                       mutexError );
+        IotLogWarn( "Failed to unlock mutex %p. errno=%d.",
+                    pMutex,
+                    mutexError );
     }
 }
 
@@ -326,12 +326,12 @@ bool IotSemaphore_Create( IotSemaphore_t * const pNewSemaphore,
 {
     bool status = true;
 
-    AwsIotLogDebug( "Creating new semaphore %p.", pNewSemaphore );
+    IotLogDebug( "Creating new semaphore %p.", pNewSemaphore );
 
     if( maxValue > ( uint32_t ) SEM_VALUE_MAX )
     {
-        AwsIotLogError( "%lu is larger than the maximum value a semaphore may"
-                        " have on this system.", maxValue );
+        IotLogError( "%lu is larger than the maximum value a semaphore may"
+                     " have on this system.", maxValue );
 
         status = false;
     }
@@ -339,9 +339,9 @@ bool IotSemaphore_Create( IotSemaphore_t * const pNewSemaphore,
     {
         if( sem_init( pNewSemaphore, 0, ( unsigned int ) initialValue ) != 0 )
         {
-            AwsIotLogError( "Failed to create new semaphore %p. errno=%d.",
-                            pNewSemaphore,
-                            errno );
+            IotLogError( "Failed to create new semaphore %p. errno=%d.",
+                         pNewSemaphore,
+                         errno );
 
             status = false;
         }
@@ -358,12 +358,12 @@ uint32_t IotSemaphore_GetCount( IotSemaphore_t * const pSemaphore )
 
     if( sem_getvalue( pSemaphore, &count ) != 0 )
     {
-        AwsIotLogWarn( "Failed to query semaphore count of %p. errno=%d.",
-                       pSemaphore,
-                       errno );
+        IotLogWarn( "Failed to query semaphore count of %p. errno=%d.",
+                    pSemaphore,
+                    errno );
     }
 
-    AwsIotLogDebug( "Semaphore %p has count %d.", pSemaphore, count );
+    IotLogDebug( "Semaphore %p has count %d.", pSemaphore, count );
 
     return ( uint32_t ) count;
 }
@@ -372,13 +372,13 @@ uint32_t IotSemaphore_GetCount( IotSemaphore_t * const pSemaphore )
 
 void IotSemaphore_Destroy( IotSemaphore_t * const pSemaphore )
 {
-    AwsIotLogDebug( "Destroying semaphore %p.", pSemaphore );
+    IotLogDebug( "Destroying semaphore %p.", pSemaphore );
 
     if( sem_destroy( pSemaphore ) != 0 )
     {
-        AwsIotLogWarn( "Failed to destroy semaphore %p. errno=%d.",
-                       pSemaphore,
-                       errno );
+        IotLogWarn( "Failed to destroy semaphore %p. errno=%d.",
+                    pSemaphore,
+                    errno );
     }
 }
 
@@ -386,13 +386,13 @@ void IotSemaphore_Destroy( IotSemaphore_t * const pSemaphore )
 
 void IotSemaphore_Wait( IotSemaphore_t * pSemaphore )
 {
-    AwsIotLogDebug( "Waiting on semaphore %p.", pSemaphore );
+    IotLogDebug( "Waiting on semaphore %p.", pSemaphore );
 
     if( sem_wait( pSemaphore ) != 0 )
     {
-        AwsIotLogWarn( "Failed to wait on semaphore %p. errno=%d.",
-                       pSemaphore,
-                       errno );
+        IotLogWarn( "Failed to wait on semaphore %p. errno=%d.",
+                    pSemaphore,
+                    errno );
     }
 }
 
@@ -402,13 +402,13 @@ bool IotSemaphore_TryWait( IotSemaphore_t * const pSemaphore )
 {
     bool status = true;
 
-    AwsIotLogDebug( "Attempting to wait on semaphore %p.", pSemaphore );
+    IotLogDebug( "Attempting to wait on semaphore %p.", pSemaphore );
 
     if( sem_trywait( pSemaphore ) != 0 )
     {
-        AwsIotLogDebug( "Semaphore %p is not available. errno=%d.",
-                        pSemaphore,
-                        errno );
+        IotLogDebug( "Semaphore %p is not available. errno=%d.",
+                     pSemaphore,
+                     errno );
 
         status = false;
     }
@@ -424,12 +424,13 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * const pSemaphore,
     bool status = true;
     struct timespec timeout = { 0 };
 
-    AwsIotLogDebug( "Attempting to wait on semaphore %p with timeout %llu.",
-                    pSemaphore, timeoutMs );
+    IotLogDebug( "Attempting to wait on semaphore %p with timeout %llu.",
+                 pSemaphore,
+                 timeoutMs );
 
     if( IotClock_TimeoutToTimespec( timeoutMs, &timeout ) == false )
     {
-        AwsIotLogError( "Invalid timeout." );
+        IotLogError( "Invalid timeout." );
 
         status = false;
     }
@@ -437,9 +438,9 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * const pSemaphore,
     {
         if( sem_timedwait( pSemaphore, &timeout ) != 0 )
         {
-            AwsIotLogDebug( "Semaphore %p is not available. errno=%d.",
-                            pSemaphore,
-                            errno );
+            IotLogDebug( "Semaphore %p is not available. errno=%d.",
+                         pSemaphore,
+                         errno );
 
             status = false;
         }
@@ -452,13 +453,13 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * const pSemaphore,
 
 void IotSemaphore_Post( IotSemaphore_t * const pSemaphore )
 {
-    AwsIotLogDebug( "Posting to semaphore %p.", pSemaphore );
+    IotLogDebug( "Posting to semaphore %p.", pSemaphore );
 
     if( sem_post( pSemaphore ) != 0 )
     {
-        AwsIotLogWarn( "Failed to post to semaphore %p. errno=%d.",
-                       pSemaphore,
-                       errno );
+        IotLogWarn( "Failed to post to semaphore %p. errno=%d.",
+                    pSemaphore,
+                    errno );
     }
 }
 

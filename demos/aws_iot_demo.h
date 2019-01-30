@@ -43,15 +43,15 @@
 #ifdef AWS_IOT_LOG_LEVEL_DEMO
     #define _LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_DEMO
 #else
-    #ifdef AWS_IOT_LOG_LEVEL_GLOBAL
-        #define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_LEVEL_GLOBAL
+    #ifdef IOT_LOG_LEVEL_GLOBAL
+        #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
     #else
-        #define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_NONE
+        #define _LIBRARY_LOG_LEVEL    IOT_LOG_NONE
     #endif
 #endif
 
 #define _LIBRARY_LOG_NAME    ( "DEMO" )
-#include "aws_iot_logging_setup.h"
+#include "iot_logging_setup.h"
 
 /*----------------------------- Demo functions ------------------------------*/
 

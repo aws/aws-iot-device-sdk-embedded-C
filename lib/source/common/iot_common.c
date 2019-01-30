@@ -33,14 +33,14 @@
 #endif
 
 /* Configure logs for the functions in this file. */
-#ifdef AWS_IOT_LOG_LEVEL_GLOBAL
-    #define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_LEVEL_GLOBAL
+#ifdef IOT_LOG_LEVEL_GLOBAL
+    #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
 #else
-    #define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_NONE
+    #define _LIBRARY_LOG_LEVEL    IOT_LOG_NONE
 #endif
 
 #define _LIBRARY_LOG_NAME         ( "COMMON" )
-#include "aws_iot_logging_setup.h"
+#include "iot_logging_setup.h"
 
 /*-----------------------------------------------------------*/
 
@@ -54,13 +54,13 @@ bool IotCommon_Init( void )
 
         if( status == false )
         {
-            AwsIotLogError( "Failed to initialize static memory." );
+            IotLogError( "Failed to initialize static memory." );
         }
     #endif
 
     if( status == true )
     {
-        AwsIotLogInfo( "Common libraries successfully initialized." );
+        IotLogInfo( "Common libraries successfully initialized." );
     }
 
     return status;
@@ -75,7 +75,7 @@ void IotCommon_Cleanup( void )
         IotStaticMemory_Cleanup();
     #endif
 
-    AwsIotLogInfo( "Common libraries cleanup done." );
+    IotLogInfo( "Common libraries cleanup done." );
 }
 
 /*-----------------------------------------------------------*/

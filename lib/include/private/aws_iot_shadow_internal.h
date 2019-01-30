@@ -64,15 +64,15 @@
 #ifdef AWS_IOT_LOG_LEVEL_SHADOW
     #define _LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_SHADOW
 #else
-    #ifdef AWS_IOT_LOG_LEVEL_GLOBAL
-        #define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_LEVEL_GLOBAL
+    #ifdef IOT_LOG_LEVEL_GLOBAL
+        #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
     #else
-        #define _LIBRARY_LOG_LEVEL    AWS_IOT_LOG_NONE
+        #define _LIBRARY_LOG_LEVEL    IOT_LOG_NONE
     #endif
 #endif
 
 #define _LIBRARY_LOG_NAME    ( "Shadow" )
-#include "aws_iot_logging_setup.h"
+#include "iot_logging_setup.h"
 
 /*
  * Provide default values for undefined memory allocation functions based on
@@ -445,7 +445,7 @@ typedef struct _shadowSubscription
 } _shadowSubscription_t;
 
 /* Declarations of names printed in logs. */
-#if _LIBRARY_LOG_LEVEL > AWS_IOT_LOG_NONE
+#if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
     extern const char * const _pAwsIotShadowOperationNames[];
     extern const char * const _pAwsIotShadowCallbackNames[];
 #endif
