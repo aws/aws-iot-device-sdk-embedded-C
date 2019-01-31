@@ -59,7 +59,7 @@
  * at any time. This struct should only be passed as the connection handle to the
  * functions declared in this file. Do not directly modify its members!
  */
-typedef IotNetworkConnectionOpenssl
+typedef struct IotNetworkConnectionOpenssl
 {
     int socket;        /**< @brief Socket associated with this connection. */
     SSL * pSslContext; /**< @brief SSL context for connection. */
@@ -68,12 +68,12 @@ typedef IotNetworkConnectionOpenssl
     /** @brief Status of the receive thread for this connection. */
     enum
     {
-        _NONE, _ACTIVE, _TERMINATED
+        _NONE = 0, _ACTIVE, _TERMINATED
     } receiveThreadStatus;
     pthread_t receiveThread;                     /**< @brief Thread that handles receiving on this connection. */
 
     IotNetworkReceiveCallback_t receiveCallback; /**< @brief Network receive callback, if any. */
-    void * pContext;                             /**< @brief The first parameter to pass to the receive callback. */
+    void * pCallbackContext;                     /**< @brief The first parameter to pass to the receive callback. */
 } IotNetworkConnectionOpenssl_t;
 
 /**
@@ -216,7 +216,7 @@ void IotNetworkOpenssl_Cleanup( void );
  */
 IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
                                             void * pCredentialInfo,
-                                            void ** const pConnection );
+                                            void * const pConnection );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::setReceiveCallback for
@@ -230,17 +230,17 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
  * @brief An implementation of #IotNetworkInterface_t::send for POSIX systems
  * with OpenSSL.
  */
-IotNetworkError_t IotNetworkOpenssl_Send( void * pConnection,
-                                          const uint8_t * pMessage,
-                                          size_t messageLength );
+size_t IotNetworkOpenssl_Send( void * pConnection,
+                               const uint8_t * pMessage,
+                               size_t messageLength );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::receive for POSIX systems
  * with OpenSSL.
  */
-IotNetworkError_t IotNetworkOpenssl_Receive( void * pConnection,
-                                             uint8_t * const pBuffer,
-                                             size_t bytesRequested );
+size_t IotNetworkOpenssl_Receive( void * pConnection,
+                                  uint8_t * const pBuffer,
+                                  size_t bytesRequested );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::close for POSIX systems

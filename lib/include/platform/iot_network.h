@@ -156,7 +156,7 @@ typedef struct IotNetworkInterface
     /* @[declare_platform_network_create] */
     IotNetworkError_t ( * create )( void * pConnectionInfo,
                                     void * pCredentialInfo,
-                                    void ** const pConnection );
+                                    void * const pConnection );
     /* @[declare_platform_network_create] */
 
     /**
