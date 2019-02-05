@@ -137,23 +137,75 @@ static void * _threadRoutineWrapper( void * pArgument )
 /*-----------------------------------------------------------*/
 
 bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
-                               void * pArgument )
+                               void * pArgument,
+                               int32_t priority,
+                               size_t stackSize )
 {
     bool status = true;
     int posixErrno = 0;
+    _threadInfo_t * pThreadInfo = NULL;
     pthread_t newThread;
     pthread_attr_t threadAttributes;
 
     IotLogDebug( "Creating new thread." );
 
-    /* Allocate memory for the new thread. */
-    _threadInfo_t * pThreadInfo = IotThreads_Malloc( sizeof( _threadInfo_t ) );
-
-    if( pThreadInfo == NULL )
+    /* Check priority if a non-default scheduling priority is given. */
+    if( priority != IOT_THREAD_DEFAULT_PRIORITY )
     {
-        IotLogError( "Failed to allocate memory for new thread." );
+        if( priority < 0 )
+        {
+            IotLogError( "Priority %ld is not valid for a new thread.",
+                         ( long int ) priority );
+            status = false;
+        }
+        else if( ( int ) priority < sched_get_priority_min( SCHED_RR ) )
+        {
+            IotLogError( "Priority %ld is less than minimum allowed %d.",
+                         sched_get_priority_min( SCHED_RR ) );
+            status = false;
+        }
+        else if( ( int ) priority > sched_get_priority_max( SCHED_RR ) )
+        {
+            IotLogError( "Priority %ld is greater than maximum allowed %d.",
+                         sched_get_priority_max( SCHED_RR ) );
+            status = false;
+        }
+        else
+        {
+            IotLogInfo( "New thread will have priority %ld with SCHED_RR policy.",
+                        ( long int ) priority );
+        }
+    }
 
-        status = false;
+    /* Check stack size if a non-default value is given. */
+    if( status == true )
+    {
+        /* Adjust stack size based on system minimum. */
+        if( stackSize != IOT_THREAD_DEFAULT_STACK_SIZE )
+        {
+            if( stackSize < PTHREAD_STACK_MIN )
+            {
+                IotLogWarn( "Stack size of %lu is smaller than system minimum %d."
+                            " System minimum will be used instead.",
+                            ( unsigned long ) stackSize,
+                            PTHREAD_STACK_MIN );
+
+                stackSize = PTHREAD_STACK_MIN;
+            }
+        }
+    }
+
+    if( status == true )
+    {
+        /* Allocate memory for the new thread. */
+        pThreadInfo = IotThreads_Malloc( sizeof( _threadInfo_t ) );
+
+        if( pThreadInfo == NULL )
+        {
+            IotLogError( "Failed to allocate memory for new thread." );
+
+            status = false;
+        }
     }
 
     /* Set up thread attributes object. */
@@ -179,9 +231,68 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
             {
                 IotLogError( "Failed to set detached thread attribute. errno=%d.",
                              posixErrno );
-                ( void ) pthread_attr_destroy( &threadAttributes );
 
                 status = false;
+            }
+
+            /* Set the stack size if given. */
+            if( status == true )
+            {
+                if( stackSize != IOT_THREAD_DEFAULT_STACK_SIZE )
+                {
+                    posixErrno = pthread_attr_setstacksize( &threadAttributes,
+                                                            stackSize );
+
+                    if( posixErrno != 0 )
+                    {
+                        IotLogError( "Failed to set stack size %lu.", ( unsigned long ) stackSize );
+
+                        status = false;
+                    }
+                }
+            }
+
+            /* Set scheduler policy and priority if given. */
+            if( status == true )
+            {
+                if( priority != IOT_THREAD_DEFAULT_PRIORITY )
+                {
+                    struct sched_param schedulerParam =
+                    {
+                        .sched_priority = ( int ) priority
+                    };
+
+                    /* Set scheduler policy SCHED_RR. */
+                    posixErrno = pthread_attr_setschedpolicy( &threadAttributes,
+                                                              SCHED_RR );
+
+                    if( posixErrno != 0 )
+                    {
+                        IotLogError( "Failed to set scheduling policy SCHED_RR." );
+
+                        status = false;
+                    }
+
+                    /* Set scheduler priority. */
+                    if( status == true )
+                    {
+                        posixErrno = pthread_attr_setschedparam( &threadAttributes,
+                                                                 &schedulerParam );
+
+                        if( posixErrno != 0 )
+                        {
+                            IotLogError( "Failed to set scheduling priority %d.",
+                                         schedulerParam.sched_priority );
+
+                            status = false;
+                        }
+                    }
+                }
+            }
+
+            if( status == false )
+            {
+                ( void ) pthread_attr_destroy( &threadAttributes );
             }
         }
     }

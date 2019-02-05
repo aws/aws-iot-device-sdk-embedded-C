@@ -630,7 +630,9 @@ AwsIotMqttError_t AwsIotMqttInternal_EnqueueOperation( _mqttOperation_t * const 
     {
         /* Create new thread. */
         if( Iot_CreateDetachedThread( _processOperation,
-                                      pQueue ) == false )
+                                      pQueue,
+                                      IOT_THREAD_DEFAULT_PRIORITY,
+                                      IOT_THREAD_DEFAULT_STACK_SIZE ) == false )
         {
             /* New thread could not be created. Remove enqueued operation and
              * report error. */
