@@ -29,6 +29,9 @@
     #include IOT_CONFIG_FILE
 #endif
 
+/* Standard includes. */
+#include <string.h>
+
 /* MQTT internal include. */
 #include "private/aws_iot_mqtt_internal.h"
 
@@ -281,7 +284,9 @@ TEST( MQTT_Unit_Validate, ValidatePublish )
 TEST( MQTT_Unit_Validate, ValidateReference )
 {
     bool validateStatus = false;
-    _mqttOperation_t reference = { 0 };
+    _mqttOperation_t reference;
+
+    ( void ) memset( &reference, 0x00, sizeof( _mqttOperation_t ) );
 
     /* NULL parameter. */
     validateStatus = AwsIotMqttInternal_ValidateReference( NULL );

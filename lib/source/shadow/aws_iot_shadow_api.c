@@ -585,7 +585,7 @@ static void _updatedCallbackWrapper( void * pArgument,
 AwsIotShadowError_t AwsIotShadow_Init( uint64_t mqttTimeoutMs )
 {
     /* Create the Shadow pending operation list mutex. */
-    if( IotMutex_Create( &( _AwsIotShadowPendingOperationsMutex ) ) == false )
+    if( IotMutex_Create( &( _AwsIotShadowPendingOperationsMutex ), false ) == false )
     {
         IotLogError( "Failed to create Shadow pending operation list." );
 
@@ -593,7 +593,7 @@ AwsIotShadowError_t AwsIotShadow_Init( uint64_t mqttTimeoutMs )
     }
 
     /* Create the Shadow subscription list mutex. */
-    if( IotMutex_Create( &( _AwsIotShadowSubscriptionsMutex ) ) == false )
+    if( IotMutex_Create( &( _AwsIotShadowSubscriptionsMutex ), false ) == false )
     {
         IotLogError( "Failed to create Shadow subscription list." );
         IotMutex_Destroy( &_AwsIotShadowPendingOperationsMutex );

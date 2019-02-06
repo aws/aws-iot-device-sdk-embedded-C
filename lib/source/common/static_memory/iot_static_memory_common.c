@@ -181,7 +181,7 @@ void IotStaticMemory_ReturnInUse( void * ptr,
 
 bool IotStaticMemory_Init( void )
 {
-    return IotMutex_Create( &( _mutex ) );
+    return IotMutex_Create( &( _mutex ), false );
 }
 
 /*-----------------------------------------------------------*/

@@ -125,6 +125,10 @@ int main( int argc,
         credentials.pClientCertPath = demoArguments.pClientCertPath;
         credentials.pPrivateKeyPath = demoArguments.pPrivateKeyPath;
 
+        /* Set server info. */
+        serverInfo.pHostName = demoArguments.pHostName;
+        serverInfo.port = demoArguments.port;
+
         /* Establish a TCP connection to the MQTT server. */
         if( IotNetworkOpenssl_Create( &serverInfo,
                                       pCredentials,
@@ -140,7 +144,7 @@ int main( int argc,
          * callback processes MQTT data from the network. */
         if( IotNetworkOpenssl_SetReceiveCallback( &networkConnection,
                                                   AwsIotMqtt_ReceiveCallback,
-                                                  &mqttConnection ) == IOT_NETWORK_SUCCESS )
+                                                  &mqttConnection ) != IOT_NETWORK_SUCCESS )
         {
             status = -1;
         }
