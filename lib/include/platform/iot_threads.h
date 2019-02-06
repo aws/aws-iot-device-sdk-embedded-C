@@ -40,6 +40,16 @@
 #include "types/iot_platform_types.h"
 
 /**
+ * @brief A value representing the system default for new thread priority.
+ */
+#define IOT_THREAD_DEFAULT_PRIORITY      0
+
+/**
+ * @brief A value representhing the system default for new thread stack size.
+ */
+#define IOT_THREAD_DEFAULT_STACK_SIZE    0
+
+/**
  * @functionspage{platform_threads,platform thread management,Thread Management}
  * - @functionname{platform_threads_function_createdetachedthread}
  * - @functionname{platform_threads_function_mutexcreate}
@@ -81,6 +91,12 @@
  *
  * @param[in] threadRoutine The function this thread should run.
  * @param[in] pArgument The argument passed to `threadRoutine`.
+ * @param[in] priority Represents the priority of the new thread, as defined by
+ * the system. The value #IOT_THREAD_DEFAULT_PRIORITY (i.e. `0`) must be used to
+ * represent the system default for thread priority.
+ * @param[in] stackSize Represents the stack size of the new thread, as defined
+ * by the system. The value #IOT_THREAD_DEFAULT_STACK_SIZE (i.e. `0`) must be used
+ * to represent the system default for stack size.
  *
  * @return `true` if the new thread was successfully created; `false` otherwise.
  *
@@ -88,8 +104,11 @@
  * // Thread routine.
  * void threadRoutine( void * pArgument );
  *
- * // Run threadRoutine in a detached thread.
- * if( Iot_CreateDetachedThread( threadRoutine, NULL ) == true )
+ * // Run threadRoutine in a detached thread, using default priority and stack size.
+ * if( Iot_CreateDetachedThread( threadRoutine,
+ *                               NULL,
+ *                               IOT_THREAD_DEFAULT_PRIORITY,
+ *                               IOT_THREAD_DEFAULT_STACK_SIZE ) == true )
  * {
  *     // Success
  * }
@@ -101,7 +120,9 @@
  */
 /* @[declare_platform_threads_createdetachedthread] */
 bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
-                               void * pArgument );
+                               void * pArgument,
+                               int32_t priority,
+                               size_t stackSize );
 /* @[declare_platform_threads_createdetachedthread] */
 
 /**
