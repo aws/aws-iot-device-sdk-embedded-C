@@ -384,9 +384,10 @@ static bool _processBuffer( const _mqttOperation_t * const pOperation,
 {
     /* Call the receive callback on pBuffer. */
     int32_t bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
+                                                         NULL,
                                                          pBuffer,
-                                                         0,
                                                          bufferSize,
+                                                         0,
                                                          _freeWrapper );
 
     /* Free pBuffer if the receive callback wasn't expected to free it. */
@@ -432,9 +433,10 @@ static bool _processPublish( const uint8_t * const pPublish,
 
     /* Call the receive callback on pPublish. */
     bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
+                                                 NULL,
                                                  pPublish,
-                                                 0,
                                                  publishSize,
+                                                 0,
                                                  _freeWrapper );
 
     /* Check how many times the publish callback is invoked. */
@@ -701,9 +703,10 @@ TEST( MQTT_Unit_Receive, InvalidPacket )
 
     /* Processing a control packet 0xf is a protocol violation. */
     bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
+                                                 NULL,
                                                  &invalidPacket,
-                                                 0,
                                                  sizeof( uint8_t ),
+                                                 0,
                                                  NULL );
     TEST_ASSERT_EQUAL( -1, bytesProcessed );
 
@@ -748,18 +751,20 @@ TEST( MQTT_Unit_Receive, DataStream )
 
     /* Passing an offset greater than dataLength should not process anything. */
     bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
+                                                 NULL,
                                                  pDataStream,
-                                                 5,
                                                  4,
+                                                 5,
                                                  _freeWrapper );
     TEST_ASSERT_EQUAL( 0, bytesProcessed );
 
     /* The first call to process 64 bytes should only process the CONNACK and
      * SUBACK. */
     bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
+                                                 NULL,
                                                  pDataStream,
-                                                 0,
                                                  processOffset + 64,
+                                                 0,
                                                  _freeWrapper );
     TEST_ASSERT_EQUAL( 11, bytesProcessed );
     processOffset += ( size_t ) bytesProcessed;
@@ -767,9 +772,10 @@ TEST( MQTT_Unit_Receive, DataStream )
     /* A second call to process 64 bytes should not process anything, as the
      * PUBLISH is incomplete. */
     bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
+                                                 NULL,
                                                  pDataStream,
-                                                 processOffset,
                                                  processOffset + 64,
+                                                 processOffset,
                                                  _freeWrapper );
     TEST_ASSERT_EQUAL( 0, bytesProcessed );
 
@@ -782,18 +788,20 @@ TEST( MQTT_Unit_Receive, DataStream )
 
     /* A call to process 5 bytes should only process the UNSUBACK (4 bytes). */
     bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
+                                                 NULL,
                                                  pDataStream,
-                                                 processOffset,
                                                  processOffset + 5,
+                                                 processOffset,
                                                  _freeWrapper );
     TEST_ASSERT_EQUAL( 4, bytesProcessed );
     processOffset += ( size_t ) bytesProcessed;
 
     /* Process the last 2 bytes (PINGRESP). */
     bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
+                                                 NULL,
                                                  pDataStream,
-                                                 processOffset,
                                                  processOffset + 2,
+                                                 processOffset,
                                                  _freeWrapper );
     TEST_ASSERT_EQUAL( 2, bytesProcessed );
 

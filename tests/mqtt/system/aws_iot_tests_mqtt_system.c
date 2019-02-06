@@ -39,6 +39,9 @@
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
+/* POSIX+OpenSSL network include. */
+#include "posix/iot_network_openssl.h"
+
 /* Test framework includes. */
 #include "unity_fixture.h"
 
@@ -117,7 +120,7 @@ typedef struct _operationCompleteParams
  * the test network function files. */
 extern bool AwsIotTest_NetworkSetup( void );
 extern void AwsIotTest_NetworkCleanup( void );
-extern bool AwsIotTest_NetworkConnect( void ** const pNewConnection,
+extern bool AwsIotTest_NetworkConnect( void * const pNewConnection,
                                        AwsIotMqttConnection_t * pMqttConnection );
 extern void AwsIotTest_NetworkClose( void * pDisconnectContext );
 extern void AwsIotTest_NetworkDestroy( void * pConnection );
@@ -452,16 +455,16 @@ TEST_SETUP( MQTT_System )
     _unsubscribeSerializerOverride = false;
     _disconnectSerializerOverride = false;
 
-    /* Set up the network stack. */
-    if( AwsIotTest_NetworkSetup() == false )
-    {
-        TEST_FAIL_MESSAGE( "Failed to set up network connection." );
-    }
-
     /* Initialize the MQTT library. */
     if( AwsIotMqtt_Init() != AWS_IOT_MQTT_SUCCESS )
     {
         TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
+    }
+
+    /* Set up the network stack. */
+    if( AwsIotTest_NetworkSetup() == false )
+    {
+        TEST_FAIL_MESSAGE( "Failed to set up network connection." );
     }
 
     /* Generate a new, unique client identifier based on the time if no client
@@ -485,12 +488,12 @@ TEST_SETUP( MQTT_System )
  */
 TEST_TEAR_DOWN( MQTT_System )
 {
-    /* Clean up the network stack. */
-    AwsIotTest_NetworkCleanup();
-
     /* Clean up the MQTT library. */
     AwsIotMqtt_Cleanup();
     _AwsIotTestMqttConnection = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
+
+    /* Clean up the network stack. */
+    AwsIotTest_NetworkCleanup();
 }
 
 /*-----------------------------------------------------------*/
@@ -651,6 +654,7 @@ TEST( MQTT_System, SubscribePublishAsync )
  */
 TEST( MQTT_System, LastWillAndTestament )
 {
+    bool lwtListenerCreated = false;
     AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
     AwsIotMqttNetIf_t lwtNetIf = _AwsIotTestNetworkInterface;
     char pLwtListenerClientIdentifier[ _CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
@@ -659,7 +663,7 @@ TEST( MQTT_System, LastWillAndTestament )
                             connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
     AwsIotMqttSubscription_t willSubscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     AwsIotMqttPublishInfo_t willInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    void * pLwtListenerConnection = NULL;
+    IotNetworkConnectionOpenssl_t lwtListenerConnection = IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER;
     IotSemaphore_t waitSem;
 
     /* Create the wait semaphore. */
@@ -682,13 +686,14 @@ TEST( MQTT_System, LastWillAndTestament )
         /* Establish an independent MQTT over TCP connection to receive a Last
          * Will and Testament message. */
         TEST_ASSERT_EQUAL( true,
-                           AwsIotTest_NetworkConnect( &pLwtListenerConnection,
+                           AwsIotTest_NetworkConnect( &lwtListenerConnection,
                                                       &lwtListener ) );
+        lwtListenerCreated = true;
 
         if( TEST_PROTECT() )
         {
-            lwtNetIf.pDisconnectContext = pLwtListenerConnection;
-            lwtNetIf.pSendContext = pLwtListenerConnection;
+            lwtNetIf.pDisconnectContext = &lwtListenerConnection;
+            lwtNetIf.pSendContext = &lwtListenerConnection;
             lwtConnectInfo.cleanSession = true;
             lwtConnectInfo.pClientIdentifier = pLwtListenerClientIdentifier;
             lwtConnectInfo.clientIdentifierLength = ( uint16_t ) strlen( lwtConnectInfo.pClientIdentifier );
@@ -746,14 +751,14 @@ TEST( MQTT_System, LastWillAndTestament )
             }
 
             AwsIotMqtt_Disconnect( lwtListener, false );
-            AwsIotTest_NetworkDestroy( pLwtListenerConnection );
-            pLwtListenerConnection = NULL;
+            AwsIotTest_NetworkDestroy( &lwtListenerConnection );
+            lwtListenerCreated = false;
         }
 
-        if( pLwtListenerConnection != NULL )
+        if( lwtListenerCreated == true )
         {
-            AwsIotTest_NetworkClose( pLwtListenerConnection );
-            AwsIotTest_NetworkDestroy( pLwtListenerConnection );
+            AwsIotTest_NetworkClose( &lwtListenerConnection );
+            AwsIotTest_NetworkDestroy( &lwtListenerConnection );
         }
     }
 
