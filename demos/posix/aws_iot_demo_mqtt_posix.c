@@ -41,19 +41,20 @@
 #include "aws_iot_demo.h"
 #include "aws_iot_demo_posix.h"
 
-/* Platform layer include. */
-#include "platform/aws_iot_network.h"
+/* POSIX+OpenSSL network include. */
+#include "posix/iot_network_openssl.h"
 
 /*-----------------------------------------------------------*/
 
 int main( int argc,
           char ** argv )
 {
-    bool commonInitialized = false;
+    bool commonInitialized = false, networkConnectionCreated = false;
     int status = 0;
     AwsIotDemoArguments_t demoArguments = AWS_IOT_DEMO_ARGUMENTS_INITIALIZER;
-    AwsIotNetworkConnection_t networkConnection = AWS_IOT_NETWORK_CONNECTION_INITIALIZER;
-    AwsIotNetworkTlsInfo_t tlsInfo = AWS_IOT_NETWORK_TLS_INFO_INITIALIZER, * pTlsInfo = NULL;
+    IotNetworkConnectionOpenssl_t networkConnection = IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER;
+    IotNetworkServerInfoOpenssl_t serverInfo = IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER;
+    IotNetworkCredentialsOpenssl_t credentials = AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER, * pCredentials = NULL;
     AwsIotMqttConnection_t mqttConnection = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
     AwsIotMqttNetIf_t networkInterface = AWS_IOT_MQTT_NETIF_INITIALIZER;
 
@@ -82,7 +83,7 @@ int main( int argc,
         }
         else
         {
-            if( AwsIotNetwork_Init() != AWS_IOT_NETWORK_SUCCESS )
+            if( IotNetworkOpenssl_Init() != IOT_NETWORK_SUCCESS )
             {
                 IotCommon_Cleanup();
                 status = -1;
@@ -99,29 +100,36 @@ int main( int argc,
         /* Set the TLS connection information for secured connections. */
         if( demoArguments.securedConnection == true )
         {
-            pTlsInfo = &tlsInfo;
+            pCredentials = &credentials;
 
-            /* By default AWS_IOT_NETWORK_TLS_INFO_INITIALIZER enables ALPN. ALPN
+            /* By default AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER enables ALPN. ALPN
              * must be used with port 443; disable ALPN if another port is being used. */
             if( demoArguments.port != 443 )
             {
-                tlsInfo.pAlpnProtos = NULL;
+                credentials.pAlpnProtos = NULL;
             }
 
             /* Set the paths to the credentials. Lengths of credential paths are
              * ignored by the POSIX platform layer, so they are not set. */
-            tlsInfo.pRootCa = demoArguments.pRootCaPath;
-            tlsInfo.pClientCert = demoArguments.pClientCertPath;
-            tlsInfo.pPrivateKey = demoArguments.pPrivateKeyPath;
+            credentials.pRootCaPath = demoArguments.pRootCaPath;
+            credentials.pClientCertPath = demoArguments.pClientCertPath;
+            credentials.pPrivateKeyPath = demoArguments.pPrivateKeyPath;
         }
 
+        /* Set server info. */
+        serverInfo.pHostName = demoArguments.pHostName;
+        serverInfo.port = demoArguments.port;
+
         /* Establish a TCP connection to the MQTT server. */
-        if( AwsIotNetwork_CreateConnection( &networkConnection,
-                                            demoArguments.pHostName,
-                                            demoArguments.port,
-                                            pTlsInfo ) != AWS_IOT_NETWORK_SUCCESS )
+        if( IotNetworkOpenssl_Create( &serverInfo,
+                                      pCredentials,
+                                      &networkConnection ) != IOT_NETWORK_SUCCESS )
         {
             status = -1;
+        }
+        else
+        {
+            networkConnectionCreated = true;
         }
     }
 
@@ -129,9 +137,9 @@ int main( int argc,
     {
         /* Set the MQTT receive callback for a network connection. This receive
          * callback processes MQTT data from the network. */
-        if( AwsIotNetwork_SetMqttReceiveCallback( networkConnection,
-                                                  &mqttConnection,
-                                                  AwsIotMqtt_ReceiveCallback ) != AWS_IOT_NETWORK_SUCCESS )
+        if( IotNetworkOpenssl_SetReceiveCallback( &networkConnection,
+                                                  AwsIotMqtt_ReceiveCallback,
+                                                  &mqttConnection ) != IOT_NETWORK_SUCCESS )
         {
             status = -1;
         }
@@ -140,10 +148,10 @@ int main( int argc,
     if( status == 0 )
     {
         /* Set the members of the network interface used by the MQTT connection. */
-        networkInterface.pDisconnectContext = ( void * ) networkConnection;
-        networkInterface.pSendContext = ( void * ) networkConnection;
-        networkInterface.disconnect = AwsIotNetwork_CloseConnection;
-        networkInterface.send = AwsIotNetwork_Send;
+        networkInterface.pDisconnectContext = ( void * ) &networkConnection;
+        networkInterface.pSendContext = ( void * ) &networkConnection;
+        networkInterface.disconnect = IotNetworkOpenssl_Close;
+        networkInterface.send = IotNetworkOpenssl_Send;
 
         /* Initialize the MQTT library. */
         if( AwsIotMqtt_Init() == AWS_IOT_MQTT_SUCCESS )
@@ -164,21 +172,21 @@ int main( int argc,
     }
 
     /* Close and destroy the network connection (if it was established). */
-    if( networkConnection != AWS_IOT_NETWORK_CONNECTION_INITIALIZER )
+    if( networkConnectionCreated == true )
     {
-        /* Note that the MQTT library may have called AwsIotNetwork_CloseConnection.
-         * However, AwsIotNetwork_CloseConnection is safe to call on a closed connection.
+        /* Note that the MQTT library may have already closed the connection.
+         * However, the network close function is safe to call on a closed connection.
          * On the other hand, AwsIotNetwork_DestroyConnection must only be called ONCE.
          */
-        AwsIotNetwork_CloseConnection( networkConnection );
-        AwsIotNetwork_DestroyConnection( networkConnection );
+        IotNetworkOpenssl_Close( &networkConnection );
+        IotNetworkOpenssl_Destroy( &networkConnection );
     }
 
     /* Clean up the common libraries and network. */
     if( commonInitialized == true )
     {
         IotCommon_Cleanup();
-        AwsIotNetwork_Cleanup();
+        IotNetworkOpenssl_Cleanup();
     }
 
     /* Log the demo status. */

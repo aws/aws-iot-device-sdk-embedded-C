@@ -106,18 +106,22 @@ static void _sendPuback( _mqttConnection_t * const pMqttConnection,
 
 /*-----------------------------------------------------------*/
 
-int32_t AwsIotMqtt_ReceiveCallback( AwsIotMqttConnection_t * pMqttConnection,
-                                    const void * pReceivedData,
-                                    size_t offset,
+int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
+                                    void * pConnection,
+                                    const uint8_t * pReceivedData,
                                     size_t dataLength,
-                                    void ( *freeReceivedData )( void * ) )
+                                    size_t offset,
+                                    void( *freeReceivedData )( void * ) )
 {
     size_t bytesProcessed = 0, totalBytesProcessed = 0, remainingDataLength = 0;
     _mqttConnection_t * pConnectionInfo = *( ( _mqttConnection_t ** ) ( pMqttConnection ) );
     AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
     uint16_t packetIdentifier = 0;
-    const uint8_t * pNextPacket = ( const uint8_t * ) pReceivedData;
+    const uint8_t * pNextPacket = pReceivedData;
     _mqttOperation_t * pOperation = NULL, * pFirstPublish = NULL, * pLastPublish = NULL;
+
+    /* Network connection parameter is ignored. */
+    ( void ) pConnection;
 
     /* Choose a packet type decoder function. */
     uint8_t ( * getPacketType )( const uint8_t * const,

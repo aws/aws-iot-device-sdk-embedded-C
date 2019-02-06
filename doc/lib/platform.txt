@@ -60,9 +60,7 @@ Currently, the platform clock component has the following dependencies:
 @page platform_network Networking
 @brief @copybrief iot_network.h
 
-The platform networking component provides other libraries with functions for managing network connections. It interfaces directly with the operating system to provide:
-- Functions for opening and closing network connections; function for sending and receiving data.
-- Functions for securing network connections.
+The platform networking component provides other libraries with an abstraction for interacting with the network through an #IotNetworkInterface_t. Libraries that require the network will request an #IotNetworkInterface_t as a parameter and use those function pointers to access the network. This allows libraries to use different network stacks simultaneously.
 
 @dependencies{platform_network,platform networking component}
 @dot "Networking direct dependencies"
@@ -75,7 +73,6 @@ digraph network_dependencies
     {
         rank = same;
         platform_network[label="Networking", fillcolor="#e89025ff"];
-        platform_threads[label="Thread management", fillcolor="#e89025ff", URL="@ref platform_threads"];
     }
     subgraph
     {
@@ -85,7 +82,6 @@ digraph network_dependencies
         security_library[label="Security library", fillcolor="#999999ff"];
         standard_library[label="Standard library", fillcolor="#d15555ff"];
     }
-    platform_network -> platform_threads;
     platform_network -> operating_system;
     platform_network -> security_library [label=" secured connection", style="dashed"];
     platform_network -> standard_library;
@@ -94,7 +90,7 @@ digraph network_dependencies
 }
 @enddot
 
-Currently, the networking component has the following dependencies:
+Functions should be implemented against the system's network stack to match the signatures given in an #IotNetworkInterface_t.
 - The operating system must provide the necessary networking APIs, such as a sockets API.
 - A third-party security library is needed to encrypt secured connections.
 - The logging library may be used if @ref IOT_LOG_LEVEL_PLATFORM is not @ref IOT_LOG_NONE.

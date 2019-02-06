@@ -37,6 +37,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/* Platform network include. */
+#include "platform/iot_network.h"
+
 /*---------------------------- MQTT handle types ----------------------------*/
 
 /**
@@ -627,7 +630,7 @@ typedef struct AwsIotMqttNetIf
      * @return Number of bytes successfully sent, 0 on failure.
      */
     size_t ( * send )( void *,
-                       const void * const,
+                       const uint8_t * const,
                        size_t );
 
     /**
@@ -642,7 +645,7 @@ typedef struct AwsIotMqttNetIf
      * must be closed in certain conditions; if this function is not provided, the
      * MQTT library is noncompliant.
      */
-    void ( * disconnect )( void * );
+    IotNetworkError_t ( * disconnect )( void * );
 
     /*
      * In addition to providing the network send and disconnect functions, this
@@ -1085,12 +1088,14 @@ void AwsIotMqtt_Cleanup( void );
  *
  * @param[in] pMqttConnection A pointer to the MQTT connection handle for which
  * the packet was received.
+ * @param[in] pConnection The network connection associated with the MQTT connection,
+ * passed by the network stack.
  * @param[in] pReceivedData Pointer to the beginning of the data stream. This buffer
  * must remain valid and in-scope until the MQTT library calls `freeReceivedData`.
+ * @param[in] dataLength The length of `pReceivedData` in bytes.
  * @param[in] offset The offset (in bytes) into `pReceivedData` where the MQTT library
  * begins processing. All bytes from `pReceivedData+offset` to `pReceivedData+dataLength`
  * will be processed. Pass `0` to start from the beginning of `pReceivedData`.
- * @param[in] dataLength The length of `pReceivedData` in bytes.
  * @param[in] freeReceivedData The function that the MQTT library calls when it is
  * finished with `pReceivedData`. This function will only be called when all data is
  * successfully processed, i.e. when this function returns a value of `dataLength-offset`.
@@ -1107,10 +1112,11 @@ void AwsIotMqtt_Cleanup( void );
  * to `pReceivedData+dataLength` were successfully processed.
  */
 /* @[declare_mqtt_receivecallback] */
-int32_t AwsIotMqtt_ReceiveCallback( AwsIotMqttConnection_t * pMqttConnection,
-                                    const void * pReceivedData,
-                                    size_t offset,
+int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
+                                    void * pConnection,
+                                    const uint8_t * pReceivedData,
                                     size_t dataLength,
+                                    size_t offset,
                                     void ( * freeReceivedData )( void * ) );
 /* @[declare_mqtt_receivecallback] */
 

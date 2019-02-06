@@ -362,7 +362,7 @@ static void _invokeCallback( _mqttOperation_t * const pOperation )
             /* Free any buffers associated with the current PUBLISH message. */
             if( pCurrent->freeReceivedData != NULL )
             {
-                AwsIotMqtt_Assert( pCurrent->pReceivedData != NULL );
+                AwsIotMqtt_Assert( pCurrent->freeReceivedData != NULL );
                 pCurrent->freeReceivedData( ( void * ) pCurrent->pReceivedData );
             }
 
