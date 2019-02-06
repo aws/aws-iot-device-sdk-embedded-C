@@ -122,7 +122,8 @@ extern bool AwsIotTest_NetworkSetup( void );
 extern void AwsIotTest_NetworkCleanup( void );
 extern bool AwsIotTest_NetworkConnect( void * const pNewConnection,
                                        AwsIotMqttConnection_t * pMqttConnection );
-extern void AwsIotTest_NetworkClose( void * pDisconnectContext );
+extern void AwsIotTest_NetworkClose( int32_t reason,
+                                     void * pDisconnectContext );
 extern void AwsIotTest_NetworkDestroy( void * pConnection );
 
 /* Network variables used by the tests, declared in one of the test network
@@ -738,7 +739,7 @@ TEST( MQTT_System, LastWillAndTestament )
 
                 /* Abruptly close the MQTT connection. This should cause the LWT
                  * to be sent to the LWT listener. */
-                AwsIotTest_NetworkClose( NULL );
+                AwsIotTest_NetworkClose( 0, NULL );
                 AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, true );
                 AwsIotTest_NetworkDestroy( NULL );
 
@@ -757,7 +758,7 @@ TEST( MQTT_System, LastWillAndTestament )
 
         if( lwtListenerCreated == true )
         {
-            AwsIotTest_NetworkClose( &lwtListenerConnection );
+            AwsIotTest_NetworkClose( 0, &lwtListenerConnection );
             AwsIotTest_NetworkDestroy( &lwtListenerConnection );
         }
     }
@@ -851,7 +852,7 @@ TEST( MQTT_System, RestorePreviousSession )
     else
     {
         /* Close network connection on test failure. */
-        AwsIotTest_NetworkClose( NULL );
+        AwsIotTest_NetworkClose( 0, NULL );
     }
 
     IotSemaphore_Destroy( &waitSem );

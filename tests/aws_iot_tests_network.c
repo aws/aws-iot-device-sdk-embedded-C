@@ -74,12 +74,14 @@ bool AwsIotTest_NetworkConnect( void * const pNewConnection,
 /**
  * @brief Network interface close connection function for the tests.
  *
+ * @param[in] reason Currently unused.
  * @param[in] pDisconnectContext The connection to close. Pass NULL to close
  * the global network connection created by #AwsIotTest_NetworkSetup.
  *
  * @return Always returns #IOT_NETWORK_SUCCESS.
  */
-IotNetworkError_t AwsIotTest_NetworkClose( void * pDisconnectContext );
+IotNetworkError_t AwsIotTest_NetworkClose( int32_t reason,
+                                           void * pDisconnectContext );
 
 /**
  * @brief Network interface cleanup function for the tests.
@@ -146,7 +148,7 @@ void AwsIotTest_NetworkCleanup( void )
     /* Close the TCP connection to the server. */
     if( _networkConnectionCreated == true )
     {
-        AwsIotTest_NetworkClose( NULL );
+        AwsIotTest_NetworkClose( 0, NULL );
         AwsIotTest_NetworkDestroy( &_networkConnection );
         _networkConnectionCreated = false;
     }
@@ -191,9 +193,9 @@ bool AwsIotTest_NetworkConnect( void * const pNewConnection,
     /* Set the MQTT receive callback. */
     if( IotNetworkOpenssl_SetReceiveCallback( pNewConnection,
                                               AwsIotMqtt_ReceiveCallback,
-                                              pMqttConnection) != IOT_NETWORK_SUCCESS )
+                                              pMqttConnection ) != IOT_NETWORK_SUCCESS )
     {
-        IotNetworkOpenssl_Close( pNewConnection );
+        IotNetworkOpenssl_Close( 0, pNewConnection );
         IotNetworkOpenssl_Destroy( pNewConnection );
 
         return false;
@@ -204,20 +206,23 @@ bool AwsIotTest_NetworkConnect( void * const pNewConnection,
 
 /*-----------------------------------------------------------*/
 
-IotNetworkError_t AwsIotTest_NetworkClose( void * pDisconnectContext )
+IotNetworkError_t AwsIotTest_NetworkClose( int32_t reason,
+                                           void * pDisconnectContext )
 {
     IotNetworkConnectionOpenssl_t * pNetworkConnection = ( IotNetworkConnectionOpenssl_t * ) pDisconnectContext;
+
+    ( void ) reason;
 
     /* Close the provided network handle; if that is NULL, close the
      * global network handle. */
     if( ( pNetworkConnection != NULL ) &&
         ( pNetworkConnection != &_networkConnection ) )
     {
-        IotNetworkOpenssl_Close( pNetworkConnection );
+        IotNetworkOpenssl_Close( 0, pNetworkConnection );
     }
     else if( _networkConnectionCreated == true )
     {
-        IotNetworkOpenssl_Close( &_networkConnection );
+        IotNetworkOpenssl_Close( 0, &_networkConnection );
     }
 
     return IOT_NETWORK_SUCCESS;

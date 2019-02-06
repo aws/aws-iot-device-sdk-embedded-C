@@ -432,7 +432,7 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
 
             if( pConnectionInfo->network.disconnect != NULL )
             {
-                pConnectionInfo->network.disconnect( pConnectionInfo->network.pDisconnectContext );
+                pConnectionInfo->network.disconnect( 0, pConnectionInfo->network.pDisconnectContext );
             }
             else
             {

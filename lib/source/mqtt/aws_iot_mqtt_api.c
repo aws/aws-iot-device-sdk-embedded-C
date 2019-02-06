@@ -465,7 +465,7 @@ static void _timerThread( void * pArgument )
                 {
                     if( pMqttConnection->network.disconnect != NULL )
                     {
-                        pMqttConnection->network.disconnect( pMqttConnection->network.pDisconnectContext );
+                        pMqttConnection->network.disconnect( 0, pMqttConnection->network.pDisconnectContext );
                     }
                     else
                     {
@@ -1316,7 +1316,7 @@ void AwsIotMqtt_Disconnect( AwsIotMqttConnection_t mqttConnection,
      * packet was sent. */
     if( pMqttConnection->network.disconnect != NULL )
     {
-        pMqttConnection->network.disconnect( pMqttConnection->network.pDisconnectContext );
+        pMqttConnection->network.disconnect( 0, pMqttConnection->network.pDisconnectContext );
     }
     else
     {
