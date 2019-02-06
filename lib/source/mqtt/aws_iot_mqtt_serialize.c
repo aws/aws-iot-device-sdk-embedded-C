@@ -234,12 +234,10 @@ static uint8_t * _encodeString( uint8_t * pDestination,
  * from the given parameters.
  *
  * @param[in] pConnectInfo User-provided CONNECT information struct.
- * @param[in] pWillInfo User-provided Last Will and Testament info struct.
  * @param[out] pRemainingLength Output for calculated "Remaining length" field.
  * @param[out] pPacketSize Output for calculated total packet size.
  */
 static void _connectPacketSize( const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                const AwsIotMqttPublishInfo_t * const pWillInfo,
                                 size_t * const pRemainingLength,
                                 size_t * const pPacketSize );
 
@@ -459,7 +457,6 @@ static uint8_t * _encodeString( uint8_t * pDestination,
 /*-----------------------------------------------------------*/
 
 static void _connectPacketSize( const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                const AwsIotMqttPublishInfo_t * const pWillInfo,
                                 size_t * const pRemainingLength,
                                 size_t * const pPacketSize )
 {
@@ -475,10 +472,10 @@ static void _connectPacketSize( const AwsIotMqttConnectInfo_t * const pConnectIn
     }
 
     /* Add the lengths of the will message and topic name if provided. */
-    if( pWillInfo != NULL )
+    if( pConnectInfo->pWillInfo != NULL )
     {
-        connectPacketSize += pWillInfo->topicNameLength + sizeof( uint16_t ) +
-                             pWillInfo->payloadLength + sizeof( uint16_t );
+        connectPacketSize += pConnectInfo->pWillInfo->topicNameLength + sizeof( uint16_t ) +
+                             pConnectInfo->pWillInfo->payloadLength + sizeof( uint16_t );
     }
 
     /* Depending on the status of metrics, add the length of the metrics username
@@ -672,7 +669,6 @@ uint8_t AwsIotMqttInternal_GetPacketType( const uint8_t * const pPacket,
 /*-----------------------------------------------------------*/
 
 AwsIotMqttError_t AwsIotMqttInternal_SerializeConnect( const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                                       const AwsIotMqttPublishInfo_t * const pWillInfo,
                                                        uint8_t ** const pConnectPacket,
                                                        size_t * const pPacketSize )
 {
@@ -682,7 +678,6 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeConnect( const AwsIotMqttConnectIn
 
     /* Calculate the "Remaining length" field and total packet size. */
     _connectPacketSize( pConnectInfo,
-                        pWillInfo,
                         &remainingLength,
                         &connectPacketSize );
 
@@ -752,12 +747,12 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeConnect( const AwsIotMqttConnectIn
         }
     }
 
-    if( pWillInfo != NULL )
+    if( pConnectInfo->pWillInfo != NULL )
     {
         _UINT8_SET_BIT( connectFlags, _MQTT_CONNECT_FLAG_WILL );
 
         /* Flags only need to be changed for will QoS 1 and 2. */
-        switch( pWillInfo->QoS )
+        switch( pConnectInfo->pWillInfo->QoS )
         {
             case 1:
                 _UINT8_SET_BIT( connectFlags, _MQTT_CONNECT_FLAG_WILL_QOS1 );
@@ -771,7 +766,7 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeConnect( const AwsIotMqttConnectIn
                 break;
         }
 
-        if( pWillInfo->retain == true )
+        if( pConnectInfo->pWillInfo->retain == true )
         {
             _UINT8_SET_BIT( connectFlags, _MQTT_CONNECT_FLAG_WILL_RETAIN );
         }
@@ -791,15 +786,15 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeConnect( const AwsIotMqttConnectIn
                              pConnectInfo->clientIdentifierLength );
 
     /* Write the will topic name and message into the CONNECT packet if provided. */
-    if( pWillInfo != NULL )
+    if( pConnectInfo->pWillInfo != NULL )
     {
         pBuffer = _encodeString( pBuffer,
-                                 pWillInfo->pTopicName,
-                                 pWillInfo->topicNameLength );
+                                 pConnectInfo->pWillInfo->pTopicName,
+                                 pConnectInfo->pWillInfo->topicNameLength );
 
         pBuffer = _encodeString( pBuffer,
-                                 pWillInfo->pPayload,
-                                 ( uint16_t ) pWillInfo->payloadLength );
+                                 pConnectInfo->pWillInfo->pPayload,
+                                 ( uint16_t ) pConnectInfo->pWillInfo->payloadLength );
     }
 
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
