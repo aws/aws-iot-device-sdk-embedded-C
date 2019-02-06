@@ -339,13 +339,50 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
 
 /*-----------------------------------------------------------*/
 
-bool IotMutex_Create( IotMutex_t * const pNewMutex )
+bool IotMutex_Create( IotMutex_t * const pNewMutex, bool recursive )
 {
     bool status = true;
+    int mutexError = 0;
+    pthread_mutexattr_t mutexAttributes, *pMutexAttributes = NULL;
 
-    IotLogDebug( "Creating new mutex %p.", pNewMutex );
+    if( recursive == true )
+    {
+        IotLogDebug( "Creating new recursive mutex %p.", pNewMutex );
 
-    int mutexError = pthread_mutex_init( pNewMutex, NULL );
+        /* Create new mutex attributes object. */
+        mutexError = pthread_mutexattr_init( &mutexAttributes );
+
+        if( mutexError != 0 )
+        {
+            IotLogError( "Failed to initialize mutex attributes. errno=%d.",
+                         mutexError );
+
+            status = false;
+        }
+
+        if( status == true )
+        {
+            pMutexAttributes = &mutexAttributes;
+
+            /* Set recursive mutex type. */
+            mutexError = pthread_mutexattr_settype( &mutexAttributes,
+                                                    PTHREAD_MUTEX_RECURSIVE );
+
+            if( mutexError != 0 )
+            {
+                IotLogError( "Failed to set recursive mutex type. errno=%d.",
+                             mutexError );
+
+                status = false;
+            }
+        }
+    }
+    else
+    {
+        IotLogDebug( "Creating new mutex %p.", pNewMutex );
+    }
+
+    mutexError = pthread_mutex_init( pNewMutex, pMutexAttributes );
 
     if( mutexError != 0 )
     {
@@ -354,6 +391,12 @@ bool IotMutex_Create( IotMutex_t * const pNewMutex )
                      mutexError );
 
         status = false;
+    }
+
+    /* Destroy any created mutex attributes. */
+    if( pMutexAttributes != NULL )
+    {
+        ( void ) pthread_mutexattr_destroy( &mutexAttributes );
     }
 
     return status;

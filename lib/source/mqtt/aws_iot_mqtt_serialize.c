@@ -612,7 +612,7 @@ static bool _subscriptionPacketSize( AwsIotMqttOperationType_t type,
 AwsIotMqttError_t AwsIotMqttInternal_InitSerialize( void )
 {
     /* Create the packet identifier mutex. */
-    if( IotMutex_Create( &_packetIdentifierMutex ) == false )
+    if( IotMutex_Create( &_packetIdentifierMutex, false ) == false )
     {
         return AWS_IOT_MQTT_INIT_FAILED;
     }

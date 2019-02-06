@@ -31,6 +31,7 @@
 
 /* Standard includes. */
 #include <stdint.h>
+#include <string.h>
 
 /* POSIX includes. */
 #ifdef POSIX_UNISTD_HEADER
@@ -306,7 +307,7 @@ TEST_SETUP( Shadow_Unit_API )
     _lastPacketIdentifier = 0;
 
     /* Create the mutex that synchronizes the receive callback and send thread. */
-    TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &_lastPacketMutex ) );
+    TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &_lastPacketMutex, false ) );
 
     /* Create the receive thread timer. */
     IotClock_TimerCreate( &_receiveTimer,
@@ -570,7 +571,9 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
 TEST( Shadow_Unit_API, WaitInvalidParameters )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
-    _shadowOperation_t operation = { 0 };
+    _shadowOperation_t operation;
+
+    ( void ) memset( &operation, 0x00, sizeof( _shadowOperation_t ) );
 
     /* NULL reference. */
     status = AwsIotShadow_Wait( NULL, 0, NULL, NULL );

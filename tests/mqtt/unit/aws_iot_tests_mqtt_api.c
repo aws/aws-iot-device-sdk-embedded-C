@@ -846,7 +846,7 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
     subscription.topicFilterLength = _TEST_TOPIC_NAME_LENGTH;
     subscription.callback.function = _SUBSCRIPTION_CALLBACK;
 
-    TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &( mqttConnection.subscriptionMutex ) ) );
+    TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &( mqttConnection.subscriptionMutex ), false ) );
     IotListDouble_Create( &( mqttConnection.subscriptionList ) );
 
     if( TEST_PROTECT() )
@@ -907,7 +907,7 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
     subscription.topicFilterLength = _TEST_TOPIC_NAME_LENGTH;
     subscription.callback.function = _SUBSCRIPTION_CALLBACK;
 
-    TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &( mqttConnection.subscriptionMutex ) ) );
+    TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &( mqttConnection.subscriptionMutex ), false ) );
     IotListDouble_Create( &( mqttConnection.subscriptionList ) );
 
     if( TEST_PROTECT() )
