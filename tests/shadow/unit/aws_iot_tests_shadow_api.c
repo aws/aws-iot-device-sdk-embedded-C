@@ -183,9 +183,10 @@ static void _receiveThread( void * pArgument )
 
     /* Call the MQTT receive callback to process the ACK packet. */
     bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
+                                                 NULL,
                                                  pReceivedData,
-                                                 0,
                                                  receivedDataLength,
+                                                 0,
                                                  NULL );
     AwsIotShadow_Assert( bytesProcessed == ( int32_t ) receivedDataLength );
 
@@ -199,11 +200,10 @@ static void _receiveThread( void * pArgument )
  * timer to respond with an ACK when necessary.
  */
 static size_t _sendSuccess( void * pSendContext,
-                            const void * const pMessage,
+                            const uint8_t * const pMessage,
                             size_t messageLength )
 {
     AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
-    const uint8_t * const pPacket = ( const uint8_t * const ) pMessage;
     const uint8_t * pPacketIdentifier = NULL;
     AwsIotMqttPublishInfo_t decodedPublish = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     size_t publishBytesProcessed = 0;
@@ -220,7 +220,7 @@ static size_t _sendSuccess( void * pSendContext,
         case ( _MQTT_PACKET_TYPE_PUBLISH & 0xf0 ):
 
             /* Only set the last packet type to PUBLISH for QoS 1. */
-            if( ( ( *pPacket & 0x06 ) >> 1 ) == 1 )
+            if( ( ( *pMessage & 0x06 ) >> 1 ) == 1 )
             {
                 _lastPacketType = _MQTT_PACKET_TYPE_PUBLISH;
             }
@@ -253,7 +253,7 @@ static size_t _sendSuccess( void * pSendContext,
         /* Decode the remaining length. */
         if( _lastPacketType != _MQTT_PACKET_TYPE_PUBLISH )
         {
-            status = AwsIotTestMqtt_decodeRemainingLength( pPacket + 1,
+            status = AwsIotTestMqtt_decodeRemainingLength( pMessage + 1,
                                                            &pPacketIdentifier,
                                                            NULL );
 

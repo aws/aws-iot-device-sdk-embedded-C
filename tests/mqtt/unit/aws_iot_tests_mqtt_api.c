@@ -144,7 +144,7 @@ static void _publishSetDup( bool awsIotMqttMode,
  * @brief A send function that always "succeeds".
  */
 static size_t _sendSuccess( void * pSendContext,
-                            const void * const pMessage,
+                            const uint8_t * const pMessage,
                             size_t messageLength )
 {
     ( void ) pSendContext;
@@ -162,13 +162,13 @@ static size_t _sendSuccess( void * pSendContext,
  * the original.
  */
 static size_t _dupChecker( void * pSendContext,
-                           const void * const pMessage,
+                           const uint8_t * const pMessage,
                            size_t messageLength )
 {
     static int runCount = 0;
     static bool status = true;
     bool * pDupCheckResult = ( bool * ) pSendContext;
-    uint8_t publishFlags = *( ( uint8_t * ) pMessage );
+    uint8_t publishFlags = *pMessage;
 
     /* Declare the remaining variables required to check packet identifier
      * for the AWS IoT MQTT server. */
@@ -265,7 +265,7 @@ static size_t _dupChecker( void * pSendContext,
 /**
  * @brief A disconnect function that only reports whether it was invoked.
  */
-static void _disconnect( void * pDisconnectContext )
+static IotNetworkError_t _disconnect( void * pDisconnectContext )
 {
     bool * pDisconnectInvoked = ( bool * ) pDisconnectContext;
 
@@ -274,6 +274,8 @@ static void _disconnect( void * pDisconnectContext )
     {
         *pDisconnectInvoked = true;
     }
+
+    return IOT_NETWORK_SUCCESS;
 }
 
 /*-----------------------------------------------------------*/

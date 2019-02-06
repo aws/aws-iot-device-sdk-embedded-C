@@ -52,7 +52,7 @@
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
 
-/* POSIX+OpenSSL network header include. */
+/* POSIX+OpenSSL network include. */
 #include "posix/iot_network_openssl.h"
 
 /* Platform threads include. */

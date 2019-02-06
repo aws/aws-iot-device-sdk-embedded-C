@@ -118,7 +118,7 @@ typedef struct _operationCompleteParams
  * the test network function files. */
 extern bool AwsIotTest_NetworkSetup( void );
 extern void AwsIotTest_NetworkCleanup( void );
-extern bool AwsIotTest_NetworkConnect( void ** const pNewConnection,
+extern bool AwsIotTest_NetworkConnect( void * const pNewConnection,
                                        AwsIotMqttConnection_t * pMqttConnection );
 extern void AwsIotTest_NetworkClose( void * pDisconnectContext );
 extern void AwsIotTest_NetworkDestroy( void * pConnection );
