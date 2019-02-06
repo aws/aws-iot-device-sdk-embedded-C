@@ -533,7 +533,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     pNewMqttConnection->awsIotMqttMode = awsIotMqttMode;
 
     /* Create the timer mutex for a new connection. */
-    if( IotMutex_Create( &( pNewMqttConnection->timerMutex ) ) == false )
+    if( IotMutex_Create( &( pNewMqttConnection->timerMutex ), true ) == false )
     {
         IotLogError( "Failed to create timer mutex for new connection." );
         AwsIotMqtt_FreeConnection( pNewMqttConnection );
@@ -541,7 +541,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
         return NULL;
     }
 
-    if( IotMutex_Create( &( pNewMqttConnection->subscriptionMutex ) ) == false )
+    if( IotMutex_Create( &( pNewMqttConnection->subscriptionMutex ), false ) == false )
     {
         IotLogError( "Failed to create subscription mutex for new connection." );
         IotMutex_Destroy( &( pNewMqttConnection->timerMutex ) );
@@ -837,7 +837,7 @@ AwsIotMqttError_t AwsIotMqtt_Init( void )
     AwsIotMqttError_t status = AWS_IOT_MQTT_SUCCESS;
 
     /* Create mutex protecting MQTT operation queues. */
-    if( IotMutex_Create( &( _IotMqttQueueMutex ) ) == false )
+    if( IotMutex_Create( &( _IotMqttQueueMutex ), false ) == false )
     {
         IotLogError( "Failed to initialize MQTT operation queue mutex." );
         status = AWS_IOT_MQTT_INIT_FAILED;
@@ -846,7 +846,7 @@ AwsIotMqttError_t AwsIotMqtt_Init( void )
     /* Create mutex protecting list of operations pending network responses. */
     if( status == AWS_IOT_MQTT_SUCCESS )
     {
-        if( IotMutex_Create( &( _IotMqttPendingResponseMutex ) ) == false )
+        if( IotMutex_Create( &( _IotMqttPendingResponseMutex ), false ) == false )
         {
             IotLogError( "Failed to initialize MQTT library pending response mutex." );
             IotMutex_Destroy( &( _IotMqttQueueMutex ) );
@@ -858,7 +858,7 @@ AwsIotMqttError_t AwsIotMqtt_Init( void )
     /* Create CONNECT mutex. */
     if( status == AWS_IOT_MQTT_SUCCESS )
     {
-        if( IotMutex_Create( &( _connectMutex ) ) == false )
+        if( IotMutex_Create( &( _connectMutex ), false ) == false )
         {
             IotLogError( "Failed to initialize MQTT library connect mutex." );
             IotMutex_Destroy( &( _IotMqttPendingResponseMutex ) );

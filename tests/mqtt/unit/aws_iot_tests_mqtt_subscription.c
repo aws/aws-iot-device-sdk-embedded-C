@@ -287,7 +287,7 @@ TEST_GROUP( MQTT_Unit_Subscription );
  */
 TEST_SETUP( MQTT_Unit_Subscription )
 {
-    TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &( _connection.subscriptionMutex ) ) );
+    TEST_ASSERT_EQUAL_INT( true, IotMutex_Create( &( _connection.subscriptionMutex ), false ) );
     IotListDouble_Create( &( _connection.subscriptionList ) );
 }
 
@@ -334,9 +334,13 @@ TEST_GROUP_RUNNER( MQTT_Unit_Subscription )
  */
 TEST( MQTT_Unit_Subscription, ListInsertRemove )
 {
-    _mqttSubscription_t node1 = { 0 };
-    _mqttSubscription_t node2 = { 0 };
-    _mqttSubscription_t node3 = { 0 };
+    _mqttSubscription_t node1;
+    _mqttSubscription_t node2;
+    _mqttSubscription_t node3;
+
+    ( void ) memset( &node1, 0x00, sizeof( _mqttSubscription_t ) );
+    ( void ) memset( &node2, 0x00, sizeof( _mqttSubscription_t ) );
+    ( void ) memset( &node3, 0x00, sizeof( _mqttSubscription_t ) );
 
     IotListDouble_InsertHead( &( _connection.subscriptionList ),
                               &( node1.link ) );

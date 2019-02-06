@@ -132,6 +132,9 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
  * #IotMutex_t. This function must not be called on an already-initialized #IotMutex_t.
  *
  * @param[in] pNewMutex Pointer to the memory that will hold the new mutex.
+ * @param[in] recursive Set to `true` to create a recursive mutex, i.e. a mutex that
+ * may be locked multiple times by the same thread. If the system does not support
+ * recursive mutexes, this function should do nothing and return `false`.
  *
  * @return `true` if mutex creation succeeds; `false` otherwise.
  *
@@ -141,7 +144,8 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
  * @code{c}
  * IotMutex_t mutex;
  *
- * if( IotMutex_Create( &mutex ) == true )
+ * // Create non-recursive mutex.
+ * if( IotMutex_Create( &mutex, false ) == true )
  * {
  *     // Lock and unlock the mutex...
  *
@@ -151,7 +155,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
  * @endcode
  */
 /* @[declare_platform_threads_mutexcreate] */
-bool IotMutex_Create( IotMutex_t * const pNewMutex );
+bool IotMutex_Create( IotMutex_t * const pNewMutex, bool recursive );
 /* @[declare_platform_threads_mutexcreate] */
 
 /**

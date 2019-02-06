@@ -848,6 +848,11 @@ TEST( MQTT_System, RestorePreviousSession )
         AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, false );
         AwsIotTest_NetworkCleanup();
     }
+    else
+    {
+        /* Close network connection on test failure. */
+        AwsIotTest_NetworkClose( NULL );
+    }
 
     IotSemaphore_Destroy( &waitSem );
 
