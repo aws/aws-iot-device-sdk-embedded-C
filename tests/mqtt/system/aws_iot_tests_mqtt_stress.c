@@ -489,7 +489,6 @@ TEST_SETUP( MQTT_Stress )
                        AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
                                            &_AwsIotTestNetworkInterface,
                                            &connectInfo,
-                                           NULL,
                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) );
 
     /* Subscribe to the test topic filters. */
