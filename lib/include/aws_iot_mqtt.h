@@ -262,61 +262,6 @@ typedef enum AwsIotMqttOperationType
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
- * @brief Information on a new MQTT connection.
- *
- * @paramfor @ref mqtt_function_connect
- *
- * Passed as an argument to @ref mqtt_function_connect. The members of this struct
- * (except for `awsIotMqttMode`) correspond to the content of an [MQTT CONNECT packet.]
- * (http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/csprd02/mqtt-v3.1.1-csprd02.html#_Toc385349764)
- *
- * @initializer{AwsIotMqttConnectInfo_t,AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER}
- *
- * @note The lengths of the strings in this struct should not include the NULL
- * terminator. Strings in this struct do not need to be NULL-terminated.
- */
-typedef struct AwsIotMqttConnectInfo
-{
-    /**
-     * @brief Specifies if this MQTT connection is to an AWS IoT MQTT server.
-     *
-     * The AWS IoT MQTT broker [differs somewhat from the MQTT specification.]
-     * (https://docs.aws.amazon.com/iot/latest/developerguide/protocols.html#mqtt)
-     * When this member is `true`, the MQTT library will accommodate these
-     * differences. This setting should be `false` when communicating with a
-     * fully-compliant MQTT broker.
-     *
-     * @attention This setting <b>MUST</b> be `true` when using the AWS IoT MQTT
-     * server; it <b>MUST</b> be `false` otherwise.
-     * @note Currently, @ref AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER sets this
-     * this member to `true`.
-     */
-    bool awsIotMqttMode;
-
-    /**
-     * @brief Whether this connection is a clean session.
-     *
-     * If this parameter is `false`, the MQTT connection should be established with
-     * @ref mqtt_function_connect. Otherwise, if this parameter is `true`, the MQTT
-     * connection should be established with @ref mqtt_function_connectrestoresession.
-     */
-    bool cleanSession;
-
-    uint16_t keepAliveSeconds;       /**< @brief Period of keep-alive messages. Set to 0 to disable keep-alive. */
-
-    const char * pClientIdentifier;  /**< @brief MQTT client identifier. */
-    uint16_t clientIdentifierLength; /**< @brief Length of #AwsIotMqttConnectInfo_t.pClientIdentifier. */
-
-    /* These credentials are not used by AWS IoT and may be ignored if
-     * awsIotMqttMode is true. */
-    const char * pUserName;          /**< @brief Username for MQTT connection. */
-    uint16_t userNameLength;         /**< @brief Length of #AwsIotMqttConnectInfo_t.pUserName. */
-    const char * pPassword;          /**< @brief Password for MQTT connection. */
-    uint16_t passwordLength;         /**< @brief Length of #AwsIotMqttConnectInfo_t.pPassword. */
-} AwsIotMqttConnectInfo_t;
-
-/**
- * @ingroup mqtt_datatypes_paramstructs
  * @brief Information on a PUBLISH message.
  *
  * @paramfor @ref mqtt_function_connect, @ref mqtt_function_publish
@@ -538,6 +483,123 @@ typedef struct AwsIotMqttSubscription
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
+ * @brief Information on a new MQTT connection.
+ *
+ * @paramfor @ref mqtt_function_connect
+ *
+ * Passed as an argument to @ref mqtt_function_connect. Most members of this struct
+ * correspond to the content of an [MQTT CONNECT packet.]
+ * (http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/csprd02/mqtt-v3.1.1-csprd02.html#_Toc385349764)
+ *
+ * @initializer{AwsIotMqttConnectInfo_t,AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER}
+ *
+ * @note The lengths of the strings in this struct should not include the NULL
+ * terminator. Strings in this struct do not need to be NULL-terminated.
+ */
+typedef struct AwsIotMqttConnectInfo
+{
+    /**
+     * @brief Specifies if this MQTT connection is to an AWS IoT MQTT server.
+     *
+     * The AWS IoT MQTT broker [differs somewhat from the MQTT specification.]
+     * (https://docs.aws.amazon.com/iot/latest/developerguide/protocols.html#mqtt)
+     * When this member is `true`, the MQTT library will accommodate these
+     * differences. This setting should be `false` when communicating with a
+     * fully-compliant MQTT broker.
+     *
+     * @attention This setting <b>MUST</b> be `true` when using the AWS IoT MQTT
+     * server; it <b>MUST</b> be `false` otherwise.
+     * @note Currently, @ref AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER sets this
+     * this member to `true`.
+     */
+    bool awsIotMqttMode;
+
+    /**
+     * @brief Whether this connection is a clean session.
+     *
+     * MQTT servers can maintain and topic filter subscriptions and unacknowledged
+     * PUBLISH messages. These form part of an <i>MQTT session</i>, which is identified by
+     * the [client identifier](@ref AwsIotMqttConnectInfo_t.pClientIdentifier).
+     *
+     * Setting this value to `true` establishes a <i>clean session</i>, which causes
+     * the MQTT server to discard any previous session data for a client identifier.
+     * When the client disconnects, the server discards all session data. If this
+     * value is `true`, #AwsIotMqttConnectInfo_t.pPreviousSubscriptions and
+     * #AwsIotMqttConnectInfo_t.previousSubscriptionCount are ignored.
+     *
+     * Setting this value to `false` does one of the following:
+     * - If no previous session exists, the MQTT server will create a new
+     * <i>persistent session</i>. The server may maintain subscriptions and
+     * unacknowledged PUBLISH messages after a client disconnects, to be restored
+     * once the same client identifier reconnects.
+     * - If a previous session exists, the MQTT server restores all of the session's
+     * subscriptions for the client identifier and may immediately transmit any
+     * unacknowledged PUBLISH packets to the client.
+     *
+     * When a client with a persistent session disconnects, the MQTT server
+     * continues to maintain all subscriptions and unacknowledged PUBLISH messages.
+     * The client must also remember the session subscriptions to restore them
+     * upon reconnecting. #AwsIotMqttConnectInfo_t.pPreviousSubscriptions
+     * and #AwsIotMqttConnectInfo_t.previousSubscriptionCount are used to
+     * restore a previous session's subscriptions client-side.
+     */
+    bool cleanSession;
+
+    /**
+     * @brief An array of MQTT subscriptions present in a previous session, if any.
+     *
+     * Pointer to the start of an array of subscriptions present a previous session,
+     * if any. These subscriptions will be immediately restored upon reconnecting.
+     *
+     * This member is ignored if it is `NULL` or #AwsIotMqttConnectInfo_t.cleanSession
+     * is `true`. If this member is not `NULL`, #AwsIotMqttConnectInfo_t.previousSubscriptionCount
+     * must be nonzero.
+     */
+    const AwsIotMqttSubscription_t * pPreviousSubscriptions;
+
+    /**
+     * @brief The number of MQTT subscriptions present in a previous session, if any.
+     *
+     * Number of subscriptions contained in the array
+     * #AwsIotMqttConnectInfo_t.pPreviousSubscriptions.
+     *
+     * This value is ignored if #AwsIotMqttConnectInfo_t.pPreviousSubscriptions
+     * is `NULL` or #AwsIotMqttConnectInfo_t.cleanSession is `true`. If
+     * #AwsIotMqttConnectInfo_t.pPreviousSubscriptions is not `NULL`, this value
+     * must be nonzero.
+     */
+    size_t previousSubscriptionCount;
+
+    /**
+     * @brief A message to publish if the new MQTT connection is unexpectedly closed.
+     *
+     * A Last Will and Testament (LWT) message may be published if this connection is
+     * closed without sending an MQTT DISCONNECT packet. This pointer should be set to
+     * an #AwsIotMqttPublishInfo_t representing any LWT message to publish. If an LWT
+     * is not needed, this member must be set to `NULL`.
+     *
+     * Unlike other PUBLISH messages, an LWT message is limited to 65535 bytes in
+     * length. Additionally, [pWillInfo->retryMs](@ref AwsIotMqttPublishInfo_t.retryMs)
+     * and [pWillInfo->retryLimit](@ref AwsIotMqttPublishInfo_t.retryLimit) will
+     * be ignored.
+     */
+    const AwsIotMqttPublishInfo_t * pWillInfo;
+
+    uint16_t keepAliveSeconds;       /**< @brief Period of keep-alive messages. Set to 0 to disable keep-alive. */
+
+    const char * pClientIdentifier;  /**< @brief MQTT client identifier. */
+    uint16_t clientIdentifierLength; /**< @brief Length of #AwsIotMqttConnectInfo_t.pClientIdentifier. */
+
+    /* These credentials are not used by AWS IoT and may be ignored if
+     * awsIotMqttMode is true. */
+    const char * pUserName;          /**< @brief Username for MQTT connection. */
+    uint16_t userNameLength;         /**< @brief Length of #AwsIotMqttConnectInfo_t.pUserName. */
+    const char * pPassword;          /**< @brief Password for MQTT connection. */
+    uint16_t passwordLength;         /**< @brief Length of #AwsIotMqttConnectInfo_t.pPassword. */
+} AwsIotMqttConnectInfo_t;
+
+/**
+ * @ingroup mqtt_datatypes_paramstructs
  * @brief Provides the network functions for sending data and closing connections.
  *
  * @paramfor @ref mqtt_function_connect
@@ -606,14 +668,12 @@ typedef struct AwsIotMqttNetIf
             /**
              * @brief CONNECT packet serializer function.
              * @param[in] AwsIotMqttConnectInfo_t* User-provided CONNECT information.
-             * @param[in] AwsIotMqttPublishInfo_t* User-provided Last Will and Testament information.
              * @param[out] uint8_t** Where the CONNECT packet is written.
              * @param[out] size_t* Size of the CONNECT packet.
              *
              * <b>Default implementation:</b> #AwsIotMqttInternal_SerializeConnect
              */
             AwsIotMqttError_t ( * connect )( const AwsIotMqttConnectInfo_t * const /* pConnectInfo */,
-                                             const AwsIotMqttPublishInfo_t * const /* pWillInfo */,
                                              uint8_t ** const /* pConnectPacket */,
                                              size_t * const /* pPacketSize */ );
 
@@ -905,7 +965,6 @@ typedef struct AwsIotMqttNetIf
  * - @functionname{mqtt_function_cleanup}
  * - @functionname{mqtt_function_receivecallback}
  * - @functionname{mqtt_function_connect}
- * - @functionname{mqtt_function_connectrestoresession}
  * - @functionname{mqtt_function_disconnect}
  * - @functionname{mqtt_function_subscribe}
  * - @functionname{mqtt_function_timedsubscribe}
@@ -933,7 +992,6 @@ typedef struct AwsIotMqttNetIf
  * @image html mqtt_function_receivecallback_partial.png width=80%
  *
  * @functionpage{AwsIotMqtt_Connect,mqtt,connect}
- * @functionpage{AwsIotMqtt_ConnectRestoreSession,mqtt,connectrestoresession}
  * @functionpage{AwsIotMqtt_Disconnect,mqtt,disconnect}
  * @functionpage{AwsIotMqtt_Subscribe,mqtt,subscribe}
  * @functionpage{AwsIotMqtt_TimedSubscribe,mqtt,timedsubscribe}
@@ -1071,17 +1129,12 @@ int32_t AwsIotMqtt_ReceiveCallback( AwsIotMqttConnection_t * pMqttConnection,
  * PUBLISH messages will be discarded when the connection is closed.
  *
  * If [pConnectInfo->cleanSession](@ref AwsIotMqttConnectInfo_t.cleanSession) is `false`,
- * this function establishes a persistent MQTT session. <b>This function should only
- * be used to establish a NEW persistent MQTT session</b>, i.e. a persistent
- * session that has no previous subscriptions. The function @ref
- * mqtt_function_connectrestoresession should be used to restore an established
- * persistent session. The flow for using persistent sessions should be:
- * 1. Establish new persistent session by calling @ref mqtt_function_connect with
- * [pConnectInfo->cleanSession](@ref AwsIotMqttConnectInfo_t.cleanSession) `= false`.
- * 2. Disconnect the MQTT connection.
- * 3. When reconnecting a persistent session, call @ref mqtt_function_connectrestoresession
- * with [pConnectInfo->cleanSession](@ref AwsIotMqttConnectInfo_t.cleanSession) `= false`
- * and pass a list of subscriptions used in the persistent session.
+ * this function establishes (or re-establishes) a persistent MQTT session. The parameters
+ * [pConnectInfo->pPreviousSubscriptions](@ref AwsIotMqttConnectInfo_t.pPreviousSubscriptions)
+ * and [pConnectInfo->previousSubscriptionCount](@ref AwsIotMqttConnectInfo_t.previousSubscriptionCount)
+ * may be used to restore subscriptions present in a re-established persistent session.
+ * Any restored subscriptions <b>MUST</b> have been present in the persistent session;
+ * <b>this function does not send an MQTT SUBSCRIBE packet!</b>
  *
  * This MQTT library is network agnostic, meaning it has no knowledge of the
  * underlying network protocol carrying the MQTT packets. It interacts with the
@@ -1093,10 +1146,11 @@ int32_t AwsIotMqtt_ReceiveCallback( AwsIotMqttConnection_t * pMqttConnection,
  * on its members.
  *
  * The `pConnectInfo` parameter provides the contents of the MQTT CONNECT packet.
- * Its members [are defined by the MQTT spec.](@ref AwsIotMqttConnectInfo_t). The
- * `pWillInfo` parameter provides information on a Last Will and Testament (LWT)
- * message to be published if the MQTT connection is closed without
- * [sending a DISCONNECT packet](@ref mqtt_function_disconnect). Unlike other PUBLISH
+ * Most members [are defined by the MQTT spec.](@ref AwsIotMqttConnectInfo_t). The
+ * [pConnectInfo->pWillInfo](@ref AwsIotMqttConnectInfo_t.pWillInfo) member provides
+ * information on a Last Will and Testament (LWT) message to be published if the
+ * MQTT connection is closed without [sending a DISCONNECT packet]
+ * (@ref mqtt_function_disconnect). Unlike other PUBLISH
  * messages, a LWT message payload is limited to 65535 bytes in length. Additionally,
  * the retry [interval](@ref AwsIotMqttPublishInfo_t.retryMs) and [limit]
  * (@ref AwsIotMqttPublishInfo_t.retryLimit) members of #AwsIotMqttPublishInfo_t
@@ -1115,9 +1169,6 @@ int32_t AwsIotMqtt_ReceiveCallback( AwsIotMqttConnection_t * pMqttConnection,
  * @param[in] pNetworkInterface The network `send` and `disconnect` functions that
  * this MQTT connection will use.
  * @param[in] pConnectInfo MQTT connection setup parameters.
- * @param[in] pWillInfo Information on a Last Will and Testament message to be
- * published if this connection is unexpectedly closed. Optional; pass `NULL` to
- * ignore.
  * @param[in] timeoutMs If the MQTT server does not accept the connection within
  * this timeout, this function returns #AWS_IOT_MQTT_TIMEOUT.
  *
@@ -1129,10 +1180,6 @@ int32_t AwsIotMqtt_ReceiveCallback( AwsIotMqttConnection_t * pMqttConnection,
  * - #AWS_IOT_MQTT_BAD_RESPONSE
  * - #AWS_IOT_MQTT_TIMEOUT
  * - #AWS_IOT_MQTT_SERVER_REFUSED
- *
- * @see
- * @ref mqtt_function_connectrestoresession for the function to restore an
- * established MQTT persistent session.
  *
  * <b>Example</b>
  * @code{c}
@@ -1164,12 +1211,14 @@ int32_t AwsIotMqtt_ReceiveCallback( AwsIotMqttConnection_t * pMqttConnection,
  * willInfo.pPayload = "MQTT client unexpectedly disconnected.";
  * willInfo.payloadLength = 38;
  *
+ * // Set the pointer to the will info.
+ * connectInfo.pWillInfo = &willInfo;
+ *
  * // Call CONNECT with a 5 second block time. Should return
  * // AWS_IOT_MQTT_SUCCESS when successful.
  * AwsIotMqttError_t result = AwsIotMqtt_Connect( &mqttConnection,
  *                                                &networkInterface,
  *                                                &connectInfo,
- *                                                &willInfo,
  *                                                5000 );
  *
  * if( result == AWS_IOT_MQTT_SUCCESS )
@@ -1185,63 +1234,8 @@ int32_t AwsIotMqtt_ReceiveCallback( AwsIotMqttConnection_t * pMqttConnection,
 AwsIotMqttError_t AwsIotMqtt_Connect( AwsIotMqttConnection_t * pMqttConnection,
                                       const AwsIotMqttNetIf_t * const pNetworkInterface,
                                       const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                      const AwsIotMqttPublishInfo_t * const pWillInfo,
                                       uint64_t timeoutMs );
 /* @[declare_mqtt_connect] */
-
-/**
- * @brief Establish an MQTT connection and restore the subscriptions of a
- * persistent session.
- *
- * Like @ref mqtt_function_connect, this function establishes an MQTT connection
- * by sending an MQTT CONNECT packet. In addition, this function also restores
- * the subscription callbacks from a persistent session.
- *
- * The subscription list passed to this function must contain subscriptions that
- * are already present on the MQTT server as part of a persistent session. <b>This
- * function does not send an MQTT SUBSCRIBE packet.</b> The parameter
- * [pConnectInfo->cleanSession](@ref AwsIotMqttConnectInfo_t.cleanSession)
- * must be `false`.
- *
- * <b>This function must only be called to restore an established persistent
- * session</b>. To create a new persistent session, use @ref mqtt_function_connect.
- *
- * @param[out] pMqttConnection Set to a newly-initialized MQTT connection handle
- * if this function succeeds.
- * @param[in] pNetworkInterface The network `send` and `disconnect` functions that
- * this MQTT connection will use.
- * @param[in] pConnectInfo MQTT connection setup parameters.
- * @param[in] pWillInfo Information on a Last Will and Testament message to be
- * published if this connection is unexpectedly closed. Optional; pass `NULL` to
- * ignore.
- * @param[in] pSessionSubscriptions MQTT subscriptions contained in the persistent
- * session.
- * @param[in] sessionSubscriptionsCount The number of persistent session subscriptions.
- * @param[in] timeoutMs If the MQTT server does not accept the connection within
- * this timeout, this function returns #AWS_IOT_MQTT_TIMEOUT.
- *
- * @return One of the following:
- * - #AWS_IOT_MQTT_SUCCESS
- * - #AWS_IOT_MQTT_BAD_PARAMETER
- * - #AWS_IOT_MQTT_NO_MEMORY
- * - #AWS_IOT_MQTT_SEND_ERROR
- * - #AWS_IOT_MQTT_BAD_RESPONSE
- * - #AWS_IOT_MQTT_TIMEOUT
- * - #AWS_IOT_MQTT_SERVER_REFUSED
- *
- * @see
- * @ref mqtt_function_connect for the function to establish clean MQTT connections
- * or new persistent MQTT connections.
- */
-/* @[declare_mqtt_connectrestoresession] */
-AwsIotMqttError_t AwsIotMqtt_ConnectRestoreSession( AwsIotMqttConnection_t * pMqttConnection,
-                                                    const AwsIotMqttNetIf_t * const pNetworkInterface,
-                                                    const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                                    const AwsIotMqttPublishInfo_t * const pWillInfo,
-                                                    const AwsIotMqttSubscription_t * const pSessionSubscriptions,
-                                                    size_t sessionSubscriptionsCount,
-                                                    uint64_t timeoutMs );
-/* @[declare_mqtt_connectrestoresession] */
 
 /**
  * @brief Closes an MQTT connection and frees resources.

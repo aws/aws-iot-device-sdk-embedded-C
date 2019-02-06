@@ -152,21 +152,6 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
 static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection );
 
 /**
- * @brief The common component of both @ref mqtt_function_connect and @ref
- * mqtt_function_connectrestoresession.
- *
- * See @ref mqtt_function_connectrestoresession for a description of the
- * parameters and return values.
- */
-static AwsIotMqttError_t _connectCommon( AwsIotMqttConnection_t * pMqttConnection,
-                                         const AwsIotMqttNetIf_t * const pNetworkInterface,
-                                         const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                         const AwsIotMqttPublishInfo_t * const pWillInfo,
-                                         const AwsIotMqttSubscription_t * const pSessionSubscriptions,
-                                         size_t sessionSubscriptionsCount,
-                                         uint64_t timeoutMs );
-
-/**
  * @brief The common component of both @ref mqtt_function_subscribe and @ref
  * mqtt_function_unsubscribe.
  *
@@ -682,196 +667,6 @@ static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
 
 /*-----------------------------------------------------------*/
 
-static AwsIotMqttError_t _connectCommon( AwsIotMqttConnection_t * pMqttConnection,
-                                         const AwsIotMqttNetIf_t * const pNetworkInterface,
-                                         const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                         const AwsIotMqttPublishInfo_t * const pWillInfo,
-                                         const AwsIotMqttSubscription_t * const pSessionSubscriptions,
-                                         size_t sessionSubscriptionsCount,
-                                         uint64_t timeoutMs )
-{
-    AwsIotMqttError_t connectStatus = AWS_IOT_MQTT_STATUS_PENDING;
-    _mqttConnection_t * pNewMqttConnection = NULL;
-    _mqttOperation_t * pConnectOperation = NULL;
-
-    /* Default CONNECT serializer function. */
-    AwsIotMqttError_t ( * serializeConnect )( const AwsIotMqttConnectInfo_t * const,
-                                              const AwsIotMqttPublishInfo_t * const,
-                                              uint8_t ** const,
-                                              size_t * const ) = AwsIotMqttInternal_SerializeConnect;
-
-    /* Check that the network interface is valid. */
-    if( AwsIotMqttInternal_ValidateNetIf( pNetworkInterface ) == false )
-    {
-        return AWS_IOT_MQTT_BAD_PARAMETER;
-    }
-
-    /* Choose a CONNECT serializer function. */
-    #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pNetworkInterface->serialize.connect != NULL )
-        {
-            serializeConnect = pNetworkInterface->serialize.connect;
-        }
-    #endif
-
-    /* Check that the connection info is valid. */
-    if( AwsIotMqttInternal_ValidateConnect( pConnectInfo ) == false )
-    {
-        return AWS_IOT_MQTT_BAD_PARAMETER;
-    }
-
-    /* If will info is provided, check that it is valid. */
-    if( pWillInfo != NULL )
-    {
-        if( AwsIotMqttInternal_ValidatePublish( pConnectInfo->awsIotMqttMode,
-                                                pWillInfo ) == false )
-        {
-            return AWS_IOT_MQTT_BAD_PARAMETER;
-        }
-
-        /* Will message payloads cannot be larger than 65535. This restriction
-         * applies only to will messages, and not normal PUBLISH messages. */
-        if( pWillInfo->payloadLength > UINT16_MAX )
-        {
-            IotLogError( "Will payload cannot be larger than 65535." );
-
-            return AWS_IOT_MQTT_BAD_PARAMETER;
-        }
-    }
-
-    IotLogInfo( "Establishing new MQTT connection." );
-
-    /* Create a CONNECT operation. */
-    connectStatus = AwsIotMqttInternal_CreateOperation( &pConnectOperation,
-                                                        AWS_IOT_MQTT_FLAG_WAITABLE,
-                                                        NULL );
-
-    if( connectStatus != AWS_IOT_MQTT_SUCCESS )
-    {
-        return connectStatus;
-    }
-
-    /* Ensure the members set by operation creation and serialization
-     * are appropriate for a blocking CONNECT. */
-    AwsIotMqtt_Assert( pConnectOperation->pPublishRetry == NULL );
-    AwsIotMqtt_Assert( pConnectOperation->status == AWS_IOT_MQTT_STATUS_PENDING );
-    AwsIotMqtt_Assert( ( pConnectOperation->flags & AWS_IOT_MQTT_FLAG_WAITABLE )
-                       == AWS_IOT_MQTT_FLAG_WAITABLE );
-
-    /* Set the operation type. */
-    pConnectOperation->operation = AWS_IOT_MQTT_CONNECT;
-
-    /* Allocate memory to store data for the new MQTT connection. */
-    pNewMqttConnection = _createMqttConnection( pConnectInfo->awsIotMqttMode,
-                                                pNetworkInterface,
-                                                pConnectInfo->keepAliveSeconds );
-
-    if( pNewMqttConnection == NULL )
-    {
-        AwsIotMqttInternal_DestroyOperation( pConnectOperation );
-
-        return AWS_IOT_MQTT_NO_MEMORY;
-    }
-
-    /* Set the MQTT connection. */
-    pConnectOperation->pMqttConnection = pNewMqttConnection;
-
-    /* Add previous session subscriptions. */
-    if( ( pSessionSubscriptions != NULL ) && ( sessionSubscriptionsCount > 0 ) )
-    {
-        connectStatus = AwsIotMqttInternal_AddSubscriptions( pNewMqttConnection,
-                                                             2,
-                                                             pSessionSubscriptions,
-                                                             sessionSubscriptionsCount );
-
-        if( connectStatus != AWS_IOT_MQTT_SUCCESS )
-        {
-            AwsIotMqttInternal_DestroyOperation( pConnectOperation );
-            _destroyMqttConnection( pNewMqttConnection );
-
-            return connectStatus;
-        }
-    }
-
-    /* Convert the connect info and will info objects to an MQTT CONNECT packet. */
-    connectStatus = serializeConnect( pConnectInfo,
-                                      pWillInfo,
-                                      &( pConnectOperation->pMqttPacket ),
-                                      &( pConnectOperation->packetSize ) );
-
-    if( connectStatus != AWS_IOT_MQTT_SUCCESS )
-    {
-        AwsIotMqttInternal_DestroyOperation( pConnectOperation );
-        _destroyMqttConnection( pNewMqttConnection );
-
-        return connectStatus;
-    }
-
-    /* Check the serialized MQTT packet. */
-    AwsIotMqtt_Assert( pConnectOperation->pMqttPacket != NULL );
-    AwsIotMqtt_Assert( pConnectOperation->packetSize > 0 );
-
-    /* Set the output parameter so it may be used by the network receive callback. */
-    *pMqttConnection = pNewMqttConnection;
-
-    /* Prevent another CONNECT operation from using the network. */
-    IotMutex_Lock( &_connectMutex );
-
-    /* Add the CONNECT operation to the send queue for network transmission. */
-    if( AwsIotMqttInternal_EnqueueOperation( pConnectOperation,
-                                             &( _IotMqttSend ) ) != AWS_IOT_MQTT_SUCCESS )
-    {
-        IotLogError( "Failed to enqueue CONNECT for sending." );
-        connectStatus = AWS_IOT_MQTT_NO_MEMORY;
-        AwsIotMqttInternal_DestroyOperation( pConnectOperation );
-    }
-    else
-    {
-        /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
-        connectStatus = AwsIotMqtt_Wait( ( AwsIotMqttReference_t ) pConnectOperation,
-                                         timeoutMs );
-    }
-
-    /* Unlock the CONNECT mutex. */
-    IotMutex_Unlock( &_connectMutex );
-
-    /* Arm the timer for the first keep alive expiration if keep-alive is
-     * active for this connection. */
-    if( ( connectStatus == AWS_IOT_MQTT_SUCCESS ) &&
-        ( pNewMqttConnection->keepAliveSeconds > 0 ) )
-    {
-        IotLogDebug( "Starting new MQTT connection timer." );
-
-        if( IotClock_TimerArm( &( pNewMqttConnection->timer ),
-                               pNewMqttConnection->pKeepAliveEvent->expirationTime - IotClock_GetTimeMs(),
-                               0 ) == false )
-        {
-            IotLogError( "Failed to start connection timer for new MQTT connection" );
-
-            connectStatus = AWS_IOT_MQTT_INIT_FAILED;
-        }
-    }
-
-    /* Check the status of the CONNECT operation. */
-    if( connectStatus == AWS_IOT_MQTT_SUCCESS )
-    {
-        IotLogInfo( "New MQTT connection %p established.", pNewMqttConnection );
-    }
-    else
-    {
-        /* Otherwise, free resources and log an error. */
-        _destroyMqttConnection( pNewMqttConnection );
-        *pMqttConnection = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
-
-        IotLogError( "Failed to establish new MQTT connection, error %s.",
-                     AwsIotMqtt_strerror( connectStatus ) );
-    }
-
-    return connectStatus;
-}
-
-/*-----------------------------------------------------------*/
-
 static AwsIotMqttError_t _subscriptionCommon( AwsIotMqttOperationType_t operation,
                                               AwsIotMqttConnection_t mqttConnection,
                                               const AwsIotMqttSubscription_t * const pSubscriptionList,
@@ -1187,53 +982,200 @@ void AwsIotMqtt_Cleanup()
 AwsIotMqttError_t AwsIotMqtt_Connect( AwsIotMqttConnection_t * pMqttConnection,
                                       const AwsIotMqttNetIf_t * const pNetworkInterface,
                                       const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                      const AwsIotMqttPublishInfo_t * const pWillInfo,
                                       uint64_t timeoutMs )
 {
-    return _connectCommon( pMqttConnection,
-                           pNetworkInterface,
-                           pConnectInfo,
-                           pWillInfo,
-                           NULL,
-                           0,
-                           timeoutMs );
-}
+    AwsIotMqttError_t connectStatus = AWS_IOT_MQTT_STATUS_PENDING;
+    _mqttConnection_t * pNewMqttConnection = NULL;
+    _mqttOperation_t * pConnectOperation = NULL;
 
-/*-----------------------------------------------------------*/
+    /* Default CONNECT serializer function. */
+    AwsIotMqttError_t ( * serializeConnect )( const AwsIotMqttConnectInfo_t * const,
+                                              uint8_t ** const,
+                                              size_t * const ) = AwsIotMqttInternal_SerializeConnect;
 
-AwsIotMqttError_t AwsIotMqtt_ConnectRestoreSession( AwsIotMqttConnection_t * pMqttConnection,
-                                                    const AwsIotMqttNetIf_t * const pNetworkInterface,
-                                                    const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                                    const AwsIotMqttPublishInfo_t * const pWillInfo,
-                                                    const AwsIotMqttSubscription_t * const pSessionSubscriptions,
-                                                    size_t sessionSubscriptionsCount,
-                                                    uint64_t timeoutMs )
-{
-    /* Check that clean session is false. */
-    if( pConnectInfo->cleanSession != false )
-    {
-        IotLogError( "AwsIotMqtt_ConnectRestoreSession must have pConnectInfo->cleanSession == false. "
-                     "AwsIotMqtt_Connect should be used to establish a clean session." );
-
-        return AWS_IOT_MQTT_BAD_PARAMETER;
-    }
-
-    /* Validate previous session subscriptions. */
-    if( AwsIotMqttInternal_ValidateSubscriptionList( AWS_IOT_MQTT_SUBSCRIBE,
-                                                     pConnectInfo->awsIotMqttMode,
-                                                     pSessionSubscriptions,
-                                                     sessionSubscriptionsCount ) == false )
+    /* Check that the network interface is valid. */
+    if( AwsIotMqttInternal_ValidateNetIf( pNetworkInterface ) == false )
     {
         return AWS_IOT_MQTT_BAD_PARAMETER;
     }
 
-    return _connectCommon( pMqttConnection,
-                           pNetworkInterface,
-                           pConnectInfo,
-                           pWillInfo,
-                           pSessionSubscriptions,
-                           sessionSubscriptionsCount,
-                           timeoutMs );
+    /* Choose a CONNECT serializer function. */
+    #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+        if( pNetworkInterface->serialize.connect != NULL )
+        {
+            serializeConnect = pNetworkInterface->serialize.connect;
+        }
+    #endif
+
+    /* Check that the connection info is valid. */
+    if( AwsIotMqttInternal_ValidateConnect( pConnectInfo ) == false )
+    {
+        return AWS_IOT_MQTT_BAD_PARAMETER;
+    }
+
+    /* If will info is provided, check that it is valid. */
+    if( pConnectInfo->pWillInfo != NULL )
+    {
+        if( AwsIotMqttInternal_ValidatePublish( pConnectInfo->awsIotMqttMode,
+                                                pConnectInfo->pWillInfo ) == false )
+        {
+            return AWS_IOT_MQTT_BAD_PARAMETER;
+        }
+
+        /* Will message payloads cannot be larger than 65535. This restriction
+         * applies only to will messages, and not normal PUBLISH messages. */
+        if( pConnectInfo->pWillInfo->payloadLength > UINT16_MAX )
+        {
+            IotLogError( "Will payload cannot be larger than 65535." );
+
+            return AWS_IOT_MQTT_BAD_PARAMETER;
+        }
+    }
+
+    /* If previous subscriptions are provided, check that they are valid. */
+    if( ( pConnectInfo->cleanSession == false ) &&
+        ( pConnectInfo->pPreviousSubscriptions != NULL ) )
+    {
+        if( AwsIotMqttInternal_ValidateSubscriptionList( AWS_IOT_MQTT_SUBSCRIBE,
+                                                         pConnectInfo->awsIotMqttMode,
+                                                         pConnectInfo->pPreviousSubscriptions,
+                                                         pConnectInfo->previousSubscriptionCount) == false )
+        {
+            return AWS_IOT_MQTT_BAD_PARAMETER;
+        }
+    }
+
+    IotLogInfo( "Establishing new MQTT connection." );
+
+    /* Create a CONNECT operation. */
+    connectStatus = AwsIotMqttInternal_CreateOperation( &pConnectOperation,
+                                                        AWS_IOT_MQTT_FLAG_WAITABLE,
+                                                        NULL );
+
+    if( connectStatus != AWS_IOT_MQTT_SUCCESS )
+    {
+        return connectStatus;
+    }
+
+    /* Ensure the members set by operation creation and serialization
+     * are appropriate for a blocking CONNECT. */
+    AwsIotMqtt_Assert( pConnectOperation->pPublishRetry == NULL );
+    AwsIotMqtt_Assert( pConnectOperation->status == AWS_IOT_MQTT_STATUS_PENDING );
+    AwsIotMqtt_Assert( ( pConnectOperation->flags & AWS_IOT_MQTT_FLAG_WAITABLE )
+                       == AWS_IOT_MQTT_FLAG_WAITABLE );
+
+    /* Set the operation type. */
+    pConnectOperation->operation = AWS_IOT_MQTT_CONNECT;
+
+    /* Allocate memory to store data for the new MQTT connection. */
+    pNewMqttConnection = _createMqttConnection( pConnectInfo->awsIotMqttMode,
+                                                pNetworkInterface,
+                                                pConnectInfo->keepAliveSeconds );
+
+    if( pNewMqttConnection == NULL )
+    {
+        AwsIotMqttInternal_DestroyOperation( pConnectOperation );
+
+        return AWS_IOT_MQTT_NO_MEMORY;
+    }
+
+    /* Set the MQTT connection. */
+    pConnectOperation->pMqttConnection = pNewMqttConnection;
+
+    /* Add previous session subscriptions. */
+    if( pConnectInfo->pPreviousSubscriptions != NULL )
+    {
+        /* Previous subscription count should have been validated as nonzero. */
+        AwsIotMqtt_Assert( pConnectInfo->previousSubscriptionCount > 0 );
+
+        connectStatus = AwsIotMqttInternal_AddSubscriptions( pNewMqttConnection,
+                                                             2,
+                                                             pConnectInfo->pPreviousSubscriptions,
+                                                             pConnectInfo->previousSubscriptionCount );
+
+        if( connectStatus != AWS_IOT_MQTT_SUCCESS )
+        {
+            AwsIotMqttInternal_DestroyOperation( pConnectOperation );
+            _destroyMqttConnection( pNewMqttConnection );
+
+            return connectStatus;
+        }
+    }
+
+    /* Convert the connect info and will info objects to an MQTT CONNECT packet. */
+    connectStatus = serializeConnect( pConnectInfo,
+                                      &( pConnectOperation->pMqttPacket ),
+                                      &( pConnectOperation->packetSize ) );
+
+    if( connectStatus != AWS_IOT_MQTT_SUCCESS )
+    {
+        AwsIotMqttInternal_DestroyOperation( pConnectOperation );
+        _destroyMqttConnection( pNewMqttConnection );
+
+        return connectStatus;
+    }
+
+    /* Check the serialized MQTT packet. */
+    AwsIotMqtt_Assert( pConnectOperation->pMqttPacket != NULL );
+    AwsIotMqtt_Assert( pConnectOperation->packetSize > 0 );
+
+    /* Set the output parameter so it may be used by the network receive callback. */
+    *pMqttConnection = pNewMqttConnection;
+
+    /* Prevent another CONNECT operation from using the network. */
+    IotMutex_Lock( &_connectMutex );
+
+    /* Add the CONNECT operation to the send queue for network transmission. */
+    if( AwsIotMqttInternal_EnqueueOperation( pConnectOperation,
+                                             &( _IotMqttSend ) ) != AWS_IOT_MQTT_SUCCESS )
+    {
+        IotLogError( "Failed to enqueue CONNECT for sending." );
+        connectStatus = AWS_IOT_MQTT_NO_MEMORY;
+        AwsIotMqttInternal_DestroyOperation( pConnectOperation );
+    }
+    else
+    {
+        /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
+        connectStatus = AwsIotMqtt_Wait( ( AwsIotMqttReference_t ) pConnectOperation,
+                                         timeoutMs );
+    }
+
+    /* Unlock the CONNECT mutex. */
+    IotMutex_Unlock( &_connectMutex );
+
+    /* Arm the timer for the first keep alive expiration if keep-alive is
+     * active for this connection. */
+    if( ( connectStatus == AWS_IOT_MQTT_SUCCESS ) &&
+        ( pNewMqttConnection->keepAliveSeconds > 0 ) )
+    {
+        IotLogDebug( "Starting new MQTT connection timer." );
+
+        if( IotClock_TimerArm( &( pNewMqttConnection->timer ),
+                               pNewMqttConnection->pKeepAliveEvent->expirationTime - IotClock_GetTimeMs(),
+                               0 ) == false )
+        {
+            IotLogError( "Failed to start connection timer for new MQTT connection" );
+
+            connectStatus = AWS_IOT_MQTT_INIT_FAILED;
+        }
+    }
+
+    /* Check the status of the CONNECT operation. */
+    if( connectStatus == AWS_IOT_MQTT_SUCCESS )
+    {
+        IotLogInfo( "New MQTT connection %p established.", pNewMqttConnection );
+    }
+    else
+    {
+        /* Otherwise, free resources and log an error. */
+        _destroyMqttConnection( pNewMqttConnection );
+        *pMqttConnection = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
+
+        IotLogError( "Failed to establish new MQTT connection, error %s.",
+                     AwsIotMqtt_strerror( connectStatus ) );
+    }
+
+    return connectStatus;
 }
 
 /*-----------------------------------------------------------*/

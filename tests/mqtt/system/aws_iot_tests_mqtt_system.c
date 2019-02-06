@@ -179,14 +179,12 @@ static void _freePacket( uint8_t * pPacket )
  * @brief Serializer override for CONNECT.
  */
 static AwsIotMqttError_t _serializeConnect( const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                            const AwsIotMqttPublishInfo_t * const pWillInfo,
                                             uint8_t ** const pConnectPacket,
                                             size_t * const pPacketSize )
 {
     _connectSerializerOverride = true;
 
     return AwsIotMqttInternal_SerializeConnect( pConnectInfo,
-                                                pWillInfo,
                                                 pConnectPacket,
                                                 pPacketSize );
 }
@@ -358,7 +356,6 @@ static void _subscribePublishWait( int QoS )
         status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
                                      &networkInterface,
                                      &connectInfo,
-                                     NULL,
                                      AWS_IOT_TEST_MQTT_TIMEOUT_MS );
         TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
 
@@ -581,7 +578,6 @@ TEST( MQTT_System, SubscribePublishAsync )
             status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
                                          &_AwsIotTestNetworkInterface,
                                          &connectInfo,
-                                         NULL,
                                          AWS_IOT_TEST_MQTT_TIMEOUT_MS );
             TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
 
@@ -700,7 +696,6 @@ TEST( MQTT_System, LastWillAndTestament )
             status = AwsIotMqtt_Connect( &lwtListener,
                                          &lwtNetIf,
                                          &lwtConnectInfo,
-                                         NULL,
                                          AWS_IOT_TEST_MQTT_TIMEOUT_MS );
             TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
 
@@ -723,6 +718,7 @@ TEST( MQTT_System, LastWillAndTestament )
                 connectInfo.cleanSession = true;
                 connectInfo.pClientIdentifier = _pClientIdentifier;
                 connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );
+                connectInfo.pWillInfo = &willInfo;
 
                 willInfo.pTopicName = AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/LastWillAndTestament";
                 willInfo.topicNameLength = ( uint16_t ) strlen( willInfo.pTopicName );
@@ -732,7 +728,6 @@ TEST( MQTT_System, LastWillAndTestament )
                 status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
                                              &_AwsIotTestNetworkInterface,
                                              &connectInfo,
-                                             &willInfo,
                                              AWS_IOT_TEST_MQTT_TIMEOUT_MS );
                 TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
 
@@ -792,7 +787,6 @@ TEST( MQTT_System, RestorePreviousSession )
         status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
                                      &_AwsIotTestNetworkInterface,
                                      &connectInfo,
-                                     NULL,
                                      AWS_IOT_TEST_MQTT_TIMEOUT_MS );
         TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
 
@@ -818,13 +812,12 @@ TEST( MQTT_System, RestorePreviousSession )
 
         /* Re-establish the MQTT connection with a previous session. */
         connectInfo.cleanSession = false;
-        status = AwsIotMqtt_ConnectRestoreSession( &_AwsIotTestMqttConnection,
-                                                   &_AwsIotTestNetworkInterface,
-                                                   &connectInfo,
-                                                   NULL,
-                                                   &subscription,
-                                                   1,
-                                                   AWS_IOT_TEST_MQTT_TIMEOUT_MS );
+        connectInfo.pPreviousSubscriptions = &subscription;
+        connectInfo.previousSubscriptionCount = 1;
+        status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
+                                     &_AwsIotTestNetworkInterface,
+                                     &connectInfo,
+                                     AWS_IOT_TEST_MQTT_TIMEOUT_MS );
         TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
 
         /* Publish a message to the subscription added in the previous session. */
@@ -865,7 +858,6 @@ TEST( MQTT_System, RestorePreviousSession )
         status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
                                      &_AwsIotTestNetworkInterface,
                                      &connectInfo,
-                                     NULL,
                                      AWS_IOT_TEST_MQTT_TIMEOUT_MS );
         TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
 

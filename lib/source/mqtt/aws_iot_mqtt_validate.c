@@ -134,6 +134,18 @@ bool AwsIotMqttInternal_ValidateConnect( const AwsIotMqttConnectInfo_t * const p
         }
     }
 
+    /* Check that the number of persistent session subscriptions is valid. */
+    if( pConnectInfo->cleanSession == false )
+    {
+        if( ( pConnectInfo->pPreviousSubscriptions != NULL ) &&
+            ( pConnectInfo->previousSubscriptionCount == 0 ) )
+        {
+            IotLogError( "Previous subscription count cannot be 0." );
+
+            return false;
+        }
+    }
+
     /* In MQTT 3.1.1, servers are not obligated to accept client identifiers longer
      * than 23 characters. */
     if( pConnectInfo->clientIdentifierLength > 23 )

@@ -384,6 +384,7 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
     connectInfo.awsIotMqttMode = awsIotMqttMode;
     connectInfo.cleanSession = true;
     connectInfo.keepAliveSeconds = _KEEP_ALIVE_SECONDS;
+    connectInfo.pWillInfo = &willInfo;
 
     /* Set the members of the Last Will and Testament (LWT) message info. The
      * MQTT server will publish the LWT message if this client disconnects
@@ -437,7 +438,6 @@ int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
         mqttStatus = AwsIotMqtt_Connect( pMqttConnection,
                                          pNetworkInterface,
                                          &connectInfo,
-                                         &willInfo,
                                          _MQTT_TIMEOUT_MS );
 
         if( mqttStatus != AWS_IOT_MQTT_SUCCESS )

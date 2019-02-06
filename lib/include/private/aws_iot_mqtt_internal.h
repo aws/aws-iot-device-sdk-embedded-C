@@ -538,14 +538,12 @@ uint8_t AwsIotMqttInternal_GetPacketType( const uint8_t * const pPacket,
  * @brief Generate a CONNECT packet from the given parameters.
  *
  * @param[in] pConnectInfo User-provided CONNECT information.
- * @param[in] pWillInfo User-provided Last Will and Testament information.
  * @param[out] pConnectPacket Where the CONNECT packet is written.
  * @param[out] pPacketSize Size of the packet written to `pConnectPacket`.
  *
  * @return #AWS_IOT_MQTT_SUCCESS or #AWS_IOT_MQTT_NO_MEMORY.
  */
 AwsIotMqttError_t AwsIotMqttInternal_SerializeConnect( const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                                       const AwsIotMqttPublishInfo_t * const pWillInfo,
                                                        uint8_t ** const pConnectPacket,
                                                        size_t * const pPacketSize );
 

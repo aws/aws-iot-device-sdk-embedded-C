@@ -447,7 +447,6 @@ TEST_SETUP( Shadow_System )
     if( AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
                             &_AwsIotTestNetworkInterface,
                             &connectInfo,
-                            NULL,
                             AWS_IOT_TEST_SHADOW_TIMEOUT ) != AWS_IOT_MQTT_SUCCESS )
     {
         TEST_FAIL_MESSAGE( "Failed to establish MQTT connection for Shadow tests." );

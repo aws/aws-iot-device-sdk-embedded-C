@@ -110,7 +110,6 @@ int AwsIotDemo_RunShadowDemo( const char * const pThingName,
     mqttStatus = AwsIotMqtt_Connect( pMqttConnection,
                                      pNetworkInterface,
                                      &connectInfo,
-                                     NULL,
                                      _TIMEOUT_MS );
 
     if( mqttStatus != AWS_IOT_MQTT_SUCCESS )
