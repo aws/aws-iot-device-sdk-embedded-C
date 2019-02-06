@@ -60,6 +60,7 @@ typedef enum IotNetworkError
  * - @functionname{platform_network_function_send}
  * - @functionname{platform_network_function_receive}
  * - @functionname{platform_network_function_close}
+ * - @functionname{platform_network_function_closecallback}
  * - @functionname{platform_network_function_destroy}
  * - @functionname{platform_network_function_receivecallback}
  */
@@ -70,6 +71,7 @@ typedef enum IotNetworkError
  * @functionpage{IotNetworkInterface_t::send,platform_network,send}
  * @functionpage{IotNetworkInterface_t::receive,platform_network,receive}
  * @functionpage{IotNetworkInterface_t::close,platform_network,close}
+ * @functionpage{IotNetworkInterface_t::closeCallback,platform_network,closecallback}
  * @functionpage{IotNetworkInterface_t::destroy,platform_network,destroy}
  * @functionpage{IotNetworkReceiveCallback_t,platform_network,receivecallback}
  */
@@ -258,6 +260,25 @@ typedef struct IotNetworkInterface
     /* @[declare_platform_network_close] */
     IotNetworkError_t ( * close )( void * pConnection );
     /* @[declare_platform_network_close] */
+
+    /**
+     * @brief Callback function to invoke after @ref platform_network_function_close
+     * is called.
+     *
+     * @ref platform_network_function_close instructs the underlying network stack to
+     * close a connection. In constrast, this function can be used to inform a higher-level
+     * application that a connection was closed.
+     *
+     * @param[in] reason Meant to convey the reason a connection was closed; meaningful
+     * values should be defined by the library closing the connection.
+     * @param[in] pContext A context defined by the library closing the connection.
+     * @param[in] pConnection The connection that was closed.
+     */
+    /* @[declare_platform_network_closecallback] */
+    void ( * closeCallback )( int32_t reason,
+                              void * pContext,
+                              void * pConnection );
+    /* @[declare_platform_network_closecallback] */
 
     /**
      * @brief Free resources used by a network connection.
