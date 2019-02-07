@@ -18,6 +18,9 @@ rm -rf *
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_MQTT_MOSQUITTO=1 $COMPILER_OPTIONS"
 make
 
+# Run common tests (no network required).
+./bin/iot_tests_common
+
 # Run MQTT tests and demos against Mosquitto.
 ./bin/aws_iot_tests_mqtt
 ./bin/aws_iot_demo_mqtt -h test.mosquitto.org -p 1883 -n
@@ -29,6 +32,9 @@ make
 rm -rf *
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DAWS_IOT_TEST_MQTT_MOSQUITTO=1 -DIOT_STATIC_MEMORY_ONLY=1 $COMPILER_OPTIONS"
 make
+
+# Run common tests in static memory mode (no network required).
+./bin/iot_tests_common
 
 # Run MQTT tests and no-network Shadow tests in static memory mode.
 ./bin/aws_iot_tests_mqtt
