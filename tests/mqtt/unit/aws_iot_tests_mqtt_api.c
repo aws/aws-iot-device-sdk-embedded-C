@@ -265,9 +265,12 @@ static size_t _dupChecker( void * pSendContext,
 /**
  * @brief A disconnect function that only reports whether it was invoked.
  */
-static IotNetworkError_t _disconnect( void * pDisconnectContext )
+static IotNetworkError_t _disconnect( int32_t reason,
+                                      void * pDisconnectContext )
 {
     bool * pDisconnectInvoked = ( bool * ) pDisconnectContext;
+
+    ( void ) reason;
 
     /* This function just sets a flag testifying that it was invoked. */
     if( pDisconnectInvoked != NULL )
