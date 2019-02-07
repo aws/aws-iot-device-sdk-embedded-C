@@ -100,6 +100,7 @@ int main( int argc,
 
     /* Run linear containers tests. */
     RUN_TEST_GROUP( Common_Unit_Linear_Containers );
+    RUN_TEST_GROUP( Common_Unit_Task_Pool );
 
     /* Clean up common libraries. */
     IotCommon_Cleanup();

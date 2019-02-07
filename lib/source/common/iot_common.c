@@ -27,6 +27,9 @@
 /* Common include. */
 #include "iot_common.h"
 
+/* Task pool include. */
+#include "iot_taskpool.h"
+
 /* Static memory include (if dynamic memory allocation is disabled). */
 #if IOT_STATIC_MEMORY_ONLY == 1
     #include "private/iot_static_memory.h"
@@ -48,6 +51,19 @@ bool IotCommon_Init( void )
 {
     bool status = true;
 
+    /* Create system task pool. */
+    if( status == true )
+    {
+        AwsIotTaskPoolInfo_t taskPoolInfo = AWS_IOT_TASKPOOL_INFO_INITIALIZER;
+
+        if( AwsIotTaskPool_CreateSystemTaskPool( &taskPoolInfo ) != AWS_IOT_TASKPOOL_SUCCESS )
+        {
+            IotLogError( "Failed to create system task pool." );
+
+            status = false;
+        }
+    }
+
     /* Initialize static memory if dynamic memory allocation is disabled. */
     #if IOT_STATIC_MEMORY_ONLY == 1
         status = IotStaticMemory_Init();
@@ -55,6 +71,7 @@ bool IotCommon_Init( void )
         if( status == false )
         {
             IotLogError( "Failed to initialize static memory." );
+            AwsIotTaskPool_Destroy( AWS_IOT_TASKPOOL_SYSTEM_TASKPOOL );
         }
     #endif
 
@@ -74,6 +91,8 @@ void IotCommon_Cleanup( void )
     #if IOT_STATIC_MEMORY_ONLY == 1
         IotStaticMemory_Cleanup();
     #endif
+
+    AwsIotTaskPool_Destroy( AWS_IOT_TASKPOOL_SYSTEM_TASKPOOL );
 
     IotLogInfo( "Common libraries cleanup done." );
 }
