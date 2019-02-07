@@ -39,8 +39,8 @@
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
-/* POSIX+OpenSSL network include. */
-#include "posix/iot_network_openssl.h"
+/* Test network header include. */
+#include IOT_TEST_NETWORK_HEADER
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -120,10 +120,10 @@ typedef struct _operationCompleteParams
  * the test network function files. */
 extern bool AwsIotTest_NetworkSetup( void );
 extern void AwsIotTest_NetworkCleanup( void );
-extern bool AwsIotTest_NetworkConnect( void * const pNewConnection,
+extern bool AwsIotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
                                        AwsIotMqttConnection_t * pMqttConnection );
-extern void AwsIotTest_NetworkClose( int32_t reason,
-                                     void * pDisconnectContext );
+extern IotNetworkError_t AwsIotTest_NetworkClose( int32_t reason,
+                                                  void * pNetworkConnection );
 extern void AwsIotTest_NetworkDestroy( void * pConnection );
 
 /* Network variables used by the tests, declared in one of the test network
@@ -664,7 +664,7 @@ TEST( MQTT_System, LastWillAndTestament )
                             connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
     AwsIotMqttSubscription_t willSubscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     AwsIotMqttPublishInfo_t willInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    IotNetworkConnectionOpenssl_t lwtListenerConnection = IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER;
+    IotTestNetworkConnection_t lwtListenerConnection = IOT_TEST_NETWORK_CONNECTION_INITIALIZER;
     IotSemaphore_t waitSem;
 
     /* Create the wait semaphore. */
