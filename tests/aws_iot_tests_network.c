@@ -36,8 +36,8 @@
 /* MQTT include. */
 #include "aws_iot_mqtt.h"
 
-/* POSIX+OpenSSL network include. */
-#include "posix/iot_network_openssl.h"
+/* Test network header include. */
+#include IOT_TEST_NETWORK_HEADER
 
 /*-----------------------------------------------------------*/
 
@@ -68,20 +68,20 @@ void AwsIotTest_NetworkCleanup( void );
  *
  * @return true if a new network connection was successfully created; false otherwise.
  */
-bool AwsIotTest_NetworkConnect( void * const pNewConnection,
+bool AwsIotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
                                 AwsIotMqttConnection_t * pMqttConnection );
 
 /**
  * @brief Network interface close connection function for the tests.
  *
  * @param[in] reason Currently unused.
- * @param[in] pDisconnectContext The connection to close. Pass NULL to close
+ * @param[in] pNetworkConnection The connection to close. Pass NULL to close
  * the global network connection created by #AwsIotTest_NetworkSetup.
  *
  * @return Always returns #IOT_NETWORK_SUCCESS.
  */
 IotNetworkError_t AwsIotTest_NetworkClose( int32_t reason,
-                                           void * pDisconnectContext );
+                                           void * pNetworkConnection );
 
 /**
  * @brief Network interface cleanup function for the tests.
@@ -100,7 +100,12 @@ static bool _networkConnectionCreated = false;
 /**
  * @brief The network connection shared among the tests.
  */
-static IotNetworkConnectionOpenssl_t _networkConnection = IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER;
+static IotTestNetworkConnection_t _networkConnection = IOT_TEST_NETWORK_CONNECTION_INITIALIZER;
+
+/**
+ * @brief Network interface to use in the tests.
+ */
+static const IotNetworkInterface_t * const _pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
 
 /**
  * @brief The MQTT network interface shared among the tests.
@@ -117,7 +122,7 @@ AwsIotMqttConnection_t _AwsIotTestMqttConnection = AWS_IOT_MQTT_CONNECTION_INITI
 bool AwsIotTest_NetworkSetup( void )
 {
     /* Initialize the network library. */
-    if( IotNetworkOpenssl_Init() != IOT_NETWORK_SUCCESS )
+    if( IotTestNetwork_Init() != IOT_NETWORK_SUCCESS )
     {
         return false;
     }
@@ -125,7 +130,7 @@ bool AwsIotTest_NetworkSetup( void )
     if( AwsIotTest_NetworkConnect( &_networkConnection,
                                    &_AwsIotTestMqttConnection ) == false )
     {
-        IotNetworkOpenssl_Cleanup();
+        IotTestNetwork_Cleanup();
 
         return false;
     }
@@ -134,7 +139,7 @@ bool AwsIotTest_NetworkSetup( void )
     _AwsIotTestNetworkInterface.pDisconnectContext = NULL;
     _AwsIotTestNetworkInterface.disconnect = AwsIotTest_NetworkClose;
     _AwsIotTestNetworkInterface.pSendContext = ( void * ) &_networkConnection;
-    _AwsIotTestNetworkInterface.send = IotNetworkOpenssl_Send;
+    _AwsIotTestNetworkInterface.send = _pNetworkInterface->send;
 
     _networkConnectionCreated = true;
 
@@ -154,7 +159,7 @@ void AwsIotTest_NetworkCleanup( void )
     }
 
     /* Clean up the network library. */
-    IotNetworkOpenssl_Cleanup();
+    IotTestNetwork_Cleanup();
 
     /* Clear the network interface. */
     ( void ) memset( &_AwsIotTestNetworkInterface, 0x00, sizeof( AwsIotMqttNetIf_t ) );
@@ -162,41 +167,33 @@ void AwsIotTest_NetworkCleanup( void )
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotTest_NetworkConnect( void * const pNewConnection,
+bool AwsIotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
                                 AwsIotMqttConnection_t * pMqttConnection )
 {
-    IotNetworkServerInfoOpenssl_t serverInfo = IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER;
-    IotNetworkCredentialsOpenssl_t * pCredentials = NULL;
-
-    serverInfo.pHostName = AWS_IOT_TEST_SERVER;
-    serverInfo.port = AWS_IOT_TEST_PORT;
+    IotTestNetworkServerInfo_t serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
+    IotTestNetworkCredentials_t * pCredentials = NULL;
 
     /* Set up TLS if the endpoint is secured. These tests should always use ALPN. */
     #if AWS_IOT_TEST_SECURED_CONNECTION == 1
-        IotNetworkCredentialsOpenssl_t credentials = AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER;
+        IotTestNetworkCredentials_t credentials = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
         pCredentials = &credentials;
-
-        /* Set credentials for secured connection. */
-        credentials.pRootCaPath = AWS_IOT_TEST_ROOT_CA;
-        credentials.pClientCertPath = AWS_IOT_TEST_CLIENT_CERT;
-        credentials.pPrivateKeyPath = AWS_IOT_TEST_PRIVATE_KEY;
-    #endif /* if AWS_IOT_TEST_SECURED_CONNECTION == 1 */
+    #endif
 
     /* Open a connection to the test server. */
-    if( IotNetworkOpenssl_Create( &serverInfo,
-                                  pCredentials,
-                                  pNewConnection ) != IOT_NETWORK_SUCCESS )
+    if( _pNetworkInterface->create( &serverInfo,
+                                    pCredentials,
+                                    pNewConnection ) != IOT_NETWORK_SUCCESS )
     {
         return false;
     }
 
     /* Set the MQTT receive callback. */
-    if( IotNetworkOpenssl_SetReceiveCallback( pNewConnection,
-                                              AwsIotMqtt_ReceiveCallback,
-                                              pMqttConnection ) != IOT_NETWORK_SUCCESS )
+    if( _pNetworkInterface->setReceiveCallback( pNewConnection,
+                                                AwsIotMqtt_ReceiveCallback,
+                                                pMqttConnection ) != IOT_NETWORK_SUCCESS )
     {
-        IotNetworkOpenssl_Close( 0, pNewConnection );
-        IotNetworkOpenssl_Destroy( pNewConnection );
+        _pNetworkInterface->close( 0, pNewConnection );
+        _pNetworkInterface->destroy( pNewConnection );
 
         return false;
     }
@@ -207,10 +204,9 @@ bool AwsIotTest_NetworkConnect( void * const pNewConnection,
 /*-----------------------------------------------------------*/
 
 IotNetworkError_t AwsIotTest_NetworkClose( int32_t reason,
-                                           void * pDisconnectContext )
+                                           void * pNetworkConnection )
 {
-    IotNetworkConnectionOpenssl_t * pNetworkConnection = ( IotNetworkConnectionOpenssl_t * ) pDisconnectContext;
-
+    /* Ignore the reason for closure. */
     ( void ) reason;
 
     /* Close the provided network handle; if that is NULL, close the
@@ -218,11 +214,11 @@ IotNetworkError_t AwsIotTest_NetworkClose( int32_t reason,
     if( ( pNetworkConnection != NULL ) &&
         ( pNetworkConnection != &_networkConnection ) )
     {
-        IotNetworkOpenssl_Close( 0, pNetworkConnection );
+        _pNetworkInterface->close( 0, pNetworkConnection );
     }
     else if( _networkConnectionCreated == true )
     {
-        IotNetworkOpenssl_Close( 0, &_networkConnection );
+        _pNetworkInterface->close( 0, &_networkConnection );
     }
 
     return IOT_NETWORK_SUCCESS;
@@ -236,13 +232,13 @@ void AwsIotTest_NetworkDestroy( void * pNetworkConnection )
         ( pNetworkConnection != &_networkConnection ) )
     {
         /* Wrap the network interface's destroy function. */
-        IotNetworkOpenssl_Destroy( pNetworkConnection );
+        _pNetworkInterface->destroy( pNetworkConnection );
     }
     else
     {
         if( _networkConnectionCreated == true )
         {
-            IotNetworkOpenssl_Destroy( &_networkConnection );
+            _pNetworkInterface->destroy( &_networkConnection );
             _networkConnectionCreated = false;
         }
     }

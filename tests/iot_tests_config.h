@@ -40,25 +40,25 @@
 
     /* AWS IoT endpoint and credentials. */
     #ifndef AWS_IOT_TEST_SERVER
-        #define AWS_IOT_TEST_SERVER            ""
+        #define AWS_IOT_TEST_SERVER         ""
     #endif
     #ifndef AWS_IOT_TEST_PORT
-        #define AWS_IOT_TEST_PORT              ( 443 )
+        #define AWS_IOT_TEST_PORT           ( 443 )
     #endif
     #ifndef AWS_IOT_TEST_ROOT_CA
-        #define AWS_IOT_TEST_ROOT_CA           ""
+        #define AWS_IOT_TEST_ROOT_CA        ""
     #endif
     #ifndef AWS_IOT_TEST_CLIENT_CERT
-        #define AWS_IOT_TEST_CLIENT_CERT       ""
+        #define AWS_IOT_TEST_CLIENT_CERT    ""
     #endif
     #ifndef AWS_IOT_TEST_PRIVATE_KEY
-        #define AWS_IOT_TEST_PRIVATE_KEY       ""
+        #define AWS_IOT_TEST_PRIVATE_KEY    ""
     #endif
 #endif /* if AWS_IOT_TEST_MQTT_MOSQUITTO == 1 */
 
 /* Shadow tests configuration. */
 #ifndef AWS_IOT_TEST_SHADOW_THING_NAME
-    #define AWS_IOT_TEST_SHADOW_THING_NAME     ""
+    #define AWS_IOT_TEST_SHADOW_THING_NAME    ""
 #endif
 
 /* Linear containers library configuration. */
@@ -75,15 +75,15 @@
 
 /* Memory allocation function configuration. Note that these functions will not
  * be affected by IOT_STATIC_MEMORY_ONLY. */
-#define IotNetwork_Malloc       unity_malloc_mt
-#define IotNetwork_Free         unity_free_mt
-#define IotThreads_Malloc       unity_malloc_mt
-#define IotThreads_Free         unity_free_mt
-#define IotLogging_Malloc       unity_malloc_mt
-#define IotLogging_Free         unity_free_mt
+#define IotNetwork_Malloc                           unity_malloc_mt
+#define IotNetwork_Free                             unity_free_mt
+#define IotThreads_Malloc                           unity_malloc_mt
+#define IotThreads_Free                             unity_free_mt
+#define IotLogging_Malloc                           unity_malloc_mt
+#define IotLogging_Free                             unity_free_mt
 /* #define IotLogging_StaticBufferSize */
-#define AwsIotTest_Malloc       unity_malloc_mt
-#define AwsIotTest_Free         unity_free_mt
+#define AwsIotTest_Malloc                           unity_malloc_mt
+#define AwsIotTest_Free                             unity_free_mt
 
 /* Static memory resource settings for the tests. These values must be large
  * enough to support the stress tests. */
@@ -112,6 +112,40 @@
     #define AwsIotShadow_MallocSubscription    unity_malloc_mt
     #define AwsIotShadow_FreeSubscription      unity_free_mt
 #endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
+
+/* Network header to include in the tests. */
+#define IOT_TEST_NETWORK_HEADER    "posix/iot_network_openssl.h"
+
+/* Network types to use in the tests. These are forward declarations. */
+typedef struct IotNetworkConnectionOpenssl    IotTestNetworkConnection_t;
+typedef struct IotNetworkServerInfoOpenssl    IotTestNetworkServerInfo_t;
+typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
+
+/* Initializers for the tests' network types. */
+#define IOT_TEST_NETWORK_CONNECTION_INITIALIZER         IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER
+#define IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER \
+    {                                            \
+        .pHostName = AWS_IOT_TEST_SERVER,        \
+        .port = AWS_IOT_TEST_PORT                \
+    }
+#if AWS_IOT_TEST_SECURED_CONNECTION == 1
+    #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER \
+    {                                                \
+        .pAlpnProtos = "\x0ex-amzn-mqtt-ca",         \
+        .pRootCaPath = AWS_IOT_TEST_ROOT_CA,         \
+        .pClientCertPath = AWS_IOT_TEST_CLIENT_CERT, \
+        .pPrivateKeyPath = AWS_IOT_TEST_PRIVATE_KEY  \
+    }
+#else
+    #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER    IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER
+#endif
+
+/* Network interface to use in the tests. */
+#define IOT_TEST_NETWORK_INTERFACE    IOT_NETWORK_INTERFACE_OPENSSL
+
+/* Network initialization and cleanup functions to use in the tests. */
+#define IotTestNetwork_Init           IotNetworkOpenssl_Init
+#define IotTestNetwork_Cleanup        IotNetworkOpenssl_Cleanup
 
 /* The build system will choose the appropriate system types file for the platform
  * layer based on the host operating system. */
