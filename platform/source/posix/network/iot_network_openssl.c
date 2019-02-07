@@ -104,6 +104,7 @@ const IotNetworkInterface_t _IotNetworkOpenssl =
 {
     .create             = IotNetworkOpenssl_Create,
     .setReceiveCallback = IotNetworkOpenssl_SetReceiveCallback,
+    .setCloseCallback   = IotNetworkOpenssl_SetCloseCallback,
     .send               = IotNetworkOpenssl_Send,
     .receive            = IotNetworkOpenssl_Receive,
     .close              = IotNetworkOpenssl_Close,
@@ -230,7 +231,7 @@ static void * _networkReceiveThread( void * pArgument )
          * terminate this thread. */
         if( pNetworkConnection->receiveCallback != NULL )
         {
-            bytesProcessed = pNetworkConnection->receiveCallback( pNetworkConnection->pCallbackContext,
+            bytesProcessed = pNetworkConnection->receiveCallback( pNetworkConnection->pReceiveContext,
                                                                   pNetworkConnection,
                                                                   pReceiveBuffer,
                                                                   ( size_t ) bytesRead,
@@ -276,7 +277,7 @@ static void * _networkReceiveThread( void * pArgument )
     /* Clear data about the callback. */
     pNetworkConnection->receiveThreadStatus = _TERMINATED;
     pNetworkConnection->receiveCallback = NULL;
-    pNetworkConnection->pCallbackContext = NULL;
+    pNetworkConnection->pReceiveContext = NULL;
 
     /* Unlock the connection mutex before exiting. */
     IotMutex_Unlock( &( pNetworkConnection->mutex ) );
@@ -751,7 +752,7 @@ static IotNetworkError_t _cancelReceiveThread( IotNetworkConnectionOpenssl_t * c
             pNetworkConnection->receiveThreadStatus = _NONE;
             ( void ) memset( &( pNetworkConnection->receiveThread ), 0x00, sizeof( pthread_t ) );
             pNetworkConnection->receiveCallback = NULL;
-            pNetworkConnection->pCallbackContext = NULL;
+            pNetworkConnection->pReceiveContext = NULL;
         }
     }
 
@@ -925,7 +926,7 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
         {
             /* Update the callback and parameter. */
             pNetworkConnection->receiveCallback = receiveCallback;
-            pNetworkConnection->pCallbackContext = pContext;
+            pNetworkConnection->pReceiveContext = pContext;
 
             posixError = pthread_create( &pNetworkConnection->receiveThread,
                                          NULL,
@@ -950,6 +951,27 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
     IotMutex_Unlock( &( pNetworkConnection->mutex ) );
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+IotNetworkError_t IotNetworkOpenssl_SetCloseCallback( void * pConnection,
+                                                      IotNetworkCloseCallback_t closeCallback,
+                                                      void * pContext )
+{
+    /* Cast function parameter to correct type. */
+    IotNetworkConnectionOpenssl_t * const pNetworkConnection = pConnection;
+
+    /* Lock the mutex to prevent a concurrent call to close. */
+    IotMutex_Lock( &( pNetworkConnection->mutex ) );
+
+    /* Replace the existing close callback. */
+    pNetworkConnection->closeCallback = closeCallback;
+    pNetworkConnection->pCloseContext = pContext;
+
+    IotMutex_Unlock( &( pNetworkConnection->mutex ) );
+
+    return IOT_NETWORK_SUCCESS;
 }
 
 /*-----------------------------------------------------------*/
@@ -1132,8 +1154,12 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
 
 /*-----------------------------------------------------------*/
 
-IotNetworkError_t IotNetworkOpenssl_Close( void * pConnection )
+IotNetworkError_t IotNetworkOpenssl_Close( int32_t reason,
+                                           void * pConnection )
 {
+    IotNetworkCloseCallback_t closeCallback = NULL;
+    void * pCloseContext = NULL;
+
     /* Cast function parameter to correct type. */
     IotNetworkConnectionOpenssl_t * const pNetworkConnection = pConnection;
 
@@ -1171,8 +1197,18 @@ IotNetworkError_t IotNetworkOpenssl_Close( void * pConnection )
                     pNetworkConnection->socket );
     }
 
+    /* Copy close callback and context to invoke after mutex unlock. */
+    closeCallback = pNetworkConnection->closeCallback;
+    pCloseContext = pNetworkConnection->pCloseContext;
+
     /* Unlock the connection mutex. */
     IotMutex_Unlock( &( pNetworkConnection->mutex ) );
+
+    /* Invoke close callback. */
+    if( closeCallback != NULL )
+    {
+        closeCallback( reason, pCloseContext, pNetworkConnection );
+    }
 
     return IOT_NETWORK_SUCCESS;
 }
