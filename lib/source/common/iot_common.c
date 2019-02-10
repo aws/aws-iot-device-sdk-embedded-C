@@ -31,9 +31,7 @@
 #include "iot_taskpool.h"
 
 /* Static memory include (if dynamic memory allocation is disabled). */
-#if IOT_STATIC_MEMORY_ONLY == 1
-    #include "private/iot_static_memory.h"
-#endif
+#include "private/iot_static_memory.h"
 
 /* Configure logs for the functions in this file. */
 #ifdef IOT_LOG_LEVEL_GLOBAL
@@ -54,7 +52,7 @@ bool IotCommon_Init( void )
     /* Create system task pool. */
     if( status == true )
     {
-        IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER;
+        IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER_LARGE;
 
         if( IotTaskPool_CreateSystemTaskPool( &taskPoolInfo ) != IOT_TASKPOOL_SUCCESS )
         {
@@ -71,7 +69,7 @@ bool IotCommon_Init( void )
         if( status == false )
         {
             IotLogError( "Failed to initialize static memory." );
-            AwsIotTaskPool_Destroy( AWS_IOT_TASKPOOL_SYSTEM_TASKPOOL );
+            IotTaskPool_Destroy( IOT_SYSTEM_TASKPOOL );
         }
     #endif
 

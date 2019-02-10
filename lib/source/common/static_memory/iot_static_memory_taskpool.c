@@ -69,7 +69,7 @@ extern void IotStaticMemory_ReturnInUse( void * ptr,
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
 static bool _pInUseTaskPoolJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };                       /**< @brief Task pool jobs in-use flags. */
-static AwsIotTaskPoolJob_t _pTaskPoolJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { { 0 } };         /**< @brief Task pool jobs. */
+static IotTaskPoolJob_t _pTaskPoolJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { { 0 } };            /**< @brief Task pool jobs. */
 
 static bool _pInUseTaskPoolTimerEvents[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };                /**< @brief Task pool timer event in-use flags. */
 static _taskPoolTimerEvent_t _pTaskPoolTimerEvents[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };    /**< @brief Task pool timer events. */
@@ -82,7 +82,7 @@ void * Iot_MallocTaskPoolJob( size_t size )
     void * pNewJob = NULL;
 
     /* Check size argument. */
-    if( size == sizeof( AwsIotTaskPoolJob_t ) )
+    if( size == sizeof( IotTaskPoolJob_t ) )
     {
         /* Find a free task pool job. */
         freeIndex = IotStaticMemory_FindFree( _pInUseTaskPoolJobs,
@@ -106,7 +106,7 @@ void Iot_FreeTaskPoolJob( void * ptr )
                                  _pTaskPoolJobs,
                                  _pInUseTaskPoolJobs,
                                  IOT_TASKPOOL_JOBS_RECYCLE_LIMIT,
-                                 sizeof( AwsIotTaskPoolJob_t ) );
+                                 sizeof( IotTaskPoolJob_t ) );
 }
 
 /*-----------------------------------------------------------*/
