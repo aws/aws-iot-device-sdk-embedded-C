@@ -116,13 +116,13 @@ typedef struct _operationCompleteParams
 
 /* Network functions used by the tests, declared and implemented in one of
  * the test network function files. */
-extern bool AwsIotTest_NetworkSetup( void );
-extern void AwsIotTest_NetworkCleanup( void );
+extern bool IotTest_NetworkSetup( void );
+extern void IotTest_NetworkCleanup( void );
 
 /* Network variables used by the tests, declared in one of the test network
  * function files. */
-extern AwsIotMqttNetIf_t _AwsIotTestNetworkInterface;
-extern AwsIotMqttConnection_t _AwsIotTestMqttConnection;
+extern IotMqttNetIf_t _IotTestNetworkInterface;
+extern IotMqttConnection_t _IotTestMqttConnection;
 
 /*-----------------------------------------------------------*/
 
@@ -290,7 +290,7 @@ static void _updateGetDeleteAsync( int QoS )
         documentInfo.update.updateDocumentLength = _TEST_SHADOW_DOCUMENT_LENGTH;
 
         /* Create a new Shadow document. */
-        status = AwsIotShadow_Update( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_Update( _IotTestMqttConnection,
                                       &documentInfo,
                                       0,
                                       &callbackInfo,
@@ -306,7 +306,7 @@ static void _updateGetDeleteAsync( int QoS )
         callbackParam.expectedType = AWS_IOT_SHADOW_GET_COMPLETE;
 
         /* Retrieve the Shadow document. */
-        status = AwsIotShadow_Get( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_Get( _IotTestMqttConnection,
                                    &documentInfo,
                                    0,
                                    &callbackInfo,
@@ -323,7 +323,7 @@ static void _updateGetDeleteAsync( int QoS )
         callbackParam.expectedType = AWS_IOT_SHADOW_DELETE_COMPLETE;
 
         /* Delete the Shadow document. */
-        status = AwsIotShadow_Delete( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_Delete( _IotTestMqttConnection,
                                       AWS_IOT_TEST_SHADOW_THING_NAME,
                                       _THING_NAME_LENGTH,
                                       0,
@@ -362,17 +362,17 @@ static void _updateGetDeleteBlocking( int QoS )
     documentInfo.update.updateDocumentLength = _TEST_SHADOW_DOCUMENT_LENGTH;
 
     /* Create a new Shadow document. */
-    status = AwsIotShadow_TimedUpdate( _AwsIotTestMqttConnection,
+    status = AwsIotShadow_TimedUpdate( _IotTestMqttConnection,
                                        &documentInfo,
                                        0,
                                        AWS_IOT_TEST_SHADOW_TIMEOUT );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
     /* Set the members of the Shadow document info for GET. */
-    documentInfo.get.mallocDocument = AwsIotTest_Malloc;
+    documentInfo.get.mallocDocument = IotTest_Malloc;
 
     /* Retrieve the Shadow document. */
-    status = AwsIotShadow_TimedGet( _AwsIotTestMqttConnection,
+    status = AwsIotShadow_TimedGet( _IotTestMqttConnection,
                                     &documentInfo,
                                     0,
                                     AWS_IOT_TEST_SHADOW_TIMEOUT,
@@ -393,10 +393,10 @@ static void _updateGetDeleteBlocking( int QoS )
     TEST_ASSERT_EQUAL_STRING_LEN( "\"value\"", pJsonValue, jsonValueLength );
 
     /* Free the retrieved Shadow document. */
-    AwsIotTest_Free( ( void * ) pShadowDocument );
+    IotTest_Free( ( void * ) pShadowDocument );
 
     /* Delete the Shadow document. */
-    status = AwsIotShadow_TimedDelete( _AwsIotTestMqttConnection,
+    status = AwsIotShadow_TimedDelete( _IotTestMqttConnection,
                                        AWS_IOT_TEST_SHADOW_THING_NAME,
                                        _THING_NAME_LENGTH,
                                        0,
@@ -418,17 +418,17 @@ TEST_GROUP( Shadow_System );
  */
 TEST_SETUP( Shadow_System )
 {
-    AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
 
     /* Set up the network stack. */
-    if( AwsIotTest_NetworkSetup() == false )
+    if( IotTest_NetworkSetup() == false )
     {
         TEST_FAIL_MESSAGE( "Failed to set up network connection." );
     }
 
     /* Initialize the MQTT library. */
-    if( AwsIotMqtt_Init() != AWS_IOT_MQTT_SUCCESS )
+    if( IotMqtt_Init() != IOT_MQTT_SUCCESS )
     {
         TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
     }
@@ -440,10 +440,10 @@ TEST_SETUP( Shadow_System )
     connectInfo.keepAliveSeconds = AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
     /* Establish an MQTT connection. */
-    if( AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
-                            &_AwsIotTestNetworkInterface,
-                            &connectInfo,
-                            AWS_IOT_TEST_SHADOW_TIMEOUT ) != AWS_IOT_MQTT_SUCCESS )
+    if( IotMqtt_Connect( &_IotTestMqttConnection,
+                         &_IotTestNetworkInterface,
+                         &connectInfo,
+                         AWS_IOT_TEST_SHADOW_TIMEOUT ) != IOT_MQTT_SUCCESS )
     {
         TEST_FAIL_MESSAGE( "Failed to establish MQTT connection for Shadow tests." );
     }
@@ -455,7 +455,7 @@ TEST_SETUP( Shadow_System )
     }
 
     /* Delete any existing Shadow so all tests start with no Shadow. */
-    status = AwsIotShadow_TimedDelete( _AwsIotTestMqttConnection,
+    status = AwsIotShadow_TimedDelete( _IotTestMqttConnection,
                                        AWS_IOT_TEST_SHADOW_THING_NAME,
                                        _THING_NAME_LENGTH,
                                        0,
@@ -477,17 +477,17 @@ TEST_SETUP( Shadow_System )
 TEST_TEAR_DOWN( Shadow_System )
 {
     /* Disconnect the MQTT connection. */
-    AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, false );
+    IotMqtt_Disconnect( _IotTestMqttConnection, false );
 
     /* Clean up the Shadow library. */
     AwsIotShadow_Cleanup();
 
     /* Clean up the network stack. */
-    AwsIotTest_NetworkCleanup();
+    IotTest_NetworkCleanup();
 
     /* Clean up the MQTT library. */
-    AwsIotMqtt_Cleanup();
-    _AwsIotTestMqttConnection = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqtt_Cleanup();
+    _IotTestMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 }
 
 /*-----------------------------------------------------------*/
@@ -573,7 +573,7 @@ TEST( Shadow_System, DeltaCallback )
     if( TEST_PROTECT() )
     {
         /* Set the delta callback. */
-        status = AwsIotShadow_SetDeltaCallback( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_SetDeltaCallback( _IotTestMqttConnection,
                                                 AWS_IOT_TEST_SHADOW_THING_NAME,
                                                 _THING_NAME_LENGTH,
                                                 0,
@@ -581,7 +581,7 @@ TEST( Shadow_System, DeltaCallback )
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Create a Shadow document with a desired state. */
-        status = AwsIotShadow_TimedUpdate( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_TimedUpdate( _IotTestMqttConnection,
                                            &updateDocument,
                                            AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
                                            AWS_IOT_TEST_SHADOW_TIMEOUT );
@@ -592,7 +592,7 @@ TEST( Shadow_System, DeltaCallback )
         updateDocument.update.updateDocumentLength = 67;
 
         /* Create a Shadow document with a reported state. */
-        status = AwsIotShadow_TimedUpdate( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_TimedUpdate( _IotTestMqttConnection,
                                            &updateDocument,
                                            0,
                                            AWS_IOT_TEST_SHADOW_TIMEOUT );
@@ -605,7 +605,7 @@ TEST( Shadow_System, DeltaCallback )
         }
 
         /* Remove the delta callback. */
-        status = AwsIotShadow_SetDeltaCallback( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_SetDeltaCallback( _IotTestMqttConnection,
                                                 AWS_IOT_TEST_SHADOW_THING_NAME,
                                                 _THING_NAME_LENGTH,
                                                 0,
@@ -613,7 +613,7 @@ TEST( Shadow_System, DeltaCallback )
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Remove persistent subscriptions for Shadow Update. */
-        status = AwsIotShadow_RemovePersistentSubscriptions( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_RemovePersistentSubscriptions( _IotTestMqttConnection,
                                                              AWS_IOT_TEST_SHADOW_THING_NAME,
                                                              _THING_NAME_LENGTH,
                                                              AWS_IOT_SHADOW_FLAG_REMOVE_UPDATE_SUBSCRIPTIONS );
@@ -648,7 +648,7 @@ TEST( Shadow_System, UpdatedCallback )
     if( TEST_PROTECT() )
     {
         /* Set the updated callback. */
-        status = AwsIotShadow_SetUpdatedCallback( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_SetUpdatedCallback( _IotTestMqttConnection,
                                                   AWS_IOT_TEST_SHADOW_THING_NAME,
                                                   _THING_NAME_LENGTH,
                                                   0,
@@ -656,7 +656,7 @@ TEST( Shadow_System, UpdatedCallback )
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Create a Shadow document. */
-        status = AwsIotShadow_TimedUpdate( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_TimedUpdate( _IotTestMqttConnection,
                                            &updateDocument,
                                            0,
                                            AWS_IOT_TEST_SHADOW_TIMEOUT );
@@ -669,7 +669,7 @@ TEST( Shadow_System, UpdatedCallback )
         }
 
         /* Remove the updated callback. */
-        status = AwsIotShadow_SetUpdatedCallback( _AwsIotTestMqttConnection,
+        status = AwsIotShadow_SetUpdatedCallback( _IotTestMqttConnection,
                                                   AWS_IOT_TEST_SHADOW_THING_NAME,
                                                   _THING_NAME_LENGTH,
                                                   0,

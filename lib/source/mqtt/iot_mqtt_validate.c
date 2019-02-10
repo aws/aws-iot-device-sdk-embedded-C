@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_mqtt_validate.c
+ * @file iot_mqtt_validate.c
  * @brief Implements functions that validate the structs of the MQTT library.
  */
 
@@ -30,11 +30,11 @@
 #endif
 
 /* MQTT internal include. */
-#include "private/aws_iot_mqtt_internal.h"
+#include "private/iot_mqtt_internal.h"
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotMqttInternal_ValidateNetIf( const AwsIotMqttNetIf_t * const pNetworkInterface )
+bool _IotMqtt_ValidateNetIf( const IotMqttNetIf_t * const pNetworkInterface )
 {
     /* Check for NULL. */
     if( pNetworkInterface == NULL )
@@ -62,7 +62,7 @@ bool AwsIotMqttInternal_ValidateNetIf( const AwsIotMqttNetIf_t * const pNetworkI
 
     /* Check that the freePacket function pointer is set if any other serializer
      * override is set. */
-    #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
         if( pNetworkInterface->freePacket == NULL )
         {
             /* Check serializer overrides. */
@@ -95,14 +95,14 @@ bool AwsIotMqttInternal_ValidateNetIf( const AwsIotMqttNetIf_t * const pNetworkI
                 return false;
             }
         }
-    #endif /* if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
     return true;
 }
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotMqttInternal_ValidateConnect( const AwsIotMqttConnectInfo_t * const pConnectInfo )
+bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * const pConnectInfo )
 {
     /* Check for NULL. */
     if( pConnectInfo == NULL )
@@ -195,8 +195,8 @@ bool AwsIotMqttInternal_ValidateConnect( const AwsIotMqttConnectInfo_t * const p
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotMqttInternal_ValidatePublish( bool awsIotMqttMode,
-                                         const AwsIotMqttPublishInfo_t * const pPublishInfo )
+bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
+                               const IotMqttPublishInfo_t * const pPublishInfo )
 {
     /* Check for NULL. */
     if( pPublishInfo == NULL )
@@ -273,7 +273,7 @@ bool AwsIotMqttInternal_ValidatePublish( bool awsIotMqttMode,
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotMqttInternal_ValidateReference( AwsIotMqttReference_t reference )
+bool _IotMqtt_ValidateReference( IotMqttReference_t reference )
 {
     _mqttOperation_t * pOperation = ( _mqttOperation_t * ) reference;
 
@@ -286,7 +286,7 @@ bool AwsIotMqttInternal_ValidateReference( AwsIotMqttReference_t reference )
     }
 
     /* Check that reference is waitable. */
-    if( ( pOperation->flags & AWS_IOT_MQTT_FLAG_WAITABLE ) != AWS_IOT_MQTT_FLAG_WAITABLE )
+    if( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) != IOT_MQTT_FLAG_WAITABLE )
     {
         IotLogError( "Reference is not a waitable MQTT operation." );
 
@@ -298,18 +298,18 @@ bool AwsIotMqttInternal_ValidateReference( AwsIotMqttReference_t reference )
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotMqttInternal_ValidateSubscriptionList( AwsIotMqttOperationType_t operation,
-                                                  bool awsIotMqttMode,
-                                                  const AwsIotMqttSubscription_t * const pListStart,
-                                                  size_t listSize )
+bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
+                                        bool awsIotMqttMode,
+                                        const IotMqttSubscription_t * const pListStart,
+                                        size_t listSize )
 {
     size_t i = 0;
     uint16_t j = 0;
-    const AwsIotMqttSubscription_t * pListElement = NULL;
+    const IotMqttSubscription_t * pListElement = NULL;
 
     /* Operation must be either subscribe or unsubscribe. */
-    AwsIotMqtt_Assert( ( operation == AWS_IOT_MQTT_SUBSCRIBE ) ||
-                       ( operation == AWS_IOT_MQTT_UNSUBSCRIBE ) );
+    IotMqtt_Assert( ( operation == IOT_MQTT_SUBSCRIBE ) ||
+                    ( operation == IOT_MQTT_UNSUBSCRIBE ) );
 
     /* Check for empty list. */
     if( ( listSize == 0 ) || ( pListStart == NULL ) )
@@ -325,8 +325,8 @@ bool AwsIotMqttInternal_ValidateSubscriptionList( AwsIotMqttOperationType_t oper
         if( listSize > _AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE )
         {
             IotLogError( "AWS IoT does not support more than %d topic filters per "
-                            "subscription request.",
-                            _AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE );
+                         "subscription request.",
+                         _AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE );
 
             return false;
         }
@@ -336,28 +336,28 @@ bool AwsIotMqttInternal_ValidateSubscriptionList( AwsIotMqttOperationType_t oper
     {
         pListElement = &( pListStart[ i ] );
 
-        /* Check for a valid QoS when subscribing. */
-        if( ( operation == AWS_IOT_MQTT_SUBSCRIBE ) &&
-            ( ( pListElement->QoS < 0 ) || ( pListElement->QoS > 1 ) ) )
+        /* Check for a valid QoS and callback function when subscribing. */
+        if( operation == IOT_MQTT_SUBSCRIBE )
         {
-            IotLogError( "Subscription QoS must be either 0 or 1." );
+            if( ( pListElement->QoS < 0 ) || ( pListElement->QoS > 1 ) )
+            {
+                IotLogError( "Subscription QoS must be either 0 or 1." );
 
-            return false;
+                return false;
+            }
+
+            if( pListElement->callback.function == NULL )
+            {
+                IotLogError( "Callback function must be set." );
+
+                return false;
+            }
         }
 
         /* Check subscription topic filter. */
         if( ( pListElement->pTopicFilter == NULL ) || ( pListElement->topicFilterLength == 0 ) )
         {
             IotLogError( "Subscription topic filter must be set." );
-
-            return false;
-        }
-
-        /* Check that a callback function is set when subscribing. */
-        if( ( operation == AWS_IOT_MQTT_SUBSCRIBE ) &&
-            ( pListElement->callback.function == NULL ) )
-        {
-            IotLogError( "Callback function must be set." );
 
             return false;
         }
@@ -369,7 +369,7 @@ bool AwsIotMqttInternal_ValidateSubscriptionList( AwsIotMqttOperationType_t oper
             if( pListElement->topicFilterLength > _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
             {
                 IotLogError( "AWS IoT does not support topic filters longer than %d bytes.",
-                                _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
+                             _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
 
                 return false;
             }

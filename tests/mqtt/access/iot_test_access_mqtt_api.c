@@ -20,28 +20,28 @@
  */
 
 /**
- * @file aws_iot_test_access_mqtt_subscription.c
+ * @file iot_test_access_mqtt_api.c
  * @brief Provides access to the internal functions and variables of
- * aws_iot_mqtt_subscription.c
+ * iot_mqtt_api.c
  *
- * This file should only be included at the bottom of aws_iot_mqtt_subscription.c
- * and never compiled by itself.
+ * This file should only be included at the bottom of iot_mqtt_api.c and never
+ * compiled by itself.
  */
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotTestMqtt_topicMatch( const IotLink_t * pSubscriptionLink,
-                                void * pMatch )
+_mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
+                                                      const IotMqttNetIf_t * const pNetworkInterface,
+                                                      uint16_t keepAliveSeconds )
 {
-    return _topicMatch( pSubscriptionLink, pMatch );
+    return _createMqttConnection( awsIotMqttMode, pNetworkInterface, keepAliveSeconds );
 }
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotTestMqtt_packetMatch( const IotLink_t * pSubscriptionLink,
-                                 void * pMatch )
+void IotTestMqtt_destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
 {
-    return _packetMatch( pSubscriptionLink, pMatch );
+    _destroyMqttConnection( pMqttConnection );
 }
 
 /*-----------------------------------------------------------*/

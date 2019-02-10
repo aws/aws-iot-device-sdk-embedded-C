@@ -20,13 +20,13 @@
  */
 
 /**
- * @file aws_iot_mqtt_internal.h
+ * @file iot_mqtt_internal.h
  * @brief Internal header of MQTT library. This header should not be included in
  * typical application code.
  */
 
-#ifndef _AWS_IOT_MQTT_INTERNAL_H_
-#define _AWS_IOT_MQTT_INTERNAL_H_
+#ifndef _IOT_MQTT_INTERNAL_H_
+#define _IOT_MQTT_INTERNAL_H_
 
 /* Build using a config header, if provided. */
 #ifdef IOT_CONFIG_FILE
@@ -40,29 +40,29 @@
 #include "types/iot_platform_types.h"
 
 /* MQTT include. */
-#include "aws_iot_mqtt.h"
+#include "iot_mqtt.h"
 
 /**
- * @def AwsIotMqtt_Assert( expression )
+ * @def IotMqtt_Assert( expression )
  * @brief Assertion macro for the MQTT library.
  *
- * Set @ref AWS_IOT_MQTT_ENABLE_ASSERTS to `1` to enable assertions in the MQTT
+ * Set @ref IOT_MQTT_ENABLE_ASSERTS to `1` to enable assertions in the MQTT
  * library.
  *
  * @param[in] expression Expression to be evaluated.
  */
-#if AWS_IOT_MQTT_ENABLE_ASSERTS == 1
-    #ifndef AwsIotMqtt_Assert
+#if IOT_MQTT_ENABLE_ASSERTS == 1
+    #ifndef IotMqtt_Assert
         #include <assert.h>
-        #define AwsIotMqtt_Assert( expression )    assert( expression )
+        #define IotMqtt_Assert( expression )    assert( expression )
     #endif
 #else
-    #define AwsIotMqtt_Assert( expression )
+    #define IotMqtt_Assert( expression )
 #endif
 
 /* Configure logs for MQTT functions. */
-#ifdef AWS_IOT_LOG_LEVEL_MQTT
-    #define _LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_MQTT
+#ifdef IOT_LOG_LEVEL_MQTT
+    #define _LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_MQTT
 #else
     #ifdef IOT_LOG_LEVEL_GLOBAL
         #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
@@ -86,8 +86,8 @@
  * signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotMqtt_MallocConnection
-        #define AwsIotMqtt_MallocConnection    Iot_MallocMqttConnection
+    #ifndef IotMqtt_MallocConnection
+        #define IotMqtt_MallocConnection    Iot_MallocMqttConnection
     #endif
 
 /**
@@ -95,8 +95,8 @@
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotMqtt_FreeConnection
-        #define AwsIotMqtt_FreeConnection    Iot_FreeMqttConnection
+    #ifndef IotMqtt_FreeConnection
+        #define IotMqtt_FreeConnection    Iot_FreeMqttConnection
     #endif
 
 /**
@@ -104,8 +104,8 @@
  * same signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotMqtt_MallocMessage
-        #define AwsIotMqtt_MallocMessage    Iot_MallocMessageBuffer
+    #ifndef IotMqtt_MallocMessage
+        #define IotMqtt_MallocMessage    Iot_MallocMessageBuffer
     #endif
 
 /**
@@ -113,8 +113,8 @@
  * as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotMqtt_FreeMessage
-        #define AwsIotMqtt_FreeMessage    Iot_FreeMessageBuffer
+    #ifndef IotMqtt_FreeMessage
+        #define IotMqtt_FreeMessage    Iot_FreeMessageBuffer
     #endif
 
 /**
@@ -122,8 +122,8 @@
  * signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotMqtt_MallocOperation
-        #define AwsIotMqtt_MallocOperation    Iot_MallocMqttOperation
+    #ifndef IotMqtt_MallocOperation
+        #define IotMqtt_MallocOperation    Iot_MallocMqttOperation
     #endif
 
 /**
@@ -131,8 +131,8 @@
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotMqtt_FreeOperation
-        #define AwsIotMqtt_FreeOperation    Iot_FreeMqttOperation
+    #ifndef IotMqtt_FreeOperation
+        #define IotMqtt_FreeOperation    Iot_FreeMqttOperation
     #endif
 
 /**
@@ -140,8 +140,8 @@
  * same signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotMqtt_MallocSubscription
-        #define AwsIotMqtt_MallocSubscription    Iot_MallocMqttSubscription
+    #ifndef IotMqtt_MallocSubscription
+        #define IotMqtt_MallocSubscription    Iot_MallocMqttSubscription
     #endif
 
 /**
@@ -149,8 +149,8 @@
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotMqtt_FreeSubscription
-        #define AwsIotMqtt_FreeSubscription    Iot_FreeMqttSubscription
+    #ifndef IotMqtt_FreeSubscription
+        #define IotMqtt_FreeSubscription    Iot_FreeMqttSubscription
     #endif
 
 /**
@@ -158,8 +158,8 @@
  * signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotMqtt_MallocTimerEvent
-        #define AwsIotMqtt_MallocTimerEvent    Iot_MallocMqttTimerEvent
+    #ifndef IotMqtt_MallocTimerEvent
+        #define IotMqtt_MallocTimerEvent    Iot_MallocMqttTimerEvent
     #endif
 
 /**
@@ -167,52 +167,52 @@
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotMqtt_FreeTimerEvent
-        #define AwsIotMqtt_FreeTimerEvent    Iot_FreeMqttTimerEvent
+    #ifndef IotMqtt_FreeTimerEvent
+        #define IotMqtt_FreeTimerEvent    Iot_FreeMqttTimerEvent
     #endif
-#else /* if IOT_STATIC_MEMORY_ONLY */
+#else /* if IOT_STATIC_MEMORY_ONLY == 1 */
     #include <stdlib.h>
 
-    #ifndef AwsIotMqtt_MallocConnection
-        #define AwsIotMqtt_MallocConnection    malloc
+    #ifndef IotMqtt_MallocConnection
+        #define IotMqtt_MallocConnection    malloc
     #endif
 
-    #ifndef AwsIotMqtt_FreeConnection
-        #define AwsIotMqtt_FreeConnection    free
+    #ifndef IotMqtt_FreeConnection
+        #define IotMqtt_FreeConnection    free
     #endif
 
-    #ifndef AwsIotMqtt_MallocMessage
-        #define AwsIotMqtt_MallocMessage    malloc
+    #ifndef IotMqtt_MallocMessage
+        #define IotMqtt_MallocMessage    malloc
     #endif
 
-    #ifndef AwsIotMqtt_FreeMessage
-        #define AwsIotMqtt_FreeMessage    free
+    #ifndef IotMqtt_FreeMessage
+        #define IotMqtt_FreeMessage    free
     #endif
 
-    #ifndef AwsIotMqtt_MallocOperation
-        #define AwsIotMqtt_MallocOperation    malloc
+    #ifndef IotMqtt_MallocOperation
+        #define IotMqtt_MallocOperation    malloc
     #endif
 
-    #ifndef AwsIotMqtt_FreeOperation
-        #define AwsIotMqtt_FreeOperation    free
+    #ifndef IotMqtt_FreeOperation
+        #define IotMqtt_FreeOperation    free
     #endif
 
-    #ifndef AwsIotMqtt_MallocSubscription
-        #define AwsIotMqtt_MallocSubscription    malloc
+    #ifndef IotMqtt_MallocSubscription
+        #define IotMqtt_MallocSubscription    malloc
     #endif
 
-    #ifndef AwsIotMqtt_FreeSubscription
-        #define AwsIotMqtt_FreeSubscription    free
+    #ifndef IotMqtt_FreeSubscription
+        #define IotMqtt_FreeSubscription    free
     #endif
 
-    #ifndef AwsIotMqtt_MallocTimerEvent
-        #define AwsIotMqtt_MallocTimerEvent    malloc
+    #ifndef IotMqtt_MallocTimerEvent
+        #define IotMqtt_MallocTimerEvent    malloc
     #endif
 
-    #ifndef AwsIotMqtt_FreeTimerEvent
-        #define AwsIotMqtt_FreeTimerEvent    free
+    #ifndef IotMqtt_FreeTimerEvent
+        #define IotMqtt_FreeTimerEvent    free
     #endif
-#endif /* if IOT_STATIC_MEMORY_ONLY */
+#endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
 /**
  * @cond DOXYGEN_IGNORE
@@ -221,28 +221,28 @@
  * Provide default values for undefined configuration constants.
  */
 #ifndef AWS_IOT_MQTT_ENABLE_METRICS
-    #define AWS_IOT_MQTT_ENABLE_METRICS                 ( 1 )
+    #define AWS_IOT_MQTT_ENABLE_METRICS             ( 1 )
 #endif
-#ifndef AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES
-    #define AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 0 )
+#ifndef IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES
+    #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 0 )
 #endif
-#ifndef AWS_IOT_MQTT_MAX_CALLBACK_THREADS
-    #define AWS_IOT_MQTT_MAX_CALLBACK_THREADS           ( 2 )
+#ifndef IOT_MQTT_MAX_CALLBACK_THREADS
+    #define IOT_MQTT_MAX_CALLBACK_THREADS           ( 2 )
 #endif
-#ifndef AWS_IOT_MQTT_MAX_SEND_THREADS
-    #define AWS_IOT_MQTT_MAX_SEND_THREADS               ( 1 )
+#ifndef IOT_MQTT_MAX_SEND_THREADS
+    #define IOT_MQTT_MAX_SEND_THREADS               ( 1 )
 #endif
-#ifndef AWS_IOT_MQTT_TEST
-    #define AWS_IOT_MQTT_TEST                           ( 0 )
+#ifndef IOT_MQTT_TEST
+    #define IOT_MQTT_TEST                           ( 0 )
 #endif
-#ifndef AWS_IOT_MQTT_RESPONSE_WAIT_MS
-    #define AWS_IOT_MQTT_RESPONSE_WAIT_MS               ( 1000 )
+#ifndef IOT_MQTT_RESPONSE_WAIT_MS
+    #define IOT_MQTT_RESPONSE_WAIT_MS               ( 1000 )
 #endif
-#ifndef AWS_IOT_MQTT_RETRY_MS_CEILING
-    #define AWS_IOT_MQTT_RETRY_MS_CEILING               ( 60000 )
+#ifndef IOT_MQTT_RETRY_MS_CEILING
+    #define IOT_MQTT_RETRY_MS_CEILING               ( 60000 )
 #endif
-#ifndef AWS_IOT_MQTT_TIMER_EVENT_THRESHOLD_MS
-    #define AWS_IOT_MQTT_TIMER_EVENT_THRESHOLD_MS       ( 100 )
+#ifndef IOT_MQTT_TIMER_EVENT_THRESHOLD_MS
+    #define IOT_MQTT_TIMER_EVENT_THRESHOLD_MS       ( 100 )
 #endif
 /** @endcond */
 
@@ -315,14 +315,14 @@ typedef struct _mqttSubscription
 
     struct
     {
-        uint16_t identifier;           /**< @brief Packet identifier. */
-        size_t order;                  /**< @brief Order in the packet's list of subscriptions. */
-    } packetInfo;                      /**< @brief Information about the SUBSCRIBE packet that registered this subscription. */
+        uint16_t identifier;        /**< @brief Packet identifier. */
+        size_t order;               /**< @brief Order in the packet's list of subscriptions. */
+    } packetInfo;                   /**< @brief Information about the SUBSCRIBE packet that registered this subscription. */
 
-    AwsIotMqttCallbackInfo_t callback; /**< @brief Callback information for this subscription. */
+    IotMqttCallbackInfo_t callback; /**< @brief Callback information for this subscription. */
 
-    uint16_t topicFilterLength;        /**< @brief Length of #_mqttSubscription_t.pTopicFilter. */
-    char pTopicFilter[];               /**< @brief The subscription topic filter. */
+    uint16_t topicFilterLength;     /**< @brief Length of #_mqttSubscription_t.pTopicFilter. */
+    char pTopicFilter[];            /**< @brief The subscription topic filter. */
 } _mqttSubscription_t;
 
 /**
@@ -332,7 +332,7 @@ typedef struct _mqttConnection
 {
     bool errorOccurred;                        /**< @brief Tracks if a protocol violation or other error occurred. */
     bool awsIotMqttMode;                       /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
-    AwsIotMqttNetIf_t network;                 /**< @brief Network interface provided to @ref mqtt_function_connect. */
+    IotMqttNetIf_t network;                    /**< @brief Network interface provided to @ref mqtt_function_connect. */
     IotListDouble_t subscriptionList;          /**< @brief Holds subscriptions associated with this connection. */
     IotMutex_t subscriptionMutex;              /**< @brief Grants exclusive access to the #_mqttConnection_t.subscriptionList. */
 
@@ -364,9 +364,9 @@ typedef struct _mqttOperation
         struct
         {
             /* Basic operation information. */
-            AwsIotMqttOperationType_t operation; /**< @brief What operation this structure represents. */
-            uint32_t flags;                      /**< @brief Flags passed to the function that created this operation. */
-            uint16_t packetIdentifier;           /**< @brief The packet identifier used with this operation. */
+            IotMqttOperationType_t operation; /**< @brief What operation this structure represents. */
+            uint32_t flags;                   /**< @brief Flags passed to the function that created this operation. */
+            uint16_t packetIdentifier;        /**< @brief The packet identifier used with this operation. */
 
             /* Serialized packet and size. */
             uint8_t * pMqttPacket; /**< @brief The MQTT packet to send over the network. */
@@ -376,9 +376,9 @@ typedef struct _mqttOperation
             union
             {
                 IotSemaphore_t waitSemaphore;       /**< @brief Semaphore to be used with @ref mqtt_function_wait. */
-                AwsIotMqttCallbackInfo_t callback;  /**< @brief User-provided callback function and parameter. */
+                IotMqttCallbackInfo_t callback;     /**< @brief User-provided callback function and parameter. */
             } notify;                               /**< @brief How to notify of this operation's completion. */
-            AwsIotMqttError_t status;               /**< @brief Result of this operation. This is reported once a response is received. */
+            IotMqttError_t status;                  /**< @brief Result of this operation. This is reported once a response is received. */
 
             struct _mqttTimerEvent * pPublishRetry; /**< @brief How an operation will be retried. Only used for QoS 1 publishes. */
         };
@@ -386,7 +386,7 @@ typedef struct _mqttOperation
         /* If incomingPublish is true, this struct is valid. */
         struct
         {
-            AwsIotMqttPublishInfo_t publishInfo;   /**< @brief Deserialized PUBLISH. */
+            IotMqttPublishInfo_t publishInfo;      /**< @brief Deserialized PUBLISH. */
             struct _mqttOperation * pNextPublish;  /**< @brief Pointer to the next PUBLISH in the data stream. */
             const void * pReceivedData;            /**< @brief Any buffer associated with this PUBLISH that should be freed. */
             void ( * freeReceivedData )( void * ); /**< @brief Function called to free `pReceivedData`. */
@@ -448,49 +448,49 @@ extern IotMutex_t _IotMqttPendingResponseMutex;
 /*-------------------- MQTT struct validation functions ---------------------*/
 
 /**
- * @brief Check that an #AwsIotMqttNetIf_t is valid.
+ * @brief Check that an #IotMqttNetIf_t is valid.
  *
- * @param[in] pNetworkInterface The #AwsIotMqttNetIf_t to validate.
+ * @param[in] pNetworkInterface The #IotMqttNetIf_t to validate.
  *
  * @return `true` if `pNetworkInterface` is valid; `false` otherwise.
  */
-bool AwsIotMqttInternal_ValidateNetIf( const AwsIotMqttNetIf_t * const pNetworkInterface );
+bool _IotMqtt_ValidateNetIf( const IotMqttNetIf_t * const pNetworkInterface );
 
 /**
- * @brief Check that an #AwsIotMqttConnectInfo_t is valid.
+ * @brief Check that an #IotMqttConnectInfo_t is valid.
  *
- * @param[in] pConnectInfo The #AwsIotMqttConnectInfo_t to validate.
+ * @param[in] pConnectInfo The #IotMqttConnectInfo_t to validate.
  *
  * @return `true` if `pConnectInfo` is valid; `false` otherwise.
  */
-bool AwsIotMqttInternal_ValidateConnect( const AwsIotMqttConnectInfo_t * const pConnectInfo );
+bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * const pConnectInfo );
 
 /**
- * @brief Check that an #AwsIotMqttPublishInfo_t is valid.
+ * @brief Check that an #IotMqttPublishInfo_t is valid.
  *
  * @param[in] awsIotMqttMode Specifies if this PUBLISH packet is being sent to
  * an AWS IoT MQTT server.
- * @param[in] pPublishInfo The #AwsIotMqttPublishInfo_t to validate.
+ * @param[in] pPublishInfo The #IotMqttPublishInfo_t to validate.
  *
  * @return `true` if `pPublishInfo` is valid; `false` otherwise.
  */
-bool AwsIotMqttInternal_ValidatePublish( bool awsIotMqttMode,
-                                         const AwsIotMqttPublishInfo_t * const pPublishInfo );
+bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
+                               const IotMqttPublishInfo_t * const pPublishInfo );
 
 /**
- * @brief Check that an #AwsIotMqttReference_t is valid and waitable.
+ * @brief Check that an #IotMqttReference_t is valid and waitable.
  *
- * @param[in] reference The #AwsIotMqttReference_t to validate.
+ * @param[in] reference The #IotMqttReference_t to validate.
  *
  * @return `true` if `reference` is valid; `false` otherwise.
  */
-bool AwsIotMqttInternal_ValidateReference( AwsIotMqttReference_t reference );
+bool _IotMqtt_ValidateReference( IotMqttReference_t reference );
 
 /**
- * @brief Check that a list of #AwsIotMqttSubscription_t is valid.
+ * @brief Check that a list of #IotMqttSubscription_t is valid.
  *
- * @param[in] operation Either #AWS_IOT_MQTT_SUBSCRIBE or #AWS_IOT_MQTT_UNSUBSCRIBE.
- * Some parameters are not validated for #AWS_IOT_MQTT_UNSUBSCRIBE.
+ * @param[in] operation Either #IOT_MQTT_SUBSCRIBE or #IOT_MQTT_UNSUBSCRIBE.
+ * Some parameters are not validated for #IOT_MQTT_UNSUBSCRIBE.
  * @param[in] awsIotMqttMode Specifies if this SUBSCRIBE packet is being sent to
  * an AWS IoT MQTT server.
  * @param[in] pListStart First element of the list to validate.
@@ -498,10 +498,10 @@ bool AwsIotMqttInternal_ValidateReference( AwsIotMqttReference_t reference );
  *
  * @return `true` if every element in the list is valid; `false` otherwise.
  */
-bool AwsIotMqttInternal_ValidateSubscriptionList( AwsIotMqttOperationType_t operation,
-                                                  bool awsIotMqttMode,
-                                                  const AwsIotMqttSubscription_t * const pListStart,
-                                                  size_t listSize );
+bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
+                                        bool awsIotMqttMode,
+                                        const IotMqttSubscription_t * const pListStart,
+                                        size_t listSize );
 
 /*-------------------- MQTT packet serializer functions ---------------------*/
 
@@ -509,16 +509,16 @@ bool AwsIotMqttInternal_ValidateSubscriptionList( AwsIotMqttOperationType_t oper
  * @brief Initialize the MQTT packet serializer. Called by @ref mqtt_function_init
  * when initializing the MQTT library.
  *
- * @return #AWS_IOT_MQTT_SUCCESS or #AWS_IOT_MQTT_INIT_FAILED.
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_INIT_FAILED.
  */
-AwsIotMqttError_t AwsIotMqttInternal_InitSerialize( void );
+IotMqttError_t _IotMqtt_InitSerialize( void );
 
 /**
- * @brief Free resources taken by #AwsIotMqttInternal_InitSerialize.
+ * @brief Free resources taken by #_IotMqtt_InitSerialize.
  *
  * No parameters, no return values.
  */
-void AwsIotMqttInternal_CleanupSerialize( void );
+void _IotMqtt_CleanupSerialize( void );
 
 /**
  * @brief Get the MQTT packet type from a stream of bytes.
@@ -531,8 +531,8 @@ void AwsIotMqttInternal_CleanupSerialize( void );
  * @note This function is only used for incoming packets, and may not work
  * correctly for outgoing packets.
  */
-uint8_t AwsIotMqttInternal_GetPacketType( const uint8_t * const pPacket,
-                                          size_t packetSize );
+uint8_t _IotMqtt_GetPacketType( const uint8_t * const pPacket,
+                                size_t packetSize );
 
 /**
  * @brief Generate a CONNECT packet from the given parameters.
@@ -541,29 +541,29 @@ uint8_t AwsIotMqttInternal_GetPacketType( const uint8_t * const pPacket,
  * @param[out] pConnectPacket Where the CONNECT packet is written.
  * @param[out] pPacketSize Size of the packet written to `pConnectPacket`.
  *
- * @return #AWS_IOT_MQTT_SUCCESS or #AWS_IOT_MQTT_NO_MEMORY.
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-AwsIotMqttError_t AwsIotMqttInternal_SerializeConnect( const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                                       uint8_t ** const pConnectPacket,
-                                                       size_t * const pPacketSize );
+IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * const pConnectInfo,
+                                          uint8_t ** const pConnectPacket,
+                                          size_t * const pPacketSize );
 
 /**
  * @brief Deserialize a CONNACK packet.
  *
- * Converts the packet from a stream of bytes to an #AwsIotMqttError_t. Also
+ * Converts the packet from a stream of bytes to an #IotMqttError_t. Also
  * prints out debug log messages about the packet.
  * @param[in] pConnackStart Pointer to the start of a CONNACK packet.
  * @param[in] dataLength Length of the data stream after `pConnackStart`.
  * @param[out] pBytesProcessed The number of bytes in the data stream processed
  * by this function. For CONNACK, this is always 4.
  *
- * @return #AWS_IOT_MQTT_SUCCESS if CONNACK specifies that CONNECT was accepted;
- * #AWS_IOT_MQTT_SERVER_REFUSED if CONNACK specifies that CONNECT was rejected;
- * #AWS_IOT_MQTT_BAD_RESPONSE if the CONNACK packet doesn't follow MQTT spec.
+ * @return #IOT_MQTT_SUCCESS if CONNACK specifies that CONNECT was accepted;
+ * #IOT_MQTT_SERVER_REFUSED if CONNACK specifies that CONNECT was rejected;
+ * #IOT_MQTT_BAD_RESPONSE if the CONNACK packet doesn't follow MQTT spec.
  */
-AwsIotMqttError_t AwsIotMqttInternal_DeserializeConnack( const uint8_t * const pConnackStart,
-                                                         size_t dataLength,
-                                                         size_t * const pBytesProcessed );
+IotMqttError_t _IotMqtt_DeserializeConnack( const uint8_t * const pConnackStart,
+                                            size_t dataLength,
+                                            size_t * const pBytesProcessed );
 
 /**
  * @brief Generate a PUBLISH packet from the given parameters.
@@ -573,12 +573,12 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeConnack( const uint8_t * const p
  * @param[out] pPacketSize Size of the packet written to `pPublishPacket`.
  * @param[out] pPacketIdentifier The packet identifier generated for this PUBLISH.
  *
- * @return #AWS_IOT_MQTT_SUCCESS or #AWS_IOT_MQTT_NO_MEMORY.
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-AwsIotMqttError_t AwsIotMqttInternal_SerializePublish( const AwsIotMqttPublishInfo_t * const pPublishInfo,
-                                                       uint8_t ** const pPublishPacket,
-                                                       size_t * const pPacketSize,
-                                                       uint16_t * const pPacketIdentifier );
+IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * const pPublishInfo,
+                                          uint8_t ** const pPublishPacket,
+                                          size_t * const pPacketSize,
+                                          uint16_t * const pPacketIdentifier );
 
 /**
  * @brief Set the DUP bit in a QoS 1 PUBLISH packet.
@@ -590,17 +590,17 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializePublish( const AwsIotMqttPublishIn
  * a new packet identifier is generated and should be written here. This parameter
  * is only used when connected to an AWS IoT MQTT server.
  *
- * @note See #AwsIotMqttPublishInfo_t for caveats with retransmission to the
+ * @note See #IotMqttPublishInfo_t for caveats with retransmission to the
  * AWS IoT MQTT server.
  */
-void AwsIotMqttInternal_PublishSetDup( bool awsIotMqttMode,
-                                       uint8_t * const pPublishPacket,
-                                       uint16_t * const pNewPacketIdentifier );
+void _IotMqtt_PublishSetDup( bool awsIotMqttMode,
+                             uint8_t * const pPublishPacket,
+                             uint16_t * const pNewPacketIdentifier );
 
 /**
  * @brief Deserialize a PUBLISH packet received from the server.
  *
- * Converts the packet from a stream of bytes to an #AwsIotMqttPublishInfo_t and
+ * Converts the packet from a stream of bytes to an #IotMqttPublishInfo_t and
  * extracts the packet identifier. Also prints out debug log messages about the
  * packet.
  *
@@ -611,14 +611,14 @@ void AwsIotMqttInternal_PublishSetDup( bool awsIotMqttMode,
  * @param[out] pBytesProcessed The number of bytes in the data stream processed
  * by this function.
  *
- * @return #AWS_IOT_MQTT_SUCCESS if PUBLISH is valid; #AWS_IOT_MQTT_BAD_RESPONSE
+ * @return #IOT_MQTT_SUCCESS if PUBLISH is valid; #IOT_MQTT_BAD_RESPONSE
  * if the PUBLISH packet doesn't follow MQTT spec.
  */
-AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const pPublishStart,
-                                                         size_t dataLength,
-                                                         AwsIotMqttPublishInfo_t * const pOutput,
-                                                         uint16_t * const pPacketIdentifier,
-                                                         size_t * const pBytesProcessed );
+IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * const pPublishStart,
+                                            size_t dataLength,
+                                            IotMqttPublishInfo_t * const pOutput,
+                                            uint16_t * const pPacketIdentifier,
+                                            size_t * const pBytesProcessed );
 
 /**
  * @brief Generate a PUBACK packet for the given packet identifier.
@@ -627,16 +627,16 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePublish( const uint8_t * const p
  * @param[out] pPubackPacket Where the PUBACK packet is written.
  * @param[out] pPacketSize Size of the packet written to `pPubackPacket`.
  *
- * @return #AWS_IOT_MQTT_SUCCESS or #AWS_IOT_MQTT_NO_MEMORY.
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-AwsIotMqttError_t AwsIotMqttInternal_SerializePuback( uint16_t packetIdentifier,
-                                                      uint8_t ** const pPubackPacket,
-                                                      size_t * const pPacketSize );
+IotMqttError_t _IotMqtt_SerializePuback( uint16_t packetIdentifier,
+                                         uint8_t ** const pPubackPacket,
+                                         size_t * const pPacketSize );
 
 /**
  * @brief Deserialize a PUBACK packet.
  *
- * Converts the packet from a stream of bytes to an #AwsIotMqttError_t and extracts
+ * Converts the packet from a stream of bytes to an #IotMqttError_t and extracts
  * the packet identifier. Also prints out debug log messages about the packet.
  *
  * @param[in] pPubackStart Pointer to the start of a PUBACK packet.
@@ -645,13 +645,13 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializePuback( uint16_t packetIdentifier,
  * @param[out] pBytesProcessed The number of bytes in the data stream processed
  * by this function. For PUBACK, this is always 4.
  *
- * @return #AWS_IOT_MQTT_SUCCESS if PUBACK is valid; #AWS_IOT_MQTT_BAD_RESPONSE
+ * @return #IOT_MQTT_SUCCESS if PUBACK is valid; #IOT_MQTT_BAD_RESPONSE
  * if the PUBACK packet doesn't follow MQTT spec.
  */
-AwsIotMqttError_t AwsIotMqttInternal_DeserializePuback( const uint8_t * const pPubackStart,
-                                                        size_t dataLength,
-                                                        uint16_t * const pPacketIdentifier,
-                                                        size_t * const pBytesProcessed );
+IotMqttError_t _IotMqtt_DeserializePuback( const uint8_t * const pPubackStart,
+                                           size_t dataLength,
+                                           uint16_t * const pPacketIdentifier,
+                                           size_t * const pBytesProcessed );
 
 /**
  * @brief Generate a SUBSCRIBE packet from the given parameters.
@@ -662,18 +662,18 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePuback( const uint8_t * const pP
  * @param[out] pPacketSize Size of the packet written to `pSubscribePacket`.
  * @param[out] pPacketIdentifier The packet identifier generated for this SUBSCRIBE.
  *
- * @return #AWS_IOT_MQTT_SUCCESS or #AWS_IOT_MQTT_NO_MEMORY.
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-AwsIotMqttError_t AwsIotMqttInternal_SerializeSubscribe( const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                                         size_t subscriptionCount,
-                                                         uint8_t ** const pSubscribePacket,
-                                                         size_t * const pPacketSize,
-                                                         uint16_t * const pPacketIdentifier );
+IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * const pSubscriptionList,
+                                            size_t subscriptionCount,
+                                            uint8_t ** const pSubscribePacket,
+                                            size_t * const pPacketSize,
+                                            uint16_t * const pPacketIdentifier );
 
 /**
  * @brief Deserialize a SUBACK packet.
  *
- * Converts the packet from a stream of bytes to an #AwsIotMqttError_t and extracts
+ * Converts the packet from a stream of bytes to an #IotMqttError_t and extracts
  * the packet identifier. Also prints out debug log messages about the packet.
  *
  * @param[in] mqttConnection The MQTT connection associated with the subscription.
@@ -684,14 +684,14 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeSubscribe( const AwsIotMqttSubscri
  * @param[out] pBytesProcessed The number of bytes in the data stream processed by
  * this function.
  *
- * @return #AWS_IOT_MQTT_SUCCESS if SUBACK is valid; #AWS_IOT_MQTT_BAD_RESPONSE
+ * @return #IOT_MQTT_SUCCESS if SUBACK is valid; #IOT_MQTT_BAD_RESPONSE
  * if the SUBACK packet doesn't follow MQTT spec.
  */
-AwsIotMqttError_t AwsIotMqttInternal_DeserializeSuback( AwsIotMqttConnection_t mqttConnection,
-                                                        const uint8_t * const pSubackStart,
-                                                        size_t dataLength,
-                                                        uint16_t * const pPacketIdentifier,
-                                                        size_t * const pBytesProcessed );
+IotMqttError_t _IotMqtt_DeserializeSuback( IotMqttConnection_t mqttConnection,
+                                           const uint8_t * const pSubackStart,
+                                           size_t dataLength,
+                                           uint16_t * const pPacketIdentifier,
+                                           size_t * const pBytesProcessed );
 
 /**
  * @brief Generate an UNSUBSCRIBE packet from the given parameters.
@@ -702,18 +702,18 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeSuback( AwsIotMqttConnection_t m
  * @param[out] pPacketSize Size of the packet written to `pUnsubscribePacket`.
  * @param[out] pPacketIdentifier The packet identifier generated for this UNSUBSCRIBE.
  *
- * @return #AWS_IOT_MQTT_SUCCESS or #AWS_IOT_MQTT_NO_MEMORY.
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-AwsIotMqttError_t AwsIotMqttInternal_SerializeUnsubscribe( const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                                           size_t subscriptionCount,
-                                                           uint8_t ** const pUnsubscribePacket,
-                                                           size_t * const pPacketSize,
-                                                           uint16_t * const pPacketIdentifier );
+IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * const pSubscriptionList,
+                                              size_t subscriptionCount,
+                                              uint8_t ** const pUnsubscribePacket,
+                                              size_t * const pPacketSize,
+                                              uint16_t * const pPacketIdentifier );
 
 /**
  * @brief Deserialize a UNSUBACK packet.
  *
- * Converts the packet from a stream of bytes to an #AwsIotMqttError_t and extracts
+ * Converts the packet from a stream of bytes to an #IotMqttError_t and extracts
  * the packet identifier. Also prints out debug log messages about the packet.
  *
  * @param[in] pUnsubackStart Pointer to the start of an UNSUBACK packet.
@@ -722,13 +722,13 @@ AwsIotMqttError_t AwsIotMqttInternal_SerializeUnsubscribe( const AwsIotMqttSubsc
  * @param[out] pBytesProcessed The number of bytes in the data stream processed by
  * this function. For UNSUBACK, this is always 4.
  *
- * @return #AWS_IOT_MQTT_SUCCESS if UNSUBACK is valid; #AWS_IOT_MQTT_BAD_RESPONSE
+ * @return #IOT_MQTT_SUCCESS if UNSUBACK is valid; #IOT_MQTT_BAD_RESPONSE
  * if the UNSUBACK packet doesn't follow MQTT spec.
  */
-AwsIotMqttError_t AwsIotMqttInternal_DeserializeUnsuback( const uint8_t * const pUnsubackStart,
-                                                          size_t dataLength,
-                                                          uint16_t * const pPacketIdentifier,
-                                                          size_t * const pBytesProcessed );
+IotMqttError_t _IotMqtt_DeserializeUnsuback( const uint8_t * const pUnsubackStart,
+                                             size_t dataLength,
+                                             uint16_t * const pPacketIdentifier,
+                                             size_t * const pBytesProcessed );
 
 /**
  * @brief Generate a PINGREQ packet.
@@ -736,27 +736,27 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializeUnsuback( const uint8_t * const 
  * @param[out] pPingreqPacket Where the PINGREQ packet is written.
  * @param[out] pPacketSize Size of the packet written to `pPingreqPacket`.
  *
- * @return Always returns #AWS_IOT_MQTT_SUCCESS.
+ * @return Always returns #IOT_MQTT_SUCCESS.
  */
-AwsIotMqttError_t AwsIotMqttInternal_SerializePingreq( uint8_t ** const pPingreqPacket,
-                                                       size_t * const pPacketSize );
+IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** const pPingreqPacket,
+                                          size_t * const pPacketSize );
 
 /**
  * @brief Deserialize a PINGRESP packet.
  *
- * Converts the packet from a stream of bytes to an #AwsIotMqttError_t. Also
+ * Converts the packet from a stream of bytes to an #IotMqttError_t. Also
  * prints out debug log messages about the packet.
  * @param[in] pPingrespStart Pointer to the start of a PINGRESP packet.
  * @param[in] dataLength Length of the data stream after `pPingrespStart`.
  * @param[out] pBytesProcessed The number of bytes in the data stream processed by
  * this function. For PINGRESP, this is always 2.
  *
- * @return #AWS_IOT_MQTT_SUCCESS if PINGRESP is valid; #AWS_IOT_MQTT_BAD_RESPONSE
+ * @return #IOT_MQTT_SUCCESS if PINGRESP is valid; #IOT_MQTT_BAD_RESPONSE
  * if the PINGRESP packet doesn't follow MQTT spec.
  */
-AwsIotMqttError_t AwsIotMqttInternal_DeserializePingresp( const uint8_t * const pPingrespStart,
-                                                          size_t dataLength,
-                                                          size_t * const pBytesProcessed );
+IotMqttError_t _IotMqtt_DeserializePingresp( const uint8_t * const pPingrespStart,
+                                             size_t dataLength,
+                                             size_t * const pBytesProcessed );
 
 /**
  * @brief Generate a DISCONNECT packet.
@@ -764,17 +764,17 @@ AwsIotMqttError_t AwsIotMqttInternal_DeserializePingresp( const uint8_t * const 
  * @param[out] pDisconnectPacket Where the DISCONNECT packet is written.
  * @param[out] pPacketSize Size of the packet written to `pDisconnectPacket`.
  *
- * @return Always returns #AWS_IOT_MQTT_SUCCESS.
+ * @return Always returns #IOT_MQTT_SUCCESS.
  */
-AwsIotMqttError_t AwsIotMqttInternal_SerializeDisconnect( uint8_t ** const pDisconnectPacket,
-                                                          size_t * const pPacketSize );
+IotMqttError_t _IotMqtt_SerializeDisconnect( uint8_t ** const pDisconnectPacket,
+                                             size_t * const pPacketSize );
 
 /**
  * @brief Free a packet generated by the serializer.
  *
  * @param[in] pPacket The packet to free.
  */
-void AwsIotMqttInternal_FreePacket( uint8_t * pPacket );
+void _IotMqtt_FreePacket( uint8_t * pPacket );
 
 /*-------------------- MQTT operation record functions ----------------------*/
 
@@ -789,8 +789,8 @@ void AwsIotMqttInternal_FreePacket( uint8_t * pPacket );
  * - Zero if the two timer events are equal.
  * - Positive value if the first timer event is greater than the second timer event.
  */
-int AwsIotMqttInternal_TimerEventCompare( const IotLink_t * const pTimerEventLink1,
-                                          const IotLink_t * const pTimerEventLink2 );
+int _IotMqtt_TimerEventCompare( const IotLink_t * const pTimerEventLink1,
+                                const IotLink_t * const pTimerEventLink2 );
 
 /**
  * @brief Create a record for a new in-progress MQTT operation.
@@ -799,11 +799,11 @@ int AwsIotMqttInternal_TimerEventCompare( const IotLink_t * const pTimerEventLin
  * @param[in] flags Flags variable passed to a user-facing MQTT function.
  * @param[in] pCallbackInfo User-provided callback function and parameter.
  *
- * @return #AWS_IOT_MQTT_SUCCESS, #AWS_IOT_MQTT_BAD_PARAMETER, or #AWS_IOT_MQTT_NO_MEMORY.
+ * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_BAD_PARAMETER, or #IOT_MQTT_NO_MEMORY.
  */
-AwsIotMqttError_t AwsIotMqttInternal_CreateOperation( _mqttOperation_t ** const pNewOperation,
-                                                      uint32_t flags,
-                                                      const AwsIotMqttCallbackInfo_t * const pCallbackInfo );
+IotMqttError_t _IotMqtt_CreateOperation( _mqttOperation_t ** const pNewOperation,
+                                         uint32_t flags,
+                                         const IotMqttCallbackInfo_t * const pCallbackInfo );
 
 /**
  * @brief Free resources used to record an MQTT operation. This is called when
@@ -813,7 +813,7 @@ AwsIotMqttError_t AwsIotMqttInternal_CreateOperation( _mqttOperation_t ** const 
  * `void*` to match the signature of [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-void AwsIotMqttInternal_DestroyOperation( void * pData );
+void _IotMqtt_DestroyOperation( void * pData );
 
 /**
  * @brief Enqueue an MQTT operation for processing.
@@ -821,10 +821,10 @@ void AwsIotMqttInternal_DestroyOperation( void * pData );
  * @param[in] pOperation The MQTT operation to enqueue.
  * @param[in] pQueue The address of either #_IotMqttCallback or #_IotMqttSend.
  *
- * @return #AWS_IOT_MQTT_SUCCESS or #AWS_IOT_MQTT_NO_MEMORY.
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-AwsIotMqttError_t AwsIotMqttInternal_EnqueueOperation( _mqttOperation_t * const pOperation,
-                                                       _mqttOperationQueue_t * const pQueue );
+IotMqttError_t _IotMqtt_EnqueueOperation( _mqttOperation_t * const pOperation,
+                                          _mqttOperationQueue_t * const pQueue );
 
 /**
  * @brief Search the list of MQTT operations pending responses using an operation
@@ -835,8 +835,8 @@ AwsIotMqttError_t AwsIotMqttInternal_EnqueueOperation( _mqttOperation_t * const 
  *
  * @return Pointer to any matching operation; `NULL` if no match was found.
  */
-_mqttOperation_t * AwsIotMqttInternal_FindOperation( AwsIotMqttOperationType_t operation,
-                                                     const uint16_t * const pPacketIdentifier );
+_mqttOperation_t * _IotMqtt_FindOperation( IotMqttOperationType_t operation,
+                                           const uint16_t * const pPacketIdentifier );
 
 /**
  * @brief Notify of a completed MQTT operation.
@@ -847,7 +847,7 @@ _mqttOperation_t * AwsIotMqttInternal_FindOperation( AwsIotMqttOperationType_t o
  * notification will cause @ref mqtt_function_wait to return or invoke a
  * user-provided callback.
  */
-void AwsIotMqttInternal_Notify( _mqttOperation_t * const pOperation );
+void _IotMqtt_Notify( _mqttOperation_t * const pOperation );
 
 /*------------------- Subscription management functions ---------------------*/
 
@@ -860,12 +860,12 @@ void AwsIotMqttInternal_Notify( _mqttOperation_t * const pOperation );
  * @param[in] pSubscriptionList The first element in the array.
  * @param[in] subscriptionCount Number of elements in `pSubscriptionList`.
  *
- * @return #AWS_IOT_MQTT_SUCCESS or #AWS_IOT_MQTT_NO_MEMORY.
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-AwsIotMqttError_t AwsIotMqttInternal_AddSubscriptions( _mqttConnection_t * const pMqttConnection,
-                                                       uint16_t subscribePacketIdentifier,
-                                                       const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                                       size_t subscriptionCount );
+IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * const pMqttConnection,
+                                          uint16_t subscribePacketIdentifier,
+                                          const IotMqttSubscription_t * const pSubscriptionList,
+                                          size_t subscriptionCount );
 
 /**
  * @brief Process a received PUBLISH from the server, invoking any subscription
@@ -875,8 +875,8 @@ AwsIotMqttError_t AwsIotMqttInternal_AddSubscriptions( _mqttConnection_t * const
  * PUBLISH.
  * @param[in] pCallbackParam The parameter to pass to a PUBLISH callback.
  */
-void AwsIotMqttInternal_ProcessPublish( _mqttConnection_t * const pMqttConnection,
-                                        AwsIotMqttCallbackParam_t * const pCallbackParam );
+void _IotMqtt_ProcessPublish( _mqttConnection_t * const pMqttConnection,
+                              IotMqttCallbackParam_t * const pCallbackParam );
 
 /**
  * @brief Remove a single subscription from the subscription manager by
@@ -888,9 +888,9 @@ void AwsIotMqttInternal_ProcessPublish( _mqttConnection_t * const pMqttConnectio
  * @param[in] order The order of the subscription in the SUBSCRIBE packet.
  * Pass `-1` to ignore order and remove all subscriptions for `packetIdentifier`.
  */
-void AwsIotMqttInternal_RemoveSubscriptionByPacket( _mqttConnection_t * const pMqttConnection,
-                                                    uint16_t packetIdentifier,
-                                                    long order );
+void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * const pMqttConnection,
+                                          uint16_t packetIdentifier,
+                                          long order );
 
 /**
  * @brief Remove an array of subscriptions from the subscription manager by
@@ -900,8 +900,8 @@ void AwsIotMqttInternal_RemoveSubscriptionByPacket( _mqttConnection_t * const pM
  * @param[in] pSubscriptionList The first element in the array.
  * @param[in] subscriptionCount Number of elements in `pSubscriptionList`.
  */
-void AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( _mqttConnection_t * const pMqttConnection,
-                                                         const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                                         size_t subscriptionCount );
+void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * const pMqttConnection,
+                                               const IotMqttSubscription_t * const pSubscriptionList,
+                                               size_t subscriptionCount );
 
-#endif /* ifndef _AWS_IOT_MQTT_INTERNAL_H_ */
+#endif /* ifndef _IOT_MQTT_INTERNAL_H_ */

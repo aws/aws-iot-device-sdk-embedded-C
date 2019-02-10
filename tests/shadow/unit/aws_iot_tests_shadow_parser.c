@@ -119,8 +119,8 @@ static void _generateParseErrorDocument( char * const pErrorDocument,
 
     /* Parse the error document and check the result. */
     TEST_ASSERT_EQUAL( expectedCode,
-                       AwsIotShadowInternal_ParseErrorDocument( pErrorDocument,
-                                                                ( size_t ) errorDocumentLength ) );
+                       _AwsIotShadow_ParseErrorDocument( pErrorDocument,
+                                                         ( size_t ) errorDocumentLength ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -137,10 +137,10 @@ static void _parseThingName( const char * const pTopicName,
     const char * pThingName = NULL;
     size_t thingNameLength = 0;
 
-    status = AwsIotShadowInternal_ParseThingName( pTopicName,
-                                                  topicNameLength,
-                                                  &pThingName,
-                                                  &thingNameLength );
+    status = _AwsIotShadow_ParseThingName( pTopicName,
+                                           topicNameLength,
+                                           &pThingName,
+                                           &thingNameLength );
     TEST_ASSERT_EQUAL( expectedResult, status );
 
     if( expectedResult == AWS_IOT_SHADOW_SUCCESS )
@@ -205,13 +205,13 @@ TEST( Shadow_Unit_Parser, StatusValid )
     _shadowOperationStatus_t status = _UNKNOWN_STATUS;
 
     /* Parse "accepted" status. */
-    status = AwsIotShadowInternal_ParseShadowStatus( "$aws/things/Test_device/shadow/accepted",
-                                                     39 );
+    status = _AwsIotShadow_ParseShadowStatus( "$aws/things/Test_device/shadow/accepted",
+                                              39 );
     TEST_ASSERT_EQUAL( _SHADOW_ACCEPTED, status );
 
     /* Parse "rejected" status. */
-    status = AwsIotShadowInternal_ParseShadowStatus( "$aws/things/Test_device/shadow/rejected",
-                                                     39 );
+    status = _AwsIotShadow_ParseShadowStatus( "$aws/things/Test_device/shadow/rejected",
+                                              39 );
     TEST_ASSERT_EQUAL( _SHADOW_REJECTED, status );
 }
 
@@ -224,23 +224,23 @@ TEST( Shadow_Unit_Parser, StatusInvalid )
 {
     /* Topic too short. */
     TEST_ASSERT_EQUAL( _UNKNOWN_STATUS,
-                       AwsIotShadowInternal_ParseShadowStatus( "accepted",
-                                                               8 ) );
+                       _AwsIotShadow_ParseShadowStatus( "accepted",
+                                                        8 ) );
 
     /* Topic missing last character. */
     TEST_ASSERT_EQUAL( _UNKNOWN_STATUS,
-                       AwsIotShadowInternal_ParseShadowStatus( "$aws/things/Test_device/shadow/accepte",
-                                                               38 ) );
+                       _AwsIotShadow_ParseShadowStatus( "$aws/things/Test_device/shadow/accepte",
+                                                        38 ) );
 
     /* Topic missing level separator. */
     TEST_ASSERT_EQUAL( _UNKNOWN_STATUS,
-                       AwsIotShadowInternal_ParseShadowStatus( "$aws/things/Test_device/shadowaccepted",
-                                                               38 ) );
+                       _AwsIotShadow_ParseShadowStatus( "$aws/things/Test_device/shadowaccepted",
+                                                        38 ) );
 
     /* Topic suffix isn't "accepted" or "rejected". */
     TEST_ASSERT_EQUAL( _UNKNOWN_STATUS,
-                       AwsIotShadowInternal_ParseShadowStatus( "$aws/things/Test_device/shadow/unknown",
-                                                               38 ) );
+                       _AwsIotShadow_ParseShadowStatus( "$aws/things/Test_device/shadow/unknown",
+                                                        38 ) );
 }
 
 /*-----------------------------------------------------------*/

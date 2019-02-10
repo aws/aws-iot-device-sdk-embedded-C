@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_tests_mqtt_receive.c
+ * @file iot_tests_mqtt_receive.c
  * @brief Tests for the function @ref mqtt_function_receivecallback.
  */
 
@@ -36,25 +36,25 @@
 #include "platform/iot_threads.h"
 
 /* MQTT internal include. */
-#include "private/aws_iot_mqtt_internal.h"
+#include "private/iot_mqtt_internal.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
 
 /* MQTT test access include. */
-#include "aws_iot_test_access_mqtt.h"
+#include "iot_test_access_mqtt.h"
 
 /**
  * @brief Determine which MQTT server mode to test (AWS IoT or Mosquitto).
  */
-#if !defined( AWS_IOT_TEST_MQTT_MOSQUITTO ) || AWS_IOT_TEST_MQTT_MOSQUITTO == 0
+#if !defined( IOT_TEST_MQTT_MOSQUITTO ) || IOT_TEST_MQTT_MOSQUITTO == 0
     #define _AWS_IOT_MQTT_SERVER    true
 #else
     #define _AWS_IOT_MQTT_SERVER    false
 
 /* Redefine the connect info initializer if not using an AWS IoT MQTT server. */
-    #undef AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER
-    #define AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER    { 0 }
+    #undef IOT_MQTT_CONNECT_INFO_INITIALIZER
+    #define IOT_MQTT_CONNECT_INFO_INITIALIZER    { 0 }
 #endif
 
 /**
@@ -64,13 +64,13 @@
  * Provide default malloc and free functions in dynamic memory mode.
  */
 #if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 )
-    #ifndef AwsIotTest_Malloc
+    #ifndef IotTest_Malloc
         #include <stdlib.h>
-        #define AwsIotTest_Malloc    malloc
+        #define IotTest_Malloc    malloc
     #endif
-    #ifndef AwsIotTest_Free
+    #ifndef IotTest_Free
         #include <stdlib.h>
-        #define AwsIotTest_Free    free
+        #define IotTest_Free    free
     #endif
 #endif /* if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 ) */
 /** @endcond */
@@ -163,9 +163,9 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
 #define _INITIALIZE_OPERATION( name )                                          \
     {                                                                          \
         .link = { 0 }, .operation = name, .pMqttConnection = _pMqttConnection, \
-        .flags = AWS_IOT_MQTT_FLAG_WAITABLE, .packetIdentifier = 1,            \
+        .flags = IOT_MQTT_FLAG_WAITABLE, .packetIdentifier = 1,                \
         .pMqttPacket = NULL, .packetSize = 0, .notify = { .callback = { 0 } }, \
-        .status = AWS_IOT_MQTT_STATUS_PENDING, .pPublishRetry = NULL           \
+        .status = IOT_MQTT_STATUS_PENDING, .pPublishRetry = NULL               \
     }
 
 /*-----------------------------------------------------------*/
@@ -193,7 +193,7 @@ static bool _getPacketTypeCalled = false;
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Wrapper for AwsIotTest_Malloc.
+ * @brief Wrapper for IotTest_Malloc.
  */
 static void * _mallocWrapper( size_t size )
 {
@@ -202,7 +202,7 @@ static void * _mallocWrapper( size_t size )
     ( void ) size;
 
     #if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 )
-        pBuffer = AwsIotTest_Malloc( size );
+        pBuffer = IotTest_Malloc( size );
 
         /* Decrement the malloc semaphore. */
         if( pBuffer != NULL )
@@ -212,7 +212,7 @@ static void * _mallocWrapper( size_t size )
             ( IotSemaphore_GetCount( &_mallocSemaphore ) > 0 ) )
         {
             /* If the malloc semaphore value isn't what's expected, return NULL. */
-            AwsIotTest_Free( pBuffer );
+            IotTest_Free( pBuffer );
             pBuffer = NULL;
         }
     }
@@ -231,13 +231,13 @@ static uint8_t _getPacketType( const uint8_t * const pPacket,
 {
     _getPacketTypeCalled = true;
 
-    return AwsIotMqttInternal_GetPacketType( pPacket, packetSize );
+    return _IotMqtt_GetPacketType( pPacket, packetSize );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Wrapper for AwsIotTest_Free.
+ * @brief Wrapper for IotTest_Free.
  */
 static void _freeWrapper( void * ptr )
 {
@@ -245,7 +245,7 @@ static void _freeWrapper( void * ptr )
     #if IOT_STATIC_MEMORY_ONLY == 1
         ( void ) ptr;
     #else
-        AwsIotTest_Free( ptr );
+        IotTest_Free( ptr );
     #endif
 
     IotSemaphore_Post( &_mallocSemaphore );
@@ -256,15 +256,15 @@ static void _freeWrapper( void * ptr )
 /**
  * @brief Deserializer override for CONNACK.
  */
-static AwsIotMqttError_t _deserializeConnack( const uint8_t * const pConnackStart,
-                                              size_t dataLength,
-                                              size_t * const pBytesProcessed )
+static IotMqttError_t _deserializeConnack( const uint8_t * const pConnackStart,
+                                           size_t dataLength,
+                                           size_t * const pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
-    return AwsIotMqttInternal_DeserializeConnack( pConnackStart,
-                                                  dataLength,
-                                                  pBytesProcessed );
+    return _IotMqtt_DeserializeConnack( pConnackStart,
+                                        dataLength,
+                                        pBytesProcessed );
 }
 
 /*-----------------------------------------------------------*/
@@ -272,19 +272,19 @@ static AwsIotMqttError_t _deserializeConnack( const uint8_t * const pConnackStar
 /**
  * @brief Deserializer override for PUBLISH.
  */
-static AwsIotMqttError_t _deserializePublish( const uint8_t * const pPublishStart,
-                                              size_t dataLength,
-                                              AwsIotMqttPublishInfo_t * const pOutput,
-                                              uint16_t * const pPacketIdentifier,
-                                              size_t * const pBytesProcessed )
+static IotMqttError_t _deserializePublish( const uint8_t * const pPublishStart,
+                                           size_t dataLength,
+                                           IotMqttPublishInfo_t * const pOutput,
+                                           uint16_t * const pPacketIdentifier,
+                                           size_t * const pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
-    return AwsIotMqttInternal_DeserializePublish( pPublishStart,
-                                                  dataLength,
-                                                  pOutput,
-                                                  pPacketIdentifier,
-                                                  pBytesProcessed );
+    return _IotMqtt_DeserializePublish( pPublishStart,
+                                        dataLength,
+                                        pOutput,
+                                        pPacketIdentifier,
+                                        pBytesProcessed );
 }
 
 /*-----------------------------------------------------------*/
@@ -292,17 +292,17 @@ static AwsIotMqttError_t _deserializePublish( const uint8_t * const pPublishStar
 /**
  * @brief Deserializer override for PUBACK.
  */
-static AwsIotMqttError_t _deserializePuback( const uint8_t * const pPubackStart,
-                                             size_t dataLength,
-                                             uint16_t * const pPacketIdentifier,
-                                             size_t * const pBytesProcessed )
+static IotMqttError_t _deserializePuback( const uint8_t * const pPubackStart,
+                                          size_t dataLength,
+                                          uint16_t * const pPacketIdentifier,
+                                          size_t * const pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
-    return AwsIotMqttInternal_DeserializePuback( pPubackStart,
-                                                 dataLength,
-                                                 pPacketIdentifier,
-                                                 pBytesProcessed );
+    return _IotMqtt_DeserializePuback( pPubackStart,
+                                       dataLength,
+                                       pPacketIdentifier,
+                                       pBytesProcessed );
 }
 
 /*-----------------------------------------------------------*/
@@ -310,19 +310,19 @@ static AwsIotMqttError_t _deserializePuback( const uint8_t * const pPubackStart,
 /**
  * @brief Deserializer override for SUBACK.
  */
-static AwsIotMqttError_t _deserializeSuback( AwsIotMqttConnection_t mqttConnection,
-                                             const uint8_t * const pSubackStart,
-                                             size_t dataLength,
-                                             uint16_t * const pPacketIdentifier,
-                                             size_t * const pBytesProcessed )
+static IotMqttError_t _deserializeSuback( IotMqttConnection_t mqttConnection,
+                                          const uint8_t * const pSubackStart,
+                                          size_t dataLength,
+                                          uint16_t * const pPacketIdentifier,
+                                          size_t * const pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
-    return AwsIotMqttInternal_DeserializeSuback( mqttConnection,
-                                                 pSubackStart,
-                                                 dataLength,
-                                                 pPacketIdentifier,
-                                                 pBytesProcessed );
+    return _IotMqtt_DeserializeSuback( mqttConnection,
+                                       pSubackStart,
+                                       dataLength,
+                                       pPacketIdentifier,
+                                       pBytesProcessed );
 }
 
 /*-----------------------------------------------------------*/
@@ -330,17 +330,17 @@ static AwsIotMqttError_t _deserializeSuback( AwsIotMqttConnection_t mqttConnecti
 /**
  * @brief Deserializer override for UNSUBACK.
  */
-static AwsIotMqttError_t _deserializeUnsuback( const uint8_t * const pUnsubackStart,
-                                               size_t dataLength,
-                                               uint16_t * const pPacketIdentifier,
-                                               size_t * const pBytesProcessed )
+static IotMqttError_t _deserializeUnsuback( const uint8_t * const pUnsubackStart,
+                                            size_t dataLength,
+                                            uint16_t * const pPacketIdentifier,
+                                            size_t * const pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
-    return AwsIotMqttInternal_DeserializeUnsuback( pUnsubackStart,
-                                                   dataLength,
-                                                   pPacketIdentifier,
-                                                   pBytesProcessed );
+    return _IotMqtt_DeserializeUnsuback( pUnsubackStart,
+                                         dataLength,
+                                         pPacketIdentifier,
+                                         pBytesProcessed );
 }
 
 /*-----------------------------------------------------------*/
@@ -348,15 +348,15 @@ static AwsIotMqttError_t _deserializeUnsuback( const uint8_t * const pUnsubackSt
 /**
  * @brief Deserializer override for PINGRESP.
  */
-static AwsIotMqttError_t _deserializePingresp( const uint8_t * const pPingrespStart,
-                                               size_t dataLength,
-                                               size_t * const pBytesProcessed )
+static IotMqttError_t _deserializePingresp( const uint8_t * const pPingrespStart,
+                                            size_t dataLength,
+                                            size_t * const pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
-    return AwsIotMqttInternal_DeserializePingresp( pPingrespStart,
-                                                   dataLength,
-                                                   pBytesProcessed );
+    return _IotMqtt_DeserializePingresp( pPingrespStart,
+                                         dataLength,
+                                         pBytesProcessed );
 }
 
 /*-----------------------------------------------------------*/
@@ -367,7 +367,7 @@ static AwsIotMqttError_t _deserializePingresp( const uint8_t * const pPingrespSt
  */
 static void _operationResetAndPush( _mqttOperation_t * const pOperation )
 {
-    pOperation->status = AWS_IOT_MQTT_STATUS_PENDING;
+    pOperation->status = IOT_MQTT_STATUS_PENDING;
     IotQueue_Enqueue( &( _IotMqttPendingResponse ), &( pOperation->link ) );
 }
 
@@ -380,15 +380,15 @@ static bool _processBuffer( const _mqttOperation_t * const pOperation,
                             const uint8_t * pBuffer,
                             size_t bufferSize,
                             int32_t expectedBytesProcessed,
-                            AwsIotMqttError_t expectedResult )
+                            IotMqttError_t expectedResult )
 {
     /* Call the receive callback on pBuffer. */
-    int32_t bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
-                                                         NULL,
-                                                         pBuffer,
-                                                         bufferSize,
-                                                         0,
-                                                         _freeWrapper );
+    int32_t bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+                                                      NULL,
+                                                      pBuffer,
+                                                      bufferSize,
+                                                      0,
+                                                      _freeWrapper );
 
     /* Free pBuffer if the receive callback wasn't expected to free it. */
     if( expectedBytesProcessed <= 0 )
@@ -432,12 +432,12 @@ static bool _processPublish( const uint8_t * const pPublish,
     }
 
     /* Call the receive callback on pPublish. */
-    bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
-                                                 NULL,
-                                                 pPublish,
-                                                 publishSize,
-                                                 0,
-                                                 _freeWrapper );
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+                                              NULL,
+                                              pPublish,
+                                              publishSize,
+                                              0,
+                                              _freeWrapper );
 
     /* Check how many times the publish callback is invoked. */
     for( i = 0; i < expectedInvokeCount; i++ )
@@ -468,7 +468,7 @@ static bool _processPublish( const uint8_t * const pPublish,
  * @brief Called when a PUBLISH message is "received".
  */
 static void _publishCallback( void * param1,
-                              AwsIotMqttCallbackParam_t * const pPublish )
+                              IotMqttCallbackParam_t * const pPublish )
 {
     IotSemaphore_t * pInvokeCount = ( IotSemaphore_t * ) param1;
 
@@ -477,8 +477,8 @@ static void _publishCallback( void * param1,
     pPublish->message.info.QoS = 0;
 
     /* Check that the parameters to this function are valid. */
-    if( ( AwsIotMqttInternal_ValidatePublish( _AWS_IOT_MQTT_SERVER,
-                                              &( pPublish->message.info ) ) == true ) &&
+    if( ( _IotMqtt_ValidatePublish( _AWS_IOT_MQTT_SERVER,
+                                    &( pPublish->message.info ) ) == true ) &&
         ( pPublish->message.info.topicNameLength == _TEST_TOPIC_LENGTH ) &&
         ( strncmp( _TEST_TOPIC_NAME, pPublish->message.info.pTopicName, _TEST_TOPIC_LENGTH ) == 0 ) )
     {
@@ -493,15 +493,15 @@ static void _publishCallback( void * param1,
  *
  * Prevents any tests on QoS 1 PUBLISH packets from sending any PUBACKS.
  */
-static AwsIotMqttError_t _serializePuback( uint16_t packetIdentifier,
-                                           uint8_t ** const pPubackPacket,
-                                           size_t * const pPacketSize )
+static IotMqttError_t _serializePuback( uint16_t packetIdentifier,
+                                        uint8_t ** const pPubackPacket,
+                                        size_t * const pPacketSize )
 {
     ( void ) packetIdentifier;
     ( void ) pPubackPacket;
     ( void ) pPacketSize;
 
-    return AWS_IOT_MQTT_NO_MEMORY;
+    return IOT_MQTT_NO_MEMORY;
 }
 
 /*-----------------------------------------------------------*/
@@ -518,8 +518,8 @@ TEST_GROUP( MQTT_Unit_Receive );
  */
 TEST_SETUP( MQTT_Unit_Receive )
 {
-    AwsIotMqttNetIf_t networkInterface = AWS_IOT_MQTT_NETIF_INITIALIZER;
-    AwsIotMqttSubscription_t subscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+    IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
 
     /* Set the deserializer overrides. */
     networkInterface.deserialize.connack = _deserializeConnack;
@@ -536,12 +536,12 @@ TEST_SETUP( MQTT_Unit_Receive )
                                                       1 ) );
 
     /* Initialize the MQTT library. */
-    TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, AwsIotMqtt_Init() );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 
     /* Initialize the MQTT connection used by the tests. */
-    _pMqttConnection = AwsIotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                            &networkInterface,
-                                                            0 );
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &networkInterface,
+                                                         0 );
     TEST_ASSERT_NOT_EQUAL( NULL, _pMqttConnection );
 
     /* Set the members of the subscription. */
@@ -550,10 +550,10 @@ TEST_SETUP( MQTT_Unit_Receive )
     subscription.callback.function = _publishCallback;
 
     /* Add the subscription to the MQTT connection. */
-    TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, AwsIotMqttInternal_AddSubscriptions( _pMqttConnection,
-                                                                                  1,
-                                                                                  &subscription,
-                                                                                  1 ) );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( _pMqttConnection,
+                                                                    1,
+                                                                    &subscription,
+                                                                    1 ) );
 
     /* Clear the deserialize override called flag. */
     _deserializeOverrideCalled = false;
@@ -568,8 +568,8 @@ TEST_SETUP( MQTT_Unit_Receive )
 TEST_TEAR_DOWN( MQTT_Unit_Receive )
 {
     /* Clean up resources taken in test setup. */
-    AwsIotTestMqtt_destroyMqttConnection( _pMqttConnection );
-    AwsIotMqtt_Cleanup();
+    IotTestMqtt_destroyMqttConnection( _pMqttConnection );
+    IotMqtt_Cleanup();
     IotSemaphore_Destroy( &_mallocSemaphore );
     _pMqttConnection = NULL;
 
@@ -617,10 +617,10 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
     {
         uint8_t pRemainingLength[ 4 ] = { 0 };
 
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS,
-                           AwsIotTestMqtt_decodeRemainingLength( pRemainingLength,
-                                                                 &pEnd,
-                                                                 &decodedLength ) );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
+                           IotTestMqtt_decodeRemainingLength( pRemainingLength,
+                                                              &pEnd,
+                                                              &decodedLength ) );
         TEST_ASSERT_EQUAL_PTR( pEnd, pRemainingLength + 1 );
         TEST_ASSERT_EQUAL( 0, decodedLength );
     }
@@ -629,10 +629,10 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
     {
         uint8_t pRemainingLength[ 4 ] = { 0x81, 0x01, 0x00, 0x00 };
 
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS,
-                           AwsIotTestMqtt_decodeRemainingLength( pRemainingLength,
-                                                                 &pEnd,
-                                                                 &decodedLength ) );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
+                           IotTestMqtt_decodeRemainingLength( pRemainingLength,
+                                                              &pEnd,
+                                                              &decodedLength ) );
         TEST_ASSERT_EQUAL_PTR( pEnd, pRemainingLength + 2 );
         TEST_ASSERT_EQUAL( 129, decodedLength );
     }
@@ -641,10 +641,10 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
     {
         uint8_t pRemainingLength[ 4 ] = { 0x82, 0x80, 0x01, 0x00 };
 
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS,
-                           AwsIotTestMqtt_decodeRemainingLength( pRemainingLength,
-                                                                 &pEnd,
-                                                                 &decodedLength ) );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
+                           IotTestMqtt_decodeRemainingLength( pRemainingLength,
+                                                              &pEnd,
+                                                              &decodedLength ) );
         TEST_ASSERT_EQUAL_PTR( pEnd, pRemainingLength + 3 );
         TEST_ASSERT_EQUAL( 16386, decodedLength );
     }
@@ -654,10 +654,10 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
     {
         uint8_t pRemainingLength[ 4 ] = { 0xff, 0xff, 0xff, 0x7f };
 
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS,
-                           AwsIotTestMqtt_decodeRemainingLength( pRemainingLength,
-                                                                 &pEnd,
-                                                                 &decodedLength ) );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
+                           IotTestMqtt_decodeRemainingLength( pRemainingLength,
+                                                              &pEnd,
+                                                              &decodedLength ) );
         TEST_ASSERT_EQUAL_PTR( pEnd, pRemainingLength + 4 );
         TEST_ASSERT_EQUAL( 268435455, decodedLength );
     }
@@ -666,10 +666,10 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
     {
         uint8_t pRemainingLength[ 4 ] = { 0xff, 0xff, 0xff, 0x8f };
 
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_BAD_PARAMETER,
-                           AwsIotTestMqtt_decodeRemainingLength( pRemainingLength,
-                                                                 &pEnd,
-                                                                 &decodedLength ) );
+        TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER,
+                           IotTestMqtt_decodeRemainingLength( pRemainingLength,
+                                                              &pEnd,
+                                                              &decodedLength ) );
     }
 
     /* Attempt to decode a 4-byte representation of 0. According to the spec,
@@ -677,10 +677,10 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
     {
         uint8_t pRemainingLength[ 4 ] = { 0x80, 0x80, 0x80, 0x00 };
 
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_BAD_PARAMETER,
-                           AwsIotTestMqtt_decodeRemainingLength( pRemainingLength,
-                                                                 &pEnd,
-                                                                 &decodedLength ) );
+        TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER,
+                           IotTestMqtt_decodeRemainingLength( pRemainingLength,
+                                                              &pEnd,
+                                                              &decodedLength ) );
     }
 
     /* Test tear down for this test group checks that deserializer overrides
@@ -702,12 +702,12 @@ TEST( MQTT_Unit_Receive, InvalidPacket )
     uint8_t invalidPacket = 0xf0;
 
     /* Processing a control packet 0xf is a protocol violation. */
-    bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
-                                                 NULL,
-                                                 &invalidPacket,
-                                                 sizeof( uint8_t ),
-                                                 0,
-                                                 NULL );
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+                                              NULL,
+                                              &invalidPacket,
+                                              sizeof( uint8_t ),
+                                              0,
+                                              NULL );
     TEST_ASSERT_EQUAL( -1, bytesProcessed );
 
     /* This test should not have called any deserializer. Set the deserialize
@@ -750,33 +750,33 @@ TEST( MQTT_Unit_Receive, DataStream )
     TEST_ASSERT_EQUAL( _DATA_STREAM_SIZE, copyOffset + sizeof( _pPingrespTemplate ) );
 
     /* Passing an offset greater than dataLength should not process anything. */
-    bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
-                                                 NULL,
-                                                 pDataStream,
-                                                 4,
-                                                 5,
-                                                 _freeWrapper );
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+                                              NULL,
+                                              pDataStream,
+                                              4,
+                                              5,
+                                              _freeWrapper );
     TEST_ASSERT_EQUAL( 0, bytesProcessed );
 
     /* The first call to process 64 bytes should only process the CONNACK and
      * SUBACK. */
-    bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
-                                                 NULL,
-                                                 pDataStream,
-                                                 processOffset + 64,
-                                                 0,
-                                                 _freeWrapper );
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+                                              NULL,
+                                              pDataStream,
+                                              processOffset + 64,
+                                              0,
+                                              _freeWrapper );
     TEST_ASSERT_EQUAL( 11, bytesProcessed );
     processOffset += ( size_t ) bytesProcessed;
 
     /* A second call to process 64 bytes should not process anything, as the
      * PUBLISH is incomplete. */
-    bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
-                                                 NULL,
-                                                 pDataStream,
-                                                 processOffset + 64,
-                                                 processOffset,
-                                                 _freeWrapper );
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+                                              NULL,
+                                              pDataStream,
+                                              processOffset + 64,
+                                              processOffset,
+                                              _freeWrapper );
     TEST_ASSERT_EQUAL( 0, bytesProcessed );
 
     /* A call to process 273 bytes should process the PUBLISH packet (272 bytes). */
@@ -787,22 +787,22 @@ TEST( MQTT_Unit_Receive, DataStream )
     processOffset += 272;
 
     /* A call to process 5 bytes should only process the UNSUBACK (4 bytes). */
-    bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
-                                                 NULL,
-                                                 pDataStream,
-                                                 processOffset + 5,
-                                                 processOffset,
-                                                 _freeWrapper );
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+                                              NULL,
+                                              pDataStream,
+                                              processOffset + 5,
+                                              processOffset,
+                                              _freeWrapper );
     TEST_ASSERT_EQUAL( 4, bytesProcessed );
     processOffset += ( size_t ) bytesProcessed;
 
     /* Process the last 2 bytes (PINGRESP). */
-    bytesProcessed = AwsIotMqtt_ReceiveCallback( ( AwsIotMqttConnection_t * ) &_pMqttConnection,
-                                                 NULL,
-                                                 pDataStream,
-                                                 processOffset + 2,
-                                                 processOffset,
-                                                 _freeWrapper );
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+                                              NULL,
+                                              pDataStream,
+                                              processOffset + 2,
+                                              processOffset,
+                                              _freeWrapper );
     TEST_ASSERT_EQUAL( 2, bytesProcessed );
 
     /* Wait for the buffer to be freed. */
@@ -822,7 +822,7 @@ TEST( MQTT_Unit_Receive, DataStream )
 TEST( MQTT_Unit_Receive, ConnackValid )
 {
     uint8_t i = 0;
-    _mqttOperation_t connect = _INITIALIZE_OPERATION( AWS_IOT_MQTT_CONNECT );
+    _mqttOperation_t connect = _INITIALIZE_OPERATION( IOT_MQTT_CONNECT );
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -838,7 +838,7 @@ TEST( MQTT_Unit_Receive, ConnackValid )
                                                      pConnack,
                                                      connackSize,
                                                      ( int32_t ) connackSize,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Process a valid, successful CONNACK with no SP flag. */
@@ -849,7 +849,7 @@ TEST( MQTT_Unit_Receive, ConnackValid )
                                                      pConnack,
                                                      connackSize,
                                                      ( int32_t ) connackSize,
-                                                     AWS_IOT_MQTT_SUCCESS ) );
+                                                     IOT_MQTT_SUCCESS ) );
     }
 
     /* Process a valid, successful CONNACK with SP flag set. */
@@ -861,7 +861,7 @@ TEST( MQTT_Unit_Receive, ConnackValid )
                                                      pConnack,
                                                      connackSize,
                                                      ( int32_t ) connackSize,
-                                                     AWS_IOT_MQTT_SUCCESS ) );
+                                                     IOT_MQTT_SUCCESS ) );
     }
 
     /* Check each of the CONNACK failure codes, which range from 1 to 5. */
@@ -878,7 +878,7 @@ TEST( MQTT_Unit_Receive, ConnackValid )
                                                      pConnack,
                                                      connackSize,
                                                      ( int32_t ) connackSize,
-                                                     AWS_IOT_MQTT_SERVER_REFUSED ) );
+                                                     IOT_MQTT_SERVER_REFUSED ) );
     }
 
     IotSemaphore_Destroy( &( connect.notify.waitSemaphore ) );
@@ -892,7 +892,7 @@ TEST( MQTT_Unit_Receive, ConnackValid )
  */
 TEST( MQTT_Unit_Receive, ConnackInvalid )
 {
-    _mqttOperation_t connect = _INITIALIZE_OPERATION( AWS_IOT_MQTT_CONNECT );
+    _mqttOperation_t connect = _INITIALIZE_OPERATION( IOT_MQTT_CONNECT );
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -908,7 +908,7 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
                                                      pConnack,
                                                      connackSize - 1,
                                                      0,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* The CONNACK control packet type must be 0x20. */
@@ -919,7 +919,7 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
                                                      pConnack,
                                                      connackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     /* A CONNACK must have a remaining length of 2. */
@@ -931,7 +931,7 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
                                                      pConnack,
                                                      connackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     /* The reserved bits in CONNACK must be 0. */
@@ -943,7 +943,7 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
                                                      pConnack,
                                                      connackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     /* The fourth byte of CONNACK must be 0 if the SP flag is set. */
@@ -956,7 +956,7 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
                                                      pConnack,
                                                      connackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     /* CONNACK return codes cannot be above 5. */
@@ -968,7 +968,7 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
                                                      pConnack,
                                                      connackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     IotSemaphore_Destroy( &( connect.notify.waitSemaphore ) );
@@ -1039,7 +1039,7 @@ TEST( MQTT_Unit_Receive, PublishValid )
     {
         _DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
         IotListDouble_RemoveAll( &( _pMqttConnection->subscriptionList ),
-                                 AwsIotMqtt_FreeSubscription,
+                                 IotMqtt_FreeSubscription,
                                  offsetof( _mqttSubscription_t, link ) );
 
         TEST_ASSERT_EQUAL_INT( true, _processPublish( pPublish,
@@ -1254,7 +1254,7 @@ TEST( MQTT_Unit_Receive, PublishInvalidStream )
  */
 TEST( MQTT_Unit_Receive, PubackValid )
 {
-    _mqttOperation_t publish = _INITIALIZE_OPERATION( AWS_IOT_MQTT_PUBLISH_TO_SERVER );
+    _mqttOperation_t publish = _INITIALIZE_OPERATION( IOT_MQTT_PUBLISH_TO_SERVER );
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1270,7 +1270,7 @@ TEST( MQTT_Unit_Receive, PubackValid )
                                                      pPuback,
                                                      pubackSize,
                                                      ( int32_t ) pubackSize,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Process a valid PUBACK. */
@@ -1281,7 +1281,7 @@ TEST( MQTT_Unit_Receive, PubackValid )
                                                      pPuback,
                                                      pubackSize,
                                                      ( int32_t ) pubackSize,
-                                                     AWS_IOT_MQTT_SUCCESS ) );
+                                                     IOT_MQTT_SUCCESS ) );
     }
 
     IotSemaphore_Destroy( &( publish.notify.waitSemaphore ) );
@@ -1295,7 +1295,7 @@ TEST( MQTT_Unit_Receive, PubackValid )
  */
 TEST( MQTT_Unit_Receive, PubackInvalid )
 {
-    _mqttOperation_t publish = _INITIALIZE_OPERATION( AWS_IOT_MQTT_PUBLISH_TO_SERVER );
+    _mqttOperation_t publish = _INITIALIZE_OPERATION( IOT_MQTT_PUBLISH_TO_SERVER );
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1311,7 +1311,7 @@ TEST( MQTT_Unit_Receive, PubackInvalid )
                                                      pPuback,
                                                      pubackSize - 1,
                                                      0,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* The PUBACK control packet type must be 0x40. */
@@ -1322,7 +1322,7 @@ TEST( MQTT_Unit_Receive, PubackInvalid )
                                                      pPuback,
                                                      pubackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     /* A PUBACK must have a remaining length of 2. */
@@ -1334,7 +1334,7 @@ TEST( MQTT_Unit_Receive, PubackInvalid )
                                                      pPuback,
                                                      pubackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     /* The packet identifier in PUBACK cannot be 0. No status should be set if
@@ -1347,7 +1347,7 @@ TEST( MQTT_Unit_Receive, PubackInvalid )
                                                      pPuback,
                                                      pubackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Remove unprocessed PUBLISH if present. */
@@ -1368,8 +1368,8 @@ TEST( MQTT_Unit_Receive, PubackInvalid )
 TEST( MQTT_Unit_Receive, SubackValid )
 {
     _mqttSubscription_t * pNewSubscription = NULL;
-    _mqttOperation_t subscribe = _INITIALIZE_OPERATION( AWS_IOT_MQTT_SUBSCRIBE );
-    AwsIotMqttSubscription_t pSubscriptions[ 2 ] = { AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER };
+    _mqttOperation_t subscribe = _INITIALIZE_OPERATION( IOT_MQTT_SUBSCRIBE );
+    IotMqttSubscription_t pSubscriptions[ 2 ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1388,10 +1388,10 @@ TEST( MQTT_Unit_Receive, SubackValid )
     pSubscriptions[ 1 ].pTopicFilter = _TEST_TOPIC_NAME "2";
     pSubscriptions[ 1 ].topicFilterLength = _TEST_TOPIC_LENGTH + 1;
 
-    TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, AwsIotMqttInternal_AddSubscriptions( _pMqttConnection,
-                                                                                  1,
-                                                                                  pSubscriptions,
-                                                                                  2 ) );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( _pMqttConnection,
+                                                                    1,
+                                                                    pSubscriptions,
+                                                                    2 ) );
 
     /* Set orders 2 and 1 for the new subscriptions. */
     pNewSubscription = IotLink_Container( _mqttSubscription_t,
@@ -1412,29 +1412,29 @@ TEST( MQTT_Unit_Receive, SubackValid )
                                                      pSuback,
                                                      subackSize,
                                                      ( int32_t ) subackSize,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Process a valid SUBACK where all subscriptions are successful. */
     {
-        AwsIotMqttSubscription_t currentSubscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+        IotMqttSubscription_t currentSubscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
         _DECLARE_PACKET( _pSubackTemplate, pSuback, subackSize );
         _operationResetAndPush( &subscribe );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( &subscribe,
                                                      pSuback,
                                                      subackSize,
                                                      ( int32_t ) subackSize,
-                                                     AWS_IOT_MQTT_SUCCESS ) );
+                                                     IOT_MQTT_SUCCESS ) );
 
         /* Test the subscription check function. QoS is not tested. */
-        TEST_ASSERT_EQUAL_INT( true, AwsIotMqtt_IsSubscribed( _pMqttConnection,
-                                                              pSubscriptions[ 0 ].pTopicFilter,
-                                                              pSubscriptions[ 0 ].topicFilterLength,
-                                                              &currentSubscription ) );
+        TEST_ASSERT_EQUAL_INT( true, IotMqtt_IsSubscribed( _pMqttConnection,
+                                                           pSubscriptions[ 0 ].pTopicFilter,
+                                                           pSubscriptions[ 0 ].topicFilterLength,
+                                                           &currentSubscription ) );
         currentSubscription.QoS = pSubscriptions[ 0 ].QoS;
         TEST_ASSERT_EQUAL_MEMORY( &pSubscriptions[ 0 ],
                                   &currentSubscription,
-                                  sizeof( AwsIotMqttSubscription_t ) );
+                                  sizeof( IotMqttSubscription_t ) );
     }
 
     /* Process a valid SUBACK where some subscriptions were rejected. */
@@ -1447,18 +1447,18 @@ TEST( MQTT_Unit_Receive, SubackValid )
                                                      pSuback,
                                                      subackSize,
                                                      ( int32_t ) subackSize,
-                                                     AWS_IOT_MQTT_SERVER_REFUSED ) );
+                                                     IOT_MQTT_SERVER_REFUSED ) );
 
         /* Check that rejected subscriptions were removed from the subscription
          * list. */
-        TEST_ASSERT_EQUAL_INT( false, AwsIotMqtt_IsSubscribed( _pMqttConnection,
-                                                               _TEST_TOPIC_NAME,
-                                                               _TEST_TOPIC_LENGTH,
-                                                               NULL ) );
-        TEST_ASSERT_EQUAL_INT( false, AwsIotMqtt_IsSubscribed( _pMqttConnection,
-                                                               pSubscriptions[ 1 ].pTopicFilter,
-                                                               pSubscriptions[ 1 ].topicFilterLength,
-                                                               NULL ) );
+        TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( _pMqttConnection,
+                                                            _TEST_TOPIC_NAME,
+                                                            _TEST_TOPIC_LENGTH,
+                                                            NULL ) );
+        TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( _pMqttConnection,
+                                                            pSubscriptions[ 1 ].pTopicFilter,
+                                                            pSubscriptions[ 1 ].topicFilterLength,
+                                                            NULL ) );
     }
 
     IotSemaphore_Destroy( &( subscribe.notify.waitSemaphore ) );
@@ -1472,7 +1472,7 @@ TEST( MQTT_Unit_Receive, SubackValid )
  */
 TEST( MQTT_Unit_Receive, SubackInvalid )
 {
-    _mqttOperation_t subscribe = _INITIALIZE_OPERATION( AWS_IOT_MQTT_SUBSCRIBE );
+    _mqttOperation_t subscribe = _INITIALIZE_OPERATION( IOT_MQTT_SUBSCRIBE );
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1489,7 +1489,7 @@ TEST( MQTT_Unit_Receive, SubackInvalid )
                                                      pSuback,
                                                      4,
                                                      0,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Attempt to process a SUBACK with an invalid "Remaining length". */
@@ -1503,7 +1503,7 @@ TEST( MQTT_Unit_Receive, SubackInvalid )
                                                      pSuback,
                                                      subackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Attempt to process a SUBACK larger than the size of the data stream. */
@@ -1514,7 +1514,7 @@ TEST( MQTT_Unit_Receive, SubackInvalid )
                                                      pSuback,
                                                      subackSize,
                                                      0,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Attempt to process a SUBACK with a "Remaining length" smaller than the
@@ -1526,7 +1526,7 @@ TEST( MQTT_Unit_Receive, SubackInvalid )
                                                      pSuback,
                                                      subackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Attempt to process a SUBACK with a bad return code. */
@@ -1537,7 +1537,7 @@ TEST( MQTT_Unit_Receive, SubackInvalid )
                                                      pSuback,
                                                      subackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     /* The SUBACK control packet type must be 0x90. */
@@ -1549,7 +1549,7 @@ TEST( MQTT_Unit_Receive, SubackInvalid )
                                                      pSuback,
                                                      subackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     IotSemaphore_Destroy( &( subscribe.notify.waitSemaphore ) );
@@ -1563,7 +1563,7 @@ TEST( MQTT_Unit_Receive, SubackInvalid )
  */
 TEST( MQTT_Unit_Receive, UnsubackValid )
 {
-    _mqttOperation_t unsubscribe = _INITIALIZE_OPERATION( AWS_IOT_MQTT_UNSUBSCRIBE );
+    _mqttOperation_t unsubscribe = _INITIALIZE_OPERATION( IOT_MQTT_UNSUBSCRIBE );
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1579,7 +1579,7 @@ TEST( MQTT_Unit_Receive, UnsubackValid )
                                                      pUnsuback,
                                                      unsubackSize,
                                                      ( int32_t ) unsubackSize,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Process a valid UNSUBACK. */
@@ -1590,7 +1590,7 @@ TEST( MQTT_Unit_Receive, UnsubackValid )
                                                      pUnsuback,
                                                      unsubackSize,
                                                      ( int32_t ) unsubackSize,
-                                                     AWS_IOT_MQTT_SUCCESS ) );
+                                                     IOT_MQTT_SUCCESS ) );
     }
 
     IotSemaphore_Destroy( &( unsubscribe.notify.waitSemaphore ) );
@@ -1604,7 +1604,7 @@ TEST( MQTT_Unit_Receive, UnsubackValid )
  */
 TEST( MQTT_Unit_Receive, UnsubackInvalid )
 {
-    _mqttOperation_t unsubscribe = _INITIALIZE_OPERATION( AWS_IOT_MQTT_UNSUBSCRIBE );
+    _mqttOperation_t unsubscribe = _INITIALIZE_OPERATION( IOT_MQTT_UNSUBSCRIBE );
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1620,7 +1620,7 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
                                                      pUnsuback,
                                                      unsubackSize - 1,
                                                      0,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* The UNSUBACK control packet type must be 0xb0. */
@@ -1631,7 +1631,7 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
                                                      pUnsuback,
                                                      unsubackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     /* An UNSUBACK must have a remaining length of 2. */
@@ -1643,7 +1643,7 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
                                                      pUnsuback,
                                                      unsubackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     /* The packet identifier in UNSUBACK cannot be 0. No status should be set if
@@ -1656,7 +1656,7 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
                                                      pUnsuback,
                                                      unsubackSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Remove unprocessed UNSUBSCRIBE if present. */
@@ -1676,7 +1676,7 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
  */
 TEST( MQTT_Unit_Receive, Pingresp )
 {
-    _mqttOperation_t pingreq = _INITIALIZE_OPERATION( AWS_IOT_MQTT_PINGREQ );
+    _mqttOperation_t pingreq = _INITIALIZE_OPERATION( IOT_MQTT_PINGREQ );
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1692,7 +1692,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pPingresp,
                                                      pingrespSize,
                                                      ( int32_t ) pingrespSize,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* Process a valid PINGRESP. */
@@ -1703,7 +1703,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pPingresp,
                                                      pingrespSize,
                                                      ( int32_t ) pingrespSize,
-                                                     AWS_IOT_MQTT_SUCCESS ) );
+                                                     IOT_MQTT_SUCCESS ) );
     }
 
     /* An incomplete PINGRESP should not be processed, and no status should be set. */
@@ -1714,7 +1714,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pPingresp,
                                                      pingrespSize - 1,
                                                      0,
-                                                     AWS_IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_STATUS_PENDING ) );
     }
 
     /* A PINGRESP should have a remaining length of 0. */
@@ -1725,7 +1725,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pPingresp,
                                                      pingrespSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     /* The PINGRESP control packet type must be 0xd0. */
@@ -1737,7 +1737,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pPingresp,
                                                      pingrespSize,
                                                      -1,
-                                                     AWS_IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
     }
 
     IotSemaphore_Destroy( &( pingreq.notify.waitSemaphore ) );

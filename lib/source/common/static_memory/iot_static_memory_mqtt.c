@@ -41,7 +41,7 @@
 #include "private/iot_static_memory.h"
 
 /* MQTT internal include. */
-#include "private/aws_iot_mqtt_internal.h"
+#include "private/iot_mqtt_internal.h"
 
 /*-----------------------------------------------------------*/
 

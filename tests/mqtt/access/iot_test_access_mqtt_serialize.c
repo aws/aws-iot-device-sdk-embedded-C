@@ -20,28 +20,21 @@
  */
 
 /**
- * @file aws_iot_test_access_mqtt_api.c
+ * @file iot_test_access_mqtt_serialize.c
  * @brief Provides access to the internal functions and variables of
- * aws_iot_mqtt_api.c
+ * iot_mqtt_serialize.c
  *
- * This file should only be included at the bottom of aws_iot_mqtt_api.c and never
- * compiled by itself.
+ * This file should only be included at the bottom of iot_mqtt_serialize.c
+ * and never compiled by itself.
  */
 
 /*-----------------------------------------------------------*/
 
-_mqttConnection_t * AwsIotTestMqtt_createMqttConnection( bool awsIotMqttMode,
-                                                         const AwsIotMqttNetIf_t * const pNetworkInterface,
-                                                         uint16_t keepAliveSeconds )
+IotMqttError_t IotTestMqtt_decodeRemainingLength( const uint8_t * pSource,
+                                                  const uint8_t ** const pEnd,
+                                                  size_t * const pLength )
 {
-    return _createMqttConnection( awsIotMqttMode, pNetworkInterface, keepAliveSeconds );
-}
-
-/*-----------------------------------------------------------*/
-
-void AwsIotTestMqtt_destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
-{
-    _destroyMqttConnection( pMqttConnection );
+    return _decodeRemainingLength( pSource, pEnd, pLength );
 }
 
 /*-----------------------------------------------------------*/

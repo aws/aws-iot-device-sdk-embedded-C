@@ -20,8 +20,8 @@
  */
 
 /**
- * @file aws_iot_tests_mqtt_system.c
- * @brief Full system tests for the AWS IoT MQTT library.
+ * @file iot_tests_mqtt_system.c
+ * @brief Full system tests for the MQTT library.
  */
 
 /* Build using a config header, if provided. */
@@ -33,7 +33,7 @@
 #include <string.h>
 
 /* MQTT internal include. */
-#include "private/aws_iot_mqtt_internal.h"
+#include "private/iot_mqtt_internal.h"
 
 /* Platform layer includes. */
 #include "platform/iot_clock.h"
@@ -66,38 +66,38 @@ extern int snprintf( char *,
  *
  * Provide default values of test configuration constants.
  */
-#ifndef AWS_IOT_TEST_MQTT_TIMEOUT_MS
-    #define AWS_IOT_TEST_MQTT_TIMEOUT_MS      ( 5000 )
+#ifndef IOT_TEST_MQTT_TIMEOUT_MS
+    #define IOT_TEST_MQTT_TIMEOUT_MS      ( 5000 )
 #endif
-#ifndef AWS_IOT_TEST_MQTT_TOPIC_PREFIX
-    #define AWS_IOT_TEST_MQTT_TOPIC_PREFIX    "awsiotmqtttest"
+#ifndef IOT_TEST_MQTT_TOPIC_PREFIX
+    #define IOT_TEST_MQTT_TOPIC_PREFIX    "iotmqtttest"
 #endif
 /** @endcond */
 
 /**
  * @brief Determine which MQTT server mode to test (AWS IoT or Mosquitto).
  */
-#if !defined( AWS_IOT_TEST_MQTT_MOSQUITTO ) || AWS_IOT_TEST_MQTT_MOSQUITTO == 0
+#if !defined( IOT_TEST_MQTT_MOSQUITTO ) || IOT_TEST_MQTT_MOSQUITTO == 0
     #define _AWS_IOT_MQTT_SERVER    true
 #else
     #define _AWS_IOT_MQTT_SERVER    false
 
 /* Redefine the connect info initializer if not using an AWS IoT MQTT server. */
-    #undef AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER
-    #define AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER    { 0 }
+    #undef IOT_MQTT_CONNECT_INFO_INITIALIZER
+    #define IOT_MQTT_CONNECT_INFO_INITIALIZER    { 0 }
 #endif
 
 /**
  * @brief The maximum length of an MQTT client identifier.
  *
- * When @ref AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER is defined, this value must
- * accommodate the length of @ref AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER plus 4
+ * When @ref IOT_TEST_MQTT_CLIENT_IDENTIFIER is defined, this value must
+ * accommodate the length of @ref IOT_TEST_MQTT_CLIENT_IDENTIFIER plus 4
  * to accommodate the Last Will and Testament test. Otherwise, this value is
  * set to 24, which is the longest client identifier length an MQTT server is
  * obligated to accept plus a NULL terminator.
  */
-#ifdef AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER
-    #define _CLIENT_IDENTIFIER_MAX_LENGTH    ( sizeof( AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER ) + 4 )
+#ifdef IOT_TEST_MQTT_CLIENT_IDENTIFIER
+    #define _CLIENT_IDENTIFIER_MAX_LENGTH    ( sizeof( IOT_TEST_MQTT_CLIENT_IDENTIFIER ) + 4 )
 #else
     #define _CLIENT_IDENTIFIER_MAX_LENGTH    ( 24 )
 #endif
@@ -109,27 +109,27 @@ extern int snprintf( char *,
  */
 typedef struct _operationCompleteParams
 {
-    AwsIotMqttOperationType_t expectedOperation; /**< @brief Expected completed operation. */
-    IotSemaphore_t waitSem;                      /**< @brief Used to unblock waiting test thread. */
-    AwsIotMqttReference_t reference;             /**< @brief Reference to expected completed operation. */
+    IotMqttOperationType_t expectedOperation; /**< @brief Expected completed operation. */
+    IotSemaphore_t waitSem;                   /**< @brief Used to unblock waiting test thread. */
+    IotMqttReference_t reference;             /**< @brief Reference to expected completed operation. */
 } _operationCompleteParams_t;
 
 /*-----------------------------------------------------------*/
 
 /* Network functions used by the tests, declared and implemented in one of
  * the test network function files. */
-extern bool AwsIotTest_NetworkSetup( void );
-extern void AwsIotTest_NetworkCleanup( void );
-extern bool AwsIotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
-                                       AwsIotMqttConnection_t * pMqttConnection );
-extern IotNetworkError_t AwsIotTest_NetworkClose( int32_t reason,
-                                                  void * pNetworkConnection );
-extern void AwsIotTest_NetworkDestroy( void * pConnection );
+extern bool IotTest_NetworkSetup( void );
+extern void IotTest_NetworkCleanup( void );
+extern bool IotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
+                                    IotMqttConnection_t * pMqttConnection );
+extern IotNetworkError_t IotTest_NetworkClose( int32_t reason,
+                                               void * pNetworkConnection );
+extern void IotTest_NetworkDestroy( void * pConnection );
 
 /* Network variables used by the tests, declared in one of the test network
  * function files. */
-extern AwsIotMqttNetIf_t _AwsIotTestNetworkInterface;
-extern AwsIotMqttConnection_t _AwsIotTestMqttConnection;
+extern IotMqttNetIf_t _IotTestNetworkInterface;
+extern IotMqttConnection_t _IotTestMqttConnection;
 
 /*-----------------------------------------------------------*/
 
@@ -174,7 +174,7 @@ static void _freePacket( uint8_t * pPacket )
 {
     _freePacketOverride = true;
 
-    AwsIotMqttInternal_FreePacket( pPacket );
+    _IotMqtt_FreePacket( pPacket );
 }
 
 /*-----------------------------------------------------------*/
@@ -182,15 +182,15 @@ static void _freePacket( uint8_t * pPacket )
 /**
  * @brief Serializer override for CONNECT.
  */
-static AwsIotMqttError_t _serializeConnect( const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                            uint8_t ** const pConnectPacket,
-                                            size_t * const pPacketSize )
+static IotMqttError_t _serializeConnect( const IotMqttConnectInfo_t * const pConnectInfo,
+                                         uint8_t ** const pConnectPacket,
+                                         size_t * const pPacketSize )
 {
     _connectSerializerOverride = true;
 
-    return AwsIotMqttInternal_SerializeConnect( pConnectInfo,
-                                                pConnectPacket,
-                                                pPacketSize );
+    return _IotMqtt_SerializeConnect( pConnectInfo,
+                                      pConnectPacket,
+                                      pPacketSize );
 }
 
 /*-----------------------------------------------------------*/
@@ -198,17 +198,17 @@ static AwsIotMqttError_t _serializeConnect( const AwsIotMqttConnectInfo_t * cons
 /**
  * @brief Serializer override for PUBLISH.
  */
-static AwsIotMqttError_t _serializePublish( const AwsIotMqttPublishInfo_t * const pPublishInfo,
-                                            uint8_t ** const pPublishPacket,
-                                            size_t * const pPacketSize,
-                                            uint16_t * const pPacketIdentifier )
+static IotMqttError_t _serializePublish( const IotMqttPublishInfo_t * const pPublishInfo,
+                                         uint8_t ** const pPublishPacket,
+                                         size_t * const pPacketSize,
+                                         uint16_t * const pPacketIdentifier )
 {
     _publishSerializerOverride = true;
 
-    return AwsIotMqttInternal_SerializePublish( pPublishInfo,
-                                                pPublishPacket,
-                                                pPacketSize,
-                                                pPacketIdentifier );
+    return _IotMqtt_SerializePublish( pPublishInfo,
+                                      pPublishPacket,
+                                      pPacketSize,
+                                      pPacketIdentifier );
 }
 
 /*-----------------------------------------------------------*/
@@ -216,15 +216,15 @@ static AwsIotMqttError_t _serializePublish( const AwsIotMqttPublishInfo_t * cons
 /**
  * @brief Serializer override for PUBACK.
  */
-static AwsIotMqttError_t _serializePuback( uint16_t packetIdentifier,
-                                           uint8_t ** const pPubackPacket,
-                                           size_t * const pPacketSize )
+static IotMqttError_t _serializePuback( uint16_t packetIdentifier,
+                                        uint8_t ** const pPubackPacket,
+                                        size_t * const pPacketSize )
 {
     _pubackSerializerOverride = true;
 
-    return AwsIotMqttInternal_SerializePuback( packetIdentifier,
-                                               pPubackPacket,
-                                               pPacketSize );
+    return _IotMqtt_SerializePuback( packetIdentifier,
+                                     pPubackPacket,
+                                     pPacketSize );
 }
 
 /*-----------------------------------------------------------*/
@@ -232,19 +232,19 @@ static AwsIotMqttError_t _serializePuback( uint16_t packetIdentifier,
 /**
  * @brief Serializer override for SUBSCRIBE.
  */
-static AwsIotMqttError_t _serializeSubscribe( const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                              size_t subscriptionCount,
-                                              uint8_t ** const pSubscribePacket,
-                                              size_t * const pPacketSize,
-                                              uint16_t * const pPacketIdentifier )
+static IotMqttError_t _serializeSubscribe( const IotMqttSubscription_t * const pSubscriptionList,
+                                           size_t subscriptionCount,
+                                           uint8_t ** const pSubscribePacket,
+                                           size_t * const pPacketSize,
+                                           uint16_t * const pPacketIdentifier )
 {
     _subscribeSerializerOverride = true;
 
-    return AwsIotMqttInternal_SerializeSubscribe( pSubscriptionList,
-                                                  subscriptionCount,
-                                                  pSubscribePacket,
-                                                  pPacketSize,
-                                                  pPacketIdentifier );
+    return _IotMqtt_SerializeSubscribe( pSubscriptionList,
+                                        subscriptionCount,
+                                        pSubscribePacket,
+                                        pPacketSize,
+                                        pPacketIdentifier );
 }
 
 /*-----------------------------------------------------------*/
@@ -252,19 +252,19 @@ static AwsIotMqttError_t _serializeSubscribe( const AwsIotMqttSubscription_t * c
 /**
  * @brief Serializer override for UNSUBSCRIBE.
  */
-static AwsIotMqttError_t _serializeUnsubscribe( const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                                size_t subscriptionCount,
-                                                uint8_t ** const pSubscribePacket,
-                                                size_t * const pPacketSize,
-                                                uint16_t * const pPacketIdentifier )
+static IotMqttError_t _serializeUnsubscribe( const IotMqttSubscription_t * const pSubscriptionList,
+                                             size_t subscriptionCount,
+                                             uint8_t ** const pSubscribePacket,
+                                             size_t * const pPacketSize,
+                                             uint16_t * const pPacketIdentifier )
 {
     _unsubscribeSerializerOverride = true;
 
-    return AwsIotMqttInternal_SerializeUnsubscribe( pSubscriptionList,
-                                                    subscriptionCount,
-                                                    pSubscribePacket,
-                                                    pPacketSize,
-                                                    pPacketIdentifier );
+    return _IotMqtt_SerializeUnsubscribe( pSubscriptionList,
+                                          subscriptionCount,
+                                          pSubscribePacket,
+                                          pPacketSize,
+                                          pPacketIdentifier );
 }
 
 /*-----------------------------------------------------------*/
@@ -272,13 +272,13 @@ static AwsIotMqttError_t _serializeUnsubscribe( const AwsIotMqttSubscription_t *
 /**
  * @brief Serializer override for DISCONNECT.
  */
-static AwsIotMqttError_t _serializeDisconnect( uint8_t ** const pDisconnectPacket,
-                                               size_t * const pPacketSize )
+static IotMqttError_t _serializeDisconnect( uint8_t ** const pDisconnectPacket,
+                                            size_t * const pPacketSize )
 {
     _disconnectSerializerOverride = true;
 
-    return AwsIotMqttInternal_SerializeDisconnect( pDisconnectPacket,
-                                                   pPacketSize );
+    return _IotMqtt_SerializeDisconnect( pDisconnectPacket,
+                                         pPacketSize );
 }
 
 /*-----------------------------------------------------------*/
@@ -288,7 +288,7 @@ static AwsIotMqttError_t _serializeDisconnect( uint8_t ** const pDisconnectPacke
  * the main test thread.
  */
 static void _publishReceived( void * pArgument,
-                              AwsIotMqttCallbackParam_t * const pPublish )
+                              IotMqttCallbackParam_t * const pPublish )
 {
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
 
@@ -309,7 +309,7 @@ static void _publishReceived( void * pArgument,
  * and unblocks the main test thread.
  */
 static void _operationComplete( void * pArgument,
-                                AwsIotMqttCallbackParam_t * const pOperation )
+                                IotMqttCallbackParam_t * const pOperation )
 {
     _operationCompleteParams_t * pParams = ( _operationCompleteParams_t * ) pArgument;
 
@@ -317,7 +317,7 @@ static void _operationComplete( void * pArgument,
      * successful, unblock the waiting thread. */
     if( ( pParams->expectedOperation == pOperation->operation.type ) &&
         ( pParams->reference == pOperation->operation.reference ) &&
-        ( pOperation->operation.result == AWS_IOT_MQTT_SUCCESS ) )
+        ( pOperation->operation.result == IOT_MQTT_SUCCESS ) )
     {
         IotSemaphore_Post( &( pParams->waitSem ) );
     }
@@ -330,11 +330,11 @@ static void _operationComplete( void * pArgument,
  */
 static void _subscribePublishWait( int QoS )
 {
-    AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
-    AwsIotMqttNetIf_t networkInterface = _AwsIotTestNetworkInterface;
-    AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
-    AwsIotMqttSubscription_t subscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
-    AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttNetIf_t networkInterface = _IotTestNetworkInterface;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     IotSemaphore_t waitSem;
 
     /* Set the serializer overrides. */
@@ -357,61 +357,61 @@ static void _subscribePublishWait( int QoS )
         connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );
 
         /* Establish the MQTT connection. */
-        status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
-                                     &networkInterface,
-                                     &connectInfo,
-                                     AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+        status = IotMqtt_Connect( &_IotTestMqttConnection,
+                                  &networkInterface,
+                                  &connectInfo,
+                                  IOT_TEST_MQTT_TIMEOUT_MS );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         if( TEST_PROTECT() )
         {
             /* Set the members of the subscription. */
             subscription.QoS = QoS;
-            subscription.pTopicFilter = AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishWait";
+            subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishWait";
             subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
             subscription.callback.function = _publishReceived;
             subscription.callback.param1 = &waitSem;
 
             /* Subscribe to the test topic filter using the blocking SUBSCRIBE
              * function. */
-            status = AwsIotMqtt_TimedSubscribe( _AwsIotTestMqttConnection,
-                                                &subscription,
-                                                1,
-                                                0,
-                                                AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-            TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+            status = IotMqtt_TimedSubscribe( _IotTestMqttConnection,
+                                             &subscription,
+                                             1,
+                                             0,
+                                             IOT_TEST_MQTT_TIMEOUT_MS );
+            TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
             /* Set the members of the publish info. */
             publishInfo.QoS = QoS;
-            publishInfo.pTopicName = AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishWait";
+            publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishWait";
             publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
             publishInfo.pPayload = _pSamplePayload;
             publishInfo.payloadLength = _samplePayloadLength;
 
             /* Publish the message. */
-            status = AwsIotMqtt_TimedPublish( _AwsIotTestMqttConnection,
-                                              &publishInfo,
-                                              0,
-                                              AWS_IOT_TEST_MQTT_TIMEOUT_MS );
+            status = IotMqtt_TimedPublish( _IotTestMqttConnection,
+                                           &publishInfo,
+                                           0,
+                                           IOT_TEST_MQTT_TIMEOUT_MS );
 
             /* Wait for the message to be received. */
             if( IotSemaphore_TimedWait( &waitSem,
-                                        AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                                        IOT_TEST_MQTT_TIMEOUT_MS ) == false )
             {
                 TEST_FAIL_MESSAGE( "Timed out waiting for subscription." );
             }
 
             /* Unsubscribe from the test topic filter. */
-            status = AwsIotMqtt_TimedUnsubscribe( _AwsIotTestMqttConnection,
-                                                  &subscription,
-                                                  1,
-                                                  0,
-                                                  AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-            TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+            status = IotMqtt_TimedUnsubscribe( _IotTestMqttConnection,
+                                               &subscription,
+                                               1,
+                                               0,
+                                               IOT_TEST_MQTT_TIMEOUT_MS );
+            TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
         }
 
         /* Close the MQTT connection. */
-        AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, false );
+        IotMqtt_Disconnect( _IotTestMqttConnection, false );
     }
 
     IotSemaphore_Destroy( &waitSem );
@@ -457,27 +457,27 @@ TEST_SETUP( MQTT_System )
     _disconnectSerializerOverride = false;
 
     /* Initialize the MQTT library. */
-    if( AwsIotMqtt_Init() != AWS_IOT_MQTT_SUCCESS )
+    if( IotMqtt_Init() != IOT_MQTT_SUCCESS )
     {
         TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
     }
 
     /* Set up the network stack. */
-    if( AwsIotTest_NetworkSetup() == false )
+    if( IotTest_NetworkSetup() == false )
     {
         TEST_FAIL_MESSAGE( "Failed to set up network connection." );
     }
 
     /* Generate a new, unique client identifier based on the time if no client
      * identifier is defined. Otherwise, copy the provided client identifier. */
-    #ifndef AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER
+    #ifndef IOT_TEST_MQTT_CLIENT_IDENTIFIER
         ( void ) snprintf( _pClientIdentifier,
                            _CLIENT_IDENTIFIER_MAX_LENGTH,
-                           "aws%llu",
+                           "iot%llu",
                            ( long long unsigned int ) IotClock_GetTimeMs() );
     #else
         ( void ) strncpy( _pClientIdentifier,
-                          AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER,
+                          IOT_TEST_MQTT_CLIENT_IDENTIFIER,
                           _CLIENT_IDENTIFIER_MAX_LENGTH );
     #endif
 }
@@ -490,11 +490,11 @@ TEST_SETUP( MQTT_System )
 TEST_TEAR_DOWN( MQTT_System )
 {
     /* Clean up the MQTT library. */
-    AwsIotMqtt_Cleanup();
-    _AwsIotTestMqttConnection = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqtt_Cleanup();
+    _IotTestMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
     /* Clean up the network stack. */
-    AwsIotTest_NetworkCleanup();
+    IotTest_NetworkCleanup();
 }
 
 /*-----------------------------------------------------------*/
@@ -538,11 +538,11 @@ TEST( MQTT_System, SubscribePublishWaitQoS1 )
  */
 TEST( MQTT_System, SubscribePublishAsync )
 {
-    AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
-    AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
-    AwsIotMqttSubscription_t subscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
-    AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    AwsIotMqttCallbackInfo_t callbackInfo = AWS_IOT_MQTT_CALLBACK_INFO_INITIALIZER;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
     _operationCompleteParams_t callbackParam = { 0 };
     IotSemaphore_t publishWaitSem;
 
@@ -551,7 +551,7 @@ TEST( MQTT_System, SubscribePublishAsync )
     callbackInfo.param1 = &callbackParam;
 
     /* Initialize members of the subscription. */
-    subscription.pTopicFilter = AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishAsync";
+    subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishAsync";
     subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
     subscription.callback.function = _publishReceived;
     subscription.callback.param1 = &publishWaitSem;
@@ -563,7 +563,7 @@ TEST( MQTT_System, SubscribePublishAsync )
 
     /* Initialize members of the publish info. */
     publishInfo.QoS = 1;
-    publishInfo.pTopicName = AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishAsync";
+    publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishAsync";
     publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
     publishInfo.pPayload = _pSamplePayload;
     publishInfo.payloadLength = _samplePayloadLength;
@@ -579,67 +579,67 @@ TEST( MQTT_System, SubscribePublishAsync )
         if( TEST_PROTECT() )
         {
             /* Establish the MQTT connection. */
-            status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
-                                         &_AwsIotTestNetworkInterface,
-                                         &connectInfo,
-                                         AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-            TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+            status = IotMqtt_Connect( &_IotTestMqttConnection,
+                                      &_IotTestNetworkInterface,
+                                      &connectInfo,
+                                      IOT_TEST_MQTT_TIMEOUT_MS );
+            TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
             if( TEST_PROTECT() )
             {
                 /* Subscribe to the test topic filter. */
-                callbackParam.expectedOperation = AWS_IOT_MQTT_SUBSCRIBE;
-                status = AwsIotMqtt_Subscribe( _AwsIotTestMqttConnection,
-                                               &subscription,
-                                               1,
-                                               0,
-                                               &callbackInfo,
-                                               &( callbackParam.reference ) );
+                callbackParam.expectedOperation = IOT_MQTT_SUBSCRIBE;
+                status = IotMqtt_Subscribe( _IotTestMqttConnection,
+                                            &subscription,
+                                            1,
+                                            0,
+                                            &callbackInfo,
+                                            &( callbackParam.reference ) );
 
                 if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
-                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                                            IOT_TEST_MQTT_TIMEOUT_MS ) == false )
                 {
                     TEST_FAIL_MESSAGE( "Timed out waiting for SUBSCRIBE to complete." );
                 }
 
                 /* Publish the message. */
-                callbackParam.expectedOperation = AWS_IOT_MQTT_PUBLISH_TO_SERVER;
-                status = AwsIotMqtt_Publish( _AwsIotTestMqttConnection,
-                                             &publishInfo,
-                                             0,
-                                             &callbackInfo,
-                                             &( callbackParam.reference ) );
+                callbackParam.expectedOperation = IOT_MQTT_PUBLISH_TO_SERVER;
+                status = IotMqtt_Publish( _IotTestMqttConnection,
+                                          &publishInfo,
+                                          0,
+                                          &callbackInfo,
+                                          &( callbackParam.reference ) );
 
                 if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
-                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                                            IOT_TEST_MQTT_TIMEOUT_MS ) == false )
                 {
                     TEST_FAIL_MESSAGE( "Timed out waiting for PUBLISH to complete." );
                 }
 
                 /* Wait for the message to be received. */
                 if( IotSemaphore_TimedWait( &publishWaitSem,
-                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                                            IOT_TEST_MQTT_TIMEOUT_MS ) == false )
                 {
                     TEST_FAIL_MESSAGE( "Timed out waiting for subscription." );
                 }
 
                 /* Unsubscribe from the test topic filter. */
-                callbackParam.expectedOperation = AWS_IOT_MQTT_UNSUBSCRIBE;
-                status = AwsIotMqtt_Unsubscribe( _AwsIotTestMqttConnection,
-                                                 &subscription,
-                                                 1,
-                                                 0,
-                                                 &callbackInfo,
-                                                 &( callbackParam.reference ) );
+                callbackParam.expectedOperation = IOT_MQTT_UNSUBSCRIBE;
+                status = IotMqtt_Unsubscribe( _IotTestMqttConnection,
+                                              &subscription,
+                                              1,
+                                              0,
+                                              &callbackInfo,
+                                              &( callbackParam.reference ) );
 
                 if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
-                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                                            IOT_TEST_MQTT_TIMEOUT_MS ) == false )
                 {
                     TEST_FAIL_MESSAGE( "Timed out waiting for UNSUBSCRIBE to complete." );
                 }
             }
 
-            AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, false );
+            IotMqtt_Disconnect( _IotTestMqttConnection, false );
         }
 
         IotSemaphore_Destroy( &publishWaitSem );
@@ -656,14 +656,14 @@ TEST( MQTT_System, SubscribePublishAsync )
 TEST( MQTT_System, LastWillAndTestament )
 {
     bool lwtListenerCreated = false;
-    AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
-    AwsIotMqttNetIf_t lwtNetIf = _AwsIotTestNetworkInterface;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttNetIf_t lwtNetIf = _IotTestNetworkInterface;
     char pLwtListenerClientIdentifier[ _CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
-    AwsIotMqttConnection_t lwtListener = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
-    AwsIotMqttConnectInfo_t lwtConnectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER,
-                            connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
-    AwsIotMqttSubscription_t willSubscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
-    AwsIotMqttPublishInfo_t willInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotMqttConnection_t lwtListener = IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqttConnectInfo_t lwtConnectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER,
+                         connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttSubscription_t willSubscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+    IotMqttPublishInfo_t willInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     IotTestNetworkConnection_t lwtListenerConnection = IOT_TEST_NETWORK_CONNECTION_INITIALIZER;
     IotSemaphore_t waitSem;
 
@@ -671,14 +671,14 @@ TEST( MQTT_System, LastWillAndTestament )
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
     /* Generate a client identifier for LWT listener. */
-    #ifndef AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER
+    #ifndef IOT_TEST_MQTT_CLIENT_IDENTIFIER
         ( void ) snprintf( pLwtListenerClientIdentifier,
                            _CLIENT_IDENTIFIER_MAX_LENGTH,
-                           "awslwt%llu",
+                           "iotlwt%llu",
                            ( long long unsigned int ) IotClock_GetTimeMs() );
     #else
         ( void ) strncpy( pLwtListenerClientIdentifier,
-                          AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER "LWT",
+                          IOT_TEST_MQTT_CLIENT_IDENTIFIER "LWT",
                           _CLIENT_IDENTIFIER_MAX_LENGTH );
     #endif
 
@@ -687,8 +687,8 @@ TEST( MQTT_System, LastWillAndTestament )
         /* Establish an independent MQTT over TCP connection to receive a Last
          * Will and Testament message. */
         TEST_ASSERT_EQUAL( true,
-                           AwsIotTest_NetworkConnect( &lwtListenerConnection,
-                                                      &lwtListener ) );
+                           IotTest_NetworkConnect( &lwtListenerConnection,
+                                                   &lwtListener ) );
         lwtListenerCreated = true;
 
         if( TEST_PROTECT() )
@@ -699,26 +699,26 @@ TEST( MQTT_System, LastWillAndTestament )
             lwtConnectInfo.pClientIdentifier = pLwtListenerClientIdentifier;
             lwtConnectInfo.clientIdentifierLength = ( uint16_t ) strlen( lwtConnectInfo.pClientIdentifier );
 
-            status = AwsIotMqtt_Connect( &lwtListener,
-                                         &lwtNetIf,
-                                         &lwtConnectInfo,
-                                         AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-            TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+            status = IotMqtt_Connect( &lwtListener,
+                                      &lwtNetIf,
+                                      &lwtConnectInfo,
+                                      IOT_TEST_MQTT_TIMEOUT_MS );
+            TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
             if( TEST_PROTECT() )
             {
                 /* Register a subscription for the LWT. */
-                willSubscription.pTopicFilter = AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/LastWillAndTestament";
+                willSubscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/LastWillAndTestament";
                 willSubscription.topicFilterLength = ( uint16_t ) strlen( willSubscription.pTopicFilter );
                 willSubscription.callback.function = _publishReceived;
                 willSubscription.callback.param1 = &waitSem;
 
-                status = AwsIotMqtt_TimedSubscribe( lwtListener,
-                                                    &willSubscription,
-                                                    1,
-                                                    0,
-                                                    AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-                TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+                status = IotMqtt_TimedSubscribe( lwtListener,
+                                                 &willSubscription,
+                                                 1,
+                                                 0,
+                                                 IOT_TEST_MQTT_TIMEOUT_MS );
+                TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
                 /* Create a connection that requests the LWT. */
                 connectInfo.cleanSession = true;
@@ -726,40 +726,40 @@ TEST( MQTT_System, LastWillAndTestament )
                 connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );
                 connectInfo.pWillInfo = &willInfo;
 
-                willInfo.pTopicName = AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/LastWillAndTestament";
+                willInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/LastWillAndTestament";
                 willInfo.topicNameLength = ( uint16_t ) strlen( willInfo.pTopicName );
                 willInfo.pPayload = _pSamplePayload;
                 willInfo.payloadLength = _samplePayloadLength;
 
-                status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
-                                             &_AwsIotTestNetworkInterface,
-                                             &connectInfo,
-                                             AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-                TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+                status = IotMqtt_Connect( &_IotTestMqttConnection,
+                                          &_IotTestNetworkInterface,
+                                          &connectInfo,
+                                          IOT_TEST_MQTT_TIMEOUT_MS );
+                TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
                 /* Abruptly close the MQTT connection. This should cause the LWT
                  * to be sent to the LWT listener. */
-                AwsIotTest_NetworkClose( 0, NULL );
-                AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, true );
-                AwsIotTest_NetworkDestroy( NULL );
+                IotTest_NetworkClose( 0, NULL );
+                IotMqtt_Disconnect( _IotTestMqttConnection, true );
+                IotTest_NetworkDestroy( NULL );
 
                 /* Check that the LWT was received. */
                 if( IotSemaphore_TimedWait( &waitSem,
-                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                                            IOT_TEST_MQTT_TIMEOUT_MS ) == false )
                 {
                     TEST_FAIL_MESSAGE( "Timed out waiting for Last Will and Testament." );
                 }
             }
 
-            AwsIotMqtt_Disconnect( lwtListener, false );
-            AwsIotTest_NetworkDestroy( &lwtListenerConnection );
+            IotMqtt_Disconnect( lwtListener, false );
+            IotTest_NetworkDestroy( &lwtListenerConnection );
             lwtListenerCreated = false;
         }
 
         if( lwtListenerCreated == true )
         {
-            AwsIotTest_NetworkClose( 0, &lwtListenerConnection );
-            AwsIotTest_NetworkDestroy( &lwtListenerConnection );
+            IotTest_NetworkClose( 0, &lwtListenerConnection );
+            IotTest_NetworkDestroy( &lwtListenerConnection );
         }
     }
 
@@ -773,10 +773,10 @@ TEST( MQTT_System, LastWillAndTestament )
  */
 TEST( MQTT_System, RestorePreviousSession )
 {
-    AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
-    AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
-    AwsIotMqttSubscription_t subscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
-    AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     IotSemaphore_t waitSem;
 
     /* Create the wait semaphore for operations. */
@@ -790,69 +790,69 @@ TEST( MQTT_System, RestorePreviousSession )
     if( TEST_PROTECT() )
     {
         /* Establish a persistent MQTT connection. */
-        status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
-                                     &_AwsIotTestNetworkInterface,
-                                     &connectInfo,
-                                     AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+        status = IotMqtt_Connect( &_IotTestMqttConnection,
+                                  &_IotTestNetworkInterface,
+                                  &connectInfo,
+                                  IOT_TEST_MQTT_TIMEOUT_MS );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         /* Add a subscription. */
-        subscription.pTopicFilter = AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/RestorePreviousSession";
+        subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/RestorePreviousSession";
         subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
         subscription.callback.param1 = &waitSem;
         subscription.callback.function = _publishReceived;
 
-        status = AwsIotMqtt_TimedSubscribe( _AwsIotTestMqttConnection,
-                                            &subscription,
-                                            1,
-                                            0,
-                                            AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+        status = IotMqtt_TimedSubscribe( _IotTestMqttConnection,
+                                         &subscription,
+                                         1,
+                                         0,
+                                         IOT_TEST_MQTT_TIMEOUT_MS );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         /* Disconnect the MQTT connection and clean up network connection. */
-        AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, false );
-        AwsIotTest_NetworkCleanup();
+        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+        IotTest_NetworkCleanup();
 
         /* Re-establish the network connection. */
-        TEST_ASSERT_EQUAL_INT( true, AwsIotTest_NetworkSetup() );
+        TEST_ASSERT_EQUAL_INT( true, IotTest_NetworkSetup() );
 
         /* Re-establish the MQTT connection with a previous session. */
         connectInfo.cleanSession = false;
         connectInfo.pPreviousSubscriptions = &subscription;
         connectInfo.previousSubscriptionCount = 1;
-        status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
-                                     &_AwsIotTestNetworkInterface,
-                                     &connectInfo,
-                                     AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+        status = IotMqtt_Connect( &_IotTestMqttConnection,
+                                  &_IotTestNetworkInterface,
+                                  &connectInfo,
+                                  IOT_TEST_MQTT_TIMEOUT_MS );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         /* Publish a message to the subscription added in the previous session. */
-        publishInfo.pTopicName = AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/RestorePreviousSession";
+        publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/RestorePreviousSession";
         publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
         publishInfo.pPayload = _pSamplePayload;
         publishInfo.payloadLength = _samplePayloadLength;
 
-        status = AwsIotMqtt_TimedPublish( _AwsIotTestMqttConnection,
-                                          &publishInfo,
-                                          0,
-                                          AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+        status = IotMqtt_TimedPublish( _IotTestMqttConnection,
+                                       &publishInfo,
+                                       0,
+                                       IOT_TEST_MQTT_TIMEOUT_MS );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         /* Wait for the message to be received. */
         if( IotSemaphore_TimedWait( &waitSem,
-                                    AWS_IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                                    IOT_TEST_MQTT_TIMEOUT_MS ) == false )
         {
             TEST_FAIL_MESSAGE( "Timed out waiting for message." );
         }
 
         /* Disconnect the MQTT connection. */
-        AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, false );
-        AwsIotTest_NetworkCleanup();
+        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+        IotTest_NetworkCleanup();
     }
     else
     {
         /* Close network connection on test failure. */
-        AwsIotTest_NetworkClose( 0, NULL );
+        IotTest_NetworkClose( 0, NULL );
     }
 
     IotSemaphore_Destroy( &waitSem );
@@ -860,19 +860,19 @@ TEST( MQTT_System, RestorePreviousSession )
     if( TEST_PROTECT() )
     {
         /* Re-establish the network connection. */
-        TEST_ASSERT_EQUAL_INT( true, AwsIotTest_NetworkSetup() );
+        TEST_ASSERT_EQUAL_INT( true, IotTest_NetworkSetup() );
 
         /* After this test is finished, establish one more connection with a clean
          * session to clean up persistent sessions on the MQTT server created by this
          * test. */
         connectInfo.cleanSession = true;
-        status = AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
-                                     &_AwsIotTestNetworkInterface,
-                                     &connectInfo,
-                                     AWS_IOT_TEST_MQTT_TIMEOUT_MS );
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, status );
+        status = IotMqtt_Connect( &_IotTestMqttConnection,
+                                  &_IotTestNetworkInterface,
+                                  &connectInfo,
+                                  IOT_TEST_MQTT_TIMEOUT_MS );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
-        AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, false );
+        IotMqtt_Disconnect( _IotTestMqttConnection, false );
     }
 }
 

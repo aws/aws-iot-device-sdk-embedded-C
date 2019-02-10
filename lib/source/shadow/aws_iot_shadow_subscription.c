@@ -77,7 +77,7 @@ static bool _shadowSubscription_match( const IotLink_t * pSubscriptionLink,
  * @return #AWS_IOT_SHADOW_STATUS_PENDING on success; otherwise
  * #AWS_IOT_SHADOW_NO_MEMORY or #AWS_IOT_SHADOW_MQTT_ERROR.
  */
-static AwsIotShadowError_t _modifyOperationSubscriptions( AwsIotMqttConnection_t mqttConnection,
+static AwsIotShadowError_t _modifyOperationSubscriptions( IotMqttConnection_t mqttConnection,
                                                           const char * const pTopicFilter,
                                                           uint16_t topicFilterLength,
                                                           _mqttCallbackFunction_t callback,
@@ -119,24 +119,24 @@ static bool _shadowSubscription_match( const IotLink_t * pSubscriptionLink,
 
 /*-----------------------------------------------------------*/
 
-static AwsIotShadowError_t _modifyOperationSubscriptions( AwsIotMqttConnection_t mqttConnection,
+static AwsIotShadowError_t _modifyOperationSubscriptions( IotMqttConnection_t mqttConnection,
                                                           const char * const pTopicFilter,
                                                           uint16_t topicFilterLength,
                                                           _mqttCallbackFunction_t callback,
                                                           _mqttOperationFunction_t mqttOperation )
 {
-    AwsIotMqttError_t mqttStatus = AWS_IOT_MQTT_STATUS_PENDING;
-    AwsIotMqttSubscription_t subscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+    IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
 
     /* The MQTT operation function pointer must be either Subscribe or Unsubscribe. */
-    AwsIotShadow_Assert( ( mqttOperation == AwsIotMqtt_TimedSubscribe ) ||
-                         ( mqttOperation == AwsIotMqtt_TimedUnsubscribe ) );
+    AwsIotShadow_Assert( ( mqttOperation == IotMqtt_TimedSubscribe ) ||
+                         ( mqttOperation == IotMqtt_TimedUnsubscribe ) );
 
     /* Per the AWS IoT documentation, Shadow topic subscriptions are QoS 1. */
     subscription.QoS = 1;
 
     IotLogDebug( "%s Shadow subscription for %.*s",
-                 mqttOperation == AwsIotMqtt_TimedSubscribe ? "Adding" : "Removing",
+                 mqttOperation == IotMqtt_TimedSubscribe ? "Adding" : "Removing",
                  topicFilterLength,
                  pTopicFilter );
 
@@ -154,16 +154,16 @@ static AwsIotShadowError_t _modifyOperationSubscriptions( AwsIotMqttConnection_t
                                 _AwsIotShadowMqttTimeoutMs );
 
     /* Check the result of the MQTT operation. */
-    if( mqttStatus != AWS_IOT_MQTT_SUCCESS )
+    if( mqttStatus != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Failed to %s %.*s, error %s.",
-                     mqttOperation == AwsIotMqtt_TimedSubscribe ? "subscribe to" : "unsubscribe from",
+                     mqttOperation == IotMqtt_TimedSubscribe ? "subscribe to" : "unsubscribe from",
                      topicFilterLength,
                      pTopicFilter,
-                     AwsIotMqtt_strerror( mqttStatus ) );
+                     IotMqtt_strerror( mqttStatus ) );
 
         /* Convert the MQTT "NO MEMORY" error to a Shadow "NO MEMORY" error. */
-        if( mqttStatus == AWS_IOT_MQTT_NO_MEMORY )
+        if( mqttStatus == IOT_MQTT_NO_MEMORY )
         {
             return AWS_IOT_SHADOW_NO_MEMORY;
         }
@@ -173,7 +173,7 @@ static AwsIotShadowError_t _modifyOperationSubscriptions( AwsIotMqttConnection_t
     else
     {
         IotLogDebug( "Successfully %s %.*s",
-                     mqttOperation == AwsIotMqtt_TimedSubscribe ? "subscribed to" : "unsubscribed from",
+                     mqttOperation == IotMqtt_TimedSubscribe ? "subscribed to" : "unsubscribed from",
                      topicFilterLength,
                      pTopicFilter );
     }
@@ -183,8 +183,8 @@ static AwsIotShadowError_t _modifyOperationSubscriptions( AwsIotMqttConnection_t
 
 /*-----------------------------------------------------------*/
 
-_shadowSubscription_t * AwsIotShadowInternal_FindSubscription( const char * const pThingName,
-                                                               size_t thingNameLength )
+_shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * const pThingName,
+                                                        size_t thingNameLength )
 {
     _shadowSubscription_t * pSubscription = NULL;
     _thingName_t thingName =
@@ -243,8 +243,8 @@ _shadowSubscription_t * AwsIotShadowInternal_FindSubscription( const char * cons
 
 /*-----------------------------------------------------------*/
 
-void AwsIotShadowInternal_RemoveSubscription( _shadowSubscription_t * const pSubscription,
-                                              _shadowSubscription_t ** const pRemovedSubscription )
+void _AwsIotShadow_RemoveSubscription( _shadowSubscription_t * const pSubscription,
+                                       _shadowSubscription_t ** const pRemovedSubscription )
 {
     int i = 0;
 
@@ -308,13 +308,13 @@ void AwsIotShadowInternal_RemoveSubscription( _shadowSubscription_t * const pSub
     }
     else
     {
-        AwsIotShadowInternal_DestroySubscription( pSubscription );
+        _AwsIotShadow_DestroySubscription( pSubscription );
     }
 }
 
 /*-----------------------------------------------------------*/
 
-void AwsIotShadowInternal_DestroySubscription( void * pData )
+void _AwsIotShadow_DestroySubscription( void * pData )
 {
     _shadowSubscription_t * pSubscription = ( _shadowSubscription_t * ) pData;
 
@@ -328,10 +328,10 @@ void AwsIotShadowInternal_DestroySubscription( void * pData )
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadowInternal_IncrementReferences( _shadowOperation_t * const pOperation,
-                                                              char * const pTopicBuffer,
-                                                              uint16_t operationTopicLength,
-                                                              _mqttCallbackFunction_t callback )
+AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * const pOperation,
+                                                       char * const pTopicBuffer,
+                                                       uint16_t operationTopicLength,
+                                                       _mqttCallbackFunction_t callback )
 {
     uint16_t topicFilterLength = 0;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
@@ -364,17 +364,17 @@ AwsIotShadowError_t AwsIotShadowInternal_IncrementReferences( _shadowOperation_t
         topicFilterLength = ( uint16_t ) ( operationTopicLength + _SHADOW_ACCEPTED_SUFFIX_LENGTH );
 
         /* There should not be an active subscription for the accepted topic. */
-        AwsIotShadow_Assert( AwsIotMqtt_IsSubscribed( pOperation->mqttConnection,
-                                                      pTopicBuffer,
-                                                      topicFilterLength,
-                                                      NULL ) == false );
+        AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
+                                                   pTopicBuffer,
+                                                   topicFilterLength,
+                                                   NULL ) == false );
 
         /* Add a subscription to the Shadow "accepted" topic. */
         status = _modifyOperationSubscriptions( pOperation->mqttConnection,
                                                 pTopicBuffer,
                                                 topicFilterLength,
                                                 callback,
-                                                AwsIotMqtt_TimedSubscribe );
+                                                IotMqtt_TimedSubscribe );
 
         if( status != AWS_IOT_SHADOW_STATUS_PENDING )
         {
@@ -388,17 +388,17 @@ AwsIotShadowError_t AwsIotShadowInternal_IncrementReferences( _shadowOperation_t
         topicFilterLength = ( uint16_t ) ( operationTopicLength + _SHADOW_REJECTED_SUFFIX_LENGTH );
 
         /* There should not be an active subscription for the rejected topic. */
-        AwsIotShadow_Assert( AwsIotMqtt_IsSubscribed( pOperation->mqttConnection,
-                                                      pTopicBuffer,
-                                                      topicFilterLength,
-                                                      NULL ) == false );
+        AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
+                                                   pTopicBuffer,
+                                                   topicFilterLength,
+                                                   NULL ) == false );
 
         /* Add a subscription to the Shadow "rejected" topic. */
         status = _modifyOperationSubscriptions( pOperation->mqttConnection,
                                                 pTopicBuffer,
                                                 topicFilterLength,
                                                 callback,
-                                                AwsIotMqtt_TimedSubscribe );
+                                                IotMqtt_TimedSubscribe );
 
         if( status != AWS_IOT_SHADOW_STATUS_PENDING )
         {
@@ -413,7 +413,7 @@ AwsIotShadowError_t AwsIotShadowInternal_IncrementReferences( _shadowOperation_t
                                                     pTopicBuffer,
                                                     topicFilterLength,
                                                     callback,
-                                                    AwsIotMqtt_TimedUnsubscribe );
+                                                    IotMqtt_TimedUnsubscribe );
 
             return status;
         }
@@ -447,9 +447,9 @@ AwsIotShadowError_t AwsIotShadowInternal_IncrementReferences( _shadowOperation_t
 
 /*-----------------------------------------------------------*/
 
-void AwsIotShadowInternal_DecrementReferences( _shadowOperation_t * const pOperation,
-                                               char * const pTopicBuffer,
-                                               _shadowSubscription_t ** const pRemovedSubscription )
+void _AwsIotShadow_DecrementReferences( _shadowOperation_t * const pOperation,
+                                        char * const pTopicBuffer,
+                                        _shadowSubscription_t ** const pRemovedSubscription )
 {
     uint16_t topicFilterLength = 0;
     const _shadowOperationType_t type = pOperation->type;
@@ -486,11 +486,11 @@ void AwsIotShadowInternal_DecrementReferences( _shadowOperation_t * const pOpera
 
         /* Generate the prefix of the Shadow topic. This function will not
          * fail when given a buffer. */
-        ( void ) AwsIotShadowInternal_GenerateShadowTopic( ( _shadowOperationType_t ) type,
-                                                           pSubscription->pThingName,
-                                                           pSubscription->thingNameLength,
-                                                           &( pSubscription->pTopicBuffer ),
-                                                           &operationTopicLength );
+        ( void ) _AwsIotShadow_GenerateShadowTopic( ( _shadowOperationType_t ) type,
+                                                    pSubscription->pThingName,
+                                                    pSubscription->thingNameLength,
+                                                    &( pSubscription->pTopicBuffer ),
+                                                    &operationTopicLength );
 
         /* Place the topic "accepted" suffix at the end of the Shadow topic buffer. */
         ( void ) memcpy( pTopicBuffer + operationTopicLength,
@@ -499,17 +499,17 @@ void AwsIotShadowInternal_DecrementReferences( _shadowOperation_t * const pOpera
         topicFilterLength = ( uint16_t ) ( operationTopicLength + _SHADOW_ACCEPTED_SUFFIX_LENGTH );
 
         /* There should be an active subscription for the accepted topic. */
-        AwsIotShadow_Assert( AwsIotMqtt_IsSubscribed( pOperation->mqttConnection,
-                                                      pTopicBuffer,
-                                                      topicFilterLength,
-                                                      NULL ) == true );
+        AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
+                                                   pTopicBuffer,
+                                                   topicFilterLength,
+                                                   NULL ) == true );
 
         /* Remove the subscription from the Shadow "accepted" topic. */
         ( void ) _modifyOperationSubscriptions( pOperation->mqttConnection,
                                                 pTopicBuffer,
                                                 topicFilterLength,
                                                 NULL,
-                                                AwsIotMqtt_TimedUnsubscribe );
+                                                IotMqtt_TimedUnsubscribe );
 
         /* Place the topic "rejected" suffix at the end of the Shadow topic buffer. */
         ( void ) memcpy( pTopicBuffer + operationTopicLength,
@@ -518,27 +518,27 @@ void AwsIotShadowInternal_DecrementReferences( _shadowOperation_t * const pOpera
         topicFilterLength = ( uint16_t ) ( operationTopicLength + _SHADOW_ACCEPTED_SUFFIX_LENGTH );
 
         /* There should be an active subscription for the accepted topic. */
-        AwsIotShadow_Assert( AwsIotMqtt_IsSubscribed( pOperation->mqttConnection,
-                                                      pTopicBuffer,
-                                                      topicFilterLength,
-                                                      NULL ) == true );
+        AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
+                                                   pTopicBuffer,
+                                                   topicFilterLength,
+                                                   NULL ) == true );
 
         /* Remove the subscription from the Shadow "rejected" topic. */
         ( void ) _modifyOperationSubscriptions( pOperation->mqttConnection,
                                                 pTopicBuffer,
                                                 topicFilterLength,
                                                 NULL,
-                                                AwsIotMqtt_TimedUnsubscribe );
+                                                IotMqtt_TimedUnsubscribe );
     }
 
     /* Check if this subscription should be deleted. */
-    AwsIotShadowInternal_RemoveSubscription( pSubscription,
-                                             pRemovedSubscription );
+    _AwsIotShadow_RemoveSubscription( pSubscription,
+                                      pRemovedSubscription );
 }
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( AwsIotMqttConnection_t mqttConnection,
+AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnection_t mqttConnection,
                                                                 const char * const pThingName,
                                                                 size_t thingNameLength,
                                                                 uint32_t flags )
@@ -592,11 +592,11 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( AwsIotMqttConnec
                 {
                     /* Generate the prefix of the Shadow topic. This function will not
                      * fail when given a buffer. */
-                    ( void ) AwsIotShadowInternal_GenerateShadowTopic( ( _shadowOperationType_t ) i,
-                                                                       pThingName,
-                                                                       thingNameLength,
-                                                                       &( pSubscription->pTopicBuffer ),
-                                                                       &operationTopicLength );
+                    ( void ) _AwsIotShadow_GenerateShadowTopic( ( _shadowOperationType_t ) i,
+                                                                pThingName,
+                                                                thingNameLength,
+                                                                &( pSubscription->pTopicBuffer ),
+                                                                &operationTopicLength );
 
                     /* Remove the "accepted" topic. */
                     ( void ) memcpy( pSubscription->pTopicBuffer + operationTopicLength,
@@ -608,7 +608,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( AwsIotMqttConnec
                                                                           pSubscription->pTopicBuffer,
                                                                           topicFilterLength,
                                                                           NULL,
-                                                                          AwsIotMqtt_TimedUnsubscribe );
+                                                                          IotMqtt_TimedUnsubscribe );
 
                     if( removeAcceptedStatus != AWS_IOT_SHADOW_STATUS_PENDING )
                     {
@@ -626,7 +626,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( AwsIotMqttConnec
                                                                           pSubscription->pTopicBuffer,
                                                                           topicFilterLength,
                                                                           NULL,
-                                                                          AwsIotMqtt_TimedUnsubscribe );
+                                                                          IotMqtt_TimedUnsubscribe );
 
                     if( removeRejectedStatus != AWS_IOT_SHADOW_STATUS_PENDING )
                     {

@@ -77,12 +77,12 @@ int main( int argc,
 
     if( sigaction( SIGSEGV, &signalAction, NULL ) != 0 )
     {
-        return -1;
+        return EXIT_FAILURE;
     }
 
     if( sigaction( SIGABRT, &signalAction, NULL ) != 0 )
     {
-        return -1;
+        return EXIT_FAILURE;
     }
 
     /* Unity setup. */
@@ -96,9 +96,13 @@ int main( int argc,
     RUN_TEST_GROUP( Common_Unit_Linear_Containers );
     RUN_TEST_GROUP( Common_Unit_Task_Pool );
 
-    /* Return the number of test failures. This will cause a non-zero exit code
-     * if any test fails. */
-    return UNITY_END();
+    /* Return failure if any tests failed. */
+    if( UNITY_END() != 0 )
+    {
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
 
 /*-----------------------------------------------------------*/
