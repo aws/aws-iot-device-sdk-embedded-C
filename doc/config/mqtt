@@ -25,7 +25,7 @@ INPUT = doc \
         tests/mqtt/system
 
 # Library file names.
-FILE_PATTERNS = *mqtt*.c *mqtt*.h *mqtt*.txt aws_iot_tests_network.c
+FILE_PATTERNS = *mqtt*.c *mqtt*.h *mqtt*.txt iot_tests_network.c
 
 # External tag files required by this library.
 TAGFILES = doc/tag/main.tag=../main \
