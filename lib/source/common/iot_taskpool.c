@@ -55,26 +55,26 @@
  * @brief Enter a critical section by locking a mutex.
  *
  */
-#define _TASKPOOL_ENTER_CRITICAL_SECTION        IotMutex_Lock( &( ( ( AwsIotTaskPool_t * ) pTaskPool )->lock ) )
+#define _TASKPOOL_ENTER_CRITICAL_SECTION        IotMutex_Lock( &( ( ( IotTaskPool_t * ) pTaskPool )->lock ) )
 
 /**
  * @brief Try entering a critical section by trying and lock a mutex.
  *
  */
-#define _TASKPOOL_TRY_ENTER_CRITICAL_SECTION    IotMutex_TryLock( &( ( ( AwsIotTaskPool_t * ) pTaskPool )->lock ) )
+#define _TASKPOOL_TRY_ENTER_CRITICAL_SECTION    IotMutex_TryLock( &( ( ( IotTaskPool_t * ) pTaskPool )->lock ) )
 
 /**
  * @brief Exit a critical section by unlocking a mutex.
  *
  */
-#define _TASKPOOL_EXIT_CRITICAL_SECTION         IotMutex_Unlock( &( ( ( AwsIotTaskPool_t * ) pTaskPool )->lock ) )
+#define _TASKPOOL_EXIT_CRITICAL_SECTION         IotMutex_Unlock( &( ( ( IotTaskPool_t * ) pTaskPool )->lock ) )
 
- /**
+/**
  * @brief Maximum semaphore value for wait operations.
  */
 #define _TASKPOOL_MAX_SEM_VALUE                 0xFFFF
 
- /**
+/**
  * @brief Reschedule delay in milliseconds for deferred jobs.
  */
 #define _TASKPOOL_JOB_RESCHEDULE_DELAY_MS       10
@@ -90,7 +90,7 @@
  * the system libraries as well. The system task pool needs to be initialized before any library is used or
  * before any code that posts jobs to the task pool runs.
  */
-AwsIotTaskPool_t _IotSystemTaskPool = { 0 };
+IotTaskPool_t _IotSystemTaskPool = { 0 };
 
 /** @endcond */
 
@@ -108,14 +108,14 @@ AwsIotTaskPool_t _IotSystemTaskPool = { 0 };
  *
  * @param[in] pCache The pre-allocated instance of the cache to initialize.
  */
-static void _initJobsCache( AwsIotTaskPoolCache_t * const pCache );
+static void _initJobsCache( IotTaskPoolCache_t * const pCache );
 
 /**
  * @brief Extracts and initializes one instance of a job from the cache or, if there is none available, it allocates and initialized a new one.
  *
  * @param[in] pCache The instance of the cache to extract the job from.
  */
-static AwsIotTaskPoolJob_t * _fetchOrAllocateJob( AwsIotTaskPoolCache_t * const pCache );
+static IotTaskPoolJob_t * _fetchOrAllocateJob( IotTaskPoolCache_t * const pCache );
 
 /**
  * Recycles one instance of a job into the cache or, if the cache is full, it destroys it.
@@ -124,8 +124,8 @@ static AwsIotTaskPoolJob_t * _fetchOrAllocateJob( AwsIotTaskPoolCache_t * const 
  * @param[in] pJob The job to recycle.
  *
  */
-static void _recycleJob( AwsIotTaskPoolCache_t * const pCache,
-                         AwsIotTaskPoolJob_t * const pJob );
+static void _recycleJob( IotTaskPoolCache_t * const pCache,
+                         IotTaskPoolJob_t * const pJob );
 
 /**
  * Destroys one instance of a job.
@@ -133,7 +133,7 @@ static void _recycleJob( AwsIotTaskPoolCache_t * const pCache,
  * @param[in] pJob The job to destroy.
  *
  */
-static void _destroyJob( AwsIotTaskPoolJob_t * const pJob );
+static void _destroyJob( IotTaskPoolJob_t * const pJob );
 
 /* -------------- The worker thread procedure for a task pool thread -------------- */
 
@@ -170,7 +170,8 @@ static void _timerThread( void * pArgument );
  * @param[in] pTaskPool The pre-allocated instance of the task pool to initialize.
  *
  */
-static AwsIotTaskPoolError_t _initTaskPoolControlStructures( const AwsIotTaskPoolInfo_t * const pInfo, AwsIotTaskPool_t * const pTaskPool );
+static IotTaskPoolError_t _initTaskPoolControlStructures( const IotTaskPoolInfo_t * const pInfo,
+                                                          IotTaskPool_t * const pTaskPool );
 
 /**
  * Initializes a pre-allocated instance of a task pool.
@@ -180,7 +181,8 @@ static AwsIotTaskPoolError_t _initTaskPoolControlStructures( const AwsIotTaskPoo
  * @param[out] pTaskPool The handle to the created task pool.
  *
  */
-static AwsIotTaskPoolError_t _createTaskPool( const AwsIotTaskPoolInfo_t * const pInfo, AwsIotTaskPool_t * const ppTaskPool );
+static IotTaskPoolError_t _createTaskPool( const IotTaskPoolInfo_t * const pInfo,
+                                           IotTaskPool_t * const ppTaskPool );
 
 /**
  * Destroys one instance of a task pool.
@@ -188,7 +190,7 @@ static AwsIotTaskPoolError_t _createTaskPool( const AwsIotTaskPoolInfo_t * const
  * @param[in] pTaskPool The task pool to destroy.
  *
  */
-static void _destroyTaskPool( AwsIotTaskPool_t * const pTaskPool );
+static void _destroyTaskPool( IotTaskPool_t * const pTaskPool );
 
 /**
  * Check for the exit condition.
@@ -196,7 +198,7 @@ static void _destroyTaskPool( AwsIotTaskPool_t * const pTaskPool );
  * @param[in] pTaskPool The task pool to destroy.
  *
  */
-static bool _IsShutdownStarted( const AwsIotTaskPool_t * const pTaskPool );
+static bool _IsShutdownStarted( const IotTaskPool_t * const pTaskPool );
 
 /**
  * Set the exit condition.
@@ -204,7 +206,8 @@ static bool _IsShutdownStarted( const AwsIotTaskPool_t * const pTaskPool );
  * @param[in] pTaskPool The task pool to destroy.
  *
  */
-static void _signalShutdown( AwsIotTaskPool_t * const pTaskPool, uint32_t threads );
+static void _signalShutdown( IotTaskPool_t * const pTaskPool,
+                             uint32_t threads );
 
 /**
  * Places a job in the dispatch queue.
@@ -213,7 +216,8 @@ static void _signalShutdown( AwsIotTaskPool_t * const pTaskPool, uint32_t thread
  * @param[in] pJob The job to schedule.
  *
  */
-static AwsIotTaskPoolError_t _scheduleInternal( AwsIotTaskPool_t * const pTaskPool, AwsIotTaskPoolJob_t * const pJob );
+static IotTaskPoolError_t _scheduleInternal( IotTaskPool_t * const pTaskPool,
+                                             IotTaskPoolJob_t * const pJob );
 
 /**
  * Matches a deferred job in the timer queue with its timer event wrapper.
@@ -222,7 +226,8 @@ static AwsIotTaskPoolError_t _scheduleInternal( AwsIotTaskPool_t * const pTaskPo
  * @param[in] pMatch A pointer to the job to match.
  *
  */
-static bool _matchJobByPointer( const IotLink_t * pLink, void * pMatch );
+static bool _matchJobByPointer( const IotLink_t * pLink,
+                                void * pMatch );
 
 /**
  * Tries to cancel a job.
@@ -232,47 +237,47 @@ static bool _matchJobByPointer( const IotLink_t * pLink, void * pMatch );
  * @param[out] pStatus The status of the job at the time of cancellation.
  *
  */
-static AwsIotTaskPoolError_t _tryCancelInternal( AwsIotTaskPool_t * const pTaskPool,
-                                                 AwsIotTaskPoolJob_t * const pJob,
-                                                 AwsIotTaskPoolJobStatus_t * const pStatus );
+static IotTaskPoolError_t _tryCancelInternal( IotTaskPool_t * const pTaskPool,
+                                              IotTaskPoolJob_t * const pJob,
+                                              IotTaskPoolJobStatus_t * const pStatus );
 
 /**
-* Try to safely cancel and/or remove a job from the cache when the user calls API out of order.
-*
-* @param[in] pTaskPool The task pool to safely extract a job from.
-* @param[in] pJob The job to extract.
-*
-*/
-static AwsIotTaskPoolError_t _trySafeExtraction( AwsIotTaskPool_t * const pTaskPool,
-                                                 AwsIotTaskPoolJob_t * const pJob );
+ * Try to safely cancel and/or remove a job from the cache when the user calls API out of order.
+ *
+ * @param[in] pTaskPool The task pool to safely extract a job from.
+ * @param[in] pJob The job to extract.
+ *
+ */
+static IotTaskPoolError_t _trySafeExtraction( IotTaskPool_t * const pTaskPool,
+                                              IotTaskPoolJob_t * const pJob );
 /** @endcond */
 
 /* ---------------------------------------------------------------------------------------------- */
 
-AwsIotTaskPool_t * AwsIotTaskPool_GetSystemTaskPool()
+IotTaskPool_t * IotTaskPool_GetSystemTaskPool()
 {
     return &_IotSystemTaskPool;
 }
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_CreateSystemTaskPool( const AwsIotTaskPoolInfo_t * const pInfo )
+IotTaskPoolError_t IotTaskPool_CreateSystemTaskPool( const IotTaskPoolInfo_t * const pInfo )
 {
-    AwsIotTaskPoolError_t error = AwsIotTaskPool_Create( pInfo, &_IotSystemTaskPool );
+    IotTaskPoolError_t error = IotTaskPool_Create( pInfo, &_IotSystemTaskPool );
 
     return error;
 }
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_Create( const AwsIotTaskPoolInfo_t * const pInfo,
-                                             AwsIotTaskPool_t * const pTaskPool )
+IotTaskPoolError_t IotTaskPool_Create( const IotTaskPoolInfo_t * const pInfo,
+                                       IotTaskPool_t * const pTaskPool )
 {
-    AwsIotTaskPoolError_t error;
+    IotTaskPoolError_t error;
 
     if( pTaskPool == NULL )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     else
     {
@@ -284,9 +289,9 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Create( const AwsIotTaskPoolInfo_t * const 
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_Destroy( AwsIotTaskPool_t * pTaskPool )
+IotTaskPoolError_t IotTaskPool_Destroy( IotTaskPool_t * pTaskPool )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
     uint32_t count;
 
     /* Track how many threads the task pool owns. */
@@ -295,7 +300,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Destroy( AwsIotTaskPool_t * pTaskPool )
     /* Parameter checking. */
     if( pTaskPool == NULL )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     else
     {
@@ -324,7 +329,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Destroy( AwsIotTaskPool_t * pTaskPool )
 
                 if( pItemLink != NULL )
                 {
-                    AwsIotTaskPoolJob_t * pJob = IotLink_Container( AwsIotTaskPoolJob_t, pItemLink, link );
+                    IotTaskPoolJob_t * pJob = IotLink_Container( IotTaskPoolJob_t, pItemLink, link );
 
                     _destroyJob( pJob );
                 }
@@ -356,7 +361,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Destroy( AwsIotTaskPool_t * pTaskPool )
 
                 if( pItemLink != NULL )
                 {
-                    AwsIotTaskPoolJob_t * pJob = IotLink_Container( AwsIotTaskPoolJob_t, pItemLink, link );
+                    IotTaskPoolJob_t * pJob = IotLink_Container( IotTaskPoolJob_t, pItemLink, link );
 
                     _destroyJob( pJob );
                 }
@@ -373,8 +378,8 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Destroy( AwsIotTaskPool_t * pTaskPool )
             IotSemaphore_Wait( &pTaskPool->startStopSignal );
         }
 
-        AwsIotTaskPool_Assert( pTaskPool->activeThreads == 0 );
-        AwsIotTaskPool_Assert( IotSemaphore_GetCount( &pTaskPool->startStopSignal ) == 0 );
+        IotTaskPool_Assert( pTaskPool->activeThreads == 0 );
+        IotTaskPool_Assert( IotSemaphore_GetCount( &pTaskPool->startStopSignal ) == 0 );
 
         /* (6) Destroy all signaling objects. */
         _destroyTaskPool( pTaskPool );
@@ -385,22 +390,22 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Destroy( AwsIotTaskPool_t * pTaskPool )
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_SetMaxThreads( AwsIotTaskPool_t * pTaskPool,
-                                                    uint32_t maxThreads )
+IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t * pTaskPool,
+                                              uint32_t maxThreads )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Parameter checking. */
     if( ( pTaskPool == NULL ) ||
         ( pTaskPool->minThreads > maxThreads ) ||
         ( maxThreads < 1 ) )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     /* Bail out early if this task pool is shutting down. */
-    else if ( _IsShutdownStarted( pTaskPool ) )
+    else if( _IsShutdownStarted( pTaskPool ) )
     {
-        error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+        error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
     }
     else
     {
@@ -409,7 +414,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_SetMaxThreads( AwsIotTaskPool_t * pTaskPool
             /* Bail out early if this task pool is shutting down. */
             if( _IsShutdownStarted( pTaskPool ) )
             {
-                error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+                error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
             }
             else
             {
@@ -440,17 +445,17 @@ AwsIotTaskPoolError_t AwsIotTaskPool_SetMaxThreads( AwsIotTaskPool_t * pTaskPool
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_CreateJob( const IotTaskPoolRoutine_t userCallback,
-                                                void * const pUserContext,
-                                                AwsIotTaskPoolJob_t * const pJob )
+IotTaskPoolError_t IotTaskPool_CreateJob( const IotTaskPoolRoutine_t userCallback,
+                                          void * const pUserContext,
+                                          IotTaskPoolJob_t * const pJob )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Parameter checking. */
     if( ( userCallback == NULL ) ||
         ( pJob == NULL ) )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     else
     {
@@ -459,7 +464,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_CreateJob( const IotTaskPoolRoutine_t userC
         pJob->link.pPrevious = NULL;
         pJob->userCallback = userCallback;
         pJob->pUserContext = pUserContext;
-        pJob->status = AWS_IOT_TASKPOOL_STATUS_READY | AWS_IOT_TASK_POOL_INTERNAL_STATIC;
+        pJob->status = IOT_TASKPOOL_STATUS_READY | IOT_TASK_POOL_INTERNAL_STATIC;
     }
 
     return error;
@@ -467,35 +472,35 @@ AwsIotTaskPoolError_t AwsIotTaskPool_CreateJob( const IotTaskPoolRoutine_t userC
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_CreateRecyclableJob( AwsIotTaskPool_t * const pTaskPool,
-                                                          const IotTaskPoolRoutine_t userCallback,
-                                                          void * const pUserContext,
-                                                          AwsIotTaskPoolJob_t ** const pJob )
+IotTaskPoolError_t IotTaskPool_CreateRecyclableJob( IotTaskPool_t * const pTaskPool,
+                                                    const IotTaskPoolRoutine_t userCallback,
+                                                    void * const pUserContext,
+                                                    IotTaskPoolJob_t ** const pJob )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Parameter checking. */
     if( ( pTaskPool == NULL ) ||
         ( userCallback == NULL ) ||
         ( pJob == NULL ) )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     /* Bail out early if this task pool is shutting down. */
-    else if ( _IsShutdownStarted( pTaskPool ) )
+    else if( _IsShutdownStarted( pTaskPool ) )
     {
-        error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+        error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
     }
     else
     {
-        AwsIotTaskPoolJob_t * pTempJob = NULL;
+        IotTaskPoolJob_t * pTempJob = NULL;
 
         _TASKPOOL_ENTER_CRITICAL_SECTION;
         {
             /* Bail out early if this task pool is shutting down. */
-            if ( _IsShutdownStarted( pTaskPool ) )
+            if( _IsShutdownStarted( pTaskPool ) )
             {
-                error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+                error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
             }
             else
             {
@@ -511,7 +516,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_CreateRecyclableJob( AwsIotTaskPool_t * con
             pTempJob->link.pPrevious = NULL;
             pTempJob->userCallback = userCallback;
             pTempJob->pUserContext = pUserContext;
-            pTempJob->status = AWS_IOT_TASKPOOL_STATUS_READY;
+            pTempJob->status = IOT_TASKPOOL_STATUS_READY;
 
             *pJob = pTempJob;
         }
@@ -526,28 +531,29 @@ AwsIotTaskPoolError_t AwsIotTaskPool_CreateRecyclableJob( AwsIotTaskPool_t * con
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_DestroyJob( AwsIotTaskPool_t * const pTaskPool, AwsIotTaskPoolJob_t * const pJob )
+IotTaskPoolError_t IotTaskPool_DestroyJob( IotTaskPool_t * const pTaskPool,
+                                           IotTaskPoolJob_t * const pJob )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Parameter checking. */
     if( pJob == NULL )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     /* Bail out early if this task pool is shutting down. */
-    else if ( _IsShutdownStarted( pTaskPool ) )
+    else if( _IsShutdownStarted( pTaskPool ) )
     {
-        error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+        error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
     }
     else
     {
         _TASKPOOL_ENTER_CRITICAL_SECTION;
         {
             /* Bail out early if this task pool is shutting down. */
-            if ( _IsShutdownStarted( pTaskPool ) )
+            if( _IsShutdownStarted( pTaskPool ) )
             {
-                error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+                error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
             }
             else
             {
@@ -559,7 +565,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_DestroyJob( AwsIotTaskPool_t * const pTaskP
         if( _TASKPOOL_SUCCEEDED( error ) )
         {
             /* At this point, the job must not be in any queue or list. */
-            AwsIotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) == false );
+            IotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) == false );
 
             _destroyJob( pJob );
         }
@@ -570,33 +576,34 @@ AwsIotTaskPoolError_t AwsIotTaskPool_DestroyJob( AwsIotTaskPool_t * const pTaskP
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_RecycleJob( AwsIotTaskPool_t * const pTaskPool, AwsIotTaskPoolJob_t * const pJob )
+IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t * const pTaskPool,
+                                           IotTaskPoolJob_t * const pJob )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Parameter checking. */
-    if ( ( pTaskPool == NULL ) || ( pJob == NULL ) )
+    if( ( pTaskPool == NULL ) || ( pJob == NULL ) )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     /* Bail out early if this task pool is shutting down. */
-    else if ( _IsShutdownStarted( pTaskPool ) )
+    else if( _IsShutdownStarted( pTaskPool ) )
     {
-        error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+        error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
     }
     else
     {
         _TASKPOOL_ENTER_CRITICAL_SECTION;
         {
             /* Bail out early if this task pool is shutting down. */
-            if ( _IsShutdownStarted( pTaskPool ) )
+            if( _IsShutdownStarted( pTaskPool ) )
             {
-                error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+                error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
             }
             else
             {
                 /* Do not recycle statically allocated jobs. */
-                if ( ( pJob->status & AWS_IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
+                if( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
                 {
                     error = _trySafeExtraction( pTaskPool, pJob );
                 }
@@ -604,12 +611,12 @@ AwsIotTaskPoolError_t AwsIotTaskPool_RecycleJob( AwsIotTaskPool_t * const pTaskP
                 {
                     IotLogWarn( "Attempt to recycle a statically allocated job." );
 
-                    error = AWS_IOT_TASKPOOL_ILLEGAL_OPERATION;
+                    error = IOT_TASKPOOL_ILLEGAL_OPERATION;
                 }
             }
 
             /* If all safety checks completed, proceed. */
-            if ( _TASKPOOL_SUCCEEDED( error ) )
+            if( _TASKPOOL_SUCCEEDED( error ) )
             {
                 _recycleJob( &pTaskPool->jobsCache, pJob );
             }
@@ -622,20 +629,21 @@ AwsIotTaskPoolError_t AwsIotTaskPool_RecycleJob( AwsIotTaskPool_t * const pTaskP
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_Schedule( AwsIotTaskPool_t * const pTaskPool, AwsIotTaskPoolJob_t * const pJob )
+IotTaskPoolError_t IotTaskPool_Schedule( IotTaskPool_t * const pTaskPool,
+                                         IotTaskPoolJob_t * const pJob )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Parameter checking. */
     if( ( pTaskPool == NULL ) ||
         ( pJob == NULL ) )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     /* Bail out early if this task pool is shutting down. */
     else if( _IsShutdownStarted( pTaskPool ) )
     {
-        error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+        error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
     }
     else
     {
@@ -644,7 +652,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Schedule( AwsIotTaskPool_t * const pTaskPoo
             /* Bail out early if this task pool is shutting down. */
             if( _IsShutdownStarted( pTaskPool ) )
             {
-                error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+                error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
             }
             else
             {
@@ -652,7 +660,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Schedule( AwsIotTaskPool_t * const pTaskPoo
             }
 
             /* If all safety checks completed, proceed. */
-            if ( _TASKPOOL_SUCCEEDED( error ) )
+            if( _TASKPOOL_SUCCEEDED( error ) )
             {
                 error = _scheduleInternal( pTaskPool, pJob );
             }
@@ -665,28 +673,28 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Schedule( AwsIotTaskPool_t * const pTaskPoo
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_ScheduleDeferred( AwsIotTaskPool_t * const pTaskPool,
-                                                       AwsIotTaskPoolJob_t * const pJob,
-                                                       uint32_t timeMs )
+IotTaskPoolError_t IotTaskPool_ScheduleDeferred( IotTaskPool_t * const pTaskPool,
+                                                 IotTaskPoolJob_t * const pJob,
+                                                 uint32_t timeMs )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Parameter checking. */
     if( ( pTaskPool == NULL ) ||
         ( pJob == NULL ) )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     /* Bail out early if this task pool is shutting down. */
     else if( _IsShutdownStarted( pTaskPool ) )
     {
-        error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+        error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
     }
     else
     {
         if( timeMs == 0 )
         {
-            error = AwsIotTaskPool_Schedule( pTaskPool, pJob );
+            error = IotTaskPool_Schedule( pTaskPool, pJob );
         }
         else
         {
@@ -695,7 +703,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_ScheduleDeferred( AwsIotTaskPool_t * const 
                 /* Bail out early if this task pool is shutting down. */
                 if( _IsShutdownStarted( pTaskPool ) )
                 {
-                    error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+                    error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
                 }
                 else
                 {
@@ -703,13 +711,13 @@ AwsIotTaskPoolError_t AwsIotTaskPool_ScheduleDeferred( AwsIotTaskPool_t * const 
                 }
 
                 /* If all safety checks completed, proceed. */
-                if ( _TASKPOOL_SUCCEEDED( error ) )
+                if( _TASKPOOL_SUCCEEDED( error ) )
                 {
                     _taskPoolTimerEvent_t * pTimerEvent = IotTaskPool_MallocTimerEvent( sizeof( _taskPoolTimerEvent_t ) );
 
                     if( pTimerEvent == NULL )
                     {
-                        error = AWS_IOT_TASKPOOL_NO_MEMORY;
+                        error = IOT_TASKPOOL_NO_MEMORY;
                     }
                     else
                     {
@@ -726,13 +734,13 @@ AwsIotTaskPoolError_t AwsIotTaskPool_ScheduleDeferred( AwsIotTaskPool_t * const 
                         IotListDouble_InsertSorted( &pTaskPool->timerEventsList, &pTimerEvent->link, _timerEventCompare );
 
                         /* Update the job status to 'scheduled'. */
-                        pJob->status &= ~AWS_IOT_TASKPOOL_STATUS_MASK;
-                        pJob->status |= AWS_IOT_TASKPOOL_STATUS_DEFERRED;
+                        pJob->status &= ~IOT_TASKPOOL_STATUS_MASK;
+                        pJob->status |= IOT_TASKPOOL_STATUS_DEFERRED;
 
                         /* Peek the first event in the timer event list. There must be at least one,
                          * since we just inserted it. */
                         pTimerEventLink = IotListDouble_PeekHead( &pTaskPool->timerEventsList );
-                        AwsIotTaskPool_Assert( pTimerEventLink != NULL );
+                        IotTaskPool_Assert( pTimerEventLink != NULL );
 
                         /* If the event we inserted is at the front of the queue, then
                          * we need to reschedule the underlying timer. */
@@ -754,35 +762,35 @@ AwsIotTaskPoolError_t AwsIotTaskPool_ScheduleDeferred( AwsIotTaskPool_t * const 
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_GetStatus( AwsIotTaskPool_t * const pTaskPool,
-                                                const AwsIotTaskPoolJob_t * const pJob,
-                                                AwsIotTaskPoolJobStatus_t * const pStatus )
+IotTaskPoolError_t IotTaskPool_GetStatus( IotTaskPool_t * const pTaskPool,
+                                          const IotTaskPoolJob_t * const pJob,
+                                          IotTaskPoolJobStatus_t * const pStatus )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Parameter checking. */
     if( ( pJob == NULL ) ||
         ( pStatus == NULL ) )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     /* Bail out early if this task pool is shutting down. */
-    else if ( _IsShutdownStarted( pTaskPool ) )
+    else if( _IsShutdownStarted( pTaskPool ) )
     {
-        error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+        error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
     }
     else
     {
         _TASKPOOL_ENTER_CRITICAL_SECTION;
         {
             /* Bail out early if this task pool is shutting down. */
-            if ( _IsShutdownStarted( pTaskPool ) )
+            if( _IsShutdownStarted( pTaskPool ) )
             {
-                error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+                error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
             }
             else
             {
-                *pStatus = ( pJob->status & AWS_IOT_TASKPOOL_STATUS_MASK );
+                *pStatus = ( pJob->status & IOT_TASKPOOL_STATUS_MASK );
             }
         }
         _TASKPOOL_EXIT_CRITICAL_SECTION;
@@ -793,33 +801,33 @@ AwsIotTaskPoolError_t AwsIotTaskPool_GetStatus( AwsIotTaskPool_t * const pTaskPo
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_TryCancel( AwsIotTaskPool_t * const pTaskPool,
-                                                AwsIotTaskPoolJob_t * const pJob,
-                                                AwsIotTaskPoolJobStatus_t * const pStatus )
+IotTaskPoolError_t IotTaskPool_TryCancel( IotTaskPool_t * const pTaskPool,
+                                          IotTaskPoolJob_t * const pJob,
+                                          IotTaskPoolJobStatus_t * const pStatus )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Parameter checking. */
     if( ( pTaskPool == NULL ) ||
         ( pJob == NULL ) )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
     /* Bail out early if this task pool is shutting down. */
     else if( _IsShutdownStarted( pTaskPool ) )
     {
-        error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+        error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
     }
     else
     {
-        *pStatus = AWS_IOT_TASKPOOL_STATUS_UNDEFINED;
+        *pStatus = IOT_TASKPOOL_STATUS_UNDEFINED;
 
         _TASKPOOL_ENTER_CRITICAL_SECTION;
         {
             /* Check again if this task pool is shutting down. */
             if( _IsShutdownStarted( pTaskPool ) )
             {
-                error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+                error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
             }
             else
             {
@@ -840,11 +848,11 @@ AwsIotTaskPoolError_t AwsIotTaskPool_TryCancel( AwsIotTaskPool_t * const pTaskPo
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
  */
-static AwsIotTaskPoolError_t _createTaskPool( const AwsIotTaskPoolInfo_t * const pInfo,
-                                              AwsIotTaskPool_t * const pTaskPool )
+static IotTaskPoolError_t _createTaskPool( const IotTaskPoolInfo_t * const pInfo,
+                                           IotTaskPool_t * const pTaskPool )
 {
     uint32_t count;
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Check input values for consistency. */
     if( ( pInfo == NULL ) ||
@@ -853,7 +861,7 @@ static AwsIotTaskPoolError_t _createTaskPool( const AwsIotTaskPoolInfo_t * const
         ( pInfo->minThreads < 1 ) ||
         ( pInfo->maxThreads < 1 ) )
     {
-        error = AWS_IOT_TASKPOOL_BAD_PARAMETER;
+        error = IOT_TASKPOOL_BAD_PARAMETER;
     }
 
     /* Start creating the pTaskPool. */
@@ -867,7 +875,7 @@ static AwsIotTaskPoolError_t _createTaskPool( const AwsIotTaskPoolInfo_t * const
             /* Create the timer mutex for a new connection. */
             if( IotClock_TimerCreate( &( pTaskPool->timer ), _timerThread, pTaskPool ) == false )
             {
-                error = AWS_IOT_TASKPOOL_NO_MEMORY;
+                error = IOT_TASKPOOL_NO_MEMORY;
 
                 IotLogError( "Failed to create timer for task pool." );
             }
@@ -877,8 +885,8 @@ static AwsIotTaskPoolError_t _createTaskPool( const AwsIotTaskPoolInfo_t * const
         {
             uint32_t threadsCreated;
 
-            AwsIotTaskPool_Assert( pInfo->minThreads == pTaskPool->minThreads );
-            AwsIotTaskPool_Assert( pInfo->maxThreads == pTaskPool->maxThreads );
+            IotTaskPool_Assert( pInfo->minThreads == pTaskPool->minThreads );
+            IotTaskPool_Assert( pInfo->maxThreads == pTaskPool->maxThreads );
 
             /* The task pool will initialize the minimum number of threads reqeusted by the user upon start. */
             /* When a thread is created, it will signal a semaphore to signify that it is about to wait on incoming */
@@ -892,12 +900,12 @@ static AwsIotTaskPoolError_t _createTaskPool( const AwsIotTaskPoolInfo_t * const
                 if( Iot_CreateDetachedThread( _taskPoolWorker,
                                               pTaskPool,
                                               pTaskPool->priority,
-                                              ( size_t ) ( pTaskPool->stackSize ) ) == false )
+                                              pTaskPool->stackSize ) == false )
                 {
                     IotLogError( "Could not create worker thread! Exiting..." );
 
                     /* If creating one thread fails, set error condition and exit the loop. */
-                    error = AWS_IOT_TASKPOOL_NO_MEMORY;
+                    error = IOT_TASKPOOL_NO_MEMORY;
 
                     break;
                 }
@@ -936,17 +944,17 @@ static AwsIotTaskPoolError_t _createTaskPool( const AwsIotTaskPoolInfo_t * const
 
 /*-----------------------------------------------------------*/
 
-static AwsIotTaskPoolError_t _initTaskPoolControlStructures( const AwsIotTaskPoolInfo_t * const pInfo,
-                                            AwsIotTaskPool_t * const pTaskPool )
+static IotTaskPoolError_t _initTaskPoolControlStructures( const IotTaskPoolInfo_t * const pInfo,
+                                                          IotTaskPool_t * const pTaskPool )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     bool semStartStopInit = false;
     bool lockInit = false;
     bool semDispatchInit = false;
 
     /* Zero out all data structures. */
-    memset( ( void * ) pTaskPool, 0x00, sizeof( AwsIotTaskPool_t ) );
+    memset( ( void * ) pTaskPool, 0x00, sizeof( IotTaskPool_t ) );
 
     /* Initialize a job data structures that require no de-initialization.
      * All other data structures carry a value of 'NULL' before initailization.
@@ -977,17 +985,17 @@ static AwsIotTaskPoolError_t _initTaskPoolControlStructures( const AwsIotTaskPoo
             }
             else
             {
-                error = AWS_IOT_TASKPOOL_NO_MEMORY;
+                error = IOT_TASKPOOL_NO_MEMORY;
             }
         }
         else
         {
-            error = AWS_IOT_TASKPOOL_NO_MEMORY;
+            error = IOT_TASKPOOL_NO_MEMORY;
         }
     }
     else
     {
-        error = AWS_IOT_TASKPOOL_NO_MEMORY;
+        error = IOT_TASKPOOL_NO_MEMORY;
     }
 
     if( _TASKPOOL_FAILED( error ) )
@@ -1013,7 +1021,7 @@ static AwsIotTaskPoolError_t _initTaskPoolControlStructures( const AwsIotTaskPoo
 
 /*-----------------------------------------------------------*/
 
-static void _destroyTaskPool( AwsIotTaskPool_t * const pTaskPool )
+static void _destroyTaskPool( IotTaskPool_t * const pTaskPool )
 {
     IotClock_TimerDestroy( &pTaskPool->timer );
     IotSemaphore_Destroy( &pTaskPool->dispatchSignal );
@@ -1026,8 +1034,8 @@ static void _destroyTaskPool( AwsIotTaskPool_t * const pTaskPool )
 static void _taskPoolWorker( void * pUserContext )
 {
     /* Extract pTaskPool pointer from context. */
-    AwsIotTaskPool_Assert( pUserContext != NULL );
-    AwsIotTaskPool_t * pTaskPool = ( AwsIotTaskPool_t * ) pUserContext;
+    IotTaskPool_Assert( pUserContext != NULL );
+    IotTaskPool_t * pTaskPool = ( IotTaskPool_t * ) pUserContext;
 
     /* Signal that this worker completed initialization and it is ready to receive notifications. */
     IotSemaphore_Post( &pTaskPool->startStopSignal );
@@ -1036,11 +1044,11 @@ static void _taskPoolWorker( void * pUserContext )
      * is setting maxThreads to zero. A worker thread is running until the maximum number of allowed
      * threads is not zero and the active threads are less than the maximum number of allowed threads.
      */
-    for ( ; ; )
+    for( ; ; )
     {
         IotLink_t * pFirst = NULL;
         IotLink_t * pNext = NULL;
-        AwsIotTaskPoolJob_t * pJob = NULL;
+        IotTaskPoolJob_t * pJob = NULL;
         bool shouldExit = false;
 
         /* Wait on incoming notifications... */
@@ -1058,7 +1066,7 @@ static void _taskPoolWorker( void * pUserContext )
 
                 IotLogDebug( "Worker thread exiting because exit condition was set." );
             }
-            else if ( pTaskPool->activeThreads > pTaskPool->maxThreads )
+            else if( pTaskPool->activeThreads > pTaskPool->maxThreads )
             {
                 shouldExit = true;
 
@@ -1066,7 +1074,7 @@ static void _taskPoolWorker( void * pUserContext )
             }
 
             /* Check if thread should exit. */
-            if ( shouldExit )
+            if( shouldExit )
             {
                 /* Decrease the number of active threads. */
                 pTaskPool->activeThreads--;
@@ -1090,11 +1098,11 @@ static void _taskPoolWorker( void * pUserContext )
                 pTaskPool->busyThreads++;
 
                 /* Extract the job from its link. */
-                pJob = IotLink_Container( AwsIotTaskPoolJob_t, pFirst, link );
+                pJob = IotLink_Container( IotTaskPoolJob_t, pFirst, link );
 
                 /* Update status to 'executing'. */
-                pJob->status &= ~AWS_IOT_TASKPOOL_STATUS_MASK;
-                pJob->status |= AWS_IOT_TASKPOOL_STATUS_EXECUTING;
+                pJob->status &= ~IOT_TASKPOOL_STATUS_MASK;
+                pJob->status |= IOT_TASKPOOL_STATUS_EXECUTING;
 
                 /* Check if there is another job in the queue, and if there is one, signal the task pool. */
                 pNext = IotQueue_Peek( &pTaskPool->dispatchQueue );
@@ -1117,7 +1125,7 @@ static void _taskPoolWorker( void * pUserContext )
              * This task pool thread will not be available until the user callback returns.
              */
             {
-                AwsIotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) == false );
+                IotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) == false );
 
                 userCallback( pTaskPool, pJob, pJob->pUserContext );
             }
@@ -1144,11 +1152,11 @@ static void _taskPoolWorker( void * pUserContext )
                 }
                 else
                 {
-                    pJob = IotLink_Container( AwsIotTaskPoolJob_t, pItem, link );
+                    pJob = IotLink_Container( IotTaskPoolJob_t, pItem, link );
                 }
 
-                pJob->status &= ~AWS_IOT_TASKPOOL_STATUS_MASK;
-                pJob->status |= AWS_IOT_TASKPOOL_STATUS_EXECUTING;
+                pJob->status &= ~IOT_TASKPOOL_STATUS_MASK;
+                pJob->status |= IOT_TASKPOOL_STATUS_EXECUTING;
             }
             _TASKPOOL_EXIT_CRITICAL_SECTION;
         }
@@ -1157,7 +1165,7 @@ static void _taskPoolWorker( void * pUserContext )
 
 /* ---------------------------------------------------------------------------------------------- */
 
-static void _initJobsCache( AwsIotTaskPoolCache_t * const pCache )
+static void _initJobsCache( IotTaskPoolCache_t * const pCache )
 {
     IotQueue_Create( &pCache->freeList );
 
@@ -1166,24 +1174,24 @@ static void _initJobsCache( AwsIotTaskPoolCache_t * const pCache )
 
 /*-----------------------------------------------------------*/
 
-static AwsIotTaskPoolJob_t * _fetchOrAllocateJob( AwsIotTaskPoolCache_t * const pCache )
+static IotTaskPoolJob_t * _fetchOrAllocateJob( IotTaskPoolCache_t * const pCache )
 {
-    AwsIotTaskPoolJob_t * pJob = NULL;
+    IotTaskPoolJob_t * pJob = NULL;
     IotLink_t * pLink = IotListDouble_RemoveHead( &( pCache->freeList ) );
 
     if( pLink != NULL )
     {
-        pJob = IotLink_Container( AwsIotTaskPoolJob_t, pLink, link );
+        pJob = IotLink_Container( IotTaskPoolJob_t, pLink, link );
     }
 
     /* If there is no available job in the cache, then allocate one. */
     if( pJob == NULL )
     {
-        pJob = ( AwsIotTaskPoolJob_t * ) IotTaskPool_MallocJob( sizeof( AwsIotTaskPoolJob_t ) );
+        pJob = ( IotTaskPoolJob_t * ) IotTaskPool_MallocJob( sizeof( IotTaskPoolJob_t ) );
 
         if( pJob != NULL )
         {
-            memset( pJob, 0x00, sizeof( AwsIotTaskPoolJob_t ) );
+            memset( pJob, 0x00, sizeof( IotTaskPoolJob_t ) );
         }
         else
         {
@@ -1193,7 +1201,7 @@ static AwsIotTaskPoolJob_t * _fetchOrAllocateJob( AwsIotTaskPoolCache_t * const 
     /* If there was a job in the cache, then make sure we keep the counters up-to-date. */
     else
     {
-        AwsIotTaskPool_Assert( pCache->freeCount > 0 );
+        IotTaskPool_Assert( pCache->freeCount > 0 );
 
         pCache->freeCount--;
     }
@@ -1203,10 +1211,11 @@ static AwsIotTaskPoolJob_t * _fetchOrAllocateJob( AwsIotTaskPoolCache_t * const 
 
 /*-----------------------------------------------------------*/
 
-static void _recycleJob( AwsIotTaskPoolCache_t * const pCache, AwsIotTaskPoolJob_t * const pJob )
+static void _recycleJob( IotTaskPoolCache_t * const pCache,
+                         IotTaskPoolJob_t * const pJob )
 {
     /* We should never try and recycling a job that is linked into some queue. */
-    AwsIotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) == false );
+    IotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) == false );
 
     /* We will recycle the job if there is space in the cache. */
     if( pCache->freeCount < IOT_TASKPOOL_JOBS_RECYCLE_LIMIT )
@@ -1218,7 +1227,7 @@ static void _recycleJob( AwsIotTaskPoolCache_t * const pCache, AwsIotTaskPoolJob
 
         pCache->freeCount++;
 
-        AwsIotTaskPool_Assert( pCache->freeCount >= 1 );
+        IotTaskPool_Assert( pCache->freeCount >= 1 );
     }
     else
     {
@@ -1228,10 +1237,10 @@ static void _recycleJob( AwsIotTaskPoolCache_t * const pCache, AwsIotTaskPoolJob
 
 /*-----------------------------------------------------------*/
 
-static void _destroyJob( AwsIotTaskPoolJob_t * const pJob )
+static void _destroyJob( IotTaskPoolJob_t * const pJob )
 {
     /* Only dispose of dynamically allocated jobs. */
-    if( ( pJob->status & AWS_IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
+    if( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
     {
         IotTaskPool_FreeJob( pJob );
     }
@@ -1239,14 +1248,14 @@ static void _destroyJob( AwsIotTaskPoolJob_t * const pJob )
 
 /* ---------------------------------------------------------------------------------------------- */
 
-static bool _IsShutdownStarted( const AwsIotTaskPool_t * const pTaskPool )
+static bool _IsShutdownStarted( const IotTaskPool_t * const pTaskPool )
 {
     return( pTaskPool->maxThreads == 0 );
 }
 
 /*-----------------------------------------------------------*/
 
-static void _signalShutdown( AwsIotTaskPool_t * const pTaskPool,
+static void _signalShutdown( IotTaskPool_t * const pTaskPool,
                              uint32_t threads )
 {
     uint32_t count;
@@ -1263,12 +1272,12 @@ static void _signalShutdown( AwsIotTaskPool_t * const pTaskPool,
 
 /* ---------------------------------------------------------------------------------------------- */
 
-static AwsIotTaskPoolError_t _scheduleInternal( AwsIotTaskPool_t * const pTaskPool,
-                                                AwsIotTaskPoolJob_t * const pJob )
+static IotTaskPoolError_t _scheduleInternal( IotTaskPool_t * const pTaskPool,
+                                             IotTaskPoolJob_t * const pJob )
 {
     /* Update the job status to 'scheduled'. */
-    pJob->status &= ~AWS_IOT_TASKPOOL_STATUS_MASK;
-    pJob->status |= AWS_IOT_TASKPOOL_STATUS_SCHEDULED;
+    pJob->status &= ~IOT_TASKPOOL_STATUS_MASK;
+    pJob->status |= IOT_TASKPOOL_STATUS_SCHEDULED;
 
     /* Append the job to the dispatch queue. */
     IotQueue_Enqueue( &pTaskPool->dispatchQueue, &pJob->link );
@@ -1293,7 +1302,7 @@ static AwsIotTaskPoolError_t _scheduleInternal( AwsIotTaskPool_t * const pTaskPo
             if( Iot_CreateDetachedThread( _taskPoolWorker,
                                           pTaskPool,
                                           pTaskPool->priority,
-                                          ( size_t ) ( pTaskPool->stackSize ) ) )
+                                          pTaskPool->stackSize ) )
             {
                 IotSemaphore_Wait( &pTaskPool->startStopSignal );
 
@@ -1307,7 +1316,7 @@ static AwsIotTaskPoolError_t _scheduleInternal( AwsIotTaskPool_t * const pTaskPo
         }
     }
 
-    return AWS_IOT_TASKPOOL_SUCCESS;
+    return IOT_TASKPOOL_SUCCESS;
 }
 
 /*-----------------------------------------------------------*/
@@ -1315,7 +1324,7 @@ static AwsIotTaskPoolError_t _scheduleInternal( AwsIotTaskPool_t * const pTaskPo
 static bool _matchJobByPointer( const IotLink_t * pLink,
                                 void * pMatch )
 {
-    const AwsIotTaskPoolJob_t * pJob = ( AwsIotTaskPoolJob_t * ) pMatch;
+    const IotTaskPoolJob_t * pJob = ( IotTaskPoolJob_t * ) pMatch;
 
     const _taskPoolTimerEvent_t * pTimerEvent = IotLink_Container( _taskPoolTimerEvent_t, pLink, link );
 
@@ -1327,67 +1336,70 @@ static bool _matchJobByPointer( const IotLink_t * pLink,
     return false;
 }
 
-static AwsIotTaskPoolError_t _tryCancelInternal( AwsIotTaskPool_t * const pTaskPool,
-                                                 AwsIotTaskPoolJob_t * const pJob,
-                                                 AwsIotTaskPoolJobStatus_t * const pStatus )
+/*-----------------------------------------------------------*/
+
+static IotTaskPoolError_t _tryCancelInternal( IotTaskPool_t * const pTaskPool,
+                                              IotTaskPoolJob_t * const pJob,
+                                              IotTaskPoolJobStatus_t * const pStatus )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* We can only cancel jobs that are either 'ready' (waiting to be scheduled). 'deferred', or 'scheduled'. */
     {
         bool cancelable = false;
 
         /* Register the current status. */
-        AwsIotTaskPoolJobStatus_t currentStatus = ( pJob->status & AWS_IOT_TASKPOOL_STATUS_MASK );
+        IotTaskPoolJobStatus_t currentStatus = ( pJob->status & IOT_TASKPOOL_STATUS_MASK );
 
-        switch ( currentStatus )
+        switch( currentStatus )
         {
-        case AWS_IOT_TASKPOOL_STATUS_READY:
-        case AWS_IOT_TASKPOOL_STATUS_DEFERRED:
-        case AWS_IOT_TASKPOOL_STATUS_SCHEDULED:
-            cancelable = true;
-            break;
+            case IOT_TASKPOOL_STATUS_READY:
+            case IOT_TASKPOOL_STATUS_DEFERRED:
+            case IOT_TASKPOOL_STATUS_SCHEDULED:
+                cancelable = true;
+                break;
 
-        case AWS_IOT_TASKPOOL_STATUS_EXECUTING:
-        case AWS_IOT_TASKPOOL_STATUS_CANCELED:
-            IotLogWarn( "Attempt to cancel a job that is already executing, or canceled." );
-            break;
+            case IOT_TASKPOOL_STATUS_EXECUTING:
+            case IOT_TASKPOOL_STATUS_CANCELED:
+                IotLogWarn( "Attempt to cancel a job that is already executing, or canceled." );
+                break;
 
-        default:
-            IotLogError( "Attempt to cancel a job with an undefined state." );
-            break;
+            default:
+                IotLogError( "Attempt to cancel a job with an undefined state." );
+                break;
         }
 
         /* Update the returned status to the current status of the job. */
-        if ( pStatus != NULL )
+        if( pStatus != NULL )
         {
             *pStatus = currentStatus;
         }
 
-        if ( cancelable )
+        if( cancelable )
         {
             /* Update the status of the job. */
-            pJob->status &= ~AWS_IOT_TASKPOOL_STATUS_MASK;
-            pJob->status |= AWS_IOT_TASKPOOL_STATUS_CANCELED;
+            pJob->status &= ~IOT_TASKPOOL_STATUS_MASK;
+            pJob->status |= IOT_TASKPOOL_STATUS_CANCELED;
 
             /* If the job is cancelable and its current status is 'scheduled' then unlink it from the dispatch
              * queue and signal any waiting threads. */
-            if ( currentStatus == AWS_IOT_TASKPOOL_STATUS_SCHEDULED )
+            if( currentStatus == IOT_TASKPOOL_STATUS_SCHEDULED )
             {
                 /* A scheduled work items must be in the dispatch queue. */
-                AwsIotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) );
+                IotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) );
 
                 IotQueue_Remove( &pJob->link );
             }
+
             /* If the job current status is 'deferred' then the job has to be pending
              * in the timeouts queue. */
-            else if ( currentStatus == AWS_IOT_TASKPOOL_STATUS_DEFERRED )
+            else if( currentStatus == IOT_TASKPOOL_STATUS_DEFERRED )
             {
                 /* Find the timer event associated with the current job. There MUST be one, hence assert if not. */
                 IotLink_t * pTimerEventLink = IotListDouble_FindFirstMatch( &pTaskPool->timerEventsList, NULL, _matchJobByPointer, pJob );
-                AwsIotTaskPool_Assert( pTimerEventLink != NULL );
+                IotTaskPool_Assert( pTimerEventLink != NULL );
 
-                if ( pTimerEventLink != NULL )
+                if( pTimerEventLink != NULL )
                 {
                     bool shouldReschedule = false;
 
@@ -1395,7 +1407,7 @@ static AwsIotTaskPoolError_t _tryCancelInternal( AwsIotTaskPool_t * const pTaskP
                      * with the next job timeout */
                     IotLink_t * pHeadLink = IotListDouble_PeekHead( &pTaskPool->timerEventsList );
 
-                    if ( pHeadLink == pTimerEventLink )
+                    if( pHeadLink == pTimerEventLink )
                     {
                         shouldReschedule = true;
                     }
@@ -1404,11 +1416,11 @@ static AwsIotTaskPoolError_t _tryCancelInternal( AwsIotTaskPool_t * const pTaskP
                     IotListDouble_Remove( pTimerEventLink );
                     IotTaskPool_FreeTimerEvent( IotLink_Container( _taskPoolTimerEvent_t, pTimerEventLink, link ) );
 
-                    if ( shouldReschedule )
+                    if( shouldReschedule )
                     {
-                        IotLink_t *  pNextTimerEventLink = IotListDouble_PeekHead( &pTaskPool->timerEventsList );
+                        IotLink_t * pNextTimerEventLink = IotListDouble_PeekHead( &pTaskPool->timerEventsList );
 
-                        if ( pNextTimerEventLink  != NULL )
+                        if( pNextTimerEventLink != NULL )
                         {
                             _rescheduleDeferredJobsTimer( &pTaskPool->timer, IotLink_Container( _taskPoolTimerEvent_t, pNextTimerEventLink, link ) );
                         }
@@ -1418,44 +1430,47 @@ static AwsIotTaskPoolError_t _tryCancelInternal( AwsIotTaskPool_t * const pTaskP
         }
         else
         {
-            error = AWS_IOT_TASKPOOL_CANCEL_FAILED;
+            error = IOT_TASKPOOL_CANCEL_FAILED;
         }
     }
 
     return error;
 }
 
-static AwsIotTaskPoolError_t _trySafeExtraction( AwsIotTaskPool_t * const pTaskPool, AwsIotTaskPoolJob_t * const pJob )
+/*-----------------------------------------------------------*/
+
+static IotTaskPoolError_t _trySafeExtraction( IotTaskPool_t * const pTaskPool,
+                                              IotTaskPoolJob_t * const pJob )
 {
-    AwsIotTaskPoolError_t error = AWS_IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Do not destroy a job in the dispatch queue or the timer queue without cancelling first. */
-    if ( ( pJob->status == AWS_IOT_TASKPOOL_STATUS_SCHEDULED ) || ( pJob->status == AWS_IOT_TASKPOOL_STATUS_DEFERRED ) )
+    if( ( pJob->status == IOT_TASKPOOL_STATUS_SCHEDULED ) || ( pJob->status == IOT_TASKPOOL_STATUS_DEFERRED ) )
     {
-        AwsIotTaskPoolJobStatus_t statusAtCancellation;
+        IotTaskPoolJobStatus_t statusAtCancellation;
 
         IotLogWarn( "Attempt to destroy a job waiting to be executed." );
 
         /* Cancellation can fail, e.g. if a job is being executed when we are trying to cancel it. */
         error = _tryCancelInternal( pTaskPool, pJob, &statusAtCancellation );
 
-        switch ( error )
+        switch( error )
         {
-        case AWS_IOT_TASKPOOL_SUCCESS:
-            break;
+            case IOT_TASKPOOL_SUCCESS:
+                break;
 
-        case AWS_IOT_TASKPOOL_CANCEL_FAILED:
-            error = AWS_IOT_TASKPOOL_ILLEGAL_OPERATION;
-            break;
+            case IOT_TASKPOOL_CANCEL_FAILED:
+                error = IOT_TASKPOOL_ILLEGAL_OPERATION;
+                break;
 
-        default:
-            break;
+            default:
+                break;
         }
     }
-    else if ( IotLink_IsLinked( &pJob->link ) )
+    else if( IotLink_IsLinked( &pJob->link ) )
     {
         /* If the job is not in the dispatch or timer queue, it must be in the cache. */
-        AwsIotTaskPool_Assert( ( pJob->status & AWS_IOT_TASK_POOL_INTERNAL_STATIC ) == 0 );
+        IotTaskPool_Assert( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 );
 
         IotListDouble_Remove( &pJob->link );
     }
@@ -1506,7 +1521,7 @@ static void _rescheduleDeferredJobsTimer( IotTimer_t * const pTimer,
         delta = _TASKPOOL_JOB_RESCHEDULE_DELAY_MS; /* The job will be late... */
     }
 
-    AwsIotTaskPool_Assert( delta > 0 );
+    IotTaskPool_Assert( delta > 0 );
 
     if( IotClock_TimerArm( pTimer, delta, 0 ) == false )
     {
@@ -1518,7 +1533,7 @@ static void _rescheduleDeferredJobsTimer( IotTimer_t * const pTimer,
 
 static void _timerThread( void * pArgument )
 {
-    AwsIotTaskPool_t * pTaskPool = ( AwsIotTaskPool_t * ) pArgument;
+    IotTaskPool_t * pTaskPool = ( IotTaskPool_t * ) pArgument;
     _taskPoolTimerEvent_t * pTimerEvent = NULL;
 
     IotLogDebug( "Timer thread started for task pool %p.", pTaskPool );

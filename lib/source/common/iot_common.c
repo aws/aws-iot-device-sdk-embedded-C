@@ -54,9 +54,9 @@ bool IotCommon_Init( void )
     /* Create system task pool. */
     if( status == true )
     {
-        AwsIotTaskPoolInfo_t taskPoolInfo = AWS_IOT_TASKPOOL_INFO_INITIALIZER;
+        IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER;
 
-        if( AwsIotTaskPool_CreateSystemTaskPool( &taskPoolInfo ) != AWS_IOT_TASKPOOL_SUCCESS )
+        if( IotTaskPool_CreateSystemTaskPool( &taskPoolInfo ) != IOT_TASKPOOL_SUCCESS )
         {
             IotLogError( "Failed to create system task pool." );
 
@@ -92,7 +92,7 @@ void IotCommon_Cleanup( void )
         IotStaticMemory_Cleanup();
     #endif
 
-    AwsIotTaskPool_Destroy( AWS_IOT_TASKPOOL_SYSTEM_TASKPOOL );
+    IotTaskPool_Destroy( IOT_SYSTEM_TASKPOOL );
 
     IotLogInfo( "Common libraries cleanup done." );
 }

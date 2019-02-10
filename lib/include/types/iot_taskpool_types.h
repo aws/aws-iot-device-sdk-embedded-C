@@ -45,14 +45,14 @@
 /*-------------------------- Task Pool enumerated types --------------------------*/
 
 /**
- * @enums{taskpool,Task Pool library}
+ * @enums{taskpool,Task pool library}
  */
 
 /**
  * @ingroup taskpool_datatypes_enums
  * @brief Return codes of [task pool functions](@ref taskpool_functions).
  */
-typedef enum AwsIotTaskPoolError
+typedef enum IotTaskPoolError
 {
     /**
      * @brief Task pool operation completed successfully.
@@ -70,7 +70,7 @@ typedef enum AwsIotTaskPoolError
      * - @ref taskpool_function_trycancel
      *
      */
-    AWS_IOT_TASKPOOL_SUCCESS = 0,
+    IOT_TASKPOOL_SUCCESS = 0,
 
     /**
      * @brief Task Pool operation failed because at laest one parameter is invalid.
@@ -88,7 +88,7 @@ typedef enum AwsIotTaskPoolError
      * - @ref taskpool_function_trycancel
      *
      */
-    AWS_IOT_TASKPOOL_BAD_PARAMETER,
+    IOT_TASKPOOL_BAD_PARAMETER,
 
     /**
      * @brief Task Pool operation failed because it is illegal.
@@ -101,7 +101,7 @@ typedef enum AwsIotTaskPoolError
      * - @ref taskpool_function_trycancel
      *
      */
-    AWS_IOT_TASKPOOL_ILLEGAL_OPERATION,
+    IOT_TASKPOOL_ILLEGAL_OPERATION,
 
     /**
      * @brief Task Pool operation failed because allocating memory failed.
@@ -114,7 +114,7 @@ typedef enum AwsIotTaskPoolError
      * - @ref taskpool_function_getstatus
      *
      */
-    AWS_IOT_TASKPOOL_NO_MEMORY,
+    IOT_TASKPOOL_NO_MEMORY,
 
     /**
      * @brief Task Pool operation failed because of an invalid parameter.
@@ -126,7 +126,7 @@ typedef enum AwsIotTaskPoolError
      * - @ref taskpool_function_schedule
      *
      */
-    AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS,
+    IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS,
 
     /**
      * @brief Task Pool cancellation failed.
@@ -135,8 +135,8 @@ typedef enum AwsIotTaskPoolError
      * - @ref taskpool_function_trycancel
      *
      */
-    AWS_IOT_TASKPOOL_CANCEL_FAILED,
-} AwsIotTaskPoolError_t;
+    IOT_TASKPOOL_CANCEL_FAILED,
+} IotTaskPoolError_t;
 
 /**
  * @enums{taskpool,Task Pool library}
@@ -144,55 +144,55 @@ typedef enum AwsIotTaskPoolError
 
 /**
  * @ingroup taskpool_datatypes_enums
- * @brief Status codes of [Task Pool Job](@ref AwsIotTaskPoolJob_t).
+ * @brief Status codes of [Task Pool Job](@ref IotTaskPoolJob_t).
  *
  */
-typedef enum AwsIotTaskPoolJobStatus
+typedef enum IotTaskPoolJobStatus
 {
     /**
      * @brief Job is ready to be scheduled.
      *
      */
-    AWS_IOT_TASKPOOL_STATUS_READY = 0,
+    IOT_TASKPOOL_STATUS_READY = 0,
 
     /**
      * @brief Job has been queued for execution.
      *
      */
-    AWS_IOT_TASKPOOL_STATUS_SCHEDULED,
+    IOT_TASKPOOL_STATUS_SCHEDULED,
 
     /**
      * @brief Job has been scheduled for deferred execution.
      *
      */
-    AWS_IOT_TASKPOOL_STATUS_DEFERRED,
+    IOT_TASKPOOL_STATUS_DEFERRED,
 
     /**
      * @brief Job is executing.
      *
      */
-    AWS_IOT_TASKPOOL_STATUS_EXECUTING,
+    IOT_TASKPOOL_STATUS_EXECUTING,
 
     /**
      * @brief Job has been canceled before it was executed.
      *
      */
-    AWS_IOT_TASKPOOL_STATUS_CANCELED,
+    IOT_TASKPOOL_STATUS_CANCELED,
 
     /**
      * @brief Job status is undefined.
      *
      */
-    AWS_IOT_TASKPOOL_STATUS_UNDEFINED,
-} AwsIotTaskPoolJobStatus_t;
+    IOT_TASKPOOL_STATUS_UNDEFINED,
+} IotTaskPoolJobStatus_t;
 
 /**
  * @cond DOXYGEN_IGNORE
  * @brief Forward declarations for task pool types.
  *
  */
-struct AwsIotTaskPool;
-struct AwsIotTaskPoolJob;
+struct IotTaskPool;
+struct IotTaskPoolJob;
 /** @endcond */
 
 /*---------------------------- Task Pool function pointer types ----------------------------*/
@@ -207,11 +207,11 @@ struct AwsIotTaskPoolJob;
  *
  * This type identifies the user callback signature to execute a task pool job. This callback will be invoked
  * by the task pool threads with the `pUserContext` parameter, as speficied by the user when
- * calling @ref AwsIotTaskPool_Schedule.
+ * calling @ref IotTaskPool_Schedule.
  *
  */
-typedef void ( * IotTaskPoolRoutine_t )( struct AwsIotTaskPool * pTaskPool,
-                                         struct AwsIotTaskPoolJob * pJob,
+typedef void ( * IotTaskPoolRoutine_t )( struct IotTaskPool * pTaskPool,
+                                         struct IotTaskPoolJob * pJob,
                                          void * pUserContext );
 
 /*------------------------- Task Pool parameter structs --------------------------*/
@@ -228,24 +228,24 @@ typedef void ( * IotTaskPoolRoutine_t )( struct AwsIotTaskPool * pTaskPool,
  *
  * Passed as an argument to @ref taskpool_function_create.
  *
- * @initializer{AwsIotTaskPoolInfo_t,AWS_IOT_TASKPOOL_INFO_INITIALIZER}
+ * @initializer{IotTaskPoolInfo_t,IOT_TASKPOOL_INFO_INITIALIZER}
  */
-typedef struct AwsIotTaskPoolInfo
+typedef struct IotTaskPoolInfo
 {
     /**
      * @brief Specifies the operating parameters for a task pool.
      *
-     * @attention #AwsIotTaskPoolInfo_t.minThreads <b>MUST</b> be at least 1.
-     * #AwsIotTaskPoolInfo_t.maxThreads <b>MUST</b> be smaller or equal to #AwsIotTaskPoolInfo_t.minThreads.
+     * @attention #IotTaskPoolInfo_t.minThreads <b>MUST</b> be at least 1.
+     * #IotTaskPoolInfo_t.maxThreads <b>MUST</b> be smaller or equal to #IotTaskPoolInfo_t.minThreads.
      * If the minimum number of threads is same as the maximum, then the task pool will not try and grow the
      * number of worker threads at run time.
      */
 
     uint32_t minThreads; /**< @brief Minimum number of threads in a task pool. These threads will be created when the task pool is first created with @ref taskpool_function_create. */
     uint32_t maxThreads; /**< @brief Maximum number of threads in a task pool. */
-    uint32_t stackSize;  /**< @brief Stack size for every task pool thread. */
-    uint32_t priority;   /**< @brief priority for every task pool thread. */
-} AwsIotTaskPoolInfo_t;
+    size_t stackSize;    /**< @brief Stack size for every task pool thread. */
+    int32_t priority;    /**< @brief priority for every task pool thread. */
+} IotTaskPoolInfo_t;
 
 /*------------------------- Task Pool handles structs --------------------------*/
 
@@ -256,11 +256,11 @@ typedef struct AwsIotTaskPoolInfo
  * @warning This is a system-level data type that should not be modified.
  *
  */
-typedef struct AwsIotTaskPoolCache
+typedef struct IotTaskPoolCache
 {
     IotListDouble_t freeList; /**< @brief Cached jobs are treaded into a list. */
     uint32_t freeCount;       /**< @brief A counter for the jobs in the cache. */
-} AwsIotTaskPoolCache_t;
+} IotTaskPoolCache_t;
 
 
 /**
@@ -271,22 +271,22 @@ typedef struct AwsIotTaskPoolCache
  * @warning This is a system-level data type that should not be modified.
  *
  */
-typedef struct AwsIotTaskPool
+typedef struct IotTaskPool
 {
     IotQueue_t dispatchQueue;        /**< @brief The queue for the jobs waiting to be executed. */
     IotListDouble_t timerEventsList; /**< @brief The queue for all deferred jobs waiting to be executed. */
-    AwsIotTaskPoolCache_t jobsCache; /**< @brief A cache to re-use jobs in order to limit memory allocations. */
+    IotTaskPoolCache_t jobsCache;    /**< @brief A cache to re-use jobs in order to limit memory allocations. */
     uint32_t minThreads;             /**< @brief The minimum number of threads for the task pool. */
     uint32_t maxThreads;             /**< @brief The maximum number of threads for the task pool. */
     uint32_t activeThreads;          /**< @brief The number of threads in the task pool at any given time. */
     uint32_t busyThreads;            /**< @brief The number of busy threads in the task pool at any given time. */
-    uint32_t stackSize;              /**< @brief The stack size for all task pool threads. */
-    uint32_t priority;               /**< @brief The priority for all task pool threads. */
+    size_t stackSize;                /**< @brief The stack size for all task pool threads. */
+    int32_t priority;                /**< @brief The priority for all task pool threads. */
     IotSemaphore_t dispatchSignal;   /**< @brief The synchronization object on which threads are waiting for incoming jobs. */
     IotSemaphore_t startStopSignal;  /**< @brief The synchronization object for threads to signal start and stop condition. */
     IotTimer_t timer;                /**< @brief The timer for deferred jobs. */
     IotMutex_t lock;                 /**< @brief The lock to protect the task pool data structure access. */
-} AwsIotTaskPool_t;
+} IotTaskPool_t;
 
 /**
  * @ingroup taskpool_datatypes_types
@@ -295,13 +295,13 @@ typedef struct AwsIotTaskPool
  * @warning This is a system-level data type that should not be modified.
  *
  */
-typedef struct AwsIotTaskPoolJob
+typedef struct IotTaskPoolJob
 {
     IotTaskPoolRoutine_t userCallback; /**< @brief The user provided callback. */
     void * pUserContext;               /**< @brief The user provided context. */
     IotLink_t link;                    /**< @brief The link to insert the job in the dispatch queue. */
-    AwsIotTaskPoolJobStatus_t status;  /**< @brief The status for the job. */
-} AwsIotTaskPoolJob_t;
+    IotTaskPoolJobStatus_t status;     /**< @brief The status for the job. */
+} IotTaskPoolJob_t;
 
 /*------------------------- TASKPOOL defined constants --------------------------*/
 
@@ -324,11 +324,11 @@ typedef struct AwsIotTaskPoolJob
  * <b>Example</b>
  * @code{c}
  *
- * AwsIotTaskPool_t * pTaskPool;
+ * IotTaskPool_t * pTaskPool;
  *
- * const AwsIotTaskPoolInfo_t tpInfo = AWS_IOT_TASKPOOL_INFO_INITIALIZER_LARGE;
+ * const IotTaskPoolInfo_t tpInfo = IOT_TASKPOOL_INFO_INITIALIZER_LARGE;
  *
- * AwsIotTaskPoolError_t error = AwsIotTaskPool_Create( &tpInfo, &pTaskPool );
+ * IotTaskPoolError_t error = IotTaskPool_Create( &tpInfo, &pTaskPool );
  *
  * // Use the task pool
  * // ...
@@ -337,12 +337,12 @@ typedef struct AwsIotTaskPoolJob
  *
  */
 /* @[define_taskpool_initializers] */
-#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_SMALL     { .minThreads = 1, .maxThreads = 1, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }   /**< @brief Initializer for a small #AwsIotTaskPoolInfo_t. */
-#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM    { .minThreads = 1, .maxThreads = 2, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }   /**< @brief Initializer for a medium #AwsIotTaskPoolInfo_t. */
-#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_LARGE     { .minThreads = 2, .maxThreads = 3, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }   /**< @brief Initializer for a large #AwsIotTaskPoolInfo_t. */
-#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_XLARGE    { .minThreads = 2, .maxThreads = 4, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }   /**< @brief Initializer for a very large #AwsIotTaskPoolInfo_t. */
-#define AWS_IOT_TASKPOOL_INFO_INITIALIZER           AWS_IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM                              /**< @brief Initializer for a typical #AwsIotTaskPoolInfo_t. */
-#define AWS_IOT_TASKPOOL_INITIALIZER                { 0 }                                                                 /**< @brief Initializer for a #AwsIotTaskPoolJob_t. */
+#define IOT_TASKPOOL_INFO_INITIALIZER_SMALL     { .minThreads = 1, .maxThreads = 1, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY } /**< @brief Initializer for a small #AwsIotTaskPoolInfo_t. */
+#define IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM    { .minThreads = 1, .maxThreads = 2, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY } /**< @brief Initializer for a medium #AwsIotTaskPoolInfo_t. */
+#define IOT_TASKPOOL_INFO_INITIALIZER_LARGE     { .minThreads = 2, .maxThreads = 3, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY } /**< @brief Initializer for a large #AwsIotTaskPoolInfo_t. */
+#define IOT_TASKPOOL_INFO_INITIALIZER_XLARGE    { .minThreads = 2, .maxThreads = 4, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY } /**< @brief Initializer for a very large #AwsIotTaskPoolInfo_t. */
+#define IOT_TASKPOOL_INFO_INITIALIZER           IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM                                                                                  /**< @brief Initializer for a typical #AwsIotTaskPoolInfo_t. */
+#define IOT_TASKPOOL_INITIALIZER                { 0 }                                                                                                                     /**< @brief Initializer for a #AwsIotTaskPoolJob_t. */
 /* @[define_taskpool_initializers] */
 
 /**
@@ -351,6 +351,6 @@ typedef struct AwsIotTaskPoolJob
  * @warning The task pool handle is not valid unless @ref taskpool_function_createsystemtaskpool is
  * called before the handle is used.
  */
-#define AWS_IOT_TASKPOOL_SYSTEM_TASKPOOL    ( AwsIotTaskPool_GetSystemTaskPool() )
+#define IOT_SYSTEM_TASKPOOL    ( IotTaskPool_GetSystemTaskPool() )
 
 #endif /* ifndef _IOT_TASKPOOL_TYPES_H_ */

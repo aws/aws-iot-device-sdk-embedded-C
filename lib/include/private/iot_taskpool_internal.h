@@ -32,26 +32,26 @@
 #include "iot_taskpool.h"
 
 /**
- * @def AwsIotTaskPool_Assert( expression )
+ * @def IotTaskPool_Assert( expression )
  * @brief Assertion macro for the Task Pool library.
  *
- * Set @ref AWS_IOT_TASKPOOL_ENABLE_ASSERTS to `1` to enable assertions in the Task Pool
+ * Set @ref IOT_TASKPOOL_ENABLE_ASSERTS to `1` to enable assertions in the Task Pool
  * library.
  *
  * @param[in] expression Expression to be evaluated.
  */
-#if AWS_IOT_TASKPOOL_ENABLE_ASSERTS == 1
-    #ifndef AwsIotTaskPool_Assert
+#if IOT_TASKPOOL_ENABLE_ASSERTS == 1
+    #ifndef IotTaskPool_Assert
         #include <assert.h>
-        #define AwsIotTaskPool_Assert( expression )    assert( expression )
+        #define IotTaskPool_Assert( expression )    assert( expression )
     #endif
 #else
-    #define AwsIotTaskPool_Assert( expression )
+    #define IotTaskPool_Assert( expression )
 #endif
 
 /* Configure logs for TASKPOOL functions. */
-#ifdef AWS_IOT_LOG_LEVEL_TASKPOOL
-    #define _LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_TASKPOOL
+#ifdef IOT_LOG_LEVEL_TASKPOOL
+    #define _LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_TASKPOOL
 #else
     #ifdef IOT_LOG_LEVEL_GLOBAL
         #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
@@ -128,12 +128,6 @@
 #ifndef IOT_TASKPOOL_JOBS_RECYCLE_LIMIT
     #define IOT_TASKPOOL_JOBS_RECYCLE_LIMIT    ( 32 )
 #endif
-#ifndef AWS_IOT_TASKPOOL_THREADS_STACK_SIZE
-    #define AWS_IOT_TASKPOOL_THREADS_STACK_SIZE    ( IOT_THREAD_DEFAULT_STACK_SIZE )
-#endif
-#ifndef AWS_IOT_TASKPOOL_THREADS_PRIORITY
-    #define AWS_IOT_TASKPOOL_THREADS_PRIORITY      ( IOT_THREAD_DEFAULT_PRIORITY )
-#endif
 /** @endcond */
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -144,9 +138,9 @@
  *
  * A few macros to manage task pool status.
  */
-#define AWS_IOT_TASKPOOL_STATUS_MASK         0x0F                 /* Lower 4 bits reserved for status (AwsIotTaskPoolJobStatus_t). */
-#define AWS_IOT_TASKPOOL_FLAGS_MASK          0xF0                 /* Upper 4 bits reserved for flags. */
-#define AWS_IOT_TASK_POOL_INTERNAL_STATIC    0x80                 /* Flag to mark a job as user-allocated. */
+#define IOT_TASKPOOL_STATUS_MASK         0x0F                 /* Lower 4 bits reserved for status (IotTaskPoolJobStatus_t). */
+#define IOT_TASKPOOL_FLAGS_MASK          0xF0                 /* Upper 4 bits reserved for flags. */
+#define IOT_TASK_POOL_INTERNAL_STATIC    0x80                 /* Flag to mark a job as user-allocated. */
 /** @endcond */
 
 /**
@@ -157,9 +151,9 @@
  */
 typedef struct _taskPoolTimerEvent
 {
-    IotLink_t link;             /**< @brief List link member. */
-    uint64_t expirationTime;    /**< @brief When this event should be processed. */
-    AwsIotTaskPoolJob_t * pJob; /**< @brief The task pool job associated with this event. */
+    IotLink_t link;          /**< @brief List link member. */
+    uint64_t expirationTime; /**< @brief When this event should be processed. */
+    IotTaskPoolJob_t * pJob; /**< @brief The task pool job associated with this event. */
 } _taskPoolTimerEvent_t;
 
 #endif /* ifndef _IOT_TASKPOOL_INTERNAL_H_ */
