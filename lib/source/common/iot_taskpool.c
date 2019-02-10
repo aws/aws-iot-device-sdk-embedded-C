@@ -488,7 +488,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_CreateRecyclableJob( AwsIotTaskPool_t * con
     }
     else
     {
-        AwsIotTaskPoolJob_t * pTempJob;
+        AwsIotTaskPoolJob_t * pTempJob = NULL;
 
         _TASKPOOL_ENTER_CRITICAL_SECTION;
         {
