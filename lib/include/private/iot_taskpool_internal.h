@@ -129,10 +129,10 @@
     #define IOT_TASKPOOL_JOBS_RECYCLE_LIMIT    ( 32 )
 #endif
 #ifndef AWS_IOT_TASKPOOL_THREADS_STACK_SIZE
-    #define AWS_IOT_TASKPOOL_THREADS_STACK_SIZE    ( 0 )   /* 0 will trigger the default stack size. */
+    #define AWS_IOT_TASKPOOL_THREADS_STACK_SIZE    ( IOT_THREAD_DEFAULT_STACK_SIZE )
 #endif
 #ifndef AWS_IOT_TASKPOOL_THREADS_PRIORITY
-    #define AWS_IOT_TASKPOOL_THREADS_PRIORITY      ( 0 )
+    #define AWS_IOT_TASKPOOL_THREADS_PRIORITY      ( IOT_THREAD_DEFAULT_PRIORITY )
 #endif
 /** @endcond */
 

@@ -337,10 +337,10 @@ typedef struct AwsIotTaskPoolJob
  *
  */
 /* @[define_taskpool_initializers] */
-#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_SMALL     { .minThreads = 1, .maxThreads = 1, .stackSize = 0, .priority = 0 }   /**< @brief Initializer for a small #AwsIotTaskPoolInfo_t. */
-#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM    { .minThreads = 1, .maxThreads = 2, .stackSize = 0, .priority = 0 }   /**< @brief Initializer for a medium #AwsIotTaskPoolInfo_t. */
-#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_LARGE     { .minThreads = 2, .maxThreads = 3, .stackSize = 0, .priority = 0 }   /**< @brief Initializer for a large #AwsIotTaskPoolInfo_t. */
-#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_XLARGE    { .minThreads = 2, .maxThreads = 4, .stackSize = 0, .priority = 0 }   /**< @brief Initializer for a very large #AwsIotTaskPoolInfo_t. */
+#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_SMALL     { .minThreads = 1, .maxThreads = 1, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }   /**< @brief Initializer for a small #AwsIotTaskPoolInfo_t. */
+#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM    { .minThreads = 1, .maxThreads = 2, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }   /**< @brief Initializer for a medium #AwsIotTaskPoolInfo_t. */
+#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_LARGE     { .minThreads = 2, .maxThreads = 3, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }   /**< @brief Initializer for a large #AwsIotTaskPoolInfo_t. */
+#define AWS_IOT_TASKPOOL_INFO_INITIALIZER_XLARGE    { .minThreads = 2, .maxThreads = 4, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }   /**< @brief Initializer for a very large #AwsIotTaskPoolInfo_t. */
 #define AWS_IOT_TASKPOOL_INFO_INITIALIZER           AWS_IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM                              /**< @brief Initializer for a typical #AwsIotTaskPoolInfo_t. */
 #define AWS_IOT_TASKPOOL_INITIALIZER                { 0 }                                                                 /**< @brief Initializer for a #AwsIotTaskPoolJob_t. */
 /* @[define_taskpool_initializers] */
