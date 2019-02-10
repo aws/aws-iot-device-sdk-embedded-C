@@ -72,8 +72,8 @@ extern int snprintf( char *,
  *
  * Provide default values of test configuration constants.
  */
-#ifndef AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
-    #define AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S    ( 30 )
+#ifndef IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
+    #define IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S        ( 30 )
 #endif
 #ifndef AWS_IOT_TEST_SHADOW_TIMEOUT
     #define AWS_IOT_TEST_SHADOW_TIMEOUT                     ( 5000 )
@@ -437,7 +437,7 @@ TEST_SETUP( Shadow_System )
      * client identifier. */
     connectInfo.pClientIdentifier = AWS_IOT_TEST_SHADOW_THING_NAME;
     connectInfo.clientIdentifierLength = ( uint16_t ) ( sizeof( AWS_IOT_TEST_SHADOW_THING_NAME ) - 1 );
-    connectInfo.keepAliveSeconds = AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
+    connectInfo.keepAliveSeconds = IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
     /* Establish an MQTT connection. */
     if( IotMqtt_Connect( &_IotTestMqttConnection,
