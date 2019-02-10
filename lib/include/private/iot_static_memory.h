@@ -45,6 +45,10 @@
  * - @functionname{static_memory_function_cleanup}
  * - @functionname{static_memory_function_messagebuffersize}
  * - @functionname{static_memory_function_mallocmessagebuffer}
+ * - @functionname{static_memory_function_malloctaskpooljob}
+ * - @functionname{static_memory_function_freetaskpooljob}
+ * - @functionname{static_memory_function_malloctaskpooltimerevent}
+ * - @functionname{static_memory_function_freetaskpooltimerevent}
  * - @functionname{static_memory_function_freemessagebuffer}
  * - @functionname{static_memory_function_mallocmqttconnection}
  * - @functionname{static_memory_function_freemqttconnection}
@@ -160,6 +164,71 @@ void * Iot_MallocMessageBuffer( size_t size );
 /* @[declare_static_memory_freemessagebuffer] */
 void Iot_FreeMessageBuffer( void * ptr );
 /* @[declare_static_memory_freemessagebuffer] */
+
+/*------------------- Task pool job and event management --------------------*/
+
+/**
+ * @functionpage{Iot_MallocTaskPoolJob,static_memory,malloctaskpooljob}
+ * @functionpage{Iot_FreeTaskPoolJob,static_memory,freetaskpooljob}
+ * @functionpage{Iot_MallocTaskPoolTimerEvent,static_memory,malloctaskpooltimerevent}
+ * @functionpage{Iot_FreeTaskPoolTimerEvent,static_memory,freetaskpooltimerevent}
+ */
+
+/**
+ * @brief Allocates memory to hold data for a new task pool job.
+ *
+ * This function is the analog of [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
+ * for task pool jobs.
+ *
+ * @param[in] size Must be equal to the size of a task pool job.
+ *
+ * @return Pointer to a task pool job.
+ */
+/* @[declare_static_memory_malloctaskpooljob] */
+void * Iot_MallocTaskPoolJob( size_t size );
+/* @[declare_static_memory_malloctaskpooljob] */
+
+/**
+ * @brief Frees an in-use task pool job.
+ *
+ * This function is the analog of [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
+ * for task pool jobs.
+ *
+ * @param[in] ptr Pointer to an active task pool job to free.
+ */
+/* @[declare_static_memory_freetaskpooljob] */
+void Iot_FreeTaskPoolJob( void * ptr );
+/* @[declare_static_memory_freetaskpooljob] */
+
+/**
+ * @brief Allocates memory to hold data for a new task pool timer event.
+ *
+ * This function is the analog of [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
+ * for task pool timer events.
+ *
+ * @param[in] size Must be equal to the size of a task pool timer event.
+ *
+ * @return Pointer to a task pool timer event.
+ */
+/* @[declare_static_memory_malloctaskpooltimerevent] */
+void * Iot_MallocTaskPoolTimerEvent( size_t size );
+/* @[declare_static_memory_malloctaskpooltimerevent] */
+
+/**
+ * @brief Frees an in-use task pool timer event.
+ *
+ * This function is the analog of [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
+ * for task pool timer events.
+ *
+ * @param[in] ptr Pointer to an active task pool timer event to free.
+ */
+/* @[declare_static_memory_freetaskpooltimerevent] */
+void Iot_FreeTaskPoolTimerEvent( void * ptr );
+/* @[declare_static_memory_freetaskpooltimerevent] */
 
 /*----------------------- MQTT connection management ------------------------*/
 

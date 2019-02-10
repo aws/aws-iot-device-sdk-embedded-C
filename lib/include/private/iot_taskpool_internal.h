@@ -68,20 +68,28 @@
  * allocation functions based on the usage of dynamic memory allocation.
  */
 #if IOT_STATIC_MEMORY_ONLY == 1
-    #include "platform/iot_static_memory.h"
+    #include "private/iot_static_memory.h"
 
 /**
  * @brief Overridable allocator.
  */
-    #ifndef AwsIotTaskPool_Malloc
-        #define AwsIotTaskPool_Malloc    !ERROR Not Implemented !
+    #ifndef IotTaskPool_MallocJob
+        #define IotTaskPool_MallocJob    Iot_MallocTaskPoolJob
+    #endif
+
+    #ifndef IotTaskPool_MallocTimerEvent
+        #define IotTaskPool_MallocTimerEvent    Iot_MallocTaskPoolTimerEvent
     #endif
 
 /**
  * @brief Overridable deallocator.
  */
-    #ifndef AwsIotTaskPool_Free
-        #define AwsIotTaskPool_Free    !ERROR Not Implemented !
+    #ifndef IotTaskPool_FreeJob
+        #define IotTaskPool_FreeJob    Iot_FreeTaskPoolJob
+    #endif
+
+    #ifndef IotTaskPool_FreeTimerEvent
+        #define IotTaskPool_FreeTimerEvent    Iot_FreeTaskPoolTimerEvent
     #endif
 
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
@@ -90,15 +98,23 @@
 /**
  * @brief Overridable allocator.
  */
-    #ifndef AwsIotTaskPool_Malloc
-        #define AwsIotTaskPool_Malloc    malloc
+    #ifndef IotTaskPool_MallocJob
+        #define IotTaskPool_MallocJob    malloc
+    #endif
+
+    #ifndef IotTaskPool_MallocTimerEvent
+        #define IotTaskPool_MallocTimerEvent    malloc
     #endif
 
 /**
  * @brief Overridable deallocator.
  */
-    #ifndef AwsIotTaskPool_Free
-        #define AwsIotTaskPool_Free    free
+    #ifndef IotTaskPool_FreeJob
+        #define IotTaskPool_FreeJob    free
+    #endif
+
+    #ifndef IotTaskPool_FreeTimerEvent
+        #define IotTaskPool_FreeTimerEvent    free
     #endif
 
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
@@ -109,8 +125,8 @@
  *
  * Provide default values for undefined configuration constants.
  */
-#ifndef AWS_IOT_TASKPOOL_JOBS_RECYCLE_LIMIT
-    #define AWS_IOT_TASKPOOL_JOBS_RECYCLE_LIMIT    ( 32 )
+#ifndef IOT_TASKPOOL_JOBS_RECYCLE_LIMIT
+    #define IOT_TASKPOOL_JOBS_RECYCLE_LIMIT    ( 32 )
 #endif
 #ifndef AWS_IOT_TASKPOOL_THREADS_STACK_SIZE
     #define AWS_IOT_TASKPOOL_THREADS_STACK_SIZE    ( 0 )   /* 0 will trigger the default stack size. */

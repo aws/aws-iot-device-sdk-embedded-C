@@ -338,16 +338,24 @@ TEST( Common_Unit_Task_Pool, TaskPool_CreateRecyclableJob )
 
     /* Recyclable jobs. */
     {
-        uint32_t count;
-        AwsIotTaskPoolJob_t * pJobs[ 2 * _TASKPOOL_TEST_ITERATIONS ] = { 0 };
+        uint32_t count, jobLimit;
 
-        for( count = 0; count < 2 * AWS_IOT_TASKPOOL_JOBS_RECYCLE_LIMIT; ++count )
+        /* In static memory mode, only the recyclable job limit may be allocated. */
+        #if IOT_STATIC_MEMORY_ONLY == 1
+            jobLimit = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+            AwsIotTaskPoolJob_t * pJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+        #else
+            jobLimit = 2 * IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+            AwsIotTaskPoolJob_t * pJobs[ 2 * _TASKPOOL_TEST_ITERATIONS ] = { 0 };
+        #endif
+
+        for( count = 0; count < jobLimit; ++count )
         {
             TEST_ASSERT( AwsIotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, NULL, &pJobs[ count ] ) == AWS_IOT_TASKPOOL_SUCCESS );
             TEST_ASSERT( pJobs[ count ] != NULL );
         }
 
-        for( count = 0; count < 2 * AWS_IOT_TASKPOOL_JOBS_RECYCLE_LIMIT; ++count )
+        for( count = 0; count < jobLimit; ++count )
         {
             TEST_ASSERT( AwsIotTaskPool_RecycleJob( &taskPool, pJobs[ count ] ) == AWS_IOT_TASKPOOL_SUCCESS );
         }
@@ -744,12 +752,19 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasks_ScheduleAllRecyclableThenWai
 
     /* Statically allocated jobs, schedule all, then wait all. */
     {
-        uint32_t count;
+        uint32_t count, maxJobs;
         uint32_t scheduled = 0;
-        AwsIotTaskPoolJob_t * tpJobs[ _TASKPOOL_TEST_ITERATIONS ] = { 0 };
 
+        /* In static memory mode, only the recyclable job limit may be allocated. */
+        #if IOT_STATIC_MEMORY_ONLY == 1
+            maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+            AwsIotTaskPoolJob_t * tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+        #else
+            maxJobs = _TASKPOOL_TEST_ITERATIONS;
+            AwsIotTaskPoolJob_t * tpJobs[ _TASKPOOL_TEST_ITERATIONS ] = { 0 };
+        #endif
 
-        for( count = 0; count < _TASKPOOL_TEST_ITERATIONS; ++count )
+        for( count = 0; count < maxJobs; ++count )
         {
             /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
             TEST_ASSERT( AwsIotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, &userContext, &tpJobs[ count ] ) == AWS_IOT_TASKPOOL_SUCCESS );
@@ -817,11 +832,19 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasks_ScheduleAllDeferredRecyclabl
 
     /* Statically allocated jobs, schedule all, then wait all. */
     {
-        uint32_t count;
+        uint32_t count, maxJobs;
         uint32_t scheduled = 0;
-        AwsIotTaskPoolJob_t * tpJobs[ _TASKPOOL_TEST_ITERATIONS ] = { 0 };
 
-        for( count = 0; count < _TASKPOOL_TEST_ITERATIONS; ++count )
+        /* In static memory mode, only the recyclable job limit may be allocated. */
+        #if IOT_STATIC_MEMORY_ONLY == 1
+            maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+            AwsIotTaskPoolJob_t * tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+        #else
+            maxJobs = _TASKPOOL_TEST_ITERATIONS;
+            AwsIotTaskPoolJob_t * tpJobs[ _TASKPOOL_TEST_ITERATIONS ] = { 0 };
+        #endif
+
+        for( count = 0; count < maxJobs; ++count )
         {
             /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
             TEST_ASSERT( AwsIotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, &userContext, &tpJobs[ count ] ) == AWS_IOT_TASKPOOL_SUCCESS );
@@ -877,14 +900,22 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasks_ScheduleAllDeferredRecyclabl
  */
 TEST( Common_Unit_Task_Pool, TaskPool_CancelTasks )
 {
-    uint32_t count;
+    uint32_t count, maxJobs;
     AwsIotTaskPool_t taskPool;
     const AwsIotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 3, .stackSize = AWS_IOT_TASKPOOL_THREADS_STACK_SIZE, .priority = AWS_IOT_TASKPOOL_THREADS_PRIORITY };
-    AwsIotTaskPoolJob_t jobs[ _TASKPOOL_TEST_ITERATIONS ] = { { 0 }  };
     uint32_t canceled = 0;
     uint32_t scheduled = 0;
 
     JobUserContext_t userContext = { 0 };
+
+    /* In static memory mode, only the recyclable job limit may be allocated. */
+    #if IOT_STATIC_MEMORY_ONLY == 1
+        maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+        AwsIotTaskPoolJob_t jobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+    #else
+        maxJobs = _TASKPOOL_TEST_ITERATIONS;
+        AwsIotTaskPoolJob_t jobs[ _TASKPOOL_TEST_ITERATIONS ] = { 0 };
+    #endif
 
     /* Initialize user context. */
     TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
@@ -892,7 +923,7 @@ TEST( Common_Unit_Task_Pool, TaskPool_CancelTasks )
     AwsIotTaskPool_Create( &tpInfo, &taskPool );
 
     /* Create and schedule loop. */
-    for( count = 0; count < _TASKPOOL_TEST_ITERATIONS; ++count )
+    for( count = 0; count < maxJobs; ++count )
     {
         AwsIotTaskPoolError_t errorSchedule;
 
@@ -914,14 +945,7 @@ TEST( Common_Unit_Task_Pool, TaskPool_CancelTasks )
                 TEST_ASSERT( false );
         }
 
-        //if( count % 2 == 0 )
-        //{
-        //    errorSchedule = AwsIotTaskPool_Schedule( &taskPool, &jobs[ count ] );
-        //}
-        //else
-        //{
-            errorSchedule = AwsIotTaskPool_ScheduleDeferred( &taskPool, &jobs[ count ], 10 + ( rand() % 20 ) );
-        //}
+        errorSchedule = AwsIotTaskPool_ScheduleDeferred( &taskPool, &jobs[ count ], 10 + ( rand() % 20 ) );
 
         switch( errorSchedule )
         {
@@ -941,7 +965,7 @@ TEST( Common_Unit_Task_Pool, TaskPool_CancelTasks )
     }
 
     /* Cancellation loop. */
-    for( count = 0; count < _TASKPOOL_TEST_ITERATIONS; ++count )
+    for( count = 0; count < maxJobs; ++count )
     {
         AwsIotTaskPoolError_t error;
         AwsIotTaskPoolJobStatus_t statusAtCancellation = AWS_IOT_TASKPOOL_STATUS_READY;
@@ -990,7 +1014,7 @@ TEST( Common_Unit_Task_Pool, TaskPool_CancelTasks )
 
     TEST_ASSERT( ( scheduled - canceled ) == userContext.counter );
 
-    for( count = 0; count < _TASKPOOL_TEST_ITERATIONS; ++count )
+    for( count = 0; count < maxJobs; ++count )
     {
         AwsIotTaskPool_DestroyJob( &taskPool, &jobs[ count ] );
     }

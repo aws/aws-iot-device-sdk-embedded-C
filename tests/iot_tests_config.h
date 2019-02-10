@@ -95,6 +95,10 @@
 /* Memory allocation function configuration for libraries affected by
  * IOT_STATIC_MEMORY_ONLY. */
 #if IOT_STATIC_MEMORY_ONLY == 0
+    #define IotTaskPool_MallocJob              unity_malloc_mt
+    #define IotTaskPool_FreeJob                unity_free_mt
+    #define IotTaskPool_MallocTimerEvent       unity_malloc_mt
+    #define IotTaskPool_FreeTimerEvent         unity_free_mt
     #define AwsIotMqtt_MallocConnection        unity_malloc_mt
     #define AwsIotMqtt_FreeConnection          unity_free_mt
     #define AwsIotMqtt_MallocMessage           unity_malloc_mt

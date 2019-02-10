@@ -343,7 +343,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Destroy( AwsIotTaskPool_t * pTaskPool )
 
                     _destroyJob( pTimerEvent->pJob );
 
-                    AwsIotTaskPool_Free( pTimerEvent );
+                    IotTaskPool_FreeTimerEvent( pTimerEvent );
                 }
             } while( pItemLink );
 
@@ -705,7 +705,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_ScheduleDeferred( AwsIotTaskPool_t * const 
                 /* If all safety checks completed, proceed. */
                 if ( _TASKPOOL_SUCCEEDED( error ) )
                 {
-                    _taskPoolTimerEvent_t * pTimerEvent = AwsIotTaskPool_Malloc( sizeof( _taskPoolTimerEvent_t ) );
+                    _taskPoolTimerEvent_t * pTimerEvent = IotTaskPool_MallocTimerEvent( sizeof( _taskPoolTimerEvent_t ) );
 
                     if( pTimerEvent == NULL )
                     {
@@ -1179,7 +1179,7 @@ static AwsIotTaskPoolJob_t * _fetchOrAllocateJob( AwsIotTaskPoolCache_t * const 
     /* If there is no available job in the cache, then allocate one. */
     if( pJob == NULL )
     {
-        pJob = ( AwsIotTaskPoolJob_t * ) AwsIotTaskPool_Malloc( sizeof( AwsIotTaskPoolJob_t ) );
+        pJob = ( AwsIotTaskPoolJob_t * ) IotTaskPool_MallocJob( sizeof( AwsIotTaskPoolJob_t ) );
 
         if( pJob != NULL )
         {
@@ -1209,7 +1209,7 @@ static void _recycleJob( AwsIotTaskPoolCache_t * const pCache, AwsIotTaskPoolJob
     AwsIotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) == false );
 
     /* We will recycle the job if there is space in the cache. */
-    if( pCache->freeCount < AWS_IOT_TASKPOOL_JOBS_RECYCLE_LIMIT )
+    if( pCache->freeCount < IOT_TASKPOOL_JOBS_RECYCLE_LIMIT )
     {
         pJob->userCallback = NULL;
         pJob->pUserContext = NULL;
@@ -1233,7 +1233,7 @@ static void _destroyJob( AwsIotTaskPoolJob_t * const pJob )
     /* Only dispose of dynamically allocated jobs. */
     if( ( pJob->status & AWS_IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
     {
-        AwsIotTaskPool_Free( pJob );
+        IotTaskPool_FreeJob( pJob );
     }
 }
 
@@ -1402,7 +1402,7 @@ static AwsIotTaskPoolError_t _tryCancelInternal( AwsIotTaskPool_t * const pTaskP
 
                     /* Remove the timer event associated with the canceled job and free the associated memory. */
                     IotListDouble_Remove( pTimerEventLink );
-                    AwsIotTaskPool_Free( IotLink_Container( _taskPoolTimerEvent_t, pTimerEventLink, link ) );
+                    IotTaskPool_FreeTimerEvent( IotLink_Container( _taskPoolTimerEvent_t, pTimerEventLink, link ) );
 
                     if ( shouldReschedule )
                     {
@@ -1596,7 +1596,7 @@ static void _timerThread( void * pArgument )
             _scheduleInternal( pTaskPool, pTimerEvent->pJob );
 
             /* Free the timer event. */
-            AwsIotTaskPool_Free( pTimerEvent );
+            IotTaskPool_FreeTimerEvent( pTimerEvent );
         }
     }
 
