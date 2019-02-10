@@ -154,22 +154,6 @@ static void EmulateWork()
 }
 
 /**
- * @brief A function that blocks execution for .
- */
-static void CleanupDelay()
-{
-    struct timespec delay =
-    {
-        .tv_sec  = 1,
-        .tv_nsec = 0
-    };
-
-    int error = clock_nanosleep( CLOCK_MONOTONIC, 0, &delay, NULL );
-
-    TEST_ASSERT_TRUE( error == 0 );
-}
-
-/**
  * @brief A callback that recycles its job.
  */
 static void ExecutionWithDestroyCb( AwsIotTaskPool_t * pTaskPool,
@@ -302,8 +286,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_CreateDestroy )
 
     TEST_ASSERT( AwsIotTaskPool_Create( &tpInfoLegal[ 0 ], NULL ) == AWS_IOT_TASKPOOL_BAD_PARAMETER );
     TEST_ASSERT( AwsIotTaskPool_Create( NULL, &taskPool ) == AWS_IOT_TASKPOOL_BAD_PARAMETER );
-
-    CleanupDelay();
 }
 
 /*-----------------------------------------------------------*/
@@ -340,8 +322,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_CreateJobError )
     }
 
     AwsIotTaskPool_Destroy( &taskPool );
-
-    CleanupDelay();
 }
 
 /*-----------------------------------------------------------*/
@@ -374,8 +354,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_CreateRecyclableJob )
     }
 
     AwsIotTaskPool_Destroy( &taskPool );
-
-    CleanupDelay();
 }
 
 /*-----------------------------------------------------------*/
@@ -402,8 +380,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasksError )
     TEST_ASSERT( AwsIotTaskPool_DestroyJob( &taskPool, &job ) == AWS_IOT_TASKPOOL_SUCCESS );
 
     AwsIotTaskPool_Destroy( &taskPool );
-
-    CleanupDelay();
 }
 
 /*-----------------------------------------------------------*/
@@ -430,8 +406,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleRecyclableTasksError )
     TEST_ASSERT( AwsIotTaskPool_RecycleJob( &taskPool, pJob ) == AWS_IOT_TASKPOOL_SUCCESS );
 
     AwsIotTaskPool_Destroy( &taskPool );
-
-    CleanupDelay();
 }
 
 /*-----------------------------------------------------------*/
@@ -512,8 +486,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasks_ScheduleOneThenWait )
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
-
-    CleanupDelay();
 }
 
 /*-----------------------------------------------------------*/
@@ -594,8 +566,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasks_ScheduleOneDeferredThenWait 
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
-
-    CleanupDelay();
 }
 
 /*-----------------------------------------------------------*/
@@ -677,8 +647,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasks_ScheduleOneRecyclableThenWai
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
-
-    CleanupDelay( );
 }
 
 /*-----------------------------------------------------------*/
@@ -756,8 +724,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasks_ScheduleAllThenWait )
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
-
-    CleanupDelay();
 }
 /*-----------------------------------------------------------*/
 
@@ -830,8 +796,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasks_ScheduleAllRecyclableThenWai
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
-
-    CleanupDelay();
 }
 
 /*-----------------------------------------------------------*/
@@ -904,8 +868,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasks_ScheduleAllDeferredRecyclabl
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
-
-    CleanupDelay();
 }
 
 /*-----------------------------------------------------------*/
@@ -992,11 +954,11 @@ TEST( Common_Unit_Task_Pool, TaskPool_CancelTasks )
             case AWS_IOT_TASKPOOL_SUCCESS:
                 canceled++;
 
-                TEST_ASSERT( 
-                    ( statusAtCancellation == AWS_IOT_TASKPOOL_STATUS_READY ) || 
-                    ( statusAtCancellation == AWS_IOT_TASKPOOL_STATUS_DEFERRED ) || 
-                    ( statusAtCancellation == AWS_IOT_TASKPOOL_STATUS_SCHEDULED ) || 
-                    ( statusAtCancellation == AWS_IOT_TASKPOOL_STATUS_CANCELED ) 
+                TEST_ASSERT(
+                    ( statusAtCancellation == AWS_IOT_TASKPOOL_STATUS_READY ) ||
+                    ( statusAtCancellation == AWS_IOT_TASKPOOL_STATUS_DEFERRED ) ||
+                    ( statusAtCancellation == AWS_IOT_TASKPOOL_STATUS_SCHEDULED ) ||
+                    ( statusAtCancellation == AWS_IOT_TASKPOOL_STATUS_CANCELED )
                 );
 
                 TEST_ASSERT( AwsIotTaskPool_GetStatus( &taskPool, &jobs[ count ], &statusAfterCancellation ) == AWS_IOT_TASKPOOL_SUCCESS );
@@ -1037,8 +999,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_CancelTasks )
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
-
-    CleanupDelay();
 }
 
 /*-----------------------------------------------------------*/
