@@ -309,9 +309,9 @@ AwsIotTaskPoolError_t AwsIotTaskPool_Destroy( AwsIotTaskPool_t * pTaskPool )
             /* Record how many active threads in the task pool. */
             activeThreads = pTaskPool->activeThreads;
 
-            /* Destroying a Task pool happens in six (6) stages: First, (1) we clear the job queue and (2) the timer queue. 
-             * Then (3) we clear the jobs cache. We will then (4) wait for all worker threads to signal exit, 
-             * before (5) setting the exit condition and wake up all active worker threads. Finally (6) destroying 
+            /* Destroying a Task pool happens in six (6) stages: First, (1) we clear the job queue and (2) the timer queue.
+             * Then (3) we clear the jobs cache. We will then (4) wait for all worker threads to signal exit,
+             * before (5) setting the exit condition and wake up all active worker threads. Finally (6) destroying
              * all task pool data structures and release the associated memory.
              */
 
@@ -729,7 +729,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_ScheduleDeferred( AwsIotTaskPool_t * const 
                         pJob->status &= ~AWS_IOT_TASKPOOL_STATUS_MASK;
                         pJob->status |= AWS_IOT_TASKPOOL_STATUS_DEFERRED;
 
-                        /* Peek the first event in the timer event list. There must be at least one, 
+                        /* Peek the first event in the timer event list. There must be at least one,
                          * since we just inserted it. */
                         pTimerEventLink = IotListDouble_PeekHead( &pTaskPool->timerEventsList );
                         AwsIotTaskPool_Assert( pTimerEventLink != NULL );
@@ -754,7 +754,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_ScheduleDeferred( AwsIotTaskPool_t * const 
 
 /*-----------------------------------------------------------*/
 
-AwsIotTaskPoolError_t AwsIotTaskPool_GetStatus( AwsIotTaskPool_t * const pTaskPool, 
+AwsIotTaskPoolError_t AwsIotTaskPool_GetStatus( AwsIotTaskPool_t * const pTaskPool,
                                                 const AwsIotTaskPoolJob_t * const pJob,
                                                 AwsIotTaskPoolJobStatus_t * const pStatus )
 {
@@ -772,7 +772,7 @@ AwsIotTaskPoolError_t AwsIotTaskPool_GetStatus( AwsIotTaskPool_t * const pTaskPo
         error = AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
     }
     else
-    { 
+    {
         _TASKPOOL_ENTER_CRITICAL_SECTION;
         {
             /* Bail out early if this task pool is shutting down. */
@@ -1071,10 +1071,10 @@ static void _taskPoolWorker( void * pUserContext )
                 /* Decrease the number of active threads. */
                 pTaskPool->activeThreads--;
 
+                _TASKPOOL_EXIT_CRITICAL_SECTION;
+
                 /* Signal that this worker is exiting. */
                 IotSemaphore_Post( &pTaskPool->startStopSignal );
-
-                _TASKPOOL_EXIT_CRITICAL_SECTION;
 
                 /* Abandon the OUTER LOOP. */
                 break;
@@ -1283,7 +1283,7 @@ static AwsIotTaskPoolError_t _scheduleInternal( AwsIotTaskPool_t * const pTaskPo
 
     if( activeThreads == pTaskPool->busyThreads )
     {
-        /* Grow the task pool up to the maximum number of threads indicated by the user. 
+        /* Grow the task pool up to the maximum number of threads indicated by the user.
          * Growing the taskpool can safely fail, the existing threads will eventually pick up
          * the job sometimes later. */
         if( activeThreads < pTaskPool->maxThreads )
@@ -1551,7 +1551,7 @@ static void _timerThread( void * pArgument )
             return;
         }
 
-        /* Dispatch all deferred job whose timer expired, then reset the timer for the next 
+        /* Dispatch all deferred job whose timer expired, then reset the timer for the next
          * job down the line. */
         while( true )
         {

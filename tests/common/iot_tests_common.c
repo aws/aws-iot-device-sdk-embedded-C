@@ -85,12 +85,6 @@ int main( int argc,
         return -1;
     }
 
-    /* Initialize the common libraries before running the tests. */
-    if( IotCommon_Init() == false )
-    {
-        return -1;
-    }
-
     /* Unity setup. */
     UnityFixture.Verbose = 1;
     UnityFixture.RepeatCount = 1;
@@ -101,9 +95,6 @@ int main( int argc,
     /* Run linear containers tests. */
     RUN_TEST_GROUP( Common_Unit_Linear_Containers );
     RUN_TEST_GROUP( Common_Unit_Task_Pool );
-
-    /* Clean up common libraries. */
-    IotCommon_Cleanup();
 
     /* Return the number of test failures. This will cause a non-zero exit code
      * if any test fails. */
