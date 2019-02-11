@@ -302,7 +302,7 @@ typedef struct IotTaskPool
  * @warning This is a system-level data type that should not be modified.
  *
  */
-typedef struct IotTaskPoolJobs
+typedef struct IotTaskPoolJob
 {
     IotTaskPoolRoutine_t userCallback; /**< @brief The user provided callback. */
     void * pUserContext;               /**< @brief The user provided context. */
