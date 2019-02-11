@@ -42,7 +42,7 @@
 /* Linear containers (lists and queues) include. */
 #include "iot_linear_containers.h"
 
-/*-------------------------- Task Pool enumerated types --------------------------*/
+/*-------------------------- Task pool enumerated types --------------------------*/
 
 /**
  * @enums{taskpool,Task pool library}
@@ -66,6 +66,7 @@ typedef enum IotTaskPoolError
      * - @ref taskpool_function_destroyjob
      * - @ref taskpool_function_recyclejob
      * - @ref taskpool_function_schedule
+     * - @ref taskpool_function_scheduledeferred
      * - @ref taskpool_function_getstatus
      * - @ref taskpool_function_trycancel
      *
@@ -73,7 +74,7 @@ typedef enum IotTaskPoolError
     IOT_TASKPOOL_SUCCESS = 0,
 
     /**
-     * @brief Task Pool operation failed because at laest one parameter is invalid.
+     * @brief Task pool operation failed because at laest one parameter is invalid.
      *
      * Functions that may return this value:
      * - @ref taskpool_function_createsystemtaskpool
@@ -84,6 +85,7 @@ typedef enum IotTaskPoolError
      * - @ref taskpool_function_destroyjob
      * - @ref taskpool_function_recyclejob
      * - @ref taskpool_function_schedule
+     * - @ref taskpool_function_scheduledeferred
      * - @ref taskpool_function_getstatus
      * - @ref taskpool_function_trycancel
      *
@@ -91,45 +93,50 @@ typedef enum IotTaskPoolError
     IOT_TASKPOOL_BAD_PARAMETER,
 
     /**
-     * @brief Task Pool operation failed because it is illegal.
+     * @brief Task pool operation failed because it is illegal.
      *
      * Functions that may return this value:
-     * - @ref taskpool_function_createsystemtaskpool
      * - @ref taskpool_function_destroyjob
      * - @ref taskpool_function_recyclejob
      * - @ref taskpool_function_schedule
+     * - @ref taskpool_function_scheduledeferred
      * - @ref taskpool_function_trycancel
      *
      */
     IOT_TASKPOOL_ILLEGAL_OPERATION,
 
     /**
-     * @brief Task Pool operation failed because allocating memory failed.
+     * @brief Task pool operation failed because allocating memory failed.
      *
      * Functions that may return this value:
      * - @ref taskpool_function_createsystemtaskpool
      * - @ref taskpool_function_create
-     * - @ref taskpool_function_setmaxthreads
-     * - @ref taskpool_function_schedule
+     * - @ref taskpool_function_setmaxthreads 
+     * - @ref taskpool_function_createrecyclablejob
+     * - @ref taskpool_function_scheduledeferred
      * - @ref taskpool_function_getstatus
      *
      */
     IOT_TASKPOOL_NO_MEMORY,
 
     /**
-     * @brief Task Pool operation failed because of an invalid parameter.
+     * @brief Task pool operation failed because of an invalid parameter.
      *
      * Functions that may return this value:
-     * - @ref taskpool_function_setmaxthreads
+     * - @ref taskpool_function_setmaxthreads 
+     * - @ref taskpool_function_createrecyclablejob
      * - @ref taskpool_function_destroyjob
      * - @ref taskpool_function_recyclejob
-     * - @ref taskpool_function_schedule
+     * - @ref taskpool_function_schedule 
+     * - @ref taskpool_function_scheduledeferred
+     * - @ref taskpool_function_getstatus
+     * - @ref taskpool_function_trycancel
      *
      */
     IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS,
 
     /**
-     * @brief Task Pool cancellation failed.
+     * @brief Task pool cancellation failed.
      *
      * Functions that may return this value:
      * - @ref taskpool_function_trycancel
@@ -139,12 +146,12 @@ typedef enum IotTaskPoolError
 } IotTaskPoolError_t;
 
 /**
- * @enums{taskpool,Task Pool library}
+ * @enums{taskpool,Task pool library}
  */
 
 /**
  * @ingroup taskpool_datatypes_enums
- * @brief Status codes of [Task Pool Job](@ref IotTaskPoolJob_t).
+ * @brief Status codes of [task pool Job](@ref IotTaskPoolJob_t).
  *
  */
 typedef enum IotTaskPoolJobStatus
@@ -173,8 +180,8 @@ typedef enum IotTaskPoolJobStatus
      */
     IOT_TASKPOOL_STATUS_EXECUTING,
 
-    /**
-     * @brief Job has been canceled before it was executed.
+    /** 
+     * @brief Job has been canceled before executing.
      *
      */
     IOT_TASKPOOL_STATUS_CANCELED,
@@ -195,10 +202,10 @@ struct IotTaskPool;
 struct IotTaskPoolJob;
 /** @endcond */
 
-/*---------------------------- Task Pool function pointer types ----------------------------*/
+/*---------------------------- Task pool function pointer types ----------------------------*/
 
 /**
- * @functionpointers{taskpool,Task Pool library}
+ * @functionpointers{taskpool,task pool library}
  */
 
 /**
@@ -214,10 +221,10 @@ typedef void ( * IotTaskPoolRoutine_t )( struct IotTaskPool * pTaskPool,
                                          struct IotTaskPoolJob * pJob,
                                          void * pUserContext );
 
-/*------------------------- Task Pool parameter structs --------------------------*/
+/*------------------------- Task pool parameter structs --------------------------*/
 
 /**
- * @paramstructs{taskpool,Task Pool}
+ * @paramstructs{taskpool,task pool}
  */
 
 /**
@@ -236,18 +243,18 @@ typedef struct IotTaskPoolInfo
      * @brief Specifies the operating parameters for a task pool.
      *
      * @attention #IotTaskPoolInfo_t.minThreads <b>MUST</b> be at least 1.
-     * #IotTaskPoolInfo_t.maxThreads <b>MUST</b> be smaller or equal to #IotTaskPoolInfo_t.minThreads.
+     * #IotTaskPoolInfo_t.maxThreads <b>MUST</b> be greater or equal to #IotTaskPoolInfo_t.minThreads.
      * If the minimum number of threads is same as the maximum, then the task pool will not try and grow the
      * number of worker threads at run time.
      */
 
     uint32_t minThreads; /**< @brief Minimum number of threads in a task pool. These threads will be created when the task pool is first created with @ref taskpool_function_create. */
-    uint32_t maxThreads; /**< @brief Maximum number of threads in a task pool. */
-    size_t stackSize;    /**< @brief Stack size for every task pool thread. */
-    int32_t priority;    /**< @brief priority for every task pool thread. */
+    uint32_t maxThreads; /**< @brief Maximum number of threads in a task pool. A task pool may try and grow the number of active threads up to #AwsIotTaskPoolInfo_t.maxThreads. */
+    uint32_t stackSize;  /**< @brief Stack size for every task pool thread. The stack size for each thread is fixed after the task pool is created and cannot be changed. */
+    uint32_t priority;   /**< @brief priority for every task pool thread. The priority for each thread is fixed after the task pool is created and cannot be changed. */
 } IotTaskPoolInfo_t;
 
-/*------------------------- Task Pool handles structs --------------------------*/
+/*------------------------- Task pool handles structs --------------------------*/
 
 /**
  * @ingroup taskpool_datatypes_types
@@ -258,8 +265,8 @@ typedef struct IotTaskPoolInfo
  */
 typedef struct IotTaskPoolCache
 {
-    IotListDouble_t freeList; /**< @brief Cached jobs are treaded into a list. */
-    uint32_t freeCount;       /**< @brief A counter for the jobs in the cache. */
+    IotListDouble_t freeList; /**< @brief A list ot hold cached jobs. */
+    uint32_t freeCount;       /**< @brief A counter to track the number of jobs in the cache. */
 } IotTaskPoolCache_t;
 
 
@@ -274,7 +281,7 @@ typedef struct IotTaskPoolCache
 typedef struct IotTaskPool
 {
     IotQueue_t dispatchQueue;        /**< @brief The queue for the jobs waiting to be executed. */
-    IotListDouble_t timerEventsList; /**< @brief The queue for all deferred jobs waiting to be executed. */
+    IotListDouble_t timerEventsList; /**< @brief The timeouts queue for all deferred jobs waiting to be executed. */
     IotTaskPoolCache_t jobsCache;    /**< @brief A cache to re-use jobs in order to limit memory allocations. */
     uint32_t minThreads;             /**< @brief The minimum number of threads for the task pool. */
     uint32_t maxThreads;             /**< @brief The maximum number of threads for the task pool. */
@@ -295,7 +302,7 @@ typedef struct IotTaskPool
  * @warning This is a system-level data type that should not be modified.
  *
  */
-typedef struct IotTaskPoolJob
+typedef struct IotTaskPoolJobs
 {
     IotTaskPoolRoutine_t userCallback; /**< @brief The user provided callback. */
     void * pUserContext;               /**< @brief The user provided context. */
@@ -306,17 +313,17 @@ typedef struct IotTaskPoolJob
 /*------------------------- TASKPOOL defined constants --------------------------*/
 
 /**
- * @constantspage{taskpool,Task Pool library}
+ * @constantspage{taskpool,task pool library}
  *
- * @section taskpool_constants_initializers Task Pool Initializers
- * @brief Provides default values for initializing the data types of the Task Pool library.
+ * @section taskpool_constants_initializers task pool Initializers
+ * @brief Provides default values for initializing the data types of the task pool library.
  *
  * @snippet this define_taskpool_initializers
  *
- * All user-facing data types of the Task Pool library can be initialized using
+ * All user-facing data types of the task pool library can be initialized using
  * one of the following.
  *
- * @warning Failure to initialize a Task Pool data type with the appropriate initializer
+ * @warning Failure to initialize a task pool data type with the appropriate initializer
  * may result in a runtime error!
  * @note The initializers may change at any time in future versions, but their
  * names will remain the same.

@@ -33,9 +33,9 @@
 
 /**
  * @def IotTaskPool_Assert( expression )
- * @brief Assertion macro for the Task Pool library.
+ * @brief Assertion macro for the Task pool library.
  *
- * Set @ref IOT_TASKPOOL_ENABLE_ASSERTS to `1` to enable assertions in the Task Pool
+ * Set @ref IOT_TASKPOOL_ENABLE_ASSERTS to `1` to enable assertions in the Task pool
  * library.
  *
  * @param[in] expression Expression to be evaluated.

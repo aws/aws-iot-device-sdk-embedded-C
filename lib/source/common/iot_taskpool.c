@@ -475,14 +475,14 @@ IotTaskPoolError_t IotTaskPool_CreateJob( const IotTaskPoolRoutine_t userCallbac
 IotTaskPoolError_t IotTaskPool_CreateRecyclableJob( IotTaskPool_t * const pTaskPool,
                                                     const IotTaskPoolRoutine_t userCallback,
                                                     void * const pUserContext,
-                                                    IotTaskPoolJob_t ** const pJob )
+                                                    IotTaskPoolJob_t ** const ppJob )
 {
     IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 
     /* Parameter checking. */
     if( ( pTaskPool == NULL ) ||
         ( userCallback == NULL ) ||
-        ( pJob == NULL ) )
+        ( ppJob == NULL ) )
     {
         error = IOT_TASKPOOL_BAD_PARAMETER;
     }
@@ -518,11 +518,13 @@ IotTaskPoolError_t IotTaskPool_CreateRecyclableJob( IotTaskPool_t * const pTaskP
             pTempJob->pUserContext = pUserContext;
             pTempJob->status = IOT_TASKPOOL_STATUS_READY;
 
-            *pJob = pTempJob;
+            *ppJob = pTempJob;
         }
         else
         {
             IotLogInfo( "Failed to allocate a job." );
+
+            error = IOT_TASKPOOL_NO_MEMORY;
         }
     }
 

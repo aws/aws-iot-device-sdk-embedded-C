@@ -37,19 +37,20 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/* Task Pool types. */
+/* Task pool types. */
 #include "types/iot_taskpool_types.h"
 
 /*------------------------- TASKPOOL defined constants --------------------------*/
 
 /**
- * @functionspage{taskpool,Task pool library}
+ * @functionspage{taskpool,task pool library}
  * - @functionname{taskpool_function_createsystemtaskpool}
  * - @functionname{taskpool_function_getsystemtaskpool}
  * - @functionname{taskpool_function_create}
  * - @functionname{taskpool_function_destroy}
  * - @functionname{taskpool_function_setmaxthreads}
- * - @functionname{taskpool_function_createjob}
+ * - @functionname{taskpool_function_createjob} 
+ * - @functionname{taskpool_function_createrecyclablejob}
  * - @functionname{taskpool_function_destroyjob}
  * - @functionname{taskpool_function_recyclejob}
  * - @functionname{taskpool_function_schedule}
@@ -65,6 +66,7 @@
  * @functionpage{IotTaskPool_Destroy,taskpool,destroy}
  * @functionpage{IotTaskPool_SetMaxThreads,taskpool,setmaxthreads}
  * @functionpage{IotTaskPool_CreateJob,taskpool,createjob}
+ * @functionpage{IotTaskPool_CreateJob,taskpool,createrecyclablejob}
  * @functionpage{IotTaskPool_DestroyJob,taskpool,destroyjob}
  * @functionpage{IotTaskPool_RecycleJob,taskpool,recyclejob}
  * @functionpage{IotTaskPool_Schedule,taskpool,schedule}
@@ -74,19 +76,20 @@
  */
 
 /**
- * @brief Initialization function for one instance of the System Task Pool of the Task Pool library.
+ * @brief Creates the one single instance of the system task pool.
  *
- * This function should be called once by the application to initialize the only instance of the system task pool.
- * An application should initialize the system task pool early in the boot sequence, before any library
- * that uses the system task pool has a chance to use it, or before any application code posts to the system task pool.
- * Early initialization it typically easy to accomplish by creating the system task pool before the scheduler is started.
+ * This function should be called once by the application to initialize the one single instance of the system task pool.
+ * An application should initialize the system task pool early in the boot sequence, before initializing any other library
+ * that uses the system task pool. such as MQTT, Shadow, Defernder, etc.. An application should also initialize the system 
+ * task pool before posting any jobs. Early initialization it typically easy to accomplish by creating the system task pool 
+ * before the scheduler is started.
  *
- * This function does not allocate memory to hold the Task Pool data structures and state, but it
+ * This function does not allocate memory to hold the task pool data structures and state, but it
  * may allocate memory to hold the dependent entities and data structures, e.g. the threads of the task
  * pool. The system task pool handle is recoverable for later use by calling (@ref taskpool_function_getsystemtaskpool) or
  * the shortcut @ref IOT_TASKPOOL_SYSTEM_TASKPOOL.
  *
- * @param[in] pInfo A pointer to the Task Pool initialization data.
+ * @param[in] pInfo A pointer to the task pool initialization data.
  *
  * @return One of the following:
  * - #IOT_TASKPOOL_SUCCESS
@@ -102,9 +105,10 @@ IotTaskPoolError_t IotTaskPool_CreateSystemTaskPool( const IotTaskPoolInfo_t * c
 /* @[declare_taskpool_createsystemtaskpool] */
 
 /**
- * @brief Retrieves the one and only instance of a system Task Pool of the Task Pool library.
+ * @brief Retrieves the one and only instance of a system task pool
  *
- * This function retrieves the sytem task pool created with (@ref taskpool_function_createsystemtaskpool).
+ * This function retrieves the sytem task pool created with (@ref taskpool_function_createsystemtaskpool), and it is functionally 
+ * equivalent to using the shortcut @ref AWS_IOT_TASKPOOL_SYSTEM_TASKPOOL.
  *
  * @return The system task pool handle.
  *
@@ -118,18 +122,17 @@ IotTaskPool_t * IotTaskPool_GetSystemTaskPool();
 /* @[declare_taskpool_getsystemtaskpool] */
 
 /**
- * @brief Initialization function for one instance of a Task Pool of the Task Pool library.
+ * @brief Creates one instance of a task pool.
  *
- * This function should be called by the user to initialiaze one instance of a Task
- * Pool. The Task Pool instance will be created around the storage pointed to by the `pTaskPool`
+ * This function should be called by the user to initialiaze one instance of a task
+ * pool. The task pool instance will be created around the storage pointed to by the `pTaskPool`
  * parameter. This function will create the minimum number of threads requested by the user
- * through an instance of the #IotTaskPoolInfo_t type specified with
- * the `pInfo` parameter.
- * This function does not allocate memory to hold the Task Pool data structures and state, but it
+ * through an instance of the #IotTaskPoolInfo_t type specified with the `pInfo` parameter.
+ * This function does not allocate memory to hold the task pool data structures and state, but it
  * may allocates memory to hold the dependent data structures, e.g. the threads of the task
  * pool.
  *
- * @param[in] pInfo A pointer to the Task Pool initialization data.
+ * @param[in] pInfo A pointer to the task pool initialization data.
  * @param[in,out] pTaskPool A pointer to the task pool storage to be initialized.
  * The pointer `pTaskPool` will hold a valid handle only if (@ref taskpool_function_create)
  * completes succesfully.
@@ -146,17 +149,18 @@ IotTaskPoolError_t IotTaskPool_Create( const IotTaskPoolInfo_t * const pInfo,
 /* @[declare_taskpool_create] */
 
 /**
- * @brief De-initialization function for a Task Pool of the Task Pool library.
+ * @brief Destroys a task pool instance and collects all memory associated with a task pool and its 
+ * satellite data structures.
  *
- * This function should be called to destroy one instance of a Task
- * Pool previously created with a call to @ref IotTaskPool_Create or @ref IotTaskPool_GetSystemTaskPool
- * and release all underlying resources. After calling this function, any job scheduled but not yet executed
- * will be cancelled and uninitialized, as if the user called @ref IotTaskPool_DestroyJob on every job
+ * This function should be called to destroy one instance of a task pool previously created with a call 
+ * to @ref taskpool_function_create or @ref taskpool_function_createsystemtaskpool.
+ * Calling this fuction release all underlying resources. After calling this function, any job scheduled but not yet executed
+ * will be cancelled and destroyed, as if the user called @ref AwsIotTaskPool_DestroyJob on every job
  * previously scheduled.
  * The `pTaskPool` instance will no longer be valid after this function returns.
  *
- * @param[in] pTaskPool A handle to the task pool, e.g. as returned by a call to @ref taskpool_function_create.
- * The `pTaskPool` instance will no longer be valid after this function returns.
+ * @param[in] pTaskPool A handle to the task pool, e.g. as returned by a call to @ref taskpool_function_create or 
+ * @ref taskpool_function_createsystemtaskpool. The `pTaskPool` instance will no longer be valid after this function returns.
  *
  * @return One of the following:
  * - #IOT_TASKPOOL_SUCCESS
@@ -167,8 +171,8 @@ IotTaskPoolError_t IotTaskPool_Create( const IotTaskPoolInfo_t * const pInfo,
 IotTaskPoolError_t IotTaskPool_Destroy( IotTaskPool_t * pTaskPool );
 /* @[declare_taskpool_destroy] */
 
-/**
- * @brief This function sets the maximum number of threads at runtime.
+/** 
+ * @brief Sets the maximum number of threads for one instance of a task pool.
  *
  * This function sets the maximum number of threads for the task pool
  * pointed to by `pTaskPool`.
@@ -182,7 +186,8 @@ IotTaskPoolError_t IotTaskPool_Destroy( IotTaskPool_t * pTaskPool );
  *
  * @return One of the following:
  * - #IOT_TASKPOOL_SUCCESS
- * - #IOT_TASKPOOL_BAD_PARAMETER
+ * - #IOT_TASKPOOL_BAD_PARAMETER 
+ * - #AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS
  *
  */
 /* @[declare_taskpool_setmaxthreads] */
@@ -191,7 +196,7 @@ IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t * pTaskPool,
 /* @[declare_taskpool_setmaxthreads] */
 
 /**
- * @brief This function creates a job for the task pool around a user-provided storage.
+ * @brief Creates a job for the task pool around a user-provided storage.
  *
  * This function may allocate memory to hold the state for a job.
  *
@@ -204,7 +209,6 @@ IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t * pTaskPool,
  * @return One of the following:
  * - #IOT_TASKPOOL_SUCCESS
  * - #IOT_TASKPOOL_BAD_PARAMETER
- * - #IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS
  *
  *
  */
@@ -215,44 +219,52 @@ IotTaskPoolError_t IotTaskPool_CreateJob( const IotTaskPoolRoutine_t userCallbac
 /* @[declare_taskpool_createjob] */
 
 /**
- * @brief This function creates a job for the task pool around a user-provided storage.
+ * brief Creates a job for the task pool by allocating the job dynamically. 
  *
- * This function may allocate memory to hold the state for a job.
+ * A recyclable job does not need to be allocated twice, but it can rather be reused through 
+ * subsequent calls to @ref AwsIotTaskPool_CreateRecyclableJob.
  *
  * @param[in] pTaskPool A handle to the task pool for which to create a recyclable job.
  * @param[in] userCallback A user-specified callback for the job.
  * @param[in] pUserContext A user-specified context for the callback.
- * @param[out] pJob A pointer to an instance of @ref IotTaskPoolJob_t that will be initialized when this
+ * @param[out] ppJob A pointer to an instance of @ref AwsIotTaskPoolJob_t that will be initialized when this
  * function returns succesfully. This handle can be used to inspect the job status with
  * @ref IotTaskPool_GetStatus or cancel the job with @ref IotTaskPool_TryCancel, etc....
  *
  * @return One of the following:
- * - #IOT_TASKPOOL_SUCCESS
- * - #IOT_TASKPOOL_BAD_PARAMETER
+ * - #IOT_TASKPOOL_SUCCESS 
+ * - #AWS_IOT_TASKPOOL_BAD_PARAMETER
+ * - #AWS_IOT_TASKPOOL_NO_MEMORY
  * - #IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS
+ * 
+ * @note This function will not allocate memory.
  *
+ * @warning A recyclable job should be recycled with a call to @ref AwsIotTaskPool_RecycleJob rather than destroyed.
  *
- */
-/* @[declare_taskpool_createjob] */
+ */ 
+/* @[declare_taskpool_createrecyclablejob] */
 IotTaskPoolError_t IotTaskPool_CreateRecyclableJob( IotTaskPool_t * const pTaskPool,
                                                     const IotTaskPoolRoutine_t userCallback,
                                                     void * const pUserContext,
-                                                    IotTaskPoolJob_t ** const pJob );
-/* @[declare_taskpool_createjob] */
+                                                    IotTaskPoolJob_t ** const ppJob );
+/* @[declare_taskpool_createrecyclablejob] */
 
 /**
  * @brief This function uninitializes a job.
  *
- * This function will destroy a job created with @ref IotTaskPool_CreateJob. A job should not be destroyed twice. A job
- * that was previously scheduled but has not completed yet or a job that was successfully should not be destroyed.
- * An attempt to do may result in an @ref IOT_TASKPOOL_ILLEGAL_OPERATION error.
+ * This function will destroy a job created with @ref AwsIotTaskPool_CreateJob or @ref AwsIotTaskPool_CreateRecyclableJob. 
+ * A job should not be destroyed twice. A job that was previously scheduled but has not completed yet should not be destroyed,
+ * but rather the application should attempt to cancel it first by calling @ref AwsIotTaskPool_TryCancel.
+ * An attempt to destroy a job that was scheduled but not yet executed or canceled, may result in a 
+ * @ref AWS_IOT_TASKPOOL_ILLEGAL_OPERATION error.
  *
  * @param[in] pTaskPool A handle to the task pool, e.g. as returned by a call to @ref taskpool_function_create.
  * @param[in] pJob A handle to a job that was create with a call to @ref IotTaskPool_CreateJob.
  *
  * @return One of the following:
  * - #IOT_TASKPOOL_SUCCESS
- * - #IOT_TASKPOOL_BAD_PARAMETER
+ * - #IOT_TASKPOOL_BAD_PARAMETER 
+ * - #AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS
  *
  * @warning The task pool will try and prevent destroying jobs that are currently queued for execution, but does
  * not enforce strict ordering of operations. It is up to the user to make sure @ref IotTaskPool_DestroyJob is not called
@@ -265,10 +277,11 @@ IotTaskPoolError_t IotTaskPool_DestroyJob( IotTaskPool_t * const pTaskPool,
 /* @[declare_taskpool_destroyjob] */
 
 /**
- * @brief This function recycles a job into the task pool job cache.
+ * @brief Rrecycles a job into the task pool job cache.
  *
  * This function will try and recycle the job into the task pool cache. If the cache is at the upper limit,
- * the job memory is de-allocated. The job should be recycled into a task pool from where it was allocated.
+ * the job memory is destroyed as if the user called @ref AwsIotTaskPool_DestroyJob. The job should be recycled into 
+ * the task pool instance from where it was allocated.
  * Failure to do so will yield undefined results. A job should not be recycled twice. A job
  * that was previously scheduled but not completed or canceled cannot be safely recycled. An attempt to do so will result
  * in an @ref IOT_TASKPOOL_ILLEGAL_OPERATION error.
@@ -279,7 +292,8 @@ IotTaskPoolError_t IotTaskPool_DestroyJob( IotTaskPool_t * const pTaskPool,
  * @return One of the following:
  * - #IOT_TASKPOOL_SUCCESS
  * - #IOT_TASKPOOL_BAD_PARAMETER
- * - #IOT_TASKPOOL_ILLEGAL_OPERATION
+ * - #IOT_TASKPOOL_ILLEGAL_OPERATION 
+ * - #AWS_IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS
  *
  * @warning The `pTaskPool` used in this function should be the same
  * used to create the job pointed to by `pJob`, or the results will be undefined.
@@ -298,10 +312,10 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t * const pTaskPool,
 /* @[declare_taskpool_recyclejob] */
 
 /**
- * @brief This function schedules a job created with @ref taskpool_function_createjob against the task pool
- * pointed to by `pTaskPool`.
+ * @brief This function schedules a job created with @ref taskpool_function_createjob or @ref taskpool_function_createrecyclablejob 
+ * against the task pool pointed to by `pTaskPool`.
  *
- * See @ref taskpool_design for a description of the jobs lifetime and interaction with the threads used in the Task Pool
+ * See @ref taskpool_design for a description of the jobs lifetime and interaction with the threads used in the task pool
  * library.
  *
  * @param[in] pTaskPool A handle to the task pool that must have been previously initialized with.
@@ -314,21 +328,22 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t * const pTaskPool,
  * - #IOT_TASKPOOL_ILLEGAL_OPERATION
  * - #IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS
  *
+ * 
+ * @note This function will not allocate memory, so it is guaranteed to succeed if the paramters are correct and the task pool 
+ * was correctly initialized, and not yet destroyed.
  *
- * @note This function will not allocate memory.
- *
- * @warning The `pTaskPool` used in this function should be the same
- * used to create the job pointed to by `pJob`, or the results will be undefined.
+ * @warning The `pTaskPool` used in this function should be the same used to create the job pointed to by `pJob`, or the 
+ * results will be undefined.
  *
  * <b>Example</b>
  * @code{c}
- * // An example of a user context to pass to a callback through a Task Pool thread.
+ * // An example of a user context to pass to a callback through a task pool thread.
  * typedef struct JobUserContext
  * {
  *     uint32_t counter;
  * } JobUserContext_t;
  *
- * // An example of a user callback to invoke through a Task Pool thread.
+ * // An example of a user callback to invoke through a task pool thread.
  * static void ExecutionCb( IotTaskPool_t * pTaskPool, IotTaskPoolJob_t * pJob, void * context )
  * {
  *     ( void )pTaskPool;
@@ -393,7 +408,7 @@ IotTaskPoolError_t IotTaskPool_Schedule( IotTaskPool_t * const pTaskPool,
  * @brief This function schedules a job created with @ref taskpool_function_createjob against the task pool
  * pointed to by `pTaskPool` to be executed after a userdefined time interval.
  *
- * See @ref taskpool_design for a description of the jobs lifetime and interaction with the threads used in the Task Pool
+ * See @ref taskpool_design for a description of the jobs lifetime and interaction with the threads used in the task pool
  * library.
  *
  * @param[in] pTaskPool A handle to the task pool that must have been previously initialized with.
@@ -423,7 +438,7 @@ IotTaskPoolError_t IotTaskPool_ScheduleDeferred( IotTaskPool_t * const pTaskPool
  * @brief This function retrieves the current status of a job.
  *
  * @param[in] pTaskPool A handle to the task pool that must have been previously initialized with
- * a call to @ref taskpool_function_create.
+ * a call to @ref taskpool_function_create or @ref taskpool_function_createsystemtaskpool.
  * @param[in] pJob The job to cancel.
  * @param[out] pStatus The status of the job at the time of cancellation.
  *
@@ -447,8 +462,7 @@ IotTaskPoolError_t IotTaskPool_GetStatus( IotTaskPool_t * const pTaskPool,
  * A job can be canceled only if it is not yet executing, i.e. if its status is
  * @ref IOT_TASKPOOL_STATUS_READY or @ref IOT_TASKPOOL_STATUS_SCHEDULED. Calling
  * @ref IotTaskPool_TryCancel on a job whose status is @ref IOT_TASKPOOL_STATUS_EXECUTING,
- * @ref IOT_TASKPOOL_STATUS_COMPLETED, or @IOT_TASKPOOL_STATUS_CANCELED will yield
- * a @IOT_TASKPOOL_CANCEL_FAILED return result.
+ * or @AWS_IOT_TASKPOOL_STATUS_CANCELED will yield a @AWS_IOT_TASKPOOL_CANCEL_FAILED return result.
  *
  * @param[in] pTaskPool A handle to the task pool that must have been previously initialized with
  * a call to @ref taskpool_function_create.
@@ -458,8 +472,8 @@ IotTaskPoolError_t IotTaskPool_GetStatus( IotTaskPool_t * const pTaskPool,
  * @return One of the following:
  * - #IOT_TASKPOOL_SUCCESS
  * - #IOT_TASKPOOL_BAD_PARAMETER
- * - #IOT_TASKPOOL_CANCEL_FAILED
  * - #IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS
+ * - #IOT_TASKPOOL_CANCEL_FAILED
  *
  * @warning The `pTaskPool` used in this function should be the same
  * used to create the job pointed to by `pJob`, or the results will be undefined.

@@ -4,7 +4,7 @@
 
 # Basic project information.
 PROJECT_NAME = "TASKPOOL"
-PROJECT_BRIEF = "Task Pool library"
+PROJECT_BRIEF = "Task pool library"
 
 # Library documentation output directory.
 HTML_OUTPUT = taskpool

@@ -7,17 +7,17 @@ participant "Application" as app
 participant "User Callback" as callback
 participant "Job" as job
 
-participant "Task Pool public API" as TP
+participant "Task pool public API" as TP
 participant "Dispatch queue" as queue
 participant "Worker Threads" as workers
 
-box "Task Pool" #LightBlue
+box "Task pool" #LightBlue
     participant TP
     participant queue
     participant workers
 end box
 
-== Create Task Pool ==
+== Create task pool ==
 
 activate app
 
@@ -30,7 +30,7 @@ TP --[#blue]> app
 activate TP
 workers -> workers: Wait on incoming jobs
 
-== Use Task Pool ==
+== Use task pool ==
 
 loop Application loop: Create and schedule jobs
 	app -[#blue]> TP: AwsIotTaskPool_CreateJob: create a job
@@ -64,7 +64,7 @@ loop Application loop: Create and schedule jobs
 	
 end
 	
-== Destroy Task Pool ==
+== Destroy task pool ==
 
     app -[#blue]> TP: AwsIotTaskPool_Destroy: destroy the task pool
 	TP -> workers: Shutdown worker threads
