@@ -333,64 +333,26 @@ static void _invokeSend( _mqttOperation_t * const pOperation )
 
 static void _invokeCallback( _mqttOperation_t * const pOperation )
 {
-    _mqttOperation_t * i = NULL, * pCurrent = NULL;
     IotMqttCallbackParam_t callbackParam = { .operation = { 0 } };
 
-    if( pOperation->incomingPublish == true )
-    {
-        /* Set the pointer to the first PUBLISH. */
-        i = pOperation;
+    /* Operations with no callback should not have been passed. */
+    IotMqtt_Assert( pOperation->notify.callback.function != NULL );
 
-        /* Process each PUBLISH in the operation. */
-        while( i != NULL )
-        {
-            /* Save a pointer to the current PUBLISH and move the iterating
-             * pointer. */
-            pCurrent = i;
-            i = i->pNextPublish;
+    IotLogDebug( "Operation %s received from queue. Invoking user callback.",
+                    IotMqtt_OperationType( pOperation->operation ) );
 
-            /* Process the current PUBLISH. */
-            if( ( pCurrent->publishInfo.pPayload != NULL ) &&
-                ( pCurrent->publishInfo.pTopicName != NULL ) )
-            {
-                callbackParam.message.info = pCurrent->publishInfo;
+    /* Set callback parameters. */
+    callbackParam.mqttConnection = pOperation->pMqttConnection;
+    callbackParam.operation.type = pOperation->operation;
+    callbackParam.operation.reference = pOperation;
+    callbackParam.operation.result = pOperation->status;
 
-                _IotMqtt_ProcessPublish( pCurrent->pMqttConnection,
-                                         &callbackParam );
-            }
+    /* Invoke user callback function. */
+    pOperation->notify.callback.function( pOperation->notify.callback.param1,
+                                            &callbackParam );
 
-            /* Free any buffers associated with the current PUBLISH message. */
-            if( pCurrent->freeReceivedData != NULL )
-            {
-                IotMqtt_Assert( pCurrent->freeReceivedData != NULL );
-                pCurrent->freeReceivedData( ( void * ) pCurrent->pReceivedData );
-            }
-
-            /* Free the current PUBLISH. */
-            IotMqtt_FreeOperation( pCurrent );
-        }
-    }
-    else
-    {
-        /* Operations with no callback should not have been passed. */
-        IotMqtt_Assert( pOperation->notify.callback.function != NULL );
-
-        IotLogDebug( "Operation %s received from queue. Invoking user callback.",
-                     IotMqtt_OperationType( pOperation->operation ) );
-
-        /* Set callback parameters. */
-        callbackParam.mqttConnection = pOperation->pMqttConnection;
-        callbackParam.operation.type = pOperation->operation;
-        callbackParam.operation.reference = pOperation;
-        callbackParam.operation.result = pOperation->status;
-
-        /* Invoke user callback function. */
-        pOperation->notify.callback.function( pOperation->notify.callback.param1,
-                                              &callbackParam );
-
-        /* Once the user-provided callback returns, the operation can be destroyed. */
-        _IotMqtt_DestroyOperation( pOperation );
-    }
+    /* Once the user-provided callback returns, the operation can be destroyed. */
+    _IotMqtt_DestroyOperation( pOperation );
 }
 
 /*-----------------------------------------------------------*/
@@ -603,6 +565,85 @@ void _IotMqtt_DestroyOperation( void * pData )
 
     /* Free the memory used to hold operation data. */
     IotMqtt_FreeOperation( pOperation );
+}
+
+/*-----------------------------------------------------------*/
+
+void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
+                                      IotTaskPoolJob_t * pPublishJob,
+                                      void * pContext )
+{
+    _mqttOperation_t * pCurrent = NULL, * pNext = pContext;
+    IotMqttCallbackParam_t callbackParam = { .message = { 0 } };
+
+    /* Check parameters. */
+    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
+    IotMqtt_Assert( pNext->incomingPublish == true );
+    IotMqtt_Assert( pPublishJob == &( pNext->job ) );
+
+    /* Process each linked incoming PUBLISH. */
+    while( pNext != NULL )
+    {
+        /* Save a pointer to the current PUBLISH and move the iterating
+         * pointer. */
+        pCurrent = pNext;
+        pNext = pNext->pNextPublish;
+
+        /* Process the current PUBLISH. */
+        if( ( pCurrent->publishInfo.pPayload != NULL ) &&
+            ( pCurrent->publishInfo.pTopicName != NULL ) )
+        {
+            callbackParam.message.info = pCurrent->publishInfo;
+
+            _IotMqtt_InvokeSubscriptionCallback( pCurrent->pMqttConnection,
+                                                 &callbackParam );
+        }
+
+        /* Free any buffers associated with the current PUBLISH message. */
+        if( pCurrent->freeReceivedData != NULL )
+        {
+            IotMqtt_Assert( pCurrent->pReceivedData != NULL );
+            pCurrent->freeReceivedData( ( void * ) pCurrent->pReceivedData );
+        }
+
+        /* Free the current PUBLISH. */
+        IotMqtt_FreeOperation( pCurrent );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
+                                           IotTaskPoolRoutine_t jobRoutine )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+    IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
+
+    /* Check that job routine is valid. */
+    IotMqtt_Assert( jobRoutine == _IotMqtt_ProcessIncomingPublish );
+
+    /* Creating a new job should never fail when parameters are valid. */
+    taskPoolStatus = IotTaskPool_CreateJob( jobRoutine,
+                                            pOperation,
+                                            &( pOperation->job ) );
+    IotMqtt_Assert( taskPoolStatus == IOT_TASKPOOL_SUCCESS );
+
+    /* Schedule the new job. */
+    taskPoolStatus = IotTaskPool_Schedule( IOT_SYSTEM_TASKPOOL, &( pOperation->job ) );
+
+    if( taskPoolStatus != IOT_TASKPOOL_SUCCESS )
+    {
+        /* Scheduling a newly-created job should never be invalid or illegal. */
+        IotMqtt_Assert( taskPoolStatus != IOT_TASKPOOL_BAD_PARAMETER );
+        IotMqtt_Assert( taskPoolStatus != IOT_TASKPOOL_ILLEGAL_OPERATION );
+
+        IotLogWarn( "Failed to schedule MQTT operation, status %d.",
+                     taskPoolStatus );
+
+        status = IOT_MQTT_SCHEDULING_ERROR;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/

@@ -310,8 +310,8 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * const pMqttConnect
 
 /*-----------------------------------------------------------*/
 
-void _IotMqtt_ProcessPublish( _mqttConnection_t * const pMqttConnection,
-                              IotMqttCallbackParam_t * const pCallbackParam )
+void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnection,
+                                          IotMqttCallbackParam_t * const pCallbackParam )
 {
     _mqttSubscription_t * pSubscription = NULL;
     IotLink_t * pStartPoint = NULL;
@@ -325,6 +325,14 @@ void _IotMqtt_ProcessPublish( _mqttConnection_t * const pMqttConnection,
         .topicNameLength = pCallbackParam->message.info.topicNameLength,
         .exactMatchOnly  = false
     };
+
+    /* Increment MQTT connection reference count to mark it as being used for
+     * subscription callbacks. Do not proceed if the reference count could not
+     * be incremented; in this case, the connection is likely closed. */
+    if( _IotMqtt_IncrementConnectionReferences( pMqttConnection ) == false )
+    {
+        return;
+    }
 
     /* Prevent any other thread from modifying the subscription list while this
      * function is searching. */
@@ -389,6 +397,8 @@ void _IotMqtt_ProcessPublish( _mqttConnection_t * const pMqttConnection,
     }
 
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+
+    _IotMqtt_DecrementConnectionReferences( pMqttConnection );
 }
 
 /*-----------------------------------------------------------*/

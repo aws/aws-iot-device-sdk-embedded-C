@@ -42,6 +42,9 @@
 /* MQTT include. */
 #include "iot_mqtt.h"
 
+/* Task pool include. */
+#include "iot_taskpool.h"
+
 /**
  * @def IotMqtt_Assert( expression )
  * @brief Assertion macro for the MQTT library.
@@ -330,11 +333,15 @@ typedef struct _mqttSubscription
  */
 typedef struct _mqttConnection
 {
-    bool errorOccurred;                        /**< @brief Tracks if a protocol violation or other error occurred. */
     bool awsIotMqttMode;                       /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
     IotMqttNetIf_t network;                    /**< @brief Network interface provided to @ref mqtt_function_connect. */
+
+    bool disconnected;                         /**< @brief Tracks if this connection has been disconnected. */
+    IotMutex_t referencesMutex;                /**< @brief Grants exclusive access to disconnected flag and reference count. */
+    int32_t references;                        /**< @brief Counts callbacks and operations using this connection. */
+
     IotListDouble_t subscriptionList;          /**< @brief Holds subscriptions associated with this connection. */
-    IotMutex_t subscriptionMutex;              /**< @brief Grants exclusive access to the #_mqttConnection_t.subscriptionList. */
+    IotMutex_t subscriptionMutex;              /**< @brief Grants exclusive access to #_mqttConnection_t.subscriptionList. */
 
     IotTimer_t timer;                          /**< @brief Expires when a timer event should be processed. */
     IotMutex_t timerMutex;                     /**< @brief Prevents concurrent access from timer thread and protects timer event list. */
@@ -357,6 +364,8 @@ typedef struct _mqttOperation
 
     bool incomingPublish;                     /**< @brief Set to true if this operation an incoming PUBLISH. */
     struct _mqttConnection * pMqttConnection; /**< @brief MQTT connection associated with this operation. */
+
+    IotTaskPoolJob_t job;                     /**< @brief Task pool job associated with this operation. */
 
     union
     {
@@ -777,7 +786,7 @@ IotMqttError_t _IotMqtt_SerializeDisconnect( uint8_t ** const pDisconnectPacket,
 void _IotMqtt_FreePacket( uint8_t * pPacket );
 
 /*-------------------- MQTT operation record functions ----------------------*/
-
+/*----------------- MQTT subscription management functions ------------------*/
 /**
  * @brief Compare two #_mqttTimerEvent_t by expiration time.
  *
@@ -827,6 +836,30 @@ IotMqttError_t _IotMqtt_EnqueueOperation( _mqttOperation_t * const pOperation,
                                           _mqttOperationQueue_t * const pQueue );
 
 /**
+ * @brief Task pool routine for processing an incoming PUBLISH message.
+ *
+ * @param[in] pTaskPool Pointer to the system task pool.
+ * @param[in] pPublishJob Pointer to an operation's job.
+ * @param[in] pContext Pointer to an operation, passed as an opaque context.
+ */
+void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
+                                      IotTaskPoolJob_t * pPublishJob,
+                                      void * pContext );
+
+/**
+ * @brief Schedule an operation for immediate processing.
+ *
+ * @param[in] pOperation The operation to schedule.
+ * @param[in] jobRoutine The routine to run for the job. Must be either
+ * #_IotMqtt_ProcessSend, #_IotMqtt_ProcessCompletedOperation, or
+ * #_IotMqtt_ProcessIncomingPublish.
+ *
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_SCHEDULING_ERROR.
+ */
+IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
+                                           IotTaskPoolRoutine_t jobRoutine );
+
+/**
  * @brief Search the list of MQTT operations pending responses using an operation
  * name and packet identifier. Removes a matching operation from the list if found.
  *
@@ -849,7 +882,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( IotMqttOperationType_t operation,
  */
 void _IotMqtt_Notify( _mqttOperation_t * const pOperation );
 
-/*------------------- Subscription management functions ---------------------*/
+/*----------------- MQTT subscription management functions ------------------*/
 
 /**
  * @brief Add an array of subscriptions to the subscription manager.
@@ -875,8 +908,8 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * const pMqttConnect
  * PUBLISH.
  * @param[in] pCallbackParam The parameter to pass to a PUBLISH callback.
  */
-void _IotMqtt_ProcessPublish( _mqttConnection_t * const pMqttConnection,
-                              IotMqttCallbackParam_t * const pCallbackParam );
+void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnection,
+                                          IotMqttCallbackParam_t * const pCallbackParam );
 
 /**
  * @brief Remove a single subscription from the subscription manager by
@@ -903,5 +936,26 @@ void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * const pMqttConnect
 void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * const pMqttConnection,
                                                const IotMqttSubscription_t * const pSubscriptionList,
                                                size_t subscriptionCount );
+
+/*------------------ MQTT connection management functions -------------------*/
+
+/**
+ * @brief Attempt to increment the reference count of an MQTT connection.
+ *
+ * @param[in] pMqttConnection The referenced MQTT connection.
+ *
+ * @return `true` if the reference count was incremented; `false` otherwise. The
+ * reference count will not be incremented for a disconnected connection.
+ */
+bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * const pMqttConnection );
+
+/**
+ * @brief Decrement the reference count of an MQTT connection.
+ *
+ * Also destroys an unreferenced MQTT connection.
+ *
+ * @param[in] pMqttConnection The referenced MQTT connection.
+ */
+void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * const pMqttConnection );
 
 #endif /* ifndef _IOT_MQTT_INTERNAL_H_ */

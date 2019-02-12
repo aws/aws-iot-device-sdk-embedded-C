@@ -271,8 +271,8 @@ static bool _processKeepAliveEvent( _mqttConnection_t * const pMqttConnection,
             /* PINGRESP was not received within IOT_MQTT_RESPONSE_WAIT_MS. */
             IotLogError( "Timeout waiting on PINGRESP." );
 
-            /* Set the error flag. The MQTT connection will be closed. */
-            pMqttConnection->errorOccurred = true;
+            /* Mark the MQTT connection as disconnected. */
+            pMqttConnection->disconnected = true;
 
             /* Free the keep-alive event and destroy the PINGREQ operation, as they
              * will no longer be used by a closed connection. */
@@ -541,10 +541,22 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
         return NULL;
     }
 
+    /* Create the references mutex for a new connection. */
+    if( IotMutex_Create( &( pNewMqttConnection->referencesMutex ), false ) == false )
+    {
+        IotLogError( "Failed to create references mutex for new connection." );
+        IotMutex_Destroy( &( pNewMqttConnection->timerMutex ) );
+        IotMqtt_FreeConnection( pNewMqttConnection );
+
+        return NULL;
+    }
+
+    /* Create the subscription mutex for a new connection. */
     if( IotMutex_Create( &( pNewMqttConnection->subscriptionMutex ), false ) == false )
     {
         IotLogError( "Failed to create subscription mutex for new connection." );
         IotMutex_Destroy( &( pNewMqttConnection->timerMutex ) );
+        IotMutex_Destroy( &( pNewMqttConnection->referencesMutex ) );
         IotMqtt_FreeConnection( pNewMqttConnection );
 
         return NULL;
@@ -561,6 +573,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     {
         IotLogError( "Failed to create timer for new connection." );
         IotMutex_Destroy( &( pNewMqttConnection->timerMutex ) );
+        IotMutex_Destroy( &( pNewMqttConnection->referencesMutex ) );
         IotMutex_Destroy( &( pNewMqttConnection->subscriptionMutex ) );
         IotMqtt_FreeConnection( pNewMqttConnection );
 
@@ -651,12 +664,17 @@ static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
         pMqttConnection->pPingreqOperation = NULL;
     }
 
-    /* Remove any previous session subscriptions. */
+    /* Remove all subscriptions. */
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
-    IotListDouble_RemoveAll( &( pMqttConnection->subscriptionList ),
-                             IotMqtt_FreeSubscription,
-                             offsetof( _mqttSubscription_t, link ) );
+    IotListDouble_RemoveAllMatches( &( pMqttConnection->subscriptionList ),
+                                    _mqttSubscription_shouldRemove,
+                                    NULL,
+                                    IotMqtt_FreeSubscription,
+                                    offsetof( _mqttSubscription_t, link ) );
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+
+    /* Destroy references mutex. */
+    IotMutex_Destroy( &( pMqttConnection->referencesMutex ) );
 
     /* Destroy timer and mutexes. */
     IotClock_TimerDestroy( &( pMqttConnection->timer ) );
@@ -828,6 +846,71 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
     /* The subscription operation is waiting for a network response. */
     return IOT_MQTT_STATUS_PENDING;
+}
+
+/*-----------------------------------------------------------*/
+
+bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * const pMqttConnection )
+{
+    bool disconnected = false;
+
+    /* Lock the mutex protecting the reference count. */
+    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+
+    /* Reference count must not be negative. */
+    IotMqtt_Assert( pMqttConnection->references >= 0 );
+
+    /* Read connection status. */
+    disconnected = pMqttConnection->disconnected;
+
+    /* Increment the connection's reference count if it is not disconnected. */
+    if( disconnected == false )
+    {
+        ( pMqttConnection->references )++;
+        IotLogDebug( "Reference count for MQTT connection %p changed from %ld to %ld.",
+                     pMqttConnection,
+                     ( long int ) pMqttConnection->references - 1,
+                     ( long int ) pMqttConnection->references );
+    }
+    else
+    {
+        IotLogWarn( "Attempt to use closed MQTT connection %p.", pMqttConnection );
+    }
+
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
+    return ( disconnected == false );
+}
+
+/*-----------------------------------------------------------*/
+
+void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * const pMqttConnection )
+{
+    bool destroyConnection = false;
+
+    /* Lock the mutex protecting the reference count. */
+    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+
+    /* Decrement reference count. It must not be negative. */
+    ( pMqttConnection->references )--;
+    IotMqtt_Assert( pMqttConnection->references >= 0 );
+
+    /* Check if this connection may be destroyed. */
+    if( pMqttConnection->disconnected == true )
+    {
+        if( pMqttConnection->references == 0 )
+        {
+            destroyConnection = true;
+        }
+    }
+
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
+    /* Destroy an unreferenced MQTT connection. */
+    if( destroyConnection == true )
+    {
+        _destroyMqttConnection( pMqttConnection );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -1234,9 +1317,9 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
     IotLogDebug( "Stopping connection timer." );
     IotClock_TimerDestroy( &( pMqttConnection->timer ) );
 
-    /* Only send a DISCONNECT packet if no error occurred and the "cleanup only"
+    /* Only send a DISCONNECT packet if the connection is active and the "cleanup only"
      * option is false. */
-    if( ( pMqttConnection->errorOccurred == false ) && ( cleanupOnly == false ) )
+    if( ( pMqttConnection->disconnected == false ) && ( cleanupOnly == false ) )
     {
         /* Create a DISCONNECT operation. This function blocks until the DISCONNECT
          * packet is sent, so it sets IOT_MQTT_FLAG_WAITABLE. */

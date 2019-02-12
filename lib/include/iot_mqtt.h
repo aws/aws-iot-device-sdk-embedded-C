@@ -173,6 +173,17 @@ typedef enum IotMqttError
     IOT_MQTT_SEND_ERROR,
 
     /**
+     * @brief MQTT operation could not be scheduled, i.e. enqueued for sending.
+     *
+     * Functions that may return this value:
+     * - @ref mqtt_function_connect
+     * - @ref mqtt_function_subscribe and @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_unsubscribe and @ref mqtt_function_timedunsubscribe
+     * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
+     */
+    IOT_MQTT_SCHEDULING_ERROR,
+
+    /**
      * @brief MQTT response packet received from the network is malformed.
      *
      * Functions that may return this value:
@@ -1198,6 +1209,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * - #IOT_MQTT_TIMEOUT
  * - #IOT_MQTT_SERVER_REFUSED
@@ -1339,6 +1351,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  * #IotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
  * - #IOT_MQTT_SUCCESS
  * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * - #IOT_MQTT_SERVER_REFUSED
  * @return If this function fails before queuing a subscribe operation, it will return
@@ -1457,6 +1470,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * - #IOT_MQTT_TIMEOUT
  * - #IOT_MQTT_SERVER_REFUSED
@@ -1496,6 +1510,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
  * #IotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
  * - #IOT_MQTT_SUCCESS
  * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * @return If this function fails before queuing an unsubscribe operation, it will return
  * one of:
@@ -1538,6 +1553,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  */
 /* @[declare_mqtt_timedunsubscribe] */
@@ -1579,6 +1595,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  * #IotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
  * - #IOT_MQTT_SUCCESS
  * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * - #IOT_MQTT_RETRY_NO_RESPONSE (if [pPublishInfo->retryMs](@ref IotMqttPublishInfo_t.retryMs)
  * and [pPublishInfo->retryLimit](@ref IotMqttPublishInfo_t.retryLimit) were set).
@@ -1667,6 +1684,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * - #IOT_MQTT_RETRY_NO_RESPONSE (if [pPublishInfo->retryMs](@ref IotMqttPublishInfo_t.retryMs)
  * and [pPublishInfo->retryLimit](@ref IotMqttPublishInfo_t.retryLimit) were set).

@@ -428,7 +428,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
             /* Prevent the timer thread from running, then set the error flag. */
             IotMutex_Lock( &( pConnectionInfo->timerMutex ) );
 
-            pConnectionInfo->errorOccurred = true;
+            pConnectionInfo->disconnected = true;
 
             if( pConnectionInfo->network.disconnect != NULL )
             {
@@ -528,10 +528,10 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
             }
         }
 
-        if( _IotMqtt_EnqueueOperation( pFirstPublish,
-                                       &( _IotMqttCallback ) ) != IOT_MQTT_SUCCESS )
+        if( _IotMqtt_ScheduleOperation( pFirstPublish,
+                                        _IotMqtt_ProcessIncomingPublish ) != IOT_MQTT_SUCCESS )
         {
-            IotLogWarn( "Failed to enqueue incoming PUBLISH for callback." );
+            IotLogWarn( "Failed to schedule incoming PUBLISH callback." );
         }
     }
 

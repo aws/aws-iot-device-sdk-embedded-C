@@ -775,8 +775,8 @@ TEST( MQTT_Unit_Subscription, ProcessPublish )
                                                   1 ) );
 
     /* Find the subscription and invoke its callback. */
-    _IotMqtt_ProcessPublish( &_connection,
-                             &callbackParam );
+    _IotMqtt_InvokeSubscriptionCallback( &_connection,
+                                         &callbackParam );
 
     /* Check that the callback was invoked. */
     TEST_ASSERT_EQUAL_INT( true, callbackInvoked );
@@ -824,8 +824,8 @@ TEST( MQTT_Unit_Subscription, ProcessPublishMultiple )
                                                   3 ) );
 
     /* Invoke subscription callbacks. */
-    _IotMqtt_ProcessPublish( &_connection,
-                             &callbackParam );
+    _IotMqtt_InvokeSubscriptionCallback( &_connection,
+                                         &callbackParam );
 
     /* Check that all 3 callbacks were invoked. */
     TEST_ASSERT_EQUAL_INT( true, callbackInvoked[ 0 ] );
