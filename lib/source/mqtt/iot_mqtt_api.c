@@ -71,19 +71,6 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Match #_mqttOperation_t by their associated MQTT connection.
- *
- * @param[in] pOperationLink Pointer to the link member of an #_mqttOperation_t.
- * @param[in] pMatch Pointer to an #_mqttConnection_t.
- *
- * @return `true` if the [connection associated with the given operation]
- * (@ref _mqttOperation_t.pMqttConnection) is equal to `pMatch`; `false`
- * otherwise.
- */
-static bool _mqttOperation_matchConnection( const IotLink_t * pOperationLink,
-                                            void * pMatch );
-
-/**
  * @brief Determines if an MQTT subscription is safe to remove based on its
  * reference count.
  *
@@ -96,46 +83,12 @@ static bool _mqttSubscription_shouldRemove( const IotLink_t * pSubscriptionLink,
                                             void * pMatch );
 
 /**
- * @brief Process a keep-alive event received from a timer event queue.
- *
- * @param[in] pMqttConnection The MQTT connection associated with the keep-alive.
- * @param[in] pKeepAliveEvent The keep-alive event to process.
- *
- * @return `true` if the event was successful; false if an error was encountered
- * while processing the keep-alive. If this function returns false, the MQTT
- * connection should be closed.
- */
-static bool _processKeepAliveEvent( _mqttConnection_t * const pMqttConnection,
-                                    _mqttTimerEvent_t * const pKeepAliveEvent );
-
-/**
- * @brief Process a PUBLISH retry event received from a timer event queue.
- *
- * @param[in] awsIotMqttMode Specifies if this connection is to an AWS IoT MQTT server.
- * @param[in] pPublishRetryEvent The PUBLISH retry event to process.
- */
-static void _processPublishRetryEvent( bool awsIotMqttMode,
-                                       _mqttTimerEvent_t * const pPublishRetryEvent );
-
-/**
- * @brief Handles timer expirations for an MQTT connection.
- *
- * This function is invoked when the MQTT connection timer expires. Based on
- * pending timer events, it then sends PINGREQ, checks for PINGRESP, or resends
- * an unacknowledged QoS 1 PUBLISH.
- *
- * @param[in] pArgument The MQTT connection for which PINGREQ is sent.
- */
-static void _timerThread( void * pArgument );
-
-/**
  * @brief Creates a new MQTT connection and initializes its members.
  *
  * @param[in] awsIotMqttMode Specifies if this connection is to an AWS IoT MQTT server.
  * @param[in] pNetworkInterface User-provided network interface for the new
  * connection.
- * @param[in] keepAliveSeconds User-provided keep-alive interval for the new
- * connection.
+ * @param[in] keepAliveSeconds User-provided keep-alive interval for the new connection.
  *
  * @return Pointer to a newly-allocated MQTT connection on success; `NULL` on
  * failure.
@@ -178,26 +131,6 @@ static IotMutex_t _connectMutex;
 
 /*-----------------------------------------------------------*/
 
-static bool _mqttOperation_matchConnection( const IotLink_t * pOperationLink,
-                                            void * pMatch )
-{
-    bool match = false;
-    _mqttOperation_t * pOperation = IotLink_Container( _mqttOperation_t,
-                                                       pOperationLink,
-                                                       link );
-
-    /* Ignore PINGREQ operations. PINGREQs will be cleaned up with the MQTT
-     * connection and not here. */
-    if( pOperation->operation != IOT_MQTT_PINGREQ )
-    {
-        match = ( pMatch == pOperation->pMqttConnection );
-    }
-
-    return match;
-}
-
-/*-----------------------------------------------------------*/
-
 static bool _mqttSubscription_shouldRemove( const IotLink_t * pSubscriptionLink,
                                             void * pMatch )
 {
@@ -229,272 +162,6 @@ static bool _mqttSubscription_shouldRemove( const IotLink_t * pSubscriptionLink,
 
 /*-----------------------------------------------------------*/
 
-static bool _processKeepAliveEvent( _mqttConnection_t * const pMqttConnection,
-                                    _mqttTimerEvent_t * const pKeepAliveEvent )
-{
-    bool status = true;
-
-    /* Check if the keep-alive is waiting for a PINGRESP. */
-    if( pKeepAliveEvent->checkPingresp == false )
-    {
-        /* If keep-alive isn't waiting for PINGRESP, send PINGREQ. */
-        IotLogDebug( "Sending PINGREQ." );
-
-        /* Add the PINGREQ operation to the send queue for network transmission. */
-        if( _IotMqtt_EnqueueOperation( pMqttConnection->pPingreqOperation,
-                                       &( _IotMqttSend ) ) != IOT_MQTT_SUCCESS )
-        {
-            IotLogWarn( "Failed to enqueue PINGREQ for sending." );
-            status = false;
-        }
-        else
-        {
-            /* Check for a PINGRESP after IOT_MQTT_RESPONSE_WAIT_MS. */
-            pKeepAliveEvent->expirationTime = IotClock_GetTimeMs() + IOT_MQTT_RESPONSE_WAIT_MS;
-            pKeepAliveEvent->checkPingresp = true;
-        }
-    }
-    else
-    {
-        /* Check that a PINGRESP is immediately available. */
-        if( IotMqtt_Wait( pMqttConnection->pPingreqOperation, 0 ) == IOT_MQTT_SUCCESS )
-        {
-            IotLogDebug( "PINGRESP received." );
-
-            /* The next keep-alive event should send another PINGREQ. */
-            pKeepAliveEvent->expirationTime = IotClock_GetTimeMs() +
-                                              pMqttConnection->keepAliveSeconds * 1000ULL;
-            pKeepAliveEvent->checkPingresp = false;
-        }
-        else
-        {
-            /* PINGRESP was not received within IOT_MQTT_RESPONSE_WAIT_MS. */
-            IotLogError( "Timeout waiting on PINGRESP." );
-
-            /* Mark the MQTT connection as disconnected. */
-            pMqttConnection->disconnected = true;
-
-            /* Free the keep-alive event and destroy the PINGREQ operation, as they
-             * will no longer be used by a closed connection. */
-            IotMqtt_FreeTimerEvent( pMqttConnection->pKeepAliveEvent );
-            pMqttConnection->pKeepAliveEvent = NULL;
-
-            _IotMqtt_DestroyOperation( pMqttConnection->pPingreqOperation );
-            pMqttConnection->pPingreqOperation = NULL;
-
-            status = false;
-        }
-    }
-
-    /* Add the next keep-alive event to the timer event list if the keep-alive
-     * was successfully processed. */
-    if( status == true )
-    {
-        IotListDouble_InsertSorted( &( pMqttConnection->timerEventList ),
-                                    &( pMqttConnection->pKeepAliveEvent->link ),
-                                    _IotMqtt_TimerEventCompare );
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
-static void _processPublishRetryEvent( bool awsIotMqttMode,
-                                       _mqttTimerEvent_t * const pPublishRetryEvent )
-{
-    _mqttOperation_t * pOperation = pPublishRetryEvent->pOperation;
-
-    /* This function should only be called for PUBLISH operations with retry. */
-    IotMqtt_Assert( pOperation->operation == IOT_MQTT_PUBLISH_TO_SERVER );
-    IotMqtt_Assert( pOperation->pPublishRetry == pPublishRetryEvent );
-    IotMqtt_Assert( pPublishRetryEvent->retry.limit > 0 );
-
-    /* Check if the PUBLISH operation is still waiting for a response. */
-    if( _IotMqtt_FindOperation( pOperation->operation,
-                                &( pOperation->packetIdentifier ) ) == pOperation )
-    {
-        /* Check if the retry limit is reached. */
-        if( pPublishRetryEvent->retry.count > pPublishRetryEvent->retry.limit )
-        {
-            IotLogError( "No PUBACK received for PUBLISH %hu after %d retransmissions.",
-                         pOperation->packetIdentifier,
-                         pPublishRetryEvent->retry.limit );
-
-            /* Set a status of "No response to retries" and notify. */
-            pOperation->status = IOT_MQTT_RETRY_NO_RESPONSE;
-            _IotMqtt_Notify( pOperation );
-        }
-        else
-        {
-            /* Choose a set DUP function. */
-            void ( * publishSetDup )( bool,
-                                      uint8_t * const,
-                                      uint16_t * const ) = _IotMqtt_PublishSetDup;
-
-            #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-                if( pOperation->pMqttConnection->network.serialize.publishSetDup != NULL )
-                {
-                    publishSetDup = pOperation->pMqttConnection->network.serialize.publishSetDup;
-                }
-            #endif
-
-            /* For the AWS IoT MQTT server, _IotMqtt_PublishSetDup changes the packet
-             * identifier; this must be done on every retry. For a compliant MQTT
-             * server, the function sets the DUP flag; this only needs to be done on the
-             * first retry. */
-            if( awsIotMqttMode == true )
-            {
-                if( pPublishRetryEvent->retry.count <= pPublishRetryEvent->retry.limit )
-                {
-                    publishSetDup( true,
-                                   pOperation->pMqttPacket,
-                                   &( pOperation->packetIdentifier ) );
-                }
-            }
-            else
-            {
-                if( pPublishRetryEvent->retry.count == 1 )
-                {
-                    publishSetDup( false,
-                                   pOperation->pMqttPacket,
-                                   &( pOperation->packetIdentifier ) );
-                }
-            }
-
-            /* Print debug log messages about this PUBLISH retry. */
-            IotLogDebug( "No PUBACK received for PUBLISH %hu. Attempting retransmission"
-                         " %d of %d.",
-                         pOperation->packetIdentifier,
-                         pPublishRetryEvent->retry.count,
-                         pPublishRetryEvent->retry.limit );
-
-            if( pPublishRetryEvent->retry.count < pPublishRetryEvent->retry.limit )
-            {
-                IotLogDebug( "Next retry for PUBLISH %hu in %llu ms.",
-                             pOperation->packetIdentifier,
-                             pPublishRetryEvent->retry.nextPeriod );
-            }
-            else
-            {
-                IotLogDebug( "Final retry for PUBLISH %hu. Will check in %llu ms "
-                             "for response.",
-                             pOperation->packetIdentifier,
-                             IOT_MQTT_RESPONSE_WAIT_MS );
-            }
-
-            /* Add the PUBLISH to the send queue for network transmission. */
-            if( _IotMqtt_EnqueueOperation( pOperation,
-                                           &( _IotMqttSend ) ) != IOT_MQTT_SUCCESS )
-            {
-                IotLogWarn( "Failed to enqueue PUBLISH retry for sending." );
-            }
-        }
-    }
-}
-
-/*-----------------------------------------------------------*/
-
-static void _timerThread( void * pArgument )
-{
-    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pArgument;
-    _mqttTimerEvent_t * pTimerEvent = NULL;
-
-    IotLogDebug( "Timer thread started for connection %p.", pMqttConnection );
-
-    /* Attempt to lock the timer mutex before this thread does anything.
-     * Return immediately if the mutex couldn't be locked. */
-    if( IotMutex_TryLock( &( pMqttConnection->timerMutex ) ) == false )
-    {
-        IotLogWarn( "Failed to lock connection timer mutex in timer thread. Exiting." );
-
-        return;
-    }
-
-    while( true )
-    {
-        /* Peek the first event in the timer event list. */
-        pTimerEvent = IotLink_Container( _mqttTimerEvent_t,
-                                         IotListDouble_PeekHead( &( pMqttConnection->timerEventList ) ),
-                                         link );
-
-        if( pTimerEvent != NULL )
-        {
-            /* Check if the first event should be processed now. */
-            if( pTimerEvent->expirationTime <= IotClock_GetTimeMs() + IOT_MQTT_TIMER_EVENT_THRESHOLD_MS )
-            {
-                /*  Remove the timer event for immediate processing. */
-                IotListDouble_Remove( &( pTimerEvent->link ) );
-            }
-            else
-            {
-                /* The first element in the timer queue shouldn't be processed yet.
-                 * Arm the timer for when it should be processed. */
-                if( IotClock_TimerArm( &( pMqttConnection->timer ),
-                                       pTimerEvent->expirationTime - IotClock_GetTimeMs(),
-                                       0 ) == false )
-                {
-                    IotLogWarn( "Failed to re-arm timer for connection %p.",
-                                pMqttConnection );
-                }
-
-                pTimerEvent = NULL;
-            }
-        }
-
-        /* If there are no timer events to process, terminate this thread. */
-        if( pTimerEvent == NULL )
-        {
-            IotLogDebug( "No further timer events to process. Exiting timer thread." );
-
-            break;
-        }
-
-        IotLogDebug( "Processing timer event for %s.",
-                     IotMqtt_OperationType( pTimerEvent->pOperation->operation ) );
-
-        /* Process the received timer event. Currently, only PINGREQ and PUBLISH
-         * operations send timer events. */
-        switch( pTimerEvent->pOperation->operation )
-        {
-            case IOT_MQTT_PINGREQ:
-
-                /* Process the PINGREQ event. If it fails to process, close the MQTT
-                 * connection. */
-                if( _processKeepAliveEvent( pMqttConnection, pTimerEvent ) == false )
-                {
-                    if( pMqttConnection->network.disconnect != NULL )
-                    {
-                        pMqttConnection->network.disconnect( 0, pMqttConnection->network.pDisconnectContext );
-                    }
-                    else
-                    {
-                        IotLogWarn( "No disconnect function was set. Network connection not closed." );
-                    }
-                }
-
-                break;
-
-            case IOT_MQTT_PUBLISH_TO_SERVER:
-
-                _processPublishRetryEvent( pMqttConnection->awsIotMqttMode,
-                                           pTimerEvent );
-                break;
-
-            default:
-
-                /* No other operation may send a timer event. Abort the program
-                 * if this case is reached. */
-                IotMqtt_Assert( 0 );
-                break;
-        }
-    }
-
-    IotMutex_Unlock( &( pMqttConnection->timerMutex ) );
-}
-
-/*-----------------------------------------------------------*/
-
 static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
                                                   const IotMqttNetIf_t * const pNetworkInterface,
                                                   uint16_t keepAliveSeconds )
@@ -522,95 +189,39 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     if( pNewMqttConnection == NULL )
     {
         IotLogError( "Failed to allocate memory for new MQTT connection." );
-
-        return NULL;
+        goto errorMallocConnection;
     }
 
-    /* Clear the MQTT connection, then copy the network interface and MQTT server
-     * mode. */
+    /* Clear the MQTT connection, then copy the MQTT server mode and network
+     * interface. */
     ( void ) memset( pNewMqttConnection, 0x00, sizeof( _mqttConnection_t ) );
-    pNewMqttConnection->network = *pNetworkInterface;
     pNewMqttConnection->awsIotMqttMode = awsIotMqttMode;
-
-    /* Create the timer mutex for a new connection. */
-    if( IotMutex_Create( &( pNewMqttConnection->timerMutex ), true ) == false )
-    {
-        IotLogError( "Failed to create timer mutex for new connection." );
-        IotMqtt_FreeConnection( pNewMqttConnection );
-
-        return NULL;
-    }
+    pNewMqttConnection->network = *pNetworkInterface;
 
     /* Create the references mutex for a new connection. */
     if( IotMutex_Create( &( pNewMqttConnection->referencesMutex ), false ) == false )
     {
         IotLogError( "Failed to create references mutex for new connection." );
-        IotMutex_Destroy( &( pNewMqttConnection->timerMutex ) );
-        IotMqtt_FreeConnection( pNewMqttConnection );
-
-        return NULL;
+        goto errorReferencesMutex;
     }
 
     /* Create the subscription mutex for a new connection. */
     if( IotMutex_Create( &( pNewMqttConnection->subscriptionMutex ), false ) == false )
     {
         IotLogError( "Failed to create subscription mutex for new connection." );
-        IotMutex_Destroy( &( pNewMqttConnection->timerMutex ) );
-        IotMutex_Destroy( &( pNewMqttConnection->referencesMutex ) );
-        IotMqtt_FreeConnection( pNewMqttConnection );
-
-        return NULL;
+        goto errorSubscriptionMutex;
     }
 
-    /* Create the new connection's subscription and timer event lists. */
+    /* Create the new connection's subscription and operation lists. */
     IotListDouble_Create( &( pNewMqttConnection->subscriptionList ) );
-    IotListDouble_Create( &( pNewMqttConnection->timerEventList ) );
-
-    /* Create the timer mutex for a new connection. */
-    if( IotClock_TimerCreate( &( pNewMqttConnection->timer ),
-                              _timerThread,
-                              pNewMqttConnection ) == false )
-    {
-        IotLogError( "Failed to create timer for new connection." );
-        IotMutex_Destroy( &( pNewMqttConnection->timerMutex ) );
-        IotMutex_Destroy( &( pNewMqttConnection->referencesMutex ) );
-        IotMutex_Destroy( &( pNewMqttConnection->subscriptionMutex ) );
-        IotMqtt_FreeConnection( pNewMqttConnection );
-
-        return NULL;
-    }
+    IotListDouble_Create( &( pNewMqttConnection->pendingProcessing ) );
+    IotListDouble_Create( &( pNewMqttConnection->pendingResponse ) );
 
     /* Check if keep-alive is active for this connection. */
     if( keepAliveSeconds != 0 )
     {
-        /* Save the keep-alive interval. */
-        pNewMqttConnection->keepAliveSeconds = keepAliveSeconds;
-
-        /* Allocate memory for keep-alive timer event. */
-        pNewMqttConnection->pKeepAliveEvent = IotMqtt_MallocTimerEvent( sizeof( _mqttTimerEvent_t ) );
-
-        if( pNewMqttConnection->pKeepAliveEvent == NULL )
-        {
-            IotLogError( "Failed to allocate keep-alive event for new connection." );
-            _destroyMqttConnection( pNewMqttConnection );
-
-            return NULL;
-        }
-
-        /* Create PINGREQ operation. */
-        if( _IotMqtt_CreateOperation( &( pNewMqttConnection->pPingreqOperation ),
-                                      IOT_MQTT_FLAG_WAITABLE,
-                                      NULL ) != IOT_MQTT_SUCCESS )
-        {
-            IotLogError( "Failed to allocate PINGREQ operation for new connection." );
-            _destroyMqttConnection( pNewMqttConnection );
-
-            return NULL;
-        }
-
-        /* Set the members of the PINGREQ operations. */
-        pNewMqttConnection->pPingreqOperation->operation = IOT_MQTT_PINGREQ;
-        pNewMqttConnection->pPingreqOperation->pMqttConnection = pNewMqttConnection;
+        /* Convert the keep-alive interval to milliseconds. */
+        pNewMqttConnection->keepAliveMs = keepAliveSeconds * 1000;
 
         /* Choose a PINGREQ serializer function. */
         IotMqttError_t ( * serializePingreq )( uint8_t ** const,
@@ -623,45 +234,46 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
             }
         #endif
 
-        if( serializePingreq( &( pNewMqttConnection->pPingreqOperation->pMqttPacket ),
-                              &( pNewMqttConnection->pPingreqOperation->packetSize ) ) != IOT_MQTT_SUCCESS )
+        if( serializePingreq( &( pNewMqttConnection->pPingreqPacket ),
+                              &( pNewMqttConnection->pingreqPacketSize ) ) != IOT_MQTT_SUCCESS )
         {
-            IotLogError( "Failed to serialize PINGREQ packet for new connection." );
-            _destroyMqttConnection( pNewMqttConnection );
-
-            return NULL;
+            IotLogError( "Failed to allocate PINGREQ packet for new connection." );
+            goto errorSerializePingreq;
         }
 
-        /* Set the members of the keep-alive timer event. */
-        ( void ) memset( pNewMqttConnection->pKeepAliveEvent, 0x00, sizeof( _mqttTimerEvent_t ) );
-        pNewMqttConnection->pKeepAliveEvent->pOperation = pNewMqttConnection->pPingreqOperation;
-        pNewMqttConnection->pKeepAliveEvent->expirationTime = IotClock_GetTimeMs() + keepAliveSeconds * 1000ULL;
+        /* Create the task pool job that processes keep-alive. */
+        if( IotTaskPool_CreateJob( _IotMqtt_ProcessKeepAlive,
+                                   pNewMqttConnection,
+                                   &( pNewMqttConnection->keepAliveJob ) ) != IOT_TASKPOOL_SUCCESS )
+        {
+            IotLogError( "Failed to create keep-alive job for new connection." );
 
-        /* Add the PINGREQ to the timer event list. */
-        IotListDouble_InsertSorted( &( pNewMqttConnection->timerEventList ),
-                                    &( pNewMqttConnection->pKeepAliveEvent->link ),
-                                    _IotMqtt_TimerEventCompare );
+            /* Keep alive job creation should never fail when valid parameters
+             * are given. Abort the program on failure. */
+            IotMqtt_Assert( false );
+        }
     }
 
     return pNewMqttConnection;
+
+errorSerializePingreq: IotMutex_Destroy( &( pNewMqttConnection->subscriptionMutex ) );
+errorSubscriptionMutex: IotMutex_Destroy( &( pNewMqttConnection->referencesMutex ) );
+errorReferencesMutex: IotMqtt_FreeConnection( pNewMqttConnection );
+errorMallocConnection: return NULL;
 }
 
 /*-----------------------------------------------------------*/
 
 static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
 {
-    /* Destroy keep-alive timer event. */
-    if( pMqttConnection->pKeepAliveEvent != NULL )
+    /* Stop the keep-alive routine. */
+    if( pMqttConnection->keepAliveMs != 0 )
     {
-        IotMqtt_FreeTimerEvent( pMqttConnection->pKeepAliveEvent );
-        pMqttConnection->pKeepAliveEvent = NULL;
-    }
+        /* A PINGREQ packet must be allocated. */
+        IotMqtt_Assert( pMqttConnection->pPingreqPacket != NULL );
+        IotMqtt_Assert( pMqttConnection->pingreqPacketSize != 0 );
 
-    /* Destroy keep-alive operation. */
-    if( pMqttConnection->pPingreqOperation != NULL )
-    {
-        _IotMqtt_DestroyOperation( pMqttConnection->pPingreqOperation );
-        pMqttConnection->pPingreqOperation = NULL;
+        _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
     }
 
     /* Remove all subscriptions. */
@@ -673,12 +285,8 @@ static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
                                     offsetof( _mqttSubscription_t, link ) );
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
-    /* Destroy references mutex. */
+    /* Destroy mutexes and free connection. */
     IotMutex_Destroy( &( pMqttConnection->referencesMutex ) );
-
-    /* Destroy timer and mutexes. */
-    IotClock_TimerDestroy( &( pMqttConnection->timer ) );
-    IotMutex_Destroy( &( pMqttConnection->timerMutex ) );
     IotMutex_Destroy( &( pMqttConnection->subscriptionMutex ) );
     IotMqtt_FreeConnection( pMqttConnection );
 }
@@ -708,6 +316,22 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     IotMqtt_Assert( ( operation == IOT_MQTT_SUBSCRIBE ) ||
                     ( operation == IOT_MQTT_UNSUBSCRIBE ) );
 
+    /* Check that all elements in the subscription list are valid. */
+    _validateParameter( _IotMqtt_ValidateSubscriptionList( operation,
+                                                           pMqttConnection->awsIotMqttMode,
+                                                           pSubscriptionList,
+                                                           subscriptionCount ) == true,
+                        NULL );
+
+    /* Check that a reference pointer is provided for a waitable operation. */
+    if( ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE ) &&
+        ( pSubscriptionRef == NULL ) )
+    {
+        _validateParameter( pSubscriptionRef != NULL,
+                            "Reference must be provided for a waitable %s.",
+                            IotMqtt_OperationType( operation ) );
+    }
+
     /* Choose a subscription serialize function. */
     if( operation == IOT_MQTT_SUBSCRIBE )
     {
@@ -732,25 +356,6 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
         #endif
     }
 
-    /* Check that a reference pointer is provided for a waitable operation. */
-    if( ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE ) &&
-        ( pSubscriptionRef == NULL ) )
-    {
-        IotLogError( "Reference must be provided for a waitable %s.",
-                     IotMqtt_OperationType( operation ) );
-
-        return IOT_MQTT_BAD_PARAMETER;
-    }
-
-    /* Check that all elements in the subscription list are valid. */
-    if( _IotMqtt_ValidateSubscriptionList( operation,
-                                           pMqttConnection->awsIotMqttMode,
-                                           pSubscriptionList,
-                                           subscriptionCount ) == false )
-    {
-        return IOT_MQTT_BAD_PARAMETER;
-    }
-
     /* Remove the MQTT subscription list for an UNSUBSCRIBE. */
     if( operation == IOT_MQTT_UNSUBSCRIBE )
     {
@@ -770,8 +375,8 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     }
 
     /* Check the subscription operation data and set the remaining members. */
-    IotMqtt_Assert( pSubscriptionOperation->pPublishRetry == NULL );
     IotMqtt_Assert( pSubscriptionOperation->status == IOT_MQTT_STATUS_PENDING );
+    IotMqtt_Assert( pSubscriptionOperation->retry.limit == 0 );
     pSubscriptionOperation->operation = operation;
     pSubscriptionOperation->pMqttConnection = pMqttConnection;
 
@@ -816,11 +421,11 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
         *pSubscriptionRef = pSubscriptionOperation;
     }
 
-    /* Add the subscription operation to the send queue for network transmission. */
-    if( _IotMqtt_EnqueueOperation( pSubscriptionOperation,
-                                   &( _IotMqttSend ) ) != IOT_MQTT_SUCCESS )
+    /* Schedule the subscription operation for network transmission. */
+    if( _IotMqtt_ScheduleOperation( pSubscriptionOperation,
+                                    _IotMqtt_ProcessSend ) != IOT_MQTT_SUCCESS )
     {
-        IotLogError( "Failed to enqueue %s for sending.",
+        IotLogError( "Failed to schedule %s for sending.",
                      IotMqtt_OperationType( operation ) );
 
         if( operation == IOT_MQTT_SUBSCRIBE )
@@ -838,10 +443,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
             *pSubscriptionRef = IOT_MQTT_REFERENCE_INITIALIZER;
         }
 
-        return IOT_MQTT_NO_MEMORY;
+        return IOT_MQTT_SCHEDULING_ERROR;
     }
 
-    IotLogInfo( "MQTT %s operation queued.",
+    IotLogInfo( "MQTT %s operation scheduled.",
                 IotMqtt_OperationType( operation ) );
 
     /* The subscription operation is waiting for a network response. */
@@ -879,7 +484,7 @@ bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * const pMqttConn
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-    return ( disconnected == false );
+    return( disconnected == false );
 }
 
 /*-----------------------------------------------------------*/
@@ -917,142 +522,34 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * const pMqttConn
 
 IotMqttError_t IotMqtt_Init( void )
 {
-    IotMqttError_t status = IOT_MQTT_SUCCESS;
-
-    /* Create mutex protecting MQTT operation queues. */
-    if( IotMutex_Create( &( _IotMqttQueueMutex ), false ) == false )
-    {
-        IotLogError( "Failed to initialize MQTT operation queue mutex." );
-        status = IOT_MQTT_INIT_FAILED;
-    }
-
-    /* Create mutex protecting list of operations pending network responses. */
-    if( status == IOT_MQTT_SUCCESS )
-    {
-        if( IotMutex_Create( &( _IotMqttPendingResponseMutex ), false ) == false )
-        {
-            IotLogError( "Failed to initialize MQTT library pending response mutex." );
-            IotMutex_Destroy( &( _IotMqttQueueMutex ) );
-
-            status = IOT_MQTT_INIT_FAILED;
-        }
-    }
-
     /* Create CONNECT mutex. */
-    if( status == IOT_MQTT_SUCCESS )
+    if( IotMutex_Create( &( _connectMutex ), false ) == false )
     {
-        if( IotMutex_Create( &( _connectMutex ), false ) == false )
-        {
-            IotLogError( "Failed to initialize MQTT library connect mutex." );
-            IotMutex_Destroy( &( _IotMqttPendingResponseMutex ) );
-            IotMutex_Destroy( &( _IotMqttQueueMutex ) );
-
-            status = IOT_MQTT_INIT_FAILED;
-        }
-    }
-
-    /* Create semaphores that count active MQTT library threads. */
-    if( status == IOT_MQTT_SUCCESS )
-    {
-        /* Create semaphore that counts active callback threads. */
-        if( IotSemaphore_Create( &( _IotMqttCallback.availableThreads ),
-                                 IOT_MQTT_MAX_CALLBACK_THREADS,
-                                 IOT_MQTT_MAX_CALLBACK_THREADS ) == false )
-        {
-            IotLogError( "Failed to initialize record of active MQTT callback threads." );
-            status = IOT_MQTT_INIT_FAILED;
-        }
-        else
-        {
-            /* Create semaphore that counts active send threads. */
-            if( IotSemaphore_Create( &( _IotMqttSend.availableThreads ),
-                                     IOT_MQTT_MAX_SEND_THREADS,
-                                     IOT_MQTT_MAX_SEND_THREADS ) == false )
-            {
-                IotLogError( "Failed to initialize record of active MQTT send threads." );
-                status = IOT_MQTT_INIT_FAILED;
-
-                IotSemaphore_Destroy( &( _IotMqttCallback.availableThreads ) );
-            }
-        }
-
-        /* Destroy previously created mutexes if thread counter semaphores could
-         * not be created. */
-        if( status == IOT_MQTT_INIT_FAILED )
-        {
-            IotMutex_Destroy( &( _connectMutex ) );
-            IotMutex_Destroy( &( _IotMqttPendingResponseMutex ) );
-            IotMutex_Destroy( &( _IotMqttQueueMutex ) );
-        }
+        IotLogError( "Failed to initialize MQTT library connect mutex." );
+        goto errorConnectMutex;
     }
 
     /* Initialize MQTT serializer. */
-    if( status == IOT_MQTT_SUCCESS )
+    if( _IotMqtt_InitSerialize() != IOT_MQTT_SUCCESS )
     {
-        if( _IotMqtt_InitSerialize() != IOT_MQTT_SUCCESS )
-        {
-            IotLogError( "Failed to initialize MQTT library serializer. " );
-            IotSemaphore_Destroy( &( _IotMqttCallback.availableThreads ) );
-            IotSemaphore_Destroy( &( _IotMqttSend.availableThreads ) );
-            IotMutex_Destroy( &( _connectMutex ) );
-            IotMutex_Destroy( &( _IotMqttPendingResponseMutex ) );
-            IotMutex_Destroy( &( _IotMqttQueueMutex ) );
-
-            status = IOT_MQTT_INIT_FAILED;
-        }
+        IotLogError( "Failed to initialize MQTT library serializer. " );
+        goto errorInitSerialize;
     }
 
-    /* Create MQTT library linear containers. */
-    if( status == IOT_MQTT_SUCCESS )
-    {
-        IotQueue_Create( &( _IotMqttCallback.queue ) );
-        IotQueue_Create( &( _IotMqttSend.queue ) );
-        IotListDouble_Create( &( _IotMqttPendingResponse ) );
+    IotLogInfo( "MQTT library successfully initialized." );
 
-        IotLogInfo( "MQTT library successfully initialized." );
-    }
+    return IOT_MQTT_SUCCESS;
 
-    return status;
+errorInitSerialize: IotMutex_Destroy( &( _connectMutex ) );
+errorConnectMutex: return IOT_MQTT_INIT_FAILED;
 }
 
 /*-----------------------------------------------------------*/
 
 void IotMqtt_Cleanup()
 {
-    /* Wait for termination of any active MQTT library threads. */
-    IotMutex_Lock( &( _IotMqttQueueMutex ) );
-
-    while( IotSemaphore_GetCount( &( _IotMqttCallback.availableThreads ) ) > 0 )
-    {
-        IotMutex_Unlock( &( _IotMqttQueueMutex ) );
-        IotSemaphore_Wait( &( _IotMqttCallback.availableThreads ) );
-        IotMutex_Lock( &( _IotMqttQueueMutex ) );
-    }
-
-    while( IotSemaphore_GetCount( &( _IotMqttSend.availableThreads ) ) > 0 )
-    {
-        IotMutex_Unlock( &( _IotMqttQueueMutex ) );
-        IotSemaphore_Wait( &( _IotMqttSend.availableThreads ) );
-        IotMutex_Lock( &( _IotMqttQueueMutex ) );
-    }
-
-    IotMutex_Unlock( &( _IotMqttQueueMutex ) );
-
-    /* This API requires all MQTT connections to be terminated. If the MQTT library
-     * linear containers are not empty, there is an active MQTT connection and the
-     * library cannot be safely shut down. */
-    IotMqtt_Assert( IotQueue_IsEmpty( &( _IotMqttCallback.queue ) ) == true );
-    IotMqtt_Assert( IotQueue_IsEmpty( &( _IotMqttSend.queue ) ) == true );
-    IotMqtt_Assert( IotListDouble_IsEmpty( &( _IotMqttPendingResponse ) ) == true );
-
-    /* Clean up MQTT library mutexes. */
+    /* Clean up CONNECT mutex. */
     IotMutex_Destroy( &( _connectMutex ) );
-    IotMutex_Destroy( &( _IotMqttPendingResponseMutex ) );
-    IotMutex_Destroy( &( _IotMqttQueueMutex ) );
-
-    /* Clean up thread counter semaphores. */
-    IotSemaphore_Destroy( &( _IotMqttCallback.availableThreads ) );
-    IotSemaphore_Destroy( &( _IotMqttSend.availableThreads ) );
 
     /* Clean up MQTT serializer. */
     _IotMqtt_CleanupSerialize();
@@ -1067,7 +564,7 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
                                 const IotMqttConnectInfo_t * const pConnectInfo,
                                 uint64_t timeoutMs )
 {
-    IotMqttError_t connectStatus = IOT_MQTT_STATUS_PENDING;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttConnection_t * pNewMqttConnection = NULL;
     _mqttOperation_t * pConnectOperation = NULL;
 
@@ -1076,10 +573,34 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
                                            uint8_t ** const,
                                            size_t * const ) = _IotMqtt_SerializeConnect;
 
-    /* Check that the network interface is valid. */
-    if( _IotMqtt_ValidateNetIf( pNetworkInterface ) == false )
+    /* Validate network interface and connect info. */
+    _validateParameter( _IotMqtt_ValidateNetIf( pNetworkInterface ) == true, NULL );
+    _validateParameter( _IotMqtt_ValidateConnect( pConnectInfo ) == true, NULL );
+
+    /* If will info is provided, check that it is valid. */
+    if( pConnectInfo->pWillInfo != NULL )
     {
-        return IOT_MQTT_BAD_PARAMETER;
+        _validateParameter( _IotMqtt_ValidatePublish( pConnectInfo->awsIotMqttMode,
+                                                      pConnectInfo->pWillInfo ) == true,
+                            NULL );
+
+        /* Will message payloads cannot be larger than 65535. This restriction
+         * applies only to will messages, and not normal PUBLISH messages. */
+        _validateParameter( pConnectInfo->pWillInfo->payloadLength <= UINT16_MAX,
+                            "Will payload cannot be larger than 65535." );
+    }
+
+    /* If previous subscriptions are provided, check that they are valid. */
+    if( pConnectInfo->cleanSession == false )
+    {
+        if( pConnectInfo->pPreviousSubscriptions != NULL )
+        {
+            _validateParameter( _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
+                                                                   pConnectInfo->awsIotMqttMode,
+                                                                   pConnectInfo->pPreviousSubscriptions,
+                                                                   pConnectInfo->previousSubscriptionCount ) == true,
+                                NULL );
+        }
     }
 
     /* Choose a CONNECT serializer function. */
@@ -1090,65 +611,7 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
         }
     #endif
 
-    /* Check that the connection info is valid. */
-    if( _IotMqtt_ValidateConnect( pConnectInfo ) == false )
-    {
-        return IOT_MQTT_BAD_PARAMETER;
-    }
-
-    /* If will info is provided, check that it is valid. */
-    if( pConnectInfo->pWillInfo != NULL )
-    {
-        if( _IotMqtt_ValidatePublish( pConnectInfo->awsIotMqttMode,
-                                      pConnectInfo->pWillInfo ) == false )
-        {
-            return IOT_MQTT_BAD_PARAMETER;
-        }
-
-        /* Will message payloads cannot be larger than 65535. This restriction
-         * applies only to will messages, and not normal PUBLISH messages. */
-        if( pConnectInfo->pWillInfo->payloadLength > UINT16_MAX )
-        {
-            IotLogError( "Will payload cannot be larger than 65535." );
-
-            return IOT_MQTT_BAD_PARAMETER;
-        }
-    }
-
-    /* If previous subscriptions are provided, check that they are valid. */
-    if( ( pConnectInfo->cleanSession == false ) &&
-        ( pConnectInfo->pPreviousSubscriptions != NULL ) )
-    {
-        if( _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
-                                               pConnectInfo->awsIotMqttMode,
-                                               pConnectInfo->pPreviousSubscriptions,
-                                               pConnectInfo->previousSubscriptionCount ) == false )
-        {
-            return IOT_MQTT_BAD_PARAMETER;
-        }
-    }
-
     IotLogInfo( "Establishing new MQTT connection." );
-
-    /* Create a CONNECT operation. */
-    connectStatus = _IotMqtt_CreateOperation( &pConnectOperation,
-                                              IOT_MQTT_FLAG_WAITABLE,
-                                              NULL );
-
-    if( connectStatus != IOT_MQTT_SUCCESS )
-    {
-        return connectStatus;
-    }
-
-    /* Ensure the members set by operation creation and serialization
-     * are appropriate for a blocking CONNECT. */
-    IotMqtt_Assert( pConnectOperation->pPublishRetry == NULL );
-    IotMqtt_Assert( pConnectOperation->status == IOT_MQTT_STATUS_PENDING );
-    IotMqtt_Assert( ( pConnectOperation->flags & IOT_MQTT_FLAG_WAITABLE )
-                    == IOT_MQTT_FLAG_WAITABLE );
-
-    /* Set the operation type. */
-    pConnectOperation->operation = IOT_MQTT_CONNECT;
 
     /* Allocate memory to store data for the new MQTT connection. */
     pNewMqttConnection = _createMqttConnection( pConnectInfo->awsIotMqttMode,
@@ -1157,10 +620,29 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
 
     if( pNewMqttConnection == NULL )
     {
-        _IotMqtt_DestroyOperation( pConnectOperation );
-
-        return IOT_MQTT_NO_MEMORY;
+        status = IOT_MQTT_NO_MEMORY;
+        goto errorCreateConnection;
     }
+
+    /* Create a CONNECT operation. */
+    status = _IotMqtt_CreateOperation( &pConnectOperation,
+                                       IOT_MQTT_FLAG_WAITABLE,
+                                       NULL );
+
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        goto errorCreateOperation;
+    }
+
+    /* Ensure the members set by operation creation and serialization
+     * are appropriate for a blocking CONNECT. */
+    IotMqtt_Assert( pConnectOperation->status == IOT_MQTT_STATUS_PENDING );
+    IotMqtt_Assert( ( pConnectOperation->flags & IOT_MQTT_FLAG_WAITABLE )
+                    == IOT_MQTT_FLAG_WAITABLE );
+    IotMqtt_Assert( pConnectOperation->retry.limit == 0 );
+
+    /* Set the operation type. */
+    pConnectOperation->operation = IOT_MQTT_CONNECT;
 
     /* Set the MQTT connection. */
     pConnectOperation->pMqttConnection = pNewMqttConnection;
@@ -1171,31 +653,25 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
         /* Previous subscription count should have been validated as nonzero. */
         IotMqtt_Assert( pConnectInfo->previousSubscriptionCount > 0 );
 
-        connectStatus = _IotMqtt_AddSubscriptions( pNewMqttConnection,
-                                                   2,
-                                                   pConnectInfo->pPreviousSubscriptions,
-                                                   pConnectInfo->previousSubscriptionCount );
+        status = _IotMqtt_AddSubscriptions( pNewMqttConnection,
+                                            2,
+                                            pConnectInfo->pPreviousSubscriptions,
+                                            pConnectInfo->previousSubscriptionCount );
 
-        if( connectStatus != IOT_MQTT_SUCCESS )
+        if( status != IOT_MQTT_SUCCESS )
         {
-            _IotMqtt_DestroyOperation( pConnectOperation );
-            _destroyMqttConnection( pNewMqttConnection );
-
-            return connectStatus;
+            goto errorAddSubscriptions;
         }
     }
 
     /* Convert the connect info and will info objects to an MQTT CONNECT packet. */
-    connectStatus = serializeConnect( pConnectInfo,
-                                      &( pConnectOperation->pMqttPacket ),
-                                      &( pConnectOperation->packetSize ) );
+    status = serializeConnect( pConnectInfo,
+                               &( pConnectOperation->pMqttPacket ),
+                               &( pConnectOperation->packetSize ) );
 
-    if( connectStatus != IOT_MQTT_SUCCESS )
+    if( status != IOT_MQTT_SUCCESS )
     {
-        _IotMqtt_DestroyOperation( pConnectOperation );
-        _destroyMqttConnection( pNewMqttConnection );
-
-        return connectStatus;
+        goto errorSerializeConnect;
     }
 
     /* Check the serialized MQTT packet. */
@@ -1209,42 +685,43 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
     IotMutex_Lock( &_connectMutex );
 
     /* Add the CONNECT operation to the send queue for network transmission. */
-    if( _IotMqtt_EnqueueOperation( pConnectOperation,
-                                   &( _IotMqttSend ) ) != IOT_MQTT_SUCCESS )
+    status = _IotMqtt_ScheduleOperation( pConnectOperation,
+                                         _IotMqtt_ProcessSend );
+
+    if( status != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Failed to enqueue CONNECT for sending." );
-        connectStatus = IOT_MQTT_NO_MEMORY;
         _IotMqtt_DestroyOperation( pConnectOperation );
     }
     else
     {
         /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
-        connectStatus = IotMqtt_Wait( ( IotMqttReference_t ) pConnectOperation,
-                                      timeoutMs );
+        status = IotMqtt_Wait( ( IotMqttReference_t ) pConnectOperation,
+                               timeoutMs );
     }
 
     /* Unlock the CONNECT mutex. */
     IotMutex_Unlock( &_connectMutex );
 
-    /* Arm the timer for the first keep alive expiration if keep-alive is
-     * active for this connection. */
-    if( ( connectStatus == IOT_MQTT_SUCCESS ) &&
-        ( pNewMqttConnection->keepAliveSeconds > 0 ) )
+    /* When a connection is successfully established, schedule keep-alive job. */
+    if( status == IOT_MQTT_SUCCESS )
     {
-        IotLogDebug( "Starting new MQTT connection timer." );
-
-        if( IotClock_TimerArm( &( pNewMqttConnection->timer ),
-                               pNewMqttConnection->pKeepAliveEvent->expirationTime - IotClock_GetTimeMs(),
-                               0 ) == false )
+        /* Schedule the keep-alive job to run after one keep-alive period. */
+        if( pNewMqttConnection->keepAliveMs > 0 )
         {
-            IotLogError( "Failed to start connection timer for new MQTT connection" );
+            IotLogDebug( "Scheduling MQTT keep-alive job." );
 
-            connectStatus = IOT_MQTT_INIT_FAILED;
+            if( IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
+                                              &( pNewMqttConnection->keepAliveJob ),
+                                              pNewMqttConnection->keepAliveMs ) != IOT_TASKPOOL_SUCCESS )
+            {
+                status = IOT_MQTT_SCHEDULING_ERROR;
+            }
         }
     }
 
     /* Check the status of the CONNECT operation. */
-    if( connectStatus == IOT_MQTT_SUCCESS )
+    if( status == IOT_MQTT_SUCCESS )
     {
         IotLogInfo( "New MQTT connection %p established.", pNewMqttConnection );
     }
@@ -1255,10 +732,15 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
         *pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
         IotLogError( "Failed to establish new MQTT connection, error %s.",
-                     IotMqtt_strerror( connectStatus ) );
+                     IotMqtt_strerror( status ) );
     }
 
-    return connectStatus;
+    return status;
+
+errorSerializeConnect:
+errorAddSubscriptions: _IotMqtt_DestroyOperation( pConnectOperation );
+errorCreateOperation: _destroyMqttConnection( pNewMqttConnection );
+errorCreateConnection: return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1281,42 +763,6 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                                     offsetof( _mqttSubscription_t, link ) );
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
-    /* Lock the connection timer mutex to block the timer thread. */
-    IotMutex_Lock( &( pMqttConnection->timerMutex ) );
-
-    /* Purge all of this connection's pending operations and timer events. */
-    IotMutex_Lock( &( _IotMqttQueueMutex ) );
-    IotQueue_RemoveAllMatches( &( _IotMqttSend.queue ),
-                               _mqttOperation_matchConnection,
-                               pMqttConnection,
-                               _IotMqtt_DestroyOperation,
-                               offsetof( _mqttOperation_t, link ) );
-    IotMutex_Unlock( &( _IotMqttQueueMutex ) );
-
-    IotMutex_Lock( &( _IotMqttPendingResponseMutex ) );
-    IotListDouble_RemoveAllMatches( &( _IotMqttPendingResponse ),
-                                    _mqttOperation_matchConnection,
-                                    pMqttConnection,
-                                    _IotMqtt_DestroyOperation,
-                                    offsetof( _mqttOperation_t, link ) );
-    IotMutex_Unlock( &( _IotMqttPendingResponseMutex ) );
-
-    IotMutex_Lock( &( _IotMqttQueueMutex ) );
-    IotQueue_RemoveAllMatches( &( _IotMqttCallback.queue ),
-                               _mqttOperation_matchConnection,
-                               pMqttConnection,
-                               _IotMqtt_DestroyOperation,
-                               offsetof( _mqttOperation_t, link ) );
-    IotMutex_Unlock( &( _IotMqttQueueMutex ) );
-
-    IotListDouble_RemoveAll( &( pMqttConnection->timerEventList ),
-                             IotMqtt_FreeTimerEvent,
-                             offsetof( _mqttTimerEvent_t, link ) );
-
-    /* Stop the connection timer. */
-    IotLogDebug( "Stopping connection timer." );
-    IotClock_TimerDestroy( &( pMqttConnection->timer ) );
-
     /* Only send a DISCONNECT packet if the connection is active and the "cleanup only"
      * option is false. */
     if( ( pMqttConnection->disconnected == false ) && ( cleanupOnly == false ) )
@@ -1331,10 +777,10 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
         {
             /* Ensure that the members set by operation creation and serialization
              * are appropriate for a blocking DISCONNECT. */
-            IotMqtt_Assert( pDisconnectOperation->pPublishRetry == NULL );
             IotMqtt_Assert( pDisconnectOperation->status == IOT_MQTT_STATUS_PENDING );
             IotMqtt_Assert( ( pDisconnectOperation->flags & IOT_MQTT_FLAG_WAITABLE )
                             == IOT_MQTT_FLAG_WAITABLE );
+            IotMqtt_Assert( pDisconnectOperation->retry.limit == 0 );
 
             /* Set the remaining members of the DISCONNECT operation. */
             pDisconnectOperation->operation = IOT_MQTT_DISCONNECT;
@@ -1362,11 +808,11 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
             IotMqtt_Assert( pDisconnectOperation->pMqttPacket != NULL );
             IotMqtt_Assert( pDisconnectOperation->packetSize > 0 );
 
-            /* Add the DISCONNECT operation to the send queue for network transmission. */
-            if( _IotMqtt_EnqueueOperation( pDisconnectOperation,
-                                           &( _IotMqttSend ) ) != IOT_MQTT_SUCCESS )
+            /* Schedule the DISCONNECT operation for network transmission. */
+            if( _IotMqtt_ScheduleOperation( pDisconnectOperation,
+                                            _IotMqtt_ProcessSend ) != IOT_MQTT_SUCCESS )
             {
-                IotLogWarn( "Failed to enqueue DISCONNECT for sending." );
+                IotLogWarn( "Failed to schedule DISCONNECT for sending." );
                 _IotMqtt_DestroyOperation( pDisconnectOperation );
             }
             else
@@ -1386,15 +832,6 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
         }
     }
 
-    /* Free the memory in use by the keep-alive operation. */
-    if( pMqttConnection->pPingreqOperation != NULL )
-    {
-        _IotMqtt_DestroyOperation( pMqttConnection->pPingreqOperation );
-    }
-
-    /* Unlock the connection timer mutex. */
-    IotMutex_Unlock( &( pMqttConnection->timerMutex ) );
-
     /* Close the network connection regardless of whether an MQTT DISCONNECT
      * packet was sent. */
     if( pMqttConnection->network.disconnect != NULL )
@@ -1407,7 +844,6 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
     }
 
     /* Destroy the MQTT connection's mutexes. */
-    IotMutex_Destroy( &( pMqttConnection->timerMutex ) );
     IotMutex_Destroy( &( pMqttConnection->subscriptionMutex ) );
 
     /* Free the memory used by this connection. */
@@ -1618,24 +1054,15 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
         IotMqtt_Assert( pPublishOperation->packetIdentifier != 0 );
     }
 
-    /* Initialize PUBLISH retry for QoS 1 PUBLISH if retryLimit is set. */
-    if( ( pPublishInfo->QoS > 0 ) && ( pPublishInfo->retryLimit > 0 ) )
+    /* Initialize PUBLISH retry if retryLimit is set. */
+    if( pPublishInfo->retryLimit > 0 )
     {
-        /* Allocate a timer event to handle retries. */
-        pPublishOperation->pPublishRetry = IotMqtt_MallocTimerEvent( sizeof( _mqttTimerEvent_t ) );
-
-        if( pPublishOperation->pPublishRetry == NULL )
+        /* A QoS 0 PUBLISH may not be retried. */
+        if( pPublishInfo->QoS > 0 )
         {
-            _IotMqtt_DestroyOperation( pPublishOperation );
-
-            return IOT_MQTT_NO_MEMORY;
+            pPublishOperation->retry.limit = pPublishInfo->retryLimit;
+            pPublishOperation->retry.nextPeriod = pPublishInfo->retryMs;
         }
-
-        /* Set the members of the retry timer event. */
-        ( void ) ( memset( pPublishOperation->pPublishRetry, 0x00, sizeof( _mqttTimerEvent_t ) ) );
-        pPublishOperation->pPublishRetry->pOperation = pPublishOperation;
-        pPublishOperation->pPublishRetry->retry.limit = pPublishInfo->retryLimit;
-        pPublishOperation->pPublishRetry->retry.nextPeriod = pPublishInfo->retryMs;
     }
 
     /* Set the reference, if provided. This should be set before the publish
@@ -1646,8 +1073,8 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     }
 
     /* Add the PUBLISH operation to the send queue for network transmission. */
-    if( _IotMqtt_EnqueueOperation( pPublishOperation,
-                                   &( _IotMqttSend ) ) != IOT_MQTT_SUCCESS )
+    if( _IotMqtt_ScheduleOperation( pPublishOperation,
+                                    _IotMqtt_ProcessSend ) != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Failed to enqueue PUBLISH for sending." );
 
@@ -1717,243 +1144,111 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
 IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
                              uint64_t timeoutMs )
 {
-    bool publishRetryActive = false;
-    uint64_t startTime = 0, currentTime = 0, elapsedTime = 0, remainingMs = timeoutMs;
-    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
-    _mqttOperation_t * pOperation = ( _mqttOperation_t * ) reference;
-
-    /* Check reference. */
-    if( _IotMqtt_ValidateReference( reference ) == false )
-    {
-        return IOT_MQTT_BAD_PARAMETER;
-    }
-
-    IotLogInfo( "Waiting for operation %s to complete.",
-                IotMqtt_OperationType( pOperation->operation ) );
-
-    /* Wait for the operation to be sent once. This wait should return quickly. */
-    IotSemaphore_Wait( &( pOperation->notify.waitSemaphore ) );
-
-    /* Check any status set by the send thread. Block the receive callback
-     * during this check by locking the mutex for operations pending responses. */
-    IotMutex_Lock( &( _IotMqttPendingResponseMutex ) );
-    status = pOperation->status;
-    IotMutex_Unlock( &( _IotMqttPendingResponseMutex ) );
-
-    if( status == IOT_MQTT_STATUS_PENDING )
-    {
-        /* Check if this operation is a PUBLISH with retry. Block the timer
-         * thread during this check by locking the connection mutex. */
-        if( pOperation->operation == IOT_MQTT_PUBLISH_TO_SERVER )
-        {
-            IotMutex_Lock( &( pOperation->pMqttConnection->timerMutex ) );
-            publishRetryActive = ( pOperation->pPublishRetry != NULL );
-            IotMutex_Unlock( &( pOperation->pMqttConnection->timerMutex ) );
-        }
-
-        /* Wait for a response to be received from the network. Record when
-         * the wait begins for a PUBLISH with retry. */
-        if( publishRetryActive == true )
-        {
-            startTime = IotClock_GetTimeMs();
-            IotMqtt_Assert( startTime > 0 );
-        }
-
-        /* All MQTT operations except PUBLISH with retry will have a status after
-         * the second block on the wait semaphore. PUBLISH with retry may require
-         * multiple blocks (once more per each retransmission). */
-        while( status == IOT_MQTT_STATUS_PENDING )
-        {
-            /* Only perform the remaining time calculation for PUBLISH with retry. */
-            if( publishRetryActive == true )
-            {
-                /* Get current time. */
-                currentTime = IotClock_GetTimeMs();
-                IotMqtt_Assert( currentTime >= startTime );
-
-                /* Calculate elapsed time. */
-                elapsedTime = currentTime - startTime;
-
-                /* Check for timeout with elapsed time. */
-                if( elapsedTime > timeoutMs )
-                {
-                    status = IOT_MQTT_TIMEOUT;
-                    break;
-                }
-
-                /* Calculate the remaining wait time. */
-                remainingMs = timeoutMs - elapsedTime;
-            }
-
-            /* Block on the wait semaphore. */
-            if( IotSemaphore_TimedWait( &( pOperation->notify.waitSemaphore ),
-                                        remainingMs ) == false )
-            {
-                /* No status received before timeout. */
-                status = IOT_MQTT_TIMEOUT;
-
-                /* A timed out operation may still pending a network response. */
-                IotMutex_Lock( &( _IotMqttPendingResponseMutex ) );
-                ( void ) IotListDouble_RemoveFirstMatch( &( _IotMqttPendingResponse ),
-                                                         NULL,
-                                                         NULL,
-                                                         pOperation );
-                IotMutex_Unlock( &( _IotMqttPendingResponseMutex ) );
-            }
-            else
-            {
-                /* For a PUBLISH with retry, block the timer thread before reading a
-                 * status. */
-                if( publishRetryActive == true )
-                {
-                    IotMutex_Lock( &( pOperation->pMqttConnection->timerMutex ) );
-                }
-
-                /* Successfully received a notification of completion. Retrieve the
-                 * status. */
-                status = pOperation->status;
-
-                if( publishRetryActive == true )
-                {
-                    IotMutex_Unlock( &( pOperation->pMqttConnection->timerMutex ) );
-                }
-            }
-        }
-    }
-    else
-    {
-        /* If a status was set by the send thread, wait for the send thread to be
-         * completely done with the operation. */
-        IotSemaphore_Wait( &( pOperation->notify.waitSemaphore ) );
-    }
-
-    /* A completed operation should not be linked. */
-    IotMqtt_Assert( IotLink_IsLinked( &( pOperation->link ) ) == false );
-
-    /* Remove any lingering subscriptions from a timed out SUBSCRIBE. If
-     * a SUBSCRIBE fails for any other reason, its subscription have already
-     * been removed. */
-    if( ( pOperation->operation == IOT_MQTT_SUBSCRIBE ) &&
-        ( status == IOT_MQTT_TIMEOUT ) )
-    {
-        _IotMqtt_RemoveSubscriptionByPacket( pOperation->pMqttConnection,
-                                             pOperation->packetIdentifier,
-                                             -1 );
-    }
-
-    IotLogInfo( "MQTT operation %s complete with result %s.",
-                IotMqtt_OperationType( pOperation->operation ),
-                IotMqtt_strerror( status ) );
-
-    /* The operation is complete; it can be destroyed. PINGREQ operations are
-     * destroyed by IotMqtt_Disconnect and not here. If the operation is a
-     * PINGRESP, reset it. */
-    if( pOperation->operation != IOT_MQTT_PINGREQ )
-    {
-        _IotMqtt_DestroyOperation( pOperation );
-    }
-    else
-    {
-        IotMqtt_Assert( IotSemaphore_GetCount( &( pOperation->notify.waitSemaphore ) ) == 0 );
-        pOperation->status = IOT_MQTT_STATUS_PENDING;
-    }
-
-    /* A complete operation status (not pending) should be set. */
-    IotMqtt_Assert( status != IOT_MQTT_STATUS_PENDING );
-
-    return status;
+    return IOT_MQTT_STATUS_PENDING;
 }
 
 /*-----------------------------------------------------------*/
 
 const char * IotMqtt_strerror( IotMqttError_t status )
 {
+    const char * pMessage = NULL;
+
     switch( status )
     {
         case IOT_MQTT_SUCCESS:
-
-            return "SUCCESS";
+            pMessage = "SUCCESS";
+            break;
 
         case IOT_MQTT_STATUS_PENDING:
-
-            return "PENDING";
+            pMessage = "PENDING";
+            break;
 
         case IOT_MQTT_INIT_FAILED:
-
-            return "INITIALIZATION FAILED";
+            pMessage = "INITIALIZATION FAILED";
+            break;
 
         case IOT_MQTT_BAD_PARAMETER:
-
-            return "BAD PARAMETER";
+            pMessage = "BAD PARAMETER";
+            break;
 
         case IOT_MQTT_NO_MEMORY:
-
-            return "NO MEMORY";
+            pMessage = "NO MEMORY";
+            break;
 
         case IOT_MQTT_SEND_ERROR:
+            pMessage = "NETWORK SEND ERROR";
+            break;
 
-            return "NETWORK SEND ERROR";
+        case IOT_MQTT_SCHEDULING_ERROR:
+            pMessage = "SCHEDULING ERROR";
+            break;
 
         case IOT_MQTT_BAD_RESPONSE:
-
-            return "BAD RESPONSE RECEIVED";
+            pMessage = "BAD RESPONSE RECEIVED";
+            break;
 
         case IOT_MQTT_TIMEOUT:
-
-            return "TIMEOUT";
+            pMessage = "TIMEOUT";
+            break;
 
         case IOT_MQTT_SERVER_REFUSED:
-
-            return "SERVER REFUSED";
+            pMessage = "SERVER REFUSED";
+            break;
 
         case IOT_MQTT_RETRY_NO_RESPONSE:
-
-            return "NO RESPONSE";
+            pMessage = "NO RESPONSE";
+            break;
 
         default:
-
-            return "INVALID STATUS";
+            pMessage = "INVALID STATUS";
+            break;
     }
+
+    return pMessage;
 }
 
 /*-----------------------------------------------------------*/
 
 const char * IotMqtt_OperationType( IotMqttOperationType_t operation )
 {
+    const char * pMessage = NULL;
+
     switch( operation )
     {
         case IOT_MQTT_CONNECT:
-
-            return "CONNECT";
+            pMessage = "CONNECT";
+            break;
 
         case IOT_MQTT_PUBLISH_TO_SERVER:
-
-            return "PUBLISH";
+            pMessage = "PUBLISH";
+            break;
 
         case IOT_MQTT_PUBACK:
-
-            return "PUBACK";
+            pMessage = "PUBACK";
+            break;
 
         case IOT_MQTT_SUBSCRIBE:
-
-            return "SUBSCRIBE";
+            pMessage = "SUBSCRIBE";
+            break;
 
         case IOT_MQTT_UNSUBSCRIBE:
-
-            return "UNSUBSCRIBE";
+            pMessage = "UNSUBSCRIBE";
+            break;
 
         case IOT_MQTT_PINGREQ:
-
-            return "PINGREQ";
+            pMessage = "PINGREQ";
+            break;
 
         case IOT_MQTT_DISCONNECT:
-
-            return "DISCONNECT";
+            pMessage = "DISCONNECT";
+            break;
 
         default:
-
-            return "INVALID OPERATION";
+            pMessage = "INVALID OPERATION";
+            break;
     }
+
+    return pMessage;
 }
 
 /*-----------------------------------------------------------*/

@@ -160,12 +160,12 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
 /**
  * @brief Initializer for operations in the tests.
  */
-#define _INITIALIZE_OPERATION( name )                                          \
-    {                                                                          \
-        .link = { 0 }, .operation = name, .pMqttConnection = _pMqttConnection, \
-        .flags = IOT_MQTT_FLAG_WAITABLE, .packetIdentifier = 1,                \
-        .pMqttPacket = NULL, .packetSize = 0, .notify = { .callback = { 0 } }, \
-        .status = IOT_MQTT_STATUS_PENDING, .pPublishRetry = NULL               \
+#define _INITIALIZE_OPERATION( name )                                                            \
+    {                                                                                            \
+        .link = { 0 }, .incomingPublish = false, .pMqttConnection = _pMqttConnection,            \
+        .job = { 0 }, .operation = name, .flags = IOT_MQTT_FLAG_WAITABLE, .packetIdentifier = 1, \
+        .pMqttPacket = NULL, .packetSize = 0, .notify = { .callback = { 0 } },                   \
+        .status = IOT_MQTT_STATUS_PENDING, .retry = { 0 }                                        \
     }
 
 /*-----------------------------------------------------------*/
@@ -368,7 +368,7 @@ static IotMqttError_t _deserializePingresp( const uint8_t * const pPingrespStart
 static void _operationResetAndPush( _mqttOperation_t * const pOperation )
 {
     pOperation->status = IOT_MQTT_STATUS_PENDING;
-    IotQueue_Enqueue( &( _IotMqttPendingResponse ), &( pOperation->link ) );
+    IotQueue_Enqueue( &( _pMqttConnection->pendingResponse ), &( pOperation->link ) );
 }
 
 /*-----------------------------------------------------------*/

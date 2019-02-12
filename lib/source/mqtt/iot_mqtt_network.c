@@ -91,15 +91,15 @@ static void _sendPuback( _mqttConnection_t * const pMqttConnection,
         return;
     }
 
-    /* Set the remaining members of the PUBACK operation and push it to the
-     * send queue for network transmission. */
+    /* Set the remaining members of the PUBACK operation and schedule it for
+     * network transmission. */
     pPubackOperation->operation = IOT_MQTT_PUBACK;
     pPubackOperation->pMqttConnection = pMqttConnection;
 
-    if( _IotMqtt_EnqueueOperation( pPubackOperation,
-                                   &( _IotMqttSend ) ) != IOT_MQTT_SUCCESS )
+    if( _IotMqtt_ScheduleOperation( pPubackOperation,
+                                   _IotMqtt_ProcessSend ) != IOT_MQTT_SUCCESS )
     {
-        IotLogWarn( "Failed to enqueue PUBACK for sending." );
+        IotLogWarn( "Failed to schedule PUBACK for sending." );
         _IotMqtt_DestroyOperation( pPubackOperation );
     }
 }
@@ -173,7 +173,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                  * in-progress CONNECT operation. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = _IotMqtt_FindOperation( IOT_MQTT_CONNECT, NULL );
+                    pOperation = _IotMqtt_FindOperation( pConnectionInfo, IOT_MQTT_CONNECT, NULL );
 
                     if( pOperation != NULL )
                     {
@@ -278,7 +278,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                  * PUBLISH with a matching client identifier. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = _IotMqtt_FindOperation( IOT_MQTT_PUBLISH_TO_SERVER, &packetIdentifier );
+                    pOperation = _IotMqtt_FindOperation( pConnectionInfo, IOT_MQTT_PUBLISH_TO_SERVER, &packetIdentifier );
 
                     if( pOperation != NULL )
                     {
@@ -316,7 +316,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                  * SUBACK with a matching client identifier. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = _IotMqtt_FindOperation( IOT_MQTT_SUBSCRIBE, &packetIdentifier );
+                    pOperation = _IotMqtt_FindOperation( pConnectionInfo, IOT_MQTT_SUBSCRIBE, &packetIdentifier );
 
                     if( pOperation != NULL )
                     {
@@ -352,7 +352,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                  * UNSUBACK with a matching client identifier. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = _IotMqtt_FindOperation( IOT_MQTT_UNSUBSCRIBE, &packetIdentifier );
+                    pOperation = _IotMqtt_FindOperation( pConnectionInfo, IOT_MQTT_UNSUBSCRIBE, &packetIdentifier );
 
                     if( pOperation != NULL )
                     {
@@ -386,7 +386,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                  * in-progress PINGREQ operation. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = _IotMqtt_FindOperation( IOT_MQTT_PINGREQ, NULL );
+                    pOperation = _IotMqtt_FindOperation( pConnectionInfo, IOT_MQTT_PINGREQ, NULL );
 
                     if( pOperation != NULL )
                     {
@@ -425,9 +425,6 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
 
             pLastPublish = NULL;
 
-            /* Prevent the timer thread from running, then set the error flag. */
-            IotMutex_Lock( &( pConnectionInfo->timerMutex ) );
-
             pConnectionInfo->disconnected = true;
 
             if( pConnectionInfo->network.disconnect != NULL )
@@ -438,8 +435,6 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
             {
                 IotLogWarn( "No disconnect function was set. Network connection not closed." );
             }
-
-            IotMutex_Unlock( &( pConnectionInfo->timerMutex ) );
 
             return -1;
         }

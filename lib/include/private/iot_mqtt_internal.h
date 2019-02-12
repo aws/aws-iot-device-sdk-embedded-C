@@ -77,6 +77,29 @@
 #define _LIBRARY_LOG_NAME    ( "MQTT" )
 #include "iot_logging_setup.h"
 
+/**
+ * @def _validateParameter( condition, errorMessage )
+ * @brief Helper macro for validating public API paramters.
+ *
+ * Bails with #IOT_MQTT_BAD_PARAMETER and optionally prints an error message on
+ * failure.
+ *
+ * @param[in] condition The condition to test when checking parameter.
+ * @param[in] errorMessage A message to log if parameter validation fails.
+ * Optional; pass `NULL` to ignore.
+ * @param[in] ... Variable-length parameters for log function.
+ */
+#define _validateParameter( condition, errorMessage, ... ) \
+    if( ( condition ) == false )                           \
+    {                                                      \
+        if( errorMessage != NULL )                         \
+        {                                                  \
+            IotLogError( errorMessage, ... );              \
+        }                                                  \
+                                                           \
+        return IOT_MQTT_BAD_PARAMETER;                     \
+    }
+
 /*
  * Provide default values for undefined memory allocation functions based on
  * the usage of dynamic memory allocation.
@@ -333,22 +356,23 @@ typedef struct _mqttSubscription
  */
 typedef struct _mqttConnection
 {
-    bool awsIotMqttMode;                       /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
-    IotMqttNetIf_t network;                    /**< @brief Network interface provided to @ref mqtt_function_connect. */
+    bool awsIotMqttMode;               /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
+    IotMqttNetIf_t network;            /**< @brief Network interface provided to @ref mqtt_function_connect. */
 
-    bool disconnected;                         /**< @brief Tracks if this connection has been disconnected. */
-    IotMutex_t referencesMutex;                /**< @brief Grants exclusive access to disconnected flag and reference count. */
-    int32_t references;                        /**< @brief Counts callbacks and operations using this connection. */
+    bool disconnected;                 /**< @brief Tracks if this connection has been disconnected. */
+    IotMutex_t referencesMutex;        /**< @brief Grants exclusive access to disconnected flag, reference count, and operation lists. */
+    int32_t references;                /**< @brief Counts callbacks and operations using this connection. */
+    IotListDouble_t pendingProcessing; /**< @brief List of operations waiting to be processed by a task pool routine. */
+    IotListDouble_t pendingResponse;   /**< @brief List of processed operations awaiting a server response. */
 
-    IotListDouble_t subscriptionList;          /**< @brief Holds subscriptions associated with this connection. */
-    IotMutex_t subscriptionMutex;              /**< @brief Grants exclusive access to #_mqttConnection_t.subscriptionList. */
+    IotListDouble_t subscriptionList;  /**< @brief Holds subscriptions associated with this connection. */
+    IotMutex_t subscriptionMutex;      /**< @brief Grants exclusive access to #_mqttConnection_t.subscriptionList. */
 
-    IotTimer_t timer;                          /**< @brief Expires when a timer event should be processed. */
-    IotMutex_t timerMutex;                     /**< @brief Prevents concurrent access from timer thread and protects timer event list. */
-    IotListDouble_t timerEventList;            /**< @brief List of active timer events. */
-    uint16_t keepAliveSeconds;                 /**< @brief Keep-alive interval. */
-    struct _mqttOperation * pPingreqOperation; /**< @brief PINGREQ operation. Only used if keep-alive is active. */
-    struct _mqttTimerEvent * pKeepAliveEvent;  /**< @brief When to process a keep-alive. Only used if keep-alive is active. */
+    bool checkPingresp;                /**< @brief Whether to send a PINGREQ or check for PINGRESP in keep-alive processing. */
+    uint32_t keepAliveMs;              /**< @brief Keep-alive interval in milliseconds. */
+    IotTaskPoolJob_t keepAliveJob;     /**< @brief Task pool job for processing this connection's keep-alive. */
+    uint8_t * pPingreqPacket;          /**< @brief An MQTT PINGREQ packet, allocated if keep-alive is active. */
+    size_t pingreqPacketSize;          /**< @brief The size of an allocated PINGREQ packet. */
 } _mqttConnection_t;
 
 /**
@@ -384,12 +408,17 @@ typedef struct _mqttOperation
             /* How to notify of an operation's completion. */
             union
             {
-                IotSemaphore_t waitSemaphore;       /**< @brief Semaphore to be used with @ref mqtt_function_wait. */
-                IotMqttCallbackInfo_t callback;     /**< @brief User-provided callback function and parameter. */
-            } notify;                               /**< @brief How to notify of this operation's completion. */
-            IotMqttError_t status;                  /**< @brief Result of this operation. This is reported once a response is received. */
+                IotSemaphore_t waitSemaphore;   /**< @brief Semaphore to be used with @ref mqtt_function_wait. */
+                IotMqttCallbackInfo_t callback; /**< @brief User-provided callback function and parameter. */
+            } notify;                           /**< @brief How to notify of this operation's completion. */
+            IotMqttError_t status;              /**< @brief Result of this operation. This is reported once a response is received. */
 
-            struct _mqttTimerEvent * pPublishRetry; /**< @brief How an operation will be retried. Only used for QoS 1 publishes. */
+            struct
+            {
+                int count;
+                int limit;
+                uint64_t nextPeriod;
+            } retry;
         };
 
         /* If incomingPublish is true, this struct is valid. */
@@ -786,20 +815,6 @@ IotMqttError_t _IotMqtt_SerializeDisconnect( uint8_t ** const pDisconnectPacket,
 void _IotMqtt_FreePacket( uint8_t * pPacket );
 
 /*-------------------- MQTT operation record functions ----------------------*/
-/*----------------- MQTT subscription management functions ------------------*/
-/**
- * @brief Compare two #_mqttTimerEvent_t by expiration time.
- *
- * @param[in] pTimerEventLink1 The link member of the first #_mqttTimerEvent_t to compare.
- * @param[in] pTimerEventLink2 The link member of the second #_mqttTimerEvent_t to compare.
- *
- * @return
- * - Negative value if the first timer event is less than the second timer event.
- * - Zero if the two timer events are equal.
- * - Positive value if the first timer event is greater than the second timer event.
- */
-int _IotMqtt_TimerEventCompare( const IotLink_t * const pTimerEventLink1,
-                                const IotLink_t * const pTimerEventLink2 );
 
 /**
  * @brief Create a record for a new in-progress MQTT operation.
@@ -825,26 +840,51 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttOperation_t ** const pNewOperation
 void _IotMqtt_DestroyOperation( void * pData );
 
 /**
- * @brief Enqueue an MQTT operation for processing.
+ * @brief Task pool routine for processing an MQTT connection's keep-alive.
  *
- * @param[in] pOperation The MQTT operation to enqueue.
- * @param[in] pQueue The address of either #_IotMqttCallback or #_IotMqttSend.
- *
- * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
+ * @param[in] pTaskPool Pointer to the system task pool.
+ * @param[in] pKeepAliveJob Pointer the an MQTT connection's keep-alive job.
+ * @param[in] pContext Pointer to an MQTT connection, passed as an opaque context.
  */
-IotMqttError_t _IotMqtt_EnqueueOperation( _mqttOperation_t * const pOperation,
-                                          _mqttOperationQueue_t * const pQueue );
+void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
+                                IotTaskPoolJob_t * pKeepAliveJob,
+                                void * pContext );
 
 /**
  * @brief Task pool routine for processing an incoming PUBLISH message.
  *
  * @param[in] pTaskPool Pointer to the system task pool.
- * @param[in] pPublishJob Pointer to an operation's job.
- * @param[in] pContext Pointer to an operation, passed as an opaque context.
+ * @param[in] pPublishJob Pointer to the incoming PUBLISH operation's job.
+ * @param[in] pContext Pointer to the incoming PUBLISH operation, passed as an
+ * opaque context.
  */
 void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
                                       IotTaskPoolJob_t * pPublishJob,
                                       void * pContext );
+
+/**
+ * @brief Task pool routine for processing an MQTT operation to send.
+ *
+ * @param[in] pTaskPool Pointer to the system task pool.
+ * @param[in] pSendJob Pointer to an operation's job.
+ * @param[in] pContext Pointer to the operation to send, passed as an opaque
+ * context.
+ */
+void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
+                           IotTaskPoolJob_t * pSendJob,
+                           void * pContext );
+
+/**
+ * @brief Task pool routine for processing a completed MQTT operation.
+ *
+ * @param[in] pTaskPool Pointer to the system task pool.
+ * @param[in] pOperationJob Pointer to the completed operation's job.
+ * @param[in] pContext Pointer to the completed operation, passed as an opaque
+ * context.
+ */
+void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
+                                         IotTaskPoolJob_t * pOperationJob,
+                                         void * pContext );
 
 /**
  * @brief Schedule an operation for immediate processing.
@@ -860,15 +900,17 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
                                            IotTaskPoolRoutine_t jobRoutine );
 
 /**
- * @brief Search the list of MQTT operations pending responses using an operation
+ * @brief Search a list of MQTT operations pending responses using an operation
  * name and packet identifier. Removes a matching operation from the list if found.
  *
+ * @param[in] pMqttConnection The connection associated with the operation.
  * @param[in] operation The operation type to look for.
  * @param[in] pPacketIdentifier A packet identifier to match. Pass `NULL` to ignore.
  *
  * @return Pointer to any matching operation; `NULL` if no match was found.
  */
-_mqttOperation_t * _IotMqtt_FindOperation( IotMqttOperationType_t operation,
+_mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnection,
+                                           IotMqttOperationType_t operation,
                                            const uint16_t * const pPacketIdentifier );
 
 /**

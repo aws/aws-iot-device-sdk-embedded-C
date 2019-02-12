@@ -65,67 +65,6 @@ typedef struct _operationMatchParam
 static bool _mqttOperation_match( const IotLink_t * pOperationLink,
                                   void * pMatch );
 
-/**
- * @brief Calculate the timeout and period of the next PUBLISH retry event.
- *
- * Calculates the next time a PUBLISH should be transmitted and places the
- * retry event in a timer event queue.
- *
- * @param[in] pMqttConnection The MQTT connection associated with the PUBLISH.
- * @param[in] pPublishRetry The current PUBLISH retry event.
- *
- * @return true if the retry event was successfully placed in a timer event queue;
- * false otherwise.
- */
-static bool _calculateNextPublishRetry( _mqttConnection_t * const pMqttConnection,
-                                        _mqttTimerEvent_t * const pPublishRetry );
-
-/**
- * @brief Send the packet associated with an MQTT operation.
- *
- * Transmits the MQTT packet from a pending operation to the MQTT server, then
- * places the operation in the list of MQTT operations awaiting responses from
- * the server.
- *
- * @param[in] pOperation The MQTT operation with the packet to send.
- */
-static void _invokeSend( _mqttOperation_t * const pOperation );
-
-/**
- * @brief Invoke user-provided callback functions.
- *
- * Invokes callback functions associated with either a completed MQTT operation
- * or an incoming PUBLISH message.
- *
- * @param[in] pOperation The MQTT operation with the callback to invoke.
- */
-static void _invokeCallback( _mqttOperation_t * const pOperation );
-
-/**
- * @brief Process an MQTT operation.
- *
- * This function is a thread routine that either sends an MQTT packet for
- * in-progress operations, notifies of an operation's completion, or notifies
- * of an incoming PUBLISH message.
- *
- * @param[in] pArgument The address of either #_IotMqttCallback (to invoke a user
- * callback) or #_IotMqttSend (to send an MQTT packet).
- */
-static void _processOperation( void * pArgument );
-
-/*-----------------------------------------------------------*/
-
-/**
- * Queues of MQTT operations waiting to be processed.
- */
-_mqttOperationQueue_t _IotMqttCallback; /**< @brief Queue of MQTT operations waiting for their callback to be invoked. */
-_mqttOperationQueue_t _IotMqttSend;     /**< @brief Queue of MQTT operations waiting to be sent. */
-IotMutex_t _IotMqttQueueMutex;          /**< @brief Protects both #_IotMqttSend and #_IotMqttCallback from concurrent access. */
-
-/* List of MQTT operations awaiting a network response. */
-IotListDouble_t _IotMqttPendingResponse; /**< @brief List of MQTT operations awaiting a response from the MQTT server. */
-IotMutex_t _IotMqttPendingResponseMutex; /**< @brief Protects #_IotMqttPendingResponse from concurrent access. */
-
 /*-----------------------------------------------------------*/
 
 static bool _mqttOperation_match( const IotLink_t * pOperationLink,
@@ -152,295 +91,6 @@ static bool _mqttOperation_match( const IotLink_t * pOperationLink,
     }
 
     return match;
-}
-
-/*-----------------------------------------------------------*/
-
-static bool _calculateNextPublishRetry( _mqttConnection_t * const pMqttConnection,
-                                        _mqttTimerEvent_t * const pPublishRetry )
-{
-    bool status = true;
-    _mqttTimerEvent_t * pTimerListHead = NULL;
-
-    /* Check arguments. */
-    IotMqtt_Assert( pPublishRetry->pOperation->operation == IOT_MQTT_PUBLISH_TO_SERVER );
-    IotMqtt_Assert( pPublishRetry->retry.limit > 0 );
-    IotMqtt_Assert( pPublishRetry->retry.nextPeriod <= IOT_MQTT_RETRY_MS_CEILING );
-
-    /* Increment the number of retries. */
-    pPublishRetry->retry.count++;
-
-    /* Calculate when the PUBLISH retry event should expire relative to the current
-     * time. */
-    pPublishRetry->expirationTime = IotClock_GetTimeMs();
-
-    if( pPublishRetry->retry.count > pPublishRetry->retry.limit )
-    {
-        /* Retry limit reached. Check for a response shortly. */
-        pPublishRetry->expirationTime += IOT_MQTT_RESPONSE_WAIT_MS;
-    }
-    else
-    {
-        /* Expire at the next retry period. */
-        pPublishRetry->expirationTime += pPublishRetry->retry.nextPeriod;
-
-        /* Calculate the next retry period. PUBLISH retries use a truncated exponential
-         * backoff strategy. */
-        if( pPublishRetry->retry.nextPeriod < IOT_MQTT_RETRY_MS_CEILING )
-        {
-            pPublishRetry->retry.nextPeriod *= 2;
-
-            if( pPublishRetry->retry.nextPeriod > IOT_MQTT_RETRY_MS_CEILING )
-            {
-                pPublishRetry->retry.nextPeriod = IOT_MQTT_RETRY_MS_CEILING;
-            }
-        }
-    }
-
-    /* Lock the connection timer mutex to block the timer thread. */
-    IotMutex_Lock( &( pMqttConnection->timerMutex ) );
-
-    /* Peek the current head of the timer event list. If the PUBLISH retry expires
-     * sooner, re-arm the timer to expire at the PUBLISH retry's expiration time. */
-    pTimerListHead = IotLink_Container( _mqttTimerEvent_t,
-                                        IotListDouble_PeekHead( &( pMqttConnection->timerEventList ) ),
-                                        link );
-
-    if( ( pTimerListHead == NULL ) ||
-        ( pTimerListHead->expirationTime > pPublishRetry->expirationTime ) )
-    {
-        status = IotClock_TimerArm( &( pMqttConnection->timer ),
-                                    pPublishRetry->expirationTime - IotClock_GetTimeMs(),
-                                    0 );
-
-        if( status == false )
-        {
-            IotLogError( "Failed to re-arm timer for connection %p.", pMqttConnection );
-        }
-    }
-
-    /* Insert the PUBLISH retry into the timer event list only if the timer
-     * is guaranteed to expire before its expiration time. */
-    if( status == true )
-    {
-        IotListDouble_InsertSorted( &( pMqttConnection->timerEventList ),
-                                    &( pPublishRetry->link ),
-                                    _IotMqtt_TimerEventCompare );
-    }
-
-    IotMutex_Unlock( &( pMqttConnection->timerMutex ) );
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
-static void _invokeSend( _mqttOperation_t * const pOperation )
-{
-    bool waitableOperation = false;
-
-    IotLogDebug( "Operation %s received from queue. Sending data over network.",
-                 IotMqtt_OperationType( pOperation->operation ) );
-
-    /* Check if this is a waitable operation. */
-    waitableOperation = ( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE )
-                          == IOT_MQTT_FLAG_WAITABLE );
-
-    /* Transmit the MQTT packet from the operation over the network. */
-    if( pOperation->pMqttConnection->network.send( pOperation->pMqttConnection->network.pSendContext,
-                                                   pOperation->pMqttPacket,
-                                                   pOperation->packetSize ) != pOperation->packetSize )
-    {
-        /* Transmission failed. */
-        IotLogError( "Failed to send data for operation %s.",
-                     IotMqtt_OperationType( pOperation->operation ) );
-
-        pOperation->status = IOT_MQTT_SEND_ERROR;
-    }
-    else
-    {
-        /* DISCONNECT operations are considered successful upon successful
-         * transmission. */
-        if( pOperation->operation == IOT_MQTT_DISCONNECT )
-        {
-            pOperation->status = IOT_MQTT_SUCCESS;
-        }
-        /* Calculate the details of the next PUBLISH retry event. */
-        else if( pOperation->pPublishRetry != NULL )
-        {
-            /* Only a PUBLISH may have a retry event. */
-            IotMqtt_Assert( pOperation->operation == IOT_MQTT_PUBLISH_TO_SERVER );
-
-            if( _calculateNextPublishRetry( pOperation->pMqttConnection,
-                                            pOperation->pPublishRetry ) == false )
-            {
-                /* PUBLISH retry failed to re-arm connection timer. Retransmission
-                 * will not be sent. */
-                pOperation->status = IOT_MQTT_SEND_ERROR;
-            }
-        }
-    }
-
-    /* Once the MQTT packet has been sent, it may be freed if it will not be
-     * retransmitted and it's not a PINGREQ. Additionally, the entire operation
-     * may be destroyed if no notification method is set. */
-    if( ( pOperation->pPublishRetry == NULL ) &&
-        ( pOperation->operation != IOT_MQTT_PINGREQ ) )
-    {
-        /* Choose a free packet function. */
-        void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
-
-        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pOperation->pMqttConnection->network.freePacket != NULL )
-            {
-                freePacket = pOperation->pMqttConnection->network.freePacket;
-            }
-        #endif
-
-        freePacket( pOperation->pMqttPacket );
-        pOperation->pMqttPacket = NULL;
-
-        if( ( waitableOperation == false ) &&
-            ( pOperation->notify.callback.function == NULL ) )
-        {
-            _IotMqtt_DestroyOperation( pOperation );
-
-            return;
-        }
-    }
-
-    /* If a status was set by this function, notify of completion. */
-    if( pOperation->status != IOT_MQTT_STATUS_PENDING )
-    {
-        _IotMqtt_Notify( pOperation );
-    }
-    /* Otherwise, add operation to the list of MQTT operations pending responses. */
-    else
-    {
-        IotMutex_Lock( &( _IotMqttPendingResponseMutex ) );
-        IotListDouble_InsertTail( &( _IotMqttPendingResponse ), &( pOperation->link ) );
-        IotMutex_Unlock( &( _IotMqttPendingResponseMutex ) );
-    }
-
-    /* Notify a waitable operation that it has been sent. */
-    if( waitableOperation == true )
-    {
-        IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
-    }
-}
-
-/*-----------------------------------------------------------*/
-
-static void _invokeCallback( _mqttOperation_t * const pOperation )
-{
-    IotMqttCallbackParam_t callbackParam = { .operation = { 0 } };
-
-    /* Operations with no callback should not have been passed. */
-    IotMqtt_Assert( pOperation->notify.callback.function != NULL );
-
-    IotLogDebug( "Operation %s received from queue. Invoking user callback.",
-                    IotMqtt_OperationType( pOperation->operation ) );
-
-    /* Set callback parameters. */
-    callbackParam.mqttConnection = pOperation->pMqttConnection;
-    callbackParam.operation.type = pOperation->operation;
-    callbackParam.operation.reference = pOperation;
-    callbackParam.operation.result = pOperation->status;
-
-    /* Invoke user callback function. */
-    pOperation->notify.callback.function( pOperation->notify.callback.param1,
-                                            &callbackParam );
-
-    /* Once the user-provided callback returns, the operation can be destroyed. */
-    _IotMqtt_DestroyOperation( pOperation );
-}
-
-/*-----------------------------------------------------------*/
-
-static void _processOperation( void * pArgument )
-{
-    _mqttOperation_t * pOperation = NULL;
-    _mqttOperationQueue_t * pQueue = ( _mqttOperationQueue_t * ) pArgument;
-
-    /* There are only two valid values for this function's argument. */
-    IotMqtt_Assert( ( pQueue == &( _IotMqttCallback ) ) ||
-                    ( pQueue == &( _IotMqttSend ) ) );
-
-    IotLogDebug( "New thread for processing MQTT operations started." );
-
-    while( true )
-    {
-        IotLogDebug( "Removing oldest operation from MQTT pending operations." );
-
-        /* Remove the oldest operation from the queue of pending MQTT operations. */
-        IotMutex_Lock( &( _IotMqttQueueMutex ) );
-
-        pOperation = IotLink_Container( _mqttOperation_t,
-                                        IotQueue_Dequeue( &( pQueue->queue ) ),
-                                        link );
-
-        /* If no operation was received, this thread will terminate. Increment
-         * number of available threads. */
-        if( pOperation == NULL )
-        {
-            IotSemaphore_Post( &( pQueue->availableThreads ) );
-        }
-
-        IotMutex_Unlock( &( _IotMqttQueueMutex ) );
-
-        /* Terminate thread if no operation was received. */
-        if( pOperation == NULL )
-        {
-            break;
-        }
-
-        /* Run thread routine based on given queue. */
-        if( pQueue == &( _IotMqttCallback ) )
-        {
-            /* Only incoming PUBLISH messages and completed operations should invoke
-             * the callback routine. */
-            IotMqtt_Assert( ( pOperation->incomingPublish == true ) ||
-                            ( pOperation->status != IOT_MQTT_STATUS_PENDING ) );
-
-            _invokeCallback( pOperation );
-        }
-        else
-        {
-            /* Only operations with an allocated packet should be sent. */
-            IotMqtt_Assert( pOperation->status == IOT_MQTT_STATUS_PENDING );
-            IotMqtt_Assert( pOperation->pMqttPacket != NULL );
-            IotMqtt_Assert( pOperation->packetSize != 0 );
-
-            _invokeSend( pOperation );
-        }
-    }
-
-    IotLogDebug( "No more pending operations. Terminating MQTT processing thread." );
-}
-
-/*-----------------------------------------------------------*/
-
-int _IotMqtt_TimerEventCompare( const IotLink_t * const pTimerEventLink1,
-                                const IotLink_t * const pTimerEventLink2 )
-{
-    const _mqttTimerEvent_t * pTimerEvent1 = IotLink_Container( _mqttTimerEvent_t,
-                                                                pTimerEventLink1,
-                                                                link );
-    const _mqttTimerEvent_t * pTimerEvent2 = IotLink_Container( _mqttTimerEvent_t,
-                                                                pTimerEventLink2,
-                                                                link );
-
-    if( pTimerEvent1->expirationTime < pTimerEvent2->expirationTime )
-    {
-        return -1;
-    }
-
-    if( pTimerEvent1->expirationTime > pTimerEvent2->expirationTime )
-    {
-        return 1;
-    }
-
-    return 0;
 }
 
 /*-----------------------------------------------------------*/
@@ -537,26 +187,6 @@ void _IotMqtt_DestroyOperation( void * pData )
         freePacket( pOperation->pMqttPacket );
     }
 
-    /* Check if this operation is a PUBLISH. Clean up its retry event if
-     * necessary. */
-    if( ( pOperation->operation == IOT_MQTT_PUBLISH_TO_SERVER ) &&
-        ( pOperation->pPublishRetry != NULL ) )
-    {
-        IotMutex_Lock( &( pOperation->pMqttConnection->timerMutex ) );
-
-        /* Remove the timer event from the timer event list before freeing it.
-         * The return value of this function is not checked because it always
-         * equals the publish retry event or is NULL. */
-        ( void ) IotListDouble_RemoveFirstMatch( &( pOperation->pMqttConnection->timerEventList ),
-                                                 NULL,
-                                                 NULL,
-                                                 pOperation->pPublishRetry );
-
-        IotMutex_Unlock( &( pOperation->pMqttConnection->timerMutex ) );
-
-        IotMqtt_FreeTimerEvent( pOperation->pPublishRetry );
-    }
-
     /* Check if a wait semaphore was created for this operation. */
     if( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
     {
@@ -569,6 +199,14 @@ void _IotMqtt_DestroyOperation( void * pData )
 
 /*-----------------------------------------------------------*/
 
+void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
+                                IotTaskPoolJob_t * pKeepAliveJob,
+                                void * pContext )
+{
+}
+
+/*-----------------------------------------------------------*/
+
 void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
                                       IotTaskPoolJob_t * pPublishJob,
                                       void * pContext )
@@ -576,7 +214,10 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
     _mqttOperation_t * pCurrent = NULL, * pNext = pContext;
     IotMqttCallbackParam_t callbackParam = { .message = { 0 } };
 
-    /* Check parameters. */
+    /* Check parameters. The task pool and job parameter is not used when asserts
+     * are disabled. */
+    ( void ) pTaskPool;
+    ( void ) pPublishJob;
     IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pNext->incomingPublish == true );
     IotMqtt_Assert( pPublishJob == &( pNext->job ) );
@@ -613,6 +254,22 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
 
 /*-----------------------------------------------------------*/
 
+void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
+                           IotTaskPoolJob_t * pSendJob,
+                           void * pContext )
+{
+}
+
+/*-----------------------------------------------------------*/
+
+void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
+                                         IotTaskPoolJob_t * pOperationJob,
+                                         void * pContext )
+{
+}
+
+/*-----------------------------------------------------------*/
+
 IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
                                            IotTaskPoolRoutine_t jobRoutine )
 {
@@ -620,7 +277,9 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
 
     /* Check that job routine is valid. */
-    IotMqtt_Assert( jobRoutine == _IotMqtt_ProcessIncomingPublish );
+    IotMqtt_Assert( ( jobRoutine == _IotMqtt_ProcessSend ) ||
+                    ( jobRoutine == _IotMqtt_ProcessCompletedOperation ) ||
+                    ( jobRoutine == _IotMqtt_ProcessIncomingPublish ) );
 
     /* Creating a new job should never fail when parameters are valid. */
     taskPoolStatus = IotTaskPool_CreateJob( jobRoutine,
@@ -638,7 +297,7 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
         IotMqtt_Assert( taskPoolStatus != IOT_TASKPOOL_ILLEGAL_OPERATION );
 
         IotLogWarn( "Failed to schedule MQTT operation, status %d.",
-                     taskPoolStatus );
+                    taskPoolStatus );
 
         status = IOT_MQTT_SCHEDULING_ERROR;
     }
@@ -648,49 +307,8 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_EnqueueOperation( _mqttOperation_t * const pOperation,
-                                          _mqttOperationQueue_t * const pQueue )
-{
-    IotMqttError_t status = IOT_MQTT_SUCCESS;
-
-    /* The given operation must not already be queued. */
-    IotMqtt_Assert( IotLink_IsLinked( &( pOperation->link ) ) == false );
-
-    /* Check that the queue argument is either the callback queue or send queue. */
-    IotMqtt_Assert( ( pQueue == &( _IotMqttCallback ) ) ||
-                    ( pQueue == &( _IotMqttSend ) ) );
-
-    /* Lock mutex for exclusive access to queues. */
-    IotMutex_Lock( &( _IotMqttQueueMutex ) );
-
-    /* Add operation to queue. */
-    IotQueue_Enqueue( &( pQueue->queue ), &( pOperation->link ) );
-
-    /* Check if a new thread can be created. */
-    if( IotSemaphore_TryWait( &( pQueue->availableThreads ) ) == true )
-    {
-        /* Create new thread. */
-        if( Iot_CreateDetachedThread( _processOperation,
-                                      pQueue,
-                                      IOT_THREAD_DEFAULT_PRIORITY,
-                                      IOT_THREAD_DEFAULT_STACK_SIZE ) == false )
-        {
-            /* New thread could not be created. Remove enqueued operation and
-             * report error. */
-            IotQueue_Remove( &( pOperation->link ) );
-            IotSemaphore_Post( &( pQueue->availableThreads ) );
-            status = IOT_MQTT_NO_MEMORY;
-        }
-    }
-
-    IotMutex_Unlock( &( _IotMqttQueueMutex ) );
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
-_mqttOperation_t * _IotMqtt_FindOperation( IotMqttOperationType_t operation,
+_mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnection,
+                                           IotMqttOperationType_t operation,
                                            const uint16_t * const pPacketIdentifier )
 {
     _mqttOperation_t * pResult = NULL;
@@ -709,14 +327,14 @@ _mqttOperation_t * _IotMqtt_FindOperation( IotMqttOperationType_t operation,
     param.pPacketIdentifier = pPacketIdentifier;
 
     /* Find the first matching element in the list. */
-    IotMutex_Lock( &( _IotMqttPendingResponseMutex ) );
+    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
     pResult = IotLink_Container( _mqttOperation_t,
-                                 IotListDouble_RemoveFirstMatch( &( _IotMqttPendingResponse ),
+                                 IotListDouble_RemoveFirstMatch( &( pMqttConnection->pendingResponse ),
                                                                  NULL,
                                                                  _mqttOperation_match,
                                                                  &param ),
                                  link );
-    IotMutex_Unlock( &( _IotMqttPendingResponseMutex ) );
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
     /* The result will be NULL if no corresponding operation was found in the
      * list. */
@@ -759,8 +377,8 @@ void _IotMqtt_Notify( _mqttOperation_t * const pOperation )
     {
         if( pOperation->notify.callback.function != NULL )
         {
-            if( _IotMqtt_EnqueueOperation( pOperation,
-                                           &( _IotMqttCallback ) ) != IOT_MQTT_SUCCESS )
+            if( _IotMqtt_ScheduleOperation( pOperation,
+                                            _IotMqtt_ProcessCompletedOperation ) != IOT_MQTT_SUCCESS )
             {
                 IotLogWarn( "Failed to create new callback thread." );
             }
