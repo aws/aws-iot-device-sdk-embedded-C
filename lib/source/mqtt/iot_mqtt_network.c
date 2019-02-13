@@ -97,7 +97,7 @@ static void _sendPuback( _mqttConnection_t * const pMqttConnection,
     pPubackOperation->pMqttConnection = pMqttConnection;
 
     if( _IotMqtt_ScheduleOperation( pPubackOperation,
-                                   _IotMqtt_ProcessSend ) != IOT_MQTT_SUCCESS )
+                                    _IotMqtt_ProcessSend ) != IOT_MQTT_SUCCESS )
     {
         IotLogWarn( "Failed to schedule PUBACK for sending." );
         _IotMqtt_DestroyOperation( pPubackOperation );
@@ -425,16 +425,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
 
             pLastPublish = NULL;
 
-            pConnectionInfo->disconnected = true;
-
-            if( pConnectionInfo->network.disconnect != NULL )
-            {
-                pConnectionInfo->network.disconnect( 0, pConnectionInfo->network.pDisconnectContext );
-            }
-            else
-            {
-                IotLogWarn( "No disconnect function was set. Network connection not closed." );
-            }
+            _IotMqtt_CloseNetworkConnection( pConnectionInfo );
 
             return -1;
         }
@@ -531,6 +522,70 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
     }
 
     return ( int32_t ) totalBytesProcessed;
+}
+
+/*-----------------------------------------------------------*/
+
+void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * const pMqttConnection )
+{
+    IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
+
+    /* Mark the MQTT connection as disconnected. */
+    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+    pMqttConnection->disconnected = true;
+
+    if( pMqttConnection->keepAliveMs != 0 )
+    {
+        /* Keep-alive must have a PINGREQ allocated. */
+        IotMqtt_Assert( pMqttConnection->pPingreqPacket != NULL );
+        IotMqtt_Assert( pMqttConnection->pingreqPacketSize != 0 );
+
+        /* PINGREQ provides a reference to the connection, so reference count must
+         * be nonzero. */
+        IotMqtt_Assert( pMqttConnection->references > 0 );
+
+        /* Attempt to cancel the keep-alive job. */
+        taskPoolStatus = IotTaskPool_TryCancel( &( _IotMqttTaskPool ),
+                                                &( pMqttConnection->keepAliveJob ),
+                                                NULL );
+
+        /* If the keep-alive job was not canceled, it must be already executing.
+         * Any other return value is invalid. */
+        IotMqtt_Assert( ( taskPoolStatus == IOT_TASKPOOL_SUCCESS ) ||
+                        ( taskPoolStatus == IOT_TASKPOOL_CANCEL_FAILED ) );
+
+        /* Clean up keep-alive if its job was successfully canceled. Otherwise,
+         * the executing keep-alive job will clean up itself. */
+        if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
+        {
+            _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
+            IotTaskPool_DestroyJob( &( _IotMqttTaskPool ),
+                                    &( pMqttConnection->keepAliveJob ) );
+
+            /* Clear data about the keep-alive. */
+            pMqttConnection->keepAliveMs = 0;
+            pMqttConnection->pPingreqPacket = NULL;
+            pMqttConnection->pingreqPacketSize = 0;
+
+            /* Keep-alive is cleaned up; decrement reference count. Since this
+             * function must be followed with a call to DISCONNECT, a check to
+             * destroy the connection is not done here. */
+            pMqttConnection->references--;
+        }
+    }
+
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
+    /* Close the network connection regardless of whether an MQTT DISCONNECT
+     * packet was sent. */
+    if( pMqttConnection->network.disconnect != NULL )
+    {
+        pMqttConnection->network.disconnect( 0, pMqttConnection->network.pDisconnectContext );
+    }
+    else
+    {
+        IotLogWarn( "No disconnect function was set. Network connection not closed." );
+    }
 }
 
 /*-----------------------------------------------------------*/

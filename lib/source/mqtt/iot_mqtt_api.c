@@ -269,18 +269,27 @@ errorMallocConnection: return NULL;
 
 static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
 {
-    /* Stop the keep-alive routine. */
+    /* Clean up keep-alive if still allocated. */
     if( pMqttConnection->keepAliveMs != 0 )
     {
-        /* A PINGREQ packet must be allocated. */
-        IotMqtt_Assert( pMqttConnection->pPingreqPacket != NULL );
-        IotMqtt_Assert( pMqttConnection->pingreqPacketSize != 0 );
-
         _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
+        IotTaskPool_DestroyJob( &( _IotMqttTaskPool ),
+                                &( pMqttConnection->keepAliveJob ) );
+
+        /* Clear data about the keep-alive. */
+        pMqttConnection->keepAliveMs = 0;
+        pMqttConnection->pPingreqPacket = NULL;
+        pMqttConnection->pingreqPacketSize = 0;
+
+        /* Decrement reference count. */
+        pMqttConnection->references--;
     }
 
-    /* This function should only be called on an unreferenced connection. */
+    /* A connection to be destroyed should have no references and no keep-alive. */
     IotMqtt_Assert( pMqttConnection->references == 0 );
+    IotMqtt_Assert( pMqttConnection->keepAliveMs == 0 );
+    IotMqtt_Assert( pMqttConnection->pPingreqPacket == NULL );
+    IotMqtt_Assert( pMqttConnection->pingreqPacketSize == 0 );
 
     /* Remove all subscriptions. */
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
@@ -530,7 +539,7 @@ IotMqttError_t IotMqtt_Init( void )
 {
     const IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM;
 
-    if( IotTaskPool_Create( &taskPoolInfo, &_IotMqttTaskPool) != IOT_TASKPOOL_SUCCESS )
+    if( IotTaskPool_Create( &taskPoolInfo, &_IotMqttTaskPool ) != IOT_TASKPOOL_SUCCESS )
     {
         IotLogError( "Failed to initialize MQTT library task pool." );
         goto errorTaskPool;
@@ -724,7 +733,7 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
     /* When a connection is successfully established, schedule keep-alive job. */
     if( status == IOT_MQTT_SUCCESS )
     {
-        /* Schedule the keep-alive job to run after one keep-alive period. */
+        /* Check if a keep-alive job should be scheduled. */
         if( pNewMqttConnection->keepAliveMs > 0 )
         {
             IotLogDebug( "Scheduling MQTT keep-alive job." );
@@ -842,10 +851,14 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
         }
     }
 
-    /* Mark the MQTT connection as closed and check if it may be destroyed. */
+    /* Close the underlying network connection. This also cleans up keep-alive. */
+    _IotMqtt_CloseNetworkConnection( pMqttConnection );
+
+    /* Check if the connection may be destroyed. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
 
-    pMqttConnection->disconnected = true;
+    /* At this point, the connection should be marked disconnected. */
+    IotMqtt_Assert( pMqttConnection->disconnected == true );
 
     if( pMqttConnection->references == 0 )
     {
@@ -853,17 +866,6 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
     }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
-
-    /* Close the network connection regardless of whether an MQTT DISCONNECT
-     * packet was sent. */
-    if( pMqttConnection->network.disconnect != NULL )
-    {
-        pMqttConnection->network.disconnect( 0, pMqttConnection->network.pDisconnectContext );
-    }
-    else
-    {
-        IotLogWarn( "No disconnect function was set. Network connection not closed." );
-    }
 
     /* Destroy the MQTT connection if possible. */
     if( destroyConnection == true )

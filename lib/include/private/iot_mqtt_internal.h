@@ -952,4 +952,15 @@ bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * const pMqttConn
  */
 void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * const pMqttConnection );
 
+/**
+ * @brief Closes the network connection associated with an MQTT connection.
+ *
+ * A network disconnect function must be set in the network interface for the
+ * network connection to be closed.
+ *
+ * @param[in] pMqttConnection The MQTT connection with the network connection
+ * to close.
+ */
+void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * const pMqttConnection );
+
 #endif /* ifndef _IOT_MQTT_INTERNAL_H_ */

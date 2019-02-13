@@ -45,6 +45,11 @@
 #else
     #include <pthread.h>
 #endif
+#ifdef POSIX_TIME_HEADER
+    #include POSIX_TIME_HEADER
+#else
+    #include <time.h>
+#endif
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -74,7 +79,7 @@ extern int snprintf( char *,
  * Provide default values of test configuration constants.
  */
 #ifndef IOT_TEST_MQTT_TIMEOUT_MS
-    #define IOT_TEST_MQTT_TIMEOUT_MS      ( 5000 )
+    #define IOT_TEST_MQTT_TIMEOUT_MS    ( 5000 )
 #endif
 /** @endcond */
 
@@ -198,11 +203,14 @@ static bool _waitForCount( IotMutex_t * const pMutex,
                            int32_t target )
 {
     bool status = false;
-    int32_t referenceCount = 0, sleepCount = 0, sleepLimit = 0;
+    int32_t referenceCount = 0, sleepCount = 0;
 
-    /* Calculate limit on the number of times to sleep for 1 second. */
-    sleepLimit = ( IOT_TEST_MQTT_TIMEOUT_MS / 1000 ) +
-                 ( ( IOT_TEST_MQTT_TIMEOUT_MS % 1000 ) != 0 );
+    /* 200 ms sleep time. */
+    const struct timespec sleepTime = { .tv_sec = 0, .tv_nsec = 200000000 };
+
+    /* Calculate limit on the number of times to sleep for 200 ms. */
+    const int32_t sleepLimit = ( IOT_TEST_MQTT_TIMEOUT_MS / 200 ) +
+                               ( ( IOT_TEST_MQTT_TIMEOUT_MS % 200 ) != 0 );
 
     /* Wait for the reference count to reach the target value. */
     for( sleepCount = 0; sleepCount < sleepLimit; sleepCount++ )
@@ -220,7 +228,10 @@ static bool _waitForCount( IotMutex_t * const pMutex,
         }
         else
         {
-            sleep( 1 );
+            if( nanosleep( &sleepTime, NULL ) != 0 )
+            {
+                break;
+            }
         }
     }
 
@@ -923,7 +934,12 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
     int32_t i = 0;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     _mqttOperation_t * pIncomingPublish[ 3 ] = { NULL };
+    _mqttSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink;
     IotSemaphore_t waitSem;
+
+    /* Adjustment to reference count based on keep-alive status. */
+    const int32_t keepAliveReference = ( _pMqttConnection->keepAliveMs != 0 ) ? 1 : 0;
 
     #if ( IOT_STATIC_MEMORY_ONLY == 1 ) && ( IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS < 3 )
     #error "IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS must be at least 3 for SubscriptionReferences test."
@@ -945,6 +961,11 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
                                                                     1,
                                                                     &subscription,
                                                                     1 ) );
+
+    /* Get the pointer to the subscription in the MQTT connection. */
+    pSubscriptionLink = IotListDouble_PeekHead( &( _pMqttConnection->subscriptionList ) );
+    TEST_ASSERT_NOT_NULL( pSubscriptionLink );
+    pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
 
     /* Create 3 incoming PUBLISH messages that match the subscription. */
     for( i = 0; i < 3; i++ )
@@ -969,12 +990,39 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
                                                                              _IotMqtt_ProcessIncomingPublish ) );
         }
 
-        /* Wait for the connection reference count to reach 3. */
+        /* Wait for the connection reference count to reach 3 (adjusted for possible keep-alive). */
         TEST_ASSERT_EQUAL_INT( true, _waitForCount( &( _pMqttConnection->referencesMutex ),
                                                     &( _pMqttConnection->references ),
-                                                    3 ) );
+                                                    3 + keepAliveReference ) );
 
+        /* Check that the subscription also has a reference count of 3. */
+        TEST_ASSERT_EQUAL_INT32( true, _waitForCount( &( _pMqttConnection->subscriptionMutex ),
+                                                      &( pSubscription->references ),
+                                                      3 ) );
+
+        /* Post to the wait semaphore, which unblocks one subscription callback. */
+        IotSemaphore_Post( &waitSem );
+
+        /* Wait for the connection reference count to decrease to 2 (adjusted for
+         * possible keep-alive). Check that the subscription reference count also
+         * decreases to 2. */
+        TEST_ASSERT_EQUAL_INT( true, _waitForCount( &( _pMqttConnection->referencesMutex ),
+                                                    &( _pMqttConnection->references ),
+                                                    2 + keepAliveReference ) );
+        TEST_ASSERT_EQUAL_INT32( true, _waitForCount( &( _pMqttConnection->subscriptionMutex ),
+                                                      &( pSubscription->references ),
+                                                      2 ) );
+
+        /* Shut down the MQTT connection. */
         IotMqtt_Disconnect( _pMqttConnection, true );
+
+        /* Post twice to the wait semaphore, which unblocks the remaining blocking
+         * callbacks. */
+        IotSemaphore_Post( &waitSem );
+        IotSemaphore_Post( &waitSem );
+
+        /* Clear the MQTT connection pointer so test cleanup does not double-free it. */
+        _pMqttConnection = NULL;
     }
 
     IotSemaphore_Destroy( &waitSem );

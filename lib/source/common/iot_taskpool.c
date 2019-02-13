@@ -1122,14 +1122,16 @@ static void _taskPoolWorker( void * pUserContext )
 
                 userCallback( pTaskPool, pJob, pJob->pUserContext );
 
-                /* Update the number of busy threads, so new requests can be served by creating new threads, up to maxThreads. */
-                pTaskPool->activeJobs--;
+                /* This job is finished, clear its pointer. */
                 pJob = NULL;
             }
 
             /* Acquire the lock before updating the job status. */
             _TASKPOOL_ENTER_CRITICAL_SECTION;
             {
+                /* Update the number of busy threads, so new requests can be served by creating new threads, up to maxThreads. */
+                pTaskPool->activeJobs--;
+
                 /* Try and dequeue the next job in the dispatch queue. */
                 IotLink_t * pItem = NULL;
 
