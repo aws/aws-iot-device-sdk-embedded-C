@@ -432,56 +432,8 @@ typedef struct _mqttOperation
     };
 } _mqttOperation_t;
 
-/**
- * @brief Represents an operation that is subject to a timer.
- *
- * These events are queued per MQTT connection. They are sorted by their
- * expiration time.
- */
-typedef struct _mqttTimerEvent
-{
-    IotLink_t link;                     /**< @brief List link member. */
-
-    uint64_t expirationTime;            /**< @brief When this event should be processed. */
-    struct _mqttOperation * pOperation; /**< @brief The MQTT operation associated with this event. */
-
-    /* Valid members depend on the operation associated with this event
-     * (PINGREQ or PUBLISH). The checkPingresp member is valid for PINGREQ,
-     * and the retry member is valid for PUBLISH. */
-    union
-    {
-        bool checkPingresp; /**< @brief This keep-alive operation is waiting for PINGRESP. */
-
-        struct
-        {
-            int count;           /**< @brief The number of times this message has been retried. */
-            int limit;           /**< @brief The maximum number of times to retry this message. */
-            uint64_t nextPeriod; /**< @brief How long to wait before the next retry. */
-        } retry;
-    };
-} _mqttTimerEvent_t;
-
-/**
- * @brief Holds waiting MQTT operations and manages threads that process them.
- */
-typedef struct _mqttOperationQueue
-{
-    IotQueue_t queue; /**< @brief Queue of waiting MQTT operations. */
-
-    /**
-     * @brief Maintains a count of threads currently available to process this
-     * queue and provides a mechanism to wait for active callback threads to finish.
-     */
-    IotSemaphore_t availableThreads;
-} _mqttOperationQueue_t;
-
-/* Declarations of the structures keeping track of MQTT operations for internal
- * files. */
-extern _mqttOperationQueue_t _IotMqttCallback;
-extern _mqttOperationQueue_t _IotMqttSend;
-extern IotMutex_t _IotMqttQueueMutex;
-extern IotListDouble_t _IotMqttPendingResponse;
-extern IotMutex_t _IotMqttPendingResponseMutex;
+/* Declaration of the MQTT task pool for internal files. */
+extern IotTaskPool_t _IotMqttTaskPool;
 
 /*-------------------- MQTT struct validation functions ---------------------*/
 
@@ -842,7 +794,7 @@ void _IotMqtt_DestroyOperation( void * pData );
 /**
  * @brief Task pool routine for processing an MQTT connection's keep-alive.
  *
- * @param[in] pTaskPool Pointer to the system task pool.
+ * @param[in] pTaskPool Pointer to #_IotMqttTaskPool.
  * @param[in] pKeepAliveJob Pointer the an MQTT connection's keep-alive job.
  * @param[in] pContext Pointer to an MQTT connection, passed as an opaque context.
  */
@@ -853,7 +805,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
 /**
  * @brief Task pool routine for processing an incoming PUBLISH message.
  *
- * @param[in] pTaskPool Pointer to the system task pool.
+ * @param[in] pTaskPool Pointer to #_IotMqttTaskPool.
  * @param[in] pPublishJob Pointer to the incoming PUBLISH operation's job.
  * @param[in] pContext Pointer to the incoming PUBLISH operation, passed as an
  * opaque context.
@@ -865,7 +817,7 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
 /**
  * @brief Task pool routine for processing an MQTT operation to send.
  *
- * @param[in] pTaskPool Pointer to the system task pool.
+ * @param[in] pTaskPool Pointer to #_IotMqttTaskPool.
  * @param[in] pSendJob Pointer to an operation's job.
  * @param[in] pContext Pointer to the operation to send, passed as an opaque
  * context.
@@ -877,7 +829,7 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
 /**
  * @brief Task pool routine for processing a completed MQTT operation.
  *
- * @param[in] pTaskPool Pointer to the system task pool.
+ * @param[in] pTaskPool Pointer to #_IotMqttTaskPool.
  * @param[in] pOperationJob Pointer to the completed operation's job.
  * @param[in] pContext Pointer to the completed operation, passed as an opaque
  * context.

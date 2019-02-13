@@ -301,11 +301,14 @@ TEST_GROUP( MQTT_Unit_Subscription );
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test setup for MQTT API tests.
+ * @brief Test setup for MQTT subscription tests.
  */
 TEST_SETUP( MQTT_Unit_Subscription )
 {
     IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+
+    /* Initialize the MQTT library. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 
     /* Create an MQTT connection with an empty network interface. */
     _pMqttConnection = IotTestMqtt_createMqttConnection( false,
@@ -317,17 +320,25 @@ TEST_SETUP( MQTT_Unit_Subscription )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test tear down for MQTT API tests.
+ * @brief Test tear down for MQTT subscription tests.
  */
 TEST_TEAR_DOWN( MQTT_Unit_Subscription )
 {
-    IotTestMqtt_destroyMqttConnection( _pMqttConnection );
+    /* Destroy the MQTT connection used for the tests. */
+    if( _pMqttConnection != NULL )
+    {
+        IotTestMqtt_destroyMqttConnection( _pMqttConnection );
+        _pMqttConnection = NULL;
+    }
+
+    /* Clean up the MQTT library. */
+    IotMqtt_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test group runner for MQTT API tests.
+ * @brief Test group runner for MQTT subscription tests.
  */
 TEST_GROUP_RUNNER( MQTT_Unit_Subscription )
 {
@@ -868,8 +879,8 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
     #error "IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS must be at least 3 for SubscriptionReferences test."
     #endif
 
-    /* The system task pool must support at least 3 threads for this test to run successfully. */
-    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_SetMaxThreads( IOT_SYSTEM_TASKPOOL, 4 ) );
+    /* The MQTT task pool must support at least 3 threads for this test to run successfully. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_SetMaxThreads( &( _IotMqttTaskPool ), 4 ) );
 
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 3 ) );
 

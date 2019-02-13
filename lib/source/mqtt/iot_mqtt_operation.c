@@ -67,6 +67,13 @@ static bool _mqttOperation_match( const IotLink_t * pOperationLink,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief The task pool that processes MQTT operations.
+ */
+IotTaskPool_t _IotMqttTaskPool = { 0 };
+
+/*-----------------------------------------------------------*/
+
 static bool _mqttOperation_match( const IotLink_t * pOperationLink,
                                   void * pMatch )
 {
@@ -218,7 +225,7 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pPublishJob;
-    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
+    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
     IotMqtt_Assert( pNext->incomingPublish == true );
     IotMqtt_Assert( pPublishJob == &( pNext->job ) );
 
@@ -288,7 +295,7 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
     IotMqtt_Assert( taskPoolStatus == IOT_TASKPOOL_SUCCESS );
 
     /* Schedule the new job. */
-    taskPoolStatus = IotTaskPool_Schedule( IOT_SYSTEM_TASKPOOL, &( pOperation->job ) );
+    taskPoolStatus = IotTaskPool_Schedule( &( _IotMqttTaskPool ), &( pOperation->job ) );
 
     if( taskPoolStatus != IOT_TASKPOOL_SUCCESS )
     {

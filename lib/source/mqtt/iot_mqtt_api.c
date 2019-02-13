@@ -522,6 +522,14 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * const pMqttConn
 
 IotMqttError_t IotMqtt_Init( void )
 {
+    const IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM;
+
+    if( IotTaskPool_Create( &taskPoolInfo, &_IotMqttTaskPool) != IOT_TASKPOOL_SUCCESS )
+    {
+        IotLogError( "Failed to initialize MQTT library task pool." );
+        goto errorTaskPool;
+    }
+
     /* Create CONNECT mutex. */
     if( IotMutex_Create( &( _connectMutex ), false ) == false )
     {
@@ -541,18 +549,22 @@ IotMqttError_t IotMqtt_Init( void )
     return IOT_MQTT_SUCCESS;
 
 errorInitSerialize: IotMutex_Destroy( &( _connectMutex ) );
-errorConnectMutex: return IOT_MQTT_INIT_FAILED;
+errorConnectMutex: IotTaskPool_Destroy( &_IotMqttTaskPool );
+errorTaskPool: return IOT_MQTT_INIT_FAILED;
 }
 
 /*-----------------------------------------------------------*/
 
 void IotMqtt_Cleanup()
 {
+    /* Clean up MQTT serializer. */
+    _IotMqtt_CleanupSerialize();
+
     /* Clean up CONNECT mutex. */
     IotMutex_Destroy( &( _connectMutex ) );
 
-    /* Clean up MQTT serializer. */
-    _IotMqtt_CleanupSerialize();
+    /* Clean up MQTT library task pool. */
+    IotTaskPool_Destroy( &_IotMqttTaskPool );
 
     IotLogInfo( "MQTT library cleanup done." );
 }
@@ -711,7 +723,7 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
         {
             IotLogDebug( "Scheduling MQTT keep-alive job." );
 
-            if( IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
+            if( IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
                                               &( pNewMqttConnection->keepAliveJob ),
                                               pNewMqttConnection->keepAliveMs ) != IOT_TASKPOOL_SUCCESS )
             {
