@@ -252,6 +252,9 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
              * are given. Abort the program on failure. */
             IotMqtt_Assert( false );
         }
+
+        /* Keep-alive references its MQTT connection, so set reference count to 1. */
+        pNewMqttConnection->references = 1;
     }
 
     return pNewMqttConnection;
@@ -275,6 +278,9 @@ static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
 
         _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
     }
+
+    /* This function should only be called on an unreferenced connection. */
+    IotMqtt_Assert( pMqttConnection->references == 0 );
 
     /* Remove all subscriptions. */
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
@@ -760,20 +766,12 @@ errorCreateConnection: return status;
 void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                          bool cleanupOnly )
 {
+    bool destroyConnection = false;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
     _mqttOperation_t * pDisconnectOperation = NULL;
 
     IotLogInfo( "Disconnecting MQTT connection %p.", pMqttConnection );
-
-    /* Purge all of this connection's subscriptions. */
-    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
-    IotListDouble_RemoveAllMatches( &( pMqttConnection->subscriptionList ),
-                                    _mqttSubscription_shouldRemove,
-                                    NULL,
-                                    IotMqtt_FreeSubscription,
-                                    offsetof( _mqttSubscription_t, link ) );
-    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
     /* Only send a DISCONNECT packet if the connection is active and the "cleanup only"
      * option is false. */
@@ -844,6 +842,18 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
         }
     }
 
+    /* Mark the MQTT connection as closed and check if it may be destroyed. */
+    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+
+    pMqttConnection->disconnected = true;
+
+    if( pMqttConnection->references == 0 )
+    {
+        destroyConnection = true;
+    }
+
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
     /* Close the network connection regardless of whether an MQTT DISCONNECT
      * packet was sent. */
     if( pMqttConnection->network.disconnect != NULL )
@@ -855,11 +865,11 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
         IotLogWarn( "No disconnect function was set. Network connection not closed." );
     }
 
-    /* Destroy the MQTT connection's mutexes. */
-    IotMutex_Destroy( &( pMqttConnection->subscriptionMutex ) );
-
-    /* Free the memory used by this connection. */
-    IotMqtt_FreeConnection( pMqttConnection );
+    /* Destroy the MQTT connection if possible. */
+    if( destroyConnection == true )
+    {
+        _destroyMqttConnection( pMqttConnection );
+    }
 }
 
 /*-----------------------------------------------------------*/

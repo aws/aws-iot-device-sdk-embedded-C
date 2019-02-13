@@ -111,7 +111,7 @@ typedef enum IotTaskPoolError
      * Functions that may return this value:
      * - @ref taskpool_function_createsystemtaskpool
      * - @ref taskpool_function_create
-     * - @ref taskpool_function_setmaxthreads 
+     * - @ref taskpool_function_setmaxthreads
      * - @ref taskpool_function_createrecyclablejob
      * - @ref taskpool_function_scheduledeferred
      * - @ref taskpool_function_getstatus
@@ -123,11 +123,11 @@ typedef enum IotTaskPoolError
      * @brief Task pool operation failed because of an invalid parameter.
      *
      * Functions that may return this value:
-     * - @ref taskpool_function_setmaxthreads 
+     * - @ref taskpool_function_setmaxthreads
      * - @ref taskpool_function_createrecyclablejob
      * - @ref taskpool_function_destroyjob
      * - @ref taskpool_function_recyclejob
-     * - @ref taskpool_function_schedule 
+     * - @ref taskpool_function_schedule
      * - @ref taskpool_function_scheduledeferred
      * - @ref taskpool_function_getstatus
      * - @ref taskpool_function_trycancel
@@ -180,7 +180,7 @@ typedef enum IotTaskPoolJobStatus
      */
     IOT_TASKPOOL_STATUS_EXECUTING,
 
-    /** 
+    /**
      * @brief Job has been canceled before executing.
      *
      */

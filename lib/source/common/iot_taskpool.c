@@ -822,7 +822,10 @@ IotTaskPoolError_t IotTaskPool_TryCancel( IotTaskPool_t * const pTaskPool,
     }
     else
     {
-        *pStatus = IOT_TASKPOOL_STATUS_UNDEFINED;
+        if( pStatus != NULL )
+        {
+            *pStatus = IOT_TASKPOOL_STATUS_UNDEFINED;
+        }
 
         _TASKPOOL_ENTER_CRITICAL_SECTION;
         {

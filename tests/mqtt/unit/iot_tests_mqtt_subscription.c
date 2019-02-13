@@ -68,6 +68,17 @@ extern int snprintf( char *,
 /*-----------------------------------------------------------*/
 
 /**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Provide default values of test configuration constants.
+ */
+#ifndef IOT_TEST_MQTT_TIMEOUT_MS
+    #define IOT_TEST_MQTT_TIMEOUT_MS      ( 5000 )
+#endif
+/** @endcond */
+
+/**
  * @brief Determine which MQTT server mode to test (AWS IoT or Mosquitto).
  */
 #if !defined( IOT_TEST_MQTT_MOSQUITTO ) || IOT_TEST_MQTT_MOSQUITTO == 0
@@ -151,7 +162,7 @@ static pthread_barrier_t _mtTestBarrier;
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Places dummy subscriptions in the subscription list of #_pMqttConnection->
+ * @brief Places dummy subscriptions in the subscription list of #_pMqttConnection.
  */
 static void _populateList( void )
 {
@@ -175,6 +186,45 @@ static void _populateList( void )
         IotListDouble_InsertHead( &( _pMqttConnection->subscriptionList ),
                                   &( pSubscription->link ) );
     }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Wait for a reference count to reach a target value, subject to a timeout.
+ */
+static bool _waitForCount( IotMutex_t * const pMutex,
+                           const int32_t * const pReferenceCount,
+                           int32_t target )
+{
+    bool status = false;
+    int32_t referenceCount = 0, sleepCount = 0, sleepLimit = 0;
+
+    /* Calculate limit on the number of times to sleep for 1 second. */
+    sleepLimit = ( IOT_TEST_MQTT_TIMEOUT_MS / 1000 ) +
+                 ( ( IOT_TEST_MQTT_TIMEOUT_MS % 1000 ) != 0 );
+
+    /* Wait for the reference count to reach the target value. */
+    for( sleepCount = 0; sleepCount < sleepLimit; sleepCount++ )
+    {
+        /* Read reference count. */
+        IotMutex_Lock( pMutex );
+        referenceCount = *pReferenceCount;
+        IotMutex_Unlock( pMutex );
+
+        /* Exit if target value is reached. Otherwise, sleep. */
+        if( referenceCount == target )
+        {
+            status = true;
+            break;
+        }
+        else
+        {
+            sleep( 1 );
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -311,7 +361,7 @@ TEST_SETUP( MQTT_Unit_Subscription )
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 
     /* Create an MQTT connection with an empty network interface. */
-    _pMqttConnection = IotTestMqtt_createMqttConnection( false,
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
                                                          &networkInterface,
                                                          0 );
     TEST_ASSERT_NOT_NULL( _pMqttConnection );
@@ -870,7 +920,7 @@ TEST( MQTT_Unit_Subscription, ProcessPublishMultiple )
  */
 TEST( MQTT_Unit_Subscription, SubscriptionReferences )
 {
-    int32_t connectionReferences = 0, i = 0;
+    int32_t i = 0;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     _mqttOperation_t * pIncomingPublish[ 3 ] = { NULL };
     IotSemaphore_t waitSem;
@@ -919,25 +969,10 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
                                                                              _IotMqtt_ProcessIncomingPublish ) );
         }
 
-        /* Eventually, the MQTT connection's reference count should reach 3, one
-         * for each active subscription. Poll the subscription count every second
-         * until this happens (there's currently no way to wait on reference count).
-         */
-        while( true )
-        {
-            IotMutex_Lock( &( _pMqttConnection->referencesMutex ) );
-            connectionReferences = _pMqttConnection->references;
-            IotMutex_Unlock( &( _pMqttConnection->referencesMutex ) );
-
-            if( connectionReferences == 3 )
-            {
-                break;
-            }
-            else
-            {
-                sleep( 1 );
-            }
-        }
+        /* Wait for the connection reference count to reach 3. */
+        TEST_ASSERT_EQUAL_INT( true, _waitForCount( &( _pMqttConnection->referencesMutex ),
+                                                    &( _pMqttConnection->references ),
+                                                    3 ) );
 
         IotMqtt_Disconnect( _pMqttConnection, true );
     }
