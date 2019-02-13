@@ -286,7 +286,7 @@ typedef struct IotTaskPool
     uint32_t minThreads;             /**< @brief The minimum number of threads for the task pool. */
     uint32_t maxThreads;             /**< @brief The maximum number of threads for the task pool. */
     uint32_t activeThreads;          /**< @brief The number of threads in the task pool at any given time. */
-    uint32_t busyThreads;            /**< @brief The number of busy threads in the task pool at any given time. */
+    uint32_t activeJobs;             /**< @brief The number of active jobs in the task pool at any given time. */
     size_t stackSize;                /**< @brief The stack size for all task pool threads. */
     int32_t priority;                /**< @brief The priority for all task pool threads. */
     IotSemaphore_t dispatchSignal;   /**< @brief The synchronization object on which threads are waiting for incoming jobs. */

@@ -1052,7 +1052,6 @@ static void _taskPoolWorker( void * pUserContext )
     for( ; ; )
     {
         IotLink_t * pFirst = NULL;
-        IotLink_t * pNext = NULL;
         IotTaskPoolJob_t * pJob = NULL;
         bool shouldExit = false;
 
@@ -1099,23 +1098,12 @@ static void _taskPoolWorker( void * pUserContext )
             /* If there is indeed a job, then update status under lock, and release the lock before processing the job. */
             if( pFirst != NULL )
             {
-                /* Update the number of busy threads, so new requests can be served by creating new threads, up to maxThreads. */
-                pTaskPool->busyThreads++;
-
                 /* Extract the job from its link. */
                 pJob = IotLink_Container( IotTaskPoolJob_t, pFirst, link );
 
                 /* Update status to 'executing'. */
                 pJob->status &= ~IOT_TASKPOOL_STATUS_MASK;
                 pJob->status |= IOT_TASKPOOL_STATUS_EXECUTING;
-
-                /* Check if there is another job in the queue, and if there is one, signal the task pool. */
-                pNext = IotQueue_Peek( &pTaskPool->dispatchQueue );
-
-                if( pNext != NULL )
-                {
-                    IotSemaphore_Post( &pTaskPool->dispatchSignal );
-                }
             }
         }
         _TASKPOOL_EXIT_CRITICAL_SECTION;
@@ -1133,6 +1121,10 @@ static void _taskPoolWorker( void * pUserContext )
                 IotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) == false );
 
                 userCallback( pTaskPool, pJob, pJob->pUserContext );
+
+                /* Update the number of busy threads, so new requests can be served by creating new threads, up to maxThreads. */
+                pTaskPool->activeJobs--;
+                pJob = NULL;
             }
 
             /* Acquire the lock before updating the job status. */
@@ -1147,9 +1139,6 @@ static void _taskPoolWorker( void * pUserContext )
                 /* If there is no job left in the dispatch queue, update the worker status and leave. */
                 if( pItem == NULL )
                 {
-                    /* Update the busy threads value. */
-                    pTaskPool->busyThreads--;
-
                     _TASKPOOL_EXIT_CRITICAL_SECTION;
 
                     /* Abandon the INNER LOOP. Execution will tranfer back to the OUTER LOOP condition. */
@@ -1287,15 +1276,15 @@ static IotTaskPoolError_t _scheduleInternal( IotTaskPool_t * const pTaskPool,
     /* Append the job to the dispatch queue. */
     IotQueue_Enqueue( &pTaskPool->dispatchQueue, &pJob->link );
 
-    /* Signal a worker to pick up the job. */
-    IotSemaphore_Post( &pTaskPool->dispatchSignal );
+    /* Update the number of busy threads, so new requests can be served by creating new threads, up to maxThreads. */
+    pTaskPool->activeJobs++;
 
     /* If all threads are busy, try and create a new one. Failing to create a new thread
      * only has performance implications on correctly exeuting th scheduled job.
      */
     uint32_t activeThreads = pTaskPool->activeThreads;
 
-    if( activeThreads == pTaskPool->busyThreads )
+    if( activeThreads == pTaskPool->activeJobs )
     {
         /* Grow the task pool up to the maximum number of threads indicated by the user.
          * Growing the taskpool can safely fail, the existing threads will eventually pick up
@@ -1320,6 +1309,9 @@ static IotTaskPoolError_t _scheduleInternal( IotTaskPool_t * const pTaskPool,
             }
         }
     }
+
+    /* Signal a worker to pick up the job. */
+    IotSemaphore_Post( &pTaskPool->dispatchSignal );
 
     return IOT_TASKPOOL_SUCCESS;
 }
