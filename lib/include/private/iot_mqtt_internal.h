@@ -326,7 +326,7 @@ typedef struct _mqttSubscription
 {
     IotLink_t link; /**< @brief List link member. */
 
-    int references; /**< @brief How many subscription callbacks are using this subscription. */
+    int32_t references; /**< @brief How many subscription callbacks are using this subscription. */
 
     /**
      * @brief Tracks whether @ref mqtt_function_unsubscribe has been called for
