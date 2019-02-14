@@ -382,6 +382,8 @@ static bool _processBuffer( const _mqttOperation_t * const pOperation,
                             int32_t expectedBytesProcessed,
                             IotMqttError_t expectedResult )
 {
+    bool status = false;
+
     /* Call the receive callback on pBuffer. */
     int32_t bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
                                                       NULL,
@@ -396,9 +398,16 @@ static bool _processBuffer( const _mqttOperation_t * const pOperation,
         _freeWrapper( ( void * ) pBuffer );
     }
 
-    /* Check results against expected values. */
-    return ( expectedBytesProcessed == bytesProcessed ) &&
-           ( expectedResult == pOperation->status );
+    /* Check expected bytes processed. */
+    status = ( expectedBytesProcessed == bytesProcessed );
+
+    /* Check expected result if operation is given. */
+    if( pOperation != NULL )
+    {
+        status = status && ( expectedResult == pOperation->status );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1676,71 +1685,79 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
  */
 TEST( MQTT_Unit_Receive, Pingresp )
 {
-    _mqttOperation_t pingreq = _INITIALIZE_OPERATION( IOT_MQTT_PINGREQ );
-
-    /* Create the wait semaphore so notifications don't crash. The value of
-     * this semaphore will not be checked, so the maxValue argument is arbitrary. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( pingreq.notify.waitSemaphore ),
-                                                      0,
-                                                      10 ) );
-
-    /* Even though no PINGREQ is in the receive queue, 2 bytes should still be
-     * processed (should not crash). */
+    /* Even though no PINGREQ is expected, the keep-alive failure flag should
+     * be cleared (should not crash). */
     {
-        _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
-        TEST_ASSERT_EQUAL_INT( true, _processBuffer( &pingreq,
-                                                     pPingresp,
-                                                     pingrespSize,
-                                                     ( int32_t ) pingrespSize,
-                                                     IOT_MQTT_STATUS_PENDING ) );
-    }
+        _pMqttConnection->keepAliveFailure = false;
 
-    /* Process a valid PINGRESP. */
-    {
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
-        _operationResetAndPush( &pingreq );
-        TEST_ASSERT_EQUAL_INT( true, _processBuffer( &pingreq,
+        TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
                                                      pPingresp,
                                                      pingrespSize,
                                                      ( int32_t ) pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
+
+        TEST_ASSERT_EQUAL_INT( false, _pMqttConnection->keepAliveFailure );
     }
 
-    /* An incomplete PINGRESP should not be processed, and no status should be set. */
+    /* Process a valid PINGRESP. */
     {
+        _pMqttConnection->keepAliveFailure = true;
+
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
-        _operationResetAndPush( &pingreq );
-        TEST_ASSERT_EQUAL_INT( true, _processBuffer( &pingreq,
+        TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
+                                                     pPingresp,
+                                                     pingrespSize,
+                                                     ( int32_t ) pingrespSize,
+                                                     IOT_MQTT_SUCCESS ) );
+
+        TEST_ASSERT_EQUAL_INT( false, _pMqttConnection->keepAliveFailure );
+    }
+
+    /* An incomplete PINGRESP should not be processed, and the keep-alive failure
+     * flag should not be cleared. */
+    {
+        _pMqttConnection->keepAliveFailure = true;
+
+        _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
+        TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
                                                      pPingresp,
                                                      pingrespSize - 1,
                                                      0,
-                                                     IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_SUCCESS ) );
+
+        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
     }
 
     /* A PINGRESP should have a remaining length of 0. */
     {
+        _pMqttConnection->keepAliveFailure = true;
+
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         pPingresp[ 1 ] = 0x01;
-        TEST_ASSERT_EQUAL_INT( true, _processBuffer( &pingreq,
+        TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
                                                      pPingresp,
                                                      pingrespSize,
                                                      -1,
-                                                     IOT_MQTT_BAD_RESPONSE ) );
+                                                     IOT_MQTT_SUCCESS ) );
+
+        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
     }
 
     /* The PINGRESP control packet type must be 0xd0. */
     {
+        _pMqttConnection->keepAliveFailure = true;
+
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         pPingresp[ 0 ] = 0xd1;
-        _operationResetAndPush( &pingreq );
-        TEST_ASSERT_EQUAL_INT( true, _processBuffer( &pingreq,
+        TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
                                                      pPingresp,
                                                      pingrespSize,
                                                      -1,
-                                                     IOT_MQTT_BAD_RESPONSE ) );
-    }
+                                                     IOT_MQTT_SUCCESS ) );
 
-    IotSemaphore_Destroy( &( pingreq.notify.waitSemaphore ) );
+        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
+    }
 }
 
 /*-----------------------------------------------------------*/

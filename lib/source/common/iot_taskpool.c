@@ -677,7 +677,7 @@ IotTaskPoolError_t IotTaskPool_Schedule( IotTaskPool_t * const pTaskPool,
 
 IotTaskPoolError_t IotTaskPool_ScheduleDeferred( IotTaskPool_t * const pTaskPool,
                                                  IotTaskPoolJob_t * const pJob,
-                                                 uint32_t timeMs )
+                                                 uint64_t timeMs )
 {
     IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
 

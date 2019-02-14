@@ -382,16 +382,29 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                                               remainingDataLength - totalBytesProcessed,
                                               &bytesProcessed );
 
-                /* If a complete PINGRESP was deserialized, check if there's an
-                 * in-progress PINGREQ operation. */
+                /* If a complete PINGRESP was successfully deserialized, clear the keep-alive
+                 * failure flag. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = _IotMqtt_FindOperation( pConnectionInfo, IOT_MQTT_PINGREQ, NULL );
-
-                    if( pOperation != NULL )
+                    if( status == IOT_MQTT_SUCCESS )
                     {
-                        pOperation->status = status;
-                        _IotMqtt_Notify( pOperation );
+                        IotMutex_Lock( &( pConnectionInfo->referencesMutex ) );
+
+                        if( pConnectionInfo->keepAliveFailure == false )
+                        {
+                            IotLogWarn( "Unexpected PINGRESP received." );
+                        }
+                        else
+                        {
+                            pConnectionInfo->keepAliveFailure = false;
+                        }
+
+                        IotMutex_Unlock( &( pConnectionInfo->referencesMutex ) );
+                    }
+                    else
+                    {
+                        IotLogError( "Failed to process PINGRESP, status %s.",
+                                     IotMqtt_strerror( status ) );
                     }
                 }
 
@@ -530,9 +543,10 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * const pMqttConnection 
 {
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
 
-    /* Mark the MQTT connection as disconnected. */
+    /* Mark the MQTT connection as disconnected and the keep-alive as failed. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
     pMqttConnection->disconnected = true;
+    pMqttConnection->keepAliveFailure = true;
 
     if( pMqttConnection->keepAliveMs != 0 )
     {
@@ -558,6 +572,7 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * const pMqttConnection 
          * the executing keep-alive job will clean up itself. */
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
+            /* Clean up PINGREQ packet and job. */
             _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
             IotTaskPool_DestroyJob( &( _IotMqttTaskPool ),
                                     &( pMqttConnection->keepAliveJob ) );
