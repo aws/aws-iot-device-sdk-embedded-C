@@ -141,14 +141,23 @@ static void _publishSetDup( bool awsIotMqttMode,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief A send function that always "succeeds".
+ * @brief A send function that always "succeeds". May report that it was invoked
+ * through a semaphore.
  */
 static size_t _sendSuccess( void * pSendContext,
                             const uint8_t * const pMessage,
                             size_t messageLength )
 {
-    ( void ) pSendContext;
+    IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pSendContext;
+
+    /* Silence warnings about unused parameters. */
     ( void ) pMessage;
+
+    /* Post to the wait semaphore, if given. */
+    if( pWaitSem != NULL )
+    {
+        IotSemaphore_Post( pWaitSem );
+    }
 
     /* This function just returns the message length to simulate a successful
      * send. */
@@ -327,6 +336,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeUnsubscribeParameters );
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeMallocFail );
     RUN_TEST_CASE( MQTT_Unit_API, UnsubscribeMallocFail );
+    RUN_TEST_CASE( MQTT_Unit_API, KeepAliveJobCleanup );
 }
 
 /*-----------------------------------------------------------*/
@@ -949,6 +959,50 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
                              IotMqtt_FreeSubscription,
                              offsetof( _mqttSubscription_t, link ) );
     IotMutex_Destroy( &( mqttConnection.subscriptionMutex ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests that the keep-alive job cleans up the MQTT connection after a call
+ * to @ref mqtt_function_disconnect.
+ */
+TEST( MQTT_Unit_API, KeepAliveJobCleanup )
+{
+    _mqttConnection_t * pMqttConnection = NULL;
+    IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+    IotSemaphore_t waitSem;
+
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
+
+    if( TEST_PROTECT() )
+    {
+        /* Set the members of the network interface and create a new MQTT connection
+         * with keep-alive. */
+        networkInterface.pSendContext = &waitSem;
+        networkInterface.send = _sendSuccess;
+        pMqttConnection = IotTestMqtt_createMqttConnection( false,
+                                                            &networkInterface,
+                                                            1 );
+        TEST_ASSERT_NOT_EQUAL( NULL, pMqttConnection );
+
+        /* Set a short keep-alive interval so this test runs faster. */
+        pMqttConnection->keepAliveMs = 200;
+
+        /* Schedule the initial PINGREQ. */
+        TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS,
+                           IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
+                                                         &( pMqttConnection->keepAliveJob ),
+                                                         200 ) );
+
+        /* Wait for the keep-alive job to send a PINGREQ. */
+        IotSemaphore_Wait( &waitSem );
+
+        /* Immediately disconnect the connection. */
+        IotMqtt_Disconnect( pMqttConnection, true );
+    }
+
+    IotSemaphore_Destroy( &waitSem );
 }
 
 /*-----------------------------------------------------------*/

@@ -213,7 +213,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
     bool status = true;
 
     /* Retrieve the MQTT connection from the context. */
-    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t* ) pContext;
+    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
 
     /* Check parameters. The task pool and job parameter is not used when asserts
      * are disabled. */
@@ -255,9 +255,32 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
     }
     else
     {
+        /* The network receive callback did not clear the failure flag. */
         IotLogError( "Failed to receive PINGRESP within %d ms.", IOT_MQTT_RESPONSE_WAIT_MS );
+    }
 
-        /* Mark the connection as disconnected because of PINGREQ failure. */
+    /* When a PINGREQ is successfully sent, reschedule this job to check for a
+     * response shortly. */
+    if( status == true )
+    {
+        if( IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
+                                          &( pMqttConnection->keepAliveJob ),
+                                          IOT_MQTT_RESPONSE_WAIT_MS ) == IOT_TASKPOOL_SUCCESS )
+        {
+            IotLogDebug( "Rescheduled keep-alive job to check for PINGRESP in %d ms.",
+                         IOT_MQTT_RESPONSE_WAIT_MS );
+        }
+        else
+        {
+            IotLogError( "Failed to reschedule keep-alive job for PINGRESP check." );
+            status = false;
+        }
+    }
+
+    /* Clean up keep-alive on failures. */
+    if( status == false )
+    {
+        /* Mark the connection as disconnected because of keep-alive failure. */
         pMqttConnection->disconnected = true;
 
         /* Clean up PINGREQ packet and job. */
@@ -273,19 +296,9 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-    /* When a PINGREQ is successfully sent, reschedule this job to check for a
-     * response shortly. Otherwise, decrement the reference count for the MQTT
-     * connection since the PINGREQ has failed and will no longer use the connection. */
-    if( status == true )
-    {
-        IotLogDebug( "Rescheduling keep-alive job to check for PINGRESP in %d ms.",
-                     IOT_MQTT_RESPONSE_WAIT_MS );
-
-        IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
-                                      &( pMqttConnection->keepAliveJob ),
-                                      IOT_MQTT_RESPONSE_WAIT_MS );
-    }
-    else
+    /* Decrement the reference count for the MQTT connection on keep-alive failure,
+     * since keep-alive will no longer use the connection. */
+    if( status == false )
     {
         _IotMqtt_DecrementConnectionReferences( pMqttConnection );
 
