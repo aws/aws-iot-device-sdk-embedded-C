@@ -381,9 +381,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     }
 
     /* Create a subscription operation. */
-    status = _IotMqtt_CreateOperation( &pSubscriptionOperation,
+    status = _IotMqtt_CreateOperation( pMqttConnection,
                                        flags,
-                                       pCallbackInfo );
+                                       pCallbackInfo,
+                                       &pSubscriptionOperation );
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -653,9 +654,10 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
     }
 
     /* Create a CONNECT operation. */
-    status = _IotMqtt_CreateOperation( &pConnectOperation,
+    status = _IotMqtt_CreateOperation( pNewMqttConnection,
                                        IOT_MQTT_FLAG_WAITABLE,
-                                       NULL );
+                                       NULL,
+                                       &pConnectOperation );
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -794,9 +796,10 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
     {
         /* Create a DISCONNECT operation. This function blocks until the DISCONNECT
          * packet is sent, so it sets IOT_MQTT_FLAG_WAITABLE. */
-        status = _IotMqtt_CreateOperation( &pDisconnectOperation,
+        status = _IotMqtt_CreateOperation( pMqttConnection,
                                            IOT_MQTT_FLAG_WAITABLE,
-                                           NULL );
+                                           NULL,
+                                           &pDisconnectOperation );
 
         if( status == IOT_MQTT_SUCCESS )
         {
@@ -1044,9 +1047,10 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     }
 
     /* Create a PUBLISH operation. */
-    status = _IotMqtt_CreateOperation( &pPublishOperation,
+    status = _IotMqtt_CreateOperation( pMqttConnection,
                                        flags,
-                                       pCallbackInfo );
+                                       pCallbackInfo,
+                                       &pPublishOperation );
 
     if( status != IOT_MQTT_SUCCESS )
     {

@@ -102,9 +102,10 @@ static bool _mqttOperation_match( const IotLink_t * pOperationLink,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_CreateOperation( _mqttOperation_t ** const pNewOperation,
+IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * const pMqttConnection,
                                          uint32_t flags,
-                                         const IotMqttCallbackInfo_t * const pCallbackInfo )
+                                         const IotMqttCallbackInfo_t * const pCallbackInfo,
+                                         _mqttOperation_t ** const pNewOperation )
 {
     _mqttOperation_t * pOperation = NULL;
 

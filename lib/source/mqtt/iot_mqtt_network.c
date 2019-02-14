@@ -71,9 +71,10 @@ static void _sendPuback( _mqttConnection_t * const pMqttConnection,
     IotLogDebug( "Sending PUBACK for received PUBLISH %hu.", packetIdentifier );
 
     /* Create a PUBACK operation. */
-    if( _IotMqtt_CreateOperation( &pPubackOperation,
+    if( _IotMqtt_CreateOperation( pMqttConnection,
                                   0,
-                                  NULL ) != IOT_MQTT_SUCCESS )
+                                  NULL,
+                                  &pPubackOperation ) != IOT_MQTT_SUCCESS )
     {
         IotLogWarn( "Failed to create PUBACK operation." );
 

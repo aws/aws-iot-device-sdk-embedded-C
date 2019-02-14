@@ -772,15 +772,17 @@ void _IotMqtt_FreePacket( uint8_t * pPacket );
 /**
  * @brief Create a record for a new in-progress MQTT operation.
  *
- * @param[out] pNewOperation Set to point to the new operation on success.
+ * @param[in] pMqttConnection The MQTT connection to associate with the operation.
  * @param[in] flags Flags variable passed to a user-facing MQTT function.
  * @param[in] pCallbackInfo User-provided callback function and parameter.
+ * @param[out] pNewOperation Set to point to the new operation on success.
  *
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_BAD_PARAMETER, or #IOT_MQTT_NO_MEMORY.
  */
-IotMqttError_t _IotMqtt_CreateOperation( _mqttOperation_t ** const pNewOperation,
+IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * const pMqttConnection,
                                          uint32_t flags,
-                                         const IotMqttCallbackInfo_t * const pCallbackInfo );
+                                         const IotMqttCallbackInfo_t * const pCallbackInfo,
+                                         _mqttOperation_t ** const pNewOperation );
 
 /**
  * @brief Free resources used to record an MQTT operation. This is called when
