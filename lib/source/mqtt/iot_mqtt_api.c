@@ -198,8 +198,8 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     pNewMqttConnection->awsIotMqttMode = awsIotMqttMode;
     pNewMqttConnection->network = *pNetworkInterface;
 
-    /* Create the references mutex for a new connection. */
-    if( IotMutex_Create( &( pNewMqttConnection->referencesMutex ), false ) == false )
+    /* Create the references mutex for a new connection. It is a recursive mutex. */
+    if( IotMutex_Create( &( pNewMqttConnection->referencesMutex ), true ) == false )
     {
         IotLogError( "Failed to create references mutex for new connection." );
         goto errorReferencesMutex;

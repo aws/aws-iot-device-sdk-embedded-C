@@ -360,7 +360,7 @@ typedef struct _mqttConnection
     IotMqttNetIf_t network;            /**< @brief Network interface provided to @ref mqtt_function_connect. */
 
     bool disconnected;                 /**< @brief Tracks if this connection has been disconnected. */
-    IotMutex_t referencesMutex;        /**< @brief Grants exclusive access to disconnected flag, reference count, and operation lists. */
+    IotMutex_t referencesMutex;        /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
     int32_t references;                /**< @brief Counts callbacks and operations using this connection. */
     IotListDouble_t pendingProcessing; /**< @brief List of operations waiting to be processed by a task pool routine. */
     IotListDouble_t pendingResponse;   /**< @brief List of processed operations awaiting a server response. */

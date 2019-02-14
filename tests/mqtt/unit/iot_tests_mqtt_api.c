@@ -78,6 +78,17 @@
  */
 #define _TIMEOUT_MS                  ( 400 )
 
+/**
+ * @brief A short keep-alive interval to use for the keep-alive tests. It may be
+ * shorter than the minimum 1 second specified by the MQTT spec.
+ */
+#define _SHORT_KEEP_ALIVE_MS         ( 100 )
+
+/**
+ * @brief The number of times the periodic keep-alive should run.
+ */
+#define _KEEP_ALIVE_COUNT            ( 10 )
+
 /*
  * Client identifier and length to use for the MQTT API tests.
  */
@@ -132,7 +143,7 @@ static bool _publishSetDupCalled = false;
 /**
  * @brief Counts how many time #_sendPingreq has been called.
  */
-static int32_t _pingreqSendCounter = 0;
+static int32_t _pingreqSendCount = 0;
 
 /*-----------------------------------------------------------*/
 
@@ -141,24 +152,59 @@ static int32_t _pingreqSendCounter = 0;
  */
 static void _incomingPingresp( void * pArgument )
 {
+    /* The sleep time calculation below does not work if the short keep-alive
+     * interval is 1 second or greater. */
+    #if _SHORT_KEEP_ALIVE_MS >= 1000
+    #error "_SHORT_KEEP_ALIVE_MS must be less than 1000."
+    #endif
+
+    /* This test will not work if the response wait time is too small. */
+    #if IOT_MQTT_RESPONSE_WAIT_MS < ( 2 * _SHORT_KEEP_ALIVE_MS + 100 )
+    #error "IOT_MQTT_RESPONSE_WAIT_MS too small for keep-alive tests."
+    #endif
+
     static int32_t invokeCount = 0;
+    static uint64_t lastInvokeTime = 0;
+    uint64_t currentTime = IotClock_GetTimeMs();
 
     /* A PINGRESP packet. */
     const uint8_t pPingresp[ 2 ] = { _MQTT_PACKET_TYPE_PINGRESP, 0x00 };
 
-    /* 200 ms sleep time. */
-    const struct timespec sleepTime = { .tv_sec = 0, .tv_nsec = 200000000 };
+    /* Sleep time of twice the keep-alive interval. */
+    const struct timespec sleepTime = { .tv_sec = 0, .tv_nsec = 2 * _SHORT_KEEP_ALIVE_MS * 1000000 };
 
     /* Increment invoke count for this function. */
     invokeCount++;
 
-    /* Sleep for 200 ms to simulate the network round-trip time. */
+    /* Sleep to simulate the network round-trip time. */
     if( nanosleep( &sleepTime, NULL ) == 0 )
     {
-        /* Respond with a PINGRESP up to 3 times. */
-        if( invokeCount < 3 )
+        /* Respond with a PINGRESP. */
+        if( invokeCount <= _KEEP_ALIVE_COUNT )
         {
-            printf( "PINGRESP %d at %lld\n", invokeCount, IotClock_GetTimeMs());
+            /* Log a status with Unity, as this test may take a while. */
+            UnityPrint( "KeepAlivePeriodic " );
+            UnityPrintNumber( ( UNITY_INT ) invokeCount );
+            UnityPrint( " of " );
+            UnityPrintNumber( ( UNITY_INT ) _KEEP_ALIVE_COUNT );
+            UnityPrint( " DONE at " );
+            UnityPrintNumber( ( UNITY_INT ) IotClock_GetTimeMs() );
+            UnityPrint( " ms" );
+
+            if( invokeCount > 1 )
+            {
+                UnityPrint( " (+" );
+                UnityPrintNumber( ( UNITY_INT ) ( currentTime - lastInvokeTime ) );
+                UnityPrint( " ms)." );
+            }
+            else
+            {
+                UnityPrint( "." );
+            }
+
+            UNITY_PRINT_EOL();
+            lastInvokeTime = currentTime;
+
             ( void ) IotMqtt_ReceiveCallback( pArgument,
                                               NULL,
                                               pPingresp,
@@ -232,8 +278,7 @@ static size_t _sendPingreq( void * pSendContext,
                                   IOT_THREAD_DEFAULT_PRIORITY,
                                   IOT_THREAD_DEFAULT_STACK_SIZE ) == true )
     {
-        _pingreqSendCounter++;
-                printf( "PINGREQ send %d at %lld\n", _pingreqSendCounter, IotClock_GetTimeMs());
+        _pingreqSendCount++;
     }
 
     /* Return the message length to simulate a successful send. */
@@ -348,19 +393,19 @@ static size_t _dupChecker( void * pSendContext,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief A disconnect function that only reports whether it was invoked.
+ * @brief A disconnect function that counts how many times it was invoked.
  */
 static IotNetworkError_t _disconnect( int32_t reason,
                                       void * pDisconnectContext )
 {
-    bool * pDisconnectInvoked = ( bool * ) pDisconnectContext;
+    int32_t * pDisconnectCount = ( int32_t * ) pDisconnectContext;
 
     ( void ) reason;
 
-    /* This function just sets a flag testifying that it was invoked. */
-    if( pDisconnectInvoked != NULL )
+    /* Increment the counter for how many times this function was invoked. */
+    if( pDisconnectCount != NULL )
     {
-        *pDisconnectInvoked = true;
+        ( *pDisconnectCount )++;
     }
 
     return IOT_NETWORK_SUCCESS;
@@ -381,7 +426,7 @@ TEST_GROUP( MQTT_Unit_API );
 TEST_SETUP( MQTT_Unit_API )
 {
     _publishSetDupCalled = false;
-    _pingreqSendCounter = 0;
+    _pingreqSendCount = 0;
 
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 }
@@ -608,12 +653,12 @@ TEST( MQTT_Unit_API, ConnectRestoreSessionMallocFail )
 TEST( MQTT_Unit_API, DisconnectMallocFail )
 {
     int i = 0;
-    bool disconnectInvoked = false;
+    int32_t disconnectCount = 0;
     IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
     _mqttConnection_t * pMqttConnection = NULL;
 
     /* Set the members of the network interface. */
-    networkInterface.pDisconnectContext = &disconnectInvoked;
+    networkInterface.pDisconnectContext = &disconnectCount;
     networkInterface.send = _sendSuccess;
     networkInterface.disconnect = _disconnect;
 
@@ -634,7 +679,8 @@ TEST( MQTT_Unit_API, DisconnectMallocFail )
         /* Call DISCONNECT; this function should always perform cleanup regardless
          * of memory allocation errors. */
         IotMqtt_Disconnect( pMqttConnection, false );
-        TEST_ASSERT_EQUAL_INT( true, disconnectInvoked );
+        TEST_ASSERT_EQUAL_INT( 1, disconnectCount );
+        disconnectCount = 0;
     }
 }
 
@@ -1047,14 +1093,22 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
  */
 TEST( MQTT_Unit_API, KeepAlivePeriodic )
 {
-    bool disconnectInvoked = false;
+    int32_t disconnectCount = 0;
     _mqttConnection_t * pMqttConnection = NULL;
     IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+
+    /* An estimate for the amount of time this test requires. */
+    const unsigned sleepTime = ( ( _KEEP_ALIVE_COUNT * _SHORT_KEEP_ALIVE_MS ) / 1000 ) +
+                               ( ( ( _KEEP_ALIVE_COUNT * _SHORT_KEEP_ALIVE_MS ) % 1000 ) != 0 ) +
+                               ( IOT_MQTT_RESPONSE_WAIT_MS * _KEEP_ALIVE_COUNT ) / 1000 + 2;
+
+    /* Print a newline so this test may log its status. */
+    UNITY_PRINT_EOL();
 
     /* Set the members of the network interface and create a new MQTT connection
      * with keep-alive. */
     networkInterface.send = _sendPingreq;
-    networkInterface.pDisconnectContext = &disconnectInvoked;
+    networkInterface.pDisconnectContext = &disconnectCount;
     networkInterface.disconnect = _disconnect;
     pMqttConnection = IotTestMqtt_createMqttConnection( false,
                                                         &networkInterface,
@@ -1065,22 +1119,24 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
     pMqttConnection->network.pSendContext = pMqttConnection;
 
     /* Set a short keep-alive interval so this test runs faster. */
-    pMqttConnection->keepAliveMs = 200;
+    pMqttConnection->keepAliveMs = _SHORT_KEEP_ALIVE_MS;
+    pMqttConnection->nextKeepAliveMs = _SHORT_KEEP_ALIVE_MS;
 
     /* Schedule the initial PINGREQ. */
     TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS,
                        IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
                                                      &( pMqttConnection->keepAliveJob ),
-                                                     200 ) );
+                                                     pMqttConnection->nextKeepAliveMs ) );
 
-    /* Sleep for 6 seconds. This should allow ample time for 3 periodic PINGREQ
-     * sends and PINGRESP responses. */
-    sleep( 6 );
+    /* Sleep to allow ample time for periodic PINGREQ sends and PINGRESP responses. */
+    sleep( sleepTime );
 
     /* Disconnect the connection. */
     IotMqtt_Disconnect( pMqttConnection, true );
 
-    TEST_ASSERT_EQUAL_INT( true, disconnectInvoked );
+    /* Check the counters for PINGREQ send and disconnect. */
+    TEST_ASSERT_EQUAL_INT32( _KEEP_ALIVE_COUNT + 1, _pingreqSendCount );
+    TEST_ASSERT_EQUAL_INT32( 2, disconnectCount );
 }
 
 /*-----------------------------------------------------------*/
