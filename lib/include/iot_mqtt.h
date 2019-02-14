@@ -158,7 +158,9 @@ typedef enum IotMqttError
     IOT_MQTT_NO_MEMORY,
 
     /**
-     * @brief MQTT packet could not be transmitted on the network.
+     * @brief MQTT operation failed because the network was unusable.
+     *
+     * This return value may indicate that the network is disconnected.
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
@@ -170,7 +172,7 @@ typedef enum IotMqttError
      * May also be the value of an operation completion callback's
      * #IotMqttCallbackParam_t.result.
      */
-    IOT_MQTT_SEND_ERROR,
+    IOT_MQTT_NETWORK_ERROR,
 
     /**
      * @brief MQTT operation could not be scheduled, i.e. enqueued for sending.

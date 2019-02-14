@@ -54,55 +54,70 @@ static void _sendPuback( _mqttConnection_t * const pMqttConnection,
 static void _sendPuback( _mqttConnection_t * const pMqttConnection,
                          uint16_t packetIdentifier )
 {
-    _mqttOperation_t * pPubackOperation = NULL;
+    uint8_t * pPuback = NULL;
+    size_t pubackSize = 0;
 
-    /* Choose a PUBACK serializer function. */
+    /* Default PUBACK serializer and free packet functions. */
     IotMqttError_t ( * serializePuback )( uint16_t,
                                           uint8_t ** const,
                                           size_t * const ) = _IotMqtt_SerializePuback;
+    void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
 
+    IotLogDebug( "Sending PUBACK for received PUBLISH %hu.", packetIdentifier );
+
+    /* Increment the reference count for the MQTT connection. */
+    if( _IotMqtt_IncrementConnectionReferences( pMqttConnection ) == false )
+    {
+        IotLogWarn( "MQTT connection %p is closed, PUBACK for PUBLISH %hu will "
+                    "not be sent.",
+                    pMqttConnection,
+                    packetIdentifier );
+
+        goto errorIncrementReferences;
+    }
+
+    /* Choose PUBACK serializer and free packet functions. */
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
         if( pMqttConnection->network.serialize.puback != NULL )
         {
             serializePuback = pMqttConnection->network.serialize.puback;
         }
     #endif
-
-    IotLogDebug( "Sending PUBACK for received PUBLISH %hu.", packetIdentifier );
-
-    /* Create a PUBACK operation. */
-    if( _IotMqtt_CreateOperation( pMqttConnection,
-                                  0,
-                                  NULL,
-                                  &pPubackOperation ) != IOT_MQTT_SUCCESS )
-    {
-        IotLogWarn( "Failed to create PUBACK operation." );
-
-        return;
-    }
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+        if( pMqttConnection->network.freePacket != NULL )
+        {
+            freePacket = pMqttConnection->network.freePacket;
+        }
+    #endif
 
     /* Generate a PUBACK packet from the packet identifier. */
     if( serializePuback( packetIdentifier,
-                         &( pPubackOperation->pMqttPacket ),
-                         &( pPubackOperation->packetSize ) ) != IOT_MQTT_SUCCESS )
+                         &pPuback,
+                         &pubackSize ) != IOT_MQTT_SUCCESS )
     {
-        IotLogWarn( "Failed to generate PUBACK packet." );
-        _IotMqtt_DestroyOperation( pPubackOperation );
+        IotLogWarn( "Failed to generate PUBACK for received PUBLISH %hu.",
+                    packetIdentifier );
 
-        return;
+        goto errorGeneratePuback;
     }
 
-    /* Set the remaining members of the PUBACK operation and schedule it for
-     * network transmission. */
-    pPubackOperation->operation = IOT_MQTT_PUBACK;
-    pPubackOperation->pMqttConnection = pMqttConnection;
-
-    if( _IotMqtt_ScheduleOperation( pPubackOperation,
-                                    _IotMqtt_ProcessSend ) != IOT_MQTT_SUCCESS )
+    /* Because a delay in sending PUBACK may cause the server to send unnecessary
+     * packets, a PUBACK transmission bypasses the queue of jobs. */
+    if( pMqttConnection->network.send( pMqttConnection->network.pSendContext,
+                                       pPuback,
+                                       pubackSize ) != pubackSize )
     {
-        IotLogWarn( "Failed to schedule PUBACK for sending." );
-        _IotMqtt_DestroyOperation( pPubackOperation );
+        IotLogWarn( "Failed to send a PUBACK for PUBLISH %hu.",
+                    packetIdentifier );
+
+        goto errorSendPuback;
     }
+
+    IotLogDebug( "PUBACK for PUBLISH %hu sent.", packetIdentifier );
+
+errorSendPuback: freePacket( pPuback );
+errorGeneratePuback: _IotMqtt_DecrementConnectionReferences( pMqttConnection );
+errorIncrementReferences: return;
 }
 
 /*-----------------------------------------------------------*/

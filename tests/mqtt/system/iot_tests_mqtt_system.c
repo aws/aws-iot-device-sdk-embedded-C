@@ -379,9 +379,9 @@ static void _reentrantCallback( void * pArgument,
             IotMqtt_Disconnect( pOperation->mqttConnection, false );
 
             /* Waiting on an operation whose connection is closed should return
-             * "Send Error". */
+             * "Network Error". */
             status = ( IotMqtt_Wait( unsubscribeRef,
-                                     500 ) == IOT_MQTT_SEND_ERROR );
+                                     500 ) == IOT_MQTT_NETWORK_ERROR );
         }
         else
         {

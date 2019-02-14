@@ -398,6 +398,7 @@ typedef struct _mqttOperation
         struct
         {
             /* Basic operation information. */
+            uint8_t jobReference;             /**< @brief Tracks if a job is using this operation. Must always be 0, 1, or 2. */
             IotMqttOperationType_t operation; /**< @brief What operation this structure represents. */
             uint32_t flags;                   /**< @brief Flags passed to the function that created this operation. */
             uint16_t packetIdentifier;        /**< @brief The packet identifier used with this operation. */

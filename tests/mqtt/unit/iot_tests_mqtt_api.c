@@ -414,6 +414,23 @@ static IotNetworkError_t _disconnect( int32_t reason,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief A task pool job routine destroys its MQTT operation.
+ */
+static void _destroyOperationJob( IotTaskPool_t * pTaskPool,
+                                  IotTaskPoolJob_t * pJob,
+                                  void * pContext )
+{
+    /* Silence warnings about unused parameters. */
+    ( void ) pTaskPool;
+    ( void ) pJob;
+
+    /* Destroy the MQTT operation, which is passed as the context. */
+    _IotMqtt_DestroyOperation( pContext );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group for MQTT API tests.
  */
 TEST_GROUP( MQTT_Unit_API );
@@ -448,6 +465,7 @@ TEST_TEAR_DOWN( MQTT_Unit_API )
  */
 TEST_GROUP_RUNNER( MQTT_Unit_API )
 {
+    RUN_TEST_CASE( MQTT_Unit_API, OperationCreateDestroy );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectParameters );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectMallocFail );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectRestoreSessionMallocFail );
@@ -461,6 +479,56 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, UnsubscribeMallocFail );
     RUN_TEST_CASE( MQTT_Unit_API, KeepAlivePeriodic );
     RUN_TEST_CASE( MQTT_Unit_API, KeepAliveJobCleanup );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test reference counts as MQTT operations are created and destroyed.
+ */
+TEST( MQTT_Unit_API, OperationCreateDestroy )
+{
+    _mqttConnection_t * pMqttConnection = NULL;
+    _mqttOperation_t * pOperation = NULL;
+    IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+
+    /* Create a new MQTT connection with an empty network interface. */
+    pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                        &networkInterface,
+                                                        0 );
+    TEST_ASSERT_NOT_EQUAL( NULL, pMqttConnection );
+
+    /* Adjustment to reference count based on keep-alive status. */
+    const int32_t keepAliveReference = ( pMqttConnection->keepAliveMs != 0 ) ? 1 : 0;
+
+    if( TEST_PROTECT() )
+    {
+        /* A new MQTT connection should only have a possible reference for keep-alive. */
+        TEST_ASSERT_EQUAL_INT32( keepAliveReference, pMqttConnection->references );
+
+        /* Create a new operation referencing the MQTT connection. */
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( pMqttConnection,
+                                                                       0,
+                                                                       NULL,
+                                                                       &pOperation ) );
+
+        /* Check reference counts and list placement. */
+        TEST_ASSERT_EQUAL_INT32( 1 + keepAliveReference, pMqttConnection->references );
+        TEST_ASSERT_EQUAL_UINT8( 2, pOperation->jobReference );
+        TEST_ASSERT_EQUAL_PTR( &( pOperation->link ), IotListDouble_FindFirstMatch( &( pMqttConnection->pendingProcessing ),
+                                                                                    NULL,
+                                                                                    NULL,
+                                                                                    &( pOperation->link ) ) );
+
+        /* Schedule a job that destroys the operation. */
+        TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _destroyOperationJob,
+                                                                        pOperation,
+                                                                        &( pOperation->job ) ) );
+        TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_Schedule( &( _IotMqttTaskPool ),
+                                                                       &( pOperation->job ) ) );
+
+        IotMqtt_Disconnect( pMqttConnection, true );
+    }
 }
 
 /*-----------------------------------------------------------*/

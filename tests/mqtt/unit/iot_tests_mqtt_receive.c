@@ -577,7 +577,7 @@ TEST_SETUP( MQTT_Unit_Receive )
 TEST_TEAR_DOWN( MQTT_Unit_Receive )
 {
     /* Clean up resources taken in test setup. */
-    IotTestMqtt_destroyMqttConnection( _pMqttConnection );
+    IotMqtt_Disconnect( _pMqttConnection, true );
     IotMqtt_Cleanup();
     IotSemaphore_Destroy( &_mallocSemaphore );
     _pMqttConnection = NULL;
