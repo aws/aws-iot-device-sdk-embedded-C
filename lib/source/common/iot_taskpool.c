@@ -249,7 +249,8 @@ static IotTaskPoolError_t _tryCancelInternal( IotTaskPool_t * const pTaskPool,
  *
  */
 static IotTaskPoolError_t _trySafeExtraction( IotTaskPool_t * const pTaskPool,
-                                              IotTaskPoolJob_t * const pJob );
+                                              IotTaskPoolJob_t * const pJob,
+                                              bool checkExecutionInProgress );
 /** @endcond */
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -559,7 +560,7 @@ IotTaskPoolError_t IotTaskPool_DestroyJob( IotTaskPool_t * const pTaskPool,
             }
             else
             {
-                error = _trySafeExtraction( pTaskPool, pJob );
+                error = _trySafeExtraction( pTaskPool, pJob, false );
             }
         }
         _TASKPOOL_EXIT_CRITICAL_SECTION;
@@ -607,7 +608,7 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t * const pTaskPool,
                 /* Do not recycle statically allocated jobs. */
                 if( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
                 {
-                    error = _trySafeExtraction( pTaskPool, pJob );
+                    error = _trySafeExtraction( pTaskPool, pJob, false );
                 }
                 else
                 {
@@ -658,7 +659,7 @@ IotTaskPoolError_t IotTaskPool_Schedule( IotTaskPool_t * const pTaskPool,
             }
             else
             {
-                error = _trySafeExtraction( pTaskPool, pJob );
+                error = _trySafeExtraction( pTaskPool, pJob, true );
             }
 
             /* If all safety checks completed, proceed. */
@@ -709,7 +710,7 @@ IotTaskPoolError_t IotTaskPool_ScheduleDeferred( IotTaskPool_t * const pTaskPool
                 }
                 else
                 {
-                    error = _trySafeExtraction( pTaskPool, pJob );
+                    error = _trySafeExtraction( pTaskPool, pJob, true );
                 }
 
                 /* If all safety checks completed, proceed. */
@@ -1216,8 +1217,13 @@ static void _recycleJob( IotTaskPoolCache_t * const pCache,
     /* We will recycle the job if there is space in the cache. */
     if( pCache->freeCount < IOT_TASKPOOL_JOBS_RECYCLE_LIMIT )
     {
+        /* Destroy user data, for added safety&security. */
         pJob->userCallback = NULL;
         pJob->pUserContext = NULL;
+
+        /* Reset the status for added debuggability. */
+        pJob->status &= ~IOT_TASKPOOL_STATUS_MASK;
+        pJob->status |= IOT_TASKPOOL_STATUS_UNDEFINED;
 
         IotListDouble_InsertTail( &pCache->freeList, &pJob->link );
 
@@ -1235,6 +1241,14 @@ static void _recycleJob( IotTaskPoolCache_t * const pCache,
 
 static void _destroyJob( IotTaskPoolJob_t * const pJob )
 {
+    /* Destroy user data, for added safety&security. */
+    pJob->userCallback = NULL;
+    pJob->pUserContext = NULL;
+
+    /* Reset the status for added debuggability. */
+    pJob->status &= ~IOT_TASKPOOL_STATUS_MASK;
+    pJob->status |= IOT_TASKPOOL_STATUS_UNDEFINED;
+
     /* Only dispose of dynamically allocated jobs. */
     if( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
     {
@@ -1439,34 +1453,40 @@ static IotTaskPoolError_t _tryCancelInternal( IotTaskPool_t * const pTaskPool,
 /*-----------------------------------------------------------*/
 
 static IotTaskPoolError_t _trySafeExtraction( IotTaskPool_t * const pTaskPool,
-                                              IotTaskPoolJob_t * const pJob )
+                                              IotTaskPoolJob_t * const pJob,
+                                              bool checkExecutionInProgress )
 {
     IotTaskPoolError_t error = IOT_TASKPOOL_SUCCESS;
+    IotTaskPoolJobStatus_t status = pJob->status & IOT_TASKPOOL_STATUS_MASK;
 
+    /* if the job is executing, we cannot touch it. */
+    if ( checkExecutionInProgress && ( status == IOT_TASKPOOL_STATUS_EXECUTING ) )
+    {
+        error = IOT_TASKPOOL_ILLEGAL_OPERATION;
+    }
     /* Do not destroy a job in the dispatch queue or the timer queue without cancelling first. */
-    if( ( pJob->status == IOT_TASKPOOL_STATUS_SCHEDULED ) || ( pJob->status == IOT_TASKPOOL_STATUS_DEFERRED ) )
+    else if ( ( status == IOT_TASKPOOL_STATUS_SCHEDULED ) || ( status == IOT_TASKPOOL_STATUS_DEFERRED ) )
     {
         IotTaskPoolJobStatus_t statusAtCancellation;
-
-        IotLogWarn( "Attempt to destroy a job waiting to be executed." );
 
         /* Cancellation can fail, e.g. if a job is being executed when we are trying to cancel it. */
         error = _tryCancelInternal( pTaskPool, pJob, &statusAtCancellation );
 
-        switch( error )
+        switch ( error )
         {
-            case IOT_TASKPOOL_SUCCESS:
-                break;
+        case IOT_TASKPOOL_SUCCESS:
+            break;
 
-            case IOT_TASKPOOL_CANCEL_FAILED:
-                error = IOT_TASKPOOL_ILLEGAL_OPERATION;
-                break;
+        case IOT_TASKPOOL_CANCEL_FAILED:
+            IotLogWarn( "Removing a scheduled job failed because the job could not be canceled." );
+            error = IOT_TASKPOOL_ILLEGAL_OPERATION;
+            break;
 
-            default:
-                break;
+        default:
+            break;
         }
     }
-    else if( IotLink_IsLinked( &pJob->link ) )
+    else if ( IotLink_IsLinked( &pJob->link ) )
     {
         /* If the job is not in the dispatch or timer queue, it must be in the cache. */
         IotTaskPool_Assert( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 );
