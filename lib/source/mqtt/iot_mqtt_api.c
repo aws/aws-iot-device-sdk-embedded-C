@@ -222,6 +222,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     {
         /* Convert the keep-alive interval to milliseconds. */
         pNewMqttConnection->keepAliveMs = keepAliveSeconds * 1000;
+        pNewMqttConnection->nextKeepAliveMs = pNewMqttConnection->keepAliveMs;
 
         /* Choose a PINGREQ serializer function. */
         IotMqttError_t ( * serializePingreq )( uint8_t ** const,
@@ -734,13 +735,13 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
     if( status == IOT_MQTT_SUCCESS )
     {
         /* Check if a keep-alive job should be scheduled. */
-        if( pNewMqttConnection->keepAliveMs > 0 )
+        if( pNewMqttConnection->keepAliveMs != 0 )
         {
             IotLogDebug( "Scheduling MQTT keep-alive job." );
 
             if( IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
                                               &( pNewMqttConnection->keepAliveJob ),
-                                              pNewMqttConnection->keepAliveMs ) != IOT_TASKPOOL_SUCCESS )
+                                              pNewMqttConnection->nextKeepAliveMs ) != IOT_TASKPOOL_SUCCESS )
             {
                 status = IOT_MQTT_SCHEDULING_ERROR;
             }
@@ -775,16 +776,21 @@ errorCreateConnection: return status;
 void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                          bool cleanupOnly )
 {
-    bool destroyConnection = false;
+    bool disconnected = false, destroyConnection = false;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
     _mqttOperation_t * pDisconnectOperation = NULL;
 
     IotLogInfo( "Disconnecting MQTT connection %p.", pMqttConnection );
 
+    /* Read the connection status. */
+    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+    disconnected = pMqttConnection->disconnected;
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
     /* Only send a DISCONNECT packet if the connection is active and the "cleanup only"
      * option is false. */
-    if( ( pMqttConnection->disconnected == false ) && ( cleanupOnly == false ) )
+    if( ( disconnected == false ) && ( cleanupOnly == false ) )
     {
         /* Create a DISCONNECT operation. This function blocks until the DISCONNECT
          * packet is sent, so it sets IOT_MQTT_FLAG_WAITABLE. */

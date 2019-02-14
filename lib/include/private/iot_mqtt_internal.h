@@ -370,6 +370,7 @@ typedef struct _mqttConnection
 
     bool keepAliveFailure;             /**< @brief Failure flag for keep-alive operation. */
     uint32_t keepAliveMs;              /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
+    uint64_t nextKeepAliveMs;          /**< @brief Relative delay for next keep-alive job. */
     IotTaskPoolJob_t keepAliveJob;     /**< @brief Task pool job for processing this connection's keep-alive. */
     uint8_t * pPingreqPacket;          /**< @brief An MQTT PINGREQ packet, allocated if keep-alive is active. */
     size_t pingreqPacketSize;          /**< @brief The size of an allocated PINGREQ packet. */

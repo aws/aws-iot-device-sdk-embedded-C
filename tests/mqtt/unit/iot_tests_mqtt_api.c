@@ -33,6 +33,11 @@
 #include <string.h>
 
 /* POSIX includes. */
+#ifdef POSIX_TIME_HEADER
+    #include POSIX_TIME_HEADER
+#else
+    #include <time.h>
+#endif
 #ifdef POSIX_UNISTD_HEADER
     #include POSIX_UNISTD_HEADER
 #else
@@ -117,10 +122,52 @@
       4 * _DUP_CHECK_RETRY_MS + \
       IOT_MQTT_RESPONSE_WAIT_MS )
 
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Tracks whether #_publishSetDup has been called.
  */
 static bool _publishSetDupCalled = false;
+
+/**
+ * @brief Counts how many time #_sendPingreq has been called.
+ */
+static int32_t _pingreqSendCounter = 0;
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief A thread routine that simulates an incoming PINGRESP.
+ */
+static void _incomingPingresp( void * pArgument )
+{
+    static int32_t invokeCount = 0;
+
+    /* A PINGRESP packet. */
+    const uint8_t pPingresp[ 2 ] = { _MQTT_PACKET_TYPE_PINGRESP, 0x00 };
+
+    /* 200 ms sleep time. */
+    const struct timespec sleepTime = { .tv_sec = 0, .tv_nsec = 200000000 };
+
+    /* Increment invoke count for this function. */
+    invokeCount++;
+
+    /* Sleep for 200 ms to simulate the network round-trip time. */
+    if( nanosleep( &sleepTime, NULL ) == 0 )
+    {
+        /* Respond with a PINGRESP up to 3 times. */
+        if( invokeCount < 3 )
+        {
+            printf( "PINGRESP %d at %lld\n", invokeCount, IotClock_GetTimeMs());
+            ( void ) IotMqtt_ReceiveCallback( pArgument,
+                                              NULL,
+                                              pPingresp,
+                                              2,
+                                              0,
+                                              NULL );
+        }
+    }
+}
 
 /*-----------------------------------------------------------*/
 
@@ -161,6 +208,35 @@ static size_t _sendSuccess( void * pSendContext,
 
     /* This function just returns the message length to simulate a successful
      * send. */
+    return messageLength;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief A send function for PINGREQ that responds with a PINGRESP.
+ */
+static size_t _sendPingreq( void * pSendContext,
+                            const uint8_t * const pMessage,
+                            size_t messageLength )
+{
+    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pSendContext;
+
+    /* Silence warnings about unused parameters. */
+    ( void ) pMessage;
+
+    /* Create a thread that responds with PINGRESP, then increment the PINGREQ
+     * send counter if successful. */
+    if( Iot_CreateDetachedThread( _incomingPingresp,
+                                  &( pMqttConnection->network.pSendContext ),
+                                  IOT_THREAD_DEFAULT_PRIORITY,
+                                  IOT_THREAD_DEFAULT_STACK_SIZE ) == true )
+    {
+        _pingreqSendCounter++;
+                printf( "PINGREQ send %d at %lld\n", _pingreqSendCounter, IotClock_GetTimeMs());
+    }
+
+    /* Return the message length to simulate a successful send. */
     return messageLength;
 }
 
@@ -305,6 +381,8 @@ TEST_GROUP( MQTT_Unit_API );
 TEST_SETUP( MQTT_Unit_API )
 {
     _publishSetDupCalled = false;
+    _pingreqSendCounter = 0;
+
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 }
 
@@ -336,6 +414,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeUnsubscribeParameters );
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeMallocFail );
     RUN_TEST_CASE( MQTT_Unit_API, UnsubscribeMallocFail );
+    RUN_TEST_CASE( MQTT_Unit_API, KeepAlivePeriodic );
     RUN_TEST_CASE( MQTT_Unit_API, KeepAliveJobCleanup );
 }
 
@@ -592,7 +671,7 @@ TEST( MQTT_Unit_API, PublishQoS0Parameters )
     status = IotMqtt_Publish( &mqttConnection, &publishInfo, 0, 0, &publishReference );
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
-    /* Allow time for the send thread to run and clean up the PUBLISH. QoS 0
+    /* Allow time for the send job to run and clean up the PUBLISH. QoS 0
      * PUBLISH provides no mechanism to wait on completion, so sleep is used. */
     sleep( 1 );
 }
@@ -959,6 +1038,49 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
                              IotMqtt_FreeSubscription,
                              offsetof( _mqttSubscription_t, link ) );
     IotMutex_Destroy( &( mqttConnection.subscriptionMutex ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests keep-alive handling and ensures that it is periodic.
+ */
+TEST( MQTT_Unit_API, KeepAlivePeriodic )
+{
+    bool disconnectInvoked = false;
+    _mqttConnection_t * pMqttConnection = NULL;
+    IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+
+    /* Set the members of the network interface and create a new MQTT connection
+     * with keep-alive. */
+    networkInterface.send = _sendPingreq;
+    networkInterface.pDisconnectContext = &disconnectInvoked;
+    networkInterface.disconnect = _disconnect;
+    pMqttConnection = IotTestMqtt_createMqttConnection( false,
+                                                        &networkInterface,
+                                                        1 );
+    TEST_ASSERT_NOT_EQUAL( NULL, pMqttConnection );
+
+    /* Connection send context can only be set after connection is created. */
+    pMqttConnection->network.pSendContext = pMqttConnection;
+
+    /* Set a short keep-alive interval so this test runs faster. */
+    pMqttConnection->keepAliveMs = 200;
+
+    /* Schedule the initial PINGREQ. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS,
+                       IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
+                                                     &( pMqttConnection->keepAliveJob ),
+                                                     200 ) );
+
+    /* Sleep for 6 seconds. This should allow ample time for 3 periodic PINGREQ
+     * sends and PINGRESP responses. */
+    sleep( 6 );
+
+    /* Disconnect the connection. */
+    IotMqtt_Disconnect( pMqttConnection, true );
+
+    TEST_ASSERT_EQUAL_INT( true, disconnectInvoked );
 }
 
 /*-----------------------------------------------------------*/

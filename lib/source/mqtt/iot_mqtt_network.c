@@ -397,6 +397,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                         else
                         {
                             pConnectionInfo->keepAliveFailure = false;
+                            pConnectionInfo->nextKeepAliveMs = pConnectionInfo->keepAliveMs;
                         }
 
                         IotMutex_Unlock( &( pConnectionInfo->referencesMutex ) );

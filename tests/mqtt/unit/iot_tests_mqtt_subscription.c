@@ -31,7 +31,6 @@
 
 /* Standard includes. */
 #include <string.h>
-#include <unistd.h>
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
@@ -49,6 +48,11 @@
     #include POSIX_TIME_HEADER
 #else
     #include <time.h>
+#endif
+#ifdef POSIX_UNISTD_HEADER
+    #include POSIX_UNISTD_HEADER
+#else
+    #include <unistd.h>
 #endif
 
 /* Test framework includes. */

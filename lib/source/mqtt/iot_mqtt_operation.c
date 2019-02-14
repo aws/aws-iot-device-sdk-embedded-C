@@ -211,6 +211,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
                                 void * pContext )
 {
     bool status = true;
+    uint64_t nextJobRuntime = 0;
 
     /* Retrieve the MQTT connection from the context. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
@@ -251,35 +252,41 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
             /* Assume the keep-alive will fail. The network receive callback will
              * clear the failure flag upon receiving a PINGRESP. */
             pMqttConnection->keepAliveFailure = true;
+            pMqttConnection->nextKeepAliveMs = IOT_MQTT_RESPONSE_WAIT_MS;
         }
     }
     else
     {
         /* The network receive callback did not clear the failure flag. */
         IotLogError( "Failed to receive PINGRESP within %d ms.", IOT_MQTT_RESPONSE_WAIT_MS );
+                printf( "PINGREQ error at %lld\n", IotClock_GetTimeMs());
     }
 
     /* When a PINGREQ is successfully sent, reschedule this job to check for a
      * response shortly. */
     if( status == true )
     {
-        if( IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
+        IotTaskPoolError_t error = IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
                                           &( pMqttConnection->keepAliveJob ),
-                                          IOT_MQTT_RESPONSE_WAIT_MS ) == IOT_TASKPOOL_SUCCESS )
+                                          pMqttConnection->nextKeepAliveMs );
+        if( error == IOT_TASKPOOL_SUCCESS )
         {
             IotLogDebug( "Rescheduled keep-alive job to check for PINGRESP in %d ms.",
                          IOT_MQTT_RESPONSE_WAIT_MS );
+                         printf( "Scheduled next job for %lld\n", IotClock_GetTimeMs() + pMqttConnection->nextKeepAliveMs );
         }
         else
         {
+            printf("Sched error\n");
             IotLogError( "Failed to reschedule keep-alive job for PINGRESP check." );
             status = false;
         }
     }
 
-    /* Clean up keep-alive on failures. */
+    /* Stop keep-alive on failures. */
     if( status == false )
     {
+        printf("Keep-alive error.\n");
         /* Mark the connection as disconnected because of keep-alive failure. */
         pMqttConnection->disconnected = true;
 
@@ -292,18 +299,14 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
         pMqttConnection->keepAliveMs = 0;
         pMqttConnection->pPingreqPacket = NULL;
         pMqttConnection->pingreqPacketSize = 0;
+
+        /* Decrement connection reference count, as keep-alive no longer
+         * references the connection. */
+        pMqttConnection->references--;
+        IotMqtt_Assert( pMqttConnection->references >= 0 );
     }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
-
-    /* Decrement the reference count for the MQTT connection on keep-alive failure,
-     * since keep-alive will no longer use the connection. */
-    if( status == false )
-    {
-        _IotMqtt_DecrementConnectionReferences( pMqttConnection );
-
-        IotLogDebug( "Failed keep-alive job has been cleaned up." );
-    }
 }
 
 /*-----------------------------------------------------------*/

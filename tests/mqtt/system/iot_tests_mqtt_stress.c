@@ -35,7 +35,6 @@
 
 /* Standard includes. */
 #include <string.h>
-#include <unistd.h>
 
 /* POSIX includes. */
 #include <time.h>
@@ -48,6 +47,11 @@
     #include POSIX_PTHREAD_HEADER
 #else
     #include <pthread.h>
+#endif
+#ifdef POSIX_UNISTD_HEADER
+    #include POSIX_UNISTD_HEADER
+#else
+    #include <unistd.h>
 #endif
 
 /* Platform layer include. */
