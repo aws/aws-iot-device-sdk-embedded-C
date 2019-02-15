@@ -1460,33 +1460,33 @@ static IotTaskPoolError_t _trySafeExtraction( IotTaskPool_t * const pTaskPool,
     IotTaskPoolJobStatus_t status = pJob->status & IOT_TASKPOOL_STATUS_MASK;
 
     /* if the job is executing, we cannot touch it. */
-    if ( checkExecutionInProgress && ( status == IOT_TASKPOOL_STATUS_EXECUTING ) )
+    if( checkExecutionInProgress && ( status == IOT_TASKPOOL_STATUS_EXECUTING ) )
     {
         error = IOT_TASKPOOL_ILLEGAL_OPERATION;
     }
     /* Do not destroy a job in the dispatch queue or the timer queue without cancelling first. */
-    else if ( ( status == IOT_TASKPOOL_STATUS_SCHEDULED ) || ( status == IOT_TASKPOOL_STATUS_DEFERRED ) )
+    else if( ( status == IOT_TASKPOOL_STATUS_SCHEDULED ) || ( status == IOT_TASKPOOL_STATUS_DEFERRED ) )
     {
         IotTaskPoolJobStatus_t statusAtCancellation;
 
         /* Cancellation can fail, e.g. if a job is being executed when we are trying to cancel it. */
         error = _tryCancelInternal( pTaskPool, pJob, &statusAtCancellation );
 
-        switch ( error )
+        switch( error )
         {
-        case IOT_TASKPOOL_SUCCESS:
-            break;
+            case IOT_TASKPOOL_SUCCESS:
+                break;
 
-        case IOT_TASKPOOL_CANCEL_FAILED:
-            IotLogWarn( "Removing a scheduled job failed because the job could not be canceled." );
-            error = IOT_TASKPOOL_ILLEGAL_OPERATION;
-            break;
+            case IOT_TASKPOOL_CANCEL_FAILED:
+                IotLogWarn( "Removing a scheduled job failed because the job could not be canceled." );
+                error = IOT_TASKPOOL_ILLEGAL_OPERATION;
+                break;
 
-        default:
-            break;
+            default:
+                break;
         }
     }
-    else if ( IotLink_IsLinked( &pJob->link ) )
+    else if( IotLink_IsLinked( &pJob->link ) )
     {
         /* If the job is not in the dispatch or timer queue, it must be in the cache. */
         IotTaskPool_Assert( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 );
