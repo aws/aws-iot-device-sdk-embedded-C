@@ -1194,7 +1194,31 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
 IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
                              uint64_t timeoutMs )
 {
-    return IOT_MQTT_STATUS_PENDING;
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+    _mqttOperation_t * pOperation = ( _mqttOperation_t * ) reference;
+
+    /* Validate the given reference. */
+    _validateParameter( ( _IotMqtt_ValidateReference( reference ) == true ), NULL );
+
+    IotLogInfo( "Waiting for %s operation %p to complete.",
+                IotMqtt_OperationType( pOperation->operation ),
+                pOperation );
+
+    if( IotSemaphore_TimedWait( &( pOperation->notify.waitSemaphore ),
+                                timeoutMs ) == false )
+    {
+        status = IOT_MQTT_TIMEOUT;
+    }
+
+    IotLogInfo( "%s operation %p complete with result %s.",
+                IotMqtt_OperationType( pOperation->operation ),
+                pOperation,
+                IotMqtt_strerror( status ) );
+
+    /* Attempt to destroy the operation. */
+    _IotMqtt_DestroyOperation( pOperation );
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/

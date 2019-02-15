@@ -453,6 +453,29 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
                            IotTaskPoolJob_t * pSendJob,
                            void * pContext )
 {
+    _mqttOperation_t * pOperation = ( _mqttOperation_t * ) pContext;
+    _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
+
+    IotLogDebug( "Send job started for %s operation %p.",
+                 IotMqtt_OperationType( pOperation->operation ),
+                 pOperation );
+
+    /* The given operation must have an allocated packet and be waiting for a status. */
+    IotMqtt_Assert( pOperation->pMqttPacket != NULL );
+    IotMqtt_Assert( pOperation->packetSize != 0 );
+    IotMqtt_Assert( pOperation->status == IOT_MQTT_STATUS_PENDING );
+
+    /* Transmit the MQTT packet from the operation over the network. */
+    if( pMqttConnection->network.send( pMqttConnection->network.pSendContext,
+                                       pOperation->pMqttPacket,
+                                       pOperation->packetSize ) != pOperation->packetSize )
+    {
+        IotLogError( "Failed to send MQTT packet for %s operation %p.",
+                     IotMqttOperationType( pOperation->operation ),
+                     pOperation );
+
+        pOperation->status = IOT_MQTT_NETWORK_ERROR;
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -575,7 +598,7 @@ void _IotMqtt_Notify( _mqttOperation_t * const pOperation )
             if( _IotMqtt_ScheduleOperation( pOperation,
                                             _IotMqtt_ProcessCompletedOperation ) != IOT_MQTT_SUCCESS )
             {
-                IotLogWarn( "Failed to create new callback thread." );
+                IotLogWarn( "Failed to schedule callback job." );
             }
         }
         else
