@@ -3,12 +3,12 @@
 @anchor taskpool
 @brief Task pool library.
 
-> A task pool is an adaptive set of threads that can grow and shrink to execute a user-provided callback through a user-defined job that can be scheduled with a non-blocking call. The design principles are to minimize the memory footprint while allowing asynchrnous execution. The adaptive behavior allows serving jobs in a timely way, without allocating system resources for the entire duration of the application. The user does not have to worry about synchronization and thread management. 
+> A task pool is an adaptive set of threads that can grow and shrink to execute a user-provided callback through a user-defined job that can be scheduled with a non-blocking call. The design principles are to minimize the memory footprint while allowing asynchrnous execution. The adaptive behavior allows serving jobs in a timely way, without allocating system resources for the entire duration of the application. The user does not have to worry about synchronization and thread management.
 
 Features of this library include:
 - Both fully asynchronous and blocking API functions.
 - Scalable performance and footprint. The [configuration settings](@ref taskpool_config) allow this library to be tailored to a system's resources.
-- Customizable caching for low memory allocation overhead. 
+- Customizable caching for low memory allocation overhead.
 
 @dependencies{taskpool,task pool library}
 @dot "Task pool direct dependencies"
@@ -161,7 +161,7 @@ By default, the task pool test executables don't run the stress tests, which may
 @brief Set this to the default stack depth used by the task pool initializers.
 
 @section AWS_IOT_TASKPOOL_PRIORITY
-@brief Set this to the default task priority used by the task pool initializers. 
+@brief Set this to the default task priority used by the task pool initializers.
 
 @section AWS_IOT_TASKPOOL_ENABLE_ASSERTS
 @brief Set this to `1` to perform sanity checks when using the task pool library.
