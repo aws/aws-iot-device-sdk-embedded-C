@@ -144,6 +144,12 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * const pMqttConnecti
     /* Clear the operation data. */
     ( void ) memset( pOperation, 0x00, sizeof( _mqttOperation_t ) );
 
+    /* Initialize the some members of the new operation. */
+    pOperation->pMqttConnection = pMqttConnection;
+    pOperation->jobReference = 1;
+    pOperation->flags = flags;
+    pOperation->status = IOT_MQTT_STATUS_PENDING;
+
     /* Check if the waitable flag is set. If it is, create a semaphore to
      * wait on. */
     if( waitable == true )
@@ -156,6 +162,10 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * const pMqttConnecti
 
             goto errorCreateSemaphore;
         }
+
+        /* A waitable operation is created with an additional reference for the
+         * Wait function. */
+        ( pOperation->jobReference )++;
     }
     else
     {
@@ -166,12 +176,6 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * const pMqttConnecti
             pOperation->notify.callback = *pCallbackInfo;
         }
     }
-
-    /* Initialize the some members of the new operation. */
-    pOperation->pMqttConnection = pMqttConnection;
-    pOperation->jobReference = 2;
-    pOperation->flags = flags;
-    pOperation->status = IOT_MQTT_STATUS_PENDING;
 
     /* Add this operation to the MQTT connection's operation list. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
@@ -194,99 +198,105 @@ errorIncrementReferences: return status;
 
 /*-----------------------------------------------------------*/
 
-void _IotMqtt_DestroyOperation( void * pData )
+bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
+                                            bool cancelJob )
 {
     bool destroyOperation = false;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
-    _mqttOperation_t * pOperation = ( _mqttOperation_t * ) pData;
-    _mqttConnection_t * const pMqttConnection = pOperation->pMqttConnection;
+    _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
+
+    /* Attempt to cancel the operation's job. */
+    if( cancelJob == true )
+    {
+        taskPoolStatus = IotTaskPool_TryCancel( &( _IotMqttTaskPool ),
+                                                &( pOperation->job ),
+                                                NULL );
+
+        /* If the operation's job was not canceled, it must be already executing.
+         * Any other return value is invalid. */
+        IotMqtt_Assert( ( taskPoolStatus == IOT_TASKPOOL_SUCCESS ) ||
+                        ( taskPoolStatus == IOT_TASKPOOL_CANCEL_FAILED ) );
+    }
+
+    /* Decrement job reference count. */
+    if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
+    {
+        IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+        pOperation->jobReference--;
+
+        /* The job reference count must be 0 or 1 after the decrement. */
+        IotMqtt_Assert( ( pOperation->jobReference == 0 ) ||
+                        ( pOperation->jobReference == 1 ) );
+
+        /* This operation may be destroyed if its reference count is 0. */
+        if( pOperation->jobReference == 0 )
+        {
+            destroyOperation = true;
+        }
+
+        IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+    }
+
+    return destroyOperation;
+}
+
+/*-----------------------------------------------------------*/
+
+void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
+{
+    _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
 
     IotLogDebug( "Attempting to destroy %s operation %p.",
                  IotMqtt_OperationType( pOperation->operation ),
                  pOperation );
 
+    /* The job reference count must be between 0 and 2. */
+    IotMqtt_Assert( ( pOperation->jobReference >= 0 ) &&
+                    ( pOperation->jobReference <= 2 ) );
+
+    /* Jobs to be destroyed should be removed from the MQTT connection's
+     * lists. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
 
-    /* Attempt to cancel the operation's job. */
-    taskPoolStatus = IotTaskPool_TryCancel( &( _IotMqttTaskPool ),
-                                            &( pOperation->job ),
-                                            NULL );
-
-    /* If the operation's job was not canceled, it must be already executing.
-     * Any other return value is invalid. */
-    IotMqtt_Assert( ( taskPoolStatus == IOT_TASKPOOL_SUCCESS ) ||
-                    ( taskPoolStatus == IOT_TASKPOOL_CANCEL_FAILED ) );
-
-    /* Decrement job reference count by 2 if a job was canceled. Otherwise,
-     * decrement by 1; this relies on the executing job to clean up. */
-    if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
+    if( IotLink_IsLinked( &( pOperation->link ) ) == true )
     {
-        pOperation->jobReference -= 2;
-    }
-    else
-    {
-        pOperation->jobReference -= 1;
-    }
-
-    /* The job reference count must be 0 or 1 after the decrement. */
-    IotMqtt_Assert( pOperation->jobReference < 2 );
-
-    /* Check if this MQTT operation may be destroyed. */
-    if( pOperation->jobReference == 0 )
-    {
-        destroyOperation = true;
-
-        /* Jobs to be destroyed should be removed from the MQTT connection's
-         * lists. */
-        if( IotLink_IsLinked( &( pOperation->link ) ) == true )
-        {
-            IotListDouble_Remove( &( pOperation->link ) );
-        }
+        IotListDouble_Remove( &( pOperation->link ) );
     }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-    if( destroyOperation == true )
+    /* If the MQTT packet is still allocated, free it. */
+    if( pOperation->pMqttPacket != NULL )
     {
-        /* If the MQTT packet is still allocated, free it. */
-        if( pOperation->pMqttPacket != NULL )
-        {
-            /* Choose a free packet function. */
-            void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
+        /* Choose a free packet function. */
+        void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
 
-            #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-                if( pMqttConnection->network.freePacket != NULL )
-                {
-                    freePacket = pMqttConnection->network.freePacket;
-                }
-            #endif
+        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            if( pMqttConnection->network.freePacket != NULL )
+            {
+                freePacket = pMqttConnection->network.freePacket;
+            }
+        #endif
 
-            freePacket( pOperation->pMqttPacket );
-        }
-
-        /* Check if a wait semaphore was created for this operation. */
-        if( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
-        {
-            IotSemaphore_Destroy( &( pOperation->notify.waitSemaphore ) );
-        }
-
-        /* Free the memory used to hold operation data. */
-        IotMqtt_FreeOperation( pOperation );
-
-        IotLogDebug( "%s operation %p destroyed.",
-                     IotMqtt_OperationType( pOperation->operation ),
-                     pOperation );
-
-        /* Decrement the MQTT connection's reference count after destroying an
-         * operation. */
-        _IotMqtt_DecrementConnectionReferences( pMqttConnection );
+        freePacket( pOperation->pMqttPacket );
     }
-    else
+
+    /* Check if a wait semaphore was created for this operation. */
+    if( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
     {
-        IotLogDebug( "%s operation %p has active references and cannot be destroyed yet.",
-                     IotMqtt_OperationType( pOperation->operation ),
-                     pOperation );
+        IotSemaphore_Destroy( &( pOperation->notify.waitSemaphore ) );
     }
+
+    IotLogDebug( "%s operation %p destroyed.",
+                 IotMqtt_OperationType( pOperation->operation ),
+                 pOperation );
+
+    /* Free the memory used to hold operation data. */
+    IotMqtt_FreeOperation( pOperation );
+
+    /* Decrement the MQTT connection's reference count after destroying an
+     * operation. */
+    _IotMqtt_DecrementConnectionReferences( pMqttConnection );
 }
 
 /*-----------------------------------------------------------*/
@@ -302,8 +312,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
     /* Retrieve the MQTT connection from the context. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
 
-    /* Check parameters. The task pool and job parameter is not used when asserts
-     * are disabled. */
+    /* Check parameters. */
     IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
     IotMqtt_Assert( pKeepAliveJob == &( pMqttConnection->keepAliveJob ) );
 
@@ -323,7 +332,6 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
                                             pKeepAliveJob );
     IotMqtt_Assert( taskPoolStatus == IOT_TASKPOOL_SUCCESS );
 
-    /* Read the current keep-alive status. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
 
     /* Determine whether to send a PINGREQ or check for PINGRESP. */
@@ -475,6 +483,11 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
                      pOperation );
 
         pOperation->status = IOT_MQTT_NETWORK_ERROR;
+    }
+
+    if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == true )
+    {
+        _IotMqtt_DestroyOperation( pOperation );
     }
 }
 

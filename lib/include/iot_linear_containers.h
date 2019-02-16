@@ -119,6 +119,37 @@ typedef IotLink_t   IotQueue_t;
     ( ( type * ) ( ( ( uint8_t * ) ( pLink ) ) - offsetof( type, linkName ) ) )
 
 /**
+ * @brief Iterates through each element of a doubly-linked list. Do NOT remove
+ * any list elements while iterating.
+ *
+ * To iterate and safely remove elements, #IotListDouble_ForEachSafe should be
+ * used instead.
+ *
+ * @param[in] pList The list to iterate through.
+ * @param[in] pLinkName The name of the pointer which may be used to access the
+ * current element.
+ */
+#define IotListDouble_ForEach( pList, pLinkName )  \
+    for( IotLink_t * pLinkName = ( pList )->pNext; \
+         pLinkName != ( pList );                   \
+         pLinkName = pLinkName->pNext )
+
+/**
+ * @brief Iterates through each element of a doubly-linked list and allows for
+ * removal.
+ *
+ * @param[in] pList The list to iterate through.
+ * @param[in] iteratorName The name of iterator for each element's. Each element's
+ * link member may be accessed by `iteratorName.pCurrentLink`.
+ */
+#define IotListDouble_ForEachSafe( pList, iteratorName )                                            \
+    for( struct { IotLink_t * pCurrentLink; IotLink_t * pNextLink; }                                \
+         iteratorName = { .pCurrentLink = ( pList )->pNext, .pNextLink = ( pList )->pNext->pNext }; \
+         iteratorName.pCurrentLink != ( pList );                                                    \
+         iteratorName.pCurrentLink = iteratorName.pNextLink, iteratorName.pNextLink = iteratorName.pCurrentLink->pNext )
+
+
+/**
  * @functionspage{linear_containers,linear containers library}
  * - @functionname{linear_containers_function_link_islinked}
  * - @functionname{linear_containers_function_list_double_create}
@@ -876,9 +907,9 @@ static inline void IotQueue_RemoveAll( IotQueue_t * const pQueue,
  */
 /* @[declare_linear_containers_queue_removeallmatches] */
 static inline void IotQueue_RemoveAllMatches( IotQueue_t * const pQueue,
-                                              bool( *isMatch )( const IotLink_t *, void * ),
+                                              bool ( * isMatch )( const IotLink_t *, void * ),
                                               void * pMatch,
-                                              void( *freeElement )( void * ),
+                                              void ( * freeElement )( void * ),
                                               size_t linkOffset )
 /* @[declare_linear_containers_queue_removeallmatches] */
 {

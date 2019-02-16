@@ -398,7 +398,7 @@ typedef struct _mqttOperation
         struct
         {
             /* Basic operation information. */
-            uint8_t jobReference;             /**< @brief Tracks if a job is using this operation. Must always be 0, 1, or 2. */
+            int32_t jobReference;             /**< @brief Tracks if a job is using this operation. Must always be 0, 1, or 2. */
             IotMqttOperationType_t operation; /**< @brief What operation this structure represents. */
             uint32_t flags;                   /**< @brief Flags passed to the function that created this operation. */
             uint16_t packetIdentifier;        /**< @brief The packet identifier used with this operation. */
@@ -786,14 +786,26 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * const pMqttConnecti
                                          _mqttOperation_t ** const pNewOperation );
 
 /**
+ * @brief Decrement the job reference count of an MQTT operation and optionally
+ * cancel its job.
+ *
+ * Checks if the operation may be destroyed afterwards.
+ *
+ * @param[in] pOperation The MQTT operation with the job to cancel.
+ * @param[in] cancelJob Whether to attempt cancellation of the operation's job.
+ *
+ * @return `true` if the the operation may be safely destroyed; `false` otherwise.
+ */
+bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
+                                            bool cancelJob );
+
+/**
  * @brief Free resources used to record an MQTT operation. This is called when
  * the operation completes.
  *
- * @param[in] pData The operation which completed. This parameter is of type
- * `void*` to match the signature of [free]
- * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ * @param[in] pData The operation which completed.
  */
-void _IotMqtt_DestroyOperation( void * pData );
+void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation );
 
 /**
  * @brief Task pool routine for processing an MQTT connection's keep-alive.

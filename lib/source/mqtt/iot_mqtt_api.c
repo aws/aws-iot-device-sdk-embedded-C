@@ -1,4 +1,4 @@
-/*
+    /*
  * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -83,6 +83,16 @@ static bool _mqttSubscription_shouldRemove( const IotLink_t * pSubscriptionLink,
                                             void * pMatch );
 
 /**
+ * @brief Decrement the reference count of an MQTT operation and attempt to
+ * destroy it.
+ *
+ * @param[in] pData The operation data to destroy. This parameter is of type
+ * `void*` for compatibility with [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
+static void _mqttOperation_tryDestroy( void * pData );
+
+/**
  * @brief Creates a new MQTT connection and initializes its members.
  *
  * @param[in] awsIotMqttMode Specifies if this connection is to an AWS IoT MQTT server.
@@ -158,6 +168,19 @@ static bool _mqttSubscription_shouldRemove( const IotLink_t * pSubscriptionLink,
     }
 
     return match;
+}
+
+/*-----------------------------------------------------------*/
+
+static void _mqttOperation_tryDestroy( void * pData )
+{
+    _mqttOperation_t * pOperation = ( _mqttOperation_t * ) pData;
+
+    /* Decrement reference count and destroy operation if possible. */
+    if( _IotMqtt_DecrementOperationReferences( pOperation, true ) == true )
+    {
+        _IotMqtt_DestroyOperation( pOperation );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -794,17 +817,8 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
 
     IotLogInfo( "Disconnecting MQTT connection %p.", pMqttConnection );
 
-    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-
-    /* Purge the MQTT connection lists. */
-    IotListDouble_RemoveAll( &( pMqttConnection->pendingProcessing ),
-                             _IotMqtt_DestroyOperation,
-                             offsetof( _mqttOperation_t, link ) );
-    IotListDouble_RemoveAll( &( pMqttConnection->pendingResponse ),
-                             _IotMqtt_DestroyOperation,
-                             offsetof( _mqttOperation_t, link ) );
-
     /* Read the connection status. */
+    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
     disconnected = pMqttConnection->disconnected;
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
@@ -890,6 +904,15 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
     {
         destroyConnection = true;
     }
+
+    /* Attempt cancel and destroy each operation in the connection's lists. */
+    IotListDouble_RemoveAll( &( pMqttConnection->pendingProcessing ),
+                             _mqttOperation_tryDestroy,
+                             offsetof( _mqttOperation_t, link ) );
+
+    IotListDouble_RemoveAll( &( pMqttConnection->pendingResponse ),
+                             _mqttOperation_tryDestroy,
+                             offsetof( _mqttOperation_t, link ) );
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
@@ -1196,27 +1219,45 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     _mqttOperation_t * pOperation = ( _mqttOperation_t * ) reference;
+    _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
 
     /* Validate the given reference. */
     _validateParameter( ( _IotMqtt_ValidateReference( reference ) == true ), NULL );
 
-    IotLogInfo( "Waiting for %s operation %p to complete.",
-                IotMqtt_OperationType( pOperation->operation ),
-                pOperation );
+    /* Check the MQTT connection status. */
+    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
 
-    if( IotSemaphore_TimedWait( &( pOperation->notify.waitSemaphore ),
-                                timeoutMs ) == false )
+    if( pMqttConnection->disconnected == true )
     {
-        status = IOT_MQTT_TIMEOUT;
+        status = IOT_MQTT_NETWORK_ERROR;
     }
 
-    IotLogInfo( "%s operation %p complete with result %s.",
-                IotMqtt_OperationType( pOperation->operation ),
-                pOperation,
-                IotMqtt_strerror( status ) );
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-    /* Attempt to destroy the operation. */
-    _IotMqtt_DestroyOperation( pOperation );
+    /* Only wait on an operation if the MQTT connection is active. */
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        IotLogInfo( "Waiting for %s operation %p to complete.",
+                    IotMqtt_OperationType( pOperation->operation ),
+                    pOperation );
+
+        if( IotSemaphore_TimedWait( &( pOperation->notify.waitSemaphore ),
+                                    timeoutMs ) == false )
+        {
+            status = IOT_MQTT_TIMEOUT;
+        }
+
+        IotLogInfo( "%s operation %p complete with result %s.",
+                    IotMqtt_OperationType( pOperation->operation ),
+                    pOperation,
+                    IotMqtt_strerror( status ) );
+    }
+
+    /* Wait is finished; decrement operation reference count. */
+    if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == true )
+    {
+        _IotMqtt_DestroyOperation( pOperation );
+    }
 
     return status;
 }

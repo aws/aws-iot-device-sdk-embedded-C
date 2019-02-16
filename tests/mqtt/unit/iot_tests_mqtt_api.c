@@ -302,7 +302,7 @@ static size_t _sendDelay( void * pSendContext,
     IotSemaphore_Post( pWaitSem );
 
     /* Delay for 2 seconds. */
-    while( 1 );
+    sleep( 2 );
 
     /* This function returns the message length to simulate a successful send. */
     return messageLength;
@@ -437,28 +437,23 @@ static IotNetworkError_t _disconnect( int32_t reason,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief A task pool job routine attempts to destroy an MQTT operation.
+ * @brief A task pool job routine that decrements an MQTT operation's job
+ * reference count.
  */
-static void _destroyOperationJob( IotTaskPool_t * pTaskPool,
-                                  IotTaskPoolJob_t * pJob,
-                                  void * pContext )
+static void _decrementReferencesJob( IotTaskPool_t * pTaskPool,
+                                     IotTaskPoolJob_t * pJob,
+                                     void * pContext )
 {
-    bool waitable = false;
     _mqttOperation_t * pOperation = ( _mqttOperation_t * ) pContext;
 
     /* Silence warnings about unused parameters. */
     ( void ) pTaskPool;
     ( void ) pJob;
 
-    /* Check if the operation is waitable. */
-    waitable = ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE;
-
-    /* Attempt to destroy the MQTT operation, which is passed as the context. */
-    _IotMqtt_DestroyOperation( pContext );
-
-    /* Post to the operation wait semaphore if it was waitable. */
-    if( waitable == true )
+    /* Decrement an operation's reference count. */
+    if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == false )
     {
+        /* Unblock the main test thread. */
         IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
     }
 }
@@ -548,14 +543,14 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
 
     /* Check reference counts and list placement. */
     TEST_ASSERT_EQUAL_INT32( 1 + keepAliveReference, pMqttConnection->references );
-    TEST_ASSERT_EQUAL_UINT8( 2, pOperation->jobReference );
+    TEST_ASSERT_EQUAL_INT32( 2, pOperation->jobReference );
     TEST_ASSERT_EQUAL_PTR( &( pOperation->link ), IotListDouble_FindFirstMatch( &( pMqttConnection->pendingProcessing ),
                                                                                 NULL,
                                                                                 NULL,
                                                                                 &( pOperation->link ) ) );
 
     /* Schedule a job that destroys the operation. */
-    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _destroyOperationJob,
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _decrementReferencesJob,
                                                                     pOperation,
                                                                     &( pOperation->job ) ) );
     TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_Schedule( &( _IotMqttTaskPool ),
@@ -566,14 +561,15 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
 
     /* Check reference counts after job completion. */
     TEST_ASSERT_EQUAL_INT32( 1 + keepAliveReference, pMqttConnection->references );
-    TEST_ASSERT_EQUAL_UINT8( 1, pOperation->jobReference );
+    TEST_ASSERT_EQUAL_INT32( 1, pOperation->jobReference );
     TEST_ASSERT_EQUAL_PTR( &( pOperation->link ), IotListDouble_FindFirstMatch( &( pMqttConnection->pendingProcessing ),
                                                                                 NULL,
                                                                                 NULL,
                                                                                 &( pOperation->link ) ) );
 
-    /* Disconnect the MQTT connection, which also destroys the operation. */
+    /* Disconnect the MQTT connection, then call Wait to clean up the operation. */
     IotMqtt_Disconnect( pMqttConnection, true );
+    IotMqtt_Wait( pOperation, 0 );
 }
 
 /*-----------------------------------------------------------*/
@@ -628,15 +624,17 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
         TEST_ASSERT_EQUAL( IOT_MQTT_TIMEOUT, IotMqtt_Wait( pOperation, 10 ) );
 
         /* Check reference count after a timed out wait. */
-        TEST_ASSERT_EQUAL_UINT8( 1, pOperation->jobReference );
-
-        /* Unblock the send job. */
-        IotSemaphore_Post( &waitSem );
+        IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+        TEST_ASSERT_EQUAL_INT32( 1, pOperation->jobReference );
+        IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
         /* Disconnect the MQTT connection. */
         IotMqtt_Disconnect( pMqttConnection, true );
 
-        while( 1 );
+        /* Clean up the MQTT library, which waits for the send job to finish. The
+         * library must be re-initialized so that test tear down does not crash. */
+        IotMqtt_Cleanup();
+        IotMqtt_Init();
     }
 
     IotSemaphore_Destroy( &waitSem );
