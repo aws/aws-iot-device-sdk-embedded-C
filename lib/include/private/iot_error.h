@@ -52,7 +52,7 @@
 /**
  * @brief Jump to the cleanup area.
  */
-#define IOT_LEAVE()                                 goto Iot_Cleanup
+#define IOT_GOTO_CLEANUP()                          goto Iot_Cleanup
 
 /**
  * @brief Just return.
@@ -65,54 +65,54 @@
 #define IOT_FUNCTION_ENTRY( error_type, result )    error_type error = result
 
 /**
- * @brief Check error and leave in case of failure.
+ * @brief Check error and go to the cleanup area in case of failure.
  */
-#define IOT_CHECK_ERROR( expr )                     { if( IOT_FAILED( error = ( expr ) ) ) { IOT_LEAVE(); } }
+#define IOT_ON_ERROR_GOTO_CLEANUP( expr )           { if( IOT_FAILED( error = ( expr ) ) ) { IOT_GOTO_CLEANUP(); } }
 
 /**
- * @brief Check error and leave in case of success.
+ * @brief Check error and go to the cleanup area in case of success.
  */
-#define IOT_EXIT_ON_SUCCESS( expr )                 { if( IOT_SUCCEEDED( error = ( expr ) ) ) { IOT_LEAVE(); } }
+#define IOT_ON_SUCCESS_GOTO_CLEANUP( expr )         { if( IOT_SUCCEEDED( error = ( expr ) ) ) { IOT_GOTO_CLEANUP(); } }
 
 /**
- * @brief Set error and leave.
+ * @brief Set error and go to the cleanup area.
  */
-#define IOT_SET_AND_LEAVE( expr )                   { error = ( expr ); IOT_LEAVE(); }
+#define IOT_SET_AND_GOTO_CLEANUP( expr )            { error = ( expr ); IOT_GOTO_CLEANUP(); }
 
 /**
  * @brief Initialize error and declare start of cleanup area.
  */
 
-#define IOT_FUNCTION_CLEANUP( prefix )                    Iot_Cleanup :
+#define IOT_FUNCTION_CLEANUP( prefix )                           Iot_Cleanup :
 
 /**
  * @brief Initialize error and declare end of cleanup area.
  */
-#define IOT_FUNCTION_CLEANUP_END()                        IOT_RETURN()
+#define IOT_FUNCTION_CLEANUP_END()                               IOT_RETURN()
 
 /**
  * @brief Create an empty cleanup area.
  */
-#define IOT_NO_FUNCTION_CLEANUP()                         IOT_FUNCTION_CLEANUP(); IOT_FUNCTION_CLEANUP_END()
+#define IOT_NO_FUNCTION_CLEANUP()                                IOT_FUNCTION_CLEANUP(); IOT_FUNCTION_CLEANUP_END()
 
 /**
  * @brief Do not create a cleanup area.
  */
-#define IOT_NO_FUNCTION_CLEANUP_NOLABEL( prefix )         IOT_RETURN()
+#define IOT_NO_FUNCTION_CLEANUP_NOLABEL( prefix )                IOT_RETURN()
 
 /**
  * @brief Exit if the pointer is NULL.
  */
-#define IOT_FAULT_ON_NULL( library_prefix, ptr )          if( !( ptr ) ) IOT_SET_AND_LEAVE( library_prefix ## _NULL_POINTER )
+#define IOT_ON_NULL_GOTO_CLEANUP( library_prefix, ptr )          if( !( ptr ) ) IOT_SET_AND_GOTO_CLEANUP( library_prefix ## _NULL_POINTER )
 
 /**
  * @brief Exit if an argument is NULL.
  */
-#define IOT_FAULT_ON_NULL_ARG( library_prefix, ptr )      if( !( ptr ) ) IOT_SET_AND_LEAVE( library_prefix ## _BAD_PARAMETER )
+#define IOT_ON_NULL_ARG_GOTO_CLEANUP( library_prefix, ptr )      if( !( ptr ) ) IOT_SET_AND_GOTO_CLEANUP( library_prefix ## _BAD_PARAMETER )
 
 /**
  * @brief Exit if an argument is NULL.
  */
-#define IOT_FAULT_ON_ARG_ERROR( library_prefix, expr )    { if( IOT_FAILED( error = ( expr ) ) ) { IOT_SET_AND_LEAVE( library_prefix ## _BAD_PARAMETER ); } }
+#define IOT_ON_ARG_ERROR_GOTO_CLEANUP( library_prefix, expr )    { if( IOT_FAILED( error = ( expr ) ) ) { IOT_SET_AND_GOTO_CLEANUP( library_prefix ## _BAD_PARAMETER ); } }
 
 #endif /* ifndef _IOT_ERROR_H_ */
