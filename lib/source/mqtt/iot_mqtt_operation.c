@@ -78,6 +78,11 @@ static bool _mqttOperation_match( const IotLink_t * pOperationLink,
                                   void * pMatch )
 {
     bool match = false;
+
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    IotMqtt_Assert( pOperationLink != NULL );
+
     _mqttOperation_t * pOperation = IotLink_Container( _mqttOperation_t,
                                                        pOperationLink,
                                                        link );
@@ -543,6 +548,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnec
                                            const uint16_t * const pPacketIdentifier )
 {
     _mqttOperation_t * pResult = NULL;
+    IotLink_t * pResultLink = NULL;
     _operationMatchParam_t param = { 0 };
 
     IotLogDebug( "Searching for in-progress operation %s in MQTT operations pending response.",
@@ -559,17 +565,15 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnec
 
     /* Find the first matching element in the list. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-    pResult = IotLink_Container( _mqttOperation_t,
-                                 IotListDouble_RemoveFirstMatch( &( pMqttConnection->pendingResponse ),
-                                                                 NULL,
-                                                                 _mqttOperation_match,
-                                                                 &param ),
-                                 link );
+    pResultLink = IotListDouble_RemoveFirstMatch( &( pMqttConnection->pendingResponse ),
+                                                  NULL,
+                                                  _mqttOperation_match,
+                                                  &param );
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
     /* The result will be NULL if no corresponding operation was found in the
      * list. */
-    if( pResult == NULL )
+    if( pResultLink == NULL )
     {
         IotLogDebug( "In-progress operation %s not found.",
                      IotMqtt_OperationType( operation ) );
@@ -578,6 +582,8 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnec
     {
         IotLogDebug( "Found in-progress operation %s.",
                      IotMqtt_OperationType( operation ) );
+
+        pResult = IotLink_Container( _mqttOperation_t, pResultLink, link );
     }
 
     return pResult;

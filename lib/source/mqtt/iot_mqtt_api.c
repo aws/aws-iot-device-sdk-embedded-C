@@ -145,6 +145,11 @@ static bool _mqttSubscription_shouldRemove( const IotLink_t * pSubscriptionLink,
                                             void * pMatch )
 {
     bool match = false;
+
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    IotMqtt_Assert( pSubscriptionLink != NULL );
+
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                              pSubscriptionLink,
                                                              link );
@@ -1045,31 +1050,18 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
                                            size_t * const,
                                            uint16_t * const ) = _IotMqtt_SerializePublish;
 
-    /* Choose a PUBLISH serializer function. */
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pMqttConnection->network.serialize.publish != NULL )
-        {
-            serializePublish = pMqttConnection->network.serialize.publish;
-        }
-    #endif
-
     /* Check that the PUBLISH information is valid. */
-    if( _IotMqtt_ValidatePublish( pMqttConnection->awsIotMqttMode,
-                                  pPublishInfo ) == false )
-    {
-        return IOT_MQTT_BAD_PARAMETER;
-    }
+    _validateParameter( _IotMqtt_ValidatePublish( pMqttConnection->awsIotMqttMode,
+                                                  pPublishInfo) == true,
+                                                  NULL );
 
     /* Check that no notification is requested for a QoS 0 publish. */
     if( pPublishInfo->QoS == 0 )
     {
-        if( ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE ) ||
-            ( pCallbackInfo != NULL ) )
-        {
-            IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
-
-            return IOT_MQTT_BAD_PARAMETER;
-        }
+        _validateParameter( pCallbackInfo == NULL,
+                            "QoS 0 PUBLISH should not have notification parameters set." );
+        _validateParameter( ( flags & IOT_MQTT_FLAG_WAITABLE ) == 0,
+                            "QoS 0 PUBLISH should not have notification parameters set." );
 
         if( pPublishRef != NULL )
         {
@@ -1078,12 +1070,10 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     }
 
     /* Check that a reference pointer is provided for a waitable operation. */
-    if( ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE ) &&
-        ( pPublishRef == NULL ) )
+    if( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
     {
-        IotLogError( "Reference must be provided for a waitable PUBLISH." );
-
-        return IOT_MQTT_BAD_PARAMETER;
+        _validateParameter( pPublishRef != NULL,
+                            "Reference must be provided for a waitable PUBLISH." );
     }
 
     /* Create a PUBLISH operation. */
@@ -1101,6 +1091,14 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     IotMqtt_Assert( pPublishOperation->status == IOT_MQTT_STATUS_PENDING );
     pPublishOperation->operation = IOT_MQTT_PUBLISH_TO_SERVER;
 
+    /* Choose a PUBLISH serializer function. */
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+        if( pMqttConnection->network.serialize.publish != NULL )
+        {
+            serializePublish = pMqttConnection->network.serialize.publish;
+        }
+    #endif
+
     /* Generate a PUBLISH packet from pPublishInfo. */
     status = serializePublish( pPublishInfo,
                                &( pPublishOperation->pMqttPacket ),
@@ -1117,15 +1115,6 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     /* Check the serialized MQTT packet. */
     IotMqtt_Assert( pPublishOperation->pMqttPacket != NULL );
     IotMqtt_Assert( pPublishOperation->packetSize > 0 );
-
-    if( pPublishInfo->QoS == 0 )
-    {
-        IotMqtt_Assert( pPublishOperation->packetIdentifier == 0 );
-    }
-    else
-    {
-        IotMqtt_Assert( pPublishOperation->packetIdentifier != 0 );
-    }
 
     /* Initialize PUBLISH retry if retryLimit is set. */
     if( pPublishInfo->retryLimit > 0 )

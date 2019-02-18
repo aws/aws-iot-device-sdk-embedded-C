@@ -93,6 +93,11 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                          void * pMatch )
 {
     uint16_t nameIndex = 0, filterIndex = 0;
+
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    IotMqtt_Assert( pSubscriptionLink != NULL );
+
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                              pSubscriptionLink,
                                                              link );
@@ -192,6 +197,11 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
                           void * pMatch )
 {
     bool match = false;
+
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    IotMqtt_Assert( pSubscriptionLink != NULL );
+
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                              pSubscriptionLink,
                                                              link );
@@ -241,6 +251,7 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * const pMqttConnect
 {
     size_t i = 0;
     _mqttSubscription_t * pNewSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams = { .exactMatchOnly = true };
 
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
@@ -250,15 +261,15 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * const pMqttConnect
         /* Check if this topic filter is already registered. */
         topicMatchParams.pTopicName = pSubscriptionList[ i ].pTopicFilter;
         topicMatchParams.topicNameLength = pSubscriptionList[ i ].topicFilterLength;
-        pNewSubscription = IotLink_Container( _mqttSubscription_t,
-                                              IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                                            NULL,
-                                                                            _topicMatch,
-                                                                            &topicMatchParams ),
-                                              link );
+        pSubscriptionLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+                                                          NULL,
+                                                          _topicMatch,
+                                                          &topicMatchParams );
 
-        if( pNewSubscription != NULL )
+        if( pSubscriptionLink != NULL )
         {
+            pNewSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
+
             /* The lengths of exactly matching topic filters must match. */
             IotMqtt_Assert( pNewSubscription->topicFilterLength == pSubscriptionList[ i ].topicFilterLength );
 
@@ -314,7 +325,6 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
                                           IotMqttCallbackParam_t * const pCallbackParam )
 {
     _mqttSubscription_t * pSubscription = NULL;
-    IotLink_t * pStartPoint = NULL;
     void * pParam1 = NULL;
 
     void ( * callbackFunction )( void *,
@@ -337,14 +347,13 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
     /* Prevent any other thread from modifying the subscription list while this
      * function is searching. */
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
-    pStartPoint = IotListDouble_PeekHead( &( pMqttConnection->subscriptionList ) );
 
     /* Search the subscription list for all matching subscriptions. */
-    while( pStartPoint != NULL )
+    IotListDouble_ForEachSafe( &( pMqttConnection->subscriptionList ), iterator )
     {
         pSubscription = IotLink_Container( _mqttSubscription_t,
                                            IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                                         pStartPoint,
+                                                                         iterator.pCurrentLink,
                                                                          _topicMatch,
                                                                          ( void * ) ( &topicMatchParams ) ),
                                            link );
@@ -383,9 +392,6 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
         /* Decrement the reference count. It must still be positive. */
         ( pSubscription->references )--;
         IotMqtt_Assert( pSubscription->references >= 0 );
-
-        /* Restart the search at the next subscription. */
-        pStartPoint = pSubscription->link.pNext;
 
         /* Remove this subscription if it has no references and the unsubscribed
          * flag is set. */
@@ -428,6 +434,7 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * const pMqttCo
 {
     size_t i = 0;
     _mqttSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams = { 0 };
 
     /* Prevent any other thread from modifying the subscription list while this
@@ -441,15 +448,15 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * const pMqttCo
         topicMatchParams.topicNameLength = pSubscriptionList[ i ].topicFilterLength;
         topicMatchParams.exactMatchOnly = true;
 
-        pSubscription = IotLink_Container( _mqttSubscription_t,
-                                           IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                                         NULL,
-                                                                         _topicMatch,
-                                                                         &topicMatchParams ),
-                                           link );
+        pSubscriptionLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+                                                          NULL,
+                                                          _topicMatch,
+                                                          &topicMatchParams );
 
-        if( pSubscription != NULL )
+        if( pSubscriptionLink != NULL )
         {
+            pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
+
             /* Reference count must not be negative. */
             IotMqtt_Assert( pSubscription->references >= 0 );
 
@@ -483,6 +490,7 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
     bool status = false;
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
     _mqttSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams =
     {
         .pTopicName      = pTopicFilter,
@@ -495,16 +503,16 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
 
     /* Search for a matching subscription. */
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     _topicMatch,
-                                                                     &topicMatchParams ),
-                                       link );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      _topicMatch,
+                                                      &topicMatchParams );
 
     /* Check if a matching subscription was found. */
-    if( pSubscription != NULL )
+    if( pSubscriptionLink != NULL )
     {
+        pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
+
         /* Copy the matching subscription to the output parameter. */
         if( pCurrentSubscription != NULL )
         {

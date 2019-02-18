@@ -154,6 +154,10 @@ IotMutex_t _AwsIotShadowPendingOperationsMutex;
 static bool _shadowOperation_match( const IotLink_t * pOperationLink,
                                     void * pMatch )
 {
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    AwsIotShadow_Assert( pOperationLink != NULL );
+
     _shadowOperation_t * const pOperation = IotLink_Container( _shadowOperation_t,
                                                                pOperationLink,
                                                                link );
@@ -215,6 +219,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
                                       IotMqttCallbackParam_t * const pMessage )
 {
     _shadowOperation_t * pOperation = NULL;
+    IotLink_t * pOperationLink = NULL;
     _shadowOperationStatus_t status = _UNKNOWN_STATUS;
     _operationMatchParams_t param = { 0 };
     uint32_t flags = 0;
@@ -242,15 +247,13 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     IotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
 
     /* Search for a matching pending operation. */
-    pOperation = IotLink_Container( _shadowOperation_t,
-                                    IotListDouble_FindFirstMatch( &( _AwsIotShadowPendingOperations ),
-                                                                  NULL,
-                                                                  _shadowOperation_match,
-                                                                  &param ),
-                                    link );
+    pOperationLink = IotListDouble_FindFirstMatch( &( _AwsIotShadowPendingOperations ),
+                                                   NULL,
+                                                   _shadowOperation_match,
+                                                   &param );
 
     /* Find and remove the first Shadow operation of the given type. */
-    if( pOperation == NULL )
+    if( pOperationLink == NULL )
     {
         /* Operation is not pending. It may have already been processed. Return
          * without doing anything */
@@ -263,6 +266,8 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     }
     else
     {
+        pOperation = IotLink_Container( _shadowOperation_t, pOperationLink, link );
+
         /* Remove a non-waitable operation from the pending operation list. */
         if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0 )
         {

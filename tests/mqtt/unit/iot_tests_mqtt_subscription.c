@@ -459,41 +459,38 @@ TEST( MQTT_Unit_Subscription, ListInsertRemove )
 TEST( MQTT_Unit_Subscription, ListFindByTopicFilter )
 {
     _mqttSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams = { 0 };
 
     topicMatchParams.pTopicName = "/test0";
     topicMatchParams.topicNameLength = 6;
 
     /* On empty list. */
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     IotTestMqtt_topicMatch,
-                                                                     &topicMatchParams ),
-                                       link );
-    TEST_ASSERT_EQUAL_PTR( NULL, pSubscription );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      IotTestMqtt_topicMatch,
+                                                      &topicMatchParams );
+    TEST_ASSERT_EQUAL_PTR( NULL, pSubscriptionLink );
 
     _populateList();
 
     /* Topic filter present. */
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     IotTestMqtt_topicMatch,
-                                                                     &topicMatchParams ),
-                                       link );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      IotTestMqtt_topicMatch,
+                                                      &topicMatchParams );
+    TEST_ASSERT_NOT_EQUAL( NULL, pSubscriptionLink );
+    pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
     TEST_ASSERT_NOT_EQUAL( NULL, pSubscription );
 
     /* Topic filter not present. */
     topicMatchParams.pTopicName = "/notpresent";
     topicMatchParams.topicNameLength = 11;
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     IotTestMqtt_topicMatch,
-                                                                     &topicMatchParams ),
-                                       link );
-    TEST_ASSERT_EQUAL_PTR( NULL, pSubscription );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      IotTestMqtt_topicMatch,
+                                                      &topicMatchParams );
+    TEST_ASSERT_EQUAL_PTR( NULL, pSubscriptionLink );
 }
 
 /*-----------------------------------------------------------*/
@@ -503,63 +500,56 @@ TEST( MQTT_Unit_Subscription, ListFindByTopicFilter )
  */
 TEST( MQTT_Unit_Subscription, ListFindByPacket )
 {
-    _mqttSubscription_t * pSubscription = 0;
+    _mqttSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _packetMatchParams_t packetMatchParams = { 0 };
 
     packetMatchParams.packetIdentifier = 1;
     packetMatchParams.order = 0;
 
     /* On empty list. */
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     IotTestMqtt_packetMatch,
-                                                                     &packetMatchParams ),
-                                       link );
-    TEST_ASSERT_EQUAL_PTR( NULL, pSubscription );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      IotTestMqtt_packetMatch,
+                                                      &packetMatchParams );
+    TEST_ASSERT_EQUAL_PTR( NULL, pSubscriptionLink );
 
     _populateList();
 
     /* Packet and order present. */
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     IotTestMqtt_packetMatch,
-                                                                     &packetMatchParams ),
-                                       link );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      IotTestMqtt_packetMatch,
+                                                      &packetMatchParams );
+    TEST_ASSERT_NOT_EQUAL( NULL, pSubscriptionLink );
+    pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
     TEST_ASSERT_NOT_EQUAL( NULL, pSubscription );
 
     /* Packet present, order not present. */
     packetMatchParams.order = _LIST_ITEM_COUNT;
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     IotTestMqtt_packetMatch,
-                                                                     &packetMatchParams ),
-                                       link );
-    TEST_ASSERT_EQUAL_PTR( NULL, pSubscription );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      IotTestMqtt_packetMatch,
+                                                      &packetMatchParams );
+    TEST_ASSERT_EQUAL_PTR( NULL, pSubscriptionLink );
 
     /* Packet not present, order present. */
     packetMatchParams.packetIdentifier = 0;
     packetMatchParams.order = 0;
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     IotTestMqtt_packetMatch,
-                                                                     &packetMatchParams ),
-                                       link );
-    TEST_ASSERT_EQUAL_PTR( NULL, pSubscription );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      IotTestMqtt_packetMatch,
+                                                      &packetMatchParams );
+    TEST_ASSERT_EQUAL_PTR( NULL, pSubscriptionLink );
 
     /* Packet and order not present. */
     packetMatchParams.packetIdentifier = 0;
     packetMatchParams.order = _LIST_ITEM_COUNT;
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     IotTestMqtt_packetMatch,
-                                                                     &packetMatchParams ),
-                                       link );
-    TEST_ASSERT_EQUAL_PTR( NULL, pSubscription );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      IotTestMqtt_packetMatch,
+                                                      &packetMatchParams );
+    TEST_ASSERT_EQUAL_PTR( NULL, pSubscriptionLink );
 }
 
 /*-----------------------------------------------------------*/
@@ -665,6 +655,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionAddDuplicate )
 {
     size_t i = 0;
     _mqttSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams = { 0 };
     char pTopicFilters[ _LIST_ITEM_COUNT ][ _TEST_TOPIC_FILTER_LENGTH ] = { { 0 } };
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
@@ -703,12 +694,12 @@ TEST( MQTT_Unit_Subscription, SubscriptionAddDuplicate )
     topicMatchParams.pTopicName = "/test1";
     topicMatchParams.topicNameLength = 6;
     topicMatchParams.exactMatchOnly = true;
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     IotTestMqtt_topicMatch,
-                                                                     &topicMatchParams ),
-                                       link );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      IotTestMqtt_topicMatch,
+                                                      &topicMatchParams );
+    TEST_ASSERT_NOT_EQUAL( NULL, pSubscriptionLink );
+    pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
     TEST_ASSERT_NOT_EQUAL( NULL, pSubscription );
 
     /* Check that the information was changed. */
@@ -720,13 +711,11 @@ TEST( MQTT_Unit_Subscription, SubscriptionAddDuplicate )
     /* Check that a duplicate entry wasn't created. */
     IotListDouble_Remove( &( pSubscription->link ) );
     IotMqtt_FreeSubscription( pSubscription );
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     IotTestMqtt_topicMatch,
-                                                                     &topicMatchParams ),
-                                       link );
-    TEST_ASSERT_EQUAL_PTR( NULL, pSubscription );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      IotTestMqtt_topicMatch,
+                                                      &topicMatchParams );
+    TEST_ASSERT_EQUAL_PTR( NULL, pSubscriptionLink );
 }
 
 /*-----------------------------------------------------------*/
@@ -970,6 +959,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
     pSubscriptionLink = IotListDouble_PeekHead( &( _pMqttConnection->subscriptionList ) );
     TEST_ASSERT_NOT_NULL( pSubscriptionLink );
     pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
+    TEST_ASSERT_NOT_NULL( pSubscription );
 
     /* Create 3 incoming PUBLISH messages that match the subscription. */
     for( i = 0; i < 3; i++ )

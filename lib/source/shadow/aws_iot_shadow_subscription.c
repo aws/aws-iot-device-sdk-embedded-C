@@ -101,6 +101,11 @@ static bool _shadowSubscription_match( const IotLink_t * pSubscriptionLink,
                                        void * pMatch )
 {
     bool match = false;
+
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    AwsIotShadow_Assert( pSubscriptionLink != NULL );
+
     const _shadowSubscription_t * const pSubscription = IotLink_Container( _shadowSubscription_t,
                                                                            pSubscriptionLink,
                                                                            link );
@@ -187,6 +192,7 @@ _shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * const pThin
                                                         size_t thingNameLength )
 {
     _shadowSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _thingName_t thingName =
     {
         .pThingName      = pThingName,
@@ -194,15 +200,13 @@ _shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * const pThin
     };
 
     /* Search the list for an existing subscription for Thing Name. */
-    pSubscription = IotLink_Container( _shadowSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _AwsIotShadowSubscriptions ),
-                                                                     NULL,
-                                                                     _shadowSubscription_match,
-                                                                     &thingName ),
-                                       link );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _AwsIotShadowSubscriptions ),
+                                                      NULL,
+                                                      _shadowSubscription_match,
+                                                      &thingName );
 
     /* Check if a subscription was found. */
-    if( pSubscription == NULL )
+    if( pSubscriptionLink == NULL )
     {
         /* No subscription found. Allocate a new subscription. */
         pSubscription = AwsIotShadow_MallocSubscription( sizeof( _shadowSubscription_t ) + thingNameLength );
@@ -236,6 +240,8 @@ _shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * const pThin
         IotLogDebug( "Found existing Shadow subscriptions object for %.*s.",
                      thingNameLength,
                      pThingName );
+
+        pSubscription = IotLink_Container( _shadowSubscription_t, pSubscriptionLink, link );
     }
 
     return pSubscription;
@@ -548,6 +554,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
     AwsIotShadowError_t removeAcceptedStatus = AWS_IOT_SHADOW_STATUS_PENDING,
                         removeRejectedStatus = AWS_IOT_SHADOW_STATUS_PENDING;
     _shadowSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _thingName_t thingName =
     {
         .pThingName      = pThingName,
@@ -561,20 +568,20 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
     IotMutex_Lock( &( _AwsIotShadowSubscriptionsMutex ) );
 
     /* Search the list for an existing subscription for Thing Name. */
-    pSubscription = IotLink_Container( _shadowSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( _AwsIotShadowSubscriptions ),
-                                                                     NULL,
-                                                                     _shadowSubscription_match,
-                                                                     &thingName ),
-                                       link );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _AwsIotShadowSubscriptions ),
+                                                      NULL,
+                                                      _shadowSubscription_match,
+                                                      &thingName );
 
     /* Unsubscribe from operation subscriptions if found. */
-    if( pSubscription != NULL )
+    if( pSubscriptionLink != NULL )
     {
         IotLogDebug( "Found subscription object for %.*s. Checking for persistent "
                      "subscriptions to remove.",
                      thingNameLength,
                      pThingName );
+
+        pSubscription = IotLink_Container( _shadowSubscription_t, pSubscriptionLink, link );
 
         for( i = 0; i < _SHADOW_OPERATION_COUNT; i++ )
         {
