@@ -531,9 +531,10 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
     _mqttOperation_t * pOperation = ( _mqttOperation_t * ) pContext;
     _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
 
-    IotLogDebug( "Send job started for %s operation %p.",
+    IotLogDebug( "Send job started for %s operation %p (MQTT connection %p).",
                  IotMqtt_OperationType( pOperation->operation ),
-                 pOperation );
+                 pOperation,
+                 pMqttConnection );
 
     /* The given operation must have an allocated packet and be waiting for a status. */
     IotMqtt_Assert( pOperation->pMqttPacket != NULL );
@@ -590,8 +591,6 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
                         {
                             IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
                             _IotMqtt_DestroyOperation( pOperation );
-
-                            return;
                         }
                         else
                         {

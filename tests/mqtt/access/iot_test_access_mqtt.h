@@ -84,7 +84,7 @@ typedef struct _topicMatchParams
 typedef struct _packetMatchParams
 {
     uint16_t packetIdentifier;
-    long order;
+    int32_t order;
 } _packetMatchParams_t;
 
 /**
