@@ -417,8 +417,8 @@ typedef struct _mqttOperation
 
             struct
             {
-                int count;
-                int limit;
+                uint32_t count;
+                uint32_t limit;
                 uint64_t nextPeriod;
             } retry;
         };
@@ -933,7 +933,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
  */
 void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * const pMqttConnection,
                                           uint16_t packetIdentifier,
-                                          long order );
+                                          int32_t order );
 
 /**
  * @brief Remove an array of subscriptions from the subscription manager by

@@ -57,7 +57,7 @@ typedef struct _topicMatchParams
 typedef struct _packetMatchParams
 {
     uint16_t packetIdentifier; /**< Packet identifier to match. */
-    long order;                /**< Order to match. Set to `-1` to ignore. */
+    int32_t order;             /**< Order to match. Set to `-1` to ignore. */
 } _packetMatchParams_t;
 
 /*-----------------------------------------------------------*/
@@ -411,7 +411,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
 
 void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * const pMqttConnection,
                                           uint16_t packetIdentifier,
-                                          long order )
+                                          int32_t order )
 {
     const _packetMatchParams_t packetMatchParams =
     {

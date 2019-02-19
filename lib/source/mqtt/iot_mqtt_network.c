@@ -602,6 +602,9 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * const pMqttConnection 
              * function must be followed with a call to DISCONNECT, a check to
              * destroy the connection is not done here. */
             pMqttConnection->references--;
+
+            IotLogDebug( "Keep-alive job for MQTT connection %p canceled and cleaned up.",
+                         pMqttConnection );
         }
     }
 
@@ -612,10 +615,13 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * const pMqttConnection 
     if( pMqttConnection->network.disconnect != NULL )
     {
         pMqttConnection->network.disconnect( 0, pMqttConnection->network.pDisconnectContext );
+
+        IotLogInfo( "Network connection of MQTT connection %p closed.", pMqttConnection );
     }
     else
     {
-        IotLogWarn( "No disconnect function was set. Network connection not closed." );
+        IotLogWarn( "No disconnect function was set. Network connection of MQTT "
+                    "connection %p not closed.", pMqttConnection );
     }
 }
 

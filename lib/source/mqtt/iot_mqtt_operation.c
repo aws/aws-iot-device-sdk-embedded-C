@@ -65,6 +65,13 @@ typedef struct _operationMatchParam
 static bool _mqttOperation_match( const IotLink_t * pOperationLink,
                                   void * pMatch );
 
+/**
+ * @brief Schedule the next send of an operation with retry.
+ *
+ * @param[in] pOperation The operation to retry.
+ */
+static IotMqttError_t _scheduleNextRetry( _mqttOperation_t * pOperation );
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -103,6 +110,13 @@ static bool _mqttOperation_match( const IotLink_t * pOperationLink,
     }
 
     return match;
+}
+
+/*-----------------------------------------------------------*/
+
+static IotMqttError_t _scheduleNextRetry( _mqttOperation_t * pOperation )
+{
+    return IOT_MQTT_SCHEDULING_ERROR;
 }
 
 /*-----------------------------------------------------------*/
@@ -226,6 +240,11 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
     /* Decrement job reference count. */
     if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
     {
+        IotLogDebug( "Job of %s operation %p (MQTT connection %p) canceled.",
+                     IotMqtt_OperationType( pOperation->operation ),
+                     pOperation,
+                     pMqttConnection );
+
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
         pOperation->jobReference--;
 
@@ -251,9 +270,13 @@ void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
 {
     _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
 
-    IotLogDebug( "Attempting to destroy %s operation %p.",
+    /* Default free packet function. */
+    void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
+
+    IotLogDebug( "Destroying %s operation %p (MQTT connection %p).",
                  IotMqtt_OperationType( pOperation->operation ),
-                 pOperation );
+                 pOperation,
+                 pMqttConnection );
 
     /* The job reference count must be between 0 and 2. */
     IotMqtt_Assert( ( pOperation->jobReference >= 0 ) &&
@@ -265,17 +288,26 @@ void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
 
     if( IotLink_IsLinked( &( pOperation->link ) ) == true )
     {
+        IotLogDebug( "Removed %s operation %p from lists of MQTT connection %p.",
+                     IotMqtt_OperationType( pOperation->operation ),
+                     pOperation,
+                     pMqttConnection );
+
         IotListDouble_Remove( &( pOperation->link ) );
+    }
+    else
+    {
+        IotLogDebug( "%s operation %p was not present in lists of MQTT connection %p.",
+                     IotMqtt_OperationType( pOperation->operation ),
+                     pOperation,
+                     pMqttConnection );
     }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-    /* If the MQTT packet is still allocated, free it. */
+    /* Free any allocated MQTT packet. */
     if( pOperation->pMqttPacket != NULL )
     {
-        /* Choose a free packet function. */
-        void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
-
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
             if( pMqttConnection->network.freePacket != NULL )
             {
@@ -284,17 +316,35 @@ void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
         #endif
 
         freePacket( pOperation->pMqttPacket );
+
+        IotLogDebug( "MQTT packet of %s operation %p (MQTT connection %p) freed.",
+                     IotMqtt_OperationType( pOperation->operation ),
+                     pOperation,
+                     pMqttConnection );
+    }
+    else
+    {
+        IotLogDebug( "%s operation %p (MQTT connection %p) has no allocated MQTT packet.",
+                     IotMqtt_OperationType( pOperation->operation ),
+                     pOperation,
+                     pMqttConnection );
     }
 
     /* Check if a wait semaphore was created for this operation. */
     if( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
     {
         IotSemaphore_Destroy( &( pOperation->notify.waitSemaphore ) );
+
+        IotLogDebug( "Wait semaphore of %s operation %p (MQTT connection %p) destroyed.",
+                     IotMqtt_OperationType( pOperation->operation ),
+                     pOperation,
+                     pMqttConnection );
     }
 
-    IotLogDebug( "%s operation %p destroyed.",
+    IotLogDebug( "%s operation %p (MQTT connection %p) destroyed.",
                  IotMqtt_OperationType( pOperation->operation ),
-                 pOperation );
+                 pOperation,
+                 pMqttConnection );
 
     /* Free the memory used to hold operation data. */
     IotMqtt_FreeOperation( pOperation );
@@ -311,7 +361,6 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
                                 void * pContext )
 {
     bool status = true;
-    uint64_t nextJobRuntime = 0;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
 
     /* Retrieve the MQTT connection from the context. */
@@ -329,7 +378,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
     IotMqtt_Assert( ( pMqttConnection->nextKeepAliveMs == pMqttConnection->keepAliveMs ) ||
                     ( pMqttConnection->nextKeepAliveMs == IOT_MQTT_RESPONSE_WAIT_MS ) );
 
-    IotLogDebug( "Keep-alive job started." );
+    IotLogDebug( "Keep-alive job started for MQTT connection %p.", pMqttConnection );
 
     /* Re-create the keep-alive job for rescheduling. This should never fail. */
     taskPoolStatus = IotTaskPool_CreateJob( _IotMqtt_ProcessKeepAlive,
@@ -342,7 +391,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
     /* Determine whether to send a PINGREQ or check for PINGRESP. */
     if( pMqttConnection->nextKeepAliveMs == pMqttConnection->keepAliveMs )
     {
-        IotLogDebug( "Sending PINGREQ." );
+        IotLogDebug( "Sending PINGREQ for MQTT connection %p.", pMqttConnection );
 
         /* Because PINGREQ may be used to keep the MQTT connection alive, it is
          * more important than other operations. Bypass the queue of jobs for
@@ -351,7 +400,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
                                            pMqttConnection->pPingreqPacket,
                                            pMqttConnection->pingreqPacketSize ) != pMqttConnection->pingreqPacketSize )
         {
-            IotLogError( "Failed to send PINGREQ." );
+            IotLogError( "Failed to send PINGREQ for MQTT connection %p.", pMqttConnection );
             status = false;
         }
         else
@@ -361,25 +410,33 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
             pMqttConnection->keepAliveFailure = true;
 
             /* Schedule a check for PINGRESP. */
-            IotLogDebug( "PINGREQ sent. Scheduling check for PINGRESP in %d ms.",
-                         IOT_MQTT_RESPONSE_WAIT_MS );
             pMqttConnection->nextKeepAliveMs = IOT_MQTT_RESPONSE_WAIT_MS;
+
+            IotLogDebug( "PINGREQ sent for MQTT connection %p. Scheduling check "
+                         "for PINGRESP in %d ms.",
+                         pMqttConnection,
+                         IOT_MQTT_RESPONSE_WAIT_MS );
         }
     }
     else
     {
-        IotLogDebug( "Checking for PINGRESP." );
+        IotLogDebug( "Checking for PINGRESP for MQTT connection %p.", pMqttConnection );
 
         if( pMqttConnection->keepAliveFailure == false )
         {
+            IotLogDebug( "PINGRESP was received for MQTT connection %p.", pMqttConnection );
+
             /* PINGRESP was received. Schedule the next PINGREQ transmission. */
-            IotLogDebug( "PINGRESP was received." );
             pMqttConnection->nextKeepAliveMs = pMqttConnection->keepAliveMs;
         }
         else
         {
+            IotLogError( "Failed to receive PINGRESP within %d ms for MQTT "
+                         "connection %p.",
+                         pMqttConnection,
+                         IOT_MQTT_RESPONSE_WAIT_MS );
+
             /* The network receive callback did not clear the failure flag. */
-            IotLogError( "Failed to receive PINGRESP within %d ms.", IOT_MQTT_RESPONSE_WAIT_MS );
             status = false;
         }
     }
@@ -394,12 +451,17 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
 
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
-            IotLogDebug( "Rescheduled keep-alive job to check for PINGRESP in %d ms.",
+            IotLogDebug( "Rescheduled keep-alive job for MQTT connection %p to "
+                         "check for PINGRESP in %d ms.",
+                         pMqttConnection,
                          IOT_MQTT_RESPONSE_WAIT_MS );
         }
         else
         {
-            IotLogError( "Failed to reschedule keep-alive job for PINGRESP check." );
+            IotLogError( "Failed to reschedule keep-alive job for PINGRESP check "
+                         "for MQTT connection %p.",
+                         pMqttConnection );
+
             status = false;
         }
     }
@@ -476,23 +538,102 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
     /* The given operation must have an allocated packet and be waiting for a status. */
     IotMqtt_Assert( pOperation->pMqttPacket != NULL );
     IotMqtt_Assert( pOperation->packetSize != 0 );
+    IotMqtt_Assert( pOperation->jobReference >= 1 );
     IotMqtt_Assert( pOperation->status == IOT_MQTT_STATUS_PENDING );
 
-    /* Transmit the MQTT packet from the operation over the network. */
-    if( pMqttConnection->network.send( pMqttConnection->network.pSendContext,
-                                       pOperation->pMqttPacket,
-                                       pOperation->packetSize ) != pOperation->packetSize )
+    /* Check if operation with retry has reached its limit. */
+    if( pOperation->retry.limit > 0 )
     {
-        IotLogError( "Failed to send MQTT packet for %s operation %p.",
-                     IotMqttOperationType( pOperation->operation ),
-                     pOperation );
+        /* Only PUBLISH may be retried. */
+        IotMqtt_Assert( pOperation->operation == IOT_MQTT_PUBLISH_TO_SERVER );
 
-        pOperation->status = IOT_MQTT_NETWORK_ERROR;
+        if( pOperation->retry.count == pOperation->retry.limit )
+        {
+            pOperation->status = IOT_MQTT_RETRY_NO_RESPONSE;
+        }
+    }
+    else
+    {
+        /* Transmit the MQTT packet from the operation over the network. */
+        if( pMqttConnection->network.send( pMqttConnection->network.pSendContext,
+                                           pOperation->pMqttPacket,
+                                           pOperation->packetSize ) != pOperation->packetSize )
+        {
+            IotLogError( "Failed to send MQTT packet for %s operation %p.",
+                         IotMqttOperationType( pOperation->operation ),
+                         pOperation );
+
+            pOperation->status = IOT_MQTT_NETWORK_ERROR;
+        }
+        else
+        {
+            /* DISCONNECT operations are considered successful upon successful
+             * transmission. */
+            if( pOperation->operation == IOT_MQTT_DISCONNECT )
+            {
+                pOperation->status = IOT_MQTT_SUCCESS;
+            }
+            /* Move other operations from pending processing to pending response. */
+            else
+            {
+                if( pOperation->retry.limit > 0 )
+                {
+                    pOperation->status = _scheduleNextRetry( pOperation );
+                }
+                else
+                {
+                    if( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
+                    {
+                        IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+
+                        if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == true )
+                        {
+                            IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+                            _IotMqtt_DestroyOperation( pOperation );
+
+                            return;
+                        }
+                        else
+                        {
+                            /* Operation must be linked. */
+                            IotMqtt_Assert( IotLink_IsLinked( &( pOperation->link ) ) );
+
+                            IotListDouble_Remove( &( pOperation->link ) );
+                            IotListDouble_InsertHead( &( pMqttConnection->pendingResponse ),
+                                                      &( pOperation->link ) );
+
+                            IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+                        }
+                    }
+                    else
+                    {
+                        if( pOperation->notify.callback.function == NULL )
+                        {
+                            pOperation->status = IOT_MQTT_SUCCESS;
+                        }
+                        else
+                        {
+                            IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+
+                            /* Operation must be linked. */
+                            IotMqtt_Assert( IotLink_IsLinked( &( pOperation->link ) ) );
+
+                            IotListDouble_Remove( &( pOperation->link ) );
+                            IotListDouble_InsertHead( &( pMqttConnection->pendingResponse ),
+                                                      &( pOperation->link ) );
+
+                            IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == true )
+    /* Notify of operation completion if this job set a status. */
+    if( pOperation->status != IOT_MQTT_STATUS_PENDING )
     {
-        _IotMqtt_DestroyOperation( pOperation );
+        _IotMqtt_Notify( pOperation );
     }
 }
 
@@ -593,36 +734,49 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnec
 
 void _IotMqtt_Notify( _mqttOperation_t * const pOperation )
 {
+    /* Check if operation is waitable. */
+    bool waitable = ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE;
+
     /* Remove any lingering subscriptions if a SUBSCRIBE failed. Rejected
      * subscriptions are removed by the deserializer, so not removed here. */
-    if( ( pOperation->operation == IOT_MQTT_SUBSCRIBE ) &&
-        ( pOperation->status != IOT_MQTT_SUCCESS ) &&
-        ( pOperation->status != IOT_MQTT_SERVER_REFUSED ) )
+    if( pOperation->operation == IOT_MQTT_SUBSCRIBE )
     {
-        _IotMqtt_RemoveSubscriptionByPacket( pOperation->pMqttConnection,
-                                             pOperation->packetIdentifier,
-                                             -1 );
+        if( ( pOperation->status != IOT_MQTT_SUCCESS ) &&
+            ( pOperation->status != IOT_MQTT_SERVER_REFUSED ) )
+        {
+            _IotMqtt_RemoveSubscriptionByPacket( pOperation->pMqttConnection,
+                                                 pOperation->packetIdentifier,
+                                                 -1 );
+        }
     }
 
-    /* If the operation is waitable, post to its wait semaphore and return.
-     * Otherwise, enqueue it for callback. */
-    if( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
+    /* Check if a callback function is set. */
+    if( pOperation->notify.callback.function != NULL )
     {
-        IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
+        /* A waitable operation may not have a callback. */
+        IotMqtt_Assert( waitable == false );
+
+        /* Non-waitable operation should have job reference of 1. */
+        IotMqtt_Assert( pOperation->jobReference == 1 );
+
+        /* Schedule an invocation of the callback. */
+        if( _IotMqtt_ScheduleOperation( pOperation,
+                                        _IotMqtt_ProcessCompletedOperation ) != IOT_MQTT_SUCCESS )
+        {
+            IotLogWarn( "Failed to schedule callback job." );
+        }
     }
     else
     {
-        if( pOperation->notify.callback.function != NULL )
+        /* For a waitable operation, post to the wait semaphore. */
+        if( waitable == true )
         {
-            if( _IotMqtt_ScheduleOperation( pOperation,
-                                            _IotMqtt_ProcessCompletedOperation ) != IOT_MQTT_SUCCESS )
-            {
-                IotLogWarn( "Failed to schedule callback job." );
-            }
+            IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
         }
-        else
+
+        /* Decrement reference count of operations with no callback. */
+        if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == true )
         {
-            /* Destroy the operation if no callback was set. */
             _IotMqtt_DestroyOperation( pOperation );
         }
     }

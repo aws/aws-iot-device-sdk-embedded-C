@@ -1,4 +1,4 @@
-    /*
+/*
  * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -1052,8 +1052,8 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
 
     /* Check that the PUBLISH information is valid. */
     _validateParameter( _IotMqtt_ValidatePublish( pMqttConnection->awsIotMqttMode,
-                                                  pPublishInfo) == true,
-                                                  NULL );
+                                                  pPublishInfo ) == true,
+                        NULL );
 
     /* Check that no notification is requested for a QoS 0 publish. */
     if( pPublishInfo->QoS == 0 )
@@ -1218,7 +1218,20 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
 
     if( pMqttConnection->disconnected == true )
     {
+        IotLogError( "%s operation %p associated with closed MQTT connection %p "
+                     "and cannot be waited on.",
+                     IotMqtt_OperationType( pOperation->operation ),
+                     pOperation,
+                     pMqttConnection );
+
         status = IOT_MQTT_NETWORK_ERROR;
+    }
+    else
+    {
+        IotLogInfo( "Waiting for %s operation %p (MQTT connection %p) to complete.",
+                    IotMqtt_OperationType( pOperation->operation ),
+                    pOperation,
+                    pMqttConnection );
     }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
@@ -1226,19 +1239,39 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
     /* Only wait on an operation if the MQTT connection is active. */
     if( status == IOT_MQTT_SUCCESS )
     {
-        IotLogInfo( "Waiting for %s operation %p to complete.",
-                    IotMqtt_OperationType( pOperation->operation ),
-                    pOperation );
-
         if( IotSemaphore_TimedWait( &( pOperation->notify.waitSemaphore ),
                                     timeoutMs ) == false )
         {
             status = IOT_MQTT_TIMEOUT;
+
+            /* Attempt to cancel the job of the timed out operation. */
+            ( void ) _IotMqtt_DecrementOperationReferences( pOperation, true );
+
+            /* Clean up lingering subscriptions from a timed-out SUBSCRIBE. */
+            if( pOperation->operation == IOT_MQTT_SUBSCRIBE )
+            {
+                IotLogDebug( "Cleaning up subscriptions of timed-out SUBSCRIBE "
+                             "operation %p (MQTT connection %p).",
+                             pOperation,
+                             pMqttConnection );
+
+                IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
+                _IotMqtt_RemoveSubscriptionByPacket( pMqttConnection,
+                                                     pOperation->packetIdentifier,
+                                                     -1 );
+                IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+            }
+        }
+        else
+        {
+            /* Retreive the status of the completed operation. */
+            status = pOperation->status;
         }
 
-        IotLogInfo( "%s operation %p complete with result %s.",
+        IotLogInfo( "Wait on %s operation %p (MQTT connection %p) complete with result %s.",
                     IotMqtt_OperationType( pOperation->operation ),
                     pOperation,
+                    pMqttConnection,
                     IotMqtt_strerror( status ) );
     }
 
