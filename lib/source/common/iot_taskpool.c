@@ -380,12 +380,6 @@ IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t * pTaskPool,
     _TASKPOOL_ON_ARG_ERROR_GOTO_CLEANUP( pTaskPool->minThreads > maxThreads );
     _TASKPOOL_ON_ARG_ERROR_GOTO_CLEANUP( maxThreads < 1 );
 
-    /* Bail out early if this task pool is shutting down. */
-    if( _IsShutdownStarted( pTaskPool ) )
-    {
-        _TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS );
-    }
-
     _TASKPOOL_ENTER_CRITICAL_SECTION;
     {
         /* Bail out early if this task pool is shutting down. */
@@ -455,12 +449,6 @@ IotTaskPoolError_t IotTaskPool_CreateRecyclableJob( IotTaskPool_t * const pTaskP
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( userCallback );
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( ppJob );
 
-    /* Bail out early if this task pool is shutting down. */
-    if( _IsShutdownStarted( pTaskPool ) )
-    {
-        _TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS );
-    }
-
     {
         IotTaskPoolJob_t * pTempJob = NULL;
 
@@ -508,12 +496,6 @@ IotTaskPoolError_t IotTaskPool_DestroyJob( IotTaskPool_t * const pTaskPool,
     /* Parameter checking. */
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pJob );
 
-    /* Bail out early if this task pool is shutting down. */
-    if( _IsShutdownStarted( pTaskPool ) )
-    {
-        _TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS );
-    }
-
     _TASKPOOL_ENTER_CRITICAL_SECTION;
     {
         /* Bail out early if this task pool is shutting down. */
@@ -551,12 +533,6 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t * const pTaskPool,
     /* Parameter checking. */
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pTaskPool );
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pJob );
-
-    /* Bail out early if this task pool is shutting down. */
-    if( _IsShutdownStarted( pTaskPool ) )
-    {
-        _TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS );
-    }
 
     _TASKPOOL_ENTER_CRITICAL_SECTION;
     {
@@ -602,12 +578,6 @@ IotTaskPoolError_t IotTaskPool_Schedule( IotTaskPool_t * const pTaskPool,
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pTaskPool );
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pJob );
 
-    /* Bail out early if this task pool is shutting down. */
-    if( _IsShutdownStarted( pTaskPool ) )
-    {
-        _TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS );
-    }
-
     _TASKPOOL_ENTER_CRITICAL_SECTION;
     {
         /* Bail out early if this task pool is shutting down. */
@@ -644,12 +614,6 @@ IotTaskPoolError_t IotTaskPool_ScheduleDeferred( IotTaskPool_t * const pTaskPool
     /* Parameter checking. */
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pTaskPool );
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pJob );
-
-    /* Bail out early if this task pool is shutting down. */
-    if( _IsShutdownStarted( pTaskPool ) )
-    {
-        _TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS );
-    }
 
     if( timeMs == 0 )
     {
@@ -727,12 +691,6 @@ IotTaskPoolError_t IotTaskPool_GetStatus( IotTaskPool_t * const pTaskPool,
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pJob );
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pStatus );
 
-    /* Bail out early if this task pool is shutting down. */
-    if( _IsShutdownStarted( pTaskPool ) )
-    {
-        _TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS );
-    }
-
     _TASKPOOL_ENTER_CRITICAL_SECTION;
     {
         /* Bail out early if this task pool is shutting down. */
@@ -761,12 +719,6 @@ IotTaskPoolError_t IotTaskPool_TryCancel( IotTaskPool_t * const pTaskPool,
     /* Parameter checking. */
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pTaskPool );
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pJob );
-
-    /* Bail out early if this task pool is shutting down. */
-    if( _IsShutdownStarted( pTaskPool ) )
-    {
-        _TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS );
-    }
 
     if( pStatus != NULL )
     {
@@ -1523,12 +1475,6 @@ static void _timerThread( void * pArgument )
     _taskPoolTimerEvent_t * pTimerEvent = NULL;
 
     IotLogDebug( "Timer thread started for task pool %p.", pTaskPool );
-
-    /* Bail out early if this task pool is shutting down. */
-    if( _IsShutdownStarted( pTaskPool ) )
-    {
-        return;
-    }
 
     /* Attempt to lock the timer mutex. Return immediately if the mutex cannot be locked.
      * If this mutex cannot be locked it means that another thread is manipulating the
