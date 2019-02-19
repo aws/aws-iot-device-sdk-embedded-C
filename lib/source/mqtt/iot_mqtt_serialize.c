@@ -1093,7 +1093,7 @@ void _IotMqtt_PublishSetDup( bool awsIotMqttMode,
         pPacketIdentifier = ( uint8_t * ) ( pTopicNameLength + topicNameLength + sizeof( uint16_t ) );
 
         IotLogDebug( "Changing PUBLISH packet identifier %hu to %hu.",
-                     *pPacketIdentifier,
+                     _UINT16_DECODE( pPacketIdentifier ),
                      newPacketIdentifier );
 
         /* Replace the packet identifier. */
@@ -1105,6 +1105,8 @@ void _IotMqtt_PublishSetDup( bool awsIotMqttMode,
     {
         /* For a compliant MQTT 3.1.1 server, set the DUP flag. */
         _UINT8_SET_BIT( *pPublishPacket, _MQTT_PUBLISH_FLAG_DUP );
+
+        IotLogDebug( "PUBLISH DUP flag set." );
     }
 }
 

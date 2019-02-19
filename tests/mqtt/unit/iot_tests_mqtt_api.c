@@ -614,7 +614,8 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
 
         /* Schedule the send job. */
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_ScheduleOperation( pOperation,
-                                                                         _IotMqtt_ProcessSend ) );
+                                                                         _IotMqtt_ProcessSend,
+                                                                         0 ) );
 
         /* Wait for the send job to begin. */
         IotSemaphore_Wait( &waitSem );

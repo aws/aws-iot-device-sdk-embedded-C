@@ -368,19 +368,25 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                     ( operation == IOT_MQTT_UNSUBSCRIBE ) );
 
     /* Check that all elements in the subscription list are valid. */
-    _validateParameter( _IotMqtt_ValidateSubscriptionList( operation,
-                                                           pMqttConnection->awsIotMqttMode,
-                                                           pSubscriptionList,
-                                                           subscriptionCount ) == true,
-                        NULL );
+    if( _IotMqtt_ValidateSubscriptionList( operation,
+                                           pMqttConnection->awsIotMqttMode,
+                                           pSubscriptionList,
+                                           subscriptionCount ) == false )
+    {
+        return IOT_MQTT_BAD_PARAMETER;
+    }
 
     /* Check that a reference pointer is provided for a waitable operation. */
     if( ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE ) &&
         ( pSubscriptionRef == NULL ) )
     {
-        _validateParameter( pSubscriptionRef != NULL,
-                            "Reference must be provided for a waitable %s.",
-                            IotMqtt_OperationType( operation ) );
+        if( pSubscriptionRef == NULL )
+        {
+            IotLogError( "Reference must be provided for a waitable %s.",
+                         IotMqtt_OperationType( operation ) );
+
+            return IOT_MQTT_BAD_PARAMETER;
+        }
     }
 
     /* Choose a subscription serialize function. */
@@ -474,7 +480,8 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
     /* Schedule the subscription operation for network transmission. */
     if( _IotMqtt_ScheduleOperation( pSubscriptionOperation,
-                                    _IotMqtt_ProcessSend ) != IOT_MQTT_SUCCESS )
+                                    _IotMqtt_ProcessSend,
+                                    0 ) != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Failed to schedule %s for sending.",
                      IotMqtt_OperationType( operation ) );
@@ -643,20 +650,33 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
                                            size_t * const ) = _IotMqtt_SerializeConnect;
 
     /* Validate network interface and connect info. */
-    _validateParameter( _IotMqtt_ValidateNetIf( pNetworkInterface ) == true, NULL );
-    _validateParameter( _IotMqtt_ValidateConnect( pConnectInfo ) == true, NULL );
+    if( _IotMqtt_ValidateNetIf( pNetworkInterface ) == false )
+    {
+        return IOT_MQTT_BAD_PARAMETER;
+    }
+
+    if( _IotMqtt_ValidateConnect( pConnectInfo ) == false )
+    {
+        return IOT_MQTT_BAD_PARAMETER;
+    }
 
     /* If will info is provided, check that it is valid. */
     if( pConnectInfo->pWillInfo != NULL )
     {
-        _validateParameter( _IotMqtt_ValidatePublish( pConnectInfo->awsIotMqttMode,
-                                                      pConnectInfo->pWillInfo ) == true,
-                            NULL );
+        if( _IotMqtt_ValidatePublish( pConnectInfo->awsIotMqttMode,
+                                      pConnectInfo->pWillInfo ) == false )
+        {
+            return IOT_MQTT_BAD_PARAMETER;
+        }
 
         /* Will message payloads cannot be larger than 65535. This restriction
          * applies only to will messages, and not normal PUBLISH messages. */
-        _validateParameter( pConnectInfo->pWillInfo->payloadLength <= UINT16_MAX,
-                            "Will payload cannot be larger than 65535." );
+        if( pConnectInfo->pWillInfo->payloadLength > UINT16_MAX )
+        {
+            IotLogError( "Will payload cannot be larger than 65535." );
+
+            return IOT_MQTT_BAD_PARAMETER;
+        }
     }
 
     /* If previous subscriptions are provided, check that they are valid. */
@@ -664,11 +684,13 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
     {
         if( pConnectInfo->pPreviousSubscriptions != NULL )
         {
-            _validateParameter( _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
-                                                                   pConnectInfo->awsIotMqttMode,
-                                                                   pConnectInfo->pPreviousSubscriptions,
-                                                                   pConnectInfo->previousSubscriptionCount ) == true,
-                                NULL );
+            if( _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
+                                                   pConnectInfo->awsIotMqttMode,
+                                                   pConnectInfo->pPreviousSubscriptions,
+                                                   pConnectInfo->previousSubscriptionCount ) == false )
+            {
+                return IOT_MQTT_BAD_PARAMETER;
+            }
         }
     }
 
@@ -753,7 +775,8 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
 
     /* Add the CONNECT operation to the send queue for network transmission. */
     status = _IotMqtt_ScheduleOperation( pConnectOperation,
-                                         _IotMqtt_ProcessSend );
+                                         _IotMqtt_ProcessSend,
+                                         0 );
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -874,21 +897,22 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
 
             /* Schedule the DISCONNECT operation for network transmission. */
             if( _IotMqtt_ScheduleOperation( pDisconnectOperation,
-                                            _IotMqtt_ProcessSend ) != IOT_MQTT_SUCCESS )
+                                            _IotMqtt_ProcessSend,
+                                            0 ) != IOT_MQTT_SUCCESS )
             {
                 IotLogWarn( "Failed to schedule DISCONNECT for sending." );
                 _IotMqtt_DestroyOperation( pDisconnectOperation );
             }
             else
             {
-                /* Wait until the DISCONNECT packet has been transmitted. DISCONNECT
-                 * should always be successful because it does not rely on any incoming
-                 * data. */
+                /* Wait a short time for the DISCONNECT packet to be transmitted. */
                 status = IotMqtt_Wait( ( IotMqttReference_t ) pDisconnectOperation,
-                                       0 );
+                                       IOT_MQTT_RESPONSE_WAIT_MS );
 
-                /* A wait on DISCONNECT should only ever return SUCCESS or NETWORK ERROR. */
+                /* A wait on DISCONNECT should only ever return SUCCESS, TIMEOUT,
+                 * or NETWORK ERROR. */
                 IotMqtt_Assert( ( status == IOT_MQTT_SUCCESS ) ||
+                                ( status == IOT_MQTT_TIMEOUT ) ||
                                 ( status == IOT_MQTT_NETWORK_ERROR ) );
 
                 IotLogInfo( "MQTT connection %p disconnected.", pMqttConnection );
@@ -1051,17 +1075,28 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
                                            uint16_t * const ) = _IotMqtt_SerializePublish;
 
     /* Check that the PUBLISH information is valid. */
-    _validateParameter( _IotMqtt_ValidatePublish( pMqttConnection->awsIotMqttMode,
-                                                  pPublishInfo ) == true,
-                        NULL );
+    if( _IotMqtt_ValidatePublish( pMqttConnection->awsIotMqttMode,
+                                  pPublishInfo ) == false )
+    {
+        return IOT_MQTT_BAD_PARAMETER;
+    }
 
     /* Check that no notification is requested for a QoS 0 publish. */
     if( pPublishInfo->QoS == 0 )
     {
-        _validateParameter( pCallbackInfo == NULL,
-                            "QoS 0 PUBLISH should not have notification parameters set." );
-        _validateParameter( ( flags & IOT_MQTT_FLAG_WAITABLE ) == 0,
-                            "QoS 0 PUBLISH should not have notification parameters set." );
+        if( pCallbackInfo != NULL )
+        {
+            IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
+
+            return IOT_MQTT_BAD_PARAMETER;
+        }
+
+        if( ( flags & IOT_MQTT_FLAG_WAITABLE ) != 0 )
+        {
+            IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
+
+            return IOT_MQTT_BAD_PARAMETER;
+        }
 
         if( pPublishRef != NULL )
         {
@@ -1072,8 +1107,12 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     /* Check that a reference pointer is provided for a waitable operation. */
     if( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
     {
-        _validateParameter( pPublishRef != NULL,
-                            "Reference must be provided for a waitable PUBLISH." );
+        if( pPublishRef == NULL )
+        {
+            IotLogError( "Reference must be provided for a waitable PUBLISH." );
+
+            return IOT_MQTT_BAD_PARAMETER;
+        }
     }
 
     /* Create a PUBLISH operation. */
@@ -1136,7 +1175,8 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
 
     /* Add the PUBLISH operation to the send queue for network transmission. */
     if( _IotMqtt_ScheduleOperation( pPublishOperation,
-                                    _IotMqtt_ProcessSend ) != IOT_MQTT_SUCCESS )
+                                    _IotMqtt_ProcessSend,
+                                    0 ) != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Failed to enqueue PUBLISH for sending." );
 
@@ -1211,7 +1251,10 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
     _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
 
     /* Validate the given reference. */
-    _validateParameter( ( _IotMqtt_ValidateReference( reference ) == true ), NULL );
+    if( _IotMqtt_ValidateReference( reference ) == false )
+    {
+        return IOT_MQTT_BAD_PARAMETER;
+    }
 
     /* Check the MQTT connection status. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );

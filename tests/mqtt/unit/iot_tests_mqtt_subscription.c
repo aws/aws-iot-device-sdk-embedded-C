@@ -981,7 +981,8 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
         for( i = 0; i < 3; i++ )
         {
             TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_ScheduleOperation( pIncomingPublish[ i ],
-                                                                             _IotMqtt_ProcessIncomingPublish ) );
+                                                                             _IotMqtt_ProcessIncomingPublish,
+                                                                             0 ) );
         }
 
         /* Wait for the connection reference count to reach 3 (adjusted for possible keep-alive). */

@@ -77,29 +77,6 @@
 #define _LIBRARY_LOG_NAME    ( "MQTT" )
 #include "iot_logging_setup.h"
 
-/**
- * @def _validateParameter( condition, errorMessage )
- * @brief Helper macro for validating public API paramters.
- *
- * Bails with #IOT_MQTT_BAD_PARAMETER and optionally prints an error message on
- * failure.
- *
- * @param[in] condition The condition to test when checking parameter.
- * @param[in] errorMessage A message to log if parameter validation fails.
- * Optional; pass `NULL` to ignore.
- * @param[in] ... Variable-length parameters for log function.
- */
-#define _validateParameter( condition, errorMessage, ... ) \
-    if( ( condition ) == false )                           \
-    {                                                      \
-        if( errorMessage != NULL )                         \
-        {                                                  \
-            IotLogError( errorMessage, ... );              \
-        }                                                  \
-                                                           \
-        return IOT_MQTT_BAD_PARAMETER;                     \
-    }
-
 /*
  * Provide default values for undefined memory allocation functions based on
  * the usage of dynamic memory allocation.
@@ -861,11 +838,14 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
  * @param[in] jobRoutine The routine to run for the job. Must be either
  * #_IotMqtt_ProcessSend, #_IotMqtt_ProcessCompletedOperation, or
  * #_IotMqtt_ProcessIncomingPublish.
+ * @param[in] delay A delay before the operation job should be executed. Pass
+ * `0` to execute ASAP.
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_SCHEDULING_ERROR.
  */
 IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
-                                           IotTaskPoolRoutine_t jobRoutine );
+                                           IotTaskPoolRoutine_t jobRoutine,
+                                           uint64_t delay );
 
 /**
  * @brief Search a list of MQTT operations pending responses using an operation

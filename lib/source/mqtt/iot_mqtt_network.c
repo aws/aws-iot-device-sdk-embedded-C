@@ -544,7 +544,8 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
         }
 
         if( _IotMqtt_ScheduleOperation( pFirstPublish,
-                                        _IotMqtt_ProcessIncomingPublish ) != IOT_MQTT_SUCCESS )
+                                        _IotMqtt_ProcessIncomingPublish,
+                                        0 ) != IOT_MQTT_SUCCESS )
         {
             IotLogWarn( "Failed to schedule incoming PUBLISH callback." );
         }
