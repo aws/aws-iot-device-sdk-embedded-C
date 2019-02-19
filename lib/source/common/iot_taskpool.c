@@ -790,6 +790,38 @@ IotTaskPoolError_t IotTaskPool_TryCancel( IotTaskPool_t * const pTaskPool,
     _TASKPOOL_NO_FUNCTION_CLEANUP();
 }
 
+const char * IotTaskPool_strerror( IotTaskPoolError_t status )
+{
+    const char * pMessage = NULL;
+
+    switch( status )
+    {
+        case IOT_TASKPOOL_SUCCESS:
+            pMessage = "SUCCESS";
+            break;
+        case IOT_TASKPOOL_BAD_PARAMETER:
+            pMessage = "BAD PARAMETER";
+            break;
+        case IOT_TASKPOOL_ILLEGAL_OPERATION:
+            pMessage = "ILLEGAL OPERATION";
+            break;
+        case IOT_TASKPOOL_NO_MEMORY:
+            pMessage = "NO MEMORY";
+            break;
+        case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
+            pMessage = "SHUTDOWN IN PROGRESS";
+            break;
+        case IOT_TASKPOOL_CANCEL_FAILED:
+            pMessage = "CANCEL FAILED";
+            break;
+        default:
+            pMessage = "INVALID STATUS";
+            break;
+    }
+
+    return pMessage;
+}
+
 /* ---------------------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------------------- */

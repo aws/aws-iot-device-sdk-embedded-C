@@ -485,4 +485,6 @@ IotTaskPoolError_t IotTaskPool_TryCancel( IotTaskPool_t * const pTaskPool,
                                           IotTaskPoolJobStatus_t * const pStatus );
 /* @[declare_taskpool_trycancel] */
 
+const char * IotTaskPool_strerror( IotTaskPoolError_t status );
+
 #endif /* ifndef _IOT_TASKPOOL_H_ */
