@@ -119,38 +119,6 @@ typedef IotLink_t   IotQueue_t;
     ( ( type * ) ( ( ( uint8_t * ) ( pLink ) ) - offsetof( type, linkName ) ) )
 
 /**
- * @brief Iterates through each element of a doubly-linked list. Do NOT remove
- * any list elements while iterating.
- *
- * To iterate and safely remove elements, #IotListDouble_ForEachSafe should be
- * used instead.
- *
- * @param[in] pList The list to iterate through.
- * @param[in] pLinkName The name of the pointer which may be used to access the
- * current element.
- */
-#define IotListDouble_ForEach( pList, pLinkName )  \
-    for( IotLink_t * pLinkName = ( pList )->pNext; \
-         pLinkName != ( pList );                   \
-         pLinkName = pLinkName->pNext )
-
-/**
- * @brief Iterates through each element of a doubly-linked list and allows for
- * removal.
- *
- * @param[in] pList The list to iterate through.
- * @param[in] pNextLink Pointer to an #IotLink_t that will be temporarily used
- * to hold a pointer to the next element. Must not be modified within the loop.
- * @param[out] pCurrentLink Pointer to an #IotLink_t that will be set to point
- * to each element's link member.
- */
-#define IotListDouble_ForEachSafe( pList, pNextLink, pCurrentLink )                \
-    for( ( pCurrentLink ) = ( pList )->pNext, pNextLink = ( pCurrentLink )->pNext; \
-         ( pCurrentLink ) != ( pList );                                            \
-         ( pCurrentLink ) = ( pNextLink ), ( pNextLink ) = ( pCurrentLink )->pNext )
-
-
-/**
  * @functionspage{linear_containers,linear containers library}
  * - @functionname{linear_containers_function_link_islinked}
  * - @functionname{linear_containers_function_list_double_create}

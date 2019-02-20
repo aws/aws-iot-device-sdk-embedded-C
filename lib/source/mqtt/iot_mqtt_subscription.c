@@ -330,7 +330,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
 
     void ( * callbackFunction )( void *,
                                  IotMqttCallbackParam_t * const ) = NULL;
-    const _topicMatchParams_t topicMatchParams =
+    _topicMatchParams_t topicMatchParams =
     {
         .pTopicName      = pCallbackParam->message.info.pTopicName,
         .topicNameLength = pCallbackParam->message.info.topicNameLength,
@@ -349,23 +349,23 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
      * function is searching. */
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
 
-    /* Search the subscription list for all matching subscriptions. */
-    IotListDouble_ForEachSafe( &( pMqttConnection->subscriptionList ),
-                               pNextLink,
-                               pCurrentLink )
+    /* Search the subscription list for all matching subscriptions starting at
+     * the list head. */
+    while( true )
     {
-        pSubscription = IotLink_Container( _mqttSubscription_t,
-                                           IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                                         pCurrentLink,
-                                                                         _topicMatch,
-                                                                         ( void * ) ( &topicMatchParams ) ),
-                                           link );
+        pCurrentLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+                                                     pCurrentLink,
+                                                     _topicMatch,
+                                                     &topicMatchParams );
 
         /* No subscription found. Exit loop. */
-        if( pSubscription == NULL )
+        if( pCurrentLink == NULL )
         {
             break;
         }
+
+        /* Subscription found. Calculate pointer to subscription object. */
+        pSubscription = IotLink_Container( _mqttSubscription_t, pCurrentLink, link );
 
         /* Subscription validation should not have allowed a NULL callback function. */
         IotMqtt_Assert( pSubscription->callback.function != NULL );
@@ -396,6 +396,9 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
         ( pSubscription->references )--;
         IotMqtt_Assert( pSubscription->references >= 0 );
 
+        /* Save the pointer to the next link in case this subscription is freed. */
+        pNextLink = pCurrentLink->pNext;
+
         /* Remove this subscription if it has no references and the unsubscribed
          * flag is set. */
         if( ( pSubscription->references == 0 ) && ( pSubscription->unsubscribed == true ) )
@@ -403,6 +406,9 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
             IotListDouble_Remove( &( pSubscription->link ) );
             IotMqtt_FreeSubscription( pSubscription );
         }
+
+        /* Move current link pointer. */
+        pCurrentLink = pNextLink;
     }
 
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
