@@ -530,14 +530,14 @@ bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * const pMqttConn
     if( disconnected == false )
     {
         ( pMqttConnection->references )++;
-        IotLogDebug( "Reference count for MQTT connection %p changed from %ld to %ld.",
+        IotLogDebug( "(MQTT connection %p) Reference count changed from %ld to %ld.",
                      pMqttConnection,
                      ( long int ) pMqttConnection->references - 1,
                      ( long int ) pMqttConnection->references );
     }
     else
     {
-        IotLogWarn( "Attempt to use closed MQTT connection %p.", pMqttConnection );
+        IotLogWarn( "(MQTT connection %p) Attempt to use closed connection.", pMqttConnection );
     }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
@@ -621,14 +621,14 @@ errorTaskPool: return IOT_MQTT_INIT_FAILED;
 
 void IotMqtt_Cleanup()
 {
+    /* Clean up MQTT library task pool. */
+    IotTaskPool_Destroy( &_IotMqttTaskPool );
+
     /* Clean up MQTT serializer. */
     _IotMqtt_CleanupSerialize();
 
     /* Clean up CONNECT mutex. */
     IotMutex_Destroy( &( _connectMutex ) );
-
-    /* Clean up MQTT library task pool. */
-    IotTaskPool_Destroy( &_IotMqttTaskPool );
 
     IotLogInfo( "MQTT library cleanup done." );
 }

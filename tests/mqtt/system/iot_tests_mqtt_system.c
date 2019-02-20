@@ -332,6 +332,7 @@ static void _reentrantCallback( void * pArgument,
                                 IotMqttCallbackParam_t * const pOperation )
 {
     bool status = true;
+    IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
     IotSemaphore_t * pWaitSemaphores = ( IotSemaphore_t * ) pArgument;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
@@ -349,10 +350,12 @@ static void _reentrantCallback( void * pArgument,
     publishInfo.retryLimit = 3;
     publishInfo.retryMs = 5000;
 
-    if( IotMqtt_TimedPublish( pOperation->mqttConnection,
-                              &publishInfo,
-                              0,
-                              IOT_TEST_MQTT_TIMEOUT_MS ) == IOT_MQTT_SUCCESS )
+    mqttStatus = IotMqtt_TimedPublish( pOperation->mqttConnection,
+                                       &publishInfo,
+                                       0,
+                                       IOT_TEST_MQTT_TIMEOUT_MS );
+
+    if( mqttStatus == IOT_MQTT_SUCCESS )
     {
         status = IotSemaphore_TimedWait( &( pWaitSemaphores[ 0 ] ),
                                          IOT_TEST_MQTT_TIMEOUT_MS );
@@ -368,20 +371,24 @@ static void _reentrantCallback( void * pArgument,
         subscription.pTopicFilter = pTopic;
         subscription.topicFilterLength = topicLength;
 
-        if( IotMqtt_Unsubscribe( pOperation->mqttConnection,
-                                 &subscription,
-                                 1,
-                                 IOT_MQTT_FLAG_WAITABLE,
-                                 NULL,
-                                 &unsubscribeRef ) == IOT_MQTT_STATUS_PENDING )
+        mqttStatus = IotMqtt_Unsubscribe( pOperation->mqttConnection,
+                                          &subscription,
+                                          1,
+                                          IOT_MQTT_FLAG_WAITABLE,
+                                          NULL,
+                                          &unsubscribeRef );
+
+        if( mqttStatus == IOT_MQTT_STATUS_PENDING )
         {
             /* Disconnect the MQTT connection. */
             IotMqtt_Disconnect( pOperation->mqttConnection, false );
 
             /* Waiting on an operation whose connection is closed should return
              * "Network Error". */
-            status = ( IotMqtt_Wait( unsubscribeRef,
-                                     500 ) == IOT_MQTT_NETWORK_ERROR );
+            mqttStatus = IotMqtt_Wait( unsubscribeRef,
+                                       500 );
+
+            status = ( mqttStatus == IOT_MQTT_NETWORK_ERROR );
         }
         else
         {

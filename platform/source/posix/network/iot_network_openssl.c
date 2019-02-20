@@ -857,7 +857,7 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
     ( void ) memset( pNetworkConnection, 0x00, sizeof( IotNetworkConnectionOpenssl_t ) );
 
     /* Create the network connection mutex. */
-    if( IotMutex_Create( &( pNetworkConnection->mutex ), false ) == false )
+    if( IotMutex_Create( &( pNetworkConnection->mutex ), true ) == false )
     {
         IotLogError( "Failed to create network connection mutex." );
 

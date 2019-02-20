@@ -123,18 +123,6 @@ static IotMqttError_t _scheduleNextRetry( _mqttOperation_t * pOperation )
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
 
-    /* Choose a set DUP function. */
-    void ( * publishSetDup )( bool,
-                              uint8_t * const,
-                              uint16_t * const ) = _IotMqtt_PublishSetDup;
-
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pMqttConnection->network.serialize.publishSetDup != NULL )
-        {
-            publishSetDup = pMqttConnection->network.serialize.publishSetDup;
-        }
-    #endif
-
     /* This function should never be called with retry count greater than
      * retry limit. */
     IotMqtt_Assert( pOperation->retry.count <= pOperation->retry.limit );
@@ -181,23 +169,7 @@ static IotMqttError_t _scheduleNextRetry( _mqttOperation_t * pOperation )
          * to manipulate the lists. */
         if( firstRetry == true )
         {
-            /* Always set the DUP flag on the first retry. */
-            publishSetDup( pMqttConnection->awsIotMqttMode,
-                           pOperation->pMqttPacket,
-                           &( pOperation->packetIdentifier ) );
-
             IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-        }
-        else
-        {
-            /* In AWS IoT MQTT mode, the DUP flag (really a change to the packet
-             * identifier) must be reset on every retry. */
-            if( pMqttConnection->awsIotMqttMode == true )
-            {
-                publishSetDup( pMqttConnection->awsIotMqttMode,
-                               pOperation->pMqttPacket,
-                               &( pOperation->packetIdentifier ) );
-            }
         }
     }
 
@@ -211,13 +183,10 @@ static IotMqttError_t _scheduleNextRetry( _mqttOperation_t * pOperation )
     if( status == IOT_MQTT_SUCCESS )
     {
         status = IOT_MQTT_STATUS_PENDING;
-    }
 
-    if( firstRetry == true )
-    {
         /* Move a successfully rescheduled PUBLISH from the pending processing
          * list to the pending responses list. */
-        if( status == IOT_MQTT_STATUS_PENDING )
+        if( firstRetry == true )
         {
             /* Operation must be linked. */
             IotMqtt_Assert( IotLink_IsLinked( &( pOperation->link ) ) );
@@ -227,7 +196,12 @@ static IotMqttError_t _scheduleNextRetry( _mqttOperation_t * pOperation )
             IotListDouble_InsertHead( &( pMqttConnection->pendingResponse ),
                                       &( pOperation->link ) );
         }
+    }
 
+    /* The references mutex only needs to be unlocked on the first retry, since
+     * only the first retry manipulates the connection lists. */
+    if( firstRetry == true )
+    {
         IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
     }
 
@@ -364,16 +338,19 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
          * Any other return value is invalid. */
         IotMqtt_Assert( ( taskPoolStatus == IOT_TASKPOOL_SUCCESS ) ||
                         ( taskPoolStatus == IOT_TASKPOOL_CANCEL_FAILED ) );
+
+        if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
+        {
+            IotLogDebug( "(MQTT connection %p, %s operation %p) Job canceled.",
+                         pMqttConnection,
+                         IotMqtt_OperationType( pOperation->operation ),
+                         pOperation );
+        }
     }
 
     /* Decrement job reference count. */
     if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
     {
-        IotLogDebug( "(MQTT connection %p, %s operation %p) Job canceled.",
-                     pMqttConnection,
-                     IotMqtt_OperationType( pOperation->operation ),
-                     pOperation );
-
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
         pOperation->jobReference--;
 
@@ -405,6 +382,7 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
 
 void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
 {
+    IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
 
     /* Default free packet function. */
@@ -474,6 +452,25 @@ void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
         IotSemaphore_Destroy( &( pOperation->notify.waitSemaphore ) );
 
         IotLogDebug( "(MQTT connection %p, %s operation %p) Wait semaphore destroyed.",
+                     pMqttConnection,
+                     IotMqtt_OperationType( pOperation->operation ),
+                     pOperation );
+    }
+
+    /* Destroy task pool job associated with this operation. */
+    taskPoolStatus = IotTaskPool_DestroyJob( &( _IotMqttTaskPool ), &( pOperation->job ) );
+
+    if( taskPoolStatus != IOT_TASKPOOL_SUCCESS )
+    {
+        IotLogWarn( "(MQTT connection %p, %s operation %p) Failed to destroy operation job, error %s.",
+                    pMqttConnection,
+                    IotMqtt_OperationType( pOperation->operation ),
+                    pOperation,
+                    taskPoolStatus );
+    }
+    else
+    {
+        IotLogDebug( "(MQTT connection %p, %s operation %p) Operation job destroyed.",
                      pMqttConnection,
                      IotMqtt_OperationType( pOperation->operation ),
                      pOperation );
@@ -664,29 +661,44 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
                            void * pContext )
 {
     size_t bytesSent = 0;
-    bool destroyOperation = false, waitable = false;
+    bool destroyOperation = false, waitable = false, networkPending = false;
     _mqttOperation_t * pOperation = ( _mqttOperation_t * ) pContext;
     _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
 
-    /* Silence warnings about unused parameters. */
+    /* Check parameters. The task pool and job parameter is not used when asserts
+     * are disabled. */
     ( void ) pTaskPool;
     ( void ) pSendJob;
+    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
+    IotMqtt_Assert( pSendJob == &( pOperation->job ) );
 
     /* The given operation must have an allocated packet and be waiting for a status. */
     IotMqtt_Assert( pOperation->pMqttPacket != NULL );
     IotMqtt_Assert( pOperation->packetSize != 0 );
-    IotMqtt_Assert( pOperation->jobReference >= 1 );
     IotMqtt_Assert( pOperation->status == IOT_MQTT_STATUS_PENDING );
 
     /* Check if this operation is waitable. */
     waitable = ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE;
 
-    /* Check if operation with retry has reached its limit. */
+    /* Check PUBLISH retry counts and limits. */
     if( pOperation->retry.limit > 0 )
     {
+        /* Choose a set DUP function. */
+        void ( * publishSetDup )( bool,
+                                  uint8_t * const,
+                                  uint16_t * const ) = _IotMqtt_PublishSetDup;
+
+        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            if( pMqttConnection->network.serialize.publishSetDup != NULL )
+            {
+                publishSetDup = pMqttConnection->network.serialize.publishSetDup;
+            }
+        #endif
+
         /* Only PUBLISH may be retried. */
         IotMqtt_Assert( pOperation->operation == IOT_MQTT_PUBLISH_TO_SERVER );
 
+        /* Check if the retry limit is exhausted. */
         if( pOperation->retry.count > pOperation->retry.limit )
         {
             /* The retry count may be at most one more than the retry limit, which
@@ -700,6 +712,25 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
                          pOperation,
                          pOperation->retry.limit );
         }
+        /* Check if this is the first retry. */
+        else if( pOperation->retry.count == 1 )
+        {
+            /* Always set the DUP flag on the first retry. */
+            publishSetDup( pMqttConnection->awsIotMqttMode,
+                           pOperation->pMqttPacket,
+                           &( pOperation->packetIdentifier ) );
+        }
+        else
+        {
+            /* In AWS IoT MQTT mode, the DUP flag (really a change to the packet
+             * identifier) must be reset on every retry. */
+            if( pMqttConnection->awsIotMqttMode == true )
+            {
+                publishSetDup( pMqttConnection->awsIotMqttMode,
+                               pOperation->pMqttPacket,
+                               &( pOperation->packetIdentifier ) );
+            }
+        }
     }
 
     /* Send an operation that is waiting for a response. */
@@ -707,8 +738,8 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
     {
         IotLogDebug( "(MQTT connection %p, %s operation %p) Sending MQTT packet.",
                      pMqttConnection,
-                     pOperation,
-                     IotMqtt_OperationType( pOperation->operation ) );
+                     IotMqtt_OperationType( pOperation->operation ),
+                     pOperation );
 
         /* Transmit the MQTT packet from the operation over the network. */
         bytesSent = pMqttConnection->network.send( pMqttConnection->network.pSendContext,
@@ -745,23 +776,32 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
         /* Check if this operation should be scheduled for retransmission. */
         if( pOperation->retry.limit > 0 )
         {
-            pOperation->status = _scheduleNextRetry( pOperation );
-        }
-        else
-        {
-            /* Decrement reference count to signal completion of send job. Check
-             * if the operation should be destroyed. */
-            if( waitable == true )
+            if( _scheduleNextRetry( pOperation ) == true )
             {
-                destroyOperation = _IotMqtt_DecrementOperationReferences( pOperation, false );
+                networkPending = true;
             }
-
-            /* If the operation should not be destroyed, transfer it from the
-             * pending processing to the pending response list. */
-            if( destroyOperation == false )
+            else
             {
-                IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+                pOperation->status = IOT_MQTT_SCHEDULING_ERROR;
+            }
+        }
 
+        IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+
+        /* Decrement reference count to signal completion of send job. Check
+         * if the operation should be destroyed. */
+        if( waitable == true )
+        {
+            destroyOperation = _IotMqtt_DecrementOperationReferences( pOperation, false );
+        }
+
+        /* If the operation should not be destroyed, transfer it from the
+         * pending processing to the pending response list. Do not transfer
+         * operations with retries. */
+        if( destroyOperation == false )
+        {
+            if( pOperation->retry.limit == 0 )
+            {
                 /* Operation must be linked. */
                 IotMqtt_Assert( IotLink_IsLinked( &( pOperation->link ) ) );
 
@@ -770,9 +810,12 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
                 IotListDouble_InsertHead( &( pMqttConnection->pendingResponse ),
                                           &( pOperation->link ) );
 
-                IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+                /* This operation is now awaiting a response from the network. */
+                networkPending = true;
             }
         }
+
+        IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
     }
 
     /* Destroy the operation or notify of completion if necessary. */
@@ -782,10 +825,15 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
     }
     else
     {
-        /* Notify of operation completion if this job set a status. */
-        if( pOperation->status != IOT_MQTT_STATUS_PENDING )
+        /* Do not check the operation status if a network response is pending,
+         * since a network response could modify the status. */
+        if( networkPending == false )
         {
-            _IotMqtt_Notify( pOperation );
+            /* Notify of operation completion if this job set a status. */
+            if( pOperation->status != IOT_MQTT_STATUS_PENDING )
+            {
+                _IotMqtt_Notify( pOperation );
+            }
         }
     }
 }
@@ -796,6 +844,34 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
                                          IotTaskPoolJob_t * pOperationJob,
                                          void * pContext )
 {
+    _mqttOperation_t * pOperation = ( _mqttOperation_t * ) pContext;
+    IotMqttCallbackParam_t callbackParam = { .operation = { 0 } };
+
+    /* Check parameters. The task pool and job parameter is not used when asserts
+     * are disabled. */
+    ( void ) pTaskPool;
+    ( void ) pOperationJob;
+    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
+    IotMqtt_Assert( pOperationJob == &( pOperation->job ) );
+
+    /* The operation's callback function and status must be set. */
+    IotMqtt_Assert( pOperation->notify.callback.function != NULL );
+    IotMqtt_Assert( pOperation->status != IOT_MQTT_STATUS_PENDING );
+
+    callbackParam.mqttConnection = pOperation->pMqttConnection;
+    callbackParam.operation.type = pOperation->operation;
+    callbackParam.operation.reference = pOperation;
+    callbackParam.operation.result = pOperation->status;
+
+    /* Invoke the user callback function. */
+    pOperation->notify.callback.function( pOperation->notify.callback.param1,
+                                          &callbackParam );
+
+    /* Attempt to destroy the operation once the user callback returns. */
+    if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == true )
+    {
+        _IotMqtt_DestroyOperation( pOperation );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -876,24 +952,42 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnec
                                                   NULL,
                                                   _mqttOperation_match,
                                                   &param );
-    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-    /* The result will be NULL if no corresponding operation was found in the
-     * list. */
-    if( pResultLink == NULL )
+    /* Check if a match was found. */
+    if( pResultLink != NULL )
     {
-        IotLogDebug( "(MQTT connection %p) Operation %s not found.",
+        pResult = IotLink_Container( _mqttOperation_t, pResultLink, link );
+
+        /* An operation in the pending responses list should always have a job
+         * reference of 1. */
+        IotMqtt_Assert( pResult->jobReference == 1 );
+
+        /* Increment job references of a waitable operation to prevent Wait from
+         * destroying this operation if it times out. */
+        if( ( pResult->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
+        {
+            pResult->jobReference++;
+
+            IotLogDebug( "MQTT connection %p, %s operation %p) Job reference changed from %ld to %ld.",
+                         pMqttConnection,
+                         IotMqtt_OperationType( operation ),
+                         pResult,
+                         pResult->jobReference - 1,
+                         pResult->jobReference );
+        }
+
+        IotLogDebug( "(MQTT connection %p) Found operation %s.",
                      pMqttConnection,
                      IotMqtt_OperationType( operation ) );
     }
     else
     {
-        IotLogDebug( "(MQTT connection %p) Found operation %s.",
+        IotLogDebug( "(MQTT connection %p) Operation %s not found.",
                      pMqttConnection,
                      IotMqtt_OperationType( operation ) );
-
-        pResult = IotLink_Container( _mqttOperation_t, pResultLink, link );
     }
+
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
     return pResult;
 }
