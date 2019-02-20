@@ -226,6 +226,9 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     pNewMqttConnection->awsIotMqttMode = awsIotMqttMode;
     pNewMqttConnection->network = *pNetworkInterface;
 
+    /* Start a new MQTT connection with a reference count of 1. */
+    pNewMqttConnection->references = 1;
+
     /* Create the references mutex for a new connection. It is a recursive mutex. */
     if( IotMutex_Create( &( pNewMqttConnection->referencesMutex ), true ) == false )
     {
@@ -282,8 +285,8 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
             IotMqtt_Assert( false );
         }
 
-        /* Keep-alive references its MQTT connection, so set reference count to 1. */
-        pNewMqttConnection->references = 1;
+        /* Keep-alive references its MQTT connection, so increment reference. */
+        ( pNewMqttConnection->references )++;
     }
 
     /* This is the successful return path. */
@@ -319,8 +322,9 @@ static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
         pMqttConnection->references--;
     }
 
-    /* A connection to be destroyed should have no references and no keep-alive. */
-    IotMqtt_Assert( pMqttConnection->references == 0 );
+    /* A connection to be destroyed should have no keep-alive and at most 1
+     * reference. */
+    IotMqtt_Assert( pMqttConnection->references <= 1 );
     IotMqtt_Assert( pMqttConnection->keepAliveMs == 0 );
     IotMqtt_Assert( pMqttConnection->pPingreqPacket == NULL );
     IotMqtt_Assert( pMqttConnection->pingreqPacketSize == 0 );
@@ -564,12 +568,9 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * const pMqttConn
                  ( long int ) pMqttConnection->references );
 
     /* Check if this connection may be destroyed. */
-    if( pMqttConnection->disconnected == true )
+    if( pMqttConnection->references == 0 )
     {
-        if( pMqttConnection->references == 0 )
-        {
-            destroyConnection = true;
-        }
+        destroyConnection = true;
     }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
@@ -838,7 +839,7 @@ errorCreateConnection: return status;
 void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                          bool cleanupOnly )
 {
-    bool disconnected = false, destroyConnection = false;
+    bool disconnected = false;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
     _mqttOperation_t * pDisconnectOperation = NULL;
@@ -929,11 +930,6 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
     /* At this point, the connection should be marked disconnected. */
     IotMqtt_Assert( pMqttConnection->disconnected == true );
 
-    if( pMqttConnection->references == 0 )
-    {
-        destroyConnection = true;
-    }
-
     /* Attempt cancel and destroy each operation in the connection's lists. */
     IotListDouble_RemoveAll( &( pMqttConnection->pendingProcessing ),
                              _mqttOperation_tryDestroy,
@@ -945,11 +941,8 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-    /* Destroy the MQTT connection if possible. */
-    if( destroyConnection == true )
-    {
-        _destroyMqttConnection( pMqttConnection );
-    }
+    /* Decrement the connection reference count and destroy it if possible. */
+    _IotMqtt_DecrementConnectionReferences( pMqttConnection );
 }
 
 /*-----------------------------------------------------------*/

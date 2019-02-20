@@ -50,12 +50,12 @@ static void _signalHandler( int signum )
     if( signum == SIGSEGV )
     {
         printf( "\nSegmentation fault.\n" );
-        exit( EXIT_FAILURE );
+        _Exit( EXIT_FAILURE );
     }
     else if( signum == SIGABRT )
     {
         printf( "\nAssertion failed.\n" );
-        exit( EXIT_FAILURE );
+        _Exit( EXIT_FAILURE );
     }
 }
 

@@ -39,13 +39,6 @@ _mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
                                                       const IotMqttNetIf_t * const pNetworkInterface,
                                                       uint16_t keepAliveSeconds );
 
-/**
- * @brief Test access function for #_destroyMqttConnection.
- *
- * @see #_destroyMqttConnection.
- */
-void IotTestMqtt_destroyMqttConnection( _mqttConnection_t * const pMqttConnection );
-
 /*------------------------- iot_mqtt_serialize.c ------------------------*/
 
 /*

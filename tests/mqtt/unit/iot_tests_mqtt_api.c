@@ -527,7 +527,7 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
     TEST_ASSERT_NOT_NULL( pMqttConnection );
 
     /* Adjustment to reference count based on keep-alive status. */
-    const int32_t keepAliveReference = ( pMqttConnection->keepAliveMs != 0 ) ? 1 : 0;
+    const int32_t keepAliveReference = 1 + ( ( pMqttConnection->keepAliveMs != 0 ) ? 1 : 0 );
 
     /* A new MQTT connection should only have a possible reference for keep-alive. */
     TEST_ASSERT_EQUAL_INT32( keepAliveReference, pMqttConnection->references );

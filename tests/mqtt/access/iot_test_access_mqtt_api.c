@@ -38,10 +38,3 @@ _mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
 }
 
 /*-----------------------------------------------------------*/
-
-void IotTestMqtt_destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
-{
-    _destroyMqttConnection( pMqttConnection );
-}
-
-/*-----------------------------------------------------------*/
