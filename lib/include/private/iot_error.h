@@ -20,9 +20,11 @@
  */
 
 /**
- * @file iot_common.h
- * @brief Provides function signatures for intialization and cleanup of common
- * libraries.
+ * @file iot_error.h
+ * @brief Provides macros for error checking and function cleanup.
+ *
+ * The macros in this file are generic. They may be customized by each library
+ * by setting the library prefix.
  */
 
 #ifndef _IOT_ERROR_H_
@@ -33,86 +35,81 @@
     #include IOT_CONFIG_FILE
 #endif
 
-/*
- * Some macros for error standardized checking using a cleanup area.
- * This macros should not be used directly, but rather customized in the library
- * that uses them for injecting the correct library prefixes.
+/**
+ * @brief Declare the status variable and an initial value.
+ *
+ * This macro should be at the beginning of any functions that use cleanup sections.
+ *
+ * @param[in] statusType The type of the status variable for this function.
+ * @param[in] initialValue The initial value to assign to the status variable.
  */
+#define _IOT_FUNCTION_ENTRY( statusType, initialValue )    statusType status = initialValue
 
 /**
- * @brief Every public API return an enumeration value with an undelying value of 0 in case of success.
+ * @brief Declares the label that begins a cleanup section.
+ *
+ * This macro should be placed at the end of a function and followed by
+ * #_IOT_FUNCTION_CLEANUP_END.
  */
-#define IOT_SUCCEEDED( x )                          ( ( x ) == 0 )
+#define _IOT_FUNCTION_CLEANUP_BEGIN()                      iotCleanup:
 
 /**
- * @brief Every public API returns an enumeration value with an undelying value different than 0 in case of success.
+ * @brief Declares the end of a cleanup section.
+ *
+ * This macro should be placed at the end of a function and preceded by
+ * #_IOT_FUNCTION_CLEANUP_BEGIN.
  */
-#define IOT_FAILED( x )                             ( ( x ) != 0 )
+#define _IOT_FUNCTION_CLEANUP_END()                        return status
 
 /**
- * @brief Jump to the cleanup area.
+ * @brief Declares an empty cleanup section.
+ *
+ * This macro should be placed at the end of a function to exit on error if no
+ * cleanup is required.
  */
-#define IOT_GOTO_CLEANUP()                          goto Iot_Cleanup
+#define _IOT_FUNCTION_EXIT_NO_CLEANUP()                    _IOT_FUNCTION_CLEANUP_BEGIN(); _IOT_FUNCTION_CLEANUP_END()
 
 /**
- * @brief Just return.
+ * @brief Jump to the cleanup section.
  */
-#define IOT_RETURN()                                return error
+#define _IOT_GOTO_CLEANUP()                                goto iotCleanup
 
 /**
- * @brief Declare the storage for the error status variable.
+ * @brief Assign a value to the status variable and jump to the cleanup section.
+ *
+ * @param[in] errorValue The value to assign to the status variable.
  */
-#define IOT_FUNCTION_ENTRY( error_type, result )    error_type error = result
+#define _IOT_SET_AND_GOTO_CLEANUP( statusValue )           { status = ( statusValue ); _IOT_GOTO_CLEANUP(); }
 
 /**
- * @brief Check error and go to the cleanup area in case of failure.
+ * @brief Jump to the cleanup section if a condition is `false`.
+ *
+ * This macro may be used in place of `assert` to exit a function is a condition
+ * is `false`.
+ *
+ * @param[in] condition The condition to check.
  */
-#define IOT_ON_ERROR_GOTO_CLEANUP( expr )           { if( IOT_FAILED( error = ( expr ) ) ) { IOT_GOTO_CLEANUP(); } }
+#define _IOT_GOTO_CLEANUP_IF_FALSE( condition )            { if( ( condition ) == false ) { _IOT_GOTO_CLEANUP(); } }
 
 /**
- * @brief Check error and go to the cleanup area in case of success.
+ * @brief Assign a value to the status variable and jump to the cleanup section
+ * if a condition is `false`.
+ *
+ * @param[in] statusValue The value to assign to the status variable.
+ * @param[in] condition The condition to check.
  */
-#define IOT_ON_SUCCESS_GOTO_CLEANUP( expr )         { if( IOT_SUCCEEDED( error = ( expr ) ) ) { IOT_GOTO_CLEANUP(); } }
+#define _IOT_SET_AND_GOTO_CLEANUP_IF_FALSE( statusValue, condition ) \
+    if( ( condition ) == false )                                     \
+        _IOT_SET_AND_GOTO_CLEANUP( statusValue )
 
 /**
- * @brief Set error and go to the cleanup area.
+ * @brief Check a condition; if `false`, assign the "Bad parameter" status value
+ * and jump to the cleanup section.
+ *
+ * @param[in] libraryPrefix The library prefix of the status variable.
+ * @param[in] condition The condition to check.
  */
-#define IOT_SET_AND_GOTO_CLEANUP( expr )            { error = ( expr ); IOT_GOTO_CLEANUP(); }
-
-/**
- * @brief Initialize error and declare start of cleanup area.
- */
-
-#define IOT_FUNCTION_CLEANUP( prefix )                           Iot_Cleanup :
-
-/**
- * @brief Initialize error and declare end of cleanup area.
- */
-#define IOT_FUNCTION_CLEANUP_END()                               IOT_RETURN()
-
-/**
- * @brief Create an empty cleanup area.
- */
-#define IOT_NO_FUNCTION_CLEANUP()                                IOT_FUNCTION_CLEANUP(); IOT_FUNCTION_CLEANUP_END()
-
-/**
- * @brief Do not create a cleanup area.
- */
-#define IOT_NO_FUNCTION_CLEANUP_NOLABEL( prefix )                IOT_RETURN()
-
-/**
- * @brief Exit if the pointer is NULL.
- */
-#define IOT_ON_NULL_GOTO_CLEANUP( library_prefix, ptr )          if( !( ptr ) ) IOT_SET_AND_GOTO_CLEANUP( library_prefix ## _NULL_POINTER )
-
-/**
- * @brief Exit if an argument is NULL.
- */
-#define IOT_ON_NULL_ARG_GOTO_CLEANUP( library_prefix, ptr )      if( !( ptr ) ) IOT_SET_AND_GOTO_CLEANUP( library_prefix ## _BAD_PARAMETER )
-
-/**
- * @brief Exit if an argument is NULL.
- */
-#define IOT_ON_ARG_ERROR_GOTO_CLEANUP( library_prefix, expr )    { if( IOT_FAILED( error = ( expr ) ) ) { IOT_SET_AND_GOTO_CLEANUP( library_prefix ## _BAD_PARAMETER ); } }
+#define _IOT_VALIDATE_PARAMETER( libraryPrefix, condition ) \
+    _IOT_SET_AND_GOTO_CLEANUP_IF_FALSE( libraryPrefix ## _BAD_PARAMETER, condition )
 
 #endif /* ifndef _IOT_ERROR_H_ */
