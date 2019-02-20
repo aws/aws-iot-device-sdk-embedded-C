@@ -54,8 +54,6 @@
  * - @functionname{static_memory_function_freemqttconnection}
  * - @functionname{static_memory_function_mallocmqttoperation}
  * - @functionname{static_memory_function_freemqttoperation}
- * - @functionname{static_memory_function_mallocmqtttimerevent}
- * - @functionname{static_memory_function_freemqtttimerevent}
  * - @functionname{static_memory_function_mallocmqttsubscription}
  * - @functionname{static_memory_function_freemqttsubscription}
  * - @functionname{static_memory_function_mallocshadowoperation}
@@ -303,42 +301,6 @@ void * Iot_MallocMqttOperation( size_t size );
 /* @[declare_static_memory_freemqttoperation] */
 void Iot_FreeMqttOperation( void * ptr );
 /* @[declare_static_memory_freemqttoperation] */
-
-/*----------------------- MQTT timer event management -----------------------*/
-
-/**
- * @functionpage{Iot_MallocMqttTimerEvent,static_memory,mallocmqtttimerevent}
- * @functionpage{Iot_FreeMqttTimerEvent,static_memory,freemqtttimerevent}
- */
-
-/**
- * @brief Allocates memory to hold data for a new [MQTT timer event]
- * (@ref static_memory_types_mqtttimerevents).
- *
- * This function is the analog of [malloc]
- * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) for MQTT timer events.
- *
- * @param[in] size Must be equal to sizeof( #_mqttTimerEvent_t ).
- *
- * @return Pointer to an MQTT timer event.
- */
-/* @[declare_static_memory_mallocmqtttimerevent] */
-void * Iot_MallocMqttTimerEvent( size_t size );
-/* @[declare_static_memory_mallocmqtttimerevent] */
-
-/**
- * @brief Frees an in-use [MQTT timer event]
- * (@ref static_memory_types_mqtttimerevents).
- *
- * This function is the analog of [free]
- * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
- * for MQTT timer events.
- *
- * @param[in] ptr Pointer to an active MQTT timer event to free.
- */
-/* @[declare_static_memory_freemqtttimerevent] */
-void Iot_FreeMqttTimerEvent( void * ptr );
-/* @[declare_static_memory_freemqtttimerevent] */
 
 /*---------------------- MQTT subscription management -----------------------*/
 
