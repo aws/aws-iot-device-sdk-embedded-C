@@ -223,6 +223,13 @@
 #endif
 /** @endcond */
 
+/**
+ * @brief Marks the empty statement of an `else` branch.
+ *
+ * Does nothing, but allows test coverage to detect branches not taken.
+ */
+#define _EMPTY_ELSE_MARKER                                      ;
+
 /*
  * Constants related to limits defined in AWS Service Limits.
  *
@@ -275,7 +282,7 @@ struct _mqttTimerEvent;
  */
 typedef struct _mqttSubscription
 {
-    IotLink_t link; /**< @brief List link member. */
+    IotLink_t link;     /**< @brief List link member. */
 
     int32_t references; /**< @brief How many subscription callbacks are using this subscription. */
 
