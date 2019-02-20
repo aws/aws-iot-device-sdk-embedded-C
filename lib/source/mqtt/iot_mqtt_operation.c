@@ -939,6 +939,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnec
                                        &( pResult->job ),
                                        NULL ) == IOT_TASKPOOL_SUCCESS )
             {
+                if( ( pResult->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
                 pResult->jobReference--;
             }
             else
