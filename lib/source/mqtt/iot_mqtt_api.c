@@ -32,6 +32,9 @@
 /* Standard includes. */
 #include <string.h>
 
+/* Error handling include. */
+#include "private/iot_error.h"
+
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
@@ -84,6 +87,20 @@ static bool _mqttSubscription_shouldRemove( const IotLink_t * pSubscriptionLink,
 static void _mqttOperation_tryDestroy( void * pData );
 
 /**
+ * @brief Create a keep-alive job for an MQTT connection.
+ *
+ * @param[in] awsIotMqttMode Specifies if this connection is to an AWS IoT MQTT
+ * server.
+ * @param[in] pMqttConnection The MQTT connection associated with the keep-alive.
+ * @param[in] keepAliveSeconds User-provided keep-alive interval.
+ *
+ * @return `true` if the keep-alive job was successfully created; `false` otherwise.
+ */
+static bool _createKeepAliveJob( bool awsIotMqttMode,
+                                 _mqttConnection_t * pMqttConnection,
+                                 uint16_t keepAliveSeconds );
+
+/**
  * @brief Creates a new MQTT connection and initializes its members.
  *
  * @param[in] awsIotMqttMode Specifies if this connection is to an AWS IoT MQTT server.
@@ -95,7 +112,7 @@ static void _mqttOperation_tryDestroy( void * pData );
  * failure.
  */
 static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
-                                                  const IotMqttNetIf_t * const pNetworkInterface,
+                                                  const IotMqttNetIf_t * pNetworkInterface,
                                                   uint16_t keepAliveSeconds );
 
 /**
@@ -103,7 +120,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
  *
  * @param[in] pMqttConnection Which connection to destroy.
  */
-static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection );
+static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection );
 
 /**
  * @brief The common component of both @ref mqtt_function_subscribe and @ref
@@ -114,11 +131,11 @@ static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection );
  */
 static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            IotMqttConnection_t mqttConnection,
-                                           const IotMqttSubscription_t * const pSubscriptionList,
+                                           const IotMqttSubscription_t * pSubscriptionList,
                                            size_t subscriptionCount,
                                            uint32_t flags,
-                                           const IotMqttCallbackInfo_t * const pCallbackInfo,
-                                           IotMqttReference_t * const pSubscriptionRef );
+                                           const IotMqttCallbackInfo_t * pCallbackInfo,
+                                           IotMqttReference_t * pSubscriptionRef );
 
 /*-----------------------------------------------------------*/
 
@@ -177,15 +194,25 @@ static void _mqttOperation_tryDestroy( void * pData )
     {
         _IotMqtt_DestroyOperation( pOperation );
     }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
 }
 
 /*-----------------------------------------------------------*/
 
-static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
-                                                  const IotMqttNetIf_t * const pNetworkInterface,
-                                                  uint16_t keepAliveSeconds )
+static bool _createKeepAliveJob( bool awsIotMqttMode,
+                                 _mqttConnection_t * pMqttConnection,
+                                 uint16_t keepAliveSeconds )
 {
-    _mqttConnection_t * pNewMqttConnection = NULL;
+    bool status = true;
+    IotMqttError_t serializeStatus = IOT_MQTT_SUCCESS;
+    IotTaskPoolError_t jobStatus = IOT_TASKPOOL_SUCCESS;
+
+    /* Default PINGREQ serializer function. */
+    IotMqttError_t ( * serializePingreq )( uint8_t ** const,
+                                           size_t * const ) = _IotMqtt_SerializePingreq;
 
     /* AWS IoT service limits set minimum and maximum values for keep-alive interval.
      * Adjust the user-provided keep-alive interval based on these requirements. */
@@ -195,11 +222,86 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
         {
             keepAliveSeconds = _AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE;
         }
-        else if( ( keepAliveSeconds > _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE ) || ( keepAliveSeconds == 0 ) )
+        else if( keepAliveSeconds > _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE )
         {
             keepAliveSeconds = _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE;
         }
+        else if( keepAliveSeconds == 0 )
+        {
+            keepAliveSeconds = _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE;
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
     }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
+
+    /* Convert the keep-alive interval to milliseconds. */
+    pMqttConnection->keepAliveMs = keepAliveSeconds * 1000;
+    pMqttConnection->nextKeepAliveMs = pMqttConnection->keepAliveMs;
+
+    /* Choose a PINGREQ serializer function. */
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+        if( pMqttConnection->network.serialize.pingreq != NULL )
+        {
+            serializePingreq = pMqttConnection->network.serialize.pingreq;
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    #endif
+
+    /* Generate a PINGREQ packet. */
+    serializeStatus = serializePingreq( &( pMqttConnection->pPingreqPacket ),
+                                        &( pMqttConnection->pingreqPacketSize ) );
+
+    if( serializeStatus != IOT_MQTT_SUCCESS )
+    {
+        IotLogError( "Failed to allocate PINGREQ packet for new connection." );
+
+        status = false;
+    }
+    else
+    {
+        /* Create the task pool job that processes keep-alive. */
+        jobStatus = IotTaskPool_CreateJob( _IotMqtt_ProcessKeepAlive,
+                                           pMqttConnection,
+                                           &( pMqttConnection->keepAliveJob ) );
+
+        /* Task pool job creation for a pre-allocated job should never fail.
+         * Abort the program if it does. */
+        if( jobStatus != IOT_TASKPOOL_SUCCESS )
+        {
+            IotLogError( "Failed to create keep-alive job for new connection." );
+
+            IotMqtt_Assert( false );
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+
+        /* Keep-alive references its MQTT connection, so increment reference. */
+        ( pMqttConnection->references )++;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
+                                                  const IotMqttNetIf_t * pNetworkInterface,
+                                                  uint16_t keepAliveSeconds )
+{
+    _IOT_FUNCTION_ENTRY( bool, true );
+    bool referencesMutexCreated = false, subscriptionMutexCreated = false;
+    _mqttConnection_t * pNewMqttConnection = NULL;
 
     /* Allocate memory to store data for the new MQTT connection. */
     pNewMqttConnection = ( _mqttConnection_t * )
@@ -208,7 +310,12 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     if( pNewMqttConnection == NULL )
     {
         IotLogError( "Failed to allocate memory for new MQTT connection." );
-        goto errorMallocConnection;
+
+        _IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Clear the MQTT connection, then copy the MQTT server mode and network
@@ -221,17 +328,31 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     pNewMqttConnection->references = 1;
 
     /* Create the references mutex for a new connection. It is a recursive mutex. */
-    if( IotMutex_Create( &( pNewMqttConnection->referencesMutex ), true ) == false )
+    referencesMutexCreated = IotMutex_Create( &( pNewMqttConnection->referencesMutex ), true );
+
+    if( referencesMutexCreated == false )
     {
         IotLogError( "Failed to create references mutex for new connection." );
-        goto errorReferencesMutex;
+
+        _IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Create the subscription mutex for a new connection. */
-    if( IotMutex_Create( &( pNewMqttConnection->subscriptionMutex ), false ) == false )
+    subscriptionMutexCreated = IotMutex_Create( &( pNewMqttConnection->subscriptionMutex ), false );
+
+    if( subscriptionMutexCreated == false )
     {
         IotLogError( "Failed to create subscription mutex for new connection." );
-        goto errorSubscriptionMutex;
+
+        _IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Create the new connection's subscription and operation lists. */
@@ -242,58 +363,67 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     /* Check if keep-alive is active for this connection. */
     if( keepAliveSeconds != 0 )
     {
-        /* Convert the keep-alive interval to milliseconds. */
-        pNewMqttConnection->keepAliveMs = keepAliveSeconds * 1000;
-        pNewMqttConnection->nextKeepAliveMs = pNewMqttConnection->keepAliveMs;
-
-        /* Choose a PINGREQ serializer function. */
-        IotMqttError_t ( * serializePingreq )( uint8_t ** const,
-                                               size_t * const ) = _IotMqtt_SerializePingreq;
-
-        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pNewMqttConnection->network.serialize.pingreq != NULL )
-            {
-                serializePingreq = pNewMqttConnection->network.serialize.pingreq;
-            }
-        #endif
-
-        if( serializePingreq( &( pNewMqttConnection->pPingreqPacket ),
-                              &( pNewMqttConnection->pingreqPacketSize ) ) != IOT_MQTT_SUCCESS )
+        if( _createKeepAliveJob( awsIotMqttMode,
+                                 pNewMqttConnection,
+                                 keepAliveSeconds ) == false )
         {
-            IotLogError( "Failed to allocate PINGREQ packet for new connection." );
-            goto errorSerializePingreq;
+            _IOT_SET_AND_GOTO_CLEANUP( false );
         }
-
-        /* Create the task pool job that processes keep-alive. */
-        if( IotTaskPool_CreateJob( _IotMqtt_ProcessKeepAlive,
-                                   pNewMqttConnection,
-                                   &( pNewMqttConnection->keepAliveJob ) ) != IOT_TASKPOOL_SUCCESS )
+        else
         {
-            IotLogError( "Failed to create keep-alive job for new connection." );
-
-            /* Keep alive job creation should never fail when valid parameters
-             * are given. Abort the program on failure. */
-            IotMqtt_Assert( false );
+            _EMPTY_ELSE_MARKER;
         }
-
-        /* Keep-alive references its MQTT connection, so increment reference. */
-        ( pNewMqttConnection->references )++;
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
-    /* This is the successful return path. */
-    IotMqtt_Assert( pNewMqttConnection != NULL );
+    _IOT_FUNCTION_CLEANUP_BEGIN();
+
+    /* Clean up mutexes and connections if this function failed. */
+    if( status == false )
+    {
+        if( subscriptionMutexCreated == true )
+        {
+            IotMutex_Destroy( &( pNewMqttConnection->subscriptionMutex ) );
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+
+        if( referencesMutexCreated == true )
+        {
+            IotMutex_Destroy( &( pNewMqttConnection->referencesMutex ) );
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+
+        if( pNewMqttConnection != NULL )
+        {
+            IotMqtt_FreeConnection( pNewMqttConnection );
+
+            pNewMqttConnection = NULL;
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
 
     return pNewMqttConnection;
-
-errorSerializePingreq: IotMutex_Destroy( &( pNewMqttConnection->subscriptionMutex ) );
-errorSubscriptionMutex: IotMutex_Destroy( &( pNewMqttConnection->referencesMutex ) );
-errorReferencesMutex: IotMqtt_FreeConnection( pNewMqttConnection );
-errorMallocConnection: return NULL;
 }
 
 /*-----------------------------------------------------------*/
 
-static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
+static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 {
     /* Clean up keep-alive if still allocated. */
     if( pMqttConnection->keepAliveMs != 0 )
@@ -341,11 +471,11 @@ static void _destroyMqttConnection( _mqttConnection_t * const pMqttConnection )
 
 static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            IotMqttConnection_t mqttConnection,
-                                           const IotMqttSubscription_t * const pSubscriptionList,
+                                           const IotMqttSubscription_t * pSubscriptionList,
                                            size_t subscriptionCount,
                                            uint32_t flags,
-                                           const IotMqttCallbackInfo_t * const pCallbackInfo,
-                                           IotMqttReference_t * const pSubscriptionRef )
+                                           const IotMqttCallbackInfo_t * pCallbackInfo,
+                                           IotMqttReference_t * pSubscriptionRef )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t * pSubscriptionOperation = NULL;

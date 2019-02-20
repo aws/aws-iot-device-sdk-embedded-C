@@ -77,7 +77,7 @@
 /**
  * @brief Assign a value to the status variable and jump to the cleanup section.
  *
- * @param[in] errorValue The value to assign to the status variable.
+ * @param[in] statusValue The value to assign to the status variable.
  */
 #define _IOT_SET_AND_GOTO_CLEANUP( statusValue )           { status = ( statusValue ); _IOT_GOTO_CLEANUP(); }
 
