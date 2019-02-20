@@ -393,7 +393,6 @@ static void _reentrantCallback( void * pArgument,
         {
             status = false;
         }
-
     }
 
     /* Disconnect and unblock the main test thread. */
@@ -589,6 +588,8 @@ TEST_GROUP_RUNNER( MQTT_System )
     RUN_TEST_CASE( MQTT_System, SubscribePublishAsync );
     RUN_TEST_CASE( MQTT_System, LastWillAndTestament );
     RUN_TEST_CASE( MQTT_System, RestorePreviousSession );
+    RUN_TEST_CASE( MQTT_System, WaitAfterDisconnect );
+    RUN_TEST_CASE( MQTT_System, SubscribeCompleteReentrancy );
     RUN_TEST_CASE( MQTT_System, IncomingPublishReentrancy )
 }
 
@@ -955,6 +956,139 @@ TEST( MQTT_System, RestorePreviousSession )
 
         IotMqtt_Disconnect( _IotTestMqttConnection, false );
     }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test that Wait can be safely invoked after Disconnect.
+ */
+TEST( MQTT_System, WaitAfterDisconnect )
+{
+    int32_t i = 0;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotMqttReference_t pPublishRef[ 3 ] = { IOT_MQTT_REFERENCE_INITIALIZER };
+
+    /* Set the client identifier and length. */
+    connectInfo.pClientIdentifier = _pClientIdentifier;
+    connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );
+
+    /* Set the members of the publish info. */
+    publishInfo.qos = IOT_MQTT_QOS_1;
+    publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/WaitAfterDisconnect";
+    publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
+    publishInfo.pPayload = _pSamplePayload;
+    publishInfo.payloadLength = _samplePayloadLength;
+    publishInfo.retryLimit = 3;
+    publishInfo.retryMs = 5000;
+
+    /* Establish the MQTT connection. */
+    status = IotMqtt_Connect( &_IotTestMqttConnection,
+                              &_IotTestNetworkInterface,
+                              &connectInfo,
+                              IOT_TEST_MQTT_TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+
+    if( TEST_PROTECT() )
+    {
+        /* Publish a sequence of messages. */
+        for( i = 0; i < 3; i++ )
+        {
+            status = IotMqtt_Publish( _IotTestMqttConnection,
+                                      &publishInfo,
+                                      IOT_MQTT_FLAG_WAITABLE,
+                                      NULL,
+                                      &( pPublishRef[ i ] ) );
+            TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING, status );
+        }
+    }
+
+    /* Disconnect the MQTT connection. */
+    IotMqtt_Disconnect( _IotTestMqttConnection, false );
+
+    if( TEST_PROTECT() )
+    {
+        /* Waiting on operations after a connection is disconnected should not crash.
+         * The actual statuses of the PUBLISH operations may vary depending on the
+         * timing of publish versus disconnect, so the statuses are not checked. */
+        for( i = 0; i < 3; i++ )
+        {
+            status = IotMqtt_Wait( pPublishRef[ i ], 100 );
+        }
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test that API functions can be invoked from a callback for a completed
+ * subscription operation.
+ */
+TEST( MQTT_System, SubscribeCompleteReentrancy )
+{
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+    IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
+
+    /* Two semaphores are needed for this test: one for incoming PUBLISH and one
+     * for test completion. */
+    IotSemaphore_t pWaitSemaphores[ 2 ];
+
+    /* Create the semaphores. */
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( pWaitSemaphores[ 0 ] ), 0, 1 ) );
+
+    if( TEST_PROTECT() )
+    {
+        TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( pWaitSemaphores[ 1 ] ), 0, 1 ) );
+
+        if( TEST_PROTECT() )
+        {
+            connectInfo.pClientIdentifier = _pClientIdentifier;
+            connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );
+
+            if( TEST_PROTECT() )
+            {
+                /* Establish the MQTT connection. */
+                status = IotMqtt_Connect( &_IotTestMqttConnection,
+                                          &_IotTestNetworkInterface,
+                                          &connectInfo,
+                                          IOT_TEST_MQTT_TIMEOUT_MS );
+                TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+
+                /* Subscribe with a completion callback. */
+                subscription.qos = 1;
+                subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/Reentrancy";
+                subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
+                subscription.callback.function = _publishReceived;
+                subscription.callback.param1 = &( pWaitSemaphores[ 0 ] );
+
+                callbackInfo.function = _reentrantCallback;
+                callbackInfo.param1 = pWaitSemaphores;
+
+                status = IotMqtt_Subscribe( _IotTestMqttConnection,
+                                            &subscription,
+                                            1,
+                                            0,
+                                            &callbackInfo,
+                                            NULL );
+                TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING, status );
+
+                /* Wait for the reentrant callback to complete. */
+                if( IotSemaphore_TimedWait( &( pWaitSemaphores[ 1 ] ),
+                                            IOT_TEST_MQTT_TIMEOUT_MS ) == false )
+                {
+                    TEST_FAIL_MESSAGE( "Timed out waiting for reentrant callback." );
+                }
+            }
+        }
+
+        IotSemaphore_Destroy( &( pWaitSemaphores[ 1 ] ) );
+    }
+
+    IotSemaphore_Destroy( &( pWaitSemaphores[ 0 ] ) );
 }
 
 /*-----------------------------------------------------------*/
