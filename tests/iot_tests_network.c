@@ -74,14 +74,12 @@ bool IotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
 /**
  * @brief Network interface close connection function for the tests.
  *
- * @param[in] reason Currently unused.
  * @param[in] pNetworkConnection The connection to close. Pass NULL to close
  * the global network connection created by #IotTest_NetworkSetup.
  *
  * @return Always returns #IOT_NETWORK_SUCCESS.
  */
-IotNetworkError_t IotTest_NetworkClose( int32_t reason,
-                                        void * pNetworkConnection );
+IotNetworkError_t IotTest_NetworkClose( void * pNetworkConnection );
 
 /**
  * @brief Network interface cleanup function for the tests.
@@ -153,7 +151,7 @@ void IotTest_NetworkCleanup( void )
     /* Close the TCP connection to the server. */
     if( _networkConnectionCreated == true )
     {
-        IotTest_NetworkClose( 0, NULL );
+        IotTest_NetworkClose( NULL );
         IotTest_NetworkDestroy( &_networkConnection );
         _networkConnectionCreated = false;
     }
@@ -192,7 +190,7 @@ bool IotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
                                                 IotMqtt_ReceiveCallback,
                                                 pMqttConnection ) != IOT_NETWORK_SUCCESS )
     {
-        _pNetworkInterface->close( 0, pNewConnection );
+        _pNetworkInterface->close( pNewConnection );
         _pNetworkInterface->destroy( pNewConnection );
 
         return false;
@@ -203,22 +201,18 @@ bool IotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
 
 /*-----------------------------------------------------------*/
 
-IotNetworkError_t IotTest_NetworkClose( int32_t reason,
-                                        void * pNetworkConnection )
+IotNetworkError_t IotTest_NetworkClose( void * pNetworkConnection )
 {
-    /* Ignore the reason for closure. */
-    ( void ) reason;
-
     /* Close the provided network handle; if that is NULL, close the
      * global network handle. */
     if( ( pNetworkConnection != NULL ) &&
         ( pNetworkConnection != &_networkConnection ) )
     {
-        _pNetworkInterface->close( 0, pNetworkConnection );
+        _pNetworkInterface->close( pNetworkConnection );
     }
     else if( _networkConnectionCreated == true )
     {
-        _pNetworkInterface->close( 0, &_networkConnection );
+        _pNetworkInterface->close( &_networkConnection );
     }
 
     return IOT_NETWORK_SUCCESS;

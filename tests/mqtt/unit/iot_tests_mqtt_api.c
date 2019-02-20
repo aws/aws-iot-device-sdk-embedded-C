@@ -418,12 +418,9 @@ static size_t _dupChecker( void * pSendContext,
 /**
  * @brief A disconnect function that counts how many times it was invoked.
  */
-static IotNetworkError_t _disconnect( int32_t reason,
-                                      void * pDisconnectContext )
+static IotNetworkError_t _disconnect( void * pDisconnectContext )
 {
     int32_t * pDisconnectCount = ( int32_t * ) pDisconnectContext;
-
-    ( void ) reason;
 
     /* Increment the counter for how many times this function was invoked. */
     if( pDisconnectCount != NULL )

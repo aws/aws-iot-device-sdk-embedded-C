@@ -615,7 +615,7 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * const pMqttConnection 
      * packet was sent. */
     if( pMqttConnection->network.disconnect != NULL )
     {
-        pMqttConnection->network.disconnect( 0, pMqttConnection->network.pDisconnectContext );
+        pMqttConnection->network.disconnect( pMqttConnection->network.pDisconnectContext );
 
         IotLogInfo( "Network connection of MQTT connection %p closed.", pMqttConnection );
     }

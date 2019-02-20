@@ -178,7 +178,7 @@ int main( int argc,
          * However, the network close function is safe to call on a closed connection.
          * On the other hand, the destroy connection function must only be called ONCE.
          */
-        IotNetworkOpenssl_Close( 0, &networkConnection );
+        IotNetworkOpenssl_Close( &networkConnection );
         IotNetworkOpenssl_Destroy( &networkConnection );
     }
 

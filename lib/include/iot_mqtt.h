@@ -660,14 +660,13 @@ typedef struct IotMqttNetIf
      * If this function is not provided, the network connection will not be closed
      * by the MQTT library.
      *
-     * @param[in] int32_t Currently unused.
      * @param[in] void * #IotMqttNetIf_t.pDisconnectContext
      *
      * @note Optional; set to `NULL` to ignore. The MQTT spec states that connections
      * must be closed in certain conditions; if this function is not provided, the
      * MQTT library is noncompliant.
      */
-    IotNetworkError_t ( * disconnect )( int32_t, void * );
+    IotNetworkError_t ( * disconnect )( void * );
 
     /*
      * In addition to providing the network send and disconnect functions, this
