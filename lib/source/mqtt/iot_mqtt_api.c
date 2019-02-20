@@ -1307,7 +1307,7 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
         }
         else
         {
-            /* Retreive the status of the completed operation. */
+            /* Retrieve the status of the completed operation. */
             status = pOperation->status;
         }
 
