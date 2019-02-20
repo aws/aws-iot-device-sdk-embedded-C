@@ -341,7 +341,7 @@ static void _reentrantCallback( void * pArgument,
     const char * const pTopic = IOT_TEST_MQTT_TOPIC_PREFIX "/Reentrancy";
     const uint16_t topicLength = ( uint16_t ) strlen( pTopic );
 
-    publishInfo.QoS = 1;
+    publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pTopicName = pTopic;
     publishInfo.topicNameLength = topicLength;
     publishInfo.pPayload = _pSamplePayload;
@@ -408,7 +408,7 @@ static void _reentrantCallback( void * pArgument,
 /**
  * @brief Run the subscribe-publish-wait tests at various QoS.
  */
-static void _subscribePublishWait( int QoS )
+static void _subscribePublishWait( IotMqttQos_t qos )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttNetIf_t networkInterface = _IotTestNetworkInterface;
@@ -446,7 +446,7 @@ static void _subscribePublishWait( int QoS )
         if( TEST_PROTECT() )
         {
             /* Set the members of the subscription. */
-            subscription.QoS = QoS;
+            subscription.qos = qos;
             subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishWait";
             subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
             subscription.callback.function = _publishReceived;
@@ -462,7 +462,7 @@ static void _subscribePublishWait( int QoS )
             TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
             /* Set the members of the publish info. */
-            publishInfo.QoS = QoS;
+            publishInfo.qos = qos;
             publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishWait";
             publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
             publishInfo.pPayload = _pSamplePayload;
@@ -506,7 +506,7 @@ static void _subscribePublishWait( int QoS )
         TEST_ASSERT_EQUAL_INT( true, _unsubscribeSerializerOverride );
         TEST_ASSERT_EQUAL_INT( true, _disconnectSerializerOverride );
 
-        if( QoS == 1 )
+        if( qos == IOT_MQTT_QOS_1 )
         {
             TEST_ASSERT_EQUAL_INT( true, _pubackSerializerOverride );
         }
@@ -599,7 +599,7 @@ TEST_GROUP_RUNNER( MQTT_System )
  */
 TEST( MQTT_System, SubscribePublishWaitQoS0 )
 {
-    _subscribePublishWait( 0 );
+    _subscribePublishWait( IOT_MQTT_QOS_0 );
 }
 
 /*-----------------------------------------------------------*/
@@ -609,7 +609,7 @@ TEST( MQTT_System, SubscribePublishWaitQoS0 )
  */
 TEST( MQTT_System, SubscribePublishWaitQoS1 )
 {
-    _subscribePublishWait( 1 );
+    _subscribePublishWait( IOT_MQTT_QOS_1 );
 }
 
 /*-----------------------------------------------------------*/
@@ -643,7 +643,7 @@ TEST( MQTT_System, SubscribePublishAsync )
     connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );
 
     /* Initialize members of the publish info. */
-    publishInfo.QoS = 1;
+    publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishAsync";
     publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
     publishInfo.pPayload = _pSamplePayload;
@@ -996,13 +996,13 @@ TEST( MQTT_System, IncomingPublishReentrancy )
                 TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
                 /* Subscribe with to the test topics. */
-                pSubscription[ 0 ].QoS = 1;
+                pSubscription[ 0 ].qos = IOT_MQTT_QOS_1;
                 pSubscription[ 0 ].pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/IncomingPublishReentrancy";
                 pSubscription[ 0 ].topicFilterLength = ( uint16_t ) strlen( pSubscription[ 0 ].pTopicFilter );
                 pSubscription[ 0 ].callback.function = _reentrantCallback;
                 pSubscription[ 0 ].callback.param1 = pWaitSemaphores;
 
-                pSubscription[ 1 ].QoS = 1;
+                pSubscription[ 1 ].qos = IOT_MQTT_QOS_1;
                 pSubscription[ 1 ].pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/Reentrancy";
                 pSubscription[ 1 ].topicFilterLength = ( uint16_t ) strlen( pSubscription[ 1 ].pTopicFilter );
                 pSubscription[ 1 ].callback.function = _publishReceived;
@@ -1016,7 +1016,7 @@ TEST( MQTT_System, IncomingPublishReentrancy )
                 TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
                 /* Publish a message to the test topic. */
-                publishInfo.QoS = 1;
+                publishInfo.qos = IOT_MQTT_QOS_1;
                 publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/IncomingPublishReentrancy";
                 publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
                 publishInfo.pPayload = _pSamplePayload;

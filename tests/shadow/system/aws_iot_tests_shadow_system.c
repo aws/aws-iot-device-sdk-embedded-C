@@ -261,7 +261,7 @@ static void _updatedCallback( void * pArgument,
 /**
  * @brief Run the Update-Get-Delete asynchronous tests at various QoS.
  */
-static void _updateGetDeleteAsync( int QoS )
+static void _updateGetDeleteAsync( IotMqttQos_t qos )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
@@ -275,7 +275,7 @@ static void _updateGetDeleteAsync( int QoS )
     /* Initialize the common members of the Shadow document info. */
     documentInfo.pThingName = AWS_IOT_TEST_SHADOW_THING_NAME;
     documentInfo.thingNameLength = _THING_NAME_LENGTH;
-    documentInfo.QoS = QoS;
+    documentInfo.qos = qos;
 
     /* Create the wait semaphore for operations. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( callbackParam.waitSem ), 0, 1 ) );
@@ -345,7 +345,7 @@ static void _updateGetDeleteAsync( int QoS )
 /**
  * @brief Run the Update-Get-Delete blocking tests at various QoS.
  */
-static void _updateGetDeleteBlocking( int QoS )
+static void _updateGetDeleteBlocking( IotMqttQos_t qos )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowDocumentInfo_t documentInfo = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
@@ -355,7 +355,7 @@ static void _updateGetDeleteBlocking( int QoS )
     /* Initialize the common members of the Shadow document info. */
     documentInfo.pThingName = AWS_IOT_TEST_SHADOW_THING_NAME;
     documentInfo.thingNameLength = _THING_NAME_LENGTH;
-    documentInfo.QoS = QoS;
+    documentInfo.qos = qos;
 
     /* Set the members of the Shadow document info for UPDATE. */
     documentInfo.update.pUpdateDocument = _TEST_SHADOW_DOCUMENT;
@@ -512,7 +512,7 @@ TEST_GROUP_RUNNER( Shadow_System )
  */
 TEST( Shadow_System, UpdateGetDeleteAsyncQoS0 )
 {
-    _updateGetDeleteAsync( 0 );
+    _updateGetDeleteAsync( IOT_MQTT_QOS_0 );
 }
 
 /*-----------------------------------------------------------*/
@@ -522,7 +522,7 @@ TEST( Shadow_System, UpdateGetDeleteAsyncQoS0 )
  */
 TEST( Shadow_System, UpdateGetDeleteAsyncQoS1 )
 {
-    _updateGetDeleteAsync( 1 );
+    _updateGetDeleteAsync( IOT_MQTT_QOS_1 );
 }
 
 /*-----------------------------------------------------------*/
@@ -532,7 +532,7 @@ TEST( Shadow_System, UpdateGetDeleteAsyncQoS1 )
  */
 TEST( Shadow_System, UpdateGetDeleteBlockingQoS0 )
 {
-    _updateGetDeleteBlocking( 0 );
+    _updateGetDeleteBlocking( IOT_MQTT_QOS_0 );
 }
 
 /*-----------------------------------------------------------*/
@@ -542,7 +542,7 @@ TEST( Shadow_System, UpdateGetDeleteBlockingQoS0 )
  */
 TEST( Shadow_System, UpdateGetDeleteBlockingQoS1 )
 {
-    _updateGetDeleteBlocking( 1 );
+    _updateGetDeleteBlocking( IOT_MQTT_QOS_1 );
 }
 
 /*-----------------------------------------------------------*/

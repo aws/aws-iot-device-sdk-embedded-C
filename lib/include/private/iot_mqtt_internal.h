@@ -155,24 +155,6 @@
     #ifndef IotMqtt_FreeSubscription
         #define IotMqtt_FreeSubscription    Iot_FreeMqttSubscription
     #endif
-
-/**
- * @brief Allocate an #_mqttTimerEvent_t. This function should have the same
- * signature as [malloc]
- * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
- */
-    #ifndef IotMqtt_MallocTimerEvent
-        #define IotMqtt_MallocTimerEvent    Iot_MallocMqttTimerEvent
-    #endif
-
-/**
- * @brief Free an #_mqttTimerEvent_t. This function should have the same
- * signature as [free]
- * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
- */
-    #ifndef IotMqtt_FreeTimerEvent
-        #define IotMqtt_FreeTimerEvent    Iot_FreeMqttTimerEvent
-    #endif
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
     #include <stdlib.h>
 
@@ -206,14 +188,6 @@
 
     #ifndef IotMqtt_FreeSubscription
         #define IotMqtt_FreeSubscription    free
-    #endif
-
-    #ifndef IotMqtt_MallocTimerEvent
-        #define IotMqtt_MallocTimerEvent    malloc
-    #endif
-
-    #ifndef IotMqtt_FreeTimerEvent
-        #define IotMqtt_FreeTimerEvent    free
     #endif
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
@@ -780,7 +754,7 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
  * @brief Free resources used to record an MQTT operation. This is called when
  * the operation completes.
  *
- * @param[in] pData The operation which completed.
+ * @param[in] pOperation The operation which completed.
  */
 void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation );
 

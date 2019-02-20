@@ -985,7 +985,7 @@ TEST( MQTT_Unit_API, PublishQoS1 )
     TEST_ASSERT_NOT_NULL( pMqttConnection );
 
     /* Set the publish info. */
-    publishInfo.QoS = 1;
+    publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pTopicName = _TEST_TOPIC_NAME;
     publishInfo.topicNameLength = _TEST_TOPIC_NAME_LENGTH;
 
@@ -1066,7 +1066,7 @@ TEST( MQTT_Unit_API, PublishDuplicates )
     TEST_ASSERT_NOT_NULL( pMqttConnection );
 
     /* Set the publish info. */
-    publishInfo.QoS = 1;
+    publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pTopicName = _TEST_TOPIC_NAME;
     publishInfo.topicNameLength = _TEST_TOPIC_NAME_LENGTH;
     publishInfo.pPayload = "test";

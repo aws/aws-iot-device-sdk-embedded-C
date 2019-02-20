@@ -717,14 +717,14 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
         /* Set the document info if this operation is not a Shadow DELETE. */
         if( pOperation->type != _SHADOW_DELETE )
         {
-            publishInfo.QoS = pDocumentInfo->QoS;
+            publishInfo.qos = pDocumentInfo->qos;
             publishInfo.retryLimit = pDocumentInfo->retryLimit;
             publishInfo.retryMs = pDocumentInfo->retryMs;
 
             IotLogDebug( "Shadow %s message will be published at QoS %d with "
                          "retryLimit %d and retryMs %llu.",
                          _pAwsIotShadowOperationNames[ pOperation->type ],
-                         publishInfo.QoS,
+                         publishInfo.qos,
                          publishInfo.retryLimit,
                          publishInfo.retryMs );
         }

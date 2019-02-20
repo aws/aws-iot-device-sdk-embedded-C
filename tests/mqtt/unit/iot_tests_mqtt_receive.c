@@ -484,7 +484,7 @@ static void _publishCallback( void * param1,
 
     /* QoS 2 is valid for these tests, but currently unsupported by the MQTT library.
      * Change the QoS to 0 so that QoS validation passes. */
-    pPublish->message.info.QoS = 0;
+    pPublish->message.info.qos = IOT_MQTT_QOS_0;
 
     /* Check that the parameters to this function are valid. */
     if( ( _IotMqtt_ValidatePublish( _AWS_IOT_MQTT_SERVER,
@@ -1388,12 +1388,12 @@ TEST( MQTT_Unit_Receive, SubackValid )
                                                       10 ) );
 
     /* Add 2 additional subscriptions to the MQTT connection. */
-    pSubscriptions[ 0 ].QoS = 1;
+    pSubscriptions[ 0 ].qos = IOT_MQTT_QOS_1;
     pSubscriptions[ 0 ].callback.function = _publishCallback;
     pSubscriptions[ 0 ].pTopicFilter = _TEST_TOPIC_NAME "1";
     pSubscriptions[ 0 ].topicFilterLength = _TEST_TOPIC_LENGTH + 1;
 
-    pSubscriptions[ 1 ].QoS = 1;
+    pSubscriptions[ 1 ].qos = IOT_MQTT_QOS_1;
     pSubscriptions[ 1 ].callback.function = _publishCallback;
     pSubscriptions[ 1 ].pTopicFilter = _TEST_TOPIC_NAME "2";
     pSubscriptions[ 1 ].topicFilterLength = _TEST_TOPIC_LENGTH + 1;
@@ -1441,7 +1441,7 @@ TEST( MQTT_Unit_Receive, SubackValid )
                                                            pSubscriptions[ 0 ].pTopicFilter,
                                                            pSubscriptions[ 0 ].topicFilterLength,
                                                            &currentSubscription ) );
-        currentSubscription.QoS = pSubscriptions[ 0 ].QoS;
+        currentSubscription.qos = pSubscriptions[ 0 ].qos;
         TEST_ASSERT_EQUAL_MEMORY( &pSubscriptions[ 0 ],
                                   &currentSubscription,
                                   sizeof( IotMqttSubscription_t ) );

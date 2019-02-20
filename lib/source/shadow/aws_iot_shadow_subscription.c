@@ -138,7 +138,7 @@ static AwsIotShadowError_t _modifyOperationSubscriptions( IotMqttConnection_t mq
                          ( mqttOperation == IotMqtt_TimedUnsubscribe ) );
 
     /* Per the AWS IoT documentation, Shadow topic subscriptions are QoS 1. */
-    subscription.QoS = 1;
+    subscription.qos = IOT_MQTT_QOS_1;
 
     IotLogDebug( "%s Shadow subscription for %.*s",
                  mqttOperation == IotMqtt_TimedSubscribe ? "Adding" : "Removing",
@@ -264,9 +264,9 @@ void _AwsIotShadow_RemoveSubscription( _shadowSubscription_t * const pSubscripti
     {
         if( pSubscription->references[ i ] > 0 )
         {
-            IotLogDebug( "Reference count %d for %.*s subscription object. "
+            IotLogDebug( "Reference count %ld for %.*s subscription object. "
                          "Subscription cannot be removed yet.",
-                         pSubscription->references[ i ],
+                         ( long int ) pSubscription->references[ i ],
                          pSubscription->thingNameLength,
                          pSubscription->pThingName );
 

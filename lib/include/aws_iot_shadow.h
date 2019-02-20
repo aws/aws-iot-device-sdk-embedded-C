@@ -102,7 +102,7 @@ typedef enum AwsIotShadowError
      * [AwsIotShadowCallbackParam_t.operation.result](@ref AwsIotShadowCallbackParam_t.result)
      * when successful.
      */
-    AWS_IOT_SHADOW_SUCCESS,
+    AWS_IOT_SHADOW_SUCCESS = 0,
 
     /**
      * @brief Shadow operation queued, awaiting result.
@@ -449,8 +449,8 @@ typedef struct AwsIotShadowDocumentInfo
     const char * pThingName; /**< @brief The Thing Name associated with this Shadow document. */
     size_t thingNameLength;  /**< @brief Length of #AwsIotShadowDocumentInfo_t.pThingName. */
 
-    int QoS;                 /**< @brief QoS when sending a Shadow get or update message. See #IotMqttPublishInfo_t.QoS. */
-    int retryLimit;          /**< @brief Maximum number of retries for a Shadow get or update message. See #IotMqttPublishInfo_t.retryLimit. */
+    IotMqttQos_t qos;        /**< @brief QoS when sending a Shadow get or update message. See #IotMqttPublishInfo_t.qos. */
+    uint32_t retryLimit;     /**< @brief Maximum number of retries for a Shadow get or update message. See #IotMqttPublishInfo_t.retryLimit. */
     uint64_t retryMs;        /**< @brief First retry time for a Shadow get or update message. See IotMqttPublishInfo_t.retryMs. */
 
     union

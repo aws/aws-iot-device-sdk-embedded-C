@@ -239,13 +239,13 @@ TEST( MQTT_Unit_Validate, ValidatePublish )
     publishInfo.payloadLength = 0;
 
     /* Negative QoS or QoS > 2. */
-    publishInfo.QoS = -1;
+    publishInfo.qos = -1;
     validateStatus = _IotMqtt_ValidatePublish( false, &publishInfo );
     TEST_ASSERT_EQUAL_INT( false, validateStatus );
-    publishInfo.QoS = 3;
+    publishInfo.qos = 3;
     validateStatus = _IotMqtt_ValidatePublish( false, &publishInfo );
     TEST_ASSERT_EQUAL_INT( false, validateStatus );
-    publishInfo.QoS = 0;
+    publishInfo.qos = IOT_MQTT_QOS_0;
 
     /* Negative retry limit. */
     publishInfo.retryLimit = -1;
@@ -272,10 +272,10 @@ TEST( MQTT_Unit_Validate, ValidatePublish )
     /* AWS IoT MQTT service limit tests. */
     #if _AWS_IOT_MQTT_SERVER == true
         /* QoS 2. */
-        publishInfo.QoS = 2;
+        publishInfo.qos = IOT_MQTT_QOS_2;
         validateStatus = _IotMqtt_ValidatePublish( true, &publishInfo );
         TEST_ASSERT_EQUAL_INT( false, validateStatus );
-        publishInfo.QoS = 0;
+        publishInfo.qos = IOT_MQTT_QOS_0;
 
         /* Retained message. */
         publishInfo.retain = true;
@@ -352,16 +352,16 @@ TEST( MQTT_Unit_Validate, ValidateSubscriptionList )
     TEST_ASSERT_EQUAL_INT( true, validateStatus );
 
     /* One subscription with invalid QoS. */
-    pSubscriptions[ _SUBSCRIPTION_COUNT - 1 ].QoS = -1;
+    pSubscriptions[ _SUBSCRIPTION_COUNT - 1 ].qos = -1;
     validateStatus = _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE, false, pSubscriptions, _SUBSCRIPTION_COUNT );
     TEST_ASSERT_EQUAL_INT( false, validateStatus );
-    pSubscriptions[ _SUBSCRIPTION_COUNT - 1 ].QoS = 3;
+    pSubscriptions[ _SUBSCRIPTION_COUNT - 1 ].qos = 3;
     validateStatus = _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE, false, pSubscriptions, _SUBSCRIPTION_COUNT );
     TEST_ASSERT_EQUAL_INT( false, validateStatus );
     /* QoS is not validated for UNSUBSCRIBE. */
     validateStatus = _IotMqtt_ValidateSubscriptionList( IOT_MQTT_UNSUBSCRIBE, false, pSubscriptions, _SUBSCRIPTION_COUNT );
     TEST_ASSERT_EQUAL_INT( true, validateStatus );
-    pSubscriptions[ _SUBSCRIPTION_COUNT - 1 ].QoS = 0;
+    pSubscriptions[ _SUBSCRIPTION_COUNT - 1 ].qos = IOT_MQTT_QOS_0;
 
     /* One subscription with no callback. */
     pSubscriptions[ _SUBSCRIPTION_COUNT - 1 ].callback.function = NULL;
@@ -439,13 +439,13 @@ TEST( MQTT_Unit_Validate, ValidateSubscriptionList )
         TEST_ASSERT_EQUAL_INT( false, validateStatus );
 
         /* QoS 2. */
-        pSubscriptions[ 0 ].QoS = 2;
+        pSubscriptions[ 0 ].qos = IOT_MQTT_QOS_2;
         validateStatus = _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
                                                             true,
                                                             pSubscriptions,
                                                             _SUBSCRIPTION_COUNT );
         TEST_ASSERT_EQUAL_INT( false, validateStatus );
-        pSubscriptions[ 0 ].QoS = 0;
+        pSubscriptions[ 0 ].qos = IOT_MQTT_QOS_0;
 
         /* Topic filter too long. */
         pSubscriptions[ 0 ].topicFilterLength = _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH + 1;

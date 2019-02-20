@@ -429,7 +429,7 @@ typedef struct _shadowSubscription
 {
     IotLink_t link;                                                 /**< @brief List link member. */
 
-    int references[ _SHADOW_OPERATION_COUNT ];                      /**< @brief Reference counter for Shadow operation topics. */
+    int32_t references[ _SHADOW_OPERATION_COUNT ];                  /**< @brief Reference counter for Shadow operation topics. */
     AwsIotShadowCallbackInfo_t callbacks[ _SHADOW_CALLBACK_COUNT ]; /**< @brief Shadow callbacks for this Thing. */
 
     /**

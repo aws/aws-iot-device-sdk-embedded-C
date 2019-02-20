@@ -270,6 +270,28 @@ typedef enum IotMqttOperationType
     IOT_MQTT_DISCONNECT         /**< Client-to-server DISCONNECT. */
 } IotMqttOperationType_t;
 
+/**
+ * @ingroup mqtt_datatypes_enums
+ * @brief Quality of service levels for MQTT PUBLISH messages.
+ *
+ * All MQTT PUBLISH messages, including Last Will and Testament and messages
+ * received on subscription filters, have an associated <i>Quality of Service</i>,
+ * which defines any delivery guarantees for that message.
+ * - QoS 0 messages will be delivered at most once. This is a "best effort"
+ * transmission with no retransmissions.
+ * - QoS 1 messages will be delivered at least once. See #IotMqttPublishInfo_t
+ * for the retransmission strategy this library uses to redeliver messages
+ * assumed to be lost.
+ *
+ * @attention QoS 2 is not supported by this library and should not be used.
+ */
+typedef enum IotMqttQos
+{
+    IOT_MQTT_QOS_0 = 0, /**< Delivery at most once. */
+    IOT_MQTT_QOS_1 = 1, /**< Delivery at least once. See #IotMqttPublishInfo_t for client-side retry strategy. */
+    IOT_MQTT_QOS_2 = 2  /**< Delivery exactly once. Unsupported, but enumerated for completeness. */
+} IotMqttQos_t;
+
 /*------------------------- MQTT parameter structs --------------------------*/
 
 /**
@@ -342,7 +364,7 @@ typedef enum IotMqttOperationType
  */
 typedef struct IotMqttPublishInfo
 {
-    int QoS;                   /**< @brief QoS of message. Must be 0 or 1. */
+    IotMqttQos_t qos;          /**< @brief QoS of message. Must be 0 or 1. */
     bool retain;               /**< @brief MQTT message retain flag. */
 
     const char * pTopicName;   /**< @brief Topic name of PUBLISH. */
@@ -352,7 +374,7 @@ typedef struct IotMqttPublishInfo
     size_t payloadLength;      /**< @brief Length of #IotMqttPublishInfo_t.pPayload. For LWT messages, this is limited to 65535. */
 
     uint64_t retryMs;          /**< @brief If no response is received within this time, the message is retransmitted. */
-    int retryLimit;            /**< @brief How many times to attempt retransmission. */
+    uint32_t retryLimit;       /**< @brief How many times to attempt retransmission. */
 } IotMqttPublishInfo_t;
 
 /**
@@ -477,7 +499,7 @@ typedef struct IotMqttCallbackInfo
  *
  * An array of these is passed to @ref mqtt_function_subscribe and @ref
  * mqtt_function_unsubscribe. However, #IotMqttSubscription_t.callback and
- * and #IotMqttSubscription_t.QoS are ignored by @ref mqtt_function_unsubscribe.
+ * and #IotMqttSubscription_t.qos are ignored by @ref mqtt_function_unsubscribe.
  *
  * @initializer{IotMqttSubscription_t,IOT_MQTT_SUBSCRIPTION_INITIALIZER}
  *
@@ -492,7 +514,7 @@ typedef struct IotMqttSubscription
      *
      * Must be `0` or `1`. Ignored by @ref mqtt_function_unsubscribe.
      */
-    int QoS;
+    IotMqttQos_t qos;
 
     const char * pTopicFilter;         /**< @brief Topic filter of subscription. */
     uint16_t topicFilterLength;        /**< @brief Length of #IotMqttSubscription_t.pTopicFilter. */
@@ -977,7 +999,7 @@ typedef struct IotMqttNetIf
  *
  * This flag is always valid for @ref mqtt_function_subscribe and
  * @ref mqtt_function_unsubscribe. If passed to @ref mqtt_function_publish,
- * the parameter [pPublishInfo->QoS](@ref IotMqttPublishInfo_t.QoS) must not be `0`.
+ * the parameter [pPublishInfo->qos](@ref IotMqttPublishInfo_t.qos) must not be `0`.
  *
  * An #IotMqttReference_t <b>MUST</b> be provided if this flag is set. Additionally, an
  * #IotMqttCallbackInfo_t <b>MUST NOT</b> be provided.
@@ -1209,7 +1231,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
  * - #IOT_MQTT_SUCCESS
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
- * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_NETWORK_ERROR
  * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * - #IOT_MQTT_TIMEOUT
@@ -1239,7 +1261,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
  * connectInfo.clientIdentifierLength = 22;
  *
  * // Set the members of the will info (retain and retry not used).
- * willInfo.QoS = 1;
+ * willInfo.qos = IOT_MQTT_QOS_1;
  * willInfo.pTopicName = "will/topic/name";
  * willInfo.topicNameLength = 15;
  * willInfo.pPayload = "MQTT client unexpectedly disconnected.";
@@ -1351,7 +1373,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  * @return Upon completion of the subscription (either through an
  * #IotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
  * - #IOT_MQTT_SUCCESS
- * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_NETWORK_ERROR
  * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * - #IOT_MQTT_SERVER_REFUSED
@@ -1380,7 +1402,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  * // Set the subscription information.
  * for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
  * {
- *     pSubscriptions[ i ].QoS = 1;
+ *     pSubscriptions[ i ].qos = IOT_MQTT_QOS_1;
  *     pSubscriptions[ i ].pTopicFilter = "some/topic/filter";
  *     pSubscriptions[ i ].topicLength = ( uint16_t ) strlen( pSubscriptions[ i ].pTopicFilter );
  *     pSubscriptions[ i ].callback.function = subscriptionCallback;
@@ -1470,7 +1492,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_SUCCESS
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
- * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_NETWORK_ERROR
  * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * - #IOT_MQTT_TIMEOUT
@@ -1510,7 +1532,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
  * @return Upon completion of the unsubscribe (either through an
  * #IotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
  * - #IOT_MQTT_SUCCESS
- * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_NETWORK_ERROR
  * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * @return If this function fails before queuing an unsubscribe operation, it will return
@@ -1553,7 +1575,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_SUCCESS
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
- * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_NETWORK_ERROR
  * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  */
@@ -1595,7 +1617,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  * @return Upon completion of a QoS 1 publish (either through an
  * #IotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
  * - #IOT_MQTT_SUCCESS
- * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_NETWORK_ERROR
  * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * - #IOT_MQTT_RETRY_NO_RESPONSE (if [pPublishInfo->retryMs](@ref IotMqttPublishInfo_t.retryMs)
@@ -1619,7 +1641,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  * IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
  *
  * // Set the publish information. QoS 0 example (retain not used):
- * publishInfo.QoS = 0;
+ * publishInfo.qos = IOT_MQTT_QOS_0;
  * publishInfo.pTopicName = "some/topic/name";
  * publishInfo.topicNameLength = 15;
  * publishInfo.pPayload = "payload";
@@ -1634,7 +1656,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  *
  * // QoS 1 with retry example (using same topic name and payload as QoS 0 example):
  * IotMqttReference_t qos1Reference = IOT_MQTT_REFERENCE_INITIALIZER;
- * publishInfo.QoS = 1;
+ * publishInfo.qos = IOT_MQTT_QOS_1;
  * publishInfo.retryMs = 1000; // Retry if no response is received in 1 second.
  * publishInfo.retryLimit = 5; // Retry up to 5 times.
  *
@@ -1684,7 +1706,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_SUCCESS
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
- * - #IOT_MQTT_SEND_ERROR
+ * - #IOT_MQTT_NETWORK_ERROR
  * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  * - #IOT_MQTT_RETRY_NO_RESPONSE (if [pPublishInfo->retryMs](@ref IotMqttPublishInfo_t.retryMs)
@@ -1826,7 +1848,7 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation );
  * @return `true` if a subscription was found; `false` otherwise.
  *
  * @note The subscription QoS is not stored by the MQTT library; therefore,
- * `pCurrentSubscription->QoS` will always be set to `0`.
+ * `pCurrentSubscription->qos` will always be set to #IOT_MQTT_QOS_0.
  */
 /* @[declare_mqtt_issubscribed] */
 bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,

@@ -518,7 +518,7 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
         {
             pCurrentSubscription->pTopicFilter = pTopicFilter;
             pCurrentSubscription->topicFilterLength = topicFilterLength;
-            pCurrentSubscription->QoS = 0;
+            pCurrentSubscription->qos = IOT_MQTT_QOS_0;
             pCurrentSubscription->callback = pSubscription->callback;
         }
 

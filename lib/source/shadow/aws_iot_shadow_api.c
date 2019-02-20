@@ -251,23 +251,19 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
     AwsIotShadow_Assert( ( type == _SHADOW_GET ) || ( type == _SHADOW_UPDATE ) );
 
     /* Check QoS. */
-    if( ( pDocumentInfo->QoS < 0 ) || ( pDocumentInfo->QoS > 1 ) )
+    if( pDocumentInfo->qos != IOT_MQTT_QOS_0 )
     {
-        IotLogError( "QoS for Shadow %d must be 0 or 1.",
-                     _pAwsIotShadowOperationNames[ type ] );
+        if( pDocumentInfo->qos != IOT_MQTT_QOS_1 )
+        {
+            IotLogError( "QoS for Shadow %d must be 0 or 1.",
+                         _pAwsIotShadowOperationNames[ type ] );
 
-        return AWS_IOT_SHADOW_BAD_PARAMETER;
+            return AWS_IOT_SHADOW_BAD_PARAMETER;
+        }
     }
 
     /* Check the retry parameters. */
-    if( pDocumentInfo->retryLimit < 0 )
-    {
-        IotLogError( "Retry limit of Shadow %s cannot be less than 0.",
-                     _pAwsIotShadowOperationNames[ type ] );
-
-        return AWS_IOT_SHADOW_BAD_PARAMETER;
-    }
-    else if( pDocumentInfo->retryLimit > 0 )
+    if( pDocumentInfo->retryLimit > 0 )
     {
         if( pDocumentInfo->retryMs == 0 )
         {
@@ -481,7 +477,7 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
                  pTopicFilter );
 
     /* Set the members of the MQTT subscription. */
-    subscription.QoS = 1;
+    subscription.qos = IOT_MQTT_QOS_1;
     subscription.pTopicFilter = pTopicFilter;
     subscription.topicFilterLength = ( uint16_t ) ( operationTopicLength + pCallbackSuffixLength[ type ] );
     subscription.callback.param1 = ( void * ) pSubscription;

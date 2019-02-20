@@ -243,7 +243,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                 if( ( bytesProcessed > 0 ) && ( status == IOT_MQTT_SUCCESS ) )
                 {
                     /* If a QoS 1 PUBLISH was received, send a PUBACK. */
-                    if( pOperation->publishInfo.QoS == 1 )
+                    if( pOperation->publishInfo.qos == IOT_MQTT_QOS_1 )
                     {
                         _sendPuback( pConnectionInfo, packetIdentifier );
                     }

@@ -497,14 +497,14 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
     documentInfo.thingNameLength = _TEST_THING_NAME_LENGTH;
 
     /* Invalid QoS. */
-    documentInfo.QoS = 3;
+    documentInfo.qos = 3;
     status = AwsIotShadow_Get( _pMqttConnection,
                                &documentInfo,
                                AWS_IOT_SHADOW_FLAG_WAITABLE,
                                NULL,
                                &reference );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
-    documentInfo.QoS = 0;
+    documentInfo.qos = IOT_MQTT_QOS_0;
 
     /* Invalid retry parameters. */
     documentInfo.retryLimit = -1;
@@ -597,7 +597,7 @@ TEST( Shadow_Unit_API, WaitInvalidParameters )
  */
 TEST( Shadow_Unit_API, DeleteMallocFail )
 {
-    int i = 0;
+    int32_t i = 0;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
 
@@ -641,7 +641,7 @@ TEST( Shadow_Unit_API, DeleteMallocFail )
  */
 TEST( Shadow_Unit_API, GetMallocFail )
 {
-    int i = 0;
+    int32_t i = 0;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowDocumentInfo_t documentInfo = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
     AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
@@ -651,7 +651,7 @@ TEST( Shadow_Unit_API, GetMallocFail )
     /* Set the members of the document info. */
     documentInfo.pThingName = _TEST_THING_NAME;
     documentInfo.thingNameLength = _TEST_THING_NAME_LENGTH;
-    documentInfo.QoS = 1;
+    documentInfo.qos = IOT_MQTT_QOS_1;
     documentInfo.get.mallocDocument = IotTest_Malloc;
 
     for( i = 0; ; i++ )
@@ -689,7 +689,7 @@ TEST( Shadow_Unit_API, GetMallocFail )
 
 TEST( Shadow_Unit_API, UpdateMallocFail )
 {
-    int i = 0;
+    int32_t i = 0;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowDocumentInfo_t documentInfo = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
     AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
@@ -697,7 +697,7 @@ TEST( Shadow_Unit_API, UpdateMallocFail )
     /* Set the members of the document info. */
     documentInfo.pThingName = _TEST_THING_NAME;
     documentInfo.thingNameLength = _TEST_THING_NAME_LENGTH;
-    documentInfo.QoS = 1;
+    documentInfo.qos = IOT_MQTT_QOS_1;
     documentInfo.update.pUpdateDocument = "{\"state\":{\"reported\":{null}},\"clientToken\":\"TEST\"}";
     documentInfo.update.updateDocumentLength = 50;
 

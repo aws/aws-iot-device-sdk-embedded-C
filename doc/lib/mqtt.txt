@@ -261,24 +261,6 @@ void _IotMqtt_CleanupSerializeAdditional( void );
 @configrecommended The default value is <b>strongly recommended</b>.<br>
 @configdefault The default value of this setting depends on the platform. For example, when running on FreeRTOS with BLE support, this setting will be automatically enabled. Conversely, when running on Linux, this setting will be disabled.
 
-@section IOT_MQTT_MAX_CALLBACK_THREADS
-@brief Set the maximum number of simultaneous callback threads.
-
-Callback threads process notifications from completed MQTT operations or incoming PUBLISH messages. Incoming notifications are queued, then removed from the queue and processed by any available callback threads. User callback functions are invoked from the callback threads. This means that user callback functions should avoid blocking, since blocking will make a callback thread unavailable and cause the queue of notifications to grow. A situation where all callback threads are blocked should certainly be avoided.
-
-@configpossible Any positive integer.<br>
-@configrecommended In most use cases, this value can be `1` or `2`. In high-throughput use cases with many MQTT operations or incoming PUBLISH messages, this value can be increased for better performance.<br>
-@configdefault `2`
-
-@section IOT_MQTT_MAX_SEND_THREADS
-@brief Set the number of simultaneous send threads.
-
-Send threads process outgoing network packets. Packets are queued, then removed from the queue and sent over the network by any available send threads.
-
-@configpossible Any positive integer<br>
-@configrecommended `1`. Unless the [network interface send function](@ref IotMqttNetIf_t.send) supports parallel sends, any value greater than `1` will not provide any performance benefit.<br>
-@configdefault `1`
-
 @section IOT_LOG_LEVEL_MQTT
 @brief Set the log level of the MQTT library.
 
@@ -314,34 +296,6 @@ This setting is used by the [MQTT tests](@ref mqtt_tests) to access the internal
 @configrecommended `0`<br>
 @configdefault `0`
 
-@section IOT_MQTT_TIMER_EVENT_THRESHOLD_MS
-@brief Set the threshold for processing MQTT timer events in the future.
-
-MQTT timer events (such as keep-alive or PUBLISH retry) are sorted by their expiration time and place in a queue. A timer thread processes the events in this queue as each event's expiration time passes.  To conserve memory, all MQTT connections (and therefore, all timer events for an MQTT connection) share a single system timer. The purpose of this setting is to avoid having an MQTT connection's timer expire too often. It allows the timer thread to process timer events before their expiration time <b>if</b> their expiration time is in the near future.
-
-Consider the following timer queue:
-@dot
-graph timer_event_example
-{
-    node[shape=box, fontname=Helvetica, fontsize=10, style=filled];
-    subgraph
-    {
-        rank = same;
-        event1[label="Event 1\nExpiration time = NOW"];
-        event2[label="Event 2\nExpiration time = NOW + 50"];
-        event3[label="Event 3\nExpiration time = NOW + 150"];
-    }
-    event1 -- event2;
-    event2 -- event3;
-}
-@enddot
-
-If @ref IOT_MQTT_TIMER_EVENT_THRESHOLD_MS is `100`, then both `Event 1` and `Event 2` will be processed now because their expiration times are within `100` of the current time. Because `Event 3` has an expiration time greater than `100` in the future, it will not be processed now.
-
-@configpossible Any non-negative integer.<br>
-@configrecommended This value should be small to avoid premature processing of timer events. In almost no use case should this value be greater than `1000`.<br>
-@configdefault `100`
-
 @section IotMqtt_Assert
 @brief Assertion function used when @ref IOT_MQTT_ENABLE_ASSERTS is `1`.
 
@@ -366,8 +320,4 @@ If @ref IOT_MQTT_TIMER_EVENT_THRESHOLD_MS is `100`, then both `Event 1` and `Eve
   @copybrief IotMqtt_MallocSubscription
 - #IotMqtt_FreeSubscription <br>
   @copybrief IotMqtt_FreeSubscription
-- #IotMqtt_MallocTimerEvent <br>
-  @copybrief IotMqtt_MallocTimerEvent
-- #IotMqtt_FreeTimerEvent <br>
-  @copybrief IotMqtt_FreeTimerEvent
 */

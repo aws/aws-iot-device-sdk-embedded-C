@@ -532,7 +532,7 @@ static bool _publishPacketSize( const IotMqttPublishInfo_t * const pPublishInfo,
 
     /* The variable header of a QoS 1 or 2 PUBLISH packet contains a 2-byte
      * packet identifier. */
-    if( pPublishInfo->QoS > 0 )
+    if( pPublishInfo->qos > IOT_MQTT_QOS_0 )
     {
         publishPacketSize += sizeof( uint16_t );
     }
@@ -753,13 +753,13 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * const pCo
         _UINT8_SET_BIT( connectFlags, _MQTT_CONNECT_FLAG_WILL );
 
         /* Flags only need to be changed for will QoS 1 and 2. */
-        switch( pConnectInfo->pWillInfo->QoS )
+        switch( pConnectInfo->pWillInfo->qos )
         {
-            case 1:
+            case IOT_MQTT_QOS_1:
                 _UINT8_SET_BIT( connectFlags, _MQTT_CONNECT_FLAG_WILL_QOS1 );
                 break;
 
-            case 2:
+            case IOT_MQTT_QOS_2:
                 _UINT8_SET_BIT( connectFlags, _MQTT_CONNECT_FLAG_WILL_QOS2 );
                 break;
 
@@ -1012,11 +1012,11 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * const pPu
     /* The first byte of a PUBLISH packet contains the packet type and flags. */
     publishFlags = _MQTT_PACKET_TYPE_PUBLISH;
 
-    if( pPublishInfo->QoS == 1 )
+    if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
     {
         _UINT8_SET_BIT( publishFlags, _MQTT_PUBLISH_FLAG_QOS1 );
     }
-    else if( pPublishInfo->QoS == 2 )
+    else if( pPublishInfo->qos == IOT_MQTT_QOS_2 )
     {
         _UINT8_SET_BIT( publishFlags, _MQTT_PUBLISH_FLAG_QOS2 );
     }
@@ -1038,7 +1038,7 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * const pPu
                              pPublishInfo->topicNameLength );
 
     /* A packet identifier is required for QoS 1 and 2 messages. */
-    if( pPublishInfo->QoS > 0 )
+    if( pPublishInfo->qos > IOT_MQTT_QOS_0 )
     {
         /* Get the next packet identifier. It should always be nonzero. */
         packetIdentifier = _nextPacketIdentifier();
@@ -1197,22 +1197,22 @@ IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * const pPublishStart,
             return IOT_MQTT_BAD_RESPONSE;
         }
 
-        pOutput->QoS = 2;
+        pOutput->qos = IOT_MQTT_QOS_2;
     }
     /* Check for QoS 1. */
     else if( _UINT8_CHECK_BIT( publishFlags, _MQTT_PUBLISH_FLAG_QOS1 ) == true )
     {
-        pOutput->QoS = 1;
+        pOutput->qos = IOT_MQTT_QOS_1;
     }
     /* If the PUBLISH isn't QoS 1 or 2, then it's QoS 0. */
     else
     {
-        pOutput->QoS = 0;
+        pOutput->qos = IOT_MQTT_QOS_0;
     }
 
     IotLog( IOT_LOG_DEBUG,
             &_logHideAll,
-            "QoS is %d.", pOutput->QoS );
+            "QoS is %d.", pOutput->qos );
 
     /* Parse the DUP bit. */
     if( _UINT8_CHECK_BIT( publishFlags, _MQTT_PUBLISH_FLAG_DUP ) == true )
@@ -1229,7 +1229,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * const pPublishStart,
     }
 
     /* Sanity checks for "Remaining length". */
-    if( pOutput->QoS == 0 )
+    if( pOutput->qos == IOT_MQTT_QOS_0 )
     {
         /* A QoS 0 PUBLISH must have a remaining length of at least 3 to accommodate
          * topic name length (2 bytes) and topic name (at least 1 byte). */
@@ -1264,7 +1264,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * const pPublishStart,
     pOutput->topicNameLength = _UINT16_DECODE( pVariableHeader );
 
     /* Sanity checks for topic name length and "Remaining length". */
-    if( pOutput->QoS == 0 )
+    if( pOutput->qos == IOT_MQTT_QOS_0 )
     {
         /* Check that the "Remaining length" is at least as large as the variable
          * header. */
@@ -1307,7 +1307,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * const pPublishStart,
      * identifier starts immediately after the topic name. */
     pPacketIdentifierHigh = ( const uint8_t * ) ( pOutput->pTopicName + pOutput->topicNameLength );
 
-    if( pOutput->QoS > 0 )
+    if( pOutput->qos > IOT_MQTT_QOS_0 )
     {
         packetIdentifier = _UINT16_DECODE( pPacketIdentifierHigh );
         *pPacketIdentifier = packetIdentifier;
@@ -1325,7 +1325,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * const pPublishStart,
 
     /* Calculate the length of the payload. QoS 1 or 2 PUBLISH packets contain
      * a packet identifer, but QoS 0 PUBLISH packets do not. */
-    if( pOutput->QoS == 0 )
+    if( pOutput->qos == IOT_MQTT_QOS_0 )
     {
         pOutput->payloadLength = ( uint16_t ) ( remainingLength - pOutput->topicNameLength - sizeof( uint16_t ) );
         pOutput->pPayload = pPacketIdentifierHigh;
@@ -1511,7 +1511,7 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * const 
                                  pSubscriptionList[ i ].topicFilterLength );
 
         /* Place the QoS in the SUBSCRIBE packet. */
-        *pBuffer = ( uint8_t ) pSubscriptionList[ i ].QoS;
+        *pBuffer = ( uint8_t ) ( pSubscriptionList[ i ].qos );
         pBuffer++;
     }
 

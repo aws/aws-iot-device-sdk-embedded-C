@@ -257,7 +257,7 @@ static IotMqttError_t _checkConnection( void )
     IotMqttReference_t publishRef = IOT_MQTT_REFERENCE_INITIALIZER;
 
     /* Set the publish info. */
-    publishInfo.QoS = 1;
+    publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pTopicName = _pTopicNames[ 0 ];
     publishInfo.topicNameLength = _topicNameLength;
     publishInfo.pPayload = _pSamplePayload;
@@ -297,7 +297,7 @@ static void _publishReceived( void * pArgument,
     if( ( pPublish->message.info.payloadLength == _samplePayloadLength ) &&
         ( strncmp( _pSamplePayload, pPublish->message.info.pPayload, _samplePayloadLength ) == 0 ) &&
         ( pPublish->message.info.topicNameLength == _topicNameLength ) &&
-        ( pPublish->message.info.QoS == 1 ) )
+        ( pPublish->message.info.qos == IOT_MQTT_QOS_1 ) )
     {
         IotSemaphore_Post( &receivedPublishCounter );
     }
@@ -347,7 +347,7 @@ static void * _publishThread( void * pArgument )
     };
 
     /* Set the publish info. */
-    publishInfo.QoS = 1;
+    publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pPayload = _pSamplePayload;
     publishInfo.payloadLength = _samplePayloadLength;
     publishInfo.topicNameLength = _topicNameLength;
@@ -483,7 +483,7 @@ TEST_SETUP( MQTT_Stress )
     {
         pSubscriptions[ i ].pTopicFilter = _pTopicNames[ i ];
         pSubscriptions[ i ].topicFilterLength = _topicNameLength;
-        pSubscriptions[ i ].QoS = 1;
+        pSubscriptions[ i ].qos = IOT_MQTT_QOS_1;
         pSubscriptions[ i ].callback.function = _publishReceived;
     }
 
@@ -576,7 +576,7 @@ TEST( MQTT_Stress, BlockingCallback )
     callbackInfo.function = _blockingCallback;
     callbackInfo.param1 = &waitSem;
 
-    publishInfo.QoS = 1;
+    publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pTopicName = _pTopicNames[ 0 ];
     publishInfo.topicNameLength = _topicNameLength;
     publishInfo.pPayload = _pSamplePayload;

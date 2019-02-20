@@ -1082,7 +1082,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     }
 
     /* Check that no notification is requested for a QoS 0 publish. */
-    if( pPublishInfo->QoS == 0 )
+    if( pPublishInfo->qos == IOT_MQTT_QOS_0 )
     {
         if( pCallbackInfo != NULL )
         {
@@ -1159,7 +1159,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     if( pPublishInfo->retryLimit > 0 )
     {
         /* A QoS 0 PUBLISH may not be retried. */
-        if( pPublishInfo->QoS > 0 )
+        if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
         {
             pPublishOperation->retry.limit = pPublishInfo->retryLimit;
             pPublishOperation->retry.nextPeriod = pPublishInfo->retryMs;
@@ -1168,7 +1168,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
 
     /* Set the reference, if provided. This should be set before the publish
      * is pushed to the send queue to avoid a race condition. */
-    if( ( pPublishInfo->QoS > 0 ) && ( pPublishRef != NULL ) )
+    if( ( pPublishInfo->qos != IOT_MQTT_QOS_0 ) && ( pPublishRef != NULL ) )
     {
         *pPublishRef = pPublishOperation;
     }
@@ -1183,7 +1183,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
         _IotMqtt_DestroyOperation( pPublishOperation );
 
         /* Clear the previously set (and now invalid) reference. */
-        if( ( pPublishInfo->QoS > 0 ) && ( pPublishRef != NULL ) )
+        if( ( pPublishInfo->qos != IOT_MQTT_QOS_0 ) && ( pPublishRef != NULL ) )
         {
             *pPublishRef = IOT_MQTT_REFERENCE_INITIALIZER;
         }
@@ -1193,14 +1193,14 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
 
     /* A QoS 0 PUBLISH is considered successful as soon as it is added to the
      * send queue. */
-    if( pPublishInfo->QoS == 0 )
+    if( pPublishInfo->qos == IOT_MQTT_QOS_0 )
     {
         return IOT_MQTT_SUCCESS;
     }
 
     IotLogInfo( "MQTT PUBLISH operation queued." );
 
-    /* QoS 1 and QoS 2 PUBLISH messages are awaiting responses. */
+    /* QoS 1 PUBLISH messages are awaiting responses. */
     return IOT_MQTT_STATUS_PENDING;
 }
 
@@ -1219,7 +1219,7 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
     flags = 0;
 
     /* Set the waitable flag and reference for QoS 1 PUBLISH. */
-    if( pPublishInfo->QoS > 0 )
+    if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
     {
         flags = IOT_MQTT_FLAG_WAITABLE;
         pPublishRef = &publishRef;
@@ -1233,7 +1233,7 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
                               pPublishRef );
 
     /* Wait for a queued QoS 1 PUBLISH to complete. */
-    if( ( pPublishInfo->QoS > 0 ) && ( status == IOT_MQTT_STATUS_PENDING ) )
+    if( ( pPublishInfo->qos == IOT_MQTT_QOS_0 ) && ( status == IOT_MQTT_STATUS_PENDING ) )
     {
         status = IotMqtt_Wait( publishRef, timeoutMs );
     }

@@ -257,7 +257,7 @@ static void _mqttSubscriptionCallback( void * param1,
                 pPublish->message.info.topicNameLength,
                 pPublish->message.info.pTopicName,
                 pPublish->message.info.retain,
-                pPublish->message.info.QoS,
+                pPublish->message.info.qos,
                 pPublish->message.info.payloadLength,
                 pPayload );
 
@@ -301,7 +301,7 @@ static void _mqttSubscriptionCallback( void * param1,
         else
         {
             /* Set the members of the publish info for the acknowledgement message. */
-            acknowledgementInfo.QoS = 1;
+            acknowledgementInfo.qos = IOT_MQTT_QOS_1;
             acknowledgementInfo.pTopicName = _ACKNOWLEDGEMENT_TOPIC_NAME;
             acknowledgementInfo.topicNameLength = _ACKNOWLEDGEMENT_TOPIC_NAME_LENGTH;
             acknowledgementInfo.pPayload = pAcknowledgementMessage;
@@ -454,7 +454,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
         /* Set the members of the subscription list. */
         for( i = 0; i < _TOPIC_FILTER_COUNT; i++ )
         {
-            pSubscriptions[ i ].QoS = 1;
+            pSubscriptions[ i ].qos = IOT_MQTT_QOS_1;
             pSubscriptions[ i ].pTopicFilter = pTopicFilters[ i ];
             pSubscriptions[ i ].topicFilterLength = _TOPIC_FILTER_LENGTH;
             pSubscriptions[ i ].callback.param1 = &publishesReceived;
@@ -515,7 +515,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
         publishComplete.function = _operationCompleteCallback;
 
         /* Set the common members of the publish info. */
-        publishInfo.QoS = 1;
+        publishInfo.qos = IOT_MQTT_QOS_1;
         publishInfo.topicNameLength = _TOPIC_FILTER_LENGTH;
         publishInfo.pPayload = pPublishPayload;
         publishInfo.retryMs = _PUBLISH_RETRY_MS;

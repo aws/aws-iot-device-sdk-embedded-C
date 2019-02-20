@@ -223,21 +223,18 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
     }
 
     /* Check for a valid QoS. */
-    if( ( pPublishInfo->QoS < 0 ) || ( pPublishInfo->QoS > 1 ) )
+    if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
     {
-        IotLogError( "Publish QoS must be either 0 or 1." );
+        if( pPublishInfo->qos != IOT_MQTT_QOS_1 )
+        {
+            IotLogError( "Publish QoS must be either 0 or 1." );
 
-        return false;
+            return false;
+        }
     }
 
     /* Check the retry parameters. */
-    if( pPublishInfo->retryLimit < 0 )
-    {
-        IotLogError( "Publish retry cannot be less than 0." );
-
-        return false;
-    }
-    else if( pPublishInfo->retryLimit > 0 )
+    if( pPublishInfo->retryLimit > 0 )
     {
         if( pPublishInfo->retryMs == 0 )
         {
@@ -339,11 +336,14 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
         /* Check for a valid QoS and callback function when subscribing. */
         if( operation == IOT_MQTT_SUBSCRIBE )
         {
-            if( ( pListElement->QoS < 0 ) || ( pListElement->QoS > 1 ) )
+            if( pListElement->qos != IOT_MQTT_QOS_0 )
             {
-                IotLogError( "Subscription QoS must be either 0 or 1." );
+                if( pListElement->qos != IOT_MQTT_QOS_1 )
+                {
+                    IotLogError( "Subscription QoS must be either 0 or 1." );
 
-                return false;
+                    return false;
+                }
             }
 
             if( pListElement->callback.function == NULL )
