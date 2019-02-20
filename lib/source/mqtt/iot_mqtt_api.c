@@ -1233,7 +1233,7 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
                               pPublishRef );
 
     /* Wait for a queued QoS 1 PUBLISH to complete. */
-    if( ( pPublishInfo->qos == IOT_MQTT_QOS_0 ) && ( status == IOT_MQTT_STATUS_PENDING ) )
+    if( ( pPublishInfo->qos == IOT_MQTT_QOS_1 ) && ( status == IOT_MQTT_STATUS_PENDING ) )
     {
         status = IotMqtt_Wait( publishRef, timeoutMs );
     }

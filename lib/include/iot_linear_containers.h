@@ -139,14 +139,15 @@ typedef IotLink_t   IotQueue_t;
  * removal.
  *
  * @param[in] pList The list to iterate through.
- * @param[in] iteratorName The name of iterator for each element's. Each element's
- * link member may be accessed by `iteratorName.pCurrentLink`.
+ * @param[in] pNextLink Pointer to an #IotLink_t that will be temporarily used
+ * to hold a pointer to the next element. Must not be modified within the loop.
+ * @param[out] pCurrentLink Pointer to an #IotLink_t that will be set to point
+ * to each element's link member.
  */
-#define IotListDouble_ForEachSafe( pList, iteratorName )                                            \
-    for( struct { IotLink_t * pCurrentLink; IotLink_t * pNextLink; }                                \
-         iteratorName = { .pCurrentLink = ( pList )->pNext, .pNextLink = ( pList )->pNext->pNext }; \
-         iteratorName.pCurrentLink != ( pList );                                                    \
-         iteratorName.pCurrentLink = iteratorName.pNextLink, iteratorName.pNextLink = iteratorName.pCurrentLink->pNext )
+#define IotListDouble_ForEachSafe( pList, pNextLink, pCurrentLink )                \
+    for( ( pCurrentLink ) = ( pList )->pNext, pNextLink = ( pCurrentLink )->pNext; \
+         ( pCurrentLink ) != ( pList );                                            \
+         ( pCurrentLink ) = ( pNextLink ), ( pNextLink ) = ( pCurrentLink )->pNext )
 
 
 /**

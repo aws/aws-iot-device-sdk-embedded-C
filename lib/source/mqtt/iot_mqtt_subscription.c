@@ -325,6 +325,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
                                           IotMqttCallbackParam_t * const pCallbackParam )
 {
     _mqttSubscription_t * pSubscription = NULL;
+    IotLink_t * pCurrentLink = NULL, * pNextLink = NULL;
     void * pParam1 = NULL;
 
     void ( * callbackFunction )( void *,
@@ -349,11 +350,13 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
 
     /* Search the subscription list for all matching subscriptions. */
-    IotListDouble_ForEachSafe( &( pMqttConnection->subscriptionList ), iterator )
+    IotListDouble_ForEachSafe( &( pMqttConnection->subscriptionList ),
+                               pNextLink,
+                               pCurrentLink )
     {
         pSubscription = IotLink_Container( _mqttSubscription_t,
                                            IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                                         iterator.pCurrentLink,
+                                                                         pCurrentLink,
                                                                          _topicMatch,
                                                                          ( void * ) ( &topicMatchParams ) ),
                                            link );
