@@ -124,6 +124,11 @@ extern void IotTest_NetworkCleanup( void );
 extern IotMqttNetIf_t _IotTestNetworkInterface;
 extern IotMqttConnection_t _IotTestMqttConnection;
 
+/**
+ * @brief Tracks whether connection cleanup should be done.
+ */
+static bool _connectionCreated = false;
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -433,6 +438,12 @@ TEST_SETUP( Shadow_System )
         TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
     }
 
+    /* Initialize the Shadow library. */
+    if( AwsIotShadow_Init( 0 ) != AWS_IOT_SHADOW_SUCCESS )
+    {
+        TEST_FAIL_MESSAGE( "Failed to initialize Shadow library." );
+    }
+
     /* Set the members of the connect info. Use the Shadow Thing Name as the MQTT
      * client identifier. */
     connectInfo.pClientIdentifier = AWS_IOT_TEST_SHADOW_THING_NAME;
@@ -447,11 +458,9 @@ TEST_SETUP( Shadow_System )
     {
         TEST_FAIL_MESSAGE( "Failed to establish MQTT connection for Shadow tests." );
     }
-
-    /* Initialize the Shadow library. */
-    if( AwsIotShadow_Init( 0 ) != AWS_IOT_SHADOW_SUCCESS )
+    else
     {
-        TEST_FAIL_MESSAGE( "Failed to initialize Shadow library." );
+        _connectionCreated = true;
     }
 
     /* Delete any existing Shadow so all tests start with no Shadow. */
@@ -476,8 +485,13 @@ TEST_SETUP( Shadow_System )
  */
 TEST_TEAR_DOWN( Shadow_System )
 {
-    /* Disconnect the MQTT connection. */
-    IotMqtt_Disconnect( _IotTestMqttConnection, false );
+    /* Disconnect the MQTT connection if it was created. */
+    if( _connectionCreated == true )
+    {
+        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+
+        _connectionCreated = false;
+    }
 
     /* Clean up the Shadow library. */
     AwsIotShadow_Cleanup();
