@@ -203,12 +203,6 @@
 #ifndef IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES
     #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 0 )
 #endif
-#ifndef IOT_MQTT_MAX_CALLBACK_THREADS
-    #define IOT_MQTT_MAX_CALLBACK_THREADS           ( 2 )
-#endif
-#ifndef IOT_MQTT_MAX_SEND_THREADS
-    #define IOT_MQTT_MAX_SEND_THREADS               ( 1 )
-#endif
 #ifndef IOT_MQTT_TEST
     #define IOT_MQTT_TEST                           ( 0 )
 #endif
@@ -217,9 +211,6 @@
 #endif
 #ifndef IOT_MQTT_RETRY_MS_CEILING
     #define IOT_MQTT_RETRY_MS_CEILING               ( 60000 )
-#endif
-#ifndef IOT_MQTT_TIMER_EVENT_THRESHOLD_MS
-    #define IOT_MQTT_TIMER_EVENT_THRESHOLD_MS       ( 100 )
 #endif
 /** @endcond */
 

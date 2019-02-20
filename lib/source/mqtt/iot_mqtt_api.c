@@ -49,12 +49,6 @@
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 0 && IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 1
     #error "IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES must be 0 or 1."
 #endif
-#if IOT_MQTT_MAX_CALLBACK_THREADS <= 0
-    #error "IOT_MQTT_MAX_CALLBACK_THREADS cannot be 0 or negative."
-#endif
-#if IOT_MQTT_MAX_SEND_THREADS <= 0
-    #error "IOT_MQTT_MAX_SEND_THREADS cannot be 0 or negative."
-#endif
 #if IOT_MQTT_TEST != 0 && IOT_MQTT_TEST != 1
     #error "IOT_MQTT_MQTT_TEST must be 0 or 1."
 #endif
@@ -63,9 +57,6 @@
 #endif
 #if IOT_MQTT_RETRY_MS_CEILING <= 0
     #error "IOT_MQTT_RETRY_MS_CEILING cannot be 0 or negative."
-#endif
-#if IOT_MQTT_TIMER_EVENT_THRESHOLD_MS <= 0
-    #error "IOT_MQTT_TIMER_EVENT_THRESHOLD_MS cannot be 0 or negative."
 #endif
 
 /*-----------------------------------------------------------*/
