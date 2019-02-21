@@ -217,9 +217,13 @@
 /**
  * @brief Marks the empty statement of an `else` branch.
  *
- * Does nothing, but allows test coverage to detect branches not taken.
+ * Does nothing, but allows test coverage to detect branches not taken. By default,
+ * this is defined to nothing. When running code coverage testing, this is defined
+ * to an assembly NOP.
  */
-#define _EMPTY_ELSE_MARKER                                      ;
+#ifndef _EMPTY_ELSE_MARKER
+    #define _EMPTY_ELSE_MARKER
+#endif
 
 /*
  * Constants related to limits defined in AWS Service Limits.

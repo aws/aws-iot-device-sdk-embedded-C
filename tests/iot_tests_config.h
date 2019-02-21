@@ -73,17 +73,22 @@
 /* Shadow library configuration. */
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 
+/* Define the empty else marker if test coverage is enabled. */
+#if IOT_TEST_COVERAGE == 1
+    #define _EMPTY_ELSE_MARKER    asm volatile ( "nop" )
+#endif
+
 /* Memory allocation function configuration. Note that these functions will not
  * be affected by IOT_STATIC_MEMORY_ONLY. */
-#define IotNetwork_Malloc                       unity_malloc_mt
-#define IotNetwork_Free                         unity_free_mt
-#define IotThreads_Malloc                       unity_malloc_mt
-#define IotThreads_Free                         unity_free_mt
-#define IotLogging_Malloc                       unity_malloc_mt
-#define IotLogging_Free                         unity_free_mt
+#define IotNetwork_Malloc    unity_malloc_mt
+#define IotNetwork_Free      unity_free_mt
+#define IotThreads_Malloc    unity_malloc_mt
+#define IotThreads_Free      unity_free_mt
+#define IotLogging_Malloc    unity_malloc_mt
+#define IotLogging_Free      unity_free_mt
 /* #define IotLogging_StaticBufferSize */
-#define IotTest_Malloc                          unity_malloc_mt
-#define IotTest_Free                            unity_free_mt
+#define IotTest_Malloc       unity_malloc_mt
+#define IotTest_Free         unity_free_mt
 
 /* Static memory resource settings for the tests. These values must be large
  * enough to support the stress tests. */
