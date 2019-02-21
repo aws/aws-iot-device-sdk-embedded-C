@@ -379,9 +379,9 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
         _EMPTY_ELSE_MARKER;
     }
 
+    /* Clean up mutexes and connection if this function failed. */
     _IOT_FUNCTION_CLEANUP_BEGIN();
 
-    /* Clean up mutexes and connections if this function failed. */
     if( status == false )
     {
         if( subscriptionMutexCreated == true )
@@ -441,6 +441,10 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 
         /* Decrement reference count. */
         pMqttConnection->references--;
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* A connection to be destroyed should have no keep-alive and at most 1
@@ -693,6 +697,10 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
     {
         destroyConnection = true;
     }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
@@ -702,41 +710,89 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
         IotLogDebug( "MQTT connection %p will be destroyed now.", pMqttConnection );
         _destroyMqttConnection( pMqttConnection );
     }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
 }
 
 /*-----------------------------------------------------------*/
 
 IotMqttError_t IotMqtt_Init( void )
 {
+    _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    bool taskPoolCreated = false, connectMutexCreated = false;
     const IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM;
 
+    /* Create MQTT library task pool. */
     if( IotTaskPool_Create( &taskPoolInfo, &_IotMqttTaskPool ) != IOT_TASKPOOL_SUCCESS )
     {
         IotLogError( "Failed to initialize MQTT library task pool." );
-        goto errorTaskPool;
+        
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+    }
+    else
+    {
+        taskPoolCreated = true;
     }
 
     /* Create CONNECT mutex. */
-    if( IotMutex_Create( &( _connectMutex ), false ) == false )
+    connectMutexCreated = IotMutex_Create( &( _connectMutex ), false );
+
+    if( connectMutexCreated == false )
     {
         IotLogError( "Failed to initialize MQTT library connect mutex." );
-        goto errorConnectMutex;
+        
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Initialize MQTT serializer. */
     if( _IotMqtt_InitSerialize() != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Failed to initialize MQTT library serializer. " );
-        goto errorInitSerialize;
+        
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     IotLogInfo( "MQTT library successfully initialized." );
 
-    return IOT_MQTT_SUCCESS;
+    /* Clean up if this function failed. */
+    _IOT_FUNCTION_CLEANUP_BEGIN();
 
-errorInitSerialize: IotMutex_Destroy( &( _connectMutex ) );
-errorConnectMutex: IotTaskPool_Destroy( &_IotMqttTaskPool );
-errorTaskPool: return IOT_MQTT_INIT_FAILED;
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        if( taskPoolCreated == true )
+        {
+            IotTaskPool_Destroy( &( _IotMqttTaskPool ) );
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+
+        if( connectMutexCreated == true )
+        {
+            IotMutex_Destroy( &( _connectMutex ) );
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
+
+    _IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/

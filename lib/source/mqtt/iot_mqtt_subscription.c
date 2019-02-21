@@ -313,7 +313,7 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
                                           const IotMqttSubscription_t * pSubscriptionList,
                                           size_t subscriptionCount )
 {
-    _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
     size_t i = 0;
     _mqttSubscription_t * pNewSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
@@ -349,15 +349,10 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
             pNewSubscription = IotMqtt_MallocSubscription( sizeof( _mqttSubscription_t ) +
                                                            pSubscriptionList[ i ].topicFilterLength );
 
-            /* If memory allocation failed, remove all previously added subscriptions. */
             if( pNewSubscription == NULL )
             {
-                IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
-                _IotMqtt_RemoveSubscriptionByTopicFilter( pMqttConnection,
-                                                          pSubscriptionList,
-                                                          i );
-
-                _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
+                status = IOT_MQTT_NO_MEMORY;
+                break;
             }
             else
             {
@@ -383,7 +378,19 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
 
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
-    _IOT_FUNCTION_EXIT_NO_CLEANUP();
+    /* If memory allocation failed, remove all previously added subscriptions. */
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        _IotMqtt_RemoveSubscriptionByTopicFilter( pMqttConnection,
+                                                  pSubscriptionList,
+                                                  i );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
