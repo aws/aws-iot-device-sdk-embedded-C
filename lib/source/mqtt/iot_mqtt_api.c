@@ -821,7 +821,8 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
                                 const IotMqttConnectInfo_t * pConnectInfo,
                                 uint64_t timeoutMs )
 {
-    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     _mqttConnection_t * pNewMqttConnection = NULL;
     _mqttOperation_t * pConnectOperation = NULL;
 
@@ -833,12 +834,15 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
     /* Validate network interface and connect info. */
     if( _IotMqtt_ValidateNetIf( pNetworkInterface ) == false )
     {
-        return IOT_MQTT_BAD_PARAMETER;
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
     }
-
-    if( _IotMqtt_ValidateConnect( pConnectInfo ) == false )
+    else if( _IotMqtt_ValidateConnect( pConnectInfo ) == false )
     {
-        return IOT_MQTT_BAD_PARAMETER;
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* If will info is provided, check that it is valid. */
@@ -847,17 +851,24 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
         if( _IotMqtt_ValidatePublish( pConnectInfo->awsIotMqttMode,
                                       pConnectInfo->pWillInfo ) == false )
         {
-            return IOT_MQTT_BAD_PARAMETER;
+            _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
         }
-
-        /* Will message payloads cannot be larger than 65535. This restriction
-         * applies only to will messages, and not normal PUBLISH messages. */
-        if( pConnectInfo->pWillInfo->payloadLength > UINT16_MAX )
+        else if( pConnectInfo->pWillInfo->payloadLength > UINT16_MAX )
         {
+            /* Will message payloads cannot be larger than 65535. This restriction
+             * applies only to will messages, and not normal PUBLISH messages. */
             IotLogError( "Will payload cannot be larger than 65535." );
 
-            return IOT_MQTT_BAD_PARAMETER;
+            _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
         }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* If previous subscriptions are provided, check that they are valid. */
@@ -870,9 +881,21 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
                                                    pConnectInfo->pPreviousSubscriptions,
                                                    pConnectInfo->previousSubscriptionCount ) == false )
             {
-                return IOT_MQTT_BAD_PARAMETER;
+                _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
             }
         }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Choose a CONNECT serializer function. */
@@ -880,6 +903,10 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
         if( pNetworkInterface->serialize.connect != NULL )
         {
             serializeConnect = pNetworkInterface->serialize.connect;
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
         }
     #endif
 
@@ -892,8 +919,11 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
 
     if( pNewMqttConnection == NULL )
     {
-        status = IOT_MQTT_NO_MEMORY;
-        goto errorCreateConnection;
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Create a CONNECT operation. */
@@ -904,7 +934,11 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        goto errorCreateOperation;
+        _IOT_GOTO_CLEANUP();
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Ensure the members set by operation creation and serialization
@@ -930,8 +964,16 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
 
         if( status != IOT_MQTT_SUCCESS )
         {
-            goto errorAddSubscriptions;
+            _IOT_GOTO_CLEANUP();
         }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Convert the connect info and will info objects to an MQTT CONNECT packet. */
@@ -941,7 +983,11 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        goto errorSerializeConnect;
+        _IOT_GOTO_CLEANUP();
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Check the serialized MQTT packet. */
@@ -962,13 +1008,16 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
     if( status != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Failed to enqueue CONNECT for sending." );
-        _IotMqtt_DestroyOperation( pConnectOperation );
     }
     else
     {
         /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
         status = IotMqtt_Wait( ( IotMqttReference_t ) pConnectOperation,
                                timeoutMs );
+
+        /* The call to wait cleans up the CONNECT operation, so set the pointer
+         * to NULL. */
+        pConnectOperation = NULL;
     }
 
     /* Unlock the CONNECT mutex. */
@@ -980,38 +1029,63 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
         /* Check if a keep-alive job should be scheduled. */
         if( pNewMqttConnection->keepAliveMs != 0 )
         {
-            IotLogDebug( "Scheduling MQTT keep-alive job." );
+            IotLogDebug( "Scheduling first MQTT keep-alive job." );
 
-            if( IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
-                                              &( pNewMqttConnection->keepAliveJob ),
-                                              pNewMqttConnection->nextKeepAliveMs ) != IOT_TASKPOOL_SUCCESS )
+            taskPoolStatus = IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
+                                                           &( pNewMqttConnection->keepAliveJob ),
+                                                           pNewMqttConnection->nextKeepAliveMs );
+
+            if( taskPoolStatus != IOT_TASKPOOL_SUCCESS )
             {
-                status = IOT_MQTT_SCHEDULING_ERROR;
+                _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_SCHEDULING_ERROR );
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
             }
         }
-    }
-
-    /* Check the status of the CONNECT operation. */
-    if( status == IOT_MQTT_SUCCESS )
-    {
-        IotLogInfo( "New MQTT connection %p established.", pNewMqttConnection );
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
     }
     else
     {
-        /* Otherwise, free resources and log an error. */
-        _destroyMqttConnection( pNewMqttConnection );
-        *pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
-
-        IotLogError( "Failed to establish new MQTT connection, error %s.",
-                     IotMqtt_strerror( status ) );
+        _EMPTY_ELSE_MARKER;
     }
 
-    return status;
+    _IOT_FUNCTION_CLEANUP_BEGIN();
 
-errorSerializeConnect:
-errorAddSubscriptions: _IotMqtt_DestroyOperation( pConnectOperation );
-errorCreateOperation: _destroyMqttConnection( pNewMqttConnection );
-errorCreateConnection: return status;
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        IotLogError( "Failed to establish new MQTT connection, error %s.",
+                     IotMqtt_strerror( status ) );
+
+        if( pConnectOperation != NULL )
+        {
+            _IotMqtt_DestroyOperation( pConnectOperation );
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+
+        if( pNewMqttConnection != NULL )
+        {
+            _destroyMqttConnection( pNewMqttConnection );
+            *pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        IotLogInfo( "New MQTT connection %p established.", pNewMqttConnection );
+    }
+
+    _IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
