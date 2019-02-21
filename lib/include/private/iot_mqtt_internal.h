@@ -395,7 +395,7 @@ extern IotTaskPool_t _IotMqttTaskPool;
  *
  * @return `true` if `pNetworkInterface` is valid; `false` otherwise.
  */
-bool _IotMqtt_ValidateNetIf( const IotMqttNetIf_t * const pNetworkInterface );
+bool _IotMqtt_ValidateNetIf( const IotMqttNetIf_t * pNetworkInterface );
 
 /**
  * @brief Check that an #IotMqttConnectInfo_t is valid.
@@ -404,7 +404,7 @@ bool _IotMqtt_ValidateNetIf( const IotMqttNetIf_t * const pNetworkInterface );
  *
  * @return `true` if `pConnectInfo` is valid; `false` otherwise.
  */
-bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * const pConnectInfo );
+bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo );
 
 /**
  * @brief Check that an #IotMqttPublishInfo_t is valid.
@@ -416,7 +416,7 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * const pConnectInfo )
  * @return `true` if `pPublishInfo` is valid; `false` otherwise.
  */
 bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
-                               const IotMqttPublishInfo_t * const pPublishInfo );
+                               const IotMqttPublishInfo_t * pPublishInfo );
 
 /**
  * @brief Check that an #IotMqttReference_t is valid and waitable.
@@ -441,7 +441,7 @@ bool _IotMqtt_ValidateReference( IotMqttReference_t reference );
  */
 bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                                         bool awsIotMqttMode,
-                                        const IotMqttSubscription_t * const pListStart,
+                                        const IotMqttSubscription_t * pListStart,
                                         size_t listSize );
 
 /*-------------------- MQTT packet serializer functions ---------------------*/
@@ -472,7 +472,7 @@ void _IotMqtt_CleanupSerialize( void );
  * @note This function is only used for incoming packets, and may not work
  * correctly for outgoing packets.
  */
-uint8_t _IotMqtt_GetPacketType( const uint8_t * const pPacket,
+uint8_t _IotMqtt_GetPacketType( const uint8_t * pPacket,
                                 size_t packetSize );
 
 /**
@@ -484,9 +484,9 @@ uint8_t _IotMqtt_GetPacketType( const uint8_t * const pPacket,
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * const pConnectInfo,
-                                          uint8_t ** const pConnectPacket,
-                                          size_t * const pPacketSize );
+IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
+                                          uint8_t ** pConnectPacket,
+                                          size_t * pPacketSize );
 
 /**
  * @brief Deserialize a CONNACK packet.
@@ -502,9 +502,9 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * const pCo
  * #IOT_MQTT_SERVER_REFUSED if CONNACK specifies that CONNECT was rejected;
  * #IOT_MQTT_BAD_RESPONSE if the CONNACK packet doesn't follow MQTT spec.
  */
-IotMqttError_t _IotMqtt_DeserializeConnack( const uint8_t * const pConnackStart,
+IotMqttError_t _IotMqtt_DeserializeConnack( const uint8_t * pConnackStart,
                                             size_t dataLength,
-                                            size_t * const pBytesProcessed );
+                                            size_t * pBytesProcessed );
 
 /**
  * @brief Generate a PUBLISH packet from the given parameters.
@@ -516,10 +516,10 @@ IotMqttError_t _IotMqtt_DeserializeConnack( const uint8_t * const pConnackStart,
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * const pPublishInfo,
-                                          uint8_t ** const pPublishPacket,
-                                          size_t * const pPacketSize,
-                                          uint16_t * const pPacketIdentifier );
+IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishInfo,
+                                          uint8_t ** pPublishPacket,
+                                          size_t * pPacketSize,
+                                          uint16_t * pPacketIdentifier );
 
 /**
  * @brief Set the DUP bit in a QoS 1 PUBLISH packet.
@@ -535,8 +535,8 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * const pPu
  * AWS IoT MQTT server.
  */
 void _IotMqtt_PublishSetDup( bool awsIotMqttMode,
-                             uint8_t * const pPublishPacket,
-                             uint16_t * const pNewPacketIdentifier );
+                             uint8_t * pPublishPacket,
+                             uint16_t * pNewPacketIdentifier );
 
 /**
  * @brief Deserialize a PUBLISH packet received from the server.
@@ -555,11 +555,11 @@ void _IotMqtt_PublishSetDup( bool awsIotMqttMode,
  * @return #IOT_MQTT_SUCCESS if PUBLISH is valid; #IOT_MQTT_BAD_RESPONSE
  * if the PUBLISH packet doesn't follow MQTT spec.
  */
-IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * const pPublishStart,
+IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * pPublishStart,
                                             size_t dataLength,
-                                            IotMqttPublishInfo_t * const pOutput,
-                                            uint16_t * const pPacketIdentifier,
-                                            size_t * const pBytesProcessed );
+                                            IotMqttPublishInfo_t * pOutput,
+                                            uint16_t * pPacketIdentifier,
+                                            size_t * pBytesProcessed );
 
 /**
  * @brief Generate a PUBACK packet for the given packet identifier.
@@ -571,8 +571,8 @@ IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * const pPublishStart,
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
 IotMqttError_t _IotMqtt_SerializePuback( uint16_t packetIdentifier,
-                                         uint8_t ** const pPubackPacket,
-                                         size_t * const pPacketSize );
+                                         uint8_t ** pPubackPacket,
+                                         size_t * pPacketSize );
 
 /**
  * @brief Deserialize a PUBACK packet.
@@ -589,10 +589,10 @@ IotMqttError_t _IotMqtt_SerializePuback( uint16_t packetIdentifier,
  * @return #IOT_MQTT_SUCCESS if PUBACK is valid; #IOT_MQTT_BAD_RESPONSE
  * if the PUBACK packet doesn't follow MQTT spec.
  */
-IotMqttError_t _IotMqtt_DeserializePuback( const uint8_t * const pPubackStart,
+IotMqttError_t _IotMqtt_DeserializePuback( const uint8_t * pPubackStart,
                                            size_t dataLength,
-                                           uint16_t * const pPacketIdentifier,
-                                           size_t * const pBytesProcessed );
+                                           uint16_t * pPacketIdentifier,
+                                           size_t * pBytesProcessed );
 
 /**
  * @brief Generate a SUBSCRIBE packet from the given parameters.
@@ -605,11 +605,11 @@ IotMqttError_t _IotMqtt_DeserializePuback( const uint8_t * const pPubackStart,
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * const pSubscriptionList,
+IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
                                             size_t subscriptionCount,
-                                            uint8_t ** const pSubscribePacket,
-                                            size_t * const pPacketSize,
-                                            uint16_t * const pPacketIdentifier );
+                                            uint8_t ** pSubscribePacket,
+                                            size_t * pPacketSize,
+                                            uint16_t * pPacketIdentifier );
 
 /**
  * @brief Deserialize a SUBACK packet.
@@ -629,10 +629,10 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * const 
  * if the SUBACK packet doesn't follow MQTT spec.
  */
 IotMqttError_t _IotMqtt_DeserializeSuback( IotMqttConnection_t mqttConnection,
-                                           const uint8_t * const pSubackStart,
+                                           const uint8_t * pSubackStart,
                                            size_t dataLength,
-                                           uint16_t * const pPacketIdentifier,
-                                           size_t * const pBytesProcessed );
+                                           uint16_t * pPacketIdentifier,
+                                           size_t * pBytesProcessed );
 
 /**
  * @brief Generate an UNSUBSCRIBE packet from the given parameters.
@@ -645,11 +645,11 @@ IotMqttError_t _IotMqtt_DeserializeSuback( IotMqttConnection_t mqttConnection,
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * const pSubscriptionList,
+IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList,
                                               size_t subscriptionCount,
-                                              uint8_t ** const pUnsubscribePacket,
-                                              size_t * const pPacketSize,
-                                              uint16_t * const pPacketIdentifier );
+                                              uint8_t ** pUnsubscribePacket,
+                                              size_t * pPacketSize,
+                                              uint16_t * pPacketIdentifier );
 
 /**
  * @brief Deserialize a UNSUBACK packet.
@@ -666,10 +666,10 @@ IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * cons
  * @return #IOT_MQTT_SUCCESS if UNSUBACK is valid; #IOT_MQTT_BAD_RESPONSE
  * if the UNSUBACK packet doesn't follow MQTT spec.
  */
-IotMqttError_t _IotMqtt_DeserializeUnsuback( const uint8_t * const pUnsubackStart,
+IotMqttError_t _IotMqtt_DeserializeUnsuback( const uint8_t * pUnsubackStart,
                                              size_t dataLength,
-                                             uint16_t * const pPacketIdentifier,
-                                             size_t * const pBytesProcessed );
+                                             uint16_t * pPacketIdentifier,
+                                             size_t * pBytesProcessed );
 
 /**
  * @brief Generate a PINGREQ packet.
@@ -679,8 +679,8 @@ IotMqttError_t _IotMqtt_DeserializeUnsuback( const uint8_t * const pUnsubackStar
  *
  * @return Always returns #IOT_MQTT_SUCCESS.
  */
-IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** const pPingreqPacket,
-                                          size_t * const pPacketSize );
+IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
+                                          size_t * pPacketSize );
 
 /**
  * @brief Deserialize a PINGRESP packet.
@@ -695,9 +695,9 @@ IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** const pPingreqPacket,
  * @return #IOT_MQTT_SUCCESS if PINGRESP is valid; #IOT_MQTT_BAD_RESPONSE
  * if the PINGRESP packet doesn't follow MQTT spec.
  */
-IotMqttError_t _IotMqtt_DeserializePingresp( const uint8_t * const pPingrespStart,
+IotMqttError_t _IotMqtt_DeserializePingresp( const uint8_t * pPingrespStart,
                                              size_t dataLength,
-                                             size_t * const pBytesProcessed );
+                                             size_t * pBytesProcessed );
 
 /**
  * @brief Generate a DISCONNECT packet.
@@ -707,8 +707,8 @@ IotMqttError_t _IotMqtt_DeserializePingresp( const uint8_t * const pPingrespStar
  *
  * @return Always returns #IOT_MQTT_SUCCESS.
  */
-IotMqttError_t _IotMqtt_SerializeDisconnect( uint8_t ** const pDisconnectPacket,
-                                             size_t * const pPacketSize );
+IotMqttError_t _IotMqtt_SerializeDisconnect( uint8_t ** pDisconnectPacket,
+                                             size_t * pPacketSize );
 
 /**
  * @brief Free a packet generated by the serializer.
@@ -729,10 +729,10 @@ void _IotMqtt_FreePacket( uint8_t * pPacket );
  *
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_BAD_PARAMETER, or #IOT_MQTT_NO_MEMORY.
  */
-IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * const pMqttConnection,
+IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                                          uint32_t flags,
-                                         const IotMqttCallbackInfo_t * const pCallbackInfo,
-                                         _mqttOperation_t ** const pNewOperation );
+                                         const IotMqttCallbackInfo_t * pCallbackInfo,
+                                         _mqttOperation_t ** pNewOperation );
 
 /**
  * @brief Decrement the job reference count of an MQTT operation and optionally
@@ -815,7 +815,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_SCHEDULING_ERROR.
  */
-IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
+IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * pOperation,
                                            IotTaskPoolRoutine_t jobRoutine,
                                            uint64_t delay );
 
@@ -829,9 +829,9 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
  *
  * @return Pointer to any matching operation; `NULL` if no match was found.
  */
-_mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnection,
+_mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
                                            IotMqttOperationType_t operation,
-                                           const uint16_t * const pPacketIdentifier );
+                                           const uint16_t * pPacketIdentifier );
 
 /**
  * @brief Notify of a completed MQTT operation.
@@ -842,7 +842,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnec
  * notification will cause @ref mqtt_function_wait to return or invoke a
  * user-provided callback.
  */
-void _IotMqtt_Notify( _mqttOperation_t * const pOperation );
+void _IotMqtt_Notify( _mqttOperation_t * pOperation );
 
 /*----------------- MQTT subscription management functions ------------------*/
 
@@ -857,9 +857,9 @@ void _IotMqtt_Notify( _mqttOperation_t * const pOperation );
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
-IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * const pMqttConnection,
+IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
                                           uint16_t subscribePacketIdentifier,
-                                          const IotMqttSubscription_t * const pSubscriptionList,
+                                          const IotMqttSubscription_t * pSubscriptionList,
                                           size_t subscriptionCount );
 
 /**
@@ -870,8 +870,8 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * const pMqttConnect
  * PUBLISH.
  * @param[in] pCallbackParam The parameter to pass to a PUBLISH callback.
  */
-void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnection,
-                                          IotMqttCallbackParam_t * const pCallbackParam );
+void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
+                                          IotMqttCallbackParam_t * pCallbackParam );
 
 /**
  * @brief Remove a single subscription from the subscription manager by
@@ -883,7 +883,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
  * @param[in] order The order of the subscription in the SUBSCRIBE packet.
  * Pass `-1` to ignore order and remove all subscriptions for `packetIdentifier`.
  */
-void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * const pMqttConnection,
+void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * pMqttConnection,
                                           uint16_t packetIdentifier,
                                           int32_t order );
 
@@ -895,8 +895,8 @@ void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * const pMqttConnect
  * @param[in] pSubscriptionList The first element in the array.
  * @param[in] subscriptionCount Number of elements in `pSubscriptionList`.
  */
-void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * const pMqttConnection,
-                                               const IotMqttSubscription_t * const pSubscriptionList,
+void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnection,
+                                               const IotMqttSubscription_t * pSubscriptionList,
                                                size_t subscriptionCount );
 
 /*------------------ MQTT connection management functions -------------------*/
@@ -909,7 +909,7 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * const pMqttCo
  * @return `true` if the reference count was incremented; `false` otherwise. The
  * reference count will not be incremented for a disconnected connection.
  */
-bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * const pMqttConnection );
+bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * pMqttConnection );
 
 /**
  * @brief Decrement the reference count of an MQTT connection.
@@ -918,7 +918,7 @@ bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * const pMqttConn
  *
  * @param[in] pMqttConnection The referenced MQTT connection.
  */
-void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * const pMqttConnection );
+void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection );
 
 /**
  * @brief Closes the network connection associated with an MQTT connection.
@@ -929,6 +929,6 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * const pMqttConn
  * @param[in] pMqttConnection The MQTT connection with the network connection
  * to close.
  */
-void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * const pMqttConnection );
+void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection );
 
 #endif /* ifndef _IOT_MQTT_INTERNAL_H_ */

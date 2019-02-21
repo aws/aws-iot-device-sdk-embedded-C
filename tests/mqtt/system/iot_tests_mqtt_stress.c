@@ -162,8 +162,8 @@ extern void IotTest_NetworkCleanup( void );
 
 /* Extern declarations of default serializer functions. The internal MQTT header cannot
  * be included by this file. */
-extern IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** const pPingreqPacket,
-                                                 size_t * const pPacketSize );
+extern IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
+                                                 size_t * pPacketSize );
 extern void _IotMqtt_FreePacket( uint8_t * pPacket );
 
 /* Network variables used by the tests, declared in one of the test network
@@ -235,8 +235,8 @@ static bool _pingreqOverrideCalled = false;
 /**
  * @brief Serializer override for PINGREQ.
  */
-static IotMqttError_t _serializePingreq( uint8_t ** const pPingreqPacket,
-                                         size_t * const pPacketSize )
+static IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
+                                         size_t * pPacketSize )
 {
     _pingreqOverrideCalled = true;
 
@@ -288,7 +288,7 @@ static IotMqttError_t _checkConnection( void )
  * @brief Subscription callback function.
  */
 static void _publishReceived( void * pArgument,
-                              IotMqttCallbackParam_t * const pPublish )
+                              IotMqttCallbackParam_t * pPublish )
 {
     ( void ) pArgument;
 
@@ -315,7 +315,7 @@ static void _publishReceived( void * pArgument,
  * @brief Callback function that blocks for a long time.
  */
 static void _blockingCallback( void * pArgument,
-                               IotMqttCallbackParam_t * const param )
+                               IotMqttCallbackParam_t * param )
 {
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
     const unsigned blockTime = 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;

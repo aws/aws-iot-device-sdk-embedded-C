@@ -107,7 +107,7 @@
  */
 #define _SUBSCRIPTION_CALLBACK \
     ( ( void ( * )( void *,    \
-                    IotMqttCallbackParam_t * const ) ) 0x01 )
+                    IotMqttCallbackParam_t * ) ) 0x01 )
 
 /**
  * @brief How many times #TEST_MQTT_Unit_API_DisconnectMallocFail_ will test
@@ -221,8 +221,8 @@ static void _incomingPingresp( void * pArgument )
  * @brief PUBLISH set DUP function override.
  */
 static void _publishSetDup( bool awsIotMqttMode,
-                            uint8_t * const pPublishPacket,
-                            uint16_t * const pNewPacketIdentifier )
+                            uint8_t * pPublishPacket,
+                            uint16_t * pNewPacketIdentifier )
 {
     _publishSetDupCalled = true;
 
@@ -238,7 +238,7 @@ static void _publishSetDup( bool awsIotMqttMode,
  * through a semaphore.
  */
 static size_t _sendSuccess( void * pSendContext,
-                            const uint8_t * const pMessage,
+                            const uint8_t * pMessage,
                             size_t messageLength )
 {
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pSendContext;
@@ -262,7 +262,7 @@ static size_t _sendSuccess( void * pSendContext,
  * @brief A send function for PINGREQ that responds with a PINGRESP.
  */
 static size_t _sendPingreq( void * pSendContext,
-                            const uint8_t * const pMessage,
+                            const uint8_t * pMessage,
                             size_t messageLength )
 {
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pSendContext;
@@ -290,7 +290,7 @@ static size_t _sendPingreq( void * pSendContext,
  * @brief A send function that delays.
  */
 static size_t _sendDelay( void * pSendContext,
-                          const uint8_t * const pMessage,
+                          const uint8_t * pMessage,
                           size_t messageLength )
 {
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pSendContext;
@@ -315,7 +315,7 @@ static size_t _sendDelay( void * pSendContext,
  * the original.
  */
 static size_t _dupChecker( void * pSendContext,
-                           const uint8_t * const pMessage,
+                           const uint8_t * pMessage,
                            size_t messageLength )
 {
     static int32_t runCount = 0;

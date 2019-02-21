@@ -120,7 +120,7 @@ typedef struct _operationCompleteParams
  * the test network function files. */
 extern bool IotTest_NetworkSetup( void );
 extern void IotTest_NetworkCleanup( void );
-extern bool IotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
+extern bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection,
                                     IotMqttConnection_t * pMqttConnection );
 extern IotNetworkError_t IotTest_NetworkClose( void * pNetworkConnection );
 extern void IotTest_NetworkDestroy( void * pConnection );
@@ -181,9 +181,9 @@ static void _freePacket( uint8_t * pPacket )
 /**
  * @brief Serializer override for CONNECT.
  */
-static IotMqttError_t _serializeConnect( const IotMqttConnectInfo_t * const pConnectInfo,
-                                         uint8_t ** const pConnectPacket,
-                                         size_t * const pPacketSize )
+static IotMqttError_t _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
+                                         uint8_t ** pConnectPacket,
+                                         size_t * pPacketSize )
 {
     _connectSerializerOverride = true;
 
@@ -197,10 +197,10 @@ static IotMqttError_t _serializeConnect( const IotMqttConnectInfo_t * const pCon
 /**
  * @brief Serializer override for PUBLISH.
  */
-static IotMqttError_t _serializePublish( const IotMqttPublishInfo_t * const pPublishInfo,
-                                         uint8_t ** const pPublishPacket,
-                                         size_t * const pPacketSize,
-                                         uint16_t * const pPacketIdentifier )
+static IotMqttError_t _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
+                                         uint8_t ** pPublishPacket,
+                                         size_t * pPacketSize,
+                                         uint16_t * pPacketIdentifier )
 {
     _publishSerializerOverride = true;
 
@@ -216,8 +216,8 @@ static IotMqttError_t _serializePublish( const IotMqttPublishInfo_t * const pPub
  * @brief Serializer override for PUBACK.
  */
 static IotMqttError_t _serializePuback( uint16_t packetIdentifier,
-                                        uint8_t ** const pPubackPacket,
-                                        size_t * const pPacketSize )
+                                        uint8_t ** pPubackPacket,
+                                        size_t * pPacketSize )
 {
     _pubackSerializerOverride = true;
 
@@ -231,11 +231,11 @@ static IotMqttError_t _serializePuback( uint16_t packetIdentifier,
 /**
  * @brief Serializer override for SUBSCRIBE.
  */
-static IotMqttError_t _serializeSubscribe( const IotMqttSubscription_t * const pSubscriptionList,
+static IotMqttError_t _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
                                            size_t subscriptionCount,
-                                           uint8_t ** const pSubscribePacket,
-                                           size_t * const pPacketSize,
-                                           uint16_t * const pPacketIdentifier )
+                                           uint8_t ** pSubscribePacket,
+                                           size_t * pPacketSize,
+                                           uint16_t * pPacketIdentifier )
 {
     _subscribeSerializerOverride = true;
 
@@ -251,11 +251,11 @@ static IotMqttError_t _serializeSubscribe( const IotMqttSubscription_t * const p
 /**
  * @brief Serializer override for UNSUBSCRIBE.
  */
-static IotMqttError_t _serializeUnsubscribe( const IotMqttSubscription_t * const pSubscriptionList,
+static IotMqttError_t _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList,
                                              size_t subscriptionCount,
-                                             uint8_t ** const pSubscribePacket,
-                                             size_t * const pPacketSize,
-                                             uint16_t * const pPacketIdentifier )
+                                             uint8_t ** pSubscribePacket,
+                                             size_t * pPacketSize,
+                                             uint16_t * pPacketIdentifier )
 {
     _unsubscribeSerializerOverride = true;
 
@@ -271,8 +271,8 @@ static IotMqttError_t _serializeUnsubscribe( const IotMqttSubscription_t * const
 /**
  * @brief Serializer override for DISCONNECT.
  */
-static IotMqttError_t _serializeDisconnect( uint8_t ** const pDisconnectPacket,
-                                            size_t * const pPacketSize )
+static IotMqttError_t _serializeDisconnect( uint8_t ** pDisconnectPacket,
+                                            size_t * pPacketSize )
 {
     _disconnectSerializerOverride = true;
 
@@ -287,7 +287,7 @@ static IotMqttError_t _serializeDisconnect( uint8_t ** const pDisconnectPacket,
  * the main test thread.
  */
 static void _publishReceived( void * pArgument,
-                              IotMqttCallbackParam_t * const pPublish )
+                              IotMqttCallbackParam_t * pPublish )
 {
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
 
@@ -308,7 +308,7 @@ static void _publishReceived( void * pArgument,
  * and unblocks the main test thread.
  */
 static void _operationComplete( void * pArgument,
-                                IotMqttCallbackParam_t * const pOperation )
+                                IotMqttCallbackParam_t * pOperation )
 {
     _operationCompleteParams_t * pParams = ( _operationCompleteParams_t * ) pArgument;
 
@@ -328,7 +328,7 @@ static void _operationComplete( void * pArgument,
  * @brief Callback that makes additional MQTT API calls.
  */
 static void _reentrantCallback( void * pArgument,
-                                IotMqttCallbackParam_t * const pOperation )
+                                IotMqttCallbackParam_t * pOperation )
 {
     bool status = true;
     IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;

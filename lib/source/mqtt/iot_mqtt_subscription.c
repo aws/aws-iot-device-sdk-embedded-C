@@ -104,8 +104,8 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     _topicMatchParams_t * pParam = ( _topicMatchParams_t * ) pMatch;
 
     /* Extract the relevant strings and lengths from parameters. */
-    const char * const pTopicName = pParam->pTopicName;
-    const char * const pTopicFilter = pSubscription->pTopicFilter;
+    const char * pTopicName = pParam->pTopicName;
+    const char * pTopicFilter = pSubscription->pTopicFilter;
     const uint16_t topicNameLength = pParam->topicNameLength;
     const uint16_t topicFilterLength = pSubscription->topicFilterLength;
 
@@ -244,9 +244,9 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * const pMqttConnection,
+IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
                                           uint16_t subscribePacketIdentifier,
-                                          const IotMqttSubscription_t * const pSubscriptionList,
+                                          const IotMqttSubscription_t * pSubscriptionList,
                                           size_t subscriptionCount )
 {
     size_t i = 0;
@@ -321,15 +321,15 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * const pMqttConnect
 
 /*-----------------------------------------------------------*/
 
-void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnection,
-                                          IotMqttCallbackParam_t * const pCallbackParam )
+void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
+                                          IotMqttCallbackParam_t * pCallbackParam )
 {
     _mqttSubscription_t * pSubscription = NULL;
     IotLink_t * pCurrentLink = NULL, * pNextLink = NULL;
     void * pParam1 = NULL;
 
     void ( * callbackFunction )( void *,
-                                 IotMqttCallbackParam_t * const ) = NULL;
+                                 IotMqttCallbackParam_t * ) = NULL;
     _topicMatchParams_t topicMatchParams =
     {
         .pTopicName      = pCallbackParam->message.info.pTopicName,
@@ -418,7 +418,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * const pMqttConnect
 
 /*-----------------------------------------------------------*/
 
-void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * const pMqttConnection,
+void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * pMqttConnection,
                                           uint16_t packetIdentifier,
                                           int32_t order )
 {
@@ -437,8 +437,8 @@ void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * const pMqttConnect
 
 /*-----------------------------------------------------------*/
 
-void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * const pMqttConnection,
-                                               const IotMqttSubscription_t * const pSubscriptionList,
+void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnection,
+                                               const IotMqttSubscription_t * pSubscriptionList,
                                                size_t subscriptionCount )
 {
     size_t i = 0;
@@ -492,7 +492,7 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * const pMqttCo
 /*-----------------------------------------------------------*/
 
 bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
-                           const char * const pTopicFilter,
+                           const char * pTopicFilter,
                            uint16_t topicFilterLength,
                            IotMqttSubscription_t * pCurrentSubscription )
 {

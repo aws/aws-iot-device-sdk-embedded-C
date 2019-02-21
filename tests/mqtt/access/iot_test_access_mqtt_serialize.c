@@ -31,8 +31,8 @@
 /*-----------------------------------------------------------*/
 
 IotMqttError_t IotTestMqtt_decodeRemainingLength( const uint8_t * pSource,
-                                                  const uint8_t ** const pEnd,
-                                                  size_t * const pLength )
+                                                  const uint8_t ** pEnd,
+                                                  size_t * pLength )
 {
     return _decodeRemainingLength( pSource, pEnd, pLength );
 }

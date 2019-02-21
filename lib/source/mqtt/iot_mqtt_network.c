@@ -46,12 +46,12 @@
  * @param[in] pMqttConnection Which connection the PUBACK should be sent over.
  * @param[in] packetIdentifier Which packet identifier to include in PUBACK.
  */
-static void _sendPuback( _mqttConnection_t * const pMqttConnection,
+static void _sendPuback( _mqttConnection_t * pMqttConnection,
                          uint16_t packetIdentifier );
 
 /*-----------------------------------------------------------*/
 
-static void _sendPuback( _mqttConnection_t * const pMqttConnection,
+static void _sendPuback( _mqttConnection_t * pMqttConnection,
                          uint16_t packetIdentifier )
 {
     uint8_t * pPuback = NULL;
@@ -59,8 +59,8 @@ static void _sendPuback( _mqttConnection_t * const pMqttConnection,
 
     /* Default PUBACK serializer and free packet functions. */
     IotMqttError_t ( * serializePuback )( uint16_t,
-                                          uint8_t ** const,
-                                          size_t * const ) = _IotMqtt_SerializePuback;
+                                          uint8_t **,
+                                          size_t * ) = _IotMqtt_SerializePuback;
     void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
 
     IotLogDebug( "Sending PUBACK for received PUBLISH %hu.", packetIdentifier );
@@ -140,7 +140,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
     ( void ) pConnection;
 
     /* Choose a packet type decoder function. */
-    uint8_t ( * getPacketType )( const uint8_t * const,
+    uint8_t ( * getPacketType )( const uint8_t *,
                                  size_t ) = _IotMqtt_GetPacketType;
 
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
@@ -170,9 +170,9 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "CONNACK in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Deserialize the CONNACK. */
-                IotMqttError_t ( * deserializeConnack )( const uint8_t * const,
+                IotMqttError_t ( * deserializeConnack )( const uint8_t *,
                                                          size_t,
-                                                         size_t * const ) = _IotMqtt_DeserializeConnack;
+                                                         size_t * ) = _IotMqtt_DeserializeConnack;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.connack != NULL )
@@ -220,11 +220,11 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                 pOperation->pMqttConnection = pConnectionInfo;
 
                 /* Deserialize the PUBLISH into an IotMqttPublishInfo_t. */
-                IotMqttError_t ( * deserializePublish )( const uint8_t * const,
+                IotMqttError_t ( * deserializePublish )( const uint8_t *,
                                                          size_t,
-                                                         IotMqttPublishInfo_t * const,
-                                                         uint16_t * const,
-                                                         size_t * const ) = _IotMqtt_DeserializePublish;
+                                                         IotMqttPublishInfo_t *,
+                                                         uint16_t *,
+                                                         size_t * ) = _IotMqtt_DeserializePublish;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.publish != NULL )
@@ -273,10 +273,10 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "PUBACK in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Deserialize the PUBACK to get the packet identifier. */
-                IotMqttError_t ( * deserializePuback )( const uint8_t * const,
+                IotMqttError_t ( * deserializePuback )( const uint8_t *,
                                                         size_t,
-                                                        uint16_t * const,
-                                                        size_t * const ) = _IotMqtt_DeserializePuback;
+                                                        uint16_t *,
+                                                        size_t * ) = _IotMqtt_DeserializePuback;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.puback != NULL )
@@ -310,10 +310,10 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
 
                 /* Deserialize the SUBACK to get the packet identifier. */
                 IotMqttError_t ( * deserializeSuback )( IotMqttConnection_t,
-                                                        const uint8_t * const,
+                                                        const uint8_t *,
                                                         size_t,
-                                                        uint16_t * const,
-                                                        size_t * const ) = _IotMqtt_DeserializeSuback;
+                                                        uint16_t *,
+                                                        size_t * ) = _IotMqtt_DeserializeSuback;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.suback != NULL )
@@ -347,10 +347,10 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "UNSUBACK in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Deserialize the UNSUBACK to get the packet identifier. */
-                IotMqttError_t ( * deserializeUnsuback )( const uint8_t * const,
+                IotMqttError_t ( * deserializeUnsuback )( const uint8_t *,
                                                           size_t,
-                                                          uint16_t * const,
-                                                          size_t * const ) = _IotMqtt_DeserializeUnsuback;
+                                                          uint16_t *,
+                                                          size_t * ) = _IotMqtt_DeserializeUnsuback;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.unsuback != NULL )
@@ -383,9 +383,9 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "PINGRESP in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Deserialize the PINGRESP. */
-                IotMqttError_t ( * deserializePingresp )( const uint8_t * const,
+                IotMqttError_t ( * deserializePingresp )( const uint8_t *,
                                                           size_t,
-                                                          size_t * const ) = _IotMqtt_DeserializePingresp;
+                                                          size_t * ) = _IotMqtt_DeserializePingresp;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.pingresp != NULL )
@@ -556,7 +556,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
 
 /*-----------------------------------------------------------*/
 
-void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * const pMqttConnection )
+void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection )
 {
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
 

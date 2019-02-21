@@ -207,10 +207,10 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * const pMqttConnection,
+IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                                          uint32_t flags,
-                                         const IotMqttCallbackInfo_t * const pCallbackInfo,
-                                         _mqttOperation_t ** const pNewOperation )
+                                         const IotMqttCallbackInfo_t * pCallbackInfo,
+                                         _mqttOperation_t ** pNewOperation )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     _mqttOperation_t * pOperation = NULL;
@@ -662,8 +662,8 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
     {
         /* Choose a set DUP function. */
         void ( * publishSetDup )( bool,
-                                  uint8_t * const,
-                                  uint16_t * const ) = _IotMqtt_PublishSetDup;
+                                  uint8_t *,
+                                  uint16_t * ) = _IotMqtt_PublishSetDup;
 
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
             if( pMqttConnection->network.serialize.publishSetDup != NULL )
@@ -851,7 +851,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
+IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * pOperation,
                                            IotTaskPoolRoutine_t jobRoutine,
                                            uint64_t delay )
 {
@@ -894,9 +894,9 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * const pOperation,
 
 /*-----------------------------------------------------------*/
 
-_mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnection,
+_mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
                                            IotMqttOperationType_t operation,
-                                           const uint16_t * const pPacketIdentifier )
+                                           const uint16_t * pPacketIdentifier )
 {
     _mqttOperation_t * pResult = NULL;
     IotLink_t * pResultLink = NULL;
@@ -985,7 +985,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * const pMqttConnec
 
 /*-----------------------------------------------------------*/
 
-void _IotMqtt_Notify( _mqttOperation_t * const pOperation )
+void _IotMqtt_Notify( _mqttOperation_t * pOperation )
 {
     /* Check if operation is waitable. */
     bool waitable = ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE;

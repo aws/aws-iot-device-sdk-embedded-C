@@ -226,7 +226,7 @@ static void * _mallocWrapper( size_t size )
 /**
  * @brief Get packet type function override.
  */
-static uint8_t _getPacketType( const uint8_t * const pPacket,
+static uint8_t _getPacketType( const uint8_t * pPacket,
                                size_t packetSize )
 {
     _getPacketTypeCalled = true;
@@ -256,9 +256,9 @@ static void _freeWrapper( void * ptr )
 /**
  * @brief Deserializer override for CONNACK.
  */
-static IotMqttError_t _deserializeConnack( const uint8_t * const pConnackStart,
+static IotMqttError_t _deserializeConnack( const uint8_t * pConnackStart,
                                            size_t dataLength,
-                                           size_t * const pBytesProcessed )
+                                           size_t * pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
@@ -272,11 +272,11 @@ static IotMqttError_t _deserializeConnack( const uint8_t * const pConnackStart,
 /**
  * @brief Deserializer override for PUBLISH.
  */
-static IotMqttError_t _deserializePublish( const uint8_t * const pPublishStart,
+static IotMqttError_t _deserializePublish( const uint8_t * pPublishStart,
                                            size_t dataLength,
-                                           IotMqttPublishInfo_t * const pOutput,
-                                           uint16_t * const pPacketIdentifier,
-                                           size_t * const pBytesProcessed )
+                                           IotMqttPublishInfo_t * pOutput,
+                                           uint16_t * pPacketIdentifier,
+                                           size_t * pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
@@ -292,10 +292,10 @@ static IotMqttError_t _deserializePublish( const uint8_t * const pPublishStart,
 /**
  * @brief Deserializer override for PUBACK.
  */
-static IotMqttError_t _deserializePuback( const uint8_t * const pPubackStart,
+static IotMqttError_t _deserializePuback( const uint8_t * pPubackStart,
                                           size_t dataLength,
-                                          uint16_t * const pPacketIdentifier,
-                                          size_t * const pBytesProcessed )
+                                          uint16_t * pPacketIdentifier,
+                                          size_t * pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
@@ -311,10 +311,10 @@ static IotMqttError_t _deserializePuback( const uint8_t * const pPubackStart,
  * @brief Deserializer override for SUBACK.
  */
 static IotMqttError_t _deserializeSuback( IotMqttConnection_t mqttConnection,
-                                          const uint8_t * const pSubackStart,
+                                          const uint8_t * pSubackStart,
                                           size_t dataLength,
-                                          uint16_t * const pPacketIdentifier,
-                                          size_t * const pBytesProcessed )
+                                          uint16_t * pPacketIdentifier,
+                                          size_t * pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
@@ -330,10 +330,10 @@ static IotMqttError_t _deserializeSuback( IotMqttConnection_t mqttConnection,
 /**
  * @brief Deserializer override for UNSUBACK.
  */
-static IotMqttError_t _deserializeUnsuback( const uint8_t * const pUnsubackStart,
+static IotMqttError_t _deserializeUnsuback( const uint8_t * pUnsubackStart,
                                             size_t dataLength,
-                                            uint16_t * const pPacketIdentifier,
-                                            size_t * const pBytesProcessed )
+                                            uint16_t * pPacketIdentifier,
+                                            size_t * pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
@@ -348,9 +348,9 @@ static IotMqttError_t _deserializeUnsuback( const uint8_t * const pUnsubackStart
 /**
  * @brief Deserializer override for PINGRESP.
  */
-static IotMqttError_t _deserializePingresp( const uint8_t * const pPingrespStart,
+static IotMqttError_t _deserializePingresp( const uint8_t * pPingrespStart,
                                             size_t dataLength,
-                                            size_t * const pBytesProcessed )
+                                            size_t * pBytesProcessed )
 {
     _deserializeOverrideCalled = true;
 
@@ -365,7 +365,7 @@ static IotMqttError_t _deserializePingresp( const uint8_t * const pPingrespStart
  * @brief Reset the status of an #_mqttOperation_t and push it to the queue of
  * MQTT operations awaiting network response.
  */
-static void _operationResetAndPush( _mqttOperation_t * const pOperation )
+static void _operationResetAndPush( _mqttOperation_t * pOperation )
 {
     pOperation->status = IOT_MQTT_STATUS_PENDING;
     pOperation->jobReference = 1;
@@ -377,7 +377,7 @@ static void _operationResetAndPush( _mqttOperation_t * const pOperation )
 /**
  * @brief Process a non-PUBLISH buffer and check the result.
  */
-static bool _processBuffer( const _mqttOperation_t * const pOperation,
+static bool _processBuffer( const _mqttOperation_t * pOperation,
                             const uint8_t * pBuffer,
                             size_t bufferSize,
                             int32_t expectedBytesProcessed,
@@ -416,7 +416,7 @@ static bool _processBuffer( const _mqttOperation_t * const pOperation,
 /**
  * @brief Process a PUBLISH message and check the result.
  */
-static bool _processPublish( const uint8_t * const pPublish,
+static bool _processPublish( const uint8_t * pPublish,
                              size_t publishSize,
                              int32_t expectedBytesProcessed,
                              uint32_t expectedInvokeCount )
@@ -478,7 +478,7 @@ static bool _processPublish( const uint8_t * const pPublish,
  * @brief Called when a PUBLISH message is "received".
  */
 static void _publishCallback( void * param1,
-                              IotMqttCallbackParam_t * const pPublish )
+                              IotMqttCallbackParam_t * pPublish )
 {
     IotSemaphore_t * pInvokeCount = ( IotSemaphore_t * ) param1;
 
@@ -504,8 +504,8 @@ static void _publishCallback( void * param1,
  * Prevents any tests on QoS 1 PUBLISH packets from sending any PUBACKS.
  */
 static IotMqttError_t _serializePuback( uint16_t packetIdentifier,
-                                        uint8_t ** const pPubackPacket,
-                                        size_t * const pPacketSize )
+                                        uint8_t ** pPubackPacket,
+                                        size_t * pPacketSize )
 {
     ( void ) packetIdentifier;
     ( void ) pPubackPacket;

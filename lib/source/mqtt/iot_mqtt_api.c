@@ -211,8 +211,8 @@ static bool _createKeepAliveJob( bool awsIotMqttMode,
     IotTaskPoolError_t jobStatus = IOT_TASKPOOL_SUCCESS;
 
     /* Default PINGREQ serializer function. */
-    IotMqttError_t ( * serializePingreq )( uint8_t ** const,
-                                           size_t * const ) = _IotMqtt_SerializePingreq;
+    IotMqttError_t ( * serializePingreq )( uint8_t **,
+                                           size_t * ) = _IotMqtt_SerializePingreq;
 
     /* AWS IoT service limits set minimum and maximum values for keep-alive interval.
      * Adjust the user-provided keep-alive interval based on these requirements. */
@@ -482,11 +482,11 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
 
     /* Subscription serializer function. */
-    IotMqttError_t ( * serializeSubscription )( const IotMqttSubscription_t * const,
+    IotMqttError_t ( * serializeSubscription )( const IotMqttSubscription_t *,
                                                 size_t,
-                                                uint8_t ** const,
-                                                size_t * const,
-                                                uint16_t * const ) = NULL;
+                                                uint8_t **,
+                                                size_t *,
+                                                uint16_t * ) = NULL;
 
     /* This function should only be called for subscribe or unsubscribe. */
     IotMqtt_Assert( ( operation == IOT_MQTT_SUBSCRIBE ) ||
@@ -638,7 +638,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
 /*-----------------------------------------------------------*/
 
-bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * const pMqttConnection )
+bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * pMqttConnection )
 {
     bool disconnected = false;
 
@@ -672,7 +672,7 @@ bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * const pMqttConn
 
 /*-----------------------------------------------------------*/
 
-void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * const pMqttConnection )
+void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection )
 {
     bool destroyConnection = false;
 
@@ -758,8 +758,8 @@ void IotMqtt_Cleanup()
 /*-----------------------------------------------------------*/
 
 IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
-                                const IotMqttNetIf_t * const pNetworkInterface,
-                                const IotMqttConnectInfo_t * const pConnectInfo,
+                                const IotMqttNetIf_t * pNetworkInterface,
+                                const IotMqttConnectInfo_t * pConnectInfo,
                                 uint64_t timeoutMs )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
@@ -767,9 +767,9 @@ IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
     _mqttOperation_t * pConnectOperation = NULL;
 
     /* Default CONNECT serializer function. */
-    IotMqttError_t ( * serializeConnect )( const IotMqttConnectInfo_t * const,
-                                           uint8_t ** const,
-                                           size_t * const ) = _IotMqtt_SerializeConnect;
+    IotMqttError_t ( * serializeConnect )( const IotMqttConnectInfo_t *,
+                                           uint8_t **,
+                                           size_t * ) = _IotMqtt_SerializeConnect;
 
     /* Validate network interface and connect info. */
     if( _IotMqtt_ValidateNetIf( pNetworkInterface ) == false )
@@ -996,8 +996,8 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
             pDisconnectOperation->operation = IOT_MQTT_DISCONNECT;
 
             /* Choose a disconnect serializer. */
-            IotMqttError_t ( * serializeDisconnect )( uint8_t ** const,
-                                                      size_t * const ) = _IotMqtt_SerializeDisconnect;
+            IotMqttError_t ( * serializeDisconnect )( uint8_t **,
+                                                      size_t * ) = _IotMqtt_SerializeDisconnect;
 
             #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                 if( pMqttConnection->network.serialize.disconnect != NULL )
@@ -1069,11 +1069,11 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
 /*-----------------------------------------------------------*/
 
 IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
-                                  const IotMqttSubscription_t * const pSubscriptionList,
+                                  const IotMqttSubscription_t * pSubscriptionList,
                                   size_t subscriptionCount,
                                   uint32_t flags,
-                                  const IotMqttCallbackInfo_t * const pCallbackInfo,
-                                  IotMqttReference_t * const pSubscribeRef )
+                                  const IotMqttCallbackInfo_t * pCallbackInfo,
+                                  IotMqttReference_t * pSubscribeRef )
 {
     return _subscriptionCommon( IOT_MQTT_SUBSCRIBE,
                                 mqttConnection,
@@ -1087,7 +1087,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
 /*-----------------------------------------------------------*/
 
 IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
-                                       const IotMqttSubscription_t * const pSubscriptionList,
+                                       const IotMqttSubscription_t * pSubscriptionList,
                                        size_t subscriptionCount,
                                        uint32_t flags,
                                        uint64_t timeoutMs )
@@ -1121,11 +1121,11 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
 /*-----------------------------------------------------------*/
 
 IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
-                                    const IotMqttSubscription_t * const pSubscriptionList,
+                                    const IotMqttSubscription_t * pSubscriptionList,
                                     size_t subscriptionCount,
                                     uint32_t flags,
-                                    const IotMqttCallbackInfo_t * const pCallbackInfo,
-                                    IotMqttReference_t * const pUnsubscribeRef )
+                                    const IotMqttCallbackInfo_t * pCallbackInfo,
+                                    IotMqttReference_t * pUnsubscribeRef )
 {
     return _subscriptionCommon( IOT_MQTT_UNSUBSCRIBE,
                                 mqttConnection,
@@ -1139,7 +1139,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
 /*-----------------------------------------------------------*/
 
 IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
-                                         const IotMqttSubscription_t * const pSubscriptionList,
+                                         const IotMqttSubscription_t * pSubscriptionList,
                                          size_t subscriptionCount,
                                          uint32_t flags,
                                          uint64_t timeoutMs )
@@ -1173,20 +1173,20 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
 /*-----------------------------------------------------------*/
 
 IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
-                                const IotMqttPublishInfo_t * const pPublishInfo,
+                                const IotMqttPublishInfo_t * pPublishInfo,
                                 uint32_t flags,
-                                const IotMqttCallbackInfo_t * const pCallbackInfo,
-                                IotMqttReference_t * const pPublishRef )
+                                const IotMqttCallbackInfo_t * pCallbackInfo,
+                                IotMqttReference_t * pPublishRef )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t * pPublishOperation = NULL;
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
 
     /* Default PUBLISH serializer function. */
-    IotMqttError_t ( * serializePublish )( const IotMqttPublishInfo_t * const,
-                                           uint8_t ** const,
-                                           size_t * const,
-                                           uint16_t * const ) = _IotMqtt_SerializePublish;
+    IotMqttError_t ( * serializePublish )( const IotMqttPublishInfo_t *,
+                                           uint8_t **,
+                                           size_t *,
+                                           uint16_t * ) = _IotMqtt_SerializePublish;
 
     /* Check that the PUBLISH information is valid. */
     if( _IotMqtt_ValidatePublish( pMqttConnection->awsIotMqttMode,
@@ -1321,7 +1321,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
 /*-----------------------------------------------------------*/
 
 IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
-                                     const IotMqttPublishInfo_t * const pPublishInfo,
+                                     const IotMqttPublishInfo_t * pPublishInfo,
                                      uint32_t flags,
                                      uint64_t timeoutMs )
 {

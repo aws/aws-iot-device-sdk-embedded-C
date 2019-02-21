@@ -120,7 +120,7 @@ extern int snprintf( char *,
  */
 #define _CALLBACK_FUNCTION  \
     ( ( void ( * )( void *, \
-                    IotMqttCallbackParam_t * const ) ) 0x1 )
+                    IotMqttCallbackParam_t * ) ) 0x1 )
 
 /**
  * @brief All test topic filters in the tests #TEST_MQTT_Unit_Subscription_TopicFilterMatchTrue_
@@ -202,8 +202,8 @@ static void _populateList( void )
 /**
  * @brief Wait for a reference count to reach a target value, subject to a timeout.
  */
-static bool _waitForCount( IotMutex_t * const pMutex,
-                           const int32_t * const pReferenceCount,
+static bool _waitForCount( IotMutex_t * pMutex,
+                           const int32_t * pReferenceCount,
                            int32_t target )
 {
     bool status = false;
@@ -248,7 +248,7 @@ static bool _waitForCount( IotMutex_t * const pMutex,
  * @brief A subscription callback function that only reports whether it was invoked.
  */
 static void _publishCallback( void * pArgument,
-                              IotMqttCallbackParam_t * const pPublish )
+                              IotMqttCallbackParam_t * pPublish )
 {
     uint16_t i = 0;
     bool * pCallbackInvoked = ( bool * ) pArgument;
@@ -287,7 +287,7 @@ static void _publishCallback( void * pArgument,
  * @brief A subscription callback function that blocks on a semaphore until signaled.
  */
 static void _blockingCallback( void * pArgument,
-                               IotMqttCallbackParam_t * const pPublish )
+                               IotMqttCallbackParam_t * pPublish )
 {
     IotSemaphore_t * pSemaphore = ( IotSemaphore_t * ) pArgument;
 

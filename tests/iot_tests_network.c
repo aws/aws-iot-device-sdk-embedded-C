@@ -68,7 +68,7 @@ void IotTest_NetworkCleanup( void );
  *
  * @return true if a new network connection was successfully created; false otherwise.
  */
-bool IotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
+bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection,
                              IotMqttConnection_t * pMqttConnection );
 
 /**
@@ -165,7 +165,7 @@ void IotTest_NetworkCleanup( void )
 
 /*-----------------------------------------------------------*/
 
-bool IotTest_NetworkConnect( IotTestNetworkConnection_t * const pNewConnection,
+bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection,
                              IotMqttConnection_t * pMqttConnection )
 {
     IotTestNetworkServerInfo_t serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;

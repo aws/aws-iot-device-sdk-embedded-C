@@ -456,7 +456,7 @@ typedef struct IotMqttCallbackParam
  *
  * @code{c}
  * // Operation completion callback.
- * void operationComplete( void * pArgument, IotMqttCallbackParam_t * const pOperation );
+ * void operationComplete( void * pArgument, IotMqttCallbackParam_t * pOperation );
  *
  * // Callback information.
  * IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
@@ -488,7 +488,7 @@ typedef struct IotMqttCallbackInfo
      * @see #IotMqttCallbackParam_t for more information on the second parameter.
      */
     void ( * function )( void *,
-                         IotMqttCallbackParam_t * const );
+                         IotMqttCallbackParam_t * );
 } IotMqttCallbackInfo_t;
 
 /**
@@ -667,13 +667,13 @@ typedef struct IotMqttNetIf
      * @brief Function that sends data on the network.
      *
      * @param[in] void * #IotMqttNetIf_t.pSendContext
-     * @param[in] const void * const Pointer to the data to send.
+     * @param[in] const void * Pointer to the data to send.
      * @param[in] size_t Size of the data to send.
      *
      * @return Number of bytes successfully sent, 0 on failure.
      */
     size_t ( * send )( void *,
-                       const uint8_t * const,
+                       const uint8_t *,
                        size_t );
 
     /**
@@ -719,9 +719,9 @@ typedef struct IotMqttNetIf
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializeConnect
              */
-            IotMqttError_t ( * connect )( const IotMqttConnectInfo_t * const /* pConnectInfo */,
-                                          uint8_t ** const /* pConnectPacket */,
-                                          size_t * const /* pPacketSize */ );
+            IotMqttError_t ( * connect )( const IotMqttConnectInfo_t * /* pConnectInfo */,
+                                          uint8_t ** /* pConnectPacket */,
+                                          size_t * /* pPacketSize */ );
 
             /**
              * @brief PUBLISH packet serializer function.
@@ -732,10 +732,10 @@ typedef struct IotMqttNetIf
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializePublish
              */
-            IotMqttError_t ( * publish )( const IotMqttPublishInfo_t * const /* pPublishInfo */,
-                                          uint8_t ** const /* pPublishPacket */,
-                                          size_t * const /* pPacketSize */,
-                                          uint16_t * const /* pPacketIdentifier */ );
+            IotMqttError_t ( * publish )( const IotMqttPublishInfo_t * /* pPublishInfo */,
+                                          uint8_t ** /* pPublishPacket */,
+                                          size_t * /* pPacketSize */,
+                                          uint16_t * /* pPacketIdentifier */ );
 
             /**
              * @brief Set the `DUP` bit in a QoS `1` PUBLISH packet.
@@ -747,8 +747,8 @@ typedef struct IotMqttNetIf
              * <b>Default implementation:</b> #_IotMqtt_PublishSetDup
              */
             void ( * publishSetDup )( bool /* awsIotMqttMode */,
-                                      uint8_t * const /* pPublishPacket */,
-                                      uint16_t * const /* pNewPacketIdentifier */ );
+                                      uint8_t * /* pPublishPacket */,
+                                      uint16_t * /* pNewPacketIdentifier */ );
 
             /**
              * @brief PUBACK packet serializer function.
@@ -759,8 +759,8 @@ typedef struct IotMqttNetIf
              * <b>Default implementation:</b> #_IotMqtt_SerializePuback
              */
             IotMqttError_t ( * puback )( uint16_t /* packetIdentifier */,
-                                         uint8_t ** const /* pPubackPacket */,
-                                         size_t * const /* pPacketSize */ );
+                                         uint8_t ** /* pPubackPacket */,
+                                         size_t * /* pPacketSize */ );
 
             /**
              * @brief SUBSCRIBE packet serializer function.
@@ -772,11 +772,11 @@ typedef struct IotMqttNetIf
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializeSubscribe
              */
-            IotMqttError_t ( * subscribe )( const IotMqttSubscription_t * const /* pSubscriptionList */,
+            IotMqttError_t ( * subscribe )( const IotMqttSubscription_t * /* pSubscriptionList */,
                                             size_t /* subscriptionCount */,
-                                            uint8_t ** const /* pSubscribePacket */,
-                                            size_t * const /* pPacketSize */,
-                                            uint16_t * const /* pPacketIdentifier */ );
+                                            uint8_t ** /* pSubscribePacket */,
+                                            size_t * /* pPacketSize */,
+                                            uint16_t * /* pPacketIdentifier */ );
 
             /**
              * @brief UNSUBSCRIBE packet serializer function.
@@ -788,11 +788,11 @@ typedef struct IotMqttNetIf
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializeUnsubscribe
              */
-            IotMqttError_t ( * unsubscribe )( const IotMqttSubscription_t * const /* pSubscriptionList */,
+            IotMqttError_t ( * unsubscribe )( const IotMqttSubscription_t * /* pSubscriptionList */,
                                               size_t /* subscriptionCount */,
-                                              uint8_t ** const /* pUnsubscribePacket */,
-                                              size_t * const /* pPacketSize */,
-                                              uint16_t * const /* pPacketIdentifier */ );
+                                              uint8_t ** /* pUnsubscribePacket */,
+                                              size_t * /* pPacketSize */,
+                                              uint16_t * /* pPacketIdentifier */ );
 
             /**
              * @brief PINGREQ packet serializer function.
@@ -801,8 +801,8 @@ typedef struct IotMqttNetIf
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializePingreq
              */
-            IotMqttError_t ( * pingreq )( uint8_t ** const /* pPingreqPacket */,
-                                          size_t * const /* pPacketSize */ );
+            IotMqttError_t ( * pingreq )( uint8_t ** /* pPingreqPacket */,
+                                          size_t * /* pPacketSize */ );
 
             /**
              * @brief DISCONNECT packet serializer function.
@@ -811,8 +811,8 @@ typedef struct IotMqttNetIf
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializeDisconnect
              */
-            IotMqttError_t ( * disconnect )( uint8_t ** const /* pDisconnectPacket */,
-                                             size_t * const /* pPacketSize */ );
+            IotMqttError_t ( * disconnect )( uint8_t ** /* pDisconnectPacket */,
+                                             size_t * /* pPacketSize */ );
         } serialize; /**< @brief Overrides the packet serialization functions for a single connection. */
 
         struct
@@ -826,9 +826,9 @@ typedef struct IotMqttNetIf
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeConnack
              */
-            IotMqttError_t ( * connack )( const uint8_t * const /* pConnackStart */,
+            IotMqttError_t ( * connack )( const uint8_t * /* pConnackStart */,
                                           size_t /* dataLength */,
-                                          size_t * const /* pBytesProcessed */ );
+                                          size_t * /* pBytesProcessed */ );
 
             /**
              * @brief PUBLISH packet deserializer function.
@@ -841,11 +841,11 @@ typedef struct IotMqttNetIf
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePublish
              */
-            IotMqttError_t ( * publish )( const uint8_t * const /* pPublishStart */,
+            IotMqttError_t ( * publish )( const uint8_t * /* pPublishStart */,
                                           size_t /* dataLength */,
-                                          IotMqttPublishInfo_t * const /* pOutput */,
-                                          uint16_t * const /* pPacketIdentifier */,
-                                          size_t * const /* pBytesProcessed */ );
+                                          IotMqttPublishInfo_t * /* pOutput */,
+                                          uint16_t * /* pPacketIdentifier */,
+                                          size_t * /* pBytesProcessed */ );
 
             /**
              * @brief PUBACK packet deserializer function.
@@ -857,10 +857,10 @@ typedef struct IotMqttNetIf
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePuback
              */
-            IotMqttError_t ( * puback )( const uint8_t * const /* pPubackStart */,
+            IotMqttError_t ( * puback )( const uint8_t * /* pPubackStart */,
                                          size_t /* dataLength */,
-                                         uint16_t * const /* pPacketIdentifier */,
-                                         size_t * const /* pBytesProcessed */ );
+                                         uint16_t * /* pPacketIdentifier */,
+                                         size_t * /* pBytesProcessed */ );
 
             /**
              * @brief SUBACK packet deserializer function.
@@ -876,10 +876,10 @@ typedef struct IotMqttNetIf
              * <b>Default implementation:</b> #_IotMqtt_DeserializeSuback
              */
             IotMqttError_t ( * suback )( IotMqttConnection_t /* mqttConnection */,
-                                         const uint8_t * const /* pSubackStart */,
+                                         const uint8_t * /* pSubackStart */,
                                          size_t /* dataLength */,
-                                         uint16_t * const /* pPacketIdentifier */,
-                                         size_t * const /* pBytesProcessed */ );
+                                         uint16_t * /* pPacketIdentifier */,
+                                         size_t * /* pBytesProcessed */ );
 
             /**
              * @brief UNSUBACK packet deserializer function.
@@ -891,10 +891,10 @@ typedef struct IotMqttNetIf
              *
             * <b>Default implementation:</b> #_IotMqtt_DeserializeUnsuback
              */
-            IotMqttError_t ( * unsuback )( const uint8_t * const /* pUnsubackStart */,
+            IotMqttError_t ( * unsuback )( const uint8_t * /* pUnsubackStart */,
                                            size_t /* dataLength */,
-                                           uint16_t * const /* pPacketIdentifier */,
-                                           size_t * const /* pBytesProcessed */ );
+                                           uint16_t * /* pPacketIdentifier */,
+                                           size_t * /* pBytesProcessed */ );
 
             /**
              * @brief PINGRESP packet deserializer function.
@@ -905,9 +905,9 @@ typedef struct IotMqttNetIf
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePingresp
              */
-            IotMqttError_t ( * pingresp )( const uint8_t * const /* pPingrespStart */,
+            IotMqttError_t ( * pingresp )( const uint8_t * /* pPingrespStart */,
                                            size_t /* dataLength */,
-                                           size_t * const /* pBytesProcessed */ );
+                                           size_t * /* pBytesProcessed */ );
         } deserialize; /**< @brief Overrides the packet deserialization functions for a single connection. */
 
         /**
@@ -918,7 +918,7 @@ typedef struct IotMqttNetIf
          *
          * <b>Default implementation:</b> #_IotMqtt_GetPacketType
          */
-        uint8_t ( * getPacketType )( const uint8_t * const /* pPacket */,
+        uint8_t ( * getPacketType )( const uint8_t * /* pPacket */,
                                      size_t /* packetSize */ );
 
         /**
@@ -1288,8 +1288,8 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
  */
 /* @[declare_mqtt_connect] */
 IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
-                                const IotMqttNetIf_t * const pNetworkInterface,
-                                const IotMqttConnectInfo_t * const pConnectInfo,
+                                const IotMqttNetIf_t * pNetworkInterface,
+                                const IotMqttConnectInfo_t * pConnectInfo,
                                 uint64_t timeoutMs );
 /* @[declare_mqtt_connect] */
 
@@ -1390,7 +1390,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  * #define NUMBER_OF_SUBSCRIPTIONS ...
  *
  * // Subscription callback function.
- * void subscriptionCallback( void * pArgument, IotMqttCallbackParam_t * const pPublish );
+ * void subscriptionCallback( void * pArgument, IotMqttCallbackParam_t * pPublish );
  *
  * // An initialized and connected MQTT connection.
  * IotMqttConnection_t mqttConnection;
@@ -1460,11 +1460,11 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  */
 /* @[declare_mqtt_subscribe] */
 IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
-                                  const IotMqttSubscription_t * const pSubscriptionList,
+                                  const IotMqttSubscription_t * pSubscriptionList,
                                   size_t subscriptionCount,
                                   uint32_t flags,
-                                  const IotMqttCallbackInfo_t * const pCallbackInfo,
-                                  IotMqttReference_t * const pSubscribeRef );
+                                  const IotMqttCallbackInfo_t * pCallbackInfo,
+                                  IotMqttReference_t * pSubscribeRef );
 /* @[declare_mqtt_subscribe] */
 
 /**
@@ -1500,7 +1500,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
  */
 /* @[declare_mqtt_timedsubscribe] */
 IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
-                                       const IotMqttSubscription_t * const pSubscriptionList,
+                                       const IotMqttSubscription_t * pSubscriptionList,
                                        size_t subscriptionCount,
                                        uint32_t flags,
                                        uint64_t timeoutMs );
@@ -1545,11 +1545,11 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
  */
 /* @[declare_mqtt_unsubscribe] */
 IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
-                                    const IotMqttSubscription_t * const pSubscriptionList,
+                                    const IotMqttSubscription_t * pSubscriptionList,
                                     size_t subscriptionCount,
                                     uint32_t flags,
-                                    const IotMqttCallbackInfo_t * const pCallbackInfo,
-                                    IotMqttReference_t * const pUnsubscribeRef );
+                                    const IotMqttCallbackInfo_t * pCallbackInfo,
+                                    IotMqttReference_t * pUnsubscribeRef );
 /* @[declare_mqtt_unsubscribe] */
 
 /**
@@ -1581,7 +1581,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
  */
 /* @[declare_mqtt_timedunsubscribe] */
 IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
-                                         const IotMqttSubscription_t * const pSubscriptionList,
+                                         const IotMqttSubscription_t * pSubscriptionList,
                                          size_t subscriptionCount,
                                          uint32_t flags,
                                          uint64_t timeoutMs );
@@ -1676,10 +1676,10 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  */
 /* @[declare_mqtt_publish] */
 IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
-                                const IotMqttPublishInfo_t * const pPublishInfo,
+                                const IotMqttPublishInfo_t * pPublishInfo,
                                 uint32_t flags,
-                                const IotMqttCallbackInfo_t * const pCallbackInfo,
-                                IotMqttReference_t * const pPublishRef );
+                                const IotMqttCallbackInfo_t * pCallbackInfo,
+                                IotMqttReference_t * pPublishRef );
 /* @[declare_mqtt_publish] */
 
 /**
@@ -1714,7 +1714,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
  */
 /* @[declare_mqtt_timedpublish] */
 IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
-                                     const IotMqttPublishInfo_t * const pPublishInfo,
+                                     const IotMqttPublishInfo_t * pPublishInfo,
                                      uint32_t flags,
                                      uint64_t timeoutMs );
 /* @[declare_mqtt_timedpublish] */
@@ -1852,7 +1852,7 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation );
  */
 /* @[declare_mqtt_issubscribed] */
 bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
-                           const char * const pTopicFilter,
+                           const char * pTopicFilter,
                            uint16_t topicFilterLength,
                            IotMqttSubscription_t * pCurrentSubscription );
 /* @[declare_mqtt_issubscribed] */

@@ -37,7 +37,7 @@
 
 /*-----------------------------------------------------------*/
 
-bool _IotMqtt_ValidateNetIf( const IotMqttNetIf_t * const pNetworkInterface )
+bool _IotMqtt_ValidateNetIf( const IotMqttNetIf_t * pNetworkInterface )
 {
     _IOT_FUNCTION_ENTRY( bool, true );
 
@@ -131,7 +131,7 @@ bool _IotMqtt_ValidateNetIf( const IotMqttNetIf_t * const pNetworkInterface )
 
 /*-----------------------------------------------------------*/
 
-bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * const pConnectInfo )
+bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 {
     _IOT_FUNCTION_ENTRY( bool, true );
 
@@ -273,7 +273,7 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * const pConnectInfo )
 /*-----------------------------------------------------------*/
 
 bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
-                               const IotMqttPublishInfo_t * const pPublishInfo )
+                               const IotMqttPublishInfo_t * pPublishInfo )
 {
     _IOT_FUNCTION_ENTRY( bool, true );
 
@@ -441,7 +441,7 @@ bool _IotMqtt_ValidateReference( IotMqttReference_t reference )
 
 bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                                         bool awsIotMqttMode,
-                                        const IotMqttSubscription_t * const pListStart,
+                                        const IotMqttSubscription_t * pListStart,
                                         size_t listSize )
 {
     _IOT_FUNCTION_ENTRY( bool, true );
@@ -682,3 +682,5 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
 
     _IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
+
+/*-----------------------------------------------------------*/

@@ -192,7 +192,7 @@ static size_t _remainingLengthEncodedSize( size_t length );
  * `pDestination` is large enough to hold the encoded "Remaining length" using
  * the function #_remainingLengthEncodedSize to avoid buffer overflows.
  */
-static uint8_t * _encodeRemainingLength( uint8_t * const pDestination,
+static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
                                          size_t length );
 
 /**
@@ -208,8 +208,8 @@ static uint8_t * _encodeRemainingLength( uint8_t * const pDestination,
  * @warning This function does not check the size of `pSource`!
  */
 static IotMqttError_t _decodeRemainingLength( const uint8_t * pSource,
-                                              const uint8_t ** const pEnd,
-                                              size_t * const pLength );
+                                              const uint8_t ** pEnd,
+                                              size_t * pLength );
 
 /**
  * @brief Encode a C string as a UTF-8 string, per MQTT 3.1.1 spec.
@@ -226,7 +226,7 @@ static IotMqttError_t _decodeRemainingLength( const uint8_t * pSource,
  * overflow.
  */
 static uint8_t * _encodeString( uint8_t * pDestination,
-                                const char * const source,
+                                const char * source,
                                 uint16_t sourceLength );
 
 /**
@@ -237,9 +237,9 @@ static uint8_t * _encodeString( uint8_t * pDestination,
  * @param[out] pRemainingLength Output for calculated "Remaining length" field.
  * @param[out] pPacketSize Output for calculated total packet size.
  */
-static void _connectPacketSize( const IotMqttConnectInfo_t * const pConnectInfo,
-                                size_t * const pRemainingLength,
-                                size_t * const pPacketSize );
+static void _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
+                                size_t * pRemainingLength,
+                                size_t * pPacketSize );
 
 /**
  * @brief Calculate the size and "Remaining length" of a PUBLISH packet generated
@@ -252,9 +252,9 @@ static void _connectPacketSize( const IotMqttConnectInfo_t * const pConnectInfo,
  * @return `true` if the packet is within the length allowed by MQTT 3.1.1 spec; `false`
  * otherwise. If this function returns `false`, the output parameters should be ignored.
  */
-static bool _publishPacketSize( const IotMqttPublishInfo_t * const pPublishInfo,
-                                size_t * const pRemainingLength,
-                                size_t * const pPacketSize );
+static bool _publishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
+                                size_t * pRemainingLength,
+                                size_t * pPacketSize );
 
 /**
  * @brief Calculate the size and "Remaining length" of a SUBSCRIBE or UNSUBSCRIBE
@@ -270,10 +270,10 @@ static bool _publishPacketSize( const IotMqttPublishInfo_t * const pPublishInfo,
  * otherwise. If this function returns `false`, the output parameters should be ignored.
  */
 static bool _subscriptionPacketSize( IotMqttOperationType_t type,
-                                     const IotMqttSubscription_t * const pSubscriptionList,
+                                     const IotMqttSubscription_t * pSubscriptionList,
                                      size_t subscriptionCount,
-                                     size_t * const pRemainingLength,
-                                     size_t * const pPacketSize );
+                                     size_t * pRemainingLength,
+                                     size_t * pPacketSize );
 
 /*-----------------------------------------------------------*/
 
@@ -358,7 +358,7 @@ static size_t _remainingLengthEncodedSize( size_t length )
 
 /*-----------------------------------------------------------*/
 
-static uint8_t * _encodeRemainingLength( uint8_t * const pDestination,
+static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
                                          size_t length )
 {
     uint8_t lengthByte = 0, * pLengthEnd = pDestination;
@@ -386,7 +386,7 @@ static uint8_t * _encodeRemainingLength( uint8_t * const pDestination,
 /*-----------------------------------------------------------*/
 
 static IotMqttError_t _decodeRemainingLength( const uint8_t * pSource,
-                                              const uint8_t ** const pEnd,
+                                              const uint8_t ** pEnd,
                                               size_t * const pLength )
 {
     uint8_t encodedByte = 0;
@@ -435,7 +435,7 @@ static IotMqttError_t _decodeRemainingLength( const uint8_t * pSource,
 /*-----------------------------------------------------------*/
 
 static uint8_t * _encodeString( uint8_t * pDestination,
-                                const char * const source,
+                                const char * source,
                                 uint16_t sourceLength )
 {
     /* The first byte of a UTF-8 string is the high byte of the string length. */
@@ -457,9 +457,9 @@ static uint8_t * _encodeString( uint8_t * pDestination,
 
 /*-----------------------------------------------------------*/
 
-static void _connectPacketSize( const IotMqttConnectInfo_t * const pConnectInfo,
-                                size_t * const pRemainingLength,
-                                size_t * const pPacketSize )
+static void _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
+                                size_t * pRemainingLength,
+                                size_t * pPacketSize )
 {
     size_t connectPacketSize = 0;
 
@@ -521,9 +521,9 @@ static void _connectPacketSize( const IotMqttConnectInfo_t * const pConnectInfo,
 
 /*-----------------------------------------------------------*/
 
-static bool _publishPacketSize( const IotMqttPublishInfo_t * const pPublishInfo,
-                                size_t * const pRemainingLength,
-                                size_t * const pPacketSize )
+static bool _publishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
+                                size_t * pRemainingLength,
+                                size_t * pPacketSize )
 {
     size_t publishPacketSize = 0;
 
@@ -561,10 +561,10 @@ static bool _publishPacketSize( const IotMqttPublishInfo_t * const pPublishInfo,
 /*-----------------------------------------------------------*/
 
 static bool _subscriptionPacketSize( IotMqttOperationType_t type,
-                                     const IotMqttSubscription_t * const pSubscriptionList,
+                                     const IotMqttSubscription_t * pSubscriptionList,
                                      size_t subscriptionCount,
-                                     size_t * const pRemainingLength,
-                                     size_t * const pPacketSize )
+                                     size_t * pRemainingLength,
+                                     size_t * pPacketSize )
 {
     size_t i = 0, subscriptionPacketSize = 0;
 
@@ -652,7 +652,7 @@ void _IotMqtt_CleanupSerialize( void )
 
 /*-----------------------------------------------------------*/
 
-uint8_t _IotMqtt_GetPacketType( const uint8_t * const pPacket,
+uint8_t _IotMqtt_GetPacketType( const uint8_t * pPacket,
                                 size_t packetSize )
 {
     uint8_t packetType = 0;
@@ -669,9 +669,9 @@ uint8_t _IotMqtt_GetPacketType( const uint8_t * const pPacket,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * const pConnectInfo,
-                                          uint8_t ** const pConnectPacket,
-                                          size_t * const pPacketSize )
+IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
+                                          uint8_t ** pConnectPacket,
+                                          size_t * pPacketSize )
 {
     uint8_t connectFlags = 0;
     size_t remainingLength = 0, connectPacketSize = 0;
@@ -844,9 +844,9 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * const pCo
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_DeserializeConnack( const uint8_t * const pConnackStart,
+IotMqttError_t _IotMqtt_DeserializeConnack( const uint8_t * pConnackStart,
                                             size_t dataLength,
-                                            size_t * const pBytesProcessed )
+                                            size_t * pBytesProcessed )
 {
     /* If logging is enabled, declare the CONNACK response code strings. The
      * fourth byte of CONNACK indexes into this array for the corresponding response. */
@@ -967,10 +967,10 @@ IotMqttError_t _IotMqtt_DeserializeConnack( const uint8_t * const pConnackStart,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * const pPublishInfo,
-                                          uint8_t ** const pPublishPacket,
-                                          size_t * const pPacketSize,
-                                          uint16_t * const pPacketIdentifier )
+IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishInfo,
+                                          uint8_t ** pPublishPacket,
+                                          size_t * pPacketSize,
+                                          uint16_t * pPacketIdentifier )
 {
     uint8_t publishFlags = 0;
     uint16_t packetIdentifier = 0;
@@ -1071,8 +1071,8 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * const pPu
 /*-----------------------------------------------------------*/
 
 void _IotMqtt_PublishSetDup( bool awsIotMqttMode,
-                             uint8_t * const pPublishPacket,
-                             uint16_t * const pNewPacketIdentifier )
+                             uint8_t * pPublishPacket,
+                             uint16_t * pNewPacketIdentifier )
 {
     const uint8_t * pTopicNameLength = NULL;
     uint8_t * pPacketIdentifier = NULL;
@@ -1112,11 +1112,11 @@ void _IotMqtt_PublishSetDup( bool awsIotMqttMode,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * const pPublishStart,
+IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * pPublishStart,
                                             size_t dataLength,
-                                            IotMqttPublishInfo_t * const pOutput,
-                                            uint16_t * const pPacketIdentifier,
-                                            size_t * const pBytesProcessed )
+                                            IotMqttPublishInfo_t * pOutput,
+                                            uint16_t * pPacketIdentifier,
+                                            size_t * pBytesProcessed )
 {
     size_t remainingLength = 0, packetSize = 0;
     uint8_t publishFlags = 0;
@@ -1347,8 +1347,8 @@ IotMqttError_t _IotMqtt_DeserializePublish( const uint8_t * const pPublishStart,
 /*-----------------------------------------------------------*/
 
 IotMqttError_t _IotMqtt_SerializePuback( uint16_t packetIdentifier,
-                                         uint8_t ** const pPubackPacket,
-                                         size_t * const pPacketSize )
+                                         uint8_t ** pPubackPacket,
+                                         size_t * pPacketSize )
 {
     /* Allocate memory for PUBACK. */
     uint8_t * pBuffer = IotMqtt_MallocMessage( _MQTT_PACKET_PUBACK_SIZE );
@@ -1378,10 +1378,10 @@ IotMqttError_t _IotMqtt_SerializePuback( uint16_t packetIdentifier,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_DeserializePuback( const uint8_t * const pPubackStart,
+IotMqttError_t _IotMqtt_DeserializePuback( const uint8_t * pPubackStart,
                                            size_t dataLength,
-                                           uint16_t * const pPacketIdentifier,
-                                           size_t * const pBytesProcessed )
+                                           uint16_t * pPacketIdentifier,
+                                           size_t * pBytesProcessed )
 {
     uint16_t packetIdentifier = 0;
 
@@ -1442,11 +1442,11 @@ IotMqttError_t _IotMqtt_DeserializePuback( const uint8_t * const pPubackStart,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * const pSubscriptionList,
+IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
                                             size_t subscriptionCount,
-                                            uint8_t ** const pSubscribePacket,
-                                            size_t * const pPacketSize,
-                                            uint16_t * const pPacketIdentifier )
+                                            uint8_t ** pSubscribePacket,
+                                            size_t * pPacketSize,
+                                            uint16_t * pPacketIdentifier )
 {
     size_t i = 0, subscribePacketSize = 0, remainingLength = 0;
     uint16_t packetIdentifier = 0;
@@ -1528,10 +1528,10 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * const 
 /*-----------------------------------------------------------*/
 
 IotMqttError_t _IotMqtt_DeserializeSuback( IotMqttConnection_t mqttConnection,
-                                           const uint8_t * const pSubackStart,
+                                           const uint8_t * pSubackStart,
                                            size_t dataLength,
-                                           uint16_t * const pPacketIdentifier,
-                                           size_t * const pBytesProcessed )
+                                           uint16_t * pPacketIdentifier,
+                                           size_t * pBytesProcessed )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     size_t i = 0, remainingLength = 0, packetSize = 0;
@@ -1676,11 +1676,11 @@ IotMqttError_t _IotMqtt_DeserializeSuback( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * const pSubscriptionList,
+IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList,
                                               size_t subscriptionCount,
-                                              uint8_t ** const pUnsubscribePacket,
-                                              size_t * const pPacketSize,
-                                              uint16_t * const pPacketIdentifier )
+                                              uint8_t ** pUnsubscribePacket,
+                                              size_t * pPacketSize,
+                                              uint16_t * pPacketIdentifier )
 {
     size_t i = 0, unsubscribePacketSize = 0, remainingLength = 0;
     uint16_t packetIdentifier = 0;
@@ -1757,10 +1757,10 @@ IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * cons
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_DeserializeUnsuback( const uint8_t * const pUnsubackStart,
+IotMqttError_t _IotMqtt_DeserializeUnsuback( const uint8_t * pUnsubackStart,
                                              size_t dataLength,
-                                             uint16_t * const pPacketIdentifier,
-                                             size_t * const pBytesProcessed )
+                                             uint16_t * pPacketIdentifier,
+                                             size_t * pBytesProcessed )
 {
     uint16_t packetIdentifier = 0;
 
@@ -1821,8 +1821,8 @@ IotMqttError_t _IotMqtt_DeserializeUnsuback( const uint8_t * const pUnsubackStar
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** const pPingreqPacket,
-                                          size_t * const pPacketSize )
+IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
+                                          size_t * pPacketSize )
 {
     /* PINGREQ packets are always the same. */
     static const uint8_t pPingreq[ _MQTT_PACKET_PINGREQ_SIZE ] =
@@ -1843,9 +1843,9 @@ IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** const pPingreqPacket,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_DeserializePingresp( const uint8_t * const pPingrespStart,
+IotMqttError_t _IotMqtt_DeserializePingresp( const uint8_t * pPingrespStart,
                                              size_t dataLength,
-                                             size_t * const pBytesProcessed )
+                                             size_t * pBytesProcessed )
 {
     /* According to MQTT 3.1.1, PINGRESP packets are all 2 bytes in size. If the
      * data stream has fewer than 2 bytes, then the PINGRESP packet is incomplete. */
@@ -1890,8 +1890,8 @@ IotMqttError_t _IotMqtt_DeserializePingresp( const uint8_t * const pPingrespStar
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_SerializeDisconnect( uint8_t ** const pDisconnectPacket,
-                                             size_t * const pPacketSize )
+IotMqttError_t _IotMqtt_SerializeDisconnect( uint8_t ** pDisconnectPacket,
+                                             size_t * pPacketSize )
 {
     /* DISCONNECT packets are always the same. */
     static const uint8_t pDisconnect[ _MQTT_PACKET_DISCONNECT_SIZE ] =

@@ -36,7 +36,7 @@
  * @see #_createMqttConnection.
  */
 _mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
-                                                      const IotMqttNetIf_t * const pNetworkInterface,
+                                                      const IotMqttNetIf_t * pNetworkInterface,
                                                       uint16_t keepAliveSeconds );
 
 /*------------------------- iot_mqtt_serialize.c ------------------------*/
@@ -62,8 +62,8 @@ _mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
  * @see #_decodeRemainingLength.
  */
 IotMqttError_t IotTestMqtt_decodeRemainingLength( const uint8_t * pSource,
-                                                  const uint8_t ** const pEnd,
-                                                  size_t * const pLength );
+                                                  const uint8_t ** pEnd,
+                                                  size_t * pLength );
 
 /*----------------------- iot_mqtt_subscription.c -----------------------*/
 
