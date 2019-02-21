@@ -481,7 +481,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            const IotMqttCallbackInfo_t * pCallbackInfo,
                                            IotMqttReference_t * pSubscriptionRef )
 {
-    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     _mqttOperation_t * pSubscriptionOperation = NULL;
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
 
@@ -502,20 +502,31 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            pSubscriptionList,
                                            subscriptionCount ) == false )
     {
-        return IOT_MQTT_BAD_PARAMETER;
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Check that a reference pointer is provided for a waitable operation. */
-    if( ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE ) &&
-        ( pSubscriptionRef == NULL ) )
+    if( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
     {
         if( pSubscriptionRef == NULL )
         {
             IotLogError( "Reference must be provided for a waitable %s.",
                          IotMqtt_OperationType( operation ) );
 
-            return IOT_MQTT_BAD_PARAMETER;
+            _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
         }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Choose a subscription serialize function. */
@@ -528,6 +539,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
             {
                 serializeSubscription = pMqttConnection->network.serialize.subscribe;
             }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
         #endif
     }
     else
@@ -539,6 +554,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
             {
                 serializeSubscription = pMqttConnection->network.serialize.unsubscribe;
             }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
         #endif
     }
 
@@ -549,6 +568,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                                   pSubscriptionList,
                                                   subscriptionCount );
     }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
 
     /* Create a subscription operation. */
     status = _IotMqtt_CreateOperation( pMqttConnection,
@@ -558,7 +581,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        return status;
+        _IOT_GOTO_CLEANUP();
     }
 
     /* Check the subscription operation data and set the operation type. */
@@ -575,9 +598,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        _IotMqtt_DestroyOperation( pSubscriptionOperation );
-
-        return status;
+        _IOT_GOTO_CLEANUP();
     }
 
     /* Check the serialized MQTT packet. */
@@ -594,23 +615,22 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
         if( status != IOT_MQTT_SUCCESS )
         {
-            _IotMqtt_DestroyOperation( pSubscriptionOperation );
-
-            return status;
+            _IOT_GOTO_CLEANUP();
         }
     }
 
-    /* Set the reference, if provided. This must be set before the subscription
-     * is pushed to the network queue to avoid a race condition. */
+    /* Set the reference, if provided. */
     if( pSubscriptionRef != NULL )
     {
         *pSubscriptionRef = pSubscriptionOperation;
     }
 
     /* Schedule the subscription operation for network transmission. */
-    if( _IotMqtt_ScheduleOperation( pSubscriptionOperation,
-                                    _IotMqtt_ProcessSend,
-                                    0 ) != IOT_MQTT_SUCCESS )
+    status = _IotMqtt_ScheduleOperation( pSubscriptionOperation,
+                                         _IotMqtt_ProcessSend,
+                                         0 );
+
+    if( status != IOT_MQTT_SUCCESS )
     {
         IotLogError( "(MQTT connection %p) Failed to schedule %s for sending.",
                      pMqttConnection,
@@ -623,23 +643,35 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                                  -1 );
         }
 
-        _IotMqtt_DestroyOperation( pSubscriptionOperation );
-
         /* Clear the previously set (and now invalid) reference. */
         if( pSubscriptionRef != NULL )
         {
             *pSubscriptionRef = IOT_MQTT_REFERENCE_INITIALIZER;
         }
 
-        return IOT_MQTT_SCHEDULING_ERROR;
+        _IOT_GOTO_CLEANUP();
     }
 
-    IotLogInfo( "(MQTT connection %p) %s operation scheduled.",
-                pMqttConnection,
-                IotMqtt_OperationType( operation ) );
+    /* Clean up if this function failed. */
+    _IOT_FUNCTION_CLEANUP_BEGIN();
 
-    /* The subscription operation is waiting for a network response. */
-    return IOT_MQTT_STATUS_PENDING;
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        if( pSubscriptionOperation != NULL )
+        {
+            _IotMqtt_DestroyOperation( pSubscriptionOperation );
+        }
+    }
+    else
+    {
+        status = IOT_MQTT_STATUS_PENDING;
+
+        IotLogInfo( "(MQTT connection %p) %s operation scheduled.",
+                    pMqttConnection,
+                    IotMqtt_OperationType( operation ) );
+    }
+
+    _IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
