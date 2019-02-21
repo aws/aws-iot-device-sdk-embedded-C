@@ -712,46 +712,57 @@ static IotNetworkError_t _cancelReceiveThread( IotNetworkConnectionOpenssl_t * c
     int posixError = 0;
     IotNetworkError_t status = IOT_NETWORK_SUCCESS;
 
-    /* Check if a network receive thread was created. */
-    if( pNetworkConnection->receiveThreadStatus != _NONE )
+    /* Do nothing if this thread is attempting to cancel itself. */
+    if( pNetworkConnection->receiveThreadStatus == _ACTIVE )
     {
-        /* Send a cancellation request to the receive thread if active. */
-        if( pNetworkConnection->receiveThreadStatus == _ACTIVE )
+        if( pNetworkConnection->receiveThread == pthread_self() )
         {
-            posixError = pthread_cancel( pNetworkConnection->receiveThread );
-
-            if( ( posixError != 0 ) && ( posixError != ESRCH ) )
-            {
-                IotLogWarn( "Failed to send cancellation request to socket %d receive "
-                            "thread. errno=%d.",
-                            pNetworkConnection->socket,
-                            posixError );
-
-                status = IOT_NETWORK_SYSTEM_ERROR;
-            }
-            else
-            {
-                pNetworkConnection->receiveThreadStatus = _TERMINATED;
-            }
+            status = IOT_NETWORK_FAILURE;
         }
+    }
 
-        if( pNetworkConnection->receiveThreadStatus == _TERMINATED )
+    if( status == IOT_NETWORK_SUCCESS )
+    {
+        if( pNetworkConnection->receiveThreadStatus != _NONE )
         {
-            /* Join the receive thread. */
-            posixError = pthread_join( pNetworkConnection->receiveThread, NULL );
-
-            if( posixError != 0 )
+            /* Send a cancellation request to the receive thread if active. */
+            if( pNetworkConnection->receiveThreadStatus == _ACTIVE )
             {
-                IotLogWarn( "Failed to join network receive thread for socket %d. errno=%d.",
-                            pNetworkConnection->socket,
-                            posixError );
+                posixError = pthread_cancel( pNetworkConnection->receiveThread );
+
+                if( ( posixError != 0 ) && ( posixError != ESRCH ) )
+                {
+                    IotLogWarn( "Failed to send cancellation request to socket %d receive "
+                                "thread. errno=%d.",
+                                pNetworkConnection->socket,
+                                posixError );
+
+                    status = IOT_NETWORK_SYSTEM_ERROR;
+                }
+                else
+                {
+                    pNetworkConnection->receiveThreadStatus = _TERMINATED;
+                }
             }
 
-            /* Clear data about the receive thread and callback. */
-            pNetworkConnection->receiveThreadStatus = _NONE;
-            ( void ) memset( &( pNetworkConnection->receiveThread ), 0x00, sizeof( pthread_t ) );
-            pNetworkConnection->receiveCallback = NULL;
-            pNetworkConnection->pReceiveContext = NULL;
+            if( pNetworkConnection->receiveThreadStatus == _TERMINATED )
+            {
+                /* Join the receive thread. */
+                posixError = pthread_join( pNetworkConnection->receiveThread, NULL );
+
+                if( posixError != 0 )
+                {
+                    IotLogWarn( "Failed to join network receive thread for socket %d. errno=%d.",
+                                pNetworkConnection->socket,
+                                posixError );
+                }
+
+                /* Clear data about the receive thread and callback. */
+                pNetworkConnection->receiveThreadStatus = _NONE;
+                ( void ) memset( &( pNetworkConnection->receiveThread ), 0x00, sizeof( pthread_t ) );
+                pNetworkConnection->receiveCallback = NULL;
+                pNetworkConnection->pReceiveContext = NULL;
+            }
         }
     }
 
