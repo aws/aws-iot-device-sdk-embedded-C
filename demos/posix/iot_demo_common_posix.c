@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_mqtt_demo_common_posix.c
+ * @file iot_mqtt_demo_common_posix.c
  * @brief Implements the common demo functions for POSIX systems.
  */
 
@@ -36,14 +36,14 @@
 #include <unistd.h>
 
 /* Common demo includes. */
-#include "aws_iot_demo.h"
-#include "aws_iot_demo_posix.h"
+#include "iot_demo.h"
+#include "iot_demo_posix.h"
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotDemo_ParseArguments( int argc,
-                                char ** argv,
-                                AwsIotDemoArguments_t * const pArguments )
+bool IotDemo_ParseArguments( int argc,
+                             char ** argv,
+                             IotDemoArguments_t * const pArguments )
 {
     int option = 0;
     unsigned long int port = 0;
@@ -52,33 +52,33 @@ bool AwsIotDemo_ParseArguments( int argc,
     pArguments->awsIotMqttMode = true;
 
     /* Set default secured connection status if defined. */
-    #ifdef AWS_IOT_DEMO_SECURED_CONNECTION
-        pArguments->securedConnection = AWS_IOT_DEMO_SECURED_CONNECTION;
+    #ifdef IOT_DEMO_SECURED_CONNECTION
+        pArguments->securedConnection = IOT_DEMO_SECURED_CONNECTION;
     #endif
 
     /* Set default MQTT server if defined. */
-    #ifdef AWS_IOT_DEMO_SERVER
-        pArguments->pHostName = AWS_IOT_DEMO_SERVER;
+    #ifdef IOT_DEMO_SERVER
+        pArguments->pHostName = IOT_DEMO_SERVER;
     #endif
 
     /* Set default MQTT server port if defined. */
-    #ifdef AWS_IOT_DEMO_PORT
-        pArguments->port = AWS_IOT_DEMO_PORT;
+    #ifdef IOT_DEMO_PORT
+        pArguments->port = IOT_DEMO_PORT;
     #endif
 
     /* Set default root CA path if defined. */
-    #ifdef AWS_IOT_DEMO_ROOT_CA
-        pArguments->pRootCaPath = AWS_IOT_DEMO_ROOT_CA;
+    #ifdef IOT_DEMO_ROOT_CA
+        pArguments->pRootCaPath = IOT_DEMO_ROOT_CA;
     #endif
 
     /* Set default client certificate path if defined. */
-    #ifdef AWS_IOT_DEMO_CLIENT_CERT
-        pArguments->pClientCertPath = AWS_IOT_DEMO_CLIENT_CERT;
+    #ifdef IOT_DEMO_CLIENT_CERT
+        pArguments->pClientCertPath = IOT_DEMO_CLIENT_CERT;
     #endif
 
     /* Set default client certificate private key path if defined. */
-    #ifdef AWS_IOT_DEMO_PRIVATE_KEY
-        pArguments->pPrivateKeyPath = AWS_IOT_DEMO_PRIVATE_KEY;
+    #ifdef IOT_DEMO_PRIVATE_KEY
+        pArguments->pPrivateKeyPath = IOT_DEMO_PRIVATE_KEY;
     #endif
 
     IotLogInfo( "Parsing command line arguments." );

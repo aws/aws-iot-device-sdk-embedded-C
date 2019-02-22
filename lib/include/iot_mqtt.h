@@ -20,12 +20,12 @@
  */
 
 /**
- * @file aws_iot_mqtt.h
+ * @file iot_mqtt.h
  * @brief User-facing functions and structs of the MQTT 3.1.1 library.
  */
 
-#ifndef _AWS_IOT_MQTT_H_
-#define _AWS_IOT_MQTT_H_
+#ifndef _IOT_MQTT_H_
+#define _IOT_MQTT_H_
 
 /* Build using a config header, if provided. */
 #ifdef IOT_CONFIG_FILE
@@ -59,9 +59,9 @@
  * @ref mqtt_function_disconnect returns, the connection handle should no longer
  * be used.
  *
- * @initializer{AwsIotMqttConnection_t,AWS_IOT_MQTT_CONNECTION_INITIALIZER}
+ * @initializer{IotMqttConnection_t,IOT_MQTT_CONNECTION_INITIALIZER}
  */
-typedef void * AwsIotMqttConnection_t;
+typedef void * IotMqttConnection_t;
 
 /**
  * @ingroup mqtt_datatypes_handles
@@ -74,16 +74,16 @@ typedef void * AwsIotMqttConnection_t;
  *
  * This reference will be valid from the successful return of @ref mqtt_function_publish,
  * @ref mqtt_function_subscribe, or @ref mqtt_function_unsubscribe. The reference becomes
- * invalid once the [completion callback](@ref AwsIotMqttCallbackInfo_t) is invoked, or
+ * invalid once the [completion callback](@ref IotMqttCallbackInfo_t) is invoked, or
  * @ref mqtt_function_wait returns.
  *
- * @initializer{AwsIotMqttReference_t,AWS_IOT_MQTT_REFERENCE_INITIALIZER}
+ * @initializer{IotMqttReference_t,IOT_MQTT_REFERENCE_INITIALIZER}
  *
- * @see @ref mqtt_function_wait and #AWS_IOT_MQTT_FLAG_WAITABLE for waiting on a reference.
- * #AwsIotMqttCallbackInfo_t and #AwsIotMqttCallbackParam_t for an asynchronous notification
+ * @see @ref mqtt_function_wait and #IOT_MQTT_FLAG_WAITABLE for waiting on a reference.
+ * #IotMqttCallbackInfo_t and #IotMqttCallbackParam_t for an asynchronous notification
  * of completion.
  */
-typedef void * AwsIotMqttReference_t;
+typedef void * IotMqttReference_t;
 
 /*-------------------------- MQTT enumerated types --------------------------*/
 
@@ -98,7 +98,7 @@ typedef void * AwsIotMqttReference_t;
  * The function @ref mqtt_function_strerror can be used to get a return code's
  * description.
  */
-typedef enum AwsIotMqttError
+typedef enum IotMqttError
 {
     /**
      * @brief MQTT operation completed successfully.
@@ -112,9 +112,9 @@ typedef enum AwsIotMqttError
      * - @ref mqtt_function_timedpublish
      *
      * Will also be the value of an operation completion callback's
-     * #AwsIotMqttCallbackParam_t.result when successful.
+     * #IotMqttCallbackParam_t.result when successful.
      */
-    AWS_IOT_MQTT_SUCCESS = 0,
+    IOT_MQTT_SUCCESS = 0,
 
     /**
      * @brief MQTT operation queued, awaiting result.
@@ -124,7 +124,7 @@ typedef enum AwsIotMqttError
      * - @ref mqtt_function_unsubscribe
      * - @ref mqtt_function_publish with QoS 1 parameter
      */
-    AWS_IOT_MQTT_STATUS_PENDING,
+    IOT_MQTT_STATUS_PENDING,
 
     /**
      * @brief Initialization failed.
@@ -132,7 +132,7 @@ typedef enum AwsIotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_init
      */
-    AWS_IOT_MQTT_INIT_FAILED,
+    IOT_MQTT_INIT_FAILED,
 
     /**
      * @brief At least one parameter is invalid.
@@ -144,7 +144,7 @@ typedef enum AwsIotMqttError
      * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
      * - @ref mqtt_function_wait
      */
-    AWS_IOT_MQTT_BAD_PARAMETER,
+    IOT_MQTT_BAD_PARAMETER,
 
     /**
      * @brief MQTT operation failed because of memory allocation failure.
@@ -155,10 +155,12 @@ typedef enum AwsIotMqttError
      * - @ref mqtt_function_unsubscribe and @ref mqtt_function_timedunsubscribe
      * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
      */
-    AWS_IOT_MQTT_NO_MEMORY,
+    IOT_MQTT_NO_MEMORY,
 
     /**
-     * @brief MQTT packet could not be transmitted on the network.
+     * @brief MQTT operation failed because the network was unusable.
+     *
+     * This return value may indicate that the network is disconnected.
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
@@ -168,9 +170,20 @@ typedef enum AwsIotMqttError
      * - @ref mqtt_function_timedpublish
      *
      * May also be the value of an operation completion callback's
-     * #AwsIotMqttCallbackParam_t.result.
+     * #IotMqttCallbackParam_t.result.
      */
-    AWS_IOT_MQTT_SEND_ERROR,
+    IOT_MQTT_NETWORK_ERROR,
+
+    /**
+     * @brief MQTT operation could not be scheduled, i.e. enqueued for sending.
+     *
+     * Functions that may return this value:
+     * - @ref mqtt_function_connect
+     * - @ref mqtt_function_subscribe and @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_unsubscribe and @ref mqtt_function_timedunsubscribe
+     * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
+     */
+    IOT_MQTT_SCHEDULING_ERROR,
 
     /**
      * @brief MQTT response packet received from the network is malformed.
@@ -183,13 +196,13 @@ typedef enum AwsIotMqttError
      * - @ref mqtt_function_timedpublish
      *
      * May also be the value of an operation completion callback's
-     * #AwsIotMqttCallbackParam_t.result.
+     * #IotMqttCallbackParam_t.result.
      *
      * @note If this value is received, the network connection has been closed
-     * (unless a [disconnect function](@ref AwsIotMqttNetIf_t.disconnect) was not
+     * (unless a [disconnect function](@ref IotMqttNetIf_t.disconnect) was not
      * provided to @ref mqtt_function_connect).
      */
-    AWS_IOT_MQTT_BAD_RESPONSE,
+    IOT_MQTT_BAD_RESPONSE,
 
     /**
      * @brief A blocking MQTT operation timed out.
@@ -201,19 +214,19 @@ typedef enum AwsIotMqttError
      * - @ref mqtt_function_timedunsubscribe
      * - @ref mqtt_function_timedpublish
      */
-    AWS_IOT_MQTT_TIMEOUT,
+    IOT_MQTT_TIMEOUT,
 
     /**
      * @brief A CONNECT or at least one subscription was refused by the server.
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
-     * - @ref mqtt_function_wait, but only when its #AwsIotMqttReference_t parameter
+     * - @ref mqtt_function_wait, but only when its #IotMqttReference_t parameter
      * is associated with a SUBSCRIBE operation.
      * - @ref mqtt_function_timedsubscribe
      *
      * May also be the value of an operation completion callback's
-     * #AwsIotMqttCallbackParam_t.result for a SUBSCRIBE.
+     * #IotMqttCallbackParam_t.result for a SUBSCRIBE.
      *
      * @note If this value is returned and multiple subscriptions were passed to
      * @ref mqtt_function_subscribe (or @ref mqtt_function_timedsubscribe), it's
@@ -222,22 +235,22 @@ typedef enum AwsIotMqttError
      * mqtt_function_issubscribed can be used to determine which subscriptions
      * were accepted or rejected.
      */
-    AWS_IOT_MQTT_SERVER_REFUSED,
+    IOT_MQTT_SERVER_REFUSED,
 
     /**
      * @brief A QoS 1 PUBLISH received no response and [the retry limit]
-     * (#AwsIotMqttPublishInfo_t.retryLimit) was reached.
+     * (#IotMqttPublishInfo_t.retryLimit) was reached.
      *
      * Functions that may return this value:
-     * - @ref mqtt_function_wait, but only when its #AwsIotMqttReference_t parameter
+     * - @ref mqtt_function_wait, but only when its #IotMqttReference_t parameter
      * is associated with a QoS 1 PUBLISH operation
      * - @ref mqtt_function_timedpublish
      *
      * May also be the value of an operation completion callback's
-     * #AwsIotMqttCallbackParam_t.result for a QoS 1 PUBLISH.
+     * #IotMqttCallbackParam_t.result for a QoS 1 PUBLISH.
      */
-    AWS_IOT_MQTT_RETRY_NO_RESPONSE
-} AwsIotMqttError_t;
+    IOT_MQTT_RETRY_NO_RESPONSE
+} IotMqttError_t;
 
 /**
  * @ingroup mqtt_datatypes_enums
@@ -246,16 +259,38 @@ typedef enum AwsIotMqttError
  * The function @ref mqtt_function_operationtype can be used to get an operation
  * type's description.
  */
-typedef enum AwsIotMqttOperationType
+typedef enum IotMqttOperationType
 {
-    AWS_IOT_MQTT_CONNECT,           /**< Client-to-server CONNECT. */
-    AWS_IOT_MQTT_PUBLISH_TO_SERVER, /**< Client-to-server PUBLISH. */
-    AWS_IOT_MQTT_PUBACK,            /**< Client-to-server PUBACK. */
-    AWS_IOT_MQTT_SUBSCRIBE,         /**< Client-to-server SUBSCRIBE. */
-    AWS_IOT_MQTT_UNSUBSCRIBE,       /**< Client-to-server UNSUBSCRIBE. */
-    AWS_IOT_MQTT_PINGREQ,           /**< Client-to-server PINGREQ. */
-    AWS_IOT_MQTT_DISCONNECT         /**< Client-to-server DISCONNECT. */
-} AwsIotMqttOperationType_t;
+    IOT_MQTT_CONNECT,           /**< Client-to-server CONNECT. */
+    IOT_MQTT_PUBLISH_TO_SERVER, /**< Client-to-server PUBLISH. */
+    IOT_MQTT_PUBACK,            /**< Client-to-server PUBACK. */
+    IOT_MQTT_SUBSCRIBE,         /**< Client-to-server SUBSCRIBE. */
+    IOT_MQTT_UNSUBSCRIBE,       /**< Client-to-server UNSUBSCRIBE. */
+    IOT_MQTT_PINGREQ,           /**< Client-to-server PINGREQ. */
+    IOT_MQTT_DISCONNECT         /**< Client-to-server DISCONNECT. */
+} IotMqttOperationType_t;
+
+/**
+ * @ingroup mqtt_datatypes_enums
+ * @brief Quality of service levels for MQTT PUBLISH messages.
+ *
+ * All MQTT PUBLISH messages, including Last Will and Testament and messages
+ * received on subscription filters, have an associated <i>Quality of Service</i>,
+ * which defines any delivery guarantees for that message.
+ * - QoS 0 messages will be delivered at most once. This is a "best effort"
+ * transmission with no retransmissions.
+ * - QoS 1 messages will be delivered at least once. See #IotMqttPublishInfo_t
+ * for the retransmission strategy this library uses to redeliver messages
+ * assumed to be lost.
+ *
+ * @attention QoS 2 is not supported by this library and should not be used.
+ */
+typedef enum IotMqttQos
+{
+    IOT_MQTT_QOS_0 = 0, /**< Delivery at most once. */
+    IOT_MQTT_QOS_1 = 1, /**< Delivery at least once. See #IotMqttPublishInfo_t for client-side retry strategy. */
+    IOT_MQTT_QOS_2 = 2  /**< Delivery exactly once. Unsupported, but enumerated for completeness. */
+} IotMqttQos_t;
 
 /*------------------------- MQTT parameter structs --------------------------*/
 
@@ -272,31 +307,31 @@ typedef enum AwsIotMqttOperationType
  * Passed to @ref mqtt_function_publish as the message to publish and @ref
  * mqtt_function_connect as the Last Will and Testament (LWT) message.
  *
- * @initializer{AwsIotMqttPublishInfo_t,AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER}
+ * @initializer{IotMqttPublishInfo_t,IOT_MQTT_PUBLISH_INFO_INITIALIZER}
  *
- * #AwsIotMqttPublishInfo_t.retryMs and #AwsIotMqttPublishInfo_t.retryLimit are only
+ * #IotMqttPublishInfo_t.retryMs and #IotMqttPublishInfo_t.retryLimit are only
  * relevant to QoS 1 PUBLISH messages. They are ignored for QoS 0 PUBLISH
  * messages and LWT messages. These members control retransmissions of QoS 1
  * messages under the following rules:
- * - Retransmission is disabled when #AwsIotMqttPublishInfo_t.retryLimit is 0.
+ * - Retransmission is disabled when #IotMqttPublishInfo_t.retryLimit is 0.
  * After sending the PUBLISH, the library will wait indefinitely for a PUBACK.
- * - If #AwsIotMqttPublishInfo_t.retryLimit is greater than 0, then QoS 1 publishes
- * that do not receive a PUBACK within #AwsIotMqttPublishInfo_t.retryMs will be
- * retransmitted, up to #AwsIotMqttPublishInfo_t.retryLimit times.
+ * - If #IotMqttPublishInfo_t.retryLimit is greater than 0, then QoS 1 publishes
+ * that do not receive a PUBACK within #IotMqttPublishInfo_t.retryMs will be
+ * retransmitted, up to #IotMqttPublishInfo_t.retryLimit times.
  *
  * Retransmission follows a truncated exponential backoff strategy. The constant
- * @ref AWS_IOT_MQTT_RETRY_MS_CEILING controls the maximum time between retransmissions.
+ * @ref IOT_MQTT_RETRY_MS_CEILING controls the maximum time between retransmissions.
  *
- * After #AwsIotMqttPublishInfo_t.retryLimit retransmissions are sent, the MQTT
- * library will wait @ref AWS_IOT_MQTT_RESPONSE_WAIT_MS before a final check
+ * After #IotMqttPublishInfo_t.retryLimit retransmissions are sent, the MQTT
+ * library will wait @ref IOT_MQTT_RESPONSE_WAIT_MS before a final check
  * for a PUBACK. If no PUBACK was received within this time, the QoS 1 PUBLISH
- * fails with the code #AWS_IOT_MQTT_RETRY_NO_RESPONSE.
+ * fails with the code #IOT_MQTT_RETRY_NO_RESPONSE.
  *
  * @note The lengths of the strings in this struct should not include the NULL
  * terminator. Strings in this struct do not need to be NULL-terminated.
  *
  * @note The AWS IoT MQTT server does not support the DUP bit. When
- * [using this library with the AWS IoT MQTT server](@ref AwsIotMqttConnectInfo_t.awsIotMqttMode),
+ * [using this library with the AWS IoT MQTT server](@ref IotMqttConnectInfo_t.awsIotMqttMode),
  * retransmissions will instead be sent with a new packet identifier in the PUBLISH
  * packet. This is a nonstandard workaround. Note that this workaround has some
  * flaws, including the following:
@@ -311,9 +346,9 @@ typedef enum AwsIotMqttOperationType
  * <b>Example</b>
  *
  * Consider a situation where
- * - @ref AWS_IOT_MQTT_RETRY_MS_CEILING is 60000
- * - #AwsIotMqttPublishInfo_t.retryMs is 2000
- * - #AwsIotMqttPublishInfo_t.retryLimit is 20
+ * - @ref IOT_MQTT_RETRY_MS_CEILING is 60000
+ * - #IotMqttPublishInfo_t.retryMs is 2000
+ * - #IotMqttPublishInfo_t.retryLimit is 20
  *
  * A PUBLISH message will be retransmitted at the following times after the initial
  * transmission if no PUBACK is received:
@@ -325,22 +360,22 @@ typedef enum AwsIotMqttOperationType
  * - 122000 ms, 182000 ms, 242000 ms... (every 60000 ms until 20 transmissions have been sent)
  *
  * After the 20th retransmission, the MQTT library will wait
- * @ref AWS_IOT_MQTT_RESPONSE_WAIT_MS before checking a final time for a PUBACK.
+ * @ref IOT_MQTT_RESPONSE_WAIT_MS before checking a final time for a PUBACK.
  */
-typedef struct AwsIotMqttPublishInfo
+typedef struct IotMqttPublishInfo
 {
-    int QoS;                   /**< @brief QoS of message. Must be 0 or 1. */
+    IotMqttQos_t qos;          /**< @brief QoS of message. Must be 0 or 1. */
     bool retain;               /**< @brief MQTT message retain flag. */
 
     const char * pTopicName;   /**< @brief Topic name of PUBLISH. */
-    uint16_t topicNameLength;  /**< @brief Length of #AwsIotMqttPublishInfo_t.pTopicName. */
+    uint16_t topicNameLength;  /**< @brief Length of #IotMqttPublishInfo_t.pTopicName. */
 
     const void * pPayload;     /**< @brief Payload of PUBLISH. */
-    size_t payloadLength;      /**< @brief Length of #AwsIotMqttPublishInfo_t.pPayload. For LWT messages, this is limited to 65535. */
+    size_t payloadLength;      /**< @brief Length of #IotMqttPublishInfo_t.pPayload. For LWT messages, this is limited to 65535. */
 
     uint64_t retryMs;          /**< @brief If no response is received within this time, the message is retransmitted. */
-    int retryLimit;            /**< @brief How many times to attempt retransmission. */
-} AwsIotMqttPublishInfo_t;
+    uint32_t retryLimit;       /**< @brief How many times to attempt retransmission. */
+} IotMqttPublishInfo_t;
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
@@ -364,14 +399,14 @@ typedef struct AwsIotMqttPublishInfo
  * callback function returns, so it must be copied if it is needed at a later time.
  *
  * @attention Any pointers in this callback parameter may be freed as soon as
- * the [callback function](@ref AwsIotMqttCallbackInfo_t.function) returns.
+ * the [callback function](@ref IotMqttCallbackInfo_t.function) returns.
  * Therefore, data must be copied if it is needed after the callback function
  * returns.
  * @attention The MQTT library may set strings that are not NULL-terminated.
  *
- * @see #AwsIotMqttCallbackInfo_t for the signature of a callback function.
+ * @see #IotMqttCallbackInfo_t for the signature of a callback function.
  */
-typedef struct AwsIotMqttCallbackParam
+typedef struct IotMqttCallbackParam
 {
     /**
      * @brief The MQTT connection associated with this completed operation or
@@ -381,16 +416,16 @@ typedef struct AwsIotMqttCallbackParam
      * However, blocking function calls (including @ref mqtt_function_wait) are
      * not recommended (though still safe).
      */
-    AwsIotMqttConnection_t mqttConnection;
+    IotMqttConnection_t mqttConnection;
 
     union
     {
         /* Valid for completed operations. */
         struct
         {
-            AwsIotMqttOperationType_t type;      /**< @brief Type of operation that completed. */
-            AwsIotMqttReference_t reference;     /**< @brief Reference to the operation that completed. */
-            AwsIotMqttError_t result;            /**< @brief Result of operation, e.g. succeeded or failed. */
+            IotMqttOperationType_t type;      /**< @brief Type of operation that completed. */
+            IotMqttReference_t reference;     /**< @brief Reference to the operation that completed. */
+            IotMqttError_t result;            /**< @brief Result of operation, e.g. succeeded or failed. */
         } operation;
 
         /* Valid for incoming PUBLISH messages. */
@@ -398,22 +433,22 @@ typedef struct AwsIotMqttCallbackParam
         {
             const char * pTopicFilter;           /**< @brief Topic filter that matched the message. */
             uint16_t topicFilterLength;          /**< @brief Length of `pTopicFilter`. */
-            AwsIotMqttPublishInfo_t info;        /**< @brief PUBLISH message received from the server. */
+            IotMqttPublishInfo_t info;        /**< @brief PUBLISH message received from the server. */
         } message;
     };
-} AwsIotMqttCallbackParam_t;
+} IotMqttCallbackParam_t;
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
  * @brief Information on a user-provided MQTT callback function.
  *
  * @paramfor @ref mqtt_function_subscribe, @ref mqtt_function_unsubscribe,
- * and @ref mqtt_function_publish. Cannot be used with #AWS_IOT_MQTT_FLAG_WAITABLE.
+ * and @ref mqtt_function_publish. Cannot be used with #IOT_MQTT_FLAG_WAITABLE.
  *
  * Provides a function to be invoked when an operation completes or when a
  * server-to-client PUBLISH is received.
  *
- * @initializer{AwsIotMqttCallbackInfo_t,AWS_IOT_MQTT_CALLBACK_INFO_INITIALIZER}
+ * @initializer{IotMqttCallbackInfo_t,IOT_MQTT_CALLBACK_INFO_INITIALIZER}
  *
  * Below is an example for receiving an asynchronous notification on operation
  * completion. See @ref mqtt_function_subscribe for an example of using this struct
@@ -421,40 +456,40 @@ typedef struct AwsIotMqttCallbackParam
  *
  * @code{c}
  * // Operation completion callback.
- * void operationComplete( void * pArgument, AwsIotMqttCallbackParam_t * const pOperation );
+ * void operationComplete( void * pArgument, IotMqttCallbackParam_t * pOperation );
  *
  * // Callback information.
- * AwsIotMqttCallbackInfo_t callbackInfo = AWS_IOT_MQTT_CALLBACK_INFO_INITIALIZER;
+ * IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
  * callbackInfo.function = operationComplete;
  *
  * // Operation to wait for.
- * AwsIotMqttError_t result = AwsIotMqtt_Publish( mqttConnection,
- *                                                &publishInfo,
- *                                                0,
- *                                                &callbackInfo,
- *                                                &reference );
+ * IotMqttError_t result = IotMqtt_Publish( mqttConnection,
+ *                                          &publishInfo,
+ *                                          0,
+ *                                          &callbackInfo,
+ *                                          &reference );
  *
- * // Publish should have returned AWS_IOT_MQTT_STATUS_PENDING. Once a response
+ * // Publish should have returned IOT_MQTT_STATUS_PENDING. Once a response
  * // is received, operationComplete is executed with the actual status passed
  * // in pOperation.
  * @endcode
  */
-typedef struct AwsIotMqttCallbackInfo
+typedef struct IotMqttCallbackInfo
 {
     void * param1; /**< @brief The first parameter to pass to the callback function. */
 
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void * #AwsIotMqttCallbackInfo_t.param1
-     * @param[in] AwsIotMqttCallbackParam_t * Details on the outcome of the MQTT operation
+     * @param[in] void * #IotMqttCallbackInfo_t.param1
+     * @param[in] IotMqttCallbackParam_t * Details on the outcome of the MQTT operation
      * or an incoming MQTT PUBLISH.
      *
-     * @see #AwsIotMqttCallbackParam_t for more information on the second parameter.
+     * @see #IotMqttCallbackParam_t for more information on the second parameter.
      */
     void ( * function )( void *,
-                         AwsIotMqttCallbackParam_t * const );
-} AwsIotMqttCallbackInfo_t;
+                         IotMqttCallbackParam_t * );
+} IotMqttCallbackInfo_t;
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
@@ -463,26 +498,34 @@ typedef struct AwsIotMqttCallbackInfo
  * @paramfor @ref mqtt_function_subscribe, @ref mqtt_function_unsubscribe
  *
  * An array of these is passed to @ref mqtt_function_subscribe and @ref
- * mqtt_function_unsubscribe. However, #AwsIotMqttSubscription_t.callback and
- * and #AwsIotMqttSubscription_t.QoS are ignored by @ref mqtt_function_unsubscribe.
+ * mqtt_function_unsubscribe. However, #IotMqttSubscription_t.callback and
+ * and #IotMqttSubscription_t.qos are ignored by @ref mqtt_function_unsubscribe.
  *
- * @initializer{AwsIotMqttSubscription_t,AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER}
+ * @initializer{IotMqttSubscription_t,IOT_MQTT_SUBSCRIPTION_INITIALIZER}
  *
  * @note The lengths of the strings in this struct should not include the NULL
  * terminator. Strings in this struct do not need to be NULL-terminated.
- * @see #AwsIotMqttCallbackInfo_t for details on setting a callback function.
+ * @see #IotMqttCallbackInfo_t for details on setting a callback function.
  */
-typedef struct AwsIotMqttSubscription
+typedef struct IotMqttSubscription
 {
-    int QoS;                           /**< @brief QoS of messages delivered on subscription.
-                                        * Must be `0` or `1`. Ignored by @ref mqtt_function_unsubscribe */
+    /**
+     * @brief QoS of messages delivered on subscription.
+     *
+     * Must be `0` or `1`. Ignored by @ref mqtt_function_unsubscribe.
+     */
+    IotMqttQos_t qos;
 
     const char * pTopicFilter;         /**< @brief Topic filter of subscription. */
-    uint16_t topicFilterLength;        /**< @brief Length of #AwsIotMqttSubscription_t.pTopicFilter. */
+    uint16_t topicFilterLength;        /**< @brief Length of #IotMqttSubscription_t.pTopicFilter. */
 
-    AwsIotMqttCallbackInfo_t callback; /**< @brief Callback to invoke when a message is received.
-                                        * See #AwsIotMqttCallbackInfo_t. Ignored by @ref mqtt_function_unsubscribe. */
-} AwsIotMqttSubscription_t;
+    /**
+     * @brief Callback to invoke when a message is received.
+     *
+     * See #IotMqttCallbackInfo_t. Ignored by @ref mqtt_function_unsubscribe.
+     */
+    IotMqttCallbackInfo_t callback;
+} IotMqttSubscription_t;
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
@@ -494,25 +537,25 @@ typedef struct AwsIotMqttSubscription
  * correspond to the content of an [MQTT CONNECT packet.]
  * (http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/csprd02/mqtt-v3.1.1-csprd02.html#_Toc385349764)
  *
- * @initializer{AwsIotMqttConnectInfo_t,AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER}
+ * @initializer{IotMqttConnectInfo_t,IOT_MQTT_CONNECT_INFO_INITIALIZER}
  *
  * @note The lengths of the strings in this struct should not include the NULL
  * terminator. Strings in this struct do not need to be NULL-terminated.
  */
-typedef struct AwsIotMqttConnectInfo
+typedef struct IotMqttConnectInfo
 {
     /**
      * @brief Specifies if this MQTT connection is to an AWS IoT MQTT server.
      *
      * The AWS IoT MQTT broker [differs somewhat from the MQTT specification.]
-     * (https://docs.aws.amazon.com/iot/latest/developerguide/protocols.html#mqtt)
+     * (https://docs.aws.amazon.com/iot/latest/developerguide/mqtt.html)
      * When this member is `true`, the MQTT library will accommodate these
      * differences. This setting should be `false` when communicating with a
      * fully-compliant MQTT broker.
      *
      * @attention This setting <b>MUST</b> be `true` when using the AWS IoT MQTT
      * server; it <b>MUST</b> be `false` otherwise.
-     * @note Currently, @ref AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER sets this
+     * @note Currently, @ref IOT_MQTT_CONNECT_INFO_INITIALIZER sets this
      * this member to `true`.
      */
     bool awsIotMqttMode;
@@ -522,13 +565,13 @@ typedef struct AwsIotMqttConnectInfo
      *
      * MQTT servers can maintain and topic filter subscriptions and unacknowledged
      * PUBLISH messages. These form part of an <i>MQTT session</i>, which is identified by
-     * the [client identifier](@ref AwsIotMqttConnectInfo_t.pClientIdentifier).
+     * the [client identifier](@ref IotMqttConnectInfo_t.pClientIdentifier).
      *
      * Setting this value to `true` establishes a <i>clean session</i>, which causes
      * the MQTT server to discard any previous session data for a client identifier.
      * When the client disconnects, the server discards all session data. If this
-     * value is `true`, #AwsIotMqttConnectInfo_t.pPreviousSubscriptions and
-     * #AwsIotMqttConnectInfo_t.previousSubscriptionCount are ignored.
+     * value is `true`, #IotMqttConnectInfo_t.pPreviousSubscriptions and
+     * #IotMqttConnectInfo_t.previousSubscriptionCount are ignored.
      *
      * Setting this value to `false` does one of the following:
      * - If no previous session exists, the MQTT server will create a new
@@ -542,9 +585,9 @@ typedef struct AwsIotMqttConnectInfo
      * When a client with a persistent session disconnects, the MQTT server
      * continues to maintain all subscriptions and unacknowledged PUBLISH messages.
      * The client must also remember the session subscriptions to restore them
-     * upon reconnecting. #AwsIotMqttConnectInfo_t.pPreviousSubscriptions
-     * and #AwsIotMqttConnectInfo_t.previousSubscriptionCount are used to
-     * restore a previous session's subscriptions client-side.
+     * upon reconnecting. #IotMqttConnectInfo_t.pPreviousSubscriptions and
+     * #IotMqttConnectInfo_t.previousSubscriptionCount are used to restore a
+     * previous session's subscriptions client-side.
      */
     bool cleanSession;
 
@@ -554,21 +597,21 @@ typedef struct AwsIotMqttConnectInfo
      * Pointer to the start of an array of subscriptions present a previous session,
      * if any. These subscriptions will be immediately restored upon reconnecting.
      *
-     * This member is ignored if it is `NULL` or #AwsIotMqttConnectInfo_t.cleanSession
-     * is `true`. If this member is not `NULL`, #AwsIotMqttConnectInfo_t.previousSubscriptionCount
+     * This member is ignored if it is `NULL` or #IotMqttConnectInfo_t.cleanSession
+     * is `true`. If this member is not `NULL`, #IotMqttConnectInfo_t.previousSubscriptionCount
      * must be nonzero.
      */
-    const AwsIotMqttSubscription_t * pPreviousSubscriptions;
+    const IotMqttSubscription_t * pPreviousSubscriptions;
 
     /**
      * @brief The number of MQTT subscriptions present in a previous session, if any.
      *
      * Number of subscriptions contained in the array
-     * #AwsIotMqttConnectInfo_t.pPreviousSubscriptions.
+     * #IotMqttConnectInfo_t.pPreviousSubscriptions.
      *
-     * This value is ignored if #AwsIotMqttConnectInfo_t.pPreviousSubscriptions
-     * is `NULL` or #AwsIotMqttConnectInfo_t.cleanSession is `true`. If
-     * #AwsIotMqttConnectInfo_t.pPreviousSubscriptions is not `NULL`, this value
+     * This value is ignored if #IotMqttConnectInfo_t.pPreviousSubscriptions
+     * is `NULL` or #IotMqttConnectInfo_t.cleanSession is `true`. If
+     * #IotMqttConnectInfo_t.pPreviousSubscriptions is not `NULL`, this value
      * must be nonzero.
      */
     size_t previousSubscriptionCount;
@@ -578,28 +621,28 @@ typedef struct AwsIotMqttConnectInfo
      *
      * A Last Will and Testament (LWT) message may be published if this connection is
      * closed without sending an MQTT DISCONNECT packet. This pointer should be set to
-     * an #AwsIotMqttPublishInfo_t representing any LWT message to publish. If an LWT
+     * an #IotMqttPublishInfo_t representing any LWT message to publish. If an LWT
      * is not needed, this member must be set to `NULL`.
      *
      * Unlike other PUBLISH messages, an LWT message is limited to 65535 bytes in
-     * length. Additionally, [pWillInfo->retryMs](@ref AwsIotMqttPublishInfo_t.retryMs)
-     * and [pWillInfo->retryLimit](@ref AwsIotMqttPublishInfo_t.retryLimit) will
+     * length. Additionally, [pWillInfo->retryMs](@ref IotMqttPublishInfo_t.retryMs)
+     * and [pWillInfo->retryLimit](@ref IotMqttPublishInfo_t.retryLimit) will
      * be ignored.
      */
-    const AwsIotMqttPublishInfo_t * pWillInfo;
+    const IotMqttPublishInfo_t * pWillInfo;
 
     uint16_t keepAliveSeconds;       /**< @brief Period of keep-alive messages. Set to 0 to disable keep-alive. */
 
     const char * pClientIdentifier;  /**< @brief MQTT client identifier. */
-    uint16_t clientIdentifierLength; /**< @brief Length of #AwsIotMqttConnectInfo_t.pClientIdentifier. */
+    uint16_t clientIdentifierLength; /**< @brief Length of #IotMqttConnectInfo_t.pClientIdentifier. */
 
     /* These credentials are not used by AWS IoT and may be ignored if
      * awsIotMqttMode is true. */
     const char * pUserName;          /**< @brief Username for MQTT connection. */
-    uint16_t userNameLength;         /**< @brief Length of #AwsIotMqttConnectInfo_t.pUserName. */
+    uint16_t userNameLength;         /**< @brief Length of #IotMqttConnectInfo_t.pUserName. */
     const char * pPassword;          /**< @brief Password for MQTT connection. */
-    uint16_t passwordLength;         /**< @brief Length of #AwsIotMqttConnectInfo_t.pPassword. */
-} AwsIotMqttConnectInfo_t;
+    uint16_t passwordLength;         /**< @brief Length of #IotMqttConnectInfo_t.pPassword. */
+} IotMqttConnectInfo_t;
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
@@ -613,24 +656,24 @@ typedef struct AwsIotMqttConnectInfo
  * @ref mqtt_function_connect, the function @ref mqtt_function_receivecallback
  * should be called to process data received from the network.
  *
- * @initializer{AwsIotMqttNetIf_t,AWS_IOT_MQTT_NETIF_INITIALIZER}
+ * @initializer{IotMqttNetIf_t,IOT_MQTT_NETIF_INITIALIZER}
  */
-typedef struct AwsIotMqttNetIf
+typedef struct IotMqttNetIf
 {
-    void * pSendContext;       /**< Passed as the first argument to #AwsIotMqttNetIf_t.send. */
-    void * pDisconnectContext; /**< Passed as the first argument to #AwsIotMqttNetIf_t.disconnect. */
+    void * pSendContext;       /**< Passed as the first argument to #IotMqttNetIf_t.send. */
+    void * pDisconnectContext; /**< Passed as the first argument to #IotMqttNetIf_t.disconnect. */
 
     /**
      * @brief Function that sends data on the network.
      *
-     * @param[in] void * #AwsIotMqttNetIf_t.pSendContext
-     * @param[in] const void * const Pointer to the data to send.
+     * @param[in] void * #IotMqttNetIf_t.pSendContext
+     * @param[in] const void * Pointer to the data to send.
      * @param[in] size_t Size of the data to send.
      *
      * @return Number of bytes successfully sent, 0 on failure.
      */
     size_t ( * send )( void *,
-                       const uint8_t * const,
+                       const uint8_t *,
                        size_t );
 
     /**
@@ -639,61 +682,60 @@ typedef struct AwsIotMqttNetIf
      * If this function is not provided, the network connection will not be closed
      * by the MQTT library.
      *
-     * @param[in] int32_t Currently unused.
-     * @param[in] void * #AwsIotMqttNetIf_t.pDisconnectContext
+     * @param[in] void * #IotMqttNetIf_t.pDisconnectContext
      *
      * @note Optional; set to `NULL` to ignore. The MQTT spec states that connections
      * must be closed in certain conditions; if this function is not provided, the
      * MQTT library is noncompliant.
      */
-    IotNetworkError_t ( * disconnect )( int32_t, void * );
+    IotNetworkError_t ( * disconnect )( void * );
 
     /*
      * In addition to providing the network send and disconnect functions, this
      * struct also allows the MQTT serialization and deserialization functions
      * to be overridden for an MQTT connection. The compile-time setting
-     * AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES must be 1 to enable this
-     * functionality. See the AwsIotMqttNetIf_t.serialize and
-     * AwsIotMqttNetIf_t.deserialize members for a list of functions that can be
+     * IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES must be 1 to enable this
+     * functionality. See the IotMqttNetIf_t.serialize and
+     * IotMqttNetIf_t.deserialize members for a list of functions that can be
      * overridden. In addition, the functions for freeing packets and determining
      * the packet type can also be overridden. If
-     * AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES is 1, the serializer initialization
+     * IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES is 1, the serializer initialization
      * and cleanup functions may be extended. See documentation of
-     * AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES for more information.
+     * IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES for more information.
      *
      * If any function pointers that are NULL (the default value set by
-     * AWS_IOT_MQTT_NETIF_INITIALIZER), then the default implementation of that
+     * IOT_MQTT_NETIF_INITIALIZER), then the default implementation of that
      * function will be used.
      */
-    #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
 
         struct
         {
             /**
              * @brief CONNECT packet serializer function.
-             * @param[in] AwsIotMqttConnectInfo_t* User-provided CONNECT information.
+             * @param[in] IotMqttConnectInfo_t* User-provided CONNECT information.
              * @param[out] uint8_t** Where the CONNECT packet is written.
              * @param[out] size_t* Size of the CONNECT packet.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_SerializeConnect
+             * <b>Default implementation:</b> #_IotMqtt_SerializeConnect
              */
-            AwsIotMqttError_t ( * connect )( const AwsIotMqttConnectInfo_t * const /* pConnectInfo */,
-                                             uint8_t ** const /* pConnectPacket */,
-                                             size_t * const /* pPacketSize */ );
+            IotMqttError_t ( * connect )( const IotMqttConnectInfo_t * /* pConnectInfo */,
+                                          uint8_t ** /* pConnectPacket */,
+                                          size_t * /* pPacketSize */ );
 
             /**
              * @brief PUBLISH packet serializer function.
-             * @param[in] AwsIotMqttPublishInfo_t* User-provided PUBLISH information.
+             * @param[in] IotMqttPublishInfo_t* User-provided PUBLISH information.
              * @param[out] uint8_t** Where the PUBLISH packet is written.
              * @param[out] size_t* Size of the PUBLISH packet.
              * @param[out] uint16_t* The packet identifier generated for this PUBLISH.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_SerializePublish
+             * <b>Default implementation:</b> #_IotMqtt_SerializePublish
              */
-            AwsIotMqttError_t ( * publish )( const AwsIotMqttPublishInfo_t * const /* pPublishInfo */,
-                                             uint8_t ** const /* pPublishPacket */,
-                                             size_t * const /* pPacketSize */,
-                                             uint16_t * const /* pPacketIdentifier */ );
+            IotMqttError_t ( * publish )( const IotMqttPublishInfo_t * /* pPublishInfo */,
+                                          uint8_t ** /* pPublishPacket */,
+                                          size_t * /* pPacketSize */,
+                                          uint16_t * /* pPacketIdentifier */ );
 
             /**
              * @brief Set the `DUP` bit in a QoS `1` PUBLISH packet.
@@ -702,11 +744,11 @@ typedef struct AwsIotMqttNetIf
              * @param[in] uint8_t* Pointer to the PUBLISH packet to modify.
              * @param[out] uint16_t* New packet identifier (AWS IoT MQTT mode only).
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_PublishSetDup
+             * <b>Default implementation:</b> #_IotMqtt_PublishSetDup
              */
             void ( * publishSetDup )( bool /* awsIotMqttMode */,
-                                      uint8_t * const /* pPublishPacket */,
-                                      uint16_t * const /* pNewPacketIdentifier */ );
+                                      uint8_t * /* pPublishPacket */,
+                                      uint16_t * /* pNewPacketIdentifier */ );
 
             /**
              * @brief PUBACK packet serializer function.
@@ -714,63 +756,63 @@ typedef struct AwsIotMqttNetIf
              * @param[out] uint8_t** Where the PUBACK packet is written.
              * @param[out] size_t* Size of the PUBACK packet.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_SerializePuback
+             * <b>Default implementation:</b> #_IotMqtt_SerializePuback
              */
-            AwsIotMqttError_t ( * puback )( uint16_t /* packetIdentifier */,
-                                            uint8_t ** const /* pPubackPacket */,
-                                            size_t * const /* pPacketSize */ );
+            IotMqttError_t ( * puback )( uint16_t /* packetIdentifier */,
+                                         uint8_t ** /* pPubackPacket */,
+                                         size_t * /* pPacketSize */ );
 
             /**
              * @brief SUBSCRIBE packet serializer function.
-             * @param[in] AwsIotMqttSubscription_t* User-provided array of subscriptions.
+             * @param[in] IotMqttSubscription_t* User-provided array of subscriptions.
              * @param[in] size_t Number of elements in the subscription array.
              * @param[out] uint8_t** Where the SUBSCRIBE packet is written.
              * @param[out] size_t* Size of the SUBSCRIBE packet.
              * @param[out] uint16_t* The packet identifier generated for this SUBSCRIBE.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_SerializeSubscribe
+             * <b>Default implementation:</b> #_IotMqtt_SerializeSubscribe
              */
-            AwsIotMqttError_t ( * subscribe )( const AwsIotMqttSubscription_t * const /* pSubscriptionList */,
-                                               size_t /* subscriptionCount */,
-                                               uint8_t ** const /* pSubscribePacket */,
-                                               size_t * const /* pPacketSize */,
-                                               uint16_t * const /* pPacketIdentifier */ );
+            IotMqttError_t ( * subscribe )( const IotMqttSubscription_t * /* pSubscriptionList */,
+                                            size_t /* subscriptionCount */,
+                                            uint8_t ** /* pSubscribePacket */,
+                                            size_t * /* pPacketSize */,
+                                            uint16_t * /* pPacketIdentifier */ );
 
             /**
              * @brief UNSUBSCRIBE packet serializer function.
-             * @param[in] AwsIotMqttSubscription_t* User-provided array of subscriptions to remove.
+             * @param[in] IotMqttSubscription_t* User-provided array of subscriptions to remove.
              * @param[in] size_t Number of elements in the subscription array.
              * @param[out] uint8_t** Where the UNSUBSCRIBE packet is written.
              * @param[out] size_t* Size of the UNSUBSCRIBE packet.
              * @param[out] uint16_t* The packet identifier generated for this UNSUBSCRIBE.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_SerializeUnsubscribe
+             * <b>Default implementation:</b> #_IotMqtt_SerializeUnsubscribe
              */
-            AwsIotMqttError_t ( * unsubscribe )( const AwsIotMqttSubscription_t * const /* pSubscriptionList */,
-                                                 size_t /* subscriptionCount */,
-                                                 uint8_t ** const /* pUnsubscribePacket */,
-                                                 size_t * const /* pPacketSize */,
-                                                 uint16_t * const /* pPacketIdentifier */ );
+            IotMqttError_t ( * unsubscribe )( const IotMqttSubscription_t * /* pSubscriptionList */,
+                                              size_t /* subscriptionCount */,
+                                              uint8_t ** /* pUnsubscribePacket */,
+                                              size_t * /* pPacketSize */,
+                                              uint16_t * /* pPacketIdentifier */ );
 
             /**
              * @brief PINGREQ packet serializer function.
              * @param[out] uint8_t** Where the PINGREQ packet is written.
              * @param[out] size_t* Size of the PINGREQ packet.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_SerializePingreq
+             * <b>Default implementation:</b> #_IotMqtt_SerializePingreq
              */
-            AwsIotMqttError_t ( * pingreq )( uint8_t ** const /* pPingreqPacket */,
-                                             size_t * const /* pPacketSize */ );
+            IotMqttError_t ( * pingreq )( uint8_t ** /* pPingreqPacket */,
+                                          size_t * /* pPacketSize */ );
 
             /**
              * @brief DISCONNECT packet serializer function.
              * @param[out] uint8_t** Where the DISCONNECT packet is written.
              * @param[out] size_t* Size of the DISCONNECT packet.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_SerializeDisconnect
+             * <b>Default implementation:</b> #_IotMqtt_SerializeDisconnect
              */
-            AwsIotMqttError_t ( * disconnect )( uint8_t ** const /* pDisconnectPacket */,
-                                                size_t * const /* pPacketSize */ );
+            IotMqttError_t ( * disconnect )( uint8_t ** /* pDisconnectPacket */,
+                                             size_t * /* pPacketSize */ );
         } serialize; /**< @brief Overrides the packet serialization functions for a single connection. */
 
         struct
@@ -782,28 +824,28 @@ typedef struct AwsIotMqttNetIf
              * @param[out] size_t* The number of bytes in the data stream processed
              * by this function.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_DeserializeConnack
+             * <b>Default implementation:</b> #_IotMqtt_DeserializeConnack
              */
-            AwsIotMqttError_t ( * connack )( const uint8_t * const /* pConnackStart */,
-                                             size_t /* dataLength */,
-                                             size_t * const /* pBytesProcessed */ );
+            IotMqttError_t ( * connack )( const uint8_t * /* pConnackStart */,
+                                          size_t /* dataLength */,
+                                          size_t * /* pBytesProcessed */ );
 
             /**
              * @brief PUBLISH packet deserializer function.
              * @param[in] uint8_t* Pointer to the start of a PUBLISH packet.
              * @param[in] size_t Length of the data stream.
-             * @param[out] AwsIotMqttPublishInfo_t* Where the deserialized PUBLISH will be written.
+             * @param[out] IotMqttPublishInfo_t* Where the deserialized PUBLISH will be written.
              * @param[out] uint16_t* The packet identifier in the PUBLISH.
              * @param[out] size_t* The number of bytes in the data stream processed
              * by this function.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_DeserializePublish
+             * <b>Default implementation:</b> #_IotMqtt_DeserializePublish
              */
-            AwsIotMqttError_t ( * publish )( const uint8_t * const /* pPublishStart */,
-                                             size_t /* dataLength */,
-                                             AwsIotMqttPublishInfo_t * const /* pOutput */,
-                                             uint16_t * const /* pPacketIdentifier */,
-                                             size_t * const /* pBytesProcessed */ );
+            IotMqttError_t ( * publish )( const uint8_t * /* pPublishStart */,
+                                          size_t /* dataLength */,
+                                          IotMqttPublishInfo_t * /* pOutput */,
+                                          uint16_t * /* pPacketIdentifier */,
+                                          size_t * /* pBytesProcessed */ );
 
             /**
              * @brief PUBACK packet deserializer function.
@@ -813,16 +855,16 @@ typedef struct AwsIotMqttNetIf
              * @param[out] size_t* The number of bytes in the data stream processed
              * by this function.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_DeserializePuback
+             * <b>Default implementation:</b> #_IotMqtt_DeserializePuback
              */
-            AwsIotMqttError_t ( * puback )( const uint8_t * const /* pPubackStart */,
-                                            size_t /* dataLength */,
-                                            uint16_t * const /* pPacketIdentifier */,
-                                            size_t * const /* pBytesProcessed */ );
+            IotMqttError_t ( * puback )( const uint8_t * /* pPubackStart */,
+                                         size_t /* dataLength */,
+                                         uint16_t * /* pPacketIdentifier */,
+                                         size_t * /* pBytesProcessed */ );
 
             /**
              * @brief SUBACK packet deserializer function.
-             * @param[in] AwsIotMqttConnection_t The MQTT connection associated with
+             * @param[in] IotMqttConnection_t The MQTT connection associated with
              * the subscription. Rejected topic filters should be removed from this
              * connection.
              * @param[in] uint8_t* Pointer to the start of a SUBACK packet.
@@ -831,13 +873,13 @@ typedef struct AwsIotMqttNetIf
              * @param[out] size_t* The number of bytes in the data stream processed
              * by this function.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_DeserializeSuback
+             * <b>Default implementation:</b> #_IotMqtt_DeserializeSuback
              */
-            AwsIotMqttError_t ( * suback )( AwsIotMqttConnection_t /* mqttConnection */,
-                                            const uint8_t * const /* pSubackStart */,
-                                            size_t /* dataLength */,
-                                            uint16_t * const /* pPacketIdentifier */,
-                                            size_t * const /* pBytesProcessed */ );
+            IotMqttError_t ( * suback )( IotMqttConnection_t /* mqttConnection */,
+                                         const uint8_t * /* pSubackStart */,
+                                         size_t /* dataLength */,
+                                         uint16_t * /* pPacketIdentifier */,
+                                         size_t * /* pBytesProcessed */ );
 
             /**
              * @brief UNSUBACK packet deserializer function.
@@ -847,12 +889,12 @@ typedef struct AwsIotMqttNetIf
              * @param[out] size_t* The number of bytes in the data stream processed
              * by this function.
              *
-            * <b>Default implementation:</b> #AwsIotMqttInternal_DeserializeUnsuback
+            * <b>Default implementation:</b> #_IotMqtt_DeserializeUnsuback
              */
-            AwsIotMqttError_t ( * unsuback )( const uint8_t * const /* pUnsubackStart */,
-                                              size_t /* dataLength */,
-                                              uint16_t * const /* pPacketIdentifier */,
-                                              size_t * const /* pBytesProcessed */ );
+            IotMqttError_t ( * unsuback )( const uint8_t * /* pUnsubackStart */,
+                                           size_t /* dataLength */,
+                                           uint16_t * /* pPacketIdentifier */,
+                                           size_t * /* pBytesProcessed */ );
 
             /**
              * @brief PINGRESP packet deserializer function.
@@ -861,11 +903,11 @@ typedef struct AwsIotMqttNetIf
              * @param[out] size_t* The number of bytes in the data stream processed
              * by this function.
              *
-             * <b>Default implementation:</b> #AwsIotMqttInternal_DeserializePingresp
+             * <b>Default implementation:</b> #_IotMqtt_DeserializePingresp
              */
-            AwsIotMqttError_t ( * pingresp )( const uint8_t * const /* pPingrespStart */,
-                                              size_t /* dataLength */,
-                                              size_t * const /* pBytesProcessed */ );
+            IotMqttError_t ( * pingresp )( const uint8_t * /* pPingrespStart */,
+                                           size_t /* dataLength */,
+                                           size_t * /* pBytesProcessed */ );
         } deserialize; /**< @brief Overrides the packet deserialization functions for a single connection. */
 
         /**
@@ -874,9 +916,9 @@ typedef struct AwsIotMqttNetIf
          * @param[in] uint8_t* pPacket Pointer to the beginning of the byte stream.
          * @param[in] size_t Size of the byte stream.
          *
-         * <b>Default implementation:</b> #AwsIotMqttInternal_GetPacketType
+         * <b>Default implementation:</b> #_IotMqtt_GetPacketType
          */
-        uint8_t ( * getPacketType )( const uint8_t * const /* pPacket */,
+        uint8_t ( * getPacketType )( const uint8_t * /* pPacket */,
                                      size_t /* packetSize */ );
 
         /**
@@ -885,11 +927,11 @@ typedef struct AwsIotMqttNetIf
          * This function pointer must be set if any other serializer override is set.
          * @param[in] uint8_t* The packet to free.
          *
-         * <b>Default implementation:</b> #AwsIotMqttInternal_FreePacket
+         * <b>Default implementation:</b> #_IotMqtt_FreePacket
          */
         void ( * freePacket )( uint8_t * /* pPacket */ );
-    #endif /* if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-} AwsIotMqttNetIf_t;
+    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+} IotMqttNetIf_t;
 
 /*------------------------- MQTT defined constants --------------------------*/
 
@@ -911,19 +953,19 @@ typedef struct AwsIotMqttNetIf
  *
  * <b>Example</b>
  * @code{c}
- * AwsIotMqttNetIf_t networkInterface = AWS_IOT_MQTT_NETIF_INITIALIZER;
- * AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
- * AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
- * AwsIotMqttSubscription_t subscription = AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER;
- * AwsIotMqttCallbackInfo_t callbackInfo = AWS_IOT_MQTT_CALLBACK_INFO_INITIALIZER;
- * AwsIotMqttConnection_t connection = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
- * AwsIotMqttReference_t reference = AWS_IOT_MQTT_REFERENCE_INITIALIZER;
+ * IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+ * IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+ * IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+ * IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+ * IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
+ * IotMqttConnection_t connection = IOT_MQTT_CONNECTION_INITIALIZER;
+ * IotMqttReference_t reference = IOT_MQTT_REFERENCE_INITIALIZER;
  * @endcode
  *
  * @section mqtt_constants_flags MQTT Function Flags
  * @brief Flags that modify the behavior of MQTT library functions.
- * - #AWS_IOT_MQTT_FLAG_WAITABLE <br>
- *   @copybrief AWS_IOT_MQTT_FLAG_WAITABLE
+ * - #IOT_MQTT_FLAG_WAITABLE <br>
+ *   @copybrief IOT_MQTT_FLAG_WAITABLE
  *
  * Flags should be bitwise-ORed with each other to change the behavior of
  * @ref mqtt_function_subscribe, @ref mqtt_function_unsubscribe, or
@@ -935,15 +977,21 @@ typedef struct AwsIotMqttNetIf
  */
 
 /* @[define_mqtt_initializers] */
-#define AWS_IOT_MQTT_NETIF_INITIALIZER            { 0 }                       /**< @brief Initializer for #AwsIotMqttNetIf_t. */
-/** @brief Initializer for #AwsIotMqttConnectInfo_t. */
-#define AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER     { .awsIotMqttMode = true, \
-                                                    .cleanSession = true }
-#define AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER     { 0 }                       /**< @brief Initializer for #AwsIotMqttPublishInfo_t. */
-#define AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER     { 0 }                       /**< @brief Initializer for #AwsIotMqttSubscription_t. */
-#define AWS_IOT_MQTT_CALLBACK_INFO_INITIALIZER    { 0 }                       /**< @brief Initializer for #AwsIotMqttCallbackInfo_t. */
-#define AWS_IOT_MQTT_CONNECTION_INITIALIZER       NULL                        /**< @brief Initializer for #AwsIotMqttConnection_t. */
-#define AWS_IOT_MQTT_REFERENCE_INITIALIZER        NULL                        /**< @brief Initializer for #AwsIotMqttReference_t. */
+/** @brief Initializer for #IotMqttNetIf_t. */
+#define IOT_MQTT_NETIF_INITIALIZER            { 0 }
+/** @brief Initializer for #IotMqttConnectInfo_t. */
+#define IOT_MQTT_CONNECT_INFO_INITIALIZER     { .awsIotMqttMode = true, \
+                                                .cleanSession = true }
+/** @brief Initializer for #IotMqttPublishInfo_t. */
+#define IOT_MQTT_PUBLISH_INFO_INITIALIZER     { 0 }
+/** @brief Initializer for #IotMqttSubscription_t. */
+#define IOT_MQTT_SUBSCRIPTION_INITIALIZER     { 0 }
+/** @brief Initializer for #IotMqttCallbackInfo_t. */
+#define IOT_MQTT_CALLBACK_INFO_INITIALIZER    { 0 }
+/** @brief Initializer for #IotMqttConnection_t. */
+#define IOT_MQTT_CONNECTION_INITIALIZER       NULL
+/** @brief Initializer for #IotMqttReference_t. */
+#define IOT_MQTT_REFERENCE_INITIALIZER        NULL
 /* @[define_mqtt_initializers] */
 
 /**
@@ -951,15 +999,15 @@ typedef struct AwsIotMqttNetIf
  *
  * This flag is always valid for @ref mqtt_function_subscribe and
  * @ref mqtt_function_unsubscribe. If passed to @ref mqtt_function_publish,
- * the parameter [pPublishInfo->QoS](@ref AwsIotMqttPublishInfo_t.QoS) must not be `0`.
+ * the parameter [pPublishInfo->qos](@ref IotMqttPublishInfo_t.qos) must not be `0`.
  *
- * An #AwsIotMqttReference_t <b>MUST</b> be provided if this flag is set. Additionally, an
- * #AwsIotMqttCallbackInfo_t <b>MUST NOT</b> be provided.
+ * An #IotMqttReference_t <b>MUST</b> be provided if this flag is set. Additionally, an
+ * #IotMqttCallbackInfo_t <b>MUST NOT</b> be provided.
  *
  * @note If this flag is set, @ref mqtt_function_wait <b>MUST</b> be called to clean up
  * resources.
  */
-#define AWS_IOT_MQTT_FLAG_WAITABLE    ( 0x00000001 )
+#define IOT_MQTT_FLAG_WAITABLE    ( 0x00000001 )
 
 /*------------------------- MQTT library functions --------------------------*/
 
@@ -983,9 +1031,9 @@ typedef struct AwsIotMqttNetIf
  */
 
 /**
- * @functionpage{AwsIotMqtt_Init,mqtt,init}
- * @functionpage{AwsIotMqtt_Cleanup,mqtt,cleanup}
- * @functionpage{AwsIotMqtt_ReceiveCallback,mqtt,receivecallback}
+ * @functionpage{IotMqtt_Init,mqtt,init}
+ * @functionpage{IotMqtt_Cleanup,mqtt,cleanup}
+ * @functionpage{IotMqtt_ReceiveCallback,mqtt,receivecallback}
  *
  * @anchor mqtt_function_receivecallback_nopartial
  * <b>Sequence Diagram: Processing a network buffer without partial packets</b>
@@ -995,38 +1043,38 @@ typedef struct AwsIotMqttNetIf
  * <b>Sequence Diagram: Processing a network buffer with partial packets</b>
  * @image html mqtt_function_receivecallback_partial.png width=80%
  *
- * @functionpage{AwsIotMqtt_Connect,mqtt,connect}
- * @functionpage{AwsIotMqtt_Disconnect,mqtt,disconnect}
- * @functionpage{AwsIotMqtt_Subscribe,mqtt,subscribe}
- * @functionpage{AwsIotMqtt_TimedSubscribe,mqtt,timedsubscribe}
- * @functionpage{AwsIotMqtt_Unsubscribe,mqtt,unsubscribe}
- * @functionpage{AwsIotMqtt_TimedUnsubscribe,mqtt,timedunsubscribe}
- * @functionpage{AwsIotMqtt_Publish,mqtt,publish}
- * @functionpage{AwsIotMqtt_TimedPublish,mqtt,timedpublish}
- * @functionpage{AwsIotMqtt_Wait,mqtt,wait}
- * @functionpage{AwsIotMqtt_strerror,mqtt,strerror}
- * @functionpage{AwsIotMqtt_OperationType,mqtt,operationtype}
- * @functionpage{AwsIotMqtt_IsSubscribed,mqtt,issubscribed}
+ * @functionpage{IotMqtt_Connect,mqtt,connect}
+ * @functionpage{IotMqtt_Disconnect,mqtt,disconnect}
+ * @functionpage{IotMqtt_Subscribe,mqtt,subscribe}
+ * @functionpage{IotMqtt_TimedSubscribe,mqtt,timedsubscribe}
+ * @functionpage{IotMqtt_Unsubscribe,mqtt,unsubscribe}
+ * @functionpage{IotMqtt_TimedUnsubscribe,mqtt,timedunsubscribe}
+ * @functionpage{IotMqtt_Publish,mqtt,publish}
+ * @functionpage{IotMqtt_TimedPublish,mqtt,timedpublish}
+ * @functionpage{IotMqtt_Wait,mqtt,wait}
+ * @functionpage{IotMqtt_strerror,mqtt,strerror}
+ * @functionpage{IotMqtt_OperationType,mqtt,operationtype}
+ * @functionpage{IotMqtt_IsSubscribed,mqtt,issubscribed}
  */
 
 /**
  * @brief One-time initialization function for the MQTT library.
  *
- * This function performs internal setup of the MQTT library. <b>It must be called
+ * This function performs setup of the MQTT library. <b>It must be called
  * once (and only once) before calling any other MQTT function.</b> Calling this
  * function more than once without first calling @ref mqtt_function_cleanup
  * may result in a crash.
  *
  * @return One of the following:
- * - #AWS_IOT_MQTT_SUCCESS
- * - #AWS_IOT_MQTT_INIT_FAILED
+ * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_INIT_FAILED
  *
  * @warning No thread-safety guarantees are provided for this function.
  *
  * @see @ref mqtt_function_cleanup
  */
 /* @[declare_mqtt_init] */
-AwsIotMqttError_t AwsIotMqtt_Init( void );
+IotMqttError_t IotMqtt_Init( void );
 /* @[declare_mqtt_init] */
 
 /**
@@ -1043,7 +1091,7 @@ AwsIotMqttError_t AwsIotMqtt_Init( void );
  * @see @ref mqtt_function_init
  */
 /* @[declare_mqtt_cleanup] */
-void AwsIotMqtt_Cleanup( void );
+void IotMqtt_Cleanup( void );
 /* @[declare_mqtt_cleanup] */
 
 /**
@@ -1051,7 +1099,7 @@ void AwsIotMqtt_Cleanup( void );
  *
  * This function should be called by the system whenever a stream of MQTT data
  * is received from the network. It processes the data stream and decodes any
- * MQTT packets it finds. The MQTT library uses #AwsIotMqttNetIf_t for sending
+ * MQTT packets it finds. The MQTT library uses #IotMqttNetIf_t for sending
  * data and closing network connections.
  *
  * @attention Remember that this function's input `pReceivedData` is a data
@@ -1105,7 +1153,7 @@ void AwsIotMqtt_Cleanup( void );
  * @return
  * - `-1` if a protocol violation is encountered. If this function returns `-1`, then
  * the network connection is closed (unless a [disconnect function]
- * (@ref AwsIotMqttNetIf_t.disconnect) was not provided to @ref mqtt_function_connect).
+ * (@ref IotMqttNetIf_t.disconnect) was not provided to @ref mqtt_function_connect).
  * `freeReceivedData` is not called if this function returns `-1`.
  * - Number of bytes processed otherwise. If the return value is less than `dataLength`
  * (but not `-1`), the data stream probably contained a partial MQTT packet. The function
@@ -1113,12 +1161,12 @@ void AwsIotMqtt_Cleanup( void );
  * to `pReceivedData+dataLength` were successfully processed.
  */
 /* @[declare_mqtt_receivecallback] */
-int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
-                                    void * pConnection,
-                                    const uint8_t * pReceivedData,
-                                    size_t dataLength,
-                                    size_t offset,
-                                    void ( * freeReceivedData )( void * ) );
+int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
+                                 void * pConnection,
+                                 const uint8_t * pReceivedData,
+                                 size_t dataLength,
+                                 size_t offset,
+                                 void ( * freeReceivedData )( void * ) );
 /* @[declare_mqtt_receivecallback] */
 
 /**
@@ -1131,14 +1179,14 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
  * the MQTT CONNECT packet. After @ref mqtt_function_init, this function must be
  * called before any other MQTT library function.
  *
- * If [pConnectInfo->cleanSession](@ref AwsIotMqttConnectInfo_t.cleanSession) is `true`,
+ * If [pConnectInfo->cleanSession](@ref IotMqttConnectInfo_t.cleanSession) is `true`,
  * this function establishes a clean MQTT session. Subscriptions and unacknowledged
  * PUBLISH messages will be discarded when the connection is closed.
  *
- * If [pConnectInfo->cleanSession](@ref AwsIotMqttConnectInfo_t.cleanSession) is `false`,
+ * If [pConnectInfo->cleanSession](@ref IotMqttConnectInfo_t.cleanSession) is `false`,
  * this function establishes (or re-establishes) a persistent MQTT session. The parameters
- * [pConnectInfo->pPreviousSubscriptions](@ref AwsIotMqttConnectInfo_t.pPreviousSubscriptions)
- * and [pConnectInfo->previousSubscriptionCount](@ref AwsIotMqttConnectInfo_t.previousSubscriptionCount)
+ * [pConnectInfo->pPreviousSubscriptions](@ref IotMqttConnectInfo_t.pPreviousSubscriptions)
+ * and [pConnectInfo->previousSubscriptionCount](@ref IotMqttConnectInfo_t.previousSubscriptionCount)
  * may be used to restore subscriptions present in a re-established persistent session.
  * Any restored subscriptions <b>MUST</b> have been present in the persistent session;
  * <b>this function does not send an MQTT SUBSCRIBE packet!</b>
@@ -1147,20 +1195,20 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
  * underlying network protocol carrying the MQTT packets. It interacts with the
  * network through a network abstraction layer, allowing it to be used with many
  * different network stacks. The network abstraction layer is established
- * per-connection, allowing every #AwsIotMqttConnection_t to use a different network
+ * per-connection, allowing every #IotMqttConnection_t to use a different network
  * stack. The parameter `pNetworkInterface` sets up the network abstraction layer
- * for an MQTT connection; see the documentation on #AwsIotMqttNetIf_t for details
+ * for an MQTT connection; see the documentation on #IotMqttNetIf_t for details
  * on its members.
  *
  * The `pConnectInfo` parameter provides the contents of the MQTT CONNECT packet.
- * Most members [are defined by the MQTT spec.](@ref AwsIotMqttConnectInfo_t). The
- * [pConnectInfo->pWillInfo](@ref AwsIotMqttConnectInfo_t.pWillInfo) member provides
+ * Most members [are defined by the MQTT spec.](@ref IotMqttConnectInfo_t). The
+ * [pConnectInfo->pWillInfo](@ref IotMqttConnectInfo_t.pWillInfo) member provides
  * information on a Last Will and Testament (LWT) message to be published if the
  * MQTT connection is closed without [sending a DISCONNECT packet]
  * (@ref mqtt_function_disconnect). Unlike other PUBLISH
  * messages, a LWT message payload is limited to 65535 bytes in length. Additionally,
- * the retry [interval](@ref AwsIotMqttPublishInfo_t.retryMs) and [limit]
- * (@ref AwsIotMqttPublishInfo_t.retryLimit) members of #AwsIotMqttPublishInfo_t
+ * the retry [interval](@ref IotMqttPublishInfo_t.retryMs) and [limit]
+ * (@ref IotMqttPublishInfo_t.retryLimit) members of #IotMqttPublishInfo_t
  * are ignored for LWT messages. The LWT message is optional; `pWillInfo` may be NULL.
  *
  * Unlike @ref mqtt_function_publish, @ref mqtt_function_subscribe, and
@@ -1177,33 +1225,34 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
  * this MQTT connection will use.
  * @param[in] pConnectInfo MQTT connection setup parameters.
  * @param[in] timeoutMs If the MQTT server does not accept the connection within
- * this timeout, this function returns #AWS_IOT_MQTT_TIMEOUT.
+ * this timeout, this function returns #IOT_MQTT_TIMEOUT.
  *
  * @return One of the following:
- * - #AWS_IOT_MQTT_SUCCESS
- * - #AWS_IOT_MQTT_BAD_PARAMETER
- * - #AWS_IOT_MQTT_NO_MEMORY
- * - #AWS_IOT_MQTT_SEND_ERROR
- * - #AWS_IOT_MQTT_BAD_RESPONSE
- * - #AWS_IOT_MQTT_TIMEOUT
- * - #AWS_IOT_MQTT_SERVER_REFUSED
+ * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_BAD_PARAMETER
+ * - #IOT_MQTT_NO_MEMORY
+ * - #IOT_MQTT_NETWORK_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
+ * - #IOT_MQTT_BAD_RESPONSE
+ * - #IOT_MQTT_TIMEOUT
+ * - #IOT_MQTT_SERVER_REFUSED
  *
  * <b>Example</b>
  * @code{c}
  * // An initialized and connected network connection.
- * AwsIotNetworkConnection_t pNetworkConnection;
+ * IotNetworkConnection_t pNetworkConnection;
  *
  * // Parameters to MQTT connect.
- * AwsIotMqttConnection_t mqttConnection = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
- * AwsIotMqttNetIf_t networkInterface = AWS_IOT_MQTT_NETIF_INITIALIZER;
- * AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
- * AwsIotMqttPublishInfo_t willInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+ * IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+ * IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+ * IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+ * IotMqttPublishInfo_t willInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
  *
- * // Example using the OpenSSL network implementation.
+ * // Example using a generic network implementation.
  * networkInterface.pSendContext = pNetworkConnection;
  * networkInterface.pDisconnectContext = pNetworkConnection;
- * networkInterface.send = AwsIotNetwork_Send;
- * networkInterface.disconnect = AwsIotNetwork_CloseConnection;
+ * networkInterface.send = IotNetwork_Send;
+ * networkInterface.disconnect = IotNetwork_CloseConnection;
  *
  * // Set the members of the connection info (password and username not used).
  * connectInfo.cleanSession = true;
@@ -1212,7 +1261,7 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
  * connectInfo.clientIdentifierLength = 22;
  *
  * // Set the members of the will info (retain and retry not used).
- * willInfo.QoS = 1;
+ * willInfo.qos = IOT_MQTT_QOS_1;
  * willInfo.pTopicName = "will/topic/name";
  * willInfo.topicNameLength = 15;
  * willInfo.pPayload = "MQTT client unexpectedly disconnected.";
@@ -1222,26 +1271,26 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
  * connectInfo.pWillInfo = &willInfo;
  *
  * // Call CONNECT with a 5 second block time. Should return
- * // AWS_IOT_MQTT_SUCCESS when successful.
- * AwsIotMqttError_t result = AwsIotMqtt_Connect( &mqttConnection,
- *                                                &networkInterface,
- *                                                &connectInfo,
- *                                                5000 );
+ * // IOT_MQTT_SUCCESS when successful.
+ * IotMqttError_t result = IotMqtt_Connect( &mqttConnection,
+ *                                          &networkInterface,
+ *                                          &connectInfo,
+ *                                          5000 );
  *
- * if( result == AWS_IOT_MQTT_SUCCESS )
+ * if( result == IOT_MQTT_SUCCESS )
  * {
  *     // Do something with the MQTT connection...
  *
  *     // Clean up and close the MQTT connection once it's no longer needed.
- *     AwsIotMqtt_Disconnect( mqttConnection, false );
+ *     IotMqtt_Disconnect( mqttConnection, false );
  * }
  * @endcode
  */
 /* @[declare_mqtt_connect] */
-AwsIotMqttError_t AwsIotMqtt_Connect( AwsIotMqttConnection_t * pMqttConnection,
-                                      const AwsIotMqttNetIf_t * const pNetworkInterface,
-                                      const AwsIotMqttConnectInfo_t * const pConnectInfo,
-                                      uint64_t timeoutMs );
+IotMqttError_t IotMqtt_Connect( IotMqttConnection_t * pMqttConnection,
+                                const IotMqttNetIf_t * pNetworkInterface,
+                                const IotMqttConnectInfo_t * pConnectInfo,
+                                uint64_t timeoutMs );
 /* @[declare_mqtt_connect] */
 
 /**
@@ -1253,7 +1302,7 @@ AwsIotMqttError_t AwsIotMqtt_Connect( AwsIotMqttConnection_t * pMqttConnection,
  *
  * Normally, `cleanupOnly` should be `false`. This gracefully shuts down an MQTT
  * connection by sending an MQTT DISCONNECT packet. Any [disconnect function]
- * (@ref AwsIotMqttNetIf_t.disconnect) provided [when the connection was established]
+ * (@ref IotMqttNetIf_t.disconnect) provided [when the connection was established]
  * (@ref mqtt_function_connect) will also be called. Note that because the MQTT server
  * will not acknowledge a DISCONNECT packet, the client has no way of knowing if
  * the server received the DISCONNECT packet. In the case where the DISCONNECT
@@ -1263,7 +1312,7 @@ AwsIotMqttError_t AwsIotMqtt_Connect( AwsIotMqttConnection_t * pMqttConnection,
  *
  * Should the underlying network connection become unusable, this function should
  * be called with `cleanupOnly` set to `true`. In this case, no DISCONNECT packet
- * nor [disconnect function](@ref AwsIotMqttNetIf_t.disconnect) will be called.
+ * nor [disconnect function](@ref IotMqttNetIf_t.disconnect) will be called.
  * This function will only free the resources used by the MQTT connection; it still
  * must be called even if the network is offline to avoid leaking resources.
  *
@@ -1277,8 +1326,8 @@ AwsIotMqttError_t AwsIotMqtt_Connect( AwsIotMqttConnection_t * pMqttConnection,
  * it should be `false`.
  */
 /* @[declare_mqtt_disconnect] */
-void AwsIotMqtt_Disconnect( AwsIotMqttConnection_t mqttConnection,
-                            bool cleanupOnly );
+void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
+                         bool cleanupOnly );
 /* @[declare_mqtt_disconnect] */
 
 /**
@@ -1289,18 +1338,18 @@ void AwsIotMqtt_Disconnect( AwsIotMqttConnection_t mqttConnection,
  * packet notifies the server to send any matching PUBLISH messages to this client.
  * A single SUBSCRIBE packet may carry more than one topic filter, hence the
  * parameters to this function include an array of [subscriptions]
- * (@ref AwsIotMqttSubscription_t).
+ * (@ref IotMqttSubscription_t).
  *
  * An MQTT subscription has two pieces:
  * 1. The subscription topic filter registered with the MQTT server. The MQTT
  * SUBSCRIBE packet sent from this client to server notifies the server to send
  * messages matching the given topic filters to this client.
- * 2. The [callback function](@ref AwsIotMqttCallbackInfo_t.function) that this
+ * 2. The [callback function](@ref IotMqttCallbackInfo_t.function) that this
  * client will invoke when an incoming message is received. The callback function
  * notifies applications of an incoming PUBLISH message.
  *
  * The helper function @ref mqtt_function_issubscribed can be used to check if a
- * [callback function](@ref AwsIotMqttCallbackInfo_t.function) is registered for
+ * [callback function](@ref IotMqttCallbackInfo_t.function) is registered for
  * a particular topic filter.
  *
  * To modify an already-registered subscription callback, call this function with
@@ -1320,17 +1369,18 @@ void AwsIotMqtt_Disconnect( AwsIotMqttConnection_t mqttConnection,
  * referenced after this function returns. This reference is invalidated once
  * the subscription operation completes.
  *
- * @return This function will return #AWS_IOT_MQTT_STATUS_PENDING upon success.
+ * @return This function will return #IOT_MQTT_STATUS_PENDING upon success.
  * @return Upon completion of the subscription (either through an
- * #AwsIotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
- * - #AWS_IOT_MQTT_SUCCESS
- * - #AWS_IOT_MQTT_SEND_ERROR
- * - #AWS_IOT_MQTT_BAD_RESPONSE
- * - #AWS_IOT_MQTT_SERVER_REFUSED
+ * #IotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
+ * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_NETWORK_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
+ * - #IOT_MQTT_BAD_RESPONSE
+ * - #IOT_MQTT_SERVER_REFUSED
  * @return If this function fails before queuing a subscribe operation, it will return
  * one of:
- * - #AWS_IOT_MQTT_BAD_PARAMETER
- * - #AWS_IOT_MQTT_NO_MEMORY
+ * - #IOT_MQTT_BAD_PARAMETER
+ * - #IOT_MQTT_NO_MEMORY
  *
  * @see @ref mqtt_function_timedsubscribe for a blocking variant of this function.
  * @see @ref mqtt_function_unsubscribe for the function that removes subscriptions.
@@ -1340,67 +1390,67 @@ void AwsIotMqtt_Disconnect( AwsIotMqttConnection_t mqttConnection,
  * #define NUMBER_OF_SUBSCRIPTIONS ...
  *
  * // Subscription callback function.
- * void subscriptionCallback( void * pArgument, AwsIotMqttCallbackParam_t * const pPublish );
+ * void subscriptionCallback( void * pArgument, IotMqttCallbackParam_t * pPublish );
  *
  * // An initialized and connected MQTT connection.
- * AwsIotMqttConnection_t mqttConnection;
+ * IotMqttConnection_t mqttConnection;
  *
  * // Subscription information.
- * pSubscriptions[ NUMBER_OF_SUBSCRIPTIONS ] = { AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER };
- * AwsIotMqttReference_t lastOperation = AWS_IOT_MQTT_REFERENCE_INITIALIZER;
+ * pSubscriptions[ NUMBER_OF_SUBSCRIPTIONS ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
+ * IotMqttReference_t lastOperation = IOT_MQTT_REFERENCE_INITIALIZER;
  *
  * // Set the subscription information.
  * for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
  * {
- *     pSubscriptions[ i ].QoS = 1;
+ *     pSubscriptions[ i ].qos = IOT_MQTT_QOS_1;
  *     pSubscriptions[ i ].pTopicFilter = "some/topic/filter";
  *     pSubscriptions[ i ].topicLength = ( uint16_t ) strlen( pSubscriptions[ i ].pTopicFilter );
  *     pSubscriptions[ i ].callback.function = subscriptionCallback;
  * }
  *
- * AwsIotMqttError_t result = AwsIotMqtt_Subscribe( mqttConnection,
- *                                                  pSubscriptions,
- *                                                  NUMBER_OF_SUBSCRIPTIONS,
- *                                                  AWS_IOT_MQTT_FLAG_WAITABLE,
- *                                                  NULL,
- *                                                  &lastOperation );
+ * IotMqttError_t result = IotMqtt_Subscribe( mqttConnection,
+ *                                            pSubscriptions,
+ *                                            NUMBER_OF_SUBSCRIPTIONS,
+ *                                            IOT_MQTT_FLAG_WAITABLE,
+ *                                            NULL,
+ *                                            &lastOperation );
  *
- * // Subscribe returns AWS_IOT_MQTT_STATUS_PENDING when successful. Wait up to
+ * // Subscribe returns IOT_MQTT_STATUS_PENDING when successful. Wait up to
  * // 5 seconds for the operation to complete.
- * if( result == AWS_IOT_MQTT_STATUS_PENDING )
+ * if( result == IOT_MQTT_STATUS_PENDING )
  * {
- *     result = AwsIotMqtt_Wait( subscriptionRef, 5000 );
+ *     result = IotMqtt_Wait( subscriptionRef, 5000 );
  * }
  *
  * // Check that the subscriptions were successful.
- * if( result == AWS_IOT_MQTT_SUCCESS )
+ * if( result == IOT_MQTT_SUCCESS )
  * {
  *     // Wait for messages on the subscription topic filters...
  *
  *     // Unsubscribe once the subscriptions are no longer needed.
- *     result = AwsIotMqtt_Unsubscribe( mqttConnection,
- *                                      pSubscriptions,
- *                                      NUMBER_OF_SUBSCRIPTIONS,
- *                                      AWS_IOT_MQTT_FLAG_WAITABLE,
- *                                      NULL,
- *                                      &lastOperation );
+ *     result = IotMqtt_Unsubscribe( mqttConnection,
+ *                                   pSubscriptions,
+ *                                   NUMBER_OF_SUBSCRIPTIONS,
+ *                                   IOT_MQTT_FLAG_WAITABLE,
+ *                                   NULL,
+ *                                   &lastOperation );
  *
- *     // UNSUBSCRIBE returns AWS_IOT_MQTT_STATUS_PENDING when successful.
+ *     // UNSUBSCRIBE returns IOT_MQTT_STATUS_PENDING when successful.
  *     // Wait up to 5 seconds for the operation to complete.
- *     if( result == AWS_IOT_MQTT_STATUS_PENDING )
+ *     if( result == IOT_MQTT_STATUS_PENDING )
  *     {
- *         result = AwsIotMqtt_Wait( lastOperation, 5000 );
+ *         result = IotMqtt_Wait( lastOperation, 5000 );
  *     }
  * }
  * // Check which subscriptions were rejected by the server.
- * else if( result == AWS_IOT_MQTT_SERVER_REFUSED )
+ * else if( result == IOT_MQTT_SERVER_REFUSED )
  * {
  *     for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
  *     {
- *         if( AwsIotMqtt_IsSubscribed( mqttConnection,
- *                                      pSubscriptions[ i ].pTopicFilter,
- *                                      pSubscriptions[ i ].topicFilterLength,
- *                                      NULL ) == false )
+ *         if( IotMqtt_IsSubscribed( mqttConnection,
+ *                                   pSubscriptions[ i ].pTopicFilter,
+ *                                   pSubscriptions[ i ].topicFilterLength,
+ *                                   NULL ) == false )
  *         {
  *             // This subscription was rejected.
  *         }
@@ -1409,12 +1459,12 @@ void AwsIotMqtt_Disconnect( AwsIotMqttConnection_t mqttConnection,
  * @endcode
  */
 /* @[declare_mqtt_subscribe] */
-AwsIotMqttError_t AwsIotMqtt_Subscribe( AwsIotMqttConnection_t mqttConnection,
-                                        const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                        size_t subscriptionCount,
-                                        uint32_t flags,
-                                        const AwsIotMqttCallbackInfo_t * const pCallbackInfo,
-                                        AwsIotMqttReference_t * const pSubscribeRef );
+IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
+                                  const IotMqttSubscription_t * pSubscriptionList,
+                                  size_t subscriptionCount,
+                                  uint32_t flags,
+                                  const IotMqttCallbackInfo_t * pCallbackInfo,
+                                  IotMqttReference_t * pSubscribeRef );
 /* @[declare_mqtt_subscribe] */
 
 /**
@@ -1436,23 +1486,24 @@ AwsIotMqttError_t AwsIotMqtt_Subscribe( AwsIotMqttConnection_t mqttConnection,
  * Currently, flags are ignored by this function; this parameter is for
  * future-compatibility.
  * @param[in] timeoutMs If the MQTT server does not acknowledge the subscriptions within
- * this timeout, this function returns #AWS_IOT_MQTT_TIMEOUT.
+ * this timeout, this function returns #IOT_MQTT_TIMEOUT.
  *
  * @return One of the following:
- * - #AWS_IOT_MQTT_SUCCESS
- * - #AWS_IOT_MQTT_BAD_PARAMETER
- * - #AWS_IOT_MQTT_NO_MEMORY
- * - #AWS_IOT_MQTT_SEND_ERROR
- * - #AWS_IOT_MQTT_BAD_RESPONSE
- * - #AWS_IOT_MQTT_TIMEOUT
- * - #AWS_IOT_MQTT_SERVER_REFUSED
+ * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_BAD_PARAMETER
+ * - #IOT_MQTT_NO_MEMORY
+ * - #IOT_MQTT_NETWORK_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
+ * - #IOT_MQTT_BAD_RESPONSE
+ * - #IOT_MQTT_TIMEOUT
+ * - #IOT_MQTT_SERVER_REFUSED
  */
 /* @[declare_mqtt_timedsubscribe] */
-AwsIotMqttError_t AwsIotMqtt_TimedSubscribe( AwsIotMqttConnection_t mqttConnection,
-                                             const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                             size_t subscriptionCount,
-                                             uint32_t flags,
-                                             uint64_t timeoutMs );
+IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
+                                       const IotMqttSubscription_t * pSubscriptionList,
+                                       size_t subscriptionCount,
+                                       uint32_t flags,
+                                       uint64_t timeoutMs );
 /* @[declare_mqtt_timedsubscribe] */
 
 /**
@@ -1463,7 +1514,7 @@ AwsIotMqttError_t AwsIotMqtt_TimedSubscribe( AwsIotMqttConnection_t mqttConnecti
  * packet removes registered topic filters from the server. After unsubscribing,
  * the server will no longer send messages on these topic filters to the client.
  *
- * Corresponding [subscription callback functions](@ref AwsIotMqttCallbackInfo_t.function)
+ * Corresponding [subscription callback functions](@ref IotMqttCallbackInfo_t.function)
  * are also removed from the MQTT connection. These subscription callback functions
  * will be removed even if the MQTT UNSUBSCRIBE packet fails to send.
  *
@@ -1477,27 +1528,28 @@ AwsIotMqttError_t AwsIotMqtt_TimedSubscribe( AwsIotMqttConnection_t mqttConnecti
  * referenced after this function returns. This reference is invalidated once
  * the unsubscribe operation completes.
  *
- * @return This function will return #AWS_IOT_MQTT_STATUS_PENDING upon success.
+ * @return This function will return #IOT_MQTT_STATUS_PENDING upon success.
  * @return Upon completion of the unsubscribe (either through an
- * #AwsIotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
- * - #AWS_IOT_MQTT_SUCCESS
- * - #AWS_IOT_MQTT_SEND_ERROR
- * - #AWS_IOT_MQTT_BAD_RESPONSE
+ * #IotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
+ * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_NETWORK_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
+ * - #IOT_MQTT_BAD_RESPONSE
  * @return If this function fails before queuing an unsubscribe operation, it will return
  * one of:
- * - #AWS_IOT_MQTT_BAD_PARAMETER
- * - #AWS_IOT_MQTT_NO_MEMORY
+ * - #IOT_MQTT_BAD_PARAMETER
+ * - #IOT_MQTT_NO_MEMORY
  *
  * @see @ref mqtt_function_timedsubscribe for a blocking variant of this function.
  * @see @ref mqtt_function_subscribe for the function that adds subscriptions.
  */
 /* @[declare_mqtt_unsubscribe] */
-AwsIotMqttError_t AwsIotMqtt_Unsubscribe( AwsIotMqttConnection_t mqttConnection,
-                                          const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                          size_t subscriptionCount,
-                                          uint32_t flags,
-                                          const AwsIotMqttCallbackInfo_t * const pCallbackInfo,
-                                          AwsIotMqttReference_t * const pUnsubscribeRef );
+IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
+                                    const IotMqttSubscription_t * pSubscriptionList,
+                                    size_t subscriptionCount,
+                                    uint32_t flags,
+                                    const IotMqttCallbackInfo_t * pCallbackInfo,
+                                    IotMqttReference_t * pUnsubscribeRef );
 /* @[declare_mqtt_unsubscribe] */
 
 /**
@@ -1517,21 +1569,22 @@ AwsIotMqttError_t AwsIotMqtt_Unsubscribe( AwsIotMqttConnection_t mqttConnection,
  * Currently, flags are ignored by this function; this parameter is for
  * future-compatibility.
  * @param[in] timeoutMs If the MQTT server does not acknowledge the UNSUBSCRIBE within
- * this timeout, this function returns #AWS_IOT_MQTT_TIMEOUT.
+ * this timeout, this function returns #IOT_MQTT_TIMEOUT.
  *
  * @return One of the following:
- * - #AWS_IOT_MQTT_SUCCESS
- * - #AWS_IOT_MQTT_BAD_PARAMETER
- * - #AWS_IOT_MQTT_NO_MEMORY
- * - #AWS_IOT_MQTT_SEND_ERROR
- * - #AWS_IOT_MQTT_BAD_RESPONSE
+ * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_BAD_PARAMETER
+ * - #IOT_MQTT_NO_MEMORY
+ * - #IOT_MQTT_NETWORK_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
+ * - #IOT_MQTT_BAD_RESPONSE
  */
 /* @[declare_mqtt_timedunsubscribe] */
-AwsIotMqttError_t AwsIotMqtt_TimedUnsubscribe( AwsIotMqttConnection_t mqttConnection,
-                                               const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                               size_t subscriptionCount,
-                                               uint32_t flags,
-                                               uint64_t timeoutMs );
+IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
+                                         const IotMqttSubscription_t * pSubscriptionList,
+                                         size_t subscriptionCount,
+                                         uint32_t flags,
+                                         uint64_t timeoutMs );
 /* @[declare_mqtt_timedunsubscribe] */
 
 /**
@@ -1544,7 +1597,7 @@ AwsIotMqttError_t AwsIotMqtt_TimedUnsubscribe( AwsIotMqttConnection_t mqttConnec
  * PUBLISH packet from the server.
  *
  * If a PUBLISH packet fails to reach the server and it is not a QoS 0 message,
- * it will be retransmitted. See #AwsIotMqttPublishInfo_t for a description
+ * it will be retransmitted. See #IotMqttPublishInfo_t for a description
  * of the retransmission strategy.
  *
  * @attention QoS 2 messages are currently unsupported. Only 0 or 1 are valid
@@ -1558,20 +1611,21 @@ AwsIotMqttError_t AwsIotMqtt_TimedUnsubscribe( AwsIotMqttConnection_t mqttConnec
  * referenced after this function returns. This reference is invalidated once
  * the publish operation completes.
  *
- * @return This function will return #AWS_IOT_MQTT_STATUS_PENDING upon success for
- * QoS 1 publishes. For a QoS 0 publish it returns #AWS_IOT_MQTT_SUCCESS upon
+ * @return This function will return #IOT_MQTT_STATUS_PENDING upon success for
+ * QoS 1 publishes. For a QoS 0 publish it returns #IOT_MQTT_SUCCESS upon
  * success.
  * @return Upon completion of a QoS 1 publish (either through an
- * #AwsIotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
- * - #AWS_IOT_MQTT_SUCCESS
- * - #AWS_IOT_MQTT_SEND_ERROR
- * - #AWS_IOT_MQTT_BAD_RESPONSE
- * - #AWS_IOT_MQTT_RETRY_NO_RESPONSE (if [pPublishInfo->retryMs](@ref AwsIotMqttPublishInfo_t.retryMs)
- * and [pPublishInfo->retryLimit](@ref AwsIotMqttPublishInfo_t.retryLimit) were set).
+ * #IotMqttCallbackInfo_t or @ref mqtt_function_wait), the status will be one of:
+ * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_NETWORK_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
+ * - #IOT_MQTT_BAD_RESPONSE
+ * - #IOT_MQTT_RETRY_NO_RESPONSE (if [pPublishInfo->retryMs](@ref IotMqttPublishInfo_t.retryMs)
+ * and [pPublishInfo->retryLimit](@ref IotMqttPublishInfo_t.retryLimit) were set).
  * @return If this function fails before queuing an publish operation (regardless
  * of QoS), it will return one of:
- * - #AWS_IOT_MQTT_BAD_PARAMETER
- * - #AWS_IOT_MQTT_NO_MEMORY
+ * - #IOT_MQTT_BAD_PARAMETER
+ * - #IOT_MQTT_NO_MEMORY
  *
  * @note The parameters `pCallbackInfo` and `pPublishRef` should only be used for QoS
  * 1 publishes. For QoS 0, they should both be `NULL`.
@@ -1581,51 +1635,51 @@ AwsIotMqttError_t AwsIotMqtt_TimedUnsubscribe( AwsIotMqttConnection_t mqttConnec
  * <b>Example</b>
  * @code{c}
  * // An initialized and connected MQTT connection.
- * AwsIotMqttConnection_t mqttConnection;
+ * IotMqttConnection_t mqttConnection;
  *
  * // Publish information.
- * AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+ * IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
  *
  * // Set the publish information. QoS 0 example (retain not used):
- * publishInfo.QoS = 0;
+ * publishInfo.qos = IOT_MQTT_QOS_0;
  * publishInfo.pTopicName = "some/topic/name";
  * publishInfo.topicNameLength = 15;
  * publishInfo.pPayload = "payload";
  * publishInfo.payloadLength = 8;
  *
- * // QoS 0 publish should return AWS_IOT_MQTT_SUCCESS upon success.
- * AwsIotMqttError_t qos0Result = AwsIotMqtt_Publish( mqttConnection,
- *                                                    &publishInfo,
- *                                                    0,
- *                                                    NULL,
- *                                                    NULL );
+ * // QoS 0 publish should return IOT_MQTT_SUCCESS upon success.
+ * IotMqttError_t qos0Result = IotMqtt_Publish( mqttConnection,
+ *                                              &publishInfo,
+ *                                              0,
+ *                                              NULL,
+ *                                              NULL );
  *
  * // QoS 1 with retry example (using same topic name and payload as QoS 0 example):
- * AwsIotMqttReference_t qos1Reference = AWS_IOT_MQTT_REFERENCE_INITIALIZER;
- * publishInfo.QoS = 1;
+ * IotMqttReference_t qos1Reference = IOT_MQTT_REFERENCE_INITIALIZER;
+ * publishInfo.qos = IOT_MQTT_QOS_1;
  * publishInfo.retryMs = 1000; // Retry if no response is received in 1 second.
  * publishInfo.retryLimit = 5; // Retry up to 5 times.
  *
- * // QoS 1 publish should return AWS_IOT_MQTT_STATUS_PENDING upon success.
- * AwsIotMqttError_t qos1Result = AwsIotMqtt_Publish( mqttConnection,
- *                                                    &publishInfo,
- *                                                    AWS_IOT_MQTT_FLAG_WAITABLE,
- *                                                    NULL,
- *                                                    &qos1Reference );
+ * // QoS 1 publish should return IOT_MQTT_STATUS_PENDING upon success.
+ * IotMqttError_t qos1Result = IotMqtt_Publish( mqttConnection,
+ *                                              &publishInfo,
+ *                                              IOT_MQTT_FLAG_WAITABLE,
+ *                                              NULL,
+ *                                              &qos1Reference );
  *
  * // Wait up to 5 seconds for the publish to complete.
- * if( qos1Result == AWS_IOT_MQTT_STATUS_PENDING )
+ * if( qos1Result == IOT_MQTT_STATUS_PENDING )
  * {
- *     qos1Result = AwsIotMqtt_Wait( qos1Reference, 5000 );
+ *     qos1Result = IotMqtt_Wait( qos1Reference, 5000 );
  * }
  * @endcode
  */
 /* @[declare_mqtt_publish] */
-AwsIotMqttError_t AwsIotMqtt_Publish( AwsIotMqttConnection_t mqttConnection,
-                                      const AwsIotMqttPublishInfo_t * const pPublishInfo,
-                                      uint32_t flags,
-                                      const AwsIotMqttCallbackInfo_t * const pCallbackInfo,
-                                      AwsIotMqttReference_t * const pPublishRef );
+IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
+                                const IotMqttPublishInfo_t * pPublishInfo,
+                                uint32_t flags,
+                                const IotMqttCallbackInfo_t * pCallbackInfo,
+                                IotMqttReference_t * pPublishRef );
 /* @[declare_mqtt_publish] */
 
 /**
@@ -1645,23 +1699,24 @@ AwsIotMqttError_t AwsIotMqtt_Publish( AwsIotMqttConnection_t mqttConnection,
  * Currently, flags are ignored by this function; this parameter is for
  * future-compatibility.
  * @param[in] timeoutMs If the MQTT server does not acknowledge a QoS 1 PUBLISH
- * within this timeout, this function returns #AWS_IOT_MQTT_TIMEOUT. This parameter
+ * within this timeout, this function returns #IOT_MQTT_TIMEOUT. This parameter
  * is ignored for QoS 0 PUBLISH messages.
  *
  * @return One of the following:
- * - #AWS_IOT_MQTT_SUCCESS
- * - #AWS_IOT_MQTT_BAD_PARAMETER
- * - #AWS_IOT_MQTT_NO_MEMORY
- * - #AWS_IOT_MQTT_SEND_ERROR
- * - #AWS_IOT_MQTT_BAD_RESPONSE
- * - #AWS_IOT_MQTT_RETRY_NO_RESPONSE (if [pPublishInfo->retryMs](@ref AwsIotMqttPublishInfo_t.retryMs)
- * and [pPublishInfo->retryLimit](@ref AwsIotMqttPublishInfo_t.retryLimit) were set).
+ * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_BAD_PARAMETER
+ * - #IOT_MQTT_NO_MEMORY
+ * - #IOT_MQTT_NETWORK_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
+ * - #IOT_MQTT_BAD_RESPONSE
+ * - #IOT_MQTT_RETRY_NO_RESPONSE (if [pPublishInfo->retryMs](@ref IotMqttPublishInfo_t.retryMs)
+ * and [pPublishInfo->retryLimit](@ref IotMqttPublishInfo_t.retryLimit) were set).
  */
 /* @[declare_mqtt_timedpublish] */
-AwsIotMqttError_t AwsIotMqtt_TimedPublish( AwsIotMqttConnection_t mqttConnection,
-                                           const AwsIotMqttPublishInfo_t * const pPublishInfo,
-                                           uint32_t flags,
-                                           uint64_t timeoutMs );
+IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
+                                     const IotMqttPublishInfo_t * pPublishInfo,
+                                     uint32_t flags,
+                                     uint64_t timeoutMs );
 /* @[declare_mqtt_timedpublish] */
 
 /**
@@ -1673,55 +1728,55 @@ AwsIotMqttError_t AwsIotMqtt_TimedPublish( AwsIotMqttConnection_t mqttConnection
  * asynchronous; the function calls queue an operation for processing, and a
  * callback is invoked once the operation is complete.
  *
- * To use this function, the flag #AWS_IOT_MQTT_FLAG_WAITABLE must have been
+ * To use this function, the flag #IOT_MQTT_FLAG_WAITABLE must have been
  * set in the operation's function call. Additionally, this function must always
  * be called with any waitable operation to clean up resources.
  *
  * Regardless of its return value, this function always clean up resources used
  * by the waitable operation. This means `reference` is invalidated as soon as
- * this function returns, even if it returns #AWS_IOT_MQTT_TIMEOUT or another error.
+ * this function returns, even if it returns #IOT_MQTT_TIMEOUT or another error.
  *
  * @param[in] reference Reference to the operation to wait for. The flag
- * #AWS_IOT_MQTT_FLAG_WAITABLE must have been set for this operation.
- * @param[in] timeoutMs How long to wait before returning #AWS_IOT_MQTT_TIMEOUT.
+ * #IOT_MQTT_FLAG_WAITABLE must have been set for this operation.
+ * @param[in] timeoutMs How long to wait before returning #IOT_MQTT_TIMEOUT.
  *
  * @return The return value of this function depends on the MQTT operation associated
- * with `reference`. See #AwsIotMqttError_t for possible return values.
+ * with `reference`. See #IotMqttError_t for possible return values.
  *
  * <b>Example</b>
  * @code{c}
  * // Reference and timeout.
- * AwsIotMqttReference_t reference = AWS_IOT_MQTT_REFERENCE_INITIALIZER;
+ * IotMqttReference_t reference = IOT_MQTT_REFERENCE_INITIALIZER;
  * uint64_t timeoutMs = 5000; // 5 seconds
  *
  * // MQTT operation to wait for.
- * AwsIotMqttError_t result = AwsIotMqtt_Publish( mqttConnection,
- *                                                &publishInfo,
- *                                                AWS_IOT_MQTT_FLAG_WAITABLE,
- *                                                NULL,
- *                                                &reference );
+ * IotMqttError_t result = IotMqtt_Publish( mqttConnection,
+ *                                          &publishInfo,
+ *                                          IOT_MQTT_FLAG_WAITABLE,
+ *                                          NULL,
+ *                                          &reference );
  *
- * // Publish should have returned AWS_IOT_MQTT_STATUS_PENDING. The call to wait
+ * // Publish should have returned IOT_MQTT_STATUS_PENDING. The call to wait
  * // returns once the result of the publish is available or the timeout expires.
- * if( result == AWS_IOT_MQTT_STATUS_PENDING )
+ * if( result == IOT_MQTT_STATUS_PENDING )
  * {
- *     result = AwsIotMqtt_Wait( reference, timeoutMs );
+ *     result = IotMqtt_Wait( reference, timeoutMs );
  *
  *     // After the call to wait, the result of the publish is known
- *     // (not AWS_IOT_MQTT_STATUS_PENDING).
- *     assert( result != AWS_IOT_MQTT_STATUS_PENDING );
+ *     // (not IOT_MQTT_STATUS_PENDING).
+ *     assert( result != IOT_MQTT_STATUS_PENDING );
  * }
  * @endcode
  */
 /* @[declare_mqtt_wait] */
-AwsIotMqttError_t AwsIotMqtt_Wait( AwsIotMqttReference_t reference,
-                                   uint64_t timeoutMs );
+IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
+                             uint64_t timeoutMs );
 /* @[declare_mqtt_wait] */
 
 /*-------------------------- MQTT helper functions --------------------------*/
 
 /**
- * @brief Returns a string that describes an #AwsIotMqttError_t.
+ * @brief Returns a string that describes an #IotMqttError_t.
  *
  * Like the POSIX's `strerror`, this function returns a string describing a
  * return code. In this case, the return code is an MQTT library error code,
@@ -1738,11 +1793,11 @@ AwsIotMqttError_t AwsIotMqtt_Wait( AwsIotMqttReference_t reference,
  * @warning The string returned by this function must never be modified.
  */
 /* @[declare_mqtt_strerror] */
-const char * AwsIotMqtt_strerror( AwsIotMqttError_t status );
+const char * IotMqtt_strerror( IotMqttError_t status );
 /* @[declare_mqtt_strerror] */
 
 /**
- * @brief Returns a string that describes an #AwsIotMqttOperationType_t.
+ * @brief Returns a string that describes an #IotMqttOperationType_t.
  *
  * This function returns a string describing an MQTT operation type, `operation`.
  *
@@ -1757,7 +1812,7 @@ const char * AwsIotMqtt_strerror( AwsIotMqttError_t status );
  * @warning The string returned by this function must never be modified.
  */
 /* @[declare_mqtt_operationtype] */
-const char * AwsIotMqtt_OperationType( AwsIotMqttOperationType_t operation );
+const char * IotMqtt_OperationType( IotMqttOperationType_t operation );
 /* @[declare_mqtt_operationtype] */
 
 /**
@@ -1780,7 +1835,7 @@ const char * AwsIotMqtt_OperationType( AwsIotMqttOperationType_t operation );
  * or UNSUBSCRIBE operations.
  *
  * One suitable use of this function is to check <i>which</i> subscriptions were rejected
- * if @ref mqtt_function_subscribe returns #AWS_IOT_MQTT_SERVER_REFUSED; that return
+ * if @ref mqtt_function_subscribe returns #IOT_MQTT_SERVER_REFUSED; that return
  * code only means that <i>at least one</i> subscription was rejected.
  *
  * @param[in] mqttConnection The MQTT connection to check.
@@ -1793,13 +1848,13 @@ const char * AwsIotMqtt_OperationType( AwsIotMqttOperationType_t operation );
  * @return `true` if a subscription was found; `false` otherwise.
  *
  * @note The subscription QoS is not stored by the MQTT library; therefore,
- * `pCurrentSubscription->QoS` will always be set to `0`.
+ * `pCurrentSubscription->qos` will always be set to #IOT_MQTT_QOS_0.
  */
 /* @[declare_mqtt_issubscribed] */
-bool AwsIotMqtt_IsSubscribed( AwsIotMqttConnection_t mqttConnection,
-                              const char * const pTopicFilter,
-                              uint16_t topicFilterLength,
-                              AwsIotMqttSubscription_t * pCurrentSubscription );
+bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
+                           const char * pTopicFilter,
+                           uint16_t topicFilterLength,
+                           IotMqttSubscription_t * pCurrentSubscription );
 /* @[declare_mqtt_issubscribed] */
 
-#endif /* ifndef _AWS_IOT_MQTT_H_ */
+#endif /* ifndef _IOT_MQTT_H_ */

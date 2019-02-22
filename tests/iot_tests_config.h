@@ -29,32 +29,32 @@
 #include "unity_fixture_malloc_overrides.h"
 
 /* MQTT server endpoints used for the tests. */
-#if AWS_IOT_TEST_MQTT_MOSQUITTO == 1
+#if IOT_TEST_MQTT_MOSQUITTO == 1
     /* Mosquitto test server. */
-    #define AWS_IOT_TEST_SECURED_CONNECTION    ( 0 )
-    #define AWS_IOT_TEST_SERVER                "test.mosquitto.org"
-    #define AWS_IOT_TEST_PORT                  ( 1883 )
+    #define IOT_TEST_SECURED_CONNECTION    ( 0 )
+    #define IOT_TEST_SERVER                "test.mosquitto.org"
+    #define IOT_TEST_PORT                  ( 1883 )
 #else
     /* AWS IoT MQTT server. */
-    #define AWS_IOT_TEST_SECURED_CONNECTION    ( 1 )
+    #define IOT_TEST_SECURED_CONNECTION    ( 1 )
 
     /* AWS IoT endpoint and credentials. */
-    #ifndef AWS_IOT_TEST_SERVER
-        #define AWS_IOT_TEST_SERVER         ""
+    #ifndef IOT_TEST_SERVER
+        #define IOT_TEST_SERVER         ""
     #endif
-    #ifndef AWS_IOT_TEST_PORT
-        #define AWS_IOT_TEST_PORT           ( 443 )
+    #ifndef IOT_TEST_PORT
+        #define IOT_TEST_PORT           ( 443 )
     #endif
-    #ifndef AWS_IOT_TEST_ROOT_CA
-        #define AWS_IOT_TEST_ROOT_CA        ""
+    #ifndef IOT_TEST_ROOT_CA
+        #define IOT_TEST_ROOT_CA        ""
     #endif
-    #ifndef AWS_IOT_TEST_CLIENT_CERT
-        #define AWS_IOT_TEST_CLIENT_CERT    ""
+    #ifndef IOT_TEST_CLIENT_CERT
+        #define IOT_TEST_CLIENT_CERT    ""
     #endif
-    #ifndef AWS_IOT_TEST_PRIVATE_KEY
-        #define AWS_IOT_TEST_PRIVATE_KEY    ""
+    #ifndef IOT_TEST_PRIVATE_KEY
+        #define IOT_TEST_PRIVATE_KEY    ""
     #endif
-#endif /* if AWS_IOT_TEST_MQTT_MOSQUITTO == 1 */
+#endif /* if IOT_TEST_MQTT_MOSQUITTO == 1 */
 
 /* Shadow tests configuration. */
 #ifndef AWS_IOT_TEST_SHADOW_THING_NAME
@@ -62,49 +62,59 @@
 #endif
 
 /* Linear containers library configuration. */
-#define IOT_CONTAINERS_ENABLE_ASSERTS               ( 1 )
-
-/* Shadow library configuration. */
-#define AWS_IOT_SHADOW_ENABLE_ASSERTS               ( 1 )
+#define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )
 
 /* MQTT library configuration. */
-#define AWS_IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
-#define AWS_IOT_MQTT_ENABLE_METRICS                 ( 0 )
-#define AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 1 )
-#define AWS_IOT_MQTT_TEST                           ( 1 )
+#define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
+#define IOT_MQTT_ENABLE_METRICS                 ( 0 )
+#define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 1 )
+
+#define IOT_MQTT_TEST                           ( 1 )
+/* Shadow library configuration. */
+#define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
+
+/* Define the empty else marker if test coverage is enabled. */
+#if IOT_TEST_COVERAGE == 1
+    #define _EMPTY_ELSE_MARKER    asm volatile ( "nop" )
+#endif
 
 /* Memory allocation function configuration. Note that these functions will not
  * be affected by IOT_STATIC_MEMORY_ONLY. */
-#define IotNetwork_Malloc                           unity_malloc_mt
-#define IotNetwork_Free                             unity_free_mt
-#define IotThreads_Malloc                           unity_malloc_mt
-#define IotThreads_Free                             unity_free_mt
-#define IotLogging_Malloc                           unity_malloc_mt
-#define IotLogging_Free                             unity_free_mt
+#define IotNetwork_Malloc    unity_malloc_mt
+#define IotNetwork_Free      unity_free_mt
+#define IotThreads_Malloc    unity_malloc_mt
+#define IotThreads_Free      unity_free_mt
+#define IotLogging_Malloc    unity_malloc_mt
+#define IotLogging_Free      unity_free_mt
 /* #define IotLogging_StaticBufferSize */
-#define AwsIotTest_Malloc                           unity_malloc_mt
-#define AwsIotTest_Free                             unity_free_mt
+#define IotTest_Malloc       unity_malloc_mt
+#define IotTest_Free         unity_free_mt
 
 /* Static memory resource settings for the tests. These values must be large
  * enough to support the stress tests. */
 #if IOT_STATIC_MEMORY_ONLY == 1
-    #define IOT_MQTT_CONNECTIONS      ( 2 )
-    #define IOT_MQTT_SUBSCRIPTIONS    ( 80 )
+    #define IOT_MQTT_CONNECTIONS                   ( 2 )
+    #define IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS    ( 10 )
+    #define IOT_MQTT_SUBSCRIPTIONS                 ( 80 )
 #endif
 
 /* Memory allocation function configuration for libraries affected by
  * IOT_STATIC_MEMORY_ONLY. */
 #if IOT_STATIC_MEMORY_ONLY == 0
-    #define AwsIotMqtt_MallocConnection        unity_malloc_mt
-    #define AwsIotMqtt_FreeConnection          unity_free_mt
-    #define AwsIotMqtt_MallocMessage           unity_malloc_mt
-    #define AwsIotMqtt_FreeMessage             unity_free_mt
-    #define AwsIotMqtt_MallocOperation         unity_malloc_mt
-    #define AwsIotMqtt_FreeOperation           unity_free_mt
-    #define AwsIotMqtt_MallocSubscription      unity_malloc_mt
-    #define AwsIotMqtt_FreeSubscription        unity_free_mt
-    #define AwsIotMqtt_MallocTimerEvent        unity_malloc_mt
-    #define AwsIotMqtt_FreeTimerEvent          unity_free_mt
+    #define IotTaskPool_MallocJob              unity_malloc_mt
+    #define IotTaskPool_FreeJob                unity_free_mt
+    #define IotTaskPool_MallocTimerEvent       unity_malloc_mt
+    #define IotTaskPool_FreeTimerEvent         unity_free_mt
+    #define IotMqtt_MallocConnection           unity_malloc_mt
+    #define IotMqtt_FreeConnection             unity_free_mt
+    #define IotMqtt_MallocMessage              unity_malloc_mt
+    #define IotMqtt_FreeMessage                unity_free_mt
+    #define IotMqtt_MallocOperation            unity_malloc_mt
+    #define IotMqtt_FreeOperation              unity_free_mt
+    #define IotMqtt_MallocSubscription         unity_malloc_mt
+    #define IotMqtt_FreeSubscription           unity_free_mt
+    #define IotMqtt_MallocTimerEvent           unity_malloc_mt
+    #define IotMqtt_FreeTimerEvent             unity_free_mt
     #define AwsIotShadow_MallocOperation       unity_malloc_mt
     #define AwsIotShadow_FreeOperation         unity_free_mt
     #define AwsIotShadow_MallocString          unity_malloc_mt
@@ -122,19 +132,19 @@ typedef struct IotNetworkServerInfoOpenssl    IotTestNetworkServerInfo_t;
 typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
 
 /* Initializers for the tests' network types. */
-#define IOT_TEST_NETWORK_CONNECTION_INITIALIZER         IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER
+#define IOT_TEST_NETWORK_CONNECTION_INITIALIZER    IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER
 #define IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER \
     {                                            \
-        .pHostName = AWS_IOT_TEST_SERVER,        \
-        .port = AWS_IOT_TEST_PORT                \
+        .pHostName = IOT_TEST_SERVER,            \
+        .port = IOT_TEST_PORT                    \
     }
-#if AWS_IOT_TEST_SECURED_CONNECTION == 1
+#if IOT_TEST_SECURED_CONNECTION == 1
     #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER \
     {                                                \
         .pAlpnProtos = "\x0ex-amzn-mqtt-ca",         \
-        .pRootCaPath = AWS_IOT_TEST_ROOT_CA,         \
-        .pClientCertPath = AWS_IOT_TEST_CLIENT_CERT, \
-        .pPrivateKeyPath = AWS_IOT_TEST_PRIVATE_KEY  \
+        .pRootCaPath = IOT_TEST_ROOT_CA,             \
+        .pClientCertPath = IOT_TEST_CLIENT_CERT,     \
+        .pPrivateKeyPath = IOT_TEST_PRIVATE_KEY      \
     }
 #else
     #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER    IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER

@@ -20,8 +20,8 @@
  */
 
 /**
- * @file aws_iot_tests_mqtt_stress.c
- * @brief Stress tests for the AWS IoT MQTT library.
+ * @file iot_tests_mqtt_stress.c
+ * @brief Stress tests for the MQTT library.
  *
  * The tests in this file run far longer than other tests, and may easily fail
  * due to poor network conditions. For best results, these tests should be run
@@ -35,19 +35,23 @@
 
 /* Standard includes. */
 #include <string.h>
-#include <unistd.h>
 
 /* POSIX includes. */
 #include <time.h>
 
 /* MQTT include. */
-#include "aws_iot_mqtt.h"
+#include "iot_mqtt.h"
 
 /* POSIX includes. */
 #ifdef POSIX_PTHREAD_HEADER
     #include POSIX_PTHREAD_HEADER
 #else
     #include <pthread.h>
+#endif
+#ifdef POSIX_UNISTD_HEADER
+    #include POSIX_UNISTD_HEADER
+#else
+    #include <unistd.h>
 #endif
 
 /* Platform layer include. */
@@ -66,14 +70,14 @@
 /**
  * @brief Determine which MQTT server mode to test (AWS IoT or Mosquitto).
  */
-#if !defined( AWS_IOT_TEST_MQTT_MOSQUITTO ) || AWS_IOT_TEST_MQTT_MOSQUITTO == 0
+#if !defined( IOT_TEST_MQTT_MOSQUITTO ) || IOT_TEST_MQTT_MOSQUITTO == 0
     #define _AWS_IOT_MQTT_SERVER    true
 #else
     #define _AWS_IOT_MQTT_SERVER    false
 
 /* Redefine the connect info initializer if not using an AWS IoT MQTT server. */
-    #undef AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER
-    #define AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER    { 0 }
+    #undef IOT_MQTT_CONNECT_INFO_INITIALIZER
+    #define IOT_MQTT_CONNECT_INFO_INITIALIZER    { 0 }
 #endif
 
 /**
@@ -82,36 +86,36 @@
  *
  * Provide default values of test configuration constants.
  */
-#ifndef AWS_IOT_TEST_MQTT_TIMEOUT_MS
-    #define AWS_IOT_TEST_MQTT_TIMEOUT_MS      ( 5000 )
+#ifndef IOT_TEST_MQTT_TIMEOUT_MS
+    #define IOT_TEST_MQTT_TIMEOUT_MS      ( 5000 )
 #endif
-#ifndef AWS_IOT_TEST_MQTT_TOPIC_PREFIX
-    #define AWS_IOT_TEST_MQTT_TOPIC_PREFIX    "awsiotmqtttest"
+#ifndef IOT_TEST_MQTT_TOPIC_PREFIX
+    #define IOT_TEST_MQTT_TOPIC_PREFIX    "iotmqtttest"
 #endif
-#ifndef AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
-    #if AWS_IOT_TEST_MQTT_MOSQUITTO == 1
-        #define AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S    ( 5 )
+#ifndef IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
+    #if IOT_TEST_MQTT_MOSQUITTO == 1
+        #define IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S    ( 5 )
     #else
-        #define AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S    ( 30 )
+        #define IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S    ( 30 )
     #endif
 #endif
-#ifndef AWS_IOT_TEST_MQTT_RETRY_MS
-    #define AWS_IOT_TEST_MQTT_RETRY_MS       ( 350 )
+#ifndef IOT_TEST_MQTT_RETRY_MS
+    #define IOT_TEST_MQTT_RETRY_MS       ( 350 )
 #endif
-#ifndef AWS_IOT_TEST_MQTT_RETRY_LIMIT
-    #define AWS_IOT_TEST_MQTT_RETRY_LIMIT    ( 32 )
+#ifndef IOT_TEST_MQTT_RETRY_LIMIT
+    #define IOT_TEST_MQTT_RETRY_LIMIT    ( 32 )
 #endif
-#ifndef AWS_IOT_TEST_MQTT_DECONGEST_S
-    #define AWS_IOT_TEST_MQTT_DECONGEST_S    ( 30 )
+#ifndef IOT_TEST_MQTT_DECONGEST_S
+    #define IOT_TEST_MQTT_DECONGEST_S    ( 30 )
 #endif
-#ifndef AWS_IOT_TEST_MQTT_THREADS
-    #define AWS_IOT_TEST_MQTT_THREADS        ( 16 )
+#ifndef IOT_TEST_MQTT_THREADS
+    #define IOT_TEST_MQTT_THREADS        ( 16 )
 #endif
-#ifndef AWS_IOT_TEST_MQTT_PUBLISHES_PER_THREAD
-    #ifdef AWS_IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS
-        #define AWS_IOT_TEST_MQTT_PUBLISHES_PER_THREAD    ( AWS_IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS )
+#ifndef IOT_TEST_MQTT_PUBLISHES_PER_THREAD
+    #ifdef IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS
+        #define IOT_TEST_MQTT_PUBLISHES_PER_THREAD    ( IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS )
     #else
-        #define AWS_IOT_TEST_MQTT_PUBLISHES_PER_THREAD    ( 100 )
+        #define IOT_TEST_MQTT_PUBLISHES_PER_THREAD    ( 100 )
     #endif
 #endif
 /** @endcond */
@@ -125,13 +129,13 @@
  * @brief The maximum number of PUBLISH messages that will be received by a
  * single test.
  */
-#define _MAX_RECEIVED_PUBLISH     ( AWS_IOT_TEST_MQTT_THREADS * AWS_IOT_TEST_MQTT_PUBLISHES_PER_THREAD )
+#define _MAX_RECEIVED_PUBLISH     ( IOT_TEST_MQTT_THREADS * IOT_TEST_MQTT_PUBLISHES_PER_THREAD )
 
 /**
  * @brief The maximum length of an MQTT client identifier.
  */
-#ifdef AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER
-    #define _CLIENT_IDENTIFIER_MAX_LENGTH    ( sizeof( AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER ) )
+#ifdef IOT_TEST_MQTT_CLIENT_IDENTIFIER
+    #define _CLIENT_IDENTIFIER_MAX_LENGTH    ( sizeof( IOT_TEST_MQTT_CLIENT_IDENTIFIER ) )
 #else
     #define _CLIENT_IDENTIFIER_MAX_LENGTH    ( 24 )
 #endif
@@ -143,29 +147,29 @@
  */
 typedef struct _publishParams
 {
-    int threadNumber;         /**< @brief ID number of this publish thread. */
-    long publishPeriodNs;     /**< @brief How long to wait (in nanoseconds) between each publish. */
-    unsigned publishLimit;    /**< @brief How many publishes this thread will send. */
-    AwsIotMqttError_t status; /**< @brief Final status of this publish thread. */
+    int threadNumber;      /**< @brief ID number of this publish thread. */
+    long publishPeriodNs;  /**< @brief How long to wait (in nanoseconds) between each publish. */
+    unsigned publishLimit; /**< @brief How many publishes this thread will send. */
+    IotMqttError_t status; /**< @brief Final status of this publish thread. */
 } _publishParams_t;
 
 /*-----------------------------------------------------------*/
 
 /* Network functions used by the tests, declared and implemented in one of
  * the test network function files. */
-extern bool AwsIotTest_NetworkSetup( void );
-extern void AwsIotTest_NetworkCleanup( void );
+extern bool IotTest_NetworkSetup( void );
+extern void IotTest_NetworkCleanup( void );
 
 /* Extern declarations of default serializer functions. The internal MQTT header cannot
  * be included by this file. */
-extern AwsIotMqttError_t AwsIotMqttInternal_SerializePingreq( uint8_t ** const pPingreqPacket,
-                                                              size_t * const pPacketSize );
-extern void AwsIotMqttInternal_FreePacket( uint8_t * pPacket );
+extern IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
+                                                 size_t * pPacketSize );
+extern void _IotMqtt_FreePacket( uint8_t * pPacket );
 
 /* Network variables used by the tests, declared in one of the test network
  * function files. */
-extern AwsIotMqttNetIf_t _AwsIotTestNetworkInterface;
-extern AwsIotMqttConnection_t _AwsIotTestMqttConnection;
+extern IotMqttNetIf_t _IotTestNetworkInterface;
+extern IotMqttConnection_t _IotTestMqttConnection;
 
 /*-----------------------------------------------------------*/
 
@@ -192,14 +196,14 @@ static const size_t _samplePayloadLength = sizeof( _pSamplePayload ) - 1;
  */
 static const char * const _pTopicNames[ _TEST_TOPIC_NAME_COUNT ] =
 {
-    AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/stress/0",
-    AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/stress/1",
-    AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/stress/2",
-    AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/stress/3",
-    AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/stress/4",
-    AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/stress/5",
-    AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/stress/6",
-    AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/stress/7"
+    IOT_TEST_MQTT_TOPIC_PREFIX "/stress/0",
+    IOT_TEST_MQTT_TOPIC_PREFIX "/stress/1",
+    IOT_TEST_MQTT_TOPIC_PREFIX "/stress/2",
+    IOT_TEST_MQTT_TOPIC_PREFIX "/stress/3",
+    IOT_TEST_MQTT_TOPIC_PREFIX "/stress/4",
+    IOT_TEST_MQTT_TOPIC_PREFIX "/stress/5",
+    IOT_TEST_MQTT_TOPIC_PREFIX "/stress/6",
+    IOT_TEST_MQTT_TOPIC_PREFIX "/stress/7"
 };
 
 /**
@@ -207,7 +211,7 @@ static const char * const _pTopicNames[ _TEST_TOPIC_NAME_COUNT ] =
  *
  * For convenience, all topic names are the same length.
  */
-static const uint16_t _topicNameLength = ( uint16_t ) sizeof( AWS_IOT_TEST_MQTT_TOPIC_PREFIX "/stress/0" ) - 1;
+static const uint16_t _topicNameLength = ( uint16_t ) sizeof( IOT_TEST_MQTT_TOPIC_PREFIX "/stress/0" ) - 1;
 
 /**
  * @brief Counts how many subscriptions were received for each test.
@@ -231,52 +235,51 @@ static bool _pingreqOverrideCalled = false;
 /**
  * @brief Serializer override for PINGREQ.
  */
-static AwsIotMqttError_t _serializePingreq( uint8_t ** const pPingreqPacket,
-                                            size_t * const pPacketSize )
+static IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
+                                         size_t * pPacketSize )
 {
     _pingreqOverrideCalled = true;
 
-    return AwsIotMqttInternal_SerializePingreq( pPingreqPacket,
-                                                pPacketSize );
+    return _IotMqtt_SerializePingreq( pPingreqPacket, pPacketSize );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Checks that #_AwsIotTestMqttConnection is still usable by sending a PUBLISH.
+ * @brief Checks that #_IotTestMqttConnection is still usable by sending a PUBLISH.
  *
  * @return The result of the PUBLISH.
  */
-static AwsIotMqttError_t _checkConnection( void )
+static IotMqttError_t _checkConnection( void )
 {
-    AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
-    AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    AwsIotMqttReference_t publishRef = AWS_IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotMqttReference_t publishRef = IOT_MQTT_REFERENCE_INITIALIZER;
 
     /* Set the publish info. */
-    publishInfo.QoS = 1;
+    publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pTopicName = _pTopicNames[ 0 ];
     publishInfo.topicNameLength = _topicNameLength;
     publishInfo.pPayload = _pSamplePayload;
     publishInfo.payloadLength = _samplePayloadLength;
-    publishInfo.retryMs = AWS_IOT_TEST_MQTT_RETRY_MS;
-    publishInfo.retryLimit = AWS_IOT_TEST_MQTT_RETRY_LIMIT;
+    publishInfo.retryMs = IOT_TEST_MQTT_RETRY_MS;
+    publishInfo.retryLimit = IOT_TEST_MQTT_RETRY_LIMIT;
 
     /* Send a PUBLISH. */
-    status = AwsIotMqtt_Publish( _AwsIotTestMqttConnection,
-                                 &publishInfo,
-                                 AWS_IOT_MQTT_FLAG_WAITABLE,
-                                 NULL,
-                                 &publishRef );
+    status = IotMqtt_Publish( _IotTestMqttConnection,
+                              &publishInfo,
+                              IOT_MQTT_FLAG_WAITABLE,
+                              NULL,
+                              &publishRef );
 
-    if( status != AWS_IOT_MQTT_STATUS_PENDING )
+    if( status != IOT_MQTT_STATUS_PENDING )
     {
         return status;
     }
 
     /* Return the result of the PUBLISH. */
-    return AwsIotMqtt_Wait( publishRef,
-                            AWS_IOT_TEST_MQTT_TIMEOUT_MS );
+    return IotMqtt_Wait( publishRef,
+                         IOT_TEST_MQTT_TIMEOUT_MS );
 }
 
 /*-----------------------------------------------------------*/
@@ -285,7 +288,7 @@ static AwsIotMqttError_t _checkConnection( void )
  * @brief Subscription callback function.
  */
 static void _publishReceived( void * pArgument,
-                              AwsIotMqttCallbackParam_t * const pPublish )
+                              IotMqttCallbackParam_t * pPublish )
 {
     ( void ) pArgument;
 
@@ -294,7 +297,7 @@ static void _publishReceived( void * pArgument,
     if( ( pPublish->message.info.payloadLength == _samplePayloadLength ) &&
         ( strncmp( _pSamplePayload, pPublish->message.info.pPayload, _samplePayloadLength ) == 0 ) &&
         ( pPublish->message.info.topicNameLength == _topicNameLength ) &&
-        ( pPublish->message.info.QoS == 1 ) )
+        ( pPublish->message.info.qos == IOT_MQTT_QOS_1 ) )
     {
         IotSemaphore_Post( &receivedPublishCounter );
     }
@@ -312,10 +315,10 @@ static void _publishReceived( void * pArgument,
  * @brief Callback function that blocks for a long time.
  */
 static void _blockingCallback( void * pArgument,
-                               AwsIotMqttCallbackParam_t * const param )
+                               IotMqttCallbackParam_t * param )
 {
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
-    const unsigned blockTime = 5 * AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
+    const unsigned blockTime = 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
     ( void ) param;
 
@@ -334,9 +337,9 @@ static void _blockingCallback( void * pArgument,
 static void * _publishThread( void * pArgument )
 {
     unsigned i = 0;
-    AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _publishParams_t * pParams = ( _publishParams_t * ) pArgument;
-    AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     const struct timespec sleepTime =
     {
         .tv_sec  = 0,
@@ -344,12 +347,12 @@ static void * _publishThread( void * pArgument )
     };
 
     /* Set the publish info. */
-    publishInfo.QoS = 1;
+    publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pPayload = _pSamplePayload;
     publishInfo.payloadLength = _samplePayloadLength;
     publishInfo.topicNameLength = _topicNameLength;
-    publishInfo.retryMs = AWS_IOT_TEST_MQTT_RETRY_MS;
-    publishInfo.retryLimit = AWS_IOT_TEST_MQTT_RETRY_LIMIT;
+    publishInfo.retryMs = IOT_TEST_MQTT_RETRY_MS;
+    publishInfo.retryLimit = IOT_TEST_MQTT_RETRY_LIMIT;
 
     for( i = 0; i < pParams->publishLimit; )
     {
@@ -357,26 +360,26 @@ static void * _publishThread( void * pArgument )
         publishInfo.pTopicName = _pTopicNames[ i % _TEST_TOPIC_NAME_COUNT ];
 
         /* PUBLISH the message. */
-        status = AwsIotMqtt_Publish( _AwsIotTestMqttConnection,
-                                     &publishInfo,
-                                     0,
-                                     NULL,
-                                     NULL );
+        status = IotMqtt_Publish( _IotTestMqttConnection,
+                                  &publishInfo,
+                                  0,
+                                  NULL,
+                                  NULL );
 
         /* The stress tests may exhaust all memory available to the MQTT library.
          * If no memory is available, wait some time for resources to be released. */
-        if( status == AWS_IOT_MQTT_NO_MEMORY )
+        if( status == IOT_MQTT_NO_MEMORY )
         {
             IotLogInfo( "Thread %d: no memory available on PUBLISH %d."
                         " Sleeping for %d seconds.",
                         pParams->threadNumber,
                         i,
-                        AWS_IOT_TEST_MQTT_DECONGEST_S );
-            sleep( AWS_IOT_TEST_MQTT_DECONGEST_S );
+                        IOT_TEST_MQTT_DECONGEST_S );
+            sleep( IOT_TEST_MQTT_DECONGEST_S );
             continue;
         }
         /* If the PUBLISH failed, exit this thread. */
-        else if( status != AWS_IOT_MQTT_STATUS_PENDING )
+        else if( status != IOT_MQTT_STATUS_PENDING )
         {
             IotLogError( "Thread %d encountered error %d publishing message %d.",
                          status, i );
@@ -399,7 +402,7 @@ static void * _publishThread( void * pArgument )
         if( nanosleep( &sleepTime, NULL ) != 0 )
         {
             IotLogError( "Error in nanosleep." );
-            status = AWS_IOT_MQTT_BAD_RESPONSE;
+            status = IOT_MQTT_BAD_RESPONSE;
             break;
         }
     }
@@ -425,8 +428,8 @@ TEST_GROUP( MQTT_Stress );
 TEST_SETUP( MQTT_Stress )
 {
     int i = 0;
-    AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
-    AwsIotMqttSubscription_t pSubscriptions[ _TEST_TOPIC_NAME_COUNT ] = { AWS_IOT_MQTT_SUBSCRIPTION_INITIALIZER };
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttSubscription_t pSubscriptions[ _TEST_TOPIC_NAME_COUNT ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
     const IotLogConfig_t logHideAll = { .hideLogLevel = true, .hideLibraryName = true, .hideTimestring = true };
 
     /* Clear the PINGREQ override flag. */
@@ -441,37 +444,37 @@ TEST_SETUP( MQTT_Stress )
                                                       _MAX_RECEIVED_PUBLISH ) );
 
     /* Set the serializer overrides. */
-    _AwsIotTestNetworkInterface.serialize.pingreq = _serializePingreq;
-    _AwsIotTestNetworkInterface.freePacket = AwsIotMqttInternal_FreePacket;
+    _IotTestNetworkInterface.serialize.pingreq = _serializePingreq;
+    _IotTestNetworkInterface.freePacket = _IotMqtt_FreePacket;
 
     /* Set up the network stack. */
-    if( AwsIotTest_NetworkSetup() == false )
+    if( IotTest_NetworkSetup() == false )
     {
         TEST_FAIL_MESSAGE( "Failed to set up network connection." );
     }
 
     /* Initialize the MQTT library. */
-    if( AwsIotMqtt_Init() != AWS_IOT_MQTT_SUCCESS )
+    if( IotMqtt_Init() != IOT_MQTT_SUCCESS )
     {
         TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
     }
 
     /* Generate a new, unique client identifier based on the time if no client
      * identifier is defined. Otherwise, copy the provided client identifier. */
-    #ifndef AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER
+    #ifndef IOT_TEST_MQTT_CLIENT_IDENTIFIER
         ( void ) snprintf( _pClientIdentifier,
                            _CLIENT_IDENTIFIER_MAX_LENGTH,
-                           "aws%llu",
+                           "iot%llu",
                            ( long long unsigned int ) IotClock_GetTimeMs() );
     #else
         ( void ) strncpy( _pClientIdentifier,
-                          AWS_IOT_TEST_MQTT_CLIENT_IDENTIFIER,
+                          IOT_TEST_MQTT_CLIENT_IDENTIFIER,
                           _CLIENT_IDENTIFIER_MAX_LENGTH );
     #endif
 
     /* Set the members of the connect info. */
     connectInfo.cleanSession = true;
-    connectInfo.keepAliveSeconds = AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
+    connectInfo.keepAliveSeconds = IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
     connectInfo.pClientIdentifier = _pClientIdentifier;
     connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );
 
@@ -480,24 +483,24 @@ TEST_SETUP( MQTT_Stress )
     {
         pSubscriptions[ i ].pTopicFilter = _pTopicNames[ i ];
         pSubscriptions[ i ].topicFilterLength = _topicNameLength;
-        pSubscriptions[ i ].QoS = 1;
+        pSubscriptions[ i ].qos = IOT_MQTT_QOS_1;
         pSubscriptions[ i ].callback.function = _publishReceived;
     }
 
     /* Establish the MQTT connection. */
-    TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS,
-                       AwsIotMqtt_Connect( &_AwsIotTestMqttConnection,
-                                           &_AwsIotTestNetworkInterface,
-                                           &connectInfo,
-                                           AWS_IOT_TEST_MQTT_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
+                       IotMqtt_Connect( &_IotTestMqttConnection,
+                                        &_IotTestNetworkInterface,
+                                        &connectInfo,
+                                        IOT_TEST_MQTT_TIMEOUT_MS ) );
 
     /* Subscribe to the test topic filters. */
-    TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS,
-                       AwsIotMqtt_TimedSubscribe( _AwsIotTestMqttConnection,
-                                                  pSubscriptions,
-                                                  _TEST_TOPIC_NAME_COUNT,
-                                                  0,
-                                                  AWS_IOT_TEST_MQTT_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
+                       IotMqtt_TimedSubscribe( _IotTestMqttConnection,
+                                               pSubscriptions,
+                                               _TEST_TOPIC_NAME_COUNT,
+                                               0,
+                                               IOT_TEST_MQTT_TIMEOUT_MS ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -512,17 +515,17 @@ TEST_TEAR_DOWN( MQTT_Stress )
 
     /* Disconnect the MQTT connection. Unsubscribe is not called; the subscriptions
      * should be cleaned up by Disconnect. */
-    if( _AwsIotTestMqttConnection != AWS_IOT_MQTT_CONNECTION_INITIALIZER )
+    if( _IotTestMqttConnection != IOT_MQTT_CONNECTION_INITIALIZER )
     {
-        AwsIotMqtt_Disconnect( _AwsIotTestMqttConnection, false );
+        IotMqtt_Disconnect( _IotTestMqttConnection, false );
     }
 
     /* Clean up the network stack. */
-    AwsIotTest_NetworkCleanup();
+    IotTest_NetworkCleanup();
 
     /* Clean up the MQTT library. */
-    AwsIotMqtt_Cleanup();
-    _AwsIotTestMqttConnection = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqtt_Cleanup();
+    _IotTestMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 }
 
 /*-----------------------------------------------------------*/
@@ -544,7 +547,7 @@ TEST_GROUP_RUNNER( MQTT_Stress )
  */
 TEST( MQTT_Stress, KeepAlive )
 {
-    const unsigned sleepTime = 5 * AWS_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
+    const unsigned sleepTime = 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
     /* Send no MQTT packets for a long time. The keep-alive must be used to keep
      * the connection open. */
@@ -553,7 +556,7 @@ TEST( MQTT_Stress, KeepAlive )
 
     /* Send a PUBLISH to verify that the connection is still usable. */
     IotLogInfo( "KeepAlive test checking MQTT connection." );
-    TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, _checkConnection() );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _checkConnection() );
 
     /* Check that the PINGREQ override was used. */
     TEST_ASSERT_EQUAL( true, _pingreqOverrideCalled );
@@ -566,20 +569,20 @@ TEST( MQTT_Stress, KeepAlive )
  */
 TEST( MQTT_Stress, BlockingCallback )
 {
-    AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    AwsIotMqttCallbackInfo_t callbackInfo = AWS_IOT_MQTT_CALLBACK_INFO_INITIALIZER;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
     IotSemaphore_t waitSem;
 
     callbackInfo.function = _blockingCallback;
     callbackInfo.param1 = &waitSem;
 
-    publishInfo.QoS = 1;
+    publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pTopicName = _pTopicNames[ 0 ];
     publishInfo.topicNameLength = _topicNameLength;
     publishInfo.pPayload = _pSamplePayload;
     publishInfo.payloadLength = _samplePayloadLength;
-    publishInfo.retryMs = AWS_IOT_TEST_MQTT_RETRY_MS;
-    publishInfo.retryLimit = AWS_IOT_TEST_MQTT_RETRY_LIMIT;
+    publishInfo.retryMs = IOT_TEST_MQTT_RETRY_MS;
+    publishInfo.retryLimit = IOT_TEST_MQTT_RETRY_LIMIT;
 
     /* Create the wait semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
@@ -587,18 +590,18 @@ TEST( MQTT_Stress, BlockingCallback )
     if( TEST_PROTECT() )
     {
         /* Call a function that will invoke the blocking callback. */
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_STATUS_PENDING,
-                           AwsIotMqtt_Publish( _AwsIotTestMqttConnection,
-                                               &publishInfo,
-                                               0,
-                                               &callbackInfo,
-                                               NULL ) );
+        TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING,
+                           IotMqtt_Publish( _IotTestMqttConnection,
+                                            &publishInfo,
+                                            0,
+                                            &callbackInfo,
+                                            NULL ) );
 
         /* Wait for the callback to return, then check that the connection is
          * still usable. */
         IotSemaphore_Wait( &waitSem );
         IotLogInfo( "BlockingCallback test checking MQTT connection." );
-        TEST_ASSERT_EQUAL( AWS_IOT_MQTT_SUCCESS, _checkConnection() );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _checkConnection() );
     }
 
     IotSemaphore_Destroy( &waitSem );
@@ -616,21 +619,21 @@ TEST( MQTT_Stress, BlockingCallback )
 TEST( MQTT_Stress, ClientClosesConnection )
 {
     int i = 0, threadsCreated = 0, threadsJoined = 0;
-    pthread_t publishThreads[ AWS_IOT_TEST_MQTT_THREADS ] = { 0 };
-    _publishParams_t publishThreadParams[ AWS_IOT_TEST_MQTT_THREADS ] = { 0 };
+    pthread_t publishThreads[ IOT_TEST_MQTT_THREADS ] = { 0 };
+    _publishParams_t publishThreadParams[ IOT_TEST_MQTT_THREADS ] = { 0 };
 
     /* Set the parameters for each thread. */
-    for( i = 0; i < AWS_IOT_TEST_MQTT_THREADS; i++ )
+    for( i = 0; i < IOT_TEST_MQTT_THREADS; i++ )
     {
         publishThreadParams[ i ].threadNumber = i;
         publishThreadParams[ i ].publishPeriodNs = 500000000;
-        publishThreadParams[ i ].publishLimit = AWS_IOT_TEST_MQTT_PUBLISHES_PER_THREAD;
+        publishThreadParams[ i ].publishLimit = IOT_TEST_MQTT_PUBLISHES_PER_THREAD;
     }
 
     IotLogInfo( "ClientClosesConnection test creating threads." );
 
     /* Spawn the threads for the test. */
-    for( i = 0; i < AWS_IOT_TEST_MQTT_THREADS; i++ )
+    for( i = 0; i < IOT_TEST_MQTT_THREADS; i++ )
     {
         if( pthread_create( &( publishThreads[ i ] ),
                             NULL,

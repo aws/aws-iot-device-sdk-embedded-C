@@ -3,7 +3,9 @@ add_library( iotcommon SHARED
              iot_common.c
              iot_json_utils.c
              iot_logging.c
+             iot_taskpool.c
              static_memory/iot_static_memory_common.c
+             static_memory/iot_static_memory_taskpool.c
              static_memory/iot_static_memory_mqtt.c
              static_memory/aws_iot_static_memory_shadow.c )
 

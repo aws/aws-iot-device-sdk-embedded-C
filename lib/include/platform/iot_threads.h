@@ -40,16 +40,6 @@
 #include "types/iot_platform_types.h"
 
 /**
- * @brief A value representing the system default for new thread priority.
- */
-#define IOT_THREAD_DEFAULT_PRIORITY      0
-
-/**
- * @brief A value representhing the system default for new thread stack size.
- */
-#define IOT_THREAD_DEFAULT_STACK_SIZE    0
-
-/**
  * @functionspage{platform_threads,platform thread management,Thread Management}
  * - @functionname{platform_threads_function_createdetachedthread}
  * - @functionname{platform_threads_function_mutexcreate}

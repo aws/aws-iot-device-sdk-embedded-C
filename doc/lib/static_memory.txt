@@ -20,9 +20,6 @@ MQTT connections correspond to a statically-allocated MQTT session between a sin
 @subsubsection static_memory_types_mqttoperations Operations
 MQTT operations correspond to in-progress requests between a client and the MQTT server, such as CONNECT, PUBLISH, or publish acknowledgement (PUBACK). In static memory mode, the number of simultaneous, active MQTT operations is controlled by the constant @ref IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS.
 
-@subsubsection static_memory_types_mqtttimerevents Timer events
-MQTT timer events store data on operations that require responses within a certain timeout: PINGREQ and QoS 1 PUBLISH. In static memory mode, the number of simultaneous, active MQTT timer events is controlled by the constant @ref IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS.
-
 @subsubsection static_memory_types_mqttsubscriptions Subscriptions
 MQTT subscriptions store records on callbacks registered for MQTT topic filters. In static memory mode, the number of simultaneous, active MQTT subscriptions (across all connections) is controlled by the constant @ref IOT_MQTT_SUBSCRIPTIONS.
 
