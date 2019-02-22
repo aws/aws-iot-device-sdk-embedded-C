@@ -20,21 +20,28 @@
  */
 
 /**
- * @file aws_iot_test_access_mqtt_serialize.c
+ * @file iot_test_access_mqtt_subscription.c
  * @brief Provides access to the internal functions and variables of
- * aws_iot_mqtt_serialize.c
+ * iot_mqtt_subscription.c
  *
- * This file should only be included at the bottom of aws_iot_mqtt_serialize.c
+ * This file should only be included at the bottom of iot_mqtt_subscription.c
  * and never compiled by itself.
  */
 
 /*-----------------------------------------------------------*/
 
-AwsIotMqttError_t AwsIotTestMqtt_decodeRemainingLength( const uint8_t * pSource,
-                                                        const uint8_t ** const pEnd,
-                                                        size_t * const pLength )
+bool IotTestMqtt_topicMatch( const IotLink_t * pSubscriptionLink,
+                             void * pMatch )
 {
-    return _decodeRemainingLength( pSource, pEnd, pLength );
+    return _topicMatch( pSubscriptionLink, pMatch );
+}
+
+/*-----------------------------------------------------------*/
+
+bool IotTestMqtt_packetMatch( const IotLink_t * pSubscriptionLink,
+                              void * pMatch )
+{
+    return _packetMatch( pSubscriptionLink, pMatch );
 }
 
 /*-----------------------------------------------------------*/

@@ -20,12 +20,12 @@
  */
 
 /**
- * @file aws_iot_demo.h
+ * @file iot_demo.h
  * @brief Declares the platform-independent demo functions.
  */
 
-#ifndef _AWS_IOT_DEMO_H_
-#define _AWS_IOT_DEMO_H_
+#ifndef _IOT_DEMO_H_
+#define _IOT_DEMO_H_
 
 /* Build using a config header, if provided. */
 #ifdef IOT_CONFIG_FILE
@@ -37,11 +37,11 @@
 #include <stdint.h>
 
 /* MQTT include. */
-#include "aws_iot_mqtt.h"
+#include "iot_mqtt.h"
 
 /* Configure logs for the demos. */
-#ifdef AWS_IOT_LOG_LEVEL_DEMO
-    #define _LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_DEMO
+#ifdef IOT_LOG_LEVEL_DEMO
+    #define _LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_DEMO
 #else
     #ifdef IOT_LOG_LEVEL_GLOBAL
         #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
@@ -55,15 +55,15 @@
 
 /*----------------------------- Demo functions ------------------------------*/
 
-/* See aws_iot_demo_mqtt.c for documentation of this function. */
-int AwsIotDemo_RunMqttDemo( bool awsIotMqttMode,
-                            const char * const pClientIdentifier,
-                            AwsIotMqttConnection_t * const pMqttConnection,
-                            const AwsIotMqttNetIf_t * const pNetworkInterface );
+/* See iot_demo_mqtt.c for documentation of this function. */
+int IotDemo_RunMqttDemo( bool awsIotMqttMode,
+                         const char * const pClientIdentifier,
+                         IotMqttConnection_t * const pMqttConnection,
+                         const IotMqttNetIf_t * const pNetworkInterface );
 
 /* See aws_iot_demo_shadow.c for documentation of this function. */
 int AwsIotDemo_RunShadowDemo( const char * const pThingName,
-                              AwsIotMqttConnection_t * const pMqttConnection,
-                              const AwsIotMqttNetIf_t * const pNetworkInterface );
+                              IotMqttConnection_t * const pMqttConnection,
+                              const IotMqttNetIf_t * const pNetworkInterface );
 
-#endif /* ifndef _AWS_IOT_DEMO_H_ */
+#endif /* ifndef _IOT_DEMO_H_ */

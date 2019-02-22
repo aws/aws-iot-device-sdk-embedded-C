@@ -57,25 +57,21 @@ typedef enum IotNetworkError
  * Together, they represent a network stack.
  * - @functionname{platform_network_function_create}
  * - @functionname{platform_network_function_setreceivecallback}
- * - @functionname{platform_network_function_setclosecallback}
  * - @functionname{platform_network_function_send}
  * - @functionname{platform_network_function_receive}
  * - @functionname{platform_network_function_close}
  * - @functionname{platform_network_function_destroy}
  * - @functionname{platform_network_function_receivecallback}
- * - @functionname{platform_network_function_closecallback}
  */
 
 /**
  * @functionpage{IotNetworkInterface_t::create,platform_network,create}
  * @functionpage{IotNetworkInterface_t::setReceiveCallback,platform_network,setreceivecallback}
- * @functionpage{IotNetworkInterface_t::setCloseCallback,platform_network,setclosecallback}
  * @functionpage{IotNetworkInterface_t::send,platform_network,send}
  * @functionpage{IotNetworkInterface_t::receive,platform_network,receive}
  * @functionpage{IotNetworkInterface_t::close,platform_network,close}
  * @functionpage{IotNetworkInterface_t::destroy,platform_network,destroy}
  * @functionpage{IotNetworkReceiveCallback_t,platform_network,receivecallback}
- * @functionpage{IotNetworkCloseCallback_t,platform_network,closecallback}
  */
 
 /**
@@ -134,28 +130,6 @@ typedef int32_t ( * IotNetworkReceiveCallback_t )( void * pContext,
                                                    size_t offset,
                                                    void ( * freeReceivedData )( void * ) );
 /* @[declare_platform_network_receivecallback] */
-
-/**
- * @brief Callback function to invoke after @ref platform_network_function_close
- * is called.
- *
- * A function with this signature may be set with @ref platform_network_function_setclosecallback
- * to be invoked when the network connection is closed.
- *
- * @ref platform_network_function_close instructs the underlying network stack to
- * close a connection. In constrast, this function can be used to inform a higher-level
- * application that a connection was closed.
- *
- * @param[in] reason Meant to convey the reason a connection was closed; meaningful
- * values should be defined by the library closing the connection.
- * @param[in] pContext A context defined by the library closing the connection.
- * @param[in] pConnection The connection that was closed.
- */
-/* @[declare_platform_network_closecallback] */
-typedef void ( * IotNetworkCloseCallback_t )( int32_t reason,
-                                              void * pContext,
-                                              void * pConnection );
-/* @[declare_platform_network_closecallback] */
 
 /**
  * @ingroup platform_datatypes_paramstructs
@@ -218,30 +192,6 @@ typedef struct IotNetworkInterface
     /* @[declare_platform_network_setreceivecallback] */
 
     /**
-     * @brief Register an @ref platform_network_function_closecallback.
-     *
-     * Sets an @ref platform_network_function_closecallback to be called when
-     * this network connection is closed. This function can be used to notify
-     * higher-level applications of network connection closure.
-     *
-     * Each network connection may only have one close callback at any time.
-     * If this function is called for a connection that already has a close
-     * callback, the existing callback should be replaced. If the `closeCallback`
-     * parameter is `NULL`, any existing close callback should be removed.
-     *
-     * @param[in] pConnection The connection to associate with the close callback.
-     * @param[in] closeCallback The function to invoke when the network is closed.
-     * @param[in] pContext A value to pass as a parameter to the close callback.
-     *
-     * @return Any #IotNetworkError_t, as defined by the network stack.
-     */
-    /* @[declare_platform_network_setclosecallback] */
-    IotNetworkError_t ( * setCloseCallback )( void * pConnection,
-                                              IotNetworkCloseCallback_t closeCallback,
-                                              void * pContext );
-    /* @[declare_platform_network_setclosecallback] */
-
-    /**
      * @brief Send data over a return connection.
      *
      * Attempts to transmit `messageLength` bytes of `pMessage` across the
@@ -298,8 +248,6 @@ typedef struct IotNetworkInterface
      * In addition to closing the connection, this function should also remove
      * any active [receive callback](@ref platform_network_function_receivecallback).
      *
-     * @param[in] reason The reason for connection closure, defined by a higher-level
-     * library. It will be passed to @ref platform_network_function_closecallback.
      * @param[in] pConnection The network connection to close, defined by the
      * network stack.
      *
@@ -308,8 +256,7 @@ typedef struct IotNetworkInterface
      * @note It must be safe to call this function on an already-closed connection.
      */
     /* @[declare_platform_network_close] */
-    IotNetworkError_t ( * close )( int32_t reason,
-                                   void * pConnection );
+    IotNetworkError_t ( * close )( void * pConnection );
     /* @[declare_platform_network_close] */
 
     /**

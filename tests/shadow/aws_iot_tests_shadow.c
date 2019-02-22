@@ -50,12 +50,12 @@ static void _signalHandler( int signum )
     if( signum == SIGSEGV )
     {
         printf( "\nSegmentation fault.\n" );
-        exit( EXIT_FAILURE );
+        _Exit( EXIT_FAILURE );
     }
     else if( signum == SIGABRT )
     {
         printf( "\nAssertion failed.\n" );
-        exit( EXIT_FAILURE );
+        _Exit( EXIT_FAILURE );
     }
 }
 
@@ -72,18 +72,18 @@ int main( int argc,
 
     if( sigaction( SIGSEGV, &signalAction, NULL ) != 0 )
     {
-        return -1;
+        return EXIT_FAILURE;
     }
 
     if( sigaction( SIGABRT, &signalAction, NULL ) != 0 )
     {
-        return -1;
+        return EXIT_FAILURE;
     }
 
     /* Initialize the common libraries before running the tests. */
     if( IotCommon_Init() == false )
     {
-        return -1;
+        return EXIT_FAILURE;
     }
 
     /* Unity setup. */
@@ -113,9 +113,13 @@ int main( int argc,
     /* Clean up common libraries. */
     IotCommon_Cleanup();
 
-    /* Return the number of test failures. This will cause a non-zero exit code
-     * if any test fails. */
-    return UNITY_END();
+    /* Return failure if any tests failed. */
+    if( UNITY_END() != 0 )
+    {
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
 
 /*-----------------------------------------------------------*/

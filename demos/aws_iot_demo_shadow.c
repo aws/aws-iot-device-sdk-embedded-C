@@ -34,7 +34,7 @@
 #include <string.h>
 
 /* Common demo include. */
-#include "aws_iot_demo.h"
+#include "iot_demo.h"
 
 /* Platform layer includes. */
 #include "platform/iot_clock.h"
@@ -77,7 +77,7 @@ extern int snprintf( char *,
  * been established.
  * @param[in] pThingName NULL-terminated Thing Name to use for this demo.
  * @param[in] pMqttConnection Pointer to the MQTT connection to use. This MQTT
- * connection must be initialized to AWS_IOT_MQTT_CONNECTION_INITIALIZER.
+ * connection must be initialized to IOT_MQTT_CONNECTION_INITIALIZER.
  * @param[in] pNetworkInterface Pointer to an MQTT network interface to use.
  * All necessary members of the network interface should be set before calling
  * this function.
@@ -85,12 +85,12 @@ extern int snprintf( char *,
  * @return 0 if the demo completes successfully; -1 if some part of it fails.
  */
 int AwsIotDemo_RunShadowDemo( const char * const pThingName,
-                              AwsIotMqttConnection_t * const pMqttConnection,
-                              const AwsIotMqttNetIf_t * const pNetworkInterface )
+                              IotMqttConnection_t * const pMqttConnection,
+                              const IotMqttNetIf_t * const pNetworkInterface )
 {
     int status = 0;
-    AwsIotMqttError_t mqttStatus = AWS_IOT_MQTT_STATUS_PENDING;
-    AwsIotMqttConnectInfo_t connectInfo = AWS_IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
 
     /* Set the common members of the connection info. */
     connectInfo.awsIotMqttMode = true;
@@ -107,23 +107,23 @@ int AwsIotDemo_RunShadowDemo( const char * const pThingName,
                 connectInfo.clientIdentifierLength );
 
     /* Establish the MQTT connection. */
-    mqttStatus = AwsIotMqtt_Connect( pMqttConnection,
-                                     pNetworkInterface,
-                                     &connectInfo,
-                                     _TIMEOUT_MS );
+    mqttStatus = IotMqtt_Connect( pMqttConnection,
+                                  pNetworkInterface,
+                                  &connectInfo,
+                                  _TIMEOUT_MS );
 
-    if( mqttStatus != AWS_IOT_MQTT_SUCCESS )
+    if( mqttStatus != IOT_MQTT_SUCCESS )
     {
         IotLogError( "MQTT CONNECT returned error %s.",
-                     AwsIotMqtt_strerror( mqttStatus ) );
+                     IotMqtt_strerror( mqttStatus ) );
 
         status = -1;
     }
 
     /* Disconnect the MQTT connection if it was established. */
-    if( *pMqttConnection != AWS_IOT_MQTT_CONNECTION_INITIALIZER )
+    if( *pMqttConnection != IOT_MQTT_CONNECTION_INITIALIZER )
     {
-        AwsIotMqtt_Disconnect( *pMqttConnection, false );
+        IotMqtt_Disconnect( *pMqttConnection, false );
     }
 
     return status;

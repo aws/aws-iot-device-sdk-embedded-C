@@ -1,5 +1,5 @@
 #include IOT_CONFIG_FILE
-#include "private/aws_iot_mqtt_internal.h"
+#include "private/iot_mqtt_internal.h"
 
 #include <stdlib.h>
 
@@ -12,8 +12,8 @@ void harness()
     uint16_t packetIdentifier;
     size_t bytesProcessed;
 
-    AwsIotMqttInternal_DeserializePuback( pPubackStart,
-                                          dataLength,
-                                          &packetIdentifier,
-                                          &bytesProcessed );
+    _IotMqtt_DeserializePuback( pPubackStart,
+                                dataLength,
+                                &packetIdentifier,
+                                &bytesProcessed );
 }

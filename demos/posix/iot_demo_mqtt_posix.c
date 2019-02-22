@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_demo_mqtt_posix.c
+ * @file iot_demo_mqtt_posix.c
  * @brief Runs the MQTT demo on POSIX systems.
  */
 
@@ -38,8 +38,8 @@
 #include "iot_common.h"
 
 /* Common demo includes. */
-#include "aws_iot_demo.h"
-#include "aws_iot_demo_posix.h"
+#include "iot_demo.h"
+#include "iot_demo_posix.h"
 
 /* POSIX+OpenSSL network include. */
 #include "posix/iot_network_openssl.h"
@@ -51,25 +51,25 @@ int main( int argc,
 {
     bool commonInitialized = false, networkConnectionCreated = false;
     int status = 0;
-    AwsIotDemoArguments_t demoArguments = AWS_IOT_DEMO_ARGUMENTS_INITIALIZER;
+    IotDemoArguments_t demoArguments = IOT_DEMO_ARGUMENTS_INITIALIZER;
     IotNetworkConnectionOpenssl_t networkConnection = IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER;
     IotNetworkServerInfoOpenssl_t serverInfo = IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER;
     IotNetworkCredentialsOpenssl_t credentials = AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER, * pCredentials = NULL;
-    AwsIotMqttConnection_t mqttConnection = AWS_IOT_MQTT_CONNECTION_INITIALIZER;
-    AwsIotMqttNetIf_t networkInterface = AWS_IOT_MQTT_NETIF_INITIALIZER;
+    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
 
     /* This function parses arguments and establishes the network connection
      * before running the MQTT demo. */
 
     /* Set default client identifier. */
-    #ifdef AWS_IOT_DEMO_MQTT_CLIENT_IDENTIFIER
-        demoArguments.pIdentifier = AWS_IOT_DEMO_MQTT_CLIENT_IDENTIFIER;
+    #ifdef IOT_DEMO_MQTT_CLIENT_IDENTIFIER
+        demoArguments.pIdentifier = IOT_DEMO_MQTT_CLIENT_IDENTIFIER;
     #endif
 
     /* Parse any command line arguments. */
-    if( AwsIotDemo_ParseArguments( argc,
-                                   argv,
-                                   &demoArguments ) == false )
+    if( IotDemo_ParseArguments( argc,
+                                argv,
+                                &demoArguments ) == false )
     {
         status = -1;
     }
@@ -138,7 +138,7 @@ int main( int argc,
         /* Set the MQTT receive callback for a network connection. This receive
          * callback processes MQTT data from the network. */
         if( IotNetworkOpenssl_SetReceiveCallback( &networkConnection,
-                                                  AwsIotMqtt_ReceiveCallback,
+                                                  IotMqtt_ReceiveCallback,
                                                   &mqttConnection ) != IOT_NETWORK_SUCCESS )
         {
             status = -1;
@@ -154,16 +154,16 @@ int main( int argc,
         networkInterface.send = IotNetworkOpenssl_Send;
 
         /* Initialize the MQTT library. */
-        if( AwsIotMqtt_Init() == AWS_IOT_MQTT_SUCCESS )
+        if( IotMqtt_Init() == IOT_MQTT_SUCCESS )
         {
             /* Run the MQTT demo. */
-            status = AwsIotDemo_RunMqttDemo( demoArguments.awsIotMqttMode,
-                                             demoArguments.pIdentifier,
-                                             &mqttConnection,
-                                             &networkInterface );
+            status = IotDemo_RunMqttDemo( demoArguments.awsIotMqttMode,
+                                          demoArguments.pIdentifier,
+                                          &mqttConnection,
+                                          &networkInterface );
 
             /* Clean up the MQTT library. */
-            AwsIotMqtt_Cleanup();
+            IotMqtt_Cleanup();
         }
         else
         {
@@ -176,9 +176,9 @@ int main( int argc,
     {
         /* Note that the MQTT library may have already closed the connection.
          * However, the network close function is safe to call on a closed connection.
-         * On the other hand, AwsIotNetwork_DestroyConnection must only be called ONCE.
+         * On the other hand, the destroy connection function must only be called ONCE.
          */
-        IotNetworkOpenssl_Close( 0, &networkConnection );
+        IotNetworkOpenssl_Close( &networkConnection );
         IotNetworkOpenssl_Destroy( &networkConnection );
     }
 

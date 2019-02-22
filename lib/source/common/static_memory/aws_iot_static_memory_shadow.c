@@ -37,13 +37,6 @@
 #include <stddef.h>
 #include <string.h>
 
-/* POSIX include. Allow it to be overridden. */
-#ifdef POSIX_PTHREAD_HEADER
-    #include POSIX_PTHREAD_HEADER
-#else
-    #include <pthread.h>
-#endif
-
 /* Static memory include. */
 #include "private/iot_static_memory.h"
 

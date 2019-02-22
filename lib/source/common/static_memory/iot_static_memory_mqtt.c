@@ -37,18 +37,11 @@
 #include <stddef.h>
 #include <string.h>
 
-/* POSIX include. Allow it to be overridden. */
-#ifdef POSIX_PTHREAD_HEADER
-    #include POSIX_PTHREAD_HEADER
-#else
-    #include <pthread.h>
-#endif
-
 /* Static memory include. */
 #include "private/iot_static_memory.h"
 
 /* MQTT internal include. */
-#include "private/aws_iot_mqtt_internal.h"
+#include "private/iot_mqtt_internal.h"
 
 /*-----------------------------------------------------------*/
 
@@ -112,9 +105,6 @@ static _mqttConnection_t _pMqttConnections[ IOT_MQTT_CONNECTIONS ] = { { 0 } }; 
 
 static bool _pInUseMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { 0 };                 /**< @brief MQTT operation in-use flags. */
 static _mqttOperation_t _pMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { 0 };          /**< @brief MQTT operations. */
-
-static bool _pInUseMqttTimerEvents[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { 0 };                /**< @brief MQTT timer event in-use flags. */
-static _mqttTimerEvent_t _pMqttTimerEvents[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { 0 };        /**< @brief MQTT timer events. */
 
 static bool _pInUseMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ] = { 0 };                           /**< @brief MQTT subscription in-use flags. */
 static char _pMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ][ _MQTT_SUBSCRIPTION_SIZE ] = { { 0 } }; /**< @brief MQTT subscriptions. */
@@ -187,41 +177,6 @@ void Iot_FreeMqttOperation( void * ptr )
                                  _pInUseMqttOperations,
                                  IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS,
                                  sizeof( _mqttOperation_t ) );
-}
-
-/*-----------------------------------------------------------*/
-
-void * Iot_MallocMqttTimerEvent( size_t size )
-{
-    int freeIndex = -1;
-    void * pNewTimerEvent = NULL;
-
-    /* Check size argument. */
-    if( size == sizeof( _mqttTimerEvent_t ) )
-    {
-        /* Find a free MQTT timer event. */
-        freeIndex = IotStaticMemory_FindFree( _pInUseMqttTimerEvents,
-                                             IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS );
-
-        if( freeIndex != -1 )
-        {
-            pNewTimerEvent = &( _pMqttTimerEvents[ freeIndex ] );
-        }
-    }
-
-    return pNewTimerEvent;
-}
-
-/*-----------------------------------------------------------*/
-
-void Iot_FreeMqttTimerEvent( void * ptr )
-{
-    /* Return the in-use MQTT timer event. */
-    IotStaticMemory_ReturnInUse( ptr,
-                                 _pMqttTimerEvents,
-                                 _pInUseMqttTimerEvents,
-                                 IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS,
-                                 sizeof( _mqttTimerEvent_t ) );
 }
 
 /*-----------------------------------------------------------*/

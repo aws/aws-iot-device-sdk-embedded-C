@@ -27,7 +27,7 @@ DEF += \
 	-DIOT_CONFIG_FILE=\"iot_demo_config.h\" \
 	-DIOT_SDK_VERSION=\"4.0.0\" \
 	-DIOT_SYSTEM_TYPES_FILE=\"posix/iot_platform_types_posix.h\" \
-	-Dawsiotmqtt_EXPORTS \
+	-Diotmqtt_EXPORTS \
 
 CFLAGS += $(CFLAGS2) $(INC) $(DEF)
 

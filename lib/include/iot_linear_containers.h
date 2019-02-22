@@ -876,9 +876,9 @@ static inline void IotQueue_RemoveAll( IotQueue_t * const pQueue,
  */
 /* @[declare_linear_containers_queue_removeallmatches] */
 static inline void IotQueue_RemoveAllMatches( IotQueue_t * const pQueue,
-                                              bool( *isMatch )( const IotLink_t *, void * ),
+                                              bool ( * isMatch )( const IotLink_t *, void * ),
                                               void * pMatch,
-                                              void( *freeElement )( void * ),
+                                              void ( * freeElement )( void * ),
                                               size_t linkOffset )
 /* @[declare_linear_containers_queue_removeallmatches] */
 {

@@ -27,7 +27,7 @@ The following pages describe configuration settings that affect multiple compone
 @globalconfigpage{library,Library,libraries}
 
 @section IOT_CONFIG_FILE
-@brief Configuration header for the AWS IoT libraries.
+@brief Configuration header for the libraries in this SDK.
 
 Define a file to be included in all library source files before any other files. Unlike other settings, this one must be set using a compiler option, such as `-D` for gcc. The option should specify a filename that is in the include path; for example, `-DIOT_CONFIG_FILE="iot_config.h"` (quotes may need to be escaped for some compilers).
 
@@ -57,10 +57,10 @@ When dynamic memory allocation is disabled, all of the memory allocation functio
 /**
 @globalconfigpage{demos,Demo,demos}
 
-@section AWS_IOT_DEMO_SECURED_CONNECTION
+@section IOT_DEMO_SECURED_CONNECTION
 @brief Determines if the demos default to a TLS-secured connection with the remote host.
 
-When this setting is `true`, all demo applications will use a TLS-secured connection by default. The default credentials for connections are @ref AWS_IOT_DEMO_ROOT_CA, @ref AWS_IOT_DEMO_CLIENT_CERT, and @ref AWS_IOT_DEMO_PRIVATE_KEY. Any connection with AWS IoT must be secured.
+When this setting is `true`, all demo applications will use a TLS-secured connection by default. The default credentials for connections are @ref IOT_DEMO_ROOT_CA, @ref IOT_DEMO_CLIENT_CERT, and @ref IOT_DEMO_PRIVATE_KEY. Any connection with AWS IoT must be secured.
 
 In demo applications, the default secured connection setting can be overridden using the command line options `-s` or `-u`. Neither of these command line options have an argument, and only one of the two should be used at a time. Passing `-s` will cause the demo application to use a secured connection, and passing `-u` will cause the demo application to use an unsecured connection.
 
@@ -68,7 +68,7 @@ In demo applications, the default secured connection setting can be overridden u
 @configrecommended When using the demo applications with AWS IoT, connections must be secured. Therefore, the recommended value for this setting is `true`. <br>
 @configdefault If this setting is undefined <i>and</i> neither `-s` nor `-u` are passed as command line options, then any connections will be unsecured.
 
-@section AWS_IOT_DEMO_SERVER
+@section IOT_DEMO_SERVER
 @brief The default remote host to use in the demos.
 
 All demo applications will open TCP connections to this host. When using the demos with AWS IoT, this should be set to the AWS account's custom IoT endpoint. This custom endpoint can be found under the <i>Settings</i> tab of the AWS IoT console. It has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`, where `ABCDEFG1234567` is a placeholder subdomain and `us-east-2` is the region.
@@ -82,10 +82,10 @@ In demo applications, the default server can be overridden using the command lin
 - `192.168.1.1`
 - `localhost`
 
-@section AWS_IOT_DEMO_PORT
+@section IOT_DEMO_PORT
 @brief The default remote port to use in the demos.
 
-All demo applications will open TCP connections to @ref AWS_IOT_DEMO_SERVER on this port. When using the demos with AWS IoT, this should be set to either `443` or `8883`.  Port `8883` provides a standard encrypted MQTT connection, while port `443` provides a secured MQTT connection using [ALPN](https://aws.amazon.com/about-aws/whats-new/2018/02/aws-iot-core-now-supports-mqtt-connections-with-certificate-based-client-authentication-on-port-443/).
+All demo applications will open TCP connections to @ref IOT_DEMO_SERVER on this port. When using the demos with AWS IoT, this should be set to either `443` or `8883`.  Port `8883` provides a standard encrypted MQTT connection, while port `443` provides a secured MQTT connection using [ALPN](https://aws.amazon.com/about-aws/whats-new/2018/02/aws-iot-core-now-supports-mqtt-connections-with-certificate-based-client-authentication-on-port-443/).
 
 In demo applications, the default server port may be overridden using the command line option `-p`. The command line option will override this setting.
 
@@ -94,10 +94,10 @@ In demo applications, the default server port may be overridden using the comman
 @configpossible Any positive integer below `65536`.<br>
 @configrecommended When using the demo applications with AWS IoT, port `443` is recommended.
 
-@section AWS_IOT_DEMO_ROOT_CA
+@section IOT_DEMO_ROOT_CA
 @brief The path to the default trusted server root certificate to use in the demos.
 
-A trusted server root certificate only needs to be set for [secured connections](@ref AWS_IOT_DEMO_SECURED_CONNECTION). See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/managing-device-certs.html) for more information about AWS IoT server certificates.
+A trusted server root certificate only needs to be set for [secured connections](@ref IOT_DEMO_SECURED_CONNECTION). See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/managing-device-certs.html) for more information about AWS IoT server certificates.
 
 In demo applications, the default trusted server root certificate can be overridden using the command line option `-r`. The command line option will override this setting.
 
@@ -106,10 +106,10 @@ In demo applications, the default trusted server root certificate can be overrid
 @configpossible Any string representing a filesystem path to a PEM-encoded trusted server root certificate. <br>
 @configrecommended When using the demo applications with AWS IoT, one of [these root certificates](https://docs.aws.amazon.com/iot/latest/developerguide/managing-device-certs.html#server-authentication) should be used.
 
-@section AWS_IOT_DEMO_CLIENT_CERT
+@section IOT_DEMO_CLIENT_CERT
 @brief The path to the default client certificate to use in the demos.
 
-A client certificate only needs to be set for [secured connections](@ref AWS_IOT_DEMO_SECURED_CONNECTION). See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/create-device-certificate.html) for a tutorial on how to set up client certificates with AWS IoT.
+A client certificate only needs to be set for [secured connections](@ref IOT_DEMO_SECURED_CONNECTION). See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/create-device-certificate.html) for a tutorial on how to set up client certificates with AWS IoT.
 
 In demo applications, the default client certificate can be overridden with the command line option `-c`. The command line option will override this setting.
 
@@ -117,16 +117,16 @@ In demo applications, the default client certificate can be overridden with the 
 
 @configpossible Any string representing a filesystem path to a PEM-encoded client certificate.
 
-@section AWS_IOT_DEMO_PRIVATE_KEY
+@section IOT_DEMO_PRIVATE_KEY
 @brief The path to the default client certificate private key to use in the demos.
 
-A client certificate private key only needs to be set for [secured connections](@ref AWS_IOT_DEMO_SECURED_CONNECTION). This private key must match the [client certificate](@ref AWS_IOT_DEMO_CLIENT_CERT).
+A client certificate private key only needs to be set for [secured connections](@ref IOT_DEMO_SECURED_CONNECTION). This private key must match the [client certificate](@ref IOT_DEMO_CLIENT_CERT).
 
 In demo applications, the default client certificate private key can be overridden with the command line option `-k`. The command line option will override this setting.
 
 <b>No default value is provided for this setting.</b> If this setting is undefined and no command line option `-k` is given to a demo application using a secured connection, the demo will fail.
 
-@configpossible Any string representing a filesystem path to a PEM-encoded private key matching the [client certificate](@ref AWS_IOT_DEMO_CLIENT_CERT).
+@configpossible Any string representing a filesystem path to a PEM-encoded private key matching the [client certificate](@ref IOT_DEMO_CLIENT_CERT).
 
 @section AWS_IOT_DEMO_THING_NAME
 @brief Default Thing Name used for demos specific to AWS IoT.
@@ -137,7 +137,7 @@ In demo applications, the default Thing Name can be overridden with the command 
 
 <b>No default value is provided for this setting.</b> For demos requiring a Thing Name (such as Shadow) this setting must be defined (or a command line option `-i` given to the demo application); otherwise, the demo will fail.
 
-This setting does not affect the MQTT demo (which is not specific to AWS IoT); see @ref AWS_IOT_DEMO_MQTT_CLIENT_IDENTIFIER for the equivalent setting for the MQTT demo.
+This setting does not affect the MQTT demo (which is not specific to AWS IoT); see @ref IOT_DEMO_MQTT_CLIENT_IDENTIFIER for the equivalent setting for the MQTT demo.
 
 @configpossible Any string representing an AWS IoT Thing Name.
 */
@@ -145,16 +145,16 @@ This setting does not affect the MQTT demo (which is not specific to AWS IoT); s
 /**
 @globalconfigpage{tests,Test,tests}
 
-@section AWS_IOT_TEST_SECURED_CONNECTION
+@section IOT_TEST_SECURED_CONNECTION
 @brief Determines if the tests use a TLS-secured connection with the remote host.
 
-When this setting is `true`, all test applications will use a TLS-secured connection. The credentials for connections are @ref AWS_IOT_TEST_ROOT_CA, @ref AWS_IOT_TEST_CLIENT_CERT, and @ref AWS_IOT_TEST_PRIVATE_KEY. Any connection with AWS IoT must be secured.
+When this setting is `true`, all test applications will use a TLS-secured connection. The credentials for connections are @ref IOT_TEST_ROOT_CA, @ref IOT_TEST_CLIENT_CERT, and @ref IOT_TEST_PRIVATE_KEY. Any connection with AWS IoT must be secured.
 
 @configpossible `true` (secured connection) or `false` (unsecured connection) <br>
 @configrecommended When testing against AWS IoT, connections must be secured. Therefore, the recommended value for this setting is `true`. <br>
 @configdefault `true`
 
-@section AWS_IOT_TEST_SERVER
+@section IOT_TEST_SERVER
 @brief The remote host to use in the tests.
 
 Tests using the network will open TCP connections to this host. When testing against AWS IoT, this should be set to the AWS account's custom IoT endpoint. This custom endpoint can be found under the <i>Settings</i> tab of the AWS IoT console. It has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`, where `ABCDEFG1234567` is a placeholder subdomain and `us-east-2` is the region.
@@ -166,41 +166,41 @@ Tests using the network will open TCP connections to this host. When testing aga
 - `192.168.1.1`
 - `localhost`
 
-@section AWS_IOT_TEST_PORT
+@section IOT_TEST_PORT
 @brief The remote port to use in the tests.
 
-Tests using the network will open TCP connections to @ref AWS_IOT_TEST_SERVER on this port. When testing against AWS IoT, this should be set to either `443` or `8883`.  Port `8883` provides a standard encrypted MQTT connection, while port `443` provides a secured MQTT connection using [ALPN](https://aws.amazon.com/about-aws/whats-new/2018/02/aws-iot-core-now-supports-mqtt-connections-with-certificate-based-client-authentication-on-port-443/).
+Tests using the network will open TCP connections to @ref IOT_TEST_SERVER on this port. When testing against AWS IoT, this should be set to either `443` or `8883`.  Port `8883` provides a standard encrypted MQTT connection, while port `443` provides a secured MQTT connection using [ALPN](https://aws.amazon.com/about-aws/whats-new/2018/02/aws-iot-core-now-supports-mqtt-connections-with-certificate-based-client-authentication-on-port-443/).
 
 <b>No default value is provided for this setting.</b> If this setting is undefined, the tests will fail to compile.
 
 @configpossible Any positive integer below `65536`.<br>
 @configrecommended When testing against AWS IoT, port `443` is recommended.
 
-@section AWS_IOT_TEST_ROOT_CA
+@section IOT_TEST_ROOT_CA
 @brief The path to the trusted server root certificate to use in the tests.
 
-A trusted server root certificate only needs to be set for [secured connections](@ref AWS_IOT_TEST_SECURED_CONNECTION). See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/managing-device-certs.html) for more information about AWS IoT server certificates.
+A trusted server root certificate only needs to be set for [secured connections](@ref IOT_TEST_SECURED_CONNECTION). See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/managing-device-certs.html) for more information about AWS IoT server certificates.
 
 <b>No default value is provided for this setting.</b> If this setting is undefined, tests requiring secured connections will fail to compile.
 
 @configpossible Any string representing a filesystem path to a PEM-encoded trusted server root certificate. <br>
 @configrecommended When testing against AWS IoT, one of [these root certificates](https://docs.aws.amazon.com/iot/latest/developerguide/managing-device-certs.html#server-authentication) should be used.
 
-@section AWS_IOT_TEST_CLIENT_CERT
+@section IOT_TEST_CLIENT_CERT
 @brief The path to the client certificate to use in the tests.
 
-A client certificate only needs to be set for [secured connections](@ref AWS_IOT_TEST_SECURED_CONNECTION). See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/create-device-certificate.html) for a tutorial on how to set up client certificates with AWS IoT.
+A client certificate only needs to be set for [secured connections](@ref IOT_TEST_SECURED_CONNECTION). See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/create-device-certificate.html) for a tutorial on how to set up client certificates with AWS IoT.
 
 <b>No default value is provided for this setting.</b> If this setting is undefined, tests requiring secured connections will fail to compile.
 
 @configpossible Any string representing a filesystem path to a PEM-encoded client certificate.
 
-@section AWS_IOT_TEST_PRIVATE_KEY
+@section IOT_TEST_PRIVATE_KEY
 @brief The path to the client certificate private key to use in the tests.
 
-A client certificate private key only needs to be set for [secured connections](@ref AWS_IOT_TEST_SECURED_CONNECTION). This private key must match the [client certificate](@ref AWS_IOT_TEST_CLIENT_CERT).
+A client certificate private key only needs to be set for [secured connections](@ref IOT_TEST_SECURED_CONNECTION). This private key must match the [client certificate](@ref IOT_TEST_CLIENT_CERT).
 
 <b>No default value is provided for this setting.</b> If this setting is undefined, tests requiring secured connections will fail to compile.
 
-@configpossible Any string representing a filesystem path to a PEM-encoded private key matching the [client certificate](@ref AWS_IOT_TEST_CLIENT_CERT).
+@configpossible Any string representing a filesystem path to a PEM-encoded private key matching the [client certificate](@ref IOT_TEST_CLIENT_CERT).
 */

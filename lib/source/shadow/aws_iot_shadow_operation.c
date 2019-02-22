@@ -77,7 +77,7 @@ static bool _shadowOperation_match( const IotLink_t * pOperationLink,
  * @param[in] pMessage Received Shadow response (as an MQTT PUBLISH message).
  */
 static void _commonOperationCallback( _shadowOperationType_t type,
-                                      AwsIotMqttCallbackParam_t * const pMessage );
+                                      IotMqttCallbackParam_t * const pMessage );
 
 /**
  * @brief Invoked when a Shadow response is received for Shadow DELETE.
@@ -86,7 +86,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
  * @param[in] pMessage Received Shadow response (as an MQTT PUBLISH message).
  */
 static void _deleteCallback( void * pArgument,
-                             AwsIotMqttCallbackParam_t * const pMessage );
+                             IotMqttCallbackParam_t * const pMessage );
 
 /**
  * @brief Invoked when a Shadow response is received for a Shadow GET.
@@ -95,7 +95,7 @@ static void _deleteCallback( void * pArgument,
  * @param[in] pMessage Received Shadow response (as an MQTT PUBLISH message).
  */
 static void _getCallback( void * pArgument,
-                          AwsIotMqttCallbackParam_t * const pMessage );
+                          IotMqttCallbackParam_t * const pMessage );
 
 /**
  * @brief Process an incoming Shadow document received when a Shadow GET is
@@ -110,7 +110,7 @@ static void _getCallback( void * pArgument,
  * only happens for a waitable `pOperation`.
  */
 static AwsIotShadowError_t _processAcceptedGet( _shadowOperation_t * const pOperation,
-                                                const AwsIotMqttPublishInfo_t * const pPublishInfo );
+                                                const IotMqttPublishInfo_t * const pPublishInfo );
 
 /**
  * @brief Invoked when a Shadow response is received for a Shadow UPDATE.
@@ -119,7 +119,7 @@ static AwsIotShadowError_t _processAcceptedGet( _shadowOperation_t * const pOper
  * @param[in] pMessage Received Shadow response (as an MQTT PUBLISH message).
  */
 static void _updateCallback( void * pArgument,
-                             AwsIotMqttCallbackParam_t * const pMessage );
+                             IotMqttCallbackParam_t * const pMessage );
 
 /*-----------------------------------------------------------*/
 
@@ -154,6 +154,10 @@ IotMutex_t _AwsIotShadowPendingOperationsMutex;
 static bool _shadowOperation_match( const IotLink_t * pOperationLink,
                                     void * pMatch )
 {
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    AwsIotShadow_Assert( pOperationLink != NULL );
+
     _shadowOperation_t * const pOperation = IotLink_Container( _shadowOperation_t,
                                                                pOperationLink,
                                                                link );
@@ -212,9 +216,10 @@ static bool _shadowOperation_match( const IotLink_t * pOperationLink,
 /*-----------------------------------------------------------*/
 
 static void _commonOperationCallback( _shadowOperationType_t type,
-                                      AwsIotMqttCallbackParam_t * const pMessage )
+                                      IotMqttCallbackParam_t * const pMessage )
 {
     _shadowOperation_t * pOperation = NULL;
+    IotLink_t * pOperationLink = NULL;
     _shadowOperationStatus_t status = _UNKNOWN_STATUS;
     _operationMatchParams_t param = { 0 };
     uint32_t flags = 0;
@@ -230,10 +235,10 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     }
 
     /* Parse the Thing Name from the MQTT topic name. */
-    if( AwsIotShadowInternal_ParseThingName( pMessage->message.info.pTopicName,
-                                             pMessage->message.info.topicNameLength,
-                                             &( param.pThingName ),
-                                             &( param.thingNameLength ) ) != AWS_IOT_SHADOW_SUCCESS )
+    if( _AwsIotShadow_ParseThingName( pMessage->message.info.pTopicName,
+                                      pMessage->message.info.topicNameLength,
+                                      &( param.pThingName ),
+                                      &( param.thingNameLength ) ) != AWS_IOT_SHADOW_SUCCESS )
     {
         return;
     }
@@ -242,15 +247,13 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     IotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
 
     /* Search for a matching pending operation. */
-    pOperation = IotLink_Container( _shadowOperation_t,
-                                    IotListDouble_FindFirstMatch( &( _AwsIotShadowPendingOperations ),
-                                                                  NULL,
-                                                                  _shadowOperation_match,
-                                                                  &param ),
-                                    link );
+    pOperationLink = IotListDouble_FindFirstMatch( &( _AwsIotShadowPendingOperations ),
+                                                   NULL,
+                                                   _shadowOperation_match,
+                                                   &param );
 
     /* Find and remove the first Shadow operation of the given type. */
-    if( pOperation == NULL )
+    if( pOperationLink == NULL )
     {
         /* Operation is not pending. It may have already been processed. Return
          * without doing anything */
@@ -263,6 +266,8 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     }
     else
     {
+        pOperation = IotLink_Container( _shadowOperation_t, pOperationLink, link );
+
         /* Remove a non-waitable operation from the pending operation list. */
         if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0 )
         {
@@ -280,8 +285,8 @@ static void _commonOperationCallback( _shadowOperationType_t type,
                  pMessage->message.info.pTopicName );
 
     /* Parse the status from the topic name. */
-    status = AwsIotShadowInternal_ParseShadowStatus( pMessage->message.info.pTopicName,
-                                                     pMessage->message.info.topicNameLength );
+    status = _AwsIotShadow_ParseShadowStatus( pMessage->message.info.pTopicName,
+                                              pMessage->message.info.topicNameLength );
 
     switch( status )
     {
@@ -311,8 +316,8 @@ static void _commonOperationCallback( _shadowOperationType_t type,
                         pOperation->pSubscription->thingNameLength,
                         pOperation->pSubscription->pThingName );
 
-            pOperation->status = AwsIotShadowInternal_ParseErrorDocument( pMessage->message.info.pPayload,
-                                                                          pMessage->message.info.payloadLength );
+            pOperation->status = _AwsIotShadow_ParseErrorDocument( pMessage->message.info.pPayload,
+                                                                   pMessage->message.info.payloadLength );
             break;
 
         default:
@@ -329,7 +334,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     flags = pOperation->flags;
 
     /* Notify of operation completion. */
-    AwsIotShadowInternal_Notify( pOperation );
+    _AwsIotShadow_Notify( pOperation );
 
     /* For waitable operations, unlock the pending operation list mutex to signal
      * this function's completion. */
@@ -342,7 +347,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
 /*-----------------------------------------------------------*/
 
 static void _deleteCallback( void * pArgument,
-                             AwsIotMqttCallbackParam_t * const pMessage )
+                             IotMqttCallbackParam_t * const pMessage )
 {
     /* Silence warnings about unused parameter. */
     ( void ) pArgument;
@@ -353,7 +358,7 @@ static void _deleteCallback( void * pArgument,
 /*-----------------------------------------------------------*/
 
 static void _getCallback( void * pArgument,
-                          AwsIotMqttCallbackParam_t * const pMessage )
+                          IotMqttCallbackParam_t * const pMessage )
 {
     /* Silence warnings about unused parameter. */
     ( void ) pArgument;
@@ -364,7 +369,7 @@ static void _getCallback( void * pArgument,
 /*-----------------------------------------------------------*/
 
 static AwsIotShadowError_t _processAcceptedGet( _shadowOperation_t * const pOperation,
-                                                const AwsIotMqttPublishInfo_t * const pPublishInfo )
+                                                const IotMqttPublishInfo_t * const pPublishInfo )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
 
@@ -410,7 +415,7 @@ static AwsIotShadowError_t _processAcceptedGet( _shadowOperation_t * const pOper
 /*-----------------------------------------------------------*/
 
 static void _updateCallback( void * pArgument,
-                             AwsIotMqttCallbackParam_t * const pMessage )
+                             IotMqttCallbackParam_t * const pMessage )
 {
     /* Silence warnings about unused parameter. */
     ( void ) pArgument;
@@ -420,10 +425,10 @@ static void _updateCallback( void * pArgument,
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadowInternal_CreateOperation( _shadowOperation_t ** const pNewOperation,
-                                                          _shadowOperationType_t type,
-                                                          uint32_t flags,
-                                                          const AwsIotShadowCallbackInfo_t * const pCallbackInfo )
+AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** const pNewOperation,
+                                                   _shadowOperationType_t type,
+                                                   uint32_t flags,
+                                                   const AwsIotShadowCallbackInfo_t * const pCallbackInfo )
 {
     _shadowOperation_t * pOperation = NULL;
 
@@ -451,7 +456,7 @@ AwsIotShadowError_t AwsIotShadowInternal_CreateOperation( _shadowOperation_t ** 
         if( IotSemaphore_Create( &( pOperation->notify.waitSemaphore ), 0, 1 ) == false )
         {
             IotLogError( "Failed to create semaphore for waitable Shadow %s.",
-                            _pAwsIotShadowOperationNames[ type ] );
+                         _pAwsIotShadowOperationNames[ type ] );
 
             AwsIotShadow_FreeOperation( pOperation );
 
@@ -481,7 +486,7 @@ AwsIotShadowError_t AwsIotShadowInternal_CreateOperation( _shadowOperation_t ** 
 
 /*-----------------------------------------------------------*/
 
-void AwsIotShadowInternal_DestroyOperation( void * pData )
+void _AwsIotShadow_DestroyOperation( void * pData )
 {
     _shadowOperation_t * pOperation = ( _shadowOperation_t * ) pData;
 
@@ -513,11 +518,11 @@ void AwsIotShadowInternal_DestroyOperation( void * pData )
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadowInternal_GenerateShadowTopic( _shadowOperationType_t type,
-                                                              const char * const pThingName,
-                                                              size_t thingNameLength,
-                                                              char ** const pTopicBuffer,
-                                                              uint16_t * const pOperationTopicLength )
+AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t type,
+                                                       const char * const pThingName,
+                                                       size_t thingNameLength,
+                                                       char ** const pTopicBuffer,
+                                                       uint16_t * const pOperationTopicLength )
 {
     uint16_t bufferLength = 0;
     uint16_t operationTopicLength = 0;
@@ -597,19 +602,19 @@ AwsIotShadowError_t AwsIotShadowInternal_GenerateShadowTopic( _shadowOperationTy
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_t mqttConnection,
-                                                           const char * const pThingName,
-                                                           size_t thingNameLength,
-                                                           _shadowOperation_t * const pOperation,
-                                                           const AwsIotShadowDocumentInfo_t * const pDocumentInfo )
+AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConnection,
+                                                    const char * const pThingName,
+                                                    size_t thingNameLength,
+                                                    _shadowOperation_t * const pOperation,
+                                                    const AwsIotShadowDocumentInfo_t * const pDocumentInfo )
 {
     _shadowSubscription_t * pSubscription = NULL;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
-    AwsIotMqttError_t publishStatus = AWS_IOT_MQTT_STATUS_PENDING;
+    IotMqttError_t publishStatus = IOT_MQTT_STATUS_PENDING;
     char * pTopicBuffer = NULL;
     uint16_t operationTopicLength = 0;
     bool freeTopicBuffer = true;
-    AwsIotMqttPublishInfo_t publishInfo = AWS_IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
     /* Lookup table for Shadow operation callbacks. */
     const _mqttCallbackFunction_t shadowCallbacks[ _SHADOW_OPERATION_COUNT ] =
@@ -628,15 +633,15 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
     pOperation->mqttConnection = mqttConnection;
 
     /* Generate the operation topic buffer. */
-    if( AwsIotShadowInternal_GenerateShadowTopic( pOperation->type,
-                                                  pThingName,
-                                                  thingNameLength,
-                                                  &pTopicBuffer,
-                                                  &operationTopicLength ) != AWS_IOT_SHADOW_SUCCESS )
+    if( _AwsIotShadow_GenerateShadowTopic( pOperation->type,
+                                           pThingName,
+                                           thingNameLength,
+                                           &pTopicBuffer,
+                                           &operationTopicLength ) != AWS_IOT_SHADOW_SUCCESS )
     {
         IotLogError( "No memory for Shadow operation topic buffer." );
 
-        AwsIotShadowInternal_DestroyOperation( pOperation );
+        _AwsIotShadow_DestroyOperation( pOperation );
 
         return AWS_IOT_SHADOW_NO_MEMORY;
     }
@@ -646,8 +651,8 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
 
     /* Check for an existing subscription. This function will attempt to allocate
      * a new subscription if not found. */
-    pSubscription = AwsIotShadowInternal_FindSubscription( pThingName,
-                                                           thingNameLength );
+    pSubscription = _AwsIotShadow_FindSubscription( pThingName,
+                                                    thingNameLength );
 
     if( pSubscription == NULL )
     {
@@ -680,17 +685,17 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
 
         /* Increment the reference count for this Shadow operation's
          * subscriptions. */
-        status = AwsIotShadowInternal_IncrementReferences( pOperation,
-                                                           pTopicBuffer,
-                                                           operationTopicLength,
-                                                           shadowCallbacks[ pOperation->type ] );
+        status = _AwsIotShadow_IncrementReferences( pOperation,
+                                                    pTopicBuffer,
+                                                    operationTopicLength,
+                                                    shadowCallbacks[ pOperation->type ] );
 
         if( status != AWS_IOT_SHADOW_STATUS_PENDING )
         {
             /* Failed to add subscriptions for a Shadow operation. The reference
              * count was not incremented. Check if this subscription should be
              * deleted. */
-            AwsIotShadowInternal_RemoveSubscription( pSubscription, NULL );
+            _AwsIotShadow_RemoveSubscription( pSubscription, NULL );
         }
     }
 
@@ -712,14 +717,14 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
         /* Set the document info if this operation is not a Shadow DELETE. */
         if( pOperation->type != _SHADOW_DELETE )
         {
-            publishInfo.QoS = pDocumentInfo->QoS;
+            publishInfo.qos = pDocumentInfo->qos;
             publishInfo.retryLimit = pDocumentInfo->retryLimit;
             publishInfo.retryMs = pDocumentInfo->retryMs;
 
             IotLogDebug( "Shadow %s message will be published at QoS %d with "
                          "retryLimit %d and retryMs %llu.",
                          _pAwsIotShadowOperationNames[ pOperation->type ],
-                         publishInfo.QoS,
+                         publishInfo.qos,
                          publishInfo.retryLimit,
                          publishInfo.retryMs );
         }
@@ -746,22 +751,22 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
         IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
 
         /* Publish to the Shadow topic name. */
-        publishStatus = AwsIotMqtt_TimedPublish( pOperation->mqttConnection,
-                                                 &publishInfo,
-                                                 0,
-                                                 _AwsIotShadowMqttTimeoutMs );
+        publishStatus = IotMqtt_TimedPublish( pOperation->mqttConnection,
+                                              &publishInfo,
+                                              0,
+                                              _AwsIotShadowMqttTimeoutMs );
 
         /* Check for errors from the MQTT publish. */
-        if( publishStatus != AWS_IOT_MQTT_SUCCESS )
+        if( publishStatus != IOT_MQTT_SUCCESS )
         {
             IotLogError( "Failed to publish MQTT message to %s %.*s Shadow, error %s.",
                          _pAwsIotShadowOperationNames[ pOperation->type ],
                          thingNameLength,
                          pThingName,
-                         AwsIotMqtt_strerror( publishStatus ) );
+                         IotMqtt_strerror( publishStatus ) );
 
             /* Convert the MQTT "NO MEMORY" error to a Shadow "NO MEMORY" error. */
-            if( publishStatus == AWS_IOT_MQTT_NO_MEMORY )
+            if( publishStatus == IOT_MQTT_NO_MEMORY )
             {
                 status = AWS_IOT_SHADOW_NO_MEMORY;
             }
@@ -775,9 +780,9 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
             if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS ) == 0 )
             {
                 IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
-                AwsIotShadowInternal_DecrementReferences( pOperation,
-                                                          pTopicBuffer,
-                                                          NULL );
+                _AwsIotShadow_DecrementReferences( pOperation,
+                                                   pTopicBuffer,
+                                                   NULL );
                 IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
             }
 
@@ -803,7 +808,7 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
     /* Destroy the Shadow operation on failure. */
     if( status != AWS_IOT_SHADOW_STATUS_PENDING )
     {
-        AwsIotShadowInternal_DestroyOperation( pOperation );
+        _AwsIotShadow_DestroyOperation( pOperation );
     }
 
     return status;
@@ -811,7 +816,7 @@ AwsIotShadowError_t AwsIotShadowInternal_ProcessOperation( AwsIotMqttConnection_
 
 /*-----------------------------------------------------------*/
 
-void AwsIotShadowInternal_Notify( _shadowOperation_t * const pOperation )
+void _AwsIotShadow_Notify( _shadowOperation_t * const pOperation )
 {
     AwsIotShadowCallbackParam_t callbackParam = { 0 };
     _shadowSubscription_t * pSubscription = pOperation->pSubscription,
@@ -828,9 +833,9 @@ void AwsIotShadowInternal_Notify( _shadowOperation_t * const pOperation )
     /* Decrement the reference count. This also removes subscriptions if the
      * count reaches 0. */
     IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
-    AwsIotShadowInternal_DecrementReferences( pOperation,
-                                              pSubscription->pTopicBuffer,
-                                              &pRemovedSubscription );
+    _AwsIotShadow_DecrementReferences( pOperation,
+                                       pSubscription->pTopicBuffer,
+                                       &pRemovedSubscription );
     IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
 
     /* Set the subscription pointer used for the user callback based on whether
@@ -866,10 +871,10 @@ void AwsIotShadowInternal_Notify( _shadowOperation_t * const pOperation )
     /* Destroy a removed subscription. */
     if( pRemovedSubscription != NULL )
     {
-        AwsIotShadowInternal_DestroySubscription( pRemovedSubscription );
+        _AwsIotShadow_DestroySubscription( pRemovedSubscription );
     }
 
-    AwsIotShadowInternal_DestroyOperation( pOperation );
+    _AwsIotShadow_DestroyOperation( pOperation );
 }
 
 /*-----------------------------------------------------------*/

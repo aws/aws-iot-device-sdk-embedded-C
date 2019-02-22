@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_mqtt_subscription.c
+ * @file iot_mqtt_subscription.c
  * @brief Implements functions that manage subscriptions for an MQTT connection.
  */
 
@@ -33,8 +33,11 @@
 #include <stdbool.h>
 #include <string.h>
 
+/* Error handling include. */
+#include "private/iot_error.h"
+
 /* MQTT internal include. */
-#include "private/aws_iot_mqtt_internal.h"
+#include "private/iot_mqtt_internal.h"
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
@@ -57,7 +60,7 @@ typedef struct _topicMatchParams
 typedef struct _packetMatchParams
 {
     uint16_t packetIdentifier; /**< Packet identifier to match. */
-    long order;                /**< Order to match. Set to `-1` to ignore. */
+    int32_t order;             /**< Order to match. Set to `-1` to ignore. */
 } _packetMatchParams_t;
 
 /*-----------------------------------------------------------*/
@@ -92,29 +95,45 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
 static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                          void * pMatch )
 {
+    _IOT_FUNCTION_ENTRY( bool, false );
     uint16_t nameIndex = 0, filterIndex = 0;
+
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    IotMqtt_Assert( pSubscriptionLink != NULL );
+
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                              pSubscriptionLink,
                                                              link );
     _topicMatchParams_t * pParam = ( _topicMatchParams_t * ) pMatch;
 
     /* Extract the relevant strings and lengths from parameters. */
-    const char * const pTopicName = pParam->pTopicName;
-    const char * const pTopicFilter = pSubscription->pTopicFilter;
+    const char * pTopicName = pParam->pTopicName;
+    const char * pTopicFilter = pSubscription->pTopicFilter;
     const uint16_t topicNameLength = pParam->topicNameLength;
     const uint16_t topicFilterLength = pSubscription->topicFilterLength;
 
     /* Check for an exact match. */
     if( topicNameLength == topicFilterLength )
     {
-        return( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 );
+        status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 );
+
+        _IOT_GOTO_CLEANUP();
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* If the topic lengths are different but an exact match is required, return
      * false. */
     if( pParam->exactMatchOnly == true )
     {
-        return false;
+        _IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     while( ( nameIndex < topicNameLength ) && ( filterIndex < topicFilterLength ) )
@@ -126,20 +145,58 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
             /* Handle special corner cases as documented by the MQTT protocol spec. */
 
             /* Filter "sport/#" also matches "sport" since # includes the parent level. */
-            if( ( nameIndex == topicNameLength - 1 ) &&
-                ( filterIndex == topicFilterLength - 3 ) &&
-                ( pTopicFilter[ filterIndex + 1 ] == '/' ) &&
-                ( pTopicFilter[ filterIndex + 2 ] == '#' ) )
+            if( nameIndex == topicNameLength - 1 )
             {
-                return true;
+                if( filterIndex == topicFilterLength - 3 )
+                {
+                    if( pTopicFilter[ filterIndex + 1 ] == '/' )
+                    {
+                        if( pTopicFilter[ filterIndex + 2 ] == '#' )
+                        {
+                            _IOT_SET_AND_GOTO_CLEANUP( true );
+                        }
+                        else
+                        {
+                            _EMPTY_ELSE_MARKER;
+                        }
+                    }
+                    else
+                    {
+                        _EMPTY_ELSE_MARKER;
+                    }
+                }
+                else
+                {
+                    _EMPTY_ELSE_MARKER;
+                }
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
             }
 
             /* Filter "sport/+" also matches the "sport/" but not "sport". */
-            if( ( nameIndex == topicNameLength - 1 ) &&
-                ( filterIndex == topicFilterLength - 2 ) &&
-                ( pTopicFilter[ filterIndex + 1 ] == '+' ) )
+            if( nameIndex == topicNameLength - 1 )
             {
-                return true;
+                if( filterIndex == topicFilterLength - 2 )
+                {
+                    if( pTopicFilter[ filterIndex + 1 ] == '+' )
+                    {
+                        _IOT_SET_AND_GOTO_CLEANUP( true );
+                    }
+                    else
+                    {
+                        _EMPTY_ELSE_MARKER;
+                    }
+                }
+                else
+                {
+                    _EMPTY_ELSE_MARKER;
+                }
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
             }
         }
         else
@@ -162,13 +219,13 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
             {
                 /* Subsequent characters don't need to be checked if the for the
                  * multi-level wildcard. */
-                return true;
+                _IOT_SET_AND_GOTO_CLEANUP( true );
             }
             else
             {
                 /* Any character mismatch other than '+' or '#' means the topic
                  * name does not match the topic filter. */
-                return false;
+                _IOT_SET_AND_GOTO_CLEANUP( false );
             }
         }
 
@@ -180,10 +237,14 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     /* If the end of both strings has been reached, they match. */
     if( ( nameIndex == topicNameLength ) && ( filterIndex == topicFilterLength ) )
     {
-        return true;
+        _IOT_SET_AND_GOTO_CLEANUP( true );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
-    return false;
+    _IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
@@ -192,6 +253,11 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
                           void * pMatch )
 {
     bool match = false;
+
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    IotMqtt_Assert( pSubscriptionLink != NULL );
+
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                              pSubscriptionLink,
                                                              link );
@@ -215,7 +281,7 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
     if( match == true )
     {
         /* Reference count must not be negative. */
-        AwsIotMqtt_Assert( pSubscription->references >= 0 );
+        IotMqtt_Assert( pSubscription->references >= 0 );
 
         /* If the reference count is positive, this subscription cannot be
          * removed yet because there are subscription callbacks using it. */
@@ -227,6 +293,14 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
              * will remove and clean up this subscription. */
             pSubscription->unsubscribed = true;
         }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     return match;
@@ -234,13 +308,15 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
 
 /*-----------------------------------------------------------*/
 
-AwsIotMqttError_t AwsIotMqttInternal_AddSubscriptions( _mqttConnection_t * const pMqttConnection,
-                                                       uint16_t subscribePacketIdentifier,
-                                                       const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                                       size_t subscriptionCount )
+IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
+                                          uint16_t subscribePacketIdentifier,
+                                          const IotMqttSubscription_t * pSubscriptionList,
+                                          size_t subscriptionCount )
 {
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
     size_t i = 0;
     _mqttSubscription_t * pNewSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams = { .exactMatchOnly = true };
 
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
@@ -250,17 +326,17 @@ AwsIotMqttError_t AwsIotMqttInternal_AddSubscriptions( _mqttConnection_t * const
         /* Check if this topic filter is already registered. */
         topicMatchParams.pTopicName = pSubscriptionList[ i ].pTopicFilter;
         topicMatchParams.topicNameLength = pSubscriptionList[ i ].topicFilterLength;
-        pNewSubscription = IotLink_Container( _mqttSubscription_t,
-                                              IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                                            NULL,
-                                                                            _topicMatch,
-                                                                            &topicMatchParams ),
-                                              link );
+        pSubscriptionLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+                                                          NULL,
+                                                          _topicMatch,
+                                                          &topicMatchParams );
 
-        if( pNewSubscription != NULL )
+        if( pSubscriptionLink != NULL )
         {
+            pNewSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
+
             /* The lengths of exactly matching topic filters must match. */
-            AwsIotMqtt_Assert( pNewSubscription->topicFilterLength == pSubscriptionList[ i ].topicFilterLength );
+            IotMqtt_Assert( pNewSubscription->topicFilterLength == pSubscriptionList[ i ].topicFilterLength );
 
             /* Replace the callback and packet info with the new parameters. */
             pNewSubscription->callback = pSubscriptionList[ i ].callback;
@@ -270,132 +346,165 @@ AwsIotMqttError_t AwsIotMqttInternal_AddSubscriptions( _mqttConnection_t * const
         else
         {
             /* Allocate memory for a new subscription. */
-            pNewSubscription = AwsIotMqtt_MallocSubscription( sizeof( _mqttSubscription_t ) +
-                                                              pSubscriptionList[ i ].topicFilterLength );
+            pNewSubscription = IotMqtt_MallocSubscription( sizeof( _mqttSubscription_t ) +
+                                                           pSubscriptionList[ i ].topicFilterLength );
 
-            /* If memory allocation failed, remove all previously added subscriptions. */
             if( pNewSubscription == NULL )
             {
-                IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
-                AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( pMqttConnection,
-                                                                    pSubscriptionList,
-                                                                    i );
-
-                return AWS_IOT_MQTT_NO_MEMORY;
+                status = IOT_MQTT_NO_MEMORY;
+                break;
             }
+            else
+            {
+                /* Clear the new subscription. */
+                ( void ) memset( pNewSubscription,
+                                 0x00,
+                                 sizeof( _mqttSubscription_t ) + pSubscriptionList[ i ].topicFilterLength );
 
-            /* Clear the new subscription. */
-            ( void ) memset( pNewSubscription,
-                             0x00,
-                             sizeof( _mqttSubscription_t ) + pSubscriptionList[ i ].topicFilterLength );
+                /* Set the members of the new subscription and add it to the list. */
+                pNewSubscription->packetInfo.identifier = subscribePacketIdentifier;
+                pNewSubscription->packetInfo.order = i;
+                pNewSubscription->callback = pSubscriptionList[ i ].callback;
+                pNewSubscription->topicFilterLength = pSubscriptionList[ i ].topicFilterLength;
+                ( void ) strncpy( pNewSubscription->pTopicFilter,
+                                  pSubscriptionList[ i ].pTopicFilter,
+                                  pSubscriptionList[ i ].topicFilterLength );
 
-            /* Set the members of the new subscription and add it to the list. */
-            pNewSubscription->packetInfo.identifier = subscribePacketIdentifier;
-            pNewSubscription->packetInfo.order = i;
-            pNewSubscription->callback = pSubscriptionList[ i ].callback;
-            pNewSubscription->topicFilterLength = pSubscriptionList[ i ].topicFilterLength;
-            ( void ) strncpy( pNewSubscription->pTopicFilter,
-                              pSubscriptionList[ i ].pTopicFilter,
-                              pSubscriptionList[ i ].topicFilterLength );
-
-            IotListDouble_InsertHead( &( pMqttConnection->subscriptionList ),
-                                      &( pNewSubscription->link ) );
+                IotListDouble_InsertHead( &( pMqttConnection->subscriptionList ),
+                                          &( pNewSubscription->link ) );
+            }
         }
     }
 
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
-    return AWS_IOT_MQTT_SUCCESS;
+    /* If memory allocation failed, remove all previously added subscriptions. */
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        _IotMqtt_RemoveSubscriptionByTopicFilter( pMqttConnection,
+                                                  pSubscriptionList,
+                                                  i );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
 
-void AwsIotMqttInternal_ProcessPublish( _mqttConnection_t * const pMqttConnection,
-                                        AwsIotMqttCallbackParam_t * const pCallbackParam )
+void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
+                                          IotMqttCallbackParam_t * pCallbackParam )
 {
     _mqttSubscription_t * pSubscription = NULL;
-    IotLink_t * pStartPoint = NULL;
+    IotLink_t * pCurrentLink = NULL, * pNextLink = NULL;
     void * pParam1 = NULL;
 
     void ( * callbackFunction )( void *,
-                                 AwsIotMqttCallbackParam_t * const ) = NULL;
-    const _topicMatchParams_t topicMatchParams =
+                                 IotMqttCallbackParam_t * ) = NULL;
+    _topicMatchParams_t topicMatchParams =
     {
         .pTopicName      = pCallbackParam->message.info.pTopicName,
         .topicNameLength = pCallbackParam->message.info.topicNameLength,
         .exactMatchOnly  = false
     };
 
-    /* Prevent any other thread from modifying the subscription list while this
-     * function is searching. */
-    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
-    pStartPoint = IotListDouble_PeekHead( &( pMqttConnection->subscriptionList ) );
-
-    /* Search the subscription list for all matching subscriptions. */
-    while( pStartPoint != NULL )
+    /* Increment MQTT connection reference count to mark it as being used for
+     * subscription callbacks. Do not proceed if the reference count could not
+     * be incremented; in this case, the connection is likely closed. */
+    if( _IotMqtt_IncrementConnectionReferences( pMqttConnection ) == true )
     {
-        pSubscription = IotLink_Container( _mqttSubscription_t,
-                                           IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                                         pStartPoint,
-                                                                         _topicMatch,
-                                                                         ( void * ) ( &topicMatchParams ) ),
-                                           link );
-
-        /* No subscription found. Exit loop. */
-        if( pSubscription == NULL )
-        {
-            break;
-        }
-
-        /* Subscription validation should not have allowed a NULL callback function. */
-        AwsIotMqtt_Assert( pSubscription->callback.function != NULL );
-
-        /* Increment the subscription's reference count. */
-        ( pSubscription->references )++;
-
-        /* Copy the necessary members of the subscription before releasing the
-         * subscription list mutex. */
-        pParam1 = pSubscription->callback.param1;
-        callbackFunction = pSubscription->callback.function;
-
-        /* Unlock the subscription list mutex. */
-        IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
-
-        /* Set the members of the callback parameter. */
-        pCallbackParam->mqttConnection = pMqttConnection;
-        pCallbackParam->message.pTopicFilter = pSubscription->pTopicFilter;
-        pCallbackParam->message.topicFilterLength = pSubscription->topicFilterLength;
-
-        /* Invoke the subscription callback. */
-        callbackFunction( pParam1, pCallbackParam );
-
-        /* Lock the subscription list mutex to decrement the reference count. */
+        /* Prevent any other thread from modifying the subscription list while this
+         * function is searching. */
         IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
 
-        /* Decrement the reference count. It must still be positive. */
-        ( pSubscription->references )--;
-        AwsIotMqtt_Assert( pSubscription->references >= 0 );
-
-        /* Restart the search at the next subscription. */
-        pStartPoint = pSubscription->link.pNext;
-
-        /* Remove this subscription if it has no references and the unsubscribed
-         * flag is set. */
-        if( ( pSubscription->references == 0 ) && ( pSubscription->unsubscribed == true ) )
+        /* Search the subscription list for all matching subscriptions starting at
+         * the list head. */
+        while( true )
         {
-            IotListDouble_Remove( &( pSubscription->link ) );
-            AwsIotMqtt_FreeSubscription( pSubscription );
-        }
-    }
+            pCurrentLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+                                                         pCurrentLink,
+                                                         _topicMatch,
+                                                         &topicMatchParams );
 
-    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+            /* No subscription found. Exit loop. */
+            if( pCurrentLink == NULL )
+            {
+                break;
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
+
+            /* Subscription found. Calculate pointer to subscription object. */
+            pSubscription = IotLink_Container( _mqttSubscription_t, pCurrentLink, link );
+
+            /* Subscription validation should not have allowed a NULL callback function. */
+            IotMqtt_Assert( pSubscription->callback.function != NULL );
+
+            /* Increment the subscription's reference count. */
+            ( pSubscription->references )++;
+
+            /* Copy the necessary members of the subscription before releasing the
+             * subscription list mutex. */
+            pParam1 = pSubscription->callback.param1;
+            callbackFunction = pSubscription->callback.function;
+
+            /* Unlock the subscription list mutex. */
+            IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+
+            /* Set the members of the callback parameter. */
+            pCallbackParam->mqttConnection = pMqttConnection;
+            pCallbackParam->message.pTopicFilter = pSubscription->pTopicFilter;
+            pCallbackParam->message.topicFilterLength = pSubscription->topicFilterLength;
+
+            /* Invoke the subscription callback. */
+            callbackFunction( pParam1, pCallbackParam );
+
+            /* Lock the subscription list mutex to decrement the reference count. */
+            IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
+
+            /* Decrement the reference count. It must still be positive. */
+            ( pSubscription->references )--;
+            IotMqtt_Assert( pSubscription->references >= 0 );
+
+            /* Save the pointer to the next link in case this subscription is freed. */
+            pNextLink = pCurrentLink->pNext;
+
+            /* Remove this subscription if it has no references and the unsubscribed
+             * flag is set. */
+            if( ( pSubscription->references == 0 ) && ( pSubscription->unsubscribed == true ) )
+            {
+                IotListDouble_Remove( &( pSubscription->link ) );
+                IotMqtt_FreeSubscription( pSubscription );
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
+
+            /* Move current link pointer. */
+            pCurrentLink = pNextLink;
+        }
+
+        IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+
+        _IotMqtt_DecrementConnectionReferences( pMqttConnection );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
 }
 
 /*-----------------------------------------------------------*/
 
-void AwsIotMqttInternal_RemoveSubscriptionByPacket( _mqttConnection_t * const pMqttConnection,
-                                                    uint16_t packetIdentifier,
-                                                    long order )
+void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * pMqttConnection,
+                                          uint16_t packetIdentifier,
+                                          int32_t order )
 {
     const _packetMatchParams_t packetMatchParams =
     {
@@ -406,18 +515,19 @@ void AwsIotMqttInternal_RemoveSubscriptionByPacket( _mqttConnection_t * const pM
     IotListDouble_RemoveAllMatches( &( pMqttConnection->subscriptionList ),
                                     _packetMatch,
                                     ( void * ) ( &packetMatchParams ),
-                                    AwsIotMqtt_FreeSubscription,
+                                    IotMqtt_FreeSubscription,
                                     offsetof( _mqttSubscription_t, link ) );
 }
 
 /*-----------------------------------------------------------*/
 
-void AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( _mqttConnection_t * const pMqttConnection,
-                                                         const AwsIotMqttSubscription_t * const pSubscriptionList,
-                                                         size_t subscriptionCount )
+void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnection,
+                                               const IotMqttSubscription_t * pSubscriptionList,
+                                               size_t subscriptionCount )
 {
     size_t i = 0;
     _mqttSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams = { 0 };
 
     /* Prevent any other thread from modifying the subscription list while this
@@ -431,17 +541,17 @@ void AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( _mqttConnection_t * con
         topicMatchParams.topicNameLength = pSubscriptionList[ i ].topicFilterLength;
         topicMatchParams.exactMatchOnly = true;
 
-        pSubscription = IotLink_Container( _mqttSubscription_t,
-                                           IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                                         NULL,
-                                                                         _topicMatch,
-                                                                         &topicMatchParams ),
-                                           link );
+        pSubscriptionLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+                                                          NULL,
+                                                          _topicMatch,
+                                                          &topicMatchParams );
 
-        if( pSubscription != NULL )
+        if( pSubscriptionLink != NULL )
         {
+            pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
+
             /* Reference count must not be negative. */
-            AwsIotMqtt_Assert( pSubscription->references >= 0 );
+            IotMqtt_Assert( pSubscription->references >= 0 );
 
             /* Check the reference count. This subscription cannot be removed if
              * there are subscription callbacks using it. */
@@ -455,8 +565,12 @@ void AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( _mqttConnection_t * con
             {
                 /* No subscription callbacks are using this subscription. Remove it. */
                 IotListDouble_Remove( &( pSubscription->link ) );
-                AwsIotMqtt_FreeSubscription( pSubscription );
+                IotMqtt_FreeSubscription( pSubscription );
             }
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
         }
     }
 
@@ -465,14 +579,15 @@ void AwsIotMqttInternal_RemoveSubscriptionByTopicFilter( _mqttConnection_t * con
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotMqtt_IsSubscribed( AwsIotMqttConnection_t mqttConnection,
-                              const char * const pTopicFilter,
-                              uint16_t topicFilterLength,
-                              AwsIotMqttSubscription_t * pCurrentSubscription )
+bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
+                           const char * pTopicFilter,
+                           uint16_t topicFilterLength,
+                           IotMqttSubscription_t * pCurrentSubscription )
 {
     bool status = false;
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
     _mqttSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams =
     {
         .pTopicName      = pTopicFilter,
@@ -485,26 +600,34 @@ bool AwsIotMqtt_IsSubscribed( AwsIotMqttConnection_t mqttConnection,
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
 
     /* Search for a matching subscription. */
-    pSubscription = IotLink_Container( _mqttSubscription_t,
-                                       IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                                     NULL,
-                                                                     _topicMatch,
-                                                                     &topicMatchParams ),
-                                       link );
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+                                                      NULL,
+                                                      _topicMatch,
+                                                      &topicMatchParams );
 
     /* Check if a matching subscription was found. */
-    if( pSubscription != NULL )
+    if( pSubscriptionLink != NULL )
     {
+        pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
+
         /* Copy the matching subscription to the output parameter. */
         if( pCurrentSubscription != NULL )
         {
             pCurrentSubscription->pTopicFilter = pTopicFilter;
             pCurrentSubscription->topicFilterLength = topicFilterLength;
-            pCurrentSubscription->QoS = 0;
+            pCurrentSubscription->qos = IOT_MQTT_QOS_0;
             pCurrentSubscription->callback = pSubscription->callback;
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
         }
 
         status = true;
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
@@ -516,6 +639,6 @@ bool AwsIotMqtt_IsSubscribed( AwsIotMqttConnection_t mqttConnection,
 
 /* If the MQTT library is being tested, include a file that allows access to
  * internal functions and variables. */
-#if AWS_IOT_MQTT_TEST == 1
-    #include "aws_iot_test_access_mqtt_subscription.c"
+#if IOT_MQTT_TEST == 1
+    #include "iot_test_access_mqtt_subscription.c"
 #endif

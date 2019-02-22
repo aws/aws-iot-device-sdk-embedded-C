@@ -135,8 +135,8 @@ static AwsIotShadowError_t _codeToShadowStatus( unsigned long code )
 
 /*-----------------------------------------------------------*/
 
-_shadowOperationStatus_t AwsIotShadowInternal_ParseShadowStatus( const char * const pTopicName,
-                                                                 size_t topicNameLength )
+_shadowOperationStatus_t _AwsIotShadow_ParseShadowStatus( const char * const pTopicName,
+                                                          size_t topicNameLength )
 {
     const char * pSuffixStart = NULL;
 
@@ -186,8 +186,8 @@ _shadowOperationStatus_t AwsIotShadowInternal_ParseShadowStatus( const char * co
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadowInternal_ParseErrorDocument( const char * const pErrorDocument,
-                                                             size_t errorDocumentLength )
+AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * const pErrorDocument,
+                                                      size_t errorDocumentLength )
 {
     const char * pCode = NULL, * pMessage = NULL;
     size_t codeLength = 0, messageLength = 0;
@@ -246,10 +246,10 @@ AwsIotShadowError_t AwsIotShadowInternal_ParseErrorDocument( const char * const 
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadowInternal_ParseThingName( const char * const pTopicName,
-                                                         uint16_t topicNameLength,
-                                                         const char ** const pThingName,
-                                                         size_t * const pThingNameLength )
+AwsIotShadowError_t _AwsIotShadow_ParseThingName( const char * const pTopicName,
+                                                  uint16_t topicNameLength,
+                                                  const char ** const pThingName,
+                                                  size_t * const pThingNameLength )
 {
     const char * pThingNameStart = NULL;
     size_t thingNameLength = 0;
