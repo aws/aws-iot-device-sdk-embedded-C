@@ -25,7 +25,7 @@ This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. *
    1. Browse to the [AWS IoT console](https://console.aws.amazon.com/iotv2/)\.
    2. In the navigation pane, choose **Secure**, choose **Policies**, and then choose **Create**\.
    3. Enter a name to identify your policy\.
-   4. In the **Add statements** section, choose **Advanced mode**\. Copy and paste the following JSON into the policy editor window\. Replace *aws\-region* and *aws\-account* with your AWS Region and account ID\.
+   4. In the **Add statements** section, choose **Advanced mode**\. Copy and paste the following JSON into the policy editor window\. Replace *aws\-region* and *aws\-account* with your AWS region and account ID\.
    ```
    {
        "Version": "2012-10-17",
@@ -58,7 +58,7 @@ This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. *
 2. Create an AWS IoT thing
     1. Browse to the [AWS IoT console](https://console.aws.amazon.com/iotv2/)\.
     2. In the navigation pane, choose **Manage**, and then choose **Things**\.
-    3. If you do not have any IoT things registered in your account, the **You don't have any things yet** page is displayed\. If you see this page, choose **Register a thing**\. Otherwise, choose **Create**\.
+    3. If you do not have any things registered in your account, the **You don't have any things yet** page is displayed\. If you see this page, choose **Register a thing**\. Otherwise, choose **Create**\.
     4. On the **Creating AWS IoT things** page, choose **Create a single thing**\.
     5. On the **Add your device to the thing registry** page, enter a name for your thing, and then choose **Next**\.
     6. On the **Add a certificate for your thing** page, under **One\-click certificate creation**, choose **Create certificate**\.
