@@ -34,4 +34,4 @@ script:
 
 after_success:
   # Send code coverage report to Coveralls, but only for one of the build jobs.
-  - if [ "$CC" = "gcc" ]; then bash ./scripts/coverage.sh; fi
+  - if [ "$TRAVIS_PULL_REQUEST" = false ] && [ "$CC" = "gcc" ]; then bash ./scripts/coverage.sh; fi
