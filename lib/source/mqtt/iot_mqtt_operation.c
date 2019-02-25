@@ -1241,7 +1241,7 @@ void _IotMqtt_Notify( _mqttOperation_t * pOperation )
                                              _IotMqtt_ProcessCompletedOperation,
                                              0 );
 
-        if( status != IOT_MQTT_SUCCESS )
+        if( status == IOT_MQTT_SUCCESS )
         {
             IotLogDebug( "(MQTT connection %p, %s operation %p) Callback scheduled.",
                          pOperation->pMqttConnection,
