@@ -320,7 +320,8 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t * const pTaskPool,
  *
  * @param[in] pTaskPool A handle to the task pool that must have been previously initialized with.
  * a call to @ref taskpool_function_create.
- * @param[in] pJob A job to schedule for execution. This must be first initialized with a call to @ref taskpool_function_createjob.
+ * @param[in] pJob A job to schedule for execution. This must be first initialized with a call to @ref taskpool_function_createjob. 
+ * @param[in] flags Flags to be passed by the user, e.g. to identify the job as high priority by specifying #IOT_TASKPOOL_JOB_HIGH_PRIORITY.
  *
  * @return One of the following:
  * - #IOT_TASKPOOL_SUCCESS
@@ -401,7 +402,8 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t * const pTaskPool,
  */
 /* @[declare_taskpool_schedule] */
 IotTaskPoolError_t IotTaskPool_Schedule( IotTaskPool_t * const pTaskPool,
-                                         IotTaskPoolJob_t * const pJob );
+                                         IotTaskPoolJob_t * const pJob,
+                                         uint32_t flags );
 /* @[declare_taskpool_schedule] */
 
 /**
