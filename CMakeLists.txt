@@ -56,9 +56,8 @@ if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     add_subdirectory( platform/source/posix )
 endif()
 
-# Thrid party libraries (tinycbor, base64).
+# Thrid party libraries (tinycbor).
 add_subdirectory( third_party/tinycbor )
-add_subdirectory( third_party/base64 )
 
 # Common libraries (linear containers, logging, etc.)
 add_subdirectory( lib/source/common )
