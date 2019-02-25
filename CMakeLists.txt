@@ -27,7 +27,8 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
 # SDK include paths.
 include_directories( ${PROJECT_SOURCE_DIR}/lib/include
-                     ${PROJECT_SOURCE_DIR}/platform/include )
+                     ${PROJECT_SOURCE_DIR}/platform/include
+                     ${PROJECT_SOURCE_DIR}/third_party/include )
 
 # Demo include path.
 include_directories( ${PROJECT_SOURCE_DIR}/demos )
@@ -54,6 +55,9 @@ if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     add_definitions( -DIOT_SYSTEM_TYPES_FILE="posix/iot_platform_types_posix.h" )
     add_subdirectory( platform/source/posix )
 endif()
+
+# Thrid party libraries (tinycbor).
+add_subdirectory( third_party/tinycbor )
 
 # Common libraries (linear containers, logging, etc.)
 add_subdirectory( lib/source/common )
