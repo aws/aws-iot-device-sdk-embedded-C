@@ -27,7 +27,8 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
 # SDK include paths.
 include_directories( ${PROJECT_SOURCE_DIR}/lib/include
-                     ${PROJECT_SOURCE_DIR}/platform/include )
+                     ${PROJECT_SOURCE_DIR}/platform/include
+                     ${PROJECT_SOURCE_DIR}/third_party/include )
 
 # Demo include path.
 include_directories( ${PROJECT_SOURCE_DIR}/demos )
@@ -55,8 +56,9 @@ if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     add_subdirectory( platform/source/posix )
 endif()
 
-# Thrid party libraries (tinycbor).
+# Thrid party libraries (tinycbor, base64).
 add_subdirectory( third_party/tinycbor )
+add_subdirectory( third_party/base64 )
 
 # Common libraries (linear containers, logging, etc.)
 add_subdirectory( lib/source/common )
