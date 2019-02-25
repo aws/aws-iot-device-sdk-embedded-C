@@ -551,7 +551,8 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
                                                                     pOperation,
                                                                     &( pOperation->job ) ) );
     TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_Schedule( &( _IotMqttTaskPool ),
-                                                                   &( pOperation->job ) ) );
+                                                                   &( pOperation->job ),
+                                                                   0 ) );
 
     /* Wait for the job to complete. */
     IotSemaphore_Wait( &( pOperation->notify.waitSemaphore ) );
