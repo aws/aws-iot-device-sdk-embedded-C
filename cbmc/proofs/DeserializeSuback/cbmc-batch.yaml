@@ -1,4 +1,4 @@
 jobos: ubuntu16
-cbmcflags:        '=--unwindset;AwsIotMqttInternal_DeserializeSuback.0:200;--bounds-check;--pointer-check;--unwinding-assertions='
+cbmcflags:        '=--unwindset;_IotMqtt_DeserializeSuback.0:100;--bounds-check;--pointer-check;--unwinding-assertions='
 goto: DeserializeSuback.goto
 expected: SUCCESSFUL

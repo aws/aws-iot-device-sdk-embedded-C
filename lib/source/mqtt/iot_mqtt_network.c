@@ -33,7 +33,7 @@
 #include <string.h>
 
 /* MQTT internal include. */
-#include "private/aws_iot_mqtt_internal.h"
+#include "private/iot_mqtt_internal.h"
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
@@ -46,76 +46,111 @@
  * @param[in] pMqttConnection Which connection the PUBACK should be sent over.
  * @param[in] packetIdentifier Which packet identifier to include in PUBACK.
  */
-static void _sendPuback( _mqttConnection_t * const pMqttConnection,
+static void _sendPuback( _mqttConnection_t * pMqttConnection,
                          uint16_t packetIdentifier );
 
 /*-----------------------------------------------------------*/
 
-static void _sendPuback( _mqttConnection_t * const pMqttConnection,
+static void _sendPuback( _mqttConnection_t * pMqttConnection,
                          uint16_t packetIdentifier )
 {
-    _mqttOperation_t * pPubackOperation = NULL;
+    IotMqttError_t serializeStatus = IOT_MQTT_SUCCESS;
+    uint8_t * pPuback = NULL;
+    size_t pubackSize = 0, bytesSent = 0;
 
-    /* Choose a PUBACK serializer function. */
-    AwsIotMqttError_t ( * serializePuback )( uint16_t,
-                                             uint8_t ** const,
-                                             size_t * const ) = AwsIotMqttInternal_SerializePuback;
+    /* Default PUBACK serializer and free packet functions. */
+    IotMqttError_t ( * serializePuback )( uint16_t,
+                                          uint8_t **,
+                                          size_t * ) = _IotMqtt_SerializePuback;
+    void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
 
-    #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pMqttConnection->network.serialize.puback != NULL )
+    /* Increment the reference count for the MQTT connection. */
+    if( _IotMqtt_IncrementConnectionReferences( pMqttConnection ) == true )
+    {
+        IotLogDebug( "(MQTT connection %p) Sending PUBACK for received PUBLISH %hu.",
+                     pMqttConnection,
+                     packetIdentifier );
+
+        /* Choose PUBACK serializer and free packet functions. */
+        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            if( pMqttConnection->network.serialize.puback != NULL )
+            {
+                serializePuback = pMqttConnection->network.serialize.puback;
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
+        #endif
+        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            if( pMqttConnection->network.freePacket != NULL )
+            {
+                freePacket = pMqttConnection->network.freePacket;
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
+        #endif
+
+        /* Generate a PUBACK packet from the packet identifier. */
+        serializeStatus = serializePuback( packetIdentifier,
+                                           &pPuback,
+                                           &pubackSize );
+
+        if( serializeStatus != IOT_MQTT_SUCCESS )
         {
-            serializePuback = pMqttConnection->network.serialize.puback;
+            IotLogWarn( "(MQTT connection %p) Failed to generate PUBACK packet for "
+                        "received PUBLISH %hu.",
+                        pMqttConnection,
+                        packetIdentifier );
         }
-    #endif
+        else
+        {
+            bytesSent = pMqttConnection->network.send( pMqttConnection->network.pSendContext,
+                                                       pPuback,
+                                                       pubackSize );
 
-    IotLogDebug( "Sending PUBACK for received PUBLISH %hu.", packetIdentifier );
+            if( bytesSent != pubackSize )
+            {
+                IotLogWarn( "(MQTT connection %p) Failed to send PUBACK for received"
+                            " PUBLISH %hu.",
+                            pMqttConnection,
+                            packetIdentifier );
+            }
+            else
+            {
+                IotLogDebug( "(MQTT connection %p) PUBACK for received PUBLISH %hu sent.",
+                             pMqttConnection,
+                             packetIdentifier );
+            }
 
-    /* Create a PUBACK operation. */
-    if( AwsIotMqttInternal_CreateOperation( &pPubackOperation,
-                                            0,
-                                            NULL ) != AWS_IOT_MQTT_SUCCESS )
-    {
-        IotLogWarn( "Failed to create PUBACK operation." );
+            freePacket( pPuback );
+        }
 
-        return;
+        _IotMqtt_DecrementConnectionReferences( pMqttConnection );
     }
-
-    /* Generate a PUBACK packet from the packet identifier. */
-    if( serializePuback( packetIdentifier,
-                         &( pPubackOperation->pMqttPacket ),
-                         &( pPubackOperation->packetSize ) ) != AWS_IOT_MQTT_SUCCESS )
+    else
     {
-        IotLogWarn( "Failed to generate PUBACK packet." );
-        AwsIotMqttInternal_DestroyOperation( pPubackOperation );
-
-        return;
-    }
-
-    /* Set the remaining members of the PUBACK operation and push it to the
-     * send queue for network transmission. */
-    pPubackOperation->operation = AWS_IOT_MQTT_PUBACK;
-    pPubackOperation->pMqttConnection = pMqttConnection;
-
-    if( AwsIotMqttInternal_EnqueueOperation( pPubackOperation,
-                                             &( _IotMqttSend ) ) != AWS_IOT_MQTT_SUCCESS )
-    {
-        IotLogWarn( "Failed to enqueue PUBACK for sending." );
-        AwsIotMqttInternal_DestroyOperation( pPubackOperation );
+        IotLogWarn( "(MQTT connection %p) Connection is closed, PUBACK for received"
+                    " PUBLISH %hu will not be sent.",
+                    pMqttConnection,
+                    packetIdentifier );
     }
 }
 
 /*-----------------------------------------------------------*/
 
-int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
-                                    void * pConnection,
-                                    const uint8_t * pReceivedData,
-                                    size_t dataLength,
-                                    size_t offset,
-                                    void( *freeReceivedData )( void * ) )
+int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
+                                 void * pConnection,
+                                 const uint8_t * pReceivedData,
+                                 size_t dataLength,
+                                 size_t offset,
+                                 void ( *freeReceivedData )( void * ) )
 {
     size_t bytesProcessed = 0, totalBytesProcessed = 0, remainingDataLength = 0;
     _mqttConnection_t * pConnectionInfo = *( ( _mqttConnection_t ** ) ( pMqttConnection ) );
-    AwsIotMqttError_t status = AWS_IOT_MQTT_STATUS_PENDING;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     uint16_t packetIdentifier = 0;
     const uint8_t * pNextPacket = pReceivedData;
     _mqttOperation_t * pOperation = NULL, * pFirstPublish = NULL, * pLastPublish = NULL;
@@ -124,10 +159,10 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
     ( void ) pConnection;
 
     /* Choose a packet type decoder function. */
-    uint8_t ( * getPacketType )( const uint8_t * const,
-                                 size_t ) = AwsIotMqttInternal_GetPacketType;
+    uint8_t ( * getPacketType )( const uint8_t *,
+                                 size_t ) = _IotMqtt_GetPacketType;
 
-    #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
         if( pConnectionInfo->network.getPacketType != NULL )
         {
             getPacketType = pConnectionInfo->network.getPacketType;
@@ -146,7 +181,7 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
 
     /* Process the stream of data until the entire stream is proccessed or an
      * incomplete packet is found. */
-    while( ( totalBytesProcessed < remainingDataLength ) && ( status != AWS_IOT_MQTT_BAD_RESPONSE ) )
+    while( ( totalBytesProcessed < remainingDataLength ) && ( status != IOT_MQTT_BAD_RESPONSE ) )
     {
         switch( getPacketType( pNextPacket, remainingDataLength - totalBytesProcessed ) )
         {
@@ -154,11 +189,11 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "CONNACK in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Deserialize the CONNACK. */
-                AwsIotMqttError_t ( * deserializeConnack )( const uint8_t * const,
-                                                            size_t,
-                                                            size_t * const ) = AwsIotMqttInternal_DeserializeConnack;
+                IotMqttError_t ( * deserializeConnack )( const uint8_t *,
+                                                         size_t,
+                                                         size_t * ) = _IotMqtt_DeserializeConnack;
 
-                #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+                #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.connack != NULL )
                     {
                         deserializeConnack = pConnectionInfo->network.deserialize.connack;
@@ -173,12 +208,12 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                  * in-progress CONNECT operation. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = AwsIotMqttInternal_FindOperation( AWS_IOT_MQTT_CONNECT, NULL );
+                    pOperation = _IotMqtt_FindOperation( pConnectionInfo, IOT_MQTT_CONNECT, NULL );
 
                     if( pOperation != NULL )
                     {
                         pOperation->status = status;
-                        AwsIotMqttInternal_Notify( pOperation );
+                        _IotMqtt_Notify( pOperation );
                     }
                 }
 
@@ -188,7 +223,7 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "PUBLISH in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Allocate memory to handle the incoming PUBLISH. */
-                pOperation = AwsIotMqtt_MallocOperation( sizeof( _mqttOperation_t ) );
+                pOperation = IotMqtt_MallocOperation( sizeof( _mqttOperation_t ) );
 
                 if( pOperation == NULL )
                 {
@@ -203,14 +238,14 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                 pOperation->incomingPublish = true;
                 pOperation->pMqttConnection = pConnectionInfo;
 
-                /* Deserialize the PUBLISH into an AwsIotMqttPublishInfo_t. */
-                AwsIotMqttError_t ( * deserializePublish )( const uint8_t * const,
-                                                            size_t,
-                                                            AwsIotMqttPublishInfo_t * const,
-                                                            uint16_t * const,
-                                                            size_t * const ) = AwsIotMqttInternal_DeserializePublish;
+                /* Deserialize the PUBLISH into an IotMqttPublishInfo_t. */
+                IotMqttError_t ( * deserializePublish )( const uint8_t *,
+                                                         size_t,
+                                                         IotMqttPublishInfo_t *,
+                                                         uint16_t *,
+                                                         size_t * ) = _IotMqtt_DeserializePublish;
 
-                #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+                #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.publish != NULL )
                     {
                         deserializePublish = pConnectionInfo->network.deserialize.publish;
@@ -224,10 +259,10 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                                              &bytesProcessed );
 
                 /* If a complete PUBLISH was deserialized, process it. */
-                if( ( bytesProcessed > 0 ) && ( status == AWS_IOT_MQTT_SUCCESS ) )
+                if( ( bytesProcessed > 0 ) && ( status == IOT_MQTT_SUCCESS ) )
                 {
                     /* If a QoS 1 PUBLISH was received, send a PUBACK. */
-                    if( pOperation->publishInfo.QoS == 1 )
+                    if( pOperation->publishInfo.qos == IOT_MQTT_QOS_1 )
                     {
                         _sendPuback( pConnectionInfo, packetIdentifier );
                     }
@@ -248,7 +283,7 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                 {
                     /* Free the PUBLISH operation here if the PUBLISH packet isn't
                      * valid. */
-                    AwsIotMqtt_FreeOperation( pOperation );
+                    IotMqtt_FreeOperation( pOperation );
                 }
 
                 break;
@@ -257,12 +292,12 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "PUBACK in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Deserialize the PUBACK to get the packet identifier. */
-                AwsIotMqttError_t ( * deserializePuback )( const uint8_t * const,
-                                                           size_t,
-                                                           uint16_t * const,
-                                                           size_t * const ) = AwsIotMqttInternal_DeserializePuback;
+                IotMqttError_t ( * deserializePuback )( const uint8_t *,
+                                                        size_t,
+                                                        uint16_t *,
+                                                        size_t * ) = _IotMqtt_DeserializePuback;
 
-                #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+                #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.puback != NULL )
                     {
                         deserializePuback = pConnectionInfo->network.deserialize.puback;
@@ -278,12 +313,12 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                  * PUBLISH with a matching client identifier. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = AwsIotMqttInternal_FindOperation( AWS_IOT_MQTT_PUBLISH_TO_SERVER, &packetIdentifier );
+                    pOperation = _IotMqtt_FindOperation( pConnectionInfo, IOT_MQTT_PUBLISH_TO_SERVER, &packetIdentifier );
 
                     if( pOperation != NULL )
                     {
                         pOperation->status = status;
-                        AwsIotMqttInternal_Notify( pOperation );
+                        _IotMqtt_Notify( pOperation );
                     }
                 }
 
@@ -293,13 +328,13 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "SUBACK in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Deserialize the SUBACK to get the packet identifier. */
-                AwsIotMqttError_t ( * deserializeSuback )( AwsIotMqttConnection_t,
-                                                           const uint8_t * const,
-                                                           size_t,
-                                                           uint16_t * const,
-                                                           size_t * const ) = AwsIotMqttInternal_DeserializeSuback;
+                IotMqttError_t ( * deserializeSuback )( IotMqttConnection_t,
+                                                        const uint8_t *,
+                                                        size_t,
+                                                        uint16_t *,
+                                                        size_t * ) = _IotMqtt_DeserializeSuback;
 
-                #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+                #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.suback != NULL )
                     {
                         deserializeSuback = pConnectionInfo->network.deserialize.suback;
@@ -316,12 +351,12 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                  * SUBACK with a matching client identifier. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = AwsIotMqttInternal_FindOperation( AWS_IOT_MQTT_SUBSCRIBE, &packetIdentifier );
+                    pOperation = _IotMqtt_FindOperation( pConnectionInfo, IOT_MQTT_SUBSCRIBE, &packetIdentifier );
 
                     if( pOperation != NULL )
                     {
                         pOperation->status = status;
-                        AwsIotMqttInternal_Notify( pOperation );
+                        _IotMqtt_Notify( pOperation );
                     }
                 }
 
@@ -331,12 +366,12 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "UNSUBACK in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Deserialize the UNSUBACK to get the packet identifier. */
-                AwsIotMqttError_t ( * deserializeUnsuback )( const uint8_t * const,
-                                                             size_t,
-                                                             uint16_t * const,
-                                                             size_t * const ) = AwsIotMqttInternal_DeserializeUnsuback;
+                IotMqttError_t ( * deserializeUnsuback )( const uint8_t *,
+                                                          size_t,
+                                                          uint16_t *,
+                                                          size_t * ) = _IotMqtt_DeserializeUnsuback;
 
-                #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+                #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.unsuback != NULL )
                     {
                         deserializeUnsuback = pConnectionInfo->network.deserialize.unsuback;
@@ -352,12 +387,12 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                  * UNSUBACK with a matching client identifier. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = AwsIotMqttInternal_FindOperation( AWS_IOT_MQTT_UNSUBSCRIBE, &packetIdentifier );
+                    pOperation = _IotMqtt_FindOperation( pConnectionInfo, IOT_MQTT_UNSUBSCRIBE, &packetIdentifier );
 
                     if( pOperation != NULL )
                     {
                         pOperation->status = status;
-                        AwsIotMqttInternal_Notify( pOperation );
+                        _IotMqtt_Notify( pOperation );
                     }
                 }
 
@@ -367,11 +402,11 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "PINGRESP in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Deserialize the PINGRESP. */
-                AwsIotMqttError_t ( * deserializePingresp )( const uint8_t * const,
-                                                             size_t,
-                                                             size_t * const ) = AwsIotMqttInternal_DeserializePingresp;
+                IotMqttError_t ( * deserializePingresp )( const uint8_t *,
+                                                          size_t,
+                                                          size_t * ) = _IotMqtt_DeserializePingresp;
 
-                #if AWS_IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+                #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                     if( pConnectionInfo->network.deserialize.pingresp != NULL )
                     {
                         deserializePingresp = pConnectionInfo->network.deserialize.pingresp;
@@ -382,16 +417,29 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                                               remainingDataLength - totalBytesProcessed,
                                               &bytesProcessed );
 
-                /* If a complete PINGRESP was deserialized, check if there's an
-                 * in-progress PINGREQ operation. */
+                /* If a complete PINGRESP was successfully deserialized, clear the keep-alive
+                 * failure flag. */
                 if( bytesProcessed > 0 )
                 {
-                    pOperation = AwsIotMqttInternal_FindOperation( AWS_IOT_MQTT_PINGREQ, NULL );
-
-                    if( pOperation != NULL )
+                    if( status == IOT_MQTT_SUCCESS )
                     {
-                        pOperation->status = status;
-                        AwsIotMqttInternal_Notify( pOperation );
+                        IotMutex_Lock( &( pConnectionInfo->referencesMutex ) );
+
+                        if( pConnectionInfo->keepAliveFailure == false )
+                        {
+                            IotLogWarn( "Unexpected PINGRESP received." );
+                        }
+                        else
+                        {
+                            pConnectionInfo->keepAliveFailure = false;
+                        }
+
+                        IotMutex_Unlock( &( pConnectionInfo->referencesMutex ) );
+                    }
+                    else
+                    {
+                        IotLogError( "Failed to process PINGRESP, status %s.",
+                                     IotMqtt_strerror( status ) );
                     }
                 }
 
@@ -401,16 +449,16 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
 
                 /* If an unknown packet is received, stop processing pReceivedData. */
                 IotLogError( "Unknown packet type %02x received.",
-                                pNextPacket[ 0 ] );
+                             pNextPacket[ 0 ] );
 
                 bytesProcessed = 1;
-                status = AWS_IOT_MQTT_BAD_RESPONSE;
+                status = IOT_MQTT_BAD_RESPONSE;
 
                 break;
         }
 
         /* Check if a protocol violation was encountered. */
-        if( ( bytesProcessed > 0 ) && ( status == AWS_IOT_MQTT_BAD_RESPONSE ) )
+        if( ( bytesProcessed > 0 ) && ( status == IOT_MQTT_BAD_RESPONSE ) )
         {
             IotLogError( "MQTT protocol violation encountered. Closing network connection" );
 
@@ -420,26 +468,12 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                 pLastPublish = pFirstPublish;
                 pFirstPublish = pFirstPublish->pNextPublish;
 
-                AwsIotMqtt_FreeOperation( pLastPublish );
+                IotMqtt_FreeOperation( pLastPublish );
             }
 
             pLastPublish = NULL;
 
-            /* Prevent the timer thread from running, then set the error flag. */
-            IotMutex_Lock( &( pConnectionInfo->timerMutex ) );
-
-            pConnectionInfo->errorOccurred = true;
-
-            if( pConnectionInfo->network.disconnect != NULL )
-            {
-                pConnectionInfo->network.disconnect( 0, pConnectionInfo->network.pDisconnectContext );
-            }
-            else
-            {
-                IotLogWarn( "No disconnect function was set. Network connection not closed." );
-            }
-
-            IotMutex_Unlock( &( pConnectionInfo->timerMutex ) );
+            _IotMqtt_CloseNetworkConnection( pConnectionInfo );
 
             return -1;
         }
@@ -455,8 +489,8 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
         totalBytesProcessed += bytesProcessed;
 
         /* Number of bytes processed should never exceed remainingDataLength. */
-        AwsIotMqtt_Assert( pNextPacket - totalBytesProcessed - offset == pReceivedData );
-        AwsIotMqtt_Assert( totalBytesProcessed <= remainingDataLength );
+        IotMqtt_Assert( pNextPacket - totalBytesProcessed - offset == pReceivedData );
+        IotMqtt_Assert( totalBytesProcessed <= remainingDataLength );
     }
 
     /* Only free pReceivedData if all bytes were processed and no PUBLISH messages
@@ -465,7 +499,7 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
         ( totalBytesProcessed == remainingDataLength ) &&
         ( pFirstPublish == NULL ) )
     {
-        AwsIotMqtt_Assert( pLastPublish == NULL );
+        IotMqtt_Assert( pLastPublish == NULL );
 
         freeReceivedData( ( void * ) pReceivedData );
     }
@@ -490,12 +524,12 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
             for( pOperation = pFirstPublish; pOperation != NULL; pOperation = pOperation->pNextPublish )
             {
                 /* Neither the buffer pointer nor the free function should be set. */
-                AwsIotMqtt_Assert( pOperation->pReceivedData == NULL );
-                AwsIotMqtt_Assert( pOperation->freeReceivedData == NULL );
+                IotMqtt_Assert( pOperation->pReceivedData == NULL );
+                IotMqtt_Assert( pOperation->freeReceivedData == NULL );
 
                 /* Allocate a new buffer to hold the topic name and payload. */
-                pOperation->pReceivedData = AwsIotMqtt_MallocMessage( pOperation->publishInfo.topicNameLength +
-                                                                      pOperation->publishInfo.payloadLength );
+                pOperation->pReceivedData = IotMqtt_MallocMessage( pOperation->publishInfo.topicNameLength +
+                                                                   pOperation->publishInfo.payloadLength );
 
                 if( pOperation->pReceivedData != NULL )
                 {
@@ -513,7 +547,7 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
                     pOperation->publishInfo.pTopicName = pOperation->pReceivedData;
                     pOperation->publishInfo.pPayload = ( uint8_t * ) ( pOperation->pReceivedData ) +
                                                        pOperation->publishInfo.topicNameLength;
-                    pOperation->freeReceivedData = AwsIotMqtt_FreeMessage;
+                    pOperation->freeReceivedData = IotMqtt_FreeMessage;
                 }
                 else
                 {
@@ -528,14 +562,95 @@ int32_t AwsIotMqtt_ReceiveCallback( void * pMqttConnection,
             }
         }
 
-        if( AwsIotMqttInternal_EnqueueOperation( pFirstPublish,
-                                                 &( _IotMqttCallback ) ) != AWS_IOT_MQTT_SUCCESS )
+        if( _IotMqtt_ScheduleOperation( pFirstPublish,
+                                        _IotMqtt_ProcessIncomingPublish,
+                                        0 ) != IOT_MQTT_SUCCESS )
         {
-            IotLogWarn( "Failed to enqueue incoming PUBLISH for callback." );
+            IotLogWarn( "Failed to schedule incoming PUBLISH callback." );
         }
     }
 
     return ( int32_t ) totalBytesProcessed;
+}
+
+/*-----------------------------------------------------------*/
+
+void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection )
+{
+    IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
+
+    /* Mark the MQTT connection as disconnected and the keep-alive as failed. */
+    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+    pMqttConnection->disconnected = true;
+    pMqttConnection->keepAliveFailure = true;
+
+    if( pMqttConnection->keepAliveMs != 0 )
+    {
+        /* Keep-alive must have a PINGREQ allocated. */
+        IotMqtt_Assert( pMqttConnection->pPingreqPacket != NULL );
+        IotMqtt_Assert( pMqttConnection->pingreqPacketSize != 0 );
+
+        /* PINGREQ provides a reference to the connection, so reference count must
+         * be nonzero. */
+        IotMqtt_Assert( pMqttConnection->references > 0 );
+
+        /* Attempt to cancel the keep-alive job. */
+        taskPoolStatus = IotTaskPool_TryCancel( &( _IotMqttTaskPool ),
+                                                &( pMqttConnection->keepAliveJob ),
+                                                NULL );
+
+        /* If the keep-alive job was not canceled, it must be already executing.
+         * Any other return value is invalid. */
+        IotMqtt_Assert( ( taskPoolStatus == IOT_TASKPOOL_SUCCESS ) ||
+                        ( taskPoolStatus == IOT_TASKPOOL_CANCEL_FAILED ) );
+
+        /* Clean up keep-alive if its job was successfully canceled. Otherwise,
+         * the executing keep-alive job will clean up itself. */
+        if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
+        {
+            /* Clean up PINGREQ packet and job. */
+            _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
+            IotTaskPool_DestroyJob( &( _IotMqttTaskPool ),
+                                    &( pMqttConnection->keepAliveJob ) );
+
+            /* Clear data about the keep-alive. */
+            pMqttConnection->keepAliveMs = 0;
+            pMqttConnection->pPingreqPacket = NULL;
+            pMqttConnection->pingreqPacketSize = 0;
+
+            /* Keep-alive is cleaned up; decrement reference count. Since this
+             * function must be followed with a call to DISCONNECT, a check to
+             * destroy the connection is not done here. */
+            pMqttConnection->references--;
+
+            IotLogDebug( "(MQTT connection %p) Keep-alive job canceled and cleaned up.",
+                         pMqttConnection );
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
+
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
+    /* Close the network connection regardless of whether an MQTT DISCONNECT
+     * packet was sent. */
+    if( pMqttConnection->network.disconnect != NULL )
+    {
+        pMqttConnection->network.disconnect( pMqttConnection->network.pDisconnectContext );
+
+        IotLogInfo( "(MQTT connection %p) Network connection closed.", pMqttConnection );
+    }
+    else
+    {
+        IotLogWarn( "(MQTT connection %p) No disconnect function was set. Network connection"
+                    " not closed.", pMqttConnection );
+    }
 }
 
 /*-----------------------------------------------------------*/

@@ -74,8 +74,6 @@ typedef struct IotNetworkConnectionOpenssl
 
     IotNetworkReceiveCallback_t receiveCallback; /**< @brief Network receive callback, if any. */
     void * pReceiveContext;                      /**< @brief The context for the receive callback. */
-    IotNetworkCloseCallback_t closeCallback;     /**< @brief Network close callback, if any. */
-    void * pCloseContext;                        /**< @brief The context for the close callback. */
 } IotNetworkConnectionOpenssl_t;
 
 /**
@@ -229,14 +227,6 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
                                                         void * pContext );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::setCloseCallback for
- * POSIX systems with OpenSSL.
- */
-IotNetworkError_t IotNetworkOpenssl_SetCloseCallback( void * pConnection,
-                                                      IotNetworkCloseCallback_t closeCallback,
-                                                      void * pContext );
-
-/**
  * @brief An implementation of #IotNetworkInterface_t::send for POSIX systems
  * with OpenSSL.
  */
@@ -256,7 +246,7 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
  * @brief An implementation of #IotNetworkInterface_t::close for POSIX systems
  * with OpenSSL.
  */
-IotNetworkError_t IotNetworkOpenssl_Close( int32_t reason, void * pConnection );
+IotNetworkError_t IotNetworkOpenssl_Close( void * pConnection );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::destroy for POSIX systems
