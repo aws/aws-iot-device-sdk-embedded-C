@@ -68,6 +68,12 @@ add_subdirectory( lib/source/mqtt )
 # Shadow library.
 add_subdirectory( lib/source/shadow )
 
+# Metrics library.
+add_subdirectory( lib/source/metrics )
+
+# Serializer library.
+add_subdirectory( lib/source/serializer )
+
 # Demo executables.
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     add_subdirectory( demos/posix )

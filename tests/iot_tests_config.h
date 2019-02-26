@@ -78,6 +78,16 @@
     #define _EMPTY_ELSE_MARKER    asm volatile ( "nop" )
 #endif
 
+/* Metrics library configuration. */
+#define IOT_METRICS_ENABLE_ASSERTS                  ( 1 )
+
+/* Serializer library configuration. */
+#define IOT_SERIALIZER_ENABLE_ASSERTS               ( 1 )
+
+/* Defender library configuration. */
+#define AWS_IOT_DEFENDER_ENABLE_ASSERTS             ( 1 )
+#define AWS_IOT_DEFENDER_USE_LONG_TAG               ( 1 )
+
 /* Memory allocation function configuration. Note that these functions will not
  * be affected by IOT_STATIC_MEMORY_ONLY. */
 #define IotNetwork_Malloc    unity_malloc_mt
@@ -121,6 +131,20 @@
     #define AwsIotShadow_FreeString            unity_free_mt
     #define AwsIotShadow_MallocSubscription    unity_malloc_mt
     #define AwsIotShadow_FreeSubscription      unity_free_mt
+    #define IotMetrics_MallocTcpConnection     unity_malloc_mt
+    #define IotMetrics_FreeTcpConnection       unity_free_mt
+    #define IotSerializer_MallocCborEncoder    unity_malloc_mt
+    #define IotSerializer_FreeCborEncoder      unity_free_mt
+    #define IotSerializer_MallocCborParser     unity_malloc_mt
+    #define IotSerializer_FreeCborParser       unity_free_mt
+    #define IotSerializer_MallocCborValue      unity_malloc_mt
+    #define IotSerializer_FreeCborValue        unity_free_mt
+    #define IotSerializer_MallocDecoderObject  unity_malloc_mt
+    #define IotSerializer_FreeDecoderObject    unity_free_mt
+    #define AwsIotDefender_MallocReport        unity_malloc_mt
+    #define AwsIotDefender_FreeReport          unity_free_mt
+    #define AwsIotDefender_MallocTopic         unity_malloc_mt
+    #define AwsIotDefender_FreeTopic           unity_free_mt
 #endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
 
 /* Network header to include in the tests. */
