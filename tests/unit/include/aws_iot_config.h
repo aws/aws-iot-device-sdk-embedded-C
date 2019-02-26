@@ -69,5 +69,6 @@
 // Auto Reconnect specific config
 #define AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL 1000 ///< Minimum time before the First reconnect attempt is made as part of the exponential back-off algorithm
 #define AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL 128000 ///< Maximum time interval after which exponential back-off will stop attempting to reconnect.
+#define AWS_IOT_MQTT_INFINITE_RECONNECT 0 ///< Infinite reconnect flag. If set to 1 will not stop attempting to reconnect after hitting AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL.
 
 #endif /* IOT_TESTS_UNIT_CONFIG_H_ */
