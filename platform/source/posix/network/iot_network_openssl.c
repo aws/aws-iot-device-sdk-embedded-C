@@ -58,6 +58,9 @@
 /* Platform threads include. */
 #include "platform/iot_threads.h"
 
+/* Metrics include. */
+#include "iot_metrics.h"
+
 /* Configure logs for the functions in this file. */
 #ifdef IOT_LOG_LEVEL_NETWORK
     #define _LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_NETWORK
@@ -290,10 +293,11 @@ static void * _networkReceiveThread( void * pArgument )
  * @brief Perform a DNS lookup of a host name and establish a TCP connection.
  *
  * @param[in] pServerInfo Server host name and port.
+ * @param[out] pIpAddress Ip address number in network byte order.
  *
  * @return A connected TCP socket number; `-1` if the DNS lookup failed.
  */
-static inline int _dnsLookup( const IotNetworkServerInfoOpenssl_t * const pServerInfo )
+static inline int _dnsLookup( const IotNetworkServerInfoOpenssl_t * const pServerInfo, uint32_t * pIpAddress )
 {
     int status = 0, tcpSocket = -1;
     const uint16_t netPort = htons( pServerInfo->port );
@@ -351,6 +355,9 @@ static inline int _dnsLookup( const IotNetworkServerInfoOpenssl_t * const pServe
         }
         else
         {
+            /* Copy IP address to the output parameter. */
+            *pIpAddress = pServer->sin_addr.s_addr;
+
             /* Connection successful; stop searching the list. */
             IotLogDebug( "Socket connection successful." );
             break;
@@ -832,6 +839,8 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
     const IotNetworkCredentialsOpenssl_t * const pOpensslCredentials = pCredentialInfo;
     IotNetworkConnectionOpenssl_t * const pNetworkConnection = pConnection;
 
+    IotMetricsTcpConnection_t connection = { .remotePort = pServerInfo->port };
+
     /* Check output parameter. */
     if( pNetworkConnection == NULL )
     {
@@ -875,7 +884,7 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
     }
 
     /* Perform a DNS lookup of pHostName. This also establishes a TCP socket. */
-    tcpSocket = _dnsLookup( pServerInfo );
+    tcpSocket = _dnsLookup( pServerInfo, &connection.remoteIP );
 
     if( tcpSocket == -1 )
     {
@@ -907,7 +916,11 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
 
         IotNetworkOpenssl_Destroy( pNetworkConnection );
     }
-
+    else
+    {
+        connection.id = tcpSocket;
+        IotMetrics_AddTcpConnection( &connection );
+    }
     return status;
 }
 
@@ -1184,6 +1197,9 @@ IotNetworkError_t IotNetworkOpenssl_Close( void * pConnection )
 
     /* Unlock the connection mutex. */
     IotMutex_Unlock( &( pNetworkConnection->mutex ) );
+
+    /* Remove the socket from metrics. */
+    IotMetrics_RemoveTcpConnection( pNetworkConnection->socket );
 
     return IOT_NETWORK_SUCCESS;
 }
