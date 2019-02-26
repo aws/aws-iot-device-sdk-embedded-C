@@ -104,7 +104,7 @@
     static CborParser _cborParsers[ IOT_SERIALIZER_CBOR_PARSERS ] = { { 0 } };
 
     static bool _inUseCborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { 0 };
-    static _cborValueWrapper_t _cborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { { 0 } };
+    static _cborValueWrapper_t _cborValues[IOT_SERIALIZER_CBOR_VALUES] = { { 0 } };
 
     static bool _inUseDecoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { 0 };
     static IotSerializerDecoderObject_t _decoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { { 0 } };
@@ -214,12 +214,12 @@
 
         if( size == sizeof( IotSerializerDecoderObject_t ) )
         {
-            freeIndex = IotStaticMemory_FindFree( _inUseCborValues,
-                                                  IOT_SERIALIZER_CBOR_VALUES );
+            freeIndex = IotStaticMemory_FindFree( _inUseDecoderObjects,
+                                                  IOT_SERIALIZER_DECODER_OBJECTS );
 
             if( freeIndex != -1 )
             {
-                pNewDecoderObject = &( _cborValues[ freeIndex ] );
+                pNewDecoderObject = &( _decoderObjects[ freeIndex ] );
             }
         }
 
@@ -231,9 +231,9 @@
     void Iot_FreeSerializerDecoderObject( void * ptr )
     {
         IotStaticMemory_ReturnInUse( ptr,
-                                     _cborValues,
-                                     _inUseCborValues,
-                                     IOT_SERIALIZER_CBOR_VALUES,
+                                     _decoderObjects,
+                                     _inUseDecoderObjects,
+                                     IOT_SERIALIZER_DECODER_OBJECTS,
                                      sizeof( IotSerializerDecoderObject_t ) );
     }
 
