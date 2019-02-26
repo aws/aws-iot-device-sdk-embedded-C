@@ -1441,16 +1441,16 @@ static IotTaskPoolError_t _trySafeExtraction( IotTaskPool_t * const pTaskPool,
         IotTaskPoolJobStatus_t statusAtCancellation;
 
         /* Cancellation can fail, e.g. if a job is being executed when we are trying to cancel it. */
-        jobStatus = _tryCancelInternal( pTaskPool, pJob, &statusAtCancellation );
+        status = _tryCancelInternal( pTaskPool, pJob, &statusAtCancellation );
 
-        switch( jobStatus )
+        switch( status )
         {
             case IOT_TASKPOOL_SUCCESS:
                 break;
 
             case IOT_TASKPOOL_CANCEL_FAILED:
                 IotLogWarn( "Removing a scheduled job failed because the job could not be canceled." );
-                jobStatus = IOT_TASKPOOL_ILLEGAL_OPERATION;
+                status = IOT_TASKPOOL_ILLEGAL_OPERATION;
                 break;
 
             default:
