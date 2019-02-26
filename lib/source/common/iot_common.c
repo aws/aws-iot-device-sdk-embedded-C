@@ -30,6 +30,9 @@
 /* Task pool include. */
 #include "iot_taskpool.h"
 
+/* Metrics include. */
+#include "iot_metrics.h"
+
 /* Static memory include (if dynamic memory allocation is disabled). */
 #include "private/iot_static_memory.h"
 
@@ -60,6 +63,11 @@ bool IotCommon_Init( void )
 
             status = false;
         }
+    }
+
+    if (status == true)
+    {
+        status = IotMetrics_Init();
     }
 
     /* Initialize static memory if dynamic memory allocation is disabled. */
