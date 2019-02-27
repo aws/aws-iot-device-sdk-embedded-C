@@ -50,7 +50,7 @@
 
 /* Time interval for defender agent to publish metrics. It will be throttled if too frequent. */
 /* TODO: if we can change "thingname" in each test, this can be lowered. */
-#define _DEFENDER_PUBLISH_INTERVAL_SECONDS    30
+#define _DEFENDER_PUBLISH_INTERVAL_SECONDS    15
 
 /* Estimated max size of message payload received in MQTT callback. */
 #define _PAYLOAD_MAX_SIZE                     200
@@ -399,8 +399,6 @@ TEST( Full_DEFENDER, Metrics_TCP_connections_all_are_published )
 
     _verifyMetricsCommon();
     _verifyTcpConections( 1, pIotAddress );
-
-    sleep( 30 );
 }
 
 TEST( Full_DEFENDER, Metrics_TCP_connections_total_are_published )
@@ -620,9 +618,56 @@ static void _assertEvent( AwsIotDefenderEventType_t event,
 
 /*-----------------------------------------------------------*/
 
+static void _assertRejectDueToThrottle()
+{
+    TEST_ASSERT_NOT_NULL( _callbackInfo.pPayload );
+    TEST_ASSERT_GREATER_THAN( 0, _callbackInfo.payloadLength );
+
+    IotSerializerDecoderObject_t decoderObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t statusDetailsObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t errorCodeObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+
+    char errorCode[ 12 ] = "";
+
+    IotSerializerError_t error = _Decoder.init( &decoderObject, _callbackInfo.pPayload, _callbackInfo.payloadLength );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, decoderObject.type );
+
+    error = _Decoder.find( &decoderObject, "statusDetails", &statusDetailsObject );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, statusDetailsObject.type );
+
+    errorCodeObject.value.pString = ( uint8_t * ) errorCode;
+    errorCodeObject.value.stringLength = 12;
+
+    error = _Decoder.find( &statusDetailsObject, "ErrorCode", &errorCodeObject );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_TEXT_STRING, errorCodeObject.type );
+
+    TEST_ASSERT_EQUAL( 0, strncmp( ( const char * ) errorCodeObject.value.pString, "Throttled", errorCodeObject.value.stringLength ) );
+
+    _Decoder.destroy( &statusDetailsObject );
+    _Decoder.destroy( &decoderObject );
+}
+
+/*-----------------------------------------------------------*/
+
 static void _waitForMetricsAccepted( uint32_t timeoutSec )
 {
     _waitForAnyEvent( timeoutSec );
+
+    if( _callbackInfo.eventType == AWS_IOT_DEFENDER_METRICS_REJECTED )
+    {
+        _assertRejectDueToThrottle();
+
+        return;
+    }
 
     /* Assert metrics is accepted. */
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_METRICS_ACCEPTED, _callbackInfo.eventType );
