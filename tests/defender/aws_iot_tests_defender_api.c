@@ -618,6 +618,7 @@ static void _assertEvent( AwsIotDefenderEventType_t event,
 
 /*-----------------------------------------------------------*/
 
+/* Assert the cause of rejection is throttle. */
 static void _assertRejectDueToThrottle()
 {
     TEST_ASSERT_NOT_NULL( _callbackInfo.pPayload );

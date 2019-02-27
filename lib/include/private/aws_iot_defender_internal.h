@@ -83,8 +83,8 @@
  * Provide default values for undefined memory allocation functions based on
  * the usage of dynamic memory allocation.
  */
-#if AWS_IOT_STATIC_MEMORY_ONLY == 1
-    #include "platform/aws_iot_static_memory.h"
+#if IOT_STATIC_MEMORY_ONLY == 1
+    #include "private/iot_static_memory.h"
 
 /**
  * @brief Allocate an array of uint8_t. This function should have the same
@@ -122,7 +122,7 @@
         #define AwsIotDefender_FreeTopic    AwsIot_FreeDefenderTopic
     #endif
 
-#else /* if AWS_IOT_STATIC_MEMORY_ONLY */
+#else /* if IOT_STATIC_MEMORY_ONLY */
     #include <stdlib.h>
 
     #ifndef AwsIotDefender_MallocReport
@@ -141,7 +141,7 @@
         #define AwsIotDefender_FreeTopic    free
     #endif
 
-#endif /* if AWS_IOT_STATIC_MEMORY_ONLY */
+#endif /* if IOT_STATIC_MEMORY_ONLY */
 
 /**
  * @page Defender_Config Configuration
