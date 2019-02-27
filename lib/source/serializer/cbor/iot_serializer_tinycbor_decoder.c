@@ -358,7 +358,6 @@ static IotSerializerError_t _find( IotSerializerDecoderObject_t * pDecoderObject
         if( pNewCborValueWrapper->cborValue.type == CborInvalidType )
         {
             /* pValueObject is untouched. */
-
             returnedError = IOT_SERIALIZER_NOT_FOUND;
         }
         else
@@ -368,6 +367,12 @@ static IotSerializerError_t _find( IotSerializerDecoderObject_t * pDecoderObject
     }
 
     _translateErrorCode( cborError, &returnedError );
+
+    /* If there is any error or decoder object is a scalar type, free the cbor resources. */
+    if( returnedError || !_isArrayOrMap( pValueObject->type ) )
+    {
+        IotSerializer_FreeCborValue( pNewCborValueWrapper );
+    }
 
     return returnedError;
 }

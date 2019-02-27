@@ -583,4 +583,74 @@ void * Iot_MallocSerializerDecoderObject( size_t size );
 void Iot_FreeSerializerDecoderObject( void * ptr );
 /* @[declare_static_memory_freeserializerdecoderobject] */
 
+/**
+ * @brief Allocates memory to hold data for a new [Defender Report]
+ * (@ref static_memory_mallocdefenderreport).
+ *
+ * This function is the analog of [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
+ * for Defender Report.
+ *
+ * @param[in] size Requested size for the report. Because each report
+ * contains a different metrics content, reports will be different sizes. This
+ * value should be checked to make sure that the statically-allocated report
+ * object is large enough to accommodate all the metrics data.
+ *
+ * @return Pointer to a Defender Report. If the size argument is larger than
+ * the fixed size of a Defender Report object or no free Defender Report
+ * are available, `NULL` is returned.
+ */
+/* @[declare_static_memory_mallocdefenderreport] */
+void * AwsIot_MallocDefenderReport( size_t size );
+/* @[declare_static_memory_mallocdefenderreport] */
+
+/**
+ * @brief Frees an in-use [Defender Report]
+ * (@ref static_memory_freedefenderreport).
+ *
+ * This function is the analog of [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
+ * for Defender Report.
+ *
+ * @param[in] ptr Pointer to an active Defender Report to free.
+ */
+/* @[declare_static_memory_freedefenderreport] */
+void AwsIot_FreeDefenderReport( void * ptr );
+/* @[declare_static_memory_freedefenderreport] */
+
+/**
+ * @brief Allocates memory to hold data for a new [Defender Topic]
+ * (@ref static_memory_mallocdefendertopic).
+ *
+ * This function is the analog of [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
+ * for Defender Topic.
+ *
+ * @param[in] size Requested size for the topic. Because each topic
+ * contains a different thing name, topics will be different sizes. This
+ * value should be checked to make sure that the statically-allocated topic
+ * object is large enough to accommodate all the topics.
+ *
+ * @return Pointer to a Defender Topic. If the size argument is larger than
+ * the fixed size of a Defender Topic object or no free Defender Topic
+ * are available, `NULL` is returned.
+ */
+/* @[declare_static_memory_mallocdefendertopic] */
+void * AwsIot_MallocDefenderTopic( size_t size );
+/* @[declare_static_memory_mallocdefendertopic] */
+
+/**
+ * @brief Frees an in-use [Defender Topic]
+ * (@ref static_memory_freedefendertopic).
+ *
+ * This function is the analog of [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
+ * for Defender Topic.
+ *
+ * @param[in] ptr Pointer to an active Defender Topic to free.
+ */
+/* @[declare_static_memory_freedefendertopic] */
+void AwsIot_FreeDefenderTopic( void * ptr );
+/* @[declare_static_memory_freedefendertopic] */
+
 #endif /* if !defined( _IOT_STATIC_MEMORY_H_ ) && ( IOT_STATIC_MEMORY_ONLY == 1 ) */
