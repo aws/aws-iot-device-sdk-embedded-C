@@ -62,7 +62,7 @@
 #define _MAX_ADDRESS_LENGTH                   25
 
 /* Use a big number to represent no event happened in defender. */
-#define _NO_EVENT 10000
+#define _NO_EVENT                             10000
 
 /* Define a decoder based on chosen format. */
 #if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR
@@ -126,7 +126,7 @@ TEST_SETUP( Full_DEFENDER )
 {
     _resetCalbackInfo();
 
-    _decoderObject = (IotSerializerDecoderObject_t) IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    _decoderObject = ( IotSerializerDecoderObject_t ) IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     _metricsObject = ( IotSerializerDecoderObject_t ) IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
     /* Reset test callback. */
@@ -531,7 +531,7 @@ static void _copyDataCallbackFunction( void * param1,
                                        AwsIotDefenderCallbackInfo_t * const pCallbackInfo )
 {
     /* Silence the compiler. */
-    ( void )param1;
+    ( void ) param1;
 
     /* Print out rejected message to stdout. */
     if( pCallbackInfo->eventType == AWS_IOT_DEFENDER_METRICS_REJECTED )
@@ -587,6 +587,7 @@ static void _resetCalbackInfo()
         .pPayload = _payloadBuffer,
         .payloadLength = 0,
         .eventType = _NO_EVENT
+    };
 }
 
 /*-----------------------------------------------------------*/
