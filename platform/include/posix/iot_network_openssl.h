@@ -95,9 +95,9 @@ typedef struct IotNetworkServerInfoOpenssl
  *
  * Passed to #IotNetworkOpenssl_Create as `pCredentialInfo`.
  *
- * All instances of #IotNetworkCredentialsOpenssl should be initialized with either
- * #AWS_IOT_NETWORK_CREDENTIALS_OPENSSL (for connections to AWS IoT) or
- * #IOT_NETWORK_CREDENTIALS_OPENSSL (for other connections).
+ * All instances of #IotNetworkCredentialsOpenssl_t should be initialized with either
+ * #AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER (for connections to AWS IoT) or
+ * #IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER (for other connections).
  */
 typedef struct IotNetworkCredentialsOpenssl
 {
