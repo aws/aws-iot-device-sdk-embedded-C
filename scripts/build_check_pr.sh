@@ -31,6 +31,9 @@ make
 # Run serializer tests
 ./bin/iot_tests_serializer
 
+# Run defender tests
+./bin/aws_iot_tests_defender
+
 # Rebuild in static memory mode.
 rm -rf *
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DIOT_TEST_MQTT_MOSQUITTO=1 -DIOT_STATIC_MEMORY_ONLY=1 $COMPILER_OPTIONS"
@@ -45,3 +48,6 @@ make
 
 # Run serializer tests
 ./bin/iot_tests_serializer
+
+# Run defender tests
+./bin/aws_iot_tests_defender
