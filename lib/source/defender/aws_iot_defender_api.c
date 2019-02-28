@@ -356,6 +356,11 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
                                     IotTaskPoolJob_t * pJob,
                                     void * pUserContext )
 {
+    /* Unsed parameter; silence the compiler. */
+    ( void )pTaskPool;
+    ( void )pJob;
+    ( void )pUserContext;
+
     IotLogDebug( "Metrics publish job starts." );
 
     if( !_started )
