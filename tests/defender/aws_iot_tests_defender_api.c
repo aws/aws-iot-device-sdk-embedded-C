@@ -61,6 +61,9 @@
 /* Max size of address: IP + port. */
 #define _MAX_ADDRESS_LENGTH                   25
 
+/* Use a big number to represent no event happened in defender. */
+#define _NO_EVENT                             10000
+
 /* Define a decoder based on chosen format. */
 #if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR
 
@@ -527,6 +530,9 @@ TEST( Full_DEFENDER, SetPeriod_after_started )
 static void _copyDataCallbackFunction( void * param1,
                                        AwsIotDefenderCallbackInfo_t * const pCallbackInfo )
 {
+    /* Silence the compiler. */
+    ( void ) param1;
+
     /* Print out rejected message to stdout. */
     if( pCallbackInfo->eventType == AWS_IOT_DEFENDER_METRICS_REJECTED )
     {
@@ -580,7 +586,7 @@ static void _resetCalbackInfo()
         .metricsReportLength = 0,
         .pPayload = _payloadBuffer,
         .payloadLength = 0,
-        .eventType = -1 /* Initialize to -1 to indicate there is no event. */
+        .eventType = _NO_EVENT
     };
 }
 
@@ -592,7 +598,7 @@ static void _waitForAnyEvent( uint32_t timeoutSec )
     uint32_t iter = 1;
 
     /* Wait for an event type to be set. */
-    while( _callbackInfo.eventType == -1 )
+    while( _callbackInfo.eventType == _NO_EVENT )
     {
         if( iter > maxIterations )
         {

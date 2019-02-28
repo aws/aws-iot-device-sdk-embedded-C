@@ -356,6 +356,11 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
                                     IotTaskPoolJob_t * pJob,
                                     void * pUserContext )
 {
+    /* Unsed parameter; silence the compiler. */
+    ( void )pTaskPool;
+    ( void )pJob;
+    ( void )pUserContext;
+
     IotLogDebug( "Metrics publish job starts." );
 
     if( !_started )
@@ -374,15 +379,15 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
     const IotMqttCallbackInfo_t rejectCallbackInfo = { .function = _rejectCallback, .param1 = NULL };
 
     /* Step 1: connect to Iot endpoint. */
-    if( networkConnected = AwsIotDefenderInternal_NetworkConnect( &_startInfo.serverInfo,
-                                                                  &_startInfo.credentials ) )
+    if( ( networkConnected = AwsIotDefenderInternal_NetworkConnect( &_startInfo.serverInfo,
+                                                                    &_startInfo.credentials ) ) )
     {
         /* Step 2: set MQTT callback. */
         AwsIotDefenderInternal_SetMqttCallback();
 
         /* Step 3: connect to MQTT. */
-        if( mqttConnected = AwsIotDefenderInternal_MqttConnect( _startInfo.pThingName,
-                                                                _startInfo.thingNameLength ) )
+        if( ( mqttConnected = AwsIotDefenderInternal_MqttConnect( _startInfo.pThingName,
+                                                                  _startInfo.thingNameLength ) ) )
         {
             /* Step 4: subscribe to accept/reject MQTT topics. */
             if( AwsIotDefenderInternal_MqttSubscribe( acceptCallbackInfo,
@@ -397,8 +402,8 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
                     reportCreated = true;
 
                     /* Step 6: publish report to defender topic. */
-                    if( reportPublished = AwsIotDefenderInternal_MqttPublish( AwsIotDefenderInternal_GetReportBuffer(),
-                                                                              AwsIotDefenderInternal_GetReportBufferSize() ) )
+                    if( ( reportPublished = AwsIotDefenderInternal_MqttPublish( AwsIotDefenderInternal_GetReportBuffer(),
+                                                                                AwsIotDefenderInternal_GetReportBufferSize() ) ) )
                     {
                         IotLogDebug( "Metrics report has been published successfully." );
                     }
@@ -477,6 +482,11 @@ static void _disconnectRoutine( IotTaskPool_t * pTaskPool,
                                 IotTaskPoolJob_t * pJob,
                                 void * pUserContext )
 {
+    /* Unsed parameter; silence the compiler. */
+    ( void ) pTaskPool;
+    ( void ) pJob;
+    ( void ) pUserContext;
+
     IotLogDebug( "Disconnect job starts." );
 
     AwsIotDefenderInternal_DeleteReport();
