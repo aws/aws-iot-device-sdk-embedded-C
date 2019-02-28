@@ -146,9 +146,9 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
                               uint16_t * ) = _IotMqtt_PublishSetDup;
 
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pMqttConnection->network.serialize.publishSetDup != NULL )
+        if( pMqttConnection->pSerializers->serialize.publishSetDup != NULL )
         {
-            publishSetDup = pMqttConnection->network.serialize.publishSetDup;
+            publishSetDup = pMqttConnection->pSerializers->serialize.publishSetDup;
         }
         else
         {
@@ -572,9 +572,9 @@ void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
     if( pOperation->pMqttPacket != NULL )
     {
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pMqttConnection->network.freePacket != NULL )
+            if( pMqttConnection->pSerializers->freePacket != NULL )
             {
-                freePacket = pMqttConnection->network.freePacket;
+                freePacket = pMqttConnection->pSerializers->freePacket;
             }
             else
             {
@@ -668,9 +668,9 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
         /* Because PINGREQ may be used to keep the MQTT connection alive, it is
          * more important than other operations. Bypass the queue of jobs for
          * operations by directly sending the PINGREQ in this job. */
-        bytesSent = pMqttConnection->network.send( pMqttConnection->network.pSendContext,
-                                                   pMqttConnection->pPingreqPacket,
-                                                   pMqttConnection->pingreqPacketSize );
+        bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
+                                                              pMqttConnection->pPingreqPacket,
+                                                              pMqttConnection->pingreqPacketSize );
 
         if( bytesSent != pMqttConnection->pingreqPacketSize )
         {
@@ -867,9 +867,9 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
                      pOperation );
 
         /* Transmit the MQTT packet from the operation over the network. */
-        bytesSent = pMqttConnection->network.send( pMqttConnection->network.pSendContext,
-                                                   pOperation->pMqttPacket,
-                                                   pOperation->packetSize );
+        bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
+                                                              pOperation->pMqttPacket,
+                                                              pOperation->packetSize );
 
         /* Check transmission status. */
         if( bytesSent != pOperation->packetSize )

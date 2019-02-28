@@ -309,8 +309,13 @@ typedef struct _mqttSubscription
  */
 typedef struct _mqttConnection
 {
-    bool awsIotMqttMode;               /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
-    IotMqttNetIf_t network;            /**< @brief Network interface provided to @ref mqtt_function_connect. */
+    bool awsIotMqttMode;                             /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
+    void * pNetworkConnection;                       /**< @brief References the transport-layer network connection. */
+    const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
+
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+        const IotMqttSerializer_t * pSerializers; /**< @brief MQTT packet serializer overrides. */
+    #endif
 
     bool disconnected;                 /**< @brief Tracks if this connection has been disconnected. */
     IotMutex_t referencesMutex;        /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
@@ -391,15 +396,6 @@ typedef struct _mqttOperation
 extern IotTaskPool_t _IotMqttTaskPool;
 
 /*-------------------- MQTT struct validation functions ---------------------*/
-
-/**
- * @brief Check that an #IotMqttNetIf_t is valid.
- *
- * @param[in] pNetworkInterface The #IotMqttNetIf_t to validate.
- *
- * @return `true` if `pNetworkInterface` is valid; `false` otherwise.
- */
-bool _IotMqtt_ValidateNetIf( const IotMqttNetIf_t * pNetworkInterface );
 
 /**
  * @brief Check that an #IotMqttConnectInfo_t is valid.
