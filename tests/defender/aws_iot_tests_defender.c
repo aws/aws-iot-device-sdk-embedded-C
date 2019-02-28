@@ -63,6 +63,10 @@ int main( int argc,
 {
     struct sigaction signalAction;
 
+    /* Silence warnings about unused parameters. */
+    ( void )argc;
+    ( void )argv;
+
     /* Set a signal handler for segmentation faults and assertion failures. */
     ( void ) memset( &signalAction, 0x00, sizeof( struct sigaction ) );
     signalAction.sa_handler = _signalHandler;
