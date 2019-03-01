@@ -50,7 +50,7 @@
 
 /* Time interval for defender agent to publish metrics. It will be throttled if too frequent. */
 /* TODO: if we can change "thingname" in each test, this can be lowered. */
-#define _DEFENDER_PUBLISH_INTERVAL_SECONDS    15
+#define _DEFENDER_PUBLISH_INTERVAL_SECONDS    20
 
 /* Estimated max size of message payload received in MQTT callback. */
 #define _PAYLOAD_MAX_SIZE                     200
