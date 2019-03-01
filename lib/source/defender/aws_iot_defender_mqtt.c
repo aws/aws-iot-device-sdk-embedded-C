@@ -132,9 +132,6 @@ bool AwsIotDefenderInternal_MqttConnect()
 {
     IotMqttNetIf_t mqttNetInterface = IOT_MQTT_NETIF_INITIALIZER;
 
-    const char * pThingName = _startInfo.mqttConnectionInfo.pClientIdentifier;
-    uint16_t thingNameLength = _startInfo.mqttConnectionInfo.clientIdentifierLength;
-
     mqttNetInterface.pDisconnectContext = _startInfo.pConnection;
     mqttNetInterface.pSendContext = _startInfo.pConnection;
     mqttNetInterface.disconnect = _startInfo.pNetworkInterface->close;

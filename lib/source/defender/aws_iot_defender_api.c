@@ -77,6 +77,8 @@ static IotTaskPoolJob_t _metricsPublishJob = { 0 };
 
 static IotTaskPoolJob_t _disconnectJob = { 0 };
 
+static IotSemaphore_t _doneSem;
+
 /*
  * State variable to indicate if defender has been started successfully, initialized to false.
  * There is no lock to protect it so the functions referencing it are not thread safe.
@@ -140,6 +142,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
 
     /* Initialize flow control states to false. */
     bool buildTopicsNamesSuccess = false,
+         doneSemaphoreCreateSuccess = false,
          metricsMutexCreateSuccess = false;
 
     if( !_started )
@@ -152,6 +155,12 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
         buildTopicsNamesSuccess = ( defenderError == AWS_IOT_DEFENDER_SUCCESS );
 
         if( buildTopicsNamesSuccess )
+        {
+            /* Create a binary semaphore with initial value 1. */
+            doneSemaphoreCreateSuccess = IotSemaphore_Create( &_doneSem, 1, 1 );
+        }
+
+        if( doneSemaphoreCreateSuccess )
         {
             metricsMutexCreateSuccess = IotMutex_Create( &_AwsIotDefenderMetrics.mutex, false );
         }
@@ -187,17 +196,22 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
                 AwsIotDefenderInternal_DeleteTopicsNames();
             }
 
+            if( doneSemaphoreCreateSuccess )
+            {
+                IotSemaphore_Destroy( &_doneSem );
+            }
+
             if( metricsMutexCreateSuccess )
             {
                 IotMutex_Destroy( &_AwsIotDefenderMetrics.mutex );
 
-                taskPoolError = IotTaskPool_DestroyJob(IOT_SYSTEM_TASKPOOL, &_metricsPublishJob);
+                taskPoolError = IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL, &_metricsPublishJob );
 
-                AwsIotDefender_Assert(taskPoolError == IOT_TASKPOOL_SUCCESS);
+                AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
 
-                taskPoolError = IotTaskPool_DestroyJob(IOT_SYSTEM_TASKPOOL, &_disconnectJob);
+                taskPoolError = IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL, &_disconnectJob );
 
-                AwsIotDefender_Assert(taskPoolError == IOT_TASKPOOL_SUCCESS);
+                AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
             }
 
             IotLogError( "Defender agent failed to start due to error %s.", AwsIotDefender_strerror( defenderError ) );
@@ -222,8 +236,8 @@ void AwsIotDefender_Stop( void )
         return;
     }
 
-    /* As first step, set flag to NOT started. */
-    _started = false;
+    /* First thing to do: wait for all the metrics processing to be done. */
+    IotSemaphore_Wait( &_doneSem );
 
     IotTaskPoolJobStatus_t status;
     IotTaskPoolError_t taskPoolError = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL, &_metricsPublishJob, &status );
@@ -245,6 +259,9 @@ void AwsIotDefender_Stop( void )
     /* Destroy metrics' mutex. */
     IotMutex_Destroy( &_AwsIotDefenderMetrics.mutex );
 
+    /* Destroy 'done' semaphore. */
+    IotSemaphore_Destroy( &_doneSem );
+
     /* Delete topics names. */
     AwsIotDefenderInternal_DeleteTopicsNames();
 
@@ -256,6 +273,9 @@ void AwsIotDefender_Stop( void )
 
     /* Reset metrics flag array to 0. */
     memset( _AwsIotDefenderMetrics.metricsFlag, 0, sizeof( _AwsIotDefenderMetrics.metricsFlag ) );
+
+    /* Set to not started. */
+    _started = false;
 
     IotLogInfo( "Defender agent has stopped." );
 }
@@ -362,9 +382,9 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
 
     IotLogDebug( "Metrics publish job starts." );
 
-    if( !_started )
+    if( !IotSemaphore_TryWait( &_doneSem ) )
     {
-        IotLogWarn( "Defender has been stopped. No further processing." );
+        IotLogWarn( "Defender has been stopped or the previous metrics is in process. No further action." );
 
         return;
     }
@@ -468,6 +488,8 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
         {
             AwsIotDefenderInternal_NetworkDestroy();
         }
+
+        IotSemaphore_Post( &_doneSem );
     }
 
     IotLogDebug( "Metrics publish job ends." );
@@ -490,20 +512,15 @@ static void _disconnectRoutine( IotTaskPool_t * pTaskPool,
     AwsIotDefenderInternal_MqttDisconnect();
     AwsIotDefenderInternal_NetworkDestroy();
 
-    if( _started )
-    {
-        /* Re-create metrics job. */
-        IotTaskPoolError_t taskPoolError = IotTaskPool_CreateJob( _metricsPublishRoutine, NULL, &_metricsPublishJob );
-        AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
+    /* Re-create metrics job. */
+    IotTaskPoolError_t taskPoolError = IotTaskPool_CreateJob( _metricsPublishRoutine, NULL, &_metricsPublishJob );
+    AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
 
-        /* Re-schedule metrics job with period as deferred interval. */
-        taskPoolError = IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL, &_metricsPublishJob, _periodMilliSecond );
-        AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
-    }
-    else
-    {
-        IotLogWarn( "Defender has been stopped. Skip scheduling new metrics publish job." );
-    }
+    /* Re-schedule metrics job with period as deferred interval. */
+    taskPoolError = IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL, &_metricsPublishJob, _periodMilliSecond );
+    AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
+
+    IotSemaphore_Post( &_doneSem );
 
     IotLogDebug( "Disconnect job ends." );
 }
