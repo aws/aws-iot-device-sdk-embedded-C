@@ -32,6 +32,9 @@
 /* Defender internal includes. */
 #include "private/aws_iot_defender_internal.h"
 
+/* Openssl includes. */
+#include "posix/iot_network_openssl.h"
+
 /* Serializer includes. */
 #include "iot_serializer.h"
 
@@ -77,6 +80,10 @@
 
 /* Empty callback structure passed to startInfo. */
 static const AwsIotDefenderCallback_t _EMPTY_CALLBACK = { .function = NULL, .param1 = NULL };
+
+static IotNetworkServerInfoOpenssl_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
+static IotNetworkCredentialsOpenssl_t _credential = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
+static IotNetworkConnectionOpenssl_t _networkConnection = IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER;
 
 /*------------------ global variables -----------------------------*/
 
@@ -134,15 +141,27 @@ TEST_SETUP( Full_DEFENDER )
         .function = _copyDataCallbackFunction, .param1 = NULL
     };
 
-    /* Setup startInfo. */
-    _startInfo.serverInfo.pHostName = IOT_TEST_SERVER;
-    _startInfo.serverInfo.port = IOT_TEST_PORT;
-    _startInfo.pThingName = AWS_IOT_TEST_SHADOW_THING_NAME;
-    _startInfo.thingNameLength = strlen( AWS_IOT_TEST_SHADOW_THING_NAME );
-    _startInfo.callback = _EMPTY_CALLBACK;
+    /* By default IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER enables ALPN. ALPN
+     * must be used with port 443; disable ALPN if another port is being used. */
+    if( _serverInfo.port != 443 )
+    {
+        _credential.pAlpnProtos = NULL;
+    }
 
-    /* Setup TLS information. */
-    _startInfo.credentials = ( IotNetworkCredentialsOpenssl_t ) IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
+    /* Reset server info. */
+    _serverInfo = ( IotNetworkServerInfoOpenssl_t ) IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
+
+    /* Set fields of start info. */
+    _startInfo.pConnectionInfo = &_serverInfo;
+    _startInfo.pCredentialInfo = &_credential;
+    _startInfo.pConnection = &_networkConnection;
+    _startInfo.pNetworkInterface = IOT_NETWORK_INTERFACE_OPENSSL;
+
+    _startInfo.mqttConnectionInfo = ( IotMqttConnectInfo_t ) IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    _startInfo.mqttConnectionInfo.pClientIdentifier = AWS_IOT_TEST_SHADOW_THING_NAME;
+    _startInfo.mqttConnectionInfo.clientIdentifierLength = strlen( AWS_IOT_TEST_SHADOW_THING_NAME );
+
+    _startInfo.callback = _EMPTY_CALLBACK;
 }
 
 TEST_TEAR_DOWN( Full_DEFENDER )
@@ -565,11 +584,8 @@ static void _copyDataCallbackFunction( void * param1,
 
 static void _publishMetricsNotNeeded()
 {
-    /*_startInfo.pThingName = "dummy-thing-for-test"; */
-    /*_startInfo.thingNameLength = ( uint16_t ) strlen( "dummy-thing-for-test" ); */
-
     /* Given a dummy IoT endpoint to fail network connection. */
-    _startInfo.serverInfo.pHostName = "dummy endpoint";
+    _serverInfo.pHostName = "dummy endpoint";
 }
 
 /*-----------------------------------------------------------*/
