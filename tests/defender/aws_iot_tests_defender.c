@@ -28,9 +28,13 @@
 /* POSIX includes. */
 #include <signal.h>
 
+/* Network includes. */
+#include "posix/iot_network_openssl.h"
+
 /* Common include. */
 #include "iot_common.h"
 
+/* MQTT include. */
 #include "iot_mqtt.h"
 
 /* Test framework includes. */
@@ -87,8 +91,14 @@ int main( int argc,
         return EXIT_FAILURE;
     }
 
+    /* Set up the network stack. */
+    if ( IotNetworkOpenssl_Init() != IOT_NETWORK_SUCCESS )
+    {
+        return EXIT_FAILURE;
+    }
+
     /* Initialize the MQTT library before running the tests. */
-    if (IotMqtt_Init() != IOT_MQTT_SUCCESS)
+    if ( IotMqtt_Init() != IOT_MQTT_SUCCESS )
     {
         return EXIT_FAILURE;
     }
@@ -105,6 +115,9 @@ int main( int argc,
 
     /* Clean up common libraries. */
     IotCommon_Cleanup();
+
+    /* Clean up the network stack. */
+    IotNetworkOpenssl_Cleanup();
 
     /* Clean up MQTT library. */
     IotMqtt_Cleanup();

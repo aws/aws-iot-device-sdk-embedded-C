@@ -54,9 +54,13 @@
 
 /* Standard includes. */
 #include <stdint.h>
+#include <stdlib.h>
 
 /* Network include. */
-#include "posix/iot_network_openssl.h"
+#include "platform/iot_network.h"
+
+/* MQTT include. */
+#include "iot_mqtt.h"
 
 /**
  * @page Defender_constants Constants
@@ -74,7 +78,7 @@
  */
 /**@{ */
 #define AWS_IOT_DEFENDER_FORMAT_CBOR    1                                      /**< CBOR format. */
-#define AWS_IOT_DEFENDER_FORMAT_JSON    2                                      /**< JSON format. */
+#define AWS_IOT_DEFENDER_FORMAT_JSON    2                                      /**< JSON format (NOT supported). */
 /**@} */
 
 /**
@@ -144,12 +148,12 @@ typedef enum
  */
 typedef enum
 {
-    AWS_IOT_DEFENDER_SUCCESS = 0,        /**< Defender operation completed successfully. */
-    AWS_IOT_DEFENDER_INVALID_INPUT,      /**< At least one input parameter is invalid. */
-    AWS_IOT_DEFENDER_ALREADY_STARTED,    /**< Defender has been already started. */
-    AWS_IOT_DEFENDER_PERIOD_TOO_SHORT,   /**< Given period is too short. */
-    AWS_IOT_DEFENDER_ERROR_NO_MEMORY,    /**< Defender operation failed due to memory allocation failure. */
-    AWS_IOT_DEFENDER_INTERNAL_FAILURE    /**< Defender operation failed due to internal unexpected cause. */
+    AWS_IOT_DEFENDER_SUCCESS = 0,      /**< Defender operation completed successfully. */
+    AWS_IOT_DEFENDER_INVALID_INPUT,    /**< At least one input parameter is invalid. */
+    AWS_IOT_DEFENDER_ALREADY_STARTED,  /**< Defender has been already started. */
+    AWS_IOT_DEFENDER_PERIOD_TOO_SHORT, /**< Given period is too short. */
+    AWS_IOT_DEFENDER_ERROR_NO_MEMORY,  /**< Defender operation failed due to memory allocation failure. */
+    AWS_IOT_DEFENDER_INTERNAL_FAILURE  /**< Defender operation failed due to internal unexpected cause. */
 } AwsIotDefenderError_t;
 
 /**
@@ -206,11 +210,12 @@ typedef struct AwsIotDefenderCallback
  */
 typedef struct AwsIotDefenderStartInfo
 {
-    IotNetworkServerInfoOpenssl_t serverInfo;
-    IotNetworkCredentialsOpenssl_t credentials;
-    const char * pThingName;           /**< AWS IoT thing name(must be valid). */
-    uint16_t thingNameLength;          /**< Length of AWS IoT thing name(must be valid). */
-    AwsIotDefenderCallback_t callback; /**< Length of AWS IoT thing name(optional). */
+    void * pConnectionInfo;
+    void * pCredentialInfo;
+    void * pConnection;
+    const IotNetworkInterface_t * pNetworkInterface;
+    IotMqttConnectInfo_t mqttConnectionInfo;
+    AwsIotDefenderCallback_t callback;
 } AwsIotDefenderStartInfo_t;
 
 /**

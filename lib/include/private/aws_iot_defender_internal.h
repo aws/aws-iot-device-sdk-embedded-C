@@ -44,9 +44,6 @@
 /* Double linked list include. */
 #include "iot_linear_containers.h"
 
-/* MQTT include. */
-#include "iot_mqtt.h"
-
 /**
  * @def AwsIotDefender_Assert( expression )
  * @brief Assertion macro for the Defender library.
@@ -306,8 +303,7 @@ void AwsIotDefenderInternal_DeleteReport();
 /**
  * Build three topics names used by defender library.
  */
-AwsIotDefenderError_t AwsIotDefenderInternal_BuildTopicsNames( const char * pThingName,
-                                                               uint16_t thingNameLength );
+AwsIotDefenderError_t AwsIotDefenderInternal_BuildTopicsNames();
 
 /**
  * Free the memory of three topics names.
@@ -317,8 +313,7 @@ void AwsIotDefenderInternal_DeleteTopicsNames();
 /**
  * Creat a network connection.
  */
-bool AwsIotDefenderInternal_NetworkConnect( IotNetworkServerInfoOpenssl_t * pServerInfo,
-                                            IotNetworkCredentialsOpenssl_t * pCredentials );
+bool AwsIotDefenderInternal_NetworkConnect();
 
 /**
  * Set the network connection to callback MQTT.
@@ -328,8 +323,7 @@ void AwsIotDefenderInternal_SetMqttCallback();
 /**
  * Connect to AWS with MQTT.
  */
-bool AwsIotDefenderInternal_MqttConnect( const char * pThingName,
-                                         uint16_t thingNameLength );
+bool AwsIotDefenderInternal_MqttConnect();
 
 /**
  * Subscribe accept/reject defender topics.

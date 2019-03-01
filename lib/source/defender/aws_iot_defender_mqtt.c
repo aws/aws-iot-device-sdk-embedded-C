@@ -19,27 +19,23 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <string.h>
+
 /* Defender internal include. */
 #include "private/aws_iot_defender_internal.h"
 
-/*
- * 30 seconds is the minimum allowed in AFR MQTT
- */
-#define _DEFENDER_MQTT_KEEP_ALIVE_SECONDS    30
-
 /* Define topics segments used by defender. */
-#define _TOPIC_PREFIX                        "$aws/things/"
+#define _TOPIC_PREFIX             "$aws/things/"
 
-#define _TOPIC_SUFFIX_PUBLISH                "/defender/metrics/" _DEFENDER_FORMAT
+#define _TOPIC_SUFFIX_PUBLISH     "/defender/metrics/" _DEFENDER_FORMAT
 
-#define _TOPIC_SUFFIX_ACCEPTED               _TOPIC_SUFFIX_PUBLISH "/accepted"
+#define _TOPIC_SUFFIX_ACCEPTED    _TOPIC_SUFFIX_PUBLISH "/accepted"
 
-#define _TOPIC_SUFFIX_REJECTED               _TOPIC_SUFFIX_PUBLISH "/rejected"
+#define _TOPIC_SUFFIX_REJECTED    _TOPIC_SUFFIX_PUBLISH "/rejected"
 
-static IotNetworkInterface_t _networkInterface;
+extern AwsIotDefenderStartInfo_t _startInfo;
 
 /* defender internally manages network and mqtt connection */
-static IotNetworkConnectionOpenssl_t _networkConnection = IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER;
 static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 static char * _pPublishTopic = NULL;
@@ -50,10 +46,12 @@ static char * _pRejectTopic = NULL;
 
 /*-----------------------------------------------------------*/
 
-AwsIotDefenderError_t AwsIotDefenderInternal_BuildTopicsNames( const char * pThingName,
-                                                               uint16_t thingNameLength )
+AwsIotDefenderError_t AwsIotDefenderInternal_BuildTopicsNames()
 {
     AwsIotDefenderError_t returnedError = AWS_IOT_DEFENDER_SUCCESS;
+
+    const char * pThingName = _startInfo.mqttConnectionInfo.pClientIdentifier;
+    uint16_t thingNameLength = _startInfo.mqttConnectionInfo.clientIdentifierLength;
 
     /* Calculate topics lengths. Plus one for string terminator. */
     size_t publishTopicLength = strlen( _TOPIC_PREFIX ) + thingNameLength + strlen( _TOPIC_SUFFIX_PUBLISH ) + 1;
@@ -110,54 +108,41 @@ void AwsIotDefenderInternal_DeleteTopicsNames()
 
 /*-----------------------------------------------------------*/
 
-void AwsIotDefenderInternal_SetNetworkInterface()
+bool AwsIotDefenderInternal_NetworkConnect()
 {
-    _networkInterface = _IotNetworkOpenssl;
-}
-
-/*-----------------------------------------------------------*/
-
-bool AwsIotDefenderInternal_NetworkConnect( IotNetworkServerInfoOpenssl_t * pServerInfo,
-                                            IotNetworkCredentialsOpenssl_t * pCredentials )
-{
-    _networkInterface = _IotNetworkOpenssl;
-
-    return _networkInterface.create( pServerInfo, pCredentials, &_networkConnection ) == IOT_NETWORK_SUCCESS;
+    return _startInfo.pNetworkInterface->create( _startInfo.pConnectionInfo,
+                                                 _startInfo.pCredentialInfo,
+                                                 _startInfo.pConnection ) == IOT_NETWORK_SUCCESS;
 }
 
 /*-----------------------------------------------------------*/
 
 void AwsIotDefenderInternal_SetMqttCallback()
 {
-    IotNetworkError_t error = _networkInterface.setReceiveCallback( &_networkConnection,
-                                                                    IotMqtt_ReceiveCallback,
-                                                                    &_mqttConnection );
+    IotNetworkError_t error = _startInfo.pNetworkInterface->setReceiveCallback( _startInfo.pConnection,
+                                                                                IotMqtt_ReceiveCallback,
+                                                                                &_mqttConnection );
 
     AwsIotDefender_Assert( error == IOT_NETWORK_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotDefenderInternal_MqttConnect( const char * pThingName,
-                                         uint16_t thingNameLength )
+bool AwsIotDefenderInternal_MqttConnect()
 {
     IotMqttNetIf_t mqttNetInterface = IOT_MQTT_NETIF_INITIALIZER;
-    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
 
-    mqttNetInterface.pDisconnectContext = &_networkConnection;
-    mqttNetInterface.pSendContext = &_networkConnection;
-    mqttNetInterface.disconnect = _networkInterface.close;
-    mqttNetInterface.send = _networkInterface.send;
+    const char * pThingName = _startInfo.mqttConnectionInfo.pClientIdentifier;
+    uint16_t thingNameLength = _startInfo.mqttConnectionInfo.clientIdentifierLength;
 
-    /* Set the members of the connection info (password and username not used). */
-    connectInfo.cleanSession = true;
-    connectInfo.keepAliveSeconds = _DEFENDER_MQTT_KEEP_ALIVE_SECONDS;
-    connectInfo.pClientIdentifier = pThingName;
-    connectInfo.clientIdentifierLength = thingNameLength;
+    mqttNetInterface.pDisconnectContext = _startInfo.pConnection;
+    mqttNetInterface.pSendContext = _startInfo.pConnection;
+    mqttNetInterface.disconnect = _startInfo.pNetworkInterface->close;
+    mqttNetInterface.send = _startInfo.pNetworkInterface->send;
 
     return IotMqtt_Connect( &_mqttConnection,
                             &mqttNetInterface,
-                            &connectInfo,
+                            &_startInfo.mqttConnectionInfo,
                             _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_CONNECT_TIMEOUT_SECONDS ) ) == IOT_MQTT_SUCCESS;
 }
 
@@ -216,7 +201,7 @@ void AwsIotDefenderInternal_MqttDisconnect()
 
 void AwsIotDefenderInternal_NetworkClose()
 {
-    IotNetworkError_t error = _networkInterface.close( &_networkConnection );
+    IotNetworkError_t error = _startInfo.pNetworkInterface->close( _startInfo.pConnection );
 
     AwsIotDefender_Assert( error == IOT_NETWORK_SUCCESS );
 }
@@ -225,11 +210,7 @@ void AwsIotDefenderInternal_NetworkClose()
 
 void AwsIotDefenderInternal_NetworkDestroy()
 {
-    IotNetworkError_t error = _networkInterface.destroy( &_networkConnection );
+    IotNetworkError_t error = _startInfo.pNetworkInterface->destroy( _startInfo.pConnection );
 
     AwsIotDefender_Assert( error == IOT_NETWORK_SUCCESS );
-
-    _networkInterface = ( IotNetworkInterface_t ) {
-        0
-    };
 }

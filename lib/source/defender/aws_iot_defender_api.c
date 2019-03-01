@@ -84,7 +84,7 @@ static IotTaskPoolJob_t _disconnectJob = { 0 };
 static bool _started = false;
 
 /* Internal copy of startInfo so that user's input doesn't have to be valid all the time. */
-static AwsIotDefenderStartInfo_t _startInfo = AWS_IOT_DEFENDER_START_INFO_INITIALIZER;
+AwsIotDefenderStartInfo_t _startInfo = AWS_IOT_DEFENDER_START_INFO_INITIALIZER;
 
 /*-----------------------------------------------------------*/
 
@@ -122,7 +122,9 @@ AwsIotDefenderError_t AwsIotDefender_SetMetrics( AwsIotDefenderMetricsGroup_t me
 AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartInfo )
 {
     if( ( pStartInfo == NULL ) ||
-        ( pStartInfo->pThingName == NULL ) )
+        ( pStartInfo->pConnectionInfo == NULL ) ||
+        ( pStartInfo->pCredentialInfo == NULL ) ||
+        ( pStartInfo->pNetworkInterface == NULL ) )
     {
         IotLogError( "Input start info is invalid." );
 
@@ -145,8 +147,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
         /* copy input start info into global variable _startInfo */
         _startInfo = *pStartInfo;
 
-        defenderError = AwsIotDefenderInternal_BuildTopicsNames( _startInfo.pThingName,
-                                                                 _startInfo.thingNameLength );
+        defenderError = AwsIotDefenderInternal_BuildTopicsNames();
 
         buildTopicsNamesSuccess = ( defenderError == AWS_IOT_DEFENDER_SUCCESS );
 
@@ -175,9 +176,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
             IotLogInfo( "Defender agent has successfully started." );
         }
 
-        /* Do the cleanup jobs if not success.
-         * It is almost the same work as AwsIotDefender_Stop except here it must "clean" on condition.
-         */
+        /* Do the cleanup jobs if not success. */
         if( defenderError != AWS_IOT_DEFENDER_SUCCESS )
         {
             /* reset _startInfo to empty; otherwise next time defender might start with incorrect information. */
@@ -186,19 +185,19 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
             if( buildTopicsNamesSuccess )
             {
                 AwsIotDefenderInternal_DeleteTopicsNames();
-
-                taskPoolError = IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL, &_metricsPublishJob );
-
-                AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
-
-                taskPoolError = IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL, &_disconnectJob );
-
-                AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
             }
 
             if( metricsMutexCreateSuccess )
             {
                 IotMutex_Destroy( &_AwsIotDefenderMetrics.mutex );
+
+                taskPoolError = IotTaskPool_DestroyJob(IOT_SYSTEM_TASKPOOL, &_metricsPublishJob);
+
+                AwsIotDefender_Assert(taskPoolError == IOT_TASKPOOL_SUCCESS);
+
+                taskPoolError = IotTaskPool_DestroyJob(IOT_SYSTEM_TASKPOOL, &_disconnectJob);
+
+                AwsIotDefender_Assert(taskPoolError == IOT_TASKPOOL_SUCCESS);
             }
 
             IotLogError( "Defender agent failed to start due to error %s.", AwsIotDefender_strerror( defenderError ) );
@@ -357,9 +356,9 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
                                     void * pUserContext )
 {
     /* Unsed parameter; silence the compiler. */
-    ( void )pTaskPool;
-    ( void )pJob;
-    ( void )pUserContext;
+    ( void ) pTaskPool;
+    ( void ) pJob;
+    ( void ) pUserContext;
 
     IotLogDebug( "Metrics publish job starts." );
 
@@ -379,15 +378,13 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
     const IotMqttCallbackInfo_t rejectCallbackInfo = { .function = _rejectCallback, .param1 = NULL };
 
     /* Step 1: connect to Iot endpoint. */
-    if( ( networkConnected = AwsIotDefenderInternal_NetworkConnect( &_startInfo.serverInfo,
-                                                                    &_startInfo.credentials ) ) )
+    if( ( networkConnected = AwsIotDefenderInternal_NetworkConnect() ) )
     {
         /* Step 2: set MQTT callback. */
         AwsIotDefenderInternal_SetMqttCallback();
 
         /* Step 3: connect to MQTT. */
-        if( ( mqttConnected = AwsIotDefenderInternal_MqttConnect( _startInfo.pThingName,
-                                                                  _startInfo.thingNameLength ) ) )
+        if( ( mqttConnected = AwsIotDefenderInternal_MqttConnect() ) )
         {
             /* Step 4: subscribe to accept/reject MQTT topics. */
             if( AwsIotDefenderInternal_MqttSubscribe( acceptCallbackInfo,
