@@ -45,15 +45,12 @@
 
 #include "unity_fixture.h"
 
-/* Time interval to wait for a state to be true. */
-#define _WAIT_STATE_INTERVAL_SECONDS    1
-
 /* Total time to wait for a state to be true. */
-#define _WAIT_STATE_TOTAL_SECONDS       5
+#define _WAIT_STATE_TOTAL_SECONDS    5
 
 /* Time interval for defender agent to publish metrics. It will be throttled if too frequent. */
 /* TODO: if we can change "thingname" in each test, this can be lowered. */
-#define _DEFENDER_PUBLISH_INTERVAL_SECONDS    15
+#define _DEFENDER_PUBLISH_INTERVAL_SECONDS    20
 
 /* Estimated max size of message payload received in MQTT callback. */
 #define _PAYLOAD_MAX_SIZE                     200
@@ -94,6 +91,12 @@ static AwsIotDefenderCallback_t _testCallback;
 
 static AwsIotDefenderStartInfo_t _startInfo = AWS_IOT_DEFENDER_START_INFO_INITIALIZER;
 
+/* 
+Waiting for it indicates waiting for any event to happen
+Posting it indicates any event happened
+*/
+static IotSemaphore_t _callbackInfoSem;
+
 static AwsIotDefenderCallbackInfo_t _callbackInfo;
 
 static IotSerializerDecoderObject_t _decoderObject;
@@ -105,7 +108,7 @@ static IotSerializerDecoderObject_t _metricsObject;
 static void _copyDataCallbackFunction( void * param1,
                                        AwsIotDefenderCallbackInfo_t * const pCallbackInfo );
 
-static void _waitForAnyEvent( uint32_t timeoutSec );
+static bool _waitForAnyEvent( uint32_t timeoutSec );
 
 static void _assertEvent( AwsIotDefenderEventType_t event,
                           uint32_t timeoutSec );
@@ -131,6 +134,12 @@ TEST_GROUP( Full_DEFENDER );
 
 TEST_SETUP( Full_DEFENDER )
 {
+    /* Create a binary semaphore with initial value 0. */
+    if( !IotSemaphore_Create( &_callbackInfoSem, 0, 1 ) )
+    {
+        TEST_FAIL_MESSAGE( "Fail to create semaphore for callback info." );
+    }
+
     _resetCalbackInfo();
 
     _decoderObject = ( IotSerializerDecoderObject_t ) IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
@@ -174,6 +183,8 @@ TEST_TEAR_DOWN( Full_DEFENDER )
     {
         sleep( _DEFENDER_PUBLISH_INTERVAL_SECONDS );
     }
+
+    IotSemaphore_Destroy( &_callbackInfoSem );
 }
 
 TEST_GROUP_RUNNER( Full_DEFENDER )
@@ -578,6 +589,8 @@ static void _copyDataCallbackFunction( void * param1,
             memcpy( ( uint8_t * ) _callbackInfo.pMetricsReport, pCallbackInfo->pMetricsReport, _callbackInfo.metricsReportLength );
         }
     }
+
+    IotSemaphore_Post( &_callbackInfoSem );
 }
 
 /*-----------------------------------------------------------*/
@@ -606,26 +619,12 @@ static void _resetCalbackInfo()
     };
 }
 
+
 /*-----------------------------------------------------------*/
 
-static void _waitForAnyEvent( uint32_t timeoutSec )
+static bool _waitForAnyEvent( uint32_t timeoutSec )
 {
-    uint32_t maxIterations = timeoutSec / _WAIT_STATE_INTERVAL_SECONDS;
-    uint32_t iter = 1;
-
-    /* Wait for an event type to be set. */
-    while( _callbackInfo.eventType == _NO_EVENT )
-    {
-        if( iter > maxIterations )
-        {
-            /* Timeout. */
-            TEST_FAIL_MESSAGE( "No event has happened after max timeout." );
-        }
-
-        sleep( _WAIT_STATE_INTERVAL_SECONDS );
-
-        iter++;
-    }
+    return IotSemaphore_TimedWait( &_callbackInfoSem, timeoutSec * 1000 );
 }
 
 /*-----------------------------------------------------------*/
@@ -683,7 +682,11 @@ static void _assertRejectDueToThrottle()
 
 static void _waitForMetricsAccepted( uint32_t timeoutSec )
 {
-    _waitForAnyEvent( timeoutSec );
+    /* If not event has occured, simply fail the test. */
+    if( !_waitForAnyEvent( timeoutSec ) )
+    {
+        TEST_FAIL_MESSAGE( "No event has occured within timeout." );
+    }
 
     if( _callbackInfo.eventType == AWS_IOT_DEFENDER_METRICS_REJECTED )
     {
