@@ -86,7 +86,7 @@ extern int snprintf( char *,
  */
 int AwsIotDemo_RunShadowDemo( const char * const pThingName,
                               IotMqttConnection_t * const pMqttConnection,
-                              const IotMqttNetIf_t * const pNetworkInterface )
+                              const IotMqttNetworkInfo_t * const pNetworkInfo )
 {
     int status = 0;
     IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
@@ -107,10 +107,10 @@ int AwsIotDemo_RunShadowDemo( const char * const pThingName,
                 connectInfo.clientIdentifierLength );
 
     /* Establish the MQTT connection. */
-    mqttStatus = IotMqtt_Connect( pMqttConnection,
-                                  pNetworkInterface,
+    mqttStatus = IotMqtt_Connect( pNetworkInfo,
                                   &connectInfo,
-                                  _TIMEOUT_MS );
+                                  _TIMEOUT_MS,
+                                  pMqttConnection );
 
     if( mqttStatus != IOT_MQTT_SUCCESS )
     {

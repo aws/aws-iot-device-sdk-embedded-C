@@ -359,7 +359,7 @@ static void _mqttSubscriptionCallback( void * param1,
 int IotDemo_RunMqttDemo( bool awsIotMqttMode,
                          const char * const pClientIdentifier,
                          IotMqttConnection_t * const pMqttConnection,
-                         const IotMqttNetIf_t * const pNetworkInterface )
+                         const IotMqttNetworkInfo_t * const pNetworkInfo )
 {
     int status = 0, i = 0;
     intptr_t publishCount = 0;
@@ -435,10 +435,10 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
                     connectInfo.clientIdentifierLength );
 
         /* Establish the MQTT connection. */
-        mqttStatus = IotMqtt_Connect( pMqttConnection,
-                                      pNetworkInterface,
+        mqttStatus = IotMqtt_Connect( pNetworkInfo,
                                       &connectInfo,
-                                      _MQTT_TIMEOUT_MS );
+                                      _MQTT_TIMEOUT_MS,
+                                      pMqttConnection );
 
         if( mqttStatus != IOT_MQTT_SUCCESS )
         {

@@ -56,7 +56,7 @@ int main( int argc,
     IotNetworkServerInfoOpenssl_t serverInfo = IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER;
     IotNetworkCredentialsOpenssl_t credentials = AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER, * pCredentials = NULL;
     IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
-    IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
     /* This function parses arguments and establishes the network connection
      * before running the MQTT demo. */
@@ -148,10 +148,9 @@ int main( int argc,
     if( status == 0 )
     {
         /* Set the members of the network interface used by the MQTT connection. */
-        networkInterface.pDisconnectContext = ( void * ) &networkConnection;
-        networkInterface.pSendContext = ( void * ) &networkConnection;
-        networkInterface.disconnect = IotNetworkOpenssl_Close;
-        networkInterface.send = IotNetworkOpenssl_Send;
+        networkInfo.createNetworkConnection = false;
+        networkInfo.pNetworkConnection = &networkConnection;
+        networkInfo.pNetworkInterface = IOT_NETWORK_INTERFACE_OPENSSL;
 
         /* Initialize the MQTT library. */
         if( IotMqtt_Init() == IOT_MQTT_SUCCESS )
@@ -160,7 +159,7 @@ int main( int argc,
             status = IotDemo_RunMqttDemo( demoArguments.awsIotMqttMode,
                                           demoArguments.pIdentifier,
                                           &mqttConnection,
-                                          &networkInterface );
+                                          &networkInfo );
 
             /* Clean up the MQTT library. */
             IotMqtt_Cleanup();
