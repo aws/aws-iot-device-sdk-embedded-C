@@ -360,9 +360,6 @@ IotTaskPoolError_t IotTaskPool_Destroy( IotTaskPool_t * pTaskPool )
         IotSemaphore_Wait( &pTaskPool->startStopSignal );
     }
 
-    IotTaskPool_Assert( pTaskPool->activeThreads == 0 );
-    IotTaskPool_Assert( IotSemaphore_GetCount( &pTaskPool->startStopSignal ) == 0 );
-
     /* (6) Destroy all signaling objects. */
     _destroyTaskPool( pTaskPool );
 
@@ -976,11 +973,10 @@ static void _taskPoolWorker( void * pUserContext )
      * is setting maxThreads to zero. A worker thread is running until the maximum number of allowed
      * threads is not zero and the active threads are less than the maximum number of allowed threads.
      */
-    for( ; ; )
+    for ( ; ; )
     {
         IotLink_t * pFirst = NULL;
         IotTaskPoolJob_t * pJob = NULL;
-        bool shouldExit = false;
 
         /* Wait on incoming notifications... */
         IotSemaphore_Wait( &pTaskPool->dispatchSignal );
@@ -993,14 +989,8 @@ static void _taskPoolWorker( void * pUserContext )
             /* If the exit condition is verified, update the number of active threads and exit the loop. */
             if( _IsShutdownStarted( pTaskPool ) )
             {
-                shouldExit = true;
-
                 IotLogDebug( "Worker thread exiting because exit condition was set." );
-            }
 
-            /* Check if thread should exit. */
-            if( shouldExit )
-            {
                 /* Decrease the number of active threads. */
                 pTaskPool->activeThreads--;
 
@@ -1080,14 +1070,23 @@ static void _taskPoolWorker( void * pUserContext )
 
         /* We  check whether this thread needs to exit or not at the end of the outer loop, so
          * we can support the case for scheduling 'high prioroty' jobs that exceed the
-         * max threads quota. */
+         * max threads quota for the purpose of executing the high-piority task. */
         _TASKPOOL_ENTER_CRITICAL_SECTION;
         {
             if( pTaskPool->activeThreads > pTaskPool->maxThreads )
             {
-                shouldExit = true;
-
                 IotLogDebug( "Worker thread exiting because maximum quota was exceeded." );
+
+                /* Decrease the number of active threads. */
+                pTaskPool->activeThreads--;
+
+                _TASKPOOL_EXIT_CRITICAL_SECTION;
+
+                /* Signal that this worker is exiting. */
+                IotSemaphore_Post( &pTaskPool->startStopSignal );
+
+                /* Abandon the OUTER LOOP. */
+                break;
             }
         }
         _TASKPOOL_EXIT_CRITICAL_SECTION;

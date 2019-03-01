@@ -642,6 +642,7 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleTasks_GrowHighPri )
     IotSemaphore_Destroy( &userContext.block );
 
 #undef _NUMBER_OF_JOBS
+#undef _NUMBER_OF_THREADS
 }
 
 /*-----------------------------------------------------------*/
