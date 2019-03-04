@@ -73,25 +73,39 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
 
         /* Choose PUBACK serializer and free packet functions. */
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pMqttConnection->pSerializers->serialize.puback != NULL )
+            if( pMqttConnection->pSerializer != NULL )
             {
-                serializePuback = pMqttConnection->pSerializers->serialize.puback;
+                if( pMqttConnection->pSerializer->serialize.puback != NULL )
+                {
+                    serializePuback = pMqttConnection->pSerializer->serialize.puback;
+                }
+                else
+                {
+                    _EMPTY_ELSE_MARKER;
+                }
             }
             else
             {
                 _EMPTY_ELSE_MARKER;
             }
-        #endif
+        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pMqttConnection->pSerializers->freePacket != NULL )
+            if( pMqttConnection->pSerializer != NULL )
             {
-                freePacket = pMqttConnection->pSerializers->freePacket;
+                if( pMqttConnection->pSerializer->freePacket != NULL )
+                {
+                    freePacket = pMqttConnection->pSerializer->freePacket;
+                }
+                else
+                {
+                    _EMPTY_ELSE_MARKER;
+                }
             }
             else
             {
                 _EMPTY_ELSE_MARKER;
             }
-        #endif
+        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
         /* Generate a PUBACK packet from the packet identifier. */
         serializeStatus = serializePuback( packetIdentifier,
@@ -163,9 +177,12 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                                  size_t ) = _IotMqtt_GetPacketType;
 
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pConnectionInfo->pSerializers->getPacketType != NULL )
+        if( pConnectionInfo->pSerializer != NULL )
         {
-            getPacketType = pConnectionInfo->pSerializers->getPacketType;
+            if( pConnectionInfo->pSerializer->getPacketType != NULL )
+            {
+                getPacketType = pConnectionInfo->pSerializer->getPacketType;
+            }
         }
     #endif
 
@@ -194,9 +211,12 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                                                          size_t * ) = _IotMqtt_DeserializeConnack;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-                    if( pConnectionInfo->pSerializers->deserialize.connack != NULL )
+                    if( pConnectionInfo->pSerializer != NULL )
                     {
-                        deserializeConnack = pConnectionInfo->pSerializers->deserialize.connack;
+                        if( pConnectionInfo->pSerializer->deserialize.connack != NULL )
+                        {
+                            deserializeConnack = pConnectionInfo->pSerializer->deserialize.connack;
+                        }
                     }
                 #endif
 
@@ -246,9 +266,12 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                                                          size_t * ) = _IotMqtt_DeserializePublish;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-                    if( pConnectionInfo->pSerializers->deserialize.publish != NULL )
+                    if( pConnectionInfo->pSerializer != NULL )
                     {
-                        deserializePublish = pConnectionInfo->pSerializers->deserialize.publish;
+                        if( pConnectionInfo->pSerializer->deserialize.publish != NULL )
+                        {
+                            deserializePublish = pConnectionInfo->pSerializer->deserialize.publish;
+                        }
                     }
                 #endif
 
@@ -298,9 +321,12 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                                                         size_t * ) = _IotMqtt_DeserializePuback;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-                    if( pConnectionInfo->pSerializers->deserialize.puback != NULL )
+                    if( pConnectionInfo->pSerializer != NULL )
                     {
-                        deserializePuback = pConnectionInfo->pSerializers->deserialize.puback;
+                        if( pConnectionInfo->pSerializer->deserialize.puback != NULL )
+                        {
+                            deserializePuback = pConnectionInfo->pSerializer->deserialize.puback;
+                        }
                     }
                 #endif
 
@@ -335,9 +361,12 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                                                         size_t * ) = _IotMqtt_DeserializeSuback;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-                    if( pConnectionInfo->pSerializers->deserialize.suback != NULL )
+                    if( pConnectionInfo->pSerializer != NULL )
                     {
-                        deserializeSuback = pConnectionInfo->pSerializers->deserialize.suback;
+                        if( pConnectionInfo->pSerializer->deserialize.suback != NULL )
+                        {
+                            deserializeSuback = pConnectionInfo->pSerializer->deserialize.suback;
+                        }
                     }
                 #endif
 
@@ -372,9 +401,12 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                                                           size_t * ) = _IotMqtt_DeserializeUnsuback;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-                    if( pConnectionInfo->pSerializers->deserialize.unsuback != NULL )
+                    if( pConnectionInfo->pSerializer != NULL )
                     {
-                        deserializeUnsuback = pConnectionInfo->pSerializers->deserialize.unsuback;
+                        if( pConnectionInfo->pSerializer->deserialize.unsuback != NULL )
+                        {
+                            deserializeUnsuback = pConnectionInfo->pSerializer->deserialize.unsuback;
+                        }
                     }
                 #endif
 
@@ -407,9 +439,12 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                                                           size_t * ) = _IotMqtt_DeserializePingresp;
 
                 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-                    if( pConnectionInfo->pSerializers->deserialize.pingresp != NULL )
+                    if( pConnectionInfo->pSerializer != NULL )
                     {
-                        deserializePingresp = pConnectionInfo->pSerializers->deserialize.pingresp;
+                        if( pConnectionInfo->pSerializer->deserialize.pingresp != NULL )
+                        {
+                            deserializePingresp = pConnectionInfo->pSerializer->deserialize.pingresp;
+                        }
                     }
                 #endif
 

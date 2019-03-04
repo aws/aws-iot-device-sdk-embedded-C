@@ -300,7 +300,8 @@ TEST_GROUP( Shadow_Unit_API );
  */
 TEST_SETUP( Shadow_Unit_API )
 {
-    IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+    IotNetworkInterface_t networkInterface = { 0 };
+    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
     /* Clear the last packet type and identifier. */
     _lastPacketType = 0;
@@ -319,10 +320,11 @@ TEST_SETUP( Shadow_Unit_API )
 
     /* Set the network interface send function. */
     networkInterface.send = _sendSuccess;
+    networkInfo.pNetworkInterface = &networkInterface;
 
     /* Initialize the MQTT connection object to use for the Shadow tests. */
     _pMqttConnection = IotTestMqtt_createMqttConnection( false,
-                                                         &networkInterface,
+                                                         &networkInfo,
                                                          0 );
 
     /* Initialize the Shadow library. */

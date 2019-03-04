@@ -108,7 +108,7 @@ static const IotNetworkInterface_t * const _pNetworkInterface = IOT_TEST_NETWORK
 /**
  * @brief The MQTT network interface shared among the tests.
  */
-IotMqttNetIf_t _IotTestNetworkInterface = IOT_MQTT_NETIF_INITIALIZER;
+IotMqttNetworkInfo_t _IotTestNetworkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
 /**
  * @brief The MQTT connection shared among the tests.
@@ -133,11 +133,10 @@ bool IotTest_NetworkSetup( void )
         return false;
     }
 
-    /* Set the members of the network interface. */
-    _IotTestNetworkInterface.pDisconnectContext = NULL;
-    _IotTestNetworkInterface.disconnect = IotTest_NetworkClose;
-    _IotTestNetworkInterface.pSendContext = ( void * ) &_networkConnection;
-    _IotTestNetworkInterface.send = _pNetworkInterface->send;
+    /* Set the members of the network info. */
+    _IotTestNetworkInfo.createNetworkConnection = false;
+    _IotTestNetworkInfo.pNetworkConnection = &_networkConnection;
+    _IotTestNetworkInfo.pNetworkInterface = _pNetworkInterface;
 
     _networkConnectionCreated = true;
 
@@ -160,7 +159,7 @@ void IotTest_NetworkCleanup( void )
     IotTestNetwork_Cleanup();
 
     /* Clear the network interface. */
-    ( void ) memset( &_IotTestNetworkInterface, 0x00, sizeof( IotMqttNetIf_t ) );
+    ( void ) memset( &_IotTestNetworkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
 }
 
 /*-----------------------------------------------------------*/

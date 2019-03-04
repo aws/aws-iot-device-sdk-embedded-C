@@ -314,7 +314,7 @@ typedef struct _mqttConnection
     const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
 
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        const IotMqttSerializer_t * pSerializers; /**< @brief MQTT packet serializer overrides. */
+        const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
     #endif
 
     bool disconnected;                 /**< @brief Tracks if this connection has been disconnected. */

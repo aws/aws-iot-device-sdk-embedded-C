@@ -121,7 +121,7 @@ extern void IotTest_NetworkCleanup( void );
 
 /* Network variables used by the tests, declared in one of the test network
  * function files. */
-extern IotMqttNetIf_t _IotTestNetworkInterface;
+extern IotMqttNetworkInfo_t _IotTestNetworkInfo;
 extern IotMqttConnection_t _IotTestMqttConnection;
 
 /**
@@ -451,10 +451,10 @@ TEST_SETUP( Shadow_System )
     connectInfo.keepAliveSeconds = IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
     /* Establish an MQTT connection. */
-    if( IotMqtt_Connect( &_IotTestMqttConnection,
-                         &_IotTestNetworkInterface,
+    if( IotMqtt_Connect( &_IotTestNetworkInfo,
                          &connectInfo,
-                         AWS_IOT_TEST_SHADOW_TIMEOUT ) != IOT_MQTT_SUCCESS )
+                         AWS_IOT_TEST_SHADOW_TIMEOUT,
+                         &_IotTestMqttConnection ) != IOT_MQTT_SUCCESS )
     {
         TEST_FAIL_MESSAGE( "Failed to establish MQTT connection for Shadow tests." );
     }

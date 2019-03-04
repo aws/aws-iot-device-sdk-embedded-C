@@ -370,14 +370,17 @@ TEST_GROUP( MQTT_Unit_Subscription );
  */
 TEST_SETUP( MQTT_Unit_Subscription )
 {
-    IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+    static IotNetworkInterface_t networkInterface = { 0 };
+    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
+
+    networkInfo.pNetworkInterface = &networkInterface;
 
     /* Initialize the MQTT library. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 
-    /* Create an MQTT connection with an empty network interface. */
+    /* Create an MQTT connection with empty network info. */
     _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                         &networkInterface,
+                                                         &networkInfo,
                                                          0 );
     TEST_ASSERT_NOT_NULL( _pMqttConnection );
 }

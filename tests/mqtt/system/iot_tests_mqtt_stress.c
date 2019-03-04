@@ -164,11 +164,10 @@ extern void IotTest_NetworkCleanup( void );
  * be included by this file. */
 extern IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
                                                  size_t * pPacketSize );
-extern void _IotMqtt_FreePacket( uint8_t * pPacket );
 
 /* Network variables used by the tests, declared in one of the test network
  * function files. */
-extern IotMqttNetIf_t _IotTestNetworkInterface;
+extern IotMqttNetworkInfo_t _IotTestNetworkInfo;
 extern IotMqttConnection_t _IotTestMqttConnection;
 
 /*-----------------------------------------------------------*/
@@ -427,7 +426,8 @@ TEST_GROUP( MQTT_Stress );
  */
 TEST_SETUP( MQTT_Stress )
 {
-    int i = 0;
+    int32_t i = 0;
+    IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttSubscription_t pSubscriptions[ _TEST_TOPIC_NAME_COUNT ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
     const IotLogConfig_t logHideAll = { .hideLogLevel = true, .hideLibraryName = true, .hideTimestring = true };
@@ -444,8 +444,8 @@ TEST_SETUP( MQTT_Stress )
                                                       _MAX_RECEIVED_PUBLISH ) );
 
     /* Set the serializer overrides. */
-    _IotTestNetworkInterface.serialize.pingreq = _serializePingreq;
-    _IotTestNetworkInterface.freePacket = _IotMqtt_FreePacket;
+    serializer.serialize.pingreq = _serializePingreq;
+    _IotTestNetworkInfo.pMqttSerializer = &serializer;
 
     /* Set up the network stack. */
     if( IotTest_NetworkSetup() == false )
@@ -489,10 +489,10 @@ TEST_SETUP( MQTT_Stress )
 
     /* Establish the MQTT connection. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
-                       IotMqtt_Connect( &_IotTestMqttConnection,
-                                        &_IotTestNetworkInterface,
+                       IotMqtt_Connect( &_IotTestNetworkInfo,
                                         &connectInfo,
-                                        IOT_TEST_MQTT_TIMEOUT_MS ) );
+                                        IOT_TEST_MQTT_TIMEOUT_MS,
+                                        &_IotTestMqttConnection ) );
 
     /* Subscribe to the test topic filters. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,

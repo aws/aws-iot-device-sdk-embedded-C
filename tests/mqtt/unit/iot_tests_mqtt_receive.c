@@ -528,17 +528,22 @@ TEST_GROUP( MQTT_Unit_Receive );
  */
 TEST_SETUP( MQTT_Unit_Receive )
 {
-    IotMqttNetIf_t networkInterface = IOT_MQTT_NETIF_INITIALIZER;
+    static IotNetworkInterface_t networkInterface = { 0 };
+    static IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
+    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
 
     /* Set the deserializer overrides. */
-    networkInterface.deserialize.connack = _deserializeConnack;
-    networkInterface.deserialize.publish = _deserializePublish;
-    networkInterface.deserialize.puback = _deserializePuback;
-    networkInterface.deserialize.suback = _deserializeSuback;
-    networkInterface.deserialize.unsuback = _deserializeUnsuback;
-    networkInterface.deserialize.pingresp = _deserializePingresp;
-    networkInterface.getPacketType = _getPacketType;
+    serializer.serialize.puback = _serializePuback;
+    serializer.deserialize.connack = _deserializeConnack;
+    serializer.deserialize.publish = _deserializePublish;
+    serializer.deserialize.puback = _deserializePuback;
+    serializer.deserialize.suback = _deserializeSuback;
+    serializer.deserialize.unsuback = _deserializeUnsuback;
+    serializer.deserialize.pingresp = _deserializePingresp;
+    serializer.getPacketType = _getPacketType;
+
+    networkInfo.pNetworkInterface = &networkInterface;
 
     /* Create the memory allocation semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &_mallocSemaphore,
@@ -550,9 +555,12 @@ TEST_SETUP( MQTT_Unit_Receive )
 
     /* Initialize the MQTT connection used by the tests. */
     _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                         &networkInterface,
+                                                         &networkInfo,
                                                          0 );
-    TEST_ASSERT_NOT_EQUAL( NULL, _pMqttConnection );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Set the MQTT serializer overrides. */
+    _pMqttConnection->pSerializer = &serializer;
 
     /* Set the members of the subscription. */
     subscription.pTopicFilter = _TEST_TOPIC_NAME;
@@ -992,10 +1000,6 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
  */
 TEST( MQTT_Unit_Receive, PublishValid )
 {
-    /* Set the PUBACK serializer function. This serializer function always returns
-     * failure to prevent any PUBACK packets from actually being sent. */
-    _pMqttConnection->network.serialize.puback = _serializePuback;
-
     /* Process a valid QoS 0 PUBLISH. */
     {
         _DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );

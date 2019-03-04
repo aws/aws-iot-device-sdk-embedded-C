@@ -973,7 +973,7 @@ typedef struct IotMqttNetworkInfo
          * @attention The function pointers of the MQTT serializer overrides must
          * remain valid for the lifetime of the MQTT connection.
          */
-        const IotMqttSerializer_t * pMqttSerializers;
+        const IotMqttSerializer_t * pMqttSerializer;
     #endif
 } IotMqttNetworkInfo_t;
 
@@ -998,6 +998,7 @@ typedef struct IotMqttNetworkInfo
  * <b>Example</b>
  * @code{c}
  * IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
+ * IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
  * IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
  * IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
  * IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
@@ -1023,6 +1024,8 @@ typedef struct IotMqttNetworkInfo
 /* @[define_mqtt_initializers] */
 /** @brief Initializer for #IotMqttNetworkInfo_t. */
 #define IOT_MQTT_NETWORK_INFO_INITIALIZER     { .createNetworkConnection = true }
+/** @brief Initializer for #IotMqttSerializer_t. */
+#define IOT_MQTT_SERIALIZER_INITIALIZER       { 0 }
 /** @brief Initializer for #IotMqttConnectInfo_t. */
 #define IOT_MQTT_CONNECT_INFO_INITIALIZER     { .cleanSession = true }
 /** @brief Initializer for #IotMqttPublishInfo_t. */

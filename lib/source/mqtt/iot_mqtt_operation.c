@@ -146,15 +146,22 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
                               uint16_t * ) = _IotMqtt_PublishSetDup;
 
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pMqttConnection->pSerializers->serialize.publishSetDup != NULL )
+        if( pMqttConnection->pSerializer != NULL )
         {
-            publishSetDup = pMqttConnection->pSerializers->serialize.publishSetDup;
+            if( pMqttConnection->pSerializer->serialize.publishSetDup != NULL )
+            {
+                publishSetDup = pMqttConnection->pSerializer->serialize.publishSetDup;
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
         }
         else
         {
             _EMPTY_ELSE_MARKER;
         }
-    #endif
+    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
     /* Only PUBLISH may be retried. */
     IotMqtt_Assert( pOperation->operation == IOT_MQTT_PUBLISH_TO_SERVER );
@@ -572,15 +579,22 @@ void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
     if( pOperation->pMqttPacket != NULL )
     {
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pMqttConnection->pSerializers->freePacket != NULL )
+            if( pMqttConnection->pSerializer != NULL )
             {
-                freePacket = pMqttConnection->pSerializers->freePacket;
+                if( pMqttConnection->pSerializer->freePacket != NULL )
+                {
+                    freePacket = pMqttConnection->pSerializer->freePacket;
+                }
+                else
+                {
+                    _EMPTY_ELSE_MARKER;
+                }
             }
             else
             {
                 _EMPTY_ELSE_MARKER;
             }
-        #endif
+        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
         freePacket( pOperation->pMqttPacket );
 
