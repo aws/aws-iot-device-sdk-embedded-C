@@ -32,6 +32,9 @@
 /* Standard includes. */
 #include <string.h>
 
+/* Common include. */
+#include "iot_common.h"
+
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
 
@@ -533,6 +536,9 @@ TEST_SETUP( MQTT_Unit_Receive )
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
 
+    /* Initialize common components. */
+    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
+
     /* Set the deserializer overrides. */
     serializer.serialize.puback = _serializePuback;
     serializer.deserialize.connack = _deserializeConnack;
@@ -589,6 +595,7 @@ TEST_TEAR_DOWN( MQTT_Unit_Receive )
     IotMqtt_Disconnect( &_mqttConnection, true );
     IotMqtt_Cleanup();
     IotSemaphore_Destroy( &_mallocSemaphore );
+    IotCommon_Cleanup();
 
     /* Check that the tests used a deserializer override. */
     TEST_ASSERT_EQUAL_INT( true, _deserializeOverrideCalled );

@@ -39,6 +39,9 @@
 /* POSIX includes. */
 #include <time.h>
 
+/* Common include. */
+#include "iot_common.h"
+
 /* MQTT include. */
 #include "iot_mqtt.h"
 
@@ -437,6 +440,9 @@ TEST_SETUP( MQTT_Stress )
     IotMqttSubscription_t pSubscriptions[ _TEST_TOPIC_NAME_COUNT ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
     const IotLogConfig_t logHideAll = { .hideLogLevel = true, .hideLibraryName = true, .hideTimestring = true };
 
+    /* Initialize common components. */
+    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
+
     /* Clear the PINGREQ override flag. */
     _pingreqOverrideCalled = false;
 
@@ -533,6 +539,9 @@ TEST_TEAR_DOWN( MQTT_Stress )
 
     /* Clean up the MQTT library. */
     IotMqtt_Cleanup();
+
+    /* Clean up common components. */
+    IotCommon_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

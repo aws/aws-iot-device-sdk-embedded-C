@@ -32,6 +32,9 @@
 /* Standard includes. */
 #include <string.h>
 
+/* Common include. */
+#include "iot_common.h"
+
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
@@ -537,6 +540,12 @@ TEST_SETUP( MQTT_System )
     _unsubscribeSerializerOverride = false;
     _disconnectSerializerOverride = false;
 
+    /* Initialize common components. */
+    if( IotCommon_Init() == false )
+    {
+        TEST_FAIL_MESSAGE( "Failed to initialize common components." );
+    }
+
     /* Initialize the MQTT library. */
     if( IotMqtt_Init() != IOT_MQTT_SUCCESS )
     {
@@ -575,6 +584,9 @@ TEST_TEAR_DOWN( MQTT_System )
 
     /* Clean up the network stack. */
     IotTest_NetworkCleanup();
+
+    /* Clean up common components. */
+    IotCommon_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

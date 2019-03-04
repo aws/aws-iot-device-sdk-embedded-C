@@ -32,6 +32,9 @@
 /* Standard includes. */
 #include <string.h>
 
+/* Common include. */
+#include "iot_common.h"
+
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
 
@@ -429,6 +432,12 @@ TEST_SETUP( Shadow_System )
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
 
+    /* Initialize common components. */
+    if( IotCommon_Init() == false )
+    {
+        TEST_FAIL_MESSAGE( "Failed to initialize common components." );
+    }
+
     /* Set up the network stack. */
     if( IotTest_NetworkSetup() == false )
     {
@@ -504,6 +513,9 @@ TEST_TEAR_DOWN( Shadow_System )
 
     /* Clean up the MQTT library. */
     IotMqtt_Cleanup();
+
+    /* Clean up common components. */
+    IotCommon_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

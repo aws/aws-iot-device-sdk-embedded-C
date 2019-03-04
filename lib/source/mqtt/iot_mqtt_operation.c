@@ -91,13 +91,6 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation );
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief The task pool that processes MQTT operations.
- */
-IotTaskPool_t _IotMqttTaskPool = { 0 };
-
-/*-----------------------------------------------------------*/
-
 static bool _mqttOperation_match( const IotLink_t * pOperationLink,
                                   void * pMatch )
 {
@@ -469,7 +462,7 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
     /* Attempt to cancel the operation's job. */
     if( cancelJob == true )
     {
-        taskPoolStatus = IotTaskPool_TryCancel( &( _IotMqttTaskPool ),
+        taskPoolStatus = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
                                                 &( pOperation->job ),
                                                 NULL );
 
@@ -653,7 +646,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
 
     /* Check parameters. */
-    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
+    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pKeepAliveJob == &( pMqttConnection->keepAliveJob ) );
 
     /* Check that keep-alive interval is valid. The MQTT spec states its maximum
@@ -781,7 +774,7 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pPublishJob;
-    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
+    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pNext->incomingPublish == true );
     IotMqtt_Assert( pPublishJob == &( pNext->job ) );
 
@@ -844,7 +837,7 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pSendJob;
-    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
+    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pSendJob == &( pOperation->job ) );
 
     /* The given operation must have an allocated packet and be waiting for a status. */
@@ -1021,7 +1014,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pOperationJob;
-    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
+    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pOperationJob == &( pOperation->job ) );
 
     /* The operation's callback function and status must be set. */
@@ -1069,7 +1062,7 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * pOperation,
     IotMqtt_Assert( taskPoolStatus == IOT_TASKPOOL_SUCCESS );
 
     /* Schedule the new job with a delay. */
-    taskPoolStatus = IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
+    taskPoolStatus = IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
                                                    &( pOperation->job ),
                                                    delay );
 
@@ -1144,7 +1137,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
          * the retry job. */
         if( pResult->retry.limit > 0 )
         {
-            taskPoolStatus = IotTaskPool_TryCancel( &( _IotMqttTaskPool ),
+            taskPoolStatus = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
                                                     &( pResult->job ),
                                                     NULL );
 

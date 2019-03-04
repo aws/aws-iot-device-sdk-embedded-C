@@ -32,6 +32,9 @@
 /* Standard includes. */
 #include <string.h>
 
+/* Common include. */
+#include "iot_common.h"
+
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
@@ -78,6 +81,7 @@ TEST_GROUP( MQTT_Unit_Validate );
  */
 TEST_SETUP( MQTT_Unit_Validate )
 {
+    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
 }
 
 /*-----------------------------------------------------------*/
@@ -87,6 +91,7 @@ TEST_SETUP( MQTT_Unit_Validate )
  */
 TEST_TEAR_DOWN( MQTT_Unit_Validate )
 {
+    IotCommon_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

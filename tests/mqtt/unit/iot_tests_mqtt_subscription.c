@@ -32,6 +32,9 @@
 /* Standard includes. */
 #include <string.h>
 
+/* Common include. */
+#include "iot_common.h"
+
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
 
@@ -378,6 +381,9 @@ TEST_SETUP( MQTT_Unit_Subscription )
     static IotNetworkInterface_t networkInterface = { 0 };
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
+    /* Initialize common components. */
+    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
+
     networkInfo.pNetworkInterface = &networkInterface;
 
     /* Initialize the MQTT library. */
@@ -406,8 +412,9 @@ TEST_TEAR_DOWN( MQTT_Unit_Subscription )
         _connectionCreated = false;
     }
 
-    /* Clean up the MQTT library. */
+    /* Clean up libraries. */
     IotMqtt_Cleanup();
+    IotCommon_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
@@ -949,7 +956,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
     #endif
 
     /* The MQTT task pool must support at least 3 threads for this test to run successfully. */
-    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_SetMaxThreads( &( _IotMqttTaskPool ), 4 ) );
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_SetMaxThreads( IOT_SYSTEM_TASKPOOL, 4 ) );
 
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 3 ) );
 

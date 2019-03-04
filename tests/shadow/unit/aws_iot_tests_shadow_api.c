@@ -40,6 +40,9 @@
     #include <unistd.h>
 #endif
 
+/* Common include. */
+#include "iot_common.h"
+
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
 
@@ -101,6 +104,11 @@
  * @brief The MQTT connection object shared among all the tests.
  */
 static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+
+/**
+ * @brief The #IotNetworkInterface_t to share among the tests.
+ */
+static IotNetworkInterface_t _networkInterface = { 0 };
 
 /**
  * @brief Timer used to simulate a response from the network.
@@ -300,8 +308,10 @@ TEST_GROUP( Shadow_Unit_API );
  */
 TEST_SETUP( Shadow_Unit_API )
 {
-    IotNetworkInterface_t networkInterface = { 0 };
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
+
+    /* Initialize common components. */
+    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
 
     /* Clear the last packet type and identifier. */
     _lastPacketType = 0;
@@ -319,8 +329,9 @@ TEST_SETUP( Shadow_Unit_API )
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 
     /* Set the network interface send function. */
-    networkInterface.send = _sendSuccess;
-    networkInfo.pNetworkInterface = &networkInterface;
+    ( void ) memset( &_networkInterface, 0x00, sizeof( IotNetworkInterface_t ) );
+    _networkInterface.send = _sendSuccess;
+    networkInfo.pNetworkInterface = &_networkInterface;
 
     /* Initialize the MQTT connection object to use for the Shadow tests. */
     TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( false,
@@ -357,6 +368,9 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
     /* Destroy the last packet mutex. */
     IotMutex_Unlock( &_lastPacketMutex );
     IotMutex_Destroy( &_lastPacketMutex );
+
+    /* Clean up common components. */
+    IotCommon_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

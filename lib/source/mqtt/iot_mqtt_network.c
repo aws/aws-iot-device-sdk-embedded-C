@@ -630,7 +630,7 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection )
         IotMqtt_Assert( pMqttConnection->references > 0 );
 
         /* Attempt to cancel the keep-alive job. */
-        taskPoolStatus = IotTaskPool_TryCancel( &( _IotMqttTaskPool ),
+        taskPoolStatus = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
                                                 &( pMqttConnection->keepAliveJob ),
                                                 NULL );
 
@@ -645,7 +645,7 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection )
         {
             /* Clean up PINGREQ packet and job. */
             _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
-            IotTaskPool_DestroyJob( &( _IotMqttTaskPool ),
+            IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL,
                                     &( pMqttConnection->keepAliveJob ) );
 
             /* Clear data about the keep-alive. */

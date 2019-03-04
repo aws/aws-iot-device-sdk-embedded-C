@@ -330,9 +330,6 @@ typedef struct _mqttOperation
     };
 } _mqttOperation_t;
 
-/* Declaration of the MQTT task pool for internal files. */
-extern IotTaskPool_t _IotMqttTaskPool;
-
 /*-------------------- MQTT struct validation functions ---------------------*/
 
 /**

@@ -416,7 +416,7 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
         IotLogDebug( "(MQTT connection %p) Cleaning up keep-alive.", pMqttConnection );
 
         _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
-        IotTaskPool_DestroyJob( &( _IotMqttTaskPool ),
+        IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL,
                                 &( pMqttConnection->keepAliveJob ) );
 
         /* Clear data about the keep-alive. */
@@ -753,20 +753,7 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
 IotMqttError_t IotMqtt_Init( void )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
-    bool taskPoolCreated = false, connectMutexCreated = false;
-    const IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM;
-
-    /* Create MQTT library task pool. */
-    if( IotTaskPool_Create( &taskPoolInfo, &_IotMqttTaskPool ) != IOT_TASKPOOL_SUCCESS )
-    {
-        IotLogError( "Failed to initialize MQTT library task pool." );
-
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
-    }
-    else
-    {
-        taskPoolCreated = true;
-    }
+    bool connectMutexCreated = false;
 
     /* Create CONNECT mutex. */
     connectMutexCreated = IotMutex_Create( &( _connectMutex ), false );
@@ -801,15 +788,6 @@ IotMqttError_t IotMqtt_Init( void )
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        if( taskPoolCreated == true )
-        {
-            IotTaskPool_Destroy( &( _IotMqttTaskPool ) );
-        }
-        else
-        {
-            _EMPTY_ELSE_MARKER;
-        }
-
         if( connectMutexCreated == true )
         {
             IotMutex_Destroy( &( _connectMutex ) );
@@ -831,9 +809,6 @@ IotMqttError_t IotMqtt_Init( void )
 
 void IotMqtt_Cleanup()
 {
-    /* Clean up MQTT library task pool. */
-    IotTaskPool_Destroy( &_IotMqttTaskPool );
-
     /* Clean up MQTT serializer. */
     _IotMqtt_CleanupSerialize();
 
@@ -1088,7 +1063,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         {
             IotLogDebug( "Scheduling first MQTT keep-alive job." );
 
-            taskPoolStatus = IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
+            taskPoolStatus = IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
                                                            &( pMqttConnection->keepAliveJob ),
                                                            pMqttConnection->nextKeepAliveMs );
 

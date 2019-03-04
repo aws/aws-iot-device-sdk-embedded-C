@@ -44,6 +44,9 @@
     #include <unistd.h>
 #endif
 
+/* Common include. */
+#include "iot_common.h"
+
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
@@ -500,6 +503,8 @@ TEST_SETUP( MQTT_Unit_API )
     _pingreqSendCount = 0;
     _closeCount = 0;
 
+    /* Initialize libraries. */
+    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 }
 
@@ -511,6 +516,7 @@ TEST_SETUP( MQTT_Unit_API )
 TEST_TEAR_DOWN( MQTT_Unit_API )
 {
     IotMqtt_Cleanup();
+    IotCommon_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
@@ -576,7 +582,7 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
     TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _decrementReferencesJob,
                                                                     pOperation,
                                                                     &( pOperation->job ) ) );
-    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_Schedule( &( _IotMqttTaskPool ),
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_Schedule( IOT_SYSTEM_TASKPOOL,
                                                                    &( pOperation->job ),
                                                                    0 ) );
 
@@ -608,7 +614,7 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
     IotSemaphore_t waitSem;
 
     /* An arbitrary MQTT packet for this test. */
-    uint8_t pPacket[ 2 ] = { _MQTT_PACKET_TYPE_DISCONNECT, 0x00 };
+    static uint8_t pPacket[ 2 ] = { _MQTT_PACKET_TYPE_DISCONNECT, 0x00 };
 
     /* Create the wait semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
@@ -1332,7 +1338,7 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
 
     /* Schedule the initial PINGREQ. */
     TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS,
-                       IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
+                       IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
                                                      &( _mqttConnection.keepAliveJob ),
                                                      _mqttConnection.nextKeepAliveMs ) );
 
@@ -1379,7 +1385,7 @@ TEST( MQTT_Unit_API, KeepAliveJobCleanup )
 
         /* Schedule the initial PINGREQ. */
         TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS,
-                           IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
+                           IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
                                                          &( _mqttConnection.keepAliveJob ),
                                                          _mqttConnection.nextKeepAliveMs ) );
 

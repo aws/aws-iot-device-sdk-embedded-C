@@ -80,12 +80,6 @@ int main( int argc,
         return EXIT_FAILURE;
     }
 
-    /* Initialize the common libraries before running the tests. */
-    if( IotCommon_Init() == false )
-    {
-        return EXIT_FAILURE;
-    }
-
     /* Unity setup. */
     UnityFixture.Verbose = 1;
     UnityFixture.RepeatCount = 1;
@@ -109,9 +103,6 @@ int main( int argc,
     if( getopt( argc, argv, "l" ) != -1 )
     {
     }
-
-    /* Clean up common libraries. */
-    IotCommon_Cleanup();
 
     /* Return failure if any tests failed. */
     if( UNITY_END() != 0 )
