@@ -163,7 +163,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                                  void ( *freeReceivedData )( void * ) )
 {
     size_t bytesProcessed = 0, totalBytesProcessed = 0, remainingDataLength = 0;
-    _mqttConnection_t * pConnectionInfo = *( ( _mqttConnection_t ** ) ( pMqttConnection ) );
+    _mqttConnection_t * pConnectionInfo = ( _mqttConnection_t * ) ( pMqttConnection );
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     uint16_t packetIdentifier = 0;
     const uint8_t * pNextPacket = pReceivedData;
@@ -354,7 +354,7 @@ int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
                 IotLog_PrintBuffer( "SUBACK in data stream:", pNextPacket, remainingDataLength - totalBytesProcessed );
 
                 /* Deserialize the SUBACK to get the packet identifier. */
-                IotMqttError_t ( * deserializeSuback )( IotMqttConnection_t,
+                IotMqttError_t ( * deserializeSuback )( IotMqttConnection_t *,
                                                         const uint8_t *,
                                                         size_t,
                                                         uint16_t *,

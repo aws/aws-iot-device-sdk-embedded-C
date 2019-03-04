@@ -50,8 +50,6 @@
  * - @functionname{static_memory_function_malloctaskpooltimerevent}
  * - @functionname{static_memory_function_freetaskpooltimerevent}
  * - @functionname{static_memory_function_freemessagebuffer}
- * - @functionname{static_memory_function_mallocmqttconnection}
- * - @functionname{static_memory_function_freemqttconnection}
  * - @functionname{static_memory_function_mallocmqttoperation}
  * - @functionname{static_memory_function_freemqttoperation}
  * - @functionname{static_memory_function_mallocmqttsubscription}
@@ -227,43 +225,6 @@ void * Iot_MallocTaskPoolTimerEvent( size_t size );
 /* @[declare_static_memory_freetaskpooltimerevent] */
 void Iot_FreeTaskPoolTimerEvent( void * ptr );
 /* @[declare_static_memory_freetaskpooltimerevent] */
-
-/*----------------------- MQTT connection management ------------------------*/
-
-/**
- * @functionpage{Iot_MallocMqttConnection,static_memory,mallocmqttconnection}
- * @functionpage{Iot_FreeMqttConnection,static_memory,freemqttconnection}
- */
-
-/**
- * @brief Allocates memory to hold data for a new [MQTT connection]
- * (@ref static_memory_types_mqttconnections).
- *
- * This function is the analog of [malloc]
- * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
- * for MQTT connections.
- *
- * @param[in] size Must be equal to sizeof( #_mqttConnection_t ).
- *
- * @return Pointer to an MQTT connection.
- */
-/* @[declare_static_memory_mallocmqttconnection] */
-void * Iot_MallocMqttConnection( size_t size );
-/* @[declare_static_memory_mallocmqttconnection] */
-
-/**
- * @brief Frees an in-use [MQTT connection]
- * (@ref static_memory_types_mqttconnections).
- *
- * This function is the analog of [free]
- * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
- * for MQTT connections.
- *
- * @param[in] ptr Pointer to an active MQTT connection to free.
- */
-/* @[declare_static_memory_freemqttconnection] */
-void Iot_FreeMqttConnection( void * ptr );
-/* @[declare_static_memory_freemqttconnection] */
 
 /*------------------------ MQTT operation management ------------------------*/
 

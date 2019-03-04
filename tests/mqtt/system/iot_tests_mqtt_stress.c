@@ -173,6 +173,11 @@ extern IotMqttConnection_t _IotTestMqttConnection;
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Tracks whether the test MQTT connection has been created.
+ */
+static bool _connectionCreated = false;
+
+/**
  * @brief Filler text to publish.
  */
 static const char _pSamplePayload[] =
@@ -265,7 +270,7 @@ static IotMqttError_t _checkConnection( void )
     publishInfo.retryLimit = IOT_TEST_MQTT_RETRY_LIMIT;
 
     /* Send a PUBLISH. */
-    status = IotMqtt_Publish( _IotTestMqttConnection,
+    status = IotMqtt_Publish( &_IotTestMqttConnection,
                               &publishInfo,
                               IOT_MQTT_FLAG_WAITABLE,
                               NULL,
@@ -359,7 +364,7 @@ static void * _publishThread( void * pArgument )
         publishInfo.pTopicName = _pTopicNames[ i % _TEST_TOPIC_NAME_COUNT ];
 
         /* PUBLISH the message. */
-        status = IotMqtt_Publish( _IotTestMqttConnection,
+        status = IotMqtt_Publish( &_IotTestMqttConnection,
                                   &publishInfo,
                                   0,
                                   NULL,
@@ -494,9 +499,11 @@ TEST_SETUP( MQTT_Stress )
                                         IOT_TEST_MQTT_TIMEOUT_MS,
                                         &_IotTestMqttConnection ) );
 
+    _connectionCreated = true;
+
     /* Subscribe to the test topic filters. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
-                       IotMqtt_TimedSubscribe( _IotTestMqttConnection,
+                       IotMqtt_TimedSubscribe( &_IotTestMqttConnection,
                                                pSubscriptions,
                                                _TEST_TOPIC_NAME_COUNT,
                                                0,
@@ -515,9 +522,10 @@ TEST_TEAR_DOWN( MQTT_Stress )
 
     /* Disconnect the MQTT connection. Unsubscribe is not called; the subscriptions
      * should be cleaned up by Disconnect. */
-    if( _IotTestMqttConnection != IOT_MQTT_CONNECTION_INITIALIZER )
+    if( _connectionCreated == true )
     {
-        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+        IotMqtt_Disconnect( &_IotTestMqttConnection, false );
+        _connectionCreated = false;
     }
 
     /* Clean up the network stack. */
@@ -525,7 +533,6 @@ TEST_TEAR_DOWN( MQTT_Stress )
 
     /* Clean up the MQTT library. */
     IotMqtt_Cleanup();
-    _IotTestMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 }
 
 /*-----------------------------------------------------------*/
@@ -591,7 +598,7 @@ TEST( MQTT_Stress, BlockingCallback )
     {
         /* Call a function that will invoke the blocking callback. */
         TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING,
-                           IotMqtt_Publish( _IotTestMqttConnection,
+                           IotMqtt_Publish( &_IotTestMqttConnection,
                                             &publishInfo,
                                             0,
                                             &callbackInfo,

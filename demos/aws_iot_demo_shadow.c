@@ -89,6 +89,7 @@ int AwsIotDemo_RunShadowDemo( const char * const pThingName,
                               const IotMqttNetworkInfo_t * const pNetworkInfo )
 {
     int status = 0;
+    bool connectionCreated = false;
     IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
 
@@ -121,9 +122,9 @@ int AwsIotDemo_RunShadowDemo( const char * const pThingName,
     }
 
     /* Disconnect the MQTT connection if it was established. */
-    if( *pMqttConnection != IOT_MQTT_CONNECTION_INITIALIZER )
+    if( connectionCreated == true )
     {
-        IotMqtt_Disconnect( *pMqttConnection, false );
+        IotMqtt_Disconnect( pMqttConnection, false );
     }
 
     return status;

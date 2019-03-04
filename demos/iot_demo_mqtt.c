@@ -315,7 +315,7 @@ static void _mqttSubscriptionCallback( void * param1,
              * the MQTT library will still guarantee at-least-once delivery (subject
              * to the retransmission strategy) because the acknowledgement message is
              * sent at QoS 1. */
-            if( IotMqtt_Publish( pPublish->mqttConnection,
+            if( IotMqtt_Publish( pPublish->pMqttConnection,
                                  &acknowledgementInfo,
                                  0,
                                  NULL,
@@ -350,7 +350,7 @@ static void _mqttSubscriptionCallback( void * param1,
  * @param[in] pClientIdentifier NULL-terminated MQTT client identifier.
  * @param[in] pMqttConnection Pointer to the MQTT connection to use. This MQTT
  * connection must be initialized to IOT_MQTT_CONNECTION_INITIALIZER.
- * @param[in] pNetworkInterface Pointer to an MQTT network interface to use.
+ * @param[in] pNetworkInfo Pointer to an MQTT network interface to use.
  * All necessary members of the network interface should be set before calling
  * this function.
  *
@@ -362,6 +362,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
                          const IotMqttNetworkInfo_t * const pNetworkInfo )
 {
     int status = 0, i = 0;
+    bool connectionCreated = false;
     intptr_t publishCount = 0;
     char pClientIdentifierBuffer[ _CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
     char pPublishPayload[ _PUBLISH_PAYLOAD_BUFFER_LENGTH ] = { 0 };
@@ -447,6 +448,10 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
 
             status = -1;
         }
+        else
+        {
+            connectionCreated = true;
+        }
     }
 
     if( status == 0 )
@@ -464,7 +469,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
         /* Subscribe to all the topic filters in the subscription list. The
          * blocking SUBSCRIBE function is used because the demo should not
          * continue until SUBSCRIBE completes. */
-        mqttStatus = IotMqtt_TimedSubscribe( *pMqttConnection,
+        mqttStatus = IotMqtt_TimedSubscribe( pMqttConnection,
                                              pSubscriptions,
                                              _TOPIC_FILTER_COUNT,
                                              0,
@@ -481,7 +486,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
                 /* Check which subscriptions were rejected before exiting the demo. */
                 for( i = 0; i < _TOPIC_FILTER_COUNT; i++ )
                 {
-                    if( IotMqtt_IsSubscribed( *pMqttConnection,
+                    if( IotMqtt_IsSubscribed( pMqttConnection,
                                               pSubscriptions[ i ].pTopicFilter,
                                               pSubscriptions[ i ].topicFilterLength,
                                               NULL ) == true )
@@ -565,7 +570,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
                 }
 
                 /* PUBLISH a message. */
-                mqttStatus = IotMqtt_Publish( *pMqttConnection,
+                mqttStatus = IotMqtt_Publish( pMqttConnection,
                                               &publishInfo,
                                               0,
                                               &publishComplete,
@@ -645,7 +650,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
     if( status == 0 )
     {
         /* Unsubscribe from all demo topic filters. */
-        mqttStatus = IotMqtt_TimedUnsubscribe( *pMqttConnection,
+        mqttStatus = IotMqtt_TimedUnsubscribe( pMqttConnection,
                                                pSubscriptions,
                                                _TOPIC_FILTER_COUNT,
                                                0,
@@ -660,9 +665,9 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
     }
 
     /* Disconnect the MQTT connection if it was established. */
-    if( *pMqttConnection != IOT_MQTT_CONNECTION_INITIALIZER )
+    if( connectionCreated == true )
     {
-        IotMqtt_Disconnect( *pMqttConnection, false );
+        IotMqtt_Disconnect( pMqttConnection, false );
     }
 
     return status;

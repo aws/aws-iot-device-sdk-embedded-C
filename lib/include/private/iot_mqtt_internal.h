@@ -36,9 +36,6 @@
 /* Linear containers (lists and queues) include. */
 #include "iot_linear_containers.h"
 
-/* Platform layer types include. */
-#include "types/iot_platform_types.h"
-
 /* MQTT include. */
 #include "iot_mqtt.h"
 
@@ -83,24 +80,6 @@
  */
 #if IOT_STATIC_MEMORY_ONLY == 1
     #include "private/iot_static_memory.h"
-
-/**
- * @brief Allocate an #_mqttConnection_t. This function should have the same
- * signature as [malloc]
- * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
- */
-    #ifndef IotMqtt_MallocConnection
-        #define IotMqtt_MallocConnection    Iot_MallocMqttConnection
-    #endif
-
-/**
- * @brief Free an #_mqttConnection_t. This function should have the same
- * signature as [free]
- * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
- */
-    #ifndef IotMqtt_FreeConnection
-        #define IotMqtt_FreeConnection    Iot_FreeMqttConnection
-    #endif
 
 /**
  * @brief Allocate memory for an MQTT packet. This function should have the
@@ -157,14 +136,6 @@
     #endif
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
     #include <stdlib.h>
-
-    #ifndef IotMqtt_MallocConnection
-        #define IotMqtt_MallocConnection    malloc
-    #endif
-
-    #ifndef IotMqtt_FreeConnection
-        #define IotMqtt_FreeConnection    free
-    #endif
 
     #ifndef IotMqtt_MallocMessage
         #define IotMqtt_MallocMessage    malloc
@@ -264,12 +235,9 @@
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
  *
- * Forward declarations.
+ * Define the internal MQTT connection type.
  */
-struct _mqttSubscription;
-struct _mqttConnection;
-struct _mqttOperation;
-struct _mqttTimerEvent;
+typedef struct _IotMqttConnection _mqttConnection_t;
 /** @endcond */
 
 /**
@@ -305,36 +273,6 @@ typedef struct _mqttSubscription
 } _mqttSubscription_t;
 
 /**
- * @brief Internal structure to hold data on an MQTT connection.
- */
-typedef struct _mqttConnection
-{
-    bool awsIotMqttMode;                             /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
-    void * pNetworkConnection;                       /**< @brief References the transport-layer network connection. */
-    const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
-
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
-    #endif
-
-    bool disconnected;                 /**< @brief Tracks if this connection has been disconnected. */
-    IotMutex_t referencesMutex;        /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
-    int32_t references;                /**< @brief Counts callbacks and operations using this connection. */
-    IotListDouble_t pendingProcessing; /**< @brief List of operations waiting to be processed by a task pool routine. */
-    IotListDouble_t pendingResponse;   /**< @brief List of processed operations awaiting a server response. */
-
-    IotListDouble_t subscriptionList;  /**< @brief Holds subscriptions associated with this connection. */
-    IotMutex_t subscriptionMutex;      /**< @brief Grants exclusive access to #_mqttConnection_t.subscriptionList. */
-
-    bool keepAliveFailure;             /**< @brief Failure flag for keep-alive operation. */
-    uint32_t keepAliveMs;              /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
-    uint64_t nextKeepAliveMs;          /**< @brief Relative delay for next keep-alive job. */
-    IotTaskPoolJob_t keepAliveJob;     /**< @brief Task pool job for processing this connection's keep-alive. */
-    uint8_t * pPingreqPacket;          /**< @brief An MQTT PINGREQ packet, allocated if keep-alive is active. */
-    size_t pingreqPacketSize;          /**< @brief The size of an allocated PINGREQ packet. */
-} _mqttConnection_t;
-
-/**
  * @brief Internal structure representing a single MQTT operation, such as
  * CONNECT, SUBSCRIBE, PUBLISH, etc.
  *
@@ -346,7 +284,7 @@ typedef struct _mqttOperation
     IotLink_t link;                           /**< @brief List link member. */
 
     bool incomingPublish;                     /**< @brief Set to true if this operation an incoming PUBLISH. */
-    struct _mqttConnection * pMqttConnection; /**< @brief MQTT connection associated with this operation. */
+    _mqttConnection_t * pMqttConnection;      /**< @brief MQTT connection associated with this operation. */
 
     IotTaskPoolJob_t job;                     /**< @brief Task pool job associated with this operation. */
 
@@ -617,7 +555,7 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubsc
  * Converts the packet from a stream of bytes to an #IotMqttError_t and extracts
  * the packet identifier. Also prints out debug log messages about the packet.
  *
- * @param[in] mqttConnection The MQTT connection associated with the subscription.
+ * @param[in] pMqttConnection The MQTT connection associated with the subscription.
  * Rejected topic filters are removed from this connection.
  * @param[in] pSubackStart Pointer to the start of a SUBACK packet.
  * @param[in] dataLength Length of the data stream after `pSubackStart`.
@@ -628,7 +566,7 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubsc
  * @return #IOT_MQTT_SUCCESS if SUBACK is valid; #IOT_MQTT_BAD_RESPONSE
  * if the SUBACK packet doesn't follow MQTT spec.
  */
-IotMqttError_t _IotMqtt_DeserializeSuback( IotMqttConnection_t mqttConnection,
+IotMqttError_t _IotMqtt_DeserializeSuback( IotMqttConnection_t * pMqttConnection,
                                            const uint8_t * pSubackStart,
                                            size_t dataLength,
                                            uint16_t * pPacketIdentifier,

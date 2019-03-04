@@ -107,13 +107,14 @@ static bool _createKeepAliveJob( const IotMqttNetworkInfo_t * pNetworkInfo,
  * @param[in] pNetworkInfo User-provided network information for the new
  * connection.
  * @param[in] keepAliveSeconds User-provided keep-alive interval for the new connection.
+ * @param[out] pMqttConnection Output parameter for new MQTT connection.
  *
- * @return Pointer to a newly-allocated MQTT connection on success; `NULL` on
- * failure.
+ * @return `true` if the connection was successfully created; `false` otherwise.
  */
-static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
-                                                  const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                  uint16_t keepAliveSeconds );
+static bool _createMqttConnection( bool awsIotMqttMode,
+                                   const IotMqttNetworkInfo_t * pNetworkInfo,
+                                   uint16_t keepAliveSeconds,
+                                   _mqttConnection_t * pMqttConnection );
 
 /**
  * @brief Destroys the members of an MQTT connection.
@@ -130,7 +131,7 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection );
  * description of the parameters and return values.
  */
 static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
-                                           IotMqttConnection_t mqttConnection,
+                                           IotMqttConnection_t * pMqttConnection,
                                            const IotMqttSubscription_t * pSubscriptionList,
                                            size_t subscriptionCount,
                                            uint32_t flags,
@@ -279,40 +280,25 @@ static bool _createKeepAliveJob( const IotMqttNetworkInfo_t * pNetworkInfo,
 
 /*-----------------------------------------------------------*/
 
-static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
-                                                  const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                  uint16_t keepAliveSeconds )
+static bool _createMqttConnection( bool awsIotMqttMode,
+                                   const IotMqttNetworkInfo_t * pNetworkInfo,
+                                   uint16_t keepAliveSeconds,
+                                   _mqttConnection_t * pMqttConnection )
 {
     _IOT_FUNCTION_ENTRY( bool, true );
     bool referencesMutexCreated = false, subscriptionMutexCreated = false;
-    _mqttConnection_t * pNewMqttConnection = NULL;
-
-    /* Allocate memory to store data for the new MQTT connection. */
-    pNewMqttConnection = ( _mqttConnection_t * )
-                         IotMqtt_MallocConnection( sizeof( _mqttConnection_t ) );
-
-    if( pNewMqttConnection == NULL )
-    {
-        IotLogError( "Failed to allocate memory for new MQTT connection." );
-
-        _IOT_SET_AND_GOTO_CLEANUP( false );
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
 
     /* Clear the MQTT connection, then copy the MQTT server mode and network
      * interface. */
-    ( void ) memset( pNewMqttConnection, 0x00, sizeof( _mqttConnection_t ) );
-    pNewMqttConnection->awsIotMqttMode = awsIotMqttMode;
-    pNewMqttConnection->pNetworkInterface = pNetworkInfo->pNetworkInterface;
+    ( void ) memset( pMqttConnection, 0x00, sizeof( _mqttConnection_t ) );
+    pMqttConnection->awsIotMqttMode = awsIotMqttMode;
+    pMqttConnection->pNetworkInterface = pNetworkInfo->pNetworkInterface;
 
     /* Start a new MQTT connection with a reference count of 1. */
-    pNewMqttConnection->references = 1;
+    pMqttConnection->references = 1;
 
     /* Create the references mutex for a new connection. It is a recursive mutex. */
-    referencesMutexCreated = IotMutex_Create( &( pNewMqttConnection->referencesMutex ), true );
+    referencesMutexCreated = IotMutex_Create( &( pMqttConnection->referencesMutex ), true );
 
     if( referencesMutexCreated == false )
     {
@@ -326,7 +312,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     }
 
     /* Create the subscription mutex for a new connection. */
-    subscriptionMutexCreated = IotMutex_Create( &( pNewMqttConnection->subscriptionMutex ), false );
+    subscriptionMutexCreated = IotMutex_Create( &( pMqttConnection->subscriptionMutex ), false );
 
     if( subscriptionMutexCreated == false )
     {
@@ -340,9 +326,9 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     }
 
     /* Create the new connection's subscription and operation lists. */
-    IotListDouble_Create( &( pNewMqttConnection->subscriptionList ) );
-    IotListDouble_Create( &( pNewMqttConnection->pendingProcessing ) );
-    IotListDouble_Create( &( pNewMqttConnection->pendingResponse ) );
+    IotListDouble_Create( &( pMqttConnection->subscriptionList ) );
+    IotListDouble_Create( &( pMqttConnection->pendingProcessing ) );
+    IotListDouble_Create( &( pMqttConnection->pendingResponse ) );
 
     /* AWS IoT service limits set minimum and maximum values for keep-alive interval.
      * Adjust the user-provided keep-alive interval based on these requirements. */
@@ -375,7 +361,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     {
         if( _createKeepAliveJob( pNetworkInfo,
                                  keepAliveSeconds,
-                                 pNewMqttConnection ) == false )
+                                 pMqttConnection ) == false )
         {
             _IOT_SET_AND_GOTO_CLEANUP( false );
         }
@@ -396,7 +382,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     {
         if( subscriptionMutexCreated == true )
         {
-            IotMutex_Destroy( &( pNewMqttConnection->subscriptionMutex ) );
+            IotMutex_Destroy( &( pMqttConnection->subscriptionMutex ) );
         }
         else
         {
@@ -405,18 +391,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
 
         if( referencesMutexCreated == true )
         {
-            IotMutex_Destroy( &( pNewMqttConnection->referencesMutex ) );
-        }
-        else
-        {
-            _EMPTY_ELSE_MARKER;
-        }
-
-        if( pNewMqttConnection != NULL )
-        {
-            IotMqtt_FreeConnection( pNewMqttConnection );
-
-            pNewMqttConnection = NULL;
+            IotMutex_Destroy( &( pMqttConnection->referencesMutex ) );
         }
         else
         {
@@ -428,7 +403,7 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
         _EMPTY_ELSE_MARKER;
     }
 
-    return pNewMqttConnection;
+    _IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
@@ -473,10 +448,9 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
                                     offsetof( _mqttSubscription_t, link ) );
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
-    /* Destroy mutexes and free connection. */
+    /* Destroy mutexes. */
     IotMutex_Destroy( &( pMqttConnection->referencesMutex ) );
     IotMutex_Destroy( &( pMqttConnection->subscriptionMutex ) );
-    IotMqtt_FreeConnection( pMqttConnection );
 
     IotLogDebug( "(MQTT connection %p) Connection destroyed.", pMqttConnection );
 }
@@ -484,7 +458,7 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 /*-----------------------------------------------------------*/
 
 static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
-                                           IotMqttConnection_t mqttConnection,
+                                           IotMqttConnection_t * pMqttConnection,
                                            const IotMqttSubscription_t * pSubscriptionList,
                                            size_t subscriptionCount,
                                            uint32_t flags,
@@ -493,7 +467,6 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     _mqttOperation_t * pSubscriptionOperation = NULL;
-    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
 
     /* Subscription serializer function. */
     IotMqttError_t ( * serializeSubscription )( const IotMqttSubscription_t *,
@@ -878,9 +851,9 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
                                 IotMqttConnection_t * pMqttConnection )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    bool connectionCreated = false;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     void * pNetworkConnection = NULL;
-    _mqttConnection_t * pNewMqttConnection = NULL;
     _mqttOperation_t * pConnectOperation = NULL;
 
     /* Default CONNECT serializer function. */
@@ -974,27 +947,28 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     IotLogInfo( "Establishing new MQTT connection." );
 
     /* Initialize a new MQTT connection object. */
-    pNewMqttConnection = _createMqttConnection( pConnectInfo->awsIotMqttMode,
-                                                pNetworkInfo,
-                                                pConnectInfo->keepAliveSeconds );
+    connectionCreated = _createMqttConnection( pConnectInfo->awsIotMqttMode,
+                                               pNetworkInfo,
+                                               pConnectInfo->keepAliveSeconds,
+                                               pMqttConnection );
 
-    if( pNewMqttConnection == NULL )
+    if( connectionCreated == false )
     {
         _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
     }
     else
     {
         /* Set the network connection associated with the MQTT connection. */
-        pNewMqttConnection->pNetworkConnection = pNetworkConnection;
+        pMqttConnection->pNetworkConnection = pNetworkConnection;
 
         /* Set the MQTT packet serializer overrides. */
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            pNewMqttConnection->pSerializer = pNetworkInfo->pMqttSerializer;
+            pMqttConnection->pSerializer = pNetworkInfo->pMqttSerializer;
         #endif
     }
 
     /* Create a CONNECT operation. */
-    status = _IotMqtt_CreateOperation( pNewMqttConnection,
+    status = _IotMqtt_CreateOperation( pMqttConnection,
                                        IOT_MQTT_FLAG_WAITABLE,
                                        NULL,
                                        &pConnectOperation );
@@ -1024,7 +998,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         /* Previous subscription count should have been validated as nonzero. */
         IotMqtt_Assert( pConnectInfo->previousSubscriptionCount > 0 );
 
-        status = _IotMqtt_AddSubscriptions( pNewMqttConnection,
+        status = _IotMqtt_AddSubscriptions( pMqttConnection,
                                             2,
                                             pConnectInfo->pPreviousSubscriptions,
                                             pConnectInfo->previousSubscriptionCount );
@@ -1045,11 +1019,11 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
 
     /* Choose a CONNECT serializer function. */
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pNewMqttConnection->pSerializer != NULL )
+        if( pMqttConnection->pSerializer != NULL )
         {
-            if( pNewMqttConnection->pSerializer->serialize.connect != NULL )
+            if( pMqttConnection->pSerializer->serialize.connect != NULL )
             {
-                serializeConnect = pNewMqttConnection->pSerializer->serialize.connect;
+                serializeConnect = pMqttConnection->pSerializer->serialize.connect;
             }
             else
             {
@@ -1079,9 +1053,6 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     /* Check the serialized MQTT packet. */
     IotMqtt_Assert( pConnectOperation->pMqttPacket != NULL );
     IotMqtt_Assert( pConnectOperation->packetSize > 0 );
-
-    /* Set the output parameter so it may be used by the network receive callback. */
-    *pMqttConnection = pNewMqttConnection;
 
     /* Prevent another CONNECT operation from using the network. */
     IotMutex_Lock( &_connectMutex );
@@ -1113,13 +1084,13 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     if( status == IOT_MQTT_SUCCESS )
     {
         /* Check if a keep-alive job should be scheduled. */
-        if( pNewMqttConnection->keepAliveMs != 0 )
+        if( pMqttConnection->keepAliveMs != 0 )
         {
             IotLogDebug( "Scheduling first MQTT keep-alive job." );
 
             taskPoolStatus = IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
-                                                           &( pNewMqttConnection->keepAliveJob ),
-                                                           pNewMqttConnection->nextKeepAliveMs );
+                                                           &( pMqttConnection->keepAliveJob ),
+                                                           pMqttConnection->nextKeepAliveMs );
 
             if( taskPoolStatus != IOT_TASKPOOL_SUCCESS )
             {
@@ -1156,10 +1127,9 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
             _EMPTY_ELSE_MARKER;
         }
 
-        if( pNewMqttConnection != NULL )
+        if( connectionCreated == true )
         {
-            _destroyMqttConnection( pNewMqttConnection );
-            *pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+            _destroyMqttConnection( pMqttConnection );
         }
         else
         {
@@ -1168,7 +1138,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     }
     else
     {
-        IotLogInfo( "New MQTT connection %p established.", pNewMqttConnection );
+        IotLogInfo( "New MQTT connection %p established.", pMqttConnection );
     }
 
     _IOT_FUNCTION_CLEANUP_END();
@@ -1176,12 +1146,11 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
 
 /*-----------------------------------------------------------*/
 
-void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
+void IotMqtt_Disconnect( IotMqttConnection_t * pMqttConnection,
                          bool cleanupOnly )
 {
     bool disconnected = false;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
-    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
     _mqttOperation_t * pDisconnectOperation = NULL;
 
     IotLogInfo( "(MQTT connection %p) Disconnecting connection.", pMqttConnection );
@@ -1326,7 +1295,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
+IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t * pMqttConnection,
                                   const IotMqttSubscription_t * pSubscriptionList,
                                   size_t subscriptionCount,
                                   uint32_t flags,
@@ -1334,7 +1303,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
                                   IotMqttReference_t * pSubscribeRef )
 {
     return _subscriptionCommon( IOT_MQTT_SUBSCRIBE,
-                                mqttConnection,
+                                pMqttConnection,
                                 pSubscriptionList,
                                 subscriptionCount,
                                 flags,
@@ -1344,7 +1313,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
+IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t * pMqttConnection,
                                        const IotMqttSubscription_t * pSubscriptionList,
                                        size_t subscriptionCount,
                                        uint32_t flags,
@@ -1357,7 +1326,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
     ( void ) flags;
 
     /* Call the asynchronous SUBSCRIBE function. */
-    status = IotMqtt_Subscribe( mqttConnection,
+    status = IotMqtt_Subscribe( pMqttConnection,
                                 pSubscriptionList,
                                 subscriptionCount,
                                 IOT_MQTT_FLAG_WAITABLE,
@@ -1382,7 +1351,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
+IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t * pMqttConnection,
                                     const IotMqttSubscription_t * pSubscriptionList,
                                     size_t subscriptionCount,
                                     uint32_t flags,
@@ -1390,7 +1359,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
                                     IotMqttReference_t * pUnsubscribeRef )
 {
     return _subscriptionCommon( IOT_MQTT_UNSUBSCRIBE,
-                                mqttConnection,
+                                pMqttConnection,
                                 pSubscriptionList,
                                 subscriptionCount,
                                 flags,
@@ -1400,7 +1369,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
+IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t * pMqttConnection,
                                          const IotMqttSubscription_t * pSubscriptionList,
                                          size_t subscriptionCount,
                                          uint32_t flags,
@@ -1413,7 +1382,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
     ( void ) flags;
 
     /* Call the asynchronous UNSUBSCRIBE function. */
-    status = IotMqtt_Unsubscribe( mqttConnection,
+    status = IotMqtt_Unsubscribe( pMqttConnection,
                                   pSubscriptionList,
                                   subscriptionCount,
                                   IOT_MQTT_FLAG_WAITABLE,
@@ -1438,7 +1407,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
+IotMqttError_t IotMqtt_Publish( IotMqttConnection_t * pMqttConnection,
                                 const IotMqttPublishInfo_t * pPublishInfo,
                                 uint32_t flags,
                                 const IotMqttCallbackInfo_t * pCallbackInfo,
@@ -1446,7 +1415,6 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     _mqttOperation_t * pPublishOperation = NULL;
-    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
 
     /* Default PUBLISH serializer function. */
     IotMqttError_t ( * serializePublish )( const IotMqttPublishInfo_t *,
@@ -1680,7 +1648,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
+IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t * pMqttConnection,
                                      const IotMqttPublishInfo_t * pPublishInfo,
                                      uint32_t flags,
                                      uint64_t timeoutMs )
@@ -1704,7 +1672,7 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
     }
 
     /* Call the asynchronous PUBLISH function. */
-    status = IotMqtt_Publish( mqttConnection,
+    status = IotMqtt_Publish( pMqttConnection,
                               pPublishInfo,
                               flags,
                               NULL,

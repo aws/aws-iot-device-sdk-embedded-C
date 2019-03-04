@@ -248,7 +248,7 @@ Metrics allow AWS IoT to prioritize engineering resources based on SDK usage. SD
 @section IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES
 @brief Set this to `1` to allow the MQTT packet serializer and deserializer functions to be overridden.
 
-Serializer overrides allow the functions that generate and decode MQTT packets to be overridden. When this setting is `1`, each connection may have different serializer and deserializer functions. This allows the MQTT library to be used as a general-purpose transport library (with limitations). Currently, this setting is used to support MQTT over Bluetooth Low-Energy on Amazon FreeRTOS. See #IotMqttNetIf_t for a list of functions that can be overridden. If this setting is `1`, the serializer [initialization](@ref _IotMqtt_InitSerialize) and [cleanup](@ref _IotMqtt_CleanupSerialize) functions may be extended by defining `_IotMqtt_InitSerializeAdditional` and `_IotMqtt_CleanupSerializeAdditional`. These functions will be called along with the default serializer initialization and cleanup functions. They must have the following signatures:
+Serializer overrides allow the functions that generate and decode MQTT packets to be overridden. When this setting is `1`, each connection may have different serializer and deserializer functions. This allows the MQTT library to be used as a general-purpose transport library (with limitations). Currently, this setting is used to support MQTT over Bluetooth Low-Energy on Amazon FreeRTOS. See #IotMqttSerializer_t for a list of functions that can be overridden. If this setting is `1`, the serializer [initialization](@ref _IotMqtt_InitSerialize) and [cleanup](@ref _IotMqtt_CleanupSerialize) functions may be extended by defining `_IotMqtt_InitSerializeAdditional` and `_IotMqtt_CleanupSerializeAdditional`. These functions will be called along with the default serializer initialization and cleanup functions. They must have the following signatures:
 @code{c}
 #include <stdbool.h>
 
@@ -304,10 +304,6 @@ This setting is used by the [MQTT tests](@ref mqtt_tests) to access the internal
 
 @section mqtt_config_memory Memory allocation
 @brief If @ref IOT_STATIC_MEMORY_ONLY is `1`, then the following functions must be re-implemented for the MQTT library.
-- #IotMqtt_MallocConnection <br>
-  @copybrief IotMqtt_MallocConnection
-- #IotMqtt_FreeConnection <br>
-  @copybrief IotMqtt_FreeConnection
 - #IotMqtt_MallocMessage <br>
   @copybrief IotMqtt_MallocMessage
 - #IotMqtt_FreeMessage <br>

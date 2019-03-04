@@ -51,9 +51,6 @@
  *
  * Provide default values for undefined configuration constants.
  */
-#ifndef IOT_MQTT_CONNECTIONS
-    #define IOT_MQTT_CONNECTIONS                   ( 1 )
-#endif
 #ifndef IOT_MQTT_SUBSCRIPTIONS
     #define IOT_MQTT_SUBSCRIPTIONS                 ( 8 )
 #endif
@@ -63,9 +60,6 @@
 /** @endcond */
 
 /* Validate static memory configuration settings. */
-#if IOT_MQTT_CONNECTIONS <= 0
-    #error "IOT_MQTT_CONNECTIONS cannot be 0 or negative."
-#endif
 #if IOT_MQTT_SUBSCRIPTIONS <= 0
     #error "IOT_MQTT_SUBSCRIPTIONS cannot be 0 or negative."
 #endif
@@ -100,49 +94,11 @@ extern void IotStaticMemory_ReturnInUse( void * ptr,
 /*
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
-static bool _pInUseMqttConnections[ IOT_MQTT_CONNECTIONS ] = { 0 };                               /**< @brief MQTT connection in-use flags. */
-static _mqttConnection_t _pMqttConnections[ IOT_MQTT_CONNECTIONS ] = { { 0 } };                   /**< @brief MQTT connections. */
-
 static bool _pInUseMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { 0 };                 /**< @brief MQTT operation in-use flags. */
 static _mqttOperation_t _pMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { 0 };          /**< @brief MQTT operations. */
 
 static bool _pInUseMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ] = { 0 };                           /**< @brief MQTT subscription in-use flags. */
 static char _pMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ][ _MQTT_SUBSCRIPTION_SIZE ] = { { 0 } }; /**< @brief MQTT subscriptions. */
-
-/*-----------------------------------------------------------*/
-
-void * Iot_MallocMqttConnection( size_t size )
-{
-    int freeIndex = -1;
-    void * pNewConnection = NULL;
-
-    /* Check size argument. */
-    if( size == sizeof( _mqttConnection_t ) )
-    {
-        /* Find a free MQTT connection. */
-        freeIndex = IotStaticMemory_FindFree( _pInUseMqttConnections,
-                                              IOT_MQTT_CONNECTIONS );
-
-        if( freeIndex != -1 )
-        {
-            pNewConnection = &( _pMqttConnections[ freeIndex ] );
-        }
-    }
-
-    return pNewConnection;
-}
-
-/*-----------------------------------------------------------*/
-
-void Iot_FreeMqttConnection( void * ptr )
-{
-    /* Return the in-use MQTT connection. */
-    IotStaticMemory_ReturnInUse( ptr,
-                                 _pMqttConnections,
-                                 _pInUseMqttConnections,
-                                 IOT_MQTT_CONNECTIONS,
-                                 sizeof( _mqttConnection_t ) );
-}
 
 /*-----------------------------------------------------------*/
 

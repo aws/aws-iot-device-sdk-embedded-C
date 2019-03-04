@@ -457,7 +457,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
             IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
             /* Set the members of the callback parameter. */
-            pCallbackParam->mqttConnection = pMqttConnection;
+            pCallbackParam->pMqttConnection = pMqttConnection;
             pCallbackParam->message.pTopicFilter = pSubscription->pTopicFilter;
             pCallbackParam->message.topicFilterLength = pSubscription->topicFilterLength;
 
@@ -579,13 +579,12 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnecti
 
 /*-----------------------------------------------------------*/
 
-bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
+bool IotMqtt_IsSubscribed( IotMqttConnection_t * pMqttConnection,
                            const char * pTopicFilter,
                            uint16_t topicFilterLength,
                            IotMqttSubscription_t * pCurrentSubscription )
 {
     bool status = false;
-    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
     _mqttSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams =

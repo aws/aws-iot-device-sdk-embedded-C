@@ -1799,7 +1799,7 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubsc
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_DeserializeSuback( IotMqttConnection_t mqttConnection,
+IotMqttError_t _IotMqtt_DeserializeSuback( IotMqttConnection_t * pMqttConnection,
                                            const uint8_t * pSubackStart,
                                            size_t dataLength,
                                            uint16_t * pPacketIdentifier,
@@ -1810,7 +1810,6 @@ IotMqttError_t _IotMqtt_DeserializeSuback( IotMqttConnection_t mqttConnection,
     uint16_t packetIdentifier = 0;
     uint8_t subscriptionStatus = 0;
     const uint8_t * pVariableHeader = NULL;
-    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
 
     /* Ensure that at least 5 bytes are available. If not, this is an incomplete
      * SUBACK packet. */

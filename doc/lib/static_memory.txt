@@ -14,9 +14,6 @@ Message buffers are fixed-size buffers used for strings, such as log messages or
 @subsection static_memory_mqtt MQTT static buffers
 @brief Statically-allocated buffers used by the [MQTT library](@ref mqtt).
 
-@subsubsection static_memory_types_mqttconnections Connections
-MQTT connections correspond to a statically-allocated MQTT session between a single client and server. In static memory mode, the number of simultaneous, active MQTT connections is controlled by the constant @ref IOT_MQTT_CONNECTIONS.
-
 @subsubsection static_memory_types_mqttoperations Operations
 MQTT operations correspond to in-progress requests between a client and the MQTT server, such as CONNECT, PUBLISH, or publish acknowledgement (PUBACK). In static memory mode, the number of simultaneous, active MQTT operations is controlled by the constant @ref IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS.
 
@@ -71,14 +68,6 @@ Currently, the static memory component has the following dependencies:
 
 @configpossible Any positive integer. <br>
 @configdefault `1024`
-
-@section IOT_MQTT_CONNECTIONS
-@brief The number of statically-allocated [MQTT connections](@ref static_memory_types_mqttconnections). This setting has no effect if @ref IOT_STATIC_MEMORY_ONLY is `0`.
-
-@see [MQTT connections](@ref static_memory_types_mqttconnections)
-
-@configpossible Any positive integer. <br>
-@configdefault `1`
 
 @section IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS
 @brief The number of statically-allocated [MQTT operations](@ref static_memory_types_mqttoperations). This setting has no effect if @ref IOT_STATIC_MEMORY_ONLY is `0`.

@@ -162,7 +162,7 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
  */
 #define _INITIALIZE_OPERATION( name )                                                                 \
     {                                                                                                 \
-        .link = { 0 }, .incomingPublish = false, .pMqttConnection = _pMqttConnection,                 \
+        .link = { 0 }, .incomingPublish = false, .pMqttConnection = &_mqttConnection,                 \
         .job = { 0 }, .jobReference = 1, .operation = name, .flags = IOT_MQTT_FLAG_WAITABLE,          \
         .packetIdentifier = 1, .pMqttPacket = NULL, .packetSize = 0, .notify = { .callback = { 0 } }, \
         .status = IOT_MQTT_STATUS_PENDING, .retry = { 0 }                                             \
@@ -173,7 +173,7 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
 /**
  * @brief The MQTT connection shared by all the tests.
  */
-static _mqttConnection_t * _pMqttConnection = NULL;
+static _mqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
  * @brief Synchronizes malloc and free, which may be called from different threads.
@@ -310,7 +310,7 @@ static IotMqttError_t _deserializePuback( const uint8_t * pPubackStart,
 /**
  * @brief Deserializer override for SUBACK.
  */
-static IotMqttError_t _deserializeSuback( IotMqttConnection_t mqttConnection,
+static IotMqttError_t _deserializeSuback( IotMqttConnection_t * pMqttConnection,
                                           const uint8_t * pSubackStart,
                                           size_t dataLength,
                                           uint16_t * pPacketIdentifier,
@@ -318,7 +318,7 @@ static IotMqttError_t _deserializeSuback( IotMqttConnection_t mqttConnection,
 {
     _deserializeOverrideCalled = true;
 
-    return _IotMqtt_DeserializeSuback( mqttConnection,
+    return _IotMqtt_DeserializeSuback( pMqttConnection,
                                        pSubackStart,
                                        dataLength,
                                        pPacketIdentifier,
@@ -369,7 +369,7 @@ static void _operationResetAndPush( _mqttOperation_t * pOperation )
 {
     pOperation->status = IOT_MQTT_STATUS_PENDING;
     pOperation->jobReference = 1;
-    IotQueue_Enqueue( &( _pMqttConnection->pendingResponse ), &( pOperation->link ) );
+    IotQueue_Enqueue( &( _mqttConnection.pendingResponse ), &( pOperation->link ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -386,7 +386,7 @@ static bool _processBuffer( const _mqttOperation_t * pOperation,
     bool status = false;
 
     /* Call the receive callback on pBuffer. */
-    int32_t bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+    int32_t bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_mqttConnection,
                                                       NULL,
                                                       pBuffer,
                                                       bufferSize,
@@ -433,16 +433,16 @@ static bool _processPublish( const uint8_t * pPublish,
     }
 
     /* Set the subscription parameter. */
-    if( IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) == false )
+    if( IotListDouble_IsEmpty( &( _mqttConnection.subscriptionList ) ) == false )
     {
         _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
-                                                                 IotListDouble_PeekHead( &( _pMqttConnection->subscriptionList ) ),
+                                                                 IotListDouble_PeekHead( &( _mqttConnection.subscriptionList ) ),
                                                                  link );
         pSubscription->callback.param1 = &invokeCount;
     }
 
     /* Call the receive callback on pPublish. */
-    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_mqttConnection,
                                               NULL,
                                               pPublish,
                                               publishSize,
@@ -554,13 +554,13 @@ TEST_SETUP( MQTT_Unit_Receive )
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 
     /* Initialize the MQTT connection used by the tests. */
-    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                         &networkInfo,
-                                                         0 );
-    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                                   &networkInfo,
+                                                                   0,
+                                                                   &_mqttConnection ) );
 
     /* Set the MQTT serializer overrides. */
-    _pMqttConnection->pSerializer = &serializer;
+    _mqttConnection.pSerializer = &serializer;
 
     /* Set the members of the subscription. */
     subscription.pTopicFilter = _TEST_TOPIC_NAME;
@@ -568,7 +568,7 @@ TEST_SETUP( MQTT_Unit_Receive )
     subscription.callback.function = _publishCallback;
 
     /* Add the subscription to the MQTT connection. */
-    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( _pMqttConnection,
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( &_mqttConnection,
                                                                     1,
                                                                     &subscription,
                                                                     1 ) );
@@ -586,10 +586,9 @@ TEST_SETUP( MQTT_Unit_Receive )
 TEST_TEAR_DOWN( MQTT_Unit_Receive )
 {
     /* Clean up resources taken in test setup. */
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( &_mqttConnection, true );
     IotMqtt_Cleanup();
     IotSemaphore_Destroy( &_mallocSemaphore );
-    _pMqttConnection = NULL;
 
     /* Check that the tests used a deserializer override. */
     TEST_ASSERT_EQUAL_INT( true, _deserializeOverrideCalled );
@@ -720,7 +719,7 @@ TEST( MQTT_Unit_Receive, InvalidPacket )
     uint8_t invalidPacket = 0xf0;
 
     /* Processing a control packet 0xf is a protocol violation. */
-    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_mqttConnection,
                                               NULL,
                                               &invalidPacket,
                                               sizeof( uint8_t ),
@@ -768,7 +767,7 @@ TEST( MQTT_Unit_Receive, DataStream )
     TEST_ASSERT_EQUAL( _DATA_STREAM_SIZE, copyOffset + sizeof( _pPingrespTemplate ) );
 
     /* Passing an offset greater than dataLength should not process anything. */
-    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_mqttConnection,
                                               NULL,
                                               pDataStream,
                                               4,
@@ -778,7 +777,7 @@ TEST( MQTT_Unit_Receive, DataStream )
 
     /* The first call to process 64 bytes should only process the CONNACK and
      * SUBACK. */
-    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_mqttConnection,
                                               NULL,
                                               pDataStream,
                                               processOffset + 64,
@@ -789,7 +788,7 @@ TEST( MQTT_Unit_Receive, DataStream )
 
     /* A second call to process 64 bytes should not process anything, as the
      * PUBLISH is incomplete. */
-    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_mqttConnection,
                                               NULL,
                                               pDataStream,
                                               processOffset + 64,
@@ -805,7 +804,7 @@ TEST( MQTT_Unit_Receive, DataStream )
     processOffset += 272;
 
     /* A call to process 5 bytes should only process the UNSUBACK (4 bytes). */
-    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_mqttConnection,
                                               NULL,
                                               pDataStream,
                                               processOffset + 5,
@@ -815,7 +814,7 @@ TEST( MQTT_Unit_Receive, DataStream )
     processOffset += ( size_t ) bytesProcessed;
 
     /* Process the last 2 bytes (PINGRESP). */
-    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_pMqttConnection,
+    bytesProcessed = IotMqtt_ReceiveCallback( ( IotMqttConnection_t * ) &_mqttConnection,
                                               NULL,
                                               pDataStream,
                                               processOffset + 2,
@@ -1052,7 +1051,7 @@ TEST( MQTT_Unit_Receive, PublishValid )
      * all bytes of the PUBLISH should still be processed (should not crash). */
     {
         _DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
-        IotListDouble_RemoveAll( &( _pMqttConnection->subscriptionList ),
+        IotListDouble_RemoveAll( &( _mqttConnection.subscriptionList ),
                                  IotMqtt_FreeSubscription,
                                  offsetof( _mqttSubscription_t, link ) );
 
@@ -1402,14 +1401,14 @@ TEST( MQTT_Unit_Receive, SubackValid )
     pSubscriptions[ 1 ].pTopicFilter = _TEST_TOPIC_NAME "2";
     pSubscriptions[ 1 ].topicFilterLength = _TEST_TOPIC_LENGTH + 1;
 
-    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( _pMqttConnection,
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( &_mqttConnection,
                                                                     1,
                                                                     pSubscriptions,
                                                                     2 ) );
 
     /* Set orders 2 and 1 for the new subscriptions. */
     pNewSubscription = IotLink_Container( _mqttSubscription_t,
-                                          IotListDouble_PeekHead( &( _pMqttConnection->subscriptionList ) ),
+                                          IotListDouble_PeekHead( &( _mqttConnection.subscriptionList ) ),
                                           link );
     pNewSubscription->packetInfo.order = 2;
 
@@ -1441,7 +1440,7 @@ TEST( MQTT_Unit_Receive, SubackValid )
                                                      IOT_MQTT_SUCCESS ) );
 
         /* Test the subscription check function. QoS is not tested. */
-        TEST_ASSERT_EQUAL_INT( true, IotMqtt_IsSubscribed( _pMqttConnection,
+        TEST_ASSERT_EQUAL_INT( true, IotMqtt_IsSubscribed( &_mqttConnection,
                                                            pSubscriptions[ 0 ].pTopicFilter,
                                                            pSubscriptions[ 0 ].topicFilterLength,
                                                            &currentSubscription ) );
@@ -1465,11 +1464,11 @@ TEST( MQTT_Unit_Receive, SubackValid )
 
         /* Check that rejected subscriptions were removed from the subscription
          * list. */
-        TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( _pMqttConnection,
+        TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( &_mqttConnection,
                                                             _TEST_TOPIC_NAME,
                                                             _TEST_TOPIC_LENGTH,
                                                             NULL ) );
-        TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( _pMqttConnection,
+        TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( &_mqttConnection,
                                                             pSubscriptions[ 1 ].pTopicFilter,
                                                             pSubscriptions[ 1 ].topicFilterLength,
                                                             NULL ) );
@@ -1693,7 +1692,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
     /* Even though no PINGREQ is expected, the keep-alive failure flag should
      * be cleared (should not crash). */
     {
-        _pMqttConnection->keepAliveFailure = false;
+        _mqttConnection.keepAliveFailure = false;
 
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
@@ -1702,12 +1701,12 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      ( int32_t ) pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( false, _pMqttConnection->keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( false, _mqttConnection.keepAliveFailure );
     }
 
     /* Process a valid PINGRESP. */
     {
-        _pMqttConnection->keepAliveFailure = true;
+        _mqttConnection.keepAliveFailure = true;
 
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
@@ -1716,13 +1715,13 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      ( int32_t ) pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( false, _pMqttConnection->keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( false, _mqttConnection.keepAliveFailure );
     }
 
     /* An incomplete PINGRESP should not be processed, and the keep-alive failure
      * flag should not be cleared. */
     {
-        _pMqttConnection->keepAliveFailure = true;
+        _mqttConnection.keepAliveFailure = true;
 
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
@@ -1731,12 +1730,12 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      0,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( true, _mqttConnection.keepAliveFailure );
     }
 
     /* A PINGRESP should have a remaining length of 0. */
     {
-        _pMqttConnection->keepAliveFailure = true;
+        _mqttConnection.keepAliveFailure = true;
 
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         pPingresp[ 1 ] = 0x01;
@@ -1746,12 +1745,12 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      -1,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( true, _mqttConnection.keepAliveFailure );
     }
 
     /* The PINGRESP control packet type must be 0xd0. */
     {
-        _pMqttConnection->keepAliveFailure = true;
+        _mqttConnection.keepAliveFailure = true;
 
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         pPingresp[ 0 ] = 0xd1;
@@ -1761,7 +1760,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      -1,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( true, _mqttConnection.keepAliveFailure );
     }
 }
 
