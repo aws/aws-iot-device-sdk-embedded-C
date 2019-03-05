@@ -298,6 +298,10 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
                     _EMPTY_ELSE_MARKER;
                 }
 
+                /* Transfer ownership of the received MQTT packet to the PUBLISH operation. */
+                pOperation->pReceivedData = pIncomingPacket->pRemainingData;
+                pIncomingPacket->pRemainingData = NULL;
+
                 /* Schedule PUBLISH for callback invocation. */
                 status = _IotMqtt_ScheduleOperation( pOperation, _IotMqtt_ProcessIncomingPublish, 0 );
             }
@@ -305,6 +309,10 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
             /* Free PUBLISH operation on error. */
             if( status != IOT_MQTT_SUCCESS )
             {
+                /* PUBLISH must have allocated remaining data. */
+                IotMqtt_Assert( pIncomingPacket->pRemainingData != NULL );
+
+                IotMqtt_FreeMessage( pIncomingPacket->pRemainingData );
                 IotMqtt_FreeOperation( pOperation );
             }
 
@@ -734,6 +742,16 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
         /* Deserialize the received packet. */
         _deserializeIncomingPacket( pMqttConnection,
                                     &incomingPacket );
+
+        /* Free any buffers allocated for the MQTT packet. */
+        if( incomingPacket.pRemainingData != NULL )
+        {
+            IotMqtt_FreeMessage( incomingPacket.pRemainingData );
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
     }
     else
     {

@@ -330,9 +330,7 @@ typedef struct _mqttOperation
         struct
         {
             IotMqttPublishInfo_t publishInfo;      /**< @brief Deserialized PUBLISH. */
-            struct _mqttOperation * pNextPublish;  /**< @brief Pointer to the next PUBLISH in the data stream. */
             const void * pReceivedData;            /**< @brief Any buffer associated with this PUBLISH that should be freed. */
-            void ( * freeReceivedData )( void * ); /**< @brief Function called to free `pReceivedData`. */
         };
     };
 } _mqttOperation_t;

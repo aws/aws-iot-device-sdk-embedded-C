@@ -1081,7 +1081,7 @@ TEST( MQTT_Unit_API, PublishQoS1 )
  */
 TEST( MQTT_Unit_API, PublishDuplicates )
 {
-    IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
+    static IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     IotMqttReference_t publishRef = IOT_MQTT_REFERENCE_INITIALIZER;
     bool dupCheckResult = false;

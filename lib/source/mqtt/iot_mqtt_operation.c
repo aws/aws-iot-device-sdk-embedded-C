@@ -767,7 +767,7 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
                                       IotTaskPoolJob_t * pPublishJob,
                                       void * pContext )
 {
-    _mqttOperation_t * pCurrent = NULL, * pNext = pContext;
+    _mqttOperation_t * pOperation = pContext;
     IotMqttCallbackParam_t callbackParam = { .message = { 0 } };
 
     /* Check parameters. The task pool and job parameter is not used when asserts
@@ -775,51 +775,27 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
     ( void ) pTaskPool;
     ( void ) pPublishJob;
     IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
-    IotMqtt_Assert( pNext->incomingPublish == true );
-    IotMqtt_Assert( pPublishJob == &( pNext->job ) );
+    IotMqtt_Assert( pOperation->incomingPublish == true );
+    IotMqtt_Assert( pPublishJob == &( pOperation->job ) );
 
-    /* Process each linked incoming PUBLISH. */
-    while( pNext != NULL )
+    /* Process the current PUBLISH. */
+    callbackParam.message.info = pOperation->publishInfo;
+
+    _IotMqtt_InvokeSubscriptionCallback( pOperation->pMqttConnection,
+                                         &callbackParam );
+
+    /* Free any buffers associated with the current PUBLISH message. */
+    if( pOperation->pReceivedData != NULL )
     {
-        /* Save a pointer to the current PUBLISH and move the iterating
-         * pointer. */
-        pCurrent = pNext;
-        pNext = pNext->pNextPublish;
-
-        /* Process the current PUBLISH. */
-        if( pCurrent->publishInfo.pPayload != NULL )
-        {
-            if( pCurrent->publishInfo.pTopicName != NULL )
-            {
-                callbackParam.message.info = pCurrent->publishInfo;
-
-                _IotMqtt_InvokeSubscriptionCallback( pCurrent->pMqttConnection,
-                                                     &callbackParam );
-            }
-            else
-            {
-                _EMPTY_ELSE_MARKER;
-            }
-        }
-        else
-        {
-            _EMPTY_ELSE_MARKER;
-        }
-
-        /* Free any buffers associated with the current PUBLISH message. */
-        if( pCurrent->freeReceivedData != NULL )
-        {
-            IotMqtt_Assert( pCurrent->pReceivedData != NULL );
-            pCurrent->freeReceivedData( ( void * ) pCurrent->pReceivedData );
-        }
-        else
-        {
-            _EMPTY_ELSE_MARKER;
-        }
-
-        /* Free the current PUBLISH. */
-        IotMqtt_FreeOperation( pCurrent );
+        IotMqtt_FreeMessage( ( void* ) pOperation->pReceivedData );
     }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
+
+    /* Free the incoming PUBLISH operation. */
+    IotMqtt_FreeOperation( pOperation );
 }
 
 /*-----------------------------------------------------------*/
