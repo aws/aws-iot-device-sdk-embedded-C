@@ -431,8 +431,6 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
         IotLogDebug( "(MQTT connection %p) Cleaning up keep-alive.", pMqttConnection );
 
         _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
-        IotTaskPool_DestroyJob( &( _IotMqttTaskPool ),
-                                &( pMqttConnection->keepAliveJob ) );
 
         /* Clear data about the keep-alive. */
         pMqttConnection->keepAliveMs = 0;
