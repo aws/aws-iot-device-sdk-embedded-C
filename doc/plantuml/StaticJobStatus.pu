@@ -1,0 +1,32 @@
+@startuml
+
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+
+state READY {
+}
+state SCHEDULED {
+}
+state DEFERRED {
+}
+state COMPLETED {
+}
+state CANCELED {
+}
+state UNDEFINED {
+}
+
+[*] --[#green]> READY : CreateJob
+READY --[#blue]> SCHEDULED : Schedule
+READY --[#blue]> DEFERRED : ScheduleDeferred
+DEFERRED --[#cyan]> SCHEDULED : <timeout elapses>
+SCHEDULED --[#cyan]> COMPLETED : <worker available>
+COMPLETED --[#green]> READY : CreateJob
+
+READY --[#red]> CANCELED : TryCancel
+DEFERRED --[#red]> CANCELED : TryCancel
+SCHEDULED --[#red]> CANCELED : TryCancel
+
+CANCELED --[#green]> READY : CreateJob
+
+@enduml
