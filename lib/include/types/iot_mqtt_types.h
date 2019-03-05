@@ -814,95 +814,51 @@ typedef struct IotMqttConnectInfo
         {
             /**
              * @brief CONNACK packet deserializer function.
-             * @param[in] uint8_t* Pointer to the start of a CONNACK packet.
-             * @param[in] size_t Length of the data stream.
-             * @param[out] size_t* The number of bytes in the data stream processed
-             * by this function.
+             * @param[in,out] pConnack Pointer to an MQTT packet struct representing a CONNACK.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeConnack
              */
-            IotMqttError_t ( * connack )( const uint8_t * /* pConnackStart */,
-                                          size_t /* dataLength */,
-                                          size_t * /* pBytesProcessed */ );
+            IotMqttError_t ( * connack )( _mqttPacket_t * pConnack );
 
             /**
              * @brief PUBLISH packet deserializer function.
-             * @param[in] uint8_t* Pointer to the start of a PUBLISH packet.
-             * @param[in] size_t Length of the data stream.
-             * @param[out] IotMqttPublishInfo_t* Where the deserialized PUBLISH will be written.
-             * @param[out] uint16_t* The packet identifier in the PUBLISH.
-             * @param[out] size_t* The number of bytes in the data stream processed
-             * by this function.
+             * @param[in,out] pPublish Pointer to an MQTT packet struct representing a PUBLISH.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePublish
              */
-            IotMqttError_t ( * publish )( const uint8_t * /* pPublishStart */,
-                                          size_t /* dataLength */,
-                                          IotMqttPublishInfo_t * /* pOutput */,
-                                          uint16_t * /* pPacketIdentifier */,
-                                          size_t * /* pBytesProcessed */ );
+            IotMqttError_t ( * publish )( _mqttPacket_t * pPublish );
 
             /**
              * @brief PUBACK packet deserializer function.
-             * @param[in] uint8_t* Pointer to the start of a PUBACK packet.
-             * @param[in] size_t Length of the data stream.
-             * @param[out] uint16_t* The packet identifier in the PUBACK.
-             * @param[out] size_t* The number of bytes in the data stream processed
-             * by this function.
+             * @param[in,out] pPuback Pointer to an MQTT packet struct representing a PUBACK.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePuback
              */
-            IotMqttError_t ( * puback )( const uint8_t * /* pPubackStart */,
-                                         size_t /* dataLength */,
-                                         uint16_t * /* pPacketIdentifier */,
-                                         size_t * /* pBytesProcessed */ );
+            IotMqttError_t ( * puback )( _mqttPacket_t * pPuback );
 
             /**
              * @brief SUBACK packet deserializer function.
-             * @param[in] IotMqttConnection_t* The MQTT connection associated with
-             * the subscription. Rejected topic filters should be removed from this
-             * connection.
-             * @param[in] uint8_t* Pointer to the start of a SUBACK packet.
-             * @param[in] size_t Length of the data stream.
-             * @param[out] uint16_t* The packet identifier in the SUBACK.
-             * @param[out] size_t* The number of bytes in the data stream processed
-             * by this function.
+             * @param[in,out] pSuback Pointer to an MQTT packet struct representing a SUBACK.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeSuback
              */
-            IotMqttError_t ( * suback )( IotMqttConnection_t * /* pMqttConnection */,
-                                         const uint8_t * /* pSubackStart */,
-                                         size_t /* dataLength */,
-                                         uint16_t * /* pPacketIdentifier */,
-                                         size_t * /* pBytesProcessed */ );
+            IotMqttError_t ( * suback )( _mqttPacket_t * pSuback );
 
             /**
              * @brief UNSUBACK packet deserializer function.
-             * @param[in] uint8_t* Pointer to the start of a UNSUBACK packet.
-             * @param[in] size_t Length of the data stream.
-             * @param[out] uint16_t* The packet identifier in the UNSUBACK.
-             * @param[out] size_t* The number of bytes in the data stream processed
-             * by this function.
+             * @param[in,out] pUnsuback Pointer to an MQTT packet struct representing an UNSUBACK.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeUnsuback
              */
-            IotMqttError_t ( * unsuback )( const uint8_t * /* pUnsubackStart */,
-                                           size_t /* dataLength */,
-                                           uint16_t * /* pPacketIdentifier */,
-                                           size_t * /* pBytesProcessed */ );
+            IotMqttError_t ( * unsuback )( _mqttPacket_t * pUnsuback );
 
             /**
              * @brief PINGRESP packet deserializer function.
-             * @param[in] uint8_t* Pointer to the start of a PINGRESP packet.
-             * @param[in] size_t Length of the data stream.
-             * @param[out] size_t* The number of bytes in the data stream processed
-             * by this function.
+             * @param[in,out] pPingresp Pointer to an MQTT packet struct representing a PINGRESP.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePingresp
              */
-            IotMqttError_t ( * pingresp )( const uint8_t * /* pPingrespStart */,
-                                           size_t /* dataLength */,
-                                           size_t * /* pBytesProcessed */ );
+            IotMqttError_t ( * pingresp )( _mqttPacket_t * pPingresp );
         } deserialize; /**< @brief Overrides the packet deserialization functions for a single connection. */
     } IotMqttSerializer_t;
 #else /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */

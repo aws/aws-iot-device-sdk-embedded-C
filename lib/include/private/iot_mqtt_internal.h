@@ -347,8 +347,17 @@ typedef struct _mqttPacket
 {
     union
     {
-        _mqttConnection_t * pMqttConnection; /**< @brief (Input) MQTT connection associated with this packet. */
-        _mqttOperation_t * pIncomingPublish; /**< @brief (Output) Deserialized PUBLISH packet. */
+        /**
+         * @brief (Input) MQTT connection associated with this packet. Only used
+         * when deserializing SUBACKs.
+         */
+        _mqttConnection_t * pMqttConnection;
+
+        /**
+         * @brief (Output) Operation representing an incoming PUBLISH. Only used
+         * when deserializing PUBLISHes.
+         */
+        _mqttOperation_t * pIncomingPublish;
     };
 
     uint8_t * pRemainingData;  /**< @brief (Input) The remaining data in MQTT packet. */
@@ -469,7 +478,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
  * Converts the packet from a stream of bytes to an #IotMqttError_t. Also
  * prints out debug log messages about the packet.
  *
- * @param[in] pConnack Pointer to an MQTT packet struct representing a CONNACK.
+ * @param[in,out] pConnack Pointer to an MQTT packet struct representing a CONNACK.
  *
  * @return #IOT_MQTT_SUCCESS if CONNACK specifies that CONNECT was accepted;
  * #IOT_MQTT_SERVER_REFUSED if CONNACK specifies that CONNECT was rejected;
@@ -516,7 +525,7 @@ void _IotMqtt_PublishSetDup( bool awsIotMqttMode,
  * extracts the packet identifier. Also prints out debug log messages about the
  * packet.
  *
- * @param[in] pPublish Pointer to an MQTT packet struct representing a PUBLISH.
+ * @param[in,out] pPublish Pointer to an MQTT packet struct representing a PUBLISH.
  *
  * @return #IOT_MQTT_SUCCESS if PUBLISH is valid; #IOT_MQTT_BAD_RESPONSE
  * if the PUBLISH packet doesn't follow MQTT spec.
@@ -542,7 +551,7 @@ IotMqttError_t _IotMqtt_SerializePuback( uint16_t packetIdentifier,
  * Converts the packet from a stream of bytes to an #IotMqttError_t and extracts
  * the packet identifier. Also prints out debug log messages about the packet.
  *
- * @param[in] pPuback Pointer to an MQTT packet struct representing a PUBACK.
+ * @param[in,out] pPuback Pointer to an MQTT packet struct representing a PUBACK.
  *
  * @return #IOT_MQTT_SUCCESS if PUBACK is valid; #IOT_MQTT_BAD_RESPONSE
  * if the PUBACK packet doesn't follow MQTT spec.
@@ -572,7 +581,7 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubsc
  * Converts the packet from a stream of bytes to an #IotMqttError_t and extracts
  * the packet identifier. Also prints out debug log messages about the packet.
  *
- * @param[in] pSuback Pointer to an MQTT packet struct representing a SUBACK.
+ * @param[in,out] pSuback Pointer to an MQTT packet struct representing a SUBACK.
  *
  * @return #IOT_MQTT_SUCCESS if SUBACK is valid; #IOT_MQTT_BAD_RESPONSE
  * if the SUBACK packet doesn't follow MQTT spec.
@@ -602,7 +611,7 @@ IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSub
  * Converts the packet from a stream of bytes to an #IotMqttError_t and extracts
  * the packet identifier. Also prints out debug log messages about the packet.
  *
- * @param[in] pUnsuback Pointer to an MQTT packet struct representing a UNSUBACK.
+ * @param[in,out] pUnsuback Pointer to an MQTT packet struct representing an UNSUBACK.
  *
  * @return #IOT_MQTT_SUCCESS if UNSUBACK is valid; #IOT_MQTT_BAD_RESPONSE
  * if the UNSUBACK packet doesn't follow MQTT spec.
@@ -626,7 +635,7 @@ IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
  * Converts the packet from a stream of bytes to an #IotMqttError_t. Also
  * prints out debug log messages about the packet.
  *
- * @param[in] pPingresp Pointer to an MQTT packet struct representing a PINGRESP.
+ * @param[in,out] pPingresp Pointer to an MQTT packet struct representing a PINGRESP.
  *
  * @return #IOT_MQTT_SUCCESS if PINGRESP is valid; #IOT_MQTT_BAD_RESPONSE
  * if the PINGRESP packet doesn't follow MQTT spec.
