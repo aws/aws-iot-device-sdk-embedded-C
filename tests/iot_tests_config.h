@@ -80,8 +80,6 @@
 
 /* Memory allocation function configuration. Note that these functions will not
  * be affected by IOT_STATIC_MEMORY_ONLY. */
-#define IotNetwork_Malloc    unity_malloc_mt
-#define IotNetwork_Free      unity_free_mt
 #define IotThreads_Malloc    unity_malloc_mt
 #define IotThreads_Free      unity_free_mt
 #define IotLogging_Malloc    unity_malloc_mt

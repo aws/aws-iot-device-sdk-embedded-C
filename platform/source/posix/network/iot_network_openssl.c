@@ -72,29 +72,6 @@
 #define _LIBRARY_LOG_NAME    ( "NET" )
 #include "iot_logging_setup.h"
 
-/*
- * Provide default values for undefined memory allocation functions based on
- * the usage of dynamic memory allocation.
- */
-#ifndef IotNetwork_Malloc
-    #include <stdlib.h>
-
-/**
- * @brief Memory allocation. This function should have the same signature as
- * [malloc.](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html)
- */
-    #define IotNetwork_Malloc    malloc
-#endif
-#ifndef IotNetwork_Free
-    #include <stdlib.h>
-
-/**
- * @brief Free memory. This function should have the same signature as
- * [free.](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html)
- */
-    #define IotNetwork_Free    free
-#endif
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -122,12 +99,9 @@ const IotNetworkInterface_t _IotNetworkOpenssl =
  */
 static void * _networkReceiveThread( void * pArgument )
 {
-    int bytesAvailable = 0, bytesRead = 0;
-    int32_t bytesProcessed = 0;
-    uint8_t * pReceiveBuffer = NULL;
     struct pollfd fileDescriptor =
     {
-        .events  = POLLIN,
+        .events  = POLLIN | POLLPRI,
         .revents = 0
     };
 
@@ -157,112 +131,15 @@ static void * _networkReceiveThread( void * pArgument )
             break;
         }
 
-        /* Query how many bytes are available to read. The value returned by this
-         * function may include more than just the data. */
-        if( ioctl( pNetworkConnection->socket, FIONREAD, &bytesAvailable ) != 0 )
-        {
-            IotLogError( "Failed to query bytes available on socket. errno=%d.",
-                         errno );
-
-            /* Unlock the connection mutex before polling again. */
-            IotMutex_Unlock( &( pNetworkConnection->mutex ) );
-
-            continue;
-        }
-
-        IotLogDebug( "%d bytes available on socket %d.",
-                     bytesAvailable,
-                     pNetworkConnection->socket );
-
-        /* If no bytes can be read, the socket is likely closed. Terminate this thread. */
-        if( bytesAvailable == 0 )
-        {
-            IotLogInfo( "No data available, terminating receive thread for socket %d.",
-                        pNetworkConnection->socket );
-            break;
-        }
-
-        /* Allocate memory to hold the received message. */
-        pReceiveBuffer = IotNetwork_Malloc( ( size_t ) bytesAvailable );
-
-        if( pReceiveBuffer == NULL )
-        {
-            IotLogError( "Failed to allocate %d bytes for socket read on %d.",
-                         bytesAvailable,
-                         pNetworkConnection->socket );
-
-            /* Terminate on memory allocation failure to prevent unread incoming
-             * data from accumulating. */
-            break;
-        }
-
-        /* Use OpenSSL's SSL_read() function or the POSIX recv() function based on
-         * whether the SSL connection context is set up. */
-        if( pNetworkConnection->pSslContext != NULL )
-        {
-            bytesRead = SSL_read( pNetworkConnection->pSslContext,
-                                  pReceiveBuffer,
-                                  bytesAvailable );
-        }
-        else
-        {
-            bytesRead = ( int ) recv( pNetworkConnection->socket,
-                                      pReceiveBuffer,
-                                      ( size_t ) bytesAvailable,
-                                      0 );
-        }
-
-        /* Check how many bytes were read. */
-        if( bytesRead <= 0 )
-        {
-            IotLogError( "Error reading from socket %d.",
-                         pNetworkConnection->socket );
-
-            IotNetwork_Free( pReceiveBuffer );
-            break;
-        }
-
-        IotLogDebug( "Received %d bytes from socket %d.",
-                     bytesRead,
-                     pNetworkConnection->socket );
-
         /* Invoke the callback function. But if there's no callback to invoke,
          * terminate this thread. */
         if( pNetworkConnection->receiveCallback != NULL )
         {
-            bytesProcessed = pNetworkConnection->receiveCallback( pNetworkConnection->pReceiveContext,
-                                                                  pNetworkConnection,
-                                                                  pReceiveBuffer,
-                                                                  ( size_t ) bytesRead,
-                                                                  0,
-                                                                  IotNetwork_Free );
+            pNetworkConnection->receiveCallback( pNetworkConnection,
+                                                 pNetworkConnection->pReceiveContext );
         }
         else
         {
-            /* Free resources and terminate thread. */
-            IotNetwork_Free( pReceiveBuffer );
-
-            break;
-        }
-
-        /* Free resources and terminate thread if some data was unprocessed. */
-        if( bytesProcessed != ( int32_t ) bytesRead )
-        {
-            if( bytesProcessed < 0 )
-            {
-                IotLogError( "Receive callback for socket %d returned error."
-                             "Receive thread terminating.", pNetworkConnection->socket );
-            }
-            else
-            {
-                /* This implementation should never read incomplete packets
-                 * because it is able to allocate buffers large enough for
-                 * entire streams. */
-                IotLogError( "Incomplete data received from network on socket %d.",
-                             pNetworkConnection->socket );
-            }
-
-            IotNetwork_Free( pReceiveBuffer );
             break;
         }
 
@@ -1054,12 +931,6 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
                                   size_t bytesRequested )
 {
     int bytesRead = 0;
-    size_t totalBytesRead = 0;
-    struct pollfd fileDescriptor =
-    {
-        .events  = POLLIN | POLLPRI,
-        .revents = 0
-    };
 
     /* Cast function parameter to correct type. */
     IotNetworkConnectionOpenssl_t * const pNetworkConnection = pConnection;
@@ -1076,69 +947,50 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
                  ( unsigned long ) bytesRequested,
                  pNetworkConnection->socket );
 
-    /* Set the file descriptor for poll. */
-    fileDescriptor.fd = pNetworkConnection->socket;
-
     /* Lock the connection mutex to prevent the connection from being closed
      * while receiving. */
     IotMutex_Lock( &( pNetworkConnection->mutex ) );
 
-    /* Continuously block on the socket for available data. */
-    while( poll( &fileDescriptor, 1, -1 ) == 1 )
+    /* Use OpenSSL's SSL_read() function or the POSIX recv() function based on
+     * whether the SSL connection context is set up. */
+    if( pNetworkConnection->pSslContext != NULL )
     {
-        /* If an error event is detected, stop receiving. */
-        if( ( fileDescriptor.revents & POLLERR ) ||
-            ( fileDescriptor.revents & POLLHUP ) ||
-            ( fileDescriptor.revents & POLLNVAL ) )
-        {
-            IotLogError( "Error receiving on socket %d after %lu bytes;"
-                         " stopping blocking receive.",
-                         ( unsigned long ) totalBytesRead,
-                         pNetworkConnection->socket );
-            break;
-        }
-
-        /* Use OpenSSL's SSL_read() function or the POSIX recv() function based on
-         * whether the SSL connection context is set up. */
-        if( pNetworkConnection->pSslContext != NULL )
-        {
-            bytesRead = SSL_read( pNetworkConnection->pSslContext,
-                                  pBuffer + totalBytesRead,
-                                  ( int ) ( bytesRequested - totalBytesRead ) );
-        }
-        else
-        {
-            bytesRead = ( int ) recv( pNetworkConnection->socket,
-                                      pBuffer + totalBytesRead,
-                                      bytesRequested - totalBytesRead,
-                                      0 );
-        }
-
-        /* Check for an error during receive. */
-        if( bytesRead <= 0 )
-        {
-            IotLogError( "Error receiving from socket %d after receiving %lu bytes",
-                         pNetworkConnection->socket,
-                         ( unsigned long ) totalBytesRead );
-            break;
-        }
-
-        totalBytesRead += ( size_t ) bytesRead;
-
-        /* Check if any more data needs to be read. */
-        if( totalBytesRead == bytesRequested )
-        {
-            IotLogDebug( "Successfully received %lu bytes.",
-                         ( unsigned long ) bytesRequested );
-
-            break;
-        }
+        bytesRead = SSL_read( pNetworkConnection->pSslContext,
+                              pBuffer,
+                              ( int ) bytesRequested );
+    }
+    else
+    {
+        bytesRead = ( int ) recv( pNetworkConnection->socket,
+                                  pBuffer,
+                                  bytesRequested,
+                                  0 );
     }
 
     /* Unlock the connection mutex. */
     IotMutex_Unlock( &( pNetworkConnection->mutex ) );
 
-    return totalBytesRead;
+    /* Check how many bytes were read. */
+    if( bytesRead <= 0 )
+    {
+        IotLogError( "Error receiving from socket %d.",
+                     pNetworkConnection->socket );
+
+        bytesRead = 0;
+    }
+    else if( ( size_t ) bytesRead < bytesRequested )
+    {
+        IotLogWarn( "Receive requested %lu bytes, but only %d bytes received.",
+                    ( unsigned long ) bytesRequested,
+                    bytesRead );
+    }
+    else
+    {
+        IotLogDebug( "Successfully received %lu bytes.",
+                     ( unsigned long ) bytesRequested );
+    }
+
+    return ( size_t ) bytesRead;
 }
 
 /*-----------------------------------------------------------*/

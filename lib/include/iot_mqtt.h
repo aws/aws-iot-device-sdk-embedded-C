@@ -77,15 +77,6 @@
  * @functionpage{IotMqtt_Init,mqtt,init}
  * @functionpage{IotMqtt_Cleanup,mqtt,cleanup}
  * @functionpage{IotMqtt_ReceiveCallback,mqtt,receivecallback}
- *
- * @anchor mqtt_function_receivecallback_nopartial
- * <b>Sequence Diagram: Processing a network buffer without partial packets</b>
- * @image html mqtt_function_receivecallback_nopartial.png width=80%
- *
- * @anchor mqtt_function_receivecallback_partial
- * <b>Sequence Diagram: Processing a network buffer with partial packets</b>
- * @image html mqtt_function_receivecallback_partial.png width=80%
- *
  * @functionpage{IotMqtt_Connect,mqtt,connect}
  * @functionpage{IotMqtt_Disconnect,mqtt,disconnect}
  * @functionpage{IotMqtt_Subscribe,mqtt,subscribe}
@@ -140,76 +131,17 @@ void IotMqtt_Cleanup( void );
 /**
  * @brief Network receive callback for the MQTT library.
  *
- * This function should be called by the system whenever a stream of MQTT data
- * is received from the network. It processes the data stream and decodes any
- * MQTT packets it finds. The MQTT library uses #IotMqttNetworkInfo_t for sending
- * data and closing network connections.
+ * This function should be called by the system whenever data is available for
+ * the MQTT library.
  *
- * @attention Remember that this function's input `pReceivedData` is a data
- * stream! A data stream may contain any number of different MQTT packets,
- * including incomplete MQTT packets.
- *
- * The input parameter `pReceivedData` must be allocated by the system. The system
- * should read data from the network and place the data in `pReceivedData`. Then,
- * the system should call this function.
- *
- * An important concept associated with this function is *buffer ownership*.
- * Normally, once `pReceivedData` is passed to this function, it is considered
- * property of the MQTT library. <b>The system must keep `pReceivedData` valid
- * and in-scope even after this function returns</b>, and must not make any changes
- * to `pReceivedData` until the MQTT library calls `freeReceivedData` (which
- * transfers ownership of `pReceivedData` back to the system).
- * [This sequence diagram](@ref mqtt_function_receivecallback_nopartial) illustrates
- * the flow where `pReceivedData` is completely processed.
- *
- * If `pReceivedData` ends with a partial MQTT packet, the MQTT library will not
- * call `freeReceivedData`. In this case, this function will return the actual
- * number of bytes processed (from this point onwards called `bytesProcessed`).
- * The buffer `pReceivedData` will be returned to the system. The system should
- * wait for the rest of the MQTT packet to be received and place the remainder
- * of the MQTT packet immediately after the last processed byte in `pReceivedData`.
- * The bytes in `pReceivedData` in the range of `[offset, offset+bytesProcessed]`
- * should be considered "already processed" and should be discarded.
- * [This sequence diagram](@ref mqtt_function_receivecallback_partial) illustrates
- * the case where `pReceivedData` contains a partial packet.
- *
- * <b>If `freeReceivedData` is `NULL`, then ownership of `pReceivedData` will always
- * revert to the system as soon as this function returns.</b> In this scenario, the
- * MQTT library will copy any data it requires out of `pReceivedData`. Therefore,
- * passing `NULL` for `freeReceivedData` may increase memory usage.
- *
- * @param[in] pMqttConnection A pointer to the MQTT connection handle for which
+ * @param[in] pNetworkConnection The network connection associated with the MQTT
+ * connection, passed by the network stack.
+ * @param[in] pReceiveContext A pointer to the MQTT connection handle for which
  * the packet was received.
- * @param[in] pConnection The network connection associated with the MQTT connection,
- * passed by the network stack.
- * @param[in] pReceivedData Pointer to the beginning of the data stream. This buffer
- * must remain valid and in-scope until the MQTT library calls `freeReceivedData`.
- * @param[in] dataLength The length of `pReceivedData` in bytes.
- * @param[in] offset The offset (in bytes) into `pReceivedData` where the MQTT library
- * begins processing. All bytes from `pReceivedData+offset` to `pReceivedData+dataLength`
- * will be processed. Pass `0` to start from the beginning of `pReceivedData`.
- * @param[in] freeReceivedData The function that the MQTT library calls when it is
- * finished with `pReceivedData`. This function will only be called when all data is
- * successfully processed, i.e. when this function returns a value of `dataLength-offset`.
- * Pass `NULL` to ignore.
- *
- * @return
- * - `-1` if a protocol violation is encountered. If this function returns `-1`, then
- * the network connection is closed (unless a [network close function]
- * (@ref IotNetworkInterface_t::close) was not provided to @ref mqtt_function_connect).
- * `freeReceivedData` is not called if this function returns `-1`.
- * - Number of bytes processed otherwise. If the return value is less than `dataLength`
- * (but not `-1`), the data stream probably contained a partial MQTT packet. The function
- * `freeReceivedData` will only be called if all bytes in the range `pReceivedData+offset`
- * to `pReceivedData+dataLength` were successfully processed.
  */
 /* @[declare_mqtt_receivecallback] */
-int32_t IotMqtt_ReceiveCallback( void * pMqttConnection,
-                                 void * pConnection,
-                                 const uint8_t * pReceivedData,
-                                 size_t dataLength,
-                                 size_t offset,
-                                 void ( * freeReceivedData )( void * ) );
+void IotMqtt_ReceiveCallback( void * pNetworkConnection,
+                              void * pReceiveContext );
 /* @[declare_mqtt_receivecallback] */
 
 /**
