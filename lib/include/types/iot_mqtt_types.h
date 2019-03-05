@@ -652,6 +652,15 @@ typedef struct IotMqttConnectInfo
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
 
 /**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Forward declaration of the internal MQTT packet structure.
+ */
+typedef struct _mqttPacket _mqttPacket_t;
+/** @endcond */
+
+/**
  * @ingroup mqtt_datatypes_paramstructs
  * @brief Function pointers for MQTT packet serializer overrides.
  *

@@ -413,8 +413,8 @@ TEST_TEAR_DOWN( MQTT_Unit_Subscription )
     }
 
     /* Clean up libraries. */
-    IotMqtt_Cleanup();
     IotCommon_Cleanup();
+    IotMqtt_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

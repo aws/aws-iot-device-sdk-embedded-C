@@ -193,9 +193,6 @@ static void _incomingPingresp( void * pArgument )
     static uint64_t lastInvokeTime = 0;
     uint64_t currentTime = IotClock_GetTimeMs();
 
-    /* A PINGRESP packet. */
-    const uint8_t pPingresp[ 2 ] = { _MQTT_PACKET_TYPE_PINGRESP, 0x00 };
-
     /* Sleep time of twice the keep-alive interval. */
     const struct timespec sleepTime = { .tv_sec = 0, .tv_nsec = 2 * _SHORT_KEEP_ALIVE_MS * 1000000 };
 
@@ -231,12 +228,8 @@ static void _incomingPingresp( void * pArgument )
             UNITY_PRINT_EOL();
             lastInvokeTime = currentTime;
 
-            ( void ) IotMqtt_ReceiveCallback( &_mqttConnection,
-                                              NULL,
-                                              pPingresp,
-                                              2,
-                                              0,
-                                              NULL );
+            IotMqtt_ReceiveCallback( NULL,
+                                     &_mqttConnection );
         }
     }
 }
@@ -352,9 +345,13 @@ static size_t _dupChecker( void * pSendContext,
      * for the AWS IoT MQTT server. */
     #if _AWS_IOT_MQTT_SERVER == true
         static uint16_t lastPacketIdentifier = 0;
-        uint16_t currentPacketIdentifier = 0;
-        size_t bytesProcessed = 0;
-        IotMqttPublishInfo_t publishInfo = { 0 };
+        _mqttPacket_t publishPacket = { 0 };
+        _mqttOperation_t publishOperation = { 0 };
+
+        publishPacket.type = publishFlags;
+        publishPacket.pIncomingPublish = &publishOperation;
+        publishPacket.remainingLength = 8 + _TEST_TOPIC_NAME_LENGTH;
+        publishPacket.pRemainingData = ( uint8_t * ) pMessage + ( messageLength - publishPacket.remainingLength );
     #endif
 
     /* Ignore any MQTT packet that's not a PUBLISH. */
@@ -370,18 +367,13 @@ static size_t _dupChecker( void * pSendContext,
     {
         #if _AWS_IOT_MQTT_SERVER == true
             /* Deserialize the PUBLISH to read the packet identifier. */
-            if( _IotMqtt_DeserializePublish( pMessage,
-                                             messageLength,
-                                             &publishInfo,
-                                             &lastPacketIdentifier,
-                                             &bytesProcessed ) != IOT_MQTT_SUCCESS )
+            if( _IotMqtt_DeserializePublish( &publishPacket ) != IOT_MQTT_SUCCESS )
             {
                 status = false;
             }
             else
             {
-                /* Ensure that all bytes of the PUBLISH were processed. */
-                status = ( bytesProcessed == messageLength );
+                lastPacketIdentifier = publishPacket.packetIdentifier;
             }
         #else /* if _AWS_IOT_MQTT_SERVER == true */
             /* DUP flag should not be set on this function's first run. */
@@ -398,25 +390,15 @@ static size_t _dupChecker( void * pSendContext,
         {
             #if _AWS_IOT_MQTT_SERVER == true
                 /* Deserialize the PUBLISH to read the packet identifier. */
-                if( _IotMqtt_DeserializePublish( pMessage,
-                                                 messageLength,
-                                                 &publishInfo,
-                                                 &currentPacketIdentifier,
-                                                 &bytesProcessed ) != IOT_MQTT_SUCCESS )
+                if( _IotMqtt_DeserializePublish( &publishPacket ) != IOT_MQTT_SUCCESS )
                 {
                     status = false;
                 }
                 else
                 {
-                    /* Ensure that all bytes of the PUBLISH were processed. */
-                    status = ( bytesProcessed == messageLength );
-
                     /* Check that the packet identifier is different. */
-                    if( status == true )
-                    {
-                        status = ( currentPacketIdentifier != lastPacketIdentifier );
-                        lastPacketIdentifier = currentPacketIdentifier;
-                    }
+                    status = ( publishPacket.packetIdentifier != lastPacketIdentifier );
+                    lastPacketIdentifier = publishPacket.packetIdentifier;
                 }
             #else /* if _AWS_IOT_MQTT_SERVER == true */
                 /* DUP flag should be set when this function runs again. */
@@ -436,6 +418,36 @@ static size_t _dupChecker( void * pSendContext,
 
     /* Return the message length to simulate a successful send. */
     return messageLength;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief A network receive function that simulates receiving a PINGRESP.
+ */
+static size_t _receivePingresp( void * pReceiveContext,
+                                uint8_t * pBuffer,
+                                size_t bytesRequested )
+{
+    size_t bytesReceived = 0;
+    static size_t receiveIndex = 0;
+    const uint8_t pPingresp[ 2 ] = { _MQTT_PACKET_TYPE_PINGRESP, 0x00 };
+
+    /* Silence warnings about unused parameters. */
+    ( void ) pReceiveContext;
+
+    /* Receive of PINGRESP should only ever request 1 byte. */
+    if( bytesRequested == 1 )
+    {
+        /* Write a byte of PINGRESP. */
+        *pBuffer = pPingresp[ receiveIndex ];
+        bytesReceived = 1;
+
+        /* Alternate the byte of PINGRESP to write. */
+        receiveIndex = ( receiveIndex + 1 ) % 2;
+    }
+
+    return bytesReceived;
 }
 
 /*-----------------------------------------------------------*/
@@ -515,8 +527,8 @@ TEST_SETUP( MQTT_Unit_API )
  */
 TEST_TEAR_DOWN( MQTT_Unit_API )
 {
-    IotMqtt_Cleanup();
     IotCommon_Cleanup();
+    IotMqtt_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
@@ -1324,6 +1336,7 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
 
     /* Initialize parameters. */
     _networkInterface.send = _sendPingreq;
+    _networkInterface.receive = _receivePingresp;
     _networkInterface.close = _close;
 
     /* Create a new MQTT connection with an empty network interface. */

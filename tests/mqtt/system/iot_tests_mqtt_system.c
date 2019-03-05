@@ -579,14 +579,14 @@ TEST_SETUP( MQTT_System )
  */
 TEST_TEAR_DOWN( MQTT_System )
 {
+    /* Clean up common components. */
+    IotCommon_Cleanup();
+
     /* Clean up the MQTT library. */
     IotMqtt_Cleanup();
 
     /* Clean up the network stack. */
     IotTest_NetworkCleanup();
-
-    /* Clean up common components. */
-    IotCommon_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

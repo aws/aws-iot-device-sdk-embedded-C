@@ -88,23 +88,24 @@ static bool _getIncomingPacket( const _mqttConnection_t * pMqttConnection,
 
     /* No buffer for remaining data should be allocated. */
     IotMqtt_Assert( pIncomingPacket->pRemainingData == NULL );
+    IotMqtt_Assert( pIncomingPacket->remainingLength == 0 );
 
     /* Choose packet type and length functions. */
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
         if( pMqttConnection->pSerializer != NULL )
         {
-            if( pMqttConnection->pSerializer.getPacketType != NULL )
+            if( pMqttConnection->pSerializer->getPacketType != NULL )
             {
-                getPacketType = pMqttConnection->pSerializer.getPacketType;
+                getPacketType = pMqttConnection->pSerializer->getPacketType;
             }
             else
             {
                 _EMPTY_ELSE_MARKER;
             }
 
-            if( pMqttConnection->pSerializer.getRemainingLength != NULL )
+            if( pMqttConnection->pSerializer->getRemainingLength != NULL )
             {
-                getRemainingLength = pMqttConnection->pSerializer.getRemainingLength;
+                getRemainingLength = pMqttConnection->pSerializer->getRemainingLength;
             }
             else
             {
@@ -134,26 +135,32 @@ static bool _getIncomingPacket( const _mqttConnection_t * pMqttConnection,
         _EMPTY_ELSE_MARKER;
     }
 
-    /* Allocate a buffer for the remaining data. */
-    pIncomingPacket->pRemainingData = IotMqtt_MallocMessage( pIncomingPacket->remainingLength );
-
-    if( pIncomingPacket->pRemainingData == NULL )
+    /* Allocate a buffer for the remaining data and read the data. */
+    if( pIncomingPacket->remainingLength > 0 )
     {
-        _IOT_SET_AND_GOTO_CLEANUP( false );
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
+        pIncomingPacket->pRemainingData = IotMqtt_MallocMessage( pIncomingPacket->remainingLength );
 
-    /* Read the remaining data. */
-    dataBytesRead = pMqttConnection->pNetworkInterface->receive( pMqttConnection->pNetworkConnection,
-                                                                 pIncomingPacket->pRemainingData,
-                                                                 pIncomingPacket->remainingLength );
+        if( pIncomingPacket->pRemainingData == NULL )
+        {
+            _IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
 
-    if( dataBytesRead != pIncomingPacket->remainingLength )
-    {
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        dataBytesRead = pMqttConnection->pNetworkInterface->receive( pMqttConnection->pNetworkConnection,
+                                                                     pIncomingPacket->pRemainingData,
+                                                                     pIncomingPacket->remainingLength );
+
+        if( dataBytesRead != pIncomingPacket->remainingLength )
+        {
+            _IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
     }
     else
     {
@@ -193,9 +200,9 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
     /* Deserializer function. */
     IotMqttError_t ( * deserialize )( _mqttPacket_t * ) = NULL;
 
-    /* A buffer for remaining data must be allocated. */
-    IotMqtt_Assert( pIncomingPacket->pRemainingData != NULL );
-    IotMqtt_Assert( pIncomingPacket->remainingLength > 0 );
+    /* A buffer for remaining data must be allocated if remaining length is not 0. */
+    IotMqtt_Assert( ( pIncomingPacket->remainingLength > 0 ) ==
+                    ( pIncomingPacket->pRemainingData != NULL ) );
 
     /* Mask out the low bits of packet type to ignore flags. */
     switch( ( pIncomingPacket->type & 0xf0 ) )
@@ -209,9 +216,9 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
             #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                 if( pMqttConnection->pSerializer != NULL )
                 {
-                    if( pMqttConnection->pSerializer.deserialize.connack != NULL )
+                    if( pMqttConnection->pSerializer->deserialize.connack != NULL )
                     {
-                        deserialize = pMqttConnection->pSerializer.deserialize.connack;
+                        deserialize = pMqttConnection->pSerializer->deserialize.connack;
                     }
                     else
                     {
@@ -265,9 +272,9 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
             #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                 if( pMqttConnection->pSerializer != NULL )
                 {
-                    if( pMqttConnection->pSerializer.deserialize.publish != NULL )
+                    if( pMqttConnection->pSerializer->deserialize.publish != NULL )
                     {
-                        deserialize = pMqttConnection->pSerializer.deserialize.publish;
+                        deserialize = pMqttConnection->pSerializer->deserialize.publish;
                     }
                 }
                 else
@@ -312,9 +319,9 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
             #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                 if( pMqttConnection->pSerializer != NULL )
                 {
-                    if( pMqttConnection->pSerializer.deserialize.puback != NULL )
+                    if( pMqttConnection->pSerializer->deserialize.puback != NULL )
                     {
-                        deserialize = pMqttConnection->pSerializer.deserialize.puback;
+                        deserialize = pMqttConnection->pSerializer->deserialize.puback;
                     }
                     else
                     {
@@ -350,9 +357,9 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
             #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
                 if( pMqttConnection->pSerializer != NULL )
                 {
-                    if( pMqttConnection->pSerializer.deserialize.suback != NULL )
+                    if( pMqttConnection->pSerializer->deserialize.suback != NULL )
                     {
-                        deserialize = pMqttConnection->pSerializer.deserialize.suback;
+                        deserialize = pMqttConnection->pSerializer->deserialize.suback;
                     }
                     else
                     {
@@ -420,18 +427,18 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
             deserialize = _IotMqtt_DeserializePingresp;
 
             #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pMqttConnection->pSerializer != NULL )
-            {
-                if( pMqttConnection->pSerializer.deserialize.pingresp != NULL )
+                if( pMqttConnection->pSerializer != NULL )
                 {
-                    deserialize = pMqttConnection->pSerializer.deserialize.pingresp;
+                    if( pMqttConnection->pSerializer->deserialize.pingresp != NULL )
+                    {
+                        deserialize = pMqttConnection->pSerializer->deserialize.pingresp;
+                    }
                 }
-            }
-            else
-            {
-                _EMPTY_ELSE_MARKER;
-            }
-            #endif
+                else
+                {
+                    _EMPTY_ELSE_MARKER;
+                }
+            #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
             /* Deserialize PINGRESP. */
             status = deserialize( pIncomingPacket );

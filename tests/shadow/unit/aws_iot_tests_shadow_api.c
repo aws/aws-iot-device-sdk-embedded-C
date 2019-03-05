@@ -356,6 +356,9 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
     /* Clean up the MQTT connection object. */
     IotMqtt_Disconnect( &_mqttConnection, true );
 
+    /* Clean up common components. */
+    IotCommon_Cleanup();
+
     /* Clean up the MQTT library. */
     IotMqtt_Cleanup();
 
@@ -368,9 +371,6 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
     /* Destroy the last packet mutex. */
     IotMutex_Unlock( &_lastPacketMutex );
     IotMutex_Destroy( &_lastPacketMutex );
-
-    /* Clean up common components. */
-    IotCommon_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

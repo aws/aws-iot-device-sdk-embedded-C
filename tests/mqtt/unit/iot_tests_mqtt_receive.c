@@ -593,9 +593,9 @@ TEST_TEAR_DOWN( MQTT_Unit_Receive )
 {
     /* Clean up resources taken in test setup. */
     IotMqtt_Disconnect( &_mqttConnection, true );
+    IotCommon_Cleanup();
     IotMqtt_Cleanup();
     IotSemaphore_Destroy( &_mallocSemaphore );
-    IotCommon_Cleanup();
 
     /* Check that the tests used a deserializer override. */
     TEST_ASSERT_EQUAL_INT( true, _deserializeOverrideCalled );
