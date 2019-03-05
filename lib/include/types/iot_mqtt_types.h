@@ -657,7 +657,7 @@ typedef struct IotMqttConnectInfo
  *
  * Forward declaration of the internal MQTT packet structure.
  */
-typedef struct _mqttPacket _mqttPacket_t;
+    typedef struct _mqttPacket _mqttPacket_t;
 /** @endcond */
 
 /**
@@ -733,25 +733,27 @@ typedef struct _mqttPacket _mqttPacket_t;
              * @param[out] uint8_t** Where the PUBLISH packet is written.
              * @param[out] size_t* Size of the PUBLISH packet.
              * @param[out] uint16_t* The packet identifier generated for this PUBLISH.
+             * @param[out] uint8_t** Where the high byte of the packet identifier
+             * is written.
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializePublish
              */
             IotMqttError_t ( * publish )( const IotMqttPublishInfo_t * /* pPublishInfo */,
                                           uint8_t ** /* pPublishPacket */,
                                           size_t * /* pPacketSize */,
-                                          uint16_t * /* pPacketIdentifier */ );
+                                          uint16_t * /* pPacketIdentifier */,
+                                          uint8_t ** /* pPacketIdentifierHigh */ );
 
             /**
              * @brief Set the `DUP` bit in a QoS `1` PUBLISH packet.
-             * @param[in] bool Specifies if this PUBLISH packet is being sent to
-             * an AWS IoT MQTT server.
              * @param[in] uint8_t* Pointer to the PUBLISH packet to modify.
+             * @param[in] uint8_t* The high byte of any packet identifier to modify.
              * @param[out] uint16_t* New packet identifier (AWS IoT MQTT mode only).
              *
              * <b>Default implementation:</b> #_IotMqtt_PublishSetDup
              */
-            void ( *publishSetDup )( bool /* awsIotMqttMode */,
-                                     uint8_t * /* pPublishPacket */,
+            void ( *publishSetDup )( uint8_t * /* pPublishPacket */,
+                                     uint8_t * /* pPacketIdentifierHigh */,
                                      uint16_t * /* pNewPacketIdentifier */ );
 
             /**

@@ -307,8 +307,9 @@ typedef struct _mqttOperation
             uint16_t packetIdentifier;        /**< @brief The packet identifier used with this operation. */
 
             /* Serialized packet and size. */
-            uint8_t * pMqttPacket; /**< @brief The MQTT packet to send over the network. */
-            size_t packetSize;     /**< @brief Size of `pMqttPacket`. */
+            uint8_t * pMqttPacket;           /**< @brief The MQTT packet to send over the network. */
+            uint8_t * pPacketIdentifierHigh; /**< @brief The location of the high byte of the packet identifier in the MQTT packet. */
+            size_t packetSize;               /**< @brief Size of `pMqttPacket`. */
 
             /* How to notify of an operation's completion. */
             union
@@ -329,8 +330,8 @@ typedef struct _mqttOperation
         /* If incomingPublish is true, this struct is valid. */
         struct
         {
-            IotMqttPublishInfo_t publishInfo;      /**< @brief Deserialized PUBLISH. */
-            const void * pReceivedData;            /**< @brief Any buffer associated with this PUBLISH that should be freed. */
+            IotMqttPublishInfo_t publishInfo; /**< @brief Deserialized PUBLISH. */
+            const void * pReceivedData;       /**< @brief Any buffer associated with this PUBLISH that should be freed. */
         };
     };
 } _mqttOperation_t;
@@ -491,20 +492,22 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack );
  * @param[out] pPublishPacket Where the PUBLISH packet is written.
  * @param[out] pPacketSize Size of the packet written to `pPublishPacket`.
  * @param[out] pPacketIdentifier The packet identifier generated for this PUBLISH.
+ * @param[out] pPacketIdentifierHigh Where the high byte of the packet identifier
+ * is written.
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
  */
 IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishInfo,
                                           uint8_t ** pPublishPacket,
                                           size_t * pPacketSize,
-                                          uint16_t * pPacketIdentifier );
+                                          uint16_t * pPacketIdentifier,
+                                          uint8_t ** pPacketIdentifierHigh );
 
 /**
  * @brief Set the DUP bit in a QoS 1 PUBLISH packet.
  *
- * @param[in] awsIotMqttMode Specifies if this PUBLISH packet is being sent to
- * an AWS IoT MQTT server.
  * @param[in] pPublishPacket Pointer to the PUBLISH packet to modify.
+ * @param[in] pPacketIdentifierHigh The high byte of any packet identifier to modify.
  * @param[out] pNewPacketIdentifier Since AWS IoT does not support the DUP flag,
  * a new packet identifier is generated and should be written here. This parameter
  * is only used when connected to an AWS IoT MQTT server.
@@ -512,8 +515,8 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
  * @note See #IotMqttPublishInfo_t for caveats with retransmission to the
  * AWS IoT MQTT server.
  */
-void _IotMqtt_PublishSetDup( bool awsIotMqttMode,
-                             uint8_t * pPublishPacket,
+void _IotMqtt_PublishSetDup( uint8_t * pPublishPacket,
+                             uint8_t * pPacketIdentifierHigh,
                              uint16_t * pNewPacketIdentifier );
 
 /**

@@ -197,22 +197,6 @@ static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
                                          size_t length );
 
 /**
- * @brief Decodes the "Remaining length" field in an MQTT packet.
- *
- * @param[in] pSource Pointer to the beginning of remaining length.
- * @param[out] pEnd Set to point to the byte after the encoded "Remaining length".
- * @param[out] pLength Set to the decoded remaining length.
- *
- * @return Pointer to the end of the encoded "Remaining length", which is 1-4
- * bytes greater than pSource.
- *
- * @warning This function does not check the size of `pSource`!
- */
-static IotMqttError_t _decodeRemainingLength( const uint8_t * pSource,
-                                              const uint8_t ** pEnd,
-                                              size_t * pLength );
-
-/**
  * @brief Encode a C string as a UTF-8 string, per MQTT 3.1.1 spec.
  *
  * @param[out] pDestination Where to write the encoded string.
@@ -393,76 +377,6 @@ static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
     } while( length > 0 );
 
     return pLengthEnd;
-}
-
-/*-----------------------------------------------------------*/
-
-static IotMqttError_t _decodeRemainingLength( const uint8_t * pSource,
-                                              const uint8_t ** pEnd,
-                                              size_t * pLength )
-{
-    IotMqttError_t status = IOT_MQTT_SUCCESS;
-    uint8_t encodedByte = 0;
-    size_t remainingLength = 0, multiplier = 1, bytesDecoded = 0, expectedSize = 0;
-
-    /* This algorithm is copied from the MQTT v3.1.1 spec. */
-    do
-    {
-        if( multiplier > 2097152 ) /* 128 ^ 3 */
-        {
-            status = IOT_MQTT_BAD_PARAMETER;
-            break;
-        }
-        else
-        {
-            encodedByte = *pSource;
-            pSource++;
-
-            remainingLength += ( encodedByte & 0x7F ) * multiplier;
-            multiplier *= 128;
-            bytesDecoded++;
-        }
-    } while( ( encodedByte & 0x80 ) != 0 );
-
-    if( status == IOT_MQTT_SUCCESS )
-    {
-        expectedSize = _remainingLengthEncodedSize( remainingLength );
-
-        if( bytesDecoded != expectedSize )
-        {
-            status = IOT_MQTT_BAD_PARAMETER;
-        }
-        else
-        {
-            /* Valid remaining length should be at most 4 bytes. */
-            IotMqtt_Assert( bytesDecoded <= 4 );
-
-            /* Set the output parameters. */
-            if( pLength != NULL )
-            {
-                *pLength = remainingLength;
-            }
-            else
-            {
-                _EMPTY_ELSE_MARKER;
-            }
-
-            if( pEnd != NULL )
-            {
-                *pEnd = pSource;
-            }
-            else
-            {
-                _EMPTY_ELSE_MARKER;
-            }
-        }
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
-
-    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1176,7 +1090,8 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
 IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishInfo,
                                           uint8_t ** pPublishPacket,
                                           size_t * pPacketSize,
-                                          uint16_t * pPacketIdentifier )
+                                          uint16_t * pPacketIdentifier,
+                                          uint8_t ** pPacketIdentifierHigh )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     uint8_t publishFlags = 0;
@@ -1263,8 +1178,19 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
     {
         /* Get the next packet identifier. It should always be nonzero. */
         packetIdentifier = _nextPacketIdentifier();
-        *pPacketIdentifier = packetIdentifier;
         IotMqtt_Assert( packetIdentifier != 0 );
+
+        /* Set the packet identifier output parameters. */
+        *pPacketIdentifier = packetIdentifier;
+
+        if( pPacketIdentifierHigh != NULL )
+        {
+            *pPacketIdentifierHigh = pBuffer;
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
 
         /* Place the packet identifier into the PUBLISH packet. */
         *pBuffer = _UINT16_HIGH_BYTE( packetIdentifier );
@@ -1299,35 +1225,28 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
 
 /*-----------------------------------------------------------*/
 
-void _IotMqtt_PublishSetDup( bool awsIotMqttMode,
-                             uint8_t * pPublishPacket,
+void _IotMqtt_PublishSetDup( uint8_t * pPublishPacket,
+                             uint8_t * pPacketIdentifierHigh,
                              uint16_t * pNewPacketIdentifier )
 {
-    const uint8_t * pTopicNameLength = NULL;
-    uint8_t * pPacketIdentifier = NULL;
-    uint16_t topicNameLength = 0, newPacketIdentifier = _nextPacketIdentifier();
+    uint16_t newPacketIdentifier = 0;
 
     /* For an AWS IoT MQTT server, change the packet identifier. */
-    if( awsIotMqttMode == true )
+    if( pPacketIdentifierHigh != NULL )
     {
-        /* Decode the "Remaining length" to find where it ends. Because the
-         * "Remaining length" was not received from the network, it is "trusted"
-         * so the return value of this function isn't checked. */
-        ( void ) _decodeRemainingLength( pPublishPacket + 1,
-                                         &pTopicNameLength,
-                                         NULL );
+        /* Output parameter for new packet identifier must be provided. */
+        IotMqtt_Assert( pNewPacketIdentifier != NULL );
 
-        /* Decode the topic name length and calculate the address of the packet identifier. */
-        topicNameLength = _UINT16_DECODE( pTopicNameLength );
-        pPacketIdentifier = ( uint8_t * ) ( pTopicNameLength + topicNameLength + sizeof( uint16_t ) );
+        /* Generate a new packet identifier. */
+        newPacketIdentifier = _nextPacketIdentifier();
 
         IotLogDebug( "Changing PUBLISH packet identifier %hu to %hu.",
-                     _UINT16_DECODE( pPacketIdentifier ),
+                     _UINT16_DECODE( pPacketIdentifierHigh ),
                      newPacketIdentifier );
 
         /* Replace the packet identifier. */
-        *pPacketIdentifier = _UINT16_HIGH_BYTE( newPacketIdentifier );
-        *( pPacketIdentifier + 1 ) = _UINT16_LOW_BYTE( newPacketIdentifier );
+        *pPacketIdentifierHigh = _UINT16_HIGH_BYTE( newPacketIdentifier );
+        *( pPacketIdentifierHigh + 1 ) = _UINT16_LOW_BYTE( newPacketIdentifier );
         *pNewPacketIdentifier = newPacketIdentifier;
     }
     else
@@ -2084,9 +2003,3 @@ void _IotMqtt_FreePacket( uint8_t * pPacket )
 }
 
 /*-----------------------------------------------------------*/
-
-/* If the MQTT library is being tested, include a file that allows access to
- * internal functions and variables. */
-#if IOT_MQTT_TEST == 1
-    #include "iot_test_access_mqtt_serialize.c"
-#endif

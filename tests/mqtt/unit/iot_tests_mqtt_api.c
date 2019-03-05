@@ -239,14 +239,14 @@ static void _incomingPingresp( void * pArgument )
 /**
  * @brief PUBLISH set DUP function override.
  */
-static void _publishSetDup( bool awsIotMqttMode,
-                            uint8_t * pPublishPacket,
+static void _publishSetDup( uint8_t * pPublishPacket,
+                            uint8_t * pPacketIdentifierHigh,
                             uint16_t * pNewPacketIdentifier )
 {
     _publishSetDupCalled = true;
 
-    _IotMqtt_PublishSetDup( awsIotMqttMode,
-                            pPublishPacket,
+    _IotMqtt_PublishSetDup( pPublishPacket,
+                            pPacketIdentifierHigh,
                             pNewPacketIdentifier );
 }
 

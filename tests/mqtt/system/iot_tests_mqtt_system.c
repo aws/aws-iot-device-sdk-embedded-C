@@ -203,14 +203,16 @@ static IotMqttError_t _serializeConnect( const IotMqttConnectInfo_t * pConnectIn
 static IotMqttError_t _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
                                          uint8_t ** pPublishPacket,
                                          size_t * pPacketSize,
-                                         uint16_t * pPacketIdentifier )
+                                         uint16_t * pPacketIdentifier,
+                                         uint8_t ** pPacketIdentifierHigh )
 {
     _publishSerializerOverride = true;
 
     return _IotMqtt_SerializePublish( pPublishInfo,
                                       pPublishPacket,
                                       pPacketSize,
-                                      pPacketIdentifier );
+                                      pPacketIdentifier,
+                                      pPacketIdentifierHigh );
 }
 
 /*-----------------------------------------------------------*/

@@ -1390,12 +1390,14 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t * pMqttConnection,
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     _mqttOperation_t * pPublishOperation = NULL;
+    uint8_t ** pPacketIdentifierHigh = NULL;
 
     /* Default PUBLISH serializer function. */
     IotMqttError_t ( * serializePublish )( const IotMqttPublishInfo_t *,
                                            uint8_t **,
                                            size_t *,
-                                           uint16_t * ) = _IotMqtt_SerializePublish;
+                                           uint16_t *,
+                                           uint8_t ** ) = _IotMqtt_SerializePublish;
 
     /* Check that the PUBLISH information is valid. */
     if( _IotMqtt_ValidatePublish( pMqttConnection->awsIotMqttMode,
@@ -1499,11 +1501,22 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t * pMqttConnection,
         }
     #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
+    /* In AWS IoT MQTT mode, a pointer to the packet identifier must be saved. */
+    if( pMqttConnection->awsIotMqttMode == true )
+    {
+        pPacketIdentifierHigh = &( pPublishOperation->pPacketIdentifierHigh );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
+
     /* Generate a PUBLISH packet from pPublishInfo. */
     status = serializePublish( pPublishInfo,
                                &( pPublishOperation->pMqttPacket ),
                                &( pPublishOperation->packetSize ),
-                               &( pPublishOperation->packetIdentifier ) );
+                               &( pPublishOperation->packetIdentifier ),
+                               pPacketIdentifierHigh );
 
     if( status != IOT_MQTT_SUCCESS )
     {

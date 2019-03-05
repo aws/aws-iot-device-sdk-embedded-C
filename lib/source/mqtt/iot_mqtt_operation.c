@@ -134,7 +134,7 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
     bool status = true;
 
     /* Choose a set DUP function. */
-    void ( * publishSetDup )( bool,
+    void ( * publishSetDup )( uint8_t *,
                               uint8_t *,
                               uint16_t * ) = _IotMqtt_PublishSetDup;
 
@@ -177,8 +177,8 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
     else if( pOperation->retry.count == 1 )
     {
         /* Always set the DUP flag on the first retry. */
-        publishSetDup( pMqttConnection->awsIotMqttMode,
-                       pOperation->pMqttPacket,
+        publishSetDup( pOperation->pMqttPacket,
+                       pOperation->pPacketIdentifierHigh,
                        &( pOperation->packetIdentifier ) );
     }
     else
@@ -187,8 +187,8 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
          * identifier) must be reset on every retry. */
         if( pMqttConnection->awsIotMqttMode == true )
         {
-            publishSetDup( pMqttConnection->awsIotMqttMode,
-                           pOperation->pMqttPacket,
+            publishSetDup( pOperation->pMqttPacket,
+                           pOperation->pPacketIdentifierHigh,
                            &( pOperation->packetIdentifier ) );
         }
         else

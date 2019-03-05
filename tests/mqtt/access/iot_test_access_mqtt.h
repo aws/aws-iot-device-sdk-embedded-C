@@ -57,15 +57,6 @@ bool IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
     ( uint16_t ) ( ( ( ( uint16_t ) ( *( ptr ) ) ) << 8 ) | \
                    ( ( uint16_t ) ( *( ptr + 1 ) ) ) )
 
-/**
- * @brief Test access function for #_decodeRemainingLength.
- *
- * @see #_decodeRemainingLength.
- */
-IotMqttError_t IotTestMqtt_decodeRemainingLength( const uint8_t * pSource,
-                                                  const uint8_t ** pEnd,
-                                                  size_t * pLength );
-
 /*----------------------- iot_mqtt_subscription.c -----------------------*/
 
 /* Internal data structures of iot_mqtt_subscription.c, redefined for the tests. */
