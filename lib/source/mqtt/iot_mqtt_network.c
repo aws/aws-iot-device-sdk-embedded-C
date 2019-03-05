@@ -670,8 +670,6 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection )
         {
             /* Clean up PINGREQ packet and job. */
             _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
-            IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL,
-                                    &( pMqttConnection->keepAliveJob ) );
 
             /* Clear data about the keep-alive. */
             pMqttConnection->keepAliveMs = 0;
