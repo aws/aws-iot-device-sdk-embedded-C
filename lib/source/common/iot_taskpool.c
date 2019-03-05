@@ -37,6 +37,10 @@
 /* Task pool internal include. */
 #include "private/iot_taskpool_internal.h"
 
+#ifdef __clang__
+#define NO_SANITIZE __attribute__( ( no_sanitize( "thread" ) ) )
+#endif
+
 /**
  * @brief Enter a critical section by locking a mutex.
  *
@@ -97,14 +101,14 @@ IotTaskPool_t _IotSystemTaskPool = { 0 };
 static void _initJobsCache( IotTaskPoolCache_t * const pCache );
 
 /**
-* @brief Initialize a job.
-*
-* @param[in] pJob The job to initialize.
-*/
+ * @brief Initialize a job.
+ *
+ * @param[in] pJob The job to initialize.
+ */
 static void _initializeJob( IotTaskPoolJob_t * const pJob,
-                                          IotTaskPoolRoutine_t userCallback,
-                                          void * pUserContext,
-                                          bool isStatic );
+                            IotTaskPoolRoutine_t userCallback,
+                            void * pUserContext,
+                            bool isStatic );
 
 /**
  * @brief Extracts and initializes one instance of a job from the cache or, if there is none available, it allocates and initialized a new one.
@@ -500,16 +504,16 @@ IotTaskPoolError_t IotTaskPool_DestroyRecyclableJob( IotTaskPool_t * const pTask
     _TASKPOOL_ENTER_CRITICAL_SECTION;
     {
         /* Bail out early if this task pool is shutting down. */
-        if ( _IsShutdownStarted( pTaskPool ) )
+        if( _IsShutdownStarted( pTaskPool ) )
         {
             status = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
         }
         /* Do not destroy statically allocated jobs. */
-        else if ( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == IOT_TASK_POOL_INTERNAL_STATIC )
+        else if( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == IOT_TASK_POOL_INTERNAL_STATIC )
         {
             IotLogWarn( "Attempt to destroy a statically allocated job." );
 
-            status = IOT_TASKPOOL_ILLEGAL_OPERATION ;
+            status = IOT_TASKPOOL_ILLEGAL_OPERATION;
         }
         else
         {
@@ -518,7 +522,7 @@ IotTaskPoolError_t IotTaskPool_DestroyRecyclableJob( IotTaskPool_t * const pTask
     }
     _TASKPOOL_EXIT_CRITICAL_SECTION;
 
-    if ( _TASKPOOL_SUCCEEDED( status ) )
+    if( _TASKPOOL_SUCCEEDED( status ) )
     {
         /* At this point, the job must not be in any queue or list. */
         IotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) == false );
@@ -526,7 +530,7 @@ IotTaskPoolError_t IotTaskPool_DestroyRecyclableJob( IotTaskPool_t * const pTask
         _destroyJob( pJob );
     }
 
-    _TASKPOOL_NO_FUNCTION_CLEANUP( );
+    _TASKPOOL_NO_FUNCTION_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
@@ -543,12 +547,12 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t * const pTaskPool,
     _TASKPOOL_ENTER_CRITICAL_SECTION;
     {
         /* Bail out early if this task pool is shutting down. */
-        if ( _IsShutdownStarted( pTaskPool ) )
+        if( _IsShutdownStarted( pTaskPool ) )
         {
             status = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
         }
         /* Do not recycle statically allocated jobs. */
-        else if ( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
+        else if( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
         {
             status = _trySafeExtraction( pTaskPool, pJob, true );
         }
@@ -560,7 +564,7 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t * const pTaskPool,
         }
 
         /* If all safety checks completed, proceed. */
-        if ( _TASKPOOL_SUCCEEDED( status ) )
+        if( _TASKPOOL_SUCCEEDED( status ) )
         {
             /* At this point, the job must not be in any queue or list. */
             IotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) == false );
@@ -570,7 +574,7 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t * const pTaskPool,
     }
     _TASKPOOL_EXIT_CRITICAL_SECTION;
 
-    _TASKPOOL_NO_FUNCTION_CLEANUP( );
+    _TASKPOOL_NO_FUNCTION_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
@@ -800,6 +804,8 @@ const char * IotTaskPool_strerror( IotTaskPoolError_t status )
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
  */
+
+NO_SANITIZE
 static IotTaskPoolError_t _createTaskPool( const IotTaskPoolInfo_t * const pInfo,
                                            IotTaskPool_t * const pTaskPool )
 {
@@ -884,6 +890,7 @@ static IotTaskPoolError_t _createTaskPool( const IotTaskPoolInfo_t * const pInfo
 
 /*-----------------------------------------------------------*/
 
+NO_SANITIZE
 static IotTaskPoolError_t _initTaskPoolControlStructures( const IotTaskPoolInfo_t * const pInfo,
                                                           IotTaskPool_t * const pTaskPool )
 {
@@ -963,6 +970,7 @@ static IotTaskPoolError_t _initTaskPoolControlStructures( const IotTaskPoolInfo_
 
 /*-----------------------------------------------------------*/
 
+NO_SANITIZE
 static void _destroyTaskPool( IotTaskPool_t * const pTaskPool )
 {
     IotClock_TimerDestroy( &pTaskPool->timer );
@@ -973,11 +981,13 @@ static void _destroyTaskPool( IotTaskPool_t * const pTaskPool )
 
 /* ---------------------------------------------------------------------------------------------- */
 
+NO_SANITIZE
 static void _taskPoolWorker( void * pUserContext )
 {
     /* Extract pTaskPool pointer from context. */
     IotTaskPool_Assert( pUserContext != NULL );
     IotTaskPool_t * pTaskPool = ( IotTaskPool_t * ) pUserContext;
+    bool running = true;
 
     /* Signal that this worker completed initialization and it is ready to receive notifications. */
     IotSemaphore_Post( &pTaskPool->startStopSignal );
@@ -986,7 +996,7 @@ static void _taskPoolWorker( void * pUserContext )
      * is setting maxThreads to zero. A worker thread is running until the maximum number of allowed
      * threads is not zero and the active threads are less than the maximum number of allowed threads.
      */
-    for ( ; ; )
+    while( running )
     {
         IotLink_t * pFirst = NULL;
         IotTaskPoolJob_t * pJob = NULL;
@@ -1007,13 +1017,15 @@ static void _taskPoolWorker( void * pUserContext )
                 /* Decrease the number of active threads. */
                 pTaskPool->activeThreads--;
 
+                running = false;
+
                 _TASKPOOL_EXIT_CRITICAL_SECTION;
 
                 /* Signal that this worker is exiting. */
                 IotSemaphore_Post( &pTaskPool->startStopSignal );
 
                 /* Abandon the OUTER LOOP. */
-                break;
+                continue;
             }
 
             /* Dequeue the first job in FIFO order. */
@@ -1093,13 +1105,15 @@ static void _taskPoolWorker( void * pUserContext )
                 /* Decrease the number of active threads. */
                 pTaskPool->activeThreads--;
 
+                running = false;
+
                 _TASKPOOL_EXIT_CRITICAL_SECTION;
 
                 /* Signal that this worker is exiting. */
                 IotSemaphore_Post( &pTaskPool->startStopSignal );
 
                 /* Abandon the OUTER LOOP. */
-                break;
+                continue;
             }
         }
         _TASKPOOL_EXIT_CRITICAL_SECTION;
@@ -1118,16 +1132,16 @@ static void _initJobsCache( IotTaskPoolCache_t * const pCache )
 /*-----------------------------------------------------------*/
 
 static void _initializeJob( IotTaskPoolJob_t * const pJob,
-                                          IotTaskPoolRoutine_t userCallback,
-                                          void * pUserContext, 
-                                          bool isStatic )
+                            IotTaskPoolRoutine_t userCallback,
+                            void * pUserContext,
+                            bool isStatic )
 {
     pJob->link.pNext = NULL;
     pJob->link.pPrevious = NULL;
     pJob->userCallback = userCallback;
     pJob->pUserContext = pUserContext;
 
-    if ( isStatic )
+    if( isStatic )
     {
         pJob->status = IOT_TASKPOOL_STATUS_READY | IOT_TASK_POOL_INTERNAL_STATIC;
     }
@@ -1216,7 +1230,7 @@ static void _destroyJob( IotTaskPoolJob_t * const pJob )
     pJob->status |= IOT_TASKPOOL_STATUS_UNDEFINED;
 
     /* Only dispose of dynamically allocated jobs. */
-    if ( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
+    if( ( pJob->status & IOT_TASK_POOL_INTERNAL_STATIC ) == 0 )
     {
         IotTaskPool_FreeJob( pJob );
     }
