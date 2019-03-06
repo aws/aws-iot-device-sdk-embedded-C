@@ -46,12 +46,15 @@
 /**
  * @brief Get an incoming MQTT packet from the network.
  *
+ * @param[in] pNetworkConnection Network connection to use for receive, which
+ * may be different from the network connection associated with the MQTT connection.
  * @param[in] pMqttConnection The associated MQTT connection.
  * @param[out] pIncomingPacket Output parameter for the incoming packet.
  *
  * @return `true` if a packet was successfully received; `false` otherwise.
  */
-static bool _getIncomingPacket( const _mqttConnection_t * pMqttConnection,
+static bool _getIncomingPacket( void * pNetworkConnection,
+                                const _mqttConnection_t * pMqttConnection,
                                 _mqttPacket_t * pIncomingPacket );
 
 /**
@@ -74,7 +77,8 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
 
 /*-----------------------------------------------------------*/
 
-static bool _getIncomingPacket( const _mqttConnection_t * pMqttConnection,
+static bool _getIncomingPacket( void * pNetworkConnection,
+                                const _mqttConnection_t * pMqttConnection,
                                 _mqttPacket_t * pIncomingPacket )
 {
     _IOT_FUNCTION_ENTRY( bool, true );
@@ -119,11 +123,11 @@ static bool _getIncomingPacket( const _mqttConnection_t * pMqttConnection,
     #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
     /* Read the packet type, which is the first byte available. */
-    pIncomingPacket->type = getPacketType( pMqttConnection->pNetworkConnection,
+    pIncomingPacket->type = getPacketType( pNetworkConnection,
                                            pMqttConnection->pNetworkInterface );
 
     /* Read the remaining length. */
-    pIncomingPacket->remainingLength = getRemainingLength( pMqttConnection->pNetworkConnection,
+    pIncomingPacket->remainingLength = getRemainingLength( pNetworkConnection,
                                                            pMqttConnection->pNetworkInterface );
 
     if( pIncomingPacket->remainingLength == _MQTT_REMAINING_LENGTH_INVALID )
@@ -149,7 +153,7 @@ static bool _getIncomingPacket( const _mqttConnection_t * pMqttConnection,
             _EMPTY_ELSE_MARKER;
         }
 
-        dataBytesRead = pMqttConnection->pNetworkInterface->receive( pMqttConnection->pNetworkConnection,
+        dataBytesRead = pMqttConnection->pNetworkInterface->receive( pNetworkConnection,
                                                                      pIncomingPacket->pRemainingData,
                                                                      pIncomingPacket->remainingLength );
 
@@ -314,7 +318,7 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
                 {
                     /* Retrieve the pointer MQTT packet pointer so it may be freed later. */
                     IotMqtt_Assert( pIncomingPacket->pRemainingData == NULL );
-                    pIncomingPacket->pRemainingData = pOperation->pReceivedData;
+                    pIncomingPacket->pRemainingData = ( uint8_t * ) pOperation->pReceivedData;
                 }
                 else
                 {
@@ -738,14 +742,12 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
 {
     _mqttPacket_t incomingPacket = { 0 };
 
-    /* Silence warnings about unused parameters. */
-    ( void ) pNetworkConnection;
-
     /* Cast context to correct type. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pReceiveContext;
 
     /* Read an MQTT packet from the network. */
-    if( _getIncomingPacket( pMqttConnection,
+    if( _getIncomingPacket( pNetworkConnection,
+                            pMqttConnection,
                             &incomingPacket ) == true )
     {
         /* Deserialize the received packet. */
