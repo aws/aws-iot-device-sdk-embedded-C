@@ -68,8 +68,8 @@
 #define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
 #define IOT_MQTT_ENABLE_METRICS                 ( 0 )
 #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 1 )
-
 #define IOT_MQTT_TEST                           ( 1 )
+
 /* Shadow library configuration. */
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 

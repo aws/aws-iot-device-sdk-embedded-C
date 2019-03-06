@@ -90,7 +90,7 @@
  * @brief A delay that simulates the time required for an MQTT packet to be sent
  * to the server and for the server to send a response.
  */
-#define _NETWORK_ROUND_TRIP_TIME_MS     ( 50 )
+#define _NETWORK_ROUND_TRIP_TIME_MS     ( 25 )
 
 /**
  * @brief The maximum size of any MQTT acknowledgement packet (e.g. SUBACK,
@@ -663,9 +663,12 @@ TEST( Shadow_Unit_API, WaitInvalidParameters )
  */
 TEST( Shadow_Unit_API, DeleteMallocFail )
 {
-    int32_t i = 0;
+    int32_t i = 0, mqttErrorCount = 0;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
+
+    /* Set a short timeout so this test runs faster. */
+    _AwsIotShadowMqttTimeoutMs = 75;
 
     for( i = 0; ; i++ )
     {
@@ -690,10 +693,21 @@ TEST( Shadow_Unit_API, DeleteMallocFail )
             break;
         }
 
-        /* If the return value isn't success, check that it is memory allocation
-         * failure. */
-        TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NO_MEMORY, status );
+        /* Count the number of MQTT library errors. Otherwise, check that the error
+         * is a "No memory" error. */
+        if( status == AWS_IOT_SHADOW_MQTT_ERROR )
+        {
+            mqttErrorCount++;
+        }
+        else
+        {
+            TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NO_MEMORY, status );
+        }
     }
+
+    /* Allow 2 MQTT library errors, which are caused by failure to allocate memory
+     * for incoming packets (SUBSCRIBE, UNSUBSCRIBE). */
+    TEST_ASSERT_EQUAL_INT32( 2, mqttErrorCount );
 }
 
 /*-----------------------------------------------------------*/
@@ -704,12 +718,15 @@ TEST( Shadow_Unit_API, DeleteMallocFail )
  */
 TEST( Shadow_Unit_API, GetMallocFail )
 {
-    int32_t i = 0;
+    int32_t i = 0, mqttErrorCount = 0;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowDocumentInfo_t documentInfo = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
     AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
     const char * pRetrievedDocument = NULL;
     size_t retrievedDocumentSize = 0;
+
+    /* Set a short timeout so this test runs faster. */
+    _AwsIotShadowMqttTimeoutMs = 75;
 
     /* Set the members of the document info. */
     documentInfo.pThingName = _TEST_THING_NAME;
@@ -742,20 +759,34 @@ TEST( Shadow_Unit_API, GetMallocFail )
             break;
         }
 
-        /* If the return value isn't success, check that it is memory allocation
-         * failure. */
-        TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NO_MEMORY, status );
+        /* Count the number of MQTT library errors. Otherwise, check that the error
+         * is a "No memory" error. */
+        if( status == AWS_IOT_SHADOW_MQTT_ERROR )
+        {
+            mqttErrorCount++;
+        }
+        else
+        {
+            TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NO_MEMORY, status );
+        }
     }
+
+    /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
+     * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). */
+    TEST_ASSERT_EQUAL_INT32( 3, mqttErrorCount );
 }
 
 /*-----------------------------------------------------------*/
 
 TEST( Shadow_Unit_API, UpdateMallocFail )
 {
-    int32_t i = 0;
+    int32_t i = 0, mqttErrorCount = 0;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowDocumentInfo_t documentInfo = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
     AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
+
+    /* Set a short timeout so this test runs faster. */
+    _AwsIotShadowMqttTimeoutMs = 75;
 
     /* Set the members of the document info. */
     documentInfo.pThingName = _TEST_THING_NAME;
@@ -789,10 +820,21 @@ TEST( Shadow_Unit_API, UpdateMallocFail )
             break;
         }
 
-        /* If the return value isn't success, check that it is memory allocation
-         * failure. */
-        TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NO_MEMORY, status );
+        /* Count the number of MQTT library errors. Otherwise, check that the error
+         * is a "No memory" error. */
+        if( status == AWS_IOT_SHADOW_MQTT_ERROR )
+        {
+            mqttErrorCount++;
+        }
+        else
+        {
+            TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NO_MEMORY, status );
+        }
     }
+
+    /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
+     * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). */
+    TEST_ASSERT_EQUAL_INT32( 3, mqttErrorCount );
 }
 
 /*-----------------------------------------------------------*/
