@@ -21,7 +21,6 @@
 
 /* Standard includes */
 #include <stdio.h>
-#include <arpa/inet.h>
 
 /* Defender internal include. */
 #include "private/aws_iot_defender_internal.h"
@@ -29,6 +28,12 @@
 #include "iot_metrics.h"
 
 #include "platform/iot_clock.h"
+
+#ifdef _DEFENDER_ON_AMAZON_FREERTOS
+    #include "aws_secure_sockets.h"
+#else
+    #include <arpa/inet.h>
+#endif
 
 #define  _HEADER_TAG           AwsIotDefenderInternal_SelectTag( "header", "hed" )
 #define  _REPORTID_TAG         AwsIotDefenderInternal_SelectTag( "report_id", "rid" )
@@ -53,8 +58,8 @@
 typedef struct _metricsReport
 {
     IotSerializerEncoderObject_t object; /* Encoder object handle. */
-    uint8_t * pDataBuffer;                  /* Raw data buffer to be published with MQTT. */
-    size_t size;                            /* Raw data size. */
+    uint8_t * pDataBuffer;               /* Raw data buffer to be published with MQTT. */
+    size_t size;                         /* Raw data size. */
 } _metricsReport_t;
 
 typedef struct _tcpConns
@@ -126,8 +131,8 @@ uint8_t * AwsIotDefenderInternal_GetReportBuffer()
 size_t AwsIotDefenderInternal_GetReportBufferSize()
 {
     /* Encoder might over-calculate the needed size. Therefor encoded size might be smaller than buffer size: _report.size. */
-    return _report.pDataBuffer == NULL ? 0 
-        : _AwsIotDefenderEncoder.getEncodedSize(&_report.object, _report.pDataBuffer);
+    return _report.pDataBuffer == NULL ? 0
+           : _AwsIotDefenderEncoder.getEncodedSize( &_report.object, _report.pDataBuffer );
 }
 
 /*-----------------------------------------------------------*/
@@ -230,7 +235,7 @@ static void _serialize()
 
     /* Define an assert function for serialization returned error. */
     void (* assertNoError)( IotSerializerError_t ) = _report.pDataBuffer == NULL ? assertSuccessOrBufferToSmall
-                                                        : assertSuccess;
+                                                     : assertSuccess;
 
     uint8_t metricsGroupCount = 0;
     uint32_t i = 0;
@@ -418,10 +423,9 @@ static void _serializeTcpConnections( IotSerializerEncoderObject_t * pMetricsObj
     uint8_t hasRemoteAddr = ( tcpConnFlag & AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_REMOTE_ADDR ) > 0;
 
     char remoteAddr[ _REMOTE_ADDR_LENGTH ] = "";
-    char * pRemoteAddr = remoteAddr;
 
     void (* assertNoError)( IotSerializerError_t ) = _report.pDataBuffer == NULL ? assertSuccessOrBufferToSmall
-                                                        : assertSuccess;
+                                                     : assertSuccess;
 
     uint32_t i = 0;
 
@@ -467,13 +471,19 @@ static void _serializeTcpConnections( IotSerializerEncoderObject_t * pMetricsObj
                 /* add remote address */
                 if( hasRemoteAddr )
                 {
-                    /* Remote IP is with host endian. So it is converted to network endian and passed into SOCKETS_inet_ntoa. */
-                    struct in_addr remoteInAddr = { .s_addr = _metrics.tcpConns.pArray[ i ].remoteIP };
-                    char * pRemoteIp = inet_ntoa( remoteInAddr );
-                    sprintf( remoteAddr, "%s:%d", pRemoteIp, _metrics.tcpConns.pArray[ i ].remotePort );
+                    #ifdef _DEFENDER_ON_AMAZON_FREERTOS
+                        /* Remote IP is with host endian. So it is converted to network endian and passed into SOCKETS_inet_ntoa. */
+                        SOCKETS_inet_ntoa( SOCKETS_htonl( _metrics.tcpConns.pArray[ i ].remoteIP ), remoteAddr );
+                        sprintf( remoteAddr, "%s:%d", remoteAddr, _metrics.tcpConns.pArray[ i ].remotePort );
+                    #else
+                        /* Remote IP is with network endian. */
+                        struct in_addr remoteInAddr = { .s_addr = _metrics.tcpConns.pArray[ i ].remoteIP };
+                        char * pRemoteIp = inet_ntoa( remoteInAddr );
+                        sprintf( remoteAddr, "%s:%d", pRemoteIp, _metrics.tcpConns.pArray[ i ].remotePort );
+                    #endif
 
                     serializerError = _AwsIotDefenderEncoder.appendKeyValue( &connectionMap, _REMOTE_ADDR_TAG,
-                                                                             IotSerializer_ScalarTextString( pRemoteAddr ) );
+                                                                             IotSerializer_ScalarTextString( remoteAddr ) );
                     assertNoError( serializerError );
                 }
 
