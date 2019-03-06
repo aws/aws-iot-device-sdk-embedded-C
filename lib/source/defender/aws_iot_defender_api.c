@@ -26,7 +26,11 @@
 #include "iot_taskpool.h"
 
 /* POSIX includes. */
-#include <unistd.h>
+#ifdef _DEFENDER_ON_AMAZON_FREERTOS
+    #include "FreeRTOS_POSIX/unistd.h"
+#else
+    #include <unistd.h>
+#endif
 
 #define _WAIT_METRICS_JOB_MAX_SECONDS    ( 5 )
 
