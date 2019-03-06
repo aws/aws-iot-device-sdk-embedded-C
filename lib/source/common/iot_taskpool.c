@@ -383,6 +383,8 @@ IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t * pTaskPool,
 {
     _TASKPOOL_FUNCTION_ENTRY( IOT_TASKPOOL_SUCCESS );
 
+    uint32_t count, i;
+
     /* Parameter checking. */
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pTaskPool );
     _TASKPOOL_ON_ARG_ERROR_GOTO_CLEANUP( pTaskPool->minThreads > maxThreads );
@@ -398,25 +400,36 @@ IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t * pTaskPool,
             _TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS );
         }
 
-        uint32_t currentMaxThreads = pTaskPool->maxThreads;
+        uint32_t previousMaxThreads = pTaskPool->maxThreads;
 
         /* Reset the max threads counter. */
         pTaskPool->maxThreads = maxThreads;
 
-        /* If the number of maximum threads in the pool is set to be smaller than the current value,
-         * then we need to signal all redundant to exit.
-         */
-        if( maxThreads < currentMaxThreads )
-        {
-            uint32_t count = currentMaxThreads - maxThreads;
+        count = previousMaxThreads - maxThreads;
 
-            while( count-- > 0 )
+        /* If the number of maximum threads in the pool is set to be smaller than the current value,
+         * then we need to signal all redundant threads to exit.
+         */
+        if( maxThreads < previousMaxThreads )
+        {
+            IotLogDebug( "Setting max threads caused %d thread to exit.", count );
+
+            i = count;
+
+            while( i-- > 0 )
             {
                 IotSemaphore_Post( &pTaskPool->dispatchSignal );
             }
         }
     }
     _TASKPOOL_EXIT_CRITICAL_SECTION;
+
+    //i = count;
+
+    //while( count-- > 0 )
+    //{
+    //    IotSemaphore_Wait( &pTaskPool->startStopSignal );
+    //}
 
     _TASKPOOL_NO_FUNCTION_CLEANUP();
 }
@@ -702,6 +715,8 @@ IotTaskPoolError_t IotTaskPool_GetStatus( IotTaskPool_t * const pTaskPool,
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pTaskPool );
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pJob );
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pStatus );
+    
+    *pStatus = IOT_TASKPOOL_STATUS_UNDEFINED;
 
     _TASKPOOL_ENTER_CRITICAL_SECTION;
     {
@@ -1066,7 +1081,7 @@ static void _taskPoolWorker( void * pUserContext )
                 pJob = NULL;
 
                 /* If this thread exceeded the quota, then let it terminate. */
-                if ( running == false )
+                if( running == false )
                 {
                     /* Abandon the INNER LOOP. Execution will tranfer back to the OUTER LOOP condition. */
                     break;
@@ -1103,7 +1118,6 @@ static void _taskPoolWorker( void * pUserContext )
             }
             _TASKPOOL_EXIT_CRITICAL_SECTION;
         }
-
     } while( running == true );
 }
 
