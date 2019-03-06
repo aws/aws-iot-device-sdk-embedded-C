@@ -44,6 +44,15 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Check if an incoming packet type is valid.
+ *
+ * @param[in] packetType The packet type to check.
+ *
+ * @return `true` if the packet type is valid; `false` otherwise.
+ */
+static bool _incomingPacketValid( uint8_t packetType );
+
+/**
  * @brief Get an incoming MQTT packet from the network.
  *
  * @param[in] pNetworkConnection Network connection to use for receive, which
@@ -62,8 +71,11 @@ static bool _getIncomingPacket( void * pNetworkConnection,
  *
  * @param[in] pMqttConnection The associated MQTT connection.
  * @param[in] pIncomingPacket The packet received from the network.
+ *
+ * @return `true` if the incoming packet was successfully deserialized; `false`
+ * otherwise.
  */
-static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
+static bool _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
                                         _mqttPacket_t * pIncomingPacket );
 
 /**
@@ -74,6 +86,33 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
  */
 static void _sendPuback( _mqttConnection_t * pMqttConnection,
                          uint16_t packetIdentifier );
+
+/*-----------------------------------------------------------*/
+
+static bool _incomingPacketValid( uint8_t packetType )
+{
+    bool status = true;
+
+    /* Check packet type. Mask out lower bits to ignore flags. */
+    switch( packetType & 0xf0 )
+    {
+        /* Valid incoming packet types. */
+        case _MQTT_PACKET_TYPE_CONNACK:
+        case _MQTT_PACKET_TYPE_PUBLISH:
+        case _MQTT_PACKET_TYPE_PUBACK:
+        case _MQTT_PACKET_TYPE_SUBACK:
+        case _MQTT_PACKET_TYPE_UNSUBACK:
+        case _MQTT_PACKET_TYPE_PINGRESP:
+            break;
+
+        /* Any other packet type is invalid. */
+        default:
+            status = false;
+            break;
+    }
+
+    return status;
+}
 
 /*-----------------------------------------------------------*/
 
@@ -125,6 +164,20 @@ static bool _getIncomingPacket( void * pNetworkConnection,
     /* Read the packet type, which is the first byte available. */
     pIncomingPacket->type = getPacketType( pNetworkConnection,
                                            pMqttConnection->pNetworkInterface );
+
+    /* Check that the incoming packet type is valid. */
+    if( _incomingPacketValid( pIncomingPacket->type ) == false )
+    {
+        IotLogError( "(MQTT connection %p) Unknown packet type %02x received.",
+                     pMqttConnection,
+                     pIncomingPacket->type );
+
+        _IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
 
     /* Read the remaining length. */
     pIncomingPacket->remainingLength = getRemainingLength( pNetworkConnection,
@@ -195,7 +248,7 @@ static bool _getIncomingPacket( void * pNetworkConnection,
 
 /*-----------------------------------------------------------*/
 
-static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
+static bool _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
                                         _mqttPacket_t * pIncomingPacket )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
@@ -207,6 +260,9 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
     /* A buffer for remaining data must be allocated if remaining length is not 0. */
     IotMqtt_Assert( ( pIncomingPacket->remainingLength > 0 ) ==
                     ( pIncomingPacket->pRemainingData != NULL ) );
+
+    /* Only valid packets should be given to this function. */
+    IotMqtt_Assert( _incomingPacketValid( pIncomingPacket->type ) == true );
 
     /* Mask out the low bits of packet type to ignore flags. */
     switch( ( pIncomingPacket->type & 0xf0 ) )
@@ -443,7 +499,9 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
 
             break;
 
-        case _MQTT_PACKET_TYPE_PINGRESP:
+        default:
+            /* The only remaining valid type is PINGRESP. */
+            IotMqtt_Assert( pIncomingPacket->type == _MQTT_PACKET_TYPE_PINGRESP );
             IotLogDebug( "(MQTT connection %p) PINGRESP in data stream.", pMqttConnection );
 
             /* Choose PINGRESP deserializer. */
@@ -487,30 +545,20 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
             }
 
             break;
-
-        default:
-            IotLogError( "(MQTT connection %p) Unknown packet type %02x received.",
-                         pMqttConnection,
-                         pIncomingPacket->type );
-
-            status = IOT_MQTT_BAD_RESPONSE;
-
-            break;
     }
 
-    /* Close the network connection on errors, per the MQTT specification. */
     if( status != IOT_MQTT_SUCCESS )
     {
-        IotLogError( "(MQTT connection %p) Packet parser status %s. Closing connection.",
+        IotLogError( "(MQTT connection %p) Packet parser status %s.",
                      pMqttConnection,
                      IotMqtt_strerror( status ) );
-
-        _IotMqtt_CloseNetworkConnection( pMqttConnection );
     }
     else
     {
         _EMPTY_ELSE_MARKER;
     }
+
+    return( status == IOT_MQTT_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
@@ -740,19 +788,22 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection )
 void IotMqtt_ReceiveCallback( void * pNetworkConnection,
                               void * pReceiveContext )
 {
+    bool status = true;
     _mqttPacket_t incomingPacket = { 0 };
 
     /* Cast context to correct type. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pReceiveContext;
 
     /* Read an MQTT packet from the network. */
-    if( _getIncomingPacket( pNetworkConnection,
-                            pMqttConnection,
-                            &incomingPacket ) == true )
+    status = _getIncomingPacket( pNetworkConnection,
+                                 pMqttConnection,
+                                 &incomingPacket );
+
+    if( status == true )
     {
         /* Deserialize the received packet. */
-        _deserializeIncomingPacket( pMqttConnection,
-                                    &incomingPacket );
+        status = _deserializeIncomingPacket( pMqttConnection,
+                                             &incomingPacket );
 
         /* Free any buffers allocated for the MQTT packet. */
         if( incomingPacket.pRemainingData != NULL )
@@ -766,8 +817,15 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
     }
     else
     {
-        IotLogError( "(MQTT connection %p) Failed to receive an incoming MQTT packet.",
+        _EMPTY_ELSE_MARKER;
+    }
+
+    if( status == false )
+    {
+        IotLogError( "(MQTT connection %p) Error processing incoming data. Closing connection.",
                      pMqttConnection );
+
+        _IotMqtt_CloseNetworkConnection( pMqttConnection );
     }
 }
 
