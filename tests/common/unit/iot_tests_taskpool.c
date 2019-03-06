@@ -107,17 +107,17 @@ TEST_GROUP_RUNNER( Common_Unit_Task_Pool )
     RUN_TEST_CASE( Common_Unit_Task_Pool, CreateDestroyRecycleRecyclableJobError );
     RUN_TEST_CASE( Common_Unit_Task_Pool, CreateRecyclableJob );
     RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasksError );
-    //RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_LongRunningAndCachedJobsAndDestroy );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_LongRunningAndCachedJobsAndDestroy );
     RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_Grow );
-    //RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_GrowHighPri );
-    //RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleOneThenWait );
-    //RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleOneDeferredThenWait );
-    //RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllThenWait );
-    //RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllRecyclableThenWait );
-    //RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllDeferredRecyclableThenWait );
-    //RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ReSchedule );
-    //RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ReScheduleDeferred );
-    //RUN_TEST_CASE( Common_Unit_Task_Pool, TaskPool_CancelTasks );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_GrowHighPri );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleOneThenWait );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleOneDeferredThenWait );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllThenWait );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllRecyclableThenWait );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllDeferredRecyclableThenWait );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ReSchedule );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ReScheduleDeferred );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, TaskPool_CancelTasks );
 }
 
 /*-----------------------------------------------------------*/
@@ -394,11 +394,12 @@ TEST( Common_Unit_Task_Pool, CreateDestroyMaxThreads )
         TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 1 ) == IOT_TASKPOOL_BAD_PARAMETER ); /* less than min threads. */
 
         /* Initialize more jobs than max threads. */
-        for ( count = 0; count < 2 * MAX_THREADS; ++count )
+        for( count = 0; count < 2 * MAX_THREADS; ++count )
         {
             /* Create legal recyclable job. */
             TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, &jobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
         }
+
         /* Schedule all jobs to make the task pool grow. */
         for( count = 0; count < 2 * MAX_THREADS; ++count )
         {
