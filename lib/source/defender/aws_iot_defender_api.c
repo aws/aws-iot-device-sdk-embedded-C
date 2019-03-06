@@ -208,14 +208,6 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
             if( metricsMutexCreateSuccess )
             {
                 IotMutex_Destroy( &_AwsIotDefenderMetrics.mutex );
-
-                taskPoolError = IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL, &_metricsPublishJob );
-
-                AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
-
-                taskPoolError = IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL, &_disconnectJob );
-
-                AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
             }
 
             IotLogError( "Defender agent failed to start due to error %s.", AwsIotDefender_strerror( defenderError ) );
@@ -252,13 +244,6 @@ void AwsIotDefender_Stop( void )
         IotLogWarn( "Failed to cancel metrics publish job with return code %d and status %d.", taskPoolError, status );
         sleep( _WAIT_METRICS_JOB_MAX_SECONDS );
     }
-
-    /* Destroy two task pool jobs. */
-    taskPoolError = IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL, &_metricsPublishJob );
-    AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
-
-    taskPoolError = IotTaskPool_DestroyJob( IOT_SYSTEM_TASKPOOL, &_disconnectJob );
-    AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy metrics' mutex. */
     IotMutex_Destroy( &_AwsIotDefenderMetrics.mutex );

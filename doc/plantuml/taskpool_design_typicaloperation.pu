@@ -33,7 +33,7 @@ workers -> workers: Wait on incoming jobs
 == Use Task Pool ==
 
 loop Application loop: Create and schedule jobs
-	app -[#blue]> TP: AwsIotTaskPool_CreateJob: create a job
+	app -[#blue]> TP: AwsIotTaskPool_CreateRecyclableJob: create a job
 	TP --[#blue]> app
 	activate job
 	note left: job status: //ready//
@@ -52,7 +52,7 @@ loop Application loop: Create and schedule jobs
 			note left: job status: //executing//
 			job -[#green]> callback: Invoke
 			activate callback
-			callback -[#blue]> TP: AwsIotTaskPool_DestroyJob: destroy job
+			callback -[#blue]> TP: AwsIotTaskPool_RecycleJob: recycles job
 			TP --[#blue]> callback
 			note left: job status: //completed//
 			deactivate job
