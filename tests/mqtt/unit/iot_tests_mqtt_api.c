@@ -1342,7 +1342,7 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
     /* Create a new MQTT connection with an empty network interface. */
     TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
                                                                    &_networkInfo,
-                                                                   0,
+                                                                   1,
                                                                    &_mqttConnection ) );
 
     /* Set a short keep-alive interval so this test runs faster. */
@@ -1386,7 +1386,7 @@ TEST( MQTT_Unit_API, KeepAliveJobCleanup )
         /* Create a new MQTT connection with an empty network interface. */
         TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
                                                                        &_networkInfo,
-                                                                       0,
+                                                                       1,
                                                                        &_mqttConnection ) );
 
         /* Set the parameter to the send function. */
