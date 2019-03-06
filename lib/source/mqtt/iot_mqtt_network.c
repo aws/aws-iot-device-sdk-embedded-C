@@ -309,10 +309,21 @@ static void _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
             /* Free PUBLISH operation on error. */
             if( status != IOT_MQTT_SUCCESS )
             {
-                /* PUBLISH must have allocated remaining data. */
-                IotMqtt_Assert( pIncomingPacket->pRemainingData != NULL );
+                /* Check ownership of the received MQTT packet. */
+                if( pOperation->pReceivedData != NULL )
+                {
+                    /* Retrieve the pointer MQTT packet pointer so it may be freed later. */
+                    IotMqtt_Assert( pIncomingPacket->pRemainingData == NULL );
+                    pIncomingPacket->pRemainingData = pOperation->pReceivedData;
+                }
+                else
+                {
+                    /* The received MQTT packet must be part of the incoming
+                     * packet structure. */
+                    IotMqtt_Assert( pIncomingPacket->pRemainingData != NULL );
+                }
 
-                IotMqtt_FreeMessage( pIncomingPacket->pRemainingData );
+                IotMqtt_Assert( pOperation != NULL );
                 IotMqtt_FreeOperation( pOperation );
             }
 
