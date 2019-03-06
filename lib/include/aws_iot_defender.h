@@ -37,19 +37,19 @@
  *
  * Amazon FreeRTOS provides a library that allows your Amazon FreeRTOS-based devices to work with AWS IoT Device Defender.
  *
- ## Dependencies
- ##- MQTT library
- ##- Serializer library
- ##- Platform(POSIX) libraries
- ##- Metrics library
+ * ## Dependencies
+ * * MQTT library
+ * * Serializer library
+ * * Platform(POSIX) libraries
+ * * Metrics library
  */
 
 #ifndef _AWS_IOT_DEFENDER_H_
 #define _AWS_IOT_DEFENDER_H_
 
 /* Build using a config header, if provided. */
-#ifdef AWS_IOT_CONFIG_FILE
-    #include AWS_IOT_CONFIG_FILE
+#ifdef IOT_CONFIG_FILE
+    #include IOT_CONFIG_FILE
 #endif
 
 /* Standard includes. */
@@ -75,6 +75,7 @@
  * @name Serialization Format
  *
  * @brief Format constants: Cbor or Json.
+ * @warning JSON format is not supported for now.
  */
 /**@{ */
 #define AWS_IOT_DEFENDER_FORMAT_CBOR    1                                      /**< CBOR format. */
@@ -107,7 +108,7 @@
 #define AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED                                                                          \
     ( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_CONNECTIONS | AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL ) \
 
-/**@} */
+/**@} end of DefenderMetricsFlags */
 
 /**
  * @anchor DefenderInitializers
@@ -210,12 +211,12 @@ typedef struct AwsIotDefenderCallback
  */
 typedef struct AwsIotDefenderStartInfo
 {
-    void * pConnectionInfo;
-    void * pCredentialInfo;
-    void * pConnection;
-    const IotNetworkInterface_t * pNetworkInterface;
-    IotMqttConnectInfo_t mqttConnectionInfo;
-    AwsIotDefenderCallback_t callback;
+    void * pConnectionInfo;                          /**< Connection information(required). */
+    void * pCredentialInfo;                          /**< Credential information(required). */
+    void * pConnection;                              /**< Connection object(required). */
+    const IotNetworkInterface_t * pNetworkInterface; /**< Network inferface defender uses(required). */
+    IotMqttConnectInfo_t mqttConnectionInfo;         /**< Network inferface defender uses(required). */
+    AwsIotDefenderCallback_t callback;               /**< Callback function parameter(optional). */
 } AwsIotDefenderStartInfo_t;
 
 /**
@@ -235,7 +236,8 @@ typedef struct AwsIotDefenderStartInfo
  * @snippet this declare_defender_setmetrics
  * @brief Set metrics that defender agent needs to collect for a metrics group.
  *
- * Metrics to be collected is global data which is independent of defender agent start or stop.
+ * * If defender agent is not started, this function will provide the metrics to be collected.
+ * * If defender agent is started, this function will update the metrics and take effect in defender agent's next iteration.
  *
  * @param[in] metricsGroup Metrics group defined in #AwsIotDefenderMetricsGroup_t
  * @param[in] metrics Bit-flags to specify what metrics to collect.
@@ -246,6 +248,7 @@ typedef struct AwsIotDefenderStartInfo
  * * On success, #AWS_IOT_DEFENDER_SUCCESS is returned.
  * * If metricsGroup is invalid, #AWS_IOT_DEFENDER_INVALID_INPUT is returned.
  * @note This function is thread safe.
+ * @note @ref Defender_function_Stop "AwsIotDefender_Stop" will clear the metrics.
  */
 
 /* @[declare_defender_setmetrics] */

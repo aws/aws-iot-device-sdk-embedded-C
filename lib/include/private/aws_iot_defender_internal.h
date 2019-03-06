@@ -28,8 +28,8 @@
 #define _AWS_IOT_DEFENDER_INTERNAL_H_
 
 /* Build using a config header, if provided. */
-#ifdef AWS_IOT_CONFIG_FILE
-    #include AWS_IOT_CONFIG_FILE
+#ifdef IOT_CONFIG_FILE
+    #include IOT_CONFIG_FILE
 #endif
 
 /* Defender include. */
@@ -216,6 +216,7 @@
     #error "AWS_IOT_DEFENDER_FORMAT_JSON is not supported."
 #endif
 
+/* Default to short tag to save memory and network. */
 #ifndef AWS_IOT_DEFENDER_USE_LONG_TAG
     #define AWS_IOT_DEFENDER_USE_LONG_TAG    ( 0 )
 #endif
