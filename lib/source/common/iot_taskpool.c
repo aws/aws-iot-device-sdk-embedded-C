@@ -424,13 +424,6 @@ IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t * pTaskPool,
     }
     _TASKPOOL_EXIT_CRITICAL_SECTION;
 
-    //i = count;
-
-    //while( count-- > 0 )
-    //{
-    //    IotSemaphore_Wait( &pTaskPool->startStopSignal );
-    //}
-
     _TASKPOOL_NO_FUNCTION_CLEANUP();
 }
 
@@ -715,7 +708,7 @@ IotTaskPoolError_t IotTaskPool_GetStatus( IotTaskPool_t * const pTaskPool,
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pTaskPool );
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pJob );
     _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pStatus );
-    
+
     *pStatus = IOT_TASKPOOL_STATUS_UNDEFINED;
 
     _TASKPOOL_ENTER_CRITICAL_SECTION;
