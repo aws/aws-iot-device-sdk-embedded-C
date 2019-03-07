@@ -847,6 +847,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
                                 IotMqttConnection_t * pMqttConnection )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    bool receiveCallbackSet = false;
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     void * pNetworkConnection = NULL;
@@ -976,7 +977,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        receiveCallbackSet = true;
     }
 
     /* Create a CONNECT operation. */
@@ -1130,26 +1131,18 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         IotLogError( "Failed to establish new MQTT connection, error %s.",
                      IotMqtt_strerror( status ) );
 
-        /* Close the network connection for all errors except bad parameters and
-         * memory allocation failures. */
-        if( status != IOT_MQTT_BAD_PARAMETER )
+        /* The network connection must be closed if a receive callback was set. */
+        if( receiveCallbackSet == true )
         {
-            if( status != IOT_MQTT_NO_MEMORY )
-            {
-                networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
+            networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
 
-                if( networkStatus != IOT_NETWORK_SUCCESS )
-                {
-                    IotLogWarn( "Failed to close network connection." );
-                }
-                else
-                {
-                    IotLogInfo( "Network connection closed on error." );
-                }
+            if( networkStatus != IOT_NETWORK_SUCCESS )
+            {
+                IotLogWarn( "Failed to close network connection." );
             }
             else
             {
-                _EMPTY_ELSE_MARKER;
+                IotLogInfo( "Network connection closed on error." );
             }
         }
         else

@@ -706,8 +706,13 @@ TEST( Shadow_Unit_API, DeleteMallocFail )
     }
 
     /* Allow 2 MQTT library errors, which are caused by failure to allocate memory
-     * for incoming packets (SUBSCRIBE, UNSUBSCRIBE). */
-    TEST_ASSERT_EQUAL_INT32( 2, mqttErrorCount );
+     * for incoming packets (SUBSCRIBE, UNSUBSCRIBE). These allocation errors do
+     * not happen in static memory mode. */
+    #if IOT_STATIC_MEMORY_ONLY == 1
+        TEST_ASSERT_EQUAL_INT32( 0, mqttErrorCount );
+    #else
+        TEST_ASSERT_EQUAL_INT32( 2, mqttErrorCount );
+    #endif
 }
 
 /*-----------------------------------------------------------*/
@@ -772,8 +777,13 @@ TEST( Shadow_Unit_API, GetMallocFail )
     }
 
     /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
-     * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). */
-    TEST_ASSERT_EQUAL_INT32( 3, mqttErrorCount );
+     * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). These allocation
+     * errors do not happen in static memory mode. */
+    #if IOT_STATIC_MEMORY_ONLY == 1
+        TEST_ASSERT_EQUAL_INT32( 0, mqttErrorCount );
+    #else
+        TEST_ASSERT_EQUAL_INT32( 3, mqttErrorCount );
+    #endif
 }
 
 /*-----------------------------------------------------------*/
@@ -833,8 +843,13 @@ TEST( Shadow_Unit_API, UpdateMallocFail )
     }
 
     /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
-     * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). */
-    TEST_ASSERT_EQUAL_INT32( 3, mqttErrorCount );
+     * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). These allocation
+     * errors do not happen in static memory mode. */
+    #if IOT_STATIC_MEMORY_ONLY == 1
+        TEST_ASSERT_EQUAL_INT32( 0, mqttErrorCount );
+    #else
+        TEST_ASSERT_EQUAL_INT32( 3, mqttErrorCount );
+    #endif
 }
 
 /*-----------------------------------------------------------*/
