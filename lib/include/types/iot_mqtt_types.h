@@ -900,7 +900,9 @@ typedef struct IotMqttNetworkInfo
      * is `true`.
      *
      * When this value is `false`, the MQTT connection will use a transport-layer
-     * network connection that has already been established.
+     * network connection that has already been established. The MQTT library will
+     * still set the appropriate receive callback even if the network connection
+     * has been established.
      * #IotMqttNetworkInfo_t::pNetworkConnection, which represents an established
      * network connection, is valid when this value is `false`.
      */

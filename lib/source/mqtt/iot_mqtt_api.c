@@ -847,6 +847,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
                                 IotMqttConnection_t * pMqttConnection )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     void * pNetworkConnection = NULL;
     _mqttOperation_t * pConnectOperation = NULL;
@@ -960,6 +961,22 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
             pNewMqttConnection->pSerializer = pNetworkInfo->pMqttSerializer;
         #endif
+    }
+
+    /* Set the MQTT receive callback. */
+    networkStatus = pNewMqttConnection->pNetworkInterface->setReceiveCallback( pNetworkConnection,
+                                                                               IotMqtt_ReceiveCallback,
+                                                                               pNewMqttConnection );
+
+    if( networkStatus != IOT_NETWORK_SUCCESS )
+    {
+        IotLogError( "Failed to set MQTT network receive callback." );
+
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NETWORK_ERROR );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Create a CONNECT operation. */
@@ -1112,6 +1129,18 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     {
         IotLogError( "Failed to establish new MQTT connection, error %s.",
                      IotMqtt_strerror( status ) );
+
+        /* Close the network connection on error. */
+        networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
+
+        if( networkStatus != IOT_NETWORK_SUCCESS )
+        {
+            IotLogWarn( "Failed to close network connection." );
+        }
+        else
+        {
+            IotLogInfo( "Network connection closed on error." );
+        }
 
         if( pConnectOperation != NULL )
         {

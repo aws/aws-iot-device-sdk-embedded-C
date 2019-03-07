@@ -453,6 +453,23 @@ static size_t _receivePingresp( void * pReceiveContext,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief A function for setting the receive callback that just returns success.
+ */
+static IotNetworkError_t _setReceiveCallback( void * pConnection,
+                                              IotNetworkReceiveCallback_t receiveCallback,
+                                              void * pReceiveContext )
+{
+    /* Silence warnings about unused parameters. */
+    ( void ) pConnection;
+    ( void ) receiveCallback;
+    ( void ) pReceiveContext;
+
+    return IOT_NETWORK_SUCCESS;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief A network close function that counts how many times it was invoked.
  */
 static IotNetworkError_t _close( void * pCloseContext )
@@ -509,6 +526,7 @@ TEST_SETUP( MQTT_Unit_API )
     /* Reset the network info and interface. */
     ( void ) memset( &_networkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
     ( void ) memset( &_networkInterface, 0x00, sizeof( IotNetworkInterface_t ) );
+    _networkInterface.setReceiveCallback = _setReceiveCallback;
     _networkInfo.pNetworkInterface = &_networkInterface;
 
     /* Reset the counters. */
