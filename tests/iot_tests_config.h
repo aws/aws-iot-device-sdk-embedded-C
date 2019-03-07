@@ -91,6 +91,7 @@
 /* Static memory resource settings for the tests. These values must be large
  * enough to support the stress tests. */
 #if IOT_STATIC_MEMORY_ONLY == 1
+    #define IOT_MQTT_CONNECTIONS                   ( 2 )
     #define IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS    ( 10 )
     #define IOT_MQTT_SUBSCRIPTIONS                 ( 80 )
 #endif
@@ -104,6 +105,8 @@
     #define IotTaskPool_FreeTimerEvent         unity_free_mt
     #define IotMqtt_MallocMessage              unity_malloc_mt
     #define IotMqtt_FreeMessage                unity_free_mt
+    #define IotMqtt_MallocConnection           unity_malloc_mt
+    #define IotMqtt_FreeConnection             unity_free_mt
     #define IotMqtt_MallocOperation            unity_malloc_mt
     #define IotMqtt_FreeOperation              unity_free_mt
     #define IotMqtt_MallocSubscription         unity_malloc_mt

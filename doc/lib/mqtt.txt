@@ -304,6 +304,10 @@ This setting is used by the [MQTT tests](@ref mqtt_tests) to access the internal
 
 @section mqtt_config_memory Memory allocation
 @brief If @ref IOT_STATIC_MEMORY_ONLY is `1`, then the following functions must be re-implemented for the MQTT library.
+- #IotMqtt_MallocConnection <br>
+  @copybrief IotMqtt_MallocConnection
+- #IotMqtt_FreeConnection <br>
+  @copybrief IotMqtt_FreeConnection
 - #IotMqtt_MallocMessage <br>
   @copybrief IotMqtt_MallocMessage
 - #IotMqtt_FreeMessage <br>

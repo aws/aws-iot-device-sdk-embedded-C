@@ -110,22 +110,6 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
 #define _PUBLISH_CALLBACK_TIMEOUT    ( 1000 )
 
 /**
- * @brief Size of data stream in #TEST_MQTT_Unit_Receive_DataStream_.
- */
-#define _DATA_STREAM_SIZE            \
-    ( sizeof( _pConnackTemplate ) +  \
-      sizeof( _pSubackTemplate ) +   \
-      sizeof( _pPublishTemplate ) +  \
-      sizeof( _pUnsubackTemplate ) + \
-      sizeof( _pPingrespTemplate ) )
-
-/**
- * @brief Number of PUBLISH messages in the stream for #TEST_MQTT_Unit_Receive_PublishStream_
- * and #TEST_MQTT_Unit_Receive_PublishInvalidStream_.
- */
-#define _PUBLISH_STREAM_COUNT    ( 3 )
-
-/**
  * @brief Declare a buffer holding a packet and its size.
  */
 #define _DECLARE_PACKET( pTemplate, bufferName, sizeName ) \
@@ -602,7 +586,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_Receive )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the function #_decodeRemainingLength.
+ * @brief Tests the function for decoding MQTT remaining length.
  */
 TEST( MQTT_Unit_Receive, DecodeRemainingLength )
 {

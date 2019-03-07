@@ -82,6 +82,24 @@
     #include "private/iot_static_memory.h"
 
 /**
+ * @brief Allocate an #_mqttConnection_t. This function should have the same
+ * signature as [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
+ */
+    #ifndef IotMqtt_MallocConnection
+        #define IotMqtt_MallocConnection    Iot_MallocMqttConnection
+    #endif
+
+/**
+ * @brief Free an #_mqttConnection_t. This function should have the same
+ * signature as [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
+    #ifndef IotMqtt_FreeConnection
+        #define IotMqtt_FreeConnection    Iot_FreeMqttConnection
+    #endif
+
+/**
  * @brief Allocate memory for an MQTT packet. This function should have the
  * same signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
@@ -136,6 +154,14 @@
     #endif
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
     #include <stdlib.h>
+
+    #ifndef IotMqtt_MallocConnection
+        #define IotMqtt_MallocConnection    malloc
+    #endif
+
+    #ifndef IotMqtt_FreeConnection
+        #define IotMqtt_FreeConnection    free
+    #endif
 
     #ifndef IotMqtt_MallocMessage
         #define IotMqtt_MallocMessage    malloc
