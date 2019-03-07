@@ -273,7 +273,7 @@ static IotMqttError_t _checkConnection( void )
     publishInfo.retryLimit = IOT_TEST_MQTT_RETRY_LIMIT;
 
     /* Send a PUBLISH. */
-    status = IotMqtt_Publish( &_IotTestMqttConnection,
+    status = IotMqtt_Publish( _IotTestMqttConnection,
                               &publishInfo,
                               IOT_MQTT_FLAG_WAITABLE,
                               NULL,
@@ -367,7 +367,7 @@ static void * _publishThread( void * pArgument )
         publishInfo.pTopicName = _pTopicNames[ i % _TEST_TOPIC_NAME_COUNT ];
 
         /* PUBLISH the message. */
-        status = IotMqtt_Publish( &_IotTestMqttConnection,
+        status = IotMqtt_Publish( _IotTestMqttConnection,
                                   &publishInfo,
                                   0,
                                   NULL,
@@ -509,7 +509,7 @@ TEST_SETUP( MQTT_Stress )
 
     /* Subscribe to the test topic filters. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
-                       IotMqtt_TimedSubscribe( &_IotTestMqttConnection,
+                       IotMqtt_TimedSubscribe( _IotTestMqttConnection,
                                                pSubscriptions,
                                                _TEST_TOPIC_NAME_COUNT,
                                                0,
@@ -530,7 +530,7 @@ TEST_TEAR_DOWN( MQTT_Stress )
      * should be cleaned up by Disconnect. */
     if( _connectionCreated == true )
     {
-        IotMqtt_Disconnect( &_IotTestMqttConnection, false );
+        IotMqtt_Disconnect( _IotTestMqttConnection, false );
         _connectionCreated = false;
     }
 
@@ -607,7 +607,7 @@ TEST( MQTT_Stress, BlockingCallback )
     {
         /* Call a function that will invoke the blocking callback. */
         TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING,
-                           IotMqtt_Publish( &_IotTestMqttConnection,
+                           IotMqtt_Publish( _IotTestMqttConnection,
                                             &publishInfo,
                                             0,
                                             &callbackInfo,

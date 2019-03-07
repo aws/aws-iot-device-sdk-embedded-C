@@ -58,7 +58,6 @@ int main( int argc,
     IotNetworkConnectionOpenssl_t networkConnection = IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER;
     IotNetworkServerInfoOpenssl_t serverInfo = IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER;
     IotNetworkCredentialsOpenssl_t credentials = AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER, * pCredentials = NULL;
-    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
     /* This function parses arguments and establishes the network connection
@@ -140,18 +139,6 @@ int main( int argc,
 
     if( status == 0 )
     {
-        /* Set the MQTT receive callback for a network connection. This receive
-         * callback processes MQTT data from the network. */
-        if( IotNetworkOpenssl_SetReceiveCallback( &networkConnection,
-                                                  IotMqtt_ReceiveCallback,
-                                                  &mqttConnection ) != IOT_NETWORK_SUCCESS )
-        {
-            status = -1;
-        }
-    }
-
-    if( status == 0 )
-    {
         /* Set the members of the network interface used by the MQTT connection. */
         networkInfo.createNetworkConnection = false;
         networkInfo.pNetworkConnection = &networkConnection;
@@ -164,7 +151,6 @@ int main( int argc,
             {
                 /* Run the Shadow demo. */
                 status = AwsIotDemo_RunShadowDemo( demoArguments.pIdentifier,
-                                                   &mqttConnection,
                                                    &networkInfo );
 
                 /* Clean up the MQTT library and Shadow library. */

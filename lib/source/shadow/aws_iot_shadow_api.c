@@ -89,7 +89,7 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
 /**
  * @brief Common function for setting Shadow callbacks.
  *
- * @param[in] pMqttConnection The MQTT connection to use.
+ * @param[in] mqttConnection The MQTT connection to use.
  * @param[in] type Type of Shadow callback.
  * @param[in] pThingName Thing Name for Shadow callback.
  * @param[in] thingNameLength Length of `pThingName`.
@@ -98,7 +98,7 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
  * @return #AWS_IOT_SHADOW_SUCCESS, #AWS_IOT_SHADOW_BAD_PARAMETER,
  * #AWS_IOT_SHADOW_NO_MEMORY, or #AWS_IOT_SHADOW_MQTT_ERROR.
  */
-static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t * pMqttConnection,
+static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
                                                _shadowCallbackType_t type,
                                                const char * const pThingName,
                                                size_t thingNameLength,
@@ -108,13 +108,13 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t * pMqttConnec
  * @brief Change the subscriptions for Shadow callbacks, either by subscribing
  * or unsubscribing.
  *
- * @param[in] pMqttConnection The MQTT connection to use.
+ * @param[in] mqttConnection The MQTT connection to use.
  * @param[in] type Type of Shadow callback.
  * @param[in] pSubscription Shadow subscriptions object for callback.
  * @param[in] mqttOperation Either @ref mqtt_function_timedsubscribe or
  * @ref mqtt_function_timedunsubscribe.
  */
-static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t * pMqttConnection,
+static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttConnection,
                                                          _shadowCallbackType_t type,
                                                          _shadowSubscription_t * const pSubscription,
                                                          _mqttOperationFunction_t mqttOperation );
@@ -308,7 +308,7 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
 
 /*-----------------------------------------------------------*/
 
-static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t * pMqttConnection,
+static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
                                                _shadowCallbackType_t type,
                                                const char * const pThingName,
                                                size_t thingNameLength,
@@ -372,7 +372,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t * pMqttConnec
                              pThingName );
 
                 /* Unsubscribe, then clear the callback information. */
-                ( void ) _modifyCallbackSubscriptions( pMqttConnection,
+                ( void ) _modifyCallbackSubscriptions( mqttConnection,
                                                        type,
                                                        pSubscription,
                                                        IotMqtt_TimedUnsubscribe );
@@ -396,7 +396,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t * pMqttConnec
                              pThingName );
 
                 pSubscription->callbacks[ type ] = *pCallbackInfo;
-                status = _modifyCallbackSubscriptions( pMqttConnection,
+                status = _modifyCallbackSubscriptions( mqttConnection,
                                                        type,
                                                        pSubscription,
                                                        IotMqtt_TimedSubscribe );
@@ -416,7 +416,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t * pMqttConnec
 
 /*-----------------------------------------------------------*/
 
-static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t * pMqttConnection,
+static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttConnection,
                                                          _shadowCallbackType_t type,
                                                          _shadowSubscription_t * const pSubscription,
                                                          _mqttOperationFunction_t mqttOperation )
@@ -487,7 +487,7 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t * p
     subscription.callback.function = pCallbackWrapper[ type ];
 
     /* Call the MQTT operation function. */
-    mqttStatus = mqttOperation( pMqttConnection,
+    mqttStatus = mqttOperation( mqttConnection,
                                 &subscription,
                                 1,
                                 0,
@@ -645,7 +645,7 @@ void AwsIotShadow_Cleanup( void )
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t * pMqttConnection,
+AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t mqttConnection,
                                          const char * const pThingName,
                                          size_t thingNameLength,
                                          uint32_t flags,
@@ -692,7 +692,7 @@ AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t * pMqttConnection,
 
     /* Process the Shadow operation. This subscribes to any required topics and
      * sends the MQTT message for the Shadow operation. */
-    status = _AwsIotShadow_ProcessOperation( pMqttConnection,
+    status = _AwsIotShadow_ProcessOperation( mqttConnection,
                                              pThingName,
                                              thingNameLength,
                                              pOperation,
@@ -709,7 +709,7 @@ AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t * pMqttConnection,
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t * pMqttConnection,
+AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t mqttConnection,
                                               const char * const pThingName,
                                               size_t thingNameLength,
                                               uint32_t flags,
@@ -722,7 +722,7 @@ AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t * pMqttConnect
     flags |= AWS_IOT_SHADOW_FLAG_WAITABLE;
 
     /* Call the asynchronous Shadow delete function. */
-    status = AwsIotShadow_Delete( pMqttConnection,
+    status = AwsIotShadow_Delete( mqttConnection,
                                   pThingName,
                                   thingNameLength,
                                   flags,
@@ -743,7 +743,7 @@ AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t * pMqttConnect
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_Get( IotMqttConnection_t * pMqttConnection,
+AwsIotShadowError_t AwsIotShadow_Get( IotMqttConnection_t mqttConnection,
                                       const AwsIotShadowDocumentInfo_t * const pGetInfo,
                                       uint32_t flags,
                                       const AwsIotShadowCallbackInfo_t * const pCallbackInfo,
@@ -801,7 +801,7 @@ AwsIotShadowError_t AwsIotShadow_Get( IotMqttConnection_t * pMqttConnection,
 
     /* Process the Shadow operation. This subscribes to any required topics and
      * sends the MQTT message for the Shadow operation. */
-    status = _AwsIotShadow_ProcessOperation( pMqttConnection,
+    status = _AwsIotShadow_ProcessOperation( mqttConnection,
                                              pGetInfo->pThingName,
                                              pGetInfo->thingNameLength,
                                              pOperation,
@@ -818,7 +818,7 @@ AwsIotShadowError_t AwsIotShadow_Get( IotMqttConnection_t * pMqttConnection,
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_TimedGet( IotMqttConnection_t * pMqttConnection,
+AwsIotShadowError_t AwsIotShadow_TimedGet( IotMqttConnection_t mqttConnection,
                                            const AwsIotShadowDocumentInfo_t * const pGetInfo,
                                            uint32_t flags,
                                            uint64_t timeoutMs,
@@ -832,7 +832,7 @@ AwsIotShadowError_t AwsIotShadow_TimedGet( IotMqttConnection_t * pMqttConnection
     flags |= AWS_IOT_SHADOW_FLAG_WAITABLE;
 
     /* Call the asynchronous Shadow get function. */
-    status = AwsIotShadow_Get( pMqttConnection,
+    status = AwsIotShadow_Get( mqttConnection,
                                pGetInfo,
                                flags,
                                NULL,
@@ -855,7 +855,7 @@ AwsIotShadowError_t AwsIotShadow_TimedGet( IotMqttConnection_t * pMqttConnection
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t * pMqttConnection,
+AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
                                          const AwsIotShadowDocumentInfo_t * const pUpdateInfo,
                                          uint32_t flags,
                                          const AwsIotShadowCallbackInfo_t * const pCallbackInfo,
@@ -955,7 +955,7 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t * pMqttConnection,
 
     /* Process the Shadow operation. This subscribes to any required topics and
      * sends the MQTT message for the Shadow operation. */
-    status = _AwsIotShadow_ProcessOperation( pMqttConnection,
+    status = _AwsIotShadow_ProcessOperation( mqttConnection,
                                              pUpdateInfo->pThingName,
                                              pUpdateInfo->thingNameLength,
                                              pOperation,
@@ -972,7 +972,7 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t * pMqttConnection,
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t * pMqttConnection,
+AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection,
                                               const AwsIotShadowDocumentInfo_t * const pUpdateInfo,
                                               uint32_t flags,
                                               uint64_t timeoutMs )
@@ -984,7 +984,7 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t * pMqttConnect
     flags |= AWS_IOT_SHADOW_FLAG_WAITABLE;
 
     /* Call the asynchronous Shadow update function. */
-    status = AwsIotShadow_Update( pMqttConnection,
+    status = AwsIotShadow_Update( mqttConnection,
                                   pUpdateInfo,
                                   flags,
                                   NULL,
@@ -1079,7 +1079,7 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowReference_t reference,
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_SetDeltaCallback( IotMqttConnection_t * pMqttConnection,
+AwsIotShadowError_t AwsIotShadow_SetDeltaCallback( IotMqttConnection_t mqttConnection,
                                                    const char * const pThingName,
                                                    size_t thingNameLength,
                                                    uint32_t flags,
@@ -1088,7 +1088,7 @@ AwsIotShadowError_t AwsIotShadow_SetDeltaCallback( IotMqttConnection_t * pMqttCo
     /* Flags are currently not used by this function. */
     ( void ) flags;
 
-    return _setCallbackCommon( pMqttConnection,
+    return _setCallbackCommon( mqttConnection,
                                _DELTA_CALLBACK,
                                pThingName,
                                thingNameLength,
@@ -1097,7 +1097,7 @@ AwsIotShadowError_t AwsIotShadow_SetDeltaCallback( IotMqttConnection_t * pMqttCo
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_SetUpdatedCallback( IotMqttConnection_t * pMqttConnection,
+AwsIotShadowError_t AwsIotShadow_SetUpdatedCallback( IotMqttConnection_t mqttConnection,
                                                      const char * const pThingName,
                                                      size_t thingNameLength,
                                                      uint32_t flags,
@@ -1106,7 +1106,7 @@ AwsIotShadowError_t AwsIotShadow_SetUpdatedCallback( IotMqttConnection_t * pMqtt
     /* Flags are currently not used by this function. */
     ( void ) flags;
 
-    return _setCallbackCommon( pMqttConnection,
+    return _setCallbackCommon( mqttConnection,
                                _UPDATED_CALLBACK,
                                pThingName,
                                thingNameLength,

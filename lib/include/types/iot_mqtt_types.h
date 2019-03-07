@@ -64,11 +64,8 @@
  * be used.
  *
  * @initializer{IotMqttConnection_t,IOT_MQTT_CONNECTION_INITIALIZER}
- *
- * @attention Although its members are visible to applications, this type <b>MUST</b>
- * be treated as opaque! The members of this type may change at any time.
  */
-typedef struct _IotMqttConnection   IotMqttConnection_t;
+typedef struct _mqttConnection * IotMqttConnection_t;
 
 /**
  * @ingroup mqtt_datatypes_handles
@@ -90,7 +87,7 @@ typedef struct _IotMqttConnection   IotMqttConnection_t;
  * #IotMqttCallbackInfo_t and #IotMqttCallbackParam_t for an asynchronous notification
  * of completion.
  */
-typedef void                        * IotMqttReference_t;
+typedef struct _mqttOperation * IotMqttReference_t;
 
 /*-------------------------- MQTT enumerated types --------------------------*/
 
@@ -421,7 +418,7 @@ typedef struct IotMqttCallbackParam
      * However, blocking function calls (including @ref mqtt_function_wait) are
      * not recommended (though still safe).
      */
-    IotMqttConnection_t * pMqttConnection;
+    IotMqttConnection_t mqttConnection;
 
     union
     {
@@ -657,7 +654,7 @@ typedef struct IotMqttConnectInfo
  *
  * Forward declaration of the internal MQTT packet structure.
  */
-    typedef struct _mqttPacket _mqttPacket_t;
+struct _mqttPacket;
 /** @endcond */
 
 /**
@@ -825,51 +822,51 @@ typedef struct IotMqttConnectInfo
         {
             /**
              * @brief CONNACK packet deserializer function.
-             * @param[in,out] pConnack Pointer to an MQTT packet struct representing a CONNACK.
+             * @param[in,out] _mqttPacket* Pointer to an MQTT packet struct representing a CONNACK.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeConnack
              */
-            IotMqttError_t ( * connack )( _mqttPacket_t * pConnack );
+            IotMqttError_t ( * connack )( struct _mqttPacket * /* pConnack */ );
 
             /**
              * @brief PUBLISH packet deserializer function.
-             * @param[in,out] pPublish Pointer to an MQTT packet struct representing a PUBLISH.
+             * @param[in,out] _mqttPacket* Pointer to an MQTT packet struct representing a PUBLISH.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePublish
              */
-            IotMqttError_t ( * publish )( _mqttPacket_t * pPublish );
+            IotMqttError_t ( * publish )( struct _mqttPacket * /* pPublish */ );
 
             /**
              * @brief PUBACK packet deserializer function.
-             * @param[in,out] pPuback Pointer to an MQTT packet struct representing a PUBACK.
+             * @param[in,out] _mqttPacket* Pointer to an MQTT packet struct representing a PUBACK.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePuback
              */
-            IotMqttError_t ( * puback )( _mqttPacket_t * pPuback );
+            IotMqttError_t ( * puback )( struct _mqttPacket * pPuback );
 
             /**
              * @brief SUBACK packet deserializer function.
-             * @param[in,out] pSuback Pointer to an MQTT packet struct representing a SUBACK.
+             * @param[in,out] _mqttPacket* Pointer to an MQTT packet struct representing a SUBACK.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeSuback
              */
-            IotMqttError_t ( * suback )( _mqttPacket_t * pSuback );
+            IotMqttError_t ( * suback )( struct _mqttPacket * /* pSuback */ );
 
             /**
              * @brief UNSUBACK packet deserializer function.
-             * @param[in,out] pUnsuback Pointer to an MQTT packet struct representing an UNSUBACK.
+             * @param[in,out] _mqttPacket* Pointer to an MQTT packet struct representing an UNSUBACK.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeUnsuback
              */
-            IotMqttError_t ( * unsuback )( _mqttPacket_t * pUnsuback );
+            IotMqttError_t ( * unsuback )( struct _mqttPacket * /* pUnsuback */ );
 
             /**
              * @brief PINGRESP packet deserializer function.
-             * @param[in,out] pPingresp Pointer to an MQTT packet struct representing a PINGRESP.
+             * @param[in,out] _mqttPacket* Pointer to an MQTT packet struct representing a PINGRESP.
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePingresp
              */
-            IotMqttError_t ( * pingresp )( _mqttPacket_t * pPingresp );
+            IotMqttError_t ( * pingresp )( struct _mqttPacket * /* pPingresp */ );
         } deserialize; /**< @brief Overrides the packet deserialization functions for a single connection. */
     } IotMqttSerializer_t;
 #else /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
@@ -1022,47 +1019,9 @@ typedef struct IotMqttNetworkInfo
 /** @brief Initializer for #IotMqttCallbackInfo_t. */
 #define IOT_MQTT_CALLBACK_INFO_INITIALIZER    { 0 }
 /** @brief Initializer for #IotMqttConnection_t. */
-#define IOT_MQTT_CONNECTION_INITIALIZER       { 0 }
+#define IOT_MQTT_CONNECTION_INITIALIZER       NULL
 /** @brief Initializer for #IotMqttReference_t. */
 #define IOT_MQTT_REFERENCE_INITIALIZER        NULL
 /* @[define_mqtt_initializers] */
-
-/*--------------------------- MQTT internal types ---------------------------*/
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Definitions of internal types required for forward-declared types in this
- * file. They should not be used in application code. Their members may change
- * at any time.
- */
-struct _IotMqttConnection
-{
-    bool awsIotMqttMode;                             /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
-    void * pNetworkConnection;                       /**< @brief References the transport-layer network connection. */
-    const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
-
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
-    #endif
-
-    bool disconnected;                 /**< @brief Tracks if this connection has been disconnected. */
-    IotMutex_t referencesMutex;        /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
-    int32_t references;                /**< @brief Counts callbacks and operations using this connection. */
-    IotListDouble_t pendingProcessing; /**< @brief List of operations waiting to be processed by a task pool routine. */
-    IotListDouble_t pendingResponse;   /**< @brief List of processed operations awaiting a server response. */
-
-    IotListDouble_t subscriptionList;  /**< @brief Holds subscriptions associated with this connection. */
-    IotMutex_t subscriptionMutex;      /**< @brief Grants exclusive access to the subscription list. */
-
-    bool keepAliveFailure;             /**< @brief Failure flag for keep-alive operation. */
-    uint32_t keepAliveMs;              /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
-    uint64_t nextKeepAliveMs;          /**< @brief Relative delay for next keep-alive job. */
-    IotTaskPoolJob_t keepAliveJob;     /**< @brief Task pool job for processing this connection's keep-alive. */
-    uint8_t * pPingreqPacket;          /**< @brief An MQTT PINGREQ packet, allocated if keep-alive is active. */
-    size_t pingreqPacketSize;          /**< @brief The size of an allocated PINGREQ packet. */
-};
-/** @endcond */
 
 #endif /* ifndef _IOT_MQTT_TYPES_H_ */

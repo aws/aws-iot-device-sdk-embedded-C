@@ -452,7 +452,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
         IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 
         /* Set the members of the callback parameter. */
-        pCallbackParam->pMqttConnection = pMqttConnection;
+        pCallbackParam->mqttConnection = pMqttConnection;
         pCallbackParam->message.pTopicFilter = pSubscription->pTopicFilter;
         pCallbackParam->message.topicFilterLength = pSubscription->topicFilterLength;
 
@@ -571,7 +571,7 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnecti
 
 /*-----------------------------------------------------------*/
 
-bool IotMqtt_IsSubscribed( IotMqttConnection_t * pMqttConnection,
+bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
                            const char * pTopicFilter,
                            uint16_t topicFilterLength,
                            IotMqttSubscription_t * pCurrentSubscription )
@@ -588,10 +588,10 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t * pMqttConnection,
 
     /* Prevent any other thread from modifying the subscription list while this
      * function is running. */
-    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Lock( &( mqttConnection->subscriptionMutex ) );
 
     /* Search for a matching subscription. */
-    pSubscriptionLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( mqttConnection->subscriptionList ),
                                                       NULL,
                                                       _topicMatch,
                                                       &topicMatchParams );
@@ -621,7 +621,7 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t * pMqttConnection,
         _EMPTY_ELSE_MARKER;
     }
 
-    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Unlock( &( mqttConnection->subscriptionMutex ) );
 
     return status;
 }

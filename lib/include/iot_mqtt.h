@@ -262,7 +262,7 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
  *     // Do something with the MQTT connection...
  *
  *     // Clean up and close the MQTT connection once it's no longer needed.
- *     IotMqtt_Disconnect( &mqttConnection, false );
+ *     IotMqtt_Disconnect( mqttConnection, false );
  * }
  * @endcode
  */
@@ -297,17 +297,17 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
  * connection; it still must be called even if the network is offline to avoid leaking
  * resources.
  *
- * Once this function is called, its parameter `pMqttConnection` should no longer
+ * Once this function is called, its parameter `mqttConnection` should no longer
  * be used.
  *
- * @param[in] pMqttConnection The MQTT connection to close and clean up.
+ * @param[in] mqttConnection The MQTT connection to close and clean up.
  * @param[in] cleanupOnly Passing `true` will cause this function to only perform
  * cleanup of the MQTT connection and not send a DISCONNECT packet. This parameter
  * should be `true` if the network goes offline or is otherwise unusable. Otherwise,
  * it should be `false`.
  */
 /* @[declare_mqtt_disconnect] */
-void IotMqtt_Disconnect( IotMqttConnection_t * pMqttConnection,
+void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                          bool cleanupOnly );
 /* @[declare_mqtt_disconnect] */
 
@@ -340,7 +340,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t * pMqttConnection,
  * @attention QoS 2 subscriptions are currently unsupported. Only 0 or 1 are valid
  * for subscription QoS.
  *
- * @param[in] pMqttConnection The MQTT connection to use for the subscription.
+ * @param[in] mqttConnection The MQTT connection to use for the subscription.
  * @param[in] pSubscriptionList Pointer to the first element in the array of
  * subscriptions.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
@@ -389,7 +389,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t * pMqttConnection,
  *     pSubscriptions[ i ].callback.function = subscriptionCallback;
  * }
  *
- * IotMqttError_t result = IotMqtt_Subscribe( &mqttConnection,
+ * IotMqttError_t result = IotMqtt_Subscribe( mqttConnection,
  *                                            pSubscriptions,
  *                                            NUMBER_OF_SUBSCRIPTIONS,
  *                                            IOT_MQTT_FLAG_WAITABLE,
@@ -409,7 +409,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t * pMqttConnection,
  *     // Wait for messages on the subscription topic filters...
  *
  *     // Unsubscribe once the subscriptions are no longer needed.
- *     result = IotMqtt_Unsubscribe( &mqttConnection,
+ *     result = IotMqtt_Unsubscribe( mqttConnection,
  *                                   pSubscriptions,
  *                                   NUMBER_OF_SUBSCRIPTIONS,
  *                                   IOT_MQTT_FLAG_WAITABLE,
@@ -428,7 +428,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t * pMqttConnection,
  * {
  *     for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
  *     {
- *         if( IotMqtt_IsSubscribed( &mqttConnection,
+ *         if( IotMqtt_IsSubscribed( mqttConnection,
  *                                   pSubscriptions[ i ].pTopicFilter,
  *                                   pSubscriptions[ i ].topicFilterLength,
  *                                   NULL ) == false )
@@ -440,7 +440,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t * pMqttConnection,
  * @endcode
  */
 /* @[declare_mqtt_subscribe] */
-IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t * pMqttConnection,
+IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
                                   const IotMqttSubscription_t * pSubscriptionList,
                                   size_t subscriptionCount,
                                   uint32_t flags,
@@ -459,7 +459,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t * pMqttConnection,
  * @attention QoS 2 subscriptions are currently unsupported. Only 0 or 1 are valid
  * for subscription QoS.
  *
- * @param[in] pMqttConnection The MQTT connection to use for the subscription.
+ * @param[in] mqttConnection The MQTT connection to use for the subscription.
  * @param[in] pSubscriptionList Pointer to the first element in the array of
  * subscriptions.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
@@ -480,7 +480,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t * pMqttConnection,
  * - #IOT_MQTT_SERVER_REFUSED
  */
 /* @[declare_mqtt_timedsubscribe] */
-IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t * pMqttConnection,
+IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
                                        const IotMqttSubscription_t * pSubscriptionList,
                                        size_t subscriptionCount,
                                        uint32_t flags,
@@ -499,7 +499,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t * pMqttConnection,
  * are also removed from the MQTT connection. These subscription callback functions
  * will be removed even if the MQTT UNSUBSCRIBE packet fails to send.
  *
- * @param[in] pMqttConnection The MQTT connection used for the subscription.
+ * @param[in] mqttConnection The MQTT connection used for the subscription.
  * @param[in] pSubscriptionList Pointer to the first element in the array of
  * subscriptions.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
@@ -525,7 +525,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t * pMqttConnection,
  * @see @ref mqtt_function_subscribe for the function that adds subscriptions.
  */
 /* @[declare_mqtt_unsubscribe] */
-IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t * pMqttConnection,
+IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
                                     const IotMqttSubscription_t * pSubscriptionList,
                                     size_t subscriptionCount,
                                     uint32_t flags,
@@ -542,7 +542,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t * pMqttConnection,
  * mqtt_function_unsubscribe for more information about the MQTT UNSUBSCRIBE
  * operation.
  *
- * @param[in] pMqttConnection The MQTT connection used for the subscription.
+ * @param[in] mqttConnection The MQTT connection used for the subscription.
  * @param[in] pSubscriptionList Pointer to the first element in the array of
  * subscriptions.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
@@ -561,7 +561,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t * pMqttConnection,
  * - #IOT_MQTT_BAD_RESPONSE
  */
 /* @[declare_mqtt_timedunsubscribe] */
-IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t * pMqttConnection,
+IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
                                          const IotMqttSubscription_t * pSubscriptionList,
                                          size_t subscriptionCount,
                                          uint32_t flags,
@@ -584,7 +584,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t * pMqttConnection,
  * @attention QoS 2 messages are currently unsupported. Only 0 or 1 are valid
  * for message QoS.
  *
- * @param[in] pMqttConnection The MQTT connection to use for the publish.
+ * @param[in] mqttConnection The MQTT connection to use for the publish.
  * @param[in] pPublishInfo MQTT publish parameters.
  * @param[in] flags Flags which modify the behavior of this function. See @ref mqtt_constants_flags.
  * @param[in] pCallbackInfo Asynchronous notification of this function's completion.
@@ -629,7 +629,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t * pMqttConnection,
  * publishInfo.payloadLength = 8;
  *
  * // QoS 0 publish should return IOT_MQTT_SUCCESS upon success.
- * IotMqttError_t qos0Result = IotMqtt_Publish( &mqttConnection,
+ * IotMqttError_t qos0Result = IotMqtt_Publish( mqttConnection,
  *                                              &publishInfo,
  *                                              0,
  *                                              NULL,
@@ -642,7 +642,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t * pMqttConnection,
  * publishInfo.retryLimit = 5; // Retry up to 5 times.
  *
  * // QoS 1 publish should return IOT_MQTT_STATUS_PENDING upon success.
- * IotMqttError_t qos1Result = IotMqtt_Publish( &mqttConnection,
+ * IotMqttError_t qos1Result = IotMqtt_Publish( mqttConnection,
  *                                              &publishInfo,
  *                                              IOT_MQTT_FLAG_WAITABLE,
  *                                              NULL,
@@ -656,7 +656,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t * pMqttConnection,
  * @endcode
  */
 /* @[declare_mqtt_publish] */
-IotMqttError_t IotMqtt_Publish( IotMqttConnection_t * pMqttConnection,
+IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
                                 const IotMqttPublishInfo_t * pPublishInfo,
                                 uint32_t flags,
                                 const IotMqttCallbackInfo_t * pCallbackInfo,
@@ -674,7 +674,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t * pMqttConnection,
  * @attention QoS 2 messages are currently unsupported. Only 0 or 1 are valid
  * for message QoS.
  *
- * @param[in] pMqttConnection The MQTT connection to use for the publish.
+ * @param[in] mqttConnection The MQTT connection to use for the publish.
  * @param[in] pPublishInfo MQTT publish parameters.
  * @param[in] flags Flags which modify the behavior of this function. See @ref mqtt_constants_flags.
  * Currently, flags are ignored by this function; this parameter is for
@@ -694,7 +694,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t * pMqttConnection,
  * and [pPublishInfo->retryLimit](@ref IotMqttPublishInfo_t.retryLimit) were set).
  */
 /* @[declare_mqtt_timedpublish] */
-IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t * pMqttConnection,
+IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
                                      const IotMqttPublishInfo_t * pPublishInfo,
                                      uint32_t flags,
                                      uint64_t timeoutMs );
@@ -731,7 +731,7 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t * pMqttConnection,
  * uint64_t timeoutMs = 5000; // 5 seconds
  *
  * // MQTT operation to wait for.
- * IotMqttError_t result = IotMqtt_Publish( &mqttConnection,
+ * IotMqttError_t result = IotMqtt_Publish( mqttConnection,
  *                                          &publishInfo,
  *                                          IOT_MQTT_FLAG_WAITABLE,
  *                                          NULL,
@@ -799,7 +799,7 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation );
 /**
  * @brief Check if an MQTT connection has a subscription for a topic filter.
  *
- * This function checks whether an MQTT connection `pMqttConnection` has a
+ * This function checks whether an MQTT connection `mqttConnection` has a
  * subscription callback registered for a topic filter `pTopicFilter`. If a
  * subscription callback is found, its details are copied into the output parameter
  * `pCurrentSubscription`. This subscription callback will be invoked for incoming
@@ -819,7 +819,7 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation );
  * if @ref mqtt_function_subscribe returns #IOT_MQTT_SERVER_REFUSED; that return
  * code only means that <i>at least one</i> subscription was rejected.
  *
- * @param[in] pMqttConnection The MQTT connection to check.
+ * @param[in] mqttConnection The MQTT connection to check.
  * @param[in] pTopicFilter The topic filter to check.
  * @param[in] topicFilterLength Length of `pTopicFilter`.
  * @param[out] pCurrentSubscription If a subscription is found, its details are
@@ -832,7 +832,7 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation );
  * `pCurrentSubscription->qos` will always be set to #IOT_MQTT_QOS_0.
  */
 /* @[declare_mqtt_issubscribed] */
-bool IotMqtt_IsSubscribed( IotMqttConnection_t * pMqttConnection,
+bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
                            const char * pTopicFilter,
                            uint16_t topicFilterLength,
                            IotMqttSubscription_t * pCurrentSubscription );

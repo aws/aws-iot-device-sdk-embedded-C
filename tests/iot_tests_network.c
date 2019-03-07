@@ -64,12 +64,10 @@ void IotTest_NetworkCleanup( void );
  * Creates a new network connection for use with MQTT.
  *
  * @param[out] pNewConnection The handle by which this new connection will be referenced.
- * @param[in] pMqttConnection The MQTT connection associated with the new network connection.
  *
  * @return true if a new network connection was successfully created; false otherwise.
  */
-bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection,
-                             IotMqttConnection_t * pMqttConnection );
+bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection );
 
 /**
  * @brief Network interface close connection function for the tests.
@@ -125,8 +123,7 @@ bool IotTest_NetworkSetup( void )
         return false;
     }
 
-    if( IotTest_NetworkConnect( &_networkConnection,
-                                &_IotTestMqttConnection ) == false )
+    if( IotTest_NetworkConnect( &_networkConnection ) == false )
     {
         IotTestNetwork_Cleanup();
 
@@ -164,8 +161,7 @@ void IotTest_NetworkCleanup( void )
 
 /*-----------------------------------------------------------*/
 
-bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection,
-                             IotMqttConnection_t * pMqttConnection )
+bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection )
 {
     IotTestNetworkServerInfo_t serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
     IotTestNetworkCredentials_t * pCredentials = NULL;
@@ -181,17 +177,6 @@ bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection,
                                     pCredentials,
                                     pNewConnection ) != IOT_NETWORK_SUCCESS )
     {
-        return false;
-    }
-
-    /* Set the MQTT receive callback. */
-    if( _pNetworkInterface->setReceiveCallback( pNewConnection,
-                                                IotMqtt_ReceiveCallback,
-                                                pMqttConnection ) != IOT_NETWORK_SUCCESS )
-    {
-        _pNetworkInterface->close( pNewConnection );
-        _pNetworkInterface->destroy( pNewConnection );
-
         return false;
     }
 

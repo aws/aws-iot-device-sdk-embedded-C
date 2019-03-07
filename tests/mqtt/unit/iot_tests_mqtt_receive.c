@@ -122,7 +122,7 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
  */
 #define _INITIALIZE_OPERATION( name )                                                                 \
     {                                                                                                 \
-        .link = { 0 }, .incomingPublish = false, .pMqttConnection = &_mqttConnection,                 \
+        .link = { 0 }, .incomingPublish = false, .pMqttConnection = _pMqttConnection,                 \
         .job = { 0 }, .jobReference = 1, .operation = name, .flags = IOT_MQTT_FLAG_WAITABLE,          \
         .packetIdentifier = 1, .pMqttPacket = NULL, .packetSize = 0, .notify = { .callback = { 0 } }, \
         .status = IOT_MQTT_STATUS_PENDING, .retry = { 0 }                                             \
@@ -145,7 +145,7 @@ typedef struct _receiveContext
 /**
  * @brief The MQTT connection shared by all the tests.
  */
-static _mqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+static _mqttConnection_t * _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
  * @brief The network interface shared by all the tests.
@@ -285,7 +285,7 @@ static void _operationResetAndPush( _mqttOperation_t * pOperation )
 {
     pOperation->status = IOT_MQTT_STATUS_PENDING;
     pOperation->jobReference = 1;
-    IotQueue_Enqueue( &( _mqttConnection.pendingResponse ), &( pOperation->link ) );
+    IotQueue_Enqueue( &( _pMqttConnection->pendingResponse ), &( pOperation->link ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -307,7 +307,7 @@ static bool _processBuffer( const _mqttOperation_t * pOperation,
 
     /* Call the receive callback on pBuffer. */
     IotMqtt_ReceiveCallback( &receiveContext,
-                             &_mqttConnection );
+                             _pMqttConnection );
 
     /* Check expected result if operation is given. */
     if( pOperation != NULL )
@@ -339,10 +339,10 @@ static bool _processPublish( const uint8_t * pPublish,
     }
 
     /* Set the subscription parameter. */
-    if( IotListDouble_IsEmpty( &( _mqttConnection.subscriptionList ) ) == false )
+    if( IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) == false )
     {
         _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
-                                                                 IotListDouble_PeekHead( &( _mqttConnection.subscriptionList ) ),
+                                                                 IotListDouble_PeekHead( &( _pMqttConnection->subscriptionList ) ),
                                                                  link );
         pSubscription->callback.param1 = &invokeCount;
     }
@@ -353,7 +353,7 @@ static bool _processPublish( const uint8_t * pPublish,
 
     /* Call the receive callback on pPublish. */
     IotMqtt_ReceiveCallback( &receiveContext,
-                             &_mqttConnection );
+                             _pMqttConnection );
 
     /* Check how many times the publish callback is invoked. */
     for( i = 0; i < expectedInvokeCount; i++ )
@@ -517,13 +517,13 @@ TEST_SETUP( MQTT_Unit_Receive )
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 
     /* Initialize the MQTT connection used by the tests. */
-    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                   &networkInfo,
-                                                                   0,
-                                                                   &_mqttConnection ) );
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Set the MQTT serializer overrides. */
-    _mqttConnection.pSerializer = &serializer;
+    _pMqttConnection->pSerializer = &serializer;
 
     /* Set the members of the subscription. */
     _subscription.pTopicFilter = _TEST_TOPIC_NAME;
@@ -531,7 +531,7 @@ TEST_SETUP( MQTT_Unit_Receive )
     _subscription.callback.function = _publishCallback;
 
     /* Add the subscription to the MQTT connection. */
-    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( &_mqttConnection,
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( _pMqttConnection,
                                                                     1,
                                                                     &_subscription,
                                                                     1 ) );
@@ -551,7 +551,7 @@ TEST_SETUP( MQTT_Unit_Receive )
 TEST_TEAR_DOWN( MQTT_Unit_Receive )
 {
     /* Clean up resources taken in test setup. */
-    IotMqtt_Disconnect( &_mqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, true );
     IotCommon_Cleanup();
     IotMqtt_Cleanup();
 
@@ -701,7 +701,7 @@ TEST( MQTT_Unit_Receive, InvalidPacket )
 
     /* Processing a control packet 0xf is a protocol violation. */
     IotMqtt_ReceiveCallback( &receiveContext,
-                             &_mqttConnection );
+                             _pMqttConnection );
 
     /* Processing an invalid packet should cause the network connection to be closed. */
     TEST_ASSERT_EQUAL_INT( true, _networkCloseCalled );
@@ -940,7 +940,7 @@ TEST( MQTT_Unit_Receive, PublishValid )
     {
         _DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
 
-        _IotMqtt_RemoveSubscriptionByTopicFilter( &_mqttConnection,
+        _IotMqtt_RemoveSubscriptionByTopicFilter( _pMqttConnection,
                                                   &_subscription,
                                                   1 );
 
@@ -1228,14 +1228,14 @@ TEST( MQTT_Unit_Receive, SubackValid )
     pSubscriptions[ 1 ].pTopicFilter = _TEST_TOPIC_NAME "2";
     pSubscriptions[ 1 ].topicFilterLength = _TEST_TOPIC_LENGTH + 1;
 
-    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( &_mqttConnection,
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( _pMqttConnection,
                                                                     1,
                                                                     pSubscriptions,
                                                                     2 ) );
 
     /* Set orders 2 and 1 for the new subscriptions. */
     pNewSubscription = IotLink_Container( _mqttSubscription_t,
-                                          IotListDouble_PeekHead( &( _mqttConnection.subscriptionList ) ),
+                                          IotListDouble_PeekHead( &( _pMqttConnection->subscriptionList ) ),
                                           link );
     pNewSubscription->packetInfo.order = 2;
 
@@ -1265,7 +1265,7 @@ TEST( MQTT_Unit_Receive, SubackValid )
                                                      IOT_MQTT_SUCCESS ) );
 
         /* Test the subscription check function. QoS is not tested. */
-        TEST_ASSERT_EQUAL_INT( true, IotMqtt_IsSubscribed( &_mqttConnection,
+        TEST_ASSERT_EQUAL_INT( true, IotMqtt_IsSubscribed( _pMqttConnection,
                                                            pSubscriptions[ 0 ].pTopicFilter,
                                                            pSubscriptions[ 0 ].topicFilterLength,
                                                            &currentSubscription ) );
@@ -1288,11 +1288,11 @@ TEST( MQTT_Unit_Receive, SubackValid )
 
         /* Check that rejected subscriptions were removed from the subscription
          * list. */
-        TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( &_mqttConnection,
+        TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( _pMqttConnection,
                                                             _TEST_TOPIC_NAME,
                                                             _TEST_TOPIC_LENGTH,
                                                             NULL ) );
-        TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( &_mqttConnection,
+        TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( _pMqttConnection,
                                                             pSubscriptions[ 1 ].pTopicFilter,
                                                             pSubscriptions[ 1 ].topicFilterLength,
                                                             NULL ) );
@@ -1551,7 +1551,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
     /* Even though no PINGREQ is expected, the keep-alive failure flag should
      * be cleared (should not crash). */
     {
-        _mqttConnection.keepAliveFailure = false;
+        _pMqttConnection->keepAliveFailure = false;
 
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
@@ -1559,13 +1559,13 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( false, _mqttConnection.keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( false, _pMqttConnection->keepAliveFailure );
         TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
     }
 
     /* Process a valid PINGRESP. */
     {
-        _mqttConnection.keepAliveFailure = true;
+        _pMqttConnection->keepAliveFailure = true;
 
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
@@ -1573,14 +1573,14 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( false, _mqttConnection.keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( false, _pMqttConnection->keepAliveFailure );
         TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
     }
 
     /* An incomplete PINGRESP should not be processed, and the keep-alive failure
      * flag should not be cleared. */
     {
-        _mqttConnection.keepAliveFailure = true;
+        _pMqttConnection->keepAliveFailure = true;
 
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
@@ -1588,14 +1588,14 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pingrespSize - 1,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( true, _mqttConnection.keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
         TEST_ASSERT_EQUAL_INT( true, _networkCloseCalled );
         _networkCloseCalled = false;
     }
 
     /* A PINGRESP should have a remaining length of 0. */
     {
-        _mqttConnection.keepAliveFailure = true;
+        _pMqttConnection->keepAliveFailure = true;
 
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         pPingresp[ 1 ] = 0x01;
@@ -1604,14 +1604,14 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( true, _mqttConnection.keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
         TEST_ASSERT_EQUAL_INT( true, _networkCloseCalled );
         _networkCloseCalled = false;
     }
 
     /* The PINGRESP control packet type must be 0xd0. */
     {
-        _mqttConnection.keepAliveFailure = true;
+        _pMqttConnection->keepAliveFailure = true;
 
         _DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         pPingresp[ 0 ] = 0xd1;
@@ -1620,7 +1620,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( true, _mqttConnection.keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
         TEST_ASSERT_EQUAL_INT( true, _networkCloseCalled );
         _networkCloseCalled = false;
     }

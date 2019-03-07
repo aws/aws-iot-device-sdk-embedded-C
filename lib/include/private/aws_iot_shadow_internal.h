@@ -323,7 +323,7 @@ struct _shadowSubscription;
  * Currently, this is used to represent @ref mqtt_function_timedsubscribe or
  * @ref mqtt_function_timedunsubscribe.
  */
-typedef IotMqttError_t ( * _mqttOperationFunction_t )( IotMqttConnection_t *,
+typedef IotMqttError_t ( * _mqttOperationFunction_t )( IotMqttConnection_t,
                                                        const IotMqttSubscription_t * const,
                                                        size_t,
                                                        uint32_t,
@@ -385,7 +385,7 @@ typedef struct _shadowOperation
     uint32_t flags;                             /**< @brief Flags passed to operation API function. */
     AwsIotShadowError_t status;                 /**< @brief Status of operation. */
 
-    IotMqttConnection_t * pMqttConnection;      /**< @brief MQTT connection associated with this operation. */
+    IotMqttConnection_t mqttConnection;         /**< @brief MQTT connection associated with this operation. */
     struct _shadowSubscription * pSubscription; /**< @brief Shadow subscriptions object associated with this operation. */
 
     union
@@ -512,7 +512,7 @@ AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t ty
 /**
  * @brief Process a Shadow operation by sending the necessary MQTT packets.
  *
- * @param[in] pMqttConnection The MQTT connection to use.
+ * @param[in] mqttConnection The MQTT connection to use.
  * @param[in] pThingName Thing Name for the Shadow operation.
  * @param[in] thingNameLength Length of `pThingName`.
  * @param[in] pOperation Operation data to process.
@@ -522,7 +522,7 @@ AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t ty
  * @return #AWS_IOT_SHADOW_STATUS_PENDING on success. On error, one of
  * #AWS_IOT_SHADOW_NO_MEMORY or #AWS_IOT_SHADOW_MQTT_ERROR.
  */
-AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t * pMqttConnection,
+AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConnection,
                                                     const char * const pThingName,
                                                     size_t thingNameLength,
                                                     _shadowOperation_t * const pOperation,

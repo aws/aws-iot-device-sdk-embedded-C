@@ -76,8 +76,6 @@ extern int snprintf( char *,
  * This function is called to run the Shadow demo once a network connection has
  * been established.
  * @param[in] pThingName NULL-terminated Thing Name to use for this demo.
- * @param[in] pMqttConnection Pointer to the MQTT connection to use. This MQTT
- * connection must be initialized to IOT_MQTT_CONNECTION_INITIALIZER.
  * @param[in] pNetworkInterface Pointer to an MQTT network interface to use.
  * All necessary members of the network interface should be set before calling
  * this function.
@@ -85,12 +83,12 @@ extern int snprintf( char *,
  * @return 0 if the demo completes successfully; -1 if some part of it fails.
  */
 int AwsIotDemo_RunShadowDemo( const char * const pThingName,
-                              IotMqttConnection_t * const pMqttConnection,
                               const IotMqttNetworkInfo_t * const pNetworkInfo )
 {
     int status = 0;
     bool connectionCreated = false;
     IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
 
     /* Set the common members of the connection info. */
@@ -111,7 +109,7 @@ int AwsIotDemo_RunShadowDemo( const char * const pThingName,
     mqttStatus = IotMqtt_Connect( pNetworkInfo,
                                   &connectInfo,
                                   _TIMEOUT_MS,
-                                  pMqttConnection );
+                                  &mqttConnection );
 
     if( mqttStatus != IOT_MQTT_SUCCESS )
     {
@@ -124,7 +122,7 @@ int AwsIotDemo_RunShadowDemo( const char * const pThingName,
     /* Disconnect the MQTT connection if it was established. */
     if( connectionCreated == true )
     {
-        IotMqtt_Disconnect( pMqttConnection, false );
+        IotMqtt_Disconnect( mqttConnection, false );
     }
 
     return status;

@@ -265,13 +265,34 @@
 /*---------------------- MQTT internal data structures ----------------------*/
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Define the internal MQTT connection type.
+ * @brief Represents an MQTT connection.
  */
-typedef struct _IotMqttConnection _mqttConnection_t;
-/** @endcond */
+typedef struct _mqttConnection
+{
+    bool awsIotMqttMode;                             /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
+    void * pNetworkConnection;                       /**< @brief References the transport-layer network connection. */
+    const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
+
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+        const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
+    #endif
+
+    bool disconnected;                 /**< @brief Tracks if this connection has been disconnected. */
+    IotMutex_t referencesMutex;        /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
+    int32_t references;                /**< @brief Counts callbacks and operations using this connection. */
+    IotListDouble_t pendingProcessing; /**< @brief List of operations waiting to be processed by a task pool routine. */
+    IotListDouble_t pendingResponse;   /**< @brief List of processed operations awaiting a server response. */
+
+    IotListDouble_t subscriptionList;  /**< @brief Holds subscriptions associated with this connection. */
+    IotMutex_t subscriptionMutex;      /**< @brief Grants exclusive access to the subscription list. */
+
+    bool keepAliveFailure;             /**< @brief Failure flag for keep-alive operation. */
+    uint32_t keepAliveMs;              /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
+    uint64_t nextKeepAliveMs;          /**< @brief Relative delay for next keep-alive job. */
+    IotTaskPoolJob_t keepAliveJob;     /**< @brief Task pool job for processing this connection's keep-alive. */
+    uint8_t * pPingreqPacket;          /**< @brief An MQTT PINGREQ packet, allocated if keep-alive is active. */
+    size_t pingreqPacketSize;          /**< @brief The size of an allocated PINGREQ packet. */
+} _mqttConnection_t;
 
 /**
  * @brief Represents a subscription stored in an MQTT connection.

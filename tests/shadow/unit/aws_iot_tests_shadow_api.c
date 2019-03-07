@@ -115,7 +115,7 @@ typedef struct _receiveContext
 /**
  * @brief The MQTT connection object shared among all the tests.
  */
-static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+static _mqttConnection_t * _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
  * @brief The #IotNetworkInterface_t to share among the tests.
@@ -206,7 +206,7 @@ static void _receiveThread( void * pArgument )
 
     /* Call the MQTT receive callback to process the ACK packet. */
     IotMqtt_ReceiveCallback( &receiveContext,
-                             &_mqttConnection );
+                             _pMqttConnection );
 
     IotMutex_Unlock( &_lastPacketMutex );
 }
@@ -391,10 +391,10 @@ TEST_SETUP( Shadow_Unit_API )
     networkInfo.pNetworkInterface = &_networkInterface;
 
     /* Initialize the MQTT connection object to use for the Shadow tests. */
-    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( false,
-                                                                   &networkInfo,
-                                                                   0,
-                                                                   &_mqttConnection ) );
+    _pMqttConnection = IotTestMqtt_createMqttConnection( false,
+                                                         &networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Initialize the Shadow library. */
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, AwsIotShadow_Init( 0 ) );
@@ -411,7 +411,7 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
     AwsIotShadow_Cleanup();
 
     /* Clean up the MQTT connection object. */
-    IotMqtt_Disconnect( &_mqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, true );
 
     /* Clean up common components. */
     IotCommon_Cleanup();
@@ -486,7 +486,7 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
     AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
 
     /* Missing Thing Name. */
-    status = AwsIotShadow_Delete( &_mqttConnection,
+    status = AwsIotShadow_Delete( _pMqttConnection,
                                   NULL,
                                   0,
                                   0,
@@ -494,7 +494,7 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
                                   NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
-    status = AwsIotShadow_Update( &_mqttConnection,
+    status = AwsIotShadow_Update( _pMqttConnection,
                                   &documentInfo,
                                   0,
                                   0,
@@ -502,7 +502,7 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Thing Name too long. */
-    status = AwsIotShadow_Delete( &_mqttConnection,
+    status = AwsIotShadow_Delete( _pMqttConnection,
                                   _TEST_THING_NAME,
                                   _MAX_THING_NAME_LENGTH + 1,
                                   0,
@@ -511,7 +511,7 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* No reference with waitable operation. */
-    status = AwsIotShadow_Delete( &_mqttConnection,
+    status = AwsIotShadow_Delete( _pMqttConnection,
                                   _TEST_THING_NAME,
                                   _TEST_THING_NAME_LENGTH,
                                   AWS_IOT_SHADOW_FLAG_WAITABLE,
@@ -520,7 +520,7 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Both callback and waitable flag set. */
-    status = AwsIotShadow_Delete( &_mqttConnection,
+    status = AwsIotShadow_Delete( _pMqttConnection,
                                   _TEST_THING_NAME,
                                   _TEST_THING_NAME_LENGTH,
                                   AWS_IOT_SHADOW_FLAG_WAITABLE,
@@ -531,7 +531,7 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
     /* No callback for non-waitable GET. */
     documentInfo.pThingName = _TEST_THING_NAME;
     documentInfo.thingNameLength = _TEST_THING_NAME_LENGTH;
-    status = AwsIotShadow_Get( &_mqttConnection,
+    status = AwsIotShadow_Get( _pMqttConnection,
                                &documentInfo,
                                0,
                                NULL,
@@ -539,7 +539,7 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Callback function not set. */
-    status = AwsIotShadow_Delete( &_mqttConnection,
+    status = AwsIotShadow_Delete( _pMqttConnection,
                                   _TEST_THING_NAME,
                                   _TEST_THING_NAME_LENGTH,
                                   0,
@@ -561,7 +561,7 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
     AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
 
     /* Missing Thing Name. */
-    status = AwsIotShadow_Get( &_mqttConnection,
+    status = AwsIotShadow_Get( _pMqttConnection,
                                &documentInfo,
                                AWS_IOT_SHADOW_FLAG_WAITABLE,
                                NULL,
@@ -572,7 +572,7 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
 
     /* Invalid QoS. */
     documentInfo.qos = 3;
-    status = AwsIotShadow_Get( &_mqttConnection,
+    status = AwsIotShadow_Get( _pMqttConnection,
                                &documentInfo,
                                AWS_IOT_SHADOW_FLAG_WAITABLE,
                                NULL,
@@ -582,7 +582,7 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
 
     /* Invalid retry parameters. */
     documentInfo.retryLimit = 1;
-    status = AwsIotShadow_Get( &_mqttConnection,
+    status = AwsIotShadow_Get( _pMqttConnection,
                                &documentInfo,
                                AWS_IOT_SHADOW_FLAG_WAITABLE,
                                NULL,
@@ -591,7 +591,7 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
     documentInfo.retryLimit = 0;
 
     /* Waitable Shadow get with no memory allocation function. */
-    status = AwsIotShadow_Get( &_mqttConnection,
+    status = AwsIotShadow_Get( _pMqttConnection,
                                &documentInfo,
                                AWS_IOT_SHADOW_FLAG_WAITABLE,
                                NULL,
@@ -599,7 +599,7 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Update with no document. */
-    status = AwsIotShadow_Update( &_mqttConnection,
+    status = AwsIotShadow_Update( _pMqttConnection,
                                   &documentInfo,
                                   0,
                                   0,
@@ -609,7 +609,7 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
     /* Update with no client token. */
     documentInfo.update.pUpdateDocument = "{\"state\":{\"reported\":{null}}}";
     documentInfo.update.updateDocumentLength = 29;
-    status = AwsIotShadow_Update( &_mqttConnection,
+    status = AwsIotShadow_Update( _pMqttConnection,
                                   &documentInfo,
                                   0,
                                   0,
@@ -620,7 +620,7 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
     documentInfo.update.pUpdateDocument = "{\"state\":{\"reported\":{null}}},\"clientToken\": "
                                           "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"";
     documentInfo.update.updateDocumentLength = 146;
-    status = AwsIotShadow_Update( &_mqttConnection,
+    status = AwsIotShadow_Update( _pMqttConnection,
                                   &documentInfo,
                                   0,
                                   0,
@@ -676,7 +676,7 @@ TEST( Shadow_Unit_API, DeleteMallocFail )
 
         /* Call Shadow DELETE. Memory allocation will fail at various times
          * during this call. */
-        status = AwsIotShadow_Delete( &_mqttConnection,
+        status = AwsIotShadow_Delete( _pMqttConnection,
                                       _TEST_THING_NAME,
                                       _TEST_THING_NAME_LENGTH,
                                       AWS_IOT_SHADOW_FLAG_WAITABLE,
@@ -740,7 +740,7 @@ TEST( Shadow_Unit_API, GetMallocFail )
 
         /* Call Shadow GET. Memory allocation will fail at various times
          * during this call. */
-        status = AwsIotShadow_Get( &_mqttConnection,
+        status = AwsIotShadow_Get( _pMqttConnection,
                                    &documentInfo,
                                    AWS_IOT_SHADOW_FLAG_WAITABLE,
                                    NULL,
@@ -801,7 +801,7 @@ TEST( Shadow_Unit_API, UpdateMallocFail )
 
         /* Call Shadow UPDATE. Memory allocation will fail at various times
          * during this call. */
-        status = AwsIotShadow_Update( &_mqttConnection,
+        status = AwsIotShadow_Update( _pMqttConnection,
                                       &documentInfo,
                                       AWS_IOT_SHADOW_FLAG_WAITABLE,
                                       NULL,

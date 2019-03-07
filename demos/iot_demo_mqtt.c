@@ -315,7 +315,7 @@ static void _mqttSubscriptionCallback( void * param1,
              * the MQTT library will still guarantee at-least-once delivery (subject
              * to the retransmission strategy) because the acknowledgement message is
              * sent at QoS 1. */
-            if( IotMqtt_Publish( pPublish->pMqttConnection,
+            if( IotMqtt_Publish( pPublish->mqttConnection,
                                  &acknowledgementInfo,
                                  0,
                                  NULL,
@@ -348,8 +348,6 @@ static void _mqttSubscriptionCallback( void * param1,
  * @param[in] awsIotMqttMode Specify if this demo is running with the AWS IoT
  * MQTT server. Set this to false if using another MQTT server.
  * @param[in] pClientIdentifier NULL-terminated MQTT client identifier.
- * @param[in] pMqttConnection Pointer to the MQTT connection to use. This MQTT
- * connection must be initialized to IOT_MQTT_CONNECTION_INITIALIZER.
  * @param[in] pNetworkInfo Pointer to an MQTT network interface to use.
  * All necessary members of the network interface should be set before calling
  * this function.
@@ -358,7 +356,6 @@ static void _mqttSubscriptionCallback( void * param1,
  */
 int IotDemo_RunMqttDemo( bool awsIotMqttMode,
                          const char * const pClientIdentifier,
-                         IotMqttConnection_t * const pMqttConnection,
                          const IotMqttNetworkInfo_t * const pNetworkInfo )
 {
     int status = 0, i = 0;
@@ -367,6 +364,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
     char pClientIdentifierBuffer[ _CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
     char pPublishPayload[ _PUBLISH_PAYLOAD_BUFFER_LENGTH ] = { 0 };
     IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttPublishInfo_t willInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER,
                          publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
@@ -439,7 +437,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
         mqttStatus = IotMqtt_Connect( pNetworkInfo,
                                       &connectInfo,
                                       _MQTT_TIMEOUT_MS,
-                                      pMqttConnection );
+                                      &mqttConnection );
 
         if( mqttStatus != IOT_MQTT_SUCCESS )
         {
@@ -469,7 +467,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
         /* Subscribe to all the topic filters in the subscription list. The
          * blocking SUBSCRIBE function is used because the demo should not
          * continue until SUBSCRIBE completes. */
-        mqttStatus = IotMqtt_TimedSubscribe( pMqttConnection,
+        mqttStatus = IotMqtt_TimedSubscribe( mqttConnection,
                                              pSubscriptions,
                                              _TOPIC_FILTER_COUNT,
                                              0,
@@ -486,7 +484,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
                 /* Check which subscriptions were rejected before exiting the demo. */
                 for( i = 0; i < _TOPIC_FILTER_COUNT; i++ )
                 {
-                    if( IotMqtt_IsSubscribed( pMqttConnection,
+                    if( IotMqtt_IsSubscribed( mqttConnection,
                                               pSubscriptions[ i ].pTopicFilter,
                                               pSubscriptions[ i ].topicFilterLength,
                                               NULL ) == true )
@@ -570,7 +568,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
                 }
 
                 /* PUBLISH a message. */
-                mqttStatus = IotMqtt_Publish( pMqttConnection,
+                mqttStatus = IotMqtt_Publish( mqttConnection,
                                               &publishInfo,
                                               0,
                                               &publishComplete,
@@ -650,7 +648,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
     if( status == 0 )
     {
         /* Unsubscribe from all demo topic filters. */
-        mqttStatus = IotMqtt_TimedUnsubscribe( pMqttConnection,
+        mqttStatus = IotMqtt_TimedUnsubscribe( mqttConnection,
                                                pSubscriptions,
                                                _TOPIC_FILTER_COUNT,
                                                0,
@@ -667,7 +665,7 @@ int IotDemo_RunMqttDemo( bool awsIotMqttMode,
     /* Disconnect the MQTT connection if it was established. */
     if( connectionCreated == true )
     {
-        IotMqtt_Disconnect( pMqttConnection, false );
+        IotMqtt_Disconnect( mqttConnection, false );
     }
 
     return status;

@@ -605,7 +605,7 @@ AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t ty
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t * pMqttConnection,
+AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConnection,
                                                     const char * const pThingName,
                                                     size_t thingNameLength,
                                                     _shadowOperation_t * const pOperation,
@@ -633,7 +633,7 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t * pMqttC
                  pThingName );
 
     /* Set the operation's MQTT connection. */
-    pOperation->pMqttConnection = pMqttConnection;
+    pOperation->mqttConnection = mqttConnection;
 
     /* Generate the operation topic buffer. */
     if( _AwsIotShadow_GenerateShadowTopic( pOperation->type,
@@ -754,7 +754,7 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t * pMqttC
         IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
 
         /* Publish to the Shadow topic name. */
-        publishStatus = IotMqtt_TimedPublish( pOperation->pMqttConnection,
+        publishStatus = IotMqtt_TimedPublish( pOperation->mqttConnection,
                                               &publishInfo,
                                               0,
                                               _AwsIotShadowMqttTimeoutMs );

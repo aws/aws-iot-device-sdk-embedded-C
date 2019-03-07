@@ -997,7 +997,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
     IotMqtt_Assert( pOperation->notify.callback.function != NULL );
     IotMqtt_Assert( pOperation->status != IOT_MQTT_STATUS_PENDING );
 
-    callbackParam.pMqttConnection = pOperation->pMqttConnection;
+    callbackParam.mqttConnection = pOperation->pMqttConnection;
     callbackParam.operation.type = pOperation->operation;
     callbackParam.operation.reference = pOperation;
     callbackParam.operation.result = pOperation->status;

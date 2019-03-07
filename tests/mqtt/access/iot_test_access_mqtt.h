@@ -35,10 +35,9 @@
  *
  * @see #_createMqttConnection.
  */
-bool IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
-                                       const IotMqttNetworkInfo_t * pNetworkInfo,
-                                       uint16_t keepAliveSeconds,
-                                       _mqttConnection_t * pMqttConnection );
+_mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
+                                                      const IotMqttNetworkInfo_t * pNetworkInfo,
+                                                      uint16_t keepAliveSeconds );
 
 /*------------------------- iot_mqtt_serialize.c ------------------------*/
 

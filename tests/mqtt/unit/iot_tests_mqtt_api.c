@@ -156,7 +156,7 @@ static int32_t _closeCount = 0;
 /**
  * @brief An MQTT connection to share among the tests.
  */
-static _mqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+static _mqttConnection_t * _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
  * @brief An #IotMqttNetworkInfo_t to share among the tests.
@@ -229,7 +229,7 @@ static void _incomingPingresp( void * pArgument )
             lastInvokeTime = currentTime;
 
             IotMqtt_ReceiveCallback( NULL,
-                                     &_mqttConnection );
+                                     _pMqttConnection );
         }
     }
 }
@@ -565,27 +565,27 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
     _mqttOperation_t * pOperation = NULL;
 
     /* Create a new MQTT connection. */
-    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                   &_networkInfo,
-                                                                   0,
-                                                                   &_mqttConnection ) );
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Adjustment to reference count based on keep-alive status. */
-    const int32_t keepAliveReference = 1 + ( ( _mqttConnection.keepAliveMs != 0 ) ? 1 : 0 );
+    const int32_t keepAliveReference = 1 + ( ( _pMqttConnection->keepAliveMs != 0 ) ? 1 : 0 );
 
     /* A new MQTT connection should only have a possible reference for keep-alive. */
-    TEST_ASSERT_EQUAL_INT32( keepAliveReference, _mqttConnection.references );
+    TEST_ASSERT_EQUAL_INT32( keepAliveReference, _pMqttConnection->references );
 
     /* Create a new operation referencing the MQTT connection. */
-    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( &_mqttConnection,
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( _pMqttConnection,
                                                                    IOT_MQTT_FLAG_WAITABLE,
                                                                    NULL,
                                                                    &pOperation ) );
 
     /* Check reference counts and list placement. */
-    TEST_ASSERT_EQUAL_INT32( 1 + keepAliveReference, _mqttConnection.references );
+    TEST_ASSERT_EQUAL_INT32( 1 + keepAliveReference, _pMqttConnection->references );
     TEST_ASSERT_EQUAL_INT32( 2, pOperation->jobReference );
-    TEST_ASSERT_EQUAL_PTR( &( pOperation->link ), IotListDouble_FindFirstMatch( &( _mqttConnection.pendingProcessing ),
+    TEST_ASSERT_EQUAL_PTR( &( pOperation->link ), IotListDouble_FindFirstMatch( &( _pMqttConnection->pendingProcessing ),
                                                                                 NULL,
                                                                                 NULL,
                                                                                 &( pOperation->link ) ) );
@@ -602,15 +602,15 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
     IotSemaphore_Wait( &( pOperation->notify.waitSemaphore ) );
 
     /* Check reference counts after job completion. */
-    TEST_ASSERT_EQUAL_INT32( 1 + keepAliveReference, _mqttConnection.references );
+    TEST_ASSERT_EQUAL_INT32( 1 + keepAliveReference, _pMqttConnection->references );
     TEST_ASSERT_EQUAL_INT32( 1, pOperation->jobReference );
-    TEST_ASSERT_EQUAL_PTR( &( pOperation->link ), IotListDouble_FindFirstMatch( &( _mqttConnection.pendingProcessing ),
+    TEST_ASSERT_EQUAL_PTR( &( pOperation->link ), IotListDouble_FindFirstMatch( &( _pMqttConnection->pendingProcessing ),
                                                                                 NULL,
                                                                                 NULL,
                                                                                 &( pOperation->link ) ) );
 
     /* Disconnect the MQTT connection, then call Wait to clean up the operation. */
-    IotMqtt_Disconnect( &_mqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, true );
     IotMqtt_Wait( pOperation, 0 );
 }
 
@@ -637,16 +637,16 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
         _networkInterface.send = _sendDelay;
 
         /* Create a new MQTT connection. */
-        TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                       &_networkInfo,
-                                                                       0,
-                                                                       &_mqttConnection ) );
+        _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                             &_networkInfo,
+                                                             0 );
+        TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
         /* Set parameter to network send function. */
-        _mqttConnection.pNetworkConnection = &waitSem;
+        _pMqttConnection->pNetworkConnection = &waitSem;
 
         /* Create a new operation referencing the MQTT connection. */
-        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( &_mqttConnection,
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( _pMqttConnection,
                                                                        IOT_MQTT_FLAG_WAITABLE,
                                                                        NULL,
                                                                        &pOperation ) );
@@ -669,12 +669,12 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
         TEST_ASSERT_EQUAL( IOT_MQTT_TIMEOUT, IotMqtt_Wait( pOperation, 10 ) );
 
         /* Check reference count after a timed out wait. */
-        IotMutex_Lock( &( _mqttConnection.referencesMutex ) );
+        IotMutex_Lock( &( _pMqttConnection->referencesMutex ) );
         TEST_ASSERT_EQUAL_INT32( 1, pOperation->jobReference );
-        IotMutex_Unlock( &( _mqttConnection.referencesMutex ) );
+        IotMutex_Unlock( &( _pMqttConnection->referencesMutex ) );
 
         /* Disconnect the MQTT connection. */
-        IotMqtt_Disconnect( &_mqttConnection, true );
+        IotMqtt_Disconnect( _pMqttConnection, true );
 
         /* Clean up the MQTT library, which waits for the send job to finish. The
          * library must be re-initialized so that test tear down does not crash. */
@@ -704,14 +704,14 @@ TEST( MQTT_Unit_API, ConnectParameters )
     status = IotMqtt_Connect( &_networkInfo,
                               &connectInfo,
                               _TIMEOUT_MS,
-                              &_mqttConnection );
+                              &_pMqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     /* Check that the connection info is validated. */
     status = IotMqtt_Connect( &_networkInfo,
                               &connectInfo,
                               _TIMEOUT_MS,
-                              &_mqttConnection );
+                              &_pMqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
     connectInfo.pClientIdentifier = _CLIENT_IDENTIFIER;
     connectInfo.clientIdentifierLength = _CLIENT_IDENTIFIER_LENGTH;
@@ -723,7 +723,7 @@ TEST( MQTT_Unit_API, ConnectParameters )
     status = IotMqtt_Connect( &_networkInfo,
                               &connectInfo,
                               _TIMEOUT_MS,
-                              &_mqttConnection );
+                              &_pMqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     /* Connect with bad subscription count. */
@@ -734,7 +734,7 @@ TEST( MQTT_Unit_API, ConnectParameters )
     status = IotMqtt_Connect( &_networkInfo,
                               &connectInfo,
                               _TIMEOUT_MS,
-                              &_mqttConnection );
+                              &_pMqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
     connectInfo.previousSubscriptionCount = 1;
 
@@ -743,7 +743,7 @@ TEST( MQTT_Unit_API, ConnectParameters )
     status = IotMqtt_Connect( &_networkInfo,
                               &connectInfo,
                               _TIMEOUT_MS,
-                              &_mqttConnection );
+                              &_pMqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
     willInfo.pTopicName = _TEST_TOPIC_NAME;
     willInfo.topicNameLength = _TEST_TOPIC_NAME_LENGTH;
@@ -754,7 +754,7 @@ TEST( MQTT_Unit_API, ConnectParameters )
     status = IotMqtt_Connect( &_networkInfo,
                               &connectInfo,
                               _TIMEOUT_MS,
-                              &_mqttConnection );
+                              &_pMqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
     willInfo.payloadLength = 0;
 
@@ -762,7 +762,7 @@ TEST( MQTT_Unit_API, ConnectParameters )
     status = IotMqtt_Connect( &_networkInfo,
                               &connectInfo,
                               0,
-                              &_mqttConnection );
+                              &_pMqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_TIMEOUT, status );
 }
 
@@ -794,7 +794,7 @@ TEST( MQTT_Unit_API, ConnectMallocFail )
         status = IotMqtt_Connect( &_networkInfo,
                                   &connectInfo,
                                   _TIMEOUT_MS,
-                                  &_mqttConnection );
+                                  &_pMqttConnection );
 
         /* If the return value is timeout, then all memory allocation succeeded
          * and the loop can exit. The expected return value is timeout (and not
@@ -845,7 +845,7 @@ TEST( MQTT_Unit_API, ConnectRestoreSessionMallocFail )
         status = IotMqtt_Connect( &_networkInfo,
                                   &connectInfo,
                                   _TIMEOUT_MS,
-                                  &_mqttConnection );
+                                  &_pMqttConnection );
 
         /* If the return value is timeout, then all memory allocation succeeded
          * and the loop can exit. The expected return value is timeout (and not
@@ -882,17 +882,17 @@ TEST( MQTT_Unit_API, DisconnectMallocFail )
         UnityMalloc_MakeMallocFailAfterCount( -1 );
 
         /* Create a new MQTT connection. */
-        TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                       &_networkInfo,
-                                                                       0,
-                                                                       &_mqttConnection ) );
+        _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                             &_networkInfo,
+                                                             0 );
+        TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
         /* Set malloc to eventually fail. */
         UnityMalloc_MakeMallocFailAfterCount( i );
 
         /* Call DISCONNECT; this function should always perform cleanup regardless
          * of memory allocation errors. */
-        IotMqtt_Disconnect( &_mqttConnection, false );
+        IotMqtt_Disconnect( _pMqttConnection, false );
         TEST_ASSERT_EQUAL_INT( 1, _closeCount );
         _closeCount = 0;
     }
@@ -915,31 +915,31 @@ TEST( MQTT_Unit_API, PublishQoS0Parameters )
     _networkInterface.send = _sendSuccess;
 
     /* Create a new MQTT connection. */
-    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                   &_networkInfo,
-                                                                   0,
-                                                                   &_mqttConnection ) );
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     if( TEST_PROTECT() )
     {
         /* Check that the publish info is validated. */
-        status = IotMqtt_Publish( &_mqttConnection, &publishInfo, 0, NULL, NULL );
+        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, NULL, NULL );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
         publishInfo.pTopicName = _TEST_TOPIC_NAME;
         publishInfo.topicNameLength = _TEST_TOPIC_NAME_LENGTH;
 
         /* Check that a QoS 0 publish is refused if a notification is requested. */
-        status = IotMqtt_Publish( &_mqttConnection, &publishInfo, IOT_MQTT_FLAG_WAITABLE, NULL, &publishReference );
+        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, IOT_MQTT_FLAG_WAITABLE, NULL, &publishReference );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
-        status = IotMqtt_Publish( &_mqttConnection, &publishInfo, 0, &callbackInfo, NULL );
+        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, &callbackInfo, NULL );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
         /* If valid parameters are passed, QoS 0 publish should always return success. */
-        status = IotMqtt_Publish( &_mqttConnection, &publishInfo, 0, 0, &publishReference );
+        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, 0, &publishReference );
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
     }
 
-    IotMqtt_Disconnect( &_mqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, true );
 }
 
 /*-----------------------------------------------------------*/
@@ -957,11 +957,11 @@ TEST( MQTT_Unit_API, PublishQoS0MallocFail )
     /* Initialize parameters. */
     _networkInterface.send = _sendSuccess;
 
-    /* Create a new MQTT connection with an empty network interface. */
-    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                   &_networkInfo,
-                                                                   0,
-                                                                   &_mqttConnection ) );
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Set the necessary members of publish info. */
     publishInfo.pTopicName = _TEST_TOPIC_NAME;
@@ -975,7 +975,7 @@ TEST( MQTT_Unit_API, PublishQoS0MallocFail )
 
             /* Call PUBLISH. Memory allocation will fail at various times during
              * this call. */
-            status = IotMqtt_Publish( &_mqttConnection, &publishInfo, 0, NULL, NULL );
+            status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, NULL, NULL );
 
             /* Once PUBLISH succeeds, the loop can exit. */
             if( status == IOT_MQTT_SUCCESS )
@@ -989,7 +989,7 @@ TEST( MQTT_Unit_API, PublishQoS0MallocFail )
         }
     }
 
-    IotMqtt_Disconnect( &_mqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, true );
 }
 
 /*-----------------------------------------------------------*/
@@ -1010,11 +1010,11 @@ TEST( MQTT_Unit_API, PublishQoS1 )
     /* Initialize parameters. */
     _networkInterface.send = _sendSuccess;
 
-    /* Create a new MQTT connection with an empty network interface. */
-    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                   &_networkInfo,
-                                                                   0,
-                                                                   &_mqttConnection ) );
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Set the publish info. */
     publishInfo.qos = IOT_MQTT_QOS_1;
@@ -1024,7 +1024,7 @@ TEST( MQTT_Unit_API, PublishQoS1 )
     if( TEST_PROTECT() )
     {
         /* Setting the waitable flag with no reference is not allowed. */
-        status = IotMqtt_Publish( &_mqttConnection,
+        status = IotMqtt_Publish( _pMqttConnection,
                                   &publishInfo,
                                   IOT_MQTT_FLAG_WAITABLE,
                                   NULL,
@@ -1032,7 +1032,7 @@ TEST( MQTT_Unit_API, PublishQoS1 )
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
         /* Setting both the waitable flag and callback info is not allowed. */
-        status = IotMqtt_Publish( &_mqttConnection,
+        status = IotMqtt_Publish( _pMqttConnection,
                                   &publishInfo,
                                   IOT_MQTT_FLAG_WAITABLE,
                                   &callbackInfo,
@@ -1046,7 +1046,7 @@ TEST( MQTT_Unit_API, PublishQoS1 )
 
             /* Call PUBLISH. Memory allocation will fail at various times during
              * this call. */
-            status = IotMqtt_Publish( &_mqttConnection,
+            status = IotMqtt_Publish( _pMqttConnection,
                                       &publishInfo,
                                       IOT_MQTT_FLAG_WAITABLE,
                                       NULL,
@@ -1067,7 +1067,7 @@ TEST( MQTT_Unit_API, PublishQoS1 )
     }
 
     /* Clean up MQTT connection. */
-    IotMqtt_Disconnect( &_mqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, true );
 }
 
 /*-----------------------------------------------------------*/
@@ -1091,15 +1091,15 @@ TEST( MQTT_Unit_API, PublishDuplicates )
     serializer.serialize.publishSetDup = _publishSetDup;
     _networkInterface.send = _dupChecker;
 
-    /* Create a new MQTT connection with an empty network interface. */
-    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                   &_networkInfo,
-                                                                   0,
-                                                                   &_mqttConnection ) );
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Set the serializers and parameter to the send function. */
-    _mqttConnection.pNetworkConnection = &dupCheckResult;
-    _mqttConnection.pSerializer = &serializer;
+    _pMqttConnection->pNetworkConnection = &dupCheckResult;
+    _pMqttConnection->pSerializer = &serializer;
 
     /* Set the publish info. */
     publishInfo.qos = IOT_MQTT_QOS_1;
@@ -1116,7 +1116,7 @@ TEST( MQTT_Unit_API, PublishDuplicates )
     {
         /* Send a PUBLISH with retransmissions enabled. */
         TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING,
-                           IotMqtt_Publish( &_mqttConnection,
+                           IotMqtt_Publish( _pMqttConnection,
                                             &publishInfo,
                                             IOT_MQTT_FLAG_WAITABLE,
                                             NULL,
@@ -1135,7 +1135,7 @@ TEST( MQTT_Unit_API, PublishDuplicates )
     }
 
     /* Clean up MQTT connection. */
-    IotMqtt_Disconnect( &_mqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, true );
 
     /* Check that the set DUP override was called. */
     if( TEST_PROTECT() )
@@ -1157,7 +1157,7 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
     IotMqttReference_t reference = IOT_MQTT_REFERENCE_INITIALIZER;
 
     /* Check that subscription info is validated. */
-    status = IotMqtt_Subscribe( &_mqttConnection,
+    status = IotMqtt_Subscribe( _pMqttConnection,
                                 &subscription,
                                 1,
                                 IOT_MQTT_FLAG_WAITABLE,
@@ -1165,7 +1165,7 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
                                 &reference );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
-    status = IotMqtt_Unsubscribe( &_mqttConnection,
+    status = IotMqtt_Unsubscribe( _pMqttConnection,
                                   &subscription,
                                   1,
                                   IOT_MQTT_FLAG_WAITABLE,
@@ -1178,7 +1178,7 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
     subscription.callback.function = _SUBSCRIPTION_CALLBACK;
 
     /* A reference must be provided for a waitable SUBSCRIBE. */
-    status = IotMqtt_Subscribe( &_mqttConnection,
+    status = IotMqtt_Subscribe( _pMqttConnection,
                                 &subscription,
                                 1,
                                 IOT_MQTT_FLAG_WAITABLE,
@@ -1186,7 +1186,7 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
                                 NULL );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
-    status = IotMqtt_Unsubscribe( &_mqttConnection,
+    status = IotMqtt_Unsubscribe( _pMqttConnection,
                                   &subscription,
                                   1,
                                   IOT_MQTT_FLAG_WAITABLE,
@@ -1211,11 +1211,11 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
     /* Initializer parameters. */
     _networkInterface.send = _sendSuccess;
 
-    /* Create a new MQTT connection with an empty network interface. */
-    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                   &_networkInfo,
-                                                                   0,
-                                                                   &_mqttConnection ) );
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Set the necessary members of the subscription. */
     subscription.pTopicFilter = _TEST_TOPIC_NAME;
@@ -1230,7 +1230,7 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
 
             /* Call SUBSCRIBE. Memory allocation will fail at various times during
              * this call. */
-            status = IotMqtt_Subscribe( &_mqttConnection,
+            status = IotMqtt_Subscribe( _pMqttConnection,
                                         &subscription,
                                         1,
                                         IOT_MQTT_FLAG_WAITABLE,
@@ -1251,10 +1251,10 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
         }
 
         /* No lingering subscriptions should be in the MQTT connection. */
-        TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _mqttConnection.subscriptionList ) ) );
+        TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) );
     }
 
-    IotMqtt_Disconnect( &_mqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, true );
 }
 
 /*-----------------------------------------------------------*/
@@ -1273,11 +1273,11 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
     /* Initialize parameters. */
     _networkInterface.send = _sendSuccess;
 
-    /* Create a new MQTT connection with an empty network interface. */
-    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                   &_networkInfo,
-                                                                   0,
-                                                                   &_mqttConnection ) );
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Set the necessary members of the subscription. */
     subscription.pTopicFilter = _TEST_TOPIC_NAME;
@@ -1292,7 +1292,7 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
 
             /* Call UNSUBSCRIBE. Memory allocation will fail at various times during
              * this call. */
-            status = IotMqtt_Unsubscribe( &_mqttConnection,
+            status = IotMqtt_Unsubscribe( _pMqttConnection,
                                           &subscription,
                                           1,
                                           IOT_MQTT_FLAG_WAITABLE,
@@ -1313,10 +1313,10 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
         }
 
         /* No lingering subscriptions should be in the MQTT connection. */
-        TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _mqttConnection.subscriptionList ) ) );
+        TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) );
     }
 
-    IotMqtt_Disconnect( &_mqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, true );
 }
 
 /*-----------------------------------------------------------*/
@@ -1339,27 +1339,27 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
     _networkInterface.receive = _receivePingresp;
     _networkInterface.close = _close;
 
-    /* Create a new MQTT connection with an empty network interface. */
-    TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                   &_networkInfo,
-                                                                   1,
-                                                                   &_mqttConnection ) );
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         1 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Set a short keep-alive interval so this test runs faster. */
-    _mqttConnection.keepAliveMs = _SHORT_KEEP_ALIVE_MS;
-    _mqttConnection.nextKeepAliveMs = _SHORT_KEEP_ALIVE_MS;
+    _pMqttConnection->keepAliveMs = _SHORT_KEEP_ALIVE_MS;
+    _pMqttConnection->nextKeepAliveMs = _SHORT_KEEP_ALIVE_MS;
 
     /* Schedule the initial PINGREQ. */
     TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS,
                        IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
-                                                     &( _mqttConnection.keepAliveJob ),
-                                                     _mqttConnection.nextKeepAliveMs ) );
+                                                     &( _pMqttConnection->keepAliveJob ),
+                                                     _pMqttConnection->nextKeepAliveMs ) );
 
     /* Sleep to allow ample time for periodic PINGREQ sends and PINGRESP responses. */
     sleep( sleepTime );
 
     /* Disconnect the connection. */
-    IotMqtt_Disconnect( &_mqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, true );
 
     /* Check the counters for PINGREQ send and close. */
     TEST_ASSERT_EQUAL_INT32( _KEEP_ALIVE_COUNT + 1, _pingreqSendCount );
@@ -1383,30 +1383,30 @@ TEST( MQTT_Unit_API, KeepAliveJobCleanup )
 
     if( TEST_PROTECT() )
     {
-        /* Create a new MQTT connection with an empty network interface. */
-        TEST_ASSERT_EQUAL_INT( true, IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
-                                                                       &_networkInfo,
-                                                                       1,
-                                                                       &_mqttConnection ) );
+        /* Create a new MQTT connection. */
+        _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                             &_networkInfo,
+                                                             1 );
+        TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
         /* Set the parameter to the send function. */
-        _mqttConnection.pNetworkConnection = &waitSem;
+        _pMqttConnection->pNetworkConnection = &waitSem;
 
         /* Set a short keep-alive interval so this test runs faster. */
-        _mqttConnection.keepAliveMs = _SHORT_KEEP_ALIVE_MS;
-        _mqttConnection.nextKeepAliveMs = _SHORT_KEEP_ALIVE_MS;
+        _pMqttConnection->keepAliveMs = _SHORT_KEEP_ALIVE_MS;
+        _pMqttConnection->nextKeepAliveMs = _SHORT_KEEP_ALIVE_MS;
 
         /* Schedule the initial PINGREQ. */
         TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS,
                            IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
-                                                         &( _mqttConnection.keepAliveJob ),
-                                                         _mqttConnection.nextKeepAliveMs ) );
+                                                         &( _pMqttConnection->keepAliveJob ),
+                                                         _pMqttConnection->nextKeepAliveMs ) );
 
         /* Wait for the keep-alive job to send a PINGREQ. */
         IotSemaphore_Wait( &waitSem );
 
         /* Immediately disconnect the connection. */
-        IotMqtt_Disconnect( &_mqttConnection, true );
+        IotMqtt_Disconnect( _pMqttConnection, true );
     }
 
     IotSemaphore_Destroy( &waitSem );
