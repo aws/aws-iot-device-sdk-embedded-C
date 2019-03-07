@@ -179,7 +179,7 @@ static pthread_barrier_t _mtTestBarrier;
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Places dummy subscriptions in the subscription list of #_mqttConnection.
+ * @brief Places dummy subscriptions in the subscription list of #_pMqttConnection.
  */
 static void _populateList( void )
 {

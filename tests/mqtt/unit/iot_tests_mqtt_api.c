@@ -1156,6 +1156,12 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     IotMqttReference_t reference = IOT_MQTT_REFERENCE_INITIALIZER;
 
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
     /* Check that subscription info is validated. */
     status = IotMqtt_Subscribe( _pMqttConnection,
                                 &subscription,
@@ -1193,6 +1199,8 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
                                   NULL,
                                   NULL );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
+
+    IotMqtt_Disconnect( _pMqttConnection, true );
 }
 
 /*-----------------------------------------------------------*/

@@ -123,8 +123,7 @@ typedef struct _operationCompleteParams
  * the test network function files. */
 extern bool IotTest_NetworkSetup( void );
 extern void IotTest_NetworkCleanup( void );
-extern bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection,
-                                    IotMqttConnection_t * pMqttConnection );
+extern bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection );
 extern IotNetworkError_t IotTest_NetworkClose( void * pNetworkConnection );
 extern void IotTest_NetworkDestroy( void * pConnection );
 
@@ -784,8 +783,7 @@ TEST( MQTT_System, LastWillAndTestament )
         /* Establish an independent MQTT over TCP connection to receive a Last
          * Will and Testament message. */
         TEST_ASSERT_EQUAL( true,
-                           IotTest_NetworkConnect( &lwtListenerConnection,
-                                                   &lwtListener ) );
+                           IotTest_NetworkConnect( &lwtListenerConnection ) );
         lwtListenerCreated = true;
 
         if( TEST_PROTECT() )

@@ -299,9 +299,9 @@ static size_t _sendSuccess( void * pSendContext,
         AwsIotShadow_Assert( _lastPacketIdentifier != 0 );
 
         /* Set the receive thread to run after a "network round-trip". */
-        IotClock_TimerArm( &_receiveTimer,
-                           _NETWORK_ROUND_TRIP_TIME_MS,
-                           0 );
+        AwsIotShadow_Assert( IotClock_TimerArm( &_receiveTimer,
+                                                _NETWORK_ROUND_TRIP_TIME_MS,
+                                                0 ) == true );
     }
 
     IotMutex_Unlock( &_lastPacketMutex );

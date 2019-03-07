@@ -60,11 +60,11 @@ static bool _incomingPacketValid( uint8_t packetType );
  * @param[in] pMqttConnection The associated MQTT connection.
  * @param[out] pIncomingPacket Output parameter for the incoming packet.
  *
- * @return `true` if a packet was successfully received; `false` otherwise.
+ * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_NO_MEMORY or #IOT_MQTT_BAD_RESPONSE.
  */
-static bool _getIncomingPacket( void * pNetworkConnection,
-                                const _mqttConnection_t * pMqttConnection,
-                                _mqttPacket_t * pIncomingPacket );
+static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
+                                          const _mqttConnection_t * pMqttConnection,
+                                          _mqttPacket_t * pIncomingPacket );
 
 /**
  * @brief Deserialize a packet received from the network.
@@ -72,11 +72,11 @@ static bool _getIncomingPacket( void * pNetworkConnection,
  * @param[in] pMqttConnection The associated MQTT connection.
  * @param[in] pIncomingPacket The packet received from the network.
  *
- * @return `true` if deserialization succeeded; `false` otherwise. If this function
- * returns false, the network connection should be closed.
+ * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_NO_MEMORY, #IOT_MQTT_NETWORK_ERROR,
+ * #IOT_MQTT_SCHEDULING_ERROR, #IOT_MQTT_BAD_RESPONSE, or #IOT_MQTT_SERVER_REFUSED.
  */
-static bool _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
-                                        _mqttPacket_t * pIncomingPacket );
+static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
+                                                  _mqttPacket_t * pIncomingPacket );
 
 /**
  * @brief Send a PUBACK for a received QoS 1 PUBLISH packet.
@@ -116,11 +116,11 @@ static bool _incomingPacketValid( uint8_t packetType )
 
 /*-----------------------------------------------------------*/
 
-static bool _getIncomingPacket( void * pNetworkConnection,
-                                const _mqttConnection_t * pMqttConnection,
-                                _mqttPacket_t * pIncomingPacket )
+static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
+                                          const _mqttConnection_t * pMqttConnection,
+                                          _mqttPacket_t * pIncomingPacket )
 {
-    _IOT_FUNCTION_ENTRY( bool, true );
+    _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     size_t dataBytesRead = 0;
 
     /* Default functions for retrieving packet type and length. */
@@ -172,7 +172,7 @@ static bool _getIncomingPacket( void * pNetworkConnection,
                      pMqttConnection,
                      pIncomingPacket->type );
 
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
     }
     else
     {
@@ -185,7 +185,7 @@ static bool _getIncomingPacket( void * pNetworkConnection,
 
     if( pIncomingPacket->remainingLength == _MQTT_REMAINING_LENGTH_INVALID )
     {
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
     }
     else
     {
@@ -199,7 +199,7 @@ static bool _getIncomingPacket( void * pNetworkConnection,
 
         if( pIncomingPacket->pRemainingData == NULL )
         {
-            _IOT_SET_AND_GOTO_CLEANUP( false );
+            _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
         }
         else
         {
@@ -212,7 +212,7 @@ static bool _getIncomingPacket( void * pNetworkConnection,
 
         if( dataBytesRead != pIncomingPacket->remainingLength )
         {
-            _IOT_SET_AND_GOTO_CLEANUP( false );
+            _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
         }
         else
         {
@@ -227,7 +227,7 @@ static bool _getIncomingPacket( void * pNetworkConnection,
     /* Clean up on error. */
     _IOT_FUNCTION_CLEANUP_BEGIN();
 
-    if( status == false )
+    if( status != IOT_MQTT_SUCCESS )
     {
         if( pIncomingPacket->pRemainingData != NULL )
         {
@@ -248,8 +248,8 @@ static bool _getIncomingPacket( void * pNetworkConnection,
 
 /*-----------------------------------------------------------*/
 
-static bool _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
-                                        _mqttPacket_t * pIncomingPacket )
+static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
+                                                  _mqttPacket_t * pIncomingPacket )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t * pOperation = NULL;
@@ -568,7 +568,7 @@ static bool _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
         _EMPTY_ELSE_MARKER;
     }
 
-    return( status != IOT_MQTT_BAD_RESPONSE );
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -798,7 +798,7 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection )
 void IotMqtt_ReceiveCallback( void * pNetworkConnection,
                               void * pReceiveContext )
 {
-    bool status = true;
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
     _mqttPacket_t incomingPacket = { 0 };
 
     /* Cast context to correct type. */
@@ -809,7 +809,7 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
                                  pMqttConnection,
                                  &incomingPacket );
 
-    if( status == true )
+    if( status == IOT_MQTT_SUCCESS )
     {
         /* Deserialize the received packet. */
         status = _deserializeIncomingPacket( pMqttConnection,
@@ -830,7 +830,8 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
         _EMPTY_ELSE_MARKER;
     }
 
-    if( status == false )
+    /* Close the network connection on a bad response. */
+    if( status == IOT_MQTT_BAD_RESPONSE )
     {
         IotLogError( "(MQTT connection %p) Error processing incoming data. Closing connection.",
                      pMqttConnection );
