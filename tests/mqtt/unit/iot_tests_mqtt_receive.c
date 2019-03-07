@@ -1003,10 +1003,10 @@ TEST( MQTT_Unit_Receive, PublishInvalid )
         _networkCloseCalled = false;
     }
 
-    /* Attempt to process a PUBLISH larger than the size of the data stream. */
+    /* Attempt to process a PUBLISH where some bytes could not be received. */
     {
         _DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
-        pPublish[ 2 ] = 0x52;
+        pPublish[ 2 ] = 0x03;
         TEST_ASSERT_EQUAL_INT( true, _processPublish( pPublish,
                                                       publishSize,
                                                       0 ) );

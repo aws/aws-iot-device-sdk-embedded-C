@@ -717,6 +717,7 @@ TEST( MQTT_Unit_API, ConnectParameters )
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
 
     _networkInterface.send = _sendSuccess;
+    _networkInterface.close = _close;
 
     /* Check that the network interface is validated. */
     status = IotMqtt_Connect( &_networkInfo,
@@ -798,6 +799,7 @@ TEST( MQTT_Unit_API, ConnectMallocFail )
 
     /* Initialize parameters. */
     _networkInterface.send = _sendSuccess;
+    _networkInterface.close = _close;
     connectInfo.keepAliveSeconds = 100;
     connectInfo.cleanSession = true;
     connectInfo.pClientIdentifier = _CLIENT_IDENTIFIER;
@@ -843,6 +845,7 @@ TEST( MQTT_Unit_API, ConnectRestoreSessionMallocFail )
 
     /* Initialize parameters. */
     _networkInterface.send = _sendSuccess;
+    _networkInterface.close = _close;
     connectInfo.cleanSession = false;
     connectInfo.keepAliveSeconds = 100;
     connectInfo.pClientIdentifier = _CLIENT_IDENTIFIER;

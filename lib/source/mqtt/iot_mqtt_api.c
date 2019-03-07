@@ -1130,16 +1130,31 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         IotLogError( "Failed to establish new MQTT connection, error %s.",
                      IotMqtt_strerror( status ) );
 
-        /* Close the network connection on error. */
-        networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
-
-        if( networkStatus != IOT_NETWORK_SUCCESS )
+        /* Close the network connection for all errors except bad parameters and
+         * memory allocation failures. */
+        if( status != IOT_MQTT_BAD_PARAMETER )
         {
-            IotLogWarn( "Failed to close network connection." );
+            if( status != IOT_MQTT_NO_MEMORY )
+            {
+                networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
+
+                if( networkStatus != IOT_NETWORK_SUCCESS )
+                {
+                    IotLogWarn( "Failed to close network connection." );
+                }
+                else
+                {
+                    IotLogInfo( "Network connection closed on error." );
+                }
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
         }
         else
         {
-            IotLogInfo( "Network connection closed on error." );
+            _EMPTY_ELSE_MARKER;
         }
 
         if( pConnectOperation != NULL )
