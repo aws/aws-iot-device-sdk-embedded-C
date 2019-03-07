@@ -1747,11 +1747,9 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
                                  pMqttConnection,
                                  pOperation );
 
-                    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
                     _IotMqtt_RemoveSubscriptionByPacket( pMqttConnection,
                                                          pOperation->packetIdentifier,
                                                          -1 );
-                    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
                 }
                 else
                 {

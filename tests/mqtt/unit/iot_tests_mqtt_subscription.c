@@ -875,6 +875,9 @@ TEST( MQTT_Unit_Subscription, ProcessPublish )
                                                   &subscription,
                                                   1 ) );
 
+    /* Increment connection reference count for processing subscription callbacks. */
+    TEST_ASSERT_EQUAL_INT( true, _IotMqtt_IncrementConnectionReferences( &_mqttConnection ) );
+
     /* Find the subscription and invoke its callback. */
     _IotMqtt_InvokeSubscriptionCallback( &_mqttConnection,
                                          &callbackParam );
@@ -923,6 +926,9 @@ TEST( MQTT_Unit_Subscription, ProcessPublishMultiple )
                                                   1,
                                                   &( subscription[ 0 ] ),
                                                   3 ) );
+
+    /* Increment connection reference count for processing subscription callbacks. */
+    TEST_ASSERT_EQUAL_INT( true, _IotMqtt_IncrementConnectionReferences( &_mqttConnection ) );
 
     /* Invoke subscription callbacks. */
     _IotMqtt_InvokeSubscriptionCallback( &_mqttConnection,
@@ -997,6 +1003,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
         /* Schedule 3 callback invocations for the incoming PUBLISH. */
         for( i = 0; i < 3; i++ )
         {
+            TEST_ASSERT_EQUAL_INT( true, _IotMqtt_IncrementConnectionReferences( &_mqttConnection ) );
             TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_ScheduleOperation( pIncomingPublish[ i ],
                                                                              _IotMqtt_ProcessIncomingPublish,
                                                                              0 ) );

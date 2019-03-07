@@ -1501,21 +1501,6 @@ IotMqttError_t _IotMqtt_DeserializePuback( _mqttPacket_t * pPuback )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
 
-    /* Check that the control packet type is 0x40. */
-    if( pPuback->type != _MQTT_PACKET_TYPE_PUBACK )
-    {
-        IotLog( IOT_LOG_ERROR,
-                &_logHideAll,
-                "Bad control packet type 0x%02x.",
-                pPuback->type );
-
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
-
     /* Check the "Remaining length" of the received PUBACK. */
     if( pPuback->remainingLength != _MQTT_PACKET_PUBACK_REMAINING_LENGTH )
     {
@@ -1541,6 +1526,22 @@ IotMqttError_t _IotMqtt_DeserializePuback( _mqttPacket_t * pPuback )
     /* Packet identifier cannot be 0. */
     if( pPuback->packetIdentifier == 0 )
     {
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
+
+    /* Check that the control packet type is 0x40 (this must be done after the
+     * packet identifier is parsed). */
+    if( pPuback->type != _MQTT_PACKET_TYPE_PUBACK )
+    {
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "Bad control packet type 0x%02x.",
+                pPuback->type );
+
         _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
     }
     else
@@ -1651,24 +1652,8 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     size_t i = 0, remainingLength = pSuback->remainingLength;
-    uint16_t packetIdentifier = 0;
     uint8_t subscriptionStatus = 0;
     const uint8_t * pVariableHeader = pSuback->pRemainingData;
-
-    /* Check that the control packet type is 0x90. */
-    if( pSuback->type != _MQTT_PACKET_TYPE_SUBACK )
-    {
-        IotLog( IOT_LOG_ERROR,
-                &_logHideAll,
-                "Bad control packet type 0x%02x.",
-                pSuback->type );
-
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
 
     /* A SUBACK must have a remaining length of at least 3 to accommodate the
      * packet identifer and at least 1 return code. */
@@ -1690,7 +1675,23 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
 
     IotLog( IOT_LOG_DEBUG,
             &_logHideAll,
-            "Packet identifier %hu.", packetIdentifier );
+            "Packet identifier %hu.", pSuback->packetIdentifier );
+
+    /* Check that the control packet type is 0x90 (this must be done after the
+     * packet identifier is parsed). */
+    if( pSuback->type != _MQTT_PACKET_TYPE_SUBACK )
+    {
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "Bad control packet type 0x%02x.",
+                pSuback->type );
+
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
 
     /* Iterate through each status byte in the SUBACK packet. */
     for( i = 0; i < remainingLength - sizeof( uint16_t ); i++ )
@@ -1717,7 +1718,7 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
 
                 /* Remove a rejected subscription from the subscription manager. */
                 _IotMqtt_RemoveSubscriptionByPacket( pSuback->pMqttConnection,
-                                                     packetIdentifier,
+                                                     pSuback->packetIdentifier,
                                                      ( int32_t ) i );
 
                 status = IOT_MQTT_SERVER_REFUSED;
@@ -1844,21 +1845,6 @@ IotMqttError_t _IotMqtt_DeserializeUnsuback( _mqttPacket_t * pUnsuback )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
 
-    /* Check that the control packet type is 0xb0. */
-    if( pUnsuback->type != _MQTT_PACKET_TYPE_UNSUBACK )
-    {
-        IotLog( IOT_LOG_ERROR,
-                &_logHideAll,
-                "Bad control packet type 0x%02x.",
-                pUnsuback->type );
-
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
-
     /* Check the "Remaining length" (second byte) of the received UNSUBACK. */
     if( pUnsuback->remainingLength != _MQTT_PACKET_UNSUBACK_REMAINING_LENGTH )
     {
@@ -1890,6 +1876,22 @@ IotMqttError_t _IotMqtt_DeserializeUnsuback( _mqttPacket_t * pUnsuback )
     IotLog( IOT_LOG_DEBUG,
             &_logHideAll,
             "Packet identifier %hu.", pUnsuback->packetIdentifier );
+
+    /* Check that the control packet type is 0xb0 (this must be done after the
+     * packet identifier is parsed). */
+    if( pUnsuback->type != _MQTT_PACKET_TYPE_UNSUBACK )
+    {
+        IotLog( IOT_LOG_ERROR,
+                &_logHideAll,
+                "Bad control packet type 0x%02x.",
+                pUnsuback->type );
+
+        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
 
     _IOT_FUNCTION_EXIT_NO_CLEANUP();
 }

@@ -72,8 +72,8 @@ static bool _getIncomingPacket( void * pNetworkConnection,
  * @param[in] pMqttConnection The associated MQTT connection.
  * @param[in] pIncomingPacket The packet received from the network.
  *
- * @return `true` if the incoming packet was successfully deserialized; `false`
- * otherwise.
+ * @return `true` if deserialization succeeded; `false` otherwise. If this function
+ * returns false, the network connection should be closed.
  */
 static bool _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
                                         _mqttPacket_t * pIncomingPacket );
@@ -362,8 +362,17 @@ static bool _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
                 pOperation->pReceivedData = pIncomingPacket->pRemainingData;
                 pIncomingPacket->pRemainingData = NULL;
 
-                /* Schedule PUBLISH for callback invocation. */
-                status = _IotMqtt_ScheduleOperation( pOperation, _IotMqtt_ProcessIncomingPublish, 0 );
+                /* Increment the MQTT connection reference count before scheduling an
+                 * incoming PUBLISH. */
+                if( _IotMqtt_IncrementConnectionReferences( pMqttConnection ) == true )
+                {
+                    /* Schedule PUBLISH for callback invocation. */
+                    status = _IotMqtt_ScheduleOperation( pOperation, _IotMqtt_ProcessIncomingPublish, 0 );
+                }
+                else
+                {
+                    status = IOT_MQTT_NETWORK_ERROR;
+                }
             }
 
             /* Free PUBLISH operation on error. */
@@ -452,6 +461,7 @@ static bool _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
             #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
             /* Deserialize SUBACK and notify of result. */
+            pIncomingPacket->pMqttConnection = pMqttConnection;
             status = deserialize( pIncomingPacket );
             pOperation = _IotMqtt_FindOperation( pMqttConnection,
                                                  IOT_MQTT_SUBSCRIBE,
@@ -501,7 +511,7 @@ static bool _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
 
         default:
             /* The only remaining valid type is PINGRESP. */
-            IotMqtt_Assert( pIncomingPacket->type == _MQTT_PACKET_TYPE_PINGRESP );
+            IotMqtt_Assert( ( pIncomingPacket->type & 0xf0 ) == _MQTT_PACKET_TYPE_PINGRESP );
             IotLogDebug( "(MQTT connection %p) PINGRESP in data stream.", pMqttConnection );
 
             /* Choose PINGRESP deserializer. */
@@ -558,7 +568,7 @@ static bool _deserializeIncomingPacket( _mqttConnection_t * pMqttConnection,
         _EMPTY_ELSE_MARKER;
     }
 
-    return( status == IOT_MQTT_SUCCESS );
+    return( status != IOT_MQTT_BAD_RESPONSE );
 }
 
 /*-----------------------------------------------------------*/
