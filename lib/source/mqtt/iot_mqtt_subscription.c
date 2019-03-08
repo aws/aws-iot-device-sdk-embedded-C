@@ -113,6 +113,12 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     const uint16_t topicNameLength = pParam->topicNameLength;
     const uint16_t topicFilterLength = pSubscription->topicFilterLength;
 
+    /* Ignore this subscription if the unsubscribed flag is set. */
+    if( pSubscription->unsubscribed == true )
+    {
+        _IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
     /* Check for an exact match. */
     if( topicNameLength == topicFilterLength )
     {
