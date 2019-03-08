@@ -879,7 +879,7 @@ struct _mqttPacket;
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
- * @brief Infomation on the transport-layert network connection for the new MQTT
+ * @brief Infomation on the transport-layer network connection for the new MQTT
  * connection.
  *
  * @paramfor @ref mqtt_function_connect
