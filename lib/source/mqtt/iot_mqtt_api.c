@@ -65,16 +65,24 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Determines if an MQTT subscription is safe to remove based on its
- * reference count.
+ * @brief Set the unsubscribed flag of an MQTT subscription.
  *
  * @param[in] pSubscriptionLink Pointer to the link member of an #_mqttSubscription_t.
  * @param[in] pMatch Not used.
  *
- * @return `true` if the given subscription has no references; `false` otherwise.
+ * @return Always returns `true`.
  */
-static bool _mqttSubscription_shouldRemove( const IotLink_t * pSubscriptionLink,
-                                            void * pMatch );
+static bool _mqttSubscription_setUnsubscribe( const IotLink_t * pSubscriptionLink,
+                                              void * pMatch );
+
+/**
+ * @brief Destroy an MQTT subscription if its reference count is 0.
+ *
+ * @param[in] pData The subscription to destroy. This parameter is of type
+ * `void*` for compatibility with [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
+static void _mqttSubscription_tryDestroy( void * pData );
 
 /**
  * @brief Decrement the reference count of an MQTT operation and attempt to
@@ -148,11 +156,9 @@ static IotMutex_t _connectMutex;
 
 /*-----------------------------------------------------------*/
 
-static bool _mqttSubscription_shouldRemove( const IotLink_t * pSubscriptionLink,
-                                            void * pMatch )
+static bool _mqttSubscription_setUnsubscribe( const IotLink_t * pSubscriptionLink,
+                                              void * pMatch )
 {
-    bool match = false;
-
     /* Because this function is called from a container function, the given link
      * must never be NULL. */
     IotMqtt_Assert( pSubscriptionLink != NULL );
@@ -164,22 +170,33 @@ static bool _mqttSubscription_shouldRemove( const IotLink_t * pSubscriptionLink,
     /* Silence warnings about unused parameters. */
     ( void ) pMatch;
 
+    /* Set the unsubscribed flag. */
+    pSubscription->unsubscribed = true;
+
+    return true;
+}
+
+/*-----------------------------------------------------------*/
+
+static void _mqttSubscription_tryDestroy( void * pData )
+{
+    _mqttSubscription_t * pSubscription = ( _mqttSubscription_t * ) pData;
+
     /* Reference count must not be negative. */
     IotMqtt_Assert( pSubscription->references >= 0 );
 
-    /* Check if any subscription callbacks are using this subscription. */
-    if( pSubscription->references > 0 )
+    /* Unsubscribed flag should be set. */
+    IotMqtt_Assert( pSubscription->unsubscribed == true );
+
+    /* Free the subscription if it has no references. */
+    if( pSubscription->references == 0 )
     {
-        /* Set the unsubscribed flag, but do not remove the subscription yet. */
-        pSubscription->unsubscribed = true;
+        IotMqtt_FreeSubscription( pSubscription );
     }
     else
     {
-        /* No references for this subscription; it can be removed. */
-        match = true;
+        _EMPTY_ELSE_MARKER;
     }
-
-    return match;
 }
 
 /*-----------------------------------------------------------*/
@@ -460,9 +477,9 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
     /* Remove all subscriptions. */
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
     IotListDouble_RemoveAllMatches( &( pMqttConnection->subscriptionList ),
-                                    _mqttSubscription_shouldRemove,
+                                    _mqttSubscription_setUnsubscribe,
                                     NULL,
-                                    IotMqtt_FreeSubscription,
+                                    _mqttSubscription_tryDestroy,
                                     offsetof( _mqttSubscription_t, link ) );
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 

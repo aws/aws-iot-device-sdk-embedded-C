@@ -113,12 +113,6 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     const uint16_t topicNameLength = pParam->topicNameLength;
     const uint16_t topicFilterLength = pSubscription->topicFilterLength;
 
-    /* Ignore this subscription if the unsubscribed flag is set. */
-    if( pSubscription->unsubscribed == true )
-    {
-        _IOT_SET_AND_GOTO_CLEANUP( false );
-    }
-
     /* Check for an exact match. */
     if( topicNameLength == topicFilterLength )
     {
@@ -477,10 +471,20 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
 
         /* Remove this subscription if it has no references and the unsubscribed
          * flag is set. */
-        if( ( pSubscription->references == 0 ) && ( pSubscription->unsubscribed == true ) )
+        if( pSubscription->unsubscribed == true )
         {
-            IotListDouble_Remove( &( pSubscription->link ) );
-            IotMqtt_FreeSubscription( pSubscription );
+            /* An unsubscribed subscription should have been removed from the list. */
+            IotMqtt_Assert( IotLink_IsLinked( &( pSubscription->link ) ) == false );
+
+            /* Free subscriptions with no references. */
+            if( pSubscription->references == 0 )
+            {
+                IotMqtt_FreeSubscription( pSubscription );
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
         }
         else
         {
@@ -551,6 +555,9 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnecti
             /* Reference count must not be negative. */
             IotMqtt_Assert( pSubscription->references >= 0 );
 
+            /* Remove subscription from list. */
+            IotListDouble_Remove( pSubscriptionLink );
+
             /* Check the reference count. This subscription cannot be removed if
              * there are subscription callbacks using it. */
             if( pSubscription->references > 0 )
@@ -561,8 +568,7 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnecti
             }
             else
             {
-                /* No subscription callbacks are using this subscription. Remove it. */
-                IotListDouble_Remove( &( pSubscription->link ) );
+                /* Free a subscription with no references. */
                 IotMqtt_FreeSubscription( pSubscription );
             }
         }
