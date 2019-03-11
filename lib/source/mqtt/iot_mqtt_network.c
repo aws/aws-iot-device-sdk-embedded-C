@@ -586,92 +586,79 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
                                           size_t * ) = _IotMqtt_SerializePuback;
     void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
 
-    /* Increment the reference count for the MQTT connection. */
-    if( _IotMqtt_IncrementConnectionReferences( pMqttConnection ) == true )
-    {
-        IotLogDebug( "(MQTT connection %p) Sending PUBACK for received PUBLISH %hu.",
-                     pMqttConnection,
-                     packetIdentifier );
+    IotLogDebug( "(MQTT connection %p) Sending PUBACK for received PUBLISH %hu.",
+                 pMqttConnection,
+                 packetIdentifier );
 
-        /* Choose PUBACK serializer and free packet functions. */
-        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pMqttConnection->pSerializer != NULL )
-            {
-                if( pMqttConnection->pSerializer->serialize.puback != NULL )
-                {
-                    serializePuback = pMqttConnection->pSerializer->serialize.puback;
-                }
-                else
-                {
-                    _EMPTY_ELSE_MARKER;
-                }
-            }
-            else
-            {
-                _EMPTY_ELSE_MARKER;
-            }
-        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pMqttConnection->pSerializer != NULL )
-            {
-                if( pMqttConnection->pSerializer->freePacket != NULL )
-                {
-                    freePacket = pMqttConnection->pSerializer->freePacket;
-                }
-                else
-                {
-                    _EMPTY_ELSE_MARKER;
-                }
-            }
-            else
-            {
-                _EMPTY_ELSE_MARKER;
-            }
-        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
-        /* Generate a PUBACK packet from the packet identifier. */
-        serializeStatus = serializePuback( packetIdentifier,
-                                           &pPuback,
-                                           &pubackSize );
-
-        if( serializeStatus != IOT_MQTT_SUCCESS )
+    /* Choose PUBACK serializer and free packet functions. */
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+        if( pMqttConnection->pSerializer != NULL )
         {
-            IotLogWarn( "(MQTT connection %p) Failed to generate PUBACK packet for "
-                        "received PUBLISH %hu.",
+            if( pMqttConnection->pSerializer->serialize.puback != NULL )
+            {
+                serializePuback = pMqttConnection->pSerializer->serialize.puback;
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+        if( pMqttConnection->pSerializer != NULL )
+        {
+            if( pMqttConnection->pSerializer->freePacket != NULL )
+            {
+                freePacket = pMqttConnection->pSerializer->freePacket;
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+
+    /* Generate a PUBACK packet from the packet identifier. */
+    serializeStatus = serializePuback( packetIdentifier,
+                                       &pPuback,
+                                       &pubackSize );
+
+    if( serializeStatus != IOT_MQTT_SUCCESS )
+    {
+        IotLogWarn( "(MQTT connection %p) Failed to generate PUBACK packet for "
+                    "received PUBLISH %hu.",
+                    pMqttConnection,
+                    packetIdentifier );
+    }
+    else
+    {
+        bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
+                                                              pPuback,
+                                                              pubackSize );
+
+        if( bytesSent != pubackSize )
+        {
+            IotLogWarn( "(MQTT connection %p) Failed to send PUBACK for received"
+                        " PUBLISH %hu.",
                         pMqttConnection,
                         packetIdentifier );
         }
         else
         {
-            bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
-                                                                  pPuback,
-                                                                  pubackSize );
-
-            if( bytesSent != pubackSize )
-            {
-                IotLogWarn( "(MQTT connection %p) Failed to send PUBACK for received"
-                            " PUBLISH %hu.",
-                            pMqttConnection,
-                            packetIdentifier );
-            }
-            else
-            {
-                IotLogDebug( "(MQTT connection %p) PUBACK for received PUBLISH %hu sent.",
-                             pMqttConnection,
-                             packetIdentifier );
-            }
-
-            freePacket( pPuback );
+            IotLogDebug( "(MQTT connection %p) PUBACK for received PUBLISH %hu sent.",
+                         pMqttConnection,
+                         packetIdentifier );
         }
 
-        _IotMqtt_DecrementConnectionReferences( pMqttConnection );
-    }
-    else
-    {
-        IotLogWarn( "(MQTT connection %p) Connection is closed, PUBACK for received"
-                    " PUBLISH %hu will not be sent.",
-                    pMqttConnection,
-                    packetIdentifier );
+        freePacket( pPuback );
     }
 }
 
@@ -837,6 +824,10 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
                      pMqttConnection );
 
         _IotMqtt_CloseNetworkConnection( pMqttConnection );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 }
 
