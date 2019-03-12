@@ -52,10 +52,10 @@
 int main( int argc,
           char ** argv )
 {
-    bool commonInitialized = false, networkConnectionCreated = false;
+    bool commonInitialized = false;
     int status = 0;
     IotDemoArguments_t demoArguments = IOT_DEMO_ARGUMENTS_INITIALIZER;
-    IotNetworkConnectionOpenssl_t networkConnection = IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER;
+    IotNetworkConnectionOpenssl_t * pNetworkConnection = NULL;
     IotNetworkServerInfoOpenssl_t serverInfo = IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER;
     IotNetworkCredentialsOpenssl_t credentials = AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER, * pCredentials = NULL;
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
@@ -131,7 +131,7 @@ int main( int argc,
         /* Establish a TCP connection to the MQTT server. */
         if( IotNetworkOpenssl_Create( &serverInfo,
                                       pCredentials,
-                                      &networkConnection ) != IOT_NETWORK_SUCCESS )
+                                      &pNetworkConnection ) != IOT_NETWORK_SUCCESS )
         {
             status = -1;
         }
@@ -141,7 +141,7 @@ int main( int argc,
     {
         /* Set the members of the network interface used by the MQTT connection. */
         networkInfo.createNetworkConnection = false;
-        networkInfo.pNetworkConnection = &networkConnection;
+        networkInfo.pNetworkConnection = pNetworkConnection;
         networkInfo.pNetworkInterface = IOT_NETWORK_INTERFACE_OPENSSL;
 
         /* Initialize the MQTT library and Shadow library. */
@@ -170,14 +170,14 @@ int main( int argc,
     }
 
     /* Close and destroy the network connection (if it was established). */
-    if( networkConnectionCreated == true )
+    if( pNetworkConnection != NULL )
     {
         /* Note that the MQTT library may have already closed the connection.
          * However, the network close function is safe to call on a closed connection.
          * On the other hand, the destroy connection function must only be called ONCE.
          */
-        IotNetworkOpenssl_Close( &networkConnection );
-        IotNetworkOpenssl_Destroy( &networkConnection );
+        IotNetworkOpenssl_Close( pNetworkConnection );
+        IotNetworkOpenssl_Destroy( pNetworkConnection );
     }
 
     /* Clean up the network. */

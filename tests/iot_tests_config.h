@@ -82,6 +82,8 @@
  * be affected by IOT_STATIC_MEMORY_ONLY. */
 #define IotThreads_Malloc    unity_malloc_mt
 #define IotThreads_Free      unity_free_mt
+#define IotNetwork_Malloc    unity_malloc_mt
+#define IotNetwork_Free      unity_free_mt
 #define IotLogging_Malloc    unity_malloc_mt
 #define IotLogging_Free      unity_free_mt
 /* #define IotLogging_StaticBufferSize */
@@ -125,12 +127,11 @@
 #define IOT_TEST_NETWORK_HEADER    "posix/iot_network_openssl.h"
 
 /* Network types to use in the tests. These are forward declarations. */
-typedef struct IotNetworkConnectionOpenssl    IotTestNetworkConnection_t;
+typedef struct _networkConnection             IotTestNetworkConnection_t;
 typedef struct IotNetworkServerInfoOpenssl    IotTestNetworkServerInfo_t;
 typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
 
 /* Initializers for the tests' network types. */
-#define IOT_TEST_NETWORK_CONNECTION_INITIALIZER    IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER
 #define IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER \
     {                                            \
         .pHostName = IOT_TEST_SERVER,            \

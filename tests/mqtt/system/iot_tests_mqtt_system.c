@@ -123,7 +123,7 @@ typedef struct _operationCompleteParams
  * the test network function files. */
 extern bool IotTest_NetworkSetup( void );
 extern void IotTest_NetworkCleanup( void );
-extern bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection );
+extern bool IotTest_NetworkConnect( IotTestNetworkConnection_t ** pNewConnection );
 extern IotNetworkError_t IotTest_NetworkClose( void * pNetworkConnection );
 extern void IotTest_NetworkDestroy( void * pConnection );
 
@@ -760,7 +760,7 @@ TEST( MQTT_System, LastWillAndTestament )
                          connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttSubscription_t willSubscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     IotMqttPublishInfo_t willInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    IotTestNetworkConnection_t lwtListenerConnection = IOT_TEST_NETWORK_CONNECTION_INITIALIZER;
+    IotTestNetworkConnection_t * pLwtListenerConnection = NULL;
     IotSemaphore_t waitSem;
 
     /* Create the wait semaphore. */
@@ -783,13 +783,13 @@ TEST( MQTT_System, LastWillAndTestament )
         /* Establish an independent MQTT over TCP connection to receive a Last
          * Will and Testament message. */
         TEST_ASSERT_EQUAL( true,
-                           IotTest_NetworkConnect( &lwtListenerConnection ) );
+                           IotTest_NetworkConnect( &pLwtListenerConnection ) );
         lwtListenerCreated = true;
 
         if( TEST_PROTECT() )
         {
             lwtNetworkInfo.createNetworkConnection = false;
-            lwtNetworkInfo.pNetworkConnection = &lwtListenerConnection;
+            lwtNetworkInfo.pNetworkConnection = pLwtListenerConnection;
             lwtConnectInfo.cleanSession = true;
             lwtConnectInfo.pClientIdentifier = pLwtListenerClientIdentifier;
             lwtConnectInfo.clientIdentifierLength = ( uint16_t ) strlen( lwtConnectInfo.pClientIdentifier );
@@ -847,14 +847,14 @@ TEST( MQTT_System, LastWillAndTestament )
             }
 
             IotMqtt_Disconnect( lwtListener, false );
-            IotTest_NetworkDestroy( &lwtListenerConnection );
+            IotTest_NetworkDestroy( pLwtListenerConnection );
             lwtListenerCreated = false;
         }
 
         if( lwtListenerCreated == true )
         {
-            IotTest_NetworkClose( &lwtListenerConnection );
-            IotTest_NetworkDestroy( &lwtListenerConnection );
+            IotTest_NetworkClose( pLwtListenerConnection );
+            IotTest_NetworkDestroy( pLwtListenerConnection );
         }
     }
 

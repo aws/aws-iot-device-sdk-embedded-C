@@ -172,6 +172,11 @@ static bool _connectionCreated = false;
 static _mqttConnection_t * _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
+ * @brief 100 ms sleep time.
+ */
+static const struct timespec _sleepTime = { .tv_sec = 0, .tv_nsec = 100000000 };
+
+/**
  * @brief Synchronizes threads in the multithreaded test.
  */
 static pthread_barrier_t _mtTestBarrier;
@@ -217,9 +222,6 @@ static bool _waitForCount( IotMutex_t * pMutex,
     bool status = false;
     int32_t referenceCount = 0, sleepCount = 0;
 
-    /* 200 ms sleep time. */
-    const struct timespec sleepTime = { .tv_sec = 0, .tv_nsec = 200000000 };
-
     /* Calculate limit on the number of times to sleep for 200 ms. */
     const int32_t sleepLimit = ( IOT_TEST_MQTT_TIMEOUT_MS / 200 ) +
                                ( ( IOT_TEST_MQTT_TIMEOUT_MS % 200 ) != 0 );
@@ -240,7 +242,7 @@ static bool _waitForCount( IotMutex_t * pMutex,
         }
         else
         {
-            if( nanosleep( &sleepTime, NULL ) != 0 )
+            if( nanosleep( &_sleepTime, NULL ) != 0 )
             {
                 break;
             }
@@ -1040,14 +1042,11 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
         IotSemaphore_Post( &waitSem );
         IotSemaphore_Post( &waitSem );
 
-        /* Wait for the reference counts to reach 0. This ensures the subscription
-         * callbacks exit. */
-        TEST_ASSERT_EQUAL_INT( true, _waitForCount( &( _pMqttConnection->referencesMutex ),
-                                                    &( _pMqttConnection->references ),
-                                                    0 + keepAliveReference ) );
-        TEST_ASSERT_EQUAL_INT32( true, _waitForCount( &( _pMqttConnection->subscriptionMutex ),
-                                                      &( pSubscription->references ),
-                                                      0 ) );
+        /* Wait for the callbacks to exit. */
+        while( IotSemaphore_GetCount( &waitSem ) > 0 )
+        {
+            ( void ) nanosleep( &_sleepTime, NULL );
+        }
 
         /* Clear the MQTT connection flag so test cleanup does not double-free it. */
         _connectionCreated = false;
