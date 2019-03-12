@@ -146,16 +146,6 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Ensures that only one CONNECT operation is in-progress at any time.
- *
- * Because CONNACK contains no data about which CONNECT packet it acknowledges,
- * only one CONNECT operation may be in-progress at any time.
- */
-static IotMutex_t _connectMutex;
-
-/*-----------------------------------------------------------*/
-
 static bool _mqttSubscription_setUnsubscribe( const IotLink_t * pSubscriptionLink,
                                               void * pMatch )
 {
@@ -790,57 +780,21 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
 
 IotMqttError_t IotMqtt_Init( void )
 {
-    _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
-    bool connectMutexCreated = false;
-
-    /* Create CONNECT mutex. */
-    connectMutexCreated = IotMutex_Create( &( _connectMutex ), false );
-
-    if( connectMutexCreated == false )
-    {
-        IotLogError( "Failed to initialize MQTT library connect mutex." );
-
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
 
     /* Initialize MQTT serializer. */
     if( _IotMqtt_InitSerialize() != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Failed to initialize MQTT library serializer. " );
 
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+        status = IOT_MQTT_INIT_FAILED;
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        IotLogInfo( "MQTT library successfully initialized." );
     }
 
-    IotLogInfo( "MQTT library successfully initialized." );
-
-    /* Clean up if this function failed. */
-    _IOT_FUNCTION_CLEANUP_BEGIN();
-
-    if( status != IOT_MQTT_SUCCESS )
-    {
-        if( connectMutexCreated == true )
-        {
-            IotMutex_Destroy( &( _connectMutex ) );
-        }
-        else
-        {
-            _EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
-
-    _IOT_FUNCTION_CLEANUP_END();
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -849,9 +803,6 @@ void IotMqtt_Cleanup()
 {
     /* Clean up MQTT serializer. */
     _IotMqtt_CleanupSerialize();
-
-    /* Clean up CONNECT mutex. */
-    IotMutex_Destroy( &( _connectMutex ) );
 
     IotLogInfo( "MQTT library cleanup done." );
 }
@@ -864,7 +815,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
                                 IotMqttConnection_t * pMqttConnection )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
-    bool receiveCallbackSet = false;
+    bool networkCreated = false;
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     void * pNetworkConnection = NULL;
@@ -953,10 +904,23 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
      * network connection. */
     if( pNetworkInfo->createNetworkConnection == true )
     {
+        networkStatus = pNetworkInfo->pNetworkInterface->create( pNetworkInfo->pNetworkServerInfo,
+                                                                 pNetworkInfo->pNetworkCredentialInfo,
+                                                                 &pNetworkConnection );
+
+        if( networkStatus == IOT_NETWORK_SUCCESS )
+        {
+            networkCreated = true;
+        }
+        else
+        {
+            _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NETWORK_ERROR );
+        }
     }
     else
     {
         pNetworkConnection = pNetworkInfo->pNetworkConnection;
+        networkCreated = true;
     }
 
     IotLogInfo( "Establishing new MQTT connection." );
@@ -994,7 +958,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     }
     else
     {
-        receiveCallbackSet = true;
+        _EMPTY_ELSE_MARKER;
     }
 
     /* Create a CONNECT operation. */
@@ -1084,9 +1048,6 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     IotMqtt_Assert( pConnectOperation->pMqttPacket != NULL );
     IotMqtt_Assert( pConnectOperation->packetSize > 0 );
 
-    /* Prevent another CONNECT operation from using the network. */
-    IotMutex_Lock( &_connectMutex );
-
     /* Add the CONNECT operation to the send queue for network transmission. */
     status = _IotMqtt_ScheduleOperation( pConnectOperation,
                                          _IotMqtt_ProcessSend,
@@ -1106,9 +1067,6 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
          * to NULL. */
         pConnectOperation = NULL;
     }
-
-    /* Unlock the CONNECT mutex. */
-    IotMutex_Unlock( &_connectMutex );
 
     /* When a connection is successfully established, schedule keep-alive job. */
     if( status == IOT_MQTT_SUCCESS )
@@ -1148,8 +1106,8 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         IotLogError( "Failed to establish new MQTT connection, error %s.",
                      IotMqtt_strerror( status ) );
 
-        /* The network connection must be closed if a receive callback was set. */
-        if( receiveCallbackSet == true )
+        /* The network connection must be closed if it was created. */
+        if( networkCreated == true )
         {
             networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
 
