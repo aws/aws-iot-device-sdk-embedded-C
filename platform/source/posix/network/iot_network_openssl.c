@@ -954,7 +954,8 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
                                   uint8_t * pBuffer,
                                   size_t bytesRequested )
 {
-    int bytesRead = 0;
+    int receiveStatus = 0;
+    size_t bytesRead = 0, bytesRemaining = bytesRequested;
 
     /* Cast function parameter to correct type. */
     _networkConnection_t * const pNetworkConnection = pConnection;
@@ -967,38 +968,49 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
      * while receiving. */
     IotMutex_Lock( &( pNetworkConnection->mutex ) );
 
-    /* Use OpenSSL's SSL_read() function or the POSIX recv() function based on
-     * whether the SSL connection context is set up. */
-    if( pNetworkConnection->pSslContext != NULL )
+    /* Loop until all bytes are received. */
+    while( bytesRemaining > 0 )
     {
-        bytesRead = SSL_read( pNetworkConnection->pSslContext,
-                              pBuffer,
-                              ( int ) bytesRequested );
-    }
-    else
-    {
-        bytesRead = ( int ) recv( pNetworkConnection->socket,
-                                  pBuffer,
-                                  bytesRequested,
-                                  0 );
+        /* Use OpenSSL's SSL_read() function or the POSIX recv() function based on
+         * whether the SSL connection context is set up. */
+        if( pNetworkConnection->pSslContext != NULL )
+        {
+            receiveStatus = SSL_read( pNetworkConnection->pSslContext,
+                                      pBuffer + bytesRead,
+                                      ( int ) bytesRemaining );
+        }
+        else
+        {
+            receiveStatus = ( int ) recv( pNetworkConnection->socket,
+                                          pBuffer + bytesRead,
+                                          bytesRemaining,
+                                          0 );
+        }
+
+        /* Check receive status. */
+        if( receiveStatus <= 0 )
+        {
+            IotLogError( "Error receiving from socket %d.",
+                         pNetworkConnection->socket );
+
+            break;
+        }
+        else
+        {
+            bytesRead += ( size_t ) receiveStatus;
+            bytesRemaining -= ( size_t ) receiveStatus;
+        }
     }
 
     /* Unlock the connection mutex. */
     IotMutex_Unlock( &( pNetworkConnection->mutex ) );
 
     /* Check how many bytes were read. */
-    if( bytesRead <= 0 )
+    if( bytesRead < bytesRequested )
     {
-        IotLogError( "Error receiving from socket %d.",
-                     pNetworkConnection->socket );
-
-        bytesRead = 0;
-    }
-    else if( ( size_t ) bytesRead < bytesRequested )
-    {
-        IotLogWarn( "Receive requested %lu bytes, but only %d bytes received.",
+        IotLogWarn( "Receive requested %lu bytes, but only %lu bytes received.",
                     ( unsigned long ) bytesRequested,
-                    bytesRead );
+                    ( unsigned long ) bytesRead );
     }
     else
     {
@@ -1006,7 +1018,7 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
                      ( unsigned long ) bytesRequested );
     }
 
-    return ( size_t ) bytesRead;
+    return bytesRead;
 }
 
 /*-----------------------------------------------------------*/
