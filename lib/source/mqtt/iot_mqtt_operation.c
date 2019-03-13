@@ -866,6 +866,9 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
              * may also be considered successful. */
             if( pOperation->operation == IOT_MQTT_DISCONNECT )
             {
+                /* DISCONNECT operations are always waitable. */
+                IotMqtt_Assert( waitable == true );
+
                 pOperation->status = IOT_MQTT_SUCCESS;
             }
             else if( waitable == false )

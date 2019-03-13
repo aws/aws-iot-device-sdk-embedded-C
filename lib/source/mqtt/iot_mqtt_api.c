@@ -437,6 +437,8 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
 
 static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 {
+    IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
+
     /* Clean up keep-alive if still allocated. */
     if( pMqttConnection->keepAliveMs != 0 )
     {
@@ -476,6 +478,25 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
     /* Destroy mutexes. */
     IotMutex_Destroy( &( pMqttConnection->referencesMutex ) );
     IotMutex_Destroy( &( pMqttConnection->subscriptionMutex ) );
+
+    /* An MQTT connection that owns its network connection should destroy it. */
+    if( pMqttConnection->ownNetworkConnection == true )
+    {
+        networkStatus = pMqttConnection->pNetworkInterface->destroy( pMqttConnection->pNetworkConnection );
+
+        if( networkStatus != IOT_NETWORK_SUCCESS )
+        {
+            IotLogWarn( "Failed to destroy network connection." );
+        }
+        else
+        {
+            IotLogInfo( "Network connection destroyed." );
+        }
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
 
     IotLogDebug( "(MQTT connection %p) Connection destroyed.", pMqttConnection );
 
@@ -815,7 +836,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
                                 IotMqttConnection_t * pMqttConnection )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
-    bool networkCreated = false;
+    bool networkCreated = false, ownNetworkConnection = false;
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     void * pNetworkConnection = NULL;
@@ -911,6 +932,10 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         if( networkStatus == IOT_NETWORK_SUCCESS )
         {
             networkCreated = true;
+
+            /* This MQTT connection owns the network connection it created and
+             * should destroy it on cleanup. */
+            ownNetworkConnection = true;
         }
         else
         {
@@ -938,6 +963,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     {
         /* Set the network connection associated with the MQTT connection. */
         pNewMqttConnection->pNetworkConnection = pNetworkConnection;
+        pNewMqttConnection->ownNetworkConnection = ownNetworkConnection;
 
         /* Set the MQTT packet serializer overrides. */
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1

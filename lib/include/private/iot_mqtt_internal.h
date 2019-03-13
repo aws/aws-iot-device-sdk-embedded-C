@@ -270,6 +270,7 @@
 typedef struct _mqttConnection
 {
     bool awsIotMqttMode;                             /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
+    bool ownNetworkConnection;                       /**< @brief Whether this MQTT connection owns its network connection. */
     void * pNetworkConnection;                       /**< @brief References the transport-layer network connection. */
     const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
 

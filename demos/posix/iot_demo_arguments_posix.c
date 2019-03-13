@@ -20,8 +20,9 @@
  */
 
 /**
- * @file iot_mqtt_demo_common_posix.c
- * @brief Implements the common demo functions for POSIX systems.
+ * @file iot_demo_arguments_posix.c
+ * @brief Implements a function for retrieving command line arguments on POSIX
+ * systems.
  */
 
 /* Build using a config header, if provided. */
@@ -35,19 +36,23 @@
 #include <string.h>
 #include <unistd.h>
 
+/* Error handling include. */
+#include "private/iot_error.h"
+
 /* Common demo includes. */
-#include "iot_demo.h"
-#include "iot_demo_posix.h"
+#include "iot_demo_arguments.h"
+#include "iot_demo_logging.h"
 
 /*-----------------------------------------------------------*/
 
-bool IotDemo_ParseArguments( int argc,
-                             char ** argv,
-                             IotDemoArguments_t * const pArguments )
+/**
+ * @brief Set the default values of an #IotDemoArguments_t based on compile-time
+ * defined constants.
+ *
+ * @param[out] pArguments Default values will be placed here.
+ */
+static void _setDefaultArguments( IotDemoArguments_t * pArguments )
 {
-    int option = 0;
-    unsigned long int port = 0;
-
     /* Default to AWS IoT MQTT mode. */
     pArguments->awsIotMqttMode = true;
 
@@ -80,6 +85,86 @@ bool IotDemo_ParseArguments( int argc,
     #ifdef IOT_DEMO_PRIVATE_KEY
         pArguments->pPrivateKeyPath = IOT_DEMO_PRIVATE_KEY;
     #endif
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validates the members of an #IotDemoArguments_t.
+ *
+ * @param[in] pArguments The #IotDemoArguments_t to validate.
+ *
+ * @return `true` if every member of the #IotDemoArguments_t is valid; `false`
+ * otherwise.
+ */
+static bool _validateArguments( const IotDemoArguments_t * pArguments )
+{
+    /* Declare a status variable for this function. */
+    _IOT_FUNCTION_ENTRY( bool, true );
+
+    /* Check that a server was set. */
+    if( ( pArguments->pHostName == NULL ) ||
+        ( strlen( pArguments->pHostName ) == 0 ) )
+    {
+        IotLogError( "MQTT server not set. Exiting." );
+
+        _IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* Check that a server port was set. */
+    if( pArguments->port == 0 )
+    {
+        IotLogError( "MQTT server port not set. Exiting." );
+
+        _IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* Check credentials for a secured connection. */
+    if( pArguments->securedConnection == true )
+    {
+        /* Check that a root CA path was set. */
+        if( ( pArguments->pRootCaPath == NULL ) ||
+            ( strlen( pArguments->pRootCaPath ) == 0 ) )
+        {
+            IotLogError( "Root CA path not set. Exiting." );
+
+            _IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+
+        /* Check that a client certificate path was set. */
+        if( ( pArguments->pClientCertPath == NULL ) ||
+            ( strlen( pArguments->pClientCertPath ) == 0 ) )
+        {
+            IotLogError( "Client certificate path not set. Exiting." );
+
+            _IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+
+        /* Check that a client certificate private key was set. */
+        if( ( pArguments->pPrivateKeyPath == NULL ) ||
+            ( strlen( pArguments->pPrivateKeyPath ) == 0 ) )
+        {
+            IotLogError( "Client certificate private key not set. Exiting." );
+
+            _IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+    }
+
+    /* No cleanup is required for this function. */
+    _IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
+bool IotDemo_ParseArguments( int argc,
+                             char ** argv,
+                             IotDemoArguments_t * pArguments )
+{
+    int option = 0;
+    unsigned long int port = 0;
+
+    /* Set default arguments based on compile-time constants. */
+    _setDefaultArguments( pArguments );
 
     IotLogInfo( "Parsing command line arguments." );
 
@@ -170,54 +255,6 @@ bool IotDemo_ParseArguments( int argc,
         }
     }
 
-    /* Check that a server was set. */
-    if( ( pArguments->pHostName == NULL ) ||
-        ( strlen( pArguments->pHostName ) == 0 ) )
-    {
-        IotLogError( "MQTT server not set. Exiting." );
-
-        return false;
-    }
-
-    /* Check that a server port was set. */
-    if( pArguments->port == 0 )
-    {
-        IotLogError( "MQTT server port not set. Exiting." );
-
-        return false;
-    }
-
-    /* Check credentials for a secured connection. */
-    if( pArguments->securedConnection == true )
-    {
-        /* Check that a root CA path was set. */
-        if( ( pArguments->pRootCaPath == NULL ) ||
-            ( strlen( pArguments->pRootCaPath ) == 0 ) )
-        {
-            IotLogError( "Root CA path not set. Exiting." );
-
-            return false;
-        }
-
-        /* Check that a client certificate path was set. */
-        if( ( pArguments->pClientCertPath == NULL ) ||
-            ( strlen( pArguments->pClientCertPath ) == 0 ) )
-        {
-            IotLogError( "Client certificate path not set. Exiting." );
-
-            return false;
-        }
-
-        /* Check that a client certificate private key was set. */
-        if( ( pArguments->pPrivateKeyPath == NULL ) ||
-            ( strlen( pArguments->pPrivateKeyPath ) == 0 ) )
-        {
-            IotLogError( "Client certificate private key not set. Exiting." );
-
-            return false;
-        }
-    }
-
     IotLogInfo( "Command line arguments successfully parsed." );
 
     IotLogDebug( "AWS IoT MQTT mode: %s", pArguments->awsIotMqttMode == true ? "true" : "false" );
@@ -228,7 +265,8 @@ bool IotDemo_ParseArguments( int argc,
     IotLogDebug( "Client certificate: %s", pArguments->pClientCertPath );
     IotLogDebug( "Private key: %s", pArguments->pPrivateKeyPath );
 
-    return true;
+    /* Validate the arguments and return the value of that check. */
+    return _validateArguments( pArguments );
 }
 
 /*-----------------------------------------------------------*/

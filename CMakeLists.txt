@@ -31,7 +31,7 @@ include_directories( ${PROJECT_SOURCE_DIR}/lib/include
                      ${PROJECT_SOURCE_DIR}/third_party/include )
 
 # Demo include path.
-include_directories( ${PROJECT_SOURCE_DIR}/demos )
+include_directories( ${PROJECT_SOURCE_DIR}/demos/include )
 
 # Use either the demo or test configuration file.
 if( ${IOT_BUILD_TESTS} )
