@@ -774,11 +774,11 @@ static int _publishAllMessages( IotMqttConnection_t mqttConnection,
  *
  * @return `EXIT_SUCCESS` if the demo completes successfully; `EXIT_FAILURE` otherwise.
  */
-int RunDemo( bool awsIotMqttMode,
-             const char * pIdentifier,
-             void * pNetworkServerInfo,
-             void * pNetworkCredentialInfo,
-             const IotNetworkInterface_t * pNetworkInterface )
+int RunMqttDemo( bool awsIotMqttMode,
+                 const char * pIdentifier,
+                 void * pNetworkServerInfo,
+                 void * pNetworkCredentialInfo,
+                 const IotNetworkInterface_t * pNetworkInterface )
 {
     /* Return value of this function and the exit status of this program. */
     int status = EXIT_SUCCESS;

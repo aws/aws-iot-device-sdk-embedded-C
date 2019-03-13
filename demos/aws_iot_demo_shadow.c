@@ -31,14 +31,21 @@
 
 /* Standard includes. */
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
-/* Common demo include. */
-#include "iot_demo.h"
+/* Set up logging for this demo. */
+#include "iot_demo_logging.h"
 
 /* Platform layer includes. */
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
+
+/* Common libraries include. */
+#include "iot_common.h"
+
+/* MQTT include. */
+#include "iot_mqtt.h"
 
 /* Shadow include. */
 #include "aws_iot_shadow.h"
@@ -71,58 +78,226 @@ extern int snprintf( char *,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief The function that runs the Shadow demo.
+ * @brief Initialize the common libraries, the MQTT library, and the Shadow library.
  *
- * This function is called to run the Shadow demo once a network connection has
- * been established.
- * @param[in] pThingName NULL-terminated Thing Name to use for this demo.
- * @param[in] pNetworkInterface Pointer to an MQTT network interface to use.
- * All necessary members of the network interface should be set before calling
- * this function.
- *
- * @return 0 if the demo completes successfully; -1 if some part of it fails.
+ * @return `EXIT_SUCCESS` if all libraries were successfully initialized;
+ * `EXIT_FAILURE` otherwise.
  */
-int AwsIotDemo_RunShadowDemo( const char * const pThingName,
-                              const IotMqttNetworkInfo_t * const pNetworkInfo )
+static int _initializeDemo( void )
 {
-    int status = 0;
-    bool connectionCreated = false;
-    IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
-    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    int status = EXIT_SUCCESS;
+    IotMqttError_t mqttInitStatus = IOT_MQTT_SUCCESS;
+    AwsIotShadowError_t shadowInitStatus = AWS_IOT_SHADOW_SUCCESS;
+
+    /* Flags to track cleanup on error. */
+    bool commonInitialized = false, mqttInitialized = false;
+
+    /* Initialize the common libraries. */
+    commonInitialized = IotCommon_Init();
+
+    if( commonInitialized == false )
+    {
+        status = EXIT_FAILURE;
+    }
+
+    /* Initialize the MQTT library. */
+    if( status == EXIT_SUCCESS )
+    {
+        mqttInitStatus = IotMqtt_Init();
+
+        if( mqttInitStatus == IOT_MQTT_SUCCESS )
+        {
+            mqttInitialized = true;
+        }
+        else
+        {
+            status = EXIT_FAILURE;
+        }
+    }
+
+    /* Initialize the Shadow library. */
+    if( status == EXIT_SUCCESS )
+    {
+        /* Use the default MQTT timeout. */
+        shadowInitStatus = AwsIotShadow_Init( 0 );
+
+        if( shadowInitStatus != AWS_IOT_SHADOW_SUCCESS )
+        {
+            status = EXIT_FAILURE;
+        }
+    }
+
+    /* Clean up on error. */
+    if( status == EXIT_FAILURE )
+    {
+        if( commonInitialized == true )
+        {
+            IotCommon_Cleanup();
+        }
+
+        if( mqttInitialized == true )
+        {
+            IotMqtt_Cleanup();
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Clean up the common libraries, the MQTT library, and the Shadow library.
+ */
+static void _cleanupDemo( void )
+{
+    IotCommon_Cleanup();
+    IotMqtt_Cleanup();
+    AwsIotShadow_Cleanup();
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Establish a new connection to the MQTT server for the Shadow demo.
+ *
+ * @param[in] pIdentifier NULL-terminated MQTT client identifier. The Shadow
+ * demo will use the Thing Name as the client identifier.
+ * @param[in] pNetworkServerInfo Passed to the MQTT connect function when
+ * establishing the MQTT connection.
+ * @param[in] pNetworkCredentialInfo Passed to the MQTT connect function when
+ * establishing the MQTT connection.
+ * @param[in] pNetworkInterface The network interface to use for this demo.
+ * @param[out] pMqttConnection Set to the handle to the new MQTT connection.
+ *
+ * @return `EXIT_SUCCESS` if the connection is successfully established; `EXIT_FAILURE`
+ * otherwise.
+ */
+static int _establishMqttConnection( const char * pIdentifier,
+                                     void * pNetworkServerInfo,
+                                     void * pNetworkCredentialInfo,
+                                     const IotNetworkInterface_t * pNetworkInterface,
+                                     IotMqttConnection_t * pMqttConnection )
+{
+    int status = EXIT_SUCCESS;
+    IotMqttError_t connectStatus = IOT_MQTT_STATUS_PENDING;
+    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
 
-    /* Set the common members of the connection info. */
-    connectInfo.awsIotMqttMode = true;
-    connectInfo.cleanSession = true;
-    connectInfo.keepAliveSeconds = _KEEP_ALIVE_SECONDS;
-
-    /* AWS IoT recommends the use of the Thing Name as the MQTT client ID. */
-    connectInfo.pClientIdentifier = pThingName;
-    connectInfo.clientIdentifierLength = ( uint16_t ) strlen( pThingName );
-
-    IotLogInfo( "Shadow Thing Name is %.*s (length %hu).",
-                connectInfo.clientIdentifierLength,
-                connectInfo.pClientIdentifier,
-                connectInfo.clientIdentifierLength );
-
-    /* Establish the MQTT connection. */
-    mqttStatus = IotMqtt_Connect( pNetworkInfo,
-                                  &connectInfo,
-                                  _TIMEOUT_MS,
-                                  &mqttConnection );
-
-    if( mqttStatus != IOT_MQTT_SUCCESS )
+    if( pIdentifier == NULL )
     {
-        IotLogError( "MQTT CONNECT returned error %s.",
-                     IotMqtt_strerror( mqttStatus ) );
+        IotLogError( "Shadow Thing Name must be provided." );
 
-        status = -1;
+        status = EXIT_FAILURE;
+    }
+
+    if( status == EXIT_SUCCESS )
+    {
+        /* Set the members of the network info not set by the initializer. This
+         * struct provided information on the transport layer to the MQTT connection. */
+        networkInfo.createNetworkConnection = true;
+        networkInfo.pNetworkServerInfo = pNetworkServerInfo;
+        networkInfo.pNetworkCredentialInfo = pNetworkCredentialInfo;
+        networkInfo.pNetworkInterface = pNetworkInterface;
+
+        /* Set the members of the connection info not set by the initializer. */
+        connectInfo.awsIotMqttMode = true;
+        connectInfo.cleanSession = true;
+        connectInfo.keepAliveSeconds = _KEEP_ALIVE_SECONDS;
+
+        /* AWS IoT recommends the use of the Thing Name as the MQTT client ID. */
+        connectInfo.pClientIdentifier = pIdentifier;
+        connectInfo.clientIdentifierLength = ( uint16_t ) strlen( pIdentifier );
+
+        IotLogInfo( "Shadow Thing Name is %.*s (length %hu).",
+                    connectInfo.clientIdentifierLength,
+                    connectInfo.pClientIdentifier,
+                    connectInfo.clientIdentifierLength );
+
+        /* Establish the MQTT connection. */
+        connectStatus = IotMqtt_Connect( &networkInfo,
+                                         &connectInfo,
+                                         _TIMEOUT_MS,
+                                         pMqttConnection );
+
+        if( connectStatus != IOT_MQTT_SUCCESS )
+        {
+            IotLogError( "MQTT CONNECT returned error %s.",
+                         IotMqtt_strerror( connectStatus ) );
+
+            status = EXIT_FAILURE;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief The function that runs the Shadow demo, called by the demo runner.
+ *
+ * @param[in] awsIotMqttMode Ignored for the Shadow demo.
+ * @param[in] pIdentifier NULL-terminated Shadow Thing Name.
+ * @param[in] pNetworkServerInfo Passed to the MQTT connect function when
+ * establishing the MQTT connection for Shadows.
+ * @param[in] pNetworkCredentialInfo Passed to the MQTT connect function when
+ * establishing the MQTT connection for Shadows.
+ * @param[in] pNetworkInterface The network interface to use for this demo.
+ *
+ * @return `EXIT_SUCCESS` if the demo completes successfully; `EXIT_FAILURE` otherwise.
+ */
+int RunShadowDemo( bool awsIotMqttMode,
+                   const char * pIdentifier,
+                   void * pNetworkServerInfo,
+                   void * pNetworkCredentialInfo,
+                   const IotNetworkInterface_t * pNetworkInterface )
+{
+    /* Return value of this function and the exit status of this program. */
+    int status = 0;
+
+    /* Handle of the MQTT connection used in this demo. */
+    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+
+    /* Flags for tracking which cleanup functions must be called. */
+    bool librariesInitialized = false, connectionEstablished = false;
+
+    /* The first parameter of this demo function is not used. Shadows are specific
+     * to AWS IoT, so this value is hardcoded to true whenever needed. */
+    ( void ) awsIotMqttMode;
+
+    /* Initialize the libraries required for this demo. */
+    status = _initializeDemo();
+
+    if( status == EXIT_SUCCESS )
+    {
+        /* Mark the libraries as initialized. */
+        librariesInitialized = true;
+
+        /* Establish a new MQTT connection. */
+        status = _establishMqttConnection( pIdentifier,
+                                           pNetworkServerInfo,
+                                           pNetworkCredentialInfo,
+                                           pNetworkInterface,
+                                           &mqttConnection );
+    }
+
+    if( status == EXIT_SUCCESS )
+    {
+        /* Mark the MQTT connection as established. */
+        connectionEstablished = true;
     }
 
     /* Disconnect the MQTT connection if it was established. */
-    if( connectionCreated == true )
+    if( connectionEstablished == true )
     {
         IotMqtt_Disconnect( mqttConnection, false );
+    }
+
+    /* Clean up libraries if they were initialized. */
+    if( librariesInitialized == true )
+    {
+        _cleanupDemo();
     }
 
     return status;

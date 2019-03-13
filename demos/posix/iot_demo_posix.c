@@ -44,10 +44,15 @@
 /* POSIX+OpenSSL network include. */
 #include "posix/iot_network_openssl.h"
 
+/* This file calls a generic placeholder demo function. The build system selects
+ * the actual demo function to run by defining it. */
+#ifndef RunDemo
+    #error "Demo function undefined."
+#endif
+
 /*-----------------------------------------------------------*/
 
-/* The demo function to run. This links to a different function depending on
- * the demo. */
+/* Declaration of generic demo function. */
 extern int RunDemo( bool awsIotMqttMode,
                     const char * pIdentifier,
                     void * pNetworkServerInfo,
