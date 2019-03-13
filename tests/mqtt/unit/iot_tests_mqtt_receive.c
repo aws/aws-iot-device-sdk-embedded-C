@@ -551,7 +551,7 @@ TEST_SETUP( MQTT_Unit_Receive )
 TEST_TEAR_DOWN( MQTT_Unit_Receive )
 {
     /* Clean up resources taken in test setup. */
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
     IotCommon_Cleanup();
     IotMqtt_Cleanup();
 

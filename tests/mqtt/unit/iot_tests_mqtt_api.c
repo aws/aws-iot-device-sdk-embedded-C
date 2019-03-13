@@ -628,7 +628,7 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
                                                                                 &( pOperation->link ) ) );
 
     /* Disconnect the MQTT connection, then call Wait to clean up the operation. */
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
     IotMqtt_Wait( pOperation, 0 );
 }
 
@@ -692,7 +692,7 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
         IotMutex_Unlock( &( _pMqttConnection->referencesMutex ) );
 
         /* Disconnect the MQTT connection. */
-        IotMqtt_Disconnect( _pMqttConnection, true );
+        IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 
         /* Clean up the MQTT library, which waits for the send job to finish. The
          * library must be re-initialized so that test tear down does not crash. */
@@ -913,7 +913,7 @@ TEST( MQTT_Unit_API, DisconnectMallocFail )
 
         /* Call DISCONNECT; this function should always perform cleanup regardless
          * of memory allocation errors. */
-        IotMqtt_Disconnect( _pMqttConnection, false );
+        IotMqtt_Disconnect( _pMqttConnection, 0 );
         TEST_ASSERT_EQUAL_INT( 1, _closeCount );
         _closeCount = 0;
     }
@@ -960,7 +960,7 @@ TEST( MQTT_Unit_API, PublishQoS0Parameters )
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
     }
 
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
@@ -1010,7 +1010,7 @@ TEST( MQTT_Unit_API, PublishQoS0MallocFail )
         }
     }
 
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
@@ -1088,7 +1088,7 @@ TEST( MQTT_Unit_API, PublishQoS1 )
     }
 
     /* Clean up MQTT connection. */
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
@@ -1156,7 +1156,7 @@ TEST( MQTT_Unit_API, PublishDuplicates )
     }
 
     /* Clean up MQTT connection. */
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 
     /* Check that the set DUP override was called. */
     if( TEST_PROTECT() )
@@ -1221,7 +1221,7 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
                                   NULL );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
@@ -1283,7 +1283,7 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
         TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) );
     }
 
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
@@ -1345,7 +1345,7 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
         TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) );
     }
 
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
@@ -1388,7 +1388,7 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
     sleep( sleepTime );
 
     /* Disconnect the connection. */
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 
     /* Check the counters for PINGREQ send and close. */
     TEST_ASSERT_EQUAL_INT32( _KEEP_ALIVE_COUNT + 1, _pingreqSendCount );
@@ -1435,7 +1435,7 @@ TEST( MQTT_Unit_API, KeepAliveJobCleanup )
         IotSemaphore_Wait( &waitSem );
 
         /* Immediately disconnect the connection. */
-        IotMqtt_Disconnect( _pMqttConnection, true );
+        IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
     }
 
     IotSemaphore_Destroy( &waitSem );

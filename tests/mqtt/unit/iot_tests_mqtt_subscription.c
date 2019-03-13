@@ -410,7 +410,7 @@ TEST_TEAR_DOWN( MQTT_Unit_Subscription )
     /* Destroy the MQTT connection used for the tests. */
     if( _connectionCreated == true )
     {
-        IotMqtt_Disconnect( _pMqttConnection, true );
+        IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
         _connectionCreated = false;
     }
 
@@ -1035,7 +1035,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
                                                       2 ) );
 
         /* Shut down the MQTT connection. */
-        IotMqtt_Disconnect( _pMqttConnection, true );
+        IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 
         /* Post twice to the wait semaphore, which unblocks the remaining blocking
          * callbacks. */

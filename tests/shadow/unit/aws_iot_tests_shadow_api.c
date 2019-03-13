@@ -411,7 +411,7 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
     AwsIotShadow_Cleanup();
 
     /* Clean up the MQTT connection object. */
-    IotMqtt_Disconnect( _pMqttConnection, true );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 
     /* Clean up common components. */
     IotCommon_Cleanup();

@@ -65,7 +65,7 @@
  *
  * @initializer{IotMqttConnection_t,IOT_MQTT_CONNECTION_INITIALIZER}
  */
-typedef struct _mqttConnection * IotMqttConnection_t;
+typedef struct _mqttConnection   * IotMqttConnection_t;
 
 /**
  * @ingroup mqtt_datatypes_handles
@@ -87,7 +87,7 @@ typedef struct _mqttConnection * IotMqttConnection_t;
  * #IotMqttCallbackInfo_t and #IotMqttCallbackParam_t for an asynchronous notification
  * of completion.
  */
-typedef struct _mqttOperation * IotMqttReference_t;
+typedef struct _mqttOperation    * IotMqttReference_t;
 
 /*-------------------------- MQTT enumerated types --------------------------*/
 
@@ -654,7 +654,7 @@ typedef struct IotMqttConnectInfo
  *
  * Forward declaration of the internal MQTT packet structure.
  */
-struct _mqttPacket;
+    struct _mqttPacket;
 /** @endcond */
 
 /**
@@ -963,7 +963,7 @@ typedef struct IotMqttNetworkInfo
     #endif
 } IotMqttNetworkInfo_t;
 
-/*------------------------- MQTT type initializers --------------------------*/
+/*------------------------- MQTT defined constants --------------------------*/
 
 /**
  * @constantspage{mqtt,MQTT library}
@@ -997,14 +997,16 @@ typedef struct IotMqttNetworkInfo
  * @brief Flags that modify the behavior of MQTT library functions.
  * - #IOT_MQTT_FLAG_WAITABLE <br>
  *   @copybrief IOT_MQTT_FLAG_WAITABLE
+ * - #IOT_MQTT_FLAG_CLEANUP_ONLY <br>
+ *   @copybrief IOT_MQTT_FLAG_CLEANUP_ONLY
  *
  * Flags should be bitwise-ORed with each other to change the behavior of
- * @ref mqtt_function_subscribe, @ref mqtt_function_unsubscribe, or
- * @ref mqtt_function_publish.
+ * @ref mqtt_function_subscribe, @ref mqtt_function_unsubscribe,
+ * @ref mqtt_function_publish, or @ref mqtt_function_disconnect.
  *
  * @note The values of the flags may change at any time in future versions, but
- * their names will remain the same. Additionally, flags will be bitwise-exclusive
- * of each other.
+ * their names will remain the same. Additionally, flags that may be used together
+ * will be bitwise-exclusive of each other.
  */
 
 /* @[define_mqtt_initializers] */
@@ -1025,5 +1027,30 @@ typedef struct IotMqttNetworkInfo
 /** @brief Initializer for #IotMqttReference_t. */
 #define IOT_MQTT_REFERENCE_INITIALIZER        NULL
 /* @[define_mqtt_initializers] */
+
+/**
+ * @brief Allows the use of @ref mqtt_function_wait for blocking until completion.
+ *
+ * This flag is always valid for @ref mqtt_function_subscribe and
+ * @ref mqtt_function_unsubscribe. If passed to @ref mqtt_function_publish,
+ * the parameter [pPublishInfo->qos](@ref IotMqttPublishInfo_t.qos) must not be `0`.
+ *
+ * An #IotMqttReference_t <b>MUST</b> be provided if this flag is set. Additionally, an
+ * #IotMqttCallbackInfo_t <b>MUST NOT</b> be provided.
+ *
+ * @note If this flag is set, @ref mqtt_function_wait <b>MUST</b> be called to clean up
+ * resources.
+ */
+#define IOT_MQTT_FLAG_WAITABLE        ( 0x00000001 )
+
+/**
+ * @brief Causes @ref mqtt_function_disconnect to only free memory and not send
+ * an MQTT DISCONNECT packet.
+ *
+ * This flag is only valid for @ref mqtt_function_disconnect. It should be passed
+ * to @ref mqtt_function_disconnect if the network goes offline or is otherwise
+ * unusable.
+ */
+#define IOT_MQTT_FLAG_CLEANUP_ONLY    ( 0x00000001 )
 
 #endif /* ifndef _IOT_MQTT_TYPES_H_ */

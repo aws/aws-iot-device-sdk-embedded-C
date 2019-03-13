@@ -35,23 +35,6 @@
 /* MQTT types include. */
 #include "types/iot_mqtt_types.h"
 
-/*------------------------- MQTT defined constants --------------------------*/
-
-/**
- * @brief Allows the use of @ref mqtt_function_wait for blocking until completion.
- *
- * This flag is always valid for @ref mqtt_function_subscribe and
- * @ref mqtt_function_unsubscribe. If passed to @ref mqtt_function_publish,
- * the parameter [pPublishInfo->qos](@ref IotMqttPublishInfo_t.qos) must not be `0`.
- *
- * An #IotMqttReference_t <b>MUST</b> be provided if this flag is set. Additionally, an
- * #IotMqttCallbackInfo_t <b>MUST NOT</b> be provided.
- *
- * @note If this flag is set, @ref mqtt_function_wait <b>MUST</b> be called to clean up
- * resources.
- */
-#define IOT_MQTT_FLAG_WAITABLE    ( 0x00000001 )
-
 /*------------------------- MQTT library functions --------------------------*/
 
 /**
@@ -262,7 +245,7 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
  *     // Do something with the MQTT connection...
  *
  *     // Clean up and close the MQTT connection once it's no longer needed.
- *     IotMqtt_Disconnect( mqttConnection, false );
+ *     IotMqtt_Disconnect( mqttConnection, 0 );
  * }
  * @endcode
  */
@@ -278,9 +261,9 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
  *
  * This function closes an MQTT connection and should only be called once
  * the MQTT connection is no longer needed. Its exact behavior depends on the
- * `cleanupOnly` parameter.
+ * `flags` parameter.
  *
- * Normally, `cleanupOnly` should be `false`. This gracefully shuts down an MQTT
+ * Normally, `flags` should be `0`. This gracefully shuts down an MQTT
  * connection by sending an MQTT DISCONNECT packet. Any [network close function]
  * (@ref IotNetworkInterface_t::close) provided [when the connection was established]
  * (@ref mqtt_function_connect) will also be called. Note that because the MQTT server
@@ -291,9 +274,9 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
  * MQTT server, the LWT message will be discarded and not published.
  *
  * Should the underlying network connection become unusable, this function should
- * be called with `cleanupOnly` set to `true`. In this case, no DISCONNECT packet
- * will be sent, and the [network close function](@ref IotNetworkInterface_t::close)
- * will not be called. This function will only free the resources used by the MQTT
+ * be called with `flags` set to #IOT_MQTT_FLAG_CLEANUP_ONLY. In this case, no
+ * DISCONNECT packet will be sent, though the [network close function](@ref IotNetworkInterface_t::close)
+ * will still be called. This function will only free the resources used by the MQTT
  * connection; it still must be called even if the network is offline to avoid leaking
  * resources.
  *
@@ -301,14 +284,11 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
  * be used.
  *
  * @param[in] mqttConnection The MQTT connection to close and clean up.
- * @param[in] cleanupOnly Passing `true` will cause this function to only perform
- * cleanup of the MQTT connection and not send a DISCONNECT packet. This parameter
- * should be `true` if the network goes offline or is otherwise unusable. Otherwise,
- * it should be `false`.
+ * @param[in] flags Flags which modify the behavior of this function. See @ref mqtt_constants_flags.
  */
 /* @[declare_mqtt_disconnect] */
 void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
-                         bool cleanupOnly );
+                         uint32_t flags );
 /* @[declare_mqtt_disconnect] */
 
 /**

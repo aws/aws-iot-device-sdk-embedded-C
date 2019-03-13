@@ -865,7 +865,7 @@ int RunMqttDemo( bool awsIotMqttMode,
     /* Disconnect the MQTT connection if it was established. */
     if( connectionEstablished == true )
     {
-        IotMqtt_Disconnect( mqttConnection, false );
+        IotMqtt_Disconnect( mqttConnection, 0 );
     }
 
     /* Clean up libraries if they were initialized. */

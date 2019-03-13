@@ -384,7 +384,7 @@ static void _reentrantCallback( void * pArgument,
         if( mqttStatus == IOT_MQTT_STATUS_PENDING )
         {
             /* Disconnect the MQTT connection. */
-            IotMqtt_Disconnect( pOperation->mqttConnection, false );
+            IotMqtt_Disconnect( pOperation->mqttConnection, 0 );
 
             /* Waiting on an operation whose connection is closed should return
              * "Network Error". */
@@ -496,7 +496,7 @@ static void _subscribePublishWait( IotMqttQos_t qos )
         }
 
         /* Close the MQTT connection. */
-        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+        IotMqtt_Disconnect( _IotTestMqttConnection, 0 );
     }
 
     IotSemaphore_Destroy( &waitSem );
@@ -735,7 +735,7 @@ TEST( MQTT_System, SubscribePublishAsync )
                 }
             }
 
-            IotMqtt_Disconnect( _IotTestMqttConnection, false );
+            IotMqtt_Disconnect( _IotTestMqttConnection, 0 );
         }
 
         IotSemaphore_Destroy( &publishWaitSem );
@@ -835,7 +835,7 @@ TEST( MQTT_System, LastWillAndTestament )
                 /* Abruptly close the MQTT connection. This should cause the LWT
                  * to be sent to the LWT listener. */
                 IotTest_NetworkClose( NULL );
-                IotMqtt_Disconnect( _IotTestMqttConnection, true );
+                IotMqtt_Disconnect( _IotTestMqttConnection, 0 );
                 IotTest_NetworkDestroy( NULL );
 
                 /* Check that the LWT was received. */
@@ -846,7 +846,7 @@ TEST( MQTT_System, LastWillAndTestament )
                 }
             }
 
-            IotMqtt_Disconnect( lwtListener, false );
+            IotMqtt_Disconnect( lwtListener, 0 );
             IotTest_NetworkDestroy( pLwtListenerConnection );
             lwtListenerCreated = false;
         }
@@ -905,7 +905,7 @@ TEST( MQTT_System, RestorePreviousSession )
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         /* Disconnect the MQTT connection and clean up network connection. */
-        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+        IotMqtt_Disconnect( _IotTestMqttConnection, 0 );
         IotTest_NetworkCleanup();
 
         /* Re-establish the network connection. */
@@ -941,7 +941,7 @@ TEST( MQTT_System, RestorePreviousSession )
         }
 
         /* Disconnect the MQTT connection. */
-        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+        IotMqtt_Disconnect( _IotTestMqttConnection, 0 );
         IotTest_NetworkCleanup();
     }
     else
@@ -967,7 +967,7 @@ TEST( MQTT_System, RestorePreviousSession )
                                   &_IotTestMqttConnection );
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
-        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+        IotMqtt_Disconnect( _IotTestMqttConnection, 0 );
     }
 }
 
@@ -1019,7 +1019,7 @@ TEST( MQTT_System, WaitAfterDisconnect )
     }
 
     /* Disconnect the MQTT connection. */
-    IotMqtt_Disconnect( _IotTestMqttConnection, false );
+    IotMqtt_Disconnect( _IotTestMqttConnection, 0 );
 
     if( TEST_PROTECT() )
     {

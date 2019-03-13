@@ -500,7 +500,7 @@ TEST_TEAR_DOWN( Shadow_System )
     /* Disconnect the MQTT connection if it was created. */
     if( _connectionCreated == true )
     {
-        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+        IotMqtt_Disconnect( _IotTestMqttConnection, 0 );
 
         _connectionCreated = false;
     }

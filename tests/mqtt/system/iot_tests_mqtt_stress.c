@@ -530,7 +530,7 @@ TEST_TEAR_DOWN( MQTT_Stress )
      * should be cleaned up by Disconnect. */
     if( _connectionCreated == true )
     {
-        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+        IotMqtt_Disconnect( _IotTestMqttConnection, 0 );
         _connectionCreated = false;
     }
 

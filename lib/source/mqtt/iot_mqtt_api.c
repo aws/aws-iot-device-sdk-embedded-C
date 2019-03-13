@@ -1183,7 +1183,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
 /*-----------------------------------------------------------*/
 
 void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
-                         bool cleanupOnly )
+                         uint32_t flags )
 {
     bool disconnected = false;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
@@ -1197,10 +1197,10 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
     IotMutex_Unlock( &( mqttConnection->referencesMutex ) );
 
     /* Only send a DISCONNECT packet if the connection is active and the "cleanup only"
-     * option is false. */
+     * flag is not set. */
     if( disconnected == false )
     {
-        if( cleanupOnly == false )
+        if( ( flags & IOT_MQTT_FLAG_CLEANUP_ONLY ) == 0 )
         {
             /* Create a DISCONNECT operation. This function blocks until the DISCONNECT
              * packet is sent, so it sets IOT_MQTT_FLAG_WAITABLE. */

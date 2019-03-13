@@ -33,6 +33,9 @@
 /* POSIX includes. */
 #include <signal.h>
 
+/* Error handling include. */
+#include "private/iot_error.h"
+
 /* Common include. */
 #include "iot_common.h"
 
@@ -64,6 +67,7 @@ static void _signalHandler( int signum )
 int main( int argc,
           char ** argv )
 {
+    _IOT_FUNCTION_ENTRY( int, EXIT_SUCCESS );
     struct sigaction signalAction;
 
     /* Set a signal handler for segmentation faults and assertion failures. */
@@ -72,12 +76,12 @@ int main( int argc,
 
     if( sigaction( SIGSEGV, &signalAction, NULL ) != 0 )
     {
-        return EXIT_FAILURE;
+        _IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
     if( sigaction( SIGABRT, &signalAction, NULL ) != 0 )
     {
-        return EXIT_FAILURE;
+        _IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
     /* Unity setup. */
@@ -107,10 +111,10 @@ int main( int argc,
     /* Return failure if any tests failed. */
     if( UNITY_END() != 0 )
     {
-        return EXIT_FAILURE;
+        _IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
-    return EXIT_SUCCESS;
+    _IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
