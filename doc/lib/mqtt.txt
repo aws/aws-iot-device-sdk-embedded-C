@@ -186,16 +186,6 @@ Up to @ref IOT_TEST_MQTT_THREADS `*` @ref IOT_TEST_MQTT_PUBLISHES_PER_THREAD pub
 /**
 @configpage{mqtt_demo,MQTT demo,Demo,demos}
 
-@section IOT_DEMO_MQTT_CLIENT_IDENTIFIER
-@brief The MQTT client identifier to use for the demo.
-
-No two clients may connect using the same client identifier simultaneously.
-
-The MQTT client identifier may also be set with [the command line option -i](@ref demo_optioni). The command line option will override this setting. If this setting is undefined and no command line option is provided, the demo will generate a unique client identifier to use.
-
-@configpossible Any string representing an MQTT client identifier. MQTT client identifiers may be subject to certain constraints; for example, servers are not obligated to accept client identifiers longer than 23 characters or client identifiers containing non-alphanumeric characters. <br>
-@configdefault The demo will generate a unique client identifier if this setting is undefined.
-
 @section IOT_DEMO_MQTT_TOPIC_PREFIX
 @brief The string prepended to topic filters in the demo.
 
