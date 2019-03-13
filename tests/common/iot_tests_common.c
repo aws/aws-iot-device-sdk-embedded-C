@@ -95,6 +95,7 @@ int main( int argc,
     /* Run linear containers tests. */
     RUN_TEST_GROUP( Common_Unit_Linear_Containers );
     RUN_TEST_GROUP( Common_Unit_Task_Pool );
+    RUN_TEST_GROUP( Common_Unit_Atomic );
 
     /* Return failure if any tests failed. */
     if( UNITY_END() != 0 )
