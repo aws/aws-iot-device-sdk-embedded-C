@@ -85,9 +85,9 @@
  * @endcode
  */
 /* @[declare_platform_clock_gettimestring] */
-bool IotClock_GetTimestring( char * const pBuffer,
+bool IotClock_GetTimestring( char * pBuffer,
                              size_t bufferSize,
-                             size_t * const pTimestringLength );
+                             size_t * pTimestringLength );
 /* @[declare_platform_clock_gettimestring] */
 
 /**
@@ -125,7 +125,7 @@ uint64_t IotClock_GetTimeMs( void );
  * @see @ref platform_clock_function_timerdestroy, @ref platform_clock_function_timerarm
  */
 /* @[declare_platform_clock_timercreate] */
-bool IotClock_TimerCreate( IotTimer_t * const pNewTimer,
+bool IotClock_TimerCreate( IotTimer_t * pNewTimer,
                            IotThreadRoutine_t expirationRoutine,
                            void * pArgument );
 /* @[declare_platform_clock_timercreate] */
@@ -144,7 +144,7 @@ bool IotClock_TimerCreate( IotTimer_t * const pNewTimer,
  * @see @ref platform_clock_function_timercreate, @ref platform_clock_function_timerarm
  */
 /* @[declare_platform_clock_timerdestroy] */
-void IotClock_TimerDestroy( IotTimer_t * const pTimer );
+void IotClock_TimerDestroy( IotTimer_t * pTimer );
 /* @[declare_platform_clock_timerdestroy] */
 
 /**
@@ -193,7 +193,7 @@ void IotClock_TimerDestroy( IotTimer_t * const pTimer );
  * @endcode
  */
 /* @[declare_platform_clock_timerarm] */
-bool IotClock_TimerArm( IotTimer_t * const pTimer,
+bool IotClock_TimerArm( IotTimer_t * pTimer,
                         uint64_t relativeTimeoutMs,
                         uint64_t periodMs );
 /* @[declare_platform_clock_timerarm] */

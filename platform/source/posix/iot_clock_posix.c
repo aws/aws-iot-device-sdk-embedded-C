@@ -106,7 +106,7 @@ static void _timerExpirationWrapper( union sigval argument );
  * @return `true` if `timeoutMs` was successfully converted; `false` otherwise.
  */
 bool IotClock_TimeoutToTimespec( uint64_t timeoutMs,
-                                 struct timespec * const pOutput );
+                                 struct timespec * pOutput );
 
 /*-----------------------------------------------------------*/
 
@@ -121,7 +121,7 @@ static void _timerExpirationWrapper( union sigval argument )
 /*-----------------------------------------------------------*/
 
 bool IotClock_TimeoutToTimespec( uint64_t timeoutMs,
-                                 struct timespec * const pOutput )
+                                 struct timespec * pOutput )
 {
     bool status = true;
     struct timespec systemTime = { 0 };
@@ -156,9 +156,9 @@ bool IotClock_TimeoutToTimespec( uint64_t timeoutMs,
 
 /*-----------------------------------------------------------*/
 
-bool IotClock_GetTimestring( char * const pBuffer,
+bool IotClock_GetTimestring( char * pBuffer,
                              size_t bufferSize,
-                             size_t * const pTimestringLength )
+                             size_t * pTimestringLength )
 {
     bool status = true;
     const time_t unixTime = time( NULL );
@@ -210,7 +210,7 @@ uint64_t IotClock_GetTimeMs( void )
 
 /*-----------------------------------------------------------*/
 
-bool IotClock_TimerCreate( IotTimer_t * const pNewTimer,
+bool IotClock_TimerCreate( IotTimer_t * pNewTimer,
                            IotThreadRoutine_t expirationRoutine,
                            void * pArgument )
 {
@@ -244,7 +244,7 @@ bool IotClock_TimerCreate( IotTimer_t * const pNewTimer,
 
 /*-----------------------------------------------------------*/
 
-void IotClock_TimerDestroy( IotTimer_t * const pTimer )
+void IotClock_TimerDestroy( IotTimer_t * pTimer )
 {
     IotLogDebug( "Destroying timer %p.", pTimer );
 
@@ -257,7 +257,7 @@ void IotClock_TimerDestroy( IotTimer_t * const pTimer )
 
 /*-----------------------------------------------------------*/
 
-bool IotClock_TimerArm( IotTimer_t * const pTimer,
+bool IotClock_TimerArm( IotTimer_t * pTimer,
                         uint64_t relativeTimeoutMs,
                         uint64_t periodMs )
 {
