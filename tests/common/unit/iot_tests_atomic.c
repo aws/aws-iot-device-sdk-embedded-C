@@ -25,9 +25,9 @@
  *
  * Tests in this file do not check extensively for atomicity,
  * but only guarantee APIs at least do what they supposed to do.
- * 
+ *
  * Atomic APIs are wrapped with asm tag, so that objdump disassembly
- * can be examined. 
+ * can be examined.
  */
 
 /* Build using a config header, if provided. */
@@ -115,9 +115,9 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     ulCasComparator_32 = MAGIC_NUMBER_32BIT_1;
     ulCasNewValue_32 = MAGIC_NUMBER_32BIT_2;
 
-    __asm__ __volatile__ ( "atomic_cas_1: " );
+    COMPILER_ASM_VOLATILE( "atomic_cas_1: " );
     bExecutinoStatus = Atomic_CompareAndSwap_u32( &ulCasDestination_32, ulCasNewValue_32, ulCasComparator_32 );
-    __asm__ __volatile__ ( "atomic_cas_1_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_cas_1_end: " );
 
     TEST_ASSERT_MESSAGE( ulCasDestination_32 == ulCasNewValue_32, "Atomic_CompareAndSwap_u32 -- did not swap." );
     TEST_ASSERT_MESSAGE( bExecutinoStatus, "Atomic_CompareAndSwap_u32 -- expected return value true." );
@@ -125,9 +125,9 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     /* #2 -- CAS, comparator from the same mem location. */
     ulCasDestination_32 = MAGIC_NUMBER_32BIT_1;
 
-    __asm__ __volatile__ ( "atomic_cas_2: " );
+    COMPILER_ASM_VOLATILE( "atomic_cas_2: " );
     bExecutinoStatus = Atomic_CompareAndSwap_u32( &ulCasDestination_32, MAGIC_NUMBER_32BIT_2, ulCasDestination_32 );
-    __asm__ __volatile__ ( "atomic_cas_2_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_cas_2_end: " );
 
     TEST_ASSERT_MESSAGE( ulCasDestination_32 == MAGIC_NUMBER_32BIT_2, "Atomic_CompareAndSwap_u32 -- did not swap." );
     TEST_ASSERT_MESSAGE( bExecutinoStatus, "Atomic_CompareAndSwap_u32 -- expected return value true." );
@@ -137,9 +137,9 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     pSwapNewValue_32 = &ulCasNewValue_32;
     pReturnValue_32 = NULL;
 
-    __asm__ __volatile__ ( "atomic_xchg_32bit: " );
+    COMPILER_ASM_VOLATILE( "atomic_xchg_32bit: " );
     pReturnValue_32 = Atomic_SwapPointers_p32( ( void ** ) &pSwapDestination_32, pSwapNewValue_32 );
-    __asm__ __volatile__ ( "atomic_xchg_32bit_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_xchg_32bit_end: " );
 
     TEST_ASSERT_MESSAGE( pSwapDestination_32 == &ulCasNewValue_32, "Atomic_SwapPointers_p32 -- did not swap." );
     TEST_ASSERT_MESSAGE( pReturnValue_32 == &ulCasDestination_32, "Atomic_SwapPointers_p32 -- expected to return previous value." );
@@ -149,9 +149,9 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     pSwapNewValue_8 = &uCasComparator_8;
     pReturnValue_8 = NULL;
 
-    __asm__ __volatile__ ( "atomic_xchg_8bit: nop" );
+    COMPILER_ASM_VOLATILE( "atomic_xchg_8bit: nop" );
     pReturnValue_8 = Atomic_SwapPointers_p32( ( void ** ) &pSwapDestination_8, pSwapNewValue_8 );
-    __asm__ __volatile__ ( "atomic_xchg_8bit_end: nop" );
+    COMPILER_ASM_VOLATILE( "atomic_xchg_8bit_end: nop" );
 
     TEST_ASSERT_MESSAGE( pSwapDestination_8 == &uCasComparator_8, "Atomic_SwapPointers_p32 -- did not swap." );
     TEST_ASSERT_MESSAGE( pReturnValue_8 == &uCasDestination_8, "Atomic_SwapPointers_p32 -- expected to return previous value." );
@@ -160,9 +160,9 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     pSwapDestination_32 = &ulCasDestination_32;
     pSwapNewValue_32 = &ulCasNewValue_32;
 
-    __asm__ __volatile__ ( "atomic_CAS_pointers: nop" );
+    COMPILER_ASM_VOLATILE( "atomic_CAS_pointers: nop" );
     bExecutinoStatus = Atomic_CompareAndSwapPointers_p32( ( void ** ) &pSwapDestination_32, pSwapNewValue_32, &ulCasDestination_32 );
-    __asm__ __volatile__ ( "atomic_CAS_pointers_end: nop" );
+    COMPILER_ASM_VOLATILE( "atomic_CAS_pointers_end: nop" );
 
     TEST_ASSERT_MESSAGE( ( intptr_t ) pSwapDestination_32 == ( intptr_t ) pSwapNewValue_32, "Atomic_CompareAndSwapPointers_p32 -- did not swap." );
     TEST_ASSERT_MESSAGE( bExecutinoStatus, "Atomic_CompareAndSwapPointers_p32 -- expected return value true." );
@@ -172,8 +172,12 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
 
 TEST( Common_Unit_Atomic, AtomicArithmeticHappyPath )
 {
+    uint32_t uAddend_32;
     int32_t iAddend_32;
+
     int32_t iDelta_32;
+
+    int32_t uReturnValue_32;
     int32_t iReturnValue_32;
 
     int8_t iAddend_8;
@@ -181,69 +185,95 @@ TEST( Common_Unit_Atomic, AtomicArithmeticHappyPath )
     /* asm (built-in function) implementation --
      * for curiosity, see what instructions add-register and add-immediate are using. */
 
+    /* #0 -- Some examples for user --
+     *       casting number in range 0x80000000-0xFFFFFFFF.
+     *       COMPILER_ASM_VOLATILE is omitted, as this is the normal user caller routine. */
+    uAddend_32 = ( uint32_t ) 0xFFFFFFFE; /* signed 0xFFFFFFFE is -2, 2's complement. */
+
+    uReturnValue_32 = Atomic_Add_u32( &uAddend_32, 1 );
+    TEST_ASSERT_MESSAGE( uAddend_32 == UINT32_MAX, "Atomic_Add_u32 -- did not add correctly." );
+    TEST_ASSERT_MESSAGE( uReturnValue_32 == ( uint32_t ) 0xFFFFFFFE, "Atomic_Add_u32 -- expected return value (UINT32_MAX - 1)." );
+
+    iAddend_32 = ( int32_t ) uAddend_32;
+    iReturnValue_32 = ( int32_t ) uReturnValue_32;
+    TEST_ASSERT_MESSAGE( iAddend_32 == -1, "Atomic_Add_u32 -- did not cast correctly." );
+    TEST_ASSERT_MESSAGE( iReturnValue_32 == -2, "Atomic_Add_u32 -- expected return value -2." );
+
+
+    iAddend_32 = INT32_MIN + 1; /* unsigned 0x80000001, 2's complement. */
+
+    iReturnValue_32 = Atomic_Subtract_u32( &iAddend_32, 1 );
+    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MIN, "Atomic_Subtract_u32 -- did not subtract correctly." );
+    TEST_ASSERT_MESSAGE( iReturnValue_32 == ( INT32_MIN + 1 ), "Atomic_Subtract_u32 -- expected return value (INT32_MIN + 1)." );
+
+    uAddend_32 = ( uint32_t ) iAddend_32;
+    uReturnValue_32 = ( uint32_t ) iReturnValue_32;
+    TEST_ASSERT_MESSAGE( uAddend_32 == ( uint32_t ) 0x80000000, "Atomic_Subtract_u32 -- did not subtract correctly." );
+    TEST_ASSERT_MESSAGE( uReturnValue_32 == ( uint32_t ) 0x80000001, "Atomic_Add_u32 -- expected return value (INT32_MIN + 1)." );
+
     /* #1 -- add, overflow */
     iAddend_32 = 1;
     iDelta_32 = INT32_MAX;
     iReturnValue_32 = 0;
 
-    __asm__ __volatile__ ( "atomic_add_reg: " );
-    iReturnValue_32 = Atomic_Add_i32( &iAddend_32, iDelta_32 );
-    __asm__ __volatile__ ( "atomic_add_reg_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_add_reg: " );
+    iReturnValue_32 = Atomic_Add_u32( &iAddend_32, iDelta_32 );
+    COMPILER_ASM_VOLATILE( "atomic_add_reg_end: " );
 
-    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MIN, "Atomic_Add_i32 -- did not add correctly." );
-    TEST_ASSERT_MESSAGE( iReturnValue_32 == 1, "Atomic_Add_i32 -- expected return value 1." );
+    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MIN, "Atomic_Add_u32 -- did not add correctly." );
+    TEST_ASSERT_MESSAGE( iReturnValue_32 == 1, "Atomic_Add_u32 -- expected return value 1." );
 
     /* #2 -- add immediate */
     iAddend_32 = 1;
     iDelta_32 = INT32_MAX;
     iReturnValue_32 = 0;
 
-    __asm__ __volatile__ ( "atomic_add_imme: " );
-    iReturnValue_32 = Atomic_Add_i32( &iAddend_32, INT32_MAX );
-    __asm__ __volatile__ ( "atomic_add_imme_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_add_imme: " );
+    iReturnValue_32 = Atomic_Add_u32( &iAddend_32, INT32_MAX );
+    COMPILER_ASM_VOLATILE( "atomic_add_imme_end: " );
 
-    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MIN, "Atomic_Add_i32 -- did not add immediate number correctly." );
-    TEST_ASSERT_MESSAGE( iReturnValue_32 == 1, "Atomic_Add_i32 -- expected return value 1." );
+    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MIN, "Atomic_Add_u32 -- did not add immediate number correctly." );
+    TEST_ASSERT_MESSAGE( iReturnValue_32 == 1, "Atomic_Add_u32 -- expected return value 1." );
 
     /* #3 -- add, 8-bit casting */
     iAddend_8 = 1;
     iAddend_32 = ( uint32_t ) iAddend_8;
 
-    __asm__ __volatile__ ( "atomic_add_8bit: " );
-    iReturnValue_32 = Atomic_Add_i32( &iAddend_32, INT8_MAX );
-    __asm__ __volatile__ ( "atomic_add_8bit_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_add_8bit: " );
+    iReturnValue_32 = Atomic_Add_u32( &iAddend_32, INT8_MAX );
+    COMPILER_ASM_VOLATILE( "atomic_add_8bit_end: " );
 
-    TEST_ASSERT_MESSAGE( ( uint8_t ) iReturnValue_32 != INT8_MIN, "Atomic_Add_i32 -- expected result to not be INT8_MIN." );
+    TEST_ASSERT_MESSAGE( ( uint8_t ) iReturnValue_32 != INT8_MIN, "Atomic_Add_u32 -- expected result to not be INT8_MIN." );
 
     /* #4 -- sub, almost but not underflow */
     iAddend_32 = -1;
 
-    __asm__ __volatile__ ( "atomic_sub_reg: " );
-    iReturnValue_32 = Atomic_Subtract_i32( &iAddend_32, INT32_MAX );
-    __asm__ __volatile__ ( "atomic_sub_reg_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_sub_reg: " );
+    iReturnValue_32 = Atomic_Subtract_u32( &iAddend_32, INT32_MAX );
+    COMPILER_ASM_VOLATILE( "atomic_sub_reg_end: " );
 
-    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MIN, "Atomic_Subtract_i32 -- did not subtract correctly." );
-    TEST_ASSERT_MESSAGE( iReturnValue_32 == -1, "Atomic_Subtract_i32 -- expected return value -1." );
+    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MIN, "Atomic_Subtract_u32 -- did not subtract correctly." );
+    TEST_ASSERT_MESSAGE( iReturnValue_32 == -1, "Atomic_Subtract_u32 -- expected return value -1." );
 
     /* #5 -- inc, sanity check */
     iAddend_32 = INT32_MAX;
 
-    __asm__ __volatile__ ( "atomic_inc: " );
-    iReturnValue_32 = Atomic_Increment_i32( &iAddend_32 );
-    __asm__ __volatile__ ( "atomic_inc_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_inc: " );
+    iReturnValue_32 = Atomic_Increment_u32( &iAddend_32 );
+    COMPILER_ASM_VOLATILE( "atomic_inc_end: " );
 
-    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MIN, "Atomic_Increment_i32 -- did not increment correctly." );
-    TEST_ASSERT_MESSAGE( iReturnValue_32 == INT32_MAX, "Atomic_Increment_i32 -- expected return value INT32_MAX." );
+    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MIN, "Atomic_Increment_u32 -- did not increment correctly." );
+    TEST_ASSERT_MESSAGE( iReturnValue_32 == INT32_MAX, "Atomic_Increment_u32 -- expected return value INT32_MAX." );
 
     /* #6 -- dec, sanity check */
     iAddend_32 = INT32_MIN;
 
-    __asm__ __volatile__ ( "atomic_dec: " );
-    iReturnValue_32 = Atomic_Decrement_i32( &iAddend_32 );
-    __asm__ __volatile__ ( "atomic_dec_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_dec: " );
+    iReturnValue_32 = Atomic_Decrement_u32( &iAddend_32 );
+    COMPILER_ASM_VOLATILE( "atomic_dec_end: " );
 
-    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MAX, "Atomic_Decrement_i32 -- did not decrement correctly." );
-    TEST_ASSERT_MESSAGE( iReturnValue_32 == INT32_MIN, "Atomic_Decrement_i32 -- expected return value INT32_MIN." );
+    TEST_ASSERT_MESSAGE( iAddend_32 == INT32_MAX, "Atomic_Decrement_u32 -- did not decrement correctly." );
+    TEST_ASSERT_MESSAGE( iReturnValue_32 == INT32_MIN, "Atomic_Decrement_u32 -- expected return value INT32_MIN." );
 }
 
 TEST( Common_Unit_Atomic, AtomicBitwiseHappyPath )
@@ -256,9 +286,9 @@ TEST( Common_Unit_Atomic, AtomicBitwiseHappyPath )
     ulOp1 = MAGIC_NUMBER_32BIT_1;
     ulOp2 = MAGIC_NUMBER_32BIT_2;
 
-    __asm__ __volatile__ ( "atomic_and: " );
+    COMPILER_ASM_VOLATILE( "atomic_and: " );
     ulReturnValue = Atomic_AND_u32( &ulOp1, ulOp2 );
-    __asm__ __volatile__ ( "atomic_and_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_and_end: " );
 
     TEST_ASSERT_MESSAGE( ulOp1 == 0xA0A0A0A0, "Atomic_AND_u32 -- did not ANDed correctly." );
     TEST_ASSERT_MESSAGE( ulReturnValue == MAGIC_NUMBER_32BIT_1, "Atomic_AND_u32 -- expected return value 0xA5A5A5A5." );
@@ -267,9 +297,9 @@ TEST( Common_Unit_Atomic, AtomicBitwiseHappyPath )
     ulOp1 = MAGIC_NUMBER_32BIT_2;
     ulOp2 = MAGIC_NUMBER_32BIT_3;
 
-    __asm__ __volatile__ ( "atomic_or: " );
+    COMPILER_ASM_VOLATILE( "atomic_or: " );
     ulReturnValue = Atomic_OR_u32( &ulOp1, ulOp2 );
-    __asm__ __volatile__ ( "atomic_or_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_or_end: " );
 
     TEST_ASSERT_MESSAGE( ulOp1 == 0xF0F0F0FF, "Atomic_OR_u32 -- did not ORed correctly." );
     TEST_ASSERT_MESSAGE( ulReturnValue == MAGIC_NUMBER_32BIT_2, "Atomic_AND_u32 -- expected return value 0xF0F0F0F0." );
@@ -278,9 +308,9 @@ TEST( Common_Unit_Atomic, AtomicBitwiseHappyPath )
     ulOp1 = MAGIC_NUMBER_32BIT_1;
     ulOp2 = MAGIC_NUMBER_32BIT_2;
 
-    __asm__ __volatile__ ( "atomic_nand: " );
+    COMPILER_ASM_VOLATILE( "atomic_nand: " );
     ulReturnValue = Atomic_NAND_u32( &ulOp1, ulOp2 );
-    __asm__ __volatile__ ( "atomic_nand_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_nand_end: " );
 
     TEST_ASSERT_MESSAGE( ulOp1 == 0x5F5F5F5F, "Atomic_NAND_u32 -- did not NANDed correctly." );
     TEST_ASSERT_MESSAGE( ulReturnValue == MAGIC_NUMBER_32BIT_1, "Atomic_NAND_u32 -- expected return value 0xA5A5A5A5." );
@@ -289,9 +319,9 @@ TEST( Common_Unit_Atomic, AtomicBitwiseHappyPath )
     ulOp1 = MAGIC_NUMBER_32BIT_1;
     ulOp2 = MAGIC_NUMBER_32BIT_2;
 
-    __asm__ __volatile__ ( "atomic_xor: " );
+    COMPILER_ASM_VOLATILE( "atomic_xor: " );
     ulReturnValue = Atomic_XOR_u32( &ulOp1, ulOp2 );
-    __asm__ __volatile__ ( "atomic_XOR_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_XOR_end: " );
 
     TEST_ASSERT_MESSAGE( ulOp1 == 0x55555555, "Atomic_XOR_u32 -- did not XORed correctly." );
     TEST_ASSERT_MESSAGE( ulReturnValue == MAGIC_NUMBER_32BIT_1, "Atomic_XOR_u32 -- expected return value 0xA5A5A5A5." );
@@ -313,9 +343,9 @@ TEST( Common_Unit_Atomic, AtomicCasFailToSwap )
     ulCasComparator_32 = MAGIC_NUMBER_32BIT_2;
     ulCasNewValue_32 = MAGIC_NUMBER_32BIT_3;
 
-    __asm__ __volatile__ ( "atomic_cas_neq: " );
+    COMPILER_ASM_VOLATILE( "atomic_cas_neq: " );
     bExecutinoStatus = Atomic_CompareAndSwap_u32( &ulCasDestination_32, ulCasNewValue_32, ulCasComparator_32 );
-    __asm__ __volatile__ ( "atomic_cas_neq_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_cas_neq_end: " );
 
     TEST_ASSERT_MESSAGE( ulCasDestination_32 == MAGIC_NUMBER_32BIT_1, "Atomic_CompareAndSwap_u32 -- should not swap." );
     TEST_ASSERT_MESSAGE( !bExecutinoStatus, "Atomic_CompareAndSwap_u32 -- expected return value false." );
@@ -325,9 +355,9 @@ TEST( Common_Unit_Atomic, AtomicCasFailToSwap )
     pCasComparator_32 = &ulCasComparator_32;
     pCasNewValue_32 = &ulCasNewValue_32;
 
-    __asm__ __volatile__ ( "atomic_cas_pointers_neq: " );
+    COMPILER_ASM_VOLATILE( "atomic_cas_pointers_neq: " );
     bExecutinoStatus = Atomic_CompareAndSwapPointers_p32( ( void ** ) &pCasDestination_32, pCasNewValue_32, pCasComparator_32 );
-    __asm__ __volatile__ ( "atomic_cas_pointers_neq_end: " );
+    COMPILER_ASM_VOLATILE( "atomic_cas_pointers_neq_end: " );
 
     TEST_ASSERT_MESSAGE( ( intptr_t ) pCasDestination_32 == ( intptr_t ) &ulCasDestination_32, "Atomic_CompareAndSwapPointers_p32 -- should not swap." );
     TEST_ASSERT_MESSAGE( !bExecutinoStatus, "Atomic_CompareAndSwapPointers_p32 -- expected return value false." );

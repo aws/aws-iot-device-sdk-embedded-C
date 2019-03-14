@@ -323,7 +323,7 @@ static uint16_t _nextPacketIdentifier( void )
          * Here, using addition two bytes and casting, to achieve the same implementation as in the other branch. */
         static uint32_t nextPacketIdentifier = 1;
 
-        return ( uint16_t ) Atomic_Add_i32( &nextPacketIdentifier, 2 );
+        return ( uint16_t ) Atomic_Add_u32( &nextPacketIdentifier, 2 );
     #else /* ( IOT_ATOMIC_OPERATION != 1 ) */
         static uint16_t nextPacketIdentifier = 1;
         uint16_t newPacketIdentifier = 0;

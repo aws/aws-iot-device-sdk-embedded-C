@@ -31,19 +31,29 @@
  * GCC flatten/always_inline equivalent.
  *
  * @todo Define this macro, refer to compiler specific docs.
+ *       Please note that, Atomic_*() functions in atomic.h are calling
+ *       into user defined functions in this header file. Please make
+ *       sure atomic nested function calls are "flattened" and "inlined",
+ *       from caller's perspective.
  */
-#define FORCE_INLINE_FLATTEN
+#define FORCE_INLINE
 
 /**
  * GCC always_inline equivalent.
  *
  * @todo Define this macro, refer to compiler specific docs.
- *       This, in combine with FORCE_INLINE_FLATTEN, should guarantee 
- *       the atomic functions are always inlined even without compiler 
- *       optimization. The behavior can be checked with compiler objdump
- *       disassembly. 
+ *       This, in combine with FORCE_INLINE, should guarantee the atomic
+ *       functions are always inlined even without compiler  optimization.
+ *       The behavior can be checked with compiler objdump disassembly.
  */
-#define FORCE_INLINE
+#define FORCE_INLINE_NESTED
+
+/**
+ * GCC __asm__ __volatile__ equivalent.
+ *
+ * @todo Optionally define this macro, refer to compiler specific docs.
+ */
+#define COMPILER_ASM_VOLATILE
 
 /**
  * Atomic user defined implementations.
@@ -63,7 +73,7 @@
  * static FORCE_INLINE int32_t Atomic_Add_i32_User_Override(int32_t volatile * pAddend, int32_t lCount)
  * {
  *     int32_t lCurrent;
- *     CriticalSessionType_t temp;
+ *     CriticalSectionType_t temp;
  *
  *     // Platform specific definition of enter/exit critical section.
  *     // The return value from enter critical section function call
@@ -79,12 +89,13 @@
  *
  * <b> Example -- ISA supported atomic instruction(s), with compiler support.</b>
  * @code{.c}
- * // IAR compiler atomic support for ARM.
- * #include <stdatomic.h>
+ * // A compiler has atomic built-in extension.
+ * // Include atomic header in app code.
  *
  * static FORCE_INLINE int32_t Atomic_Add_i32_User_Override(int32_t volatile * pAddend, int32_t lCount)
  * {
- *     // IAR atomic interface happens to be the similar to GCC.
+ *     // Assume atomic_fetch_add() does something similar to GCC __atomic_fetch_add()
+ *     // with memory order __ATOMIC_SEQ_CST.
  *     return atomic_fetch_add(pAddend, lCount);
  * }
  * @endcode
@@ -101,29 +112,29 @@
  */
 
 /*----------------------------- Swap && CAS ------------------------------*/
-static FORCE_INLINE bool Atomic_CompareAndSwap_u32_User_Override( uint32_t volatile * pDestination,
-                                                                  uint32_t ulExchange,
-                                                                  uint32_t ulComparand );
-static FORCE_INLINE void * Atomic_SwapPointers_p32_User_Override( void * volatile * ppDestination,
-                                                                  void * pExchange );
-static FORCE_INLINE bool Atomic_CompareAndSwapPointers_p32_User_Override( void * volatile * ppDestination,
-                                                                          void * pExchange,
-                                                                          void * pComparand );
+static FORCE_INLINE_NESTED bool Atomic_CompareAndSwap_u32_User_Override( uint32_t volatile * pDestination,
+                                                                         uint32_t ulExchange,
+                                                                         uint32_t ulComparand );
+static FORCE_INLINE_NESTED void * Atomic_SwapPointers_p32_User_Override( void * volatile * ppDestination,
+                                                                         void * pExchange );
+static FORCE_INLINE_NESTED bool Atomic_CompareAndSwapPointers_p32_User_Override( void * volatile * ppDestination,
+                                                                                 void * pExchange,
+                                                                                 void * pComparand );
 
 /*----------------------------- Arithmetic ------------------------------*/
-static FORCE_INLINE int32_t Atomic_Add_i32_User_Override( int32_t volatile * pAddend,
-                                                          int32_t lCount );
-static FORCE_INLINE int32_t Atomic_Subtract_i32_User_Override( int32_t volatile * pAddend,
-                                                               int32_t lCount );
-static FORCE_INLINE int32_t Atomic_Increment_i32_User_Override( int32_t volatile * pAddend );
-static FORCE_INLINE int32_t Atomic_Decrement_i32_User_Override( int32_t volatile * pAddend );
+static FORCE_INLINE_NESTED int32_t Atomic_Add_i32_User_Override( int32_t volatile * pAddend,
+                                                                 int32_t lCount );
+static FORCE_INLINE_NESTED int32_t Atomic_Subtract_i32_User_Override( int32_t volatile * pAddend,
+                                                                      int32_t lCount );
+static FORCE_INLINE_NESTED int32_t Atomic_Increment_i32_User_Override( int32_t volatile * pAddend );
+static FORCE_INLINE_NESTED int32_t Atomic_Decrement_i32_User_Override( int32_t volatile * pAddend );
 
 /*----------------------------- Bitwise Logical ------------------------------*/
-static FORCE_INLINE uint32_t Atomic_OR_u32_User_Override( uint32_t volatile * pDestination,
-                                                          uint32_t ulValue );
-static FORCE_INLINE uint32_t Atomic_AND_u32_User_Override( uint32_t volatile * pDestination,
-                                                           uint32_t ulValue );
-static FORCE_INLINE uint32_t Atomic_NAND_u32_User_Override( uint32_t volatile * pDestination,
-                                                            uint32_t ulValue );
-static FORCE_INLINE uint32_t Atomic_XOR_u32_User_Override( uint32_t volatile * pDestination,
-                                                           uint32_t ulValue );
+static FORCE_INLINE_NESTED uint32_t Atomic_OR_u32_User_Override( uint32_t volatile * pDestination,
+                                                                 uint32_t ulValue );
+static FORCE_INLINE_NESTED uint32_t Atomic_AND_u32_User_Override( uint32_t volatile * pDestination,
+                                                                  uint32_t ulValue );
+static FORCE_INLINE_NESTED uint32_t Atomic_NAND_u32_User_Override( uint32_t volatile * pDestination,
+                                                                   uint32_t ulValue );
+static FORCE_INLINE_NESTED uint32_t Atomic_XOR_u32_User_Override( uint32_t volatile * pDestination,
+                                                                  uint32_t ulValue );

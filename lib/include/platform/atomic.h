@@ -46,9 +46,17 @@
  * If you believe atomic built-in is not compiled correctly by GCC for your target,
  * please use the other branch and provide your own implementation for atomic.
  *
- * attribute flatten is not needed in this branch. 
+ * attribute flatten is not needed in this branch.
  */
-    #define FORCE_INLINE_FLATTEN    inline __attribute__( ( always_inline ) )
+    #define FORCE_INLINE    inline __attribute__( ( always_inline ) )
+
+/* GCC asm volatile.
+ * This can be helpful when user wants to observe how atomic inline function is
+ * compiled. Simply add a tag (or no-op) before and after atomic inline function
+ * call, and observe objdump disassembly. Though, it is not suggested to call this
+ * macro in user application code.
+ */
+    #define COMPILER_ASM_VOLATILE( x )    __asm__ __volatile__ ( x )
 
 #else
 
@@ -56,7 +64,7 @@
  * User needs to figure out compiler specific syntax for always-inline and flatten.*/
     #include "atomic_user_override_template.h"
 
-#endif
+#endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
 
 /*----------------------------- Swap && CAS ------------------------------*/
 
@@ -73,9 +81,9 @@
  *
  * @note This function only swaps *pDestination with ulExchange, if previous *pDestination value equals ulComparand.
  */
-static FORCE_INLINE_FLATTEN bool Atomic_CompareAndSwap_u32( uint32_t volatile * pDestination,
-                                                            uint32_t ulExchange,
-                                                            uint32_t ulComparand )
+static FORCE_INLINE bool Atomic_CompareAndSwap_u32( uint32_t volatile * pDestination,
+                                                    uint32_t ulExchange,
+                                                    uint32_t ulComparand )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_compare_exchange( pDestination, &ulComparand, &ulExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST );
@@ -94,8 +102,8 @@ static FORCE_INLINE_FLATTEN bool Atomic_CompareAndSwap_u32( uint32_t volatile * 
  *
  * @return The initial value of *ppDestination.
  */
-static FORCE_INLINE_FLATTEN void * Atomic_SwapPointers_p32( void * volatile * ppDestination,
-                                                            void * pExchange )
+static FORCE_INLINE void * Atomic_SwapPointers_p32( void * volatile * ppDestination,
+                                                    void * pExchange )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         void * pReturnValue;
@@ -120,9 +128,9 @@ static FORCE_INLINE_FLATTEN void * Atomic_SwapPointers_p32( void * volatile * pp
  *
  * @note This function only swaps *ppDestination with pExchange, if previous *ppDestination value equals pComparand.
  */
-static FORCE_INLINE_FLATTEN bool Atomic_CompareAndSwapPointers_p32( void * volatile * ppDestination,
-                                                                    void * pExchange,
-                                                                    void * pComparand )
+static FORCE_INLINE bool Atomic_CompareAndSwapPointers_p32( void * volatile * ppDestination,
+                                                            void * pExchange,
+                                                            void * pComparand )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_compare_exchange( ppDestination, &pComparand, &pExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST );
@@ -144,8 +152,8 @@ static FORCE_INLINE_FLATTEN bool Atomic_CompareAndSwapPointers_p32( void * volat
  *
  * @return previous *pAddend value.
  */
-static FORCE_INLINE_FLATTEN int32_t Atomic_Add_i32( int32_t volatile * pAddend,
-                                                    int32_t lCount )
+static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAddend,
+                                             uint32_t lCount )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_add( pAddend, lCount, __ATOMIC_SEQ_CST );
@@ -164,8 +172,8 @@ static FORCE_INLINE_FLATTEN int32_t Atomic_Add_i32( int32_t volatile * pAddend,
  *
  * @return previous *pAddend value.
  */
-static FORCE_INLINE_FLATTEN int32_t Atomic_Subtract_i32( int32_t volatile * pAddend,
-                                                         int32_t lCount )
+static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pAddend,
+                                                  uint32_t lCount )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_sub( pAddend, lCount, __ATOMIC_SEQ_CST );
@@ -183,7 +191,7 @@ static FORCE_INLINE_FLATTEN int32_t Atomic_Subtract_i32( int32_t volatile * pAdd
  *
  * @return *pAddend value before increment.
  */
-static FORCE_INLINE_FLATTEN int32_t Atomic_Increment_i32( int32_t volatile * pAddend )
+static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAddend )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_add( pAddend, 1, __ATOMIC_SEQ_CST );
@@ -201,7 +209,7 @@ static FORCE_INLINE_FLATTEN int32_t Atomic_Increment_i32( int32_t volatile * pAd
  *
  * @return *pAddend value before decrement.
  */
-static FORCE_INLINE_FLATTEN int32_t Atomic_Decrement_i32( int32_t volatile * pAddend )
+static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pAddend )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_sub( pAddend, 1, __ATOMIC_SEQ_CST );
@@ -222,8 +230,8 @@ static FORCE_INLINE_FLATTEN int32_t Atomic_Decrement_i32( int32_t volatile * pAd
  *
  * @return The original value of *pDestination.
  */
-static FORCE_INLINE_FLATTEN uint32_t Atomic_OR_u32( uint32_t volatile * pDestination,
-                                                    uint32_t ulValue )
+static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pDestination,
+                                            uint32_t ulValue )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_or( pDestination, ulValue, __ATOMIC_SEQ_CST );
@@ -242,8 +250,8 @@ static FORCE_INLINE_FLATTEN uint32_t Atomic_OR_u32( uint32_t volatile * pDestina
  *
  * @return The original value of *pDestination.
  */
-static FORCE_INLINE_FLATTEN uint32_t Atomic_AND_u32( uint32_t volatile * pDestination,
-                                                     uint32_t ulValue )
+static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pDestination,
+                                             uint32_t ulValue )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_and( pDestination, ulValue, __ATOMIC_SEQ_CST );
@@ -262,8 +270,8 @@ static FORCE_INLINE_FLATTEN uint32_t Atomic_AND_u32( uint32_t volatile * pDestin
  *
  * @return The original value of *pDestination.
  */
-static FORCE_INLINE_FLATTEN uint32_t Atomic_NAND_u32( uint32_t volatile * pDestination,
-                                                      uint32_t ulValue )
+static FORCE_INLINE uint32_t Atomic_NAND_u32( uint32_t volatile * pDestination,
+                                              uint32_t ulValue )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_nand( pDestination, ulValue, __ATOMIC_SEQ_CST );
@@ -281,8 +289,8 @@ static FORCE_INLINE_FLATTEN uint32_t Atomic_NAND_u32( uint32_t volatile * pDesti
  *
  * @return The original value of *pDestination.
  */
-static FORCE_INLINE_FLATTEN uint32_t Atomic_XOR_u32( uint32_t volatile * pDestination,
-                                                     uint32_t ulValue )
+static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pDestination,
+                                             uint32_t ulValue )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_xor( pDestination, ulValue, __ATOMIC_SEQ_CST );
