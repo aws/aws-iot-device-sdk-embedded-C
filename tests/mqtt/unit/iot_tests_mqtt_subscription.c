@@ -37,6 +37,7 @@
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
+#include "platform/iot_clock.h"
 
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
@@ -46,16 +47,6 @@
     #include POSIX_PTHREAD_HEADER
 #else
     #include <pthread.h>
-#endif
-#ifdef POSIX_TIME_HEADER
-    #include POSIX_TIME_HEADER
-#else
-    #include <time.h>
-#endif
-#ifdef POSIX_UNISTD_HEADER
-    #include POSIX_UNISTD_HEADER
-#else
-    #include <unistd.h>
 #endif
 
 /* Test framework includes. */
@@ -172,11 +163,6 @@ static bool _connectionCreated = false;
 static _mqttConnection_t * _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
- * @brief 100 ms sleep time.
- */
-static const struct timespec _sleepTime = { .tv_sec = 0, .tv_nsec = 100000000 };
-
-/**
  * @brief Synchronizes threads in the multithreaded test.
  */
 static pthread_barrier_t _mtTestBarrier;
@@ -220,11 +206,12 @@ static bool _waitForCount( IotMutex_t * pMutex,
                            int32_t target )
 {
     bool status = false;
-    int32_t referenceCount = 0, sleepCount = 0;
+    int32_t referenceCount = 0;
+    uint32_t sleepCount = 0;
 
-    /* Calculate limit on the number of times to sleep for 200 ms. */
-    const int32_t sleepLimit = ( IOT_TEST_MQTT_TIMEOUT_MS / 200 ) +
-                               ( ( IOT_TEST_MQTT_TIMEOUT_MS % 200 ) != 0 );
+    /* Calculate limit on the number of times to sleep for 100 ms. */
+    const uint32_t sleepLimit = ( IOT_TEST_MQTT_TIMEOUT_MS / 100 ) +
+                                ( ( IOT_TEST_MQTT_TIMEOUT_MS % 100 ) != 0 );
 
     /* Wait for the reference count to reach the target value. */
     for( sleepCount = 0; sleepCount < sleepLimit; sleepCount++ )
@@ -242,10 +229,7 @@ static bool _waitForCount( IotMutex_t * pMutex,
         }
         else
         {
-            if( nanosleep( &_sleepTime, NULL ) != 0 )
-            {
-                break;
-            }
+            IotClock_SleepMs( 100 );
         }
     }
 
@@ -1045,7 +1029,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
         /* Wait for the callbacks to exit. */
         while( IotSemaphore_GetCount( &waitSem ) > 0 )
         {
-            ( void ) nanosleep( &_sleepTime, NULL );
+            IotClock_SleepMs( 100 );
         }
 
         /* Clear the MQTT connection flag so test cleanup does not double-free it. */

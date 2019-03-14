@@ -210,6 +210,23 @@ uint64_t IotClock_GetTimeMs( void )
 
 /*-----------------------------------------------------------*/
 
+void IotClock_SleepMs( uint32_t sleepTimeMs )
+{
+    /* Convert parameter to timespec. */
+    struct timespec sleepTime =
+    {
+        .tv_sec = sleepTimeMs / _MILLISECONDS_PER_SECOND,
+        .tv_nsec = ( sleepTimeMs % _MILLISECONDS_PER_SECOND ) * _NANOSECONDS_PER_MILLISECOND
+    };
+
+    if( nanosleep( &sleepTime, NULL ) == -1 )
+    {
+        IotLogWarn( "Sleep failed. errno=%d.", errno );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
 bool IotClock_TimerCreate( IotTimer_t * pNewTimer,
                            IotThreadRoutine_t expirationRoutine,
                            void * pArgument )

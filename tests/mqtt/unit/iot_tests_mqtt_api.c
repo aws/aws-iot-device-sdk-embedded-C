@@ -32,18 +32,6 @@
 /* Standard includes. */
 #include <string.h>
 
-/* POSIX includes. */
-#ifdef POSIX_TIME_HEADER
-    #include POSIX_TIME_HEADER
-#else
-    #include <time.h>
-#endif
-#ifdef POSIX_UNISTD_HEADER
-    #include POSIX_UNISTD_HEADER
-#else
-    #include <unistd.h>
-#endif
-
 /* Common include. */
 #include "iot_common.h"
 
@@ -178,12 +166,6 @@ static void _incomingPingresp( void * pArgument )
     /* Silence warnings about unused parameters. */
     ( void ) pArgument;
 
-    /* The sleep time calculation below does not work if the short keep-alive
-     * interval is 1 second or greater. */
-    #if _SHORT_KEEP_ALIVE_MS >= 1000
-    #error "_SHORT_KEEP_ALIVE_MS must be less than 1000."
-    #endif
-
     /* This test will not work if the response wait time is too small. */
     #if IOT_MQTT_RESPONSE_WAIT_MS < ( 2 * _SHORT_KEEP_ALIVE_MS + 100 )
     #error "IOT_MQTT_RESPONSE_WAIT_MS too small for keep-alive tests."
@@ -193,44 +175,40 @@ static void _incomingPingresp( void * pArgument )
     static uint64_t lastInvokeTime = 0;
     uint64_t currentTime = IotClock_GetTimeMs();
 
-    /* Sleep time of twice the keep-alive interval. */
-    const struct timespec sleepTime = { .tv_sec = 0, .tv_nsec = 2 * _SHORT_KEEP_ALIVE_MS * 1000000 };
-
     /* Increment invoke count for this function. */
     invokeCount++;
 
     /* Sleep to simulate the network round-trip time. */
-    if( nanosleep( &sleepTime, NULL ) == 0 )
+    IotClock_SleepMs( 2 * _SHORT_KEEP_ALIVE_MS );
+
+    /* Respond with a PINGRESP. */
+    if( invokeCount <= _KEEP_ALIVE_COUNT )
     {
-        /* Respond with a PINGRESP. */
-        if( invokeCount <= _KEEP_ALIVE_COUNT )
+        /* Log a status with Unity, as this test may take a while. */
+        UnityPrint( "KeepAlivePeriodic " );
+        UnityPrintNumber( ( UNITY_INT ) invokeCount );
+        UnityPrint( " of " );
+        UnityPrintNumber( ( UNITY_INT ) _KEEP_ALIVE_COUNT );
+        UnityPrint( " DONE at " );
+        UnityPrintNumber( ( UNITY_INT ) IotClock_GetTimeMs() );
+        UnityPrint( " ms" );
+
+        if( invokeCount > 1 )
         {
-            /* Log a status with Unity, as this test may take a while. */
-            UnityPrint( "KeepAlivePeriodic " );
-            UnityPrintNumber( ( UNITY_INT ) invokeCount );
-            UnityPrint( " of " );
-            UnityPrintNumber( ( UNITY_INT ) _KEEP_ALIVE_COUNT );
-            UnityPrint( " DONE at " );
-            UnityPrintNumber( ( UNITY_INT ) IotClock_GetTimeMs() );
-            UnityPrint( " ms" );
-
-            if( invokeCount > 1 )
-            {
-                UnityPrint( " (+" );
-                UnityPrintNumber( ( UNITY_INT ) ( currentTime - lastInvokeTime ) );
-                UnityPrint( " ms)." );
-            }
-            else
-            {
-                UnityPrint( "." );
-            }
-
-            UNITY_PRINT_EOL();
-            lastInvokeTime = currentTime;
-
-            IotMqtt_ReceiveCallback( NULL,
-                                     _pMqttConnection );
+            UnityPrint( " (+" );
+            UnityPrintNumber( ( UNITY_INT ) ( currentTime - lastInvokeTime ) );
+            UnityPrint( " ms)." );
         }
+        else
+        {
+            UnityPrint( "." );
+        }
+
+        UNITY_PRINT_EOL();
+        lastInvokeTime = currentTime;
+
+        IotMqtt_ReceiveCallback( NULL,
+                                 _pMqttConnection );
     }
 }
 
@@ -320,7 +298,7 @@ static size_t _sendDelay( void * pSendContext,
     IotSemaphore_Post( pWaitSem );
 
     /* Delay for 2 seconds. */
-    sleep( 2 );
+    IotClock_SleepMs( 2000 );
 
     /* This function returns the message length to simulate a successful send. */
     return messageLength;
@@ -1356,9 +1334,8 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
 TEST( MQTT_Unit_API, KeepAlivePeriodic )
 {
     /* An estimate for the amount of time this test requires. */
-    const unsigned sleepTime = ( ( _KEEP_ALIVE_COUNT * _SHORT_KEEP_ALIVE_MS ) / 1000 ) +
-                               ( ( ( _KEEP_ALIVE_COUNT * _SHORT_KEEP_ALIVE_MS ) % 1000 ) != 0 ) +
-                               ( IOT_MQTT_RESPONSE_WAIT_MS * _KEEP_ALIVE_COUNT ) / 1000 + 2;
+    const uint32_t sleepTimeMs = ( _KEEP_ALIVE_COUNT * _SHORT_KEEP_ALIVE_MS ) +
+                                 ( IOT_MQTT_RESPONSE_WAIT_MS * _KEEP_ALIVE_COUNT ) + 1500;
 
     /* Print a newline so this test may log its status. */
     UNITY_PRINT_EOL();
@@ -1385,7 +1362,7 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
                                                      _pMqttConnection->nextKeepAliveMs ) );
 
     /* Sleep to allow ample time for periodic PINGREQ sends and PINGRESP responses. */
-    sleep( sleepTime );
+    IotClock_SleepMs( sleepTimeMs );
 
     /* Disconnect the connection. */
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );

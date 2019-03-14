@@ -44,6 +44,7 @@
  * @functionspage{platform_clock,platform clock component,Clock}
  * - @functionname{platform_clock_function_gettimestring}
  * - @functionname{platform_clock_function_gettimems}
+ * - @functionname{platform_clock_function_sleepms}
  * - @functionname{platform_clock_function_timercreate}
  * - @functionname{platform_clock_function_timerdestroy}
  * - @functionname{platform_clock_function_timerarm}
@@ -52,6 +53,7 @@
 /**
  * @functionpage{IotClock_GetTimestring,platform_clock,gettimestring}
  * @functionpage{IotClock_GetTimeMs,platform_clock,gettimems}
+ * @functionpage{IotClock_SleepMs,platform_clock,sleepms}
  * @functionpage{IotClock_TimerCreate,platform_clock,timercreate}
  * @functionpage{IotClock_TimerDestroy,platform_clock,timerdestroy}
  * @functionpage{IotClock_TimerArm,platform_clock,timerarm}
@@ -108,6 +110,17 @@ bool IotClock_GetTimestring( char * pBuffer,
 /* @[declare_platform_clock_gettimems] */
 uint64_t IotClock_GetTimeMs( void );
 /* @[declare_platform_clock_gettimems] */
+
+/**
+ * @brief Delay for the given number of milliseconds.
+ *
+ * This function suspends its calling thread for at least `sleepTimeMs` milliseconds.
+ *
+ * @param[in] sleepTimeMs Sleep time (in milliseconds).
+ */
+/* @[declare_platform_clock_sleepms] */
+void IotClock_SleepMs( uint32_t sleepTimeMs );
+/* @[declare_platform_clock_sleepms] */
 
 /**
  * @brief Create a new timer.

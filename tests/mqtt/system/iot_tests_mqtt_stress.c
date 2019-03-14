@@ -51,11 +51,6 @@
 #else
     #include <pthread.h>
 #endif
-#ifdef POSIX_UNISTD_HEADER
-    #include POSIX_UNISTD_HEADER
-#else
-    #include <unistd.h>
-#endif
 
 /* Platform layer include. */
 #include "platform/iot_clock.h"
@@ -150,10 +145,10 @@
  */
 typedef struct _publishParams
 {
-    int threadNumber;      /**< @brief ID number of this publish thread. */
-    long publishPeriodNs;  /**< @brief How long to wait (in nanoseconds) between each publish. */
-    unsigned publishLimit; /**< @brief How many publishes this thread will send. */
-    IotMqttError_t status; /**< @brief Final status of this publish thread. */
+    int threadNumber;         /**< @brief ID number of this publish thread. */
+    uint32_t publishPeriodMs; /**< @brief How long to wait (in milliseconds) between each publish. */
+    unsigned publishLimit;    /**< @brief How many publishes this thread will send. */
+    IotMqttError_t status;    /**< @brief Final status of this publish thread. */
 } _publishParams_t;
 
 /*-----------------------------------------------------------*/
@@ -325,12 +320,12 @@ static void _blockingCallback( void * pArgument,
                                IotMqttCallbackParam_t * param )
 {
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
-    const unsigned blockTime = 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
+    const uint32_t blockTimeMs = ( 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S ) * 1000;
 
     ( void ) param;
 
-    IotLogInfo( "Callback blocking for %u seconds.", blockTime );
-    sleep( blockTime );
+    IotLogInfo( "Callback blocking for %lu milliseconds.", blockTimeMs );
+    IotClock_SleepMs( blockTimeMs );
     IotSemaphore_Post( pWaitSem );
 }
 
@@ -347,11 +342,6 @@ static void * _publishThread( void * pArgument )
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _publishParams_t * pParams = ( _publishParams_t * ) pArgument;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    const struct timespec sleepTime =
-    {
-        .tv_sec  = 0,
-        .tv_nsec = pParams->publishPeriodNs
-    };
 
     /* Set the publish info. */
     publishInfo.qos = IOT_MQTT_QOS_1;
@@ -382,7 +372,7 @@ static void * _publishThread( void * pArgument )
                         pParams->threadNumber,
                         i,
                         IOT_TEST_MQTT_DECONGEST_S );
-            sleep( IOT_TEST_MQTT_DECONGEST_S );
+            IotClock_SleepMs( IOT_TEST_MQTT_DECONGEST_S * 1000 );
             continue;
         }
         /* If the PUBLISH failed, exit this thread. */
@@ -406,12 +396,7 @@ static void * _publishThread( void * pArgument )
         }
 
         /* Sleep until the next PUBLISH should be sent. */
-        if( nanosleep( &sleepTime, NULL ) != 0 )
-        {
-            IotLogError( "Error in nanosleep." );
-            status = IOT_MQTT_BAD_RESPONSE;
-            break;
-        }
+        IotClock_SleepMs( pParams->publishPeriodMs );
     }
 
     /* Set the thread's last status. */
@@ -563,12 +548,12 @@ TEST_GROUP_RUNNER( MQTT_Stress )
  */
 TEST( MQTT_Stress, KeepAlive )
 {
-    const unsigned sleepTime = 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
+    const uint32_t sleepTimeMs = ( 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S ) * 1000;
 
     /* Send no MQTT packets for a long time. The keep-alive must be used to keep
      * the connection open. */
-    IotLogInfo( "KeepAlive test sleeping for %u seconds.", sleepTime );
-    sleep( sleepTime );
+    IotLogInfo( "KeepAlive test sleeping for %lu milliseconds.", sleepTimeMs );
+    IotClock_SleepMs( sleepTimeMs );
 
     /* Send a PUBLISH to verify that the connection is still usable. */
     IotLogInfo( "KeepAlive test checking MQTT connection." );
@@ -642,7 +627,7 @@ TEST( MQTT_Stress, ClientClosesConnection )
     for( i = 0; i < IOT_TEST_MQTT_THREADS; i++ )
     {
         publishThreadParams[ i ].threadNumber = i;
-        publishThreadParams[ i ].publishPeriodNs = 500000000;
+        publishThreadParams[ i ].publishPeriodMs = 500;
         publishThreadParams[ i ].publishLimit = IOT_TEST_MQTT_PUBLISHES_PER_THREAD;
     }
 
