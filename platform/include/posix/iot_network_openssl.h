@@ -40,6 +40,9 @@
     #include <sys/types.h>
 #endif
 
+/* Standard bool include. */
+#include <stdbool.h>
+
 /* OpenSSL types include. */
 #include <openssl/ossl_typ.h>
 

@@ -7,13 +7,16 @@ add_library( iotcommon SHARED
              static_memory/iot_static_memory_common.c
              static_memory/iot_static_memory_taskpool.c
              static_memory/iot_static_memory_mqtt.c
-             static_memory/aws_iot_static_memory_shadow.c )
+             static_memory/aws_iot_static_memory_shadow.c
+             static_memory/iot_static_memory_metrics.c
+             static_memory/iot_static_memory_serializer.c
+             static_memory/aws_iot_static_memory_defender.c )
 
 # Library version.
 set_target_properties( iotcommon PROPERTIES VERSION ${PROJECT_VERSION} )
 
 # Link required libraries.
-target_link_libraries( iotcommon iotplatform )
+target_link_libraries( iotcommon iotplatform iotmetrics )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )

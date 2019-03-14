@@ -43,6 +43,12 @@ make
 ./bin/aws_iot_tests_shadow
 ./bin/aws_iot_demo_shadow -h "$AWS_IOT_ENDPOINT" -p 443 -s -r ../credentials/AmazonRootCA1.pem -c ../credentials/clientCert.pem -k ../credentials/privateKey.pem -i "$AWS_IOT_THING_NAME"
 
+# Run serializer tests
+./bin/iot_tests_serializer
+
+# Run defender tests
+./bin/aws_iot_tests_defender
+
 # Rebuild in static memory mode.
 rm -rf *
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"../credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"../credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"../credentials/privateKey.pem\\\"\" -DIOT_STATIC_MEMORY_ONLY=1 -DIOT_TEST_MQTT_CLIENT_IDENTIFIER=\"\\\"$AWS_IOT_THING_NAME\\\"\" -DAWS_IOT_TEST_SHADOW_THING_NAME=\"\\\"$AWS_IOT_THING_NAME\\\"\" -DIOT_TEST_MQTT_TOPIC_PREFIX=\"\\\"$AWS_IOT_THING_NAME\\\"\" -DIOT_DEMO_MQTT_TOPIC_PREFIX=\"\\\"$AWS_IOT_THING_NAME\\\"\" $COMPILER_OPTIONS"
@@ -54,3 +60,9 @@ make
 # Run MQTT and Shadow tests in static memory mode.
 ./bin/iot_tests_mqtt
 ./bin/aws_iot_tests_shadow
+
+# Run serializer tests
+./bin/iot_tests_serializer
+
+# Run defender tests
+./bin/aws_iot_tests_defender

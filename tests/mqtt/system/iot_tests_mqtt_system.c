@@ -588,6 +588,7 @@ TEST_TEAR_DOWN( MQTT_System )
 
     /* Clean up the network stack. */
     IotTest_NetworkCleanup();
+    _IotTestMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 }
 
 /*-----------------------------------------------------------*/
