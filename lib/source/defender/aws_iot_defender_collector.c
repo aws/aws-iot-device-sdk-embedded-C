@@ -25,7 +25,7 @@
 /* Defender internal include. */
 #include "private/aws_iot_defender_internal.h"
 
-#include "iot_metrics.h"
+#include "platform/iot_metrics.h"
 
 #include "platform/iot_clock.h"
 
@@ -471,16 +471,7 @@ static void _serializeTcpConnections( IotSerializerEncoderObject_t * pMetricsObj
                 /* add remote address */
                 if( hasRemoteAddr )
                 {
-                    #ifdef _DEFENDER_ON_AMAZON_FREERTOS
-                        /* Remote IP is with host endian. So it is converted to network endian and passed into SOCKETS_inet_ntoa. */
-                        SOCKETS_inet_ntoa( SOCKETS_htonl( _metrics.tcpConns.pArray[ i ].remoteIP ), remoteAddr );
-                        sprintf( remoteAddr, "%s:%d", remoteAddr, _metrics.tcpConns.pArray[ i ].remotePort );
-                    #else
-                        /* Remote IP is with network endian. */
-                        struct in_addr remoteInAddr = { .s_addr = _metrics.tcpConns.pArray[ i ].remoteIP };
-                        char * pRemoteIp = inet_ntoa( remoteInAddr );
-                        sprintf( remoteAddr, "%s:%d", pRemoteIp, _metrics.tcpConns.pArray[ i ].remotePort );
-                    #endif
+                    sprintf( remoteAddr, "%s:%d", _metrics.tcpConns.pArray[i].pRemoteIP, _metrics.tcpConns.pArray[i].remotePort);
 
                     serializerError = _AwsIotDefenderEncoder.appendKeyValue( &connectionMap, _REMOTE_ADDR_TAG,
                                                                              IotSerializer_ScalarTextString( remoteAddr ) );

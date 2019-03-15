@@ -89,15 +89,19 @@
 
 #endif /* if IOT_STATIC_MEMORY_ONLY */
 
+#ifndef IotMetricsConnectionId_t
+    #define IotMetricsConnectionId_t    uint32_t
+#endif
+
 /**
  * Data handle of TCP connection
  */
 typedef struct IotMetricsTcpConnection
 {
     IotLink_t link;
-    uint32_t id;
-    uint32_t remoteIP; /* This is limited to IPv4. */
-    uint16_t remotePort;
+    IotMetricsConnectionId_t id;
+    char * pRemoteIP;    /* This is limited to IPv4. */
+    uint16_t remotePort; /* In host order. */
 } IotMetricsTcpConnection_t;
 
 /**
@@ -123,7 +127,7 @@ void IotMetrics_AddTcpConnection( IotMetricsTcpConnection_t * pTcpConnection );
 /**
  * Remove one TCP connection metric.
  */
-void IotMetrics_RemoveTcpConnection( uint32_t tcpConnectionId );
+void IotMetrics_RemoveTcpConnection( IotMetricsConnectionId_t tcpConnectionId );
 
 /**
  * Use a callback to process a list of TCP connections

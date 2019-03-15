@@ -130,17 +130,17 @@ void AwsIotDefenderInternal_SetMqttCallback()
 
 bool AwsIotDefenderInternal_MqttConnect()
 {
-    IotMqttNetIf_t mqttNetInterface = IOT_MQTT_NETIF_INITIALIZER;
+    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
-    mqttNetInterface.pDisconnectContext = _startInfo.pConnection;
-    mqttNetInterface.pSendContext = _startInfo.pConnection;
-    mqttNetInterface.disconnect = _startInfo.pNetworkInterface->close;
-    mqttNetInterface.send = _startInfo.pNetworkInterface->send;
+    networkInfo.createNetworkConnection = true;
+    networkInfo.pNetworkServerInfo = _startInfo.pConnectionInfo;
+    networkInfo.pNetworkCredentialInfo = _startInfo.pCredentialInfo;
+    networkInfo.pNetworkInterface = _startInfo.pNetworkInterface;
 
-    return IotMqtt_Connect( &_mqttConnection,
-                            &mqttNetInterface,
+    return IotMqtt_Connect( &networkInfo,
                             &_startInfo.mqttConnectionInfo,
-                            _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_CONNECT_TIMEOUT_SECONDS ) ) == IOT_MQTT_SUCCESS;
+                            _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_CONNECT_TIMEOUT_SECONDS ),
+                            &_mqttConnection ) == IOT_MQTT_SUCCESS;
 }
 
 /*-----------------------------------------------------------*/
