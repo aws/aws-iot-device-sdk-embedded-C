@@ -7,13 +7,8 @@
 
 void harness()
 {
-    size_t dataLength;
-    uint8_t * pPubackStart = malloc( sizeof( uint8_t ) * dataLength );
-    uint16_t packetIdentifier;
-    size_t bytesProcessed;
+  _mqttPacket_t Puback;
+  Puback.pRemainingData = malloc(sizeof(uint8_t) * Puback.remainingLength);
 
-    _IotMqtt_DeserializePuback( pPubackStart,
-                                dataLength,
-                                &packetIdentifier,
-                                &bytesProcessed );
+  _IotMqtt_DeserializePuback( &Puback );
 }

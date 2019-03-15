@@ -7,11 +7,8 @@
 
 void harness()
 {
-    size_t dataLength;
-    uint8_t * pConnackStart = malloc( sizeof( uint8_t ) * dataLength );
-    size_t bytesProcessed;
+  _mqttPacket_t Connack;
+  Connack.pRemainingData = malloc(sizeof(uint8_t) * Connack.remainingLength);
 
-    _IotMqtt_DeserializeConnack( pConnackStart,
-                                 dataLength,
-                                 &bytesProcessed );
+  _IotMqtt_DeserializeConnack( &Connack );
 }
