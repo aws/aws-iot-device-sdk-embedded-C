@@ -49,12 +49,10 @@
  */
 #define _TASKPOOL_GOTO_CLEANUP()                       _IOT_GOTO_CLEANUP()
 
- /**
+/**
  * @brief Declare the storage for the error status variable.
  */
 #define _TASKPOOL_FUNCTION_ENTRY( result )             _IOT_FUNCTION_ENTRY( IotTaskPoolError_t, result )
-
-#define _TASKPOOL_NO_FUNCTION_CLEANUP_NOLABEL()        return status
 
 /**
  * @brief Check error and leave in case of failure.
@@ -62,14 +60,24 @@
 #define _TASKPOOL_ON_ERROR_GOTO_CLEANUP( expr )        { if( _TASKPOOL_FAILED( status = ( expr ) ) ) { _IOT_GOTO_CLEANUP(); } }
 
 /**
+ * @brief Exit if an argument is NULL.
+ */
+#define _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( ptr )      _IOT_VALIDATE_PARAMETER( IOT_TASKPOOL, ( ptr != NULL ) )
+
+/**
+ * @brief Exit if an argument is NULL.
+ */
+#define _TASKPOOL_ON_ARG_ERROR_GOTO_CLEANUP( expr )    _IOT_VALIDATE_PARAMETER( IOT_TASKPOOL, ( ( expr ) == false ) )
+
+/**
  * @brief Set error and leave.
  */
-#define _TASKPOOL_SET_AND_GOTO_CLEANUP( expr )          _IOT_SET_AND_GOTO_CLEANUP( expr )
+#define _TASKPOOL_SET_AND_GOTO_CLEANUP( expr )         _IOT_SET_AND_GOTO_CLEANUP( expr )
 
 /**
  * @brief Initialize error and declare start of cleanup area.
  */
-#define _TASKPOOL_FUNCTION_CLEANUP()                   _IOT_FUNCTION_CLEANUP_BEGIN( )
+#define _TASKPOOL_FUNCTION_CLEANUP()                   _IOT_FUNCTION_CLEANUP_BEGIN()
 
 /**
  * @brief Initialize error and declare end of cleanup area.
@@ -82,15 +90,9 @@
 #define _TASKPOOL_NO_FUNCTION_CLEANUP()                _IOT_FUNCTION_EXIT_NO_CLEANUP()
 
 /**
- * @brief Exit if an argument is NULL.
+ * @brief Does not create a cleanup area.
  */
-#define _TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( ptr )      _IOT_VALIDATE_PARAMETER( IOT_TASKPOOL, ( ptr != NULL ) )
-
-/**
- * @brief Exit if an argument is NULL.
- */
-#define _TASKPOOL_ON_ARG_ERROR_GOTO_CLEANUP( expr )    _IOT_VALIDATE_PARAMETER( IOT_TASKPOOL, ( ( expr ) == false ) )
-
+#define _TASKPOOL_NO_FUNCTION_CLEANUP_NOLABEL()        return status
 
 /**
  * @def IotTaskPool_Assert( expression )
@@ -132,28 +134,39 @@
     #include "private/iot_static_memory.h"
 
 /**
- * @brief Overridable allocator.
+ * @brief Allocate an #IotTaskPoolJob_t. This function should have the
+ * same signature as [malloc].
  */
     #ifndef IotTaskPool_MallocJob
         #define IotTaskPool_MallocJob    Iot_MallocTaskPoolJob
     #endif
 
+/**
+ * @brief Allocate an #_taskPoolTimerEvent_t. This function should have the
+ * same signature as [malloc].
+ */
     #ifndef IotTaskPool_MallocTimerEvent
         #define IotTaskPool_MallocTimerEvent    Iot_MallocTaskPoolTimerEvent
     #endif
 
 /**
- * @brief Overridable deallocator.
+ * @brief Free an #IotTaskPoolJob_t. This function should have the same
+ * signature as [free]
  */
     #ifndef IotTaskPool_FreeJob
         #define IotTaskPool_FreeJob    Iot_FreeTaskPoolJob
     #endif
 
+/**
+ * @brief Free an #_taskPoolTimerEvent_t. This function should have the
+ * same signature as[ free ].
+ */
     #ifndef IotTaskPool_FreeTimerEvent
         #define IotTaskPool_FreeTimerEvent    Iot_FreeTaskPoolTimerEvent
     #endif
 
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
+
     #include <stdlib.h>
 
 /**
@@ -213,6 +226,7 @@
 typedef struct _taskPoolTimerEvent
 {
     IotLink_t link;          /**< @brief List link member. */
+
     uint64_t expirationTime; /**< @brief When this event should be processed. */
     IotTaskPoolJob_t * pJob; /**< @brief The task pool job associated with this event. */
 } _taskPoolTimerEvent_t;

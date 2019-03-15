@@ -136,7 +136,35 @@ TEST_GROUP_RUNNER( Common_Unit_Task_Pool )
     #define _TASKPOOL_TEST_WORK_ITEM_DURATION_MAX    ( 55 )
 #endif
 
-/**
+ /**
+ * @brief Define the number of long running jobs.
+ */
+#ifndef _LONG_JOBS_NUMBER
+#define _LONG_JOBS_NUMBER    3
+#endif
+
+ /**
+ * @brief Define the number of running jobs to grow the taskpool for.
+ */
+#ifndef _NUMBER_OF_JOBS
+#define _NUMBER_OF_JOBS    4
+#endif
+
+ /**
+ * @brief Define the number of threads to grow the taskpool to.
+ */
+#ifndef _NUMBER_OF_THREADS
+#define _NUMBER_OF_THREADS    ( _NUMBER_OF_JOBS - 1 )
+#endif
+
+ /**
+ * @brief Define the number of threads to grow the taskpool to.
+ */
+#ifndef _MAX_THREADS
+#define _MAX_THREADS           7
+#endif
+
+ /**
  * @brief A global delay to wait for threads to exit or such...
  */
 static struct itimerspec _TEST_DELAY_50MS =
@@ -146,6 +174,9 @@ static struct itimerspec _TEST_DELAY_50MS =
     .it_interval      = { 0 }
 };
 
+/**
+* @brief One hour in milliseconds.
+*/
 #define ONE_HOUR_FROM_NOW_MS    ( 3600 * 1000 )
 
 /* ---------------------------------------------------------- */
@@ -360,8 +391,6 @@ IotTaskPoolInfo_t tpInfoIllegal[ ILLEGAL_INFOS ] =
  */
 TEST( Common_Unit_Task_Pool, CreateDestroyMaxThreads )
 {
-#define MAX_THREADS    7
-
     uint32_t count;
     IotTaskPool_t taskPool;
 
@@ -409,8 +438,6 @@ TEST( Common_Unit_Task_Pool, CreateDestroyMaxThreads )
 
         TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
     }
-
-#undef MAX_THREADS
 }
 
 /*-----------------------------------------------------------*/
@@ -626,8 +653,6 @@ TEST( Common_Unit_Task_Pool, ScheduleTasksError )
  */
 TEST( Common_Unit_Task_Pool, ScheduleTasks_LongRunningAndCachedJobsAndDestroy )
 {
-#define _LONG_JOBS_NUMBER    3
-
     IotTaskPool_t taskPool;
     IotTaskPoolJob_t * pRecyclableJob;
     const IotTaskPoolInfo_t tpInfo = { .minThreads = 1, .maxThreads = 2, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
@@ -703,8 +728,6 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_LongRunningAndCachedJobsAndDestroy )
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
-
-#undef _LONG_JOBS_NUMBER
 }
 
 /*-----------------------------------------------------------*/
@@ -740,8 +763,6 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleRecyclableTasksError )
  */
 TEST( Common_Unit_Task_Pool, ScheduleTasks_Grow )
 {
-#define _NUMBER_OF_JOBS    4
-
     IotTaskPool_t taskPool;
     const IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = _NUMBER_OF_JOBS, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 
@@ -798,8 +819,6 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_Grow )
     /* Destroy user context. */
     IotSemaphore_Destroy( &userContext.signal );
     IotSemaphore_Destroy( &userContext.block );
-
-#undef _NUMBER_OF_JOBS
 }
 
 /*-----------------------------------------------------------*/
@@ -809,9 +828,6 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_Grow )
  */
 TEST( Common_Unit_Task_Pool, ScheduleTasks_GrowHighPri )
 {
-#define _NUMBER_OF_JOBS       4
-#define _NUMBER_OF_THREADS    3
-
     IotTaskPool_t taskPool;
 
     /* Use a taskpool with not enough threads. */
@@ -874,9 +890,6 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_GrowHighPri )
     /* Destroy user context. */
     IotSemaphore_Destroy( &userContext.signal );
     IotSemaphore_Destroy( &userContext.block );
-
-#undef _NUMBER_OF_JOBS
-#undef _NUMBER_OF_THREADS
 }
 
 /*-----------------------------------------------------------*/
