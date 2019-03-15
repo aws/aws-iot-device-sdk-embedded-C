@@ -162,22 +162,6 @@ TEST_GROUP_RUNNER( Common_Unit_Task_Pool )
     #define TEST_TASKPOOL_MAX_THREADS    7
 #endif
 
-<<<<<<< HEAD
-=======
-/**
- * @brief A global delay to wait for threads to exit or such...
- */
-static struct itimerspec _TEST_DELAY_50MS =
-{
-    .it_value.tv_sec  = 0,
-    .it_value.tv_nsec = ( 50000000L ), /* 50ms */
-    .it_interval      = { 0 }
-};
-
-/**
- * @brief One hour in milliseconds.
- */
->>>>>>> 2143ba7... Address most linting and MISRA issues. (#318)
 #define ONE_HOUR_FROM_NOW_MS    ( 3600 * 1000 )
 
 /* ---------------------------------------------------------- */
@@ -187,23 +171,7 @@ static struct itimerspec _TEST_DELAY_50MS =
  */
 static void EmulateWork()
 {
-<<<<<<< HEAD
-    IotClock_SleepMs( rand() % _TASKPOOL_TEST_WORK_ITEM_DURATION_MAX );
-=======
-    int32_t duration_in_nsec = ( ( 1000000 ) * ( rand() % TEST_TASKPOOL_WORK_ITEM_DURATION_MAX ) );
-
-    TEST_ASSERT_TRUE( duration_in_nsec <= 999999999 );
-
-    struct timespec delay =
-    {
-        .tv_sec  = 0,
-        .tv_nsec = duration_in_nsec
-    };
-
-    int error = clock_nanosleep( CLOCK_MONOTONIC, 0, &delay, NULL );
-
-    TEST_ASSERT_TRUE( error == 0 );
->>>>>>> 2143ba7... Address most linting and MISRA issues. (#318)
+    IotClock_SleepMs( rand() % TEST_TASKPOOL_WORK_ITEM_DURATION_MAX );
 }
 
 /**
@@ -211,24 +179,7 @@ static void EmulateWork()
  */
 static void EmulateWorkLong()
 {
-<<<<<<< HEAD
-    IotClock_SleepMs( 2000 + ( rand() % _TASKPOOL_TEST_WORK_ITEM_DURATION_MAX ) );
-=======
-    int32_t duration_in_nsec = ( ( 1000000 ) * ( rand() % TEST_TASKPOOL_WORK_ITEM_DURATION_MAX ) );
-
-    TEST_ASSERT_TRUE( duration_in_nsec <= 999999999 );
-
-    /* Emulate at least 10 seconds worth of work. */
-    struct timespec delay =
-    {
-        .tv_sec  = 2,
-        .tv_nsec = duration_in_nsec
-    };
-
-    int error = clock_nanosleep( CLOCK_MONOTONIC, 0, &delay, NULL );
-
-    TEST_ASSERT_TRUE( error == 0 );
->>>>>>> 2143ba7... Address most linting and MISRA issues. (#318)
+    IotClock_SleepMs( 2000 + ( rand() % TEST_TASKPOOL_WORK_ITEM_DURATION_MAX ) );
 }
 
 /**
