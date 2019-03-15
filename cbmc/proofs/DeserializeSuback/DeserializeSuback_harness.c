@@ -7,10 +7,11 @@
 
 void harness()
 {
-  _mqttPacket_t Suback;
-  Suback.pRemainingData = malloc(sizeof(uint8_t) * Suback.remainingLength);
+    _mqttPacket_t suback;
 
-  __CPROVER_assume( Suback.remainingLength <= BUFFER_SIZE );
+    suback.pRemainingData = malloc( sizeof( uint8_t ) * suback.remainingLength );
 
-  _IotMqtt_DeserializeSuback( &Suback );
+    __CPROVER_assume( suback.remainingLength <= BUFFER_SIZE );
+
+    _IotMqtt_DeserializeSuback( &suback );
 }

@@ -7,8 +7,9 @@
 
 void harness()
 {
-  _mqttPacket_t Pingresp;
-  Pingresp.pRemainingData = malloc(sizeof(uint8_t) * Pingresp.remainingLength);
+    _mqttPacket_t pingresp;
 
-  _IotMqtt_DeserializePingresp( &Pingresp );
+    pingresp.pRemainingData = malloc( sizeof( uint8_t ) * pingresp.remainingLength );
+
+    _IotMqtt_DeserializePingresp( &pingresp );
 }

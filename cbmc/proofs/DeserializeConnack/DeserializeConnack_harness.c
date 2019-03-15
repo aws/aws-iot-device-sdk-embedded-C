@@ -7,8 +7,9 @@
 
 void harness()
 {
-  _mqttPacket_t Connack;
-  Connack.pRemainingData = malloc(sizeof(uint8_t) * Connack.remainingLength);
+    _mqttPacket_t connack;
 
-  _IotMqtt_DeserializeConnack( &Connack );
+    connack.pRemainingData = malloc( sizeof( uint8_t ) * connack.remainingLength );
+
+    _IotMqtt_DeserializeConnack( &connack );
 }

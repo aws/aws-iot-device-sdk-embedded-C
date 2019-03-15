@@ -7,8 +7,9 @@
 
 void harness()
 {
-  _mqttPacket_t Unsuback;
-  Unsuback.pRemainingData = malloc(sizeof(uint8_t) * Unsuback.remainingLength);
+    _mqttPacket_t unsuback;
 
-  _IotMqtt_DeserializeUnsuback( &Unsuback );
+    unsuback.pRemainingData = malloc( sizeof( uint8_t ) * unsuback.remainingLength );
+
+    _IotMqtt_DeserializeUnsuback( &unsuback );
 }
