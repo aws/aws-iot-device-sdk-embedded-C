@@ -21,7 +21,6 @@ VIEWER ?= cbmc-viewer
 INC = \
 	-I$(MQTT)/lib/include \
 	-I$(MQTT)/platform/include \
-	-I$(MQTT)/third_party/include \
 	-I$(MQTT)/demos/include \
 
 DEF += \
