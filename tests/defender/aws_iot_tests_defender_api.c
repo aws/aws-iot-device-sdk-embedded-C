@@ -40,9 +40,6 @@
 
 #include "cbor.h"
 
-/* Metrics includes. */
-#include "iot_metrics.h"
-
 #include "unity_fixture.h"
 
 /* Total time to wait for a state to be true. */
@@ -80,7 +77,6 @@ static const AwsIotDefenderCallback_t _EMPTY_CALLBACK = { .function = NULL, .par
 
 static IotNetworkServerInfoOpenssl_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 static IotNetworkCredentialsOpenssl_t _credential = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
-static IotNetworkConnectionOpenssl_t _networkConnection = IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER;
 
 /*------------------ global variables -----------------------------*/
 
@@ -163,7 +159,6 @@ TEST_SETUP( Full_DEFENDER )
     /* Set fields of start info. */
     _startInfo.pConnectionInfo = &_serverInfo;
     _startInfo.pCredentialInfo = &_credential;
-    _startInfo.pConnection = &_networkConnection;
     _startInfo.pNetworkInterface = IOT_NETWORK_INTERFACE_OPENSSL;
 
     _startInfo.mqttConnectionInfo = ( IotMqttConnectInfo_t ) IOT_MQTT_CONNECT_INFO_INITIALIZER;
