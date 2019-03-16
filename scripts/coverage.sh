@@ -18,7 +18,7 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-DIOT_TES
 make
 
 # Run Common tests with code coverage.
-./bin/iot_tests_mqtt 2&> /dev/null
+./bin/iot_tests_common 2&> /dev/null
 
 # Run MQTT tests and demo against AWS IoT with code coverage.
 ./bin/iot_tests_mqtt 2&> /dev/null
