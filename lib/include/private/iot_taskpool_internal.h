@@ -210,11 +210,9 @@
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
  *
- * A few macros to manage task pool status.
+ * A macros to manage task pool memory allocation.
  */
-#define IOT_TASKPOOL_STATUS_MASK         0x0F                 /* Lower 4 bits reserved for status (IotTaskPoolJobStatus_t). */
-#define IOT_TASKPOOL_FLAGS_MASK          0xF0                 /* Upper 4 bits reserved for flags. */
-#define IOT_TASK_POOL_INTERNAL_STATIC    0x80                 /* Flag to mark a job as user-allocated. */
+#define IOT_TASK_POOL_INTERNAL_STATIC    ( ( uint32_t ) 0x00000001 )      /* Flag to mark a job as user-allocated. */
 /** @endcond */
 
 /**
@@ -230,5 +228,15 @@ typedef struct _taskPoolTimerEvent
     uint64_t expirationTime; /**< @brief When this event should be processed. */
     IotTaskPoolJob_t * pJob; /**< @brief The task pool job associated with this event. */
 } _taskPoolTimerEvent_t;
+
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * System task pool.
+ */
+extern IotTaskPool_t _IotSystemTaskPool;
+/** @endcond */
 
 #endif /* ifndef _IOT_TASKPOOL_INTERNAL_H_ */

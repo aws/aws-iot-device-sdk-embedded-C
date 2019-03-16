@@ -191,7 +191,7 @@ IotTaskPoolError_t IotTaskPool_Destroy( IotTaskPool_t * pTaskPool );
  */
 /* @[declare_taskpool_setmaxthreads] */
 IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t * pTaskPool,
-                                              uint32_t maxThreads );
+                                              size_t maxThreads );
 /* @[declare_taskpool_setmaxthreads] */
 
 /**
