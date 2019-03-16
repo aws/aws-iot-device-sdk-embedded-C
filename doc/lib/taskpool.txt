@@ -46,7 +46,7 @@ digraph taskpool_dependencies
 
 Currently, the task pool library has the following dependencies:
 - The linear containers (list/queue) library for maintaining the data structures for scheduled and in-progress task pool operations.
-- The logging library may be used if @ref AWS_IOT_LOG_LEVEL_TASKPOOL is not @ref AWS_IOT_LOG_NONE.
+- The logging library may be used if @ref IOT_LOG_LEVEL_TASKPOOL is not @ref IOT_LOG_NONE.
 - The platform layer provides an interface to the operating system for thread management, clock functions, networking, etc.
 
 In addition to the components above, the task pool library may also depend on C standard library headers.
@@ -78,7 +78,7 @@ The task pool demo demonstrates the create-schedule workflow of task pool. After
 
 See @subpage taskpool_demo_config for configuration settings that change the behavior of the demo.
 
-The main task pool demo file, aws_iot_demo_taskpool.c, contains platform-independent code. See the following guides for running the task pool demo on various platforms.
+The main task pool demo file, iot_demo_taskpool.c, contains platform-independent code. See the following guides for running the task pool demo on various platforms.
 - @subpage demo_posix <br>
   @copybrief demo_posix
 */
@@ -99,7 +99,7 @@ The current task pool tests use the [Unity test framework](http://www.throwthesw
 /**
 @configpage{taskpool_tests,task pool tests,Test,tests}
 
-<div class="configpagedivider">The settings below only affect the [stress](@ref aws_iot_tests_taskpool_stress.c) tests.</div>
+<div class="configpagedivider">The settings below only affect the [stress](@ref iot_tests_taskpool_stress.c) tests.</div>
 
 */
 
@@ -117,9 +117,9 @@ The current task pool tests use the [Unity test framework](http://www.throwthesw
 
 Before building the task pool tests, all desired configuration settings should be defined. Configuration settings include global [library](@ref global_library_config) and [test](@ref global_tests_config) settings, as well as settings for specific libraries and demos.
 
-All tests specify their configuration settings in `tests/aws_iot_tests_config.h`. Any undefined settings will use a default value when possible.
+All tests specify their configuration settings in `tests/iot_tests_config.h`. Any undefined settings will use a default value when possible.
 
-The task pool tests build with a POSIX Makefile. A single Makefile will build all the task pool tests in both <i>dynamic memory</i> and <i>static memory only</i> modes. See @ref AWS_IOT_STATIC_MEMORY_ONLY for more information about static memory only mode. The Makefile also builds tests against AWS IoT and a [public Mosquitto test server](https://test.mosquitto.org/).
+The task pool tests build with a POSIX Makefile. A single Makefile will build all the task pool tests in both <i>dynamic memory</i> and <i>static memory only</i> modes. See @ref IOT_STATIC_MEMORY_ONLY for more information about static memory only mode. The Makefile also builds tests against AWS IoT and a [public Mosquitto test server](https://test.mosquitto.org/).
 
 The Makefile for building the task pool tests is located in `tests/taskpool`. To build the tests:
 @code
@@ -128,7 +128,7 @@ make
 @endcode
 
 The Makefile will generate four test executables:
-- `aws_iot_tests_taskpool_aws`: Tests against AWS IoT in dynamic memory mode.
+- `iot_tests_taskpool_aws`: Tests against AWS IoT in dynamic memory mode.
 
 Run `make clean` to remove all test executables.
 
@@ -146,7 +146,7 @@ By default, the task pool test executables don't run the stress tests, which may
 /**
 @configpage{taskpool_demo,task pool demo,Demo,demos}
 
-@section AWS_IOT_DEMO_MQTT_CLIENT_IDENTIFIER
+@section IOT_DEMO_MQTT_CLIENT_IDENTIFIER
 @brief The task pool client identifier to use for the demo.
 
 */
@@ -154,36 +154,36 @@ By default, the task pool test executables don't run the stress tests, which may
 /**
 @configpage{taskpool,task pool library}
 
-@section AWS_IOT_TASKPOOL_THREADS_STACK_MIN
+@section IOT_TASKPOOL_THREADS_STACK_MIN
 @brief Set this to minimum stack depth to be enforced at runtime.
 
-@section AWS_IOT_TASKPOOL_THREADS_STACK_SIZE
+@section IOT_TASKPOOL_THREADS_STACK_SIZE
 @brief Set this to the default stack depth used by the task pool initializers.
 
-@section AWS_IOT_TASKPOOL_PRIORITY
+@section IOT_TASKPOOL_PRIORITY
 @brief Set this to the default task priority used by the task pool initializers.
 
-@section AWS_IOT_TASKPOOL_ENABLE_ASSERTS
+@section IOT_TASKPOOL_ENABLE_ASSERTS
 @brief Set this to `1` to perform sanity checks when using the task pool library.
 
-Asserts are useful for debugging, but should be disabled in production code. If this is set to `1`, @ref AwsIotTaskPool_Assert can be defined to set the assertion function; otherwise, the standard library's [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function will be used.
+Asserts are useful for debugging, but should be disabled in production code. If this is set to `1`, @ref IotTaskPool_Assert can be defined to set the assertion function; otherwise, the standard library's [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function will be used.
 
 @configpossible `0` (asserts disabled) or `1` (asserts enabled)<br>
 @configrecommended `1` when debugging; `0` in production code.<br>
 @configdefault `0`
 
-@section AWS_IOT_LOG_LEVEL_TASKPOOL
+@section IOT_LOG_LEVEL_TASKPOOL
 @brief Set the log level of the task pool library.
 
 Log messages from the task pool library at or below this setting will be printed.
 
 @configpossible One of the @ref logging_constants_levels.<br>
-@configdefault @ref AWS_IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #AWS_IOT_LOG_NONE.
+@configdefault @ref IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #IOT_LOG_NONE.
 
-@section AWS_IOT_TASKPOOL_TEST
+@section IOT_TASKPOOL_TEST
 @brief Set this to `1` to enable test access for the task pool library.
 
-This setting is used by the [task pool tests](@ref taskpool_tests) to access the internal `static` functions and variables of the task pool library. When `1`, it enables the @c \#include directives at the bottom of the [task pool library source files](@ref lib/source/taskpool). These @c \#include directives include the test access files (located in `tests/taskpool/access`) that interact with the library's internal symbols. Unless the task pool library is being tested, this setting should be `0`.
+This setting is used by the [task pool tests](@ref taskpool_tests) to access the internal `static` functions and variables of the task pool library. When `1`, it enables the @c \#include directives at the bottom of the [task pool library source files](@ref lib/source/common/). These @c \#include directives include the test access files (located in `tests/taskpool/access`) that interact with the library's internal symbols. Unless the task pool library is being tested, this setting should be `0`.
 
 @configpossible `0` (test access disabled) or `1` (test access enabled)<br>
 @configrecommended `0`<br>
