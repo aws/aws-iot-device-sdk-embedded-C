@@ -455,7 +455,7 @@ static void _subscribePublishWait( IotMqttQos_t qos )
             subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishWait";
             subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
             subscription.callback.function = _publishReceived;
-            subscription.callback.param1 = &waitSem;
+            subscription.callback.pCallbackContext = &waitSem;
 
             /* Subscribe to the test topic filter using the blocking SUBSCRIBE
              * function. */
@@ -645,13 +645,13 @@ TEST( MQTT_System, SubscribePublishAsync )
 
     /* Initialize members of the operation callback info. */
     callbackInfo.function = _operationComplete;
-    callbackInfo.param1 = &callbackParam;
+    callbackInfo.pCallbackContext = &callbackParam;
 
     /* Initialize members of the subscription. */
     subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishAsync";
     subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
     subscription.callback.function = _publishReceived;
-    subscription.callback.param1 = &publishWaitSem;
+    subscription.callback.pCallbackContext = &publishWaitSem;
 
     /* Initialize members of the connect info. */
     connectInfo.cleanSession = true;
@@ -807,7 +807,7 @@ TEST( MQTT_System, LastWillAndTestament )
                 willSubscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/LastWillAndTestament";
                 willSubscription.topicFilterLength = ( uint16_t ) strlen( willSubscription.pTopicFilter );
                 willSubscription.callback.function = _publishReceived;
-                willSubscription.callback.param1 = &waitSem;
+                willSubscription.callback.pCallbackContext = &waitSem;
 
                 status = IotMqtt_TimedSubscribe( lwtListener,
                                                  &willSubscription,
@@ -895,7 +895,7 @@ TEST( MQTT_System, RestorePreviousSession )
         /* Add a subscription. */
         subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/RestorePreviousSession";
         subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
-        subscription.callback.param1 = &waitSem;
+        subscription.callback.pCallbackContext = &waitSem;
         subscription.callback.function = _publishReceived;
 
         status = IotMqtt_TimedSubscribe( _IotTestMqttConnection,
@@ -1077,10 +1077,10 @@ TEST( MQTT_System, SubscribeCompleteReentrancy )
                 subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/Reentrancy";
                 subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
                 subscription.callback.function = _publishReceived;
-                subscription.callback.param1 = &( pWaitSemaphores[ 0 ] );
+                subscription.callback.pCallbackContext = &( pWaitSemaphores[ 0 ] );
 
                 callbackInfo.function = _reentrantCallback;
-                callbackInfo.param1 = pWaitSemaphores;
+                callbackInfo.pCallbackContext = pWaitSemaphores;
 
                 status = IotMqtt_Subscribe( _IotTestMqttConnection,
                                             &subscription,
@@ -1148,13 +1148,13 @@ TEST( MQTT_System, IncomingPublishReentrancy )
                 pSubscription[ 0 ].pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/IncomingPublishReentrancy";
                 pSubscription[ 0 ].topicFilterLength = ( uint16_t ) strlen( pSubscription[ 0 ].pTopicFilter );
                 pSubscription[ 0 ].callback.function = _reentrantCallback;
-                pSubscription[ 0 ].callback.param1 = pWaitSemaphores;
+                pSubscription[ 0 ].callback.pCallbackContext = pWaitSemaphores;
 
                 pSubscription[ 1 ].qos = IOT_MQTT_QOS_1;
                 pSubscription[ 1 ].pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/Reentrancy";
                 pSubscription[ 1 ].topicFilterLength = ( uint16_t ) strlen( pSubscription[ 1 ].pTopicFilter );
                 pSubscription[ 1 ].callback.function = _publishReceived;
-                pSubscription[ 1 ].callback.param1 = &( pWaitSemaphores[ 0 ] );
+                pSubscription[ 1 ].callback.pCallbackContext = &( pWaitSemaphores[ 0 ] );
 
                 status = IotMqtt_TimedSubscribe( _IotTestMqttConnection,
                                                  pSubscription,

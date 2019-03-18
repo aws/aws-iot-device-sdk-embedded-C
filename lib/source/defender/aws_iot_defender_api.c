@@ -353,8 +353,8 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
 
     bool mqttConnected = true, reportCreated = true, reportPublished = false;
 
-    const IotMqttCallbackInfo_t acceptCallbackInfo = { .function = _acceptCallback, .param1 = NULL };
-    const IotMqttCallbackInfo_t rejectCallbackInfo = { .function = _rejectCallback, .param1 = NULL };
+    const IotMqttCallbackInfo_t acceptCallbackInfo = { .function = _acceptCallback, .pCallbackContext = NULL };
+    const IotMqttCallbackInfo_t rejectCallbackInfo = { .function = _rejectCallback, .pCallbackContext = NULL };
 
     /* Step 1: connect to MQTT. */
     mqttError = AwsIotDefenderInternal_MqttConnect();

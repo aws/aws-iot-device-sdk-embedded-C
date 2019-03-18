@@ -694,10 +694,12 @@ bool _IotMqtt_GetNextByte( void * pNetworkConnection,
 
 /*-----------------------------------------------------------*/
 
-void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection )
+void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason,
+                                      _mqttConnection_t * pMqttConnection )
 {
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     IotNetworkError_t closeStatus = IOT_NETWORK_SUCCESS;
+    IotMqttCallbackParam_t callbackParam = { .message = { 0 } };
 
     /* Mark the MQTT connection as disconnected and the keep-alive as failed. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
@@ -756,8 +758,7 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection )
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-    /* Close the network connection regardless of whether an MQTT DISCONNECT
-     * packet was sent. */
+    /* Close the network connection. */
     if( pMqttConnection->pNetworkInterface->close != NULL )
     {
         closeStatus = pMqttConnection->pNetworkInterface->close( pMqttConnection->pNetworkConnection );
@@ -777,6 +778,21 @@ void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection )
     {
         IotLogWarn( "(MQTT connection %p) No network close function was set. Network connection"
                     " not closed.", pMqttConnection );
+    }
+
+    /* Invoke the disconnect callback. */
+    if( pMqttConnection->disconnectCallback.function != NULL )
+    {
+        /* Set the members of the callback parameter. */
+        callbackParam.mqttConnection = pMqttConnection;
+        callbackParam.disconnectReason = disconnectReason;
+
+        pMqttConnection->disconnectCallback.function( pMqttConnection->disconnectCallback.pCallbackContext,
+                                                      &callbackParam );
+    }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
     }
 }
 
@@ -823,7 +839,8 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
         IotLogError( "(MQTT connection %p) Error processing incoming data. Closing connection.",
                      pMqttConnection );
 
-        _IotMqtt_CloseNetworkConnection( pMqttConnection );
+        _IotMqtt_CloseNetworkConnection( IOT_MQTT_BAD_PACKET_RECEIVED,
+                                         pMqttConnection );
     }
     else
     {

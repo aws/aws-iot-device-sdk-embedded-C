@@ -575,7 +575,7 @@ TEST( MQTT_Stress, BlockingCallback )
     IotSemaphore_t waitSem;
 
     callbackInfo.function = _blockingCallback;
-    callbackInfo.param1 = &waitSem;
+    callbackInfo.pCallbackContext = &waitSem;
 
     publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pTopicName = _pTopicNames[ 0 ];
