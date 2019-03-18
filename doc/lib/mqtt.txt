@@ -277,15 +277,6 @@ QoS 1 PUBLISH retransmissions follow a truncated exponential backoff strategy. T
 @configpossible Any positive integer.<br>
 @configdefault `60000`
 
-@section IOT_MQTT_TEST
-@brief Set this to `1` to enable test access for the MQTT library.
-
-This setting is used by the [MQTT tests](@ref mqtt_tests) to access the internal `static` functions and variables of the MQTT library. When `1`, it enables the @c \#include directives at the bottom of the [MQTT library source files](@ref lib/source/mqtt). These @c \#include directives include the test access files (located in `tests/mqtt/access`) that interact with the library's internal symbols. Unless the MQTT library is being tested, this setting should be `0`.
-
-@configpossible `0` (test access disabled) or `1` (test access enabled)<br>
-@configrecommended `0`<br>
-@configdefault `0`
-
 @section IotMqtt_Assert
 @brief Assertion function used when @ref IOT_MQTT_ENABLE_ASSERTS is `1`.
 

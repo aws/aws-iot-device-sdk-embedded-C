@@ -41,6 +41,9 @@ if( ${IOT_BUILD_TESTS} )
                          tests/unity/fixture
                          tests/mqtt/access )
 
+	# Define the constant to enable test access.
+	add_definitions( -DIOT_BUILD_TESTS=1 )
+
     # Tests config file.
     add_definitions( -DIOT_CONFIG_FILE="iot_tests_config.h" )
 
