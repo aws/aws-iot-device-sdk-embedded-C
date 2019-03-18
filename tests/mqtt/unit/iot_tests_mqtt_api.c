@@ -142,6 +142,11 @@ static int32_t _pingreqSendCount = 0;
 static int32_t _closeCount = 0;
 
 /**
+ * @brief Counts how many times #_disconnectCallback has been called.
+ */
+static int32_t _disconnectCallbackCount = 0;
+
+/**
  * @brief An MQTT connection to share among the tests.
  */
 static _mqttConnection_t * _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
@@ -463,6 +468,23 @@ static IotNetworkError_t _close( void * pCloseContext )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief An MQTT disconnect callback that counts how many times it was invoked.
+ */
+static void _disconnectCallback( void * pCallbackContext,
+                                 IotMqttCallbackParam_t * pCallbackParam )
+{
+    IotMqttDisconnectReason_t * pExpectedReason = ( IotMqttDisconnectReason_t * ) pCallbackContext;
+
+    /* Only increment counter if the reasons match. */
+    if( pCallbackParam->disconnectReason == *pExpectedReason )
+    {
+        _disconnectCallbackCount++;
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief A task pool job routine that decrements an MQTT operation's job
  * reference count.
  */
@@ -510,6 +532,7 @@ TEST_SETUP( MQTT_Unit_API )
     /* Reset the counters. */
     _pingreqSendCount = 0;
     _closeCount = 0;
+    _disconnectCallbackCount = 0;
 
     /* Initialize libraries. */
     TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
@@ -869,11 +892,14 @@ TEST( MQTT_Unit_API, ConnectRestoreSessionMallocFail )
 TEST( MQTT_Unit_API, DisconnectMallocFail )
 {
     int32_t i = 0;
+    IotMqttDisconnectReason_t expectedReason = IOT_MQTT_DISCONNECT_CALLED;
 
     /* Set the members of the network interface. */
     _networkInterface.send = _sendSuccess;
     _networkInterface.close = _close;
     _networkInfo.createNetworkConnection = false;
+    _networkInfo.disconnectCallback.pCallbackContext = &expectedReason;
+    _networkInfo.disconnectCallback.function = _disconnectCallback;
 
     for( i = 0; i < _DISCONNECT_MALLOC_LIMIT; i++ )
     {
@@ -893,7 +919,9 @@ TEST( MQTT_Unit_API, DisconnectMallocFail )
          * of memory allocation errors. */
         IotMqtt_Disconnect( _pMqttConnection, 0 );
         TEST_ASSERT_EQUAL_INT( 1, _closeCount );
+        TEST_ASSERT_EQUAL_INT( 1, _disconnectCallbackCount );
         _closeCount = 0;
+        _disconnectCallbackCount = 0;
     }
 }
 
@@ -1333,6 +1361,9 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
  */
 TEST( MQTT_Unit_API, KeepAlivePeriodic )
 {
+    /* The expected disconnect reason for this test's disconnect callback. */
+    IotMqttDisconnectReason_t expectedReason = IOT_MQTT_KEEP_ALIVE_TIMEOUT;
+
     /* An estimate for the amount of time this test requires. */
     const uint32_t sleepTimeMs = ( _KEEP_ALIVE_COUNT * _SHORT_KEEP_ALIVE_MS ) +
                                  ( IOT_MQTT_RESPONSE_WAIT_MS * _KEEP_ALIVE_COUNT ) + 1500;
@@ -1344,6 +1375,8 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
     _networkInterface.send = _sendPingreq;
     _networkInterface.receive = _receivePingresp;
     _networkInterface.close = _close;
+    _networkInfo.disconnectCallback.pCallbackContext = &expectedReason;
+    _networkInfo.disconnectCallback.function = _disconnectCallback;
 
     /* Create a new MQTT connection. */
     _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
@@ -1370,6 +1403,10 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
     /* Check the counters for PINGREQ send and close. */
     TEST_ASSERT_EQUAL_INT32( _KEEP_ALIVE_COUNT + 1, _pingreqSendCount );
     TEST_ASSERT_EQUAL_INT32( 2, _closeCount );
+
+    /* Check that the disconnect callback was invoked once (with reason
+     * "keep-alive timeout"). */
+    TEST_ASSERT_EQUAL_INT32( 1, _disconnectCallbackCount );
 }
 
 /*-----------------------------------------------------------*/

@@ -294,6 +294,23 @@ typedef enum IotMqttQos
     IOT_MQTT_QOS_2 = 2  /**< Delivery exactly once. Unsupported, but enumerated for completeness. */
 } IotMqttQos_t;
 
+/**
+ * @ingroup mqtt_datatypes_enums
+ * @brief The reason that an MQTT connection (and its associated network connection)
+ * was disconnected.
+ *
+ * When an MQTT connection is closed, its associated [disconnect callback]
+ * (@ref IotMqttNetworkInfo_t::disconnectCallback) will be invoked. This type
+ * is passed inside of an #IotMqttCallbackParam_t to provide a reason for the
+ * disconnect.
+ */
+typedef enum IotMqttDisconnectReason
+{
+    IOT_MQTT_DISCONNECT_CALLED,   /**< @ref mqtt_function_disconnect was invoked. */
+    IOT_MQTT_BAD_PACKET_RECEIVED, /**< An invalid packet was received from the network. */
+    IOT_MQTT_KEEP_ALIVE_TIMEOUT   /**< Keep-alive response was not received within @ref IOT_MQTT_RESPONSE_WAIT_MS. */
+} IotMqttDisconnectReason_t;
+
 /*------------------------- MQTT parameter structs --------------------------*/
 
 /**
@@ -386,12 +403,14 @@ typedef struct IotMqttPublishInfo
  * @paramfor MQTT callback functions
  *
  * The MQTT library passes this struct to registered callback whenever an
- * operation completes or a message is received on a topic filter.
+ * operation completes, a message is received on a topic filter, or an MQTT
+ * connection is disconnected.
  *
  * The members of this struct are different based on the callback trigger. If the
  * callback function was triggered for completed operation, the `operation`
  * member is valid. Otherwise, if the callback was triggered because of a
- * server-to-client PUBLISH, the `message` member is valid.
+ * server-to-client PUBLISH, the `message` member is valid. Finally, if the callback
+ * was triggered because of a disconnect, the `disconnectReason` member is valid.
  *
  * For an incoming PUBLISH, the `message.pTopicFilter` parameter provides the
  * subscription topic filter that matched the topic name in the PUBLISH. Because
@@ -411,12 +430,14 @@ typedef struct IotMqttPublishInfo
 typedef struct IotMqttCallbackParam
 {
     /**
-     * @brief The MQTT connection associated with this completed operation or
-     * incoming PUBLISH.
+     * @brief The MQTT connection associated with this completed operation,
+     * incoming PUBLISH, or disconnect.
      *
-     * [MQTT API functions](@ref mqtt_functions) are safe to call from a callback.
-     * However, blocking function calls (including @ref mqtt_function_wait) are
-     * not recommended (though still safe).
+     * [MQTT API functions](@ref mqtt_functions) are safe to call from a callback
+     * for completed operations or incoming PUBLISH messages. However, blocking
+     * function calls (including @ref mqtt_function_wait) are not recommended
+     * (though still safe). Do not call any API functions from a disconnect
+     * callback.
      */
     IotMqttConnection_t mqttConnection;
 
@@ -437,6 +458,9 @@ typedef struct IotMqttCallbackParam
             uint16_t topicFilterLength; /**< @brief Length of `pTopicFilter`. */
             IotMqttPublishInfo_t info;  /**< @brief PUBLISH message received from the server. */
         } message;
+
+        /* Valid when a connection is disconnected. */
+        IotMqttDisconnectReason_t disconnectReason; /**< @brief Why the MQTT connection was disconnected. */
     };
 } IotMqttCallbackParam_t;
 
@@ -478,12 +502,12 @@ typedef struct IotMqttCallbackParam
  */
 typedef struct IotMqttCallbackInfo
 {
-    void * param1; /**< @brief The first parameter to pass to the callback function. */
+    void * pCallbackContext; /**< @brief The first parameter to pass to the callback function to provide context. */
 
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void * #IotMqttCallbackInfo_t.param1
+     * @param[in] void * #IotMqttCallbackInfo_t.pCallbackContext
      * @param[in] IotMqttCallbackParam_t * Details on the outcome of the MQTT operation
      * or an incoming MQTT PUBLISH.
      *
@@ -950,6 +974,11 @@ typedef struct IotMqttNetworkInfo
      * for the lifetime of the MQTT connection.
      */
     const IotNetworkInterface_t * pNetworkInterface;
+
+    /**
+     * @brief A callback function to invoke when this MQTT connection is disconnected.
+     */
+    IotMqttCallbackInfo_t disconnectCallback;
 
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
 

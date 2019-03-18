@@ -301,11 +301,12 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     }
     else
     {
-        /* Clear the MQTT connection, then copy the MQTT server mode and network
-         * interface. */
+        /* Clear the MQTT connection, then copy the MQTT server mode, network
+         * interface, and disconnect callback. */
         ( void ) memset( pMqttConnection, 0x00, sizeof( _mqttConnection_t ) );
         pMqttConnection->awsIotMqttMode = awsIotMqttMode;
         pMqttConnection->pNetworkInterface = pNetworkInfo->pNetworkInterface;
+        pMqttConnection->disconnectCallback = pNetworkInfo->disconnectCallback;
 
         /* Start a new MQTT connection with a reference count of 1. */
         pMqttConnection->references = 1;
@@ -1303,7 +1304,8 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
     }
 
     /* Close the underlying network connection. This also cleans up keep-alive. */
-    _IotMqtt_CloseNetworkConnection( mqttConnection );
+    _IotMqtt_CloseNetworkConnection( IOT_MQTT_DISCONNECT_CALLED,
+                                     mqttConnection );
 
     /* Check if the connection may be destroyed. */
     IotMutex_Lock( &( mqttConnection->referencesMutex ) );

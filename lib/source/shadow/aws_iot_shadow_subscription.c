@@ -151,7 +151,7 @@ static AwsIotShadowError_t _modifyOperationSubscriptions( IotMqttConnection_t mq
     /* Set the members of the subscription parameter. */
     subscription.pTopicFilter = pTopicFilter;
     subscription.topicFilterLength = topicFilterLength;
-    subscription.callback.param1 = NULL;
+    subscription.callback.pCallbackContext = NULL;
     subscription.callback.function = callback;
 
     /* Call the MQTT operation function. */

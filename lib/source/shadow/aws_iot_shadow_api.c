@@ -483,7 +483,7 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
     subscription.qos = IOT_MQTT_QOS_1;
     subscription.pTopicFilter = pTopicFilter;
     subscription.topicFilterLength = ( uint16_t ) ( operationTopicLength + pCallbackSuffixLength[ type ] );
-    subscription.callback.param1 = ( void * ) pSubscription;
+    subscription.callback.pCallbackContext = ( void * ) pSubscription;
     subscription.callback.function = pCallbackWrapper[ type ];
 
     /* Call the MQTT operation function. */

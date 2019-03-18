@@ -270,6 +270,7 @@ typedef struct _mqttConnection
     bool ownNetworkConnection;                       /**< @brief Whether this MQTT connection owns its network connection. */
     void * pNetworkConnection;                       /**< @brief References the transport-layer network connection. */
     const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
+    IotMqttCallbackInfo_t disconnectCallback;        /**< @brief A function to invoke when this connection is disconnected. */
 
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
         const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
@@ -930,9 +931,12 @@ bool _IotMqtt_GetNextByte( void * pNetworkConnection,
  * A network disconnect function must be set in the network interface for the
  * network connection to be closed.
  *
+ * @param[in] disconnectReason A reason to pass to the connection's disconnect
+ * callback.
  * @param[in] pMqttConnection The MQTT connection with the network connection
  * to close.
  */
-void _IotMqtt_CloseNetworkConnection( _mqttConnection_t * pMqttConnection );
+void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason,
+                                      _mqttConnection_t * pMqttConnection );
 
 #endif /* ifndef _IOT_MQTT_INTERNAL_H_ */

@@ -400,7 +400,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
 {
     _mqttSubscription_t * pSubscription = NULL;
     IotLink_t * pCurrentLink = NULL, * pNextLink = NULL;
-    void * pParam1 = NULL;
+    void * pCallbackContext = NULL;
 
     void ( * callbackFunction )( void *,
                                  IotMqttCallbackParam_t * ) = NULL;
@@ -445,7 +445,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
 
         /* Copy the necessary members of the subscription before releasing the
          * subscription list mutex. */
-        pParam1 = pSubscription->callback.param1;
+        pCallbackContext = pSubscription->callback.pCallbackContext;
         callbackFunction = pSubscription->callback.function;
 
         /* Unlock the subscription list mutex. */
@@ -457,7 +457,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
         pCallbackParam->message.topicFilterLength = pSubscription->topicFilterLength;
 
         /* Invoke the subscription callback. */
-        callbackFunction( pParam1, pCallbackParam );
+        callbackFunction( pCallbackContext, pCallbackParam );
 
         /* Lock the subscription list mutex to decrement the reference count. */
         IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
