@@ -24,18 +24,93 @@
     #include IOT_CONFIG_FILE
 #endif
 
-#include <sys/socket.h>
-#include <linux/netlink.h>
-
 /* Metrics include. */
 #include "platform/iot_metrics.h"
 
 /* Platform threads include. */
 #include "platform/iot_threads.h"
 
+/* Compare function to identify the TCP connection id. */
+static bool _tcpConnectionMatch( const IotLink_t * pLink,
+                                 void * pId );
+
+/*------------------- Global Variables ------------------------*/
+
+static IotListDouble_t _connectionsList = IOT_LIST_DOUBLE_INITIALIZER;
+static IotMutex_t _mutex;
+
+/*-----------------------------------------------------------*/
+
+static bool _tcpConnectionMatch( const IotLink_t * pLink,
+                                 void * pId )
+{
+    IotMetrics_Assert( pLink != NULL );
+    IotMetrics_Assert( pId != NULL );
+
+    return *( ( IotMetricsConnectionId_t * ) pId ) == IotLink_Container( IotMetricsTcpConnection_t, pLink, link )->id;
+}
+
+/*-----------------------------------------------------------*/
+
 bool IotMetrics_Init()
 {
-    return true;
+    bool result = false;
+
+    if( IotMutex_Create( &_mutex, false ) )
+    {
+        IotListDouble_Create( &_connectionsList );
+        result = true;
+    }
+
+    return result;
+}
+
+/*-----------------------------------------------------------*/
+
+void IotMetrics_AddTcpConnection( IotMetricsTcpConnection_t * pTcpConnection )
+{
+    IotMetrics_Assert( pTcpConnection != NULL );
+
+    IotMutex_Lock( &_mutex );
+
+    /* Only add if it doesn't exist in the connectionsList. */
+    if( IotListDouble_FindFirstMatch( &_connectionsList,
+                                      NULL,
+                                      _tcpConnectionMatch,
+                                      &pTcpConnection->id ) == NULL )
+    {
+        IotMetricsTcpConnection_t * pNewTcpConnection = IotMetrics_MallocTcpConnection( sizeof( IotMetricsTcpConnection_t ) );
+
+        if( pNewTcpConnection != NULL )
+        {
+            /* Copy TCP connection to the new one. */
+            *pNewTcpConnection = *pTcpConnection;
+
+            /* Insert to the list. */
+            IotListDouble_InsertTail( &_connectionsList, &( pNewTcpConnection->link ) );
+        }
+    }
+
+    IotMutex_Unlock( &_mutex );
+}
+
+/*-----------------------------------------------------------*/
+
+void IotMetrics_RemoveTcpConnection( IotMetricsConnectionId_t tcpConnectionId )
+{
+    IotMutex_Lock( &_mutex );
+
+    IotLink_t * pFoundConnectionLink = IotListDouble_RemoveFirstMatch( &_connectionsList,
+                                                                       NULL,
+                                                                       _tcpConnectionMatch,
+                                                                       &tcpConnectionId );
+
+    if( pFoundConnectionLink != NULL )
+    {
+        IotMetrics_FreeTcpConnection( IotLink_Container( IotMetricsTcpConnection_t, pFoundConnectionLink, link ) );
+    }
+
+    IotMutex_Unlock( &_mutex );
 }
 
 /*-----------------------------------------------------------*/
@@ -44,22 +119,12 @@ void IotMetrics_ProcessTcpConnections( IotMetricsListCallback_t tcpConnectionsCa
 {
     if( tcpConnectionsCallback.function != NULL )
     {
-        IotListDouble_t connectionsList = IOT_LIST_DOUBLE_INITIALIZER;
-
-        int nl_sock = 0, numbytes = 0, rtalen = 0;
-        struct nlmsghdr *nlh;
-        uint8_t recv_buf[1024];
-        struct inet_diag_msg *diag_msg;
-
-        //Create the monitoring socket
-        if ((nl_sock = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_INET_DIAG)) == -1) {
-            return;
-        }
-
-
+        IotMutex_Lock( &_mutex );
 
         /* Execute the callback function. */
-        tcpConnectionsCallback.function( tcpConnectionsCallback.param1, &connectionsList);
+        tcpConnectionsCallback.function( tcpConnectionsCallback.param1, &_connectionsList );
+
+        IotMutex_Unlock( &_mutex );
     }
 
     /* If no callback function is provided, simply return. */

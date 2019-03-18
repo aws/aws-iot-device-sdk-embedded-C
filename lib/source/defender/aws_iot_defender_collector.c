@@ -29,12 +29,6 @@
 
 #include "platform/iot_clock.h"
 
-#ifdef _DEFENDER_ON_AMAZON_FREERTOS
-    #include "aws_secure_sockets.h"
-#else
-    #include <arpa/inet.h>
-#endif
-
 #define  _HEADER_TAG           AwsIotDefenderInternal_SelectTag( "header", "hed" )
 #define  _REPORTID_TAG         AwsIotDefenderInternal_SelectTag( "report_id", "rid" )
 #define  _VERSION_TAG          AwsIotDefenderInternal_SelectTag( "version", "v" )
@@ -94,7 +88,7 @@ uint64_t _AwsIotDefenderReportId = 0;
 
 static void copyMetricsFlag();
 
-static AwsIotDefenderEventType_t getLatestMetricsData();
+static bool getLatestMetricsData();
 
 static void freeMetricsData();
 
@@ -137,12 +131,12 @@ size_t AwsIotDefenderInternal_GetReportBufferSize()
 
 /*-----------------------------------------------------------*/
 
-AwsIotDefenderEventType_t AwsIotDefenderInternal_CreateReport()
+bool AwsIotDefenderInternal_CreateReport()
 {
     /* Assert report buffer is not allocated. */
     AwsIotDefender_Assert( _report.pDataBuffer == NULL && _report.size == 0 );
 
-    AwsIotDefenderEventType_t eventError = 0;
+    bool result = true;
 
     IotSerializerEncoderObject_t * pEncoderObject = &( _report.object );
     size_t dataSize = 0;
@@ -152,9 +146,9 @@ AwsIotDefenderEventType_t AwsIotDefenderInternal_CreateReport()
     copyMetricsFlag();
 
     /* Get latest metrics data. */
-    eventError = getLatestMetricsData();
+    result = getLatestMetricsData();
 
-    if( !eventError )
+    if( result )
     {
         /* Generate report id based on current time. */
         _AwsIotDefenderReportId = IotClock_GetTimeMs();
@@ -181,14 +175,14 @@ AwsIotDefenderEventType_t AwsIotDefenderInternal_CreateReport()
         }
         else
         {
-            eventError = AWS_IOT_DEFENDER_EVENT_NO_MEMORY;
+            result = false;
         }
 
         /* Metrics data can be freed. */
         freeMetricsData();
     }
 
-    return eventError;
+    return result;
 }
 
 /*-----------------------------------------------------------*/
@@ -325,9 +319,9 @@ static void copyMetricsFlag()
 
 /*-----------------------------------------------------------*/
 
-static AwsIotDefenderEventType_t getLatestMetricsData()
+static bool getLatestMetricsData()
 {
-    AwsIotDefenderEventType_t eventError = 0;
+    bool result = true;
 
     /* Get TCP connections metrics data. */
     if( _metricsFlagSnapshot[ AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS ] )
@@ -336,12 +330,12 @@ static AwsIotDefenderEventType_t getLatestMetricsData()
 
 
         tcpConnectionscallback.function = tcpConnectionsCallback;
-        tcpConnectionscallback.param1 = ( void * ) &eventError;
+        tcpConnectionscallback.param1 = ( bool * ) &result;
 
         IotMetrics_ProcessTcpConnections( tcpConnectionscallback );
     }
 
-    return eventError;
+    return result;
 }
 
 /*-----------------------------------------------------------*/
@@ -350,7 +344,11 @@ static void freeMetricsData()
 {
     if( _metricsFlagSnapshot[ AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS ] )
     {
-        IotMetrics_FreeTcpConnection( _metrics.tcpConns.pArray );
+        if( _metrics.tcpConns.pArray != NULL )
+        {
+            IotMetrics_FreeTcpConnection( _metrics.tcpConns.pArray );
+        }
+
         _metrics.tcpConns.pArray = NULL;
         _metrics.tcpConns.count = 0;
     }
@@ -361,7 +359,7 @@ static void freeMetricsData()
 static void tcpConnectionsCallback( void * param1,
                                     IotListDouble_t * pTcpConnectionsMetricsList )
 {
-    AwsIotDefenderEventType_t * pEventError = ( AwsIotDefenderEventType_t * ) param1;
+    bool * pResult = ( bool * ) param1;
 
     IotLink_t * pConnectionLink = IotListDouble_PeekHead( pTcpConnectionsMetricsList );
     IotMetricsTcpConnection_t * pConnection = NULL;
@@ -375,7 +373,10 @@ static void tcpConnectionsCallback( void * param1,
         /* Allocate memory to copy TCP connections metrics data. */
         _metrics.tcpConns.pArray = IotMetrics_MallocTcpConnection( total * sizeof( IotMetricsTcpConnection_t ) );
 
-        if( _metrics.tcpConns.pArray != NULL )
+        /* Set whether success of memory allocation to the output pointer. */
+        *pResult = _metrics.tcpConns.pArray != NULL;
+
+        if( *pResult )
         {
             /* Set count only the memory allocation succeeds. */
             _metrics.tcpConns.count = ( uint8_t ) total;
@@ -393,10 +394,6 @@ static void tcpConnectionsCallback( void * param1,
                 /* Iterate to next one. */
                 pConnectionLink = pConnectionLink->pNext;
             }
-        }
-        else
-        {
-            *pEventError = AWS_IOT_DEFENDER_EVENT_NO_MEMORY;
         }
     }
 }
@@ -471,7 +468,7 @@ static void _serializeTcpConnections( IotSerializerEncoderObject_t * pMetricsObj
                 /* add remote address */
                 if( hasRemoteAddr )
                 {
-                    sprintf( remoteAddr, "%s:%d", _metrics.tcpConns.pArray[i].pRemoteIP, _metrics.tcpConns.pArray[i].remotePort);
+                    sprintf( remoteAddr, "%s:%d", _metrics.tcpConns.pArray[ i ].pRemoteIP, _metrics.tcpConns.pArray[ i ].remotePort );
 
                     serializerError = _AwsIotDefenderEncoder.appendKeyValue( &connectionMap, _REMOTE_ADDR_TAG,
                                                                              IotSerializer_ScalarTextString( remoteAddr ) );

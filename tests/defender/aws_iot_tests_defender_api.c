@@ -78,6 +78,7 @@ static const AwsIotDefenderCallback_t _EMPTY_CALLBACK = { .function = NULL, .par
 static IotNetworkServerInfoOpenssl_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 static IotNetworkCredentialsOpenssl_t _credential = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
 
+extern const IotNetworkInterface_t _IotNetworkOpensslMetrics;
 /*------------------ global variables -----------------------------*/
 
 static uint8_t _payloadBuffer[ _PAYLOAD_MAX_SIZE ];
@@ -87,10 +88,10 @@ static AwsIotDefenderCallback_t _testCallback;
 
 static AwsIotDefenderStartInfo_t _startInfo = AWS_IOT_DEFENDER_START_INFO_INITIALIZER;
 
-/* 
-Waiting for it indicates waiting for any event to happen
-Posting it indicates any event happened
-*/
+/*
+ * Waiting for it indicates waiting for any event to happen
+ * Posting it indicates any event happened
+ */
 static IotSemaphore_t _callbackInfoSem;
 
 static AwsIotDefenderCallbackInfo_t _callbackInfo;
@@ -157,9 +158,12 @@ TEST_SETUP( Full_DEFENDER )
     _serverInfo = ( IotNetworkServerInfoOpenssl_t ) IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 
     /* Set fields of start info. */
-    _startInfo.pConnectionInfo = &_serverInfo;
-    _startInfo.pCredentialInfo = &_credential;
-    _startInfo.pNetworkInterface = IOT_NETWORK_INTERFACE_OPENSSL;
+    _startInfo.mqttNetworkInfo = ( IotMqttNetworkInfo_t ) IOT_MQTT_NETWORK_INFO_INITIALIZER;
+    _startInfo.mqttNetworkInfo.createNetworkConnection = true;
+    _startInfo.mqttNetworkInfo.pNetworkServerInfo = &_serverInfo;
+    _startInfo.mqttNetworkInfo.pNetworkCredentialInfo = &_credential;
+
+    _startInfo.mqttNetworkInfo.pNetworkInterface = &_IotNetworkOpensslMetrics;
 
     _startInfo.mqttConnectionInfo = ( IotMqttConnectInfo_t ) IOT_MQTT_CONNECT_INFO_INITIALIZER;
     _startInfo.mqttConnectionInfo.pClientIdentifier = AWS_IOT_TEST_SHADOW_THING_NAME;
@@ -357,7 +361,7 @@ TEST( Full_DEFENDER, Start_with_wrong_network_information )
 
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, error );
 
-    _assertEvent( AWS_IOT_DEFENDER_NETWORK_CONNECTION_FAILED, _WAIT_STATE_TOTAL_SECONDS );
+    _assertEvent( AWS_IOT_DEFENDER_FAILURE_MQTT, _WAIT_STATE_TOTAL_SECONDS );
 }
 
 TEST( Full_DEFENDER, Start_should_return_success )

@@ -108,45 +108,18 @@ void AwsIotDefenderInternal_DeleteTopicsNames()
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotDefenderInternal_NetworkConnect()
+IotMqttError_t AwsIotDefenderInternal_MqttConnect()
 {
-    return _startInfo.pNetworkInterface->create( _startInfo.pConnectionInfo,
-                                                 _startInfo.pCredentialInfo,
-                                                 _startInfo.pConnection ) == IOT_NETWORK_SUCCESS;
-}
-
-/*-----------------------------------------------------------*/
-
-void AwsIotDefenderInternal_SetMqttCallback()
-{
-    IotNetworkError_t error = _startInfo.pNetworkInterface->setReceiveCallback( _startInfo.pConnection,
-                                                                                IotMqtt_ReceiveCallback,
-                                                                                &_mqttConnection );
-
-    AwsIotDefender_Assert( error == IOT_NETWORK_SUCCESS );
-}
-
-/*-----------------------------------------------------------*/
-
-bool AwsIotDefenderInternal_MqttConnect()
-{
-    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
-
-    networkInfo.createNetworkConnection = true;
-    networkInfo.pNetworkServerInfo = _startInfo.pConnectionInfo;
-    networkInfo.pNetworkCredentialInfo = _startInfo.pCredentialInfo;
-    networkInfo.pNetworkInterface = _startInfo.pNetworkInterface;
-
-    return IotMqtt_Connect( &networkInfo,
+    return IotMqtt_Connect( &_startInfo.mqttNetworkInfo,
                             &_startInfo.mqttConnectionInfo,
                             _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_CONNECT_TIMEOUT_SECONDS ),
-                            &_mqttConnection ) == IOT_MQTT_SUCCESS;
+                            &_mqttConnection );
 }
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotDefenderInternal_MqttSubscribe( IotMqttCallbackInfo_t acceptCallback,
-                                           IotMqttCallbackInfo_t rejectCallback )
+IotMqttError_t AwsIotDefenderInternal_MqttSubscribe( IotMqttCallbackInfo_t acceptCallback,
+                                                     IotMqttCallbackInfo_t rejectCallback )
 {
     /* subscribe to two topics: accept and reject. */
     IotMqttSubscription_t subscriptions[ 2 ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER, IOT_MQTT_SUBSCRIPTION_INITIALIZER };
@@ -165,13 +138,13 @@ bool AwsIotDefenderInternal_MqttSubscribe( IotMqttCallbackInfo_t acceptCallback,
                                    subscriptions,
                                    2,
                                    0,
-                                   _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_SUBSCRIBE_TIMEOUT_SECONDS ) ) == IOT_MQTT_SUCCESS;
+                                   _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_SUBSCRIBE_TIMEOUT_SECONDS ) );
 }
 
 /*-----------------------------------------------------------*/
 
-bool AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
-                                         size_t dataLength )
+IotMqttError_t AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
+                                                   size_t dataLength )
 {
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
@@ -184,7 +157,7 @@ bool AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
     return IotMqtt_TimedPublish( _mqttConnection,
                                  &publishInfo,
                                  0,
-                                 _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_PUBLISH_TIMEOUT_SECONDS ) ) == IOT_MQTT_SUCCESS;
+                                 _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_PUBLISH_TIMEOUT_SECONDS ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -192,22 +165,4 @@ bool AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
 void AwsIotDefenderInternal_MqttDisconnect()
 {
     IotMqtt_Disconnect( _mqttConnection, false );
-}
-
-/*-----------------------------------------------------------*/
-
-void AwsIotDefenderInternal_NetworkClose()
-{
-    IotNetworkError_t error = _startInfo.pNetworkInterface->close( _startInfo.pConnection );
-
-    AwsIotDefender_Assert( error == IOT_NETWORK_SUCCESS );
-}
-
-/*-----------------------------------------------------------*/
-
-void AwsIotDefenderInternal_NetworkDestroy()
-{
-    IotNetworkError_t error = _startInfo.pNetworkInterface->destroy( _startInfo.pConnection );
-
-    AwsIotDefender_Assert( error == IOT_NETWORK_SUCCESS );
 }
