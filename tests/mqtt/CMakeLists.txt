@@ -10,4 +10,4 @@ add_executable( iot_tests_mqtt
                 system/iot_tests_mqtt_stress.c )
 
 # MQTT tests library dependencies.
-target_link_libraries( iot_tests_mqtt iotcommon iotplatform iotmqtt unity )
+target_link_libraries( iot_tests_mqtt iotcommon iotplatform iotmqtt unity pthread )

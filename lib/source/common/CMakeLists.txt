@@ -16,7 +16,7 @@ add_library( iotcommon SHARED
 set_target_properties( iotcommon PROPERTIES VERSION ${PROJECT_VERSION} )
 
 # Link required libraries.
-target_link_libraries( iotcommon iotplatform iotmetrics )
+target_link_libraries( iotcommon iotplatform )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )

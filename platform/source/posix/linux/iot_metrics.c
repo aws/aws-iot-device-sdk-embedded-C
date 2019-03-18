@@ -25,17 +25,19 @@
 #endif
 
 /* Metrics include. */
-#include "iot_metrics.h"
+#include "platform/iot_metrics.h"
 
 /* Platform threads include. */
 #include "platform/iot_threads.h"
 
-static IotListDouble_t _connectionsList = IOT_LIST_DOUBLE_INITIALIZER;
-static IotMutex_t _mutex;
-
 /* Compare function to identify the TCP connection id. */
 static bool _tcpConnectionMatch( const IotLink_t * pLink,
                                  void * pId );
+
+/*------------------- Global Variables ------------------------*/
+
+static IotListDouble_t _connectionsList = IOT_LIST_DOUBLE_INITIALIZER;
+static IotMutex_t _mutex;
 
 /*-----------------------------------------------------------*/
 
@@ -45,7 +47,7 @@ static bool _tcpConnectionMatch( const IotLink_t * pLink,
     IotMetrics_Assert( pLink != NULL );
     IotMetrics_Assert( pId != NULL );
 
-    return *( ( uint32_t * ) pId ) == IotLink_Container( IotMetricsTcpConnection_t, pLink, link )->id;
+    return *( ( IotMetricsConnectionId_t * ) pId ) == IotLink_Container( IotMetricsTcpConnection_t, pLink, link )->id;
 }
 
 /*-----------------------------------------------------------*/
@@ -94,7 +96,7 @@ void IotMetrics_AddTcpConnection( IotMetricsTcpConnection_t * pTcpConnection )
 
 /*-----------------------------------------------------------*/
 
-void IotMetrics_RemoveTcpConnection( uint32_t tcpConnectionId )
+void IotMetrics_RemoveTcpConnection( IotMetricsConnectionId_t tcpConnectionId )
 {
     IotMutex_Lock( &_mutex );
 
@@ -115,16 +117,15 @@ void IotMetrics_RemoveTcpConnection( uint32_t tcpConnectionId )
 
 void IotMetrics_ProcessTcpConnections( IotMetricsListCallback_t tcpConnectionsCallback )
 {
-    /* If no callback function is provided, simply return. */
-    if( tcpConnectionsCallback.function == NULL )
+    if( tcpConnectionsCallback.function != NULL )
     {
-        return;
+        IotMutex_Lock( &_mutex );
+
+        /* Execute the callback function. */
+        tcpConnectionsCallback.function( tcpConnectionsCallback.param1, &_connectionsList );
+
+        IotMutex_Unlock( &_mutex );
     }
 
-    IotMutex_Lock( &_mutex );
-
-    /* Execute the callback function. */
-    tcpConnectionsCallback.function( tcpConnectionsCallback.param1, &_connectionsList );
-
-    IotMutex_Unlock( &_mutex );
+    /* If no callback function is provided, simply return. */
 }

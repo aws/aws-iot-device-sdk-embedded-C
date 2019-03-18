@@ -7,15 +7,18 @@
 
 void harness()
 {
-    size_t dataLength;
-    uint8_t * pPublishStart = malloc( sizeof( uint8_t ) * dataLength );
-    IotMqttPublishInfo_t output;
-    uint16_t packetIdentifier;
-    size_t bytesProcessed;
+    IotMqttPublishInfo_t publishInfo;
 
-    _IotMqtt_DeserializePublish( pPublishStart,
-                                 dataLength,
-                                 &output,
-                                 &packetIdentifier,
-                                 &bytesProcessed );
+    publishInfo.pTopicName = malloc( publishInfo.topicNameLength );
+    publishInfo.pPayload = malloc( publishInfo.payloadLength );
+
+    _mqttOperation_t operation;
+    operation.publishInfo = publishInfo;
+
+    _mqttPacket_t publish;
+    publish.pRemainingData = malloc( sizeof( uint8_t ) * publish.remainingLength );
+    publish.pIncomingPublish = &operation;
+
+
+    _IotMqtt_DeserializePublish( &publish );
 }

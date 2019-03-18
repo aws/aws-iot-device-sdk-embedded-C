@@ -9,6 +9,9 @@ PROJECT_BRIEF = "MQTT 3.1.1 client library"
 # Library documentation output directory.
 HTML_OUTPUT = mqtt
 
+# Generate documentation for MQTT packet serializer overrides.
+PREDEFINED += "IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES=1"
+
 # Generate Doxygen tag file for this library.
 GENERATE_TAGFILE = doc/tag/mqtt.tag
 
@@ -16,6 +19,7 @@ GENERATE_TAGFILE = doc/tag/mqtt.tag
 INPUT = doc \
         doc/lib \
         lib/include \
+        lib/include/types \
         lib/include/private \
         lib/source/mqtt \
         demos/ \

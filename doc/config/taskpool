@@ -3,7 +3,7 @@
 @INCLUDE = common
 
 # Basic project information.
-PROJECT_NAME = "TASKPOOL"
+PROJECT_NAME = "Task Pool"
 PROJECT_BRIEF = "Task pool library"
 
 # Library documentation output directory.
@@ -19,9 +19,7 @@ INPUT = doc \
         lib/include/private \
         lib/include/types \
         lib/source/common \
-        demos/ \
-        tests/ \
-        tests/common/unit 
+        tests/common/unit
 
 # Library file names.
 FILE_PATTERNS = *taskpool*.c *taskpool*.h *taskpool*.txt

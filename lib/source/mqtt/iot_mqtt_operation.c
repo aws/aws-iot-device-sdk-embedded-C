@@ -91,13 +91,6 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation );
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief The task pool that processes MQTT operations.
- */
-IotTaskPool_t _IotMqttTaskPool = { 0 };
-
-/*-----------------------------------------------------------*/
-
 static bool _mqttOperation_match( const IotLink_t * pOperationLink,
                                   void * pMatch )
 {
@@ -141,20 +134,27 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
     bool status = true;
 
     /* Choose a set DUP function. */
-    void ( * publishSetDup )( bool,
+    void ( * publishSetDup )( uint8_t *,
                               uint8_t *,
                               uint16_t * ) = _IotMqtt_PublishSetDup;
 
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pMqttConnection->network.serialize.publishSetDup != NULL )
+        if( pMqttConnection->pSerializer != NULL )
         {
-            publishSetDup = pMqttConnection->network.serialize.publishSetDup;
+            if( pMqttConnection->pSerializer->serialize.publishSetDup != NULL )
+            {
+                publishSetDup = pMqttConnection->pSerializer->serialize.publishSetDup;
+            }
+            else
+            {
+                _EMPTY_ELSE_MARKER;
+            }
         }
         else
         {
             _EMPTY_ELSE_MARKER;
         }
-    #endif
+    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
     /* Only PUBLISH may be retried. */
     IotMqtt_Assert( pOperation->operation == IOT_MQTT_PUBLISH_TO_SERVER );
@@ -177,8 +177,8 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
     else if( pOperation->retry.count == 1 )
     {
         /* Always set the DUP flag on the first retry. */
-        publishSetDup( pMqttConnection->awsIotMqttMode,
-                       pOperation->pMqttPacket,
+        publishSetDup( pOperation->pMqttPacket,
+                       pOperation->pPacketIdentifierHigh,
                        &( pOperation->packetIdentifier ) );
     }
     else
@@ -187,8 +187,8 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
          * identifier) must be reset on every retry. */
         if( pMqttConnection->awsIotMqttMode == true )
         {
-            publishSetDup( pMqttConnection->awsIotMqttMode,
-                           pOperation->pMqttPacket,
+            publishSetDup( pOperation->pMqttPacket,
+                           pOperation->pPacketIdentifierHigh,
                            &( pOperation->packetIdentifier ) );
         }
         else
@@ -462,7 +462,7 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
     /* Attempt to cancel the operation's job. */
     if( cancelJob == true )
     {
-        taskPoolStatus = IotTaskPool_TryCancel( &( _IotMqttTaskPool ),
+        taskPoolStatus = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
                                                 &( pOperation->job ),
                                                 NULL );
 
@@ -572,15 +572,22 @@ void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
     if( pOperation->pMqttPacket != NULL )
     {
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pMqttConnection->network.freePacket != NULL )
+            if( pMqttConnection->pSerializer != NULL )
             {
-                freePacket = pMqttConnection->network.freePacket;
+                if( pMqttConnection->pSerializer->freePacket != NULL )
+                {
+                    freePacket = pMqttConnection->pSerializer->freePacket;
+                }
+                else
+                {
+                    _EMPTY_ELSE_MARKER;
+                }
             }
             else
             {
                 _EMPTY_ELSE_MARKER;
             }
-        #endif
+        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
         freePacket( pOperation->pMqttPacket );
 
@@ -639,7 +646,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
 
     /* Check parameters. */
-    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
+    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pKeepAliveJob == &( pMqttConnection->keepAliveJob ) );
 
     /* Check that keep-alive interval is valid. The MQTT spec states its maximum
@@ -668,9 +675,9 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
         /* Because PINGREQ may be used to keep the MQTT connection alive, it is
          * more important than other operations. Bypass the queue of jobs for
          * operations by directly sending the PINGREQ in this job. */
-        bytesSent = pMqttConnection->network.send( pMqttConnection->network.pSendContext,
-                                                   pMqttConnection->pPingreqPacket,
-                                                   pMqttConnection->pingreqPacketSize );
+        bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
+                                                              pMqttConnection->pPingreqPacket,
+                                                              pMqttConnection->pingreqPacketSize );
 
         if( bytesSent != pMqttConnection->pingreqPacketSize )
         {
@@ -760,59 +767,35 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
                                       IotTaskPoolJob_t * pPublishJob,
                                       void * pContext )
 {
-    _mqttOperation_t * pCurrent = NULL, * pNext = pContext;
+    _mqttOperation_t * pOperation = pContext;
     IotMqttCallbackParam_t callbackParam = { .message = { 0 } };
 
     /* Check parameters. The task pool and job parameter is not used when asserts
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pPublishJob;
-    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
-    IotMqtt_Assert( pNext->incomingPublish == true );
-    IotMqtt_Assert( pPublishJob == &( pNext->job ) );
+    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
+    IotMqtt_Assert( pOperation->incomingPublish == true );
+    IotMqtt_Assert( pPublishJob == &( pOperation->job ) );
 
-    /* Process each linked incoming PUBLISH. */
-    while( pNext != NULL )
+    /* Process the current PUBLISH. */
+    callbackParam.message.info = pOperation->publishInfo;
+
+    _IotMqtt_InvokeSubscriptionCallback( pOperation->pMqttConnection,
+                                         &callbackParam );
+
+    /* Free any buffers associated with the current PUBLISH message. */
+    if( pOperation->pReceivedData != NULL )
     {
-        /* Save a pointer to the current PUBLISH and move the iterating
-         * pointer. */
-        pCurrent = pNext;
-        pNext = pNext->pNextPublish;
-
-        /* Process the current PUBLISH. */
-        if( pCurrent->publishInfo.pPayload != NULL )
-        {
-            if( pCurrent->publishInfo.pTopicName != NULL )
-            {
-                callbackParam.message.info = pCurrent->publishInfo;
-
-                _IotMqtt_InvokeSubscriptionCallback( pCurrent->pMqttConnection,
-                                                     &callbackParam );
-            }
-            else
-            {
-                _EMPTY_ELSE_MARKER;
-            }
-        }
-        else
-        {
-            _EMPTY_ELSE_MARKER;
-        }
-
-        /* Free any buffers associated with the current PUBLISH message. */
-        if( pCurrent->freeReceivedData != NULL )
-        {
-            IotMqtt_Assert( pCurrent->pReceivedData != NULL );
-            pCurrent->freeReceivedData( ( void * ) pCurrent->pReceivedData );
-        }
-        else
-        {
-            _EMPTY_ELSE_MARKER;
-        }
-
-        /* Free the current PUBLISH. */
-        IotMqtt_FreeOperation( pCurrent );
+        IotMqtt_FreeMessage( ( void* ) pOperation->pReceivedData );
     }
+    else
+    {
+        _EMPTY_ELSE_MARKER;
+    }
+
+    /* Free the incoming PUBLISH operation. */
+    IotMqtt_FreeOperation( pOperation );
 }
 
 /*-----------------------------------------------------------*/
@@ -830,7 +813,7 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pSendJob;
-    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
+    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pSendJob == &( pOperation->job ) );
 
     /* The given operation must have an allocated packet and be waiting for a status. */
@@ -867,9 +850,9 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
                      pOperation );
 
         /* Transmit the MQTT packet from the operation over the network. */
-        bytesSent = pMqttConnection->network.send( pMqttConnection->network.pSendContext,
-                                                   pOperation->pMqttPacket,
-                                                   pOperation->packetSize );
+        bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
+                                                              pOperation->pMqttPacket,
+                                                              pOperation->packetSize );
 
         /* Check transmission status. */
         if( bytesSent != pOperation->packetSize )
@@ -883,6 +866,9 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
              * may also be considered successful. */
             if( pOperation->operation == IOT_MQTT_DISCONNECT )
             {
+                /* DISCONNECT operations are always waitable. */
+                IotMqtt_Assert( waitable == true );
+
                 pOperation->status = IOT_MQTT_SUCCESS;
             }
             else if( waitable == false )
@@ -1007,7 +993,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pOperationJob;
-    IotMqtt_Assert( pTaskPool == &( _IotMqttTaskPool ) );
+    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pOperationJob == &( pOperation->job ) );
 
     /* The operation's callback function and status must be set. */
@@ -1055,7 +1041,7 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * pOperation,
     IotMqtt_Assert( taskPoolStatus == IOT_TASKPOOL_SUCCESS );
 
     /* Schedule the new job with a delay. */
-    taskPoolStatus = IotTaskPool_ScheduleDeferred( &( _IotMqttTaskPool ),
+    taskPoolStatus = IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
                                                    &( pOperation->job ),
                                                    delay );
 
@@ -1130,7 +1116,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
          * the retry job. */
         if( pResult->retry.limit > 0 )
         {
-            taskPoolStatus = IotTaskPool_TryCancel( &( _IotMqttTaskPool ),
+            taskPoolStatus = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
                                                     &( pResult->job ),
                                                     NULL );
 

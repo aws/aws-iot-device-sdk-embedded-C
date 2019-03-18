@@ -128,18 +128,18 @@ In demo applications, the default client certificate private key can be overridd
 
 @configpossible Any string representing a filesystem path to a PEM-encoded private key matching the [client certificate](@ref IOT_DEMO_CLIENT_CERT).
 
-@section AWS_IOT_DEMO_THING_NAME
-@brief Default Thing Name used for demos specific to AWS IoT.
+@section IOT_DEMO_IDENTIFIER
+@brief A string that identifies this client to the cloud.
 
-Thing Names are used to manage devices in AWS IoT. See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) for more information.
+Depending on the demo, this identifier is used for the client identifier (general MQTT demos) or the AWS IoT Thing Name (demos specific to AWS IoT).
 
-In demo applications, the default Thing Name can be overridden with the command line option `-i`. The command line option will override this setting.
+In demo applications, the default identifier can be overridden with the command line option `-i`. The command line option will override this setting.
 
-<b>No default value is provided for this setting.</b> For demos requiring a Thing Name (such as Shadow) this setting must be defined (or a command line option `-i` given to the demo application); otherwise, the demo will fail.
+In the [general MQTT demos](@ref mqtt_demo), this identifier becomes the MQTT client identifier. No two clients may use the same identifier simultaneously. MQTT client identifiers may be subject to certain constraints; for example, servers are not obligated to accept client identifiers longer than 23 characters or client identifiers containing non-alphanumeric characters. If this setting is undefined and no command line option is provided at runtime, the MQTT demos may generate a unique client identifier for use.
 
-This setting does not affect the MQTT demo (which is not specific to AWS IoT); see @ref IOT_DEMO_MQTT_CLIENT_IDENTIFIER for the equivalent setting for the MQTT demo.
+In the demos specific to AWS IoT, this identifier becomes the Thing Name, which is used to manage devices in AWS IoT. See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/iot-thing-management.html) for more information. <b>No default value is provided for Thing Names.</b> For demos requiring a Thing Name (such as Shadow) this setting must be defined (or a command line option `-i` given to the demo application); otherwise, the demo will fail.
 
-@configpossible Any string representing an AWS IoT Thing Name.
+@configpossible Strings representing MQTT client identifiers or Thing Names.
 */
 
 /**

@@ -64,12 +64,10 @@ void IotTest_NetworkCleanup( void );
  * Creates a new network connection for use with MQTT.
  *
  * @param[out] pNewConnection The handle by which this new connection will be referenced.
- * @param[in] pMqttConnection The MQTT connection associated with the new network connection.
  *
  * @return true if a new network connection was successfully created; false otherwise.
  */
-bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection,
-                             IotMqttConnection_t * pMqttConnection );
+bool IotTest_NetworkConnect( IotTestNetworkConnection_t ** pNewConnection );
 
 /**
  * @brief Network interface close connection function for the tests.
@@ -91,14 +89,9 @@ void IotTest_NetworkDestroy( void * pNetworkConnection );
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Flag that tracks if the network connection is created.
- */
-static bool _networkConnectionCreated = false;
-
-/**
  * @brief The network connection shared among the tests.
  */
-static IotTestNetworkConnection_t _networkConnection = IOT_TEST_NETWORK_CONNECTION_INITIALIZER;
+static IotTestNetworkConnection_t * _pNetworkConnection = NULL;
 
 /**
  * @brief Network interface to use in the tests.
@@ -108,7 +101,7 @@ static const IotNetworkInterface_t * const _pNetworkInterface = IOT_TEST_NETWORK
 /**
  * @brief The MQTT network interface shared among the tests.
  */
-IotMqttNetIf_t _IotTestNetworkInterface = IOT_MQTT_NETIF_INITIALIZER;
+IotMqttNetworkInfo_t _IotTestNetworkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
 /**
  * @brief The MQTT connection shared among the tests.
@@ -125,21 +118,17 @@ bool IotTest_NetworkSetup( void )
         return false;
     }
 
-    if( IotTest_NetworkConnect( &_networkConnection,
-                                &_IotTestMqttConnection ) == false )
+    if( IotTest_NetworkConnect( &_pNetworkConnection ) == false )
     {
         IotTestNetwork_Cleanup();
 
         return false;
     }
 
-    /* Set the members of the network interface. */
-    _IotTestNetworkInterface.pDisconnectContext = NULL;
-    _IotTestNetworkInterface.disconnect = IotTest_NetworkClose;
-    _IotTestNetworkInterface.pSendContext = ( void * ) &_networkConnection;
-    _IotTestNetworkInterface.send = _pNetworkInterface->send;
-
-    _networkConnectionCreated = true;
+    /* Set the members of the network info. */
+    _IotTestNetworkInfo.createNetworkConnection = false;
+    _IotTestNetworkInfo.pNetworkConnection = _pNetworkConnection;
+    _IotTestNetworkInfo.pNetworkInterface = _pNetworkInterface;
 
     return true;
 }
@@ -149,24 +138,23 @@ bool IotTest_NetworkSetup( void )
 void IotTest_NetworkCleanup( void )
 {
     /* Close the TCP connection to the server. */
-    if( _networkConnectionCreated == true )
+    if( _pNetworkConnection != NULL )
     {
         IotTest_NetworkClose( NULL );
-        IotTest_NetworkDestroy( &_networkConnection );
-        _networkConnectionCreated = false;
+        IotTest_NetworkDestroy( _pNetworkConnection );
+        _pNetworkConnection = NULL;
     }
 
     /* Clean up the network library. */
     IotTestNetwork_Cleanup();
 
     /* Clear the network interface. */
-    ( void ) memset( &_IotTestNetworkInterface, 0x00, sizeof( IotMqttNetIf_t ) );
+    ( void ) memset( &_IotTestNetworkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
 }
 
 /*-----------------------------------------------------------*/
 
-bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection,
-                             IotMqttConnection_t * pMqttConnection )
+bool IotTest_NetworkConnect( IotTestNetworkConnection_t ** pNewConnection )
 {
     IotTestNetworkServerInfo_t serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
     IotTestNetworkCredentials_t * pCredentials = NULL;
@@ -185,17 +173,6 @@ bool IotTest_NetworkConnect( IotTestNetworkConnection_t * pNewConnection,
         return false;
     }
 
-    /* Set the MQTT receive callback. */
-    if( _pNetworkInterface->setReceiveCallback( pNewConnection,
-                                                IotMqtt_ReceiveCallback,
-                                                pMqttConnection ) != IOT_NETWORK_SUCCESS )
-    {
-        _pNetworkInterface->close( pNewConnection );
-        _pNetworkInterface->destroy( pNewConnection );
-
-        return false;
-    }
-
     return true;
 }
 
@@ -206,13 +183,13 @@ IotNetworkError_t IotTest_NetworkClose( void * pNetworkConnection )
     /* Close the provided network handle; if that is NULL, close the
      * global network handle. */
     if( ( pNetworkConnection != NULL ) &&
-        ( pNetworkConnection != &_networkConnection ) )
+        ( pNetworkConnection != _pNetworkConnection ) )
     {
         _pNetworkInterface->close( pNetworkConnection );
     }
-    else if( _networkConnectionCreated == true )
+    else if( _pNetworkConnection != NULL )
     {
-        _pNetworkInterface->close( &_networkConnection );
+        _pNetworkInterface->close( _pNetworkConnection );
     }
 
     return IOT_NETWORK_SUCCESS;
@@ -223,17 +200,17 @@ IotNetworkError_t IotTest_NetworkClose( void * pNetworkConnection )
 void IotTest_NetworkDestroy( void * pNetworkConnection )
 {
     if( ( pNetworkConnection != NULL ) &&
-        ( pNetworkConnection != &_networkConnection ) )
+        ( pNetworkConnection != _pNetworkConnection ) )
     {
         /* Wrap the network interface's destroy function. */
         _pNetworkInterface->destroy( pNetworkConnection );
     }
     else
     {
-        if( _networkConnectionCreated == true )
+        if( _pNetworkConnection != NULL )
         {
-            _pNetworkInterface->destroy( &_networkConnection );
-            _networkConnectionCreated = false;
+            _pNetworkInterface->destroy( _pNetworkConnection );
+            _pNetworkConnection = NULL;
         }
     }
 }

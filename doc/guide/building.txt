@@ -98,7 +98,7 @@ See @ref IOT_DEMO_ROOT_CA, @ref IOT_DEMO_CLIENT_CERT, and @ref IOT_DEMO_PRIVATE_
 
 Must be followed by a string representing either an MQTT client identifier (MQTT demo only) or a Thing Name (all other demos). Because AWS IoT recommends that MQTT client identifier and Thing Name match, demos will use the Thing Name as the MQTT client identifier when possible.
 
-See @ref IOT_DEMO_MQTT_CLIENT_IDENTIFIER (MQTT demo only) or @ref AWS_IOT_DEMO_THING_NAME for the compile-time default settings of this option.
+See @ref IOT_DEMO_IDENTIFIER for the compile-time default settings of this option.
 
 @section building_tests Building and running the tests
 @brief How to build and run the SDK tests.

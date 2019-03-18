@@ -21,8 +21,6 @@ INPUT = doc/lib/ \
 # Library file names.
 FILE_PATTERNS = *defender*.h *defender*.txt
 
-EXAMPLE_PATH = lib/include/aws_iot_defender.h
-
 # External tag files required by this library.
 TAGFILES = doc/tag/main.tag=../main \
            doc/tag/mqtt.tag=../mqtt \

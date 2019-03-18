@@ -25,12 +25,8 @@
 /* Task pool include. */
 #include "iot_taskpool.h"
 
-/* POSIX includes. */
-#ifdef _DEFENDER_ON_AMAZON_FREERTOS
-    #include "FreeRTOS_POSIX/unistd.h"
-#else
-    #include <unistd.h>
-#endif
+/* Clock include. */
+#include "platform/iot_clock.h"
 
 #define _WAIT_METRICS_JOB_MAX_SECONDS    ( 5 )
 
@@ -92,6 +88,9 @@ static bool _started = false;
 /* Internal copy of startInfo so that user's input doesn't have to be valid all the time. */
 AwsIotDefenderStartInfo_t _startInfo = AWS_IOT_DEFENDER_START_INFO_INITIALIZER;
 
+/* For debug purpose. */
+const char * _AwsIotDefenderEventError = "None";
+
 /*-----------------------------------------------------------*/
 
 AwsIotDefenderError_t AwsIotDefender_SetMetrics( AwsIotDefenderMetricsGroup_t metricsGroup,
@@ -127,10 +126,7 @@ AwsIotDefenderError_t AwsIotDefender_SetMetrics( AwsIotDefenderMetricsGroup_t me
 
 AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartInfo )
 {
-    if( ( pStartInfo == NULL ) ||
-        ( pStartInfo->pConnectionInfo == NULL ) ||
-        ( pStartInfo->pCredentialInfo == NULL ) ||
-        ( pStartInfo->pNetworkInterface == NULL ) )
+    if( pStartInfo == NULL )
     {
         IotLogError( "Input start info is invalid." );
 
@@ -242,7 +238,7 @@ void AwsIotDefender_Stop( void )
     if( taskPoolError != IOT_TASKPOOL_SUCCESS )
     {
         IotLogWarn( "Failed to cancel metrics publish job with return code %d and status %d.", taskPoolError, status );
-        sleep( _WAIT_METRICS_JOB_MAX_SECONDS );
+        IotClock_SleepMs( _WAIT_METRICS_JOB_MAX_SECONDS * 1000 );
     }
 
     /* Destroy metrics' mutex. */
@@ -328,35 +324,10 @@ const char * AwsIotDefender_strerror( AwsIotDefenderError_t error )
 
     return pErrorNames[ error ];
 }
-
 /*-----------------------------------------------------------*/
-
-const char * AwsIotDefender_DescribeEventType( AwsIotDefenderEventType_t eventType )
+const char * AwsIotDefender_GetEventError()
 {
-    /* The string returned if the parameter is invalid. */
-    static const char * pInvalidEvent = "INVALID EVENT";
-
-    /* Lookup table of Defender events. */
-    static const char * pEventNames[] =
-    {
-        "METRICS ACCEPTED",             /* AWS_IOT_DEFENDER_METRICS_ACCEPTED */
-        "METRICS REJECTED",             /* AWS_IOT_DEFENDER_METRICS_REJECTED */
-        "NETWORK CONNECTION FAILED"     /* AWS_IOT_DEFENDER_NETWORK_CONNECTION_FAILED */
-        "MQTT CONNECTION FAILED",       /* AWS_IOT_DEFENDER_MQTT_CONNECTION_FAILED */
-        "MQTT SUBSCRIPTION FAILED",     /* AWS_IOT_DEFENDER_MQTT_SUBSCRIPTION_FAILED */
-        "MQTT PUBLISH FAILED",          /* AWS_IOT_DEFENDER_MQTT_PUBLISH_FAILED */
-        "METRICS SERIALIZATION FAILED", /* AWS_IOT_DEFENDER_METRICS_SERIALIZATION_FAILED */
-        "NO MEMORY"                     /* AWS_IOT_DEFENDER_EVENT_NO_MEMORY */
-    };
-
-    /* Check that the parameter is valid. */
-    if( ( eventType < 0 ) ||
-        ( eventType >= ( sizeof( pEventNames ) / sizeof( pEventNames[ 0 ] ) ) ) )
-    {
-        return pInvalidEvent;
-    }
-
-    return pEventNames[ eventType ];
+    return _AwsIotDefenderEventError;
 }
 
 /*-----------------------------------------------------------*/
@@ -378,60 +349,40 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
         return;
     }
 
-    bool networkConnected = false, mqttConnected = false, reportCreated = false, reportPublished = false;
+    IotMqttError_t mqttError = IOT_MQTT_SUCCESS;
 
-    AwsIotDefenderEventType_t eventType;
-    AwsIotDefenderCallbackInfo_t callbackInfo;
+    bool mqttConnected = true, reportCreated = true, reportPublished = false;
 
     const IotMqttCallbackInfo_t acceptCallbackInfo = { .function = _acceptCallback, .param1 = NULL };
     const IotMqttCallbackInfo_t rejectCallbackInfo = { .function = _rejectCallback, .param1 = NULL };
 
-    /* Step 1: connect to Iot endpoint. */
-    if( ( networkConnected = AwsIotDefenderInternal_NetworkConnect() ) )
+    /* Step 1: connect to MQTT. */
+    mqttError = AwsIotDefenderInternal_MqttConnect();
+
+    if( ( mqttConnected = ( mqttError == IOT_MQTT_SUCCESS ) ) )
     {
-        /* Step 2: set MQTT callback. */
-        AwsIotDefenderInternal_SetMqttCallback();
+        mqttError = AwsIotDefenderInternal_MqttSubscribe( acceptCallbackInfo,
+                                                          rejectCallbackInfo );
 
-        /* Step 3: connect to MQTT. */
-        if( ( mqttConnected = AwsIotDefenderInternal_MqttConnect() ) )
+        /* Step 2: subscribe to accept/reject MQTT topics. */
+        if( mqttError == IOT_MQTT_SUCCESS )
         {
-            /* Step 4: subscribe to accept/reject MQTT topics. */
-            if( AwsIotDefenderInternal_MqttSubscribe( acceptCallbackInfo,
-                                                      rejectCallbackInfo ) )
+            /* Step 3: create serialized metrics report. */
+            reportCreated = AwsIotDefenderInternal_CreateReport();
+
+            /* If Report is created successfully. */
+            if( reportCreated )
             {
-                /* Step 5: create serialized metrics report. */
-                eventType = AwsIotDefenderInternal_CreateReport();
+                /* Step 4: publish report to defender topic. */
+                mqttError = AwsIotDefenderInternal_MqttPublish( AwsIotDefenderInternal_GetReportBuffer(),
+                                                                AwsIotDefenderInternal_GetReportBufferSize() );
 
-                /* If Report is created successfully. */
-                if( eventType == 0 )
+                if( ( reportPublished = ( mqttError == IOT_MQTT_SUCCESS ) ) )
                 {
-                    reportCreated = true;
-
-                    /* Step 6: publish report to defender topic. */
-                    if( ( reportPublished = AwsIotDefenderInternal_MqttPublish( AwsIotDefenderInternal_GetReportBuffer(),
-                                                                                AwsIotDefenderInternal_GetReportBufferSize() ) ) )
-                    {
-                        IotLogDebug( "Metrics report has been published successfully." );
-                    }
-                    else
-                    {
-                        eventType = AWS_IOT_DEFENDER_MQTT_PUBLISH_FAILED;
-                    }
+                    IotLogDebug( "Metrics report has been published successfully." );
                 }
             }
-            else
-            {
-                eventType = AWS_IOT_DEFENDER_MQTT_SUBSCRIPTION_FAILED;
-            }
         }
-        else
-        {
-            eventType = AWS_IOT_DEFENDER_MQTT_CONNECTION_FAILED;
-        }
-    }
-    else
-    {
-        eventType = AWS_IOT_DEFENDER_NETWORK_CONNECTION_FAILED;
     }
 
     if( reportPublished )
@@ -446,9 +397,29 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
     /* Something is wrong during the above process. */
     else
     {
+        /* Either MQTT functions had problem or report failed to be created. */
+        AwsIotDefender_Assert( mqttError != IOT_MQTT_SUCCESS || !reportCreated );
+
+        AwsIotDefenderEventType_t eventType;
+
+        /* Set event type to only two possible categories. */
+        if( reportCreated )
+        {
+            eventType = AWS_IOT_DEFENDER_FAILURE_MQTT;
+            _AwsIotDefenderEventError = IotMqtt_strerror( mqttError );
+        }
+        else
+        {
+            eventType = AWS_IOT_DEFENDER_FAILURE_METRICS_REPORT;
+            /* As of today, no memory is the only reason to fail metrics report creation. */
+            _AwsIotDefenderEventError = "Failed to create metrics report due to no memory.";
+        }
+
         /* Invoke user's callback if there is. */
         if( _startInfo.callback.function != NULL )
         {
+            AwsIotDefenderCallbackInfo_t callbackInfo;
+
             callbackInfo.eventType = eventType;
 
             /* No message to be given to user's callback */
@@ -473,11 +444,6 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
             AwsIotDefenderInternal_MqttDisconnect();
         }
 
-        if( networkConnected )
-        {
-            AwsIotDefenderInternal_NetworkDestroy();
-        }
-
         IotSemaphore_Post( &_doneSem );
     }
 
@@ -499,8 +465,6 @@ static void _disconnectRoutine( IotTaskPool_t * pTaskPool,
 
     AwsIotDefenderInternal_DeleteReport();
     AwsIotDefenderInternal_MqttDisconnect();
-    AwsIotDefenderInternal_NetworkDestroy();
-
     /* Re-create metrics job. */
     IotTaskPoolError_t taskPoolError = IotTaskPool_CreateJob( _metricsPublishRoutine, NULL, &_metricsPublishJob );
     AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );

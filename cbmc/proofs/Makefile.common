@@ -21,7 +21,7 @@ VIEWER ?= cbmc-viewer
 INC = \
 	-I$(MQTT)/lib/include \
 	-I$(MQTT)/platform/include \
-	-I$(MQTT)/demos \
+	-I$(MQTT)/demos/include \
 
 DEF += \
 	-DIOT_CONFIG_FILE=\"iot_demo_config.h\" \

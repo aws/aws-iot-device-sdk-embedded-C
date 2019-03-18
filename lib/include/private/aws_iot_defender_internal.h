@@ -284,7 +284,7 @@ typedef struct _defenderMetrics
 /**
  * Create a report, memory is allocated inside the function.
  */
-AwsIotDefenderEventType_t AwsIotDefenderInternal_CreateReport();
+bool AwsIotDefenderInternal_CreateReport();
 
 /**
  * Get the buffer pointer of report.
@@ -312,46 +312,26 @@ AwsIotDefenderError_t AwsIotDefenderInternal_BuildTopicsNames();
 void AwsIotDefenderInternal_DeleteTopicsNames();
 
 /**
- * Creat a network connection.
- */
-bool AwsIotDefenderInternal_NetworkConnect();
-
-/**
- * Set the network connection to callback MQTT.
- */
-void AwsIotDefenderInternal_SetMqttCallback();
-
-/**
  * Connect to AWS with MQTT.
  */
-bool AwsIotDefenderInternal_MqttConnect();
+IotMqttError_t AwsIotDefenderInternal_MqttConnect();
 
 /**
  * Subscribe accept/reject defender topics.
  */
-bool AwsIotDefenderInternal_MqttSubscribe( IotMqttCallbackInfo_t acceptCallback,
+IotMqttError_t AwsIotDefenderInternal_MqttSubscribe( IotMqttCallbackInfo_t acceptCallback,
                                            IotMqttCallbackInfo_t rejectCallback );
 
 /**
  * Publish metrics data to defender topic.
  */
-bool AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
+IotMqttError_t AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
                                          size_t dataLength );
 
 /**
  * Disconnect with AWS MQTT.
  */
 void AwsIotDefenderInternal_MqttDisconnect();
-
-/**
- * Close network connection.
- */
-void AwsIotDefenderInternal_NetworkClose();
-
-/**
- * Destory network connection.
- */
-void AwsIotDefenderInternal_NetworkDestroy();
 
 /*----------------- Below this line are INTERNAL global variables --------------------*/
 

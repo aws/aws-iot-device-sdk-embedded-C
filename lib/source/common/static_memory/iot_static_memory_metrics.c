@@ -36,7 +36,7 @@
     #include "private/iot_static_memory.h"
 
 /* Metrics include. */
-    #include "iot_metrics.h"
+    #include "platform/iot_metrics.h"
 
     #ifndef IOT_METRICS_TCP_CONNECTIONS
         #define IOT_METRICS_TCP_CONNECTIONS    ( 10 )
