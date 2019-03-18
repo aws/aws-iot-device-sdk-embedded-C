@@ -162,6 +162,37 @@ TEST_GROUP_RUNNER( Common_Unit_Task_Pool )
     #define TEST_TASKPOOL_MAX_THREADS    7
 #endif
 
+/**
+ * @brief Define the number of long running jobs.
+ */
+#ifndef TEST_TASKPOOL_LONG_JOBS_NUMBER
+    #define TEST_TASKPOOL_LONG_JOBS_NUMBER    3
+#endif
+
+/**
+ * @brief Define the number of running jobs to grow the taskpool for.
+ */
+#ifndef TEST_TAKPOOL_NUMBER_OF_JOBS
+    #define TEST_TAKPOOL_NUMBER_OF_JOBS    4
+#endif
+
+/**
+ * @brief Define the number of threads to grow the taskpool to.
+ */
+#ifndef TEST_TASKPOOL_NUMBER_OF_THREADS
+    #define TEST_TASKPOOL_NUMBER_OF_THREADS    ( TEST_TAKPOOL_NUMBER_OF_JOBS - 1 )
+#endif
+
+/**
+ * @brief Define the number of threads to grow the taskpool to.
+ */
+#ifndef TEST_TASKPOOL_MAX_THREADS
+    #define TEST_TASKPOOL_MAX_THREADS    7
+#endif
+
+/**
+ * @brief One hour in milliseconds.
+ */
 #define ONE_HOUR_FROM_NOW_MS    ( 3600 * 1000 )
 
 /* ---------------------------------------------------------- */
