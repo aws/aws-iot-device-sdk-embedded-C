@@ -52,9 +52,6 @@
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 0 && IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 1
     #error "IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES must be 0 or 1."
 #endif
-#if IOT_MQTT_TEST != 0 && IOT_MQTT_TEST != 1
-    #error "IOT_MQTT_MQTT_TEST must be 0 or 1."
-#endif
 #if IOT_MQTT_RESPONSE_WAIT_MS <= 0
     #error "IOT_MQTT_RESPONSE_WAIT_MS cannot be 0 or negative."
 #endif
@@ -1960,8 +1957,7 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation )
 
 /*-----------------------------------------------------------*/
 
-/* If the MQTT library is being tested, include a file that allows access to
- * internal functions and variables. */
-#if IOT_MQTT_TEST == 1
+/* Provide access to internal functions and variables if testing. */
+#if IOT_BUILD_TESTS == 1
     #include "iot_test_access_mqtt_api.c"
 #endif
