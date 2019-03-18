@@ -751,7 +751,8 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
     /* Close the connection on failures. */
     if( status == false )
     {
-        _IotMqtt_CloseNetworkConnection( pMqttConnection );
+        _IotMqtt_CloseNetworkConnection( IOT_MQTT_KEEP_ALIVE_TIMEOUT,
+                                         pMqttConnection );
     }
     else
     {
@@ -1006,7 +1007,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
     callbackParam.operation.result = pOperation->status;
 
     /* Invoke the user callback function. */
-    pOperation->notify.callback.function( pOperation->notify.callback.param1,
+    pOperation->notify.callback.function( pOperation->notify.callback.pCallbackContext,
                                           &callbackParam );
 
     /* Attempt to destroy the operation once the user callback returns. */

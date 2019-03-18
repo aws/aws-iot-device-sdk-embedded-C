@@ -529,7 +529,7 @@ static int _modifySubscriptions( IotMqttConnection_t mqttConnection,
         pSubscriptions[ i ].qos = IOT_MQTT_QOS_1;
         pSubscriptions[ i ].pTopicFilter = pTopicFilters[ i ];
         pSubscriptions[ i ].topicFilterLength = _TOPIC_FILTER_LENGTH;
-        pSubscriptions[ i ].callback.param1 = pCallbackParameter;
+        pSubscriptions[ i ].callback.pCallbackContext = pCallbackParameter;
         pSubscriptions[ i ].callback.function = _mqttSubscriptionCallback;
     }
 
@@ -656,7 +656,7 @@ static int _publishAllMessages( IotMqttConnection_t mqttConnection,
         }
 
         /* Pass the PUBLISH number to the operation complete callback. */
-        publishComplete.param1 = ( void * ) publishCount;
+        publishComplete.pCallbackContext = ( void * ) publishCount;
 
         /* Choose a topic name (round-robin through the array of topic names). */
         publishInfo.pTopicName = pTopicNames[ publishCount % _TOPIC_FILTER_COUNT ];

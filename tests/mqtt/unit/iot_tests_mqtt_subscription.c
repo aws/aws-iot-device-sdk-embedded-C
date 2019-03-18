@@ -684,7 +684,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionAddDuplicate )
 
     /* Change the callback information, but not the topic filter. */
     subscription[ 1 ].callback.function = _publishCallback;
-    subscription[ 1 ].callback.param1 = _pMqttConnection;
+    subscription[ 1 ].callback.pCallbackContext = _pMqttConnection;
 
     /* Add the duplicate subscription. */
     status = _IotMqtt_AddSubscriptions( _pMqttConnection,
@@ -709,7 +709,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionAddDuplicate )
     TEST_ASSERT_EQUAL_UINT16( 3, pSubscription->packetInfo.identifier );
     TEST_ASSERT_EQUAL( 0, pSubscription->packetInfo.order );
     TEST_ASSERT_EQUAL_PTR( _publishCallback, pSubscription->callback.function );
-    TEST_ASSERT_EQUAL_PTR( _pMqttConnection, pSubscription->callback.param1 );
+    TEST_ASSERT_EQUAL_PTR( _pMqttConnection, pSubscription->callback.pCallbackContext );
 
     /* Check that a duplicate entry wasn't created. */
     IotListDouble_Remove( &( pSubscription->link ) );
@@ -847,7 +847,7 @@ TEST( MQTT_Unit_Subscription, ProcessPublish )
     subscription.pTopicFilter = "/test";
     subscription.topicFilterLength = 5;
     subscription.callback.function = _publishCallback;
-    subscription.callback.param1 = &callbackInvoked;
+    subscription.callback.pCallbackContext = &callbackInvoked;
 
     callbackParam.message.info.pTopicName = "/test";
     callbackParam.message.info.topicNameLength = 5;
@@ -888,17 +888,17 @@ TEST( MQTT_Unit_Subscription, ProcessPublishMultiple )
     subscription[ 0 ].pTopicFilter = "/test";
     subscription[ 0 ].topicFilterLength = 5;
     subscription[ 0 ].callback.function = _publishCallback;
-    subscription[ 0 ].callback.param1 = &( callbackInvoked[ 0 ] );
+    subscription[ 0 ].callback.pCallbackContext = &( callbackInvoked[ 0 ] );
 
     subscription[ 1 ].pTopicFilter = "/+";
     subscription[ 1 ].topicFilterLength = 2;
     subscription[ 1 ].callback.function = _publishCallback;
-    subscription[ 1 ].callback.param1 = &( callbackInvoked[ 1 ] );
+    subscription[ 1 ].callback.pCallbackContext = &( callbackInvoked[ 1 ] );
 
     subscription[ 2 ].pTopicFilter = "/#";
     subscription[ 2 ].topicFilterLength = 2;
     subscription[ 2 ].callback.function = _publishCallback;
-    subscription[ 2 ].callback.param1 = &( callbackInvoked[ 2 ] );
+    subscription[ 2 ].callback.pCallbackContext = &( callbackInvoked[ 2 ] );
 
     /* Create a PUBLISH that matches all 3 subscriptions. */
     callbackParam.message.info.pTopicName = "/test";
@@ -956,7 +956,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
     subscription.pTopicFilter = "/test";
     subscription.topicFilterLength = 5;
     subscription.callback.function = _blockingCallback;
-    subscription.callback.param1 = &waitSem;
+    subscription.callback.pCallbackContext = &waitSem;
 
     /* Add the subscriptions. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( _pMqttConnection,
