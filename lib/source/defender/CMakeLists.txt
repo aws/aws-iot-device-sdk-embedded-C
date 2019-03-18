@@ -8,7 +8,7 @@ add_library( awsiotdefender SHARED
 set_target_properties( awsiotdefender PROPERTIES VERSION ${PROJECT_VERSION} )
 
 # Link required libraries.
-target_link_libraries( awsiotdefender iotserializer iotmetrics iotmqtt iotplatform )
+target_link_libraries( awsiotdefender iotserializer iotmqtt iotplatform )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )

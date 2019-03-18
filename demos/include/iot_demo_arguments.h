@@ -20,12 +20,16 @@
  */
 
 /**
- * @file iot_demo_posix.h
- * @brief Declares the POSIX-specific demo functions.
+ * @file iot_demo_arguments.h
+ * @brief Declares the function and structure used for processing command line
+ * arguments
  */
 
-#ifndef _IOT_DEMO_POSIX_H_
-#define _IOT_DEMO_POSIX_H_
+#ifndef _IOT_DEMO_ARGUMENTS_H_
+#define _IOT_DEMO_ARGUMENTS_H_
+
+/* Standard includes. */
+#include <stdint.h>
 
 /**
  * @brief Holds the arguments for a single demo.
@@ -79,6 +83,7 @@ typedef struct IotDemoArguments
  * The functions for parsing command line arguments differ depending on the
  * operating system. Therefore, this function is re-implemented for different
  * platforms.
+ *
  * @param[in] argc The argument count originally passed to main().
  * @param[in] argv The argument vector originally passed to main().
  * @param[out] pArguments Set to the arguments parsed from the command line.
@@ -89,6 +94,6 @@ typedef struct IotDemoArguments
  */
 bool IotDemo_ParseArguments( int argc,
                              char ** argv,
-                             IotDemoArguments_t * const pArguments );
+                             IotDemoArguments_t * pArguments );
 
-#endif /* ifndef _IOT_DEMO_POSIX_H_ */
+#endif /* ifndef _IOT_DEMO_ARGUMENTS_H_ */

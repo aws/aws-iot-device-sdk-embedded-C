@@ -35,11 +35,9 @@
 #include <stdint.h>
 #include <string.h>
 
-/* POSIX includes. */
-#include <time.h>
-
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
+#include "platform/iot_clock.h"
 
 /* MQTT internal include. */
 #include "private/iot_taskpool_internal.h"
@@ -165,14 +163,32 @@ TEST_GROUP_RUNNER( Common_Unit_Task_Pool )
 #endif
 
 /**
- * @brief A global delay to wait for threads to exit or such...
+ * @brief Define the number of long running jobs.
  */
-static struct itimerspec _TEST_DELAY_50MS =
-{
-    .it_value.tv_sec  = 0,
-    .it_value.tv_nsec = ( 50000000L ), /* 50ms */
-    .it_interval      = { 0 }
-};
+#ifndef TEST_TASKPOOL_LONG_JOBS_NUMBER
+    #define TEST_TASKPOOL_LONG_JOBS_NUMBER    3
+#endif
+
+/**
+ * @brief Define the number of running jobs to grow the taskpool for.
+ */
+#ifndef TEST_TAKPOOL_NUMBER_OF_JOBS
+    #define TEST_TAKPOOL_NUMBER_OF_JOBS    4
+#endif
+
+/**
+ * @brief Define the number of threads to grow the taskpool to.
+ */
+#ifndef TEST_TASKPOOL_NUMBER_OF_THREADS
+    #define TEST_TASKPOOL_NUMBER_OF_THREADS    ( TEST_TAKPOOL_NUMBER_OF_JOBS - 1 )
+#endif
+
+/**
+ * @brief Define the number of threads to grow the taskpool to.
+ */
+#ifndef TEST_TASKPOOL_MAX_THREADS
+    #define TEST_TASKPOOL_MAX_THREADS    7
+#endif
 
 /**
  * @brief One hour in milliseconds.
@@ -186,19 +202,7 @@ static struct itimerspec _TEST_DELAY_50MS =
  */
 static void EmulateWork()
 {
-    int32_t duration_in_nsec = ( ( 1000000 ) * ( rand() % TEST_TASKPOOL_WORK_ITEM_DURATION_MAX ) );
-
-    TEST_ASSERT_TRUE( duration_in_nsec <= 999999999 );
-
-    struct timespec delay =
-    {
-        .tv_sec  = 0,
-        .tv_nsec = duration_in_nsec
-    };
-
-    int error = clock_nanosleep( CLOCK_MONOTONIC, 0, &delay, NULL );
-
-    TEST_ASSERT_TRUE( error == 0 );
+    IotClock_SleepMs( rand() % TEST_TASKPOOL_WORK_ITEM_DURATION_MAX );
 }
 
 /**
@@ -206,20 +210,7 @@ static void EmulateWork()
  */
 static void EmulateWorkLong()
 {
-    int32_t duration_in_nsec = ( ( 1000000 ) * ( rand() % TEST_TASKPOOL_WORK_ITEM_DURATION_MAX ) );
-
-    TEST_ASSERT_TRUE( duration_in_nsec <= 999999999 );
-
-    /* Emulate at least 10 seconds worth of work. */
-    struct timespec delay =
-    {
-        .tv_sec  = 2,
-        .tv_nsec = duration_in_nsec
-    };
-
-    int error = clock_nanosleep( CLOCK_MONOTONIC, 0, &delay, NULL );
-
-    TEST_ASSERT_TRUE( error == 0 );
+    IotClock_SleepMs( 2000 + ( rand() % TEST_TASKPOOL_WORK_ITEM_DURATION_MAX ) );
 }
 
 /**
@@ -947,7 +938,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleOneThenWait )
             /* Ensure callback actually executed. */
             while( true )
             {
-                ( void ) clock_nanosleep( CLOCK_REALTIME, 0, &_TEST_DELAY_50MS.it_value, NULL );
+                IotClock_SleepMs( 50 );
 
                 IotMutex_Lock( &userContext.lock );
 
@@ -1031,7 +1022,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleOneDeferredThenWait )
             /* Ensure callback actually executed. */
             while( true )
             {
-                ( void ) clock_nanosleep( CLOCK_REALTIME, 0, &_TEST_DELAY_50MS.it_value, NULL );
+                IotClock_SleepMs( 50 );
 
                 IotMutex_Lock( &userContext.lock );
 
@@ -1109,7 +1100,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleOneRecyclableThenWait )
             /* Ensure callback actually executed. */
             while( true )
             {
-                ( void ) clock_nanosleep( CLOCK_REALTIME, 0, &_TEST_DELAY_50MS.it_value, NULL );
+                IotClock_SleepMs( 50 );
 
                 IotMutex_Lock( &userContext.lock );
 
@@ -1189,7 +1180,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllThenWait )
         /* Wait until callback is executed. */
         while( true )
         {
-            ( void ) clock_nanosleep( CLOCK_REALTIME, 0, &_TEST_DELAY_50MS.it_value, NULL );
+            IotClock_SleepMs( 50 );
 
             IotMutex_Lock( &userContext.lock );
 
@@ -1268,7 +1259,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllRecyclableThenWait )
         /* Wait until callback is executed. */
         while( true )
         {
-            ( void ) clock_nanosleep( CLOCK_REALTIME, 0, &_TEST_DELAY_50MS.it_value, NULL );
+            IotClock_SleepMs( 50 );
 
             IotMutex_Lock( &userContext.lock );
 
@@ -1348,7 +1339,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllDeferredRecyclableThenWait
         /* Wait until callback is executed. */
         while( true )
         {
-            ( void ) clock_nanosleep( CLOCK_REALTIME, 0, &_TEST_DELAY_50MS.it_value, NULL );
+            IotClock_SleepMs( 50 );
 
             IotMutex_Lock( &userContext.lock );
 
@@ -1435,7 +1426,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ReSchedule )
         }
 
         /* Give a chance to some jobs to start execution. */
-        ( void ) clock_nanosleep( CLOCK_REALTIME, 0, &_TEST_DELAY_50MS.it_value, NULL );
+        IotClock_SleepMs( 50 );
 
         /* Reschedule all. Some will fail to be rescheduled... */
         for( count = 0; count < maxJobs; ++count )
@@ -1470,7 +1461,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ReSchedule )
         /* Wait until callback is executed. */
         while( true )
         {
-            ( void ) clock_nanosleep( CLOCK_REALTIME, 0, &_TEST_DELAY_50MS.it_value, NULL );
+            IotClock_SleepMs( 50 );
 
             IotMutex_Lock( &userContext.lock );
 
@@ -1580,7 +1571,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ReScheduleDeferred )
         /* Wait until callback is executed. */
         while( true )
         {
-            ( void ) clock_nanosleep( CLOCK_REALTIME, 0, &_TEST_DELAY_50MS.it_value, NULL );
+            IotClock_SleepMs( 50 );
 
             IotMutex_Lock( &userContext.lock );
 
@@ -1719,7 +1710,7 @@ TEST( Common_Unit_Task_Pool, TaskPool_CancelTasks )
     /* Wait until callback is executed. */
     while( ( scheduled - canceled ) != userContext.counter )
     {
-        ( void ) clock_nanosleep( CLOCK_REALTIME, 0, &_TEST_DELAY_50MS.it_value, NULL );
+        IotClock_SleepMs( 50 );
     }
 
     TEST_ASSERT( ( scheduled - canceled ) == userContext.counter );

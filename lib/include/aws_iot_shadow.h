@@ -32,8 +32,8 @@
     #include IOT_CONFIG_FILE
 #endif
 
-/* MQTT include. */
-#include "iot_mqtt.h"
+/* MQTT types include. */
+#include "types/iot_mqtt_types.h"
 
 /*--------------------------- Shadow handle types ---------------------------*/
 

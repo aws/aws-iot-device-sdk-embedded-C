@@ -7,17 +7,11 @@
 
 void harness()
 {
-    IotMqttConnection_t mqttConnection;
-    size_t dataLength;
-    uint8_t * pSubackStart = malloc( sizeof( uint8_t ) * dataLength );
-    uint16_t packetIdentifier;
-    size_t bytesProcessed;
+    _mqttPacket_t suback;
 
-    __CPROVER_assume( dataLength <= BUFFER_SIZE );
+    suback.pRemainingData = malloc( sizeof( uint8_t ) * suback.remainingLength );
 
-    _IotMqtt_DeserializeSuback( mqttConnection,
-                                pSubackStart,
-                                dataLength,
-                                &packetIdentifier,
-                                &bytesProcessed );
+    __CPROVER_assume( suback.remainingLength <= BUFFER_SIZE );
+
+    _IotMqtt_DeserializeSuback( &suback );
 }

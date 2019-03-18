@@ -55,29 +55,10 @@
 /**
  * @brief Represents a network connection that uses OpenSSL.
  *
- * All instances of #IotNetworkConnectionOpenssl_t should be initialized with
- * #IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER.
- *
- * @attention The members of this struct are intended to be opaque and may change
- * at any time. This struct should only be passed as the connection handle to the
- * functions declared in this file. Do not directly modify its members!
+ * This is an incomplete type. In application code, only pointers to this type
+ * should be used.
  */
-typedef struct IotNetworkConnectionOpenssl
-{
-    int socket;        /**< @brief Socket associated with this connection. */
-    SSL * pSslContext; /**< @brief SSL context for connection. */
-    IotMutex_t mutex;  /**< @brief Synchronizes the various network threads. */
-
-    /** @brief Status of the receive thread for this connection. */
-    enum
-    {
-        _NONE = 0, _ACTIVE, _TERMINATED
-    } receiveThreadStatus;
-    pthread_t receiveThread;                     /**< @brief Thread that handles receiving on this connection. */
-
-    IotNetworkReceiveCallback_t receiveCallback; /**< @brief Network receive callback, if any. */
-    void * pReceiveContext;                      /**< @brief The context for the receive callback. */
-} IotNetworkConnectionOpenssl_t;
+typedef struct _networkConnection IotNetworkConnectionOpenssl_t;
 
 /**
  * @brief Information on the remote server for connection setup.
@@ -134,19 +115,6 @@ typedef struct IotNetworkCredentialsOpenssl
     const char * pClientCertPath; /**< @brief Filesystem path of the client certificate. */
     const char * pPrivateKeyPath; /**< @brief Filesystem path of the client certificate's private key. */
 } IotNetworkCredentialsOpenssl_t;
-
-/**
- * @brief Provides a default value for an #IotNetworkConnectionOpenssl_t.
- *
- * All instances of #IotNetworkConnectionOpenssl_t should be initialized with
- * this constant.
- *
- * @warning Failing to initialize an #IotNetworkConnectionOpenssl_t with this
- * initializer may result in undefined behavior!
- * @note This initializer may change at any time in future versions, but its
- * name will remain the same.
- */
-#define IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER     { 0 }
 
 /**
  * @brief Provides a default value for an #IotNetworkServerInfoOpenssl_t.
@@ -219,7 +187,7 @@ void IotNetworkOpenssl_Cleanup( void );
  */
 IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
                                             void * pCredentialInfo,
-                                            void * const pConnection );
+                                            void * pConnection );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::setReceiveCallback for
@@ -242,7 +210,7 @@ size_t IotNetworkOpenssl_Send( void * pConnection,
  * with OpenSSL.
  */
 size_t IotNetworkOpenssl_Receive( void * pConnection,
-                                  uint8_t * const pBuffer,
+                                  uint8_t * pBuffer,
                                   size_t bytesRequested );
 
 /**

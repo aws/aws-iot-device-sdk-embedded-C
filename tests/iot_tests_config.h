@@ -68,8 +68,8 @@
 #define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
 #define IOT_MQTT_ENABLE_METRICS                 ( 0 )
 #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 1 )
-
 #define IOT_MQTT_TEST                           ( 1 )
+
 /* Shadow library configuration. */
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 
@@ -90,10 +90,10 @@
 
 /* Memory allocation function configuration. Note that these functions will not
  * be affected by IOT_STATIC_MEMORY_ONLY. */
-#define IotNetwork_Malloc    unity_malloc_mt
-#define IotNetwork_Free      unity_free_mt
 #define IotThreads_Malloc    unity_malloc_mt
 #define IotThreads_Free      unity_free_mt
+#define IotNetwork_Malloc    unity_malloc_mt
+#define IotNetwork_Free      unity_free_mt
 #define IotLogging_Malloc    unity_malloc_mt
 #define IotLogging_Free      unity_free_mt
 /* #define IotLogging_StaticBufferSize */
@@ -115,10 +115,10 @@
     #define IotTaskPool_FreeJob                unity_free_mt
     #define IotTaskPool_MallocTimerEvent       unity_malloc_mt
     #define IotTaskPool_FreeTimerEvent         unity_free_mt
-    #define IotMqtt_MallocConnection           unity_malloc_mt
-    #define IotMqtt_FreeConnection             unity_free_mt
     #define IotMqtt_MallocMessage              unity_malloc_mt
     #define IotMqtt_FreeMessage                unity_free_mt
+    #define IotMqtt_MallocConnection           unity_malloc_mt
+    #define IotMqtt_FreeConnection             unity_free_mt
     #define IotMqtt_MallocOperation            unity_malloc_mt
     #define IotMqtt_FreeOperation              unity_free_mt
     #define IotMqtt_MallocSubscription         unity_malloc_mt
@@ -151,12 +151,11 @@
 #define IOT_TEST_NETWORK_HEADER    "posix/iot_network_openssl.h"
 
 /* Network types to use in the tests. These are forward declarations. */
-typedef struct IotNetworkConnectionOpenssl    IotTestNetworkConnection_t;
+typedef struct _networkConnection             IotTestNetworkConnection_t;
 typedef struct IotNetworkServerInfoOpenssl    IotTestNetworkServerInfo_t;
 typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
 
 /* Initializers for the tests' network types. */
-#define IOT_TEST_NETWORK_CONNECTION_INITIALIZER    IOT_NETWORK_CONNECTION_OPENSSL_INITIALIZER
 #define IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER \
     {                                            \
         .pHostName = IOT_TEST_SERVER,            \
