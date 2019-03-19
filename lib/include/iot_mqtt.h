@@ -326,7 +326,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
  * @param[in] flags Flags which modify the behavior of this function. See @ref mqtt_constants_flags.
  * @param[in] pCallbackInfo Asynchronous notification of this function's completion.
- * @param[out] pSubscribeRef Set to a handle by which this operation may be
+ * @param[out] pSubscribeOperation Set to a handle by which this operation may be
  * referenced after this function returns. This reference is invalidated once
  * the subscription operation completes.
  *
@@ -358,7 +358,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  *
  * // Subscription information.
  * pSubscriptions[ NUMBER_OF_SUBSCRIPTIONS ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
- * IotMqttReference_t lastOperation = IOT_MQTT_REFERENCE_INITIALIZER;
+ * IotMqttOperation_t lastOperation = IOT_MQTT_OPERATION_INITIALIZER;
  *
  * // Set the subscription information.
  * for( int i = 0; i < NUMBER_OF_SUBSCRIPTIONS; i++ )
@@ -425,7 +425,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
                                   size_t subscriptionCount,
                                   uint32_t flags,
                                   const IotMqttCallbackInfo_t * pCallbackInfo,
-                                  IotMqttReference_t * pSubscribeRef );
+                                  IotMqttOperation_t * pSubscribeOperation );
 /* @[declare_mqtt_subscribe] */
 
 /**
@@ -485,7 +485,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
  * @param[in] flags Flags which modify the behavior of this function. See @ref mqtt_constants_flags.
  * @param[in] pCallbackInfo Asynchronous notification of this function's completion.
- * @param[out] pUnsubscribeRef Set to a handle by which this operation may be
+ * @param[out] pUnsubscribeOperation Set to a handle by which this operation may be
  * referenced after this function returns. This reference is invalidated once
  * the unsubscribe operation completes.
  *
@@ -510,7 +510,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
                                     size_t subscriptionCount,
                                     uint32_t flags,
                                     const IotMqttCallbackInfo_t * pCallbackInfo,
-                                    IotMqttReference_t * pUnsubscribeRef );
+                                    IotMqttOperation_t * pUnsubscribeOperation );
 /* @[declare_mqtt_unsubscribe] */
 
 /**
@@ -568,7 +568,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  * @param[in] pPublishInfo MQTT publish parameters.
  * @param[in] flags Flags which modify the behavior of this function. See @ref mqtt_constants_flags.
  * @param[in] pCallbackInfo Asynchronous notification of this function's completion.
- * @param[out] pPublishRef Set to a handle by which this operation may be
+ * @param[out] pPublishOperation Set to a handle by which this operation may be
  * referenced after this function returns. This reference is invalidated once
  * the publish operation completes.
  *
@@ -588,7 +588,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  *
- * @note The parameters `pCallbackInfo` and `pPublishRef` should only be used for QoS
+ * @note The parameters `pCallbackInfo` and `pPublishOperation` should only be used for QoS
  * 1 publishes. For QoS 0, they should both be `NULL`.
  *
  * @see @ref mqtt_function_timedpublish for a blocking variant of this function.
@@ -616,7 +616,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  *                                              NULL );
  *
  * // QoS 1 with retry example (using same topic name and payload as QoS 0 example):
- * IotMqttReference_t qos1Reference = IOT_MQTT_REFERENCE_INITIALIZER;
+ * IotMqttOperation_t qos1Operation = IOT_MQTT_OPERATION_INITIALIZER;
  * publishInfo.qos = IOT_MQTT_QOS_1;
  * publishInfo.retryMs = 1000; // Retry if no response is received in 1 second.
  * publishInfo.retryLimit = 5; // Retry up to 5 times.
@@ -626,12 +626,12 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  *                                              &publishInfo,
  *                                              IOT_MQTT_FLAG_WAITABLE,
  *                                              NULL,
- *                                              &qos1Reference );
+ *                                              &qos1Operation );
  *
  * // Wait up to 5 seconds for the publish to complete.
  * if( qos1Result == IOT_MQTT_STATUS_PENDING )
  * {
- *     qos1Result = IotMqtt_Wait( qos1Reference, 5000 );
+ *     qos1Result = IotMqtt_Wait( qos1Operation, 5000 );
  * }
  * @endcode
  */
@@ -640,7 +640,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
                                 const IotMqttPublishInfo_t * pPublishInfo,
                                 uint32_t flags,
                                 const IotMqttCallbackInfo_t * pCallbackInfo,
-                                IotMqttReference_t * pPublishRef );
+                                IotMqttOperation_t * pPublishOperation );
 /* @[declare_mqtt_publish] */
 
 /**
@@ -697,7 +697,7 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
  * by the waitable operation. This means `reference` is invalidated as soon as
  * this function returns, even if it returns #IOT_MQTT_TIMEOUT or another error.
  *
- * @param[in] reference Reference to the operation to wait for. The flag
+ * @param[in] operation Reference to the operation to wait for. The flag
  * #IOT_MQTT_FLAG_WAITABLE must have been set for this operation.
  * @param[in] timeoutMs How long to wait before returning #IOT_MQTT_TIMEOUT.
  *
@@ -706,8 +706,8 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
  *
  * <b>Example</b>
  * @code{c}
- * // Reference and timeout.
- * IotMqttReference_t reference = IOT_MQTT_REFERENCE_INITIALIZER;
+ * // Operation reference and timeout.
+ * IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER;
  * uint64_t timeoutMs = 5000; // 5 seconds
  *
  * // MQTT operation to wait for.
@@ -715,13 +715,13 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
  *                                          &publishInfo,
  *                                          IOT_MQTT_FLAG_WAITABLE,
  *                                          NULL,
- *                                          &reference );
+ *                                          &publishOperation );
  *
  * // Publish should have returned IOT_MQTT_STATUS_PENDING. The call to wait
  * // returns once the result of the publish is available or the timeout expires.
  * if( result == IOT_MQTT_STATUS_PENDING )
  * {
- *     result = IotMqtt_Wait( reference, timeoutMs );
+ *     result = IotMqtt_Wait( publishOperation, timeoutMs );
  *
  *     // After the call to wait, the result of the publish is known
  *     // (not IOT_MQTT_STATUS_PENDING).
@@ -730,7 +730,7 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
  * @endcode
  */
 /* @[declare_mqtt_wait] */
-IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
+IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
                              uint64_t timeoutMs );
 /* @[declare_mqtt_wait] */
 

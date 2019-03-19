@@ -114,7 +114,7 @@ typedef struct _operationCompleteParams
 {
     IotMqttOperationType_t expectedOperation; /**< @brief Expected completed operation. */
     IotSemaphore_t waitSem;                   /**< @brief Used to unblock waiting test thread. */
-    IotMqttReference_t reference;             /**< @brief Reference to expected completed operation. */
+    IotMqttOperation_t operation;             /**< @brief Reference to expected completed operation. */
 } _operationCompleteParams_t;
 
 /*-----------------------------------------------------------*/
@@ -319,7 +319,7 @@ static void _operationComplete( void * pArgument,
     /* If the operation information matches the parameters and the operation was
      * successful, unblock the waiting thread. */
     if( ( pParams->expectedOperation == pOperation->operation.type ) &&
-        ( pParams->reference == pOperation->operation.reference ) &&
+        ( pParams->operation == pOperation->operation.reference ) &&
         ( pOperation->operation.result == IOT_MQTT_SUCCESS ) )
     {
         IotSemaphore_Post( &( pParams->waitSem ) );
@@ -339,7 +339,7 @@ static void _reentrantCallback( void * pArgument,
     IotSemaphore_t * pWaitSemaphores = ( IotSemaphore_t * ) pArgument;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
-    IotMqttReference_t unsubscribeRef = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t unsubscribeOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
     /* Topic used in this test. */
     const char * const pTopic = IOT_TEST_MQTT_TOPIC_PREFIX "/Reentrancy";
@@ -379,7 +379,7 @@ static void _reentrantCallback( void * pArgument,
                                           1,
                                           IOT_MQTT_FLAG_WAITABLE,
                                           NULL,
-                                          &unsubscribeRef );
+                                          &unsubscribeOperation );
 
         if( mqttStatus == IOT_MQTT_STATUS_PENDING )
         {
@@ -388,7 +388,7 @@ static void _reentrantCallback( void * pArgument,
 
             /* Waiting on an operation whose connection is closed should return
              * "Network Error". */
-            mqttStatus = IotMqtt_Wait( unsubscribeRef,
+            mqttStatus = IotMqtt_Wait( unsubscribeOperation,
                                        500 );
 
             status = ( mqttStatus == IOT_MQTT_NETWORK_ERROR );
@@ -691,7 +691,7 @@ TEST( MQTT_System, SubscribePublishAsync )
                                             1,
                                             0,
                                             &callbackInfo,
-                                            &( callbackParam.reference ) );
+                                            &( callbackParam.operation ) );
 
                 if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
                                             IOT_TEST_MQTT_TIMEOUT_MS ) == false )
@@ -705,7 +705,7 @@ TEST( MQTT_System, SubscribePublishAsync )
                                           &publishInfo,
                                           0,
                                           &callbackInfo,
-                                          &( callbackParam.reference ) );
+                                          &( callbackParam.operation ) );
 
                 if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
                                             IOT_TEST_MQTT_TIMEOUT_MS ) == false )
@@ -727,7 +727,7 @@ TEST( MQTT_System, SubscribePublishAsync )
                                               1,
                                               0,
                                               &callbackInfo,
-                                              &( callbackParam.reference ) );
+                                              &( callbackParam.operation ) );
 
                 if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
                                             IOT_TEST_MQTT_TIMEOUT_MS ) == false )
@@ -983,7 +983,7 @@ TEST( MQTT_System, WaitAfterDisconnect )
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    IotMqttReference_t pPublishRef[ 3 ] = { IOT_MQTT_REFERENCE_INITIALIZER };
+    IotMqttOperation_t pPublishOperation[ 3 ] = { IOT_MQTT_OPERATION_INITIALIZER };
 
     /* Set the client identifier and length. */
     connectInfo.pClientIdentifier = _pClientIdentifier;
@@ -1014,7 +1014,7 @@ TEST( MQTT_System, WaitAfterDisconnect )
                                       &publishInfo,
                                       IOT_MQTT_FLAG_WAITABLE,
                                       NULL,
-                                      &( pPublishRef[ i ] ) );
+                                      &( pPublishOperation[ i ] ) );
             TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING, status );
         }
     }
@@ -1029,7 +1029,7 @@ TEST( MQTT_System, WaitAfterDisconnect )
          * timing of publish versus disconnect, so the statuses are not checked. */
         for( i = 0; i < 3; i++ )
         {
-            status = IotMqtt_Wait( pPublishRef[ i ], 100 );
+            status = IotMqtt_Wait( pPublishOperation[ i ], 100 );
         }
     }
 }
