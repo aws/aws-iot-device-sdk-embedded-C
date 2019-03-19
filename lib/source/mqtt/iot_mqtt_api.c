@@ -139,7 +139,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            size_t subscriptionCount,
                                            uint32_t flags,
                                            const IotMqttCallbackInfo_t * pCallbackInfo,
-                                           IotMqttReference_t * pSubscriptionRef );
+                                           IotMqttOperation_t * pOperationReference );
 
 /*-----------------------------------------------------------*/
 
@@ -510,7 +510,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            size_t subscriptionCount,
                                            uint32_t flags,
                                            const IotMqttCallbackInfo_t * pCallbackInfo,
-                                           IotMqttReference_t * pSubscriptionRef )
+                                           IotMqttOperation_t * pOperationReference )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     _mqttOperation_t * pSubscriptionOperation = NULL;
@@ -542,7 +542,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     /* Check that a reference pointer is provided for a waitable operation. */
     if( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
     {
-        if( pSubscriptionRef == NULL )
+        if( pOperationReference == NULL )
         {
             IotLogError( "Reference must be provided for a waitable %s.",
                          IotMqtt_OperationType( operation ) );
@@ -631,7 +631,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     /* Check the subscription operation data and set the operation type. */
     IotMqtt_Assert( pSubscriptionOperation->status == IOT_MQTT_STATUS_PENDING );
     IotMqtt_Assert( pSubscriptionOperation->retry.limit == 0 );
-    pSubscriptionOperation->operation = operation;
+    pSubscriptionOperation->type = operation;
 
     /* Generate a subscription packet from the subscription list. */
     status = serializeSubscription( pSubscriptionList,
@@ -664,9 +664,9 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     }
 
     /* Set the reference, if provided. */
-    if( pSubscriptionRef != NULL )
+    if( pOperationReference != NULL )
     {
-        *pSubscriptionRef = pSubscriptionOperation;
+        *pOperationReference = pSubscriptionOperation;
     }
 
     /* Schedule the subscription operation for network transmission. */
@@ -688,9 +688,9 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
         }
 
         /* Clear the previously set (and now invalid) reference. */
-        if( pSubscriptionRef != NULL )
+        if( pOperationReference != NULL )
         {
-            *pSubscriptionRef = IOT_MQTT_REFERENCE_INITIALIZER;
+            *pOperationReference = IOT_MQTT_OPERATION_INITIALIZER;
         }
 
         _IOT_GOTO_CLEANUP();
@@ -838,7 +838,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     void * pNetworkConnection = NULL;
-    _mqttOperation_t * pConnectOperation = NULL;
+    _mqttOperation_t * pOperation = NULL;
     _mqttConnection_t * pNewMqttConnection = NULL;
 
     /* Default CONNECT serializer function. */
@@ -989,7 +989,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     status = _IotMqtt_CreateOperation( pNewMqttConnection,
                                        IOT_MQTT_FLAG_WAITABLE,
                                        NULL,
-                                       &pConnectOperation );
+                                       &pOperation );
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -1002,13 +1002,13 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
 
     /* Ensure the members set by operation creation and serialization
      * are appropriate for a blocking CONNECT. */
-    IotMqtt_Assert( pConnectOperation->status == IOT_MQTT_STATUS_PENDING );
-    IotMqtt_Assert( ( pConnectOperation->flags & IOT_MQTT_FLAG_WAITABLE )
+    IotMqtt_Assert( pOperation->status == IOT_MQTT_STATUS_PENDING );
+    IotMqtt_Assert( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE )
                     == IOT_MQTT_FLAG_WAITABLE );
-    IotMqtt_Assert( pConnectOperation->retry.limit == 0 );
+    IotMqtt_Assert( pOperation->retry.limit == 0 );
 
     /* Set the operation type. */
-    pConnectOperation->operation = IOT_MQTT_CONNECT;
+    pOperation->type = IOT_MQTT_CONNECT;
 
     /* Add previous session subscriptions. */
     if( pConnectInfo->pPreviousSubscriptions != NULL )
@@ -1056,8 +1056,8 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
 
     /* Convert the connect info and will info objects to an MQTT CONNECT packet. */
     status = serializeConnect( pConnectInfo,
-                               &( pConnectOperation->pMqttPacket ),
-                               &( pConnectOperation->packetSize ) );
+                               &( pOperation->pMqttPacket ),
+                               &( pOperation->packetSize ) );
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -1069,11 +1069,11 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     }
 
     /* Check the serialized MQTT packet. */
-    IotMqtt_Assert( pConnectOperation->pMqttPacket != NULL );
-    IotMqtt_Assert( pConnectOperation->packetSize > 0 );
+    IotMqtt_Assert( pOperation->pMqttPacket != NULL );
+    IotMqtt_Assert( pOperation->packetSize > 0 );
 
     /* Add the CONNECT operation to the send queue for network transmission. */
-    status = _IotMqtt_ScheduleOperation( pConnectOperation,
+    status = _IotMqtt_ScheduleOperation( pOperation,
                                          _IotMqtt_ProcessSend,
                                          0 );
 
@@ -1084,12 +1084,12 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     else
     {
         /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
-        status = IotMqtt_Wait( ( IotMqttReference_t ) pConnectOperation,
+        status = IotMqtt_Wait( pOperation,
                                timeoutMs );
 
         /* The call to wait cleans up the CONNECT operation, so set the pointer
          * to NULL. */
-        pConnectOperation = NULL;
+        pOperation = NULL;
     }
 
     /* When a connection is successfully established, schedule keep-alive job. */
@@ -1149,9 +1149,9 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
             _EMPTY_ELSE_MARKER;
         }
 
-        if( pConnectOperation != NULL )
+        if( pOperation != NULL )
         {
-            _IotMqtt_DestroyOperation( pConnectOperation );
+            _IotMqtt_DestroyOperation( pOperation );
         }
         else
         {
@@ -1185,7 +1185,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
 {
     bool disconnected = false;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
-    _mqttOperation_t * pDisconnectOperation = NULL;
+    _mqttOperation_t * pOperation = NULL;
 
     IotLogInfo( "(MQTT connection %p) Disconnecting connection.", mqttConnection );
 
@@ -1205,19 +1205,19 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
             status = _IotMqtt_CreateOperation( mqttConnection,
                                                IOT_MQTT_FLAG_WAITABLE,
                                                NULL,
-                                               &pDisconnectOperation );
+                                               &pOperation );
 
             if( status == IOT_MQTT_SUCCESS )
             {
                 /* Ensure that the members set by operation creation and serialization
                  * are appropriate for a blocking DISCONNECT. */
-                IotMqtt_Assert( pDisconnectOperation->status == IOT_MQTT_STATUS_PENDING );
-                IotMqtt_Assert( ( pDisconnectOperation->flags & IOT_MQTT_FLAG_WAITABLE )
+                IotMqtt_Assert( pOperation->status == IOT_MQTT_STATUS_PENDING );
+                IotMqtt_Assert( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE )
                                 == IOT_MQTT_FLAG_WAITABLE );
-                IotMqtt_Assert( pDisconnectOperation->retry.limit == 0 );
+                IotMqtt_Assert( pOperation->retry.limit == 0 );
 
                 /* Set the operation type. */
-                pDisconnectOperation->operation = IOT_MQTT_DISCONNECT;
+                pOperation->type = IOT_MQTT_DISCONNECT;
 
                 /* Choose a disconnect serializer. */
                 IotMqttError_t ( * serializeDisconnect )( uint8_t **,
@@ -1242,8 +1242,8 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                 #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
                 /* Generate a DISCONNECT packet. */
-                status = serializeDisconnect( &( pDisconnectOperation->pMqttPacket ),
-                                              &( pDisconnectOperation->packetSize ) );
+                status = serializeDisconnect( &( pOperation->pMqttPacket ),
+                                              &( pOperation->packetSize ) );
             }
             else
             {
@@ -1253,22 +1253,22 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
             if( status == IOT_MQTT_SUCCESS )
             {
                 /* Check the serialized MQTT packet. */
-                IotMqtt_Assert( pDisconnectOperation->pMqttPacket != NULL );
-                IotMqtt_Assert( pDisconnectOperation->packetSize > 0 );
+                IotMqtt_Assert( pOperation->pMqttPacket != NULL );
+                IotMqtt_Assert( pOperation->packetSize > 0 );
 
                 /* Schedule the DISCONNECT operation for network transmission. */
-                if( _IotMqtt_ScheduleOperation( pDisconnectOperation,
+                if( _IotMqtt_ScheduleOperation( pOperation,
                                                 _IotMqtt_ProcessSend,
                                                 0 ) != IOT_MQTT_SUCCESS )
                 {
                     IotLogWarn( "(MQTT connection %p) Failed to schedule DISCONNECT for sending.",
                                 mqttConnection );
-                    _IotMqtt_DestroyOperation( pDisconnectOperation );
+                    _IotMqtt_DestroyOperation( pOperation );
                 }
                 else
                 {
                     /* Wait a short time for the DISCONNECT packet to be transmitted. */
-                    status = IotMqtt_Wait( ( IotMqttReference_t ) pDisconnectOperation,
+                    status = IotMqtt_Wait( pOperation,
                                            IOT_MQTT_RESPONSE_WAIT_MS );
 
                     /* A wait on DISCONNECT should only ever return SUCCESS, TIMEOUT,
@@ -1335,7 +1335,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
                                   size_t subscriptionCount,
                                   uint32_t flags,
                                   const IotMqttCallbackInfo_t * pCallbackInfo,
-                                  IotMqttReference_t * pSubscribeRef )
+                                  IotMqttOperation_t * pSubscribeOperation )
 {
     return _subscriptionCommon( IOT_MQTT_SUBSCRIBE,
                                 mqttConnection,
@@ -1343,7 +1343,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
                                 subscriptionCount,
                                 flags,
                                 pCallbackInfo,
-                                pSubscribeRef );
+                                pSubscribeOperation );
 }
 
 /*-----------------------------------------------------------*/
@@ -1355,7 +1355,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
                                        uint64_t timeoutMs )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
-    IotMqttReference_t subscribeRef = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t subscribeOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
     /* Flags are not used, but the parameter is present for future compatibility. */
     ( void ) flags;
@@ -1366,12 +1366,12 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
                                 subscriptionCount,
                                 IOT_MQTT_FLAG_WAITABLE,
                                 NULL,
-                                &subscribeRef );
+                                &subscribeOperation );
 
     /* Wait for the SUBSCRIBE operation to complete. */
     if( status == IOT_MQTT_STATUS_PENDING )
     {
-        status = IotMqtt_Wait( subscribeRef, timeoutMs );
+        status = IotMqtt_Wait( subscribeOperation, timeoutMs );
     }
     else
     {
@@ -1391,7 +1391,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
                                     size_t subscriptionCount,
                                     uint32_t flags,
                                     const IotMqttCallbackInfo_t * pCallbackInfo,
-                                    IotMqttReference_t * pUnsubscribeRef )
+                                    IotMqttOperation_t * pUnsubscribeOperation )
 {
     return _subscriptionCommon( IOT_MQTT_UNSUBSCRIBE,
                                 mqttConnection,
@@ -1399,7 +1399,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
                                 subscriptionCount,
                                 flags,
                                 pCallbackInfo,
-                                pUnsubscribeRef );
+                                pUnsubscribeOperation );
 }
 
 /*-----------------------------------------------------------*/
@@ -1411,7 +1411,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
                                          uint64_t timeoutMs )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
-    IotMqttReference_t unsubscribeRef = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t unsubscribeOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
     /* Flags are not used, but the parameter is present for future compatibility. */
     ( void ) flags;
@@ -1422,12 +1422,12 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
                                   subscriptionCount,
                                   IOT_MQTT_FLAG_WAITABLE,
                                   NULL,
-                                  &unsubscribeRef );
+                                  &unsubscribeOperation );
 
     /* Wait for the UNSUBSCRIBE operation to complete. */
     if( status == IOT_MQTT_STATUS_PENDING )
     {
-        status = IotMqtt_Wait( unsubscribeRef, timeoutMs );
+        status = IotMqtt_Wait( unsubscribeOperation, timeoutMs );
     }
     else
     {
@@ -1446,10 +1446,10 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
                                 const IotMqttPublishInfo_t * pPublishInfo,
                                 uint32_t flags,
                                 const IotMqttCallbackInfo_t * pCallbackInfo,
-                                IotMqttReference_t * pPublishRef )
+                                IotMqttOperation_t * pPublishOperation )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
-    _mqttOperation_t * pPublishOperation = NULL;
+    _mqttOperation_t * pOperation = NULL;
     uint8_t ** pPacketIdentifierHigh = NULL;
 
     /* Default PUBLISH serializer function. */
@@ -1490,7 +1490,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
             _EMPTY_ELSE_MARKER;
         }
 
-        if( pPublishRef != NULL )
+        if( pPublishOperation != NULL )
         {
             IotLogWarn( "Ignoring reference parameter for QoS 0 publish." );
         }
@@ -1507,7 +1507,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     /* Check that a reference pointer is provided for a waitable operation. */
     if( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
     {
-        if( pPublishRef == NULL )
+        if( pPublishOperation == NULL )
         {
             IotLogError( "Reference must be provided for a waitable PUBLISH." );
 
@@ -1527,7 +1527,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     status = _IotMqtt_CreateOperation( mqttConnection,
                                        flags,
                                        pCallbackInfo,
-                                       &pPublishOperation );
+                                       &pOperation );
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -1539,8 +1539,8 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     }
 
     /* Check the PUBLISH operation data and set the operation type. */
-    IotMqtt_Assert( pPublishOperation->status == IOT_MQTT_STATUS_PENDING );
-    pPublishOperation->operation = IOT_MQTT_PUBLISH_TO_SERVER;
+    IotMqtt_Assert( pOperation->status == IOT_MQTT_STATUS_PENDING );
+    pOperation->type = IOT_MQTT_PUBLISH_TO_SERVER;
 
     /* Choose a PUBLISH serializer function. */
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
@@ -1564,7 +1564,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     /* In AWS IoT MQTT mode, a pointer to the packet identifier must be saved. */
     if( mqttConnection->awsIotMqttMode == true )
     {
-        pPacketIdentifierHigh = &( pPublishOperation->pPacketIdentifierHigh );
+        pPacketIdentifierHigh = &( pOperation->pPacketIdentifierHigh );
     }
     else
     {
@@ -1573,9 +1573,9 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
 
     /* Generate a PUBLISH packet from pPublishInfo. */
     status = serializePublish( pPublishInfo,
-                               &( pPublishOperation->pMqttPacket ),
-                               &( pPublishOperation->packetSize ),
-                               &( pPublishOperation->packetIdentifier ),
+                               &( pOperation->pMqttPacket ),
+                               &( pOperation->packetSize ),
+                               &( pOperation->packetIdentifier ),
                                pPacketIdentifierHigh );
 
     if( status != IOT_MQTT_SUCCESS )
@@ -1588,8 +1588,8 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     }
 
     /* Check the serialized MQTT packet. */
-    IotMqtt_Assert( pPublishOperation->pMqttPacket != NULL );
-    IotMqtt_Assert( pPublishOperation->packetSize > 0 );
+    IotMqtt_Assert( pOperation->pMqttPacket != NULL );
+    IotMqtt_Assert( pOperation->packetSize > 0 );
 
     /* Initialize PUBLISH retry if retryLimit is set. */
     if( pPublishInfo->retryLimit > 0 )
@@ -1597,8 +1597,8 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
         /* A QoS 0 PUBLISH may not be retried. */
         if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
         {
-            pPublishOperation->retry.limit = pPublishInfo->retryLimit;
-            pPublishOperation->retry.nextPeriod = pPublishInfo->retryMs;
+            pOperation->retry.limit = pPublishInfo->retryLimit;
+            pOperation->retry.nextPeriod = pPublishInfo->retryMs;
         }
         else
         {
@@ -1613,9 +1613,9 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     /* Set the reference, if provided. */
     if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
     {
-        if( pPublishRef != NULL )
+        if( pPublishOperation != NULL )
         {
-            *pPublishRef = pPublishOperation;
+            *pPublishOperation = pOperation;
         }
         else
         {
@@ -1628,7 +1628,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     }
 
     /* Add the PUBLISH operation to the send queue for network transmission. */
-    status = _IotMqtt_ScheduleOperation( pPublishOperation,
+    status = _IotMqtt_ScheduleOperation( pOperation,
                                          _IotMqtt_ProcessSend,
                                          0 );
 
@@ -1640,9 +1640,9 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
         /* Clear the previously set (and now invalid) reference. */
         if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
         {
-            if( pPublishRef != NULL )
+            if( pPublishOperation != NULL )
             {
-                *pPublishRef = IOT_MQTT_REFERENCE_INITIALIZER;
+                *pPublishOperation = IOT_MQTT_OPERATION_INITIALIZER;
             }
             else
             {
@@ -1667,9 +1667,9 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        if( pPublishOperation != NULL )
+        if( pOperation != NULL )
         {
-            _IotMqtt_DestroyOperation( pPublishOperation );
+            _IotMqtt_DestroyOperation( pOperation );
         }
         else
         {
@@ -1702,8 +1702,8 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
                                      uint64_t timeoutMs )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
-    IotMqttReference_t publishRef = IOT_MQTT_REFERENCE_INITIALIZER,
-                       * pPublishRef = NULL;
+    IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER,
+                       * pPublishOperation = NULL;
 
     /* Clear the flags. */
     flags = 0;
@@ -1712,7 +1712,7 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
     if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
     {
         flags = IOT_MQTT_FLAG_WAITABLE;
-        pPublishRef = &publishRef;
+        pPublishOperation = &publishOperation;
     }
     else
     {
@@ -1724,14 +1724,14 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
                               pPublishInfo,
                               flags,
                               NULL,
-                              pPublishRef );
+                              pPublishOperation );
 
     /* Wait for a queued QoS 1 PUBLISH to complete. */
     if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
     {
         if( status == IOT_MQTT_STATUS_PENDING )
         {
-            status = IotMqtt_Wait( publishRef, timeoutMs );
+            status = IotMqtt_Wait( publishOperation, timeoutMs );
         }
         else
         {
@@ -1748,15 +1748,14 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
+IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
                              uint64_t timeoutMs )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
-    _mqttOperation_t * pOperation = reference;
-    _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
+    _mqttConnection_t * pMqttConnection = operation->pMqttConnection;
 
-    /* Validate the given reference. */
-    if( _IotMqtt_ValidateReference( reference ) == false )
+    /* Validate the given operation reference. */
+    if( _IotMqtt_ValidateOperation( operation ) == false )
     {
         status = IOT_MQTT_BAD_PARAMETER;
     }
@@ -1775,8 +1774,8 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
             IotLogError( "(MQTT connection %p, %s operation %p) MQTT connection is closed. "
                          "Operation cannot be waited on.",
                          pMqttConnection,
-                         IotMqtt_OperationType( pOperation->operation ),
-                         pOperation );
+                         IotMqtt_OperationType( operation->type ),
+                         operation );
 
             status = IOT_MQTT_NETWORK_ERROR;
         }
@@ -1784,8 +1783,8 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
         {
             IotLogInfo( "(MQTT connection %p, %s operation %p) Waiting for operation completion.",
                         pMqttConnection,
-                        IotMqtt_OperationType( pOperation->operation ),
-                        pOperation );
+                        IotMqtt_OperationType( operation->type ),
+                        operation );
         }
 
         IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
@@ -1793,24 +1792,24 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
         /* Only wait on an operation if the MQTT connection is active. */
         if( status == IOT_MQTT_SUCCESS )
         {
-            if( IotSemaphore_TimedWait( &( pOperation->notify.waitSemaphore ),
+            if( IotSemaphore_TimedWait( &( operation->notify.waitSemaphore ),
                                         timeoutMs ) == false )
             {
                 status = IOT_MQTT_TIMEOUT;
 
                 /* Attempt to cancel the job of the timed out operation. */
-                ( void ) _IotMqtt_DecrementOperationReferences( pOperation, true );
+                ( void ) _IotMqtt_DecrementOperationReferences( operation, true );
 
                 /* Clean up lingering subscriptions from a timed-out SUBSCRIBE. */
-                if( pOperation->operation == IOT_MQTT_SUBSCRIBE )
+                if( operation->type == IOT_MQTT_SUBSCRIBE )
                 {
                     IotLogDebug( "(MQTT connection %p, SUBSCRIBE operation %p) Cleaning up"
                                  " subscriptions of timed-out SUBSCRIBE.",
                                  pMqttConnection,
-                                 pOperation );
+                                 operation );
 
                     _IotMqtt_RemoveSubscriptionByPacket( pMqttConnection,
-                                                         pOperation->packetIdentifier,
+                                                         operation->packetIdentifier,
                                                          -1 );
                 }
                 else
@@ -1821,13 +1820,13 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
             else
             {
                 /* Retrieve the status of the completed operation. */
-                status = pOperation->status;
+                status = operation->status;
             }
 
             IotLogInfo( "(MQTT connection %p, %s operation %p) Wait complete with result %s.",
                         pMqttConnection,
-                        IotMqtt_OperationType( pOperation->operation ),
-                        pOperation,
+                        IotMqtt_OperationType( operation->type ),
+                        operation,
                         IotMqtt_strerror( status ) );
         }
         else
@@ -1836,9 +1835,9 @@ IotMqttError_t IotMqtt_Wait( IotMqttReference_t reference,
         }
 
         /* Wait is finished; decrement operation reference count. */
-        if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == true )
+        if( _IotMqtt_DecrementOperationReferences( operation, false ) == true )
         {
-            _IotMqtt_DestroyOperation( pOperation );
+            _IotMqtt_DestroyOperation( operation );
         }
         else
         {

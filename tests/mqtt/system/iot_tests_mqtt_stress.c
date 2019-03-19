@@ -256,7 +256,7 @@ static IotMqttError_t _checkConnection( void )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    IotMqttReference_t publishRef = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
     /* Set the publish info. */
     publishInfo.qos = IOT_MQTT_QOS_1;
@@ -272,7 +272,7 @@ static IotMqttError_t _checkConnection( void )
                               &publishInfo,
                               IOT_MQTT_FLAG_WAITABLE,
                               NULL,
-                              &publishRef );
+                              &publishOperation );
 
     if( status != IOT_MQTT_STATUS_PENDING )
     {
@@ -280,7 +280,7 @@ static IotMqttError_t _checkConnection( void )
     }
 
     /* Return the result of the PUBLISH. */
-    return IotMqtt_Wait( publishRef,
+    return IotMqtt_Wait( publishOperation,
                          IOT_TEST_MQTT_TIMEOUT_MS );
 }
 

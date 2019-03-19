@@ -56,13 +56,13 @@
  * invalid once the [completion callback](@ref AwsIotShadowCallbackInfo_t) is invoked,
  * or @ref shadow_function_wait returns.
  *
- * @initializer{AwsIotShadowReference_t,AWS_IOT_SHADOW_REFERENCE_INITIALIZER}
+ * @initializer{AwsIotShadowOperation_t,AWS_IOT_SHADOW_OPERATION_INITIALIZER}
  *
  * @see @ref shadow_function_wait and #AWS_IOT_SHADOW_FLAG_WAITABLE for waiting on
  * a reference. #AwsIotShadowCallbackInfo_t and #AwsIotShadowCallbackParam_t for an
  * asynchronous notification of completion.
  */
-typedef void * AwsIotShadowReference_t;
+typedef struct _shadowOperation * AwsIotShadowOperation_t;
 
 /*------------------------- Shadow enumerated types -------------------------*/
 
@@ -387,7 +387,7 @@ typedef struct AwsIotShadowCallbackParam
             } get;                             /**< @brief Retrieved Shadow document, valid only for a completed [Shadow Get](@ref shadow_function_get). */
 
             AwsIotShadowError_t result;        /**< @brief Result of Shadow operation, e.g. succeeded or failed. */
-            AwsIotShadowReference_t reference; /**< @brief Reference to the Shadow operation that completed. */
+            AwsIotShadowOperation_t reference; /**< @brief Reference to the Shadow operation that completed. */
         } operation;                           /**< @brief Information on a completed Shadow operation. */
 
         /* Valid for a message on a Shadow delta or updated topic. */
@@ -498,7 +498,7 @@ typedef struct AwsIotShadowDocumentInfo
  * @code{c}
  * AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
  * AwsIotShadowDocumentInfo_t documentInfo = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
- * AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
+ * AwsIotShadowOperation_t operation = AWS_IOT_SHADOW_OPERATION_INITIALIZER;
  * @endcode
  *
  * @section shadow_constants_flags Shadow Function Flags
@@ -532,7 +532,7 @@ typedef struct AwsIotShadowDocumentInfo
 /* @[define_shadow_initializers] */
 #define AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER           { 0 } /**< @brief Initializer for #AwsIotShadowCallbackInfo_t. */
 #define AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER           { 0 } /**< @brief Initializer for #AwsIotShadowDocumentInfo_t. */
-#define AWS_IOT_SHADOW_REFERENCE_INITIALIZER               NULL  /**< @brief Initializer for #AwsIotShadowReference_t. */
+#define AWS_IOT_SHADOW_OPERATION_INITIALIZER               NULL  /**< @brief Initializer for #AwsIotShadowOperation_t. */
 /* @[define_shadow_initializers] */
 
 /**
@@ -541,7 +541,7 @@ typedef struct AwsIotShadowDocumentInfo
  * This flag is only valid if passed to the functions @ref shadow_function_delete,
  * @ref shadow_function_get, or @ref shadow_function_update.
  *
- * An #AwsIotShadowReference_t <b>MUST</b> be provided if this flag is set.
+ * An #AwsIotShadowOperation_t <b>MUST</b> be provided if this flag is set.
  * Additionally, an #AwsIotShadowCallbackInfo_t <b>MUST NOT</b> be provided.
  *
  * @note If this flag is set, @ref shadow_function_wait <b>MUST</b> be called to

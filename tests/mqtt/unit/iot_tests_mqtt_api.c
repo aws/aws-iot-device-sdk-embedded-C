@@ -671,7 +671,7 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
                                                                        &pOperation ) );
 
         /* Set an arbitrary MQTT packet for the operation. */
-        pOperation->operation = IOT_MQTT_DISCONNECT;
+        pOperation->type = IOT_MQTT_DISCONNECT;
         pOperation->pMqttPacket = pPacket;
         pOperation->packetSize = 2;
 
@@ -935,7 +935,7 @@ TEST( MQTT_Unit_API, PublishQoS0Parameters )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    IotMqttReference_t publishReference = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER;
     IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
 
     /* Initialize parameters. */
@@ -956,13 +956,13 @@ TEST( MQTT_Unit_API, PublishQoS0Parameters )
         publishInfo.topicNameLength = _TEST_TOPIC_NAME_LENGTH;
 
         /* Check that a QoS 0 publish is refused if a notification is requested. */
-        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, IOT_MQTT_FLAG_WAITABLE, NULL, &publishReference );
+        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, IOT_MQTT_FLAG_WAITABLE, NULL, &publishOperation );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
         status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, &callbackInfo, NULL );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
         /* If valid parameters are passed, QoS 0 publish should always return success. */
-        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, 0, &publishReference );
+        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, 0, &publishOperation );
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
     }
 
@@ -1031,7 +1031,7 @@ TEST( MQTT_Unit_API, PublishQoS1 )
     int32_t i = 0;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    IotMqttReference_t publishRef = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER;
     IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
 
     /* Initialize parameters. */
@@ -1063,7 +1063,7 @@ TEST( MQTT_Unit_API, PublishQoS1 )
                                   &publishInfo,
                                   IOT_MQTT_FLAG_WAITABLE,
                                   &callbackInfo,
-                                  &publishRef );
+                                  &publishOperation );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
         /* Check QoS 1 PUBLISH behavior with malloc failures. */
@@ -1077,13 +1077,13 @@ TEST( MQTT_Unit_API, PublishQoS1 )
                                       &publishInfo,
                                       IOT_MQTT_FLAG_WAITABLE,
                                       NULL,
-                                      &publishRef );
+                                      &publishOperation );
 
             /* If the PUBLISH succeeded, the loop can exit after waiting for the QoS
              * 1 PUBLISH to be cleaned up. */
             if( status == IOT_MQTT_STATUS_PENDING )
             {
-                TEST_ASSERT_EQUAL( IOT_MQTT_TIMEOUT, IotMqtt_Wait( publishRef, _TIMEOUT_MS ) );
+                TEST_ASSERT_EQUAL( IOT_MQTT_TIMEOUT, IotMqtt_Wait( publishOperation, _TIMEOUT_MS ) );
                 break;
             }
 
@@ -1110,7 +1110,7 @@ TEST( MQTT_Unit_API, PublishDuplicates )
 {
     static IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    IotMqttReference_t publishRef = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER;
     bool dupCheckResult = false;
     uint64_t startTime = 0;
 
@@ -1147,12 +1147,12 @@ TEST( MQTT_Unit_API, PublishDuplicates )
                                             &publishInfo,
                                             IOT_MQTT_FLAG_WAITABLE,
                                             NULL,
-                                            &publishRef ) );
+                                            &publishOperation ) );
 
         /* Since _dupChecker doesn't actually transmit a PUBLISH, no PUBACK is
          * expected. */
         TEST_ASSERT_EQUAL( IOT_MQTT_RETRY_NO_RESPONSE,
-                           IotMqtt_Wait( publishRef, _DUP_CHECK_TIMEOUT ) );
+                           IotMqtt_Wait( publishOperation, _DUP_CHECK_TIMEOUT ) );
 
         /* Check the result of the DUP check. */
         TEST_ASSERT_EQUAL_INT( true, dupCheckResult );
@@ -1181,7 +1181,7 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
-    IotMqttReference_t reference = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t subscribeOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
     /* Create a new MQTT connection. */
     _pMqttConnection = IotTestMqtt_createMqttConnection( _AWS_IOT_MQTT_SERVER,
@@ -1195,7 +1195,7 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
                                 1,
                                 IOT_MQTT_FLAG_WAITABLE,
                                 NULL,
-                                &reference );
+                                &subscribeOperation );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     status = IotMqtt_Unsubscribe( _pMqttConnection,
@@ -1203,7 +1203,7 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
                                   1,
                                   IOT_MQTT_FLAG_WAITABLE,
                                   NULL,
-                                  &reference );
+                                  &subscribeOperation );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     subscription.pTopicFilter = _TEST_TOPIC_NAME;
@@ -1241,7 +1241,7 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
     int32_t i = 0;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
-    IotMqttReference_t subscribeRef = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t subscribeOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
     /* Initializer parameters. */
     _networkInterface.send = _sendSuccess;
@@ -1270,13 +1270,13 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
                                         1,
                                         IOT_MQTT_FLAG_WAITABLE,
                                         NULL,
-                                        &subscribeRef );
+                                        &subscribeOperation );
 
             /* If the SUBSCRIBE succeeded, the loop can exit after waiting for
              * the SUBSCRIBE to be cleaned up. */
             if( status == IOT_MQTT_STATUS_PENDING )
             {
-                TEST_ASSERT_EQUAL( IOT_MQTT_TIMEOUT, IotMqtt_Wait( subscribeRef, _TIMEOUT_MS ) );
+                TEST_ASSERT_EQUAL( IOT_MQTT_TIMEOUT, IotMqtt_Wait( subscribeOperation, _TIMEOUT_MS ) );
                 break;
             }
 
@@ -1303,7 +1303,7 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
     int32_t i = 0;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
-    IotMqttReference_t unsubscribeRef = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t unsubscribeOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
     /* Initialize parameters. */
     _networkInterface.send = _sendSuccess;
@@ -1332,13 +1332,13 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
                                           1,
                                           IOT_MQTT_FLAG_WAITABLE,
                                           NULL,
-                                          &unsubscribeRef );
+                                          &unsubscribeOperation );
 
             /* If the UNSUBSCRIBE succeeded, the loop can exit after waiting for
              * the UNSUBSCRIBE to be cleaned up. */
             if( status == IOT_MQTT_STATUS_PENDING )
             {
-                TEST_ASSERT_EQUAL( IOT_MQTT_TIMEOUT, IotMqtt_Wait( unsubscribeRef, _TIMEOUT_MS ) );
+                TEST_ASSERT_EQUAL( IOT_MQTT_TIMEOUT, IotMqtt_Wait( unsubscribeOperation, _TIMEOUT_MS ) );
                 break;
             }
 

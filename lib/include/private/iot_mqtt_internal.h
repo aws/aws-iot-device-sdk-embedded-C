@@ -348,7 +348,7 @@ typedef struct _mqttOperation
         {
             /* Basic operation information. */
             int32_t jobReference;             /**< @brief Tracks if a job is using this operation. Must always be 0, 1, or 2. */
-            IotMqttOperationType_t operation; /**< @brief What operation this structure represents. */
+            IotMqttOperationType_t type;      /**< @brief What operation this structure represents. */
             uint32_t flags;                   /**< @brief Flags passed to the function that created this operation. */
             uint16_t packetIdentifier;        /**< @brief The packet identifier used with this operation. */
 
@@ -435,13 +435,13 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
                                const IotMqttPublishInfo_t * pPublishInfo );
 
 /**
- * @brief Check that an #IotMqttReference_t is valid and waitable.
+ * @brief Check that an #IotMqttOperation_t is valid and waitable.
  *
- * @param[in] reference The #IotMqttReference_t to validate.
+ * @param[in] operation The #IotMqttOperation_t to validate.
  *
- * @return `true` if `reference` is valid; `false` otherwise.
+ * @return `true` if `operation` is valid; `false` otherwise.
  */
-bool _IotMqtt_ValidateReference( IotMqttReference_t reference );
+bool _IotMqtt_ValidateOperation( IotMqttOperation_t operation );
 
 /**
  * @brief Check that a list of #IotMqttSubscription_t is valid.
@@ -814,13 +814,13 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * pOperation,
  * name and packet identifier. Removes a matching operation from the list if found.
  *
  * @param[in] pMqttConnection The connection associated with the operation.
- * @param[in] operation The operation type to look for.
+ * @param[in] type The operation type to look for.
  * @param[in] pPacketIdentifier A packet identifier to match. Pass `NULL` to ignore.
  *
  * @return Pointer to any matching operation; `NULL` if no match was found.
  */
 _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
-                                           IotMqttOperationType_t operation,
+                                           IotMqttOperationType_t type,
                                            const uint16_t * pPacketIdentifier );
 
 /**
