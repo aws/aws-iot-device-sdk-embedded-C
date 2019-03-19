@@ -24,8 +24,8 @@
  * @brief User-facing functions of the task pool library.
  */
 
-#ifndef _IOT_TASKPOOL_H_
-#define _IOT_TASKPOOL_H_
+#ifndef IOT_TASKPOOL_H_
+#define IOT_TASKPOOL_H_
 
 /* Build using a config header, if provided. */
 #ifdef IOT_CONFIG_FILE
@@ -118,7 +118,7 @@ IotTaskPoolError_t IotTaskPool_CreateSystemTaskPool( const IotTaskPoolInfo_t * c
  *
  */
 /* @[declare_taskpool_getsystemtaskpool] */
-IotTaskPool_t * IotTaskPool_GetSystemTaskPool();
+IotTaskPool_t * IotTaskPool_GetSystemTaskPool( void );
 /* @[declare_taskpool_getsystemtaskpool] */
 
 /**
@@ -191,7 +191,7 @@ IotTaskPoolError_t IotTaskPool_Destroy( IotTaskPool_t * pTaskPool );
  */
 /* @[declare_taskpool_setmaxthreads] */
 IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t * pTaskPool,
-                                              size_t maxThreads );
+                                              uint32_t maxThreads );
 /* @[declare_taskpool_setmaxthreads] */
 
 /**
@@ -507,4 +507,4 @@ IotTaskPoolError_t IotTaskPool_TryCancel( IotTaskPool_t * const pTaskPool,
 const char * IotTaskPool_strerror( IotTaskPoolError_t status );
 /* @[declare_taskpool_strerror] */
 
-#endif /* ifndef _IOT_TASKPOOL_H_ */
+#endif /* ifndef IOT_TASKPOOL_H_ */
