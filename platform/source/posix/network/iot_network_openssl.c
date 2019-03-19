@@ -124,7 +124,7 @@ typedef struct _networkConnection
 /**
  * @brief An #IotNetworkInterface_t that uses the functions in this file.
  */
-const IotNetworkInterface_t _IotNetworkOpenssl =
+const IotNetworkInterface_t IotNetworkOpenssl =
 {
     .create             = IotNetworkOpenssl_Create,
     .setReceiveCallback = IotNetworkOpenssl_SetReceiveCallback,
