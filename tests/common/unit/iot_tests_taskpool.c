@@ -559,17 +559,6 @@ TEST( Common_Unit_Task_Pool, CreateDestroyRecycleRecyclableJobError )
         TEST_ASSERT( IotTaskPool_RecycleJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
     }
 
-    /* Create/Schedule/Recycle. */
-    {
-        IotTaskPoolJob_t * pJob = NULL;
-
-        /* Create legal recyclable job. */
-        TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &BlankExecution, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
-        /* Schedule immediate, then try to illegally destroy, then cancel */
-        TEST_ASSERT( IotTaskPool_Schedule( &taskPool, pJob, 0 ) == IOT_TASKPOOL_SUCCESS );
-        TEST_ASSERT( IotTaskPool_RecycleJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
-    }
-
     IotTaskPool_Destroy( &taskPool );
 }
 
