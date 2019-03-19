@@ -24,8 +24,8 @@
  * @brief Types of the task pool.
  */
 
-#ifndef _IOT_TASKPOOL_TYPES_H_
-#define _IOT_TASKPOOL_TYPES_H_
+#ifndef IOT_TASKPOOL_TYPES_H_
+#define IOT_TASKPOOL_TYPES_H_
 
 /* Build using a config header, if provided. */
 #ifdef IOT_CONFIG_FILE
@@ -281,11 +281,11 @@ typedef struct IotTaskPool
     IotQueue_t dispatchQueue;        /**< @brief The queue for the jobs waiting to be executed. */
     IotListDouble_t timerEventsList; /**< @brief The timeouts queue for all deferred jobs waiting to be executed. */
     IotTaskPoolCache_t jobsCache;    /**< @brief A cache to re-use jobs in order to limit memory allocations. */
-    size_t minThreads;               /**< @brief The minimum number of threads for the task pool. */
-    size_t maxThreads;               /**< @brief The maximum number of threads for the task pool. */
-    size_t activeThreads;            /**< @brief The number of threads in the task pool at any given time. */
-    size_t activeJobs;               /**< @brief The number of active jobs in the task pool at any given time. */
-    size_t stackSize;                /**< @brief The stack size for all task pool threads. */
+    uint32_t minThreads;             /**< @brief The minimum number of threads for the task pool. */
+    uint32_t maxThreads;             /**< @brief The maximum number of threads for the task pool. */
+    uint32_t activeThreads;          /**< @brief The number of threads in the task pool at any given time. */
+    uint32_t activeJobs;             /**< @brief The number of active jobs in the task pool at any given time. */
+    uint32_t stackSize;              /**< @brief The stack size for all task pool threads. */
     int32_t priority;                /**< @brief The priority for all task pool threads. */
     IotSemaphore_t dispatchSignal;   /**< @brief The synchronization object on which threads are waiting for incoming jobs. */
     IotSemaphore_t startStopSignal;  /**< @brief The synchronization object for threads to signal start and stop condition. */
@@ -367,4 +367,4 @@ typedef struct IotTaskPoolJob
  */
 #define IOT_SYSTEM_TASKPOOL               ( IotTaskPool_GetSystemTaskPool() )
 
-#endif /* ifndef _IOT_TASKPOOL_TYPES_H_ */
+#endif /* ifndef IOT_TASKPOOL_TYPES_H_ */
