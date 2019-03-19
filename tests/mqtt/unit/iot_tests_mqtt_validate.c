@@ -261,13 +261,13 @@ TEST( MQTT_Unit_Validate, ValidatePublish )
 TEST( MQTT_Unit_Validate, ValidateOperation )
 {
     bool validateStatus = false;
-    IotMqttOperation_t operation = IotMqtt_MallocOperation( sizeof( IotMqttOperation_t ) );
+    IotMqttOperation_t operation = IotMqtt_MallocOperation( sizeof( _mqttOperation_t ) );
 
     TEST_ASSERT_NOT_NULL( operation );
 
     if( TEST_PROTECT() )
     {
-        ( void ) memset( &operation, 0x00, sizeof( IotMqttOperation_t ) );
+        ( void ) memset( operation, 0x00, sizeof( _mqttOperation_t ) );
 
         /* NULL parameter. */
         validateStatus = _IotMqtt_ValidateOperation( NULL );

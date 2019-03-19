@@ -115,7 +115,7 @@ typedef struct _operationCompleteParams
 {
     AwsIotShadowCallbackType_t expectedType; /**< @brief Expected callback type. */
     IotSemaphore_t waitSem;                  /**< @brief Used to unblock waiting test thread. */
-    AwsIotShadowReference_t reference;       /**< @brief Reference to expected completed operation. */
+    AwsIotShadowOperation_t operation;       /**< @brief Reference to expected completed operation. */
 } _operationCompleteParams_t;
 
 /*-----------------------------------------------------------*/
@@ -151,7 +151,7 @@ static void _operationComplete( void * pArgument,
     /* Check parameters against received operation information. */
     AwsIotShadow_Assert( pOperation->callbackType == pParams->expectedType );
     AwsIotShadow_Assert( pOperation->operation.result == AWS_IOT_SHADOW_SUCCESS );
-    AwsIotShadow_Assert( pOperation->operation.reference == pParams->reference );
+    AwsIotShadow_Assert( pOperation->operation.reference == pParams->operation );
     AwsIotShadow_Assert( pOperation->thingNameLength == _THING_NAME_LENGTH );
     AwsIotShadow_Assert( strncmp( pOperation->pThingName,
                                   AWS_IOT_TEST_SHADOW_THING_NAME,
@@ -305,7 +305,7 @@ static void _updateGetDeleteAsync( IotMqttQos_t qos )
                                       &documentInfo,
                                       0,
                                       &callbackInfo,
-                                      &( callbackParam.reference ) );
+                                      &( callbackParam.operation ) );
 
         if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
                                     AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
@@ -321,7 +321,7 @@ static void _updateGetDeleteAsync( IotMqttQos_t qos )
                                    &documentInfo,
                                    0,
                                    &callbackInfo,
-                                   &( callbackParam.reference ) );
+                                   &( callbackParam.operation ) );
         TEST_ASSERT_EQUAL_INT( AWS_IOT_SHADOW_STATUS_PENDING, status );
 
         if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
@@ -339,7 +339,7 @@ static void _updateGetDeleteAsync( IotMqttQos_t qos )
                                       _THING_NAME_LENGTH,
                                       0,
                                       &callbackInfo,
-                                      &( callbackParam.reference ) );
+                                      &( callbackParam.operation ) );
 
         if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
                                     AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
