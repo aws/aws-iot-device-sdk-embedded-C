@@ -21,7 +21,7 @@
 
 /**
  * @file iot_mqtt.h
- * @brief User-facing functions and structs of the MQTT 3.1.1 library.
+ * @brief User-facing functions of the MQTT 3.1.1 library.
  */
 
 #ifndef _IOT_MQTT_H_
