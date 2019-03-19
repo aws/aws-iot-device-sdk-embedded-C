@@ -31,9 +31,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/* Check which compiler is used. */
-#include "compiler.h"
-
 /* Compiler specific implementation. */
 #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
 
