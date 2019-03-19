@@ -116,7 +116,7 @@ AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t mqttConnection,
                                          size_t thingNameLength,
                                          uint32_t flags,
                                          const AwsIotShadowCallbackInfo_t * pCallbackInfo,
-                                         AwsIotShadowReference_t * pDeleteRef );
+                                         AwsIotShadowOperation_t * pDeleteOperation );
 /* @[declare_shadow_delete] */
 
 /**
@@ -139,7 +139,7 @@ AwsIotShadowError_t AwsIotShadow_Get( IotMqttConnection_t mqttConnection,
                                       const AwsIotShadowDocumentInfo_t * pGetInfo,
                                       uint32_t flags,
                                       const AwsIotShadowCallbackInfo_t * pCallbackInfo,
-                                      AwsIotShadowReference_t * pGetRef );
+                                      AwsIotShadowOperation_t * pGetOperation );
 /* @[declare_shadow_get] */
 
 /**
@@ -163,7 +163,7 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
                                          const AwsIotShadowDocumentInfo_t * pUpdateInfo,
                                          uint32_t flags,
                                          const AwsIotShadowCallbackInfo_t * pCallbackInfo,
-                                         AwsIotShadowReference_t * pUpdateRef );
+                                         AwsIotShadowOperation_t * pUpdateOperation );
 /* @[declare_shadow_update] */
 
 /**
@@ -190,11 +190,11 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection
  * be called with any waitable operation to clean up resources.
  *
  * Regardless of its return value, this function always clean up resources used
- * by the waitable operation. This means `reference` is invalidated as soon as
+ * by the waitable operation. This means `operation` is invalidated as soon as
  * this function returns, even if it returns #AWS_IOT_SHADOW_TIMEOUT or another
  * error.
  *
- * @param[in] reference Reference to the Shadow operation to wait for. The flag
+ * @param[in] operation Reference to the Shadow operation to wait for. The flag
  * #AWS_IOT_SHADOW_FLAG_WAITABLE must have been set for this operation.
  * @param[in] timeoutMs How long to wait before returning #AWS_IOT_SHADOW_TIMEOUT.
  * @param[out] pShadowDocument A pointer to a buffer containing the Shadow document
@@ -222,7 +222,7 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection
  * AwsIotShadowDocumentInfo_t updateInfo = { ... };
  *
  * // Reference and timeout.
- * AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
+ * AwsIotShadowOperation_t updateOperation = AWS_IOT_SHADOW_OPERATION_INITIALIZER;
  * uint64_t timeout = 5000; // 5 seconds
  *
  * // Shadow update operation.
@@ -230,14 +230,14 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection
  *                               &updateInfo,
  *                               AWS_IOT_SHADOW_FLAG_WAITABLE,
  *                               NULL,
- *                               &reference );
+ *                               &updateOperation );
  *
  * // Update should have returned AWS_IOT_SHADOW_STATUS_PENDING. The call to wait
  * // returns once the result of the update is available or the timeout expires.
  * if( result == AWS_IOT_SHADOW_STATUS_PENDING )
  * {
  *     // The last two parameters are ignored for a Shadow update.
- *     result = AwsIotShadow_Wait( reference, timeout, NULL, NULL );
+ *     result = AwsIotShadow_Wait( updateOperation, timeout, NULL, NULL );
  *
  *     // After the call to wait, the result of the update is known
  *     // (not AWS_IOT_SHADOW_STATUS_PENDING).
@@ -251,7 +251,7 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection
  * AwsIotShadowDocumentInfo_t getInfo = { ... };
  *
  * // Reference and timeout.
- * AwsIotShadowReference_t reference = AWS_IOT_SHADOW_REFERENCE_INITIALIZER;
+ * AwsIotShadowOperation_t getOperation = AWS_IOT_SHADOW_OPERATION_INITIALIZER;
  * uint64_t timeout = 5000; // 5 seconds
  *
  * // Buffer pointer and size for retrieved Shadow document.
@@ -266,14 +266,14 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection
  *                            &getInfo,
  *                            AWS_IOT_SHADOW_FLAG_WAITABLE,
  *                            NULL,
- *                            &reference );
+ *                            &getOperation );
  *
  * // Get should have returned AWS_IOT_SHADOW_STATUS_PENDING. The call to wait
  * // returns once the result of the get is available or the timeout expires.
  * if( result == AWS_IOT_SHADOW_STATUS_PENDING )
  * {
  *     // The last two parameters must be set for a Shadow get.
- *     result = AwsIotShadow_Wait( reference, timeout, &pShadowDocument, &documentLength );
+ *     result = AwsIotShadow_Wait( getOperation, timeout, &pShadowDocument, &documentLength );
  *
  *     // After the call to wait, the result of the get is known
  *     // (not AWS_IOT_SHADOW_STATUS_PENDING).
@@ -291,7 +291,7 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection
  * @endcode
  */
 /* @[declare_shadow_wait] */
-AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowReference_t reference,
+AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
                                        uint64_t timeoutMs,
                                        const char ** pShadowDocument,
                                        size_t * pShadowDocumentLength );

@@ -81,13 +81,13 @@ typedef struct _mqttConnection   * IotMqttConnection_t;
  * invalid once the [completion callback](@ref IotMqttCallbackInfo_t) is invoked, or
  * @ref mqtt_function_wait returns.
  *
- * @initializer{IotMqttReference_t,IOT_MQTT_REFERENCE_INITIALIZER}
+ * @initializer{IotMqttOperation_t,IOT_MQTT_OPERATION_INITIALIZER}
  *
  * @see @ref mqtt_function_wait and #IOT_MQTT_FLAG_WAITABLE for waiting on a reference.
  * #IotMqttCallbackInfo_t and #IotMqttCallbackParam_t for an asynchronous notification
  * of completion.
  */
-typedef struct _mqttOperation    * IotMqttReference_t;
+typedef struct _mqttOperation    * IotMqttOperation_t;
 
 /*-------------------------- MQTT enumerated types --------------------------*/
 
@@ -223,7 +223,7 @@ typedef enum IotMqttError
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
-     * - @ref mqtt_function_wait, but only when its #IotMqttReference_t parameter
+     * - @ref mqtt_function_wait, but only when its #IotMqttOperation_t parameter
      * is associated with a SUBSCRIBE operation.
      * - @ref mqtt_function_timedsubscribe
      *
@@ -244,7 +244,7 @@ typedef enum IotMqttError
      * (#IotMqttPublishInfo_t.retryLimit) was reached.
      *
      * Functions that may return this value:
-     * - @ref mqtt_function_wait, but only when its #IotMqttReference_t parameter
+     * - @ref mqtt_function_wait, but only when its #IotMqttOperation_t parameter
      * is associated with a QoS 1 PUBLISH operation
      * - @ref mqtt_function_timedpublish
      *
@@ -447,7 +447,7 @@ typedef struct IotMqttCallbackParam
         struct
         {
             IotMqttOperationType_t type;  /**< @brief Type of operation that completed. */
-            IotMqttReference_t reference; /**< @brief Reference to the operation that completed. */
+            IotMqttOperation_t reference; /**< @brief Reference to the operation that completed. */
             IotMqttError_t result;        /**< @brief Result of operation, e.g. succeeded or failed. */
         } operation;
 
@@ -1019,7 +1019,7 @@ typedef struct IotMqttNetworkInfo
  * IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
  * IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
  * IotMqttConnection_t connection = IOT_MQTT_CONNECTION_INITIALIZER;
- * IotMqttReference_t reference = IOT_MQTT_REFERENCE_INITIALIZER;
+ * IotMqttOperation_t operation = IOT_MQTT_OPERATION_INITIALIZER;
  * @endcode
  *
  * @section mqtt_constants_flags MQTT Function Flags
@@ -1053,8 +1053,8 @@ typedef struct IotMqttNetworkInfo
 #define IOT_MQTT_CALLBACK_INFO_INITIALIZER    { 0 }
 /** @brief Initializer for #IotMqttConnection_t. */
 #define IOT_MQTT_CONNECTION_INITIALIZER       NULL
-/** @brief Initializer for #IotMqttReference_t. */
-#define IOT_MQTT_REFERENCE_INITIALIZER        NULL
+/** @brief Initializer for #IotMqttOperation_t. */
+#define IOT_MQTT_OPERATION_INITIALIZER        NULL
 /* @[define_mqtt_initializers] */
 
 /**
@@ -1064,7 +1064,7 @@ typedef struct IotMqttNetworkInfo
  * @ref mqtt_function_unsubscribe. If passed to @ref mqtt_function_publish,
  * the parameter [pPublishInfo->qos](@ref IotMqttPublishInfo_t.qos) must not be `0`.
  *
- * An #IotMqttReference_t <b>MUST</b> be provided if this flag is set. Additionally, an
+ * An #IotMqttOperation_t <b>MUST</b> be provided if this flag is set. Additionally, an
  * #IotMqttCallbackInfo_t <b>MUST NOT</b> be provided.
  *
  * @note If this flag is set, @ref mqtt_function_wait <b>MUST</b> be called to clean up
