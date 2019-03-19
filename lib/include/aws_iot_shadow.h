@@ -699,11 +699,11 @@ void AwsIotShadow_Cleanup( void );
  */
 /* @[declare_shadow_delete] */
 AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t mqttConnection,
-                                         const char * const pThingName,
+                                         const char * pThingName,
                                          size_t thingNameLength,
                                          uint32_t flags,
-                                         const AwsIotShadowCallbackInfo_t * const pCallbackInfo,
-                                         AwsIotShadowReference_t * const pDeleteRef );
+                                         const AwsIotShadowCallbackInfo_t * pCallbackInfo,
+                                         AwsIotShadowReference_t * pDeleteRef );
 /* @[declare_shadow_delete] */
 
 /**
@@ -711,7 +711,7 @@ AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t mqttConnection,
  */
 /* @[declare_shadow_timeddelete] */
 AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t mqttConnection,
-                                              const char * const pThingName,
+                                              const char * pThingName,
                                               size_t thingNameLength,
                                               uint32_t flags,
                                               uint64_t timeoutMs );
@@ -723,10 +723,10 @@ AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t mqttConnection
  */
 /* @[declare_shadow_get] */
 AwsIotShadowError_t AwsIotShadow_Get( IotMqttConnection_t mqttConnection,
-                                      const AwsIotShadowDocumentInfo_t * const pGetInfo,
+                                      const AwsIotShadowDocumentInfo_t * pGetInfo,
                                       uint32_t flags,
-                                      const AwsIotShadowCallbackInfo_t * const pCallbackInfo,
-                                      AwsIotShadowReference_t * const pGetRef );
+                                      const AwsIotShadowCallbackInfo_t * pCallbackInfo,
+                                      AwsIotShadowReference_t * pGetRef );
 /* @[declare_shadow_get] */
 
 /**
@@ -734,11 +734,11 @@ AwsIotShadowError_t AwsIotShadow_Get( IotMqttConnection_t mqttConnection,
  */
 /* @[declare_shadow_timedget] */
 AwsIotShadowError_t AwsIotShadow_TimedGet( IotMqttConnection_t mqttConnection,
-                                           const AwsIotShadowDocumentInfo_t * const pGetInfo,
+                                           const AwsIotShadowDocumentInfo_t * pGetInfo,
                                            uint32_t flags,
                                            uint64_t timeoutMs,
-                                           const char ** const pShadowDocument,
-                                           size_t * const pShadowDocumentLength );
+                                           const char ** pShadowDocument,
+                                           size_t * pShadowDocumentLength );
 /* @[declare_shadow_timedget] */
 
 /**
@@ -747,10 +747,10 @@ AwsIotShadowError_t AwsIotShadow_TimedGet( IotMqttConnection_t mqttConnection,
  */
 /* @[declare_shadow_update] */
 AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
-                                         const AwsIotShadowDocumentInfo_t * const pUpdateInfo,
+                                         const AwsIotShadowDocumentInfo_t * pUpdateInfo,
                                          uint32_t flags,
-                                         const AwsIotShadowCallbackInfo_t * const pCallbackInfo,
-                                         AwsIotShadowReference_t * const pUpdateRef );
+                                         const AwsIotShadowCallbackInfo_t * pCallbackInfo,
+                                         AwsIotShadowReference_t * pUpdateRef );
 /* @[declare_shadow_update] */
 
 /**
@@ -758,7 +758,7 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
  */
 /* @[declare_shadow_timedupdate] */
 AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection,
-                                              const AwsIotShadowDocumentInfo_t * const pUpdateInfo,
+                                              const AwsIotShadowDocumentInfo_t * pUpdateInfo,
                                               uint32_t flags,
                                               uint64_t timeoutMs );
 /* @[declare_shadow_timedupdate] */
@@ -880,8 +880,8 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection
 /* @[declare_shadow_wait] */
 AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowReference_t reference,
                                        uint64_t timeoutMs,
-                                       const char ** const pShadowDocument,
-                                       size_t * const pShadowDocumentLength );
+                                       const char ** pShadowDocument,
+                                       size_t * pShadowDocumentLength );
 /* @[declare_shadow_wait] */
 
 /**
@@ -1003,10 +1003,10 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowReference_t reference,
  */
 /* @[declare_shadow_setdeltacallback] */
 AwsIotShadowError_t AwsIotShadow_SetDeltaCallback( IotMqttConnection_t mqttConnection,
-                                                   const char * const pThingName,
+                                                   const char * pThingName,
                                                    size_t thingNameLength,
                                                    uint32_t flags,
-                                                   const AwsIotShadowCallbackInfo_t * const pDeltaCallback );
+                                                   const AwsIotShadowCallbackInfo_t * pDeltaCallback );
 /* @[declare_shadow_setdeltacallback] */
 
 /**
@@ -1014,10 +1014,10 @@ AwsIotShadowError_t AwsIotShadow_SetDeltaCallback( IotMqttConnection_t mqttConne
  */
 /* @[declare_shadow_setupdatedcallback] */
 AwsIotShadowError_t AwsIotShadow_SetUpdatedCallback( IotMqttConnection_t mqttConnection,
-                                                     const char * const pThingName,
+                                                     const char * pThingName,
                                                      size_t thingNameLength,
                                                      uint32_t flags,
-                                                     const AwsIotShadowCallbackInfo_t * const pUpdatedCallback );
+                                                     const AwsIotShadowCallbackInfo_t * pUpdatedCallback );
 /* @[declare_shadow_setupdatedcallback] */
 
 /**
@@ -1027,7 +1027,7 @@ AwsIotShadowError_t AwsIotShadow_SetUpdatedCallback( IotMqttConnection_t mqttCon
  */
 /* @[declare_shadow_removepersistentsubscriptions] */
 AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnection_t mqttConnection,
-                                                                const char * const pThingName,
+                                                                const char * pThingName,
                                                                 size_t thingNameLength,
                                                                 uint32_t flags );
 /* @[declare_shadow_removepersistentsubscriptions] */

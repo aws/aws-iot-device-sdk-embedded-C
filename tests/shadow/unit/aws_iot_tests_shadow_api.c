@@ -33,13 +33,6 @@
 #include <stdint.h>
 #include <string.h>
 
-/* POSIX includes. */
-#ifdef POSIX_UNISTD_HEADER
-    #include POSIX_UNISTD_HEADER
-#else
-    #include <unistd.h>
-#endif
-
 /* Common include. */
 #include "iot_common.h"
 
