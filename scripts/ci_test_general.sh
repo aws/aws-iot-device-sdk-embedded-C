@@ -9,5 +9,5 @@ set -e
 
 # Run test coverage script only for commit builds.
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-    bash ../scripts/general/ci_test_coverage.sh
+    echo "Nothing to do right now."
 fi
