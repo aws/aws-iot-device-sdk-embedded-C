@@ -982,6 +982,9 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
         pIncomingPublish[ i ]->publishInfo.pTopicName = "/test";
         pIncomingPublish[ i ]->publishInfo.topicNameLength = 5;
         pIncomingPublish[ i ]->publishInfo.pPayload = "";
+
+        IotListDouble_InsertHead( &( _pMqttConnection->pendingProcessing ),
+                                  &( pIncomingPublish[ i ]->link ) );
     }
 
     if( TEST_PROTECT() )

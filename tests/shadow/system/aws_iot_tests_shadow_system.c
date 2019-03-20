@@ -82,10 +82,10 @@ extern int snprintf( char *,
  * Provide default values of test configuration constants.
  */
 #ifndef IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
-    #define IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S        ( 30 )
+    #define IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S    ( 30 )
 #endif
 #ifndef AWS_IOT_TEST_SHADOW_TIMEOUT
-    #define AWS_IOT_TEST_SHADOW_TIMEOUT                     ( 5000 )
+    #define AWS_IOT_TEST_SHADOW_TIMEOUT                 ( 5000 )
 #endif
 /** @endcond */
 
@@ -132,7 +132,7 @@ static const IotTestNetworkServerInfo_t _serverInfo = IOT_TEST_NETWORK_SERVER_IN
  * @brief Network credential info to share among the tests.
  */
 #if IOT_TEST_SECURED_CONNECTION == 1
-static const IotTestNetworkCredentials_t _credentials = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
+    static const IotTestNetworkCredentials_t _credentials = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
 #endif
 
 /**
@@ -473,7 +473,7 @@ TEST_SETUP( Shadow_System )
     _networkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
 
     #if IOT_TEST_SECURED_CONNECTION == 1
-    _networkInfo.pNetworkCredentialInfo = ( void * ) &_credentials;
+        _networkInfo.pNetworkCredentialInfo = ( void * ) &_credentials;
     #endif
 
     /* Set the members of the connect info. Use the Shadow Thing Name as the MQTT
