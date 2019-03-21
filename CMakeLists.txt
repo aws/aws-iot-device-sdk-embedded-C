@@ -21,10 +21,6 @@ if( NOT ${CMAKE_SYSTEM_NAME} IN_LIST SUPPORTED_SYSTEMS )
     message( FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}. Currently supported systems are: ${SUPPORTED_SYSTEMS}." )
 endif()
 
-# Log compiler information
-message("Compiler ID: ${CMAKE_C_COMPILER_ID}")
-message("Compiler version: ${CMAKE_C_COMPILER_VERSION}")
-
 # Set output directories.
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )

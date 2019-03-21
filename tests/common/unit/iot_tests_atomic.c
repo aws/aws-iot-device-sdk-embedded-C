@@ -176,7 +176,6 @@ TEST( Common_Unit_Atomic, AtomicArithmeticHappyPath )
     int32_t iAddend_32;
 
     uint32_t uDelta_32;
-    int32_t iDelta_32;
 
     uint32_t uReturnValue_32;
     int32_t iReturnValue_32;
