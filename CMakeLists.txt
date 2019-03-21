@@ -21,19 +21,26 @@ if( NOT ${CMAKE_SYSTEM_NAME} IN_LIST SUPPORTED_SYSTEMS )
     message( FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}. Currently supported systems are: ${SUPPORTED_SYSTEMS}." )
 endif()
 
+# Log compiler information
+message("Compiler ID: ${CMAKE_C_COMPILER_ID}")
+message("Compiler version: ${CMAKE_C_COMPILER_VERSION}")
+
 # Set output directories.
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
-#Atomic headers.
-#Define macro to use atomic implemnetation with GCC built-in.
-#Up until GCC 4.6.3, __sync_* shall be called. From 4.7.0,
-#__atomic_ * are available. We only implemented atomic
-#with __atomic_*.
-message("Compiler: ${CMAKE_COMPILER_IS_GNUCC}")
-message("Compiler version: ${CMAKE_C_COMPILER_VERSION}")
-message("Compiler ID: ${CMAKE_C_COMPILER_ID}")
-if( CMAKE_COMPILER_IS_GNUCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 4.7 )
+# Atomic headers.
+# If GCC --
+# for version <4.7.0, __sync_* shall be called.
+# for version >= 4.7.0, __atomic_* shall be called. 
+# We only implemented atomic with __atomic_*. 
+if( CMAKE_C_COMPILER_ID STREQUAL GNU AND ( CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 4.7 ) )
+    add_definitions( -DCOMPILER_OPTION_GCC_ATOMIC_BUILTIN=1 )
+endif()
+
+# If Clang --
+# Clang supports GCC's __atomic_* built-in functions since 3.1 release. 
+if( CMAKE_C_COMPILER_ID STREQUAL Clang AND ( CMAKE_C_COMPILER_VERSION VERSION_GREATER 3.1 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 3.1 ) )
     add_definitions( -DCOMPILER_OPTION_GCC_ATOMIC_BUILTIN=1 )
 endif()
 
