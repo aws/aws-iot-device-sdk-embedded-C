@@ -25,17 +25,14 @@ endif()
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
-# Define macro to use atomic implemnetation with GCC built-in.
-# Up until GCC 4.6.3, __sync_* shall be called. From 4.7.0, 
-# __atomic_* are available. We only implemented atomic
-# with __atomic_*.
-#
-# todo: check compiler is GCC AND GCC version is above 4.7.0.
-add_definitions( -DCOMPILER_OPTION_GCC_ATOMIC_BUILTIN=1 )
-
-# Whether to use atomic or not.
-# Default to "no".
-add_definitions( -DIOT_ATOMIC_OPERATION=0 )
+#Atomic headers.
+#Define macro to use atomic implemnetation with GCC built-in.
+#Up until GCC 4.6.3, __sync_* shall be called. From 4.7.0,
+#__atomic_ * are available. We only implemented atomic
+#with __atomic_*.
+if( CMAKE_COMPILER_IS_GNUCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 4.7 )
+    add_definitions( -DCOMPILER_OPTION_GCC_ATOMIC_BUILTIN=1 )
+endif()
 
 # SDK include paths.
 include_directories( ${PROJECT_SOURCE_DIR}/lib/include

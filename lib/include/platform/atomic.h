@@ -59,7 +59,7 @@
 
 /* Using none GCC compiler || user customization
  * User needs to figure out compiler specific syntax for always-inline and flatten.*/
-    #include "atomic_user_override_template.h"
+    #include "atomic/atomic_user_override_template.h"
 
 #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
 
@@ -74,16 +74,20 @@
  * @param[in] ulExchange         If condition meets, write this value to memory.
  * @param[in] ulComparand        Swap condition, checks and waits for *pDestination to be equal to ulComparand.
  *
- * @return bool True for swapped, false for not swapped.
+ * @return The initial value of *pDestination.
  *
  * @note This function only swaps *pDestination with ulExchange, if previous *pDestination value equals ulComparand.
+ * @note It's up to caller to check whether swapped or not. User cannot tell whether swapped or not if initial value 
+ * and new value are the same. But similar to ABA problems, it can be treated as "swapped".
  */
-static FORCE_INLINE bool Atomic_CompareAndSwap_u32( uint32_t volatile * pDestination,
+static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDestination,
                                                     uint32_t ulExchange,
                                                     uint32_t ulComparand )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        return __atomic_compare_exchange( pDestination, &ulComparand, &ulExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST );
+        uint32_t ulReturnValue = *pDestination;
+        __atomic_compare_exchange( pDestination, &ulComparand, &ulExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST );
+        return ulReturnValue;
     #else
         return Atomic_CompareAndSwap_u32_User_Override( pDestination, ulExchange, ulComparand );
     #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
@@ -121,16 +125,20 @@ static FORCE_INLINE void * Atomic_SwapPointers_p32( void * volatile * ppDestinat
  * @param[in] pExchange          If condition meets, write this value to memory.
  * @param[in] pComparand         Swap condition, checks and waits for *ppDestination to be equal to *pComparand.
  *
- * @return bool True for swapped, false for not swapped.
+ * @return Initial value of *ppDestination.
  *
  * @note This function only swaps *ppDestination with pExchange, if previous *ppDestination value equals pComparand.
+ * @note It's up to caller to check whether swapped or not. User cannot tell whether swapped or not if initial value
+ * and new value are the same. But similar to ABA problems, it can be treated as "swapped".
  */
-static FORCE_INLINE bool Atomic_CompareAndSwapPointers_p32( void * volatile * ppDestination,
+static FORCE_INLINE void *  Atomic_CompareAndSwapPointers_p32( void * volatile * ppDestination,
                                                             void * pExchange,
                                                             void * pComparand )
 {
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        return __atomic_compare_exchange( ppDestination, &pComparand, &pExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST );
+        void * pReturnValue = *ppDestination;
+        __atomic_compare_exchange( ppDestination, &pComparand, &pExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST );
+        return pReturnValue;
     #else
         return Atomic_CompareAndSwapPointers_p32_User_Override( ppDestination, pExchange, pComparand );
     #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
