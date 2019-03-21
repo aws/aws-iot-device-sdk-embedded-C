@@ -46,7 +46,7 @@ include_directories( ${PROJECT_SOURCE_DIR}/lib/include
                      ${PROJECT_SOURCE_DIR}/third_party/include )
 
 # Demo include path.
-include_directories( ${PROJECT_SOURCE_DIR}/demos )
+include_directories( ${PROJECT_SOURCE_DIR}/demos/include )
 
 # Use either the demo or test configuration file.
 if( ${IOT_BUILD_TESTS} )
@@ -55,6 +55,9 @@ if( ${IOT_BUILD_TESTS} )
                          tests/unity
                          tests/unity/fixture
                          tests/mqtt/access )
+
+	# Define the constant to enable test access.
+	add_definitions( -DIOT_BUILD_TESTS=1 )
 
     # Tests config file.
     add_definitions( -DIOT_CONFIG_FILE="iot_tests_config.h" )
@@ -82,9 +85,6 @@ add_subdirectory( lib/source/mqtt )
 
 # Shadow library.
 add_subdirectory( lib/source/shadow )
-
-# Metrics library.
-add_subdirectory( lib/source/metrics )
 
 # Serializer library.
 add_subdirectory( lib/source/serializer )

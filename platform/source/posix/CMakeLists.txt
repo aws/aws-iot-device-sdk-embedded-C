@@ -75,7 +75,9 @@ endif()
 add_library( iotplatform SHARED
              iot_clock_posix.c
              iot_threads_posix.c
-             ${NETWORK_SOURCE_FILE} )
+             ${NETWORK_SOURCE_FILE}
+             linux/iot_metrics.c
+             linux/iot_network_openssl_metrics.c )
 
 # Library version.
 set_target_properties( iotplatform PROPERTIES VERSION ${PROJECT_VERSION} )

@@ -3,7 +3,7 @@
 @INCLUDE = common
 
 # Basic project information.
-PROJECT_NAME = "TASKPOOL"
+PROJECT_NAME = "Task Pool"
 PROJECT_BRIEF = "Task pool library"
 
 # Library documentation output directory.
@@ -17,17 +17,16 @@ INPUT = doc \
         doc/lib \
         lib/include \
         lib/include/private \
+        lib/include/types \
         lib/source/common \
-        demos/ \
-        tests/ \
-        tests/taskpool/unit \
-        tests/taskpool/system
+        tests/common/unit
 
 # Library file names.
 FILE_PATTERNS = *taskpool*.c *taskpool*.h *taskpool*.txt
 
 # External tag files required by this library.
 TAGFILES = doc/tag/main.tag=../main \
-           doc/tag/queue.tag=../queue \
+           doc/tag/linear_containers.tag=../linear_containers \
            doc/tag/logging.tag=../logging \
            doc/tag/platform.tag=../platform \
+           doc/tag/static_memory.tag=../static_memory \

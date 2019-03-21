@@ -21,7 +21,7 @@ end box
 
 activate app
 
-app -[#blue]> TP: AwsIotTaskPool_Create: create a Task 
+app -[#blue]> TP: IotTaskPool_Create: create a Task 
 TP -> queue: Initialize dispatch queue
 activate queue
 TP -> workers: Create minimum number of worker threads
@@ -33,12 +33,12 @@ workers -> workers: Wait on incoming jobs
 == Use Task Pool ==
 
 loop Application loop: Create and schedule jobs
-	app -[#blue]> TP: AwsIotTaskPool_CreateRecyclableJob: create a job
+	app -[#blue]> TP: IotTaskPool_CreateRecyclableJob: create a job
 	TP --[#blue]> app
 	activate job
 	note left: job status: //ready//
 	
-	app -[#blue]> TP: AwsIotTaskPool_Schedule: schedule a job
+	app -[#blue]> TP: IotTaskPool_Schedule: schedule a job
 	TP -> queue: Queue job
 	TP -> TP: Grow pool up to maximum threads, if all threads are busy
 	TP -> workers: Signal incoming job
@@ -52,7 +52,7 @@ loop Application loop: Create and schedule jobs
 			note left: job status: //executing//
 			job -[#green]> callback: Invoke
 			activate callback
-			callback -[#blue]> TP: AwsIotTaskPool_RecycleJob: recycles job
+			callback -[#blue]> TP: IotTaskPool_RecycleJob: recycles job
 			TP --[#blue]> callback
 			note left: job status: //completed//
 			deactivate job
@@ -66,7 +66,7 @@ end
 	
 == Destroy Task Pool ==
 
-    app -[#blue]> TP: AwsIotTaskPool_Destroy: destroy the task pool
+    app -[#blue]> TP: IotTaskPool_Destroy: destroy the task pool
 	TP -> workers: Shutdown worker threads
 	deactivate workers
 	TP -> queue: Destroy all jobs in the dispatch queue

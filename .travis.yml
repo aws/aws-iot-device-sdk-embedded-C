@@ -1,37 +1,51 @@
-# Build on Ubuntu 16.04.
-os: linux
-dist: xenial
-
-# Build with both clang and gcc.
-language: c
-compiler:
-  - clang
-  - gcc
-
 # Only run on the v4 beta branch for now.
 branches:
   only:
   - v4_beta
 
+# Build on Ubuntu 16.04.
+os: linux
+dist: xenial
+
+# Use clang compiler (seems to provide more warnings than gcc).
+language: c
+compiler:
+  - clang
+
+# Matrix of tests to run.
+env:
+  - RUN_TEST=general  # General tests (code coverage, Coverity, etc.)
+  - RUN_TEST=common   # Common libraries (linear containers, common libraries, etc.)
+  - RUN_TEST=mqtt     # MQTT
+  - RUN_TEST=shadow   # AWS IoT Thing Shadows
+  - RUN_TEST=defender # AWS IoT Device Defender
+
+# Update repositories.
 before_install:
-  # Install coveralls only for commit check builds.
-  - if [ "$TRAVIS_PULL_REQUEST" = false ] && [ "$TRAVIS_EVENT_TYPE" != "cron" ]; then pip install --user cpp-coveralls; fi
+  - sudo apt-get update
 
 # Install dependencies.
-addons:
-  apt:
-    packages:
-      - cmake
-      - libssl-dev
-      - lcov
+install:
+  # Dependencies required across the entire build matrix.
+  - sudo apt-get install -y cmake libssl-dev
+  # Install coveralls only for "general" commit check builds.
+  - if [ "$RUN_TEST" = "general" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$TRAVIS_EVENT_TYPE" != "cron" ]; then sudo apt-get install -y lcov; pip install --user cpp-coveralls; fi
 
+# Run the test script based on matrix environment variable.
 script:
-  # Run the pull request build check script for pull requests.
-  - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then bash ./scripts/build_check_pr.sh; fi
-
-  # Run the checks with AWS IoT credentials for commits.
-  - if [ "$TRAVIS_PULL_REQUEST" = false ] && [ "$TRAVIS_EVENT_TYPE" != "cron" ]; then bash ./scripts/build_check_commit.sh; fi
-
-after_success:
-  # Send code coverage report to Coveralls, but only for one of the build jobs.
-  - if [ "$TRAVIS_PULL_REQUEST" = false ] && [ "$CC" = "gcc" ]; then bash ./scripts/coverage.sh; fi
+  # Set identifier (client identifier OR Thing Name).
+  - export IOT_IDENTIFIER="$IOT_IDENTIFIER_PREFIX$RUN_TEST"
+  # Set default compiler options. Individual test scripts may override this.
+  - export COMPILER_OPTIONS="-Wall -Wextra -fsanitize=thread"
+  # Get AWS credentials when not a pull request build.
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then mkdir credentials; fi
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; fi
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then echo -e $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem; fi
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; fi
+  # Set credential defines passed to CMake when not a pull request build.
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then export AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"../credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"../credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"../credentials/privateKey.pem\\\"\""; fi
+  # Create build directory.
+  - mkdir build
+  - cd build
+  # Run test script.
+  - bash ../scripts/ci_test_$RUN_TEST.sh

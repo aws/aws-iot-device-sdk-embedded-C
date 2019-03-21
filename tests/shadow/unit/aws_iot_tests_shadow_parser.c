@@ -33,6 +33,9 @@
 #include <stdarg.h>
 #include <string.h>
 
+/* Common include. */
+#include "iot_common.h"
+
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
@@ -68,10 +71,10 @@ extern int vsnprintf( char *,
  * @brief Wrapper for parsing JSON documents and checking the result.
  */
 static void _parseJson( bool expectedResult,
-                        const char * const pJsonDocument,
+                        const char * pJsonDocument,
                         size_t jsonDocumentLength,
-                        const char * const pJsonKey,
-                        const char * const pExpectedJsonValue,
+                        const char * pJsonKey,
+                        const char * pExpectedJsonValue,
                         size_t expectedJsonValueLength )
 {
     const char * pJsonValue = NULL;
@@ -97,9 +100,9 @@ static void _parseJson( bool expectedResult,
 /**
  * @brief Wrapper for generating and parsing error documents.
  */
-static void _generateParseErrorDocument( char * const pErrorDocument,
+static void _generateParseErrorDocument( char * pErrorDocument,
                                          AwsIotShadowError_t expectedCode,
-                                         const char * const pFormat,
+                                         const char * pFormat,
                                          ... )
 {
     int errorDocumentLength = 0;
@@ -128,9 +131,9 @@ static void _generateParseErrorDocument( char * const pErrorDocument,
 /**
  * @brief Wrapper for parsing Shadow Thing Names and checking the result.
  */
-static void _parseThingName( const char * const pTopicName,
+static void _parseThingName( const char * pTopicName,
                              AwsIotShadowError_t expectedResult,
-                             const char * const pExpectedThingName )
+                             const char * pExpectedThingName )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     uint16_t topicNameLength = ( uint16_t ) strlen( pTopicName );

@@ -163,14 +163,10 @@ typedef enum
  */
 typedef enum
 {
-    AWS_IOT_DEFENDER_METRICS_ACCEPTED = 0,         /**< Metrics report was accepted by defender service. */
-    AWS_IOT_DEFENDER_METRICS_REJECTED,             /**< Metrics report was rejected by defender service. */
-    AWS_IOT_DEFENDER_NETWORK_CONNECTION_FAILED,    /**< Failed to connect to defender service endpoint. */
-    AWS_IOT_DEFENDER_MQTT_CONNECTION_FAILED,       /**< Failed to setup MQTT connection. */
-    AWS_IOT_DEFENDER_MQTT_SUBSCRIPTION_FAILED,     /**< Failed to subscribe defender MQTT topics. */
-    AWS_IOT_DEFENDER_MQTT_PUBLISH_FAILED,          /**< Failed to publish to MQTT topics. */
-    AWS_IOT_DEFENDER_METRICS_SERIALIZATION_FAILED, /**< Failed to serialize metrics report. */
-    AWS_IOT_DEFENDER_EVENT_NO_MEMORY               /**< Metrics report was not able to be published due to memory allocation failure. */
+    AWS_IOT_DEFENDER_METRICS_ACCEPTED = 0,  /**< Metrics report was accepted by defender service. */
+    AWS_IOT_DEFENDER_METRICS_REJECTED,      /**< Metrics report was rejected by defender service. */
+    AWS_IOT_DEFENDER_FAILURE_MQTT,          /**< Defender failed to perform MQTT operation. */
+    AWS_IOT_DEFENDER_FAILURE_METRICS_REPORT /**< Defender failed to create metrics report. */
 } AwsIotDefenderEventType_t;
 
 /**
@@ -211,12 +207,9 @@ typedef struct AwsIotDefenderCallback
  */
 typedef struct AwsIotDefenderStartInfo
 {
-    void * pConnectionInfo;                          /**< Connection information(required). */
-    void * pCredentialInfo;                          /**< Credential information(required). */
-    void * pConnection;                              /**< Connection object(required). */
-    const IotNetworkInterface_t * pNetworkInterface; /**< Network inferface defender uses(required). */
-    IotMqttConnectInfo_t mqttConnectionInfo;         /**< Network inferface defender uses(required). */
-    AwsIotDefenderCallback_t callback;               /**< Callback function parameter(optional). */
+    IotMqttNetworkInfo_t mqttNetworkInfo;    /**< MQTT Network info used by defender (required). */
+    IotMqttConnectInfo_t mqttConnectionInfo; /**< MQTT connection info used by defender (required). */
+    AwsIotDefenderCallback_t callback;       /**< Callback function parameter(optional). */
 } AwsIotDefenderStartInfo_t;
 
 /**
@@ -376,7 +369,7 @@ void AwsIotDefender_Stop( void );
  * @note If this function is called when defender agent is started, the period is re-calculated and updated in next iteration.
  */
 /* @[declare_defender_setperiod] */
-AwsIotDefenderError_t AwsIotDefender_SetPeriod( uint64_t periodSeconds );
+AwsIotDefenderError_t AwsIotDefender_SetPeriod( uint32_t periodSeconds );
 /* @[declare_defender_setperiod] */
 
 /**
@@ -385,7 +378,7 @@ AwsIotDefenderError_t AwsIotDefender_SetPeriod( uint64_t periodSeconds );
  * @brief Get period in seconds.
  */
 /* @[declare_defender_getperiod] */
-uint64_t AwsIotDefender_GetPeriod( void );
+uint32_t AwsIotDefender_GetPeriod( void );
 /* @[declare_defender_getperiod] */
 
 /**
@@ -403,7 +396,7 @@ const char * AwsIotDefender_strerror( AwsIotDefenderError_t error );
  * @brief Return a string that describes #AwsIotDefenderEventType_t
  */
 /* @[declare_defender_describeeventtype] */
-const char * AwsIotDefender_DescribeEventType( AwsIotDefenderEventType_t eventType );
+const char * AwsIotDefender_GetEventError();
 /* @[declare_defender_describeeventtype] */
 
 #endif /* end of include guard: _AWS_IOT_DEFENDER_H_ */

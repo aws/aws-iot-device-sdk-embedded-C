@@ -37,100 +37,6 @@
 
 /*-----------------------------------------------------------*/
 
-bool _IotMqtt_ValidateNetIf( const IotMqttNetIf_t * pNetworkInterface )
-{
-    _IOT_FUNCTION_ENTRY( bool, true );
-
-    /* Check for NULL. */
-    if( pNetworkInterface == NULL )
-    {
-        IotLogError( "Network interface cannot be NULL." );
-
-        _IOT_SET_AND_GOTO_CLEANUP( false );
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
-
-    /* Check for a non-NULL send function. */
-    if( pNetworkInterface->send == NULL )
-    {
-        IotLogError( "Network interface send function must be set." );
-
-        _IOT_SET_AND_GOTO_CLEANUP( false );
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
-
-    /* The MQTT 3.1.1 spec suggests disconnecting the client on errors. Check
-     * that a function has been provided to do this. */
-    if( pNetworkInterface->disconnect == NULL )
-    {
-        IotLogWarn( "No disconnect function was provided. The MQTT connection will not be "
-                    "closed on errors, which is against MQTT 3.1.1 specification." );
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
-
-    /* Check that the freePacket function pointer is set if any other serializer
-     * override is set. */
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pNetworkInterface->freePacket == NULL )
-        {
-            /* Check serializer overrides. */
-            if( ( pNetworkInterface->serialize.connect != NULL ) ||
-                ( pNetworkInterface->serialize.publish != NULL ) ||
-                ( pNetworkInterface->serialize.publishSetDup != NULL ) ||
-                ( pNetworkInterface->serialize.puback != NULL ) ||
-                ( pNetworkInterface->serialize.subscribe != NULL ) ||
-                ( pNetworkInterface->serialize.unsubscribe != NULL ) ||
-                ( pNetworkInterface->serialize.pingreq != NULL ) ||
-                ( pNetworkInterface->serialize.disconnect != NULL ) )
-            {
-                IotLogError( "Network interface must have a freePacket function "
-                             "if a serializer override isn't NULL." );
-
-                _IOT_SET_AND_GOTO_CLEANUP( false );
-            }
-            else
-            {
-                _EMPTY_ELSE_MARKER;
-            }
-
-            /* Check deserializer overrides. */
-            if( ( pNetworkInterface->deserialize.connack != NULL ) ||
-                ( pNetworkInterface->deserialize.puback != NULL ) ||
-                ( pNetworkInterface->deserialize.publish != NULL ) ||
-                ( pNetworkInterface->deserialize.suback != NULL ) ||
-                ( pNetworkInterface->deserialize.unsuback != NULL ) ||
-                ( pNetworkInterface->deserialize.pingresp != NULL ) )
-            {
-                IotLogError( "Network interface must have a freePacket function "
-                             "if a deserializer override isn't NULL." );
-
-                _IOT_SET_AND_GOTO_CLEANUP( false );
-            }
-            else
-            {
-                _EMPTY_ELSE_MARKER;
-            }
-        }
-        else
-        {
-            _EMPTY_ELSE_MARKER;
-        }
-    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
-    _IOT_FUNCTION_EXIT_NO_CLEANUP();
-}
-
-/*-----------------------------------------------------------*/
-
 bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 {
     _IOT_FUNCTION_ENTRY( bool, true );
@@ -405,15 +311,14 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
 
 /*-----------------------------------------------------------*/
 
-bool _IotMqtt_ValidateReference( IotMqttReference_t reference )
+bool _IotMqtt_ValidateOperation( IotMqttOperation_t operation )
 {
     _IOT_FUNCTION_ENTRY( bool, true );
-    _mqttOperation_t * pOperation = ( _mqttOperation_t * ) reference;
 
     /* Check for NULL. */
-    if( pOperation == NULL )
+    if( operation == NULL )
     {
-        IotLogError( "Reference cannot be NULL." );
+        IotLogError( "Operation reference cannot be NULL." );
 
         _IOT_SET_AND_GOTO_CLEANUP( false );
     }
@@ -423,9 +328,9 @@ bool _IotMqtt_ValidateReference( IotMqttReference_t reference )
     }
 
     /* Check that reference is waitable. */
-    if( ( pOperation->flags & IOT_MQTT_FLAG_WAITABLE ) != IOT_MQTT_FLAG_WAITABLE )
+    if( ( operation->flags & IOT_MQTT_FLAG_WAITABLE ) != IOT_MQTT_FLAG_WAITABLE )
     {
-        IotLogError( "Reference is not a waitable MQTT operation." );
+        IotLogError( "Operation is not waitable." );
 
         _IOT_SET_AND_GOTO_CLEANUP( false );
     }

@@ -25,31 +25,36 @@
 #define _IOT_DEMO_CONFIG_H_
 
 /* Server endpoints used for the demos. May be overridden with command line
- * options. */
-#define IOT_DEMO_SECURED_CONNECTION    ( true )
-#define IOT_DEMO_SERVER                ""
-#define IOT_DEMO_PORT                  ( 443 )
+ * options at runtime. */
+#define IOT_DEMO_SECURED_CONNECTION    ( true ) /* Command line: -s (secured) or -u (unsecured) */
+#define IOT_DEMO_SERVER                ""       /* Command line: -h */
+#define IOT_DEMO_PORT                  ( 443 )  /* Command line: -p */
 
-/* Credential paths. May be overridden with command line options. */
-#define IOT_DEMO_ROOT_CA               ""
-#define IOT_DEMO_CLIENT_CERT           ""
-#define IOT_DEMO_PRIVATE_KEY           ""
+/* Credential paths. May be overridden with command line options at runtime. */
+#define IOT_DEMO_ROOT_CA               "" /* Command line: -r */
+#define IOT_DEMO_CLIENT_CERT           "" /* Command line: -c */
+#define IOT_DEMO_PRIVATE_KEY           "" /* Command line: -k */
 
-/* Default Thing Name to use for AWS IoT demos. */
-/* #define AWS_IOT_DEMO_THING_NAME                     "" */
+/* MQTT client identifier (MQTT demo only) or AWS IoT Thing Name. May be set at
+ * runtime with the command line option -i. Identifiers are optional for the
+ * MQTT demo, but required for demos requiring a Thing Name. (The MQTT demo will
+ * generate a unique identifier if no identifier is given). */
+/* #define IOT_DEMO_IDENTIFIER         "" */
 
-/* MQTT demo configuration. */
-/* #define IOT_DEMO_MQTT_CLIENT_IDENTIFIER         "" */
-#define IOT_DEMO_MQTT_PUBLISH_BURST_COUNT    ( 10 )
-#define IOT_DEMO_MQTT_PUBLISH_BURST_SIZE     ( 10 )
+/* MQTT demo configuration. The demo publishes bursts of messages. */
+#define IOT_DEMO_MQTT_PUBLISH_BURST_COUNT    ( 10 ) /* Number of message bursts. */
+#define IOT_DEMO_MQTT_PUBLISH_BURST_SIZE     ( 10 ) /* Number of messages published in each burst. */
 
 /* Enable asserts in linear containers and MQTT. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS        ( 1 )
 #define IOT_MQTT_ENABLE_ASSERTS              ( 1 )
 
-/* Library logging configuration. */
-#define IOT_LOG_LEVEL_DEMO                   IOT_LOG_INFO
+/* Library logging configuration. IOT_LOG_LEVEL_GLOBAL provides a global log
+ * level for all libraries; the library-specific settings override the global
+ * setting. If both the library-specific and global settings are undefined,
+ * no logs will be printed. */
 #define IOT_LOG_LEVEL_GLOBAL                 IOT_LOG_INFO
+#define IOT_LOG_LEVEL_DEMO                   IOT_LOG_INFO
 #define IOT_LOG_LEVEL_PLATFORM               IOT_LOG_INFO
 #define IOT_LOG_LEVEL_NETWORK                IOT_LOG_INFO
 #define IOT_LOG_LEVEL_MQTT                   IOT_LOG_INFO

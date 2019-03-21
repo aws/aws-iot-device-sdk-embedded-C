@@ -400,7 +400,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
 {
     _mqttSubscription_t * pSubscription = NULL;
     IotLink_t * pCurrentLink = NULL, * pNextLink = NULL;
-    void * pParam1 = NULL;
+    void * pCallbackContext = NULL;
 
     void ( * callbackFunction )( void *,
                                  IotMqttCallbackParam_t * ) = NULL;
@@ -411,93 +411,93 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
         .exactMatchOnly  = false
     };
 
-    /* Increment MQTT connection reference count to mark it as being used for
-     * subscription callbacks. Do not proceed if the reference count could not
-     * be incremented; in this case, the connection is likely closed. */
-    if( _IotMqtt_IncrementConnectionReferences( pMqttConnection ) == true )
+    /* Prevent any other thread from modifying the subscription list while this
+     * function is searching. */
+    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
+
+    /* Search the subscription list for all matching subscriptions starting at
+     * the list head. */
+    while( true )
     {
-        /* Prevent any other thread from modifying the subscription list while this
-         * function is searching. */
+        pCurrentLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+                                                     pCurrentLink,
+                                                     _topicMatch,
+                                                     &topicMatchParams );
+
+        /* No subscription found. Exit loop. */
+        if( pCurrentLink == NULL )
+        {
+            break;
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
+        }
+
+        /* Subscription found. Calculate pointer to subscription object. */
+        pSubscription = IotLink_Container( _mqttSubscription_t, pCurrentLink, link );
+
+        /* Subscription validation should not have allowed a NULL callback function. */
+        IotMqtt_Assert( pSubscription->callback.function != NULL );
+
+        /* Increment the subscription's reference count. */
+        ( pSubscription->references )++;
+
+        /* Copy the necessary members of the subscription before releasing the
+         * subscription list mutex. */
+        pCallbackContext = pSubscription->callback.pCallbackContext;
+        callbackFunction = pSubscription->callback.function;
+
+        /* Unlock the subscription list mutex. */
+        IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+
+        /* Set the members of the callback parameter. */
+        pCallbackParam->mqttConnection = pMqttConnection;
+        pCallbackParam->message.pTopicFilter = pSubscription->pTopicFilter;
+        pCallbackParam->message.topicFilterLength = pSubscription->topicFilterLength;
+
+        /* Invoke the subscription callback. */
+        callbackFunction( pCallbackContext, pCallbackParam );
+
+        /* Lock the subscription list mutex to decrement the reference count. */
         IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
 
-        /* Search the subscription list for all matching subscriptions starting at
-         * the list head. */
-        while( true )
+        /* Decrement the reference count. It must still be positive. */
+        ( pSubscription->references )--;
+        IotMqtt_Assert( pSubscription->references >= 0 );
+
+        /* Save the pointer to the next link in case this subscription is freed. */
+        pNextLink = pCurrentLink->pNext;
+
+        /* Remove this subscription if it has no references and the unsubscribed
+         * flag is set. */
+        if( pSubscription->unsubscribed == true )
         {
-            pCurrentLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
-                                                         pCurrentLink,
-                                                         _topicMatch,
-                                                         &topicMatchParams );
+            /* An unsubscribed subscription should have been removed from the list. */
+            IotMqtt_Assert( IotLink_IsLinked( &( pSubscription->link ) ) == false );
 
-            /* No subscription found. Exit loop. */
-            if( pCurrentLink == NULL )
+            /* Free subscriptions with no references. */
+            if( pSubscription->references == 0 )
             {
-                break;
-            }
-            else
-            {
-                _EMPTY_ELSE_MARKER;
-            }
-
-            /* Subscription found. Calculate pointer to subscription object. */
-            pSubscription = IotLink_Container( _mqttSubscription_t, pCurrentLink, link );
-
-            /* Subscription validation should not have allowed a NULL callback function. */
-            IotMqtt_Assert( pSubscription->callback.function != NULL );
-
-            /* Increment the subscription's reference count. */
-            ( pSubscription->references )++;
-
-            /* Copy the necessary members of the subscription before releasing the
-             * subscription list mutex. */
-            pParam1 = pSubscription->callback.param1;
-            callbackFunction = pSubscription->callback.function;
-
-            /* Unlock the subscription list mutex. */
-            IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
-
-            /* Set the members of the callback parameter. */
-            pCallbackParam->mqttConnection = pMqttConnection;
-            pCallbackParam->message.pTopicFilter = pSubscription->pTopicFilter;
-            pCallbackParam->message.topicFilterLength = pSubscription->topicFilterLength;
-
-            /* Invoke the subscription callback. */
-            callbackFunction( pParam1, pCallbackParam );
-
-            /* Lock the subscription list mutex to decrement the reference count. */
-            IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
-
-            /* Decrement the reference count. It must still be positive. */
-            ( pSubscription->references )--;
-            IotMqtt_Assert( pSubscription->references >= 0 );
-
-            /* Save the pointer to the next link in case this subscription is freed. */
-            pNextLink = pCurrentLink->pNext;
-
-            /* Remove this subscription if it has no references and the unsubscribed
-             * flag is set. */
-            if( ( pSubscription->references == 0 ) && ( pSubscription->unsubscribed == true ) )
-            {
-                IotListDouble_Remove( &( pSubscription->link ) );
                 IotMqtt_FreeSubscription( pSubscription );
             }
             else
             {
                 _EMPTY_ELSE_MARKER;
             }
-
-            /* Move current link pointer. */
-            pCurrentLink = pNextLink;
+        }
+        else
+        {
+            _EMPTY_ELSE_MARKER;
         }
 
-        IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+        /* Move current link pointer. */
+        pCurrentLink = pNextLink;
+    }
 
-        _IotMqtt_DecrementConnectionReferences( pMqttConnection );
-    }
-    else
-    {
-        _EMPTY_ELSE_MARKER;
-    }
+    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+
+    _IotMqtt_DecrementConnectionReferences( pMqttConnection );
 }
 
 /*-----------------------------------------------------------*/
@@ -512,11 +512,13 @@ void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * pMqttConnection,
         .order            = order
     };
 
+    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
     IotListDouble_RemoveAllMatches( &( pMqttConnection->subscriptionList ),
                                     _packetMatch,
                                     ( void * ) ( &packetMatchParams ),
                                     IotMqtt_FreeSubscription,
                                     offsetof( _mqttSubscription_t, link ) );
+    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -553,6 +555,9 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnecti
             /* Reference count must not be negative. */
             IotMqtt_Assert( pSubscription->references >= 0 );
 
+            /* Remove subscription from list. */
+            IotListDouble_Remove( pSubscriptionLink );
+
             /* Check the reference count. This subscription cannot be removed if
              * there are subscription callbacks using it. */
             if( pSubscription->references > 0 )
@@ -563,8 +568,7 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnecti
             }
             else
             {
-                /* No subscription callbacks are using this subscription. Remove it. */
-                IotListDouble_Remove( &( pSubscription->link ) );
+                /* Free a subscription with no references. */
                 IotMqtt_FreeSubscription( pSubscription );
             }
         }
@@ -585,7 +589,6 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
                            IotMqttSubscription_t * pCurrentSubscription )
 {
     bool status = false;
-    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) mqttConnection;
     _mqttSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams =
@@ -597,10 +600,10 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
 
     /* Prevent any other thread from modifying the subscription list while this
      * function is running. */
-    IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Lock( &( mqttConnection->subscriptionMutex ) );
 
     /* Search for a matching subscription. */
-    pSubscriptionLink = IotListDouble_FindFirstMatch( &( pMqttConnection->subscriptionList ),
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( mqttConnection->subscriptionList ),
                                                       NULL,
                                                       _topicMatch,
                                                       &topicMatchParams );
@@ -630,15 +633,14 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
         _EMPTY_ELSE_MARKER;
     }
 
-    IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
+    IotMutex_Unlock( &( mqttConnection->subscriptionMutex ) );
 
     return status;
 }
 
 /*-----------------------------------------------------------*/
 
-/* If the MQTT library is being tested, include a file that allows access to
- * internal functions and variables. */
-#if IOT_MQTT_TEST == 1
+/* Provide access to internal functions and variables if testing. */
+#if IOT_BUILD_TESTS == 1
     #include "iot_test_access_mqtt_subscription.c"
 #endif

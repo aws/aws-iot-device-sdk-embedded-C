@@ -186,16 +186,6 @@ Up to @ref IOT_TEST_MQTT_THREADS `*` @ref IOT_TEST_MQTT_PUBLISHES_PER_THREAD pub
 /**
 @configpage{mqtt_demo,MQTT demo,Demo,demos}
 
-@section IOT_DEMO_MQTT_CLIENT_IDENTIFIER
-@brief The MQTT client identifier to use for the demo.
-
-No two clients may connect using the same client identifier simultaneously.
-
-The MQTT client identifier may also be set with [the command line option -i](@ref demo_optioni). The command line option will override this setting. If this setting is undefined and no command line option is provided, the demo will generate a unique client identifier to use.
-
-@configpossible Any string representing an MQTT client identifier. MQTT client identifiers may be subject to certain constraints; for example, servers are not obligated to accept client identifiers longer than 23 characters or client identifiers containing non-alphanumeric characters. <br>
-@configdefault The demo will generate a unique client identifier if this setting is undefined.
-
 @section IOT_DEMO_MQTT_TOPIC_PREFIX
 @brief The string prepended to topic filters in the demo.
 
@@ -248,7 +238,7 @@ Metrics allow AWS IoT to prioritize engineering resources based on SDK usage. SD
 @section IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES
 @brief Set this to `1` to allow the MQTT packet serializer and deserializer functions to be overridden.
 
-Serializer overrides allow the functions that generate and decode MQTT packets to be overridden. When this setting is `1`, each connection may have different serializer and deserializer functions. This allows the MQTT library to be used as a general-purpose transport library (with limitations). Currently, this setting is used to support MQTT over Bluetooth Low-Energy on Amazon FreeRTOS. See #IotMqttNetIf_t for a list of functions that can be overridden. If this setting is `1`, the serializer [initialization](@ref _IotMqtt_InitSerialize) and [cleanup](@ref _IotMqtt_CleanupSerialize) functions may be extended by defining `_IotMqtt_InitSerializeAdditional` and `_IotMqtt_CleanupSerializeAdditional`. These functions will be called along with the default serializer initialization and cleanup functions. They must have the following signatures:
+Serializer overrides allow the functions that generate and decode MQTT packets to be overridden. When this setting is `1`, each connection may have different serializer and deserializer functions. This allows the MQTT library to be used as a general-purpose transport library (with limitations). Currently, this setting is used to support MQTT over Bluetooth Low-Energy on Amazon FreeRTOS. See #IotMqttSerializer_t for a list of functions that can be overridden. If this setting is `1`, the serializer [initialization](@ref _IotMqtt_InitSerialize) and [cleanup](@ref _IotMqtt_CleanupSerialize) functions may be extended by defining `_IotMqtt_InitSerializeAdditional` and `_IotMqtt_CleanupSerializeAdditional`. These functions will be called along with the default serializer initialization and cleanup functions. They must have the following signatures:
 @code{c}
 #include <stdbool.h>
 
@@ -286,15 +276,6 @@ QoS 1 PUBLISH retransmissions follow a truncated exponential backoff strategy. T
 
 @configpossible Any positive integer.<br>
 @configdefault `60000`
-
-@section IOT_MQTT_TEST
-@brief Set this to `1` to enable test access for the MQTT library.
-
-This setting is used by the [MQTT tests](@ref mqtt_tests) to access the internal `static` functions and variables of the MQTT library. When `1`, it enables the @c \#include directives at the bottom of the [MQTT library source files](@ref lib/source/mqtt). These @c \#include directives include the test access files (located in `tests/mqtt/access`) that interact with the library's internal symbols. Unless the MQTT library is being tested, this setting should be `0`.
-
-@configpossible `0` (test access disabled) or `1` (test access enabled)<br>
-@configrecommended `0`<br>
-@configdefault `0`
 
 @section IotMqtt_Assert
 @brief Assertion function used when @ref IOT_MQTT_ENABLE_ASSERTS is `1`.

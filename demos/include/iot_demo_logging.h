@@ -20,21 +20,37 @@
  */
 
 /**
- * @file iot_test_access_mqtt_serialize.c
- * @brief Provides access to the internal functions and variables of
- * iot_mqtt_serialize.c
- *
- * This file should only be included at the bottom of iot_mqtt_serialize.c
- * and never compiled by itself.
+ * @file iot_demo_logging.h
+ * @brief Sets the log level for all demos.
  */
 
-/*-----------------------------------------------------------*/
+#ifndef _IOT_DEMO_LOGGING_H_
+#define _IOT_DEMO_LOGGING_H_
 
-IotMqttError_t IotTestMqtt_decodeRemainingLength( const uint8_t * pSource,
-                                                  const uint8_t ** pEnd,
-                                                  size_t * pLength )
-{
-    return _decodeRemainingLength( pSource, pEnd, pLength );
-}
+/* Build using a config header, if provided. */
+#ifdef IOT_CONFIG_FILE
+    #include IOT_CONFIG_FILE
+#endif
 
-/*-----------------------------------------------------------*/
+/* Configure logs for the demos. The demos will have a log level of:
+ * - IOT_LOG_LEVEL_DEMO if defined.
+ * - IOT_LOG_LEVEL_GLOBAL if defined and IOT_LOG_LEVEL_DEMO is undefined.
+ * - IOT_LOG_NONE if neither IOT_LOG_LEVEL_DEMO nor IOT_LOG_LEVEL_GLOBAL are defined.
+ */
+#ifdef IOT_LOG_LEVEL_DEMO
+    #define _LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_DEMO
+#else
+    #ifdef IOT_LOG_LEVEL_GLOBAL
+        #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
+    #else
+        #define _LIBRARY_LOG_LEVEL    IOT_LOG_NONE
+    #endif
+#endif
+
+/* Set the library name to print with the demos. */
+#define _LIBRARY_LOG_NAME    ( "DEMO" )
+
+/* Include the logging setup header. This enables the logs. */
+#include "iot_logging_setup.h"
+
+#endif /* ifndef _IOT_DEMO_LOGGING_H_ */

@@ -39,6 +39,9 @@
 /* POSIX includes. */
 #include <time.h>
 
+/* Common include. */
+#include "iot_common.h"
+
 /* MQTT include. */
 #include "iot_mqtt.h"
 
@@ -48,15 +51,13 @@
 #else
     #include <pthread.h>
 #endif
-#ifdef POSIX_UNISTD_HEADER
-    #include POSIX_UNISTD_HEADER
-#else
-    #include <unistd.h>
-#endif
 
 /* Platform layer include. */
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
+
+/* Test network header include. */
+#include IOT_TEST_NETWORK_HEADER
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -147,31 +148,35 @@
  */
 typedef struct _publishParams
 {
-    int threadNumber;      /**< @brief ID number of this publish thread. */
-    long publishPeriodNs;  /**< @brief How long to wait (in nanoseconds) between each publish. */
-    unsigned publishLimit; /**< @brief How many publishes this thread will send. */
-    IotMqttError_t status; /**< @brief Final status of this publish thread. */
+    int threadNumber;         /**< @brief ID number of this publish thread. */
+    uint32_t publishPeriodMs; /**< @brief How long to wait (in milliseconds) between each publish. */
+    unsigned publishLimit;    /**< @brief How many publishes this thread will send. */
+    IotMqttError_t status;    /**< @brief Final status of this publish thread. */
 } _publishParams_t;
 
 /*-----------------------------------------------------------*/
 
-/* Network functions used by the tests, declared and implemented in one of
- * the test network function files. */
-extern bool IotTest_NetworkSetup( void );
-extern void IotTest_NetworkCleanup( void );
+/**
+ * @brief Network server info to share among the tests.
+ */
+static const IotTestNetworkServerInfo_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 
-/* Extern declarations of default serializer functions. The internal MQTT header cannot
- * be included by this file. */
-extern IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
-                                                 size_t * pPacketSize );
-extern void _IotMqtt_FreePacket( uint8_t * pPacket );
+/**
+ * @brief Network credential info to share among the tests.
+ */
+#if IOT_TEST_SECURED_CONNECTION == 1
+    static const IotTestNetworkCredentials_t _credentials = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
+#endif
 
-/* Network variables used by the tests, declared in one of the test network
- * function files. */
-extern IotMqttNetIf_t _IotTestNetworkInterface;
-extern IotMqttConnection_t _IotTestMqttConnection;
+/**
+ * @brief An MQTT network setup parameter to share among the tests.
+ */
+static IotMqttNetworkInfo_t _networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
-/*-----------------------------------------------------------*/
+/**
+ * @brief An MQTT connection to share among the tests.
+ */
+static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
  * @brief Filler text to publish.
@@ -232,6 +237,13 @@ static bool _pingreqOverrideCalled = false;
 
 /*-----------------------------------------------------------*/
 
+/* Declaration of MQTT serializer function. The internal MQTT header cannot be
+ * included here. */
+extern IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
+                                                 size_t * pPacketSize );
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Serializer override for PINGREQ.
  */
@@ -254,7 +266,7 @@ static IotMqttError_t _checkConnection( void )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    IotMqttReference_t publishRef = IOT_MQTT_REFERENCE_INITIALIZER;
+    IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
     /* Set the publish info. */
     publishInfo.qos = IOT_MQTT_QOS_1;
@@ -266,11 +278,11 @@ static IotMqttError_t _checkConnection( void )
     publishInfo.retryLimit = IOT_TEST_MQTT_RETRY_LIMIT;
 
     /* Send a PUBLISH. */
-    status = IotMqtt_Publish( _IotTestMqttConnection,
+    status = IotMqtt_Publish( _mqttConnection,
                               &publishInfo,
                               IOT_MQTT_FLAG_WAITABLE,
                               NULL,
-                              &publishRef );
+                              &publishOperation );
 
     if( status != IOT_MQTT_STATUS_PENDING )
     {
@@ -278,7 +290,7 @@ static IotMqttError_t _checkConnection( void )
     }
 
     /* Return the result of the PUBLISH. */
-    return IotMqtt_Wait( publishRef,
+    return IotMqtt_Wait( publishOperation,
                          IOT_TEST_MQTT_TIMEOUT_MS );
 }
 
@@ -318,12 +330,12 @@ static void _blockingCallback( void * pArgument,
                                IotMqttCallbackParam_t * param )
 {
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
-    const unsigned blockTime = 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
+    const uint32_t blockTimeMs = ( 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S ) * 1000;
 
     ( void ) param;
 
-    IotLogInfo( "Callback blocking for %u seconds.", blockTime );
-    sleep( blockTime );
+    IotLogInfo( "Callback blocking for %lu milliseconds.", blockTimeMs );
+    IotClock_SleepMs( blockTimeMs );
     IotSemaphore_Post( pWaitSem );
 }
 
@@ -340,11 +352,6 @@ static void * _publishThread( void * pArgument )
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _publishParams_t * pParams = ( _publishParams_t * ) pArgument;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    const struct timespec sleepTime =
-    {
-        .tv_sec  = 0,
-        .tv_nsec = pParams->publishPeriodNs
-    };
 
     /* Set the publish info. */
     publishInfo.qos = IOT_MQTT_QOS_1;
@@ -360,7 +367,7 @@ static void * _publishThread( void * pArgument )
         publishInfo.pTopicName = _pTopicNames[ i % _TEST_TOPIC_NAME_COUNT ];
 
         /* PUBLISH the message. */
-        status = IotMqtt_Publish( _IotTestMqttConnection,
+        status = IotMqtt_Publish( _mqttConnection,
                                   &publishInfo,
                                   0,
                                   NULL,
@@ -375,7 +382,7 @@ static void * _publishThread( void * pArgument )
                         pParams->threadNumber,
                         i,
                         IOT_TEST_MQTT_DECONGEST_S );
-            sleep( IOT_TEST_MQTT_DECONGEST_S );
+            IotClock_SleepMs( IOT_TEST_MQTT_DECONGEST_S * 1000 );
             continue;
         }
         /* If the PUBLISH failed, exit this thread. */
@@ -399,12 +406,7 @@ static void * _publishThread( void * pArgument )
         }
 
         /* Sleep until the next PUBLISH should be sent. */
-        if( nanosleep( &sleepTime, NULL ) != 0 )
-        {
-            IotLogError( "Error in nanosleep." );
-            status = IOT_MQTT_BAD_RESPONSE;
-            break;
-        }
+        IotClock_SleepMs( pParams->publishPeriodMs );
     }
 
     /* Set the thread's last status. */
@@ -427,16 +429,19 @@ TEST_GROUP( MQTT_Stress );
  */
 TEST_SETUP( MQTT_Stress )
 {
-    int i = 0;
+    int32_t i = 0;
+    IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttSubscription_t pSubscriptions[ _TEST_TOPIC_NAME_COUNT ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
-    const IotLogConfig_t logHideAll = { .hideLogLevel = true, .hideLibraryName = true, .hideTimestring = true };
+
+    /* Initialize common components. */
+    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
 
     /* Clear the PINGREQ override flag. */
     _pingreqOverrideCalled = false;
 
     /* Empty log message to log a new line. */
-    IotLog( IOT_LOG_INFO, &logHideAll, " " );
+    IotLogInfo( "Stress tests starting." );
 
     /* Create the publish counter semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &receivedPublishCounter,
@@ -444,13 +449,13 @@ TEST_SETUP( MQTT_Stress )
                                                       _MAX_RECEIVED_PUBLISH ) );
 
     /* Set the serializer overrides. */
-    _IotTestNetworkInterface.serialize.pingreq = _serializePingreq;
-    _IotTestNetworkInterface.freePacket = _IotMqtt_FreePacket;
+    serializer.serialize.pingreq = _serializePingreq;
+    _networkInfo.pMqttSerializer = &serializer;
 
     /* Set up the network stack. */
-    if( IotTest_NetworkSetup() == false )
+    if( IotTestNetwork_Init() != IOT_NETWORK_SUCCESS )
     {
-        TEST_FAIL_MESSAGE( "Failed to set up network connection." );
+        TEST_FAIL_MESSAGE( "Failed to set up network stack." );
     }
 
     /* Initialize the MQTT library. */
@@ -472,6 +477,16 @@ TEST_SETUP( MQTT_Stress )
                           _CLIENT_IDENTIFIER_MAX_LENGTH );
     #endif
 
+    /* Set the MQTT network setup parameters. */
+    ( void ) memset( &_networkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
+    _networkInfo.createNetworkConnection = true;
+    _networkInfo.pNetworkServerInfo = ( void * ) &_serverInfo;
+    _networkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
+
+    #if IOT_TEST_SECURED_CONNECTION == 1
+        _networkInfo.pNetworkCredentialInfo = ( void * ) &_credentials;
+    #endif
+
     /* Set the members of the connect info. */
     connectInfo.cleanSession = true;
     connectInfo.keepAliveSeconds = IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
@@ -489,14 +504,14 @@ TEST_SETUP( MQTT_Stress )
 
     /* Establish the MQTT connection. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
-                       IotMqtt_Connect( &_IotTestMqttConnection,
-                                        &_IotTestNetworkInterface,
+                       IotMqtt_Connect( &_networkInfo,
                                         &connectInfo,
-                                        IOT_TEST_MQTT_TIMEOUT_MS ) );
+                                        IOT_TEST_MQTT_TIMEOUT_MS,
+                                        &_mqttConnection ) );
 
     /* Subscribe to the test topic filters. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
-                       IotMqtt_TimedSubscribe( _IotTestMqttConnection,
+                       IotMqtt_TimedSubscribe( _mqttConnection,
                                                pSubscriptions,
                                                _TEST_TOPIC_NAME_COUNT,
                                                0,
@@ -515,17 +530,20 @@ TEST_TEAR_DOWN( MQTT_Stress )
 
     /* Disconnect the MQTT connection. Unsubscribe is not called; the subscriptions
      * should be cleaned up by Disconnect. */
-    if( _IotTestMqttConnection != IOT_MQTT_CONNECTION_INITIALIZER )
+    if( _mqttConnection != IOT_MQTT_CONNECTION_INITIALIZER )
     {
-        IotMqtt_Disconnect( _IotTestMqttConnection, false );
+        IotMqtt_Disconnect( _mqttConnection, 0 );
+        _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
     }
 
     /* Clean up the network stack. */
-    IotTest_NetworkCleanup();
+    IotTestNetwork_Cleanup();
+
+    /* Clean up common components. */
+    IotCommon_Cleanup();
 
     /* Clean up the MQTT library. */
     IotMqtt_Cleanup();
-    _IotTestMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 }
 
 /*-----------------------------------------------------------*/
@@ -547,12 +565,12 @@ TEST_GROUP_RUNNER( MQTT_Stress )
  */
 TEST( MQTT_Stress, KeepAlive )
 {
-    const unsigned sleepTime = 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
+    const uint32_t sleepTimeMs = ( 5 * IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S ) * 1000;
 
     /* Send no MQTT packets for a long time. The keep-alive must be used to keep
      * the connection open. */
-    IotLogInfo( "KeepAlive test sleeping for %u seconds.", sleepTime );
-    sleep( sleepTime );
+    IotLogInfo( "KeepAlive test sleeping for %lu milliseconds.", sleepTimeMs );
+    IotClock_SleepMs( sleepTimeMs );
 
     /* Send a PUBLISH to verify that the connection is still usable. */
     IotLogInfo( "KeepAlive test checking MQTT connection." );
@@ -574,7 +592,7 @@ TEST( MQTT_Stress, BlockingCallback )
     IotSemaphore_t waitSem;
 
     callbackInfo.function = _blockingCallback;
-    callbackInfo.param1 = &waitSem;
+    callbackInfo.pCallbackContext = &waitSem;
 
     publishInfo.qos = IOT_MQTT_QOS_1;
     publishInfo.pTopicName = _pTopicNames[ 0 ];
@@ -591,7 +609,7 @@ TEST( MQTT_Stress, BlockingCallback )
     {
         /* Call a function that will invoke the blocking callback. */
         TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING,
-                           IotMqtt_Publish( _IotTestMqttConnection,
+                           IotMqtt_Publish( _mqttConnection,
                                             &publishInfo,
                                             0,
                                             &callbackInfo,
@@ -626,7 +644,7 @@ TEST( MQTT_Stress, ClientClosesConnection )
     for( i = 0; i < IOT_TEST_MQTT_THREADS; i++ )
     {
         publishThreadParams[ i ].threadNumber = i;
-        publishThreadParams[ i ].publishPeriodNs = 500000000;
+        publishThreadParams[ i ].publishPeriodMs = 500;
         publishThreadParams[ i ].publishLimit = IOT_TEST_MQTT_PUBLISHES_PER_THREAD;
     }
 
