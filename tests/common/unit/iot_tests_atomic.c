@@ -97,7 +97,7 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     uint32_t ulCasDestination_32;
     uint32_t ulCasComparator_32;
     uint32_t ulCasNewValue_32;
-    uint32_t ulReturlValue_32;
+    uint32_t ulReturnValue_32;
 
     uint32_t * pSwapDestination_32;
     uint32_t * pSwapNewValue_32;
@@ -116,21 +116,21 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     ulCasNewValue_32 = MAGIC_NUMBER_32BIT_2;
 
     COMPILER_ASM_VOLATILE( "atomic_cas_1: " );
-    ulReturlValue_32 = Atomic_CompareAndSwap_u32( &ulCasDestination_32, ulCasNewValue_32, ulCasComparator_32 );
+    ulReturnValue_32 = Atomic_CompareAndSwap_u32( &ulCasDestination_32, ulCasNewValue_32, ulCasComparator_32 );
     COMPILER_ASM_VOLATILE( "atomic_cas_1_end: " );
 
     TEST_ASSERT_MESSAGE( ulCasDestination_32 == ulCasNewValue_32, "Atomic_CompareAndSwap_u32 -- did not swap." );
-    TEST_ASSERT_MESSAGE( ulReturlValue_32 == MAGIC_NUMBER_32BIT_1, "Atomic_CompareAndSwap_u32 -- expected return value true." );
+    TEST_ASSERT_MESSAGE( ulReturnValue_32 == 1, "Atomic_CompareAndSwap_u32 -- expected return value true." );
 
     /* #2 -- CAS, comparator from the same mem location. */
     ulCasDestination_32 = MAGIC_NUMBER_32BIT_1;
 
     COMPILER_ASM_VOLATILE( "atomic_cas_2: " );
-    ulReturlValue_32 = Atomic_CompareAndSwap_u32( &ulCasDestination_32, MAGIC_NUMBER_32BIT_2, ulCasDestination_32 );
+    ulReturnValue_32 = Atomic_CompareAndSwap_u32( &ulCasDestination_32, MAGIC_NUMBER_32BIT_2, ulCasDestination_32 );
     COMPILER_ASM_VOLATILE( "atomic_cas_2_end: " );
 
     TEST_ASSERT_MESSAGE( ulCasDestination_32 == MAGIC_NUMBER_32BIT_2, "Atomic_CompareAndSwap_u32 -- did not swap." );
-    TEST_ASSERT_MESSAGE( ulReturlValue_32 == MAGIC_NUMBER_32BIT_1, "Atomic_CompareAndSwap_u32 -- expected return value true." );
+    TEST_ASSERT_MESSAGE( ulReturnValue_32 == 1, "Atomic_CompareAndSwap_u32 -- expected return value true." );
 
     /* #3 -- swap */
     pSwapDestination_32 = &ulCasDestination_32;
@@ -161,11 +161,11 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     pSwapNewValue_32 = &ulCasNewValue_32;
 
     COMPILER_ASM_VOLATILE( "atomic_CAS_pointers: nop" );
-    pReturnValue_32 = Atomic_CompareAndSwapPointers_p32( ( void ** ) &pSwapDestination_32, pSwapNewValue_32, &ulCasDestination_32 );
+    ulReturnValue_32 = Atomic_CompareAndSwapPointers_p32( ( void ** ) &pSwapDestination_32, pSwapNewValue_32, &ulCasDestination_32 );
     COMPILER_ASM_VOLATILE( "atomic_CAS_pointers_end: nop" );
 
     TEST_ASSERT_MESSAGE( ( intptr_t ) pSwapDestination_32 == ( intptr_t ) pSwapNewValue_32, "Atomic_CompareAndSwapPointers_p32 -- did not swap." );
-    TEST_ASSERT_MESSAGE( ( intptr_t ) pReturnValue_32 == ( intptr_t ) &ulCasDestination_32, "Atomic_CompareAndSwapPointers_p32 -- expected return value true." );
+    TEST_ASSERT_MESSAGE( ulReturnValue_32 == 1, "Atomic_CompareAndSwapPointers_p32 -- expected return value true." );
 
     return;
 }
@@ -334,7 +334,6 @@ TEST( Common_Unit_Atomic, AtomicCasFailToSwap )
     uint32_t * pCasDestination_32;
     uint32_t * pCasComparator_32;
     uint32_t * pCasNewValue_32;
-    uint32_t * pReturnValue_32;
 
     /* #1 -- CAS, not equal, don't swap. */
     ulCasDestination_32 = MAGIC_NUMBER_32BIT_1;
@@ -346,7 +345,7 @@ TEST( Common_Unit_Atomic, AtomicCasFailToSwap )
     COMPILER_ASM_VOLATILE( "atomic_cas_neq_end: " );
 
     TEST_ASSERT_MESSAGE( ulCasDestination_32 == MAGIC_NUMBER_32BIT_1, "Atomic_CompareAndSwap_u32 -- should not swap." );
-    TEST_ASSERT_MESSAGE( ulReturnValue_32 == MAGIC_NUMBER_32BIT_1, "Atomic_CompareAndSwap_u32 -- should return previous value." );
+    TEST_ASSERT_MESSAGE( ulReturnValue_32 == 0, "Atomic_CompareAndSwap_u32 -- should not swap." );
 
     /* #2 -- CAS, pointers not equal, don't swap. */
     pCasDestination_32 = &ulCasDestination_32;
@@ -354,9 +353,9 @@ TEST( Common_Unit_Atomic, AtomicCasFailToSwap )
     pCasNewValue_32 = &ulCasNewValue_32;
 
     COMPILER_ASM_VOLATILE( "atomic_cas_pointers_neq: " );
-    pReturnValue_32 = Atomic_CompareAndSwapPointers_p32( ( void ** ) &pCasDestination_32, pCasNewValue_32, pCasComparator_32 );
+    ulReturnValue_32 = Atomic_CompareAndSwapPointers_p32( ( void ** ) &pCasDestination_32, pCasNewValue_32, pCasComparator_32 );
     COMPILER_ASM_VOLATILE( "atomic_cas_pointers_neq_end: " );
 
     TEST_ASSERT_MESSAGE( ( intptr_t ) pCasDestination_32 == ( intptr_t ) &ulCasDestination_32, "Atomic_CompareAndSwapPointers_p32 -- should not swap." );
-    TEST_ASSERT_MESSAGE( ( intptr_t ) pReturnValue_32 == ( intptr_t ) &ulCasDestination_32, "Atomic_CompareAndSwapPointers_p32 -- should return previous value." );
+    TEST_ASSERT_MESSAGE( ulReturnValue_32 == 0, "Atomic_CompareAndSwapPointers_p32 -- should not swap." );
 }

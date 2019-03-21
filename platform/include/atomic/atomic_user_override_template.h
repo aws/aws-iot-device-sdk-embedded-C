@@ -117,17 +117,17 @@ static FORCE_INLINE_NESTED uint32_t Atomic_CompareAndSwap_u32_User_Override( uin
                                                                              uint32_t ulComparand );
 static FORCE_INLINE_NESTED void * Atomic_SwapPointers_p32_User_Override( void * volatile * ppDestination,
                                                                          void * pExchange );
-static FORCE_INLINE_NESTED void * Atomic_CompareAndSwapPointers_p32_User_Override( void * volatile * ppDestination,
-                                                                                   void * pExchange,
-                                                                                   void * pComparand );
+static FORCE_INLINE_NESTED uint32_t Atomic_CompareAndSwapPointers_p32_User_Override( void * volatile * ppDestination,
+                                                                                     void * pExchange,
+                                                                                     void * pComparand );
 
 /*----------------------------- Arithmetic ------------------------------*/
-static FORCE_INLINE_NESTED int32_t Atomic_Add_i32_User_Override( int32_t volatile * pAddend,
-                                                                 int32_t lCount );
-static FORCE_INLINE_NESTED int32_t Atomic_Subtract_i32_User_Override( int32_t volatile * pAddend,
-                                                                      int32_t lCount );
-static FORCE_INLINE_NESTED int32_t Atomic_Increment_i32_User_Override( int32_t volatile * pAddend );
-static FORCE_INLINE_NESTED int32_t Atomic_Decrement_i32_User_Override( int32_t volatile * pAddend );
+static FORCE_INLINE_NESTED uint32_t Atomic_Add_u32_User_Override( uint32_t volatile * pAddend,
+                                                                  uint32_t lCount );
+static FORCE_INLINE_NESTED uint32_t Atomic_Subtract_u32_User_Override( uint32_t volatile * pAddend,
+                                                                       uint32_t lCount );
+static FORCE_INLINE_NESTED uint32_t Atomic_Increment_u32_User_Override( uint32_t volatile * pAddend );
+static FORCE_INLINE_NESTED uint32_t Atomic_Decrement_u32_User_Override( uint32_t volatile * pAddend );
 
 /*----------------------------- Bitwise Logical ------------------------------*/
 static FORCE_INLINE_NESTED uint32_t Atomic_OR_u32_User_Override( uint32_t volatile * pDestination,

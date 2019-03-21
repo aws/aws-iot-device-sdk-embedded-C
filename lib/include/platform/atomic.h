@@ -29,10 +29,12 @@
 
 /* Standard includes. */
 #include <stdint.h>
-#include <stdbool.h>
 
 /* Compiler specific implementation. */
 #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
+
+/* Standard boolean for CAS "strong". */
+    #include <stdbool.h>
 
 /* Default GCC compiler.
  * If GCC is used && the target architecture supports atomic instructions,
@@ -55,7 +57,7 @@
  */
     #define COMPILER_ASM_VOLATILE( x )    __asm__ __volatile__ ( x )
 
-#else
+#else  /* if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 ) */
 
 /* Using none GCC compiler || user customization
  * User needs to figure out compiler specific syntax for always-inline and flatten.*/
@@ -74,23 +76,26 @@
  * @param[in] ulExchange         If condition meets, write this value to memory.
  * @param[in] ulComparand        Swap condition, checks and waits for *pDestination to be equal to ulComparand.
  *
- * @return The initial value of *pDestination.
+ * @return unsigned integer of value 1 or 0. 1 for swapped, 0 for not swapped.
  *
  * @note This function only swaps *pDestination with ulExchange, if previous *pDestination value equals ulComparand.
- * @note It's up to caller to check whether swapped or not. User cannot tell whether swapped or not if initial value 
- * and new value are the same. But similar to ABA problems, it can be treated as "swapped".
  */
 static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDestination,
-                                                    uint32_t ulExchange,
-                                                    uint32_t ulComparand )
+                                                        uint32_t ulExchange,
+                                                        uint32_t ulComparand )
 {
+    uint32_t ulReturnValue = 0;
+
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        uint32_t ulReturnValue = *pDestination;
-        __atomic_compare_exchange( pDestination, &ulComparand, &ulExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST );
-        return ulReturnValue;
+        if( __atomic_compare_exchange( pDestination, &ulComparand, &ulExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST ) )
+        {
+            ulReturnValue = 1;
+        }
     #else
-        return Atomic_CompareAndSwap_u32_User_Override( pDestination, ulExchange, ulComparand );
+        ulReturnValue = Atomic_CompareAndSwap_u32_User_Override( pDestination, ulExchange, ulComparand );
     #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+
+    return ulReturnValue;
 }
 
 /**
@@ -125,23 +130,26 @@ static FORCE_INLINE void * Atomic_SwapPointers_p32( void * volatile * ppDestinat
  * @param[in] pExchange          If condition meets, write this value to memory.
  * @param[in] pComparand         Swap condition, checks and waits for *ppDestination to be equal to *pComparand.
  *
- * @return Initial value of *ppDestination.
+ * @return unsigned integer of value 1 or 0. 1 for swapped, 0 for not swapped.
  *
  * @note This function only swaps *ppDestination with pExchange, if previous *ppDestination value equals pComparand.
- * @note It's up to caller to check whether swapped or not. User cannot tell whether swapped or not if initial value
- * and new value are the same. But similar to ABA problems, it can be treated as "swapped".
  */
-static FORCE_INLINE void *  Atomic_CompareAndSwapPointers_p32( void * volatile * ppDestination,
-                                                            void * pExchange,
-                                                            void * pComparand )
+static FORCE_INLINE uint32_t Atomic_CompareAndSwapPointers_p32( void * volatile * ppDestination,
+                                                                void * pExchange,
+                                                                void * pComparand )
 {
+    uint32_t ulReturnValue = 0;
+
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        void * pReturnValue = *ppDestination;
-        __atomic_compare_exchange( ppDestination, &pComparand, &pExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST );
-        return pReturnValue;
+        if( __atomic_compare_exchange( ppDestination, &pComparand, &pExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST ) )
+        {
+            ulReturnValue = 1;
+        }
     #else
-        return Atomic_CompareAndSwapPointers_p32_User_Override( ppDestination, pExchange, pComparand );
+        ulReturnValue = Atomic_CompareAndSwapPointers_p32_User_Override( ppDestination, pExchange, pComparand );
     #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+
+    return ulReturnValue;
 }
 
 
@@ -163,7 +171,7 @@ static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAddend,
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_add( pAddend, lCount, __ATOMIC_SEQ_CST );
     #else
-        return Atomic_Add_i32_User_Override( pAddend, lCount );
+        return Atomic_Add_u32_User_Override( pAddend, lCount );
     #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
 }
 
@@ -183,7 +191,7 @@ static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pAddend,
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_sub( pAddend, lCount, __ATOMIC_SEQ_CST );
     #else
-        return Atomic_Subtract_i32_User_Override( pAddend, lCount );
+        return Atomic_Subtract_u32_User_Override( pAddend, lCount );
     #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
 }
 
@@ -201,7 +209,7 @@ static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAddend )
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_add( pAddend, 1, __ATOMIC_SEQ_CST );
     #else
-        return Atomic_Increment_i32_User_Override( pAddend );
+        return Atomic_Increment_u32_User_Override( pAddend );
     #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
 }
 
@@ -219,7 +227,7 @@ static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pAddend )
     #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
         return __atomic_fetch_sub( pAddend, 1, __ATOMIC_SEQ_CST );
     #else
-        return Atomic_Decrement_i32_User_Override( pAddend );
+        return Atomic_Decrement_u32_User_Override( pAddend );
     #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
 }
 
