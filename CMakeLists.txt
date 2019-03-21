@@ -30,6 +30,9 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 #Up until GCC 4.6.3, __sync_* shall be called. From 4.7.0,
 #__atomic_ * are available. We only implemented atomic
 #with __atomic_*.
+message("Compiler: ${CMAKE_COMPILER_IS_GNUCC}")
+message("Compiler version: ${CMAKE_C_COMPILER_VERSION}")
+message("Compiler ID: ${CMAKE_C_COMPILER_ID}")
 if( CMAKE_COMPILER_IS_GNUCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 4.7 )
     add_definitions( -DCOMPILER_OPTION_GCC_ATOMIC_BUILTIN=1 )
 endif()
