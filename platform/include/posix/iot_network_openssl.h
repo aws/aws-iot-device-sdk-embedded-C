@@ -187,7 +187,7 @@ void IotNetworkOpenssl_Cleanup( void );
  */
 IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
                                             void * pCredentialInfo,
-                                            void * pConnection );
+                                            void ** pConnection );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::setReceiveCallback for

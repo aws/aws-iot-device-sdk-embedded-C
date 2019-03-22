@@ -731,7 +731,7 @@ void IotNetworkOpenssl_Cleanup( void )
 
 IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
                                             void * pCredentialInfo,
-                                            void * pConnection )
+                                            void ** pConnection )
 {
     _IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
     int tcpSocket = -1;
@@ -741,7 +741,7 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
     /* Cast function parameters to correct types. */
     const IotNetworkServerInfoOpenssl_t * const pServerInfo = pConnectionInfo;
     const IotNetworkCredentialsOpenssl_t * const pOpensslCredentials = pCredentialInfo;
-    _networkConnection_t ** const pNetworkConnection = pConnection;
+    _networkConnection_t ** const pNetworkConnection = ( _networkConnection_t** const ) pConnection;
 
     /* Allocate memory for a new connection. */
     pNewNetworkConnection = IotNetwork_Malloc( sizeof( _networkConnection_t ) );
