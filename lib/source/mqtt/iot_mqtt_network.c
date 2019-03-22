@@ -406,9 +406,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
                 }
                 else
                 {
-                    /* The received MQTT packet must be part of the incoming
-                     * packet structure. */
-                    IotMqtt_Assert( pIncomingPacket->pRemainingData != NULL );
+                    _EMPTY_ELSE_MARKER;
                 }
 
                 /* Remove operation from pending processing list. */
