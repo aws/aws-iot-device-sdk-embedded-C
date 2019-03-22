@@ -40,7 +40,7 @@
 /* Metrics wrapper of create interface. */
 static IotNetworkError_t _metricsCreate( void * pConnectionInfo,
                                          void * pCredentialInfo,
-                                         void * pConnection );
+                                         void ** pConnection );
 
 /* Metrics wrapper of close interface. */
 static IotNetworkError_t _metricsClose( void * pConnection );
@@ -60,7 +60,7 @@ const IotNetworkInterface_t _IotNetworkOpensslMetrics =
 
 static IotNetworkError_t _metricsCreate( void * pConnectionInfo,
                                          void * pCredentialInfo,
-                                         void * pConnection )
+                                         void ** pConnection )
 {
     /* Call the openssl create. */
     IotNetworkError_t error = IotNetworkOpenssl_Create( pConnectionInfo, pCredentialInfo, pConnection );
