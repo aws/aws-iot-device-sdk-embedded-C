@@ -72,11 +72,6 @@
 /* Shadow library configuration. */
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 
-/* Define the empty else marker if test coverage is enabled. */
-#if IOT_TEST_COVERAGE == 1
-    #define _EMPTY_ELSE_MARKER    asm volatile ( "nop" )
-#endif
-
 /* Metrics library configuration. */
 #define IOT_METRICS_ENABLE_ASSERTS         ( 1 )
 
@@ -178,6 +173,60 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
 /* Network initialization and cleanup functions to use in the tests. */
 #define IotTestNetwork_Init           IotNetworkOpenssl_Init
 #define IotTestNetwork_Cleanup        IotNetworkOpenssl_Cleanup
+
+/* Configure code coverage testing if enabled. */
+#if IOT_TEST_COVERAGE == 1
+    /* Define the empty else marker if test coverage is enabled. */
+    #define _EMPTY_ELSE_MARKER    asm volatile ( "nop" )
+
+    /* Define a custom logging puts function. This function allows coverage
+     * testing of logging functions, but prevents excessive logs from being
+     * printed. */
+    #define IotLogging_Puts           _coveragePuts
+
+    /* Includes for coverage logging puts. */
+    #include <stdbool.h>
+    #include <stdio.h>
+    #include <string.h>
+
+    /* Logging output function that only prints messages from demo executables.
+     * May be unused, hence the gcc unused attribute (not portable!) */
+    static int __attribute__ ( ( unused ) ) _coveragePuts( const char * pMessage )
+    {
+        bool printMessage = false;
+
+        /* Name of this executable, available through glibc (not portable!) */
+        extern const char * __progname;
+
+        /* Check if this is a demo executable. */
+        if( strstr( __progname, "demo" ) != NULL )
+        {
+            /* Always print messages from the demo executables. */
+            if( strstr( pMessage, "[DEMO]" ) != NULL )
+            {
+                printMessage = true;
+            }
+            /* Always print errors in demo executables. */
+            else if( strstr( pMessage, "[ERROR]" ) != NULL )
+            {
+                printMessage = true;
+            }
+            /* Always print warnings in demo executables. */
+            else if( strstr( pMessage, "[WARN ]" ) != NULL )
+            {
+                printMessage = true;
+            }
+        }
+
+        if( printMessage == true )
+        {
+            puts( pMessage );
+        }
+
+        /* Puts should return a nonzero value. */
+        return 1;
+    }
+#endif
 
 /* The build system will choose the appropriate system types file for the platform
  * layer based on the host operating system. */
