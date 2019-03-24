@@ -100,6 +100,8 @@ TEST_TEAR_DOWN( Common_Unit_Task_Pool )
  */
 TEST_GROUP_RUNNER( Common_Unit_Task_Pool )
 {
+    RUN_TEST_CASE( Common_Unit_Task_Pool, Error );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, CreateDestroyMaxThreads );
     RUN_TEST_CASE( Common_Unit_Task_Pool, CreateDestroyMaxThreads );
     RUN_TEST_CASE( Common_Unit_Task_Pool, CreateDestroyJobError );
     RUN_TEST_CASE( Common_Unit_Task_Pool, CreateDestroyRecycleRecyclableJobError );
@@ -115,7 +117,7 @@ TEST_GROUP_RUNNER( Common_Unit_Task_Pool )
     RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllDeferredRecyclableThenWait );
     RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ReSchedule );
     RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_ReScheduleDeferred );
-    RUN_TEST_CASE( Common_Unit_Task_Pool, TaskPool_CancelTasks );
+    RUN_TEST_CASE( Common_Unit_Task_Pool, ScheduleTasks_CancelTasks );
 }
 
 /*-----------------------------------------------------------*/
@@ -376,6 +378,45 @@ IotTaskPoolInfo_t tpInfoIllegal[ ILLEGAL_INFOS ] =
 };
 
 /*-----------------------------------------------------------*/
+
+/**
+* @brief Test retrieving error string for each task pool status error.
+*/
+TEST( Common_Unit_Task_Pool, Error )
+{
+    IotTaskPoolError_t error;
+    const char * errorString = NULL;
+
+    /* Set error to all possible values, and test that the corresponding string is as expected. */
+    /* NOTE: by convention, 'success' value must be equal to zero (0). */
+    error = IOT_TASKPOOL_SUCCESS;
+    errorString = IotTaskPool_strerror( error );
+    TEST_ASSERT( 0 == strncmp( errorString, "SUCCESS", strlen( "SUCCESS" ) ) );
+
+    error = IOT_TASKPOOL_BAD_PARAMETER;
+    errorString = IotTaskPool_strerror( error );
+    TEST_ASSERT( 0 == strncmp( errorString, "BAD PARAMETER", strlen( "BAD PARAMETER" ) ) );
+
+    error = IOT_TASKPOOL_ILLEGAL_OPERATION;
+    errorString = IotTaskPool_strerror( error );
+    TEST_ASSERT( 0 == strncmp( errorString, "ILLEGAL OPERATION", strlen( "ILLEGAL OPERATION" ) ) );
+
+    error = IOT_TASKPOOL_NO_MEMORY;
+    errorString = IotTaskPool_strerror( error );
+    TEST_ASSERT( 0 == strncmp( errorString, "NO MEMORY", strlen( "NO MEMORY" ) ) );
+
+    error = IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS;
+    errorString = IotTaskPool_strerror( error );
+    TEST_ASSERT( 0 == strncmp( errorString, "SHUTDOWN IN PROGRESS", strlen( "SHUTDOWN IN PROGRESS" ) ) );
+
+    error = IOT_TASKPOOL_CANCEL_FAILED;
+    errorString = IotTaskPool_strerror( error );
+    TEST_ASSERT( 0 == strncmp( errorString, "CANCEL FAILED", strlen( "CANCEL FAILED" ) ) );
+
+    error = ( IotTaskPoolError_t ) -1;
+    errorString = IotTaskPool_strerror( error );
+    TEST_ASSERT( 0 == strncmp( errorString, "INVALID STATUS", strlen( "INVALID STATUS" ) ) );
+}
 
 /**
  * @brief Test task pool dynamic memory creation and destruction, with both legal and illegal information.
@@ -1588,7 +1629,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ReScheduleDeferred )
 /**
  * @brief Test scheduling and canceling jobs.
  */
-TEST( Common_Unit_Task_Pool, TaskPool_CancelTasks )
+TEST( Common_Unit_Task_Pool, ScheduleTasks_CancelTasks )
 {
     uint32_t count, maxJobs;
     IotTaskPool_t taskPool;
