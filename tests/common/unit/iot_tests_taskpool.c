@@ -380,8 +380,8 @@ IotTaskPoolInfo_t tpInfoIllegal[ ILLEGAL_INFOS ] =
 /*-----------------------------------------------------------*/
 
 /**
-* @brief Test retrieving error string for each task pool status error.
-*/
+ * @brief Test retrieving error string for each task pool status error.
+ */
 TEST( Common_Unit_Task_Pool, Error )
 {
     IotTaskPoolError_t error;
@@ -448,24 +448,28 @@ TEST( Common_Unit_Task_Pool, CreateDestroyMaxThreads )
         IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 6, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 
         TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
-        TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 5 ) == IOT_TASKPOOL_SUCCESS );       /* lower. */
-        TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 3 ) == IOT_TASKPOOL_SUCCESS );       /* lower. */
-        TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 4 ) == IOT_TASKPOOL_SUCCESS );       /* higher. */
-        TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 7 ) == IOT_TASKPOOL_SUCCESS );       /* higher. */
-        TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 1 ) == IOT_TASKPOOL_BAD_PARAMETER ); /* less than min threads. */
 
-        /* Initialize more jobs than max threads. */
-        for( count = 0; count < 2 * TEST_TASKPOOL_MAX_THREADS; ++count )
+        if( TEST_PROTECT() )
         {
-            /* Create legal recyclable job. */
-            TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, &jobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
-        }
+            TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 5 ) == IOT_TASKPOOL_SUCCESS );       /* lower. */
+            TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 3 ) == IOT_TASKPOOL_SUCCESS );       /* lower. */
+            TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 4 ) == IOT_TASKPOOL_SUCCESS );       /* higher. */
+            TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 7 ) == IOT_TASKPOOL_SUCCESS );       /* higher. */
+            TEST_ASSERT( IotTaskPool_SetMaxThreads( &taskPool, 1 ) == IOT_TASKPOOL_BAD_PARAMETER ); /* less than min threads. */
 
-        /* Schedule all jobs to make the task pool grow. */
-        for( count = 0; count < 2 * TEST_TASKPOOL_MAX_THREADS; ++count )
-        {
-            /* Create legal recyclable job. */
-            TEST_ASSERT( IotTaskPool_Schedule( &taskPool, &jobs[ count ], 0 ) == IOT_TASKPOOL_SUCCESS );
+            /* Initialize more jobs than max threads. */
+            for( count = 0; count < 2 * TEST_TASKPOOL_MAX_THREADS; ++count )
+            {
+                /* Create legal recyclable job. */
+                TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, &jobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
+            }
+
+            /* Schedule all jobs to make the task pool grow. */
+            for( count = 0; count < 2 * TEST_TASKPOOL_MAX_THREADS; ++count )
+            {
+                /* Create legal recyclable job. */
+                TEST_ASSERT( IotTaskPool_Schedule( &taskPool, &jobs[ count ], 0 ) == IOT_TASKPOOL_SUCCESS );
+            }
         }
 
         TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
@@ -482,54 +486,57 @@ TEST( Common_Unit_Task_Pool, CreateDestroyJobError )
     IotTaskPool_t taskPool;
     const IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 3, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Trivial parameter validation. */
+    if( TEST_PROTECT() )
     {
-        IotTaskPoolJob_t job;
+        /* Trivial parameter validation. */
+        {
+            IotTaskPoolJob_t job;
 
-        /* NULL callback. */
-        TEST_ASSERT( IotTaskPool_CreateJob( NULL, NULL, &job ) == IOT_TASKPOOL_BAD_PARAMETER );
-        /* NULL job handle. */
-        TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, NULL ) == IOT_TASKPOOL_BAD_PARAMETER );
+            /* NULL callback. */
+            TEST_ASSERT( IotTaskPool_CreateJob( NULL, NULL, &job ) == IOT_TASKPOOL_BAD_PARAMETER );
+            /* NULL job handle. */
+            TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, NULL ) == IOT_TASKPOOL_BAD_PARAMETER );
+        }
+
+        /* Create/Destroy. */
+        {
+            IotTaskPoolJob_t job;
+
+            /* Create legal static job. */
+            TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, &job ) == IOT_TASKPOOL_SUCCESS );
+            /* Illegally recycle legal static job. */
+            TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, &job ) == IOT_TASKPOOL_ILLEGAL_OPERATION );
+        }
+
+        /* Create/Destroy. */
+        {
+            IotTaskPoolJob_t job;
+            IotTaskPoolJobStatus_t jobStatusAtCancellation;
+
+            /* Create legal static job. */
+            TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, &job ) == IOT_TASKPOOL_SUCCESS );
+            /* Schedule deferred, then try to illegally destroy, then cancel */
+            TEST_ASSERT( IotTaskPool_ScheduleDeferred( &taskPool, &job, ONE_HOUR_FROM_NOW_MS ) == IOT_TASKPOOL_SUCCESS );
+            TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, &job ) == IOT_TASKPOOL_ILLEGAL_OPERATION );
+            TEST_ASSERT( IotTaskPool_TryCancel( &taskPool, &job, &jobStatusAtCancellation ) == IOT_TASKPOOL_SUCCESS );
+            TEST_ASSERT( jobStatusAtCancellation == IOT_TASKPOOL_STATUS_DEFERRED );
+        }
+
+        /* Create/Destroy. */
+        {
+            IotTaskPoolJob_t job;
+
+            /* Create legal static job. */
+            TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, &job ) == IOT_TASKPOOL_SUCCESS );
+            /* Schedule immediate, then try to illegally destroy it. */
+            TEST_ASSERT( IotTaskPool_Schedule( &taskPool, &job, 0 ) == IOT_TASKPOOL_SUCCESS );
+            TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, &job ) == IOT_TASKPOOL_ILLEGAL_OPERATION );
+        }
     }
 
-    /* Create/Destroy. */
-    {
-        IotTaskPoolJob_t job;
-
-        /* Create legal static job. */
-        TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, &job ) == IOT_TASKPOOL_SUCCESS );
-        /* Illegally recycle legal static job. */
-        TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, &job ) == IOT_TASKPOOL_ILLEGAL_OPERATION );
-    }
-
-    /* Create/Destroy. */
-    {
-        IotTaskPoolJob_t job;
-        IotTaskPoolJobStatus_t jobStatusAtCancellation;
-
-        /* Create legal static job. */
-        TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, &job ) == IOT_TASKPOOL_SUCCESS );
-        /* Schedule deferred, then try to illegally destroy, then cancel */
-        TEST_ASSERT( IotTaskPool_ScheduleDeferred( &taskPool, &job, ONE_HOUR_FROM_NOW_MS ) == IOT_TASKPOOL_SUCCESS );
-        TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, &job ) == IOT_TASKPOOL_ILLEGAL_OPERATION );
-        TEST_ASSERT( IotTaskPool_TryCancel( &taskPool, &job, &jobStatusAtCancellation ) == IOT_TASKPOOL_SUCCESS );
-        TEST_ASSERT( jobStatusAtCancellation == IOT_TASKPOOL_STATUS_DEFERRED );
-    }
-
-    /* Create/Destroy. */
-    {
-        IotTaskPoolJob_t job;
-
-        /* Create legal static job. */
-        TEST_ASSERT( IotTaskPool_CreateJob( &BlankExecution, NULL, &job ) == IOT_TASKPOOL_SUCCESS );
-        /* Schedule immediate, then try to illegally destroy it. */
-        TEST_ASSERT( IotTaskPool_Schedule( &taskPool, &job, 0 ) == IOT_TASKPOOL_SUCCESS );
-        TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, &job ) == IOT_TASKPOOL_ILLEGAL_OPERATION );
-    }
-
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
@@ -542,65 +549,68 @@ TEST( Common_Unit_Task_Pool, CreateDestroyRecycleRecyclableJobError )
     IotTaskPool_t taskPool;
     const IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 3, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Trivial parameter validation jobs. */
+    if( TEST_PROTECT() )
     {
-        IotTaskPoolJob_t * pJob = NULL;
-        /* NULL callback. */
-        TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, NULL, NULL, &pJob ) == IOT_TASKPOOL_BAD_PARAMETER );
-        /* NULL engine handle. */
-        TEST_ASSERT( IotTaskPool_CreateRecyclableJob( NULL, &ExecutionWithRecycleCb, NULL, &pJob ) == IOT_TASKPOOL_BAD_PARAMETER );
-        /* NULL job handle. */
-        TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, NULL, NULL ) == IOT_TASKPOOL_BAD_PARAMETER );
+        /* Trivial parameter validation jobs. */
+        {
+            IotTaskPoolJob_t * pJob = NULL;
+            /* NULL callback. */
+            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, NULL, NULL, &pJob ) == IOT_TASKPOOL_BAD_PARAMETER );
+            /* NULL engine handle. */
+            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( NULL, &ExecutionWithRecycleCb, NULL, &pJob ) == IOT_TASKPOOL_BAD_PARAMETER );
+            /* NULL job handle. */
+            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, NULL, NULL ) == IOT_TASKPOOL_BAD_PARAMETER );
+        }
+
+        /* Create/Destroy. */
+        {
+            IotTaskPoolJob_t * pJob = NULL;
+
+            /* Create legal recyclable job. */
+            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &BlankExecution, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
+            /* Recycle the job. */
+            TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
+        }
+
+        /* Create/Schedule/Destroy. */
+        {
+            IotTaskPoolJob_t * pJob = NULL;
+
+            /* Create legal recyclable job. */
+            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &BlankExecution, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
+            /* Schedule deferred, then try to destroy it. */
+            TEST_ASSERT( IotTaskPool_ScheduleDeferred( &taskPool, pJob, ONE_HOUR_FROM_NOW_MS ) == IOT_TASKPOOL_SUCCESS );
+            TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
+        }
+
+        /* Create/Recycle. */
+        {
+            IotTaskPoolJob_t * pJob = NULL;
+
+            /* Create legal recyclable job. */
+            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &BlankExecution, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
+            /* Illegally recycle legal static job. */
+            TEST_ASSERT( IotTaskPool_RecycleJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
+        }
+
+        /* Create/Schedule/Cancel/Recycle. */
+        {
+            IotTaskPoolJob_t * pJob = NULL;
+            IotTaskPoolJobStatus_t jobStatusAtCancellation;
+
+            /* Create legal recyclable job. */
+            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &BlankExecution, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
+            /* Schedule deferred, then try to cancel it and finally recycle it. */
+            TEST_ASSERT( IotTaskPool_ScheduleDeferred( &taskPool, pJob, ONE_HOUR_FROM_NOW_MS ) == IOT_TASKPOOL_SUCCESS );
+            TEST_ASSERT( IotTaskPool_TryCancel( &taskPool, pJob, &jobStatusAtCancellation ) == IOT_TASKPOOL_SUCCESS );
+            TEST_ASSERT( jobStatusAtCancellation == IOT_TASKPOOL_STATUS_DEFERRED );
+            TEST_ASSERT( IotTaskPool_RecycleJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
+        }
     }
 
-    /* Create/Destroy. */
-    {
-        IotTaskPoolJob_t * pJob = NULL;
-
-        /* Create legal recyclable job. */
-        TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &BlankExecution, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
-        /* Recycle the job. */
-        TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
-    }
-
-    /* Create/Schedule/Destroy. */
-    {
-        IotTaskPoolJob_t * pJob = NULL;
-
-        /* Create legal recyclable job. */
-        TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &BlankExecution, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
-        /* Schedule deferred, then try to destroy it. */
-        TEST_ASSERT( IotTaskPool_ScheduleDeferred( &taskPool, pJob, ONE_HOUR_FROM_NOW_MS ) == IOT_TASKPOOL_SUCCESS );
-        TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
-    }
-
-    /* Create/Recycle. */
-    {
-        IotTaskPoolJob_t * pJob = NULL;
-
-        /* Create legal recyclable job. */
-        TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &BlankExecution, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
-        /* Illegally recycle legal static job. */
-        TEST_ASSERT( IotTaskPool_RecycleJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
-    }
-
-    /* Create/Schedule/Cancel/Recycle. */
-    {
-        IotTaskPoolJob_t * pJob = NULL;
-        IotTaskPoolJobStatus_t jobStatusAtCancellation;
-
-        /* Create legal recyclable job. */
-        TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &BlankExecution, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
-        /* Schedule deferred, then try to cancel it and finally recycle it. */
-        TEST_ASSERT( IotTaskPool_ScheduleDeferred( &taskPool, pJob, ONE_HOUR_FROM_NOW_MS ) == IOT_TASKPOOL_SUCCESS );
-        TEST_ASSERT( IotTaskPool_TryCancel( &taskPool, pJob, &jobStatusAtCancellation ) == IOT_TASKPOOL_SUCCESS );
-        TEST_ASSERT( jobStatusAtCancellation == IOT_TASKPOOL_STATUS_DEFERRED );
-        TEST_ASSERT( IotTaskPool_RecycleJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
-    }
-
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
@@ -613,34 +623,37 @@ TEST( Common_Unit_Task_Pool, CreateRecyclableJob )
     IotTaskPool_t taskPool;
     const IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 3, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Recyclable jobs. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count, jobLimit;
-
-        /* In static memory mode, only the recyclable job limit may be allocated. */
-        #if IOT_STATIC_MEMORY_ONLY == 1
-            jobLimit = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
-            IotTaskPoolJob_t * pJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
-        #else
-            jobLimit = 2 * IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
-            IotTaskPoolJob_t * pJobs[ 2 * TEST_TASKPOOL_ITERATIONS ] = { 0 };
-        #endif
-
-        for( count = 0; count < jobLimit; ++count )
+        /* Recyclable jobs. */
         {
-            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, NULL, &pJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
-            TEST_ASSERT( pJobs[ count ] != NULL );
-        }
+            uint32_t count, jobLimit;
 
-        for( count = 0; count < jobLimit; ++count )
-        {
-            TEST_ASSERT( IotTaskPool_RecycleJob( &taskPool, pJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
+            /* In static memory mode, only the recyclable job limit may be allocated. */
+            #if IOT_STATIC_MEMORY_ONLY == 1
+                jobLimit = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+                IotTaskPoolJob_t * pJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+            #else
+                jobLimit = 2 * IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+                IotTaskPoolJob_t * pJobs[ 2 * TEST_TASKPOOL_ITERATIONS ] = { 0 };
+            #endif
+
+            for( count = 0; count < jobLimit; ++count )
+            {
+                TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, NULL, &pJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
+                TEST_ASSERT( pJobs[ count ] != NULL );
+            }
+
+            for( count = 0; count < jobLimit; ++count )
+            {
+                TEST_ASSERT( IotTaskPool_RecycleJob( &taskPool, pJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
+            }
         }
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
@@ -653,18 +666,21 @@ TEST( Common_Unit_Task_Pool, ScheduleTasksError )
     IotTaskPool_t taskPool;
     const IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 3, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    IotTaskPoolJob_t job;
+    if( TEST_PROTECT() )
+    {
+        IotTaskPoolJob_t job;
 
-    TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, NULL, &job ) == IOT_TASKPOOL_SUCCESS );
+        TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, NULL, &job ) == IOT_TASKPOOL_SUCCESS );
 
-    /* NULL Task Pool Handle. */
-    TEST_ASSERT( IotTaskPool_Schedule( NULL, &job, 0 ) == IOT_TASKPOOL_BAD_PARAMETER );
-    /* NULL Work item Handle. */
-    TEST_ASSERT( IotTaskPool_Schedule( &taskPool, NULL, 0 ) == IOT_TASKPOOL_BAD_PARAMETER );
+        /* NULL Task Pool Handle. */
+        TEST_ASSERT( IotTaskPool_Schedule( NULL, &job, 0 ) == IOT_TASKPOOL_BAD_PARAMETER );
+        /* NULL Work item Handle. */
+        TEST_ASSERT( IotTaskPool_Schedule( &taskPool, NULL, 0 ) == IOT_TASKPOOL_BAD_PARAMETER );
+    }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
@@ -685,67 +701,70 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_LongRunningAndCachedJobsAndDestroy )
     /* Initialize user context. */
     TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Create a recyclable job we will never schedule, just to have it in the cache for code coverage purposes. */
     TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, NULL, &pRecyclableJob ) == IOT_TASKPOOL_SUCCESS );
     TEST_ASSERT( IotTaskPool_DestroyRecyclableJob( &taskPool, pRecyclableJob ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Statically allocated jobs, schedule all, then wait all. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count;
-        uint32_t scheduled = 0;
-        IotTaskPoolError_t errorSchedule;
-
-        for( count = 0; count < TEST_TASKPOOL_LONG_JOBS_NUMBER; ++count )
+        /* Statically allocated jobs, schedule all, then wait all. */
         {
-            /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
-            TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionLongWithoutDestroyCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
+            uint32_t count;
+            uint32_t scheduled = 0;
+            IotTaskPoolError_t errorSchedule;
 
-            errorSchedule = IotTaskPool_Schedule( &taskPool, &tpJobs[ count ], 0 );
-
-            switch( errorSchedule )
+            for( count = 0; count < TEST_TASKPOOL_LONG_JOBS_NUMBER; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++scheduled;
-                    break;
+                /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
+                TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionLongWithoutDestroyCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                    TEST_ASSERT( false );
-                    break;
+                errorSchedule = IotTaskPool_Schedule( &taskPool, &tpJobs[ count ], 0 );
 
-                default:
-                    TEST_ASSERT( false );
+                switch( errorSchedule )
+                {
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++scheduled;
+                        break;
+
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
+                }
             }
-        }
 
-        for( count = 0; count < TEST_TASKPOOL_LONG_JOBS_NUMBER; ++count )
-        {
-            /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
-            TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionLongWithoutDestroyCb, &userContext, &tpDeferredJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
-
-            errorSchedule = IotTaskPool_ScheduleDeferred( &taskPool, &tpDeferredJobs[ count ], ONE_HOUR_FROM_NOW_MS );
-
-            switch( errorSchedule )
+            for( count = 0; count < TEST_TASKPOOL_LONG_JOBS_NUMBER; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++scheduled;
-                    break;
+                /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
+                TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionLongWithoutDestroyCb, &userContext, &tpDeferredJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                    TEST_ASSERT( false );
-                    break;
+                errorSchedule = IotTaskPool_ScheduleDeferred( &taskPool, &tpDeferredJobs[ count ], ONE_HOUR_FROM_NOW_MS );
 
-                default:
-                    TEST_ASSERT( false );
+                switch( errorSchedule )
+                {
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++scheduled;
+                        break;
+
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
+                }
             }
         }
     }
 
     /* Destroy the taskpool. It will empty all queues. */
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
@@ -761,20 +780,23 @@ TEST( Common_Unit_Task_Pool, TaskPool_ScheduleRecyclableTasksError )
     IotTaskPool_t taskPool;
     const IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 3, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    IotTaskPoolJob_t * pJob;
+    if( TEST_PROTECT() )
+    {
+        IotTaskPoolJob_t * pJob;
 
-    TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
+        TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, NULL, &pJob ) == IOT_TASKPOOL_SUCCESS );
 
-    /* NULL Task Pool Handle. */
-    TEST_ASSERT( IotTaskPool_Schedule( NULL, pJob, 0 ) == IOT_TASKPOOL_BAD_PARAMETER );
-    /* NULL Work item Handle. */
-    TEST_ASSERT( IotTaskPool_Schedule( &taskPool, NULL, 0 ) == IOT_TASKPOOL_BAD_PARAMETER );
-    /* Recycle the job, so we do not leak it. */
-    TEST_ASSERT( IotTaskPool_RecycleJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
+        /* NULL Task Pool Handle. */
+        TEST_ASSERT( IotTaskPool_Schedule( NULL, pJob, 0 ) == IOT_TASKPOOL_BAD_PARAMETER );
+        /* NULL Work item Handle. */
+        TEST_ASSERT( IotTaskPool_Schedule( &taskPool, NULL, 0 ) == IOT_TASKPOOL_BAD_PARAMETER );
+        /* Recycle the job, so we do not leak it. */
+        TEST_ASSERT( IotTaskPool_RecycleJob( &taskPool, pJob ) == IOT_TASKPOOL_SUCCESS );
+    }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
@@ -793,49 +815,52 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_Grow )
     TEST_ASSERT( IotSemaphore_Create( &userContext.signal, 0, TEST_TAKPOOL_NUMBER_OF_JOBS ) );
     TEST_ASSERT( IotSemaphore_Create( &userContext.block, 0, TEST_TAKPOOL_NUMBER_OF_JOBS ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Statically allocated job, schedule one, then wait. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count;
-        IotTaskPoolJob_t jobs[ TEST_TAKPOOL_NUMBER_OF_JOBS ];
-
-        /* Create a number of jobs that is equal to the max number of threads in the taskpool. */
-        for( count = 0; count < TEST_TAKPOOL_NUMBER_OF_JOBS; ++count )
+        /* Statically allocated job, schedule one, then wait. */
         {
-            /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
-            /* The callback will block indefintely, stealing a task pool thread. The task pool will need to grow to pass this test. */
-            TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionBlockingWithoutDestroyCb, &userContext, &jobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
-        }
+            uint32_t count;
+            IotTaskPoolJob_t jobs[ TEST_TAKPOOL_NUMBER_OF_JOBS ];
 
-        for( count = 0; count < TEST_TAKPOOL_NUMBER_OF_JOBS; ++count )
-        {
-            TEST_ASSERT( IotTaskPool_Schedule( &taskPool, &jobs[ count ], 0 ) == IOT_TASKPOOL_SUCCESS );
-        }
-
-        count = 0;
-
-        while( true )
-        {
-            /* Wait for the callback to signal the semaphore. It must happen exactly _NUMBER_OF_JOBS times. */
-            IotSemaphore_Wait( &userContext.signal );
-
-            ++count;
-
-            if( count == TEST_TAKPOOL_NUMBER_OF_JOBS )
+            /* Create a number of jobs that is equal to the max number of threads in the taskpool. */
+            for( count = 0; count < TEST_TAKPOOL_NUMBER_OF_JOBS; ++count )
             {
-                break;
+                /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
+                /* The callback will block indefintely, stealing a task pool thread. The task pool will need to grow to pass this test. */
+                TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionBlockingWithoutDestroyCb, &userContext, &jobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
             }
-        }
 
-        /* Signal all taskpool threads to exit. */
-        for( count = 0; count < TEST_TAKPOOL_NUMBER_OF_JOBS; ++count )
-        {
-            IotSemaphore_Post( &userContext.block );
+            for( count = 0; count < TEST_TAKPOOL_NUMBER_OF_JOBS; ++count )
+            {
+                TEST_ASSERT( IotTaskPool_Schedule( &taskPool, &jobs[ count ], 0 ) == IOT_TASKPOOL_SUCCESS );
+            }
+
+            count = 0;
+
+            while( true )
+            {
+                /* Wait for the callback to signal the semaphore. It must happen exactly _NUMBER_OF_JOBS times. */
+                IotSemaphore_Wait( &userContext.signal );
+
+                ++count;
+
+                if( count == TEST_TAKPOOL_NUMBER_OF_JOBS )
+                {
+                    break;
+                }
+            }
+
+            /* Signal all taskpool threads to exit. */
+            for( count = 0; count < TEST_TAKPOOL_NUMBER_OF_JOBS; ++count )
+            {
+                IotSemaphore_Post( &userContext.block );
+            }
         }
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotSemaphore_Destroy( &userContext.signal );
@@ -860,53 +885,56 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_GrowHighPri )
     TEST_ASSERT( IotSemaphore_Create( &userContext.signal, 0, TEST_TAKPOOL_NUMBER_OF_JOBS ) );
     TEST_ASSERT( IotSemaphore_Create( &userContext.block, 0, TEST_TAKPOOL_NUMBER_OF_JOBS ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Statically allocated job, schedule one, then wait. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count;
-        IotTaskPoolJob_t jobs[ TEST_TAKPOOL_NUMBER_OF_JOBS ];
-
-        /* Create a number of jobs that is equal to the max number of threads in the taskpool. */
-        for( count = 0; count < TEST_TAKPOOL_NUMBER_OF_JOBS; ++count )
+        /* Statically allocated job, schedule one, then wait. */
         {
-            /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
-            /* The callback will block indefintely, stealing a task pool thread. The task pool will need to grow to pass this test. */
-            TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionBlockingWithoutDestroyCb, &userContext, &jobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
-        }
+            uint32_t count;
+            IotTaskPoolJob_t jobs[ TEST_TAKPOOL_NUMBER_OF_JOBS ];
 
-        /* After scheduling _NUMBER_OF_JOBS - 1 jobs the task pool is maxed out, only a high pri task can make it grow more. */
-        for( count = 0; count < TEST_TASKPOOL_NUMBER_OF_THREADS; ++count )
-        {
-            TEST_ASSERT( IotTaskPool_Schedule( &taskPool, &jobs[ count ], 0 ) == IOT_TASKPOOL_SUCCESS );
-        }
-
-        /*Schedule a high pri task can make it grow more. */
-        TEST_ASSERT( IotTaskPool_Schedule( &taskPool, &jobs[ count ], IOT_TASKPOOL_JOB_HIGH_PRIORITY ) == IOT_TASKPOOL_SUCCESS );
-
-        count = 0;
-
-        while( true )
-        {
-            /* Wait for the callback to signal the semaphore. It must happen exactly _NUMBER_OF_JOBS times. */
-            IotSemaphore_Wait( &userContext.signal );
-
-            ++count;
-
-            if( count == TEST_TAKPOOL_NUMBER_OF_JOBS )
+            /* Create a number of jobs that is equal to the max number of threads in the taskpool. */
+            for( count = 0; count < TEST_TAKPOOL_NUMBER_OF_JOBS; ++count )
             {
-                break;
+                /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
+                /* The callback will block indefintely, stealing a task pool thread. The task pool will need to grow to pass this test. */
+                TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionBlockingWithoutDestroyCb, &userContext, &jobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
             }
-        }
 
-        /* Signal all taskpool threads to exit. */
-        for( count = 0; count < TEST_TAKPOOL_NUMBER_OF_JOBS; ++count )
-        {
-            IotSemaphore_Post( &userContext.block );
+            /* After scheduling _NUMBER_OF_JOBS - 1 jobs the task pool is maxed out, only a high pri task can make it grow more. */
+            for( count = 0; count < TEST_TASKPOOL_NUMBER_OF_THREADS; ++count )
+            {
+                TEST_ASSERT( IotTaskPool_Schedule( &taskPool, &jobs[ count ], 0 ) == IOT_TASKPOOL_SUCCESS );
+            }
+
+            /*Schedule a high pri task can make it grow more. */
+            TEST_ASSERT( IotTaskPool_Schedule( &taskPool, &jobs[ count ], IOT_TASKPOOL_JOB_HIGH_PRIORITY ) == IOT_TASKPOOL_SUCCESS );
+
+            count = 0;
+
+            while( true )
+            {
+                /* Wait for the callback to signal the semaphore. It must happen exactly _NUMBER_OF_JOBS times. */
+                IotSemaphore_Wait( &userContext.signal );
+
+                ++count;
+
+                if( count == TEST_TAKPOOL_NUMBER_OF_JOBS )
+                {
+                    break;
+                }
+            }
+
+            /* Signal all taskpool threads to exit. */
+            for( count = 0; count < TEST_TAKPOOL_NUMBER_OF_JOBS; ++count )
+            {
+                IotSemaphore_Post( &userContext.block );
+            }
         }
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotSemaphore_Destroy( &userContext.signal );
@@ -926,72 +954,75 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleOneThenWait )
     JobUserContext_t userContext = { 0 };
 
     /* Initialize user context. */
-    TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
+    TEST_ASSERT_TRUE( IotMutex_Create( &userContext.lock, false ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Statically allocated job, schedule one, then wait. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count;
-        uint32_t scheduled = 0;
-        IotTaskPoolJob_t job;
-
-        for( count = 0; count < TEST_TASKPOOL_ITERATIONS; ++count )
+        /* Statically allocated job, schedule one, then wait. */
         {
-            /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
-            TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, &userContext, &job ) == IOT_TASKPOOL_SUCCESS );
+            uint32_t count;
+            uint32_t scheduled = 0;
+            IotTaskPoolJob_t job;
 
-            IotTaskPoolError_t errorSchedule = IotTaskPool_Schedule( &taskPool, &job, 0 );
-
-            switch( errorSchedule )
+            for( count = 0; count < TEST_TASKPOOL_ITERATIONS; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++scheduled;
-                    break;
+                /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
+                TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, &userContext, &job ) == IOT_TASKPOOL_SUCCESS );
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                    TEST_ASSERT( false );
-                    break;
+                IotTaskPoolError_t errorSchedule = IotTaskPool_Schedule( &taskPool, &job, 0 );
 
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                    TEST_ASSERT( false );
-                    break;
-
-                case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
-                    TEST_ASSERT( false );
-                    break;
-
-                default:
-                    TEST_ASSERT( false );
-            }
-
-            /* Ensure callback actually executed. */
-            while( true )
-            {
-                IotClock_SleepMs( 50 );
-
-                IotMutex_Lock( &userContext.lock );
-
-                if( userContext.counter == scheduled )
+                switch( errorSchedule )
                 {
-                    IotMutex_Unlock( &userContext.lock );
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++scheduled;
+                        break;
 
-                    break;
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                        TEST_ASSERT( false );
+                        break;
+
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                        TEST_ASSERT( false );
+                        break;
+
+                    case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
                 }
 
-                IotMutex_Unlock( &userContext.lock );
+                /* Ensure callback actually executed. */
+                while( true )
+                {
+                    IotClock_SleepMs( 50 );
+
+                    IotMutex_Lock( &userContext.lock );
+
+                    if( userContext.counter == scheduled )
+                    {
+                        IotMutex_Unlock( &userContext.lock );
+
+                        break;
+                    }
+
+                    IotMutex_Unlock( &userContext.lock );
+                }
+
+                TEST_ASSERT( userContext.counter == scheduled );
             }
 
-            TEST_ASSERT( userContext.counter == scheduled );
+            /* Since jobs were build from a static buffer and scheduled one-by-one, we
+             * should have received all callbacks.
+             */
+            TEST_ASSERT( scheduled == TEST_TASKPOOL_ITERATIONS );
         }
-
-        /* Since jobs were build from a static buffer and scheduled one-by-one, we
-         * should have received all callbacks.
-         */
-        TEST_ASSERT( scheduled == TEST_TASKPOOL_ITERATIONS );
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
@@ -1012,70 +1043,73 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleOneDeferredThenWait )
     /* Initialize user context. */
     TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Statically allocated job, schedule one, then wait. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count;
-        uint32_t scheduled = 0;
-        IotTaskPoolJob_t job;
-
-        for( count = 0; count < TEST_TASKPOOL_ITERATIONS; ++count )
+        /* Statically allocated job, schedule one, then wait. */
         {
-            /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
-            TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, &userContext, &job ) == IOT_TASKPOOL_SUCCESS );
+            uint32_t count;
+            uint32_t scheduled = 0;
+            IotTaskPoolJob_t job;
 
-            IotTaskPoolError_t errorSchedule = IotTaskPool_ScheduleDeferred( &taskPool, &job, 10 + ( rand() % 50 ) );
-
-            switch( errorSchedule )
+            for( count = 0; count < TEST_TASKPOOL_ITERATIONS; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++scheduled;
-                    break;
+                /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
+                TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, &userContext, &job ) == IOT_TASKPOOL_SUCCESS );
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                    TEST_ASSERT( false );
-                    break;
+                IotTaskPoolError_t errorSchedule = IotTaskPool_ScheduleDeferred( &taskPool, &job, 10 + ( rand() % 50 ) );
 
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                    TEST_ASSERT( false );
-                    break;
-
-                case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
-                    TEST_ASSERT( false );
-                    break;
-
-                default:
-                    TEST_ASSERT( false );
-            }
-
-            /* Ensure callback actually executed. */
-            while( true )
-            {
-                IotClock_SleepMs( 50 );
-
-                IotMutex_Lock( &userContext.lock );
-
-                if( userContext.counter == scheduled )
+                switch( errorSchedule )
                 {
-                    IotMutex_Unlock( &userContext.lock );
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++scheduled;
+                        break;
 
-                    break;
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                        TEST_ASSERT( false );
+                        break;
+
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                        TEST_ASSERT( false );
+                        break;
+
+                    case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
                 }
 
-                IotMutex_Unlock( &userContext.lock );
+                /* Ensure callback actually executed. */
+                while( true )
+                {
+                    IotClock_SleepMs( 50 );
+
+                    IotMutex_Lock( &userContext.lock );
+
+                    if( userContext.counter == scheduled )
+                    {
+                        IotMutex_Unlock( &userContext.lock );
+
+                        break;
+                    }
+
+                    IotMutex_Unlock( &userContext.lock );
+                }
+
+                TEST_ASSERT( userContext.counter == scheduled );
             }
 
-            TEST_ASSERT( userContext.counter == scheduled );
+            /* Since jobs were build from a static buffer and scheduled one-by-one, we
+             * should have received all callbacks.
+             */
+            TEST_ASSERT( scheduled == TEST_TASKPOOL_ITERATIONS );
         }
-
-        /* Since jobs were build from a static buffer and scheduled one-by-one, we
-         * should have received all callbacks.
-         */
-        TEST_ASSERT( scheduled == TEST_TASKPOOL_ITERATIONS );
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
@@ -1096,66 +1130,69 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleOneRecyclableThenWait )
     /* Initialize user context. */
     TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Dynamically allocated job, schedule one, then wait. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count;
-        uint32_t scheduled = 0;
-        IotTaskPoolJob_t * pJob;
-
-        for( count = 0; count < TEST_TASKPOOL_ITERATIONS; ++count )
+        /* Dynamically allocated job, schedule one, then wait. */
         {
-            /* Shedule the job to be recycle in the callback. */
-            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, &userContext, &pJob ) == IOT_TASKPOOL_SUCCESS );
+            uint32_t count;
+            uint32_t scheduled = 0;
+            IotTaskPoolJob_t * pJob;
 
-            IotTaskPoolError_t errorSchedule = IotTaskPool_Schedule( &taskPool, pJob, 0 );
-
-            switch( errorSchedule )
+            for( count = 0; count < TEST_TASKPOOL_ITERATIONS; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++scheduled;
-                    break;
+                /* Shedule the job to be recycle in the callback. */
+                TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, &userContext, &pJob ) == IOT_TASKPOOL_SUCCESS );
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
-                    TEST_ASSERT( false );
-                    break;
+                IotTaskPoolError_t errorSchedule = IotTaskPool_Schedule( &taskPool, pJob, 0 );
 
-                default:
-                    TEST_ASSERT( false );
-            }
-
-            /* Ensure callback actually executed. */
-            while( true )
-            {
-                IotClock_SleepMs( 50 );
-
-                IotMutex_Lock( &userContext.lock );
-
-                if( userContext.counter == scheduled )
+                switch( errorSchedule )
                 {
-                    IotMutex_Unlock( &userContext.lock );
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++scheduled;
+                        break;
 
-                    break;
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                    case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
                 }
 
-                IotMutex_Unlock( &userContext.lock );
+                /* Ensure callback actually executed. */
+                while( true )
+                {
+                    IotClock_SleepMs( 50 );
+
+                    IotMutex_Lock( &userContext.lock );
+
+                    if( userContext.counter == scheduled )
+                    {
+                        IotMutex_Unlock( &userContext.lock );
+
+                        break;
+                    }
+
+                    IotMutex_Unlock( &userContext.lock );
+                }
+
+                TEST_ASSERT( userContext.counter == scheduled );
             }
 
-            TEST_ASSERT( userContext.counter == scheduled );
+            TEST_ASSERT( scheduled == TEST_TASKPOOL_ITERATIONS );
+
+            /* Since jobs were build from a static buffer and scheduled one-by-one, we
+             * should have received all callbacks.
+             */
+            TEST_ASSERT( scheduled == TEST_TASKPOOL_ITERATIONS );
         }
-
-        TEST_ASSERT( scheduled == TEST_TASKPOOL_ITERATIONS );
-
-        /* Since jobs were build from a static buffer and scheduled one-by-one, we
-         * should have received all callbacks.
-         */
-        TEST_ASSERT( scheduled == TEST_TASKPOOL_ITERATIONS );
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
@@ -1176,58 +1213,61 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllThenWait )
     /* Initialize user context. */
     TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Statically allocated jobs, schedule all, then wait all. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count;
-        uint32_t scheduled = 0;
-        IotTaskPoolJob_t tpJobs[ TEST_TASKPOOL_ITERATIONS ] = { { 0 } };
-
-        for( count = 0; count < TEST_TASKPOOL_ITERATIONS; ++count )
+        /* Statically allocated jobs, schedule all, then wait all. */
         {
-            /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
-            TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
+            uint32_t count;
+            uint32_t scheduled = 0;
+            IotTaskPoolJob_t tpJobs[ TEST_TASKPOOL_ITERATIONS ] = { { 0 } };
 
-            IotTaskPoolError_t errorSchedule = IotTaskPool_Schedule( &taskPool, &tpJobs[ count ], 0 );
-
-            switch( errorSchedule )
+            for( count = 0; count < TEST_TASKPOOL_ITERATIONS; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++scheduled;
-                    break;
+                /* Shedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
+                TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                    TEST_ASSERT( false );
-                    break;
+                IotTaskPoolError_t errorSchedule = IotTaskPool_Schedule( &taskPool, &tpJobs[ count ], 0 );
 
-                default:
-                    TEST_ASSERT( false );
+                switch( errorSchedule )
+                {
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++scheduled;
+                        break;
+
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
+                }
             }
-        }
 
-        /* Wait until callback is executed. */
-        while( true )
-        {
-            IotClock_SleepMs( 50 );
-
-            IotMutex_Lock( &userContext.lock );
-
-            if( userContext.counter == scheduled )
+            /* Wait until callback is executed. */
+            while( true )
             {
+                IotClock_SleepMs( 50 );
+
+                IotMutex_Lock( &userContext.lock );
+
+                if( userContext.counter == scheduled )
+                {
+                    IotMutex_Unlock( &userContext.lock );
+
+                    break;
+                }
+
                 IotMutex_Unlock( &userContext.lock );
-
-                break;
             }
 
-            IotMutex_Unlock( &userContext.lock );
+            TEST_ASSERT_TRUE( userContext.counter == scheduled );
         }
-
-        TEST_ASSERT_TRUE( userContext.counter == scheduled );
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
@@ -1247,66 +1287,69 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllRecyclableThenWait )
     /* Initialize user context. */
     TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Statically allocated jobs, schedule all, then wait all. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count, maxJobs;
-        uint32_t scheduled = 0;
-
-        /* In static memory mode, only the recyclable job limit may be allocated. */
-        #if IOT_STATIC_MEMORY_ONLY == 1
-            maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
-            IotTaskPoolJob_t * tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
-        #else
-            maxJobs = TEST_TASKPOOL_ITERATIONS;
-            IotTaskPoolJob_t * tpJobs[ TEST_TASKPOOL_ITERATIONS ] = { 0 };
-        #endif
-
-        for( count = 0; count < maxJobs; ++count )
+        /* Statically allocated jobs, schedule all, then wait all. */
         {
-            /* Shedule the job to be recycle in the callback. */
-            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
+            uint32_t count, maxJobs;
+            uint32_t scheduled = 0;
 
-            IotTaskPoolError_t errorSchedule = IotTaskPool_Schedule( &taskPool, tpJobs[ count ], 0 );
+            /* In static memory mode, only the recyclable job limit may be allocated. */
+            #if IOT_STATIC_MEMORY_ONLY == 1
+                maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+                IotTaskPoolJob_t * tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+            #else
+                maxJobs = TEST_TASKPOOL_ITERATIONS;
+                IotTaskPoolJob_t * tpJobs[ TEST_TASKPOOL_ITERATIONS ] = { 0 };
+            #endif
 
-            switch( errorSchedule )
+            for( count = 0; count < maxJobs; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++scheduled;
-                    break;
+                /* Shedule the job to be recycle in the callback. */
+                TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                    TEST_ASSERT( false );
-                    break;
+                IotTaskPoolError_t errorSchedule = IotTaskPool_Schedule( &taskPool, tpJobs[ count ], 0 );
 
-                default:
-                    TEST_ASSERT( false );
+                switch( errorSchedule )
+                {
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++scheduled;
+                        break;
+
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
+                }
             }
-        }
 
-        /* Wait until callback is executed. */
-        while( true )
-        {
-            IotClock_SleepMs( 50 );
-
-            IotMutex_Lock( &userContext.lock );
-
-            if( userContext.counter == scheduled )
+            /* Wait until callback is executed. */
+            while( true )
             {
+                IotClock_SleepMs( 50 );
+
+                IotMutex_Lock( &userContext.lock );
+
+                if( userContext.counter == scheduled )
+                {
+                    IotMutex_Unlock( &userContext.lock );
+
+                    break;
+                }
+
                 IotMutex_Unlock( &userContext.lock );
-
-                break;
             }
 
-            IotMutex_Unlock( &userContext.lock );
+            TEST_ASSERT_TRUE( userContext.counter == scheduled );
         }
-
-        TEST_ASSERT_TRUE( userContext.counter == scheduled );
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
@@ -1327,66 +1370,69 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ScheduleAllDeferredRecyclableThenWait
     /* Initialize user context. */
     TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Statically allocated jobs, schedule all, then wait all. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count, maxJobs;
-        uint32_t scheduled = 0;
-
-        /* In static memory mode, only the recyclable job limit may be allocated. */
-        #if IOT_STATIC_MEMORY_ONLY == 1
-            maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
-            IotTaskPoolJob_t * tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
-        #else
-            maxJobs = TEST_TASKPOOL_ITERATIONS;
-            IotTaskPoolJob_t * tpJobs[ TEST_TASKPOOL_ITERATIONS ] = { 0 };
-        #endif
-
-        for( count = 0; count < maxJobs; ++count )
+        /* Statically allocated jobs, schedule all, then wait all. */
         {
-            /* Shedule the job to be recycle in the callback. */
-            TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
+            uint32_t count, maxJobs;
+            uint32_t scheduled = 0;
 
-            IotTaskPoolError_t errorSchedule = IotTaskPool_ScheduleDeferred( &taskPool, tpJobs[ count ], 10 + ( rand() % 500 ) );
+            /* In static memory mode, only the recyclable job limit may be allocated. */
+            #if IOT_STATIC_MEMORY_ONLY == 1
+                maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+                IotTaskPoolJob_t * tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+            #else
+                maxJobs = TEST_TASKPOOL_ITERATIONS;
+                IotTaskPoolJob_t * tpJobs[ TEST_TASKPOOL_ITERATIONS ] = { 0 };
+            #endif
 
-            switch( errorSchedule )
+            for( count = 0; count < maxJobs; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++scheduled;
-                    break;
+                /* Shedule the job to be recycle in the callback. */
+                TEST_ASSERT( IotTaskPool_CreateRecyclableJob( &taskPool, &ExecutionWithRecycleCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                    TEST_ASSERT( false );
-                    break;
+                IotTaskPoolError_t errorSchedule = IotTaskPool_ScheduleDeferred( &taskPool, tpJobs[ count ], 10 + ( rand() % 500 ) );
 
-                default:
-                    TEST_ASSERT( false );
+                switch( errorSchedule )
+                {
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++scheduled;
+                        break;
+
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
+                }
             }
-        }
 
-        /* Wait until callback is executed. */
-        while( true )
-        {
-            IotClock_SleepMs( 50 );
-
-            IotMutex_Lock( &userContext.lock );
-
-            if( userContext.counter == scheduled )
+            /* Wait until callback is executed. */
+            while( true )
             {
+                IotClock_SleepMs( 50 );
+
+                IotMutex_Lock( &userContext.lock );
+
+                if( userContext.counter == scheduled )
+                {
+                    IotMutex_Unlock( &userContext.lock );
+
+                    break;
+                }
+
                 IotMutex_Unlock( &userContext.lock );
-
-                break;
             }
 
-            IotMutex_Unlock( &userContext.lock );
+            TEST_ASSERT_TRUE( userContext.counter == scheduled );
         }
-
-        TEST_ASSERT_TRUE( userContext.counter == scheduled );
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
@@ -1407,108 +1453,111 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ReSchedule )
     /* Initialize user context. */
     TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Statically allocated jobs, schedule all, then wait all. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count, maxJobs;
-        uint32_t scheduled = 0, rescheduled = 0, failedReschudule = 0;
-
-        /* In static memory mode, only the recyclable job limit may be allocated. */
-        #if IOT_STATIC_MEMORY_ONLY == 1
-            maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
-            IotTaskPoolJob_t tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
-        #else
-            maxJobs = 10;
-            IotTaskPoolJob_t tpJobs[ 10 ] = { 0 };
-        #endif
-
-        /* Create all jobs. */
-        for( count = 0; count < maxJobs; ++count )
+        /* Statically allocated jobs, schedule all, then wait all. */
         {
-            /* Shedule the job to be recycled in the callback. */
-            TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionLongWithoutDestroyCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
-        }
+            uint32_t count, maxJobs;
+            uint32_t scheduled = 0, rescheduled = 0, failedReschudule = 0;
 
-        /* Schedule all jobs. */
-        for( count = 0; count < maxJobs; ++count )
-        {
-            IotTaskPoolError_t errorSchedule;
+            /* In static memory mode, only the recyclable job limit may be allocated. */
+            #if IOT_STATIC_MEMORY_ONLY == 1
+                maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+                IotTaskPoolJob_t tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+            #else
+                maxJobs = 10;
+                IotTaskPoolJob_t tpJobs[ 10 ] = { 0 };
+            #endif
 
-            /* Schedule jobs for a really really long time from now, so we know that they will not execute. */
-            errorSchedule = IotTaskPool_Schedule( &taskPool, &tpJobs[ count ], 0 );
-
-            switch( errorSchedule )
+            /* Create all jobs. */
+            for( count = 0; count < maxJobs; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++scheduled;
-                    break;
-
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
-                    TEST_ASSERT( false );
-                    break;
-
-                default:
-                    TEST_ASSERT( false );
+                /* Shedule the job to be recycled in the callback. */
+                TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionLongWithoutDestroyCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
             }
-        }
 
-        /* Give a chance to some jobs to start execution. */
-        IotClock_SleepMs( 50 );
-
-        /* Reschedule all. Some will fail to be rescheduled... */
-        for( count = 0; count < maxJobs; ++count )
-        {
-            IotTaskPoolError_t errorReSchedule;
-
-            errorReSchedule = IotTaskPool_Schedule( &taskPool, &tpJobs[ count ], 0 );
-
-            switch( errorReSchedule )
+            /* Schedule all jobs. */
+            for( count = 0; count < maxJobs; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    rescheduled++;
-                    break;
+                IotTaskPoolError_t errorSchedule;
 
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                    /* Job already executed. */
-                    failedReschudule++;
-                    break;
+                /* Schedule jobs for a really really long time from now, so we know that they will not execute. */
+                errorSchedule = IotTaskPool_Schedule( &taskPool, &tpJobs[ count ], 0 );
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
-                    TEST_ASSERT( false );
-                    break;
+                switch( errorSchedule )
+                {
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++scheduled;
+                        break;
 
-                default:
-                    TEST_ASSERT( false );
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                    case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
+                }
             }
-        }
 
-        TEST_ASSERT_TRUE( ( rescheduled + failedReschudule ) == scheduled );
-
-        /* Wait until callback is executed. */
-        while( true )
-        {
+            /* Give a chance to some jobs to start execution. */
             IotClock_SleepMs( 50 );
 
-            IotMutex_Lock( &userContext.lock );
-
-            if( userContext.counter == scheduled )
+            /* Reschedule all. Some will fail to be rescheduled... */
+            for( count = 0; count < maxJobs; ++count )
             {
-                IotMutex_Unlock( &userContext.lock );
+                IotTaskPoolError_t errorReSchedule;
 
-                break;
+                errorReSchedule = IotTaskPool_Schedule( &taskPool, &tpJobs[ count ], 0 );
+
+                switch( errorReSchedule )
+                {
+                    case IOT_TASKPOOL_SUCCESS:
+                        rescheduled++;
+                        break;
+
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                        /* Job already executed. */
+                        failedReschudule++;
+                        break;
+
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                    case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
+                }
             }
 
-            IotMutex_Unlock( &userContext.lock );
-        }
+            TEST_ASSERT_TRUE( ( rescheduled + failedReschudule ) == scheduled );
 
-        TEST_ASSERT_TRUE( userContext.counter == scheduled );
+            /* Wait until callback is executed. */
+            while( true )
+            {
+                IotClock_SleepMs( 50 );
+
+                IotMutex_Lock( &userContext.lock );
+
+                if( userContext.counter == scheduled )
+                {
+                    IotMutex_Unlock( &userContext.lock );
+
+                    break;
+                }
+
+                IotMutex_Unlock( &userContext.lock );
+            }
+
+            TEST_ASSERT_TRUE( userContext.counter == scheduled );
+        }
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
@@ -1529,96 +1578,99 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ReScheduleDeferred )
     /* Initialize user context. */
     TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Statically allocated jobs, schedule all, then wait all. */
+    if( TEST_PROTECT() )
     {
-        uint32_t count, maxJobs;
-        uint32_t scheduled = 0, rescheduled = 0;
-
-        /* In static memory mode, only the recyclable job limit may be allocated. */
-        #if IOT_STATIC_MEMORY_ONLY == 1
-            maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
-            IotTaskPoolJob_t tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
-        #else
-            maxJobs = TEST_TASKPOOL_ITERATIONS;
-            IotTaskPoolJob_t tpJobs[ TEST_TASKPOOL_ITERATIONS ] = { 0 };
-        #endif
-
-        /* Schedule all jobs. */
-        for( count = 0; count < maxJobs; ++count )
+        /* Statically allocated jobs, schedule all, then wait all. */
         {
-            IotTaskPoolError_t errorSchedule;
+            uint32_t count, maxJobs;
+            uint32_t scheduled = 0, rescheduled = 0;
 
-            /* Shedule the job to be recycle in the callback. */
-            TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
+            /* In static memory mode, only the recyclable job limit may be allocated. */
+            #if IOT_STATIC_MEMORY_ONLY == 1
+                maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
+                IotTaskPoolJob_t tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+            #else
+                maxJobs = TEST_TASKPOOL_ITERATIONS;
+                IotTaskPoolJob_t tpJobs[ TEST_TASKPOOL_ITERATIONS ] = { 0 };
+            #endif
 
-            /* Schedule jobs for a really really long time from now, so we know that they will not execute. */
-            errorSchedule = IotTaskPool_ScheduleDeferred( &taskPool, &tpJobs[ count ], ONE_HOUR_FROM_NOW_MS );
-
-            switch( errorSchedule )
+            /* Schedule all jobs. */
+            for( count = 0; count < maxJobs; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++scheduled;
-                    break;
+                IotTaskPoolError_t errorSchedule;
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                    TEST_ASSERT( false );
-                    break;
+                /* Shedule the job to be recycle in the callback. */
+                TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, &userContext, &tpJobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
 
-                default:
-                    TEST_ASSERT( false );
+                /* Schedule jobs for a really really long time from now, so we know that they will not execute. */
+                errorSchedule = IotTaskPool_ScheduleDeferred( &taskPool, &tpJobs[ count ], ONE_HOUR_FROM_NOW_MS );
+
+                switch( errorSchedule )
+                {
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++scheduled;
+                        break;
+
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
+                }
             }
-        }
 
-        /* Reschedule all. */
-        for( count = 0; count < maxJobs; ++count )
-        {
-            IotTaskPoolError_t errorReSchedule;
-
-            errorReSchedule = IotTaskPool_ScheduleDeferred( &taskPool, &tpJobs[ count ], 10 + ( rand() % 500 ) );
-
-            switch( errorReSchedule )
+            /* Reschedule all. */
+            for( count = 0; count < maxJobs; ++count )
             {
-                case IOT_TASKPOOL_SUCCESS:
-                    ++rescheduled;
-                    break;
+                IotTaskPoolError_t errorReSchedule;
 
-                case IOT_TASKPOOL_BAD_PARAMETER:
-                case IOT_TASKPOOL_ILLEGAL_OPERATION:
-                case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
-                    TEST_ASSERT( false );
-                    break;
+                errorReSchedule = IotTaskPool_ScheduleDeferred( &taskPool, &tpJobs[ count ], 10 + ( rand() % 500 ) );
 
-                default:
-                    TEST_ASSERT( false );
+                switch( errorReSchedule )
+                {
+                    case IOT_TASKPOOL_SUCCESS:
+                        ++rescheduled;
+                        break;
+
+                    case IOT_TASKPOOL_BAD_PARAMETER:
+                    case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                    case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
+                        TEST_ASSERT( false );
+                        break;
+
+                    default:
+                        TEST_ASSERT( false );
+                }
             }
-        }
 
-        TEST_ASSERT_TRUE( rescheduled == scheduled );
+            TEST_ASSERT_TRUE( rescheduled == scheduled );
 
-        /* Wait until callback is executed. */
-        while( true )
-        {
-            IotClock_SleepMs( 50 );
-
-            IotMutex_Lock( &userContext.lock );
-
-            if( userContext.counter == scheduled )
+            /* Wait until callback is executed. */
+            while( true )
             {
+                IotClock_SleepMs( 50 );
+
+                IotMutex_Lock( &userContext.lock );
+
+                if( userContext.counter == scheduled )
+                {
+                    IotMutex_Unlock( &userContext.lock );
+
+                    break;
+                }
+
                 IotMutex_Unlock( &userContext.lock );
-
-                break;
             }
 
-            IotMutex_Unlock( &userContext.lock );
+            TEST_ASSERT_TRUE( userContext.counter == scheduled );
         }
-
-        TEST_ASSERT_TRUE( userContext.counter == scheduled );
     }
 
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
@@ -1651,101 +1703,104 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_CancelTasks )
     /* Initialize user context. */
     TEST_ASSERT( IotMutex_Create( &userContext.lock, false ) );
 
-    IotTaskPool_Create( &tpInfo, &taskPool );
+    TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
-    /* Create and schedule loop. */
-    for( count = 0; count < maxJobs; ++count )
+    if( TEST_PROTECT() )
     {
-        IotTaskPoolError_t errorSchedule;
-
-        IotTaskPoolError_t errorCreate = IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, &userContext, &jobs[ count ] );
-
-        switch( errorCreate )
+        /* Create and schedule loop. */
+        for( count = 0; count < maxJobs; ++count )
         {
-            case IOT_TASKPOOL_SUCCESS:
-                break;
+            IotTaskPoolError_t errorSchedule;
 
-            case IOT_TASKPOOL_NO_MEMORY: /* OK. */
-                continue;
+            IotTaskPoolError_t errorCreate = IotTaskPool_CreateJob( &ExecutionWithoutDestroyCb, &userContext, &jobs[ count ] );
 
-            case IOT_TASKPOOL_BAD_PARAMETER:
-                TEST_ASSERT( false );
-                break;
+            switch( errorCreate )
+            {
+                case IOT_TASKPOOL_SUCCESS:
+                    break;
 
-            default:
-                TEST_ASSERT( false );
+                case IOT_TASKPOOL_NO_MEMORY: /* OK. */
+                    continue;
+
+                case IOT_TASKPOOL_BAD_PARAMETER:
+                    TEST_ASSERT( false );
+                    break;
+
+                default:
+                    TEST_ASSERT( false );
+            }
+
+            errorSchedule = IotTaskPool_ScheduleDeferred( &taskPool, &jobs[ count ], 10 + ( rand() % 20 ) );
+
+            switch( errorSchedule )
+            {
+                case IOT_TASKPOOL_SUCCESS:
+                    ++scheduled;
+                    break;
+
+                case IOT_TASKPOOL_BAD_PARAMETER:
+                case IOT_TASKPOOL_ILLEGAL_OPERATION:
+                case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
+                    TEST_ASSERT( false );
+                    break;
+
+                default:
+                    TEST_ASSERT( false );
+            }
         }
 
-        errorSchedule = IotTaskPool_ScheduleDeferred( &taskPool, &jobs[ count ], 10 + ( rand() % 20 ) );
-
-        switch( errorSchedule )
+        /* Cancellation loop. */
+        for( count = 0; count < maxJobs; ++count )
         {
-            case IOT_TASKPOOL_SUCCESS:
-                ++scheduled;
-                break;
+            IotTaskPoolError_t error;
+            IotTaskPoolJobStatus_t statusAtCancellation = IOT_TASKPOOL_STATUS_READY;
+            IotTaskPoolJobStatus_t statusAfterCancellation = IOT_TASKPOOL_STATUS_READY;
 
-            case IOT_TASKPOOL_BAD_PARAMETER:
-            case IOT_TASKPOOL_ILLEGAL_OPERATION:
-            case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
-                TEST_ASSERT( false );
-                break;
+            error = IotTaskPool_TryCancel( &taskPool, &jobs[ count ], &statusAtCancellation );
 
-            default:
-                TEST_ASSERT( false );
+            switch( error )
+            {
+                case IOT_TASKPOOL_SUCCESS:
+                    canceled++;
+
+                    TEST_ASSERT(
+                        ( statusAtCancellation == IOT_TASKPOOL_STATUS_READY ) ||
+                        ( statusAtCancellation == IOT_TASKPOOL_STATUS_DEFERRED ) ||
+                        ( statusAtCancellation == IOT_TASKPOOL_STATUS_SCHEDULED ) ||
+                        ( statusAtCancellation == IOT_TASKPOOL_STATUS_CANCELED )
+                        );
+
+                    TEST_ASSERT( IotTaskPool_GetStatus( &taskPool, &jobs[ count ], &statusAfterCancellation ) == IOT_TASKPOOL_SUCCESS );
+                    TEST_ASSERT( statusAfterCancellation == IOT_TASKPOOL_STATUS_CANCELED );
+                    break;
+
+                case IOT_TASKPOOL_CANCEL_FAILED:
+                    TEST_ASSERT( ( statusAtCancellation == IOT_TASKPOOL_STATUS_COMPLETED ) );
+                    TEST_ASSERT( IotTaskPool_GetStatus( &taskPool, &jobs[ count ], &statusAfterCancellation ) == IOT_TASKPOOL_SUCCESS );
+                    TEST_ASSERT( ( statusAfterCancellation == IOT_TASKPOOL_STATUS_COMPLETED ) );
+                    break;
+
+                case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
+                    /* This must be a test issue. */
+                    TEST_ASSERT( false );
+                    break;
+
+                default:
+                    TEST_ASSERT( false );
+                    break;
+            }
         }
-    }
 
-    /* Cancellation loop. */
-    for( count = 0; count < maxJobs; ++count )
-    {
-        IotTaskPoolError_t error;
-        IotTaskPoolJobStatus_t statusAtCancellation = IOT_TASKPOOL_STATUS_READY;
-        IotTaskPoolJobStatus_t statusAfterCancellation = IOT_TASKPOOL_STATUS_READY;
-
-        error = IotTaskPool_TryCancel( &taskPool, &jobs[ count ], &statusAtCancellation );
-
-        switch( error )
+        /* Wait until callback is executed. */
+        while( ( scheduled - canceled ) != userContext.counter )
         {
-            case IOT_TASKPOOL_SUCCESS:
-                canceled++;
-
-                TEST_ASSERT(
-                    ( statusAtCancellation == IOT_TASKPOOL_STATUS_READY ) ||
-                    ( statusAtCancellation == IOT_TASKPOOL_STATUS_DEFERRED ) ||
-                    ( statusAtCancellation == IOT_TASKPOOL_STATUS_SCHEDULED ) ||
-                    ( statusAtCancellation == IOT_TASKPOOL_STATUS_CANCELED )
-                    );
-
-                TEST_ASSERT( IotTaskPool_GetStatus( &taskPool, &jobs[ count ], &statusAfterCancellation ) == IOT_TASKPOOL_SUCCESS );
-                TEST_ASSERT( statusAfterCancellation == IOT_TASKPOOL_STATUS_CANCELED );
-                break;
-
-            case IOT_TASKPOOL_CANCEL_FAILED:
-                TEST_ASSERT( ( statusAtCancellation == IOT_TASKPOOL_STATUS_COMPLETED ) );
-                TEST_ASSERT( IotTaskPool_GetStatus( &taskPool, &jobs[ count ], &statusAfterCancellation ) == IOT_TASKPOOL_SUCCESS );
-                TEST_ASSERT( ( statusAfterCancellation == IOT_TASKPOOL_STATUS_COMPLETED ) );
-                break;
-
-            case IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS:
-                /* This must be a test issue. */
-                TEST_ASSERT( false );
-                break;
-
-            default:
-                TEST_ASSERT( false );
-                break;
+            IotClock_SleepMs( 50 );
         }
+
+        TEST_ASSERT( ( scheduled - canceled ) == userContext.counter );
     }
 
-    /* Wait until callback is executed. */
-    while( ( scheduled - canceled ) != userContext.counter )
-    {
-        IotClock_SleepMs( 50 );
-    }
-
-    TEST_ASSERT( ( scheduled - canceled ) == userContext.counter );
-
-    IotTaskPool_Destroy( &taskPool );
+    TEST_ASSERT( IotTaskPool_Destroy( &taskPool ) == IOT_TASKPOOL_SUCCESS );
 
     /* Destroy user context. */
     IotMutex_Destroy( &userContext.lock );
