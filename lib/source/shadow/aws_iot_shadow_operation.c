@@ -867,7 +867,7 @@ void _AwsIotShadow_Notify( _shadowOperation_t * pOperation )
             callbackParam.operation.get.documentLength = pOperation->get.documentLength;
         }
 
-        pOperation->notify.callback.function( pOperation->notify.callback.param1,
+        pOperation->notify.callback.function( pOperation->notify.callback.pCallbackContext,
                                               &callbackParam );
     }
 
