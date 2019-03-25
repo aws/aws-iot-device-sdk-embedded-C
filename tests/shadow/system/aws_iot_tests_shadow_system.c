@@ -152,7 +152,7 @@ static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
  * and unblocks the main test thread.
  */
 static void _operationComplete( void * pArgument,
-                                AwsIotShadowCallbackParam_t * const pOperation )
+                                AwsIotShadowCallbackParam_t * pOperation )
 {
     _operationCompleteParams_t * pParams = ( _operationCompleteParams_t * ) pArgument;
     const char * pJsonValue = NULL;
@@ -193,7 +193,7 @@ static void _operationComplete( void * pArgument,
  * thread.
  */
 static void _deltaCallback( void * pArgument,
-                            AwsIotShadowCallbackParam_t * const pCallback )
+                            AwsIotShadowCallbackParam_t * pCallback )
 {
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
     const char * pValue = NULL, * pClientToken = NULL;
@@ -233,7 +233,7 @@ static void _deltaCallback( void * pArgument,
  * thread.
  */
 static void _updatedCallback( void * pArgument,
-                              AwsIotShadowCallbackParam_t * const pCallback )
+                              AwsIotShadowCallbackParam_t * pCallback )
 {
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
     const char * pPrevious = NULL, * pCurrent = NULL, * pClientToken = NULL;
@@ -290,7 +290,7 @@ static void _updateGetDeleteAsync( IotMqttQos_t qos )
     _operationCompleteParams_t callbackParam = { 0 };
 
     /* Initialize the members of the operation callback info. */
-    callbackInfo.param1 = &callbackParam;
+    callbackInfo.pCallbackContext = &callbackParam;
     callbackInfo.function = _operationComplete;
 
     /* Initialize the common members of the Shadow document info. */
@@ -605,7 +605,7 @@ TEST( Shadow_System, DeltaCallback )
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
     /* Set the delta callback information. */
-    deltaCallback.param1 = &waitSem;
+    deltaCallback.pCallbackContext = &waitSem;
     deltaCallback.function = _deltaCallback;
 
     /* Set a desired state in the Update document. */
@@ -680,7 +680,7 @@ TEST( Shadow_System, UpdatedCallback )
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
     /* Set the delta callback information. */
-    updatedCallback.param1 = &waitSem;
+    updatedCallback.pCallbackContext = &waitSem;
     updatedCallback.function = _updatedCallback;
 
     /* Set a desired state in the Update document. */
