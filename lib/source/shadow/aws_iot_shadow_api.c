@@ -559,7 +559,7 @@ static void _callbackWrapperCommon( _shadowCallbackType_t type,
     callbackParam.callback.documentLength = pMessage->message.info.payloadLength;
 
     /* Invoke the callback function. */
-    pSubscription->callbacks[ type ].function( pSubscription->callbacks[ type ].param1,
+    pSubscription->callbacks[ type ].function( pSubscription->callbacks[ type ].pCallbackContext,
                                                &callbackParam );
 }
 
