@@ -476,6 +476,10 @@ TEST_SETUP( Shadow_System )
         _networkInfo.pNetworkCredentialInfo = ( void * ) &_credentials;
     #endif
 
+    #ifdef IOT_TEST_MQTT_SERIALIZER
+        _networkInfo.pMqttSerializer = IOT_TEST_MQTT_SERIALIZER;
+    #endif
+
     /* Set the members of the connect info. Use the Shadow Thing Name as the MQTT
      * client identifier. */
     connectInfo.awsIotMqttMode = true;
