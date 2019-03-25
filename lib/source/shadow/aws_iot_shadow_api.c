@@ -328,10 +328,10 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
         return AWS_IOT_SHADOW_BAD_PARAMETER;
     }
 
-    IotLogDebug( "Processing Shadow %s callback for %.*s.",
-                 _pAwsIotShadowCallbackNames[ type ],
-                 thingNameLength,
-                 pThingName );
+    IotLogInfo( "(%.*s) Modifying Shadow %s callback.",
+                thingNameLength,
+                pThingName,
+                _pAwsIotShadowCallbackNames[ type ] );
 
     /* Lock the subscription list mutex to check for an existing subscription
      * object. */
@@ -356,20 +356,20 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
             /* Replace existing callback. */
             if( pCallbackInfo != NULL )
             {
-                IotLogDebug( "Found existing %s callback for %.*s. Replacing callback.",
-                             _pAwsIotShadowCallbackNames[ type ],
-                             thingNameLength,
-                             pThingName );
+                IotLogInfo( "(%.*s) Found existing %s callback. Replacing callback.",
+                            thingNameLength,
+                            pThingName,
+                            _pAwsIotShadowCallbackNames[ type ] );
 
                 pSubscription->callbacks[ type ] = *pCallbackInfo;
             }
             /* Remove existing callback. */
             else
             {
-                IotLogDebug( "Removing existing %s callback for %.*s.",
-                             _pAwsIotShadowCallbackNames[ type ],
-                             thingNameLength,
-                             pThingName );
+                IotLogInfo( "(%.*s) Removing existing %s callback.",
+                            thingNameLength,
+                            pThingName,
+                            _pAwsIotShadowCallbackNames[ type ] );
 
                 /* Unsubscribe, then clear the callback information. */
                 ( void ) _modifyCallbackSubscriptions( mqttConnection,
@@ -390,10 +390,10 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
             /* Add new callback. */
             if( pCallbackInfo != NULL )
             {
-                IotLogDebug( "Adding new %s callback for %.*s.",
-                             _pAwsIotShadowCallbackNames[ type ],
-                             thingNameLength,
-                             pThingName );
+                IotLogInfo( "(%.*s) Adding new %s callback.",
+                            thingNameLength,
+                            pThingName,
+                            _pAwsIotShadowCallbackNames[ type ] );
 
                 pSubscription->callbacks[ type ] = *pCallbackInfo;
                 status = _modifyCallbackSubscriptions( mqttConnection,
@@ -410,6 +410,12 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
     }
 
     IotMutex_Unlock( &( _AwsIotShadowSubscriptionsMutex ) );
+
+    IotLogInfo( "(%.*s) Shadow %s callback operation complete with result %s.",
+                thingNameLength,
+                pThingName,
+                _pAwsIotShadowCallbackNames[ type ],
+                AwsIotShadow_strerror( status ) );
 
     return status;
 }
@@ -530,10 +536,6 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
         if( pSubscription->pTopicBuffer == NULL )
         {
             pSubscription->pTopicBuffer = pTopicFilter;
-        }
-        else
-        {
-            AwsIotShadow_FreeString( pTopicFilter );
         }
     }
 
