@@ -374,6 +374,8 @@ typedef struct AwsIotShadowCallbackParam
     const char * pThingName;                 /**< @brief The Thing Name associated with this Shadow callback. */
     size_t thingNameLength;                  /**< @brief Length of #AwsIotShadowCallbackParam_t.pThingName. */
 
+    IotMqttConnection_t mqttConnection;      /**< @brief The MQTT connection associated with the Shadow callback. */
+
     union
     {
         /* Valid for completed Shadow operations. */

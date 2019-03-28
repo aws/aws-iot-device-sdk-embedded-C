@@ -160,6 +160,7 @@ static void _operationComplete( void * pArgument,
 
     /* Check parameters against received operation information. */
     AwsIotShadow_Assert( pOperation->callbackType == pParams->expectedType );
+    AwsIotShadow_Assert( pOperation->mqttConnection == _mqttConnection );
     AwsIotShadow_Assert( pOperation->operation.result == AWS_IOT_SHADOW_SUCCESS );
     AwsIotShadow_Assert( pOperation->operation.reference == pParams->operation );
     AwsIotShadow_Assert( pOperation->thingNameLength == _THING_NAME_LENGTH );
@@ -199,8 +200,9 @@ static void _deltaCallback( void * pArgument,
     const char * pValue = NULL, * pClientToken = NULL;
     size_t valueLength = 0, clientTokenLength = 0;
 
-    /* Check callback type. */
+    /* Check callback type and MQTT connection. */
     AwsIotShadow_Assert( pCallback->callbackType == AWS_IOT_SHADOW_DELTA_CALLBACK );
+    AwsIotShadow_Assert( pCallback->mqttConnection == _mqttConnection );
 
     /* Check delta document state. */
     AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
@@ -238,6 +240,9 @@ static void _updatedCallback( void * pArgument,
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
     const char * pPrevious = NULL, * pCurrent = NULL, * pClientToken = NULL;
     size_t previousStateLength = 0, currentStateLength = 0, clientTokenLength = 0;
+
+    /* Check MQTT connection. */
+    AwsIotShadow_Assert( pCallback->mqttConnection == _mqttConnection );
 
     /* Check updated document previous state. */
     AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
