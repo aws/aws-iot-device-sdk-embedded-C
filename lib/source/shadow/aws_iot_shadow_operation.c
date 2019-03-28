@@ -823,7 +823,7 @@ void _AwsIotShadow_Notify( _shadowOperation_t * pOperation )
 {
     AwsIotShadowCallbackParam_t callbackParam = { 0 };
     _shadowSubscription_t * pSubscription = pOperation->pSubscription,
-                          * pRemovedSubscription;
+                          * pRemovedSubscription = NULL;
 
     /* If the operation is waiting, post to its wait semaphore and return. */
     if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
