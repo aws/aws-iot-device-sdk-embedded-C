@@ -855,6 +855,7 @@ void _AwsIotShadow_Notify( _shadowOperation_t * pOperation )
     {
         /* Set the common members of the callback parameter. */
         callbackParam.callbackType = ( AwsIotShadowCallbackType_t ) pOperation->type;
+        callbackParam.mqttConnection = pOperation->mqttConnection;
         callbackParam.operation.result = pOperation->status;
         callbackParam.operation.reference = pOperation;
         callbackParam.pThingName = pSubscription->pThingName;

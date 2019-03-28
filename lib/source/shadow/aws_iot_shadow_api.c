@@ -555,6 +555,7 @@ static void _callbackWrapperCommon( _shadowCallbackType_t type,
 
     /* Set the members of the callback param. */
     callbackParam.callbackType = type + _SHADOW_OPERATION_COUNT; /* Shadow callbacks are enumerated after the operations. */
+    callbackParam.mqttConnection = pMessage->mqttConnection;
     callbackParam.pThingName = pSubscription->pThingName;
     callbackParam.thingNameLength = pSubscription->thingNameLength;
     callbackParam.callback.pDocument = pMessage->message.info.pPayload;
