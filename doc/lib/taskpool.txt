@@ -3,12 +3,22 @@
 @anchor taskpool
 @brief Task pool library.
 
-> A task pool is an adaptive set of threads that can grow and shrink to execute a user-provided callback through a user-defined job that can be scheduled with a non-blocking call. The design principles are to minimize the memory footprint while allowing asynchrnous execution. The adaptive behavior allows serving jobs in a timely way, without allocating system resources for the entire duration of the application. The user does not have to worry about synchronization and thread management.
+> A task pool is an adaptive set of threads that can grow and shrink to execute a user-provided callback through a user-defined job that can be scheduled with a non-blocking call. The design principles are to minimize the memory footprint while allowing non-blocking execution. The adaptive behavior allows serving jobs in a timely manner, without allocating system resources for the entire duration of the application, or causing recurring allocation/deallocation patterns. The user does not have to worry about synchronization and thread management other than within its own application.
 
 Features of this library include:
-- Both fully asynchronous and blocking API functions.
+- Non-blocking API functions to schedule immediate and deferred jobs.
+- Ability to create statically and dynamically allocated jobs.
 - Scalable performance and footprint. The [configuration settings](@ref taskpool_config) allow this library to be tailored to a system's resources.
-- Customizable caching for low memory allocation overhead.
+- Customizable caching for low memory overhead when creating jobs dynamically.
+
+This library uses a user-specified set of threads to process jobs speficied by the user as a callback and a context. 
+Overall, the task pool hinges on two main data structures: the task pool Job (IotTaskPoolJob_t) and the task pool itself (IotTaskPool_t). A task pool job carries the information about the user callback and context, one flag to track the status and a link structure for moving the job in and out of the dispatch queue and cache. User can create two types of jobs: static and recyclable. Static jobs are intended for users that know exactly how many jobs they will schedule (e.g. see Defender scenario above) or for embedding in other data structures. Static jobs need no destruction, and creation simply sets the user callback and context. Recyclable jobs are intended for scenario where user cannot know ahead of time how many jobs she will need. Recyclable jobs are dynamically allocated, and can be either destroyed after use or recycled. If jobs are recycled they are maintained in a cache (IotTaskPoolCache_t) owned by the task pool itself, and re-used when user wants to create more recyclable jobs. The task pool cache has a compile time limit, and can be pre-populated with recyclable jobs by simply creating recyclable jobs and recycling them, in an effort to limit memory allocations at run-time. This is handy for scenarios where user is aware of the steady state requirements for his application.
+User jobs are queued through a non-blocking call and processed asynchronously in the order they are received.
+- [Task pool API functions](@ref taskpool_functions) Provides a set of functions to enqueue an asynchronous operation on the <b>Dispatch Queue</b>. API functions are non-blocking and return after successfully enqueuing an operation.
+- <b>Worker threads</b> in the task pool are woken up when operations arrive in the dispatch queue. These threads remove operations from the dispatch queue in FIFO order and execute the user-provided callback. After executing the user callback, the task pool threads try and execute any remaining jobs in the dispatch queue. The task pool tries and execute a user job as soon as it is received and if there are no threads available it will try and create one, up to the maximum number of allowed threads. The user can specificy the minimum and maximum number of threads allowed when creating the task pool.
+- The user can try and cancel a job after the task has been scheduled. Cancellation is only allowed before the task enters execution. Wating on a completed task returns immediately.
+
+Threads are created with @ref platform_threads_function_createdetachedthread. Because the platform layer may be re-implemented across systems, threads will be allocated for the task pool library on-the-go on some systems, while other systems may use an always-allocated thread pool.
 
 @dependencies{taskpool,task pool library}
 @dot "Task pool direct dependencies"
@@ -24,30 +34,30 @@ digraph taskpool_dependencies
     {
         node[fillcolor="#aed8a9ff"];
         rank = same;
-        singlelinkedlist[label="SingleLinkedList", URL="@ref singlelinkedlist"];
-        queue[label="Queue", URL="@ref queue"];
+        linear_containers[label="List/Queue", URL="@ref linear_containers"];
         logging[label="Logging", URL="@ref logging"];
+        static_memory[label="Static memory", URL="@ref static_memory"];
     }
     subgraph
     {
         rank = same;
         platform_threads[label="Thread management", fillcolor="#e89025ff", URL="@ref platform_threads"];
-        platform_clock[label="Clock", fillcolor="#e89025ff", URL="@ref platform_clock"];\
-        platform_static_memory[label="Static memory", fillcolor="#e89025ff", URL="@ref platform_static_memory"];
+        platform_clock[label="Clock", fillcolor="#e89025ff", URL="@ref platform_clock"];
     }
-    taskpool -> queue;
-    taskpool -> logging [label=" if logging enabled", style="dashed"];
+    taskpool -> linear_containers;
+    taskpool -> platform_clock;
     taskpool -> platform_threads;
-    queue -> platform_threads;
+    taskpool -> static_memory [label=" if static memory only", style="dashed"];
+    taskpool -> logging [label=" if logging enabled", style="dashed"];
     logging -> platform_clock;
-    logging -> platform_static_memory [label=" if static memory only", style="dashed"];
+    logging -> static_memory [label=" if static memory only", style="dashed"];
 }
 @enddot
 
 Currently, the task pool library has the following dependencies:
 - The linear containers (list/queue) library for maintaining the data structures for scheduled and in-progress task pool operations.
 - The logging library may be used if @ref IOT_LOG_LEVEL_TASKPOOL is not @ref IOT_LOG_NONE.
-- The platform layer provides an interface to the operating system for thread management, clock functions, networking, etc.
+- The platform layer provides an interface to the operating system for thread management, timers, clock functions, etc.
 
 In addition to the components above, the task pool library may also depend on C standard library headers.
 */
@@ -56,112 +66,51 @@ In addition to the components above, the task pool library may also depend on C 
 @page taskpool_design Design
 @brief Architecture behind the task pool library.
 
-This library uses a user-specified set of threads to process jobs speficied by the user as a callback and a context. User jobs are queued through a non-blocking call and processed asynchronously in the order they are received.
-- [Task pool API functions](@ref taskpool_functions) Provides a set of functions to enqueue an asynchronous operation on the <b>Dispatch Queue</b>. API functions are non-blocking and return after successfully enqueuing an operation.
-- <b>Worker threads</b> in the task pool are woken up when operations arrive in the dispatch queue. These threads remove operations from the dispatch queue in FIFO order and execute the user-provided callback. After executing the user callback, the task pool threads try and execute any remaining jobs in the dispatch queue. The task pool tries and execute a user job as soon as it is received and if there are no threads available it will try and create one, up to the maximum number of allowed threads. The user can specificy the minimum and maximum number of threads allowed when creating the task pool.
-- The user can try and cancel a job after the task has been scheduled. Cancellation is only allowed before the task enters execution. Wating on a completed task returns immediately.
-
-Threads are created with @ref platform_threads_function_createdetachedthread. Because the platform layer may be re-implemented across systems, threads will be allocated for the task pool library on-the-go on some systems, while other systems may use an always-allocated thread pool.
-
 The sequence diagram below illustrates the workflow described above. The application thread is able to continue executing while the task pool library processes the operation.
 
 @image html taskpool_design_typicaloperation.png width=100%
+
+The state diagrams for statically allocated, non-recyclable jobs with all legal transitions is presented in the diagram below. A static job can be created, schedule and canceled. Cancellation always succeeds, unless the job was already canceled, or completed (i.e. executed). Static jobs cannot be recycled and do no need to be destroyed. Static jobs are suitable for embedding on other data structures that own them. 
+
+@image html StaticJobStatus.png width=40%
+
+The state diagram and legal transitions for all recyclable jobs is presented in the diagram below. A recyclable job is dynamically allocated. Just like a static job, a recyclable job can be created, schedule and canceled. Cancellation always succeeds, unless the job was already canceled, or completed (i.e. executed). Unlike static jobs, recyclable jobs can be recycled, or destroyed. Recycling a job effectively pushes a job to the task pool cache, where the task pool manages the lifetime of the job itself. The size of the cache is controlled via a compile time parameter. A user can get rid of a recyclable job by destroying it explicitly. Recyclable jobs should not be embedded in other data structures, but could be referenced from other data structures.  
+
+@image html RecyclableJobStatus.png width=50%
+
 */
 
 /**
 @page taskpool_demo Demo
 @brief The task pool demo demonstrates usage of the task pool library.
 
-The task pool demo demonstrates the create-schedule workflow of task pool. After creating multiple jobs, it schedules all jobs and wait on their completion, or try and cancel them.
-
-@image html taskpool_demo.png "task pool Demo Workflow" width=80%
+The task pool demo demonstrates the create-schedule workflow of task pool. After creating multiple jobs, it schedules all jobs and wait on their completion (by synchronizing at the application level), or try and cancel them.
 
 See @subpage taskpool_demo_config for configuration settings that change the behavior of the demo.
 
 The main task pool demo file, iot_demo_taskpool.c, contains platform-independent code. See the following guides for running the task pool demo on various platforms.
-- @subpage demo_posix <br>
-  @copybrief demo_posix
+- @subpage demo_taskpool <br>
+  @copybrief demo_taskpool
 */
 
 /**
 @page taskpool_tests Tests
 @brief Tests written for the task pool library.
 
-The task pool tests are divided into the following subdirectories:
-- `system`: task pool system and stress tests. Stress tests may run for a long time, so they are not run unless the [-l option is passed to the test executable](@ref taskpool_tests_optionl).
+The task pool tests reside in the `tests/common` directory. They are divided into the following subdirectories:
+- `system`: task pool system and stress tests. Stress tests may run for a long time, so they are not run unless the `-l` option is passed to the test executable.
 - `unit`: task pool unit tests. These tests do not require a network connection.
 
-See @subpage taskpool_tests_config for configuration settings that change the behavior of the tests.
-
-The current task pool tests use the [Unity test framework](http://www.throwtheswitch.org/unity/) and only run on POSIX systems. See @subpage taskpool_tests_running for a guide on running the tests.
-*/
-
-/**
-@configpage{taskpool_tests,task pool tests,Test,tests}
-
-<div class="configpagedivider">The settings below only affect the [stress](@ref iot_tests_taskpool_stress.c) tests.</div>
-
-*/
-
-/**
-@page taskpool_tests_running Running task pool tests
-@brief Guide for running the task pool tests.
-
-The current task pool tests use the [Unity test framework](http://www.throwtheswitch.org/unity/) and only run on POSIX systems.
-
-@pre The tests have the following system dependencies:
-- POSIX threads, mutexes, and semaphores (link with `-lpthread`).
-
-@section taskpool_tests_building Building the tests
-@brief How to build the task pool tests.
-
-Before building the task pool tests, all desired configuration settings should be defined. Configuration settings include global [library](@ref global_library_config) and [test](@ref global_tests_config) settings, as well as settings for specific libraries and demos.
-
-All tests specify their configuration settings in `tests/iot_tests_config.h`. Any undefined settings will use a default value when possible.
-
-The task pool tests build with a POSIX Makefile. A single Makefile will build all the task pool tests in both <i>dynamic memory</i> and <i>static memory only</i> modes. See @ref IOT_STATIC_MEMORY_ONLY for more information about static memory only mode. The Makefile also builds tests against AWS IoT and a [public Mosquitto test server](https://test.mosquitto.org/).
-
-The Makefile for building the task pool tests is located in `tests/taskpool`. To build the tests:
-@code
-cd tests/task_pool
-make
-@endcode
-
-The Makefile will generate four test executables:
-- `iot_tests_taskpool_aws`: Tests against AWS IoT in dynamic memory mode.
-
-Run `make clean` to remove all test executables.
-
-@section taskpool_tests_commandlineoptions Command line options
-@brief Command line options of the task pool test executables.
-
-All task pool test executables accept the following command line options.
-
-@subsection taskpool_tests_optionl -l
-@brief Enable long-running tests.
-
-By default, the task pool test executables don't run the stress tests, which may take a long time to run and require an extremely stable network connection. Passing `-l` enables the long-running tests, which will run after all of the default tests finish.
+The current task pool tests use the [Unity test framework](http://www.throwtheswitch.org/unity/).
 */
 
 /**
 @configpage{taskpool_demo,task pool demo,Demo,demos}
 
-@section IOT_DEMO_MQTT_CLIENT_IDENTIFIER
-@brief The task pool client identifier to use for the demo.
-
 */
 
 /**
 @configpage{taskpool,task pool library}
-
-@section IOT_TASKPOOL_THREADS_STACK_MIN
-@brief Set this to minimum stack depth to be enforced at runtime.
-
-@section IOT_TASKPOOL_THREADS_STACK_SIZE
-@brief Set this to the default stack depth used by the task pool initializers.
-
-@section IOT_TASKPOOL_PRIORITY
-@brief Set this to the default task priority used by the task pool initializers.
 
 @section IOT_TASKPOOL_ENABLE_ASSERTS
 @brief Set this to `1` to perform sanity checks when using the task pool library.
@@ -179,13 +128,4 @@ Log messages from the task pool library at or below this setting will be printed
 
 @configpossible One of the @ref logging_constants_levels.<br>
 @configdefault @ref IOT_LOG_LEVEL_GLOBAL; if that is undefined, then #IOT_LOG_NONE.
-
-@section IOT_TASKPOOL_TEST
-@brief Set this to `1` to enable test access for the task pool library.
-
-This setting is used by the [task pool tests](@ref taskpool_tests) to access the internal `static` functions and variables of the task pool library. When `1`, it enables the @c \#include directives at the bottom of the [task pool library source files](@ref lib/source/common/). These @c \#include directives include the test access files (located in `tests/taskpool/access`) that interact with the library's internal symbols. Unless the task pool library is being tested, this setting should be `0`.
-
-@configpossible `0` (test access disabled) or `1` (test access enabled)<br>
-@configrecommended `0`<br>
-@configdefault `0`
 */
