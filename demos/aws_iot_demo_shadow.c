@@ -740,6 +740,10 @@ static int _sendShadowUpdates( IotSemaphore_t * pDeltaSemaphore,
             status = EXIT_FAILURE;
             break;
         }
+        else
+        {
+            status = EXIT_SUCCESS;
+        }
 
         IotLogInfo( "Sending Shadow update %d of %d: %s",
                     i,

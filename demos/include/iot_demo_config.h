@@ -45,6 +45,11 @@
 #define IOT_DEMO_MQTT_PUBLISH_BURST_COUNT    ( 10 ) /* Number of message bursts. */
 #define IOT_DEMO_MQTT_PUBLISH_BURST_SIZE     ( 10 ) /* Number of messages published in each burst. */
 
+/* Shadow demo configuration. The demo publishes periodic Shadow updates and responds
+ * to changing Shadows. */
+#define AWS_IOT_DEMO_SHADOW_UPDATE_COUNT        ( 20 )   /* Number of updates to publish. */
+#define AWS_IOT_DEMO_SHADOW_UPDATE_PERIOD_MS    ( 3000 ) /* Period of Shadow updates. */
+
 /* Enable asserts in linear containers and MQTT. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS        ( 1 )
 #define IOT_MQTT_ENABLE_ASSERTS              ( 1 )
