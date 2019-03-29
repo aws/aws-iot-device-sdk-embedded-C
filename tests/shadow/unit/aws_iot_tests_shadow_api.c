@@ -362,6 +362,12 @@ TEST_SETUP( Shadow_Unit_API )
     /* Initialize common components. */
     TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
 
+    /* Initialize the MQTT library. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
+
+    /* Initialize the Shadow library. */
+    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, AwsIotShadow_Init( 0 ) );
+
     /* Clear the last packet type and identifier. */
     _lastPacketType = 0;
     _lastPacketIdentifier = 0;
@@ -374,9 +380,6 @@ TEST_SETUP( Shadow_Unit_API )
                           _receiveThread,
                           NULL );
 
-    /* Initialize the MQTT library. */
-    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
-
     /* Set the network interface send function. */
     ( void ) memset( &_networkInterface, 0x00, sizeof( IotNetworkInterface_t ) );
     _networkInterface.send = _sendSuccess;
@@ -388,9 +391,6 @@ TEST_SETUP( Shadow_Unit_API )
                                                          &networkInfo,
                                                          0 );
     TEST_ASSERT_NOT_NULL( _pMqttConnection );
-
-    /* Initialize the Shadow library. */
-    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, AwsIotShadow_Init( 0 ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -400,17 +400,17 @@ TEST_SETUP( Shadow_Unit_API )
  */
 TEST_TEAR_DOWN( Shadow_Unit_API )
 {
-    /* Clean up the Shadow library. */
-    AwsIotShadow_Cleanup();
-
     /* Clean up the MQTT connection object. */
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 
-    /* Clean up common components. */
-    IotCommon_Cleanup();
+    /* Clean up the Shadow library. */
+    AwsIotShadow_Cleanup();
 
     /* Clean up the MQTT library. */
     IotMqtt_Cleanup();
+
+    /* Clean up common components. */
+    IotCommon_Cleanup();
 
     /* Destroy the receive thread timer. */
     IotClock_TimerDestroy( &_receiveTimer );
