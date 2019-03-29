@@ -533,14 +533,14 @@ TEST_TEAR_DOWN( Shadow_System )
     /* Clean up the Shadow library. */
     AwsIotShadow_Cleanup();
 
+    /* Clean up the MQTT library. */
+    IotMqtt_Cleanup();
+
     /* Clean up the network stack. */
     IotTestNetwork_Cleanup();
 
     /* Clean up common components. */
     IotCommon_Cleanup();
-
-    /* Clean up the MQTT library. */
-    IotMqtt_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

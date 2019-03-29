@@ -435,7 +435,22 @@ TEST_SETUP( MQTT_Stress )
     IotMqttSubscription_t pSubscriptions[ _TEST_TOPIC_NAME_COUNT ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
 
     /* Initialize common components. */
-    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
+    if( IotCommon_Init() == false )
+    {
+        TEST_FAIL_MESSAGE( "Failed to initialize common components." );
+    }
+
+    /* Set up the network stack. */
+    if( IotTestNetwork_Init() != IOT_NETWORK_SUCCESS )
+    {
+        TEST_FAIL_MESSAGE( "Failed to set up network stack." );
+    }
+
+    /* Initialize the MQTT library. */
+    if( IotMqtt_Init() != IOT_MQTT_SUCCESS )
+    {
+        TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
+    }
 
     /* Clear the PINGREQ override flag. */
     _pingreqOverrideCalled = false;
@@ -451,18 +466,6 @@ TEST_SETUP( MQTT_Stress )
     /* Set the serializer overrides. */
     serializer.serialize.pingreq = _serializePingreq;
     _networkInfo.pMqttSerializer = &serializer;
-
-    /* Set up the network stack. */
-    if( IotTestNetwork_Init() != IOT_NETWORK_SUCCESS )
-    {
-        TEST_FAIL_MESSAGE( "Failed to set up network stack." );
-    }
-
-    /* Initialize the MQTT library. */
-    if( IotMqtt_Init() != IOT_MQTT_SUCCESS )
-    {
-        TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
-    }
 
     /* Generate a new, unique client identifier based on the time if no client
      * identifier is defined. Otherwise, copy the provided client identifier. */
@@ -536,14 +539,14 @@ TEST_TEAR_DOWN( MQTT_Stress )
         _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
     }
 
+    /* Clean up the MQTT library. */
+    IotMqtt_Cleanup();
+
     /* Clean up the network stack. */
     IotTestNetwork_Cleanup();
 
     /* Clean up common components. */
     IotCommon_Cleanup();
-
-    /* Clean up the MQTT library. */
-    IotMqtt_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
