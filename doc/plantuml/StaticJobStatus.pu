@@ -16,17 +16,17 @@ state CANCELED {
 state UNDEFINED {
 }
 
-[*] --[#green]> READY : CreateJob
+[*] --[#blue]> READY : CreateJob
 READY --[#blue]> SCHEDULED : Schedule
 READY --[#blue]> DEFERRED : ScheduleDeferred
-DEFERRED --[#cyan]> SCHEDULED : <timeout elapses>
-SCHEDULED --[#cyan]> COMPLETED : <worker available>
-COMPLETED --[#green]> READY : CreateJob
+DEFERRED --[#red]> SCHEDULED : <timeout elapses>
+SCHEDULED --[#green]> COMPLETED : <worker available>
+COMPLETED --[#blue]> READY : CreateJob
 
-READY --[#red]> CANCELED : TryCancel
-DEFERRED --[#red]> CANCELED : TryCancel
-SCHEDULED --[#red]> CANCELED : TryCancel
+READY --[#blue]> CANCELED : TryCancel
+DEFERRED --[#blue]> CANCELED : TryCancel
+SCHEDULED --[#blue]> CANCELED : TryCancel
 
-CANCELED --[#green]> READY : CreateJob
+CANCELED --[#blue]> READY : CreateJob
 
 @enduml
