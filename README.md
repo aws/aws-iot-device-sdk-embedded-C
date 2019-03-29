@@ -55,7 +55,7 @@ This Beta library is a new design that inherits from both the AWS IoT Device SDK
 - MQTT persistent session support.
 
 Compared to the AWS IoT Device SDK Embedded C v3.0.1, the following features are missing:
-- Documentation and demo for Shadow library is incomplete.
+- Documentation for Shadow library is incomplete.
 - Auto-reconnect for MQTT connections.
 - mbedTLS network stack.
 - Shadow JSON document generator.
