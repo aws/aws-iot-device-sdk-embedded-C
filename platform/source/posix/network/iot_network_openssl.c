@@ -106,7 +106,7 @@ typedef struct _networkConnection
 {
     int socket;            /**< @brief Socket associated with this connection. */
     SSL * pSslContext;     /**< @brief SSL context for connection. */
-    IotMutex_t sendMutex;  /**< @brief Prevents concurrent sends on the same socket. */
+    IotMutex_t sslMutex;   /**< @brief Prevents concurrent use of the SSL context. */
 
     bool receiveThreadCreated;    /**< @brief Whether a receive thread exists for this connection. */
     pthread_t receiveThread;      /**< @brief Thread that handles receiving on this connection. */
@@ -563,6 +563,9 @@ static void _tlsClose( _networkConnection_t * pNetworkConnection )
     /* Shut down the TLS connection. */
     IotLogInfo( "Shutting down TLS connection." );
 
+    /* Lock the SSL context mutex. */
+    IotMutex_Lock( &( pNetworkConnection->sslMutex ) );
+
     /* SSL shutdown should be called twice: once to send "close notify" and once
      * more to receive the peer's "close notify". */
     if( SSL_shutdown( pNetworkConnection->pSslContext ) == 0 )
@@ -580,6 +583,9 @@ static void _tlsClose( _networkConnection_t * pNetworkConnection )
             IotLogDebug( "Peer response to \"close notify\" received." );
         }
     }
+
+    /* Unlock the SSL context mutex. */
+    IotMutex_Unlock( &( pNetworkConnection->sslMutex ) );
 
     IotLogInfo( "TLS connection closed." );
 }
@@ -641,7 +647,7 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
 {
     _IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
     int tcpSocket = -1;
-    bool sendMutexCreated = false;
+    bool sslMutexCreated = false;
     _networkConnection_t * pNewNetworkConnection = NULL;
 
     /* Cast function parameters to correct types. */
@@ -661,16 +667,6 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
 
     /* Clear connection data. */
     ( void ) memset( pNewNetworkConnection, 0x00, sizeof( _networkConnection_t ) );
-
-    /* Create the send mutex. */
-    sendMutexCreated = IotMutex_Create( &( pNewNetworkConnection->sendMutex ), true );
-
-    if( sendMutexCreated == false )
-    {
-        IotLogError( "Failed to create network send mutex." );
-
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_SYSTEM_ERROR );
-    }
 
     /* Perform a DNS lookup of pHostName. This also establishes a TCP socket. */
     tcpSocket = _dnsLookup( pServerInfo );
@@ -692,6 +688,16 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
     {
         IotLogInfo( "Setting up TLS." );
 
+        /* Create the mutex that protects the SSL context. */
+        sslMutexCreated = IotMutex_Create( &( pNewNetworkConnection->sslMutex ), true );
+
+        if( sslMutexCreated == false )
+        {
+            IotLogError( "Failed to create network send mutex." );
+
+            _IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_SYSTEM_ERROR );
+        }
+
         status = _tlsSetup( pNewNetworkConnection,
                             pServerInfo->pHostName,
                             pOpensslCredentials );
@@ -707,9 +713,9 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
             ( void ) close( tcpSocket );
         }
 
-        if( sendMutexCreated == true )
+        if( sslMutexCreated == true )
         {
-            IotMutex_Destroy( &( pNewNetworkConnection->sendMutex ) );
+            IotMutex_Destroy( &( pNewNetworkConnection->sslMutex ) );
         }
 
         if( pNewNetworkConnection != NULL )
@@ -789,9 +795,12 @@ size_t IotNetworkOpenssl_Send( void * pConnection,
     /* Set the file descriptor for poll. */
     fileDescriptor.fd = pNetworkConnection->socket;
 
-    /* Only one thread may send at a time. Lock the connection mutex to serialize
-     * sends. */
-    IotMutex_Lock( &( pNetworkConnection->sendMutex ) );
+    /* The SSL mutex must be locked to protect an SSL context from concurrent
+     * access. */
+    if( pNetworkConnection->pSslContext != NULL )
+    {
+        IotMutex_Lock( &( pNetworkConnection->sslMutex ) );
+    }
 
     /* Check that it's possible to send data right now. */
     if( poll( &fileDescriptor, 1, 0 ) == 1 )
@@ -817,8 +826,11 @@ size_t IotNetworkOpenssl_Send( void * pConnection,
         IotLogError( "Not possible to send on socket %d.", pNetworkConnection->socket );
     }
 
-    /* Unlock the connection mutex. */
-    IotMutex_Unlock( &( pNetworkConnection->sendMutex ) );
+    /* Unlock the SSL context mutex. */
+    if( pNetworkConnection->pSslContext != NULL )
+    {
+        IotMutex_Unlock( &( pNetworkConnection->sslMutex ) );
+    }
 
     /* Log the number of bytes sent. */
     if( bytesSent <= 0 )
@@ -858,6 +870,13 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
                  ( unsigned long ) bytesRequested,
                  pNetworkConnection->socket );
 
+    /* The SSL mutex must be locked to protect an SSL context from concurrent
+     * access. */
+    if( pNetworkConnection->pSslContext != NULL )
+    {
+        IotMutex_Lock( &( pNetworkConnection->sslMutex ) );
+    }
+
     /* Loop until all bytes are received. */
     while( bytesRemaining > 0 )
     {
@@ -890,6 +909,12 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
             bytesRead += ( size_t ) receiveStatus;
             bytesRemaining -= ( size_t ) receiveStatus;
         }
+    }
+
+    /* Unlock the SSL context mutex. */
+    if( pNetworkConnection->pSslContext != NULL )
+    {
+        IotMutex_Unlock( &( pNetworkConnection->sslMutex ) );
     }
 
     /* Check how many bytes were read. */
@@ -946,6 +971,7 @@ IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection )
     /* Cast function parameter to correct type. */
     _networkConnection_t * const pNetworkConnection = pConnection;
 
+    /* Wait for the receive thread to terminate. */
     if( pNetworkConnection->receiveThreadCreated == true )
     {
         posixError = pthread_join( pNetworkConnection->receiveThread, NULL );
@@ -962,6 +988,9 @@ IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection )
     if( pNetworkConnection->pSslContext != NULL )
     {
         SSL_free( pNetworkConnection->pSslContext );
+
+        /* Destroy the SSL context mutex. */
+        IotMutex_Destroy( &( pNetworkConnection->sslMutex ) );
     }
 
     /* Close the socket file descriptor. */
@@ -976,9 +1005,6 @@ IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection )
         IotLogInfo( "(Socket %d) Socket closed.",
                     pNetworkConnection->socket );
     }
-
-    /* Destroy the connection send mutex. */
-    IotMutex_Destroy( &( pNetworkConnection->sendMutex ) );
 
     /* Free the connection. */
     IotNetwork_Free( pNetworkConnection );
