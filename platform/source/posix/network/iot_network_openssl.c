@@ -161,7 +161,7 @@ static void * _networkReceiveThread( void * pArgument )
     /* Continuously poll the network socket for events. */
     while( poll( &fileDescriptor, 1, -1 ) == 1 )
     {
-        /* Prevent this thread from being cancelled while running. But if the
+        /* Prevent this thread from being canceled while running. But if the
          * connection mutex is locked, wait until it is available. */
         if( IotMutex_TryLock( &( pNetworkConnection->mutex ) ) == false )
         {
@@ -369,9 +369,8 @@ static bool _readCredentials( SSL_CTX * pSslContext,
     IotLogInfo( "Successfully imported root CA." );
 
     /* Import the client certificate. */
-    if( SSL_CTX_use_certificate_file( pSslContext,
-                                      pClientCertPath,
-                                      SSL_FILETYPE_PEM ) != 1 )
+    if( SSL_CTX_use_certificate_chain_file( pSslContext,
+                                            pClientCertPath ) != 1 )
     {
         IotLogError( "Failed to import client certificate at %s",
                      pClientCertPath );
