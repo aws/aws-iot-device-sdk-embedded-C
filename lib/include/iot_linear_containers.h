@@ -119,6 +119,19 @@ typedef IotLink_t   IotQueue_t;
     ( ( type * ) ( void * ) ( ( ( uint8_t * ) ( pLink ) ) - offsetof( type, linkName ) ) )
 
 /**
+ * @brief Iterates through all elements of a linear container.
+ *
+ * Container elements must not be freed or removed while iterating.
+ *
+ * @param[in] pStart The first element to iterate from.
+ * @param[out] pLink Pointer to a container element.
+ */
+#define IotContainers_ForEach( pStart, pLink )  \
+    for( ( pLink ) = ( pStart )->pNext;         \
+         ( pLink ) != ( pStart );               \
+         ( pLink ) = ( pLink )->pNext )
+
+/**
  * @functionspage{linear_containers,linear containers library}
  * - @functionname{linear_containers_function_link_islinked}
  * - @functionname{linear_containers_function_list_double_create}
