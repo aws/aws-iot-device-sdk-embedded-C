@@ -67,6 +67,23 @@
     #error "Shadow API unit tests require AWS_IOT_SHADOW_ENABLE_ASSERTS to be 1."
 #endif
 
+/**
+ * @brief Whether to check the number of MQTT library errors in the malloc
+ * failure tests.
+ *
+ * Should only be checked if malloc overrides are available and not testing for
+ * code coverage. In static memory mode, there should be no MQTT library errors.
+ */
+#if ( IOT_TEST_COVERAGE == 1 ) || ( IOT_TEST_NO_MALLOC_OVERRIDES == 1 )
+    #define CHECK_MQTT_ERROR_COUNT( expected, actual )
+#else
+    #if ( IOT_STATIC_MEMORY_ONLY == 1 )
+        #define CHECK_MQTT_ERROR_COUNT( expected, actual )    TEST_ASSERT_EQUAL( 0, actual )
+    #else
+        #define CHECK_MQTT_ERROR_COUNT( expected, actual )    TEST_ASSERT_EQUAL( expected, actual )
+    #endif
+#endif
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -699,15 +716,8 @@ TEST( Shadow_Unit_API, DeleteMallocFail )
     }
 
     /* Allow 2 MQTT library errors, which are caused by failure to allocate memory
-     * for incoming packets (SUBSCRIBE, UNSUBSCRIBE). These allocation errors do
-     * not happen in static memory mode. Don't perform this check when running code
-     * coverage, as the code coverage logging function interferes with the malloc
-     * failure count. */
-    #if IOT_STATIC_MEMORY_ONLY == 1
-        TEST_ASSERT_EQUAL_INT32( 0, mqttErrorCount );
-    #elif IOT_TEST_COVERAGE != 1
-        TEST_ASSERT_EQUAL_INT32( 2, mqttErrorCount );
-    #endif
+     * for incoming packets (SUBSCRIBE, UNSUBSCRIBE). */
+    CHECK_MQTT_ERROR_COUNT( 2, mqttErrorCount );
 }
 
 /*-----------------------------------------------------------*/
@@ -772,15 +782,8 @@ TEST( Shadow_Unit_API, GetMallocFail )
     }
 
     /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
-     * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). These allocation
-     * errors do not happen in static memory mode. Don't perform this check when
-     * running code coverage, as the code coverage logging function interferes with
-     * the malloc failure count.*/
-    #if IOT_STATIC_MEMORY_ONLY == 1
-        TEST_ASSERT_EQUAL_INT32( 0, mqttErrorCount );
-    #elif IOT_TEST_COVERAGE != 1
-        TEST_ASSERT_EQUAL_INT32( 3, mqttErrorCount );
-    #endif
+     * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). */
+    CHECK_MQTT_ERROR_COUNT( 3, mqttErrorCount );
 }
 
 /*-----------------------------------------------------------*/
@@ -840,15 +843,8 @@ TEST( Shadow_Unit_API, UpdateMallocFail )
     }
 
     /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
-     * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). These allocation
-     * errors do not happen in static memory mode. Don't perform this check when
-     * running code coverage, as the code coverage logging function interferes with
-     * the malloc failure count.*/
-    #if IOT_STATIC_MEMORY_ONLY == 1
-        TEST_ASSERT_EQUAL_INT32( 0, mqttErrorCount );
-    #elif IOT_TEST_COVERAGE != 1
-        TEST_ASSERT_EQUAL_INT32( 3, mqttErrorCount );
-    #endif
+     * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). */
+    CHECK_MQTT_ERROR_COUNT( 3, mqttErrorCount );
 }
 
 /*-----------------------------------------------------------*/
