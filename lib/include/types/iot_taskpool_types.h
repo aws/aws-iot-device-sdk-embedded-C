@@ -314,7 +314,7 @@ typedef struct IotTaskPoolJob
 /**
  * @constantspage{taskpool,task pool library}
  *
- * @section taskpool_constants_initializers task pool Initializers
+ * @section taskpool_constants_initializers Task pool initializers
  * @brief Provides default values for initializing the data types of the task pool library.
  *
  * @snippet this define_taskpool_initializers
@@ -352,17 +352,18 @@ typedef struct IotTaskPoolJob
 /* @[define_taskpool_initializers] */
 
 /**
- * @brief Schedules a job to execute immediately.
+ * @brief Flag for scheduling a job to execute immediately, even if the maximum number of threads in the
+ * task pool was reached already.
  *
  * @warning This flag may cause the task pool to create a worker to serve the job immediately, and
- * therefore using this flag may incur in additinal memory usage.
+ * therefore using this flag may incur in additional memory usage and potentially fail scheduling the job.
  */
 #define IOT_TASKPOOL_JOB_HIGH_PRIORITY    ( ( uint32_t ) 0x00000001 )
 
 /**
  * @brief Allows the use of the handle to the system task pool.
  *
- * @warning The task pool handle is not valid unless @ref taskpool_function_createsystemtaskpool is
+ * @warning The task pool handle is not valid unless @ref IotTaskPool_CreateSystemTaskPool is
  * called before the handle is used.
  */
 #define IOT_SYSTEM_TASKPOOL               ( IotTaskPool_GetSystemTaskPool() )
