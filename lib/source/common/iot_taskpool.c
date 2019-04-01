@@ -1034,11 +1034,14 @@ static void _taskPoolWorker( void * pUserContext )
      */
     do
     {
-        IotLink_t * pFirst = NULL;
+        bool jobAvailable;
+        IotLink_t * pFirst;
         IotTaskPoolJob_t * pJob = NULL;
 
-        /* Wait on incoming notifications... */
-        IotSemaphore_Wait( &pTaskPool->dispatchSignal );
+        /* Wait on incoming notifications. If waiting on the semaphore return with timeout, then
+         * it means that this thread should consider shutting down for the task pool to fold back
+         * to its minimum number of threads. */
+        jobAvailable = IotSemaphore_TimedWait( &pTaskPool->dispatchSignal, IOT_TASKPOOL_JOB_WAIT_TIMEOUT_MS );
 
         /* Acquire the lock to check the exit condition, and release the lock if the exit condition is verified,
          * or before waiting for incoming notifications.
@@ -1048,7 +1051,7 @@ static void _taskPoolWorker( void * pUserContext )
             /* If the exit condition is verified, update the number of active threads and exit the loop. */
             if( _IsShutdownStarted( pTaskPool ) )
             {
-                IotLogDebug( "Worker thread exiting because exit condition was set." );
+                IotLogDebug( "Worker thread exiting because shutdown condition was set." );
 
                 /* Decrease the number of active threads. */
                 pTaskPool->activeThreads--;
@@ -1062,12 +1065,13 @@ static void _taskPoolWorker( void * pUserContext )
                 break;
             }
 
-            /* Check if this thread needs to exit but let is run once, so we can support
-             * the case for scheduling 'high prioroty' jobs that causes exceeding the
-             * max threads quota for the purpose of executing the high-piority task. */
+            /* Check if this thread needs to exit because 'max threads' quota was exceeded.
+             * In that case, let is run once, so we can support the case for scheduling 'high priority'
+             * jobs that causes exceeding the max threads quota for the purpose of executing
+             * the high-piority task. */
             if( pTaskPool->activeThreads > pTaskPool->maxThreads )
             {
-                IotLogDebug( "Worker thread exiting because maximum quota was exceeded." );
+                IotLogDebug( "Worker thread will exit because maximum quota was exceeded." );
 
                 /* Decrease the number of active threads pro-actively. */
                 pTaskPool->activeThreads--;
@@ -1075,19 +1079,39 @@ static void _taskPoolWorker( void * pUserContext )
                 /* Mark this thread as dead. */
                 running = false;
             }
-
-            /* Dequeue the first job in FIFO order. */
-            pFirst = IotQueue_Dequeue( &pTaskPool->dispatchQueue );
-
-            /* If there is indeed a job, then update status under lock, and release the lock before processing the job. */
-            if( pFirst != NULL )
+            /* Check if this thread needs to exit  because the worker woke up after a timeout. */
+            else if( jobAvailable == false )
             {
-                /* Extract the job from its link. */
-                pJob = IotLink_Container( IotTaskPoolJob_t, pFirst, link );
+                /* If there was a timeout, shrink back the task pool to the minimum nunber of threads. */
+                if( pTaskPool->activeThreads > pTaskPool->minThreads )
+                {
+                    /* After waking up from a timeout, the thread will try and pick up a new job, but . */
+                    IotLogDebug( "Worker will exit because task pool is shrinking." );
 
-                /* Update status to 'executing'. */
-                pJob->status = IOT_TASKPOOL_STATUS_COMPLETED;
-                userCallback = pJob->userCallback;
+                    /* Decrease the number of active threads pro-actively. */
+                    pTaskPool->activeThreads--;
+
+                    /* Mark this thread as dead. */
+                    running = false;
+                }
+            }
+
+            /* Only look for a job if waiting did not timed out. */
+            if( jobAvailable == true )
+            {
+                /* Dequeue the first job in FIFO order. */
+                pFirst = IotQueue_Dequeue( &pTaskPool->dispatchQueue );
+
+                /* If there is indeed a job, then update status under lock, and release the lock before processing the job. */
+                if( pFirst != NULL )
+                {
+                    /* Extract the job from its link. */
+                    pJob = IotLink_Container( IotTaskPoolJob_t, pFirst, link );
+
+                    /* Update status to 'executing'. */
+                    pJob->status = IOT_TASKPOOL_STATUS_COMPLETED;
+                    userCallback = pJob->userCallback;
+                }
             }
         }
         TASKPOOL_EXIT_CRITICAL();
