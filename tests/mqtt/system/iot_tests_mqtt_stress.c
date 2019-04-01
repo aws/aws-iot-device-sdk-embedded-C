@@ -230,31 +230,6 @@ static IotSemaphore_t receivedPublishCounter;
  */
 static char _pClientIdentifier[ _CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
 
-/**
- * @brief Tracks whether the PINGREQ serializer override was called.
- */
-static bool _pingreqOverrideCalled = false;
-
-/*-----------------------------------------------------------*/
-
-/* Declaration of MQTT serializer function. The internal MQTT header cannot be
- * included here. */
-extern IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
-                                                 size_t * pPacketSize );
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Serializer override for PINGREQ.
- */
-static IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
-                                         size_t * pPacketSize )
-{
-    _pingreqOverrideCalled = true;
-
-    return _IotMqtt_SerializePingreq( pPingreqPacket, pPacketSize );
-}
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -430,7 +405,6 @@ TEST_GROUP( MQTT_Stress );
 TEST_SETUP( MQTT_Stress )
 {
     int32_t i = 0;
-    IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttSubscription_t pSubscriptions[ _TEST_TOPIC_NAME_COUNT ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
 
@@ -452,20 +426,13 @@ TEST_SETUP( MQTT_Stress )
         TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
     }
 
-    /* Clear the PINGREQ override flag. */
-    _pingreqOverrideCalled = false;
-
-    /* Empty log message to log a new line. */
-    IotLogInfo( "Stress tests starting." );
+    /* Print a new line. */
+    UNITY_PRINT_EOL();
 
     /* Create the publish counter semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &receivedPublishCounter,
                                                       0,
                                                       _MAX_RECEIVED_PUBLISH ) );
-
-    /* Set the serializer overrides. */
-    serializer.serialize.pingreq = _serializePingreq;
-    _networkInfo.pMqttSerializer = &serializer;
 
     /* Generate a new, unique client identifier based on the time if no client
      * identifier is defined. Otherwise, copy the provided client identifier. */
@@ -578,9 +545,6 @@ TEST( MQTT_Stress, KeepAlive )
     /* Send a PUBLISH to verify that the connection is still usable. */
     IotLogInfo( "KeepAlive test checking MQTT connection." );
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _checkConnection() );
-
-    /* Check that the PINGREQ override was used. */
-    TEST_ASSERT_EQUAL( true, _pingreqOverrideCalled );
 }
 
 /*-----------------------------------------------------------*/
@@ -626,9 +590,6 @@ TEST( MQTT_Stress, BlockingCallback )
     }
 
     IotSemaphore_Destroy( &waitSem );
-
-    /* Check that the PINGREQ override was used. */
-    TEST_ASSERT_EQUAL( true, _pingreqOverrideCalled );
 }
 
 /*-----------------------------------------------------------*/
