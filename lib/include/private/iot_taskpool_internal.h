@@ -193,17 +193,6 @@
 
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Provide default values for undefined configuration constants.
- */
-#ifndef IOT_TASKPOOL_JOBS_RECYCLE_LIMIT
-    #define IOT_TASKPOOL_JOBS_RECYCLE_LIMIT    ( 32UL )
-#endif
-/** @endcond */
-
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
