@@ -258,7 +258,8 @@ typedef struct IotTaskPoolInfo
  * @ingroup taskpool_datatypes_types
  * @brief Task pool jobs cache.
  *
- * @warning This is a system-level data type that should not be modified.
+ * @warning This is a system-level data type that should not be modified or used directly in any application.
+ * @warning This is a system-level data type that can and will change across different versions of the platform, with no regards for backward compatibility.
  *
  */
 typedef struct IotTaskPoolCache
@@ -273,7 +274,8 @@ typedef struct IotTaskPoolCache
  * @brief The task pool data structure keeps track of the internal state and the signals for the dispatcher threads.
  * The task pool is a thread safe data structure.
  *
- * @warning This is a system-level data type that should not be modified.
+ * @warning This is a system-level data type that should not be modified or used directly in any application.
+ * @warning This is a system-level data type that can and will change across different versions of the platform, with no regards for backward compatibility.
  *
  */
 typedef struct IotTaskPool
@@ -297,7 +299,8 @@ typedef struct IotTaskPool
  * @ingroup taskpool_datatypes_types
  * @brief The job data structure keeps track of the user callback and context, as well as the status of the job.
  *
- * @warning This is a system-level data type that should not be modified.
+ * @warning This is a system-level data type that should not be modified or used directly in any application.
+ * @warning This is a system-level data type that can and will change across different versions of the platform, with no regards for backward compatibility.
  *
  */
 typedef struct IotTaskPoolJob
@@ -314,7 +317,7 @@ typedef struct IotTaskPoolJob
 /**
  * @constantspage{taskpool,task pool library}
  *
- * @section taskpool_constants_initializers Task pool initializers
+ * @section taskpool_constants_initializers task pool Initializers
  * @brief Provides default values for initializing the data types of the task pool library.
  *
  * @snippet this define_taskpool_initializers

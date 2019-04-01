@@ -128,7 +128,7 @@ for memory allocation failures, but it may also have negative repercussions on t
 It is up to the application developer to strike the correct balance these competing needs. 
 The task pool will cache when the application calling @ref IotTaskPool_RecycleJob. Any recycled tasks in excess of @ref IOT_TASKPOOL_JOBS_RECYCLE_LIMIT will be destroyed and its memory will be release. 
 
-@configdefault `32`
+@configdefault `8`
 
 @section IOT_TASKPOOL_ENABLE_ASSERTS
 @brief Set this to `1` to perform sanity checks when using the task pool library.

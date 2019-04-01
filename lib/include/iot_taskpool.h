@@ -513,7 +513,7 @@ const char * IotTaskPool_strerror( IotTaskPoolError_t status );
  * @brief The maximum number of jobs to cache.
  */
 #ifndef IOT_TASKPOOL_JOBS_RECYCLE_LIMIT
-    #define IOT_TASKPOOL_JOBS_RECYCLE_LIMIT    ( 32UL )
+    #define IOT_TASKPOOL_JOBS_RECYCLE_LIMIT    ( 8UL )
 #endif
 
 /**
