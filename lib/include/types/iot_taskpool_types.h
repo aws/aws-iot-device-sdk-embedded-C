@@ -45,10 +45,6 @@
 /*-------------------------- Task pool enumerated types --------------------------*/
 
 /**
- * @enums{taskpool,Task pool library}
- */
-
-/**
  * @ingroup taskpool_datatypes_enums
  * @brief Return codes of [task pool functions](@ref taskpool_functions).
  */
@@ -209,10 +205,6 @@ struct IotTaskPoolJob;
 /*------------------------- Task pool parameter structs --------------------------*/
 
 /**
- * @paramstructs{taskpool,task pool}
- */
-
-/**
  * @ingroup taskpool_datatypes_functionpointers
  * @brief Callback type for a user callback.
  *
@@ -255,7 +247,7 @@ typedef struct IotTaskPoolInfo
 /*------------------------- Task pool handles structs --------------------------*/
 
 /**
- * @ingroup taskpool_datatypes_types
+ * @ingroup taskpool_datatypes_structs
  * @brief Task pool jobs cache.
  *
  * @warning This is a system-level data type that should not be modified or used directly in any application.
@@ -270,7 +262,7 @@ typedef struct IotTaskPoolCache
 
 
 /**
- * @ingroup taskpool_datatypes_types
+ * @ingroup taskpool_datatypes_structs
  * @brief The task pool data structure keeps track of the internal state and the signals for the dispatcher threads.
  * The task pool is a thread safe data structure.
  *
@@ -296,7 +288,7 @@ typedef struct IotTaskPool
 } IotTaskPool_t;
 
 /**
- * @ingroup taskpool_datatypes_types
+ * @ingroup taskpool_datatypes_structs
  * @brief The job data structure keeps track of the user callback and context, as well as the status of the job.
  *
  * @warning This is a system-level data type that should not be modified or used directly in any application.
@@ -317,7 +309,7 @@ typedef struct IotTaskPoolJob
 /**
  * @constantspage{taskpool,task pool library}
  *
- * @section taskpool_constants_initializers task pool Initializers
+ * @section taskpool_constants_initializers Task pool Initializers
  * @brief Provides default values for initializing the data types of the task pool library.
  *
  * @snippet this define_taskpool_initializers
