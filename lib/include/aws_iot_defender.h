@@ -86,7 +86,7 @@
  * @anchor DefenderMetricsFlags
  * @name Metrics Flags
  *
- * @brief Bit flags or metrics used by @ref Defender_function_SetMetrics function.
+ * @brief Bit flags or metrics used by @ref defender_function_setmetrics function.
  */
 /**@{ */
 #define AWS_IOT_DEFENDER_METRICS_ALL                                        0xffffffff /**< Flag to indicate including all metrics. */
@@ -125,7 +125,7 @@
  * @brief Enumerated types of the Defender library.
  *
  * @defgroup Defender_datatypes_paramstructs Parameter structures
- * @brief Structures passed as parameters to [Defender functions](@ref Defender_functions)
+ * @brief Structures passed as parameters to [Defender functions](@ref defender_functions)
  *
  * These structures are passed as parameters to library functions.
  * Documentation for these structures will state the functions associated with each parameter structure and the purpose of each member.
@@ -171,7 +171,7 @@ typedef enum
 
 /**
  * @defgroup Defender_datatypes_paramstructs Parameter structures
- * @brief Structures passed as parameters to [Defender functions](@ref Defender_functions)
+ * @brief Structures passed as parameters to [Defender functions](@ref defender_functions)
  *
  * These structures are passed as parameters to library functions.
  * Documentation for these structures will state the functions associated with each parameter structure and the purpose of each member.
@@ -213,20 +213,27 @@ typedef struct AwsIotDefenderStartInfo
 } AwsIotDefenderStartInfo_t;
 
 /**
- * @page Defender_functions Functions
- * @brief Functions of the Defender library.
- * - @subpage Defender_function_SetMetrics @copybrief Defender_function_SetMetrics
- * - @subpage Defender_function_Start @copybrief Defender_function_Start
- * - @subpage Defender_function_Stop @copybrief Defender_function_Stop
- * - @subpage Defender_function_SetPeriod @copybrief Defender_function_SetPeriod
- * - @subpage Defender_function_GetPeriod @copybrief Defender_function_GetPeriod
- * - @subpage Defender_function_strerror @copybrief Defender_function_strerror
- * - @subpage Defender_function_DescribeEventType @copybrief Defender_function_DescribeEventType
+ * @functionspage{defender,Device Defender library}
+ * - @functionname{defender_function_setmetrics}
+ * - @functionname{defender_function_start}
+ * - @functionname{defender_function_stop}
+ * - @functionname{defender_function_setperiod}
+ * - @functionname{defender_function_getperiod}
+ * - @functionname{defender_function_strerror}
+ * - @functionname{defender_function_geteventerror}
  */
 
 /**
- * @page Defender_function_SetMetrics AwsIotDefender_SetMetrics
- * @snippet this declare_defender_setmetrics
+ * @functionpage{AwsIotDefender_SetMetrics,defender,setmetrics}
+ * @functionpage{AwsIotDefender_Start,defender,start}
+ * @functionpage{AwsIotDefender_Stop,defender,stop}
+ * @functionpage{AwsIotDefender_SetPeriod,defender,setperiod}
+ * @functionpage{AwsIotDefender_GetPeriod,defender,getperiod}
+ * @functionpage{AwsIotDefender_strerror,defender,strerror}
+ * @functionpage{AwsIotDefender_GetEventError,defender,geteventerror}
+ */
+
+/**
  * @brief Set metrics that defender agent needs to collect for a metrics group.
  *
  * * If defender agent is not started, this function will provide the metrics to be collected.
@@ -241,7 +248,7 @@ typedef struct AwsIotDefenderStartInfo
  * * On success, #AWS_IOT_DEFENDER_SUCCESS is returned.
  * * If metricsGroup is invalid, #AWS_IOT_DEFENDER_INVALID_INPUT is returned.
  * @note This function is thread safe.
- * @note @ref Defender_function_Stop "AwsIotDefender_Stop" will clear the metrics.
+ * @note @ref defender_function_stop will clear the metrics.
  */
 
 /* @[declare_defender_setmetrics] */
@@ -250,8 +257,6 @@ AwsIotDefenderError_t AwsIotDefender_SetMetrics( AwsIotDefenderMetricsGroup_t me
 /* @[declare_defender_setmetrics] */
 
 /**
- * @page Defender_function_Start AwsIotDefender_Start
- * @snippet this declare_defender_start
  * @brief Start the defender agent.
  *
  * @param[in] pStartInfo Pointer of parameters of start function
@@ -341,11 +346,9 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
 /* @[declare_defender_start] */
 
 /**
- * @page Defender_function_Stop AwsIotDefender_Stop
- * @snippet this declare_defender_stop
  * @brief Stop the defender agent.
  *
- * @warning This function must be called after successfully calling @ref Defender_function_Start "AwsIotDefender_Start".
+ * @warning This function must be called after successfully calling @ref defender_function_start.
  * @warning This function is not thread safe.
  */
 /* @[declare_defender_stop] */
@@ -353,8 +356,6 @@ void AwsIotDefender_Stop( void );
 /* @[declare_defender_stop] */
 
 /**
- * @page Defender_function_SetPeriod AwsIotDefender_SetPeriod
- * @snippet this declare_defender_setperiod
  * @brief Set period in seconds.
  *
  *
@@ -373,8 +374,6 @@ AwsIotDefenderError_t AwsIotDefender_SetPeriod( uint32_t periodSeconds );
 /* @[declare_defender_setperiod] */
 
 /**
- * @page Defender_function_GetPeriod AwsIotDefender_GetPeriod
- * @snippet this declare_defender_getperiod
  * @brief Get period in seconds.
  */
 /* @[declare_defender_getperiod] */
@@ -382,8 +381,6 @@ uint32_t AwsIotDefender_GetPeriod( void );
 /* @[declare_defender_getperiod] */
 
 /**
- * @page Defender_function_strerror AwsIotDefender_strerror
- * @snippet this declare_defender_strerror
  * @brief Return a string that describes #AwsIotDefenderError_t
  */
 /* @[declare_defender_strerror] */
@@ -391,12 +388,10 @@ const char * AwsIotDefender_strerror( AwsIotDefenderError_t error );
 /* @[declare_defender_strerror] */
 
 /**
- * @page Defender_function_DescribeEventType AwsIotDefender_DescribeEventType
- * @snippet this declare_defender_describeeventtype
  * @brief Return a string that describes #AwsIotDefenderEventType_t
  */
-/* @[declare_defender_describeeventtype] */
+/* @[declare_defender_geteventerror] */
 const char * AwsIotDefender_GetEventError();
-/* @[declare_defender_describeeventtype] */
+/* @[declare_defender_geteventerror] */
 
 #endif /* end of include guard: _AWS_IOT_DEFENDER_H_ */

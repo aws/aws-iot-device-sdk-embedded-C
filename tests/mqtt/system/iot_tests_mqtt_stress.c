@@ -233,7 +233,7 @@ static char _pClientIdentifier[ _CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Checks that #_IotTestMqttConnection is still usable by sending a PUBLISH.
+ * @brief Checks that the MQTT connection is still usable by sending a PUBLISH.
  *
  * @return The result of the PUBLISH.
  */
