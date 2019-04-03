@@ -421,7 +421,7 @@ typedef struct AwsIotShadowCallbackInfo
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void* #AwsIotShadowCallbackInfo_t.param1
+     * @param[in] void* #AwsIotShadowCallbackInfo_t.pCallbackContext
      * @param[in] AwsIotShadowCallbackParam_t* Details on the outcome of the Shadow
      * operation or an incoming Shadow document.
      *
