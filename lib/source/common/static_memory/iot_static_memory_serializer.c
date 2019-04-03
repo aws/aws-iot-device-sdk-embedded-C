@@ -73,10 +73,13 @@
         #error "IOT_SERIALIZER_DECODER_OBJECTS cannot be 0 or negative."
     #endif
 
+    /**
+     * @todo Placeholder.
+     */
     typedef struct _cborValueWrapper
     {
-        CborValue cborValue;
-        bool isOutermost;
+        CborValue cborValue; /**< @brief Placeholder. */
+        bool isOutermost;    /**< @brief Placeholder. */
     } _cborValueWrapper_t;
 
 /*-----------------------------------------------------------*/

@@ -102,7 +102,7 @@ ALIASES += handles{2}="@defgroup \1_datatypes_handles Handles^^@brief Opaque han
 ALIASES += enums{2}="@defgroup \1_datatypes_enums Enumerated types^^@brief Enumerated types of the \2."
 
 # Alias for starting a function pointers group.
-ALIASES += functionpointers{2}="@defgroup \1_datatypes_functionpointers Function pointers types^^@brief Function pointers types of the \2.""
+ALIASES += functionpointers{2}="@defgroup \1_datatypes_functionpointers Function pointers types^^@brief Function pointers types of the \2."
 
 # Alias for starting a structs group.
 ALIASES += structs{2}="@defgroup \1_datatypes_structs Structured types^^@brief Structured types of the \2."
