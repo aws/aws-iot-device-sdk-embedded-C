@@ -62,7 +62,9 @@ In addition to the components above, the MQTT library also depends on C standard
 @page mqtt_design Design
 @brief Architecture behind the MQTT library.
 
-@image html mqtt_design_typicaloperation.png width=100%
+MQTT relies on the [task pool library](@ref taskpool) to process MQTT operations, such as SUBSCRIBE, PUBLISH, or keep-alive. The MQTT API [functions](@ref mqtt_functions) post a job to the task pool, which is transmitted from a background task. Incoming responses are received through a [network receive callback](@ref platform_network_function_receivecallback), which posts another job to process the response to the task pool.
+
+@image html mqtt_design_typicaloperation.png width=80%
 */
 
 /**

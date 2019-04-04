@@ -36,4 +36,5 @@ TAGFILES = doc/tag/main.tag=../main \
            doc/tag/logging.tag=../logging \
            doc/tag/static_memory.tag=../static_memory \
            doc/tag/platform.tag=../platform \
-           doc/tag/linear_containers.tag=../linear_containers
+           doc/tag/linear_containers.tag=../linear_containers \
+           doc/tag/taskpool.tag=../taskpool
