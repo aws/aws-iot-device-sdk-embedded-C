@@ -53,7 +53,7 @@ TEST_GROUP_C_SETUP(ShadowJsonBuilderTests) {
 	shadowConnectParams.mqttClientIdLen = (uint16_t) strlen(AWS_IOT_MQTT_CLIENT_ID);
 	ConnectMQTTParamsSetup(&connectParams, AWS_IOT_MQTT_CLIENT_ID, (uint16_t) strlen(AWS_IOT_MQTT_CLIENT_ID));
 	setTLSRxBufferForConnack(&connectParams, 0, 0);
-	ret_val = aws_iot_shadow_connect(&iotClient, &shadowConnectParams);
+	ret_val = aws_iot_shadow_connect(&iotClient, &shadowConnectParams, 600);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
 	dataFloatHandler.cb = NULL;

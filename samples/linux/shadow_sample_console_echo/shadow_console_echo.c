@@ -204,7 +204,7 @@ int main(int argc, char** argv) {
 	scp.mqttClientIdLen = (uint16_t) strlen(AWS_IOT_MQTT_CLIENT_ID);
 
 	IOT_INFO("Shadow Connect");
-	rc = aws_iot_shadow_connect(&mqttClient, &scp);
+	rc = aws_iot_shadow_connect(&mqttClient, &scp, 600);
 	if (SUCCESS != rc) {
 		IOT_ERROR("Shadow Connection Error");
 		return rc;

@@ -103,7 +103,7 @@ IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t 
 	FUNC_EXIT_RC(SUCCESS);
 }
 
-IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams) {
+IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams, uint16_t pKeppAliveTime ) {
 	IoT_Error_t rc = SUCCESS;
 	uint16_t deleteAcceptedTopicLen;
 	IoT_Client_Connect_Params ConnectParams = iotClientConnectParamsDefault;
@@ -117,7 +117,15 @@ IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParamet
 	snprintf(myThingName, MAX_SIZE_OF_THING_NAME, "%s", pParams->pMyThingName);
 	snprintf(mqttClientID, MAX_SIZE_OF_UNIQUE_CLIENT_ID_BYTES, "%s", pParams->pMqttClientId);
 
-	ConnectParams.keepAliveIntervalInSec = 600; // NOTE: Temporary fix
+	if ( 0 >= pKeppAliveTime  || 60 >= pKeppAliveTime) {
+		/*	If the user sets "pKeppAliveTime" between 0-60.
+		 *	Then the "ConnectParams.keepAliveIntervalInSec" is set to 60secs (1min).
+		 *	And the actual TimeOut duration will be (60 * 1.5) = 90secs = 1.5Min
+		 */
+		ConnectParams.keepAliveIntervalInSec = 60;
+	} else {
+		ConnectParams.keepAliveIntervalInSec = pKeppAliveTime;
+	}
 	ConnectParams.MQTTVersion = MQTT_3_1_1;
 	ConnectParams.isCleanSession = true;
 	ConnectParams.isWillMsgPresent = false;

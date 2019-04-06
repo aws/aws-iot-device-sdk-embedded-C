@@ -118,11 +118,19 @@ IoT_Error_t aws_iot_shadow_init(AWS_IoT_Client *pClient, ShadowInitParameters_t 
  *
  * This function does the TLSv1.2 handshake and establishes the MQTT connection
  *
- * @param pClient	MQTT Client used as the protocol layer
- * @param pParams	Shadow Conenction parameters like TLS cert location
+ * @param pClient			MQTT Client used as the protocol layer
+ *
+ * @param pParams			Shadow Conenction parameters like TLS cert location
+ *
+ * @param pKeppAliveTime 	Measured in seconds. Expressed as a 16-bit word (Decimal 65535). Max Interval value is The maximum value is 18 hours 12 minutes and 15 seconds.
+ * 							It is the maximum time interval that is permitted to elapse between
+ * 							the point at which the Client finishes transmitting one Control Packet
+ * 							and the point it starts sending the next.
+ * 							If the AWS server doesn’t receive any packet from a client within [ 1.5 * pKeppAliveTime ] time interval, it close the connection to the client.
+ *
  * @return An IoT Error Type defining successful/failed Connection
  */
-IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams);
+IoT_Error_t aws_iot_shadow_connect(AWS_IoT_Client *pClient, ShadowConnectParameters_t *pParams, uint16_t pKeppAliveTime );
 
 /**
  * @brief Yield function to let the background tasks of MQTT and Shadow

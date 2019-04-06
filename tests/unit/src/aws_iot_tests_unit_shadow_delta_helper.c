@@ -67,7 +67,7 @@ TEST_GROUP_C_SETUP(ShadowDeltaTest) {
 	shadowConnectParams.mqttClientIdLen = (uint16_t) strlen(AWS_IOT_MQTT_CLIENT_ID);
 	ConnectMQTTParamsSetup(&connectParams, AWS_IOT_MQTT_CLIENT_ID, (uint16_t) strlen(AWS_IOT_MQTT_CLIENT_ID));
 	setTLSRxBufferForConnack(&connectParams, 0, 0);
-	ret_val = aws_iot_shadow_connect(&client, &shadowConnectParams);
+	ret_val = aws_iot_shadow_connect(&client, &shadowConnectParams, 600);
 	CHECK_EQUAL_C_INT(SUCCESS, ret_val);
 
 	snprintf(shadowDeltaTopic, MAX_SHADOW_TOPIC_LENGTH_BYTES, SHADOW_DELTA_UPDATE, AWS_IOT_MY_THING_NAME);
