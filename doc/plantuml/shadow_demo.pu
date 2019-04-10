@@ -1,0 +1,33 @@
+@startuml
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+box "Demo Device 1\n(part of demo application)" #LightBlue
+    participant "Main demo thread" as main
+end box
+
+box "Demo Device 2\n(part of demo application)" #LightGreen
+    participant "Delta callback" as delta_callback
+end box
+
+box "Shadow Service" #Orange
+    participant "Update topic" as update_topic
+    participant "Delta topic" as delta_topic
+end box
+
+main -> delta_topic: SUBSCRIBE (set delta callback)
+delta_topic -> delta_callback: SUBACK (delta callback set)
+
+loop AWS_IOT_DEMO_SHADOW_UPDATE_COUNT times
+    loop every AWS_IOT_DEMO_SHADOW_UPDATE_PERIOD_MS
+        main -> update_topic: New "desired" state
+        update_topic -> delta_topic: Generate delta\ndocument
+        delta_topic -> delta_callback: Send delta document
+        delta_callback -> delta_callback: Change state
+        delta_callback -> update_topic: Report state change
+        delta_callback -> main: Notify state change done
+    end
+end
+
+@enduml
