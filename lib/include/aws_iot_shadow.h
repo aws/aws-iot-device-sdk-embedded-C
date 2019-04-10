@@ -93,9 +93,10 @@ AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeout );
 /**
  * @brief One-time deinitialization function for the Shadow library.
  *
- * This function frees resources taken in @ref shadow_function_init. It should
- * be called to clean up the Shadow library. After this function returns, @ref
- * shadow_function_init must be called again before calling any other Shadow
+ * This function frees resources taken in @ref shadow_function_init and deletes
+ * any [persistent subscriptions.](@ref AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS)
+ * It should be called to clean up the Shadow library. After this function returns,
+ * @ref shadow_function_init must be called again before calling any other Shadow
  * function.
  *
  * @warning No thread-safety guarantees are provided for this function.
@@ -534,7 +535,34 @@ AwsIotShadowError_t AwsIotShadow_SetUpdatedCallback( IotMqttConnection_t mqttCon
 /**
  * @brief Remove persistent Thing Shadow operation topic subscriptions.
  *
- * Not safe to call with any in-progress operation. Does not affect callbacks.
+ * Passing the flag @ref AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS to @ref shadow_function_delete,
+ * @ref shadow_function_get, or @ref shadow_function_update causes the Shadow operation topic
+ * subscriptions to be maintained for future calls to the same function. If a persistent
+ * subscription for a Shadow topic are no longer needed, this function may be used to
+ * remove it.
+ *
+ * @param[in] mqttConnection The MQTT connection associated with the persistent subscription.
+ * @param[in] pThingName The Thing Name associated with the persistent subscription.
+ * @param[in] thingNameLength The length of `pThingName`.
+ * @param[in] flags Flags that determine which subscriptions to remove. Valid values are
+ * the bitwise OR of the following individual flags:
+ * - @ref AWS_IOT_SHADOW_FLAG_REMOVE_DELETE_SUBSCRIPTIONS
+ * - @ref AWS_IOT_SHADOW_FLAG_REMOVE_GET_SUBSCRIPTIONS
+ * - @ref AWS_IOT_SHADOW_FLAG_REMOVE_UPDATE_SUBSCRIPTIONS
+ *
+ * @return On success:
+ * - #AWS_IOT_SHADOW_SUCCESS
+ * @return If an MQTT UNSUBSCRIBE packet cannot be sent, one of the following:
+ * - #AWS_IOT_SHADOW_NO_MEMORY
+ * - #AWS_IOT_SHADOW_MQTT_ERROR
+ *
+ * @note @ref shadow_function_cleanup removes all persistent subscriptions as well.
+ *
+ * @warning This function is not safe to call with any in-progress operations!
+ * It also does not affect delta and updated callbacks registered with @ref
+ * shadow_function_setdeltacallback and @ref shadow_function_setupdatedcallback,
+ * respectively. (See documentation for those functions on how to remove their
+ * callbacks).
  */
 /* @[declare_shadow_removepersistentsubscriptions] */
 AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnection_t mqttConnection,
