@@ -334,7 +334,7 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
  * @param[in] thingNameLength The length of `pThingName`.
  * @param[in] flags This parameter is for future-compatibility. Currently, flags
  * are not supported for this function and this parameter is ignored.
- * @param[in] pDeltaCallback Callback function and to invoke for incoming delta
+ * @param[in] pDeltaCallback Callback function to invoke for incoming delta
  * documents.
  *
  * @return One of the following:
@@ -352,8 +352,8 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
  *
  * <b>Example</b>
  * @code{c}
- * #define _THING_NAME "Test_device"
- * #define _THING_NAME_LENGTH ( sizeof( _THING_NAME ) - 1 )
+ * #define THING_NAME "Test_device"
+ * #define THING_NAME_LENGTH ( sizeof( THING_NAME ) - 1 )
  *
  * AwsIotShadowError_t result = AWS_IOT_SHADOW_STATUS_PENDING;
  * AwsIotShadowCallbackInfo_t deltaCallback = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
@@ -363,8 +363,8 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
  *
  * // Set the delta callback for the Thing "Test_device".
  * result = AwsIotShadow_SetDeltaCallback( mqttConnection,
- *                                         _THING_NAME,
- *                                         _THING_NAME_LENGTH,
+ *                                         THING_NAME,
+ *                                         THING_NAME_LENGTH,
  *                                         0,
  *                                         &deltaCallback );
  *
@@ -374,8 +374,8 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
  *     AwsIotShadowDocumentInfo_t updateInfo = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
  *
  *     // Set the Thing Name for Shadow update.
- *     updateInfo.pThingName = _THING_NAME;
- *     updateInfo.thingNameLength = _THING_NAME_LENGTH;
+ *     updateInfo.pThingName = THING_NAME;
+ *     updateInfo.thingNameLength = THING_NAME_LENGTH;
  *
  *     // Set the Shadow document to send. This document has different "reported"
  *     // and "desired" states. It represents a scenario where a device is currently
@@ -404,8 +404,8 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
  *     // Once the delta callback is no longer needed, it may be removed by passing
  *     // NULL as pDeltaCallback.
  *     result = AwsIotShadow_SetDeltaCallback( mqttConnection,
- *                                             _THING_NAME,
- *                                             _THING_NAME_LENGTH,
+ *                                             THING_NAME,
+ *                                             THING_NAME_LENGTH,
  *                                             0,
  *                                             NULL );
  *
@@ -424,6 +424,104 @@ AwsIotShadowError_t AwsIotShadow_SetDeltaCallback( IotMqttConnection_t mqttConne
 
 /**
  * @brief Set a callback to be invoked when a Thing Shadow changes.
+ *
+ * The Shadow service publishes a state document to the `update/documents` topic
+ * whenever a Thing Shadow is successfully updated. This document reports the
+ * complete previous and current Shadow documents in `previous` and `current`
+ * sections, respectively. Therefore, the `update/documents` topic is useful
+ * for monitoring Shadow updates.
+ *
+ * An <i>updated callback</i> may be invoked whenever a document is published to
+ * `update/documents`. Each Thing may have a single updated callback set. This function
+ * modifies the updated callback for a specific Thing depending on the `pUpdatedCallback`
+ * parameter and the presence of any existing updated callback.
+ * - When no existing updated callback exists for a specific Thing, a new updated
+ * callback is added.
+ * - If there is an existing updated callback and `pUpdatedCallback` is not `NULL`,
+ * then the existing callback function and parameter are replaced with `pUpdatedCallback`.
+ * - If there is an existing updated callback and `pUpdatedCallback` is `NULL`,
+ * then the updated callback is removed.
+ *
+ * @param[in] mqttConnection The MQTT connection to use for the subscription to `update/documents`.
+ * @param[in] pThingName The subscription to `update/documents` will be added for
+ * this Thing Name.
+ * @param[in] thingNameLength The length of `pThingName`.
+ * @param[in] flags This parameter is for future-compatibility. Currently, flags are
+ * not supported for this function and this parameter is ignored.
+ * @param[in] pUpdatedCallback Callback function to invoke for incoming updated documents.
+ *
+ * @return One of the following:
+ * - #AWS_IOT_SHADOW_SUCCESS
+ * - #AWS_IOT_SHADOW_BAD_PARAMETER
+ * - #AWS_IOT_SHADOW_NO_MEMORY
+ * - #AWS_IOT_SHADOW_MQTT_ERROR
+ * - #AWS_IOT_SHADOW_TIMEOUT
+ *
+ * @note Documents published to `update/documents` will be large, as they contain 2
+ * complete Shadow state documents. If an updated callback is used, ensure that the
+ * device has sufficient memory for incoming documents.
+ *
+ * @see @ref shadow_function_setdeltacallback for the function to register callbacks
+ * for delta documents.
+ *
+ * <b>Example</b>
+ * @code{c}
+ * #define THING_NAME "Test_device"
+ * #define THING_NAME_LENGTH ( sizeof( THING_NAME ) - 1 )
+ *
+ * AwsIotShadowError_t result = AWS_IOT_SHADOW_STATUS_PENDING;
+ * AwsIotShadowCallbackInfo_t updatedCallback = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
+ *
+ * // _updatedCallbackFunction will be invoked when an updated document is received.
+ * updatedCallback.function = _updatedCallbackFunction;
+ *
+ * // Set the updated callback for the Thing "Test_device".
+ * result = AwsIotShadow_SetUpdatedCallback( mqttConnection,
+ *                                           THING_NAME,
+ *                                           THING_NAME_LENGTH,
+ *                                           0,
+ *                                           &updatedCallback );
+ *
+ * // Check if the callback was successfully set.
+ * if( result == AWS_IOT_SHADOW_SUCCESS )
+ * {
+ *     AwsIotShadowDocumentInfo_t updateInfo = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
+ *
+ *     // Set the Thing Name for Shadow update.
+ *     updateInfo.pThingName = THING_NAME;
+ *     updateInfo.thingNameLength = THING_NAME_LENGTH;
+ *
+ *     // Set the Shadow document to send. Any Shadow update will trigger the
+ *     // updated callback.
+ *     updateInfo.update.pUpdateDocument =
+ *     "{"
+ *          "\"state\": {"
+ *              "\"reported\": { \"deviceOn\": false }"
+ *          "}"
+ *     "}";
+ *     updateInfo.update.updateDocumentLength = strlen( updateInfo.update.pUpdateDocument );
+ *
+ *     // Send the Shadow document. A successful update will trigger the updated callback.
+ *     result = AwsIotShadow_TimedUpdate( mqttConnection,
+ *                                        &updateInfo,
+ *                                        0,
+ *                                        0,
+ *                                        5000 );
+ *
+ *     // After a successful Shadow update, the updated callback will be invoked.
+ *
+ *     // Once the updated callback is no longer needed, it may be removed by
+ *     // passing NULL as pUpdatedCallback.
+ *     result = AwsIotShadow_SetUpdatedCallback( mqttConnection,
+ *                                               THING_NAME,
+ *                                               THING_NAME_LENGTH,
+ *                                               NULL );
+ *
+ *     // The return value from removing an updated callback should always be
+ *     // success.
+ *     assert( result == AWS_IOT_SHADOW_SUCCESS );
+ * }
+ * @endcode
  */
 /* @[declare_shadow_setupdatedcallback] */
 AwsIotShadowError_t AwsIotShadow_SetUpdatedCallback( IotMqttConnection_t mqttConnection,
