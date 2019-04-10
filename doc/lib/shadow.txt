@@ -50,6 +50,34 @@ In addition to the components above, the Shadow library also depends on C standa
 /**
 @page shadow_demo Demo
 @brief The Shadow demo demonstrates usage of the Shadow library.
+
+The demo program uses [Shadow updates](@ref shadow_function_update) and [delta callbacks](@ref shadow_function_setdeltacallback) to simulate toggling a remote device's state. It sends a Shadow update with a new <i>desired</i> state and waits for the device to change its <i>reported</i> state in response to the new <i>desired</i> state. In addition, a [Shadow updated callback](@ref shadow_function_setupdatedcallback) is used to print the changing Shadow states.
+
+See @subpage shadow_demo_config for configuration settings that change the behavior of the demo.
+
+The diagram below shows the workflow of the Shadow demo. The Shadow demo runs on an established MQTT connection; MQTT connection setup and teardown are not shown.
+
+@image html shadow_demo.png "Shadow Demo Workflow" width=80%
+*/
+
+/**
+@configpage{shadow_demo,Shadow demo,Demo,demos}
+
+@section AWS_IOT_DEMO_SHADOW_UPDATE_COUNT
+@brief The number of periodic Shadow updates to send in the demo.
+
+The Shadow demo sends a new update every @ref AWS_IOT_DEMO_SHADOW_UPDATE_PERIOD_MS milliseconds. Each update contains a new <i>desired</i> state, which causes a Shadow delta document to be generated and sent to the device. The device will respond to the delta document by changing its state and reporting its new state.
+
+@configpossible Any positive integer. <br>
+@configdefault `20`
+
+@section AWS_IOT_DEMO_SHADOW_UPDATE_PERIOD_MS
+@brief How often (in milliseconds) to send a periodic Shadow update.
+
+This value may be `0`, which causes a new Shadow update to be sent as soon as the device responds to the Shadow delta document. The total runtime of the demo will be @ref AWS_IOT_DEMO_SHADOW_UPDATE_COUNT `*` @ref AWS_IOT_DEMO_SHADOW_UPDATE_PERIOD_MS milliseconds.
+
+@configpossible Any non-negative integer. <br>
+@configdefault `3000`
 */
 
 /**
