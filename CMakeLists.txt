@@ -25,21 +25,6 @@ endif()
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
-# Atomic headers.
-# If GCC --
-# for version <4.7.0, __sync_* shall be called.
-# for version >= 4.7.0, __atomic_* shall be called.
-# We only implemented atomic with __atomic_*.
-if( CMAKE_C_COMPILER_ID STREQUAL GNU AND ( CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 4.7 ) )
-    add_definitions( -DCOMPILER_OPTION_GCC_ATOMIC_BUILTIN=1 )
-endif()
-
-# If Clang --
-# Clang supports GCC's __atomic_* built-in functions since 3.1 release.
-if( CMAKE_C_COMPILER_ID STREQUAL Clang AND ( CMAKE_C_COMPILER_VERSION VERSION_GREATER 3.1 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 3.1 ) )
-    add_definitions( -DCOMPILER_OPTION_GCC_ATOMIC_BUILTIN=1 )
-endif()
-
 # SDK include paths.
 include_directories( ${PROJECT_SOURCE_DIR}/lib/include
                      ${PROJECT_SOURCE_DIR}/platform/include

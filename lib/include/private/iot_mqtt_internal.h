@@ -463,21 +463,6 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
 /*-------------------- MQTT packet serializer functions ---------------------*/
 
 /**
- * @brief Initialize the MQTT packet serializer. Called by @ref mqtt_function_init
- * when initializing the MQTT library.
- *
- * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_INIT_FAILED.
- */
-IotMqttError_t _IotMqtt_InitSerialize( void );
-
-/**
- * @brief Free resources taken by #_IotMqtt_InitSerialize.
- *
- * No parameters, no return values.
- */
-void _IotMqtt_CleanupSerialize( void );
-
-/**
  * @brief Get the MQTT packet type from a stream of bytes off the network.
  *
  * @param[in] pNetworkConnection Reference to the network connection.

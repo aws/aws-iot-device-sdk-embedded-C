@@ -35,11 +35,11 @@
     #include IOT_CONFIG_FILE
 #endif
 
-/* NULL */
+/* Standard includes. */
 #include <stdlib.h>
 
-/* Platform layer includes. */
-#include "platform/atomic.h"
+/* Atomic include. */
+#include "iot_atomic.h"
 
 /* Test framework includes. */
 #include "unity.h"
@@ -115,9 +115,9 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     ulCasComparator_32 = MAGIC_NUMBER_32BIT_1;
     ulCasNewValue_32 = MAGIC_NUMBER_32BIT_2;
 
-    COMPILER_ASM_VOLATILE( "atomic_cas_1: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_cas_1: " );
     ulReturnValue_32 = Atomic_CompareAndSwap_u32( &ulCasDestination_32, ulCasNewValue_32, ulCasComparator_32 );
-    COMPILER_ASM_VOLATILE( "atomic_cas_1_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_cas_1_end: " );
 
     TEST_ASSERT_MESSAGE( ulCasDestination_32 == ulCasNewValue_32, "Atomic_CompareAndSwap_u32 -- did not swap." );
     TEST_ASSERT_MESSAGE( ulReturnValue_32 == 1, "Atomic_CompareAndSwap_u32 -- expected return value true." );
@@ -125,9 +125,9 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     /* #2 -- CAS, comparator from the same mem location. */
     ulCasDestination_32 = MAGIC_NUMBER_32BIT_1;
 
-    COMPILER_ASM_VOLATILE( "atomic_cas_2: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_cas_2: " );
     ulReturnValue_32 = Atomic_CompareAndSwap_u32( &ulCasDestination_32, MAGIC_NUMBER_32BIT_2, ulCasDestination_32 );
-    COMPILER_ASM_VOLATILE( "atomic_cas_2_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_cas_2_end: " );
 
     TEST_ASSERT_MESSAGE( ulCasDestination_32 == MAGIC_NUMBER_32BIT_2, "Atomic_CompareAndSwap_u32 -- did not swap." );
     TEST_ASSERT_MESSAGE( ulReturnValue_32 == 1, "Atomic_CompareAndSwap_u32 -- expected return value true." );
@@ -137,9 +137,9 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     pSwapNewValue_32 = &ulCasNewValue_32;
     pReturnValue_32 = NULL;
 
-    COMPILER_ASM_VOLATILE( "atomic_xchg_32bit: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_xchg_32bit: " );
     pReturnValue_32 = Atomic_SwapPointers_p32( ( void ** ) &pSwapDestination_32, pSwapNewValue_32 );
-    COMPILER_ASM_VOLATILE( "atomic_xchg_32bit_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_xchg_32bit_end: " );
 
     TEST_ASSERT_MESSAGE( pSwapDestination_32 == &ulCasNewValue_32, "Atomic_SwapPointers_p32 -- did not swap." );
     TEST_ASSERT_MESSAGE( pReturnValue_32 == &ulCasDestination_32, "Atomic_SwapPointers_p32 -- expected to return previous value." );
@@ -149,9 +149,9 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     pSwapNewValue_8 = &uCasComparator_8;
     pReturnValue_8 = NULL;
 
-    COMPILER_ASM_VOLATILE( "atomic_xchg_8bit: nop" );
+    IOT_TEST_ASM_VOLATILE( "atomic_xchg_8bit: nop" );
     pReturnValue_8 = Atomic_SwapPointers_p32( ( void ** ) &pSwapDestination_8, pSwapNewValue_8 );
-    COMPILER_ASM_VOLATILE( "atomic_xchg_8bit_end: nop" );
+    IOT_TEST_ASM_VOLATILE( "atomic_xchg_8bit_end: nop" );
 
     TEST_ASSERT_MESSAGE( pSwapDestination_8 == &uCasComparator_8, "Atomic_SwapPointers_p32 -- did not swap." );
     TEST_ASSERT_MESSAGE( pReturnValue_8 == &uCasDestination_8, "Atomic_SwapPointers_p32 -- expected to return previous value." );
@@ -160,9 +160,9 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     pSwapDestination_32 = &ulCasDestination_32;
     pSwapNewValue_32 = &ulCasNewValue_32;
 
-    COMPILER_ASM_VOLATILE( "atomic_CAS_pointers: nop" );
+    IOT_TEST_ASM_VOLATILE( "atomic_CAS_pointers: nop" );
     ulReturnValue_32 = Atomic_CompareAndSwapPointers_p32( ( void ** ) &pSwapDestination_32, pSwapNewValue_32, &ulCasDestination_32 );
-    COMPILER_ASM_VOLATILE( "atomic_CAS_pointers_end: nop" );
+    IOT_TEST_ASM_VOLATILE( "atomic_CAS_pointers_end: nop" );
 
     TEST_ASSERT_MESSAGE( ( intptr_t ) pSwapDestination_32 == ( intptr_t ) pSwapNewValue_32, "Atomic_CompareAndSwapPointers_p32 -- did not swap." );
     TEST_ASSERT_MESSAGE( ulReturnValue_32 == 1, "Atomic_CompareAndSwapPointers_p32 -- expected return value true." );
@@ -187,7 +187,7 @@ TEST( Common_Unit_Atomic, AtomicArithmeticHappyPath )
 
     /* #0 -- Some examples for user --
      *       casting number in range 0x80000000-0xFFFFFFFF.
-     *       COMPILER_ASM_VOLATILE is omitted, as this is the normal user caller routine. */
+     *       IOT_TEST_ASM_VOLATILE is omitted, as this is the normal user caller routine. */
     uAddend_32 = ( uint32_t ) 0xFFFFFFFE; /* signed 0xFFFFFFFE is -2, 2's complement. */
 
     uReturnValue_32 = Atomic_Add_u32( &uAddend_32, 1 );
@@ -215,9 +215,9 @@ TEST( Common_Unit_Atomic, AtomicArithmeticHappyPath )
     uAddend_32 = 0;
     uDelta_32 = 1;
 
-    COMPILER_ASM_VOLATILE( "atomic_add_reg: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_add_reg: " );
     uReturnValue_32 = Atomic_Add_u32( &uAddend_32, uDelta_32 );
-    COMPILER_ASM_VOLATILE( "atomic_add_reg_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_add_reg_end: " );
 
     TEST_ASSERT_MESSAGE( uAddend_32 == 1, "Atomic_Add_u32 -- did not add correctly." );
     TEST_ASSERT_MESSAGE( uReturnValue_32 == 0, "Atomic_Add_u32 -- expected return value 0." );
@@ -225,9 +225,9 @@ TEST( Common_Unit_Atomic, AtomicArithmeticHappyPath )
     /* #2 -- add immediate */
     uAddend_32 = 0;
 
-    COMPILER_ASM_VOLATILE( "atomic_add_imme: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_add_imme: " );
     uReturnValue_32 = Atomic_Add_u32( &uAddend_32, 1 );
-    COMPILER_ASM_VOLATILE( "atomic_add_imme_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_add_imme_end: " );
 
     TEST_ASSERT_MESSAGE( uAddend_32 == 1, "Atomic_Add_u32 -- did not add immediate number correctly." );
     TEST_ASSERT_MESSAGE( uReturnValue_32 == 0, "Atomic_Add_u32 -- expected return value 0." );
@@ -236,18 +236,18 @@ TEST( Common_Unit_Atomic, AtomicArithmeticHappyPath )
     uAddend_8 = 1;
     uAddend_32 = ( uint32_t ) uAddend_8;
 
-    COMPILER_ASM_VOLATILE( "atomic_add_8bit: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_add_8bit: " );
     uReturnValue_32 = Atomic_Add_u32( &uAddend_32, UINT8_MAX );
-    COMPILER_ASM_VOLATILE( "atomic_add_8bit_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_add_8bit_end: " );
 
     TEST_ASSERT_MESSAGE( ( uint8_t ) uReturnValue_32 == 1, "Atomic_Add_u32 -- did not roll over correctly." );
 
     /* #4 -- sub, almost but not underflow */
     uAddend_32 = 1;
 
-    COMPILER_ASM_VOLATILE( "atomic_sub_reg: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_sub_reg: " );
     uReturnValue_32 = Atomic_Subtract_u32( &uAddend_32, 1 );
-    COMPILER_ASM_VOLATILE( "atomic_sub_reg_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_sub_reg_end: " );
 
     TEST_ASSERT_MESSAGE( uAddend_32 == 0, "Atomic_Subtract_u32 -- did not subtract correctly." );
     TEST_ASSERT_MESSAGE( uReturnValue_32 == 1, "Atomic_Subtract_u32 -- expected return value 1." );
@@ -255,9 +255,9 @@ TEST( Common_Unit_Atomic, AtomicArithmeticHappyPath )
     /* #5 -- inc, sanity check */
     uAddend_32 = 0;
 
-    COMPILER_ASM_VOLATILE( "atomic_inc: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_inc: " );
     uReturnValue_32 = Atomic_Increment_u32( &uAddend_32 );
-    COMPILER_ASM_VOLATILE( "atomic_inc_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_inc_end: " );
 
     TEST_ASSERT_MESSAGE( uAddend_32 == 1, "Atomic_Increment_u32 -- did not increment correctly." );
     TEST_ASSERT_MESSAGE( uReturnValue_32 == 0, "Atomic_Increment_u32 -- expected return value 0." );
@@ -265,9 +265,9 @@ TEST( Common_Unit_Atomic, AtomicArithmeticHappyPath )
     /* #6 -- dec, sanity check */
     uAddend_32 = 1;
 
-    COMPILER_ASM_VOLATILE( "atomic_dec: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_dec: " );
     uReturnValue_32 = Atomic_Decrement_u32( &uAddend_32 );
-    COMPILER_ASM_VOLATILE( "atomic_dec_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_dec_end: " );
 
     TEST_ASSERT_MESSAGE( uAddend_32 == 0, "Atomic_Decrement_u32 -- did not decrement correctly." );
     TEST_ASSERT_MESSAGE( uReturnValue_32 == 1, "Atomic_Decrement_u32 -- expected return value 1." );
@@ -283,9 +283,9 @@ TEST( Common_Unit_Atomic, AtomicBitwiseHappyPath )
     ulOp1 = MAGIC_NUMBER_32BIT_1;
     ulOp2 = MAGIC_NUMBER_32BIT_2;
 
-    COMPILER_ASM_VOLATILE( "atomic_and: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_and: " );
     ulReturnValue = Atomic_AND_u32( &ulOp1, ulOp2 );
-    COMPILER_ASM_VOLATILE( "atomic_and_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_and_end: " );
 
     TEST_ASSERT_MESSAGE( ulOp1 == 0xA0A0A0A0, "Atomic_AND_u32 -- did not ANDed correctly." );
     TEST_ASSERT_MESSAGE( ulReturnValue == MAGIC_NUMBER_32BIT_1, "Atomic_AND_u32 -- expected return value 0xA5A5A5A5." );
@@ -294,9 +294,9 @@ TEST( Common_Unit_Atomic, AtomicBitwiseHappyPath )
     ulOp1 = MAGIC_NUMBER_32BIT_2;
     ulOp2 = MAGIC_NUMBER_32BIT_3;
 
-    COMPILER_ASM_VOLATILE( "atomic_or: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_or: " );
     ulReturnValue = Atomic_OR_u32( &ulOp1, ulOp2 );
-    COMPILER_ASM_VOLATILE( "atomic_or_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_or_end: " );
 
     TEST_ASSERT_MESSAGE( ulOp1 == 0xF0F0F0FF, "Atomic_OR_u32 -- did not ORed correctly." );
     TEST_ASSERT_MESSAGE( ulReturnValue == MAGIC_NUMBER_32BIT_2, "Atomic_AND_u32 -- expected return value 0xF0F0F0F0." );
@@ -305,9 +305,9 @@ TEST( Common_Unit_Atomic, AtomicBitwiseHappyPath )
     ulOp1 = MAGIC_NUMBER_32BIT_1;
     ulOp2 = MAGIC_NUMBER_32BIT_2;
 
-    COMPILER_ASM_VOLATILE( "atomic_nand: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_nand: " );
     ulReturnValue = Atomic_NAND_u32( &ulOp1, ulOp2 );
-    COMPILER_ASM_VOLATILE( "atomic_nand_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_nand_end: " );
 
     TEST_ASSERT_MESSAGE( ulOp1 == 0x5F5F5F5F, "Atomic_NAND_u32 -- did not NANDed correctly." );
     TEST_ASSERT_MESSAGE( ulReturnValue == MAGIC_NUMBER_32BIT_1, "Atomic_NAND_u32 -- expected return value 0xA5A5A5A5." );
@@ -316,9 +316,9 @@ TEST( Common_Unit_Atomic, AtomicBitwiseHappyPath )
     ulOp1 = MAGIC_NUMBER_32BIT_1;
     ulOp2 = MAGIC_NUMBER_32BIT_2;
 
-    COMPILER_ASM_VOLATILE( "atomic_xor: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_xor: " );
     ulReturnValue = Atomic_XOR_u32( &ulOp1, ulOp2 );
-    COMPILER_ASM_VOLATILE( "atomic_XOR_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_XOR_end: " );
 
     TEST_ASSERT_MESSAGE( ulOp1 == 0x55555555, "Atomic_XOR_u32 -- did not XORed correctly." );
     TEST_ASSERT_MESSAGE( ulReturnValue == MAGIC_NUMBER_32BIT_1, "Atomic_XOR_u32 -- expected return value 0xA5A5A5A5." );
@@ -340,9 +340,9 @@ TEST( Common_Unit_Atomic, AtomicCasFailToSwap )
     ulCasComparator_32 = MAGIC_NUMBER_32BIT_2;
     ulCasNewValue_32 = MAGIC_NUMBER_32BIT_3;
 
-    COMPILER_ASM_VOLATILE( "atomic_cas_neq: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_cas_neq: " );
     ulReturnValue_32 = Atomic_CompareAndSwap_u32( &ulCasDestination_32, ulCasNewValue_32, ulCasComparator_32 );
-    COMPILER_ASM_VOLATILE( "atomic_cas_neq_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_cas_neq_end: " );
 
     TEST_ASSERT_MESSAGE( ulCasDestination_32 == MAGIC_NUMBER_32BIT_1, "Atomic_CompareAndSwap_u32 -- should not swap." );
     TEST_ASSERT_MESSAGE( ulReturnValue_32 == 0, "Atomic_CompareAndSwap_u32 -- should not swap." );
@@ -352,9 +352,9 @@ TEST( Common_Unit_Atomic, AtomicCasFailToSwap )
     pCasComparator_32 = &ulCasComparator_32;
     pCasNewValue_32 = &ulCasNewValue_32;
 
-    COMPILER_ASM_VOLATILE( "atomic_cas_pointers_neq: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_cas_pointers_neq: " );
     ulReturnValue_32 = Atomic_CompareAndSwapPointers_p32( ( void ** ) &pCasDestination_32, pCasNewValue_32, pCasComparator_32 );
-    COMPILER_ASM_VOLATILE( "atomic_cas_pointers_neq_end: " );
+    IOT_TEST_ASM_VOLATILE( "atomic_cas_pointers_neq_end: " );
 
     TEST_ASSERT_MESSAGE( ( intptr_t ) pCasDestination_32 == ( intptr_t ) &ulCasDestination_32, "Atomic_CompareAndSwapPointers_p32 -- should not swap." );
     TEST_ASSERT_MESSAGE( ulReturnValue_32 == 0, "Atomic_CompareAndSwapPointers_p32 -- should not swap." );
