@@ -678,6 +678,9 @@ TEST( Shadow_System, DeltaCallback )
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Tests the Shadow updated callback.
+ */
 TEST( Shadow_System, UpdatedCallback )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;

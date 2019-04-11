@@ -788,6 +788,10 @@ TEST( Shadow_Unit_API, GetMallocFail )
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Tests the behavior of @ref shadow_function_update when memory
+ * allocation fails at various points.
+ */
 TEST( Shadow_Unit_API, UpdateMallocFail )
 {
     int32_t i = 0, mqttErrorCount = 0;
