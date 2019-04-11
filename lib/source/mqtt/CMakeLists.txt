@@ -1,7 +1,3 @@
-#Whether to use atomic or not.
-#Default to "no".
-add_definitions( -DIOT_ATOMIC_OPERATION=0 )
-
 # MQTT library source files.
 add_library( iotmqtt SHARED
              iot_mqtt_api.c

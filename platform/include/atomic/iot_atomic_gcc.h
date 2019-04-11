@@ -20,52 +20,25 @@
  */
 
 /**
- * @file atomic.h
- * @brief Atomic operations.
+ * @file iot_atomic_gcc.h
+ * @brief Atomic operations implemented on GCC extensions.
+ *
+ * Compatible with GCC and clang.
  */
 
-#ifndef ATOMIC_H
-#define ATOMIC_H
+#ifndef IOT_ATOMIC_GCC_H
+#define IOT_ATOMIC_GCC_H
 
 /* Standard includes. */
+#include <stdbool.h>
 #include <stdint.h>
 
-/* Compiler specific implementation. */
-#if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-
-/* Standard boolean for CAS "strong". */
-    #include <stdbool.h>
-
-/* Default GCC compiler.
- * If GCC is used && the target architecture supports atomic instructions,
- * (e.g. ARM, Xtensa, ... )
- * there's no reason to not use GCC built-in atomics.
- * Thus, no user extension is provided in this branch.
- *
- * If you believe atomic built-in is not compiled correctly by GCC for your target,
- * please use the other branch and provide your own implementation for atomic.
- *
- * attribute flatten is not needed in this branch.
+/**
+ * @brief GCC function attribute to always inline a function.
  */
-    #define FORCE_INLINE    inline __attribute__( ( always_inline ) )
+#define FORCE_INLINE    inline __attribute__( ( always_inline ) )
 
-/* GCC asm volatile.
- * This can be helpful when user wants to observe how atomic inline function is
- * compiled. Simply add a tag (or no-op) before and after atomic inline function
- * call, and observe objdump disassembly. Though, it is not suggested to call this
- * macro in user application code.
- */
-    #define COMPILER_ASM_VOLATILE( x )    __asm__ __volatile__ ( x )
-
-#else  /* if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 ) */
-
-/* Using none GCC compiler || user customization
- * User needs to figure out compiler specific syntax for always-inline and flatten.*/
-    #include "atomic/atomic_user_override_template.h"
-
-#endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
-
-/*----------------------------- Swap && CAS ------------------------------*/
+/*----------------------- Swap and Compare-and-Swap -------------------------*/
 
 /**
  * Atomic compare-and-swap
@@ -86,14 +59,10 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDes
 {
     uint32_t ulReturnValue = 0;
 
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        if( __atomic_compare_exchange( pDestination, &ulComparand, &ulExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST ) )
-        {
-            ulReturnValue = 1;
-        }
-    #else
-        ulReturnValue = Atomic_CompareAndSwap_u32_User_Override( pDestination, ulExchange, ulComparand );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    if( __atomic_compare_exchange( pDestination, &ulComparand, &ulExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST ) )
+    {
+        ulReturnValue = 1;
+    }
 
     return ulReturnValue;
 }
@@ -111,14 +80,11 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDes
 static FORCE_INLINE void * Atomic_SwapPointers_p32( void * volatile * ppDestination,
                                                     void * pExchange )
 {
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        void * pReturnValue;
-        __atomic_exchange( ppDestination, &pExchange, &pReturnValue, __ATOMIC_SEQ_CST );
+    void * pReturnValue;
 
-        return pReturnValue;
-    #else
-        return Atomic_SwapPointers_p32_User_Override( ppDestination, pExchange );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    __atomic_exchange( ppDestination, &pExchange, &pReturnValue, __ATOMIC_SEQ_CST );
+
+    return pReturnValue;
 }
 
 /**
@@ -140,14 +106,10 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwapPointers_p32( void * volatile 
 {
     uint32_t ulReturnValue = 0;
 
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        if( __atomic_compare_exchange( ppDestination, &pComparand, &pExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST ) )
-        {
-            ulReturnValue = 1;
-        }
-    #else
-        ulReturnValue = Atomic_CompareAndSwapPointers_p32_User_Override( ppDestination, pExchange, pComparand );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    if( __atomic_compare_exchange( ppDestination, &pComparand, &pExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST ) )
+    {
+        ulReturnValue = 1;
+    }
 
     return ulReturnValue;
 }
@@ -168,11 +130,7 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwapPointers_p32( void * volatile 
 static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAddend,
                                              uint32_t lCount )
 {
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        return __atomic_fetch_add( pAddend, lCount, __ATOMIC_SEQ_CST );
-    #else
-        return Atomic_Add_u32_User_Override( pAddend, lCount );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    return __atomic_fetch_add( pAddend, lCount, __ATOMIC_SEQ_CST );
 }
 
 /**
@@ -188,11 +146,7 @@ static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAddend,
 static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pAddend,
                                                   uint32_t lCount )
 {
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        return __atomic_fetch_sub( pAddend, lCount, __ATOMIC_SEQ_CST );
-    #else
-        return Atomic_Subtract_u32_User_Override( pAddend, lCount );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    return __atomic_fetch_sub( pAddend, lCount, __ATOMIC_SEQ_CST );
 }
 
 /**
@@ -206,11 +160,7 @@ static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pAddend,
  */
 static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAddend )
 {
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        return __atomic_fetch_add( pAddend, 1, __ATOMIC_SEQ_CST );
-    #else
-        return Atomic_Increment_u32_User_Override( pAddend );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    return __atomic_fetch_add( pAddend, 1, __ATOMIC_SEQ_CST );
 }
 
 /**
@@ -224,11 +174,7 @@ static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAddend )
  */
 static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pAddend )
 {
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        return __atomic_fetch_sub( pAddend, 1, __ATOMIC_SEQ_CST );
-    #else
-        return Atomic_Decrement_u32_User_Override( pAddend );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    return __atomic_fetch_sub( pAddend, 1, __ATOMIC_SEQ_CST );
 }
 
 /*----------------------------- Bitwise Logical ------------------------------*/
@@ -246,11 +192,7 @@ static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pAddend )
 static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pDestination,
                                             uint32_t ulValue )
 {
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        return __atomic_fetch_or( pDestination, ulValue, __ATOMIC_SEQ_CST );
-    #else
-        return Atomic_OR_u32_User_Override( pDestination, ulValue );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    return __atomic_fetch_or( pDestination, ulValue, __ATOMIC_SEQ_CST );
 }
 
 /**
@@ -266,11 +208,7 @@ static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pDestination,
 static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pDestination,
                                              uint32_t ulValue )
 {
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        return __atomic_fetch_and( pDestination, ulValue, __ATOMIC_SEQ_CST );
-    #else
-        return Atomic_AND_u32_User_Override( pDestination, ulValue );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    return __atomic_fetch_and( pDestination, ulValue, __ATOMIC_SEQ_CST );
 }
 
 /**
@@ -286,11 +224,7 @@ static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pDestination,
 static FORCE_INLINE uint32_t Atomic_NAND_u32( uint32_t volatile * pDestination,
                                               uint32_t ulValue )
 {
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        return __atomic_fetch_nand( pDestination, ulValue, __ATOMIC_SEQ_CST );
-    #else
-        return Atomic_NAND_u32_User_Override( pDestination, ulValue );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    return __atomic_fetch_nand( pDestination, ulValue, __ATOMIC_SEQ_CST );
 }
 
 /**
@@ -305,11 +239,7 @@ static FORCE_INLINE uint32_t Atomic_NAND_u32( uint32_t volatile * pDestination,
 static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pDestination,
                                              uint32_t ulValue )
 {
-    #if ( COMPILER_OPTION_GCC_ATOMIC_BUILTIN == 1 )
-        return __atomic_fetch_xor( pDestination, ulValue, __ATOMIC_SEQ_CST );
-    #else
-        return Atomic_XOR_u32_User_Override( pDestination, ulValue );
-    #endif /* COMPILER_OPTION_GCC_ATOMIC_BUILTIN */
+    return __atomic_fetch_xor( pDestination, ulValue, __ATOMIC_SEQ_CST );
 }
 
-#endif /* ATOMIC_H */
+#endif /* IOT_ATOMIC_GCC_H */

@@ -174,10 +174,17 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
 #define IotTestNetwork_Init           IotNetworkOpenssl_Init
 #define IotTestNetwork_Cleanup        IotNetworkOpenssl_Cleanup
 
+/* Macro for placing inline assembly in test code. */
+#define IOT_TEST_ASM_VOLATILE( x ) __asm__ __volatile__ ( x )
+
+#ifndef __GNUC__
+    #error "Unsupported compiler. Only gcc and clang are supported."
+#endif
+
 /* Configure code coverage testing if enabled. */
 #if IOT_TEST_COVERAGE == 1
     /* Define the empty else marker if test coverage is enabled. */
-    #define _EMPTY_ELSE_MARKER    asm volatile ( "nop" )
+    #define _EMPTY_ELSE_MARKER    IOT_TEST_ASM_VOLATILE( "nop" )
 
     /* Define a custom logging puts function. This function allows coverage
      * testing of logging functions, but prevents excessive logs from being
