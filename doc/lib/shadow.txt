@@ -81,6 +81,37 @@ This value may be `0`, which causes a new Shadow update to be sent as soon as th
 */
 
 /**
+@page shadow_tests Tests
+@brief Tests written for the Shadow library.
+
+The Shadow tests reside in the `tests/shadow` directory. They are divided into the following subdirectories:
+- `system`: Shadow system tests. These tests require a network connection and AWS IoT credentials. The command line option `-n` may be passed to the test executable to disable these tests.
+- `unit`: Shadow unit tests. These tests do not require a network connection or credentials. These tests use the [MQTT test access files.](@ref mqtt_tests)
+
+See @subpage shadow_tests_config for configuration settings that change the behavior of the Shadow system tests. The Shadow unit tests require no special configuration.
+
+The current Shadow tests use the [Unity test framework](http://www.throwtheswitch.org/unity/) and only run on POSIX systems. See @ref building_tests for a guide on running the tests.
+*/
+
+/**
+@configpage{shadow_tests,Shadow system tests,Test,tests}
+
+@section AWS_IOT_TEST_SHADOW_THING_NAME
+@brief The Thing Name to use in the Shadow system tests.
+
+Thing Names are used to manage devices with AWS IoT. <b>No default value is provided for Thing Names, so this constant must be defined.</b> In addition to the Thing Name, AWS IoT credentials ([root CA certificate](@ref IOT_TEST_ROOT_CA), [client certificate](@ref IOT_TEST_CLIENT_CERT), and [client certificate private key](@ref IOT_TEST_PRIVATE_KEY)) must be provided to run the system tests. The [AWS IoT policy](https://docs.aws.amazon.com/iot/latest/developerguide/iot-policies.html) must also be properly configured.
+
+@configpossible A string representing an AWS IoT Thing Name.
+
+@section shadow_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
+@brief The keep-alive interval to use in the Shadow system tests.
+
+This constant is shared with the [MQTT tests](@ref mqtt_tests).
+
+@see @ref IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S on the MQTT tests config page.
+*/
+
+/**
 @configpage{shadow,Shadow library}
 
 @section AWS_IOT_SHADOW_ENABLE_ASSERTS

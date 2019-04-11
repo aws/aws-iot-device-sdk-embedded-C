@@ -338,10 +338,12 @@ static void _shadowDeltaCallback( void * pCallbackContext,
         else
         {
             /* Send the Shadow update. Its result is not checked, as the Shadow updated
-             * callback will report if the Shadow was successfully updated. */
+             * callback will report if the Shadow was successfully updated. Because the
+             * Shadow is constantly updated in this demo, the "Keep Subscriptions" flag
+             * is passed to this function. */
             updateStatus = AwsIotShadow_Update( pCallbackParam->mqttConnection,
                                                 &updateDocument,
-                                                0,
+                                                AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
                                                 NULL,
                                                 NULL );
 
@@ -750,10 +752,14 @@ static int _sendShadowUpdates( IotSemaphore_t * pDeltaSemaphore,
                     AWS_IOT_DEMO_SHADOW_UPDATE_COUNT,
                     pUpdateDocument );
 
-        /* Send the Shadow update. */
+        /* Send the Shadow update. Because the Shadow is constantly updated in
+         * this demo, the "Keep Subscriptions" flag is passed to this function.
+         * Note that this flag only needs to be passed on the first call, but
+         * passing it for subsequent calls is fine.
+         */
         updateStatus = AwsIotShadow_TimedUpdate( mqttConnection,
                                                  &updateDocument,
-                                                 0,
+                                                 AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
                                                  _TIMEOUT_MS );
 
         /* Check the status of the Shadow update. */
