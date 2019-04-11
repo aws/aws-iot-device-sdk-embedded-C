@@ -116,7 +116,8 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
  */
 #define INITIALIZE_OPERATION( name )                                                                \
     {                                                                                               \
-        .link = { 0 }, .incomingPublish = false, .pMqttConnection = _pMqttConnection, .job = { 0 }, \
+        .link = { 0 }, .incomingPublish = false, .pMqttConnection = _pMqttConnection,               \
+        .jobStorage = IOT_TASKPOOL_JOB_STORAGE_INITIALIZER, .job = IOT_TASKPOOL_JOB_INITIALIZER,    \
         .u.operation =                                                                              \
         {                                                                                           \
             .jobReference = 1, .type = name, .flags = IOT_MQTT_FLAG_WAITABLE,                       \
