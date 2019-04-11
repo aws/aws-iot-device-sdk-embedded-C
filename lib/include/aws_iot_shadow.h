@@ -110,6 +110,64 @@ void AwsIotShadow_Cleanup( void );
 /**
  * @brief Delete a Thing Shadow and receive an asynchronous notification when
  * the Delete completes.
+ *
+ * This function deletes any existing Shadow document for the given Thing Name.
+ * If the given Thing has no Shadow and this function is called, the result will
+ * be #AWS_IOT_SHADOW_NOT_FOUND.
+ *
+ * Deleting a Shadow involves sending an MQTT message to AWS IoT and waiting on
+ * a response. This message will always be sent at [MQTT QoS 0](@ref #IOT_MQTT_QOS_0).
+ *
+ * @param[in] mqttConnection The MQTT connection to use for Shadow delete.
+ * @param[in] pThingName The Thing Name associated with the Shadow to delete.
+ * @param[in] thingNameLength The length of `pThingName`.
+ * @param[in] flags Flags which modify the behavior of this function. See @ref shadow_constants_flags.
+ * @param[in] pCallbackInfo Asynchronous notification of this function's completion.
+ * @param[in] pDeleteOperation Set to a handle by which this operation may be referenced
+ * after this function returns. This reference is invalidated once the Shadow delete
+ * completes.
+ *
+ * @return This function will return #AWS_IOT_SHADOW_STATUS_PENDING upon successfully
+ * queuing a Shadow delete.
+ * @return If this function fails before queuing a Shadow delete, it will return one of:
+ * - #AWS_IOT_SHADOW_BAD_PARAMETER
+ * - #AWS_IOT_SHADOW_NO_MEMORY
+ * @return Upon successful completion of the Shadow delete (either through an #AwsIotShadowCallbackInfo_t
+ * or #AwsIotShadow_Wait), the status will be #AWS_IOT_SHADOW_SUCCESS.
+ * @return Should the Shadow delete fail, the status will be one of:
+ * - #AWS_IOT_SHADOW_MQTT_ERROR
+ * - #AWS_IOT_SHADOW_BAD_RESPONSE
+ * - A Shadow service rejected reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
+ * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
+ *
+ * @see @ref shadow_function_timeddelete for a blocking variant of this function.
+ *
+ * <b>Example</b>
+ * @code{c}
+ * #define THING_NAME "Test_device"
+ * #define THING_NAME_LENGTH ( sizeof( THING_NAME ) - 1 )
+ *
+ * // Shadow operation handle.
+ * AwsIotShadowOperation_t deleteOperation = AWS_IOT_SHADOW_OPERATION_INITIALIZER;
+ *
+ * // Queue a Shadow delete.
+ * AwsIotShadowError_t deleteResult = AwsIotShadow_Delete( mqttConnection,
+ *                                                         THING_NAME,
+ *                                                         THING_NAME_LENGTH,
+ *                                                         0,
+ *                                                         NULL,
+ *                                                         &deleteOperation );
+ *
+ * // Shadow delete should return AWS_IOT_SHADOW_STATUS_PENDING upon success.
+ * if( deleteResult == AWS_IOT_SHADOW_STATUS_PENDING )
+ * {
+ *     // Wait for the Shadow delete to complete.
+ *     deleteResult = AwsIotShadow_Wait( deleteOperation, 5000 );
+ *
+ *     // Delete result should be AWS_IOT_SHADOW_SUCCESS upon successfully
+ *     // deleting an existing Shadow.
+ * }
+ * @endcode
  */
 /* @[declare_shadow_delete] */
 AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t mqttConnection,
@@ -122,6 +180,27 @@ AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t mqttConnection,
 
 /**
  * @brief Delete a Thing Shadow with a timeout.
+ *
+ * This function queues a Shadow delete, then waits for the result. Internally, this
+ * function is a call to @ref shadow_function_delete followed by @ref shadow_function_update.
+ * See @ref shadow_function_delete for more information on the Shadow delete operation.
+ *
+ * @param[in] mqttConnection The MQTT connection to use for Shadow delete.
+ * @param[in] pThingName The Thing Name associated with the Shadow to delete.
+ * @param[in] thingNameLength The length of `pThingName`.
+ * @param[in] flags Flags which modify the behavior of this function. See @ref shadow_constants_flags.
+ * @param[in] timeoutMs If the Shadow service does not respond to the Shadow delete
+ * within this timeout, this function returns #AWS_IOT_SHADOW_TIMEOUT.
+ *
+ * @return One of the following:
+ * - #AWS_IOT_SHADOW_SUCCESS
+ * - #AWS_IOT_SHADOW_BAD_PARAMETER
+ * - #AWS_IOT_SHADOW_NO_MEMORY
+ * - #AWS_IOT_SHADOW_MQTT_ERROR
+ * - #AWS_IOT_SHADOW_BAD_RESPONSE
+ * - #AWS_IOT_SHADOW_TIMEOUT
+ * - A Shadow service rejected reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
+ * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  */
 /* @[declare_shadow_timeddelete] */
 AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t mqttConnection,
