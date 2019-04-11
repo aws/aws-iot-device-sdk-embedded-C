@@ -137,7 +137,7 @@ void AwsIotShadow_Cleanup( void );
  * @return Should the Shadow delete fail, the status will be one of:
  * - #AWS_IOT_SHADOW_MQTT_ERROR
  * - #AWS_IOT_SHADOW_BAD_RESPONSE
- * - A Shadow service rejected reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
+ * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
  * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  *
  * @see @ref shadow_function_timeddelete for a blocking variant of this function.
@@ -199,7 +199,7 @@ AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t mqttConnection,
  * - #AWS_IOT_SHADOW_MQTT_ERROR
  * - #AWS_IOT_SHADOW_BAD_RESPONSE
  * - #AWS_IOT_SHADOW_TIMEOUT
- * - A Shadow service rejected reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
+ * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
  * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  */
 /* @[declare_shadow_timeddelete] */
@@ -255,7 +255,7 @@ AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t mqttConnection
  * - #AWS_IOT_SHADOW_NO_MEMORY (Memory could not be allocated for incoming document)
  * - #AWS_IOT_SHADOW_MQTT_ERROR
  * - #AWS_IOT_SHADOW_BAD_RESPONSE
- * - A Shadow service rejected reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
+ * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
  * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  *
  * @see @ref shadow_function_timedget for a blocking variant of this function.
@@ -326,7 +326,7 @@ AwsIotShadowError_t AwsIotShadow_Get( IotMqttConnection_t mqttConnection,
  * - #AWS_IOT_SHADOW_MQTT_ERROR
  * - #AWS_IOT_SHADOW_BAD_RESPONSE
  * - #AWS_IOT_SHADOW_TIMEOUT
- * - A Shadow service rejected reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
+ * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
  * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  */
 /* @[declare_shadow_timedget] */
@@ -341,6 +341,90 @@ AwsIotShadowError_t AwsIotShadow_TimedGet( IotMqttConnection_t mqttConnection,
 /**
  * @brief Send a Thing Shadow update and receive an asynchronous notification when
  * the Shadow Update completes.
+ *
+ * This function modifies the Thing Shadow document stored by the Shadow service.
+ * If a given Thing has no Shadow and this function is called, then a new Shadow
+ * is created.
+ *
+ * New JSON keys in the Shadow document will be appended. For example, if the Shadow service
+ * currently has a document containing key `example1` and this function sends a document
+ * only containing key `example2`, then the resulting document in the Shadow service
+ * will contain both `example1` and `example2`.
+ *
+ * Existing JSON keys in the Shadow document will be replaced. For example, if the Shadow
+ * service currently has a document containing `"example1": [0,1,2]` and this function sends
+ * a document containing key `"example1": [1,2,3]`, then the resulting document in the Shadow
+ * service will contain `"example1": [1,2,3]`.
+ *
+ * Successful Shadow updates will trigger the [Shadow updated callback]
+ * (@ref shadow_function_setupdatedcallback). If the resulting Shadow document contains
+ * different `desired` and `reported` keys, then the [Shadow delta callback]
+ * (@ref shadow_function_setdeltacallback) will be triggered as well.
+ *
+ * @attention All documents passed to this function must contain a `clientToken`.
+ * The [client token]
+ * (https://docs.aws.amazon.com/iot/latest/developerguide/device-shadow-document.html#client-token)
+ * is a string used to distinguish between Shadow updates. They are limited to 64
+ * characters; attempting to use a client token longer than 64 characters will
+ * cause the Shadow update to fail. They must be unique at any given time, i.e.
+ * they may be reused <i>as long as no two Shadow updates are using the same
+ * client token at the same time</i>.
+ *
+ * @param[in] mqttConnection The MQTT connection to use for Shadow update.
+ * @param[in] pUpdateInfo Shadow document parameters.
+ * @param[in] flags Flags which modify the behavior of this function. See @ref shadow_constants_flags.
+ * @param[in] pCallbackInfo Asynchronous notification of this function's completion.
+ * @param[out] pUpdateOperation Set to a handle by which this operation may be referenced
+ * after this function returns. This reference is invalidated once the Shadow update
+ * completes.
+ *
+ * @return This function will return #AWS_IOT_SHADOW_STATUS_PENDING upon successfully
+ * queuing a Shadow update.
+ * @return If this function fails before queuing a Shadow update, it will return one of:
+ * - #AWS_IOT_SHADOW_BAD_PARAMETER
+ * - #AWS_IOT_SHADOW_NO_MEMORY
+ * @return Upon successful completion of the Shadow update (either through an #AwsIotShadowCallbackInfo_t
+ * or #AwsIotShadow_Wait), the status will be #AWS_IOT_SHADOW_SUCCESS.
+ * @return Should the Shadow update fail, the status will be one of:
+ * - #AWS_IOT_SHADOW_MQTT_ERROR
+ * - #AWS_IOT_SHADOW_BAD_RESPONSE
+ * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
+ * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
+ *
+ * @see @ref shadow_function_timedupdate for a blocking variant of this function.
+ *
+ * <b>Example</b>
+ * @code{c}
+ * // Shadow update completion callback.
+ * void _updateComplete( void * pCallbackContext,
+ *                       AwsIotShadowCallbackParam_t * pCallbackParam );
+ *
+ * // Parameters and return value of Shadow update.
+ * AwsIotShadowError_t result = AWS_IOT_SHADOW_STATUS_PENDING;
+ * AwsIotShadowDocumentInfo_t updateInfo = { ... };
+ * uint32_t timeout = 5000; // 5 seconds
+ *
+ * // Set Shadow document to send.
+ * updateInfo.update.pUpdateDocument = "{...}"; // Must contain clientToken
+ * updateInfo.update.updateDocumentLength = strlen( updateInfo.update.pUpdateDocument );
+ *
+ * // Callback for update completion.
+ * AwsIotShadowCallbackInfo_t updateCallback = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
+ * updateCallback.function = _updateComplete;
+ *
+ * // Shadow update operation.
+ * result = AwsIotShadow_Update( mqttConnection,
+ *                               &updateInfo,
+ *                               0,
+ *                               &updateCallback,
+ *                               NULL );
+ *
+ * // Update should have returned AWS_IOT_SHADOW_STATUS_PENDING. The function
+ * // _updateComplete will be invoked once the Shadow update completes.
+ * @endcode
+ *
+ * See @ref shadow_function_wait <b>Example 1</b> for an example of using this
+ * function with #AWS_IOT_SHADOW_FLAG_WAITABLE and @ref shadow_function_wait.
  */
 /* @[declare_shadow_update] */
 AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
@@ -352,6 +436,26 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
 
 /**
  * @brief Send a Thing Shadow update with a timeout.
+ *
+ * This function queues a Shadow update, then waits for the result. Internally, this
+ * function is a call to @ref shadow_function_update followed by @ref shadow_function_wait.
+ * See @ref shadow_function_update for more information on the Shadow update operation.
+ *
+ * @param[in] mqttConnection The MQTT connection to use for Shadow update.
+ * @param[in] pUpdateInfo Shadow document parameters.
+ * @param[in] flags Flags which modify the behavior of this function. See @ref shadow_constants_flags.
+ * @param[in] timeoutMs If the Shadow service does not respond to the Shadow update
+ * within this timeout, this function returns #AWS_IOT_SHADOW_TIMEOUT.
+ *
+ * @return One of the following:
+ * - #AWS_IOT_SHADOW_SUCCESS
+ * - #AWS_IOT_SHADOW_BAD_PARAMETER
+ * - #AWS_IOT_SHADOW_NO_MEMORY
+ * - #AWS_IOT_SHADOW_MQTT_ERROR
+ * - #AWS_IOT_SHADOW_BAD_RESPONSE
+ * - #AWS_IOT_SHADOW_TIMEOUT
+ * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
+ * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  */
 /* @[declare_shadow_timedupdate] */
 AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection,
@@ -397,7 +501,7 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection
  * - #AWS_IOT_SHADOW_BAD_PARAMETER
  * - #AWS_IOT_SHADOW_BAD_RESPONSE
  * - #AWS_IOT_SHADOW_TIMEOUT
- * - A Shadow service rejected reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
+ * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
  * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  *
  * <b>Example 1 (Shadow Update)</b>
