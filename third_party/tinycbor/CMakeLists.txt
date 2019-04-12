@@ -5,7 +5,8 @@ add_library( tinycbor SHARED
              tinycbor/src/cborerrorstrings.c
              tinycbor/src/cborparser.c
              tinycbor/src/cborparser_dup_string.c
-             tinycbor/src/cborpretty.c )
+             tinycbor/src/cborpretty.c
+             tinycbor/src/cborpretty_stdio.c )
 
 # Link math library.
 target_link_libraries( tinycbor m )
