@@ -1,10 +1,32 @@
 /* Wrappers that make the unity memory functions thread-safe. Implemented for
  * POSIX systems. */
 
+#include "unity_fixture.h"
 #include "unity_fixture_malloc_overrides.h"
 #include <pthread.h>
 
 pthread_mutex_t CriticalSectionMutex = PTHREAD_MUTEX_INITIALIZER;
+
+void UnityMalloc_StartTest_mt(void)
+{
+    pthread_mutex_lock(&CriticalSectionMutex);
+    UnityMalloc_StartTest();
+    pthread_mutex_unlock(&CriticalSectionMutex);
+}
+
+void UnityMalloc_EndTest_mt(void)
+{
+    pthread_mutex_lock(&CriticalSectionMutex);
+    UnityMalloc_EndTest();
+    pthread_mutex_unlock(&CriticalSectionMutex);
+}
+
+void UnityMalloc_MakeMallocFailAfterCount_mt(int countdown)
+{
+    pthread_mutex_lock(&CriticalSectionMutex);
+    UnityMalloc_MakeMallocFailAfterCount(countdown);
+    pthread_mutex_unlock(&CriticalSectionMutex);
+}
 
 void* unity_malloc_mt(size_t size)
 {

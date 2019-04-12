@@ -91,10 +91,17 @@
 #endif
 
 /* Declarations of thread-safe wrappers for the unity memory functions. */
+void UnityMalloc_StartTest_mt(void);
+void UnityMalloc_EndTest_mt(void);
+void UnityMalloc_MakeMallocFailAfterCount_mt(int countdown);
 void * unity_malloc_mt(size_t size);
 void * unity_calloc_mt(size_t num, size_t size);
 void * unity_realloc_mt(void * oldMem, size_t size);
 void unity_free_mt(void * mem);
+
+#define UnityMalloc_StartTest                      UnityMalloc_StartTest_mt
+#define UnityMalloc_EndTest                        UnityMalloc_EndTest_mt
+#define UnityMalloc_MakeMallocFailAfterCount_mt    UnityMalloc_MakeMallocFailAfterCount_mt
 
 /* Memory allocation function configuration. Note that these functions will not
  * be affected by IOT_STATIC_MEMORY_ONLY. */
