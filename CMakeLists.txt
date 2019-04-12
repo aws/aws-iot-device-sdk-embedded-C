@@ -45,8 +45,8 @@ if( ${IOT_BUILD_TESTS} )
                          tests/mqtt/access )
 
     # Unity test framework include paths.
-    include_directories( third_party/unity/unity/src
-                         third_party/unity/unity/extras/fixture/src )
+    include_directories( third_party/unity/unity
+                         third_party/unity/unity/fixture )
 
     # Tests config file.
     add_definitions( -DIOT_CONFIG_FILE="iot_tests_config.h" )
