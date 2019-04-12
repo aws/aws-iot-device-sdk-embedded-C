@@ -117,7 +117,7 @@
  * @brief Intializers of data handles.
  */
 /**@{ */
-#define AWS_IOT_DEFENDER_START_INFO_INITIALIZER    { 0 } /**< Initializer of #AwsIotDefenderCallbackInfo_t. */
+#define AWS_IOT_DEFENDER_START_INFO_INITIALIZER    { .mqttNetworkInfo = { 0 } } /**< Initializer of #AwsIotDefenderCallbackInfo_t. */
 /**@} */
 
 /**

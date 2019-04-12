@@ -66,7 +66,7 @@
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
     static bool _inUseTcpConnections[ IOT_METRICS_TCP_CONNECTIONS ] = { 0 };
-    static IotMetricsTcpConnection_t _tcpConnections[ IOT_METRICS_TCP_CONNECTIONS ] = { { 0 } };
+    static IotMetricsTcpConnection_t _tcpConnections[ IOT_METRICS_TCP_CONNECTIONS ] = { { .link = { 0 } } };
 
 /*-----------------------------------------------------------*/
 
