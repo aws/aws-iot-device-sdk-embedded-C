@@ -861,7 +861,7 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
                               void * pReceiveContext )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
-    _mqttPacket_t incomingPacket = { 0 };
+    _mqttPacket_t incomingPacket = { .pMqttConnection = NULL };
 
     /* Cast context to correct type. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pReceiveContext;

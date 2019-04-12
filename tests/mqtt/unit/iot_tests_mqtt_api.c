@@ -324,8 +324,8 @@ static size_t _dupChecker( void * pSendContext,
      * for the AWS IoT MQTT server. */
     #if _AWS_IOT_MQTT_SERVER == true
         static uint16_t lastPacketIdentifier = 0;
-        _mqttPacket_t publishPacket = { 0 };
-        _mqttOperation_t publishOperation = { 0 };
+        _mqttPacket_t publishPacket = { .pMqttConnection = NULL };
+        _mqttOperation_t publishOperation = { .link = { 0 } };
 
         publishPacket.type = publishFlags;
         publishPacket.pIncomingPublish = &publishOperation;
