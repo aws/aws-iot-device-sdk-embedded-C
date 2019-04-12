@@ -82,6 +82,20 @@
 #define AWS_IOT_DEFENDER_ENABLE_ASSERTS    ( 1 )
 #define AWS_IOT_DEFENDER_USE_LONG_TAG      ( 1 )
 
+/* Static memory resource settings for the tests. These values must be large
+ * enough to support the stress tests. */
+#if IOT_STATIC_MEMORY_ONLY == 1
+    #define IOT_MQTT_CONNECTIONS                   ( 2 )
+    #define IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS    ( 10 )
+    #define IOT_MQTT_SUBSCRIPTIONS                 ( 80 )
+#endif
+
+/* Declarations of thread-safe wrappers for the unity memory functions. */
+void * unity_malloc_mt(size_t size);
+void * unity_calloc_mt(size_t num, size_t size);
+void * unity_realloc_mt(void * oldMem, size_t size);
+void unity_free_mt(void * mem);
+
 /* Memory allocation function configuration. Note that these functions will not
  * be affected by IOT_STATIC_MEMORY_ONLY. */
 #define IotThreads_Malloc                  unity_malloc_mt
@@ -93,14 +107,6 @@
 /* #define IotLogging_StaticBufferSize */
 #define IotTest_Malloc                     unity_malloc_mt
 #define IotTest_Free                       unity_free_mt
-
-/* Static memory resource settings for the tests. These values must be large
- * enough to support the stress tests. */
-#if IOT_STATIC_MEMORY_ONLY == 1
-    #define IOT_MQTT_CONNECTIONS                   ( 2 )
-    #define IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS    ( 10 )
-    #define IOT_MQTT_SUBSCRIPTIONS                 ( 80 )
-#endif
 
 /* Memory allocation function configuration for libraries affected by
  * IOT_STATIC_MEMORY_ONLY. */
