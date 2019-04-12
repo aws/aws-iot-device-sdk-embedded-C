@@ -444,7 +444,7 @@ TEST( Common_Unit_Task_Pool, CreateDestroyMaxThreads )
     /* Create a task pool a tweak max threads up & down. */
     {
         uint32_t count;
-        IotTaskPoolJob_t jobs[ 2 * TEST_TASKPOOL_MAX_THREADS ] = { 0 };
+        IotTaskPoolJob_t jobs[ 2 * TEST_TASKPOOL_MAX_THREADS ] = { { 0 } };
         IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 6, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 
         TEST_ASSERT( IotTaskPool_Create( &tpInfo, &taskPool ) == IOT_TASKPOOL_SUCCESS );
@@ -809,7 +809,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_Grow )
     IotTaskPool_t taskPool;
     const IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = TEST_TAKPOOL_NUMBER_OF_JOBS, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 
-    JobBlockingUserContext_t userContext = { 0 };
+    JobBlockingUserContext_t userContext;
 
     /* Initialize user context. */
     TEST_ASSERT( IotSemaphore_Create( &userContext.signal, 0, TEST_TAKPOOL_NUMBER_OF_JOBS ) );
@@ -879,7 +879,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_GrowHighPri )
     /* Use a taskpool with not enough threads. */
     const IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = TEST_TASKPOOL_NUMBER_OF_THREADS, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 
-    JobBlockingUserContext_t userContext = { 0 };
+    JobBlockingUserContext_t userContext;
 
     /* Initialize user context. */
     TEST_ASSERT( IotSemaphore_Create( &userContext.signal, 0, TEST_TAKPOOL_NUMBER_OF_JOBS ) );
@@ -1465,10 +1465,10 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ReSchedule )
             /* In static memory mode, only the recyclable job limit may be allocated. */
             #if IOT_STATIC_MEMORY_ONLY == 1
                 maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
-                IotTaskPoolJob_t tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+                IotTaskPoolJob_t tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { { 0 } };
             #else
                 maxJobs = 10;
-                IotTaskPoolJob_t tpJobs[ 10 ] = { 0 };
+                IotTaskPoolJob_t tpJobs[ 10 ] = { { 0 } };
             #endif
 
             /* Create all jobs. */
@@ -1590,10 +1590,10 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_ReScheduleDeferred )
             /* In static memory mode, only the recyclable job limit may be allocated. */
             #if IOT_STATIC_MEMORY_ONLY == 1
                 maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
-                IotTaskPoolJob_t tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+                IotTaskPoolJob_t tpJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { { 0 } };
             #else
                 maxJobs = TEST_TASKPOOL_ITERATIONS;
-                IotTaskPoolJob_t tpJobs[ TEST_TASKPOOL_ITERATIONS ] = { 0 };
+                IotTaskPoolJob_t tpJobs[ TEST_TASKPOOL_ITERATIONS ] = { { 0 } };
             #endif
 
             /* Schedule all jobs. */
@@ -1694,10 +1694,10 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_CancelTasks )
     /* In static memory mode, only the recyclable job limit may be allocated. */
     #if IOT_STATIC_MEMORY_ONLY == 1
         maxJobs = IOT_TASKPOOL_JOBS_RECYCLE_LIMIT;
-        IotTaskPoolJob_t jobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };
+        IotTaskPoolJob_t jobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { { 0 } };
     #else
         maxJobs = TEST_TASKPOOL_ITERATIONS;
-        IotTaskPoolJob_t jobs[ TEST_TASKPOOL_ITERATIONS ] = { 0 };
+        IotTaskPoolJob_t jobs[ TEST_TASKPOOL_ITERATIONS ] = { { 0 } };
     #endif
 
     /* Initialize user context. */

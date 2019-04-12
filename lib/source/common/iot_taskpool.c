@@ -76,7 +76,7 @@
  * the system libraries as well. The system task pool needs to be initialized before any library is used or
  * before any code that posts jobs to the task pool runs.
  */
-IotTaskPool_t _IotSystemTaskPool = { 0 };
+IotTaskPool_t _IotSystemTaskPool = { .dispatchQueue = { 0 } };
 
 /** @endcond */
 

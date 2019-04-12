@@ -101,13 +101,13 @@
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
     static bool _inUseCborEncoders[ IOT_SERIALIZER_CBOR_ENCODERS ] = { 0 };
-    static CborEncoder _cborEncoders[ IOT_SERIALIZER_CBOR_ENCODERS ] = { { 0 } };
+    static CborEncoder _cborEncoders[ IOT_SERIALIZER_CBOR_ENCODERS ] = { { .data = { 0 } } };
 
     static bool _inUseCborParsers[ IOT_SERIALIZER_CBOR_PARSERS ] = { 0 };
     static CborParser _cborParsers[ IOT_SERIALIZER_CBOR_PARSERS ] = { { 0 } };
 
     static bool _inUseCborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { 0 };
-    static _cborValueWrapper_t _cborValues[IOT_SERIALIZER_CBOR_VALUES] = { { 0 } };
+    static _cborValueWrapper_t _cborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { { .isOutermost = false } };
 
     static bool _inUseDecoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { 0 };
     static IotSerializerDecoderObject_t _decoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { { 0 } };
