@@ -9,7 +9,7 @@ add_library( awsiotshadow SHARED
 set_target_properties( awsiotshadow PROPERTIES VERSION ${PROJECT_VERSION} )
 
 # Link required libraries.
-target_link_libraries( awsiotshadow iotcommon iotplatform iotmqtt )
+target_link_libraries( awsiotshadow iotserializer iotplatform iotmqtt )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
