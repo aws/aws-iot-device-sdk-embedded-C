@@ -30,7 +30,7 @@ include_directories( ${PROJECT_SOURCE_DIR}/lib/include
                      ${PROJECT_SOURCE_DIR}/platform/include )
 
 # TinyCBOR include path.
-include_directories( ${PROJECT_SOURCE_DIR}/third_party/include )
+include_directories( ${PROJECT_SOURCE_DIR}/third_party/tinycbor/tinycbor/src )
 
 # Demo include path.
 include_directories( ${PROJECT_SOURCE_DIR}/demos/include )
@@ -63,9 +63,6 @@ if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     add_subdirectory( platform/source/posix )
 endif()
 
-# Thrid party libraries (tinycbor).
-add_subdirectory( third_party/tinycbor )
-
 # Common libraries (linear containers, logging, etc.)
 add_subdirectory( lib/source/common )
 
@@ -80,6 +77,9 @@ add_subdirectory( lib/source/serializer )
 
 # Defender library.
 add_subdirectory( lib/source/defender )
+
+# TinyCBOR library (third-party).
+add_subdirectory( third_party/tinycbor )
 
 # Demo executables.
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
