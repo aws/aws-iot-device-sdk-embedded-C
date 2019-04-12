@@ -318,7 +318,7 @@ IotTaskPoolError_t IotTaskPool_Destroy( IotTaskPool_t * pTaskPool )
         {
             pItemLink = NULL;
 
-            pItemLink = IotQueue_Dequeue( &pTaskPool->dispatchQueue );
+            pItemLink = IotDeQueue_DequeueHead( &pTaskPool->dispatchQueue );
 
             if( pItemLink != NULL )
             {
@@ -941,7 +941,7 @@ static IotTaskPoolError_t _initTaskPoolControlStructures( const IotTaskPoolInfo_
     /* Initialize a job data structures that require no de-initialization.
      * All other data structures carry a value of 'NULL' before initailization.
      */
-    IotQueue_Create( &pTaskPool->dispatchQueue );
+    IotDeQueue_Create( &pTaskPool->dispatchQueue );
     IotListDouble_Create( &pTaskPool->timerEventsList );
 
     pTaskPool->minThreads = pInfo->minThreads;
@@ -1100,7 +1100,7 @@ static void _taskPoolWorker( void * pUserContext )
             if( jobAvailable == true )
             {
                 /* Dequeue the first job in FIFO order. */
-                pFirst = IotQueue_Dequeue( &pTaskPool->dispatchQueue );
+                pFirst = IotDeQueue_DequeueHead( &pTaskPool->dispatchQueue );
 
                 /* If there is indeed a job, then update status under lock, and release the lock before processing the job. */
                 if( pFirst != NULL )
@@ -1150,7 +1150,7 @@ static void _taskPoolWorker( void * pUserContext )
                 IotLink_t * pItem = NULL;
 
                 /* Dequeue the next job from the dispatch queue. */
-                pItem = IotQueue_Dequeue( &pTaskPool->dispatchQueue );
+                pItem = IotDeQueue_DequeueHead( &pTaskPool->dispatchQueue );
 
                 /* If there is no job left in the dispatch queue, update the worker status and leave. */
                 if( pItem == NULL )
@@ -1178,7 +1178,7 @@ static void _taskPoolWorker( void * pUserContext )
 
 static void _initJobsCache( IotTaskPoolCache_t * const pCache )
 {
-    IotQueue_Create( &pCache->freeList );
+    IotDeQueue_Create( &pCache->freeList );
 
     pCache->freeCount = 0;
 }
@@ -1388,8 +1388,17 @@ static IotTaskPoolError_t _scheduleInternal( IotTaskPool_t * const pTaskPool,
 
     if( TASKPOOL_SUCCEEDED( status ) )
     {
-        /* Append the job to the dispatch queue. */
-        IotQueue_Enqueue( &pTaskPool->dispatchQueue, &pJob->link );
+        /* Append the job to the dispatch queue. 
+         * Put the job at the front, if it is a high priority job. */
+        if(mustGrow == true )
+        {
+            IotDeQueue_EnqueueHead( &pTaskPool->dispatchQueue, &pJob->link );
+        }
+        else
+        {
+            IotDeQueue_EnqueueTail( &pTaskPool->dispatchQueue, &pJob->link );
+        }
+        
 
         /* Signal a worker to pick up the job. */
         IotSemaphore_Post( &pTaskPool->dispatchSignal );
@@ -1480,7 +1489,7 @@ static IotTaskPoolError_t _tryCancelInternal( IotTaskPool_t * const pTaskPool,
             /* A scheduled work items must be in the dispatch queue. */
             IotTaskPool_Assert( IotLink_IsLinked( &pJob->link ) );
 
-            IotQueue_Remove( &pJob->link );
+            IotDeQueue_Remove( &pJob->link );
         }
 
         /* If the job current status is 'deferred' then the job has to be pending

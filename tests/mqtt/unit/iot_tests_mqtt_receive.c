@@ -286,7 +286,7 @@ static void _operationResetAndPush( _mqttOperation_t * pOperation )
 {
     pOperation->status = IOT_MQTT_STATUS_PENDING;
     pOperation->jobReference = 1;
-    IotQueue_Enqueue( &( _pMqttConnection->pendingResponse ), &( pOperation->link ) );
+    IotDeQueue_EnqueueHead( &( _pMqttConnection->pendingResponse ), &( pOperation->link ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -1258,7 +1258,7 @@ TEST( MQTT_Unit_Receive, PubackInvalid )
     /* Remove unprocessed PUBLISH if present. */
     if( IotLink_IsLinked( &( publish.link ) ) == true )
     {
-        IotQueue_Remove( &( publish.link ) );
+        IotDeQueue_Remove( &( publish.link ) );
     }
 
     IotSemaphore_Destroy( &( publish.notify.waitSemaphore ) );
@@ -1621,7 +1621,7 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
     /* Remove unprocessed UNSUBSCRIBE if present. */
     if( IotLink_IsLinked( &( unsubscribe.link ) ) == true )
     {
-        IotQueue_Remove( &( unsubscribe.link ) );
+        IotDeQueue_Remove( &( unsubscribe.link ) );
     }
 
     IotSemaphore_Destroy( &( unsubscribe.notify.waitSemaphore ) );
