@@ -24,10 +24,8 @@
  * @brief Implementation of the functions in iot_clock.h for POSIX systems.
  */
 
-/* Build using a config header, if provided. */
-#ifdef IOT_CONFIG_FILE
-    #include IOT_CONFIG_FILE
-#endif
+/* The config header is always included first. */
+#include "iot_config.h"
 
 /* POSIX includes. Allow the default POSIX headers to be overridden. */
 #ifdef POSIX_ERRNO_HEADER

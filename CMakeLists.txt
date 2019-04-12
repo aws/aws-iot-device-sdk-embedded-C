@@ -32,10 +32,10 @@ include_directories( ${PROJECT_SOURCE_DIR}/lib/include
 # TinyCBOR include path.
 include_directories( ${PROJECT_SOURCE_DIR}/third_party/tinycbor/tinycbor/src )
 
-# Demo include path.
+# Demo include path. Always required because the tests also build the demos.
 include_directories( ${PROJECT_SOURCE_DIR}/demos/include )
 
-# Use either the demo or test configuration file.
+# Set additional include paths for demos and tests.
 if( ${IOT_BUILD_TESTS} )
     # Define the constant to enable test access.
     add_definitions( -DIOT_BUILD_TESTS=1 )
@@ -48,13 +48,10 @@ if( ${IOT_BUILD_TESTS} )
     include_directories( third_party/unity/unity
                          third_party/unity/unity/fixture )
 
-    # Tests config file.
-    add_definitions( -DIOT_CONFIG_FILE="iot_tests_config.h" )
-
     # Build unity test framework.
     add_subdirectory( third_party/unity )
 else()
-    add_definitions( -DIOT_CONFIG_FILE="iot_demo_config.h" )
+    include_directories( ${PROJECT_SOURCE_DIR}/demos )
 endif()
 
 # Platform libraries.
@@ -81,9 +78,9 @@ add_subdirectory( lib/source/defender )
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
 
-# Demo executables.
+# Determine the demo executable to build based on system.
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-    add_subdirectory( demos/posix )
+    add_subdirectory( demos/app/posix )
 endif()
 
 # Test executables.
