@@ -21,8 +21,8 @@
 
 /* This file contains configuration settings for the demos. */
 
-#ifndef _IOT_DEMO_CONFIG_H_
-#define _IOT_DEMO_CONFIG_H_
+#ifndef IOT_CONFIG_H_
+#define IOT_CONFIG_H_
 
 /* Server endpoints used for the demos. May be overridden with command line
  * options at runtime. */
@@ -69,4 +69,4 @@
  * layer based on the host operating system. */
 #include IOT_SYSTEM_TYPES_FILE
 
-#endif /* ifndef _IOT_DEMO_CONFIG_H_ */
+#endif /* ifndef IOT_CONFIG_H_ */

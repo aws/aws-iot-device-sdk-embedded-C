@@ -24,6 +24,9 @@
  * @brief Implements the task pool functions in iot_taskpool.h
  */
 
+/* The config header is always included first. */
+#include "iot_config.h"
+
 /* Standard includes. */
 #include <stdbool.h>
 #include <stddef.h>

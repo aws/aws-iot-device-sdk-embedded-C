@@ -25,10 +25,8 @@
  * @ref IOT_STATIC_MEMORY_ONLY is `1`.
  */
 
-/* Build using a config header, if provided. */
-#ifdef IOT_CONFIG_FILE
-    #include IOT_CONFIG_FILE
-#endif
+/* The config header is always included first. */
+#include "iot_config.h"
 
 /* The functions in this file should only exist in static memory only mode, hence
  * the check for IOT_STATIC_MEMORY_ONLY in the double inclusion guard. */
