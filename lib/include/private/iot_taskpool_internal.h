@@ -28,6 +28,9 @@
 #ifndef IOT_TASKPOOL_INTERNAL_H_
 #define IOT_TASKPOOL_INTERNAL_H_
 
+/* The config header is always included first. */
+#include "iot_config.h"
+
 /* Task pool include. */
 #include "private/iot_error.h"
 #include "iot_taskpool.h"

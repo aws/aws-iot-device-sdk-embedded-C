@@ -14,6 +14,8 @@ Design goals of this SDK include:
 /**
 @page global_config Global Configuration
 
+Configuration settings should be set using compiler arguments (like `-D` in gcc) or through a config file. The config file for this SDK must be called `iot_config.h` and be present in the include path.
+
 The following pages describe configuration settings that affect multiple components of this SDK.
 - @subpage global_library_config <br>
   Settings that affect all libraries.
@@ -25,14 +27,6 @@ The following pages describe configuration settings that affect multiple compone
 
 /**
 @globalconfigpage{library,Library,libraries}
-
-@section IOT_CONFIG_FILE
-@brief Configuration header for the libraries in this SDK.
-
-Define a file to be included in all library source files before any other files. Unlike other settings, this one must be set using a compiler option, such as `-D` for gcc. The option should specify a filename that is in the include path; for example, `-DIOT_CONFIG_FILE="iot_config.h"` (quotes may need to be escaped for some compilers).
-
-@configpossible A string representing a file name. This file must be in the compiler's include path.<br>
-@configdefault None. A configuration header will not be used if this value is undefined.
 
 @section IOT_LOG_LEVEL_GLOBAL
 @brief Set a default log level.

@@ -140,6 +140,9 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
 
     IotTaskPoolError_t taskPoolError = IOT_TASKPOOL_SUCCESS;
 
+    /* Silence warnigns when asserts are disabled. */
+    ( void ) taskPoolError;
+
     /* Initialize flow control states to false. */
     bool buildTopicsNamesSuccess = false,
          doneSemaphoreCreateSuccess = false,
@@ -388,6 +391,10 @@ static void _metricsPublishRoutine( IotTaskPool_t * pTaskPool,
     if( reportPublished )
     {
         IotTaskPoolError_t taskPoolError = IotTaskPool_CreateJob( _disconnectRoutine, NULL, &_disconnectJob );
+
+        /* Silence warnigns when asserts are disabled. */
+        ( void ) taskPoolError;
+
         AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
 
         IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
@@ -467,6 +474,8 @@ static void _disconnectRoutine( IotTaskPool_t * pTaskPool,
     AwsIotDefenderInternal_MqttDisconnect();
     /* Re-create metrics job. */
     IotTaskPoolError_t taskPoolError = IotTaskPool_CreateJob( _metricsPublishRoutine, NULL, &_metricsPublishJob );
+    /* Silence warnigns when asserts are disabled. */
+    ( void ) taskPoolError;
     AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
 
     /* Re-schedule metrics job with period as deferred interval. */

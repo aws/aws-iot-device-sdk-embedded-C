@@ -27,10 +27,8 @@
 #ifndef IOT_TASKPOOL_TYPES_H_
 #define IOT_TASKPOOL_TYPES_H_
 
-/* Build using a config header, if provided. */
-#ifdef IOT_CONFIG_FILE
-    #include IOT_CONFIG_FILE
-#endif
+/* The config header is always included first. */
+#include "iot_config.h"
 
 /* Standard includes. */
 #include <stdbool.h>

@@ -37,8 +37,7 @@
  * Each demo will use one of these structs to hold its arguments.
  *
  * The default values of this struct may be set using compile-time constants,
- * either through a [config file](@ref IOT_CONFIG_FILE) or a compiler option
- * like `-D`.
+ * either through the config file or a compiler option like `-D`.
  *
  * The default values may be overridden using command line arguments. If a default
  * value was not set, then a valid value must be set using a command line argument.
