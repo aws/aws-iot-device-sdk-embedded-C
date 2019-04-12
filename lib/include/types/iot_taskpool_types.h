@@ -270,7 +270,7 @@ typedef struct IotTaskPoolCache
  */
 typedef struct IotTaskPool
 {
-    IotQueue_t dispatchQueue;        /**< @brief The queue for the jobs waiting to be executed. */
+    IotDeQueue_t dispatchQueue;      /**< @brief The queue for the jobs waiting to be executed. */
     IotListDouble_t timerEventsList; /**< @brief The timeouts queue for all deferred jobs waiting to be executed. */
     IotTaskPoolCache_t jobsCache;    /**< @brief A cache to re-use jobs in order to limit memory allocations. */
     uint32_t minThreads;             /**< @brief The minimum number of threads for the task pool. */

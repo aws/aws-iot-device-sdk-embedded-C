@@ -73,7 +73,7 @@ TEST_GROUP_RUNNER( Common_Unit_Linear_Containers )
 TEST( Common_Unit_Linear_Containers, ListQueueEmpty )
 {
     IotListDouble_t list = IOT_LIST_DOUBLE_INITIALIZER;
-    IotQueue_t queue = IOT_QUEUE_INITIALIZER;
+    IotDeQueue_t queue = IOT_DEQUEUE_INITIALIZER;
 
     /* Create an empty list. */
     IotListDouble_Create( &list );
@@ -89,13 +89,13 @@ TEST( Common_Unit_Linear_Containers, ListQueueEmpty )
     TEST_ASSERT_EQUAL_PTR( NULL, IotListDouble_RemoveFirstMatch( &list, NULL, NULL, 0 ) );
 
     /* Create an empty queue. */
-    IotQueue_Create( &queue );
+    IotDeQueue_Create( &queue );
 
     /* Check appropriate return values for an empty queue. */
-    TEST_ASSERT_EQUAL( 0, IotQueue_Count( &queue ) );
-    TEST_ASSERT_EQUAL_INT( true, IotQueue_IsEmpty( &queue ) );
-    TEST_ASSERT_EQUAL_PTR( NULL, IotQueue_Peek( &queue ) );
-    TEST_ASSERT_EQUAL_PTR( NULL, IotQueue_Dequeue( &queue ) );
+    TEST_ASSERT_EQUAL( 0, IotDeQueue_Count( &queue ) );
+    TEST_ASSERT_EQUAL_INT( true, IotDeQueue_IsEmpty( &queue ) );
+    TEST_ASSERT_EQUAL_PTR( NULL, IotDeQueue_PeekHead( &queue ) );
+    TEST_ASSERT_EQUAL_PTR( NULL, IotDeQueue_DequeueHead( &queue ) );
 }
 
 /*-----------------------------------------------------------*/
