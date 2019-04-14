@@ -103,6 +103,7 @@ static void _serializeTcpConnections( IotSerializerEncoderObject_t * pMetricsObj
 
 void assertSuccess( IotSerializerError_t error )
 {
+    ( void ) error;
     AwsIotDefender_Assert( error == IOT_SERIALIZER_SUCCESS );
 }
 
@@ -110,6 +111,7 @@ void assertSuccess( IotSerializerError_t error )
 
 void assertSuccessOrBufferToSmall( IotSerializerError_t error )
 {
+    ( void ) error;
     AwsIotDefender_Assert( error == IOT_SERIALIZER_SUCCESS || error == IOT_SERIALIZER_BUFFER_TOO_SMALL );
 }
 

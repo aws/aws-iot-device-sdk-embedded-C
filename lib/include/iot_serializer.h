@@ -31,16 +31,14 @@
 #ifndef _IOT_SERIALIZER_H_
 #define _IOT_SERIALIZER_H_
 
+/* The config header is always included first. */
+#include "iot_config.h"
+
 /* Standard includes. */
 #include <string.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-/* Build using a config header, if provided. */
-#ifdef IOT_CONFIG_FILE
-    #include IOT_CONFIG_FILE
-#endif
 
 #if IOT_SERIALIZER_ENABLE_ASSERTS == 1
     #ifndef IotSerializer_Assert

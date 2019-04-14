@@ -80,6 +80,7 @@ static IotNetworkError_t _metricsCreate( void * pConnectionInfo,
 
         /* Get the ip and port from the peer socket. */
         int ret = getpeername( socket, ( struct sockaddr * ) &socketAddressIpv4, &socklen );
+        ( void ) ret;
 
         /* Assert its succees. */
         IotMetrics_Assert( ret == 0 );

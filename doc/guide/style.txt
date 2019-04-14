@@ -27,7 +27,7 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 @code{c}
 /*-----------------------------------------------------------*/
 @endcode
-- All files must include @ref IOT_CONFIG_FILE at the top of the file <b>before any other includes</b>.
+- All files must include `iot_config.h` at the top of the file <b>before any other includes</b>.
 - `static` functions must have a declaration at the top of the file and be implemented before any application-facing functions.
 
 @subsection guide_developer_styleguide_codingstyle_typeguidelines Type guidelines
@@ -44,11 +44,7 @@ See @ref guide_developer_styleguide_naming for how to name the functions, variab
 
 @code{c}
 /* Included headers are at the top of the file. The config file include is always first. */
-
-/* Build using a config header, if provided. */
-#ifdef IOT_CONFIG_FILE
-#include IOT_CONFIG_FILE
-#endif
+#include "iot_config.h"
 
 /* Standard includes are immediately after the config file. They are sorted alphabetically.
  * They use angle brackets <> around the file name. */

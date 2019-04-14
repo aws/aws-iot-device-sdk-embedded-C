@@ -1,4 +1,4 @@
-#include IOT_CONFIG_FILE
+#include "iot_config.h"
 #include "private/iot_mqtt_internal.h"
 
 #include <stdlib.h>
