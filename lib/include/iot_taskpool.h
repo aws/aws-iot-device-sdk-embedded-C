@@ -64,7 +64,7 @@
  * @functionpage{IotTaskPool_Destroy,taskpool,destroy}
  * @functionpage{IotTaskPool_SetMaxThreads,taskpool,setmaxthreads}
  * @functionpage{IotTaskPool_CreateJob,taskpool,createjob}
- * @functionpage{IotTaskPool_CreateJob,taskpool,createrecyclablejob}
+ * @functionpage{IotTaskPool_CreateRecyclableJob,taskpool,createrecyclablejob}
  * @functionpage{IotTaskPool_DestroyRecyclableJob,taskpool,destroyrecyclablejob}
  * @functionpage{IotTaskPool_RecycleJob,taskpool,recyclejob}
  * @functionpage{IotTaskPool_Schedule,taskpool,schedule}
