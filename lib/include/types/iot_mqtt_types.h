@@ -459,7 +459,7 @@ typedef struct IotMqttCallbackParam
 
         /* Valid when a connection is disconnected. */
         IotMqttDisconnectReason_t disconnectReason; /**< @brief Why the MQTT connection was disconnected. */
-    };
+    } u /**< @brief Valid member depends on callback type. */;
 } IotMqttCallbackParam_t;
 
 /**
@@ -953,7 +953,7 @@ typedef struct IotMqttNetworkInfo
              * #IotMqttNetworkInfo_t::createNetworkConnection is `true`.
              */
             void * pNetworkCredentialInfo;
-        };
+        } setup;
 
         /**
          * @brief An established transport-layer network connection.
@@ -963,7 +963,7 @@ typedef struct IotMqttNetworkInfo
          * valid when #IotMqttNetworkInfo_t::createNetworkConnection is `false`.
          */
         void * pNetworkConnection;
-    };
+    } u /**< @brief Valid member depends of IotMqttNetworkInfo_t.createNetworkConnection. */;
 
     /**
      * @brief The network functions used by the new MQTT connection.

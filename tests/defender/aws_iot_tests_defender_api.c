@@ -163,8 +163,8 @@ TEST_SETUP( Full_DEFENDER )
     /* Set fields of start info. */
     _startInfo.mqttNetworkInfo = ( IotMqttNetworkInfo_t ) IOT_MQTT_NETWORK_INFO_INITIALIZER;
     _startInfo.mqttNetworkInfo.createNetworkConnection = true;
-    _startInfo.mqttNetworkInfo.pNetworkServerInfo = &_serverInfo;
-    _startInfo.mqttNetworkInfo.pNetworkCredentialInfo = &_credential;
+    _startInfo.mqttNetworkInfo.u.setup.pNetworkServerInfo = &_serverInfo;
+    _startInfo.mqttNetworkInfo.u.setup.pNetworkCredentialInfo = &_credential;
 
     _startInfo.mqttNetworkInfo.pNetworkInterface = &_IotNetworkOpensslMetrics;
 

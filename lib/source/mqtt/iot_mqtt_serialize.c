@@ -1173,7 +1173,7 @@ void _IotMqtt_PublishSetDup( uint8_t * pPublishPacket,
 IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
 {
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
-    IotMqttPublishInfo_t * pOutput = &( pPublish->pIncomingPublish->publishInfo );
+    IotMqttPublishInfo_t * pOutput = &( pPublish->u.pIncomingPublish->u.publish.publishInfo );
     uint8_t publishFlags = 0;
     const uint8_t * pVariableHeader = pPublish->pRemainingData, * pPacketIdentifierHigh = NULL;
 
@@ -1627,7 +1627,7 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
                         "Topic filter %lu refused.", ( unsigned long ) i );
 
                 /* Remove a rejected subscription from the subscription manager. */
-                _IotMqtt_RemoveSubscriptionByPacket( pSuback->pMqttConnection,
+                _IotMqtt_RemoveSubscriptionByPacket( pSuback->u.pMqttConnection,
                                                      pSuback->packetIdentifier,
                                                      ( int32_t ) i );
 

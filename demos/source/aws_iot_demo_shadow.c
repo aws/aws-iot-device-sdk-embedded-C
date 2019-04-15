@@ -528,8 +528,8 @@ static int _establishMqttConnection( const char * pIdentifier,
         /* Set the members of the network info not set by the initializer. This
          * struct provided information on the transport layer to the MQTT connection. */
         networkInfo.createNetworkConnection = true;
-        networkInfo.pNetworkServerInfo = pNetworkServerInfo;
-        networkInfo.pNetworkCredentialInfo = pNetworkCredentialInfo;
+        networkInfo.u.setup.pNetworkServerInfo = pNetworkServerInfo;
+        networkInfo.u.setup.pNetworkCredentialInfo = pNetworkCredentialInfo;
         networkInfo.pNetworkInterface = pNetworkInterface;
 
         /* Set the members of the connection info not set by the initializer. */

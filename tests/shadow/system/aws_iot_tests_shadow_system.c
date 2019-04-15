@@ -472,11 +472,11 @@ TEST_SETUP( Shadow_System )
     /* Set the MQTT network setup parameters. */
     ( void ) memset( &_networkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
     _networkInfo.createNetworkConnection = true;
-    _networkInfo.pNetworkServerInfo = ( void * ) &_serverInfo;
+    _networkInfo.u.setup.pNetworkServerInfo = ( void * ) &_serverInfo;
     _networkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
 
     #if IOT_TEST_SECURED_CONNECTION == 1
-        _networkInfo.pNetworkCredentialInfo = ( void * ) &_credentials;
+        _networkInfo.u.setup.pNetworkCredentialInfo = ( void * ) &_credentials;
     #endif
 
     #ifdef IOT_TEST_MQTT_SERIALIZER

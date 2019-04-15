@@ -490,7 +490,7 @@ void _acceptCallback( void * pArgument,
 
     /* In accepted case, report and MQTT message must exist. */
     AwsIotDefender_Assert( AwsIotDefenderInternal_GetReportBuffer() );
-    AwsIotDefender_Assert( pPublish->message.info.pPayload );
+    AwsIotDefender_Assert( pPublish->u.message.info.pPayload );
 
     /* Invoke user's callback with accept event. */
     AwsIotDefenderCallbackInfo_t callbackInfo;
@@ -502,8 +502,8 @@ void _acceptCallback( void * pArgument,
         callbackInfo.pMetricsReport = AwsIotDefenderInternal_GetReportBuffer();
         callbackInfo.metricsReportLength = AwsIotDefenderInternal_GetReportBufferSize();
 
-        callbackInfo.pPayload = pPublish->message.info.pPayload;
-        callbackInfo.payloadLength = pPublish->message.info.payloadLength;
+        callbackInfo.pPayload = pPublish->u.message.info.pPayload;
+        callbackInfo.payloadLength = pPublish->u.message.info.payloadLength;
 
         _startInfo.callback.function( _startInfo.callback.param1, &callbackInfo );
     }
@@ -519,7 +519,7 @@ void _rejectCallback( void * pArgument,
     IotLogError( "Metrics report was rejected by defender service." );
 
     /* In rejected case, MQTT message must exist. */
-    AwsIotDefender_Assert( pPublish->message.info.pPayload );
+    AwsIotDefender_Assert( pPublish->u.message.info.pPayload );
 
     /* Invoke user's callback with rejected event. */
     AwsIotDefenderCallbackInfo_t callbackInfo;
@@ -531,8 +531,8 @@ void _rejectCallback( void * pArgument,
         callbackInfo.pMetricsReport = AwsIotDefenderInternal_GetReportBuffer();
         callbackInfo.metricsReportLength = AwsIotDefenderInternal_GetReportBufferSize();
 
-        callbackInfo.pPayload = pPublish->message.info.pPayload;
-        callbackInfo.payloadLength = pPublish->message.info.payloadLength;
+        callbackInfo.pPayload = pPublish->u.message.info.pPayload;
+        callbackInfo.payloadLength = pPublish->u.message.info.payloadLength;
 
         _startInfo.callback.function( _startInfo.callback.param1, &callbackInfo );
     }
