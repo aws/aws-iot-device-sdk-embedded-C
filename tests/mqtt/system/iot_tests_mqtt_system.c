@@ -30,8 +30,8 @@
 /* Standard includes. */
 #include <string.h>
 
-/* Common include. */
-#include "iot_common.h"
+/* SDK initialization include. */
+#include "iot_init.h"
 
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
@@ -593,10 +593,10 @@ TEST_SETUP( MQTT_System )
     _unsubscribeSerializerOverride = false;
     _disconnectSerializerOverride = false;
 
-    /* Initialize common components. */
-    if( IotCommon_Init() == false )
+    /* Initialize SDK. */
+    if( IotSdk_Init() == false )
     {
-        TEST_FAIL_MESSAGE( "Failed to initialize common components." );
+        TEST_FAIL_MESSAGE( "Failed to initialize SDK." );
     }
 
     /* Call the network stack initialization function. */
@@ -654,8 +654,8 @@ TEST_TEAR_DOWN( MQTT_System )
     /* Clean up the network stack. */
     IotTestNetwork_Cleanup();
 
-    /* Clean up common components. */
-    IotCommon_Cleanup();
+    /* Clean up SDK. */
+    IotSdk_Cleanup();
 
     /* Clear the connection pointer. */
     _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;

@@ -32,8 +32,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-/* Common libraries include. */
-#include "iot_common.h"
+/* SDK initialization include. */
+#include "iot_init.h"
 
 /* Common demo includes. */
 #include "iot_demo_arguments.h"
@@ -67,6 +67,9 @@ int main( int argc,
 
     /* Status returned from network stack initialization. */
     IotNetworkError_t networkInitStatus = IOT_NETWORK_SUCCESS;
+
+    /* Flags for tracking which cleanup functions must be called. */
+    bool sdkInitialized = false, networkInitialized = false;
 
     /* Arguments for this demo. */
     IotDemoArguments_t demoArguments = IOT_DEMO_ARGUMENTS_INITIALIZER;
@@ -111,21 +114,32 @@ int main( int argc,
             /* Set the pointer to the credentials. */
             pCredentials = &credentials;
         }
+    }
+    else
+    {
+        /* Failed to parse arguments. */
+        status = EXIT_FAILURE;
+    }
 
-        /* Initialize the network stack. */
+    /* Call the SDK initialization function. */
+    if( status == EXIT_SUCCESS )
+    {
+        sdkInitialized = IotSdk_Init();
+
+        if( sdkInitialized == false )
+        {
+            status = EXIT_FAILURE;
+        }
+    }
+
+    /* Initialize the network stack. */
+    if( status == EXIT_SUCCESS )
+    {
         networkInitStatus = IotNetworkOpenssl_Init();
 
         if( networkInitStatus == IOT_NETWORK_SUCCESS )
         {
-            /* Run the demo. */
-            status = RunDemo( demoArguments.awsIotMqttMode,
-                              demoArguments.pIdentifier,
-                              &serverInfo,
-                              pCredentials,
-                              IOT_NETWORK_INTERFACE_OPENSSL );
-
-            /* Clean up the network stack. */
-            IotNetworkOpenssl_Cleanup();
+            networkInitialized = true;
         }
         else
         {
@@ -133,10 +147,27 @@ int main( int argc,
             status = EXIT_FAILURE;
         }
     }
-    else
+
+    /* Run the demo. */
+    if( status == EXIT_SUCCESS )
     {
-        /* Error parsing arguments. */
-        status = EXIT_FAILURE;
+        status = RunDemo( demoArguments.awsIotMqttMode,
+                          demoArguments.pIdentifier,
+                          &serverInfo,
+                          pCredentials,
+                          IOT_NETWORK_INTERFACE_OPENSSL );
+    }
+
+    /* Clean up the SDK if initialized. */
+    if( sdkInitialized == true )
+    {
+        IotSdk_Cleanup();
+    }
+
+    /* Clean up the network stack if initialized. */
+    if( networkInitialized == true )
+    {
+        IotNetworkOpenssl_Cleanup();
     }
 
     /* Log the demo status. */

@@ -28,8 +28,8 @@
 /* POSIX includes. */
 #include <signal.h>
 
-/* Common include. */
-#include "iot_common.h"
+/* SDK initialization include. */
+#include "iot_init.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -80,7 +80,7 @@ int main( int argc,
     }
 
     /* Initialize the common libraries before running the tests. */
-    if( IotCommon_Init() == false )
+    if( IotSdk_Init() == false )
     {
         return EXIT_FAILURE;
     }
@@ -96,7 +96,7 @@ int main( int argc,
     RUN_TEST_GROUP( Full_Serializer_CBOR );
 
     /* Clean up common libraries. */
-    IotCommon_Cleanup();
+    IotSdk_Cleanup();
 
     /* Return failure if any tests failed. */
     if( UNITY_END() != 0 )

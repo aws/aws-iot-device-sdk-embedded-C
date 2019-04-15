@@ -31,8 +31,8 @@
 #include <stdint.h>
 #include <string.h>
 
-/* Common include. */
-#include "iot_common.h"
+/* SDK initialization include. */
+#include "iot_init.h"
 
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
@@ -374,8 +374,8 @@ TEST_SETUP( Shadow_Unit_API )
 {
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
-    /* Initialize common components. */
-    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
+    /* Initialize SDK. */
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
 
     /* Initialize the MQTT library. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
@@ -424,8 +424,8 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
     /* Clean up the MQTT library. */
     IotMqtt_Cleanup();
 
-    /* Clean up common components. */
-    IotCommon_Cleanup();
+    /* Clean up SDK. */
+    IotSdk_Cleanup();
 
     /* Destroy the receive thread timer. */
     IotClock_TimerDestroy( &_receiveTimer );

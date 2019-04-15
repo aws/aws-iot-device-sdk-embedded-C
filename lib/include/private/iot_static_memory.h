@@ -77,7 +77,7 @@
  *
  * @return `true` if initialization succeeded; `false` otherwise.
  *
- * @attention This function is called by `IotCommon_Init` and does not need to be
+ * @attention This function is called by `IotSdk_Init` and does not need to be
  * called by itself.
  *
  * @warning No thread-safety guarantees are provided for this function.
@@ -96,7 +96,7 @@ bool IotStaticMemory_Init( void );
  * returns, @ref static_memory_function_init must be called again before
  * calling any other static memory function.
  *
- * @attention This function is called by `IotCommon_Cleanup` and does not need
+ * @attention This function is called by `IotSdk_Cleanup` and does not need
  * to be called by itself.
  *
  * @warning No thread-safety guarantees are provided for this function.
