@@ -42,8 +42,8 @@
 /* #define IOT_DEMO_IDENTIFIER         "" */
 
 /* MQTT demo configuration. The demo publishes bursts of messages. */
-#define IOT_DEMO_MQTT_PUBLISH_BURST_COUNT    ( 10 ) /* Number of message bursts. */
-#define IOT_DEMO_MQTT_PUBLISH_BURST_SIZE     ( 10 ) /* Number of messages published in each burst. */
+#define IOT_DEMO_MQTT_PUBLISH_BURST_COUNT       ( 10 ) /* Number of message bursts. */
+#define IOT_DEMO_MQTT_PUBLISH_BURST_SIZE        ( 10 ) /* Number of messages published in each burst. */
 
 /* Shadow demo configuration. The demo publishes periodic Shadow updates and responds
  * to changing Shadows. */
@@ -51,19 +51,22 @@
 #define AWS_IOT_DEMO_SHADOW_UPDATE_PERIOD_MS    ( 3000 ) /* Period of Shadow updates. */
 
 /* Enable asserts in linear containers and MQTT. */
-#define IOT_CONTAINERS_ENABLE_ASSERTS        ( 1 )
-#define IOT_MQTT_ENABLE_ASSERTS              ( 1 )
+#define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )
+#define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
 
 /* Library logging configuration. IOT_LOG_LEVEL_GLOBAL provides a global log
  * level for all libraries; the library-specific settings override the global
  * setting. If both the library-specific and global settings are undefined,
  * no logs will be printed. */
-#define IOT_LOG_LEVEL_GLOBAL                 IOT_LOG_INFO
-#define IOT_LOG_LEVEL_DEMO                   IOT_LOG_INFO
-#define IOT_LOG_LEVEL_PLATFORM               IOT_LOG_INFO
-#define IOT_LOG_LEVEL_NETWORK                IOT_LOG_INFO
-#define IOT_LOG_LEVEL_MQTT                   IOT_LOG_INFO
-#define AWS_IOT_LOG_LEVEL_SHADOW             IOT_LOG_INFO
+#define IOT_LOG_LEVEL_GLOBAL                    IOT_LOG_INFO
+#define IOT_LOG_LEVEL_DEMO                      IOT_LOG_INFO
+#define IOT_LOG_LEVEL_PLATFORM                  IOT_LOG_INFO
+#define IOT_LOG_LEVEL_NETWORK                   IOT_LOG_INFO
+#define IOT_LOG_LEVEL_MQTT                      IOT_LOG_INFO
+#define AWS_IOT_LOG_LEVEL_SHADOW                IOT_LOG_INFO
+
+/* This is supposed to be defined as the socket data type. In linux, it is "int". */
+#define IotMetricsConnectionId_t                int
 
 /* The build system will choose the appropriate system types file for the platform
  * layer based on the host operating system. */

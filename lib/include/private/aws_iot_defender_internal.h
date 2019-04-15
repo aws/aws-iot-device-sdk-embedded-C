@@ -143,10 +143,23 @@
  * @brief Configuration settings of the Defender library
  * @par configpagemarker
  *
+ * @section AWS_IOT_SECURE_SOCKETS_METRICS_ENABLED
+ * @brief Enable secure sockets metrics
+ * <b>Possible values:</b> 0 or 1 <br>
+ * <b>Recommended values:</b> 1 <br>
+ * <b>Default value (if undefined):</b> 0 <br>
+ *
+ * This macro must be defined for device defender library to collect sockets metrics correctly.
+ * Without defining it, the behavior is unknown.
+ *
+ * @code{c}
+ * #define AWS_IOT_SECURE_SOCKETS_METRICS_ENABLED (1)
+ * @endcode
+ *
  * @section AWS_IOT_DEFENDER_FORMAT
  * @brief Default format for metrics data serialization.
  *
- * <b>Possible values:</b>  #AWS_IOT_DEFENDER_FORMAT_CBOR or #AWS_IOT_DEFENDER_FORMAT_JSON <br>
+ * <b>Possible values:</b>  #AWS_IOT_DEFENDER_FORMAT_CBOR (JSON is not supported for now) <br>
  * <b>Recommended values:</b> Cbor is more compact than Json, thus more efficient. <br>
  * <b>Default value (if undefined):</b>  #AWS_IOT_DEFENDER_FORMAT_CBOR <br>
  *
@@ -318,13 +331,13 @@ IotMqttError_t AwsIotDefenderInternal_MqttConnect();
  * Subscribe accept/reject defender topics.
  */
 IotMqttError_t AwsIotDefenderInternal_MqttSubscribe( IotMqttCallbackInfo_t acceptCallback,
-                                           IotMqttCallbackInfo_t rejectCallback );
+                                                     IotMqttCallbackInfo_t rejectCallback );
 
 /**
  * Publish metrics data to defender topic.
  */
 IotMqttError_t AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
-                                         size_t dataLength );
+                                                   size_t dataLength );
 
 /**
  * Disconnect with AWS MQTT.
