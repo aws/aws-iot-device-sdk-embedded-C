@@ -1,6 +1,6 @@
 # Common libraries source files.
 add_library( iotcommon SHARED
-             iot_common.c
+             iot_init.c
              iot_logging.c
              iot_taskpool.c
              static_memory/iot_static_memory_common.c

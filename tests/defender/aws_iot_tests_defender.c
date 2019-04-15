@@ -31,8 +31,8 @@
 /* Network includes. */
 #include "posix/iot_network_openssl.h"
 
-/* Common include. */
-#include "iot_common.h"
+/* SDK initialization include. */
+#include "iot_init.h"
 
 /* MQTT include. */
 #include "iot_mqtt.h"
@@ -85,8 +85,8 @@ int main( int argc,
         return EXIT_FAILURE;
     }
 
-    /* Initialize the common libraries before running the tests. */
-    if( IotCommon_Init() == false )
+    /* Initialize the SDK before running the tests. */
+    if( IotSdk_Init() == false )
     {
         return EXIT_FAILURE;
     }
@@ -113,8 +113,8 @@ int main( int argc,
     /* Run short tests. */
     RUN_TEST_GROUP(Full_DEFENDER);
 
-    /* Clean up common libraries. */
-    IotCommon_Cleanup();
+    /* Clean up SDK. */
+    IotSdk_Cleanup();
 
     /* Clean up the network stack. */
     IotNetworkOpenssl_Cleanup();

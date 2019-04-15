@@ -30,8 +30,8 @@
 /* Standard includes. */
 #include <string.h>
 
-/* Common include. */
-#include "iot_common.h"
+/* SDK initialization include. */
+#include "iot_init.h"
 
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
@@ -529,7 +529,7 @@ TEST_SETUP( MQTT_Unit_API )
     _disconnectCallbackCount = 0;
 
     /* Initialize libraries. */
-    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 }
 
@@ -541,7 +541,7 @@ TEST_SETUP( MQTT_Unit_API )
 TEST_TEAR_DOWN( MQTT_Unit_API )
 {
     IotMqtt_Cleanup();
-    IotCommon_Cleanup();
+    IotSdk_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
