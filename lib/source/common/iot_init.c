@@ -60,11 +60,6 @@ bool IotSdk_Init( void )
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER_LARGE;
 
-    if( status == true )
-    {
-        status = IotMetrics_Init();
-    }
-
     /* Initialize static memory if dynamic memory allocation is disabled. */
     #if IOT_STATIC_MEMORY_ONLY == 1
         bool staticMemoryInitialized = IotStaticMemory_Init();
