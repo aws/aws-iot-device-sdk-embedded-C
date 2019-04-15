@@ -39,9 +39,6 @@
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
-/* Common libraries include. */
-#include "iot_common.h"
-
 /* MQTT include. */
 #include "iot_mqtt.h"
 
@@ -343,7 +340,7 @@ static void _mqttSubscriptionCallback( void * param1,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Initialize the common libraries and the MQTT library.
+ * @brief Initialize the MQTT library.
  *
  * @return `EXIT_SUCCESS` if all libraries were successfully initialized;
  * `EXIT_FAILURE` otherwise.
@@ -353,22 +350,11 @@ static int _initializeDemo( void )
     int status = EXIT_SUCCESS;
     IotMqttError_t mqttInitStatus = IOT_MQTT_SUCCESS;
 
-    if( IotCommon_Init() == true )
-    {
-        mqttInitStatus = IotMqtt_Init();
+    mqttInitStatus = IotMqtt_Init();
 
-        if( mqttInitStatus != IOT_MQTT_SUCCESS )
-        {
-            /* Failed to initialize MQTT library. */
-            status = EXIT_FAILURE;
-
-            /* Clean up the common libraries if MQTT could not be initialized. */
-            IotCommon_Cleanup();
-        }
-    }
-    else
+    if( mqttInitStatus != IOT_MQTT_SUCCESS )
     {
-        /* Failed to initialize common libraries. */
+        /* Failed to initialize MQTT library. */
         status = EXIT_FAILURE;
     }
 
@@ -378,12 +364,11 @@ static int _initializeDemo( void )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Clean up the common libraries and the MQTT library.
+ * @brief Clean up the MQTT library.
  */
 static void _cleanupDemo( void )
 {
     IotMqtt_Cleanup();
-    IotCommon_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

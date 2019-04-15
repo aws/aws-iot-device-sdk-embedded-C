@@ -30,8 +30,8 @@
 /* Standard includes. */
 #include <string.h>
 
-/* Common include. */
-#include "iot_common.h"
+/* SDK initialization include. */
+#include "iot_init.h"
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
@@ -518,8 +518,8 @@ TEST_SETUP( MQTT_Unit_Receive )
     static IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
-    /* Initialize common components. */
-    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
+    /* Initialize SDK. */
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
 
     /* Initialize the MQTT library. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
@@ -578,7 +578,7 @@ TEST_TEAR_DOWN( MQTT_Unit_Receive )
     /* Clean up resources taken in test setup. */
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
     IotMqtt_Cleanup();
-    IotCommon_Cleanup();
+    IotSdk_Cleanup();
 
     /* Check that the tests used a deserializer override. */
     TEST_ASSERT_EQUAL_INT( true, _deserializeOverrideCalled );

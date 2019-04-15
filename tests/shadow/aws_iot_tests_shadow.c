@@ -36,9 +36,6 @@
 /* Error handling include. */
 #include "private/iot_error.h"
 
-/* Common include. */
-#include "iot_common.h"
-
 /* Test framework includes. */
 #include "unity_fixture.h"
 

@@ -30,8 +30,8 @@
 /* Standard includes. */
 #include <string.h>
 
-/* Common include. */
-#include "iot_common.h"
+/* SDK initialization include. */
+#include "iot_init.h"
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
@@ -352,8 +352,8 @@ TEST_SETUP( MQTT_Unit_Subscription )
     static IotNetworkInterface_t networkInterface = { 0 };
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
-    /* Initialize common components. */
-    TEST_ASSERT_EQUAL_INT( true, IotCommon_Init() );
+    /* Initialize SDK. */
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
 
     /* Initialize the MQTT library. */
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
@@ -385,7 +385,7 @@ TEST_TEAR_DOWN( MQTT_Unit_Subscription )
 
     /* Clean up libraries. */
     IotMqtt_Cleanup();
-    IotCommon_Cleanup();
+    IotSdk_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

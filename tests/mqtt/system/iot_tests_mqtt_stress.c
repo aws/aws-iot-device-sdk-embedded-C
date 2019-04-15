@@ -37,8 +37,8 @@
 /* POSIX includes. */
 #include <time.h>
 
-/* Common include. */
-#include "iot_common.h"
+/* SDK initialization include. */
+#include "iot_init.h"
 
 /* MQTT include. */
 #include "iot_mqtt.h"
@@ -406,10 +406,10 @@ TEST_SETUP( MQTT_Stress )
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttSubscription_t pSubscriptions[ _TEST_TOPIC_NAME_COUNT ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
 
-    /* Initialize common components. */
-    if( IotCommon_Init() == false )
+    /* Initialize SDK. */
+    if( IotSdk_Init() == false )
     {
-        TEST_FAIL_MESSAGE( "Failed to initialize common components." );
+        TEST_FAIL_MESSAGE( "Failed to initialize SDK." );
     }
 
     /* Set up the network stack. */
@@ -510,8 +510,8 @@ TEST_TEAR_DOWN( MQTT_Stress )
     /* Clean up the network stack. */
     IotTestNetwork_Cleanup();
 
-    /* Clean up common components. */
-    IotCommon_Cleanup();
+    /* Clean up SDK. */
+    IotSdk_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
