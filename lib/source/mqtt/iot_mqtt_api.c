@@ -875,7 +875,7 @@ IotMqttError_t IotMqtt_Init( void )
 
 /*-----------------------------------------------------------*/
 
-void IotMqtt_Cleanup()
+void IotMqtt_Cleanup( void )
 {
     /* Call any additional serializer cleanup initialization function if serializer
      * overrides are enabled. */

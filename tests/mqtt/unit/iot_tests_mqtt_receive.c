@@ -281,14 +281,14 @@ static IotMqttError_t _deserializePingresp( _mqttPacket_t * pPingresp )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Reset the status of an #_mqttOperation_t and push it to the queue of
+ * @brief Reset the status of an #_mqttOperation_t and push it to the list of
  * MQTT operations awaiting network response.
  */
 static void _operationResetAndPush( _mqttOperation_t * pOperation )
 {
     pOperation->u.operation.status = IOT_MQTT_STATUS_PENDING;
     pOperation->u.operation.jobReference = 1;
-    IotDeQueue_EnqueueHead( &( _pMqttConnection->pendingResponse ), &( pOperation->link ) );
+    IotListDouble_InsertHead( &( _pMqttConnection->pendingResponse ), &( pOperation->link ) );
 }
 
 /*-----------------------------------------------------------*/

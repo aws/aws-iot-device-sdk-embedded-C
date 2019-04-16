@@ -45,6 +45,8 @@ void* unity_realloc(void * oldMem, size_t size);
 void unity_free(void * mem);
 
 /* Thread-safety wrappers for the unity memory functions. */
+extern pthread_mutex_t CriticalSectionMutex;
+
 void* unity_malloc_mt(size_t size);
 void* unity_calloc_mt(size_t num, size_t size);
 void* unity_realloc_mt(void * oldMem, size_t size);

@@ -396,7 +396,7 @@ typedef struct AwsIotShadowCallbackParam
             const char * pDocument; /**< @brief Shadow delta or updated document. */
             size_t documentLength;  /**< @brief Length of Shadow delta or updated document. */
         } callback;                 /**< @brief Shadow document from an incoming delta or updated topic. */
-    };
+    } u; /**< @brief Valid member depends on callback type. */
 } AwsIotShadowCallbackParam_t;
 
 /**
@@ -473,7 +473,7 @@ typedef struct AwsIotShadowDocumentInfo
             const char * pUpdateDocument; /**< @brief The Shadow document to send in the update. */
             size_t updateDocumentLength;  /**< @brief Length of Shadow update document. */
         } update;                         /**< @brief Valid members for @ref shadow_function_update. */
-    };
+    } u; /**< @brief Valid member depends on operation type. */
 } AwsIotShadowDocumentInfo_t;
 
 /*------------------------ Shadow defined constants -------------------------*/

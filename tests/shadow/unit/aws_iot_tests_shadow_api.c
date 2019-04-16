@@ -615,8 +615,8 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Update with no client token. */
-    documentInfo.update.pUpdateDocument = "{\"state\":{\"reported\":{null}}}";
-    documentInfo.update.updateDocumentLength = 29;
+    documentInfo.u.update.pUpdateDocument = "{\"state\":{\"reported\":{null}}}";
+    documentInfo.u.update.updateDocumentLength = 29;
     status = AwsIotShadow_Update( _pMqttConnection,
                                   &documentInfo,
                                   0,
@@ -625,9 +625,9 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Client token too long. */
-    documentInfo.update.pUpdateDocument = "{\"state\":{\"reported\":{null}}},\"clientToken\": "
-                                          "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"";
-    documentInfo.update.updateDocumentLength = 146;
+    documentInfo.u.update.pUpdateDocument = "{\"state\":{\"reported\":{null}}},\"clientToken\": "
+                                            "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"";
+    documentInfo.u.update.updateDocumentLength = 146;
     status = AwsIotShadow_Update( _pMqttConnection,
                                   &documentInfo,
                                   0,
@@ -740,7 +740,7 @@ TEST( Shadow_Unit_API, GetMallocFail )
     documentInfo.pThingName = _TEST_THING_NAME;
     documentInfo.thingNameLength = _TEST_THING_NAME_LENGTH;
     documentInfo.qos = IOT_MQTT_QOS_1;
-    documentInfo.get.mallocDocument = IotTest_Malloc;
+    documentInfo.u.get.mallocDocument = IotTest_Malloc;
 
     for( i = 0; ; i++ )
     {
@@ -804,8 +804,8 @@ TEST( Shadow_Unit_API, UpdateMallocFail )
     documentInfo.pThingName = _TEST_THING_NAME;
     documentInfo.thingNameLength = _TEST_THING_NAME_LENGTH;
     documentInfo.qos = IOT_MQTT_QOS_1;
-    documentInfo.update.pUpdateDocument = "{\"state\":{\"reported\":{null}},\"clientToken\":\"TEST\"}";
-    documentInfo.update.updateDocumentLength = 50;
+    documentInfo.u.update.pUpdateDocument = "{\"state\":{\"reported\":{null}},\"clientToken\":\"TEST\"}";
+    documentInfo.u.update.updateDocumentLength = 50;
 
     for( i = 0; ; i++ )
     {

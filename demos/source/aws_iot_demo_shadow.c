@@ -32,6 +32,7 @@
 
 /* Standard includes. */
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -50,19 +51,6 @@
 
 /* JSON utilities include. */
 #include "iot_json_utils.h"
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Including stdio.h also brings in unwanted (and conflicting) symbols on some
- * platforms. Therefore, any functions in stdio.h needed in this file have an
- * extern declaration here. */
-extern int snprintf( char *,
-                     size_t,
-                     const char *,
-                     ... );
-/** @endcond */
 
 /**
  * @cond DOXYGEN_IGNORE
@@ -147,6 +135,15 @@ extern int snprintf( char *,
  * its full size is known at compile-time.
  */
 #define _EXPECTED_REPORTED_JSON_SIZE    ( sizeof( _SHADOW_REPORTED_JSON ) - 4 )
+
+/*-----------------------------------------------------------*/
+
+/* Declaration of demo function. */
+int RunShadowDemo( bool awsIotMqttMode,
+                   const char * pIdentifier,
+                   void * pNetworkServerInfo,
+                   void * pNetworkCredentialInfo,
+                   const IotNetworkInterface_t * pNetworkInterface );
 
 /*-----------------------------------------------------------*/
 
@@ -280,8 +277,8 @@ static void _shadowDeltaCallback( void * pCallbackContext,
     static char pUpdateDocument[ _EXPECTED_REPORTED_JSON_SIZE + 1 ] = { 0 };
 
     /* Check if there is a different "powerOn" state in the Shadow. */
-    deltaFound = _getDelta( pCallbackParam->callback.pDocument,
-                            pCallbackParam->callback.documentLength,
+    deltaFound = _getDelta( pCallbackParam->u.callback.pDocument,
+                            pCallbackParam->u.callback.documentLength,
                             "powerOn",
                             &pDelta,
                             &deltaLength );
@@ -315,8 +312,8 @@ static void _shadowDeltaCallback( void * pCallbackContext,
         /* Set the common members to report the new state. */
         updateDocument.pThingName = pCallbackParam->pThingName;
         updateDocument.thingNameLength = pCallbackParam->thingNameLength;
-        updateDocument.update.pUpdateDocument = pUpdateDocument;
-        updateDocument.update.updateDocumentLength = _EXPECTED_REPORTED_JSON_SIZE;
+        updateDocument.u.update.pUpdateDocument = pUpdateDocument;
+        updateDocument.u.update.updateDocumentLength = _EXPECTED_REPORTED_JSON_SIZE;
 
         /* Generate a Shadow document for the reported state. To keep the client
          * token within 6 characters, it is modded by 1000000. */
@@ -386,15 +383,15 @@ static void _shadowUpdatedCallback( void * pCallbackContext,
     ( void ) pCallbackContext;
 
     /* Find the previous Shadow document. */
-    previousFound = _getUpdatedState( pCallbackParam->callback.pDocument,
-                                      pCallbackParam->callback.documentLength,
+    previousFound = _getUpdatedState( pCallbackParam->u.callback.pDocument,
+                                      pCallbackParam->u.callback.documentLength,
                                       "previous",
                                       &pPrevious,
                                       &previousLength );
 
     /* Find the current Shadow document. */
-    currentFound = _getUpdatedState( pCallbackParam->callback.pDocument,
-                                     pCallbackParam->callback.documentLength,
+    currentFound = _getUpdatedState( pCallbackParam->u.callback.pDocument,
+                                     pCallbackParam->u.callback.documentLength,
                                      "current",
                                      &pCurrent,
                                      &currentLength );
@@ -693,8 +690,8 @@ static int _sendShadowUpdates( IotSemaphore_t * pDeltaSemaphore,
     /* Set the common members of the Shadow update document info. */
     updateDocument.pThingName = pThingName;
     updateDocument.thingNameLength = thingNameLength;
-    updateDocument.update.pUpdateDocument = pUpdateDocument;
-    updateDocument.update.updateDocumentLength = _EXPECTED_DESIRED_JSON_SIZE;
+    updateDocument.u.update.pUpdateDocument = pUpdateDocument;
+    updateDocument.u.update.updateDocumentLength = _EXPECTED_DESIRED_JSON_SIZE;
 
     /* Publish Shadow updates at a set period. */
     for( i = 1; i <= AWS_IOT_DEMO_SHADOW_UPDATE_COUNT; i++ )

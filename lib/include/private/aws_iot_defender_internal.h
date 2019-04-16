@@ -295,37 +295,37 @@ typedef struct _defenderMetrics
 /**
  * Create a report, memory is allocated inside the function.
  */
-bool AwsIotDefenderInternal_CreateReport();
+bool AwsIotDefenderInternal_CreateReport( void );
 
 /**
  * Get the buffer pointer of report.
  */
-uint8_t * AwsIotDefenderInternal_GetReportBuffer();
+uint8_t * AwsIotDefenderInternal_GetReportBuffer( void );
 
 /**
  * Get the buffer size of report.
  */
-size_t AwsIotDefenderInternal_GetReportBufferSize();
+size_t AwsIotDefenderInternal_GetReportBufferSize( void );
 
 /**
  * Delete a report when it is useless. Internally, memory will be freed.
  */
-void AwsIotDefenderInternal_DeleteReport();
+void AwsIotDefenderInternal_DeleteReport( void );
 
 /**
  * Build three topics names used by defender library.
  */
-AwsIotDefenderError_t AwsIotDefenderInternal_BuildTopicsNames();
+AwsIotDefenderError_t AwsIotDefenderInternal_BuildTopicsNames( void );
 
 /**
  * Free the memory of three topics names.
  */
-void AwsIotDefenderInternal_DeleteTopicsNames();
+void AwsIotDefenderInternal_DeleteTopicsNames( void );
 
 /**
  * Connect to AWS with MQTT.
  */
-IotMqttError_t AwsIotDefenderInternal_MqttConnect();
+IotMqttError_t AwsIotDefenderInternal_MqttConnect( void );
 
 /**
  * Subscribe accept/reject defender topics.
@@ -342,7 +342,7 @@ IotMqttError_t AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
 /**
  * Disconnect with AWS MQTT.
  */
-void AwsIotDefenderInternal_MqttDisconnect();
+void AwsIotDefenderInternal_MqttDisconnect( void );
 
 /*----------------- Below this line are INTERNAL global variables --------------------*/
 
