@@ -22,11 +22,20 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* String include. */
+#include <string.h>
+
 /* Metrics include. */
 #include "platform/iot_metrics.h"
 
 /* Platform threads include. */
 #include "platform/iot_threads.h"
+
+/* Network socket includes. */
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 
 /* Compare function to identify the TCP connection id. */
 static bool _tcpConnectionMatch( const IotLink_t * pLink,
@@ -84,8 +93,27 @@ void IotMetrics_AddTcpConnection( IotMetricsTcpConnection_t * pTcpConnection )
             /* Copy TCP connection to the new one. */
             *pNewTcpConnection = *pTcpConnection;
 
-            /* Insert to the list. */
-            IotListDouble_InsertTail( &_connectionsList, &( pNewTcpConnection->link ) );
+            /* Allocate memory for ip string. */
+            pNewTcpConnection->pRemoteIp = IotMetrics_MallocIpAddress( IOT_METRICS_MAX_IP_STRING_LENGTH * sizeof( char ) );
+
+            if( pNewTcpConnection->pRemoteIp != NULL )
+            {
+                /* Convert IP to string. */
+                struct in_addr remoteIpAddr = { pNewTcpConnection->remoteIp };
+                char * pConvertedIp = inet_ntoa( remoteIpAddr );
+                strcpy( pNewTcpConnection->pRemoteIp, pConvertedIp );
+
+                /* Convert port and IP to host byte order. */
+                pNewTcpConnection->remotePort = ntohs( pNewTcpConnection->remotePort );
+                pNewTcpConnection->remoteIp = ntohl( pNewTcpConnection->remoteIp );
+
+                /* Insert to the list. */
+                IotListDouble_InsertTail( &_connectionsList, &( pNewTcpConnection->link ) );
+            }
+            else
+            {
+                IotMetrics_FreeTcpConnection( pNewTcpConnection );
+            }
         }
     }
 
@@ -105,7 +133,10 @@ void IotMetrics_RemoveTcpConnection( IotMetricsConnectionId_t tcpConnectionId )
 
     if( pFoundConnectionLink != NULL )
     {
-        IotMetrics_FreeTcpConnection( IotLink_Container( IotMetricsTcpConnection_t, pFoundConnectionLink, link ) );
+        IotMetricsTcpConnection_t * pFoundTcpConnection = IotLink_Container( IotMetricsTcpConnection_t, pFoundConnectionLink, link );
+
+        IotMetrics_FreeIpAddress( pFoundTcpConnection->pRemoteIp );
+        IotMetrics_FreeTcpConnection(pFoundTcpConnection);
     }
 
     IotMutex_Unlock( &_mutex );

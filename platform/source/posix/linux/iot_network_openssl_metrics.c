@@ -75,8 +75,7 @@ static IotNetworkError_t _metricsCreate( void * pConnectionInfo,
         struct sockaddr_in socketAddressIpv4;
         socklen_t socklen = sizeof( struct sockaddr_in );
 
-        /* Initialize a tcp connection with socket as id. */
-        IotMetricsTcpConnection_t connection = { .id = socket };
+        IotMetricsTcpConnection_t connection;
 
         /* Get the ip and port from the peer socket. */
         int ret = getpeername( socket, ( struct sockaddr * ) &socketAddressIpv4, &socklen );
@@ -85,11 +84,9 @@ static IotNetworkError_t _metricsCreate( void * pConnectionInfo,
         /* Assert its succees. */
         IotMetrics_Assert( ret == 0 );
 
-        /* Convert ip value from integer(network byte order) to string. */
-        connection.pRemoteIP = inet_ntoa( socketAddressIpv4.sin_addr );
-
-        /* Convert port value from network byte order to host byte order. */
-        connection.remotePort = ntohs( socketAddressIpv4.sin_port );
+        connection.id = ( IotMetricsConnectionId_t ) socket;
+        connection.remotePort = socketAddressIpv4.sin_port;
+        connection.remoteIp = socketAddressIpv4.sin_addr.s_addr;
 
         /* Add this metircs, a established TCP connection.  */
         IotMetrics_AddTcpConnection( &connection );
@@ -112,7 +109,7 @@ static IotNetworkError_t _metricsClose( void * pConnection )
     if( error == IOT_NETWORK_SUCCESS )
     {
         /* Remove this metircs by its id.  */
-        IotMetrics_RemoveTcpConnection( socket );
+        IotMetrics_RemoveTcpConnection( ( IotMetricsConnectionId_t ) socket );
     }
 
     return error;

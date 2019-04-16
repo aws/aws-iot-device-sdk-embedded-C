@@ -38,10 +38,32 @@
  * Amazon FreeRTOS provides a library that allows your Amazon FreeRTOS-based devices to work with AWS IoT Device Defender.
  *
  * ## Dependencies
- * * MQTT library
- * * Serializer library
- * * Platform(POSIX) libraries
- * * Metrics library
+ *
+ * @dot "Device Defender Library dependencies"
+ * digraph library_dependencies
+ * {
+ *  node[shape=box, fontname=Helvetica, fontsize=10, style=filled];
+ *  edge[fontname=Helvetica, fontsize=10];
+ *
+ *  defender[label="Device Defender", fillcolor="#cc00ccff"];
+ *
+ *  logging[label="Logging", fillcolor="#aed8a9ff", URL="@ref logging"];
+ *  static_memory[label="Static memory", fillcolor="#aed8a9ff", URL="@ref static_memory"];
+ *  linear_containers[label="List/Queue", fillcolor="#aed8a9ff", URL="@ref linear_containers"];
+ *  taskpool[label="Taskpool", fillcolor="#aed8a9ff", URL="@ref taskpool"]
+ *  mqtt[label="MQTT", fillcolor="#aed8a9ff", URL="@ref mqtt"]
+ *  platform_threads[label="Thread", fillcolor="#e89025ff", URL="@ref platform_threads"];
+ *  platform_clock[label="Clock", fillcolor="#e89025ff", URL="@ref platform_clock"];
+ *
+ *  defender -> linear_containers;
+ *  defender -> logging [label=" if logging enabled", style="dashed"];
+ *  defender -> static_memory [label=" if static memory only", style="dashed"];
+ *  defender -> platform_threads;
+ *  defender -> platform_clock;
+ *  defender -> taskpool;
+ *  defender -> mqtt;
+ * }
+ * @enddot
  */
 
 #ifndef _AWS_IOT_DEFENDER_H_
@@ -53,9 +75,6 @@
 /* Standard includes. */
 #include <stdint.h>
 #include <stdlib.h>
-
-/* Network include. */
-#include "platform/iot_network.h"
 
 /* MQTT include. */
 #include "iot_mqtt.h"
@@ -85,6 +104,9 @@
  * @name Metrics Flags
  *
  * @brief Bit flags or metrics used by @ref defender_function_setmetrics function.
+ *
+ * These metrics are subset of metrics supported by AWS IoT Device Defender service. For details,
+ * refer to developer document of [AWS IoT Device Defender](https://docs.aws.amazon.com/iot/latest/developerguide/device-defender-detect.html#DetectMetricsMessages).
  */
 /**@{ */
 #define AWS_IOT_DEFENDER_METRICS_ALL                                        0xffffffff /**< Flag to indicate including all metrics. */
@@ -115,7 +137,9 @@
  * @brief Intializers of data handles.
  */
 /**@{ */
-#define AWS_IOT_DEFENDER_START_INFO_INITIALIZER    { .mqttNetworkInfo = { 0 } } /**< Initializer of #AwsIotDefenderCallbackInfo_t. */
+#define AWS_IOT_DEFENDER_START_INFO_INITIALIZER \
+    { .mqttNetworkInfo = { 0 }                  \
+    } /**< Initializer of #AwsIotDefenderCallbackInfo_t. */
 /**@} */
 
 /**
@@ -207,7 +231,7 @@ typedef struct AwsIotDefenderStartInfo
 {
     IotMqttNetworkInfo_t mqttNetworkInfo;    /**< MQTT Network info used by defender (required). */
     IotMqttConnectInfo_t mqttConnectionInfo; /**< MQTT connection info used by defender (required). */
-    AwsIotDefenderCallback_t callback;       /**< Callback function parameter(optional). */
+    AwsIotDefenderCallback_t callback;       /**< Callback function parameter (optional). */
 } AwsIotDefenderStartInfo_t;
 
 /**
@@ -218,7 +242,6 @@ typedef struct AwsIotDefenderStartInfo
  * - @functionname{defender_function_setperiod}
  * - @functionname{defender_function_getperiod}
  * - @functionname{defender_function_strerror}
- * - @functionname{defender_function_geteventerror}
  */
 
 /**
@@ -228,7 +251,6 @@ typedef struct AwsIotDefenderStartInfo
  * @functionpage{AwsIotDefender_SetPeriod,defender,setperiod}
  * @functionpage{AwsIotDefender_GetPeriod,defender,getperiod}
  * @functionpage{AwsIotDefender_strerror,defender,strerror}
- * @functionpage{AwsIotDefender_GetEventError,defender,geteventerror}
  */
 
 /**
@@ -274,60 +296,67 @@ AwsIotDefenderError_t AwsIotDefender_SetMetrics( AwsIotDefenderMetricsGroup_t me
  * Example:
  *
  * @code{c}
- * void logDefenderCallback(void * param1, AwsIotDefenderCallbackInfo_t * const pCallbackInfo)
- * {
- *     const char * pEventStr = AwsIotDefender_DescribeEventType(pCallbackInfo->eventType);
- *     // log pEventStr
  *
- *     if (pCallbackInfo->pPayload != NULL)
+ * // assume valid IotMqttNetworkInfo_t and IotMqttConnectInfo_t are created.
+ * const IotMqttNetworkInfo_t _mqttNetworkInfo;
+ * const IotMqttConnectInfo_t _mqttConnectionInfo;
+ *
+ * void logDefenderCallback( void * param1, AwsIotDefenderCallbackInfo_t * const pCallbackInfo )
+ * {
+ *     if ( pCallbackInfo->eventType == AWS_IOT_DEFENDER_METRICS_ACCEPTED )
  *     {
- *         // log pCallbackInfo->pPayload which has length pCallbackInfo->payloadLength
+ *         // log info: metrics report accepted by defender service is a happy case
+ *     }
+ *     else
+ *     {
+ *         // log error: pCallbackInfo->eventType
  *     }
  *
- *     if (pCallbackInfo->pMetricsReport != NULL)
+ *     if ( pCallbackInfo->pPayload != NULL )
  *     {
- *         // log pCallbackInfo->pMetricsReport which has length pCallbackInfo->metricsReportLength
+ *         // log info: pCallbackInfo->pPayload with length pCallbackInfo->payloadLength
+ *     }
+ *
+ *     if ( pCallbackInfo->pMetricsReport != NULL )
+ *     {
+ *         // log info: pCallbackInfo->pMetricsReport with length pCallbackInfo->metricsReportLength
  *     }
  * }
  *
  * void startDefender()
  * {
- *     // assume a valid AwsIotNetworkTlsInfo_t is created.
- *     const AwsIotNetworkTlsInfo_t tlsInfo;
- *
  *     // define a simple callback function which simply logs
- *     const AwsIotDefenderCallback_t callback = { .function = logDefenderCallback,.param1 = NULL };
+ *     const AwsIotDefenderCallback_t callback = { .function = logDefenderCallback, .param1 = NULL };
  *
  *     // define parameters of AwsIotDefender_Start function
- *     const AwsIotDefenderStartInfo_t startInfo = {
- *           .tlsInfo = tlsInfo,                                    // copy TLS info
- *           .pAwsIotEndpoint = "iot endpoint",
- *           .port = 8883,
- *           .pThingName = "some thing name",
- *           .thingNameLength = strlen("some thing name"),
- *           .callback = callback };
+ *     const AwsIotDefenderStartInfo_t startInfo =
+ *     {
+ *         .mqttNetworkInfo = _mqttNetworkInfo,
+ *         .mqttConnectionInfo = _mqttConnectionInfo,
+ *         .callback = callback
+ *     };
  *
  *     // specify two TCP connections metrics: total count and local port
  *     AwsIotDefenderError_t error = AwsIotDefender_SetMetrics(AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS,
  *                                                             AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL |
  *                                                             AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_REMOTE_ADDR );
  *
- *     if (error == AWS_IOT_DEFENDER_SUCCESS)
+ *     if ( error == AWS_IOT_DEFENDER_SUCCESS )
  *     {
  *         // set metrics report period to 10 minutes (600 seconds)
- *         error = AwsIotDefender_SetPeriod(600);
+ *         error = AwsIotDefender_SetPeriod( 600 );
  *     }
  *
  *     if (error == AWS_IOT_DEFENDER_SUCCESS)
  *     {
  *         // start the defender
- *         error = AwsIotDefender_Start(&startInfo);
+ *         error = AwsIotDefender_Start( &startInfo );
  *     }
  *
- *     if (error != AWS_IOT_DEFENDER_SUCCESS)
+ *     if ( error != AWS_IOT_DEFENDER_SUCCESS )
  *     {
- *         const char * pError = AwsIotDefender_strerror(error);
- *         // log pError
+ *         const char * pError = AwsIotDefender_strerror( error );
+ *         // log error: pError
  *     }
  * }
  *
@@ -345,6 +374,9 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
 
 /**
  * @brief Stop the defender agent.
+ *
+ * It waits for the current metrics-publishing iteration to finish before freeing the resource allocated.
+ * It also clears the metrics set previously so that user is expected to SetMetrics again before restarting defender agent.
  *
  * @warning This function must be called after successfully calling @ref defender_function_start.
  * @warning This function is not thread safe.
@@ -373,6 +405,8 @@ AwsIotDefenderError_t AwsIotDefender_SetPeriod( uint32_t periodSeconds );
 
 /**
  * @brief Get period in seconds.
+ *
+ * @return Current period in seconds
  */
 /* @[declare_defender_getperiod] */
 uint32_t AwsIotDefender_GetPeriod( void );
@@ -380,16 +414,11 @@ uint32_t AwsIotDefender_GetPeriod( void );
 
 /**
  * @brief Return a string that describes #AwsIotDefenderError_t
+ *
+ * @return A string that describes given #AwsIotDefenderError_t
  */
 /* @[declare_defender_strerror] */
 const char * AwsIotDefender_strerror( AwsIotDefenderError_t error );
 /* @[declare_defender_strerror] */
-
-/**
- * @brief Return a string that describes #AwsIotDefenderEventType_t
- */
-/* @[declare_defender_geteventerror] */
-const char * AwsIotDefender_GetEventError();
-/* @[declare_defender_geteventerror] */
 
 #endif /* end of include guard: _AWS_IOT_DEFENDER_H_ */

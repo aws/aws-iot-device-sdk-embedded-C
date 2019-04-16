@@ -22,8 +22,8 @@
 /* This file contains configuration settings for the tests. Currently, the tests
  * must run on POSIX systems. */
 
-#ifndef _IOT_TESTS_CONFIG_H_
-#define _IOT_TESTS_CONFIG_H_
+#ifndef IOT_CONFIG_H_
+#define IOT_CONFIG_H_
 
 /* Test framework include. */
 #include "unity_fixture_malloc_overrides.h"
@@ -73,14 +73,14 @@
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 
 /* Metrics library configuration. */
-#define IOT_METRICS_ENABLE_ASSERTS         ( 1 )
+#define IOT_METRICS_ENABLE_ASSERTS              ( 1 )
 
 /* Serializer library configuration. */
-#define IOT_SERIALIZER_ENABLE_ASSERTS      ( 1 )
+#define IOT_SERIALIZER_ENABLE_ASSERTS           ( 1 )
 
 /* Defender library configuration. */
-#define AWS_IOT_DEFENDER_ENABLE_ASSERTS    ( 1 )
-#define AWS_IOT_DEFENDER_USE_LONG_TAG      ( 1 )
+#define AWS_IOT_DEFENDER_ENABLE_ASSERTS         ( 1 )
+#define AWS_IOT_DEFENDER_USE_LONG_TAG           ( 1 )
 
 /* Static memory resource settings for the tests. These values must be large
  * enough to support the stress tests. */
@@ -92,15 +92,15 @@
 
 /* Memory allocation function configuration. Note that these functions will not
  * be affected by IOT_STATIC_MEMORY_ONLY. */
-#define IotThreads_Malloc                  unity_malloc_mt
-#define IotThreads_Free                    unity_free_mt
-#define IotNetwork_Malloc                  unity_malloc_mt
-#define IotNetwork_Free                    unity_free_mt
-#define IotLogging_Malloc                  unity_malloc_mt
-#define IotLogging_Free                    unity_free_mt
+#define IotThreads_Malloc    unity_malloc_mt
+#define IotThreads_Free      unity_free_mt
+#define IotNetwork_Malloc    unity_malloc_mt
+#define IotNetwork_Free      unity_free_mt
+#define IotLogging_Malloc    unity_malloc_mt
+#define IotLogging_Free      unity_free_mt
 /* #define IotLogging_StaticBufferSize */
-#define IotTest_Malloc                     unity_malloc_mt
-#define IotTest_Free                       unity_free_mt
+#define IotTest_Malloc       unity_malloc_mt
+#define IotTest_Free         unity_free_mt
 
 /* Memory allocation function configuration for libraries affected by
  * IOT_STATIC_MEMORY_ONLY. */
@@ -127,6 +127,8 @@
     #define AwsIotShadow_FreeSubscription        unity_free_mt
     #define IotMetrics_MallocTcpConnection       unity_malloc_mt
     #define IotMetrics_FreeTcpConnection         unity_free_mt
+    #define IotMetrics_MallocIpAddress           unity_malloc_mt
+    #define IotMetrics_FreeIpAddress             unity_free_mt
     #define IotSerializer_MallocCborEncoder      unity_malloc_mt
     #define IotSerializer_FreeCborEncoder        unity_free_mt
     #define IotSerializer_MallocCborParser       unity_malloc_mt
@@ -174,8 +176,11 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
 #define IotTestNetwork_Init           IotNetworkOpenssl_Init
 #define IotTestNetwork_Cleanup        IotNetworkOpenssl_Cleanup
 
+/* This is supposed to be defined as the socket data type. In linux, it is "int". */
+#define IotMetricsConnectionId_t      int
+
 /* Macro for placing inline assembly in test code. */
-#define IOT_TEST_ASM_VOLATILE( x ) __asm__ __volatile__ ( x )
+#define IOT_TEST_ASM_VOLATILE( x )    __asm__ __volatile__ ( x )
 
 #ifndef __GNUC__
     #error "Unsupported compiler. Only gcc and clang are supported."
@@ -189,7 +194,7 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
     /* Define a custom logging puts function. This function allows coverage
      * testing of logging functions, but prevents excessive logs from being
      * printed. */
-    #define IotLogging_Puts           _coveragePuts
+    #define IotLogging_Puts       _coveragePuts
 
     /* Includes for coverage logging puts. */
     #include <stdbool.h>
@@ -198,7 +203,7 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
 
     /* Logging output function that only prints messages from demo executables.
      * May be unused, hence the gcc unused attribute (not portable!) */
-    static int __attribute__ ( ( unused ) ) _coveragePuts( const char * pMessage )
+    static int __attribute__( ( unused ) ) _coveragePuts( const char * pMessage )
     {
         bool printMessage = false;
 
@@ -233,10 +238,10 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
         /* Puts should return a nonzero value. */
         return 1;
     }
-#endif
+#endif /* if IOT_TEST_COVERAGE == 1 */
 
 /* The build system will choose the appropriate system types file for the platform
  * layer based on the host operating system. */
 #include IOT_SYSTEM_TYPES_FILE
 
-#endif /* ifndef _IOT_TESTS_CONFIG_H_ */
+#endif /* ifndef IOT_CONFIG_H_ */
