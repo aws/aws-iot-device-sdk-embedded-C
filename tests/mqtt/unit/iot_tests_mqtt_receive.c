@@ -114,12 +114,16 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
 /**
  * @brief Initializer for operations in the tests.
  */
-#define _INITIALIZE_OPERATION( name )                                                                 \
-    {                                                                                                 \
-        .link = { 0 }, .incomingPublish = false, .pMqttConnection = _pMqttConnection,                 \
-        .job = { 0 }, .jobReference = 1, .type = name, .flags = IOT_MQTT_FLAG_WAITABLE,               \
-        .packetIdentifier = 1, .pMqttPacket = NULL, .packetSize = 0, .notify = { .callback = { 0 } }, \
-        .status = IOT_MQTT_STATUS_PENDING, .retry = { 0 }                                             \
+#define _INITIALIZE_OPERATION( name )                                                               \
+    {                                                                                               \
+        .link = { 0 }, .incomingPublish = false, .pMqttConnection = _pMqttConnection, .job = { 0 }, \
+        .u.operation =                                                                              \
+        {                                                                                           \
+            .jobReference = 1, .type = name, .flags = IOT_MQTT_FLAG_WAITABLE,                       \
+            .packetIdentifier = 1, .pMqttPacket = NULL, .packetSize = 0,                            \
+            .notify= { .callback = { 0 } }, .status = IOT_MQTT_STATUS_PENDING,                      \
+            .retry = { 0 }                                                                          \
+        }                                                                                           \
     }
 
 /*-----------------------------------------------------------*/
@@ -282,8 +286,8 @@ static IotMqttError_t _deserializePingresp( _mqttPacket_t * pPingresp )
  */
 static void _operationResetAndPush( _mqttOperation_t * pOperation )
 {
-    pOperation->status = IOT_MQTT_STATUS_PENDING;
-    pOperation->jobReference = 1;
+    pOperation->u.operation.status = IOT_MQTT_STATUS_PENDING;
+    pOperation->u.operation.jobReference = 1;
     IotDeQueue_EnqueueHead( &( _pMqttConnection->pendingResponse ), &( pOperation->link ) );
 }
 
@@ -311,7 +315,7 @@ static bool _processBuffer( const _mqttOperation_t * pOperation,
     /* Check expected result if operation is given. */
     if( pOperation != NULL )
     {
-        status = ( expectedResult == pOperation->status );
+        status = ( expectedResult == pOperation->u.operation.status );
     }
 
     return status;
@@ -394,13 +398,13 @@ static void _publishCallback( void * pCallbackContext,
 
     /* QoS 2 is valid for these tests, but currently unsupported by the MQTT library.
      * Change the QoS to 0 so that QoS validation passes. */
-    pPublish->message.info.qos = IOT_MQTT_QOS_0;
+    pPublish->u.message.info.qos = IOT_MQTT_QOS_0;
 
     /* Check that the parameters to this function are valid. */
     if( ( _IotMqtt_ValidatePublish( _AWS_IOT_MQTT_SERVER,
-                                    &( pPublish->message.info ) ) == true ) &&
-        ( pPublish->message.info.topicNameLength == _TEST_TOPIC_LENGTH ) &&
-        ( strncmp( _TEST_TOPIC_NAME, pPublish->message.info.pTopicName, _TEST_TOPIC_LENGTH ) == 0 ) )
+                                    &( pPublish->u.message.info ) ) == true ) &&
+        ( pPublish->u.message.info.topicNameLength == _TEST_TOPIC_LENGTH ) &&
+        ( strncmp( _TEST_TOPIC_NAME, pPublish->u.message.info.pTopicName, _TEST_TOPIC_LENGTH ) == 0 ) )
     {
         IotSemaphore_Post( pInvokeCount );
     }
@@ -495,7 +499,7 @@ static void _disconnectCallback( void * pCallbackContext,
     /* Silence warnings about unused parameters. */
     ( void ) pCallbackContext;
 
-    if( pCallbackParam->disconnectReason == IOT_MQTT_BAD_PACKET_RECEIVED )
+    if( pCallbackParam->u.disconnectReason == IOT_MQTT_BAD_PACKET_RECEIVED )
     {
         _disconnectCallbackCalled = true;
     }
@@ -753,7 +757,7 @@ TEST( MQTT_Unit_Receive, ConnackValid )
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( connect.notify.waitSemaphore ),
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( connect.u.operation.notify.waitSemaphore ),
                                                       0,
                                                       10 ) );
 
@@ -804,7 +808,7 @@ TEST( MQTT_Unit_Receive, ConnackValid )
                                                      IOT_MQTT_SERVER_REFUSED ) );
     }
 
-    IotSemaphore_Destroy( &( connect.notify.waitSemaphore ) );
+    IotSemaphore_Destroy( &( connect.u.operation.notify.waitSemaphore ) );
 
     /* Network close function should not have been invoked. */
     TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
@@ -823,7 +827,7 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( connect.notify.waitSemaphore ),
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( connect.u.operation.notify.waitSemaphore ),
                                                       0,
                                                       10 ) );
 
@@ -927,7 +931,7 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
         _disconnectCallbackCalled = false;
     }
 
-    IotSemaphore_Destroy( &( connect.notify.waitSemaphore ) );
+    IotSemaphore_Destroy( &( connect.u.operation.notify.waitSemaphore ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -1138,7 +1142,7 @@ TEST( MQTT_Unit_Receive, PubackValid )
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( publish.notify.waitSemaphore ),
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( publish.u.operation.notify.waitSemaphore ),
                                                       0,
                                                       10 ) );
 
@@ -1162,7 +1166,7 @@ TEST( MQTT_Unit_Receive, PubackValid )
                                                      IOT_MQTT_SUCCESS ) );
     }
 
-    IotSemaphore_Destroy( &( publish.notify.waitSemaphore ) );
+    IotSemaphore_Destroy( &( publish.u.operation.notify.waitSemaphore ) );
 
     /* Network close function should not have been invoked. */
     TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
@@ -1181,7 +1185,7 @@ TEST( MQTT_Unit_Receive, PubackInvalid )
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( publish.notify.waitSemaphore ),
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( publish.u.operation.notify.waitSemaphore ),
                                                       0,
                                                       10 ) );
 
@@ -1259,7 +1263,7 @@ TEST( MQTT_Unit_Receive, PubackInvalid )
         IotDeQueue_Remove( &( publish.link ) );
     }
 
-    IotSemaphore_Destroy( &( publish.notify.waitSemaphore ) );
+    IotSemaphore_Destroy( &( publish.u.operation.notify.waitSemaphore ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -1276,7 +1280,7 @@ TEST( MQTT_Unit_Receive, SubackValid )
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( subscribe.notify.waitSemaphore ),
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( subscribe.u.operation.notify.waitSemaphore ),
                                                       0,
                                                       10 ) );
 
@@ -1361,7 +1365,7 @@ TEST( MQTT_Unit_Receive, SubackValid )
                                                             NULL ) );
     }
 
-    IotSemaphore_Destroy( &( subscribe.notify.waitSemaphore ) );
+    IotSemaphore_Destroy( &( subscribe.u.operation.notify.waitSemaphore ) );
 
     /* Network close function should not have been invoked. */
     TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
@@ -1380,7 +1384,7 @@ TEST( MQTT_Unit_Receive, SubackInvalid )
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( subscribe.notify.waitSemaphore ),
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( subscribe.u.operation.notify.waitSemaphore ),
                                                       0,
                                                       10 ) );
 
@@ -1486,7 +1490,7 @@ TEST( MQTT_Unit_Receive, SubackInvalid )
         _disconnectCallbackCalled = false;
     }
 
-    IotSemaphore_Destroy( &( subscribe.notify.waitSemaphore ) );
+    IotSemaphore_Destroy( &( subscribe.u.operation.notify.waitSemaphore ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -1501,7 +1505,7 @@ TEST( MQTT_Unit_Receive, UnsubackValid )
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( unsubscribe.notify.waitSemaphore ),
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( unsubscribe.u.operation.notify.waitSemaphore ),
                                                       0,
                                                       10 ) );
 
@@ -1525,7 +1529,7 @@ TEST( MQTT_Unit_Receive, UnsubackValid )
                                                      IOT_MQTT_SUCCESS ) );
     }
 
-    IotSemaphore_Destroy( &( unsubscribe.notify.waitSemaphore ) );
+    IotSemaphore_Destroy( &( unsubscribe.u.operation.notify.waitSemaphore ) );
 
     /* Network close function should not have been invoked. */
     TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
@@ -1544,7 +1548,7 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( unsubscribe.notify.waitSemaphore ),
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( unsubscribe.u.operation.notify.waitSemaphore ),
                                                       0,
                                                       10 ) );
 
@@ -1622,7 +1626,7 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
         IotDeQueue_Remove( &( unsubscribe.link ) );
     }
 
-    IotSemaphore_Destroy( &( unsubscribe.notify.waitSemaphore ) );
+    IotSemaphore_Destroy( &( unsubscribe.u.operation.notify.waitSemaphore ) );
 }
 
 /*-----------------------------------------------------------*/

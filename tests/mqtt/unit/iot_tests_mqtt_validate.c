@@ -59,7 +59,9 @@
 /**
  * @brief A non-NULL function pointer.
  */
-#define _FUNCTION_POINTER      ( ( void * ) 0x1 )
+#define _FUNCTION_POINTER   \
+    ( ( void ( * )( void *, \
+                    IotMqttCallbackParam_t * ) ) 0x1 )
 
 /*-----------------------------------------------------------*/
 
@@ -268,12 +270,12 @@ TEST( MQTT_Unit_Validate, ValidateOperation )
         TEST_ASSERT_EQUAL_INT( false, validateStatus );
 
         /* Non-waitable reference. */
-        operation->flags = 0;
+        operation->u.operation.flags = 0;
         validateStatus = _IotMqtt_ValidateOperation( operation );
         TEST_ASSERT_EQUAL_INT( false, validateStatus );
 
         /* Waitable (valid) reference. */
-        operation->flags = IOT_MQTT_FLAG_WAITABLE;
+        operation->u.operation.flags = IOT_MQTT_FLAG_WAITABLE;
         validateStatus = _IotMqtt_ValidateOperation( operation );
         TEST_ASSERT_EQUAL_INT( true, validateStatus );
     }

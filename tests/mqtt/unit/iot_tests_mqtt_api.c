@@ -322,11 +322,11 @@ static size_t _dupChecker( void * pSendContext,
      * for the AWS IoT MQTT server. */
     #if _AWS_IOT_MQTT_SERVER == true
         static uint16_t lastPacketIdentifier = 0;
-        _mqttPacket_t publishPacket = { .pMqttConnection = NULL };
+        _mqttPacket_t publishPacket = { .u.pMqttConnection = NULL };
         _mqttOperation_t publishOperation = { .link = { 0 } };
 
         publishPacket.type = publishFlags;
-        publishPacket.pIncomingPublish = &publishOperation;
+        publishPacket.u.pIncomingPublish = &publishOperation;
         publishPacket.remainingLength = 8 + _TEST_TOPIC_NAME_LENGTH;
         publishPacket.pRemainingData = ( uint8_t * ) pMessage + ( messageLength - publishPacket.remainingLength );
     #endif
@@ -470,7 +470,7 @@ static void _disconnectCallback( void * pCallbackContext,
     IotMqttDisconnectReason_t * pExpectedReason = ( IotMqttDisconnectReason_t * ) pCallbackContext;
 
     /* Only increment counter if the reasons match. */
-    if( pCallbackParam->disconnectReason == *pExpectedReason )
+    if( pCallbackParam->u.disconnectReason == *pExpectedReason )
     {
         _disconnectCallbackCount++;
     }
@@ -496,7 +496,7 @@ static void _decrementReferencesJob( IotTaskPool_t * pTaskPool,
     if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == false )
     {
         /* Unblock the main test thread. */
-        IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
+        IotSemaphore_Post( &( pOperation->u.operation.notify.waitSemaphore ) );
     }
 }
 
@@ -597,7 +597,7 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
 
     /* Check reference counts and list placement. */
     TEST_ASSERT_EQUAL_INT32( 1 + keepAliveReference, _pMqttConnection->references );
-    TEST_ASSERT_EQUAL_INT32( 2, pOperation->jobReference );
+    TEST_ASSERT_EQUAL_INT32( 2, pOperation->u.operation.jobReference );
     TEST_ASSERT_EQUAL_PTR( &( pOperation->link ), IotListDouble_FindFirstMatch( &( _pMqttConnection->pendingProcessing ),
                                                                                 NULL,
                                                                                 NULL,
@@ -612,11 +612,11 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
                                                                    0 ) );
 
     /* Wait for the job to complete. */
-    IotSemaphore_Wait( &( pOperation->notify.waitSemaphore ) );
+    IotSemaphore_Wait( &( pOperation->u.operation.notify.waitSemaphore ) );
 
     /* Check reference counts after job completion. */
     TEST_ASSERT_EQUAL_INT32( 1 + keepAliveReference, _pMqttConnection->references );
-    TEST_ASSERT_EQUAL_INT32( 1, pOperation->jobReference );
+    TEST_ASSERT_EQUAL_INT32( 1, pOperation->u.operation.jobReference );
     TEST_ASSERT_EQUAL_PTR( &( pOperation->link ), IotListDouble_FindFirstMatch( &( _pMqttConnection->pendingProcessing ),
                                                                                 NULL,
                                                                                 NULL,
@@ -665,9 +665,9 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
                                                                        &pOperation ) );
 
         /* Set an arbitrary MQTT packet for the operation. */
-        pOperation->type = IOT_MQTT_DISCONNECT;
-        pOperation->pMqttPacket = pPacket;
-        pOperation->packetSize = 2;
+        pOperation->u.operation.type = IOT_MQTT_DISCONNECT;
+        pOperation->u.operation.pMqttPacket = pPacket;
+        pOperation->u.operation.packetSize = 2;
 
         /* Schedule the send job. */
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_ScheduleOperation( pOperation,
@@ -683,7 +683,7 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
 
         /* Check reference count after a timed out wait. */
         IotMutex_Lock( &( _pMqttConnection->referencesMutex ) );
-        TEST_ASSERT_EQUAL_INT32( 1, pOperation->jobReference );
+        TEST_ASSERT_EQUAL_INT32( 1, pOperation->u.operation.jobReference );
         IotMutex_Unlock( &( _pMqttConnection->referencesMutex ) );
 
         /* Disconnect the MQTT connection. */

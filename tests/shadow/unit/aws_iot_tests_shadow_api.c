@@ -231,7 +231,7 @@ static size_t _sendSuccess( void * pSendContext,
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t deserializedPublish = { .link = { 0 } };
-    _mqttPacket_t mqttPacket = { .pMqttConnection = NULL };
+    _mqttPacket_t mqttPacket = { .u.pMqttConnection = NULL };
     _receiveContext_t receiveContext = { 0 };
 
     /* Ignore the send context. */
@@ -296,7 +296,7 @@ static size_t _sendSuccess( void * pSendContext,
         }
         else
         {
-            mqttPacket.pIncomingPublish = &deserializedPublish;
+            mqttPacket.u.pIncomingPublish = &deserializedPublish;
             mqttPacket.pRemainingData = ( uint8_t * ) pMessage + ( messageLength - mqttPacket.remainingLength );
 
             status = _IotMqtt_DeserializePublish( &mqttPacket );

@@ -279,18 +279,18 @@ static void _publishReceived( void * pArgument,
 
     /* Increment the received PUBLISH counter if the received message matches
      * what was published. */
-    if( ( pPublish->message.info.payloadLength == _samplePayloadLength ) &&
-        ( strncmp( _pSamplePayload, pPublish->message.info.pPayload, _samplePayloadLength ) == 0 ) &&
-        ( pPublish->message.info.topicNameLength == _topicNameLength ) &&
-        ( pPublish->message.info.qos == IOT_MQTT_QOS_1 ) )
+    if( ( pPublish->u.message.info.payloadLength == _samplePayloadLength ) &&
+        ( strncmp( _pSamplePayload, pPublish->u.message.info.pPayload, _samplePayloadLength ) == 0 ) &&
+        ( pPublish->u.message.info.topicNameLength == _topicNameLength ) &&
+        ( pPublish->u.message.info.qos == IOT_MQTT_QOS_1 ) )
     {
         IotSemaphore_Post( &receivedPublishCounter );
     }
     else
     {
         IotLogWarn( "Received an unknown message on subscription %.*s: %.*s",
-                    pPublish->message.info.topicNameLength, pPublish->message.info.pTopicName,
-                    pPublish->message.info.payloadLength, pPublish->message.info.pPayload );
+                    pPublish->u.message.info.topicNameLength, pPublish->u.message.info.pTopicName,
+                    pPublish->u.message.info.payloadLength, pPublish->u.message.info.pPayload );
     }
 }
 
@@ -448,11 +448,11 @@ TEST_SETUP( MQTT_Stress )
     /* Set the MQTT network setup parameters. */
     ( void ) memset( &_networkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
     _networkInfo.createNetworkConnection = true;
-    _networkInfo.pNetworkServerInfo = ( void * ) &_serverInfo;
+    _networkInfo.u.setup.pNetworkServerInfo = ( void * ) &_serverInfo;
     _networkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
 
     #if IOT_TEST_SECURED_CONNECTION == 1
-        _networkInfo.pNetworkCredentialInfo = ( void * ) &_credentials;
+        _networkInfo.u.setup.pNetworkCredentialInfo = ( void * ) &_credentials;
     #endif
 
     /* Set the members of the connect info. */

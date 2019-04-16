@@ -556,8 +556,8 @@ static void _callbackWrapperCommon( _shadowCallbackType_t type,
     callbackParam.mqttConnection = pMessage->mqttConnection;
     callbackParam.pThingName = pSubscription->pThingName;
     callbackParam.thingNameLength = pSubscription->thingNameLength;
-    callbackParam.callback.pDocument = pMessage->message.info.pPayload;
-    callbackParam.callback.documentLength = pMessage->message.info.payloadLength;
+    callbackParam.callback.pDocument = pMessage->u.message.info.pPayload;
+    callbackParam.callback.documentLength = pMessage->u.message.info.payloadLength;
 
     /* Invoke the callback function. */
     pSubscription->callbacks[ type ].function( pSubscription->callbacks[ type ].pCallbackContext,

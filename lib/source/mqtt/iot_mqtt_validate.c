@@ -326,7 +326,7 @@ bool _IotMqtt_ValidateOperation( IotMqttOperation_t operation )
     }
 
     /* Check that reference is waitable. */
-    if( ( operation->flags & IOT_MQTT_FLAG_WAITABLE ) != IOT_MQTT_FLAG_WAITABLE )
+    if( ( operation->u.operation.flags & IOT_MQTT_FLAG_WAITABLE ) != IOT_MQTT_FLAG_WAITABLE )
     {
         IotLogError( "Operation is not waitable." );
 

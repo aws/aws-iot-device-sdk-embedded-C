@@ -369,15 +369,15 @@ typedef struct _mqttOperation
                 uint32_t limit;
                 uint32_t nextPeriod;
             } retry;
-        };
+        } operation;
 
         /* If incomingPublish is true, this struct is valid. */
         struct
         {
             IotMqttPublishInfo_t publishInfo; /**< @brief Deserialized PUBLISH. */
             const void * pReceivedData;       /**< @brief Any buffer associated with this PUBLISH that should be freed. */
-        };
-    };
+        } publish;
+    } u; /**< @brief Valid member depends on _mqttOperation_t.incomingPublish. */
 } _mqttOperation_t;
 
 /**
@@ -401,7 +401,7 @@ typedef struct _mqttPacket
          * when deserializing PUBLISHes.
          */
         _mqttOperation_t * pIncomingPublish;
-    };
+    } u; /**< @brief Valid member depends on packet being decoded. */
 
     uint8_t * pRemainingData;  /**< @brief (Input) The remaining data in MQTT packet. */
     size_t remainingLength;    /**< @brief (Input) Length of the remaining data in the MQTT packet. */
