@@ -150,6 +150,15 @@ extern int snprintf( char *,
 
 /*-----------------------------------------------------------*/
 
+/* Declaration of demo function. */
+int RunShadowDemo( bool awsIotMqttMode,
+                   const char * pIdentifier,
+                   void * pNetworkServerInfo,
+                   void * pNetworkCredentialInfo,
+                   const IotNetworkInterface_t * pNetworkInterface );
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Parses a key in the "state" section of a Shadow delta document.
  *

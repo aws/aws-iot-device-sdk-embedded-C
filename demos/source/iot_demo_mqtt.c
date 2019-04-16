@@ -187,6 +187,15 @@ extern int snprintf( char *,
 
 /*-----------------------------------------------------------*/
 
+/* Declaration of demo function. */
+int RunMqttDemo( bool awsIotMqttMode,
+                 const char * pIdentifier,
+                 void * pNetworkServerInfo,
+                 void * pNetworkCredentialInfo,
+                 const IotNetworkInterface_t * pNetworkInterface );
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Called by the MQTT library when an operation completes.
  *
