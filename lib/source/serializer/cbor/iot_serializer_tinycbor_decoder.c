@@ -274,7 +274,7 @@ static IotSerializerError_t _init( IotSerializerDecoderObject_t * pDecoderObject
                                    size_t maxSize )
 {
     CborParser * pCborParser = IotSerializer_MallocCborParser( sizeof( CborParser ) );
-    _cborValueWrapper_t cborValueWrapper = { 0 };
+    _cborValueWrapper_t cborValueWrapper = { .isOutermost = 0 };
 
     if( pCborParser == NULL )
     {

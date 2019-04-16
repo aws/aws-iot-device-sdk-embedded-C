@@ -130,11 +130,8 @@ typedef struct IotMetricsTcpConnection
     IotLink_t link;
     IotMetricsConnectionId_t id;
     /* This is limited to IPv4. */
-    struct
-    {
-        uint32_t remoteIp; /* In host byte order. */
-        char * pRemoteIp;
-    };
+    uint32_t remoteIp; /* In host byte order. */
+    char * pRemoteIp;
     uint16_t remotePort; /* In host order. */
 } IotMetricsTcpConnection_t;
 
