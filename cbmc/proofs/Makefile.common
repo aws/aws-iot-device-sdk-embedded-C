@@ -35,7 +35,8 @@ CFLAGS += $(CFLAGS2) $(INC) $(DEF)
 	$(GOTO_CC) -o $@ $(CFLAGS) $<
 
 $(MQTT)/build:
-	(mkdir -p $(MQTT)/build; cd $(MQTT)/build; cmake ..) 2>&1 \
+	(cd $(MQTT) && git submodule init && git submodule update && \
+	 mkdir build && cd build && cmake ..) 2>&1 \
 		| tee $(ENTRY)0.txt \
 		; exit $${PIPESTATUS[0]}
 
