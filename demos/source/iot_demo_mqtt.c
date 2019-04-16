@@ -29,6 +29,7 @@
 
 /* Standard includes. */
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -41,19 +42,6 @@
 
 /* MQTT include. */
 #include "iot_mqtt.h"
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Including stdio.h also brings in unwanted (and conflicting) symbols on some
- * platforms. Therefore, any functions in stdio.h needed in this file have an
- * extern declaration here. */
-extern int snprintf( char *,
-                     size_t,
-                     const char *,
-                     ... );
-/** @endcond */
 
 /**
  * @cond DOXYGEN_IGNORE
@@ -184,6 +172,15 @@ extern int snprintf( char *,
  * @brief Size of the buffers that hold acknowledgement messages in this demo.
  */
 #define _ACKNOWLEDGEMENT_MESSAGE_BUFFER_LENGTH    ( sizeof( _ACKNOWLEDGEMENT_MESSAGE_FORMAT ) + 2 )
+
+/*-----------------------------------------------------------*/
+
+/* Declaration of demo function. */
+int RunMqttDemo( bool awsIotMqttMode,
+                 const char * pIdentifier,
+                 void * pNetworkServerInfo,
+                 void * pNetworkCredentialInfo,
+                 const IotNetworkInterface_t * pNetworkInterface );
 
 /*-----------------------------------------------------------*/
 

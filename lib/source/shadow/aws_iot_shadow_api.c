@@ -280,7 +280,7 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
     {
         /* Check memory allocation function for waitable GET. */
         if( ( ( flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE ) &&
-            ( pDocumentInfo->get.mallocDocument == NULL ) )
+            ( pDocumentInfo->u.get.mallocDocument == NULL ) )
         {
             IotLogError( "Memory allocation function must be set for waitable Shadow GET." );
 
@@ -291,8 +291,8 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
     else
     {
         /* Check UPDATE document pointer and length. */
-        if( ( pDocumentInfo->update.pUpdateDocument == NULL ) ||
-            ( pDocumentInfo->update.updateDocumentLength == 0 ) )
+        if( ( pDocumentInfo->u.update.pUpdateDocument == NULL ) ||
+            ( pDocumentInfo->u.update.updateDocumentLength == 0 ) )
         {
             IotLogError( "Shadow document for Shadow UPDATE cannot be NULL or"
                          " have length 0." );
@@ -556,8 +556,8 @@ static void _callbackWrapperCommon( _shadowCallbackType_t type,
     callbackParam.mqttConnection = pMessage->mqttConnection;
     callbackParam.pThingName = pSubscription->pThingName;
     callbackParam.thingNameLength = pSubscription->thingNameLength;
-    callbackParam.callback.pDocument = pMessage->u.message.info.pPayload;
-    callbackParam.callback.documentLength = pMessage->u.message.info.payloadLength;
+    callbackParam.u.callback.pDocument = pMessage->u.message.info.pPayload;
+    callbackParam.u.callback.documentLength = pMessage->u.message.info.payloadLength;
 
     /* Invoke the callback function. */
     pSubscription->callbacks[ type ].function( pSubscription->callbacks[ type ].pCallbackContext,
@@ -791,7 +791,7 @@ AwsIotShadowError_t AwsIotShadow_Get( IotMqttConnection_t mqttConnection,
     AwsIotShadow_Assert( pOperation->status == AWS_IOT_SHADOW_STATUS_PENDING );
 
     /* Copy the memory allocation function. */
-    pOperation->get.mallocDocument = pGetInfo->get.mallocDocument;
+    pOperation->u.get.mallocDocument = pGetInfo->u.get.mallocDocument;
 
     /* Set the reference if provided. This must be done before the Shadow operation
      * is processed. */
@@ -889,8 +889,8 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
     }
 
     /* Check UPDATE document for a client token. */
-    if( IotJsonUtils_FindJsonValue( pUpdateInfo->update.pUpdateDocument,
-                                    pUpdateInfo->update.updateDocumentLength,
+    if( IotJsonUtils_FindJsonValue( pUpdateInfo->u.update.pUpdateDocument,
+                                    pUpdateInfo->u.update.updateDocumentLength,
                                     _CLIENT_TOKEN_KEY,
                                     _CLIENT_TOKEN_KEY_LENGTH,
                                     &pClientToken,
@@ -930,9 +930,9 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
     AwsIotShadow_Assert( pOperation->status == AWS_IOT_SHADOW_STATUS_PENDING );
 
     /* Allocate memory for the client token. */
-    pOperation->update.pClientToken = AwsIotShadow_MallocString( clientTokenLength );
+    pOperation->u.update.pClientToken = AwsIotShadow_MallocString( clientTokenLength );
 
-    if( pOperation->update.pClientToken == NULL )
+    if( pOperation->u.update.pClientToken == NULL )
     {
         IotLogError( "Failed to allocate memory for Shadow update client token." );
         _AwsIotShadow_DestroyOperation( pOperation );
@@ -942,10 +942,10 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
 
     /* Copy the client token. The client token must be copied in case the application
      * frees the buffer containing it. */
-    ( void ) memcpy( ( void * ) pOperation->update.pClientToken,
+    ( void ) memcpy( ( void * ) pOperation->u.update.pClientToken,
                      pClientToken,
                      clientTokenLength );
-    pOperation->update.clientTokenLength = clientTokenLength;
+    pOperation->u.update.clientTokenLength = clientTokenLength;
 
     /* Set the reference if provided. This must be done before the Shadow operation
      * is processed. */
@@ -1067,8 +1067,8 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
     if( ( operation->type == _SHADOW_GET ) &&
         ( status == AWS_IOT_SHADOW_SUCCESS ) )
     {
-        *pShadowDocument = operation->get.pDocument;
-        *pShadowDocumentLength = operation->get.documentLength;
+        *pShadowDocument = operation->u.get.pDocument;
+        *pShadowDocumentLength = operation->u.get.documentLength;
     }
 
     /* Destroy the Shadow operation. */

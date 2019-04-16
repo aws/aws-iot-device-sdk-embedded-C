@@ -117,18 +117,18 @@ static void _assertEvent( AwsIotDefenderEventType_t event,
 static void _waitForMetricsAccepted( uint32_t timeoutSec );
 
 /* Verify common section of metrics report. */
-static void _verifyMetricsCommon();
+static void _verifyMetricsCommon( void );
 
 /* Verify tcp connections in metrics report. */
 static void _verifyTcpConections( int total,
                                   ... );
 
 /* Indicate this test doesn't actually publish report. */
-static void _publishMetricsNotNeeded();
+static void _publishMetricsNotNeeded( void );
 
-static void _resetCalbackInfo();
+static void _resetCalbackInfo( void );
 
-static char * _getIotAddress();
+static char * _getIotAddress( void );
 
 TEST_GROUP( Full_DEFENDER );
 
@@ -597,7 +597,7 @@ static void _copyDataCallbackFunction( void * param1,
 
 /*-----------------------------------------------------------*/
 
-static void _publishMetricsNotNeeded()
+static void _publishMetricsNotNeeded( void )
 {
     /* Given a dummy IoT endpoint to fail network connection. */
     _serverInfo.pHostName = "dummy endpoint";
@@ -605,7 +605,7 @@ static void _publishMetricsNotNeeded()
 
 /*-----------------------------------------------------------*/
 
-static void _resetCalbackInfo()
+static void _resetCalbackInfo( void )
 {
     /* Clean data buffer. */
     memset( _payloadBuffer, 0, _PAYLOAD_MAX_SIZE );
@@ -642,7 +642,7 @@ static void _assertEvent( AwsIotDefenderEventType_t event,
 /*-----------------------------------------------------------*/
 
 /* Assert the cause of rejection is throttle. */
-static void _assertRejectDueToThrottle()
+static void _assertRejectDueToThrottle( void )
 {
     TEST_ASSERT_NOT_NULL( _callbackInfo.pPayload );
     TEST_ASSERT_GREATER_THAN( 0, _callbackInfo.payloadLength );
@@ -731,7 +731,7 @@ static void _waitForMetricsAccepted( uint32_t timeoutSec )
 
 /*-----------------------------------------------------------*/
 
-static void _verifyMetricsCommon()
+static void _verifyMetricsCommon( void )
 {
     TEST_ASSERT_NOT_NULL( _callbackInfo.pMetricsReport );
     TEST_ASSERT_GREATER_THAN( 0, _callbackInfo.metricsReportLength );
@@ -890,7 +890,7 @@ static void _verifyTcpConections( int total,
 
 /*-----------------------------------------------------------*/
 
-static char * _getIotAddress()
+static char * _getIotAddress( void )
 {
     static char iotAddress[ _MAX_ADDRESS_LENGTH ];
 

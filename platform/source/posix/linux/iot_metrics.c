@@ -59,7 +59,7 @@ static bool _tcpConnectionMatch( const IotLink_t * pLink,
 
 /*-----------------------------------------------------------*/
 
-bool IotMetrics_Init()
+bool IotMetrics_Init( void )
 {
     bool result = false;
 
