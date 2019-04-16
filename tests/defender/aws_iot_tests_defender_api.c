@@ -665,8 +665,8 @@ static void _assertRejectDueToThrottle()
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, statusDetailsObject.type );
 
-    errorCodeObject.value.pString = ( uint8_t * ) errorCode;
-    errorCodeObject.value.stringLength = 12;
+    errorCodeObject.u.value.u.string.pString = ( uint8_t * ) errorCode;
+    errorCodeObject.u.value.u.string.length = 12;
 
     error = _Decoder.find( &statusDetailsObject, "ErrorCode", &errorCodeObject );
 
@@ -674,7 +674,7 @@ static void _assertRejectDueToThrottle()
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_TEXT_STRING, errorCodeObject.type );
 
-    TEST_ASSERT_EQUAL( 0, strncmp( ( const char * ) errorCodeObject.value.pString, "Throttled", errorCodeObject.value.stringLength ) );
+    TEST_ASSERT_EQUAL( 0, strncmp( ( const char * ) errorCodeObject.u.value.u.string.pString, "Throttled", errorCodeObject.u.value.u.string.length ) );
 
     _Decoder.destroy( &statusDetailsObject );
     _Decoder.destroy( &decoderObject );
@@ -714,8 +714,8 @@ static void _waitForMetricsAccepted( uint32_t timeoutSec )
     IotSerializerDecoderObject_t statusObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
     char status[ 10 ] = "";
-    statusObject.value.pString = ( uint8_t * ) status;
-    statusObject.value.stringLength = 10;
+    statusObject.u.value.u.string.pString = ( uint8_t * ) status;
+    statusObject.u.value.u.string.length = 10;
 
     error = _Decoder.find( &decoderObject, "status", &statusObject );
 
@@ -723,7 +723,7 @@ static void _waitForMetricsAccepted( uint32_t timeoutSec )
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_TEXT_STRING, statusObject.type );
 
-    TEST_ASSERT_EQUAL( 0, strncmp( ( const char * ) statusObject.value.pString, "ACCEPTED", statusObject.value.stringLength ) );
+    TEST_ASSERT_EQUAL( 0, strncmp( ( const char * ) statusObject.u.value.u.string.pString, "ACCEPTED", statusObject.u.value.u.string.length ) );
 
     _Decoder.destroy( &statusObject );
     _Decoder.destroy( &decoderObject );
@@ -793,7 +793,7 @@ static void _verifyTcpConections( int total,
 
                 TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_SIGNED_INT, totalObject.type );
 
-                TEST_ASSERT_EQUAL( total, totalObject.value.signedInt );
+                TEST_ASSERT_EQUAL( total, totalObject.u.value.u.signedInt );
             }
             else
             {
@@ -840,8 +840,8 @@ static void _verifyTcpConections( int total,
 
                         /* Verify the passed address matching. */
                         TEST_ASSERT_EQUAL_STRING_LEN( va_arg( valist, char * ),
-                                                      remoteAddrObject.value.pString,
-                                                      remoteAddrObject.value.stringLength );
+                                                      remoteAddrObject.u.value.u.string.pString,
+                                                      remoteAddrObject.u.value.u.string.length );
                     }
                     else
                     {
