@@ -179,13 +179,13 @@
 
 /* helper macro to create scalar data */
 #define IotSerializer_ScalarSignedInt( signedIntValue )                                                                      \
-    ( IotSerializerScalarData_t ) { .value = { .signedInt = ( signedIntValue ) }, .type = IOT_SERIALIZER_SCALAR_SIGNED_INT } \
+    ( IotSerializerScalarData_t ) { .value = { .u.signedInt = ( signedIntValue ) }, .type = IOT_SERIALIZER_SCALAR_SIGNED_INT } \
 
 #define IotSerializer_ScalarTextString( pTextStringValue )                                                                                                                              \
-    ( IotSerializerScalarData_t ) { .value = { .pString = ( ( uint8_t * ) pTextStringValue ), .stringLength = strlen( pTextStringValue ) }, .type = IOT_SERIALIZER_SCALAR_TEXT_STRING } \
+    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( ( uint8_t * ) pTextStringValue ), .u.string.length = strlen( pTextStringValue ) }, .type = IOT_SERIALIZER_SCALAR_TEXT_STRING } \
 
-#define IotSerializer_ScalarByteString( pByteStringValue, length )                                                                                        \
-    ( IotSerializerScalarData_t ) { .value = { .pString = ( pByteStringValue ), .stringLength = ( length ) }, .type = IOT_SERIALIZER_SCALAR_BYTE_STRING } \
+#define IotSerializer_ScalarByteString( pByteStringValue, pByteStringLength )                                                                                        \
+    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( pByteStringValue ), .u.string.length = ( pByteStringLength ) }, .type = IOT_SERIALIZER_SCALAR_BYTE_STRING } \
 
 /* Determine if an object is a container. */
 #define IotSerializer_IsContainer( object )                      \
@@ -234,10 +234,10 @@ typedef struct IotSerializerScalarValue
         struct
         {
             uint8_t * pString;
-            size_t stringLength;
-        };
+            size_t length;
+        } string;
         bool booleanValue;
-    };
+    } u;
 } IotSerializerScalarValue_t;
 
 /* scalar data handle used in encoder */
@@ -265,7 +265,7 @@ typedef struct IotSerializerDecoderObject
         void * pHandle;
         /* if the type is a container, the scalarValue is unuseful */
         IotSerializerScalarValue_t value;
-    };
+    } u;
 } IotSerializerDecoderObject_t;
 
 typedef void * IotSerializerDecoderIterator_t;
