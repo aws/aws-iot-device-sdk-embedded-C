@@ -29,6 +29,7 @@
 
 /* Standard includes. */
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -41,19 +42,6 @@
 
 /* MQTT include. */
 #include "iot_mqtt.h"
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Including stdio.h also brings in unwanted (and conflicting) symbols on some
- * platforms. Therefore, any functions in stdio.h needed in this file have an
- * extern declaration here. */
-extern int snprintf( char *,
-                     size_t,
-                     const char *,
-                     ... );
-/** @endcond */
 
 /**
  * @cond DOXYGEN_IGNORE

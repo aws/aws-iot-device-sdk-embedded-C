@@ -391,7 +391,7 @@ static bool _readCredentials( SSL_CTX * pSslContext,
  *
  * @param[in] pNetworkConnection An established TCP connection.
  * @param[in] pServerName Remote host name, used for server name indication.
- * @param[in] pCredentials TLS setup parameters.
+ * @param[in] pOpensslCredentials TLS setup parameters.
  *
  * @return #IOT_NETWORK_SUCCESS, #IOT_NETWORK_FAILURE, or #IOT_NETWORK_SYSTEM_ERROR.
  */

@@ -29,20 +29,8 @@
 
 /* Standard includes. */
 #include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Including stdio.h also brings in unwanted (and conflicting) symbols on some
- * platforms. Therefore, any functions in stdio.h needed in this file have an
- * extern declaration here. */
-extern int vsnprintf( char *,
-                      size_t,
-                      const char *,
-                      va_list );
-/** @endcond */
 
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"

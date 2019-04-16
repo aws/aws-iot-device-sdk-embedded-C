@@ -28,6 +28,7 @@
 #include "iot_config.h"
 
 /* Standard includes. */
+#include <stdio.h>
 #include <string.h>
 
 /* SDK initialization include. */
@@ -45,19 +46,6 @@
 
 /* MQTT test access include. */
 #include "iot_test_access_mqtt.h"
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Including stdio.h also brings in unwanted (and conflicting) symbols on some
- * platforms. Therefore, any functions in stdio.h needed in this file have an
- * extern declaration here. */
-extern int snprintf( char *,
-                     size_t,
-                     const char *,
-                     ... );
-/** @endcond */
 
 /*-----------------------------------------------------------*/
 

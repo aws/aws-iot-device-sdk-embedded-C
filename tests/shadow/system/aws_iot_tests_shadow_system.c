@@ -28,6 +28,7 @@
 #include "iot_config.h"
 
 /* Standard includes. */
+#include <stdio.h>
 #include <string.h>
 
 /* SDK initialization include. */
@@ -57,19 +58,6 @@
 #if AWS_IOT_SHADOW_ENABLE_ASSERTS == 0
     #error "Shadow API unit tests require AWS_IOT_SHADOW_ENABLE_ASSERTS to be 1."
 #endif
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Including stdio.h also brings in unwanted (and conflicting) symbols on some
- * platforms. Therefore, any functions in stdio.h needed in this file have an
- * extern declaration here. */
-extern int snprintf( char *,
-                     size_t,
-                     const char *,
-                     ... );
-/** @endcond */
 
 /*-----------------------------------------------------------*/
 
