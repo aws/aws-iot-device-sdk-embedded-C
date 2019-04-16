@@ -408,7 +408,7 @@ typedef struct _shadowOperation
             const char * pClientToken; /**< @brief Client token in update document. */
             size_t clientTokenLength;  /**< @brief Length of client token. */
         } update;
-    };
+    } u;
 
     /* How to notify of an operation's completion. */
     union

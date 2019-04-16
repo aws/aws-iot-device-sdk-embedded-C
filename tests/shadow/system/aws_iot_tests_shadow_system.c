@@ -159,8 +159,8 @@ static void _operationComplete( void * pArgument,
     /* Check parameters against received operation information. */
     AwsIotShadow_Assert( pOperation->callbackType == pParams->expectedType );
     AwsIotShadow_Assert( pOperation->mqttConnection == _mqttConnection );
-    AwsIotShadow_Assert( pOperation->operation.result == AWS_IOT_SHADOW_SUCCESS );
-    AwsIotShadow_Assert( pOperation->operation.reference == pParams->operation );
+    AwsIotShadow_Assert( pOperation->u.operation.result == AWS_IOT_SHADOW_SUCCESS );
+    AwsIotShadow_Assert( pOperation->u.operation.reference == pParams->operation );
     AwsIotShadow_Assert( pOperation->thingNameLength == _THING_NAME_LENGTH );
     AwsIotShadow_Assert( strncmp( pOperation->pThingName,
                                   AWS_IOT_TEST_SHADOW_THING_NAME,
@@ -169,10 +169,10 @@ static void _operationComplete( void * pArgument,
     /* Check the retrieved Shadow document. */
     if( pOperation->callbackType == AWS_IOT_SHADOW_GET_COMPLETE )
     {
-        AwsIotShadow_Assert( pOperation->operation.get.documentLength > 0 );
+        AwsIotShadow_Assert( pOperation->u.operation.get.documentLength > 0 );
 
-        AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pOperation->operation.get.pDocument,
-                                                         pOperation->operation.get.documentLength,
+        AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pOperation->u.operation.get.pDocument,
+                                                         pOperation->u.operation.get.documentLength,
                                                          "key",
                                                          3,
                                                          &pJsonValue,
@@ -203,8 +203,8 @@ static void _deltaCallback( void * pArgument,
     AwsIotShadow_Assert( pCallback->mqttConnection == _mqttConnection );
 
     /* Check delta document state. */
-    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
-                                                     pCallback->callback.documentLength,
+    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->u.callback.pDocument,
+                                                     pCallback->u.callback.documentLength,
                                                      "key",
                                                      3,
                                                      &pValue,
@@ -213,8 +213,8 @@ static void _deltaCallback( void * pArgument,
     AwsIotShadow_Assert( strncmp( pValue, "true", valueLength ) == 0 );
 
     /* Check delta document client token. */
-    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
-                                                     pCallback->callback.documentLength,
+    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->u.callback.pDocument,
+                                                     pCallback->u.callback.documentLength,
                                                      "clientToken",
                                                      11,
                                                      &pClientToken,
@@ -243,8 +243,8 @@ static void _updatedCallback( void * pArgument,
     AwsIotShadow_Assert( pCallback->mqttConnection == _mqttConnection );
 
     /* Check updated document previous state. */
-    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
-                                                     pCallback->callback.documentLength,
+    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->u.callback.pDocument,
+                                                     pCallback->u.callback.documentLength,
                                                      "previous",
                                                      8,
                                                      &pPrevious,
@@ -255,8 +255,8 @@ static void _updatedCallback( void * pArgument,
                                   26 ) == 0 );
 
     /* Check updated document current state. */
-    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
-                                                     pCallback->callback.documentLength,
+    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->u.callback.pDocument,
+                                                     pCallback->u.callback.documentLength,
                                                      "current",
                                                      7,
                                                      &pCurrent,
@@ -267,8 +267,8 @@ static void _updatedCallback( void * pArgument,
                                   33 ) == 0 );
 
     /* Check updated document client token. */
-    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->callback.pDocument,
-                                                     pCallback->callback.documentLength,
+    AwsIotShadow_Assert( IotJsonUtils_FindJsonValue( pCallback->u.callback.pDocument,
+                                                     pCallback->u.callback.documentLength,
                                                      "clientToken",
                                                      11,
                                                      &pClientToken,
@@ -310,8 +310,8 @@ static void _updateGetDeleteAsync( IotMqttQos_t qos )
         callbackParam.expectedType = AWS_IOT_SHADOW_UPDATE_COMPLETE;
 
         /* Set the members of the Shadow document info for UPDATE. */
-        documentInfo.update.pUpdateDocument = _TEST_SHADOW_DOCUMENT;
-        documentInfo.update.updateDocumentLength = _TEST_SHADOW_DOCUMENT_LENGTH;
+        documentInfo.u.update.pUpdateDocument = _TEST_SHADOW_DOCUMENT;
+        documentInfo.u.update.updateDocumentLength = _TEST_SHADOW_DOCUMENT_LENGTH;
 
         /* Create a new Shadow document. */
         status = AwsIotShadow_Update( _mqttConnection,
@@ -382,8 +382,8 @@ static void _updateGetDeleteBlocking( IotMqttQos_t qos )
     documentInfo.qos = qos;
 
     /* Set the members of the Shadow document info for UPDATE. */
-    documentInfo.update.pUpdateDocument = _TEST_SHADOW_DOCUMENT;
-    documentInfo.update.updateDocumentLength = _TEST_SHADOW_DOCUMENT_LENGTH;
+    documentInfo.u.update.pUpdateDocument = _TEST_SHADOW_DOCUMENT;
+    documentInfo.u.update.updateDocumentLength = _TEST_SHADOW_DOCUMENT_LENGTH;
 
     /* Create a new Shadow document. */
     status = AwsIotShadow_TimedUpdate( _mqttConnection,
@@ -393,7 +393,7 @@ static void _updateGetDeleteBlocking( IotMqttQos_t qos )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
     /* Set the members of the Shadow document info for GET. */
-    documentInfo.get.mallocDocument = IotTest_Malloc;
+    documentInfo.u.get.mallocDocument = IotTest_Malloc;
 
     /* Retrieve the Shadow document. */
     status = AwsIotShadow_TimedGet( _mqttConnection,
@@ -618,8 +618,8 @@ TEST( Shadow_System, DeltaCallback )
     /* Set a desired state in the Update document. */
     updateDocument.pThingName = AWS_IOT_TEST_SHADOW_THING_NAME;
     updateDocument.thingNameLength = _THING_NAME_LENGTH;
-    updateDocument.update.pUpdateDocument = "{\"state\": {\"desired\": {\"key\": true}}, \"clientToken\":\"shadowtest\"}";
-    updateDocument.update.updateDocumentLength = 65;
+    updateDocument.u.update.pUpdateDocument = "{\"state\": {\"desired\": {\"key\": true}}, \"clientToken\":\"shadowtest\"}";
+    updateDocument.u.update.updateDocumentLength = 65;
 
     if( TEST_PROTECT() )
     {
@@ -639,8 +639,8 @@ TEST( Shadow_System, DeltaCallback )
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Set a different reported state in the Update document. */
-        updateDocument.update.pUpdateDocument = "{\"state\": {\"reported\": {\"key\": false}}, \"clientToken\":\"shadowtest\"}";
-        updateDocument.update.updateDocumentLength = 67;
+        updateDocument.u.update.pUpdateDocument = "{\"state\": {\"reported\": {\"key\": false}}, \"clientToken\":\"shadowtest\"}";
+        updateDocument.u.update.updateDocumentLength = 67;
 
         /* Create a Shadow document with a reported state. */
         status = AwsIotShadow_TimedUpdate( _mqttConnection,
@@ -696,8 +696,8 @@ TEST( Shadow_System, UpdatedCallback )
     /* Set a desired state in the Update document. */
     updateDocument.pThingName = AWS_IOT_TEST_SHADOW_THING_NAME;
     updateDocument.thingNameLength = _THING_NAME_LENGTH;
-    updateDocument.update.pUpdateDocument = "{\"state\": {\"desired\": {\"key\": true}}, \"clientToken\":\"shadowtest\"}";
-    updateDocument.update.updateDocumentLength = 65;
+    updateDocument.u.update.pUpdateDocument = "{\"state\": {\"desired\": {\"key\": true}}, \"clientToken\":\"shadowtest\"}";
+    updateDocument.u.update.updateDocumentLength = 65;
 
     if( TEST_PROTECT() )
     {
