@@ -22,8 +22,8 @@
 /* This file contains configuration settings for the tests. Currently, the tests
  * must run on POSIX systems. */
 
-#ifndef _IOT_TESTS_CONFIG_H_
-#define _IOT_TESTS_CONFIG_H_
+#ifndef IOT_CONFIG_H_
+#define IOT_CONFIG_H_
 
 /* Test framework include. */
 #include "unity_fixture_malloc_overrides.h"
@@ -38,7 +38,7 @@
     /* AWS IoT MQTT server. */
     #define IOT_TEST_SECURED_CONNECTION    ( 1 )
 
-/* AWS IoT endpoint and credentials. */
+    /* AWS IoT endpoint and credentials. */
     #ifndef IOT_TEST_SERVER
         #define IOT_TEST_SERVER         ""
     #endif
@@ -191,27 +191,19 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
     /* Define the empty else marker if test coverage is enabled. */
     #define _EMPTY_ELSE_MARKER    IOT_TEST_ASM_VOLATILE( "nop" )
 
-/* Define a custom logging puts function. This function allows coverage
- * testing of logging functions, but prevents excessive logs from being
- * printed. */
+    /* Define a custom logging puts function. This function allows coverage
+     * testing of logging functions, but prevents excessive logs from being
+     * printed. */
     #define IotLogging_Puts       _coveragePuts
 
-/* Includes for coverage logging puts. */
+    /* Includes for coverage logging puts. */
     #include <stdbool.h>
     #include <stdio.h>
     #include <string.h>
 
-/* Logging output function that only prints messages from demo executables.
- * May be unused, hence the gcc unused attribute (not portable!) */
-    static int __attribute__( ( unused ) /*-----------------------------------------------------------*/
-
-/*-----------------------------------------------------------*/
-
-/*-----------------------------------------------------------*/
-
-/*-----------------------------------------------------------*/
-
-                              ) _coveragePuts( const char * pMessage )
+    /* Logging output function that only prints messages from demo executables.
+     * May be unused, hence the gcc unused attribute (not portable!) */
+    static int __attribute__( ( unused ) ) _coveragePuts( const char * pMessage )
     {
         bool printMessage = false;
 
@@ -252,4 +244,4 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
  * layer based on the host operating system. */
 #include IOT_SYSTEM_TYPES_FILE
 
-#endif /* ifndef _IOT_TESTS_CONFIG_H_ */
+#endif /* ifndef IOT_CONFIG_H_ */
