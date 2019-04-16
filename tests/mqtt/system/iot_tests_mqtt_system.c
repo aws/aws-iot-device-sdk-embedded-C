@@ -347,8 +347,8 @@ static void _publishReceived( void * pArgument,
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
 
     /* If the received messages matches what was sent, unblock the waiting thread. */
-    if( ( pPublish->message.info.payloadLength == _samplePayloadLength ) &&
-        ( strncmp( pPublish->message.info.pPayload,
+    if( ( pPublish->u.message.info.payloadLength == _samplePayloadLength ) &&
+        ( strncmp( pPublish->u.message.info.pPayload,
                    _pSamplePayload,
                    _samplePayloadLength ) == 0 ) )
     {
@@ -369,9 +369,9 @@ static void _operationComplete( void * pArgument,
 
     /* If the operation information matches the parameters and the operation was
      * successful, unblock the waiting thread. */
-    if( ( pParams->expectedOperation == pOperation->operation.type ) &&
-        ( pParams->operation == pOperation->operation.reference ) &&
-        ( pOperation->operation.result == IOT_MQTT_SUCCESS ) )
+    if( ( pParams->expectedOperation == pOperation->u.operation.type ) &&
+        ( pParams->operation == pOperation->u.operation.reference ) &&
+        ( pOperation->u.operation.result == IOT_MQTT_SUCCESS ) )
     {
         IotSemaphore_Post( &( pParams->waitSem ) );
     }
@@ -632,12 +632,12 @@ TEST_SETUP( MQTT_System )
     /* Set the MQTT network setup parameters. */
     ( void ) memset( &_networkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
     _networkInfo.createNetworkConnection = true;
-    _networkInfo.pNetworkServerInfo = ( void * ) &_serverInfo;
+    _networkInfo.u.setup.pNetworkServerInfo = ( void * ) &_serverInfo;
     _networkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
     _networkInfo.pMqttSerializer = _pMqttSerializer;
 
     #if IOT_TEST_SECURED_CONNECTION == 1
-        _networkInfo.pNetworkCredentialInfo = ( void * ) &_credentials;
+        _networkInfo.u.setup.pNetworkCredentialInfo = ( void * ) &_credentials;
     #endif
 }
 
@@ -851,10 +851,10 @@ TEST( MQTT_System, LastWillAndTestament )
     /* Establish an independent MQTT over TCP connection to receive a Last
      * Will and Testament message. */
     lwtNetworkInfo.createNetworkConnection = true;
-    lwtNetworkInfo.pNetworkServerInfo = ( void * ) &_serverInfo;
+    lwtNetworkInfo.u.setup.pNetworkServerInfo = ( void * ) &_serverInfo;
 
     #if IOT_TEST_SECURED_CONNECTION == 1
-        lwtNetworkInfo.pNetworkCredentialInfo = ( void * ) &_credentials;
+        lwtNetworkInfo.u.setup.pNetworkCredentialInfo = ( void * ) &_credentials;
     #endif
 
     lwtNetworkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;

@@ -404,8 +404,8 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
                                  IotMqttCallbackParam_t * ) = NULL;
     _topicMatchParams_t topicMatchParams =
     {
-        .pTopicName      = pCallbackParam->message.info.pTopicName,
-        .topicNameLength = pCallbackParam->message.info.topicNameLength,
+        .pTopicName      = pCallbackParam->u.message.info.pTopicName,
+        .topicNameLength = pCallbackParam->u.message.info.topicNameLength,
         .exactMatchOnly  = false
     };
 
@@ -451,8 +451,8 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
 
         /* Set the members of the callback parameter. */
         pCallbackParam->mqttConnection = pMqttConnection;
-        pCallbackParam->message.pTopicFilter = pSubscription->pTopicFilter;
-        pCallbackParam->message.topicFilterLength = pSubscription->topicFilterLength;
+        pCallbackParam->u.message.pTopicFilter = pSubscription->pTopicFilter;
+        pCallbackParam->u.message.topicFilterLength = pSubscription->topicFilterLength;
 
         /* Invoke the subscription callback. */
         callbackFunction( pCallbackContext, pCallbackParam );

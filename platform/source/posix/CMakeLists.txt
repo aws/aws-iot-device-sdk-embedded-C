@@ -17,7 +17,7 @@ if( NOT ${CMAKE_USE_PTHREADS_INIT} )
 endif()
 
 # Check for required POSIX types.
-set( CMAKE_EXTRA_INCLUDE_FILES "semaphore.h" )
+set( CMAKE_EXTRA_INCLUDE_FILES "pthread.h" "time.h" "semaphore.h" )
 list( APPEND REQUIRED_POSIX_TYPES
       pthread_t
       pthread_attr_t
@@ -34,7 +34,6 @@ foreach( POSIX_TYPE ${REQUIRED_POSIX_TYPES} )
 endforeach()
 
 # Check for some required POSIX functions. This is not intended to be a comprehensive list.
-set( CMAKE_REQUIRED_INCLUDES "time.h" )
 set( CMAKE_REQUIRED_LIBRARIES rt Threads::Threads )
 list( APPEND REQUIRED_POSIX_FUNCTIONS
       clock_gettime time localtime_r strftime timer_create timer_delete

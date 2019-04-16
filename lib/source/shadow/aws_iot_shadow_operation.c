@@ -231,13 +231,13 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     /* Set the response document for a Shadow UPDATE. */
     if( type == _SHADOW_UPDATE )
     {
-        param.pDocument = pMessage->message.info.pPayload;
-        param.documentLength = pMessage->message.info.payloadLength;
+        param.pDocument = pMessage->u.message.info.pPayload;
+        param.documentLength = pMessage->u.message.info.payloadLength;
     }
 
     /* Parse the Thing Name from the MQTT topic name. */
-    if( _AwsIotShadow_ParseThingName( pMessage->message.info.pTopicName,
-                                      pMessage->message.info.topicNameLength,
+    if( _AwsIotShadow_ParseThingName( pMessage->u.message.info.pTopicName,
+                                      pMessage->u.message.info.topicNameLength,
                                       &( param.pThingName ),
                                       &( param.thingNameLength ) ) != AWS_IOT_SHADOW_SUCCESS )
     {
@@ -282,12 +282,12 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     AwsIotShadow_Assert( pOperation->status == AWS_IOT_SHADOW_STATUS_PENDING );
 
     IotLogDebug( "Received Shadow response on topic %.*s",
-                 pMessage->message.info.topicNameLength,
-                 pMessage->message.info.pTopicName );
+                 pMessage->u.message.info.topicNameLength,
+                 pMessage->u.message.info.pTopicName );
 
     /* Parse the status from the topic name. */
-    status = _AwsIotShadow_ParseShadowStatus( pMessage->message.info.pTopicName,
-                                              pMessage->message.info.topicNameLength );
+    status = _AwsIotShadow_ParseShadowStatus( pMessage->u.message.info.pTopicName,
+                                              pMessage->u.message.info.topicNameLength );
 
     switch( status )
     {
@@ -302,7 +302,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
             if( type == _SHADOW_GET )
             {
                 pOperation->status = _processAcceptedGet( pOperation,
-                                                          &( pMessage->message.info ) );
+                                                          &( pMessage->u.message.info ) );
             }
             else
             {
@@ -317,8 +317,8 @@ static void _commonOperationCallback( _shadowOperationType_t type,
                         pOperation->pSubscription->thingNameLength,
                         pOperation->pSubscription->pThingName );
 
-            pOperation->status = _AwsIotShadow_ParseErrorDocument( pMessage->message.info.pPayload,
-                                                                   pMessage->message.info.payloadLength );
+            pOperation->status = _AwsIotShadow_ParseErrorDocument( pMessage->u.message.info.pPayload,
+                                                                   pMessage->u.message.info.payloadLength );
             break;
 
         default:
