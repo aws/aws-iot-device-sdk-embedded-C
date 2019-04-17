@@ -13,11 +13,11 @@ void harness()
     publishInfo.pPayload = malloc( publishInfo.payloadLength );
 
     _mqttOperation_t operation;
-    operation.publishInfo = publishInfo;
+    operation.u.publish.publishInfo = publishInfo;
 
     _mqttPacket_t publish;
     publish.pRemainingData = malloc( sizeof( uint8_t ) * publish.remainingLength );
-    publish.pIncomingPublish = &operation;
+    publish.u.pIncomingPublish = &operation;
 
 
     _IotMqtt_DeserializePublish( &publish );
