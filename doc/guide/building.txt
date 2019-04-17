@@ -19,7 +19,7 @@ In addition, credentials and Things for AWS IoT must be provisioned before runni
 @section building_demo Building the demo applications
 @brief How to build the demo applications.
 
-Before building the demos, all desired configuration settings should be defined. Configuration settings include global [library](@ref global_library_config) and [demo](@ref global_demos_config) settings, as well as settings for specific libraries and demos. Settings for demo applications should be placed in `demos/iot_demo_config.h`. Any undefined settings will use a default value when possible.
+Before building the demos, all desired configuration settings should be defined. Configuration settings include global [library](@ref global_library_config) and [demo](@ref global_demos_config) settings, as well as settings for specific libraries and demos. Settings for demo applications should be placed in `demos/iot_config.h`. Any undefined settings will use a default value when possible.
 
 The demo applications build with CMake.
 
@@ -103,7 +103,7 @@ See @ref IOT_DEMO_IDENTIFIER for the compile-time default settings of this optio
 @section building_tests Building and running the tests
 @brief How to build and run the SDK tests.
 
-Like the demo applications, the tests also build with CMake. [Global test configuration settings](@ref global_tests_config), as well as specific library test settings, should be defined in `tests/iot_tests_config.h`.
+Like the demo applications, the tests also build with CMake. [Global test configuration settings](@ref global_tests_config), as well as specific library test settings, should be defined in `tests/iot_config.h`.
 
 Unlike the demos, the tests are currently only supported on POSIX systems that support all of the POSIX prerequisites. They are built by passing the option `IOT_BUILD_TESTS=1` to CMake.
 @code{sh}

@@ -139,6 +139,17 @@ In the demos specific to AWS IoT, this identifier becomes the Thing Name, which 
 /**
 @globalconfigpage{tests,Test,tests}
 
+@section IOT_BUILD_TESTS
+@brief Specifies that the tests are being built.
+
+This setting modifies the behavior of the libraries under test. For example, it may expose internal variables or functions for testing.
+
+<span style="color:red;font-weight:bold">`IOT_BUILD_TESTS` will be automatically configured during build and generally does not need to be defined.</span>
+
+@configpossible `1` (tests are being built) or `0` (tests are not being built) <br>
+@configrecommended This must always be set to `1` if building any test files. Otherwise, it should be set to `0`. <br>
+@configdefault `0`
+
 @section IOT_TEST_SECURED_CONNECTION
 @brief Determines if the tests use a TLS-secured connection with the remote host.
 

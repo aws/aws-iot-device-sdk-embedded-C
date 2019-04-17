@@ -23,8 +23,10 @@
  * @file iot_atomic.h
  * @brief Chooses the appropriate atomic operations header.
  *
- * This file first checks if the operating system is Amazon FreeRTOS. If so, the
- * atomic header provided with Amazon FreeRTOS is used.
+ * This file first checks if an atomic port is provided.
+ *
+ * Otherwise, if the operating system is Amazon FreeRTOS, the atomic header
+ * provided with Amazon FreeRTOS is used.
  *
  * Otherwise, this file checks the compiler and chooses an appropriate atomic
  * header depending on the compiler.
@@ -37,7 +39,10 @@
 #ifndef IOT_ATOMIC_H_
 #define IOT_ATOMIC_H_
 
-#if defined( __free_rtos__ )
+/* Use an atomic port if provided. */
+#if IOT_ATOMIC_USE_PORT == 1
+    #include "atomic/iot_atomic_port.h"
+#elif defined( __free_rtos__ )
     /* Use the FreeRTOS atomic operation header on FreeRTOS. */
     #include "atomic.h"
 #elif defined( __GNUC__ )
@@ -60,9 +65,9 @@
             #define IOT_ATOMIC_GENERIC    1
         #endif
     #endif /* ifdef __clang__ */
-#else  /* if defined( __free_rtos__ ) */
+#else  /* if IOT_ATOMIC_USE_PORT == 1 */
     #define IOT_ATOMIC_GENERIC    1
-#endif /* if defined( __free_rtos__ ) */
+#endif /* if IOT_ATOMIC_USE_PORT == 1 */
 
 /* Include the generic atomic header if no supported compiler was found. */
 #if ( IOT_ATOMIC_GENERIC == 1 )
