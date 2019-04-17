@@ -1,0 +1,123 @@
+/**
+@page guide_developer_porting Porting Guide
+@brief Guide for porting this SDK to a new platform.
+
+@section guide_developer_porting_build Porting the build system
+@brief Guide for porting the SDK's build system.
+
+The CMake-based build system present in [the SDK's GitHub repo](https://github.com/aws/aws-iot-device-sdk-embedded-C) targets desktop systems and builds libraries into shared libraries. The build selects the [types of the platform layer](@ref platform_datatypes_handles) based on the detected host OS and automatically configures the platform layer. See @ref building for more information on the build system.
+
+In general, this SDK should build with C compilers in C99 mode. Currently, we do not guarantee builds with a C++ compiler. Compilers that provide intrinsics for atomic operations are recommended; see @ref guide_developer_porting_atomic for more information.
+
+@subsection guide_developer_porting_directory_layout Directory layout
+@brief The following directories contain the SDK's source code and are relevant for porting.
+
+Of the directories listed below, only <b style="color:#ff0000">`platform/`</b> should be modified during porting. Some directories present in the GitHub repo (such as `cbmc`, `doc`, and `scripts`) are not relevant for porting and therefore not listed.
+
+As relative paths from the SDK's root directory:
+- `demos/` <br>
+  SDK sample applications. These files do not need to be ported, but are useful as a starting point.
+    - `app/` <br>
+      Contains demo applications for various systems, most importantly the `main()` functions.
+    - `include/` <br>
+      Headers only needed to build the demos. These do not need to be ported.
+    - `source/` <br>
+      Platform-independent demo sources. These do not need to be ported.
+    - `iot_config.h` <br>
+      The config header for the demo applications. Useful as an example.
+- `lib/` <br>
+  Platform-independent SDK files. This directory (and all its subdirectories) should be copied and not modified.
+    - `include/` <br>
+      Library headers.
+        - <b style="color:#ff0000">`platform/` <br>
+          Interface of the platform layer, to be implemented in the `platform/` directory. </b>
+        - `private/` <br>
+          Library internal headers.
+        - `types/` <br>
+          Library types headers.
+    - `source/` <br>
+      Library source files.
+        - `common, defender, mqtt, ...` <br>
+          Individual library sources are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
+- <b style="color:#ff0000">`platform/` <br>
+  Platform-dependent SDK files that must be ported. The existing ports in this directory may be useful examples. </b>
+    - <b style="color:#ff0000">`include/` <br>
+      Platform header files. Unlike the headers in `lib/include/`, headers in this directory may directly use system types. </b>
+        - <b style="color:#ff0000">`atomic/` <br>
+          Existing ports of atomic operations. See @ref guide_developer_porting_atomic for how to create a new port. </b>
+        - <b style="color:#ff0000">`posix, ...` <br>
+          Headers for existing ports of the [platform layer](@ref platform), named after the platform they target. See @ref guide_developer_porting_platform for how to create a new port. </b>
+    - <b style="color:#ff0000">`source/`</b>
+        - <b style="color:#ff0000">`posix, ...` <br>
+          Headers for existing ports of the [platform layer](@ref platform), named after the platform they target. See @ref guide_developer_porting_platform for how to create a new port. </b>
+- `tests/` <br>
+  SDK tests that can be used to verify ports.
+    - `common, defender, mqtt, ...` <br>
+      Individual library tests are contained in directories matching the library name. When building tests, @ref IOT_BUILD_TESTS should be set to `1` globally.
+- `third_party/` <br>
+  Third-party library code. This directory (and all its subdirectories) should be copied and not modified.
+    - `tinycbor/` <br>
+      [Intel's tinyCBOR](https://github.com/intel/tinycbor), consumed as a Git submodule.
+    - `unity/` <br>
+      [Unity test framework](https://github.com/ThrowTheSwitch/Unity). Modifications were made to make its `malloc` overrides thread-safe.
+
+@subsection guide_developer_porting_include_paths Include paths
+@brief The following paths should be passed as include paths to the compiler when building this SDK.
+
+Include paths that are always required:
+- The path of the [config file](@ref global_config), `iot_config.h`. For example:
+    - In the SDK demos, `iot_config.h` is in `demos/`.
+    - In the SDK tests, `iot_config.h` is in `tests/`.
+- `lib/include`
+- `platform/include`
+- `third_party/tinycbor/tinycbor/src` (when building the serializer library)
+
+Additional include paths required to build the demos:
+- `demos/include`
+
+Additional include paths required to build the tests:
+- `third_party/unity/unity`
+- `third_party/unity/unity/fixture`
+- `tests/mqtt/access` (when building the MQTT or Shadow tests)
+
+In addition to the tests include paths, @ref IOT_BUILD_TESTS should be set to `1` globally when building tests.
+
+@section guide_developer_porting_platform Porting the platform layer
+@brief Guide for porting the SDK's [platform layer](@ref platform).
+
+@see [Platform layer](@ref platform)
+
+@subsection guide_developer_porting_platform_types Platform types
+@brief [Types](@ref platform_datatypes_handles) that must be set in the platform layer.
+
+@see [Platform types](@ref platform_datatypes_handles) for a list of all types that must be set. <br>
+`platform/include/posix/iot_platform_types_posix.h` for an example of setting the types on POSIX systems.
+
+The platform types should be set in the [config file](@ref global_config), `iot_config.h`, or in another header included by the config file. As an example, the header `iot_platform_types_posix.h` sets the platform types to the matching POSIX system types. This header is then included in `iot_config.h` by the provided CMake build system.
+
+@attention Any type configuration headers included by the config file must never include other library files. Since this file will be included by every SDK source file, take care not to include too many unnecessary symbols.
+
+@subsection guide_developer_porting_platform_functions Platform functions
+@brief [Functions](@ref platform_functions) that must be implemented for the platform layer.
+
+@see [Platform functions](@ref platform_functions) for a list of all functions that must be implemented. <br>
+`lib/include/platform` for the interfaces of the platform functions. <br>
+`platform/source/posix` for examples of functions implemented for POSIX systems.
+
+@section guide_developer_porting_atomic Porting atomic operations
+@brief Guide for porting the SDK's atomic operations.
+
+Porting atomic operations is not required to use the SDK. However, atomic operations improve the performance of all libraries; therefore, porting them is recommended.
+
+Unlike the platform layer, which relies on APIs provided by the host operating system, the SDK's atomic ports rely on facilities provided by compilers. Many compilers, particularly recent versions that support C11 atomic features, provide compiler intrinsics for atomic operations. The header `lib/include/iot_atomic.h` will select an atomic port to use based on the detected compiler. If no suitable atomic port is available, then a <i>generic</i> atomic port will be used. The generic atomic port is slower than native compiler ports, but will work on all systems.
+
+To provide a new compiler port, the preprocessor constant `IOT_ATOMIC_USE_PORT` should be defined to `1` in the [config file](@ref global_config). When `IOT_ATOMIC_USE_PORT` is `1`, a new compiler port should be implemented in a file named `iot_atomic_port.h`. This file should be created in `platform/include/atomic/`, as it will be included with the directive `#include "atomic/iot_atomic_port.h"`.
+
+@see `lib/include/iot_atomic.h` for the header that selects the atomic port to use. <br>
+`platform/include/atomic/iot_atomic_gcc.h` for a port that uses GNU compiler intrinsics.
+
+@section guide_developer_porting_metrics Porting Device Defender metrics
+@brief Guide for porting metrics reported by Device Defender.
+
+This section is currently a placeholder.
+*/
