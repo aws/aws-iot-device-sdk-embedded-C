@@ -34,9 +34,12 @@ CFLAGS += $(CFLAGS2) $(INC) $(DEF)
 %.goto : %.c
 	$(GOTO_CC) -o $@ $(CFLAGS) $<
 
-$(MQTT)/build:
-	(cd $(MQTT) && git submodule init && git submodule update && \
-	 mkdir build && cd build && cmake ..) 2>&1 \
+$(MQTT)/third_party/tinycbor/tinycbor/README:
+	cd $(MQTT)/third_party/tinycbor && \
+	git clone https://github.com/intel/tinycbor.git
+
+$(MQTT)/build: $(MQTT)/third_party/tinycbor/tinycbor/README
+	(cd $(MQTT) && mkdir -p build && cd build && cmake ..) 2>&1 \
 		| tee $(ENTRY)0.txt \
 		; exit $${PIPESTATUS[0]}
 
