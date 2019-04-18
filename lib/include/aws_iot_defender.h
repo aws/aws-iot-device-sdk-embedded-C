@@ -66,8 +66,8 @@
  * @enddot
  */
 
-#ifndef _AWS_IOT_DEFENDER_H_
-#define _AWS_IOT_DEFENDER_H_
+#ifndef AWS_IOT_DEFENDER_H_
+#define AWS_IOT_DEFENDER_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -421,4 +421,4 @@ uint32_t AwsIotDefender_GetPeriod( void );
 const char * AwsIotDefender_strerror( AwsIotDefenderError_t error );
 /* @[declare_defender_strerror] */
 
-#endif /* end of include guard: _AWS_IOT_DEFENDER_H_ */
+#endif /* end of include guard: AWS_IOT_DEFENDER_H_ */

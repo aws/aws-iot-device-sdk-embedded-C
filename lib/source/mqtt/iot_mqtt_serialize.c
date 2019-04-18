@@ -152,13 +152,30 @@
  * Username for metrics with AWS IoT.
  */
 #if AWS_IOT_MQTT_ENABLE_METRICS == 1 || DOXYGEN == 1
-    #ifndef IOT_SDK_VERSION
-        #error "IOT_SDK_VERSION must be defined."
+
+/**
+ * @brief Check if an SDK name is defined. If not, specify "C SDK".
+ */
+    #ifdef IOT_SDK_NAME
+        #define METRICS_SDK_NAME    IOT_SDK_NAME
+    #else
+        #define METRICS_SDK_NAME    "C"
     #endif
 
-    #define _AWS_IOT_METRICS_USERNAME           ( "?SDK=C&Version=" IOT_SDK_VERSION )                    /**< @brief Specify "C SDK" and SDK version. */
-    #define _AWS_IOT_METRICS_USERNAME_LENGTH    ( ( uint16_t ) sizeof( _AWS_IOT_METRICS_USERNAME ) - 1 ) /**< @brief Length of #_AWS_IOT_METRICS_USERNAME. */
-#endif
+/**
+ * @brief In the metrics string, include the platform name if defined.
+ */
+    #ifdef IOT_PLATFORM_NAME
+        #define AWS_IOT_METRICS_USERNAME    "?SDK=" METRICS_SDK_NAME "&Version=4.0.0&Platform=" IOT_PLATFORM_NAME
+    #else
+        #define AWS_IOT_METRICS_USERNAME    "?SDK=" METRICS_SDK_NAME "&Version=4.0.0"
+    #endif
+
+/**
+ * @brief Length of #AWS_IOT_METRICS_USERNAME.
+ */
+    #define AWS_IOT_METRICS_USERNAME_LENGTH    ( ( uint16_t ) sizeof( AWS_IOT_METRICS_USERNAME ) - 1 )
+#endif /* if AWS_IOT_MQTT_ENABLE_METRICS == 1 || DOXYGEN == 1 */
 
 /*-----------------------------------------------------------*/
 
@@ -422,7 +439,7 @@ static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
     if( pConnectInfo->awsIotMqttMode == true )
     {
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            connectPacketSize += _AWS_IOT_METRICS_USERNAME_LENGTH + sizeof( uint16_t );
+            connectPacketSize += AWS_IOT_METRICS_USERNAME_LENGTH + sizeof( uint16_t );
         #endif
     }
     else
@@ -825,8 +842,8 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
                         "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
 
             pBuffer = _encodeString( pBuffer,
-                                     _AWS_IOT_METRICS_USERNAME,
-                                     _AWS_IOT_METRICS_USERNAME_LENGTH );
+                                     AWS_IOT_METRICS_USERNAME,
+                                     AWS_IOT_METRICS_USERNAME_LENGTH );
         #endif
     }
     else

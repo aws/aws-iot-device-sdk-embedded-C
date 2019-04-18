@@ -30,8 +30,8 @@
  * @see iot_logging_setup.h
  */
 
-#ifndef _IOT_LOGGING_H_
-#define _IOT_LOGGING_H_
+#ifndef IOT_LOGGING_H_
+#define IOT_LOGGING_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -222,4 +222,4 @@ void IotLog_GenericPrintBuffer( const char * const pLibraryName,
                                 size_t bufferSize );
 /* @[declare_logging_genericprintbuffer] */
 
-#endif /* ifndef _IOT_LOGGING_H_ */
+#endif /* ifndef IOT_LOGGING_H_ */

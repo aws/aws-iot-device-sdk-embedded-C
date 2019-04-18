@@ -25,8 +25,8 @@
  * POSIX systems with OpenSSL.
  */
 
-#ifndef _IOT_NETWORK_OPENSSL_H_
-#define _IOT_NETWORK_OPENSSL_H_
+#ifndef IOT_NETWORK_OPENSSL_H_
+#define IOT_NETWORK_OPENSSL_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -232,4 +232,4 @@ IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection );
 extern const IotNetworkInterface_t IotNetworkOpenssl;
 /** @endcond */
 
-#endif /* ifndef _IOT_NETWORK_OPENSSL_H_ */
+#endif /* ifndef IOT_NETWORK_OPENSSL_H_ */

@@ -24,8 +24,8 @@
  * @brief Declares and implements doubly-linked lists and queues.
  */
 
-#ifndef _IOT_LINEAR_CONTAINERS_H_
-#define _IOT_LINEAR_CONTAINERS_H_
+#ifndef IOT_LINEAR_CONTAINERS_H_
+#define IOT_LINEAR_CONTAINERS_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -949,4 +949,4 @@ static inline void IotDeQueue_RemoveAllMatches( IotDeQueue_t * const pQueue,
     IotListDouble_RemoveAllMatches( pQueue, isMatch, pMatch, freeElement, linkOffset );
 }
 
-#endif /* _IOT_LINEAR_CONTAINERS_H_ */
+#endif /* IOT_LINEAR_CONTAINERS_H_ */

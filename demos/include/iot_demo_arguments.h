@@ -25,8 +25,8 @@
  * arguments
  */
 
-#ifndef _IOT_DEMO_ARGUMENTS_H_
-#define _IOT_DEMO_ARGUMENTS_H_
+#ifndef IOT_DEMO_ARGUMENTS_H_
+#define IOT_DEMO_ARGUMENTS_H_
 
 /* Standard includes. */
 #include <stdint.h>
@@ -95,4 +95,4 @@ bool IotDemo_ParseArguments( int argc,
                              char ** argv,
                              IotDemoArguments_t * pArguments );
 
-#endif /* ifndef _IOT_DEMO_ARGUMENTS_H_ */
+#endif /* ifndef IOT_DEMO_ARGUMENTS_H_ */
