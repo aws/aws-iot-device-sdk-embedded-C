@@ -166,7 +166,7 @@
  * @brief In the metrics string, include the platform name if defined.
  */
     #ifdef IOT_PLATFORM_NAME
-        #define AWS_IOT_METRICS_USERNAME    "?SDK=" METRICS_SDK_NAME "&Version=4.0.0&Platform=" METRICS_SDK_PLATFORM
+        #define AWS_IOT_METRICS_USERNAME    "?SDK=" METRICS_SDK_NAME "&Version=4.0.0&Platform=" IOT_PLATFORM_NAME
     #else
         #define AWS_IOT_METRICS_USERNAME    "?SDK=" METRICS_SDK_NAME "&Version=4.0.0"
     #endif
