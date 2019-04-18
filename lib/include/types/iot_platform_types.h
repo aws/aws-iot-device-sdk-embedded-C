@@ -24,8 +24,8 @@
  * @brief Types of the platform layer.
  */
 
-#ifndef _IOT_PLATFORM_TYPES_H_
-#define _IOT_PLATFORM_TYPES_H_
+#ifndef IOT_PLATFORM_TYPES_H_
+#define IOT_PLATFORM_TYPES_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -114,4 +114,4 @@ typedef void ( * IotThreadRoutine_t )( void * );
  */
 typedef _IotSystemTimer_t IotTimer_t;
 
-#endif /* ifndef _IOT_PLATFORM_TYPES_H_ */
+#endif /* ifndef IOT_PLATFORM_TYPES_H_ */

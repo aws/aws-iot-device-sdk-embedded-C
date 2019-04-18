@@ -25,8 +25,8 @@
  *
  */
 
-#ifndef _IOT_METRICS_H_
-#define _IOT_METRICS_H_
+#ifndef IOT_METRICS_H_
+#define IOT_METRICS_H_
 
 #include <stdint.h>
 
@@ -165,4 +165,4 @@ void IotMetrics_RemoveTcpConnection( IotMetricsConnectionId_t tcpConnectionId );
  */
 void IotMetrics_ProcessTcpConnections( IotMetricsListCallback_t tcpConnectionsCallback );
 
-#endif /* ifndef _IOT_METRICS_H_ */
+#endif /* ifndef IOT_METRICS_H_ */

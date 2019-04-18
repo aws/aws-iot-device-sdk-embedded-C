@@ -27,8 +27,8 @@
  * by setting the library prefix.
  */
 
-#ifndef _IOT_ERROR_H_
-#define _IOT_ERROR_H_
+#ifndef IOT_ERROR_H_
+#define IOT_ERROR_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -110,4 +110,4 @@
 #define _IOT_VALIDATE_PARAMETER( libraryPrefix, condition ) \
     _IOT_SET_AND_GOTO_CLEANUP_IF_FALSE( libraryPrefix ## _BAD_PARAMETER, condition )
 
-#endif /* ifndef _IOT_ERROR_H_ */
+#endif /* ifndef IOT_ERROR_H_ */
