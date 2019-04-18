@@ -25,7 +25,6 @@ INC = \
 	-I$(MQTT)/demos/include \
 
 DEF += \
-	-DIOT_SDK_VERSION=\"4.0.0\" \
 	-DIOT_SYSTEM_TYPES_FILE=\"posix/iot_platform_types_posix.h\" \
 	-Diotmqtt_EXPORTS \
 

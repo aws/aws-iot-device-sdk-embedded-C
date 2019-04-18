@@ -3,7 +3,6 @@ cmake_minimum_required( VERSION 3.5.0 )
 project( AwsIotDeviceSdkC
          VERSION 4.0.0
          LANGUAGES C )
-add_definitions( -DIOT_SDK_VERSION="${PROJECT_VERSION}" )
 
 # Use C99.
 set( CMAKE_C_STANDARD 99 )
