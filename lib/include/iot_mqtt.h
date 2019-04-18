@@ -24,8 +24,8 @@
  * @brief User-facing functions of the MQTT 3.1.1 library.
  */
 
-#ifndef _IOT_MQTT_H_
-#define _IOT_MQTT_H_
+#ifndef IOT_MQTT_H_
+#define IOT_MQTT_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -816,4 +816,4 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
                            IotMqttSubscription_t * pCurrentSubscription );
 /* @[declare_mqtt_issubscribed] */
 
-#endif /* ifndef _IOT_MQTT_H_ */
+#endif /* ifndef IOT_MQTT_H_ */

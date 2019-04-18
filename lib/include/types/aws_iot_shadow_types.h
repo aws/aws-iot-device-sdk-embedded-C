@@ -24,8 +24,8 @@
  * @brief Types of the Thing Shadow library.
  */
 
-#ifndef _AWS_IOT_SHADOW_TYPES_H_
-#define _AWS_IOT_SHADOW_TYPES_H_
+#ifndef AWS_IOT_SHADOW_TYPES_H_
+#define AWS_IOT_SHADOW_TYPES_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"

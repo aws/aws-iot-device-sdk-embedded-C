@@ -25,8 +25,8 @@
  * typical application code.
  */
 
-#ifndef _AWS_IOT_SHADOW_INTERNAL_H_
-#define _AWS_IOT_SHADOW_INTERNAL_H_
+#ifndef AWS_IOT_SHADOW_INTERNAL_H_
+#define AWS_IOT_SHADOW_INTERNAL_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -668,4 +668,4 @@ AwsIotShadowError_t _AwsIotShadow_ParseThingName( const char * pTopicName,
 AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * pErrorDocument,
                                                       size_t errorDocumentLength );
 
-#endif /* ifndef _AWS_IOT_SHADOW_INTERNAL_H_ */
+#endif /* ifndef AWS_IOT_SHADOW_INTERNAL_H_ */

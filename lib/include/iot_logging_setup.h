@@ -24,8 +24,8 @@
  * @brief Defines the logging macro #IotLog.
  */
 
-#ifndef _IOT_LOGGING_SETUP_H_
-#define _IOT_LOGGING_SETUP_H_
+#ifndef IOT_LOGGING_SETUP_H_
+#define IOT_LOGGING_SETUP_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -216,4 +216,4 @@
     #endif
 #endif
 
-#endif /* ifndef _IOT_LOGGING_SETUP_H_ */
+#endif /* ifndef IOT_LOGGING_SETUP_H_ */

@@ -24,8 +24,8 @@
  * @brief Definitions of platform layer types on POSIX systems.
  */
 
-#ifndef _IOT_PLATFORM_TYPES_POSIX_H_
-#define _IOT_PLATFORM_TYPES_POSIX_H_
+#ifndef IOT_PLATFORM_TYPES_POSIX_H_
+#define IOT_PLATFORM_TYPES_POSIX_H_
 
 /* POSIX includes. Allow the default POSIX headers to be overridden. */
 #ifdef POSIX_TYPES_HEADER
@@ -59,4 +59,4 @@ typedef struct _IotSystemTimer
     void ( * threadRoutine )( void * ); /**< @brief Thread function to run on timer expiration. */
 } _IotSystemTimer_t;
 
-#endif /* ifndef _IOT_PLATFORM_TYPES_POSIX_H_ */
+#endif /* ifndef IOT_PLATFORM_TYPES_POSIX_H_ */

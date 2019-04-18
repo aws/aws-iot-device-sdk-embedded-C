@@ -25,8 +25,8 @@
  * typical application code.
  */
 
-#ifndef _IOT_MQTT_INTERNAL_H_
-#define _IOT_MQTT_INTERNAL_H_
+#ifndef IOT_MQTT_INTERNAL_H_
+#define IOT_MQTT_INTERNAL_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -931,4 +931,4 @@ bool _IotMqtt_GetNextByte( void * pNetworkConnection,
 void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason,
                                       _mqttConnection_t * pMqttConnection );
 
-#endif /* ifndef _IOT_MQTT_INTERNAL_H_ */
+#endif /* ifndef IOT_MQTT_INTERNAL_H_ */

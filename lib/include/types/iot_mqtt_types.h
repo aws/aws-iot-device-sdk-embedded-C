@@ -24,8 +24,8 @@
  * @brief Types of the MQTT library.
  */
 
-#ifndef _IOT_MQTT_TYPES_H_
-#define _IOT_MQTT_TYPES_H_
+#ifndef IOT_MQTT_TYPES_H_
+#define IOT_MQTT_TYPES_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -1080,4 +1080,4 @@ typedef struct IotMqttNetworkInfo
  */
 #define IOT_MQTT_FLAG_CLEANUP_ONLY    ( 0x00000001 )
 
-#endif /* ifndef _IOT_MQTT_TYPES_H_ */
+#endif /* ifndef IOT_MQTT_TYPES_H_ */

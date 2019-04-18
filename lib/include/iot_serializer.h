@@ -28,8 +28,8 @@
  * The implementations can be CBOR or JSON.
  */
 
-#ifndef _IOT_SERIALIZER_H_
-#define _IOT_SERIALIZER_H_
+#ifndef IOT_SERIALIZER_H_
+#define IOT_SERIALIZER_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -478,4 +478,4 @@ extern IotSerializerEncodeInterface_t _IotSerializerJsonEncoder;
 
 extern IotSerializerDecodeInterface_t _IotSerializerJsonDecoder;
 
-#endif /* ifndef _IOT_SERIALIZER_H_ */
+#endif /* ifndef IOT_SERIALIZER_H_ */

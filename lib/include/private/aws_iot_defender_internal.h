@@ -24,8 +24,8 @@
  * typical application code.
  */
 
-#ifndef _AWS_IOT_DEFENDER_INTERNAL_H_
-#define _AWS_IOT_DEFENDER_INTERNAL_H_
+#ifndef AWS_IOT_DEFENDER_INTERNAL_H_
+#define AWS_IOT_DEFENDER_INTERNAL_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -348,4 +348,4 @@ void AwsIotDefenderInternal_MqttDisconnect( void );
 
 extern _defenderMetrics_t _AwsIotDefenderMetrics;
 
-#endif /* ifndef _AWS_IOT_DEFENDER_INTERNAL_H_ */
+#endif /* ifndef AWS_IOT_DEFENDER_INTERNAL_H_ */

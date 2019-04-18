@@ -30,8 +30,8 @@
 
 /* The functions in this file should only exist in static memory only mode, hence
  * the check for IOT_STATIC_MEMORY_ONLY in the double inclusion guard. */
-#if !defined( _IOT_STATIC_MEMORY_H_ ) && ( IOT_STATIC_MEMORY_ONLY == 1 )
-#define _IOT_STATIC_MEMORY_H_
+#if !defined( IOT_STATIC_MEMORY_H_ ) && ( IOT_STATIC_MEMORY_ONLY == 1 )
+#define IOT_STATIC_MEMORY_H_
 
 /* Standard includes. */
 #include <stdbool.h>
@@ -669,4 +669,4 @@ void * AwsIot_MallocDefenderTopic( size_t size );
 void AwsIot_FreeDefenderTopic( void * ptr );
 /* @[declare_static_memory_freedefendertopic] */
 
-#endif /* if !defined( _IOT_STATIC_MEMORY_H_ ) && ( IOT_STATIC_MEMORY_ONLY == 1 ) */
+#endif /* if !defined( IOT_STATIC_MEMORY_H_ ) && ( IOT_STATIC_MEMORY_ONLY == 1 ) */

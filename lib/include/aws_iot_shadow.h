@@ -24,8 +24,8 @@
  * @brief User-facing functions of the Shadow library.
  */
 
-#ifndef _AWS_IOT_SHADOW_H_
-#define _AWS_IOT_SHADOW_H_
+#ifndef AWS_IOT_SHADOW_H_
+#define AWS_IOT_SHADOW_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -878,4 +878,4 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
 const char * AwsIotShadow_strerror( AwsIotShadowError_t status );
 /* @[declare_shadow_strerror] */
 
-#endif /* ifndef _AWS_IOT_SHADOW_H_ */
+#endif /* ifndef AWS_IOT_SHADOW_H_ */
