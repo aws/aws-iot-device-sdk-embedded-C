@@ -29,7 +29,7 @@ As relative paths from the SDK's root directory:
   Platform-independent SDK files. This directory (and all its subdirectories) should be copied and not modified.
     - `include/` <br>
       Library headers.
-        - <b style="color:#ff0000">`platform/` <br>
+        - <b>`platform/` <br>
           Interface of the platform layer, to be implemented in the `platform/` directory. </b>
         - `private/` <br>
           Library internal headers.
@@ -109,11 +109,11 @@ The platform types should be set in the [config file](@ref global_config), `iot_
 
 Porting atomic operations is not required to use the SDK. However, atomic operations improve the performance of all libraries; therefore, porting them is recommended.
 
-Unlike the platform layer, which relies on APIs provided by the host operating system, the SDK's atomic ports rely on facilities provided by compilers. Many compilers, particularly recent versions that support C11 atomic features, provide compiler intrinsics for atomic operations. The header `lib/include/iot_atomic.h` will select an atomic port to use based on the detected compiler. If no suitable atomic port is available, then a <i>generic</i> atomic port will be used. The generic atomic port is slower than native compiler ports, but will work on all systems.
+Unlike the platform layer, which relies on APIs provided by the host operating system, the SDK's atomic ports rely on facilities provided by compilers. Many compilers, particularly recent versions that support C11 atomic features, provide compiler intrinsics for atomic operations. The header `platform/include/iot_atomic.h` will select an atomic port to use based on the detected compiler. If no suitable atomic port is available, then a <i>generic</i> atomic port will be used. The generic atomic port is slower than native compiler ports, but will work on all systems.
 
 To provide a new compiler port, the preprocessor constant `IOT_ATOMIC_USE_PORT` should be defined to `1` in the [config file](@ref global_config). When `IOT_ATOMIC_USE_PORT` is `1`, a new compiler port should be implemented in a file named `iot_atomic_port.h`. This file should be created in `platform/include/atomic/`, as it will be included with the directive `#include "atomic/iot_atomic_port.h"`.
 
-@see `lib/include/iot_atomic.h` for the header that selects the atomic port to use. <br>
+@see `platform/include/iot_atomic.h` for the header that selects the atomic port to use. <br>
 `platform/include/atomic/iot_atomic_gcc.h` for a port that uses GNU compiler intrinsics.
 
 @section guide_developer_porting_metrics Porting Device Defender metrics
