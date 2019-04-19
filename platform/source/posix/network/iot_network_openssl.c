@@ -969,16 +969,33 @@ IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection )
     /* Cast function parameter to correct type. */
     _networkConnection_t * const pNetworkConnection = pConnection;
 
-    /* Wait for the receive thread to terminate. */
+    /* Check if a receive thread needs to be cleaned up. */
     if( pNetworkConnection->receiveThreadCreated == true )
     {
-        posixError = pthread_join( pNetworkConnection->receiveThread, NULL );
-
-        if( posixError != 0 )
+        if( pthread_self() == pNetworkConnection->receiveThread )
         {
-            IotLogWarn( "Failed to join receive thread for socket %d. errno=%d.",
-                        pNetworkConnection->socket,
-                        posixError );
+            /* If this function is being called from the receive thread, detach
+             * it so no other thread needs to clean it up. */
+            posixError = pthread_detach( pNetworkConnection->receiveThread );
+
+            if( posixError != 0 )
+            {
+                IotLogWarn( "Failed to detach receive thread for socket %d. errno=%d.",
+                            pNetworkConnection->socket,
+                            posixError );
+            }
+        }
+        else
+        {
+            /* Wait for the receive thread to exit. */
+            posixError = pthread_join( pNetworkConnection->receiveThread, NULL );
+
+            if( posixError != 0 )
+            {
+                IotLogWarn( "Failed to join receive thread for socket %d. errno=%d.",
+                            pNetworkConnection->socket,
+                            posixError );
+            }
         }
     }
 
