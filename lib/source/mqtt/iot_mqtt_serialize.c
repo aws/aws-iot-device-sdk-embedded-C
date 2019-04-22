@@ -494,7 +494,7 @@ static bool _publishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
                                 size_t * pPacketSize )
 {
     bool status = true;
-    size_t publishPacketSize = 0;
+    size_t publishPacketSize = 0, payloadLimit = 0;
 
     /* The variable header of a PUBLISH packet always contains the topic name. */
     publishPacketSize += pPublishInfo->topicNameLength + sizeof( uint16_t );
@@ -510,24 +510,40 @@ static bool _publishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
         _EMPTY_ELSE_MARKER;
     }
 
-    /* Add the length of the PUBLISH payload. At this point, the "Remaining length"
-     * has been calculated. Return error if the "Remaining length" exceeds what is
-     * allowed by MQTT 3.1.1. Otherwise, set the output parameter. */
-    publishPacketSize += pPublishInfo->payloadLength;
+    /* Calculate the maximum allowed size of the payload for the given parameters.
+     * This calculation excludes the "Remaining length" encoding, whose size is not
+     * yet known. */
+    payloadLimit = _MQTT_MAX_REMAINING_LENGTH - publishPacketSize - 1;
 
-    if( publishPacketSize > _MQTT_MAX_REMAINING_LENGTH )
+    /* Ensure that the given payload fits within the calculated limit. */
+    if( pPublishInfo->payloadLength > payloadLimit )
     {
         status = false;
     }
     else
     {
-        *pRemainingLength = publishPacketSize;
+        /* Add the length of the PUBLISH payload. At this point, the "Remaining length"
+         * has been calculated. */
+        publishPacketSize += pPublishInfo->payloadLength;
 
-        /* Calculate the full size of the MQTT PUBLISH packet by adding the size of
-         * the "Remaining Length" field plus 1 byte for the "Packet Type" field. Set
-         * the pPacketSize output parameter. */
-        publishPacketSize += 1 + _remainingLengthEncodedSize( publishPacketSize );
-        *pPacketSize = publishPacketSize;
+        /* Now that the "Remaining length" is known, recalculate the payload limit
+         * based on the size of its encoding. */
+        payloadLimit -= _remainingLengthEncodedSize( publishPacketSize );
+
+        /* Check that the given payload fits within the size allowed by MQTT spec. */
+        if( pPublishInfo->payloadLength > payloadLimit )
+        {
+            status = false;
+        }
+        else
+        {
+            /* Set the "Remaining length" output parameter and calculate the full
+             * size of the PUBLISH packet. */
+            *pRemainingLength = publishPacketSize;
+
+            publishPacketSize += 1 + _remainingLengthEncodedSize( publishPacketSize );
+            *pPacketSize = publishPacketSize;
+        }
     }
 
     return status;
