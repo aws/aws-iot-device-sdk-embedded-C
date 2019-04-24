@@ -88,7 +88,7 @@ TEST_GROUP_RUNNER( Full_Serializer_CBOR )
 
 TEST( Full_Serializer_CBOR, Encoder_init_with_null_buffer )
 {
-    IotSerializerEncoderObject_t encoderObject = { 0 };
+    IotSerializerEncoderObject_t encoderObject = { .type = ( IotSerializerDataType_t ) 0 };
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _encoder.init( &encoderObject, NULL, 0 ) );
