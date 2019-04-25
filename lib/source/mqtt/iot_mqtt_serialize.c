@@ -367,7 +367,7 @@ static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         /* Output a single encoded byte. */
@@ -420,7 +420,7 @@ static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Add the lengths of the will message and topic name if provided. */
@@ -431,7 +431,7 @@ static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Depending on the status of metrics, add the length of the metrics username
@@ -452,7 +452,7 @@ static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         if( pConnectInfo->pPassword != NULL )
@@ -461,7 +461,7 @@ static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -507,7 +507,7 @@ static bool _publishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Calculate the maximum allowed size of the payload for the given parameters.
@@ -581,7 +581,7 @@ static bool _subscriptionPacketSize( IotMqttOperationType_t type,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -672,7 +672,7 @@ size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     return remainingLength;
@@ -701,7 +701,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Total size of the connect packet should be larger than the "Remaining length"
@@ -720,7 +720,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Set the output parameters. The remainder of this function always succeeds. */
@@ -751,7 +751,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Username and password depend on MQTT mode. */
@@ -772,7 +772,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         if( pConnectInfo->pPassword != NULL )
@@ -781,7 +781,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -811,12 +811,12 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     *pBuffer = connectFlags;
@@ -845,7 +845,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
@@ -872,7 +872,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         if( pConnectInfo->pPassword != NULL )
@@ -883,7 +883,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -930,7 +930,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* According to MQTT 3.1.1, the second byte of CONNACK must specify a
@@ -946,7 +946,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Check the reserved bits in CONNACK. The high 7 bits of the second byte
@@ -961,7 +961,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Determine if the "Session Present" bit it set. This is the lowest bit of
@@ -981,7 +981,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
@@ -1003,7 +1003,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Print the appropriate message for the CONNACK response code if logs are
@@ -1022,7 +1022,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     _IOT_FUNCTION_EXIT_NO_CLEANUP();
@@ -1054,7 +1054,7 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Total size of the publish packet should be larger than the "Remaining length"
@@ -1073,7 +1073,7 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Set the output parameters. The remainder of this function always succeeds. */
@@ -1093,7 +1093,7 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     if( pPublishInfo->retain == true )
@@ -1102,7 +1102,7 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     *pBuffer = publishFlags;
@@ -1132,7 +1132,7 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         /* Place the packet identifier into the PUBLISH packet. */
@@ -1142,7 +1142,7 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* The payload is placed after the packet identifier. */
@@ -1153,7 +1153,7 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Ensure that the difference between the end and beginning of the buffer
@@ -1234,7 +1234,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         pOutput->qos = IOT_MQTT_QOS_2;
@@ -1283,7 +1283,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
@@ -1301,7 +1301,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -1324,7 +1324,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
@@ -1341,7 +1341,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -1374,12 +1374,12 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Calculate the length of the payload. QoS 1 or 2 PUBLISH packets contain
@@ -1456,7 +1456,7 @@ IotMqttError_t _IotMqtt_DeserializePuback( _mqttPacket_t * pPuback )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Extract the packet identifier (third and fourth bytes) from PUBACK. */
@@ -1473,7 +1473,7 @@ IotMqttError_t _IotMqtt_DeserializePuback( _mqttPacket_t * pPuback )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Check that the control packet type is 0x40 (this must be done after the
@@ -1489,7 +1489,7 @@ IotMqttError_t _IotMqtt_DeserializePuback( _mqttPacket_t * pPuback )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     _IOT_FUNCTION_EXIT_NO_CLEANUP();
@@ -1524,7 +1524,7 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubsc
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Total size of the subscribe packet should be larger than the "Remaining length"
@@ -1543,7 +1543,7 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubsc
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Set the output parameters. The remainder of this function always succeeds. */
@@ -1610,7 +1610,7 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Extract the packet identifier (first 2 bytes of variable header) from SUBACK. */
@@ -1633,7 +1633,7 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Iterate through each status byte in the SUBACK packet. */
@@ -1685,7 +1685,7 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -1721,7 +1721,7 @@ IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSub
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Total size of the unsubscribe packet should be larger than the "Remaining length"
@@ -1740,7 +1740,7 @@ IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSub
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Set the output parameters. The remainder of this function always succeeds. */
@@ -1800,7 +1800,7 @@ IotMqttError_t _IotMqtt_DeserializeUnsuback( _mqttPacket_t * pUnsuback )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Extract the packet identifier (third and fourth bytes) from UNSUBACK. */
@@ -1813,7 +1813,7 @@ IotMqttError_t _IotMqtt_DeserializeUnsuback( _mqttPacket_t * pUnsuback )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     IotLog( IOT_LOG_DEBUG,
@@ -1833,7 +1833,7 @@ IotMqttError_t _IotMqtt_DeserializeUnsuback( _mqttPacket_t * pUnsuback )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     _IOT_FUNCTION_EXIT_NO_CLEANUP();
@@ -1879,7 +1879,7 @@ IotMqttError_t _IotMqtt_DeserializePingresp( _mqttPacket_t * pPingresp )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Check the "Remaining length" (second byte) of the received PINGRESP. */
@@ -1894,7 +1894,7 @@ IotMqttError_t _IotMqtt_DeserializePingresp( _mqttPacket_t * pPingresp )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     _IOT_FUNCTION_EXIT_NO_CLEANUP();
@@ -1938,12 +1938,12 @@ void _IotMqtt_FreePacket( uint8_t * pPacket )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 }
 

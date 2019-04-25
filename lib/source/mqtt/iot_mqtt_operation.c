@@ -118,7 +118,7 @@ static bool _mqttOperation_match( const IotLink_t * pOperationLink,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     return match;
@@ -145,12 +145,12 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
             }
             else
             {
-                _EMPTY_ELSE_MARKER;
+                EMPTY_ELSE_MARKER;
             }
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
@@ -191,7 +191,7 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -239,7 +239,7 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         IotLogDebug( "(MQTT connection %p, PUBLISH operation %p) Scheduling retry %lu of %lu in %lu ms.",
@@ -261,7 +261,7 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -287,12 +287,12 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* The references mutex only needs to be unlocked on the first retry, since
@@ -303,7 +303,7 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     return( status == IOT_MQTT_SUCCESS );
@@ -332,12 +332,12 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     IotLogDebug( "(MQTT connection %p) Creating new operation record.",
@@ -412,7 +412,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -436,7 +436,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         if( pOperation != NULL )
@@ -445,12 +445,12 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     _IOT_FUNCTION_CLEANUP_END();
@@ -486,12 +486,12 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Decrement job reference count. */
@@ -519,14 +519,14 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     return destroyOperation;
@@ -586,12 +586,12 @@ void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
                 }
                 else
                 {
-                    _EMPTY_ELSE_MARKER;
+                    EMPTY_ELSE_MARKER;
                 }
             }
             else
             {
-                _EMPTY_ELSE_MARKER;
+                EMPTY_ELSE_MARKER;
             }
         #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
@@ -622,7 +622,7 @@ void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     IotLogDebug( "(MQTT connection %p, %s operation %p) Operation record destroyed.",
@@ -751,7 +751,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Close the connection on failures. */
@@ -762,7 +762,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t * pTaskPool,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
@@ -794,7 +794,7 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     IotMutex_Unlock( &( pOperation->pMqttConnection->referencesMutex ) );
@@ -812,7 +812,7 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t * pTaskPool,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Free the incoming PUBLISH operation. */
@@ -854,12 +854,12 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Send an operation that is waiting for a response. */
@@ -900,18 +900,18 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
                 }
                 else
                 {
-                    _EMPTY_ELSE_MARKER;
+                    EMPTY_ELSE_MARKER;
                 }
             }
             else
             {
-                _EMPTY_ELSE_MARKER;
+                EMPTY_ELSE_MARKER;
             }
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Check if this operation requires further processing. */
@@ -941,7 +941,7 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
             }
             else
             {
-                _EMPTY_ELSE_MARKER;
+                EMPTY_ELSE_MARKER;
             }
 
             /* If the operation should not be destroyed, transfer it from the
@@ -965,13 +965,13 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
             }
             else
             {
-                _EMPTY_ELSE_MARKER;
+                EMPTY_ELSE_MARKER;
             }
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Destroy the operation or notify of completion if necessary. */
@@ -992,12 +992,12 @@ void _IotMqtt_ProcessSend( IotTaskPool_t * pTaskPool,
             }
             else
             {
-                _EMPTY_ELSE_MARKER;
+                EMPTY_ELSE_MARKER;
             }
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 }
@@ -1038,7 +1038,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t * pTaskPool,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 }
 
@@ -1083,7 +1083,7 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * pOperation,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     return status;
@@ -1174,7 +1174,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
@@ -1226,7 +1226,7 @@ void _IotMqtt_Notify( _mqttOperation_t * pOperation )
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Schedule callback invocation for non-waitable operation. */
@@ -1259,7 +1259,7 @@ void _IotMqtt_Notify( _mqttOperation_t * pOperation )
                 }
                 else
                 {
-                    _EMPTY_ELSE_MARKER;
+                    EMPTY_ELSE_MARKER;
                 }
 
                 IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ),
@@ -1277,12 +1277,12 @@ void _IotMqtt_Notify( _mqttOperation_t * pOperation )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* Operations that weren't scheduled may be destroyed. */
@@ -1295,7 +1295,7 @@ void _IotMqtt_Notify( _mqttOperation_t * pOperation )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         /* Post to a waitable operation's semaphore. */
@@ -1311,7 +1311,7 @@ void _IotMqtt_Notify( _mqttOperation_t * pOperation )
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else

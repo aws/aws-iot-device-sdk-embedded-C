@@ -120,7 +120,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     /* If the topic lengths are different but an exact match is required, return
@@ -131,7 +131,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     while( ( nameIndex < topicNameLength ) && ( filterIndex < topicFilterLength ) )
@@ -155,22 +155,22 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                         }
                         else
                         {
-                            _EMPTY_ELSE_MARKER;
+                            EMPTY_ELSE_MARKER;
                         }
                     }
                     else
                     {
-                        _EMPTY_ELSE_MARKER;
+                        EMPTY_ELSE_MARKER;
                     }
                 }
                 else
                 {
-                    _EMPTY_ELSE_MARKER;
+                    EMPTY_ELSE_MARKER;
                 }
             }
             else
             {
-                _EMPTY_ELSE_MARKER;
+                EMPTY_ELSE_MARKER;
             }
 
             /* Filter "sport/+" also matches the "sport/" but not "sport". */
@@ -184,17 +184,17 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                     }
                     else
                     {
-                        _EMPTY_ELSE_MARKER;
+                        EMPTY_ELSE_MARKER;
                     }
                 }
                 else
                 {
-                    _EMPTY_ELSE_MARKER;
+                    EMPTY_ELSE_MARKER;
                 }
             }
             else
             {
-                _EMPTY_ELSE_MARKER;
+                EMPTY_ELSE_MARKER;
             }
         }
         else
@@ -239,7 +239,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     _IOT_FUNCTION_EXIT_NO_CLEANUP();
@@ -293,12 +293,12 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     return match;
@@ -385,7 +385,7 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     return status;
@@ -429,7 +429,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         /* Subscription found. Calculate pointer to subscription object. */
@@ -481,12 +481,12 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
             }
             else
             {
-                _EMPTY_ELSE_MARKER;
+                EMPTY_ELSE_MARKER;
             }
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         /* Move current link pointer. */
@@ -572,7 +572,7 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnecti
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -621,14 +621,14 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
         }
         else
         {
-            _EMPTY_ELSE_MARKER;
+            EMPTY_ELSE_MARKER;
         }
 
         status = true;
     }
     else
     {
-        _EMPTY_ELSE_MARKER;
+        EMPTY_ELSE_MARKER;
     }
 
     IotMutex_Unlock( &( mqttConnection->subscriptionMutex ) );

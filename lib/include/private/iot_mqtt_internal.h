@@ -213,8 +213,8 @@
  * this is defined to nothing. When running code coverage testing, this is defined
  * to an assembly NOP.
  */
-#ifndef _EMPTY_ELSE_MARKER
-    #define _EMPTY_ELSE_MARKER
+#ifndef EMPTY_ELSE_MARKER
+    #define EMPTY_ELSE_MARKER
 #endif
 
 /*
