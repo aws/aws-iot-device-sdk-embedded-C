@@ -10,3 +10,9 @@ add_library( tinycbor SHARED
 
 # Link math library.
 target_link_libraries( tinycbor m )
+
+# Disable all warnings for this third-party library.
+target_compile_options( tinycbor
+                        PRIVATE
+                        $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
+                        -w> )
