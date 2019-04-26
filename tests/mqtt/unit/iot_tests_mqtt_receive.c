@@ -685,7 +685,7 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
         receiveContext.pData = pRemainingLength;
         receiveContext.dataLength = 4;
 
-        TEST_ASSERT_EQUAL( _MQTT_REMAINING_LENGTH_INVALID,
+        TEST_ASSERT_EQUAL( MQTT_REMAINING_LENGTH_INVALID,
                            _IotMqtt_GetRemainingLength( &receiveContext,
                                                         &_networkInterface ) );
     }
@@ -700,7 +700,7 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
         receiveContext.pData = pRemainingLength;
         receiveContext.dataLength = 4;
 
-        TEST_ASSERT_EQUAL( _MQTT_REMAINING_LENGTH_INVALID,
+        TEST_ASSERT_EQUAL( MQTT_REMAINING_LENGTH_INVALID,
                            _IotMqtt_GetRemainingLength( &receiveContext,
                                                         &_networkInterface ) );
     }

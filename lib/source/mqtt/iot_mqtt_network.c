@@ -95,12 +95,12 @@ static bool _incomingPacketValid( uint8_t packetType )
     switch( packetType & 0xf0 )
     {
         /* Valid incoming packet types. */
-        case _MQTT_PACKET_TYPE_CONNACK:
-        case _MQTT_PACKET_TYPE_PUBLISH:
-        case _MQTT_PACKET_TYPE_PUBACK:
-        case _MQTT_PACKET_TYPE_SUBACK:
-        case _MQTT_PACKET_TYPE_UNSUBACK:
-        case _MQTT_PACKET_TYPE_PINGRESP:
+        case MQTT_PACKET_TYPE_CONNACK:
+        case MQTT_PACKET_TYPE_PUBLISH:
+        case MQTT_PACKET_TYPE_PUBACK:
+        case MQTT_PACKET_TYPE_SUBACK:
+        case MQTT_PACKET_TYPE_UNSUBACK:
+        case MQTT_PACKET_TYPE_PINGRESP:
             break;
 
         /* Any other packet type is invalid. */
@@ -181,7 +181,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
     pIncomingPacket->remainingLength = getRemainingLength( pNetworkConnection,
                                                            pMqttConnection->pNetworkInterface );
 
-    if( pIncomingPacket->remainingLength == _MQTT_REMAINING_LENGTH_INVALID )
+    if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
     {
         _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
     }
@@ -265,7 +265,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
     /* Mask out the low bits of packet type to ignore flags. */
     switch( ( pIncomingPacket->type & 0xf0 ) )
     {
-        case _MQTT_PACKET_TYPE_CONNACK:
+        case MQTT_PACKET_TYPE_CONNACK:
             IotLogDebug( "(MQTT connection %p) CONNACK in data stream.", pMqttConnection );
 
             /* Choose CONNACK deserializer. */
@@ -307,7 +307,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
             break;
 
-        case _MQTT_PACKET_TYPE_PUBLISH:
+        case MQTT_PACKET_TYPE_PUBLISH:
             IotLogDebug( "(MQTT connection %p) PUBLISH in data stream.", pMqttConnection );
 
             /* Allocate memory to handle the incoming PUBLISH. */
@@ -431,7 +431,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
             break;
 
-        case _MQTT_PACKET_TYPE_PUBACK:
+        case MQTT_PACKET_TYPE_PUBACK:
             IotLogDebug( "(MQTT connection %p) PUBACK in data stream.", pMqttConnection );
 
             /* Choose PUBACK deserializer. */
@@ -473,7 +473,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
             break;
 
-        case _MQTT_PACKET_TYPE_SUBACK:
+        case MQTT_PACKET_TYPE_SUBACK:
             IotLogDebug( "(MQTT connection %p) SUBACK in data stream.", pMqttConnection );
 
             /* Choose SUBACK deserializer. */
@@ -516,7 +516,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
             break;
 
-        case _MQTT_PACKET_TYPE_UNSUBACK:
+        case MQTT_PACKET_TYPE_UNSUBACK:
             IotLogDebug( "(MQTT connection %p) UNSUBACK in data stream.", pMqttConnection );
 
             /* Choose UNSUBACK deserializer. */
@@ -560,7 +560,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
         default:
             /* The only remaining valid type is PINGRESP. */
-            IotMqtt_Assert( ( pIncomingPacket->type & 0xf0 ) == _MQTT_PACKET_TYPE_PINGRESP );
+            IotMqtt_Assert( ( pIncomingPacket->type & 0xf0 ) == MQTT_PACKET_TYPE_PINGRESP );
             IotLogDebug( "(MQTT connection %p) PINGRESP in data stream.", pMqttConnection );
 
             /* Choose PINGRESP deserializer. */

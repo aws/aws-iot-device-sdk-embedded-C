@@ -54,7 +54,7 @@
  * @brief Length of the subscription array used in
  * #TEST_MQTT_Unit_Validate_ValidateSubscriptionList_.
  */
-#define _SUBSCRIPTION_COUNT    ( _AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE )
+#define _SUBSCRIPTION_COUNT    ( AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE )
 
 /**
  * @brief A non-NULL function pointer.
@@ -139,7 +139,7 @@ TEST( MQTT_Unit_Validate, ValidateConnectInfo )
     /* AWS IoT MQTT service limit tests. */
     #if _AWS_IOT_MQTT_SERVER == true
         /* Client identifier too long. */
-        connectInfo.clientIdentifierLength = _AWS_IOT_MQTT_SERVER_MAX_CLIENTID + 1;
+        connectInfo.clientIdentifierLength = AWS_IOT_MQTT_SERVER_MAX_CLIENTID + 1;
         validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
         TEST_ASSERT_EQUAL_INT( false, validateStatus );
         connectInfo.clientIdentifierLength = 24;
@@ -150,12 +150,12 @@ TEST( MQTT_Unit_Validate, ValidateConnectInfo )
         TEST_ASSERT_EQUAL_INT( true, validateStatus );
 
         /* Keep-alive too small. */
-        connectInfo.keepAliveSeconds = _AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE - 1;
+        connectInfo.keepAliveSeconds = AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE - 1;
         validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
         TEST_ASSERT_EQUAL_INT( true, validateStatus );
 
         /* Keep-alive too large. */
-        connectInfo.keepAliveSeconds = _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE + 1;
+        connectInfo.keepAliveSeconds = AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE + 1;
         validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
         TEST_ASSERT_EQUAL_INT( true, validateStatus );
     #endif /* if _AWS_IOT_MQTT_SERVER == true */
@@ -238,7 +238,7 @@ TEST( MQTT_Unit_Validate, ValidatePublish )
         publishInfo.retain = false;
 
         /* Topic name too long. */
-        publishInfo.topicNameLength = _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH + 1;
+        publishInfo.topicNameLength = AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH + 1;
         validateStatus = _IotMqtt_ValidatePublish( true, &publishInfo );
         TEST_ASSERT_EQUAL_INT( false, validateStatus );
     #endif /* if _AWS_IOT_MQTT_SERVER == true */
@@ -396,7 +396,7 @@ TEST( MQTT_Unit_Validate, ValidateSubscriptionList )
         validateStatus = _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
                                                             true,
                                                             pSubscriptions,
-                                                            _AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE + 1 );
+                                                            AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE + 1 );
         TEST_ASSERT_EQUAL_INT( false, validateStatus );
 
         /* QoS 2. */
@@ -409,7 +409,7 @@ TEST( MQTT_Unit_Validate, ValidateSubscriptionList )
         pSubscriptions[ 0 ].qos = IOT_MQTT_QOS_0;
 
         /* Topic filter too long. */
-        pSubscriptions[ 0 ].topicFilterLength = _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH + 1;
+        pSubscriptions[ 0 ].topicFilterLength = AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH + 1;
         validateStatus = _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
                                                             true,
                                                             pSubscriptions,

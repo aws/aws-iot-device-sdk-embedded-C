@@ -378,17 +378,17 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
      * Adjust the user-provided keep-alive interval based on these requirements. */
     if( awsIotMqttMode == true )
     {
-        if( keepAliveSeconds < _AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE )
+        if( keepAliveSeconds < AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE )
         {
-            keepAliveSeconds = _AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE;
+            keepAliveSeconds = AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE;
         }
-        else if( keepAliveSeconds > _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE )
+        else if( keepAliveSeconds > AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE )
         {
-            keepAliveSeconds = _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE;
+            keepAliveSeconds = AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE;
         }
         else if( keepAliveSeconds == 0 )
         {
-            keepAliveSeconds = _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE;
+            keepAliveSeconds = AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE;
         }
         else
         {

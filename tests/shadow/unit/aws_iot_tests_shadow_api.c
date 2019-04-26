@@ -183,24 +183,24 @@ static void _receiveThread( void * pArgument )
     /* Create the corresponding ACK packet based on the last packet type. */
     switch( _lastPacketType )
     {
-        case _MQTT_PACKET_TYPE_PUBLISH:
+        case MQTT_PACKET_TYPE_PUBLISH:
 
-            pReceivedData[ 0 ] = _MQTT_PACKET_TYPE_PUBACK;
+            pReceivedData[ 0 ] = MQTT_PACKET_TYPE_PUBACK;
             pReceivedData[ 1 ] = 2;
             receiveContext.dataLength = 4;
             break;
 
-        case _MQTT_PACKET_TYPE_SUBSCRIBE:
+        case MQTT_PACKET_TYPE_SUBSCRIBE:
 
-            pReceivedData[ 0 ] = _MQTT_PACKET_TYPE_SUBACK;
+            pReceivedData[ 0 ] = MQTT_PACKET_TYPE_SUBACK;
             pReceivedData[ 1 ] = 3;
             pReceivedData[ 4 ] = 1;
             receiveContext.dataLength = 5;
             break;
 
-        case _MQTT_PACKET_TYPE_UNSUBSCRIBE:
+        case MQTT_PACKET_TYPE_UNSUBSCRIBE:
 
-            pReceivedData[ 0 ] = _MQTT_PACKET_TYPE_UNSUBACK;
+            pReceivedData[ 0 ] = MQTT_PACKET_TYPE_UNSUBACK;
             pReceivedData[ 1 ] = 2;
             receiveContext.dataLength = 4;
             break;
@@ -250,17 +250,17 @@ static size_t _sendSuccess( void * pSendContext,
     /* Read the remaining length. */
     mqttPacket.remainingLength = _IotMqtt_GetRemainingLength( &receiveContext,
                                                               &_networkInterface );
-    AwsIotShadow_Assert( mqttPacket.remainingLength != _MQTT_REMAINING_LENGTH_INVALID );
+    AwsIotShadow_Assert( mqttPacket.remainingLength != MQTT_REMAINING_LENGTH_INVALID );
 
     /* Set the last packet type based on the outgoing message. */
     switch( mqttPacket.type & 0xf0 )
     {
-        case _MQTT_PACKET_TYPE_PUBLISH:
+        case MQTT_PACKET_TYPE_PUBLISH:
 
             /* Only set the last packet type to PUBLISH for QoS 1. */
             if( ( ( *pMessage & 0x06 ) >> 1 ) == 1 )
             {
-                _lastPacketType = _MQTT_PACKET_TYPE_PUBLISH;
+                _lastPacketType = MQTT_PACKET_TYPE_PUBLISH;
             }
             else
             {
@@ -270,12 +270,12 @@ static size_t _sendSuccess( void * pSendContext,
 
             break;
 
-        case ( _MQTT_PACKET_TYPE_SUBSCRIBE & 0xf0 ):
-            _lastPacketType = _MQTT_PACKET_TYPE_SUBSCRIBE;
+        case ( MQTT_PACKET_TYPE_SUBSCRIBE & 0xf0 ):
+            _lastPacketType = MQTT_PACKET_TYPE_SUBSCRIBE;
             break;
 
-        case ( _MQTT_PACKET_TYPE_UNSUBSCRIBE & 0xf0 ):
-            _lastPacketType = _MQTT_PACKET_TYPE_UNSUBSCRIBE;
+        case ( MQTT_PACKET_TYPE_UNSUBSCRIBE & 0xf0 ):
+            _lastPacketType = MQTT_PACKET_TYPE_UNSUBSCRIBE;
             break;
 
         default:
@@ -289,7 +289,7 @@ static size_t _sendSuccess( void * pSendContext,
     if( _lastPacketType != 0 )
     {
         /* Save the packet identifier as the last packet identifier. */
-        if( _lastPacketType != _MQTT_PACKET_TYPE_PUBLISH )
+        if( _lastPacketType != MQTT_PACKET_TYPE_PUBLISH )
         {
             _lastPacketIdentifier = _UINT16_DECODE( receiveContext.pData + receiveContext.dataIndex );
             status = IOT_MQTT_SUCCESS;

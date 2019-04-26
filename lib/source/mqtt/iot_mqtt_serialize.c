@@ -634,7 +634,7 @@ size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
     {
         if( multiplier > 2097152 ) /* 128 ^ 3 */
         {
-            remainingLength = _MQTT_REMAINING_LENGTH_INVALID;
+            remainingLength = MQTT_REMAINING_LENGTH_INVALID;
             break;
         }
         else
@@ -649,20 +649,20 @@ size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
             }
             else
             {
-                remainingLength = _MQTT_REMAINING_LENGTH_INVALID;
+                remainingLength = MQTT_REMAINING_LENGTH_INVALID;
                 break;
             }
         }
     } while( ( encodedByte & 0x80 ) != 0 );
 
     /* Check that the decoded remaining length conforms to the MQTT specification. */
-    if( remainingLength != _MQTT_REMAINING_LENGTH_INVALID )
+    if( remainingLength != MQTT_REMAINING_LENGTH_INVALID )
     {
         expectedSize = _remainingLengthEncodedSize( remainingLength );
 
         if( bytesDecoded != expectedSize )
         {
-            remainingLength = _MQTT_REMAINING_LENGTH_INVALID;
+            remainingLength = MQTT_REMAINING_LENGTH_INVALID;
         }
         else
         {
@@ -728,7 +728,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
     *pPacketSize = connectPacketSize;
 
     /* The first byte in the CONNECT packet is the control packet type. */
-    *pBuffer = _MQTT_PACKET_TYPE_CONNECT;
+    *pBuffer = MQTT_PACKET_TYPE_CONNECT;
     pBuffer++;
 
     /* The remaining length of the CONNECT packet is encoded starting from the
@@ -919,7 +919,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
     #endif
 
     /* Check that the control packet type is 0x20. */
-    if( pConnack->type != _MQTT_PACKET_TYPE_CONNACK )
+    if( pConnack->type != MQTT_PACKET_TYPE_CONNACK )
     {
         IotLog( IOT_LOG_ERROR,
                 &_logHideAll,
@@ -1081,7 +1081,7 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
     *pPacketSize = publishPacketSize;
 
     /* The first byte of a PUBLISH packet contains the packet type and flags. */
-    publishFlags = _MQTT_PACKET_TYPE_PUBLISH;
+    publishFlags = MQTT_PACKET_TYPE_PUBLISH;
 
     if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
     {
@@ -1426,7 +1426,7 @@ IotMqttError_t _IotMqtt_SerializePuback( uint16_t packetIdentifier,
         *pPacketSize = _MQTT_PACKET_PUBACK_SIZE;
 
         /* Set the 4 bytes in PUBACK. */
-        pBuffer[ 0 ] = _MQTT_PACKET_TYPE_PUBACK;
+        pBuffer[ 0 ] = MQTT_PACKET_TYPE_PUBACK;
         pBuffer[ 1 ] = _MQTT_PACKET_PUBACK_REMAINING_LENGTH;
         pBuffer[ 2 ] = _UINT16_HIGH_BYTE( packetIdentifier );
         pBuffer[ 3 ] = _UINT16_LOW_BYTE( packetIdentifier );
@@ -1478,7 +1478,7 @@ IotMqttError_t _IotMqtt_DeserializePuback( _mqttPacket_t * pPuback )
 
     /* Check that the control packet type is 0x40 (this must be done after the
      * packet identifier is parsed). */
-    if( pPuback->type != _MQTT_PACKET_TYPE_PUBACK )
+    if( pPuback->type != MQTT_PACKET_TYPE_PUBACK )
     {
         IotLog( IOT_LOG_ERROR,
                 &_logHideAll,
@@ -1551,7 +1551,7 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubsc
     *pPacketSize = subscribePacketSize;
 
     /* The first byte in SUBSCRIBE is the packet type. */
-    *pBuffer = _MQTT_PACKET_TYPE_SUBSCRIBE;
+    *pBuffer = MQTT_PACKET_TYPE_SUBSCRIBE;
     pBuffer++;
 
     /* Encode the "Remaining length" starting from the second byte. */
@@ -1622,7 +1622,7 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
 
     /* Check that the control packet type is 0x90 (this must be done after the
      * packet identifier is parsed). */
-    if( pSuback->type != _MQTT_PACKET_TYPE_SUBACK )
+    if( pSuback->type != MQTT_PACKET_TYPE_SUBACK )
     {
         IotLog( IOT_LOG_ERROR,
                 &_logHideAll,
@@ -1748,7 +1748,7 @@ IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSub
     *pPacketSize = unsubscribePacketSize;
 
     /* The first byte in UNSUBSCRIBE is the packet type. */
-    *pBuffer = _MQTT_PACKET_TYPE_UNSUBSCRIBE;
+    *pBuffer = MQTT_PACKET_TYPE_UNSUBSCRIBE;
     pBuffer++;
 
     /* Encode the "Remaining length" starting from the second byte. */
@@ -1822,7 +1822,7 @@ IotMqttError_t _IotMqtt_DeserializeUnsuback( _mqttPacket_t * pUnsuback )
 
     /* Check that the control packet type is 0xb0 (this must be done after the
      * packet identifier is parsed). */
-    if( pUnsuback->type != _MQTT_PACKET_TYPE_UNSUBACK )
+    if( pUnsuback->type != MQTT_PACKET_TYPE_UNSUBACK )
     {
         IotLog( IOT_LOG_ERROR,
                 &_logHideAll,
@@ -1847,7 +1847,7 @@ IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
     /* PINGREQ packets are always the same. */
     static const uint8_t pPingreq[ _MQTT_PACKET_PINGREQ_SIZE ] =
     {
-        _MQTT_PACKET_TYPE_PINGREQ,
+        MQTT_PACKET_TYPE_PINGREQ,
         0x00
     };
 
@@ -1868,7 +1868,7 @@ IotMqttError_t _IotMqtt_DeserializePingresp( _mqttPacket_t * pPingresp )
     _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
 
     /* Check that the control packet type is 0xd0. */
-    if( pPingresp->type != _MQTT_PACKET_TYPE_PINGRESP )
+    if( pPingresp->type != MQTT_PACKET_TYPE_PINGRESP )
     {
         IotLog( IOT_LOG_ERROR,
                 &_logHideAll,
@@ -1908,7 +1908,7 @@ IotMqttError_t _IotMqtt_SerializeDisconnect( uint8_t ** pDisconnectPacket,
     /* DISCONNECT packets are always the same. */
     static const uint8_t pDisconnect[ _MQTT_PACKET_DISCONNECT_SIZE ] =
     {
-        _MQTT_PACKET_TYPE_DISCONNECT,
+        MQTT_PACKET_TYPE_DISCONNECT,
         0x00
     };
 
@@ -1930,9 +1930,9 @@ void _IotMqtt_FreePacket( uint8_t * pPacket )
 
     /* Don't call free on DISCONNECT and PINGREQ; those are allocated from static
      * memory. */
-    if( packetType != _MQTT_PACKET_TYPE_DISCONNECT )
+    if( packetType != MQTT_PACKET_TYPE_DISCONNECT )
     {
-        if( packetType != _MQTT_PACKET_TYPE_PINGREQ )
+        if( packetType != MQTT_PACKET_TYPE_PINGREQ )
         {
             IotMqtt_FreeMessage( pPacket );
         }

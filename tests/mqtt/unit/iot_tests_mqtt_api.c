@@ -332,7 +332,7 @@ static size_t _dupChecker( void * pSendContext,
     #endif
 
     /* Ignore any MQTT packet that's not a PUBLISH. */
-    if( ( publishFlags & 0xf0 ) != _MQTT_PACKET_TYPE_PUBLISH )
+    if( ( publishFlags & 0xf0 ) != MQTT_PACKET_TYPE_PUBLISH )
     {
         return messageLength;
     }
@@ -408,7 +408,7 @@ static size_t _receivePingresp( void * pReceiveContext,
 {
     size_t bytesReceived = 0;
     static size_t receiveIndex = 0;
-    const uint8_t pPingresp[ 2 ] = { _MQTT_PACKET_TYPE_PINGRESP, 0x00 };
+    const uint8_t pPingresp[ 2 ] = { MQTT_PACKET_TYPE_PINGRESP, 0x00 };
 
     /* Silence warnings about unused parameters. */
     ( void ) pReceiveContext;
@@ -639,7 +639,7 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
     IotSemaphore_t waitSem;
 
     /* An arbitrary MQTT packet for this test. */
-    static uint8_t pPacket[ 2 ] = { _MQTT_PACKET_TYPE_DISCONNECT, 0x00 };
+    static uint8_t pPacket[ 2 ] = { MQTT_PACKET_TYPE_DISCONNECT, 0x00 };
 
     /* Create the wait semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );

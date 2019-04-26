@@ -128,10 +128,10 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
     if( pConnectInfo->awsIotMqttMode == true )
     {
         /* Check that client identifier is within the service limit. */
-        if( pConnectInfo->clientIdentifierLength > _AWS_IOT_MQTT_SERVER_MAX_CLIENTID )
+        if( pConnectInfo->clientIdentifierLength > AWS_IOT_MQTT_SERVER_MAX_CLIENTID )
         {
             IotLogError( "AWS IoT does not support client identifiers longer than %d bytes.",
-                         _AWS_IOT_MQTT_SERVER_MAX_CLIENTID );
+                         AWS_IOT_MQTT_SERVER_MAX_CLIENTID );
 
             _IOT_SET_AND_GOTO_CLEANUP( false );
         }
@@ -145,21 +145,21 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
         {
             IotLogWarn( "AWS IoT does not support disabling keep-alive. Default keep-alive "
                         "of %d seconds will be used.",
-                        _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE );
+                        AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE );
         }
-        else if( pConnectInfo->keepAliveSeconds < _AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE )
+        else if( pConnectInfo->keepAliveSeconds < AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE )
         {
             IotLogWarn( "AWS IoT does not support keep-alive intervals less than %d seconds. "
                         "An interval of %d seconds will be used.",
-                        _AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE,
-                        _AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE );
+                        AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE,
+                        AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE );
         }
-        else if( pConnectInfo->keepAliveSeconds > _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE )
+        else if( pConnectInfo->keepAliveSeconds > AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE )
         {
             IotLogWarn( "AWS IoT does not support keep-alive intervals greater than %d seconds. "
                         "An interval of %d seconds will be used.",
-                        _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE,
-                        _AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE );
+                        AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE,
+                        AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE );
         }
         else
         {
@@ -287,10 +287,10 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
         }
 
         /* Check topic name length. */
-        if( pPublishInfo->topicNameLength > _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
+        if( pPublishInfo->topicNameLength > AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
         {
             IotLogError( "AWS IoT does not support topic names longer than %d bytes.",
-                         _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
+                         AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
 
             _IOT_SET_AND_GOTO_CLEANUP( false );
         }
@@ -382,11 +382,11 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
     /* AWS IoT supports at most 8 topic filters in a single SUBSCRIBE packet. */
     if( awsIotMqttMode == true )
     {
-        if( listSize > _AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE )
+        if( listSize > AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE )
         {
             IotLogError( "AWS IoT does not support more than %d topic filters per "
                          "subscription request.",
-                         _AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE );
+                         AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE );
 
             _IOT_SET_AND_GOTO_CLEANUP( false );
         }
@@ -468,10 +468,10 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
         if( awsIotMqttMode == true )
         {
             /* Check topic filter length. */
-            if( pListElement->topicFilterLength > _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
+            if( pListElement->topicFilterLength > AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
             {
                 IotLogError( "AWS IoT does not support topic filters longer than %d bytes.",
-                             _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
+                             AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
 
                 _IOT_SET_AND_GOTO_CLEANUP( false );
             }
