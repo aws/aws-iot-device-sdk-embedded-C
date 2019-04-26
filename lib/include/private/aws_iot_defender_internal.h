@@ -235,22 +235,22 @@
 /*----------------- Below this line is INTERNAL used only --------------------*/
 
 /* This MUST be consistent with enum AwsIotDefenderMetricsGroup_t. */
-#define _DEFENDER_METRICS_GROUP_COUNT    1
+#define DEFENDER_METRICS_GROUP_COUNT    1
 
 /**
  * Define encoder/decoder based on configuration AWS_IOT_DEFENDER_FORMAT.
  */
 #if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR
 
-    #define _DEFENDER_FORMAT          "cbor"
-    #define _AwsIotDefenderEncoder    _IotSerializerCborEncoder /**< Global defined in iot_serializer.h . */
-    #define _AwsIotDefenderDecoder    _IotSerializerCborDecoder /**< Global defined in iot_serializer.h . */
+    #define DEFENDER_FORMAT           "cbor"
+    #define _defenderEncoder          _IotSerializerCborEncoder /**< Global defined in iot_serializer.h . */
+    #define _defenderDecoder          _IotSerializerCborDecoder /**< Global defined in iot_serializer.h . */
 
 #elif AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_JSON
 
     #define _DEFENDER_FORMAT          "json"
-    #define _AwsIotDefenderEncoder    _IotSerializerJsonEncoder /**< Global defined in iot_serializer.h . */
-    #define _AwsIotDefenderDecoder    _IotSerializerJsonDecoder /**< Global defined in iot_serializer.h . */
+    #define _defenderEncoder          _IotSerializerJsonEncoder /**< Global defined in iot_serializer.h . */
+    #define _defenderDecoder          _IotSerializerJsonDecoder /**< Global defined in iot_serializer.h . */
 
 #else /* if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR */
     #error "AWS_IOT_DEFENDER_FORMAT must be either AWS_IOT_DEFENDER_FORMAT_CBOR or AWS_IOT_DEFENDER_FORMAT_JSON."
@@ -282,7 +282,7 @@ typedef struct _defenderMetrics
     /**
      * Array of bit-flag of metrics. The index is enum value of AwsIotDefenderMetricsGroup_t.
      */
-    uint32_t metricsFlag[ _DEFENDER_METRICS_GROUP_COUNT ];
+    uint32_t metricsFlag[ DEFENDER_METRICS_GROUP_COUNT ];
 
     /**
      * Mutex to protect _AwsIotDefenderMetricsFlag referenced by:

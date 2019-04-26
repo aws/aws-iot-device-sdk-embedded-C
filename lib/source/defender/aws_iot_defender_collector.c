@@ -29,22 +29,22 @@
 
 #include "platform/iot_clock.h"
 
-#define  _HEADER_TAG           AwsIotDefenderInternal_SelectTag( "header", "hed" )
-#define  _REPORTID_TAG         AwsIotDefenderInternal_SelectTag( "report_id", "rid" )
-#define  _VERSION_TAG          AwsIotDefenderInternal_SelectTag( "version", "v" )
-#define  _VERSION_1_0          "1.0" /* Used by defender service to indicate the schema change of report, e.g. adding new field. */
-#define  _METRICS_TAG          AwsIotDefenderInternal_SelectTag( "metrics", "met" )
+#define  HEADER_TAG           AwsIotDefenderInternal_SelectTag( "header", "hed" )
+#define  REPORTID_TAG         AwsIotDefenderInternal_SelectTag( "report_id", "rid" )
+#define  VERSION_TAG          AwsIotDefenderInternal_SelectTag( "version", "v" )
+#define  VERSION_1_0          "1.0" /* Used by defender service to indicate the schema change of report, e.g. adding new field. */
+#define  METRICS_TAG          AwsIotDefenderInternal_SelectTag( "metrics", "met" )
 
 /* 15 for IP + 1 for ":" + 5 for port + 1 terminator
  * For example: "192.168.0.1:8000\0"
  */
-#define _REMOTE_ADDR_LENGTH    22
+#define REMOTE_ADDR_LENGTH    22
 
-#define _TCP_CONN_TAG          AwsIotDefenderInternal_SelectTag( "tcp_connections", "tc" )
-#define _EST_CONN_TAG          AwsIotDefenderInternal_SelectTag( "established_connections", "ec" )
-#define _TOTAL_TAG             AwsIotDefenderInternal_SelectTag( "total", "t" )
-#define _CONN_TAG              AwsIotDefenderInternal_SelectTag( "connections", "cs" )
-#define _REMOTE_ADDR_TAG       AwsIotDefenderInternal_SelectTag( "remote_addr", "rad" )
+#define TCP_CONN_TAG          AwsIotDefenderInternal_SelectTag( "tcp_connections", "tc" )
+#define EST_CONN_TAG          AwsIotDefenderInternal_SelectTag( "established_connections", "ec" )
+#define TOTAL_TAG             AwsIotDefenderInternal_SelectTag( "total", "t" )
+#define CONN_TAG              AwsIotDefenderInternal_SelectTag( "connections", "cs" )
+#define REMOTE_ADDR_TAG       AwsIotDefenderInternal_SelectTag( "remote_addr", "rad" )
 
 /**
  * Structure to hold a metrics report.
@@ -79,13 +79,13 @@ static _metricsReport_t _report =
 static _metrics_t _metrics = { 0 };
 
 /* Define a "snapshot" global array of metrics flag. */
-static uint32_t _metricsFlagSnapshot[ _DEFENDER_METRICS_GROUP_COUNT ];
+static uint32_t _metricsFlagSnapshot[ DEFENDER_METRICS_GROUP_COUNT ];
 
 /* Report id integer. */
 uint64_t _AwsIotDefenderReportId = 0;
 
 /* Static storage holding the string of remote address: "ip:port". */
-static char _remoteAddr[ _REMOTE_ADDR_LENGTH ] = "";
+static char _remoteAddr[ REMOTE_ADDR_LENGTH ] = "";
 
 /*---------------------- Helper Functions -------------------------*/
 
@@ -135,7 +135,7 @@ size_t AwsIotDefenderInternal_GetReportBufferSize( void )
 {
     /* Encoder might over-calculate the needed size. Therefor encoded size might be smaller than buffer size: _report.size. */
     return _report.pDataBuffer == NULL ? 0
-           : _AwsIotDefenderEncoder.getEncodedSize( &_report.object, _report.pDataBuffer );
+           : _defenderEncoder.getEncodedSize( &_report.object, _report.pDataBuffer );
 }
 
 /*-----------------------------------------------------------*/
@@ -166,10 +166,10 @@ bool AwsIotDefenderInternal_CreateReport( void )
         _serialize();
 
         /* Get the calculated required size. */
-        dataSize = _AwsIotDefenderEncoder.getExtraBufferSizeNeeded( pEncoderObject );
+        dataSize = _defenderEncoder.getExtraBufferSizeNeeded( pEncoderObject );
 
         /* Clean the encoder object handle. */
-        _AwsIotDefenderEncoder.destroy( pEncoderObject );
+        _defenderEncoder.destroy( pEncoderObject );
 
         /* Allocate memory once. */
         pReportBuffer = AwsIotDefender_MallocReport( dataSize * sizeof( uint8_t ) );
@@ -199,7 +199,7 @@ bool AwsIotDefenderInternal_CreateReport( void )
 void AwsIotDefenderInternal_DeleteReport( void )
 {
     /* Destroy the encoder object. */
-    _AwsIotDefenderEncoder.destroy( &( _report.object ) );
+    _defenderEncoder.destroy( &( _report.object ) );
 
     /* Free the memory of data buffer. */
     AwsIotDefender_FreeReport( _report.pDataBuffer );
@@ -243,50 +243,50 @@ static void _serialize( void )
     uint8_t metricsGroupCount = 0;
     uint32_t i = 0;
 
-    serializerError = _AwsIotDefenderEncoder.init( pEncoderObject, _report.pDataBuffer, _report.size );
+    serializerError = _defenderEncoder.init( pEncoderObject, _report.pDataBuffer, _report.size );
     assertNoError( serializerError );
 
     /* Create the outermost map with 2 keys: "header", "metrics". */
-    serializerError = _AwsIotDefenderEncoder.openContainer( pEncoderObject, &reportMap, 2 );
+    serializerError = _defenderEncoder.openContainer( pEncoderObject, &reportMap, 2 );
     assertNoError( serializerError );
 
     /* Create the "header" map with 2 keys: "report_id", "version". */
-    serializerError = _AwsIotDefenderEncoder.openContainerWithKey( &reportMap,
-                                                                   _HEADER_TAG,
-                                                                   &headerMap,
-                                                                   2 );
+    serializerError = _defenderEncoder.openContainerWithKey( &reportMap,
+                                                             HEADER_TAG,
+                                                             &headerMap,
+                                                             2 );
     assertNoError( serializerError );
 
     /* Append key-value pair of "report_Id" which uses clock time. */
-    serializerError = _AwsIotDefenderEncoder.appendKeyValue( &headerMap,
-                                                             _REPORTID_TAG,
-                                                             IotSerializer_ScalarSignedInt( _AwsIotDefenderReportId ) );
+    serializerError = _defenderEncoder.appendKeyValue( &headerMap,
+                                                       REPORTID_TAG,
+                                                       IotSerializer_ScalarSignedInt( _AwsIotDefenderReportId ) );
     assertNoError( serializerError );
 
     /* Append key-value pair of "version". */
-    serializerError = _AwsIotDefenderEncoder.appendKeyValue( &headerMap,
-                                                             _VERSION_TAG,
-                                                             IotSerializer_ScalarTextString( _VERSION_1_0 ) );
+    serializerError = _defenderEncoder.appendKeyValue( &headerMap,
+                                                       VERSION_TAG,
+                                                       IotSerializer_ScalarTextString( VERSION_1_0 ) );
     assertNoError( serializerError );
 
     /* Close the "header" map. */
-    serializerError = _AwsIotDefenderEncoder.closeContainer( &reportMap, &headerMap );
+    serializerError = _defenderEncoder.closeContainer( &reportMap, &headerMap );
     assertNoError( serializerError );
 
     /* Count how many metrics groups user specified. */
-    for( i = 0; i < _DEFENDER_METRICS_GROUP_COUNT; i++ )
+    for( i = 0; i < DEFENDER_METRICS_GROUP_COUNT; i++ )
     {
         metricsGroupCount += _metricsFlagSnapshot[ i ] > 0;
     }
 
     /* Create the "metrics" map with number of keys as the number of metrics groups. */
-    serializerError = _AwsIotDefenderEncoder.openContainerWithKey( &reportMap,
-                                                                   _METRICS_TAG,
-                                                                   &metricsMap,
-                                                                   metricsGroupCount );
+    serializerError = _defenderEncoder.openContainerWithKey( &reportMap,
+                                                             METRICS_TAG,
+                                                             &metricsMap,
+                                                             metricsGroupCount );
     assertNoError( serializerError );
 
-    for( i = 0; i < _DEFENDER_METRICS_GROUP_COUNT; i++ )
+    for( i = 0; i < DEFENDER_METRICS_GROUP_COUNT; i++ )
     {
         /* Skip if this metrics group has 0 metrics flag. */
         if( _metricsFlagSnapshot[ i ] )
@@ -305,11 +305,11 @@ static void _serialize( void )
     }
 
     /* Close the "metrics" map. */
-    serializerError = _AwsIotDefenderEncoder.closeContainer( &reportMap, &metricsMap );
+    serializerError = _defenderEncoder.closeContainer( &reportMap, &metricsMap );
     assertNoError( serializerError );
 
     /* Close the "report" map. */
-    serializerError = _AwsIotDefenderEncoder.closeContainer( pEncoderObject, &reportMap );
+    serializerError = _defenderEncoder.closeContainer( pEncoderObject, &reportMap );
     assertNoError( serializerError );
 }
 
@@ -434,20 +434,20 @@ static void _serializeTcpConnections( IotSerializerEncoderObject_t * pMetricsObj
     uint32_t i = 0;
 
     /* Create the "tcp_connections" map with 1 key "established_connections" */
-    serializerError = _AwsIotDefenderEncoder.openContainerWithKey( pMetricsObject,
-                                                                   _TCP_CONN_TAG,
-                                                                   &tcpConnectionMap,
-                                                                   1 );
+    serializerError = _defenderEncoder.openContainerWithKey( pMetricsObject,
+                                                             TCP_CONN_TAG,
+                                                             &tcpConnectionMap,
+                                                             1 );
     assertNoError( serializerError );
 
     /* if user specify any metrics under "established_connections" */
     if( hasEstablishedConnections )
     {
         /* Create the "established_connections" map with "total" and/or "connections". */
-        serializerError = _AwsIotDefenderEncoder.openContainerWithKey( &tcpConnectionMap,
-                                                                       _EST_CONN_TAG,
-                                                                       &establishedMap,
-                                                                       hasConnections + hasTotal );
+        serializerError = _defenderEncoder.openContainerWithKey( &tcpConnectionMap,
+                                                                 EST_CONN_TAG,
+                                                                 &establishedMap,
+                                                                 hasConnections + hasTotal );
         assertNoError( serializerError );
 
         /* if user specify any metrics under "connections" and there are at least one connection */
@@ -456,10 +456,10 @@ static void _serializeTcpConnections( IotSerializerEncoderObject_t * pMetricsObj
             AwsIotDefender_Assert( _metrics.tcpConns.pArray != NULL );
 
             /* create array "connections" under "established_connections" */
-            serializerError = _AwsIotDefenderEncoder.openContainerWithKey( &establishedMap,
-                                                                           _CONN_TAG,
-                                                                           &connectionsArray,
-                                                                           _metrics.tcpConns.count );
+            serializerError = _defenderEncoder.openContainerWithKey( &establishedMap,
+                                                                     CONN_TAG,
+                                                                     &connectionsArray,
+                                                                     _metrics.tcpConns.count );
             assertNoError( serializerError );
 
             for( i = 0; i < _metrics.tcpConns.count; i++ )
@@ -467,9 +467,9 @@ static void _serializeTcpConnections( IotSerializerEncoderObject_t * pMetricsObj
                 IotSerializerEncoderObject_t connectionMap = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
 
                 /* open a map under "connections" */
-                serializerError = _AwsIotDefenderEncoder.openContainer( &connectionsArray,
-                                                                        &connectionMap,
-                                                                        hasRemoteAddr );
+                serializerError = _defenderEncoder.openContainer( &connectionsArray,
+                                                                  &connectionMap,
+                                                                  hasRemoteAddr );
                 assertNoError( serializerError );
 
                 /* add remote address */
@@ -477,31 +477,31 @@ static void _serializeTcpConnections( IotSerializerEncoderObject_t * pMetricsObj
                 {
                     sprintf( _remoteAddr, "%s:%d", _metrics.tcpConns.pArray[ i ].pRemoteIp, _metrics.tcpConns.pArray[ i ].remotePort );
 
-                    serializerError = _AwsIotDefenderEncoder.appendKeyValue( &connectionMap, _REMOTE_ADDR_TAG,
-                                                                             IotSerializer_ScalarTextString( _remoteAddr ) );
+                    serializerError = _defenderEncoder.appendKeyValue( &connectionMap, REMOTE_ADDR_TAG,
+                                                                       IotSerializer_ScalarTextString( _remoteAddr ) );
                     assertNoError( serializerError );
                 }
 
-                serializerError = _AwsIotDefenderEncoder.closeContainer( &connectionsArray, &connectionMap );
+                serializerError = _defenderEncoder.closeContainer( &connectionsArray, &connectionMap );
                 assertNoError( serializerError );
             }
 
-            serializerError = _AwsIotDefenderEncoder.closeContainer( &establishedMap, &connectionsArray );
+            serializerError = _defenderEncoder.closeContainer( &establishedMap, &connectionsArray );
             assertNoError( serializerError );
         }
 
         if( hasTotal )
         {
-            serializerError = _AwsIotDefenderEncoder.appendKeyValue( &establishedMap,
-                                                                     _TOTAL_TAG,
-                                                                     IotSerializer_ScalarSignedInt( _metrics.tcpConns.count ) );
+            serializerError = _defenderEncoder.appendKeyValue( &establishedMap,
+                                                               TOTAL_TAG,
+                                                               IotSerializer_ScalarSignedInt( _metrics.tcpConns.count ) );
             assertNoError( serializerError );
         }
 
-        serializerError = _AwsIotDefenderEncoder.closeContainer( &tcpConnectionMap, &establishedMap );
+        serializerError = _defenderEncoder.closeContainer( &tcpConnectionMap, &establishedMap );
         assertNoError( serializerError );
     }
 
-    serializerError = _AwsIotDefenderEncoder.closeContainer( pMetricsObject, &tcpConnectionMap );
+    serializerError = _defenderEncoder.closeContainer( pMetricsObject, &tcpConnectionMap );
     assertNoError( serializerError );
 }

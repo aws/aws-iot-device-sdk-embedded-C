@@ -46,32 +46,32 @@
 #include "unity_fixture.h"
 
 /* Total time to wait for a state to be true. */
-#define _WAIT_STATE_TOTAL_SECONDS    5
+#define WAIT_STATE_TOTAL_SECONDS    5
 
 /* Time interval for defender agent to publish metrics. It will be throttled if too frequent. */
 /* TODO: if we can change "thingname" in each test, this can be lowered. */
-#define _DEFENDER_PUBLISH_INTERVAL_SECONDS    20
+#define DEFENDER_PUBLISH_INTERVAL_SECONDS    20
 
 /* Estimated max size of message payload received in MQTT callback. */
-#define _PAYLOAD_MAX_SIZE                     200
+#define PAYLOAD_MAX_SIZE                     200
 
 /* Estimated max size of metrics report defender published. */
-#define _METRICS_MAX_SIZE                     200
+#define METRICS_MAX_SIZE                     200
 
 /* Max size of address: IP + port. */
-#define _MAX_ADDRESS_LENGTH                   25
+#define MAX_ADDRESS_LENGTH                   25
 
 /* Use a big number to represent no event happened in defender. */
-#define _NO_EVENT                             10000
+#define NO_EVENT                             10000
 
 /* Define a decoder based on chosen format. */
 #if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR
 
-    #define _Decoder    _IotSerializerCborDecoder /**< Global defined in iot_serializer.h . */
+    #define _decoder    _IotSerializerCborDecoder /**< Global defined in iot_serializer.h . */
 
 #elif AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_JSON
 
-    #define _Decoder    _IotSerializerJsonDecoder /**< Global defined in iot_serializer.h . */
+    #define _decoder    _IotSerializerJsonDecoder /**< Global defined in iot_serializer.h . */
 
 #endif
 
@@ -84,8 +84,8 @@ static IotNetworkCredentialsOpenssl_t _credential = IOT_TEST_NETWORK_CREDENTIALS
 extern const IotNetworkInterface_t _IotNetworkOpensslMetrics;
 /*------------------ global variables -----------------------------*/
 
-static uint8_t _payloadBuffer[ _PAYLOAD_MAX_SIZE ];
-static uint8_t _metricsBuffer[ _METRICS_MAX_SIZE ];
+static uint8_t _payloadBuffer[ PAYLOAD_MAX_SIZE ];
+static uint8_t _metricsBuffer[ METRICS_MAX_SIZE ];
 
 static AwsIotDefenderCallback_t _testCallback;
 
@@ -183,7 +183,7 @@ TEST_TEAR_DOWN( Full_DEFENDER )
     if( ( _callbackInfo.eventType == AWS_IOT_DEFENDER_METRICS_ACCEPTED ) ||
         ( _callbackInfo.eventType == AWS_IOT_DEFENDER_METRICS_REJECTED ) )
     {
-        sleep( _DEFENDER_PUBLISH_INTERVAL_SECONDS );
+        sleep( DEFENDER_PUBLISH_INTERVAL_SECONDS );
     }
 
     IotSemaphore_Destroy( &_callbackInfoSem );
@@ -319,7 +319,7 @@ TEST( Full_DEFENDER, SetMetrics_with_invalid_metrics_group )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_INVALID_INPUT, error );
 
     /* Assert metrics flag in each metrics group remains 0. */
-    for( i = 0; i < _DEFENDER_METRICS_GROUP_COUNT; i++ )
+    for( i = 0; i < DEFENDER_METRICS_GROUP_COUNT; i++ )
     {
         TEST_ASSERT_EQUAL( 0, _AwsIotDefenderMetrics.metricsFlag[ i ] );
     }
@@ -364,7 +364,7 @@ TEST( Full_DEFENDER, Start_with_wrong_network_information )
 
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, error );
 
-    _assertEvent( AWS_IOT_DEFENDER_FAILURE_MQTT, _WAIT_STATE_TOTAL_SECONDS );
+    _assertEvent( AWS_IOT_DEFENDER_FAILURE_MQTT, WAIT_STATE_TOTAL_SECONDS );
 }
 
 TEST( Full_DEFENDER, Start_should_return_success )
@@ -402,7 +402,7 @@ TEST( Full_DEFENDER, Metrics_empty_are_published )
 
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, error );
 
-    _waitForMetricsAccepted( _WAIT_STATE_TOTAL_SECONDS );
+    _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
     _verifyTcpConections( 0 );
@@ -430,7 +430,7 @@ TEST( Full_DEFENDER, Metrics_TCP_connections_all_are_published )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, error );
 
     /* Wait certain time for _reportAccepted to be true. */
-    _waitForMetricsAccepted( _WAIT_STATE_TOTAL_SECONDS );
+    _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
     _verifyTcpConections( 1, pIotAddress );
@@ -455,7 +455,7 @@ TEST( Full_DEFENDER, Metrics_TCP_connections_total_are_published )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, error );
 
     /* Wait certain time for _reportAccepted to be true. */
-    _waitForMetricsAccepted( _WAIT_STATE_TOTAL_SECONDS );
+    _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
     _verifyTcpConections( 1 );
@@ -483,7 +483,7 @@ TEST( Full_DEFENDER, Metrics_TCP_connections_remote_addr_are_published )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, error );
 
     /* Wait certain time for _reportAccepted to be true. */
-    _waitForMetricsAccepted( _WAIT_STATE_TOTAL_SECONDS );
+    _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
     _verifyTcpConections( 1, pIotAddress );
@@ -506,7 +506,7 @@ TEST( Full_DEFENDER, Restart_and_updated_metrics_are_published )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, AwsIotDefender_Start( &_startInfo ) );
 
     /* Wait certain time for _reportAccepted to be true. */
-    _waitForMetricsAccepted( _WAIT_STATE_TOTAL_SECONDS );
+    _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
     _verifyTcpConections( 1, pIotAddress );
@@ -516,7 +516,7 @@ TEST( Full_DEFENDER, Restart_and_updated_metrics_are_published )
     /* Reset _callbackInfo before restarting. */
     _resetCalbackInfo();
 
-    sleep( _DEFENDER_PUBLISH_INTERVAL_SECONDS );
+    sleep( DEFENDER_PUBLISH_INTERVAL_SECONDS );
 
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS,
                        AwsIotDefender_SetMetrics( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS, AWS_IOT_DEFENDER_METRICS_ALL ) );
@@ -527,7 +527,7 @@ TEST( Full_DEFENDER, Restart_and_updated_metrics_are_published )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, AwsIotDefender_Start( &_startInfo ) );
 
     /* Wait certain time for _reportAccepted to be true. */
-    _waitForMetricsAccepted( _WAIT_STATE_TOTAL_SECONDS );
+    _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
     _verifyTcpConections( 1, pIotAddress );
@@ -608,8 +608,8 @@ static void _publishMetricsNotNeeded( void )
 static void _resetCalbackInfo( void )
 {
     /* Clean data buffer. */
-    memset( _payloadBuffer, 0, _PAYLOAD_MAX_SIZE );
-    memset( _metricsBuffer, 0, _METRICS_MAX_SIZE );
+    memset( _payloadBuffer, 0, PAYLOAD_MAX_SIZE );
+    memset( _metricsBuffer, 0, METRICS_MAX_SIZE );
 
     /* Reset callback info. */
     _callbackInfo = ( AwsIotDefenderCallbackInfo_t ) {
@@ -617,7 +617,7 @@ static void _resetCalbackInfo( void )
         .metricsReportLength = 0,
         .pPayload = _payloadBuffer,
         .payloadLength = 0,
-        .eventType = _NO_EVENT
+        .eventType = NO_EVENT
     };
 }
 
@@ -653,13 +653,13 @@ static void _assertRejectDueToThrottle( void )
 
     char errorCode[ 12 ] = "";
 
-    IotSerializerError_t error = _Decoder.init( &decoderObject, _callbackInfo.pPayload, _callbackInfo.payloadLength );
+    IotSerializerError_t error = _decoder.init( &decoderObject, _callbackInfo.pPayload, _callbackInfo.payloadLength );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, decoderObject.type );
 
-    error = _Decoder.find( &decoderObject, "statusDetails", &statusDetailsObject );
+    error = _decoder.find( &decoderObject, "statusDetails", &statusDetailsObject );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
@@ -668,7 +668,7 @@ static void _assertRejectDueToThrottle( void )
     errorCodeObject.u.value.u.string.pString = ( uint8_t * ) errorCode;
     errorCodeObject.u.value.u.string.length = 12;
 
-    error = _Decoder.find( &statusDetailsObject, "ErrorCode", &errorCodeObject );
+    error = _decoder.find( &statusDetailsObject, "ErrorCode", &errorCodeObject );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
@@ -676,8 +676,8 @@ static void _assertRejectDueToThrottle( void )
 
     TEST_ASSERT_EQUAL( 0, strncmp( ( const char * ) errorCodeObject.u.value.u.string.pString, "Throttled", errorCodeObject.u.value.u.string.length ) );
 
-    _Decoder.destroy( &statusDetailsObject );
-    _Decoder.destroy( &decoderObject );
+    _decoder.destroy( &statusDetailsObject );
+    _decoder.destroy( &decoderObject );
 }
 
 /*-----------------------------------------------------------*/
@@ -705,7 +705,7 @@ static void _waitForMetricsAccepted( uint32_t timeoutSec )
 
     IotSerializerDecoderObject_t decoderObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
-    IotSerializerError_t error = _Decoder.init( &decoderObject, _callbackInfo.pPayload, _callbackInfo.payloadLength );
+    IotSerializerError_t error = _decoder.init( &decoderObject, _callbackInfo.pPayload, _callbackInfo.payloadLength );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
@@ -717,7 +717,7 @@ static void _waitForMetricsAccepted( uint32_t timeoutSec )
     statusObject.u.value.u.string.pString = ( uint8_t * ) status;
     statusObject.u.value.u.string.length = 10;
 
-    error = _Decoder.find( &decoderObject, "status", &statusObject );
+    error = _decoder.find( &decoderObject, "status", &statusObject );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
@@ -725,8 +725,8 @@ static void _waitForMetricsAccepted( uint32_t timeoutSec )
 
     TEST_ASSERT_EQUAL( 0, strncmp( ( const char * ) statusObject.u.value.u.string.pString, "ACCEPTED", statusObject.u.value.u.string.length ) );
 
-    _Decoder.destroy( &statusObject );
-    _Decoder.destroy( &decoderObject );
+    _decoder.destroy( &statusObject );
+    _decoder.destroy( &decoderObject );
 }
 
 /*-----------------------------------------------------------*/
@@ -736,13 +736,13 @@ static void _verifyMetricsCommon( void )
     TEST_ASSERT_NOT_NULL( _callbackInfo.pMetricsReport );
     TEST_ASSERT_GREATER_THAN( 0, _callbackInfo.metricsReportLength );
 
-    IotSerializerError_t error = _Decoder.init( &_decoderObject, _callbackInfo.pMetricsReport, _callbackInfo.metricsReportLength );
+    IotSerializerError_t error = _decoder.init( &_decoderObject, _callbackInfo.pMetricsReport, _callbackInfo.metricsReportLength );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, _decoderObject.type );
 
-    error = _Decoder.find( &_decoderObject, "metrics", &_metricsObject );
+    error = _decoder.find( &_decoderObject, "metrics", &_metricsObject );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
@@ -761,7 +761,7 @@ static void _verifyTcpConections( int total,
     /* Assert find a "tcp_connections" map in "metrics" */
     IotSerializerDecoderObject_t tcpConnObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
-    IotSerializerError_t error = _Decoder.find( &_metricsObject, "tcp_connections", &tcpConnObject );
+    IotSerializerError_t error = _decoder.find( &_metricsObject, "tcp_connections", &tcpConnObject );
 
     /* If any TCP connections flag is specified. */
     if( tcpConnFlag & AWS_IOT_DEFENDER_METRICS_ALL )
@@ -773,7 +773,7 @@ static void _verifyTcpConections( int total,
 
         IotSerializerDecoderObject_t estConnObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
-        error = _Decoder.find( &tcpConnObject, "established_connections", &estConnObject );
+        error = _decoder.find( &tcpConnObject, "established_connections", &estConnObject );
 
         if( tcpConnFlag & AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED )
         {
@@ -784,7 +784,7 @@ static void _verifyTcpConections( int total,
 
             IotSerializerDecoderObject_t totalObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
-            error = _Decoder.find( &estConnObject, "total", &totalObject );
+            error = _decoder.find( &estConnObject, "total", &totalObject );
 
             if( tcpConnFlag & AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL )
             {
@@ -804,7 +804,7 @@ static void _verifyTcpConections( int total,
             IotSerializerDecoderObject_t connsObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
             IotSerializerDecoderIterator_t connIterator = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
 
-            error = _Decoder.find( &estConnObject, "connections", &connsObject );
+            error = _decoder.find( &estConnObject, "connections", &connsObject );
 
             if( tcpConnFlag & AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_CONNECTIONS )
             {
@@ -812,7 +812,7 @@ static void _verifyTcpConections( int total,
                 TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
                 TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_ARRAY, connsObject.type );
 
-                error = _Decoder.stepIn( &connsObject, &connIterator );
+                error = _decoder.stepIn( &connsObject, &connIterator );
                 TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
                 /* Create argument list for expected remote addresses. */
@@ -823,13 +823,13 @@ static void _verifyTcpConections( int total,
                 {
                     /* Assert find one "connection" map in "connections" */
                     IotSerializerDecoderObject_t connMap = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
-                    error = _Decoder.get( connIterator, &connMap );
+                    error = _decoder.get( connIterator, &connMap );
                     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
                     TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, connMap.type );
 
                     IotSerializerDecoderObject_t remoteAddrObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
-                    error = _Decoder.find( &connMap, "remote_addr", &remoteAddrObject );
+                    error = _decoder.find( &connMap, "remote_addr", &remoteAddrObject );
 
                     if( tcpConnFlag & AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_REMOTE_ADDR )
                     {
@@ -849,17 +849,17 @@ static void _verifyTcpConections( int total,
                         TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_FOUND, error );
                     }
 
-                    error = _Decoder.next( connIterator );
+                    error = _decoder.next( connIterator );
                     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
-                    _Decoder.destroy( &connMap );
+                    _decoder.destroy( &connMap );
                 }
 
                 va_end( valist );
 
-                TEST_ASSERT_TRUE( _Decoder.isEndOfContainer( connIterator ) );
+                TEST_ASSERT_TRUE( _decoder.isEndOfContainer( connIterator ) );
 
-                _Decoder.stepOut( connIterator, &connsObject );
+                _decoder.stepOut( connIterator, &connsObject );
             }
             else
             {
@@ -867,7 +867,7 @@ static void _verifyTcpConections( int total,
                 TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_FOUND, error );
             }
 
-            _Decoder.destroy( &connsObject );
+            _decoder.destroy( &connsObject );
         }
         else
         {
@@ -875,7 +875,7 @@ static void _verifyTcpConections( int total,
             TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_FOUND, error );
         }
 
-        _Decoder.destroy( &estConnObject );
+        _decoder.destroy( &estConnObject );
     }
     else
     {
@@ -883,16 +883,16 @@ static void _verifyTcpConections( int total,
         TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_FOUND, error );
     }
 
-    _Decoder.destroy( &tcpConnObject );
-    _Decoder.destroy( &_metricsObject );
-    _Decoder.destroy( &_decoderObject );
+    _decoder.destroy( &tcpConnObject );
+    _decoder.destroy( &_metricsObject );
+    _decoder.destroy( &_decoderObject );
 }
 
 /*-----------------------------------------------------------*/
 
 static char * _getIotAddress( void )
 {
-    static char iotAddress[ _MAX_ADDRESS_LENGTH ];
+    static char iotAddress[ MAX_ADDRESS_LENGTH ];
 
     struct addrinfo * pListHead = NULL;
     char * pIotAddressIp = NULL;
