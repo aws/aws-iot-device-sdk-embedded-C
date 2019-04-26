@@ -535,7 +535,7 @@ TEST( MQTT_Unit_Subscription, ListFindByPacket )
  */
 TEST( MQTT_Unit_Subscription, SubscriptionRemoveByPacket )
 {
-    long i = 0;
+    int32_t i = 0;
 
     /* On empty list (should not crash). */
     _IotMqtt_RemoveSubscriptionByPacket( _pMqttConnection,

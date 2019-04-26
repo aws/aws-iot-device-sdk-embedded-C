@@ -358,7 +358,7 @@ static void BlankExecution( IotTaskPool_t * pTaskPool,
 /**
  * @brief Legal initialization configurations.
  */
-IotTaskPoolInfo_t tpInfoLegal[ LEGAL_INFOS ] =
+static IotTaskPoolInfo_t tpInfoLegal[ LEGAL_INFOS ] =
 {
     { .minThreads = 1, .maxThreads = 1, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY },
     { .minThreads = 1, .maxThreads = 2, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY },
@@ -368,7 +368,7 @@ IotTaskPoolInfo_t tpInfoLegal[ LEGAL_INFOS ] =
 /**
  * @brief Illegal initialization configurations.
  */
-IotTaskPoolInfo_t tpInfoIllegal[ ILLEGAL_INFOS ] =
+static IotTaskPoolInfo_t tpInfoIllegal[ ILLEGAL_INFOS ] =
 {
     { .minThreads = 0, .maxThreads = 1, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY },
     { .minThreads = 1, .maxThreads = 0, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY },
@@ -441,7 +441,6 @@ TEST( Common_Unit_Task_Pool, CreateDestroyMaxThreads )
 
     /* Create a task pool a tweak max threads up & down. */
     {
-        uint32_t count;
         IotTaskPoolJob_t jobs[ 2 * TEST_TASKPOOL_MAX_THREADS ] = { { 0 } };
         IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 6, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
 

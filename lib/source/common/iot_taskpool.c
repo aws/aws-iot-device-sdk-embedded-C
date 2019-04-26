@@ -47,12 +47,6 @@
 #define TASKPOOL_ENTER_CRITICAL()        IotMutex_Lock( &( ( ( IotTaskPool_t * ) pTaskPool )->lock ) )
 
 /**
- * @brief Try entering a critical section by trying and lock a mutex.
- *
- */
-#define TASKPOOL_TRY_ENTER_CRITICAL()    IotMutex_TryLock( &( ( ( IotTaskPool_t * ) pTaskPool )->lock ) )
-
-/**
  * @brief Exit a critical section by unlocking a mutex.
  *
  */

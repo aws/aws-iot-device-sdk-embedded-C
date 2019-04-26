@@ -49,7 +49,6 @@
 #define MAGIC_NUMBER_32BIT_3    ( 0x0000000F )
 
 #define MAGIC_NUMBER_8BIT_1     ( 0xA5 )
-#define MAGIC_NUMBER_8BIT_2     ( 0xF0 )
 
 /*-----------------------------------------------------------*/
 

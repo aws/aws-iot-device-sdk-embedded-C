@@ -457,6 +457,7 @@ TEST_SETUP( MQTT_Stress )
 
     /* Set the members of the connect info. */
     connectInfo.cleanSession = true;
+    connectInfo.awsIotMqttMode = AWS_IOT_MQTT_SERVER;
     connectInfo.keepAliveSeconds = IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
     connectInfo.pClientIdentifier = _pClientIdentifier;
     connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );

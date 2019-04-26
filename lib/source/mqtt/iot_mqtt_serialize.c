@@ -125,7 +125,6 @@
  * Constants relating to PUBLISH and PUBACK packets, defined by MQTT
  * 3.1.1 spec.
  */
-#define MQTT_PACKET_PUBLISH_MINIMUM_SIZE            ( 5 )               /**< @brief The size of the smallest valid PUBLISH packet. */
 #define MQTT_PACKET_PUBACK_SIZE                     ( 4 )               /**< @brief A PUBACK packet is always 4 bytes in size. */
 #define MQTT_PACKET_PUBACK_REMAINING_LENGTH         ( ( uint8_t ) 2 )   /**< @brief A PUBACK packet always has a "Remaining length" of 2. */
 
@@ -134,7 +133,6 @@
  * 3.1.1 spec.
  */
 #define MQTT_PACKET_SUBACK_MINIMUM_SIZE             ( 5 )               /**< @brief The size of the smallest valid SUBACK packet. */
-#define MQTT_PACKET_UNSUBACK_SIZE                   ( 4 )               /**< @brief An UNSUBACK packet is always 4 bytes in size. */
 #define MQTT_PACKET_UNSUBACK_REMAINING_LENGTH       ( ( uint8_t ) 2 )   /**< @brief An UNSUBACK packet always has a "Remaining length" of 2. */
 
 /*
