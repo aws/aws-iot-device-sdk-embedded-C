@@ -69,10 +69,10 @@
  * @brief The size of a static memory Shadow subscription.
  *
  * Since the pThingName member of #_shadowSubscription_t is variable-length,
- * the constant #_MAX_THING_NAME_LENGTH is used for the length of
+ * the constant #MAX_THING_NAME_LENGTH is used for the length of
  * #_shadowSubscription_t.pThingName.
  */
-#define _SHADOW_SUBSCRIPTION_SIZE    ( sizeof( _shadowSubscription_t ) + _MAX_THING_NAME_LENGTH )
+#define _SHADOW_SUBSCRIPTION_SIZE    ( sizeof( _shadowSubscription_t ) + MAX_THING_NAME_LENGTH )
 
 /*-----------------------------------------------------------*/
 

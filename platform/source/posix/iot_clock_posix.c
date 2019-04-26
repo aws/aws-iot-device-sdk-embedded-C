@@ -74,14 +74,14 @@
  * For more information on timestring formats, see [this link.]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/strftime.html)
  */
-#define _TIMESTRING_FORMAT              ( "%F %R:%S" )
+#define TIMESTRING_FORMAT              ( "%F %R:%S" )
 
 /*
  * Time conversion constants.
  */
-#define _NANOSECONDS_PER_SECOND         ( 1000000000 ) /**< @brief Nanoseconds per second. */
-#define _NANOSECONDS_PER_MILLISECOND    ( 1000000 )    /**< @brief Nanoseconds per millisecond. */
-#define _MILLISECONDS_PER_SECOND        ( 1000 )       /**< @brief Milliseconds per second. */
+#define NANOSECONDS_PER_SECOND         ( 1000000000 ) /**< @brief Nanoseconds per second. */
+#define NANOSECONDS_PER_MILLISECOND    ( 1000000 )    /**< @brief Nanoseconds per millisecond. */
+#define MILLISECONDS_PER_SECOND        ( 1000 )       /**< @brief Milliseconds per second. */
 
 /*-----------------------------------------------------------*/
 
@@ -127,17 +127,17 @@ bool IotClock_TimeoutToTimespec( uint32_t timeoutMs,
     if( clock_gettime( CLOCK_REALTIME, &systemTime ) == 0 )
     {
         /* Add the nanoseconds value to the time. */
-        systemTime.tv_nsec += ( long ) ( ( timeoutMs % _MILLISECONDS_PER_SECOND ) * _NANOSECONDS_PER_MILLISECOND );
+        systemTime.tv_nsec += ( long ) ( ( timeoutMs % MILLISECONDS_PER_SECOND ) * NANOSECONDS_PER_MILLISECOND );
 
         /* Check for overflow of nanoseconds value. */
-        if( systemTime.tv_nsec >= _NANOSECONDS_PER_SECOND )
+        if( systemTime.tv_nsec >= NANOSECONDS_PER_SECOND )
         {
-            systemTime.tv_nsec -= _NANOSECONDS_PER_SECOND;
+            systemTime.tv_nsec -= NANOSECONDS_PER_SECOND;
             systemTime.tv_sec++;
         }
 
         /* Add the seconds value to the timeout. */
-        systemTime.tv_sec += ( time_t ) ( timeoutMs / _MILLISECONDS_PER_SECOND );
+        systemTime.tv_sec += ( time_t ) ( timeoutMs / MILLISECONDS_PER_SECOND );
 
         /* Set the output parameter. */
         *pOutput = systemTime;
@@ -173,7 +173,7 @@ bool IotClock_GetTimestring( char * pBuffer,
     if( status == true )
     {
         /* Convert the localTime struct to a string. */
-        timestringLength = strftime( pBuffer, bufferSize, _TIMESTRING_FORMAT, &localTime );
+        timestringLength = strftime( pBuffer, bufferSize, TIMESTRING_FORMAT, &localTime );
 
         /* Check for error from strftime. */
         if( timestringLength == 0 )
@@ -213,8 +213,8 @@ void IotClock_SleepMs( uint32_t sleepTimeMs )
     /* Convert parameter to timespec. */
     struct timespec sleepTime =
     {
-        .tv_sec = sleepTimeMs / _MILLISECONDS_PER_SECOND,
-        .tv_nsec = ( sleepTimeMs % _MILLISECONDS_PER_SECOND ) * _NANOSECONDS_PER_MILLISECOND
+        .tv_sec = sleepTimeMs / MILLISECONDS_PER_SECOND,
+        .tv_nsec = ( sleepTimeMs % MILLISECONDS_PER_SECOND ) * NANOSECONDS_PER_MILLISECOND
     };
 
     if( nanosleep( &sleepTime, NULL ) == -1 )
@@ -302,8 +302,8 @@ bool IotClock_TimerArm( IotTimer_t * pTimer,
         /* Calculate the timer expiration period. */
         if( periodMs > 0 )
         {
-            timerExpiration.it_interval.tv_sec = ( time_t ) ( periodMs / _MILLISECONDS_PER_SECOND );
-            timerExpiration.it_interval.tv_nsec = ( long ) ( ( periodMs % _MILLISECONDS_PER_SECOND ) * _NANOSECONDS_PER_MILLISECOND );
+            timerExpiration.it_interval.tv_sec = ( time_t ) ( periodMs / MILLISECONDS_PER_SECOND );
+            timerExpiration.it_interval.tv_nsec = ( long ) ( ( periodMs % MILLISECONDS_PER_SECOND ) * NANOSECONDS_PER_MILLISECOND );
         }
 
         /* Arm the underlying POSIX timer. */

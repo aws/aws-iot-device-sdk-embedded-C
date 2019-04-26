@@ -87,24 +87,24 @@
 /**
  * @brief The Thing Name shared among all the tests.
  */
-#define _TEST_THING_NAME                "TestThingName"
+#define TEST_THING_NAME                "TestThingName"
 
 /**
- * @brief The length of #_TEST_THING_NAME.
+ * @brief The length of #TEST_THING_NAME.
  */
-#define _TEST_THING_NAME_LENGTH         ( sizeof( _TEST_THING_NAME ) - 1 )
+#define TEST_THING_NAME_LENGTH         ( sizeof( TEST_THING_NAME ) - 1 )
 
 /**
  * @brief A delay that simulates the time required for an MQTT packet to be sent
  * to the server and for the server to send a response.
  */
-#define _NETWORK_ROUND_TRIP_TIME_MS     ( 25 )
+#define NETWORK_ROUND_TRIP_TIME_MS     ( 25 )
 
 /**
  * @brief The maximum size of any MQTT acknowledgement packet (e.g. SUBACK,
  * PUBACK, UNSUBACK) used in these tests.
  */
-#define _ACKNOWLEDGEMENT_PACKET_SIZE    ( 5 )
+#define ACKNOWLEDGEMENT_PACKET_SIZE    ( 5 )
 
 /*-----------------------------------------------------------*/
 
@@ -160,11 +160,11 @@ static uint16_t _lastPacketIdentifier = 0;
  */
 static void _receiveThread( void * pArgument )
 {
-    uint8_t pReceivedData[ _ACKNOWLEDGEMENT_PACKET_SIZE ] = { 0 };
+    uint8_t pReceivedData[ ACKNOWLEDGEMENT_PACKET_SIZE ] = { 0 };
     _receiveContext_t receiveContext = { 0 };
 
     receiveContext.pData = pReceivedData;
-    receiveContext.dataLength = _ACKNOWLEDGEMENT_PACKET_SIZE;
+    receiveContext.dataLength = ACKNOWLEDGEMENT_PACKET_SIZE;
 
     /* Silence warnings about unused parameters. */
     ( void ) pArgument;
@@ -177,8 +177,8 @@ static void _receiveThread( void * pArgument )
     AwsIotShadow_Assert( _lastPacketIdentifier != 0 );
 
     /* Set the packet identifier in the ACK packet. */
-    pReceivedData[ 2 ] = _UINT16_HIGH_BYTE( _lastPacketIdentifier );
-    pReceivedData[ 3 ] = _UINT16_LOW_BYTE( _lastPacketIdentifier );
+    pReceivedData[ 2 ] = UINT16_HIGH_BYTE( _lastPacketIdentifier );
+    pReceivedData[ 3 ] = UINT16_LOW_BYTE( _lastPacketIdentifier );
 
     /* Create the corresponding ACK packet based on the last packet type. */
     switch( _lastPacketType )
@@ -291,7 +291,7 @@ static size_t _sendSuccess( void * pSendContext,
         /* Save the packet identifier as the last packet identifier. */
         if( _lastPacketType != MQTT_PACKET_TYPE_PUBLISH )
         {
-            _lastPacketIdentifier = _UINT16_DECODE( receiveContext.pData + receiveContext.dataIndex );
+            _lastPacketIdentifier = UINT16_DECODE( receiveContext.pData + receiveContext.dataIndex );
             status = IOT_MQTT_SUCCESS;
         }
         else
@@ -308,7 +308,7 @@ static size_t _sendSuccess( void * pSendContext,
 
         /* Set the receive thread to run after a "network round-trip". */
         AwsIotShadow_Assert( IotClock_TimerArm( &_receiveTimer,
-                                                _NETWORK_ROUND_TRIP_TIME_MS,
+                                                NETWORK_ROUND_TRIP_TIME_MS,
                                                 0 ) == true );
     }
 
@@ -511,8 +511,8 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
 
     /* Thing Name too long. */
     status = AwsIotShadow_Delete( _pMqttConnection,
-                                  _TEST_THING_NAME,
-                                  _MAX_THING_NAME_LENGTH + 1,
+                                  TEST_THING_NAME,
+                                  MAX_THING_NAME_LENGTH + 1,
                                   0,
                                   NULL,
                                   NULL );
@@ -520,8 +520,8 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
 
     /* No reference with waitable operation. */
     status = AwsIotShadow_Delete( _pMqttConnection,
-                                  _TEST_THING_NAME,
-                                  _TEST_THING_NAME_LENGTH,
+                                  TEST_THING_NAME,
+                                  TEST_THING_NAME_LENGTH,
                                   AWS_IOT_SHADOW_FLAG_WAITABLE,
                                   NULL,
                                   NULL );
@@ -529,16 +529,16 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
 
     /* Both callback and waitable flag set. */
     status = AwsIotShadow_Delete( _pMqttConnection,
-                                  _TEST_THING_NAME,
-                                  _TEST_THING_NAME_LENGTH,
+                                  TEST_THING_NAME,
+                                  TEST_THING_NAME_LENGTH,
                                   AWS_IOT_SHADOW_FLAG_WAITABLE,
                                   &callbackInfo,
                                   &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* No callback for non-waitable GET. */
-    documentInfo.pThingName = _TEST_THING_NAME;
-    documentInfo.thingNameLength = _TEST_THING_NAME_LENGTH;
+    documentInfo.pThingName = TEST_THING_NAME;
+    documentInfo.thingNameLength = TEST_THING_NAME_LENGTH;
     status = AwsIotShadow_Get( _pMqttConnection,
                                &documentInfo,
                                0,
@@ -548,8 +548,8 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
 
     /* Callback function not set. */
     status = AwsIotShadow_Delete( _pMqttConnection,
-                                  _TEST_THING_NAME,
-                                  _TEST_THING_NAME_LENGTH,
+                                  TEST_THING_NAME,
+                                  TEST_THING_NAME_LENGTH,
                                   0,
                                   &callbackInfo,
                                   &operation );
@@ -575,8 +575,8 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
                                NULL,
                                &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
-    documentInfo.pThingName = _TEST_THING_NAME;
-    documentInfo.thingNameLength = _TEST_THING_NAME_LENGTH;
+    documentInfo.pThingName = TEST_THING_NAME;
+    documentInfo.thingNameLength = TEST_THING_NAME_LENGTH;
 
     /* Invalid QoS. */
     documentInfo.qos = ( IotMqttQos_t ) 3;
@@ -685,8 +685,8 @@ TEST( Shadow_Unit_API, DeleteMallocFail )
         /* Call Shadow DELETE. Memory allocation will fail at various times
          * during this call. */
         status = AwsIotShadow_Delete( _pMqttConnection,
-                                      _TEST_THING_NAME,
-                                      _TEST_THING_NAME_LENGTH,
+                                      TEST_THING_NAME,
+                                      TEST_THING_NAME_LENGTH,
                                       AWS_IOT_SHADOW_FLAG_WAITABLE,
                                       NULL,
                                       &deleteOperation );
@@ -737,8 +737,8 @@ TEST( Shadow_Unit_API, GetMallocFail )
     _AwsIotShadowMqttTimeoutMs = 75;
 
     /* Set the members of the document info. */
-    documentInfo.pThingName = _TEST_THING_NAME;
-    documentInfo.thingNameLength = _TEST_THING_NAME_LENGTH;
+    documentInfo.pThingName = TEST_THING_NAME;
+    documentInfo.thingNameLength = TEST_THING_NAME_LENGTH;
     documentInfo.qos = IOT_MQTT_QOS_1;
     documentInfo.u.get.mallocDocument = IotTest_Malloc;
 
@@ -801,8 +801,8 @@ TEST( Shadow_Unit_API, UpdateMallocFail )
     _AwsIotShadowMqttTimeoutMs = 75;
 
     /* Set the members of the document info. */
-    documentInfo.pThingName = _TEST_THING_NAME;
-    documentInfo.thingNameLength = _TEST_THING_NAME_LENGTH;
+    documentInfo.pThingName = TEST_THING_NAME;
+    documentInfo.thingNameLength = TEST_THING_NAME_LENGTH;
     documentInfo.qos = IOT_MQTT_QOS_1;
     documentInfo.u.update.pUpdateDocument = "{\"state\":{\"reported\":{null}},\"clientToken\":\"TEST\"}";
     documentInfo.u.update.updateDocumentLength = 50;

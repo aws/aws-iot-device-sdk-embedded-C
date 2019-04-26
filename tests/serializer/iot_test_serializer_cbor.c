@@ -41,22 +41,22 @@
 #define _encoder        _IotSerializerCborEncoder
 #define _decoder        _IotSerializerCborDecoder
 
-#define _BUFFER_SIZE    100
+#define BUFFER_SIZE    100
 
 static IotSerializerEncoderObject_t _encoderObject;
 
-uint8_t _buffer[ _BUFFER_SIZE ];
+uint8_t _buffer[ BUFFER_SIZE ];
 
 TEST_GROUP( Full_Serializer_CBOR );
 
 TEST_SETUP( Full_Serializer_CBOR )
 {
     /* Reset buffer to zero. */
-    memset( _buffer, 0, _BUFFER_SIZE );
+    memset( _buffer, 0, BUFFER_SIZE );
 
     /* Init encoder object with buffer. */
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _encoder.init( &_encoderObject, _buffer, _BUFFER_SIZE ) );
+                       _encoder.init( &_encoderObject, _buffer, BUFFER_SIZE ) );
 }
 
 TEST_TEAR_DOWN( Full_Serializer_CBOR )
@@ -124,7 +124,7 @@ TEST( Full_Serializer_CBOR, Encoder_append_integer )
     CborValue outermostValue;
 
     TEST_ASSERT_EQUAL( CborNoError,
-                       cbor_parser_init( _buffer, _BUFFER_SIZE, 0, &parser, &outermostValue ) );
+                       cbor_parser_init( _buffer, BUFFER_SIZE, 0, &parser, &outermostValue ) );
 
     TEST_ASSERT_EQUAL( CborIntegerType, cbor_value_get_type( &outermostValue ) );
 
@@ -150,7 +150,7 @@ TEST( Full_Serializer_CBOR, Encoder_append_text_string )
     CborValue outermostValue;
 
     TEST_ASSERT_EQUAL( CborNoError,
-                       cbor_parser_init( _buffer, _BUFFER_SIZE, 0, &parser, &outermostValue ) );
+                       cbor_parser_init( _buffer, BUFFER_SIZE, 0, &parser, &outermostValue ) );
 
     TEST_ASSERT_EQUAL( CborTextStringType, cbor_value_get_type( &outermostValue ) );
 
@@ -175,7 +175,7 @@ TEST( Full_Serializer_CBOR, Encoder_append_byte_string )
     CborValue outermostValue;
 
     TEST_ASSERT_EQUAL( CborNoError,
-                       cbor_parser_init( _buffer, _BUFFER_SIZE, 0, &parser, &outermostValue ) );
+                       cbor_parser_init( _buffer, BUFFER_SIZE, 0, &parser, &outermostValue ) );
 
     TEST_ASSERT_EQUAL( CborByteStringType, cbor_value_get_type( &outermostValue ) );
 
@@ -217,7 +217,7 @@ TEST( Full_Serializer_CBOR, Encoder_open_map )
     CborValue outermostValue, value;
 
     TEST_ASSERT_EQUAL( CborNoError,
-                       cbor_parser_init( _buffer, _BUFFER_SIZE, 0, &parser, &outermostValue ) );
+                       cbor_parser_init( _buffer, BUFFER_SIZE, 0, &parser, &outermostValue ) );
 
     TEST_ASSERT_EQUAL( CborMapType, cbor_value_get_type( &outermostValue ) );
 
@@ -259,7 +259,7 @@ TEST( Full_Serializer_CBOR, Encoder_open_array )
     int64_t number = 0;
 
     TEST_ASSERT_EQUAL( CborNoError,
-                       cbor_parser_init( _buffer, _BUFFER_SIZE, 0, &parser, &outermostValue ) );
+                       cbor_parser_init( _buffer, BUFFER_SIZE, 0, &parser, &outermostValue ) );
 
     TEST_ASSERT_EQUAL( CborArrayType, cbor_value_get_type( &outermostValue ) );
 
@@ -304,7 +304,7 @@ TEST( Full_Serializer_CBOR, Encoder_map_nest_map )
     CborValue outermostValue, map1, str;
 
     TEST_ASSERT_EQUAL( CborNoError,
-                       cbor_parser_init( _buffer, _BUFFER_SIZE, 0, &parser, &outermostValue ) );
+                       cbor_parser_init( _buffer, BUFFER_SIZE, 0, &parser, &outermostValue ) );
 
     TEST_ASSERT_EQUAL( CborMapType, cbor_value_get_type( &outermostValue ) );
 
@@ -358,7 +358,7 @@ TEST( Full_Serializer_CBOR, Encoder_map_nest_array )
     int64_t number = 0;
 
     TEST_ASSERT_EQUAL( CborNoError,
-                       cbor_parser_init( _buffer, _BUFFER_SIZE, 0, &parser, &outermost ) );
+                       cbor_parser_init( _buffer, BUFFER_SIZE, 0, &parser, &outermost ) );
 
     TEST_ASSERT_EQUAL( CborMapType, cbor_value_get_type( &outermost ) );
 
