@@ -82,7 +82,7 @@ static _metrics_t _metrics = { 0 };
 static uint32_t _metricsFlagSnapshot[ DEFENDER_METRICS_GROUP_COUNT ];
 
 /* Report id integer. */
-uint64_t _AwsIotDefenderReportId = 0;
+static uint64_t _AwsIotDefenderReportId = 0;
 
 /* Static storage holding the string of remote address: "ip:port". */
 static char _remoteAddr[ REMOTE_ADDR_LENGTH ] = "";
@@ -260,7 +260,7 @@ static void _serialize( void )
     /* Append key-value pair of "report_Id" which uses clock time. */
     serializerError = _defenderEncoder.appendKeyValue( &headerMap,
                                                        REPORTID_TAG,
-                                                       IotSerializer_ScalarSignedInt( _AwsIotDefenderReportId ) );
+                                                       IotSerializer_ScalarSignedInt( ( int64_t ) _AwsIotDefenderReportId ) );
     assertNoError( serializerError );
 
     /* Append key-value pair of "version". */
