@@ -249,7 +249,6 @@ bool IotDemo_ParseArguments( int argc,
             /* The default case should not be executed. */
             default:
                 abort();
-                break;
         }
     }
 

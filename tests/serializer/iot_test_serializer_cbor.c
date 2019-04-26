@@ -45,7 +45,7 @@
 
 static IotSerializerEncoderObject_t _encoderObject;
 
-uint8_t _buffer[ BUFFER_SIZE ];
+static uint8_t _buffer[ BUFFER_SIZE ];
 
 TEST_GROUP( Full_Serializer_CBOR );
 
