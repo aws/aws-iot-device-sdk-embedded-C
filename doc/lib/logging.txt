@@ -36,28 +36,28 @@ Currently, the logging library has the following dependencies:
 @section logging_setup_use Setup and use
 @brief How to set up and use the logging library.
 
-The file iot_logging_setup.h should be included to configure logging for a single source file. Before including iot_logging_setup.h, the constants @ref _LIBRARY_LOG_LEVEL and @ref _LIBRARY_LOG_NAME must be defined.
+The file iot_logging_setup.h should be included to configure logging for a single source file. Before including iot_logging_setup.h, the constants @ref LIBRARY_LOG_LEVEL and @ref LIBRARY_LOG_NAME must be defined.
 
 For example, to configure all the "SAMPLE" library to print all messages below the [info](@ref IOT_LOG_INFO) log level:
 
 @code{c}
 // Print log messages up to the "info" level.
-#define _LIBRARY_LOG_LEVEL    IOT_LOG_INFO
+#define LIBRARY_LOG_LEVEL    IOT_LOG_INFO
 
 // Print library name "SAMPLE".
-#define _LIBRARY_LOG_NAME     "SAMPLE"
+#define LIBRARY_LOG_NAME     "SAMPLE"
 
-// Including this header defines the logging macros using _LIBRARY_LOG_LEVEL and
-// _LIBRARY_LOG_NAME.
+// Including this header defines the logging macros using LIBRARY_LOG_LEVEL and
+// LIBRARY_LOG_NAME.
 #include "iot_logging_setup.h"
 
 int main( void )
 {
     // After including iot_logging_setup.h, the logging functions can be used.
-    IotLogError( "Error." );      // Will be printed because IOT_LOG_ERROR <= _LIBRARY_LOG_LEVEL
-    IotLogWarn( "Warning. " );    // Will be printed because IOT_LOG_WARN <= _LIBRARY_LOG_LEVEL
-    IotLogInfo( "Info." );        // Will be printed because IOT_LOG_INFO <= _LIBRARY_LOG_LEVEL
-    IotLogDebug( "Debug." );      // Will not be printed because IOT_LOG_DEBUG > _LIBRARY_LOG_LEVEL
+    IotLogError( "Error." );      // Will be printed because IOT_LOG_ERROR <= LIBRARY_LOG_LEVEL
+    IotLogWarn( "Warning. " );    // Will be printed because IOT_LOG_WARN <= LIBRARY_LOG_LEVEL
+    IotLogInfo( "Info." );        // Will be printed because IOT_LOG_INFO <= LIBRARY_LOG_LEVEL
+    IotLogDebug( "Debug." );      // Will not be printed because IOT_LOG_DEBUG > LIBRARY_LOG_LEVEL
 
     return 0;
 }
@@ -75,22 +75,22 @@ The code above will print something like the following:
 /**
 @configpage{logging,logging library}
 
-@section _LIBRARY_LOG_LEVEL
+@section LIBRARY_LOG_LEVEL
 @brief The log level for a source file.
 
 Sets the log level for a single source file. A log message will only be printed if its level is less than this setting.
 
-Both this constant and @ref _LIBRARY_LOG_NAME must be defined before including iot_logging_setup.h. See @ref logging_setup_use for an example on how to use this setting.
+Both this constant and @ref LIBRARY_LOG_NAME must be defined before including iot_logging_setup.h. See @ref logging_setup_use for an example on how to use this setting.
 
 @configpossible One of the @ref logging_constants_levels.
 @note This value must be defined if iot_logging_setup.h is included. The library will not provide a default value for this setting.
 
-@section _LIBRARY_LOG_NAME
+@section LIBRARY_LOG_NAME
 @brief The library name printed in log messages.
 
 Sets the library name for a single source file. By default, all log messages contain the library name. The library name may be disabled for a single log message by setting passing an #IotLogConfig_t with [hideLibraryName](@ref IotLogConfig_t.hideLibraryName) set to `true`.
 
-Both this constant and @ref _LIBRARY_LOG_LEVEL must be defined before including iot_logging_setup.h. See @ref logging_setup_use for an example on how to use this setting.
+Both this constant and @ref LIBRARY_LOG_LEVEL must be defined before including iot_logging_setup.h. See @ref logging_setup_use for an example on how to use this setting.
 
 @configpossible Any string.
 @note This value must be defined if iot_logging_setup.h is included. The library will not provide a default value for this setting.

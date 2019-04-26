@@ -189,7 +189,7 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
 /* Configure code coverage testing if enabled. */
 #if IOT_TEST_COVERAGE == 1
     /* Define the empty else marker if test coverage is enabled. */
-    #define _EMPTY_ELSE_MARKER    IOT_TEST_ASM_VOLATILE( "nop" )
+    #define EMPTY_ELSE_MARKER    IOT_TEST_ASM_VOLATILE( "nop" )
 
     /* Define a custom logging puts function. This function allows coverage
      * testing of logging functions, but prevents excessive logs from being

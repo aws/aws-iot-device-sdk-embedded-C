@@ -200,7 +200,7 @@ The naming convention aims to differentiate this SDK's files, variables, and fun
 @formattableentry{`IOT_`<b>LIBRARY</b>`_`<b>DESCRIPTION</b><br>`AWS_IOT_`<b>LIBRARY</b>`_`<b>DESCRIPTION</b>,Defined constants and enum values in application-facing library header files,`IOT_MQTT_SUCCESS` (iot_mqtt.h)<br>`AWS_IOT_SHADOW_SUCCESS` (aws_iot_shadow.h)}
 @formattableentry{`IOT_DEMO_`<b>DESCRIPTION</b><br>`IOT_TEST_`<b>DESCRIPTION</b>,Defined constants and enum values in demos and tests,`IOT_DEMO_MQTT_PUBLISH_BURST_SIZE`<br>`IOT_TEST_MQTT_THREADS`}
 @formattableentry{`AWS_IOT_DEMO_`<b>DESCRIPTION</b><br>`AWS_IOT_TEST_`<b>DESCRIPTION</b>,Defined constants and enum values in demos and tests specific to AWS IoT,`AWS_IOT_DEMO_THING_NAME`<br>`AWS_IOT_TEST_SHADOW_THING_NAME`}
-@formattableentry{`_`<b>DESCRIPTION</b>,Internal constants and enum values<br>No `AWS_` prefix for internal namesin AWS-specific libraries,`_MQTT_PACKET_TYPE_CONNECT`<br>(iot_mqtt_internal.h)<br>`_SHADOW_OPERATION_COUNT`<br>(aws_iot_shadow_internal.h)}
+@formattableentry{`_`<b>DESCRIPTION</b>,Internal constants and enum values<br>No `AWS_` prefix for internal namesin AWS-specific libraries,`MQTT_PACKET_TYPE_CONNECT`<br>(iot_mqtt_internal.h)<br>`SHADOW_OPERATION_COUNT`<br>(aws_iot_shadow_internal.h)}
 
 Names of constants and enum values should contain only uppercase letters and underscores. All names intended for application use must begin with `IOT_` or `AWS_IOT_`, while names intended for internal use must begin with only `_`.
 

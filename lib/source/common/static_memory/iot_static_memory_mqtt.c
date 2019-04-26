@@ -75,10 +75,10 @@
  * @brief The size of a static memory MQTT subscription.
  *
  * Since the pTopic member of #_mqttSubscription_t is variable-length, the constant
- * #_AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH is used for the length of
+ * #AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH is used for the length of
  * #_mqttSubscription_t.pTopicFilter.
  */
-#define _MQTT_SUBSCRIPTION_SIZE    ( sizeof( _mqttSubscription_t ) + _AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
+#define _MQTT_SUBSCRIPTION_SIZE    ( sizeof( _mqttSubscription_t ) + AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
 
 /*-----------------------------------------------------------*/
 

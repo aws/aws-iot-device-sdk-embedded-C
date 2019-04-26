@@ -62,17 +62,17 @@
 
 /* The tests in this file run for a long time, so set up logging to track their
  * progress. */
-#define _LIBRARY_LOG_LEVEL    IOT_LOG_INFO
-#define _LIBRARY_LOG_NAME     ( "MQTT_STRESS" )
+#define LIBRARY_LOG_LEVEL    IOT_LOG_INFO
+#define LIBRARY_LOG_NAME     ( "MQTT_STRESS" )
 #include "iot_logging_setup.h"
 
 /**
  * @brief Determine which MQTT server mode to test (AWS IoT or Mosquitto).
  */
 #if !defined( IOT_TEST_MQTT_MOSQUITTO ) || IOT_TEST_MQTT_MOSQUITTO == 0
-    #define _AWS_IOT_MQTT_SERVER    true
+    #define AWS_IOT_MQTT_SERVER    true
 #else
-    #define _AWS_IOT_MQTT_SERVER    false
+    #define AWS_IOT_MQTT_SERVER    false
 
 /* Redefine the connect info initializer if not using an AWS IoT MQTT server. */
     #undef IOT_MQTT_CONNECT_INFO_INITIALIZER
@@ -122,21 +122,21 @@
 /**
  * @brief Number of test topic names.
  */
-#define _TEST_TOPIC_NAME_COUNT    ( 8 )
+#define TEST_TOPIC_NAME_COUNT    ( 8 )
 
 /**
  * @brief The maximum number of PUBLISH messages that will be received by a
  * single test.
  */
-#define _MAX_RECEIVED_PUBLISH     ( IOT_TEST_MQTT_THREADS * IOT_TEST_MQTT_PUBLISHES_PER_THREAD )
+#define MAX_RECEIVED_PUBLISH     ( IOT_TEST_MQTT_THREADS * IOT_TEST_MQTT_PUBLISHES_PER_THREAD )
 
 /**
  * @brief The maximum length of an MQTT client identifier.
  */
 #ifdef IOT_TEST_MQTT_CLIENT_IDENTIFIER
-    #define _CLIENT_IDENTIFIER_MAX_LENGTH    ( sizeof( IOT_TEST_MQTT_CLIENT_IDENTIFIER ) )
+    #define CLIENT_IDENTIFIER_MAX_LENGTH    ( sizeof( IOT_TEST_MQTT_CLIENT_IDENTIFIER ) )
 #else
-    #define _CLIENT_IDENTIFIER_MAX_LENGTH    ( 24 )
+    #define CLIENT_IDENTIFIER_MAX_LENGTH    ( 24 )
 #endif
 
 /*-----------------------------------------------------------*/
@@ -197,7 +197,7 @@ static const size_t _samplePayloadLength = sizeof( _pSamplePayload ) - 1;
  *
  * For convenience, all topic names are the same length.
  */
-static const char * const _pTopicNames[ _TEST_TOPIC_NAME_COUNT ] =
+static const char * const _pTopicNames[ TEST_TOPIC_NAME_COUNT ] =
 {
     IOT_TEST_MQTT_TOPIC_PREFIX "/stress/0",
     IOT_TEST_MQTT_TOPIC_PREFIX "/stress/1",
@@ -226,7 +226,7 @@ static IotSemaphore_t receivedPublishCounter;
 /**
  * @brief Buffer holding the client identifier used for the tests.
  */
-static char _pClientIdentifier[ _CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
+static char _pClientIdentifier[ CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
 
 /*-----------------------------------------------------------*/
 
@@ -337,7 +337,7 @@ static void * _publishThread( void * pArgument )
     for( i = 0; i < pParams->publishLimit; )
     {
         /* Choose a topic name. */
-        publishInfo.pTopicName = _pTopicNames[ i % _TEST_TOPIC_NAME_COUNT ];
+        publishInfo.pTopicName = _pTopicNames[ i % TEST_TOPIC_NAME_COUNT ];
 
         /* PUBLISH the message. */
         status = IotMqtt_Publish( _mqttConnection,
@@ -404,7 +404,7 @@ TEST_SETUP( MQTT_Stress )
 {
     int32_t i = 0;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
-    IotMqttSubscription_t pSubscriptions[ _TEST_TOPIC_NAME_COUNT ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
+    IotMqttSubscription_t pSubscriptions[ TEST_TOPIC_NAME_COUNT ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
 
     /* Initialize SDK. */
     if( IotSdk_Init() == false )
@@ -430,19 +430,19 @@ TEST_SETUP( MQTT_Stress )
     /* Create the publish counter semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &receivedPublishCounter,
                                                       0,
-                                                      _MAX_RECEIVED_PUBLISH ) );
+                                                      MAX_RECEIVED_PUBLISH ) );
 
     /* Generate a new, unique client identifier based on the time if no client
      * identifier is defined. Otherwise, copy the provided client identifier. */
     #ifndef IOT_TEST_MQTT_CLIENT_IDENTIFIER
         ( void ) snprintf( _pClientIdentifier,
-                           _CLIENT_IDENTIFIER_MAX_LENGTH,
+                           CLIENT_IDENTIFIER_MAX_LENGTH,
                            "iot%llu",
                            ( long long unsigned int ) IotClock_GetTimeMs() );
     #else
         ( void ) strncpy( _pClientIdentifier,
                           IOT_TEST_MQTT_CLIENT_IDENTIFIER,
-                          _CLIENT_IDENTIFIER_MAX_LENGTH );
+                          CLIENT_IDENTIFIER_MAX_LENGTH );
     #endif
 
     /* Set the MQTT network setup parameters. */
@@ -462,7 +462,7 @@ TEST_SETUP( MQTT_Stress )
     connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );
 
     /* Set the members of the subscriptions */
-    for( i = 0; i < _TEST_TOPIC_NAME_COUNT; i++ )
+    for( i = 0; i < TEST_TOPIC_NAME_COUNT; i++ )
     {
         pSubscriptions[ i ].pTopicFilter = _pTopicNames[ i ];
         pSubscriptions[ i ].topicFilterLength = _topicNameLength;
@@ -481,7 +481,7 @@ TEST_SETUP( MQTT_Stress )
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS,
                        IotMqtt_TimedSubscribe( _mqttConnection,
                                                pSubscriptions,
-                                               _TEST_TOPIC_NAME_COUNT,
+                                               TEST_TOPIC_NAME_COUNT,
                                                0,
                                                IOT_TEST_MQTT_TIMEOUT_MS ) );
 }
