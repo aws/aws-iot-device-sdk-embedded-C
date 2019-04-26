@@ -29,7 +29,7 @@ include_directories( ${PROJECT_SOURCE_DIR}/lib/include
                      ${PROJECT_SOURCE_DIR}/platform/include )
 
 # TinyCBOR include path.
-include_directories( ${PROJECT_SOURCE_DIR}/third_party/tinycbor/tinycbor/src )
+include_directories( SYSTEM ${PROJECT_SOURCE_DIR}/third_party/tinycbor/tinycbor/src )
 
 # Demo include path. Always required because the tests also build the demos.
 include_directories( ${PROJECT_SOURCE_DIR}/demos/include )
@@ -44,7 +44,7 @@ if( ${IOT_BUILD_TESTS} )
                          tests/mqtt/access )
 
     # Unity test framework include paths.
-    include_directories( third_party/unity/unity
+    include_directories( SYSTEM third_party/unity/unity
                          third_party/unity/unity/fixture )
 
     # Build unity test framework.
