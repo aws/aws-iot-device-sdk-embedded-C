@@ -316,7 +316,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                                          const IotMqttCallbackInfo_t * pCallbackInfo,
                                          _mqttOperation_t ** pNewOperation )
 {
-    _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     bool decrementOnError = false;
     _mqttOperation_t * pOperation = NULL;
     bool waitable = ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE );
@@ -351,7 +351,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                      " for a closed connection",
                      pMqttConnection );
 
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NETWORK_ERROR );
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NETWORK_ERROR );
     }
     else
     {
@@ -368,7 +368,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                      "operation record.",
                      pMqttConnection );
 
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
     }
     else
     {
@@ -393,7 +393,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                          "waitable operation.",
                          pMqttConnection );
 
-            _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
+            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
         }
         else
         {
@@ -426,7 +426,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
     *pNewOperation = pOperation;
 
     /* Clean up operation and decrement reference count if this function failed. */
-    _IOT_FUNCTION_CLEANUP_BEGIN();
+    IOT_FUNCTION_CLEANUP_BEGIN();
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -453,7 +453,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
         EMPTY_ELSE_MARKER;
     }
 
-    _IOT_FUNCTION_CLEANUP_END();
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/

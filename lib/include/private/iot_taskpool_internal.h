@@ -50,47 +50,47 @@
 /**
  * @brief Jump to the cleanup area.
  */
-#define TASKPOOL_GOTO_CLEANUP()                       _IOT_GOTO_CLEANUP()
+#define TASKPOOL_GOTO_CLEANUP()                       IOT_GOTO_CLEANUP()
 
 /**
  * @brief Declare the storage for the error status variable.
  */
-#define  TASKPOOL_FUNCTION_ENTRY( result )            _IOT_FUNCTION_ENTRY( IotTaskPoolError_t, result )
+#define  TASKPOOL_FUNCTION_ENTRY( result )            IOT_FUNCTION_ENTRY( IotTaskPoolError_t, result )
 
 /**
  * @brief Check error and leave in case of failure.
  */
-#define TASKPOOL_ON_ERROR_GOTO_CLEANUP( expr )        { if( TASKPOOL_FAILED( status = ( expr ) ) ) { _IOT_GOTO_CLEANUP(); } }
+#define TASKPOOL_ON_ERROR_GOTO_CLEANUP( expr )        { if( TASKPOOL_FAILED( status = ( expr ) ) ) { IOT_GOTO_CLEANUP(); } }
 
 /**
  * @brief Exit if an argument is NULL.
  */
-#define TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( ptr )      _IOT_VALIDATE_PARAMETER( IOT_TASKPOOL, ( ptr != NULL ) )
+#define TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( ptr )      IOT_VALIDATE_PARAMETER( IOT_TASKPOOL, ( ptr != NULL ) )
 
 /**
  * @brief Exit if an argument is NULL.
  */
-#define TASKPOOL_ON_ARG_ERROR_GOTO_CLEANUP( expr )    _IOT_VALIDATE_PARAMETER( IOT_TASKPOOL, ( ( expr ) == false ) )
+#define TASKPOOL_ON_ARG_ERROR_GOTO_CLEANUP( expr )    IOT_VALIDATE_PARAMETER( IOT_TASKPOOL, ( ( expr ) == false ) )
 
 /**
  * @brief Set error and leave.
  */
-#define TASKPOOL_SET_AND_GOTO_CLEANUP( expr )         _IOT_SET_AND_GOTO_CLEANUP( expr )
+#define TASKPOOL_SET_AND_GOTO_CLEANUP( expr )         IOT_SET_AND_GOTO_CLEANUP( expr )
 
 /**
  * @brief Initialize error and declare start of cleanup area.
  */
-#define TASKPOOL_FUNCTION_CLEANUP()                   _IOT_FUNCTION_CLEANUP_BEGIN()
+#define TASKPOOL_FUNCTION_CLEANUP()                   IOT_FUNCTION_CLEANUP_BEGIN()
 
 /**
  * @brief Initialize error and declare end of cleanup area.
  */
-#define TASKPOOL_FUNCTION_CLEANUP_END()               _IOT_FUNCTION_CLEANUP_END()
+#define TASKPOOL_FUNCTION_CLEANUP_END()               IOT_FUNCTION_CLEANUP_END()
 
 /**
  * @brief Create an empty cleanup area.
  */
-#define TASKPOOL_NO_FUNCTION_CLEANUP()                _IOT_FUNCTION_EXIT_NO_CLEANUP()
+#define TASKPOOL_NO_FUNCTION_CLEANUP()                IOT_FUNCTION_EXIT_NO_CLEANUP()
 
 /**
  * @brief Does not create a cleanup area.

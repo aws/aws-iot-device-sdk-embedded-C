@@ -118,7 +118,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
                                           const _mqttConnection_t * pMqttConnection,
                                           _mqttPacket_t * pIncomingPacket )
 {
-    _IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     size_t dataBytesRead = 0;
 
     /* Default functions for retrieving packet type and length. */
@@ -170,7 +170,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
                      pMqttConnection,
                      pIncomingPacket->type );
 
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
     }
     else
     {
@@ -183,7 +183,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
 
     if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
     {
-        _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
     }
     else
     {
@@ -197,7 +197,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
 
         if( pIncomingPacket->pRemainingData == NULL )
         {
-            _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
+            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
         }
         else
         {
@@ -210,7 +210,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
 
         if( dataBytesRead != pIncomingPacket->remainingLength )
         {
-            _IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
+            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
         }
         else
         {
@@ -223,7 +223,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
     }
 
     /* Clean up on error. */
-    _IOT_FUNCTION_CLEANUP_BEGIN();
+    IOT_FUNCTION_CLEANUP_BEGIN();
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -241,7 +241,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
         EMPTY_ELSE_MARKER;
     }
 
-    _IOT_FUNCTION_CLEANUP_END();
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/

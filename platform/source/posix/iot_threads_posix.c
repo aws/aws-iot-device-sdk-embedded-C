@@ -142,7 +142,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
                                int32_t priority,
                                size_t stackSize )
 {
-    _IOT_FUNCTION_ENTRY( bool, true );
+    IOT_FUNCTION_ENTRY( bool, true );
     int posixErrno = 0;
     bool threadAttibutesCreated = false;
     _threadInfo_t * pThreadInfo = NULL;
@@ -162,7 +162,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
     {
         IotLogError( "Failed to allocate memory for new thread." );
 
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
     /* Set up thread attributes object. */
@@ -173,7 +173,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
         IotLogError( "Failed to initialize thread attributes. errno=%d.",
                      posixErrno );
 
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
     threadAttibutesCreated = true;
@@ -187,7 +187,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
         IotLogError( "Failed to set detached thread attribute. errno=%d.",
                      posixErrno );
 
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
     /* Set the thread routine and argument. */
@@ -204,10 +204,10 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
     {
         IotLogError( "Failed to create new thread. errno=%d.", posixErrno );
 
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
-    _IOT_FUNCTION_CLEANUP_BEGIN();
+    IOT_FUNCTION_CLEANUP_BEGIN();
 
     /* Destroy thread attributes object. */
     if( threadAttibutesCreated == true )
@@ -230,7 +230,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
         }
     }
 
-    _IOT_FUNCTION_CLEANUP_END();
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/

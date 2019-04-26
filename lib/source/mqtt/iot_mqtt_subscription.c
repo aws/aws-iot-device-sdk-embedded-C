@@ -93,7 +93,7 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
 static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                          void * pMatch )
 {
-    _IOT_FUNCTION_ENTRY( bool, false );
+    IOT_FUNCTION_ENTRY( bool, false );
     uint16_t nameIndex = 0, filterIndex = 0;
 
     /* Because this function is called from a container function, the given link
@@ -116,7 +116,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     {
         status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 );
 
-        _IOT_GOTO_CLEANUP();
+        IOT_GOTO_CLEANUP();
     }
     else
     {
@@ -127,7 +127,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
      * false. */
     if( pParam->exactMatchOnly == true )
     {
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        IOT_SET_AND_GOTO_CLEANUP( false );
     }
     else
     {
@@ -151,7 +151,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                     {
                         if( pTopicFilter[ filterIndex + 2 ] == '#' )
                         {
-                            _IOT_SET_AND_GOTO_CLEANUP( true );
+                            IOT_SET_AND_GOTO_CLEANUP( true );
                         }
                         else
                         {
@@ -180,7 +180,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                 {
                     if( pTopicFilter[ filterIndex + 1 ] == '+' )
                     {
-                        _IOT_SET_AND_GOTO_CLEANUP( true );
+                        IOT_SET_AND_GOTO_CLEANUP( true );
                     }
                     else
                     {
@@ -217,13 +217,13 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
             {
                 /* Subsequent characters don't need to be checked if the for the
                  * multi-level wildcard. */
-                _IOT_SET_AND_GOTO_CLEANUP( true );
+                IOT_SET_AND_GOTO_CLEANUP( true );
             }
             else
             {
                 /* Any character mismatch other than '+' or '#' means the topic
                  * name does not match the topic filter. */
-                _IOT_SET_AND_GOTO_CLEANUP( false );
+                IOT_SET_AND_GOTO_CLEANUP( false );
             }
         }
 
@@ -235,14 +235,14 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     /* If the end of both strings has been reached, they match. */
     if( ( nameIndex == topicNameLength ) && ( filterIndex == topicFilterLength ) )
     {
-        _IOT_SET_AND_GOTO_CLEANUP( true );
+        IOT_SET_AND_GOTO_CLEANUP( true );
     }
     else
     {
         EMPTY_ELSE_MARKER;
     }
 
-    _IOT_FUNCTION_EXIT_NO_CLEANUP();
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/

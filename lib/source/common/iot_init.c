@@ -56,7 +56,7 @@
 
 bool IotSdk_Init( void )
 {
-    _IOT_FUNCTION_ENTRY( bool, true );
+    IOT_FUNCTION_ENTRY( bool, true );
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER_LARGE;
 
@@ -67,7 +67,7 @@ bool IotSdk_Init( void )
         if( staticMemoryInitialized == false )
         {
             IotLogError( "Failed to initialize static memory." );
-            _IOT_GOTO_CLEANUP();
+            IOT_GOTO_CLEANUP();
         }
     #endif
 
@@ -77,10 +77,10 @@ bool IotSdk_Init( void )
     if( taskPoolStatus != IOT_TASKPOOL_SUCCESS )
     {
         IotLogError( "Failed to create system task pool." );
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
-    _IOT_FUNCTION_CLEANUP_BEGIN();
+    IOT_FUNCTION_CLEANUP_BEGIN();
 
     if( status == false )
     {
@@ -96,7 +96,7 @@ bool IotSdk_Init( void )
         IotLogInfo( "SDK successfully initialized." );
     }
 
-    _IOT_FUNCTION_CLEANUP_END();
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
