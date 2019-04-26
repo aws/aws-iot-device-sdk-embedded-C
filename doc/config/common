@@ -22,11 +22,11 @@ QUIET = YES
 # Define the following preprocessor constants when generating documentation.
 PREDEFINED = "DOXYGEN=1" \
              "IOT_STATIC_MEMORY_ONLY=1" \
-             "_LIBRARY_LOG_LEVEL=IOT_LOG_DEBUG" \
-             "_LIBRARY_LOG_NAME=\"DOXYGEN\""
+             "LIBRARY_LOG_LEVEL=IOT_LOG_DEBUG" \
+             "LIBRARY_LOG_NAME=\"DOXYGEN\""
 
 # Ignore the constants used for setting log levels and names.
-EXCLUDE_SYMBOLS = "_LIBRARY_LOG_*"
+EXCLUDE_SYMBOLS = "LIBRARY_LOG_*"
 
 # Configure Doxygen for C.
 OPTIMIZE_OUTPUT_FOR_C = YES

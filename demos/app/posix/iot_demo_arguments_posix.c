@@ -98,7 +98,7 @@ static void _setDefaultArguments( IotDemoArguments_t * pArguments )
 static bool _validateArguments( const IotDemoArguments_t * pArguments )
 {
     /* Declare a status variable for this function. */
-    _IOT_FUNCTION_ENTRY( bool, true );
+    IOT_FUNCTION_ENTRY( bool, true );
 
     /* Check that a server was set. */
     if( ( pArguments->pHostName == NULL ) ||
@@ -106,7 +106,7 @@ static bool _validateArguments( const IotDemoArguments_t * pArguments )
     {
         IotLogError( "MQTT server not set. Exiting." );
 
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
     /* Check that a server port was set. */
@@ -114,7 +114,7 @@ static bool _validateArguments( const IotDemoArguments_t * pArguments )
     {
         IotLogError( "MQTT server port not set. Exiting." );
 
-        _IOT_SET_AND_GOTO_CLEANUP( false );
+        IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
     /* Check credentials for a secured connection. */
@@ -126,7 +126,7 @@ static bool _validateArguments( const IotDemoArguments_t * pArguments )
         {
             IotLogError( "Root CA path not set. Exiting." );
 
-            _IOT_SET_AND_GOTO_CLEANUP( false );
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
 
         /* Check that a client certificate path was set. */
@@ -135,7 +135,7 @@ static bool _validateArguments( const IotDemoArguments_t * pArguments )
         {
             IotLogError( "Client certificate path not set. Exiting." );
 
-            _IOT_SET_AND_GOTO_CLEANUP( false );
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
 
         /* Check that a client certificate private key was set. */
@@ -144,12 +144,12 @@ static bool _validateArguments( const IotDemoArguments_t * pArguments )
         {
             IotLogError( "Client certificate private key not set. Exiting." );
 
-            _IOT_SET_AND_GOTO_CLEANUP( false );
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
     }
 
     /* No cleanup is required for this function. */
-    _IOT_FUNCTION_EXIT_NO_CLEANUP();
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
