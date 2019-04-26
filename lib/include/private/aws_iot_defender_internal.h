@@ -62,16 +62,16 @@
 
 /* Configure logs for Defender functions. */
 #ifdef AWS_IOT_LOG_LEVEL_DEFENDER
-    #define _LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_DEFENDER
+    #define LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_DEFENDER
 #else
     #ifdef AWS_IOT_LOG_LEVEL_GLOBAL
-        #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
     #else
-        #define _LIBRARY_LOG_LEVEL    IOT_LOG_NONE
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
     #endif
 #endif
 
-#define _LIBRARY_LOG_NAME    ( "Defender" )
+#define LIBRARY_LOG_NAME    ( "Defender" )
 #include "iot_logging_setup.h"
 
 /*

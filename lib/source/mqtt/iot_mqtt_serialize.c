@@ -283,7 +283,7 @@ static bool _subscriptionPacketSize( IotMqttOperationType_t type,
 
 /*-----------------------------------------------------------*/
 
-#if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+#if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
 
 /**
  * @brief If logging is enabled, define a log configuration that only prints the log
@@ -906,7 +906,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
 
     /* If logging is enabled, declare the CONNACK response code strings. The
      * fourth byte of CONNACK indexes into this array for the corresponding response. */
-    #if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+    #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
         static const char * pConnackResponses[ 6 ] =
         {
             "Connection accepted.",                               /* 0 */
@@ -1008,7 +1008,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
 
     /* Print the appropriate message for the CONNACK response code if logs are
      * enabled. */
-    #if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+    #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
         IotLog( IOT_LOG_DEBUG,
                 &_logHideAll,
                 "%s",

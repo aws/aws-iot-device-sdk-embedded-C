@@ -154,7 +154,7 @@ static void _updatedCallbackWrapper( void * pArgument,
  */
 uint32_t _AwsIotShadowMqttTimeoutMs = AWS_IOT_SHADOW_DEFAULT_MQTT_TIMEOUT_MS;
 
-#if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+#if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
 
 /**
  * @brief Printable names for the Shadow callbacks.

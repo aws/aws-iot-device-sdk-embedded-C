@@ -124,7 +124,7 @@ static void _updateCallback( void * pArgument,
 
 /*-----------------------------------------------------------*/
 
-#if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+#if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
 
 /**
  * @brief Printable names for each of the Shadow operations.
@@ -137,7 +137,7 @@ static void _updateCallback( void * pArgument,
         "SET DELTA",
         "SET UPDATED"
     };
-#endif /* if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
+#endif /* if LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
 
 /**
  * @brief List of active Shadow operations awaiting a response from the Shadow

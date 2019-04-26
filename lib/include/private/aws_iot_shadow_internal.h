@@ -60,16 +60,16 @@
 
 /* Configure logs for Shadow functions. */
 #ifdef AWS_IOT_LOG_LEVEL_SHADOW
-    #define _LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_SHADOW
+    #define LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_SHADOW
 #else
     #ifdef IOT_LOG_LEVEL_GLOBAL
-        #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
     #else
-        #define _LIBRARY_LOG_LEVEL    IOT_LOG_NONE
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
     #endif
 #endif
 
-#define _LIBRARY_LOG_NAME    ( "Shadow" )
+#define LIBRARY_LOG_NAME    ( "Shadow" )
 #include "iot_logging_setup.h"
 
 /*
@@ -443,7 +443,7 @@ typedef struct _shadowSubscription
 } _shadowSubscription_t;
 
 /* Declarations of names printed in logs. */
-#if _LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+#if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
     extern const char * const _pAwsIotShadowOperationNames[];
     extern const char * const _pAwsIotShadowCallbackNames[];
 #endif

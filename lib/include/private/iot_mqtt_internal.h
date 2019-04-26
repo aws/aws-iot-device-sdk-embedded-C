@@ -60,16 +60,16 @@
 
 /* Configure logs for MQTT functions. */
 #ifdef IOT_LOG_LEVEL_MQTT
-    #define _LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_MQTT
+    #define LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_MQTT
 #else
     #ifdef IOT_LOG_LEVEL_GLOBAL
-        #define _LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
     #else
-        #define _LIBRARY_LOG_LEVEL    IOT_LOG_NONE
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
     #endif
 #endif
 
-#define _LIBRARY_LOG_NAME    ( "MQTT" )
+#define LIBRARY_LOG_NAME    ( "MQTT" )
 #include "iot_logging_setup.h"
 
 /*

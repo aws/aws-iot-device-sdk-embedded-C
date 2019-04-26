@@ -38,15 +38,15 @@
 #include "private/aws_iot_shadow_internal.h"
 
 /* Undefine logging configuration set in Shadow internal header. */
-#undef _LIBRARY_LOG_NAME
-#undef _LIBRARY_LOG_LEVEL
+#undef LIBRARY_LOG_NAME
+#undef LIBRARY_LOG_LEVEL
 
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
 /* Undefine logging configuration set in MQTT internal header. */
-#undef _LIBRARY_LOG_NAME
-#undef _LIBRARY_LOG_LEVEL
+#undef LIBRARY_LOG_NAME
+#undef LIBRARY_LOG_LEVEL
 
 /* Platform layer includes. */
 #include "platform/iot_clock.h"
