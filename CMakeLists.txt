@@ -23,6 +23,9 @@ option( IOT_ATOMIC_USE_PORT
 option( IOT_BUILD_TESTS
         "Set this to ON to build both demo and test executables. When OFF, only demo executables are built."
         OFF )
+option( IOT_BUILD_CLONE_SUBMODULES
+        "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
+        ON )
 
 # Check for system support.
 list( APPEND SUPPORTED_SYSTEMS "Linux" )
