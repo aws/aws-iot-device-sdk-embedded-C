@@ -1,5 +1,5 @@
 # Tinycbor library source files.
-add_library( tinycbor SHARED
+add_library( tinycbor
              tinycbor/src/cborencoder.c
              tinycbor/src/cborencoder_close_container_checked.c
              tinycbor/src/cborerrorstrings.c

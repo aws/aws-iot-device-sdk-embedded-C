@@ -13,6 +13,17 @@ if( ${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR} )
     message( FATAL_ERROR "In-source build is not allowed. Please build in a separate directory, such as ${PROJECT_SOURCE_DIR}/build." )
 endif()
 
+# Configure options to always show in CMake GUI.
+option( BUILD_SHARED_LIBS
+        "Set this to ON to build all libraries as shared libraries. When OFF, libraries build as static libraries."
+        ON )
+option( IOT_ATOMIC_USE_PORT
+        "Set this to ON to use a custom atomic port. When OFF, the build system will choose an atomic port."
+        OFF )
+option( IOT_BUILD_TESTS
+        "Set this to ON to build both demo and test executables. When OFF, only demo executables are built."
+        OFF )
+
 # Check for system support.
 list( APPEND SUPPORTED_SYSTEMS "Linux" )
 
@@ -51,6 +62,11 @@ if( ${IOT_BUILD_TESTS} )
     add_subdirectory( third_party/unity )
 else()
     include_directories( ${PROJECT_SOURCE_DIR}/demos )
+endif()
+
+# Use a custom atomic port if the CMake option is set.
+if( ${IOT_ATOMIC_USE_PORT} )
+    add_definitions( -DIOT_ATOMIC_USE_PORT=1 )
 endif()
 
 # Platform libraries.
