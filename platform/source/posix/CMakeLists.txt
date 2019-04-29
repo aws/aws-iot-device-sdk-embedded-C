@@ -71,7 +71,7 @@ if( NOT DEFINED TLS_LIBRARY_LINKER_FLAG )
 endif()
 
 # Platform libraries source files.
-add_library( iotplatform SHARED
+add_library( iotplatform
              iot_clock_posix.c
              iot_threads_posix.c
              ${NETWORK_SOURCE_FILE}

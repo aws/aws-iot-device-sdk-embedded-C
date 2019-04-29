@@ -1,5 +1,5 @@
 # Shadow library source files.
-add_library( awsiotshadow SHARED
+add_library( awsiotshadow
              aws_iot_shadow_api.c
              aws_iot_shadow_operation.c
              aws_iot_shadow_parser.c
