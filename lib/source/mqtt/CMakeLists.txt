@@ -1,5 +1,5 @@
 # MQTT library source files.
-add_library( iotmqtt SHARED
+add_library( iotmqtt
              iot_mqtt_api.c
              iot_mqtt_network.c
              iot_mqtt_operation.c

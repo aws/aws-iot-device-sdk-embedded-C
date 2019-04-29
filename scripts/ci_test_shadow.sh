@@ -23,15 +23,14 @@ CMAKE_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_SHADOW_THING_NAME=\"\\\"
 
 # Build executables.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FLAGS"
-make -j2
+make -j2 aws_iot_tests_shadow aws_iot_demo_shadow
 
 # Run tests and demos.
 run_tests_and_demos
 
 # Rebuild in static memory mode.
-rm -rf *
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FLAGS -DIOT_STATIC_MEMORY_ONLY=1"
-make -j2
+make -j2 aws_iot_tests_shadow aws_iot_demo_shadow
 
 # Run tests and demos in static memory mode.
 run_tests_and_demos

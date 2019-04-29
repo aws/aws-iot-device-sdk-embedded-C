@@ -25,9 +25,6 @@
  *
  * This file first checks if an atomic port is provided.
  *
- * Otherwise, if the operating system is Amazon FreeRTOS, the atomic header
- * provided with Amazon FreeRTOS is used.
- *
  * Otherwise, this file checks the compiler and chooses an appropriate atomic
  * header depending on the compiler.
  *
@@ -42,9 +39,6 @@
 /* Use an atomic port if provided. */
 #if IOT_ATOMIC_USE_PORT == 1
     #include "atomic/iot_atomic_port.h"
-#elif defined( __free_rtos__ )
-    /* Use the FreeRTOS atomic operation header on FreeRTOS. */
-    #include "atomic.h"
 #elif defined( __GNUC__ )
     /* Both clang and gcc define __GNUC__, but only clang defines __clang__ */
     #ifdef __clang__

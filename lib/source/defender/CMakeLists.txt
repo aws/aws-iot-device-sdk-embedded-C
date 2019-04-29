@@ -1,5 +1,5 @@
 # Serializer library source files.
-add_library( awsiotdefender SHARED
+add_library( awsiotdefender
              aws_iot_defender_api.c
              aws_iot_defender_collector.c
              aws_iot_defender_mqtt.c )
