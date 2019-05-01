@@ -33,12 +33,8 @@ CFLAGS += $(CFLAGS2) $(INC) $(DEF)
 %.goto : %.c
 	$(GOTO_CC) -o $@ $(CFLAGS) $<
 
-$(MQTT)/third_party/tinycbor/tinycbor/README:
-	cd $(MQTT)/third_party/tinycbor && \
-	git clone https://github.com/intel/tinycbor.git
-
-$(MQTT)/build: $(MQTT)/third_party/tinycbor/tinycbor/README
-	(cd $(MQTT) && mkdir -p build && cd build && cmake ..) 2>&1 \
+$(MQTT)/build:
+	(mkdir -p $(MQTT)/build; cd $(MQTT)/build; cmake ..) 2>&1 \
 		| tee $(ENTRY)0.txt \
 		; exit $${PIPESTATUS[0]}
 
