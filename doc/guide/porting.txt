@@ -57,7 +57,7 @@ As relative paths from the SDK's root directory:
 - `third_party/` <br>
   Third-party library code. This directory (and all its subdirectories) should be copied and not modified.
     - `tinycbor/` <br>
-      [Intel's tinyCBOR](https://github.com/intel/tinycbor), consumed as a Git submodule.
+      [Intel's TinyCBOR](https://github.com/intel/tinycbor), consumed as a Git submodule.
     - `unity/` <br>
       [Unity test framework](https://github.com/ThrowTheSwitch/Unity). Modifications were made to make its `malloc` overrides thread-safe.
 
