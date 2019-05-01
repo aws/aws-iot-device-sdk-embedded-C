@@ -33,9 +33,6 @@
 /* Task pool include. */
 #include "iot_taskpool.h"
 
-/* Metrics include. */
-#include "platform/iot_metrics.h"
-
 /* Static memory include (if dynamic memory allocation is disabled). */
 #include "private/iot_static_memory.h"
 

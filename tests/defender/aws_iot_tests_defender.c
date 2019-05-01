@@ -34,6 +34,9 @@
 /* SDK initialization include. */
 #include "iot_init.h"
 
+/* Metrics include. */
+#include "platform/iot_metrics.h"
+
 /* MQTT include. */
 #include "iot_mqtt.h"
 
@@ -87,6 +90,11 @@ int main( int argc,
 
     /* Initialize the SDK before running the tests. */
     if( IotSdk_Init() == false )
+    {
+        return EXIT_FAILURE;
+    }
+
+    if (IotMetrics_Init() == false)
     {
         return EXIT_FAILURE;
     }
