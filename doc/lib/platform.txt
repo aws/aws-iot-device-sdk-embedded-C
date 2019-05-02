@@ -10,13 +10,16 @@ All system calls (including networking) used in this SDK's libraries go through 
   @copybrief platform_threads
 - @ref platform_network <br>
   @copybrief platform_network
+- @ref platform_metrics <br>
+  @copybrief platform_metrics
 
-All of the functions in each component will need to be implemented to port the libraries to a new platform. Currently, implementations exist for the following platforms:
+The following implementations are provided with this SDK as porting samples:
 Component                   | Supported platforms
 ---------                   | -------------------
 @ref platform_clock         | [POSIX](https://en.wikipedia.org/wiki/POSIX)
 @ref platform_threads       | [POSIX](https://en.wikipedia.org/wiki/POSIX)
 @ref platform_network       | [Berkeley sockets](https://en.wikipedia.org/wiki/Berkeley_sockets) + [OpenSSL](https://en.wikipedia.org/wiki/OpenSSL) + [POSIX](https://en.wikipedia.org/wiki/POSIX) <br> [Amazon FreeRTOS Secure Sockets](https://docs.aws.amazon.com/freertos/latest/userguide/secure-sockets.html)
+@ref platform_metrics       | Sample implementation using the @ref platform_network abstraction <br> This implementation is not intended for production use.
 */
 
 /**
@@ -54,6 +57,39 @@ digraph clock_dependencies
 Currently, the platform clock component has the following dependencies:
 - The operating system must provide the necessary APIs to implement the clock component's functions.
 - The logging library may be used if @ref IOT_LOG_LEVEL_PLATFORM is not #IOT_LOG_NONE.
+*/
+
+/**
+@page platform_metrics Metrics
+@brief @copybrief iot_metrics.h
+
+Device Defender reports metrics to monitor devices. This component of the platform layer is only required by Device Defender. It does not need to be implemented if Device Defender is not used.
+
+@dependencies{platform_metrics,platform metrics component}
+@dot "Metrics direct dependencies"
+digraph clock_dependencies
+{
+    node[shape=box, fontname=Helvetica, fontsize=10, style=filled];
+    edge[fontname=Helvetica, fontsize=10];
+    subgraph
+    {
+        platform_metrics[label="Metrics", fillcolor="#e89025ff"];
+    }
+    subgraph
+    {
+        rank = same;
+        rankdir = LR;
+        operating_system[label="Operating system", fillcolor="#999999ff"]
+        standard_library[label="Standard library\nstdbool, stddef, stdint", fillcolor="#d15555ff"];
+    }
+    platform_metrics -> operating_system;
+    platform_metrics -> standard_library;
+}
+@enddot
+
+The platform metrics component is meant to query its data directory from the operating system.
+
+@note Platform metrics implementations are generally not portable, since they depend on non-portable operating system APIs. Because maintaining OS-specific implementations is beyond the scope of this SDK, the provided metrics implementation is a sample that calls in to other platform components, instead of the operating system.
 */
 
 /**
@@ -199,4 +235,6 @@ To use a header named `custom_errno.h` instead of `errno.h`, the `POSIX_ERRNO_HE
   @copybrief platform_network_functions
 - @subpage platform_threads_functions <br>
   @copybrief platform_threads_functions
+- @subpage platform_metrics_functions <br>
+  @copybrief platform_metrics_functions
 */
