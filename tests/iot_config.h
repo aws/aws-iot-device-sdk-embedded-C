@@ -125,10 +125,6 @@
     #define AwsIotShadow_FreeString              unity_free_mt
     #define AwsIotShadow_MallocSubscription      unity_malloc_mt
     #define AwsIotShadow_FreeSubscription        unity_free_mt
-    #define IotMetrics_MallocTcpConnection       unity_malloc_mt
-    #define IotMetrics_FreeTcpConnection         unity_free_mt
-    #define IotMetrics_MallocIpAddress           unity_malloc_mt
-    #define IotMetrics_FreeIpAddress             unity_free_mt
     #define IotSerializer_MallocCborEncoder      unity_malloc_mt
     #define IotSerializer_FreeCborEncoder        unity_free_mt
     #define IotSerializer_MallocCborParser       unity_malloc_mt
@@ -175,9 +171,6 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
 /* Network initialization and cleanup functions to use in the tests. */
 #define IotTestNetwork_Init           IotNetworkOpenssl_Init
 #define IotTestNetwork_Cleanup        IotNetworkOpenssl_Cleanup
-
-/* This is supposed to be defined as the socket data type. In linux, it is "int". */
-#define IotMetricsConnectionId_t      int
 
 /* Macro for placing inline assembly in test code. */
 #define IOT_TEST_ASM_VOLATILE( x )    __asm__ __volatile__ ( x )

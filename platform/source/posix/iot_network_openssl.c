@@ -42,6 +42,7 @@
 #include <sys/ioctl.h>
 
 /* Sockets includes. */
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
 
@@ -1039,6 +1040,62 @@ IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection )
     IotNetwork_Free( pNetworkConnection );
 
     return IOT_NETWORK_SUCCESS;
+}
+
+/*-----------------------------------------------------------*/
+
+void IotNetworkOpenssl_GetServerInfo( void * pConnection,
+                                      IotMetricsTcpConnection_t * pServerInfo )
+{
+    int status = 0;
+    struct sockaddr_in server = { 0 };
+    socklen_t length = sizeof( struct sockaddr_in );
+
+    /* Cast function parameter to correct type. */
+    _networkConnection_t * const pNetworkConnection = pConnection;
+
+    /* Get peer info. Since the current implementation of Device Defender only
+     * works with IPv4 addresses, the peer is assumed to be IPv4. */
+    status = getpeername( pNetworkConnection->socket,
+                          ( struct sockaddr * ) &server,
+                          &length );
+
+    if( status == 0 )
+    {
+        /* Ignore all non-IPv4 peers. */
+        if( server.sin_family == AF_INET )
+        {
+            /* Set port and address. */
+            pServerInfo->remotePort = ntohs( server.sin_port );
+
+            if( inet_ntop( AF_INET,
+                           &( server.sin_addr ),
+                           pServerInfo->remoteIpv4Address,
+                           sizeof( pServerInfo->remoteIpv4Address ) ) == NULL )
+            {
+                IotLogError( "(Socket %d) Failed to convert IPv4 address to dotted-decimal format.",
+                             pNetworkConnection->socket );
+            }
+            else
+            {
+                IotLogInfo( "(Socket %d) Collecting network metrics for %s:%d.",
+                            pNetworkConnection->socket,
+                            pServerInfo->remoteIpv4Address,
+                            pServerInfo->remotePort );
+            }
+        }
+        else
+        {
+            IotLogError( "(Socket %d) Peer is not connected over IPv4.",
+                         pNetworkConnection->socket );
+        }
+    }
+    else
+    {
+        IotLogError( "(Socket %d) Failed to query peer name. errno=%d.",
+                     pNetworkConnection->socket,
+                     errno );
+    }
 }
 
 /*-----------------------------------------------------------*/

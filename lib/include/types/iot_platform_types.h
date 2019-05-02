@@ -30,6 +30,9 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* Linear containers (lists and queues) include for metrics types. */
+#include "iot_linear_containers.h"
+
 /*------------------------- Thread management types -------------------------*/
 
 /**
@@ -113,5 +116,20 @@ typedef void ( * IotThreadRoutine_t )( void * );
  * @endcode
  */
 typedef _IotSystemTimer_t IotTimer_t;
+
+/*------------------------------ Metrics types ------------------------------*/
+
+/**
+ * @brief Represents a TCP connection to a remote IPv4 server.
+ *
+ * A list of these is provided by @ref platform_metrics_function_gettcpconnections.
+ */
+typedef struct IotMetricsTcpConnection
+{
+    IotLink_t link;               /**< @brief List link member. */
+    void * pNetworkContext;       /**< @brief Context that may be used by metrics or Defender. */
+    uint16_t remotePort;          /**< @brief Host-order remote port. */
+    char remoteIpv4Address[ 16 ]; /**< @brief NULL-terminated IPv4 address in dotted-decimal format, i.e "xxx.xxx.xxx.xxx". */
+} IotMetricsTcpConnection_t;
 
 #endif /* ifndef IOT_PLATFORM_TYPES_H_ */
