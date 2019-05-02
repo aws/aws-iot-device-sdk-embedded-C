@@ -102,12 +102,12 @@
  */
 typedef struct _networkConnection
 {
-    int socket;            /**< @brief Socket associated with this connection. */
-    SSL * pSslContext;     /**< @brief SSL context for connection. */
-    IotMutex_t sslMutex;   /**< @brief Prevents concurrent use of the SSL context. */
+    int socket;                                  /**< @brief Socket associated with this connection. */
+    SSL * pSslContext;                           /**< @brief SSL context for connection. */
+    IotMutex_t sslMutex;                         /**< @brief Prevents concurrent use of the SSL context. */
 
-    bool receiveThreadCreated;    /**< @brief Whether a receive thread exists for this connection. */
-    pthread_t receiveThread;      /**< @brief Thread that handles receiving on this connection. */
+    bool receiveThreadCreated;                   /**< @brief Whether a receive thread exists for this connection. */
+    pthread_t receiveThread;                     /**< @brief Thread that handles receiving on this connection. */
 
     IotNetworkReceiveCallback_t receiveCallback; /**< @brief Network receive callback, if any. */
     void * pReceiveContext;                      /**< @brief The context for the receive callback. */
@@ -203,7 +203,8 @@ static int _dnsLookup( const IotNetworkServerInfoOpenssl_t * pServerInfo )
     int tcpSocket = -1;
     const uint16_t netPort = htons( pServerInfo->port );
     struct addrinfo * pListHead = NULL, * pAddressInfo = NULL;
-    struct sockaddr_in * pServer = NULL;
+    struct sockaddr * pServer = NULL;
+    socklen_t serverLength = 0;
 
     /* Perform a DNS lookup of host name. */
     IotLogDebug( "Performing DNS lookup of %s", pServerInfo->pHostName );
@@ -234,15 +235,28 @@ static int _dnsLookup( const IotNetworkServerInfoOpenssl_t * pServerInfo )
             continue;
         }
 
-        /* Set the port for the connection. */
         IotLogDebug( "Socket creation successful. Attempting connection." );
-        pServer = ( struct sockaddr_in * ) ( pAddressInfo->ai_addr );
-        pServer->sin_port = netPort;
+
+        /* Set the port for the connection based on protocol. */
+        pServer = pAddressInfo->ai_addr;
+
+        if( pServer->sa_family == AF_INET )
+        {
+            /* IPv4. */
+            ( ( struct sockaddr_in * ) pServer )->sin_port = netPort;
+            serverLength = sizeof( struct sockaddr_in );
+        }
+        else
+        {
+            /* IPv6. */
+            ( ( struct sockaddr_in6 * ) pServer )->sin6_port = netPort;
+            serverLength = sizeof( struct sockaddr_in6 );
+        }
 
         /* Attempt to connect. */
         if( connect( tcpSocket,
-                     ( struct sockaddr * ) pServer,
-                     sizeof( struct sockaddr ) ) == -1 )
+                     pServer,
+                     serverLength ) == -1 )
         {
             /* Connect failed; close socket and try next record. */
             if( close( tcpSocket ) != 0 )
@@ -651,7 +665,7 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
     /* Cast function parameters to correct types. */
     const IotNetworkServerInfoOpenssl_t * const pServerInfo = pConnectionInfo;
     const IotNetworkCredentialsOpenssl_t * const pOpensslCredentials = pCredentialInfo;
-    _networkConnection_t ** const pNetworkConnection = ( _networkConnection_t** const ) pConnection;
+    _networkConnection_t ** const pNetworkConnection = ( _networkConnection_t ** const ) pConnection;
 
     /* Allocate memory for a new connection. */
     pNewNetworkConnection = IotNetwork_Malloc( sizeof( _networkConnection_t ) );
@@ -757,8 +771,8 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
         if( posixError != 0 )
         {
             IotLogError( "Failed to create socket %d network receive thread. errno=%d.",
-                          pNetworkConnection->socket,
-                          posixError );
+                         pNetworkConnection->socket,
+                         posixError );
             status = IOT_NETWORK_SYSTEM_ERROR;
         }
         else
