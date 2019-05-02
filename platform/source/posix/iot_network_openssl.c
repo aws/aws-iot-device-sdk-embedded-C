@@ -102,12 +102,12 @@
  */
 typedef struct _networkConnection
 {
-    int socket;            /**< @brief Socket associated with this connection. */
-    SSL * pSslContext;     /**< @brief SSL context for connection. */
-    IotMutex_t sslMutex;   /**< @brief Prevents concurrent use of the SSL context. */
+    int socket;                                  /**< @brief Socket associated with this connection. */
+    SSL * pSslContext;                           /**< @brief SSL context for connection. */
+    IotMutex_t sslMutex;                         /**< @brief Prevents concurrent use of the SSL context. */
 
-    bool receiveThreadCreated;    /**< @brief Whether a receive thread exists for this connection. */
-    pthread_t receiveThread;      /**< @brief Thread that handles receiving on this connection. */
+    bool receiveThreadCreated;                   /**< @brief Whether a receive thread exists for this connection. */
+    pthread_t receiveThread;                     /**< @brief Thread that handles receiving on this connection. */
 
     IotNetworkReceiveCallback_t receiveCallback; /**< @brief Network receive callback, if any. */
     void * pReceiveContext;                      /**< @brief The context for the receive callback. */
@@ -243,13 +243,13 @@ static int _dnsLookup( const IotNetworkServerInfoOpenssl_t * pServerInfo )
         if( pServer->sa_family == AF_INET )
         {
             /* IPv4. */
-            ( ( struct sockaddr_in* )pServer )->sin_port = netPort;
+            ( ( struct sockaddr_in * ) pServer )->sin_port = netPort;
             serverLength = sizeof( struct sockaddr_in );
         }
         else
         {
             /* IPv6. */
-            ( ( struct sockaddr_in6* )pServer )->sin6_port = netPort;
+            ( ( struct sockaddr_in6 * ) pServer )->sin6_port = netPort;
             serverLength = sizeof( struct sockaddr_in6 );
         }
 
@@ -665,7 +665,7 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
     /* Cast function parameters to correct types. */
     const IotNetworkServerInfoOpenssl_t * const pServerInfo = pConnectionInfo;
     const IotNetworkCredentialsOpenssl_t * const pOpensslCredentials = pCredentialInfo;
-    _networkConnection_t ** const pNetworkConnection = ( _networkConnection_t** const ) pConnection;
+    _networkConnection_t ** const pNetworkConnection = ( _networkConnection_t ** const ) pConnection;
 
     /* Allocate memory for a new connection. */
     pNewNetworkConnection = IotNetwork_Malloc( sizeof( _networkConnection_t ) );
@@ -771,8 +771,8 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
         if( posixError != 0 )
         {
             IotLogError( "Failed to create socket %d network receive thread. errno=%d.",
-                          pNetworkConnection->socket,
-                          posixError );
+                         pNetworkConnection->socket,
+                         posixError );
             status = IOT_NETWORK_SYSTEM_ERROR;
         }
         else
