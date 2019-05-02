@@ -59,7 +59,7 @@ if( ${OPENSSL_FOUND} )
     endif()
 
     # Choose OpenSSL network source file.
-    set( NETWORK_SOURCE_FILE network/iot_network_openssl.c )
+    set( NETWORK_SOURCE_FILE iot_network_openssl.c )
 
     # Link OpenSSL.
     set( TLS_LIBRARY_LINKER_FLAG OpenSSL::SSL OpenSSL::Crypto )

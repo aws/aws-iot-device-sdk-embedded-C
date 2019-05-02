@@ -4,7 +4,7 @@ if( NOT EXISTS ${PROJECT_SOURCE_DIR}/third_party/tinycbor/tinycbor/src/ )
     if( ${IOT_BUILD_CLONE_SUBMODULES} )
         find_package( Git REQUIRED )
 
-        message( "Cloning submodule TinyCBOR" )
+        message( "Cloning submodule TinyCBOR." )
         execute_process( COMMAND ${GIT_EXECUTABLE} submodule update --init third_party/tinycbor/tinycbor
                          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
                          RESULT_VARIABLE TINYCBOR_CLONE_RESULT )

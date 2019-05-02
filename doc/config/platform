@@ -19,8 +19,9 @@ INPUT = doc/lib \
 
 # Library file names.
 FILE_PATTERNS = platform.txt \
-                iot_network.h \
                 iot_clock.h \
+                iot_metrics.h \
+                iot_network.h \
                 iot_threads.h \
                 iot_platform_types.h
 
@@ -28,4 +29,5 @@ FILE_PATTERNS = platform.txt \
 TAGFILES = doc/tag/main.tag=../main \
            doc/tag/logging.tag=../logging \
            doc/tag/mqtt.tag=../mqtt \
-           doc/tag/shadow.tag=../shadow
+           doc/tag/shadow.tag=../shadow \
+           doc/tag/defender.tag=../defender
