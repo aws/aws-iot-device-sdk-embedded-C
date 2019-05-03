@@ -1047,46 +1047,81 @@ IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection )
 void IotNetworkOpenssl_GetServerInfo( void * pConnection,
                                       IotMetricsTcpConnection_t * pServerInfo )
 {
-    int status = 0;
-    struct sockaddr_in server = { 0 };
-    socklen_t length = sizeof( struct sockaddr_in );
+    int status = 0, portLength = 0;
+    struct sockaddr_storage server = { 0 };
+    socklen_t length = sizeof( struct sockaddr_storage );
+    const void * pServerAddress = NULL;
+    char * pAddressStart = NULL;
+    const char * pPortFormat = NULL;
+    uint16_t remotePort = 0;
+    size_t addressLength = 0;
 
     /* Cast function parameter to correct type. */
     _networkConnection_t * const pNetworkConnection = pConnection;
 
-    /* Get peer info. Since the current implementation of Device Defender only
-     * works with IPv4 addresses, the peer is assumed to be IPv4. */
+    /* Get peer info. */
     status = getpeername( pNetworkConnection->socket,
                           ( struct sockaddr * ) &server,
                           &length );
 
     if( status == 0 )
     {
-        /* Ignore all non-IPv4 peers. */
-        if( server.sin_family == AF_INET )
+        /* Calculate the pointer to the IP address and get the remote port based
+         * on protocol version. */
+        if( server.ss_family == AF_INET )
         {
-            /* Set port and address. */
-            pServerInfo->remotePort = ntohs( server.sin_port );
+            /* IPv4. */
+            pServerAddress = &( ( ( struct sockaddr_in * ) &server )->sin_addr );
+            remotePort = ntohs( ( ( struct sockaddr_in * ) &server )->sin_port );
 
-            if( inet_ntop( AF_INET,
-                           &( server.sin_addr ),
-                           pServerInfo->remoteIpv4Address,
-                           sizeof( pServerInfo->remoteIpv4Address ) ) == NULL )
+            /* Print the IPv4 address at the start of the address buffer. */
+            pAddressStart = pServerInfo->pRemoteAddress;
+            addressLength = IOT_METRICS_IP_ADDRESS_LENGTH;
+            pPortFormat = ":%hu";
+        }
+        else
+        {
+            /* IPv6. */
+            pServerAddress = &( ( ( struct sockaddr_in6 * ) &server )->sin6_addr );
+            remotePort = ntohs( ( ( struct sockaddr_in6 * ) &server )->sin6_port );
+
+            /* Enclose the IPv6 address with []. */
+            pServerInfo->pRemoteAddress[ 0 ] = '[';
+            pAddressStart = pServerInfo->pRemoteAddress + 1;
+            addressLength = IOT_METRICS_IP_ADDRESS_LENGTH - 1;
+            pPortFormat = "]:%hu";
+        }
+
+        /* Convert IP address to text. */
+        if( inet_ntop( server.ss_family,
+                       pServerAddress,
+                       pAddressStart,
+                       addressLength ) != NULL )
+        {
+            /* Add the port to the end of the address. */
+            addressLength = strlen( pServerInfo->pRemoteAddress );
+
+            portLength = snprintf( &( pServerInfo->pRemoteAddress[ addressLength ] ),
+                                   7,
+                                   pPortFormat,
+                                   remotePort );
+
+            if( portLength > 0 )
             {
-                IotLogError( "(Socket %d) Failed to convert IPv4 address to dotted-decimal format.",
-                             pNetworkConnection->socket );
+                pServerInfo->addressLength = addressLength + ( size_t ) portLength;
+
+                IotLogInfo( "(Socket %d) Collecting network metrics for %s.",
+                            pNetworkConnection->socket,
+                            pServerInfo->pRemoteAddress );
             }
             else
             {
-                IotLogInfo( "(Socket %d) Collecting network metrics for %s:%d.",
-                            pNetworkConnection->socket,
-                            pServerInfo->remoteIpv4Address,
-                            pServerInfo->remotePort );
+                IotLogError( "(Socket %d) Failed to add port to IP address buffer." );
             }
         }
         else
         {
-            IotLogError( "(Socket %d) Peer is not connected over IPv4.",
+            IotLogError( "(Socket %d) Failed to convert IP address to text format.",
                          pNetworkConnection->socket );
         }
     }

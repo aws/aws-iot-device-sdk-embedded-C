@@ -120,16 +120,31 @@ typedef _IotSystemTimer_t IotTimer_t;
 /*------------------------------ Metrics types ------------------------------*/
 
 /**
+ * @brief The length of the buffer used to store IP addresses for metrics.
+ *
+ * This is the length of the longest IPv6 address plus space for the port number
+ * and NULL terminator.
+ */
+#define IOT_METRICS_IP_ADDRESS_LENGTH    54
+
+/**
  * @brief Represents a TCP connection to a remote IPv4 server.
  *
  * A list of these is provided by @ref platform_metrics_function_gettcpconnections.
  */
 typedef struct IotMetricsTcpConnection
 {
-    IotLink_t link;               /**< @brief List link member. */
-    void * pNetworkContext;       /**< @brief Context that may be used by metrics or Defender. */
-    uint16_t remotePort;          /**< @brief Host-order remote port. */
-    char remoteIpv4Address[ 16 ]; /**< @brief NULL-terminated IPv4 address in dotted-decimal format, i.e "xxx.xxx.xxx.xxx". */
+    IotLink_t link;         /**< @brief List link member. */
+    void * pNetworkContext; /**< @brief Context that may be used by metrics or Defender. */
+    size_t addressLength;   /**< @brief The length of the address stored in #IotMetricsTcpConnection_t.pRemoteAddress. */
+
+    /**
+     * @brief NULL-terminated IP address and port in text format.
+     *
+     * IPv4 addresses will be in the format `xxx.xxx.xxx.xxx:port`.
+     * IPv6 addresses will be in the format `[xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx]:port`.
+     */
+    char pRemoteAddress[ IOT_METRICS_IP_ADDRESS_LENGTH ];
 } IotMetricsTcpConnection_t;
 
 #endif /* ifndef IOT_PLATFORM_TYPES_H_ */
