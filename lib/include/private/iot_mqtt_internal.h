@@ -84,72 +84,56 @@
  * signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef IotMqtt_MallocConnection
-        #define IotMqtt_MallocConnection    Iot_MallocMqttConnection
-    #endif
+    void * IotMqtt_MallocConnection( size_t size );
 
 /**
  * @brief Free an #_mqttConnection_t. This function should have the same
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef IotMqtt_FreeConnection
-        #define IotMqtt_FreeConnection    Iot_FreeMqttConnection
-    #endif
+    void IotMqtt_FreeConnection( void * ptr );
 
 /**
  * @brief Allocate memory for an MQTT packet. This function should have the
  * same signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef IotMqtt_MallocMessage
-        #define IotMqtt_MallocMessage    Iot_MallocMessageBuffer
-    #endif
+    #define IotMqtt_MallocMessage    Iot_MallocMessageBuffer
 
 /**
  * @brief Free an MQTT packet. This function should have the same signature
  * as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef IotMqtt_FreeMessage
-        #define IotMqtt_FreeMessage    Iot_FreeMessageBuffer
-    #endif
+    #define IotMqtt_FreeMessage      Iot_FreeMessageBuffer
 
 /**
  * @brief Allocate an #_mqttOperation_t. This function should have the same
  * signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef IotMqtt_MallocOperation
-        #define IotMqtt_MallocOperation    Iot_MallocMqttOperation
-    #endif
+    void * IotMqtt_MallocOperation( size_t size );
 
 /**
  * @brief Free an #_mqttOperation_t. This function should have the same
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef IotMqtt_FreeOperation
-        #define IotMqtt_FreeOperation    Iot_FreeMqttOperation
-    #endif
+    void IotMqtt_FreeOperation( void * ptr );
 
 /**
  * @brief Allocate an #_mqttSubscription_t. This function should have the
  * same signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef IotMqtt_MallocSubscription
-        #define IotMqtt_MallocSubscription    Iot_MallocMqttSubscription
-    #endif
+    void * IotMqtt_MallocSubscription( size_t size );
 
 /**
  * @brief Free an #_mqttSubscription_t. This function should have the same
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef IotMqtt_FreeSubscription
-        #define IotMqtt_FreeSubscription    Iot_FreeMqttSubscription
-    #endif
+    void IotMqtt_FreeSubscription( void * ptr );
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
     #include <stdlib.h>
 
@@ -345,10 +329,10 @@ typedef struct _mqttOperation
         struct
         {
             /* Basic operation information. */
-            int32_t jobReference;             /**< @brief Tracks if a job is using this operation. Must always be 0, 1, or 2. */
-            IotMqttOperationType_t type;      /**< @brief What operation this structure represents. */
-            uint32_t flags;                   /**< @brief Flags passed to the function that created this operation. */
-            uint16_t packetIdentifier;        /**< @brief The packet identifier used with this operation. */
+            int32_t jobReference;        /**< @brief Tracks if a job is using this operation. Must always be 0, 1, or 2. */
+            IotMqttOperationType_t type; /**< @brief What operation this structure represents. */
+            uint32_t flags;              /**< @brief Flags passed to the function that created this operation. */
+            uint16_t packetIdentifier;   /**< @brief The packet identifier used with this operation. */
 
             /* Serialized packet and size. */
             uint8_t * pMqttPacket;           /**< @brief The MQTT packet to send over the network. */
@@ -377,7 +361,7 @@ typedef struct _mqttOperation
             IotMqttPublishInfo_t publishInfo; /**< @brief Deserialized PUBLISH. */
             const void * pReceivedData;       /**< @brief Any buffer associated with this PUBLISH that should be freed. */
         } publish;
-    } u; /**< @brief Valid member depends on _mqttOperation_t.incomingPublish. */
+    } u;                                      /**< @brief Valid member depends on _mqttOperation_t.incomingPublish. */
 } _mqttOperation_t;
 
 /**
@@ -401,7 +385,7 @@ typedef struct _mqttPacket
          * when deserializing PUBLISHes.
          */
         _mqttOperation_t * pIncomingPublish;
-    } u; /**< @brief Valid member depends on packet being decoded. */
+    } u;                       /**< @brief Valid member depends on packet being decoded. */
 
     uint8_t * pRemainingData;  /**< @brief (Input) The remaining data in MQTT packet. */
     size_t remainingLength;    /**< @brief (Input) Length of the remaining data in the MQTT packet. */

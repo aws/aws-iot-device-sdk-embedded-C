@@ -4,6 +4,7 @@ add_library( iotmqtt
              iot_mqtt_network.c
              iot_mqtt_operation.c
              iot_mqtt_serialize.c
+             iot_mqtt_static_memory.c
              iot_mqtt_subscription.c
              iot_mqtt_validate.c )
 

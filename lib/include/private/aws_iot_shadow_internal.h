@@ -84,54 +84,42 @@
  * signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotShadow_MallocOperation
-        #define AwsIotShadow_MallocOperation    AwsIot_MallocShadowOperation
-    #endif
+    void * AwsIotShadow_MallocOperation( size_t size );
 
 /**
  * @brief Free a #_shadowOperation_t. This function should have the same
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotShadow_FreeOperation
-        #define AwsIotShadow_FreeOperation    AwsIot_FreeShadowOperation
-    #endif
+    void AwsIotShadow_FreeOperation( void * ptr );
 
 /**
  * @brief Allocate a buffer for a short string, used for topic names or client
  * tokens. This function should have the same signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotShadow_MallocString
-        #define AwsIotShadow_MallocString    Iot_MallocMessageBuffer
-    #endif
+    #define AwsIotShadow_MallocString    Iot_MallocMessageBuffer
 
 /**
  * @brief Free a string. This function should have the same signature as
  * [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotShadow_FreeString
-        #define AwsIotShadow_FreeString    Iot_FreeMessageBuffer
-    #endif
+    #define AwsIotShadow_FreeString      Iot_FreeMessageBuffer
 
 /**
  * @brief Allocate a #_shadowSubscription_t. This function should have the
  * same signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotShadow_MallocSubscription
-        #define AwsIotShadow_MallocSubscription    AwsIot_MallocShadowSubscription
-    #endif
+    void * AwsIotShadow_MallocSubscription( size_t size );
 
 /**
  * @brief Free a #_shadowSubscription_t. This function should have the same
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotShadow_FreeSubscription
-        #define AwsIotShadow_FreeSubscription    AwsIot_FreeShadowSubscription
-    #endif
+    void AwsIotShadow_FreeSubscription( void * ptr );
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
     #include <stdlib.h>
 
@@ -408,7 +396,7 @@ typedef struct _shadowOperation
             const char * pClientToken; /**< @brief Client token in update document. */
             size_t clientTokenLength;  /**< @brief Length of client token. */
         } update;
-    } u; /**< @brief Valid member depends on _shadowOperation_t.type. */
+    } u;                               /**< @brief Valid member depends on _shadowOperation_t.type. */
 
     /* How to notify of an operation's completion. */
     union
@@ -425,10 +413,10 @@ typedef struct _shadowOperation
  */
 typedef struct _shadowSubscription
 {
-    IotLink_t link;                                                 /**< @brief List link member. */
+    IotLink_t link;                                                /**< @brief List link member. */
 
-    int32_t references[ SHADOW_OPERATION_COUNT ];                   /**< @brief Reference counter for Shadow operation topics. */
-    AwsIotShadowCallbackInfo_t callbacks[ SHADOW_CALLBACK_COUNT ];  /**< @brief Shadow callbacks for this Thing. */
+    int32_t references[ SHADOW_OPERATION_COUNT ];                  /**< @brief Reference counter for Shadow operation topics. */
+    AwsIotShadowCallbackInfo_t callbacks[ SHADOW_CALLBACK_COUNT ]; /**< @brief Shadow callbacks for this Thing. */
 
     /**
      * @brief Buffer allocated for removing Shadow topics.

@@ -40,27 +40,29 @@
 /**
  * @brief Every public API return an enumeration value with an undelying value of 0 in case of success.
  */
-#define TASKPOOL_SUCCEEDED( x )                       ( ( x ) == IOT_TASKPOOL_SUCCESS )
+#define TASKPOOL_SUCCEEDED( x )               ( ( x ) == IOT_TASKPOOL_SUCCESS )
 
 /**
  * @brief Every public API returns an enumeration value with an undelying value different than 0 in case of success.
  */
-#define TASKPOOL_FAILED( x )                          ( ( x ) != IOT_TASKPOOL_SUCCESS )
+#define TASKPOOL_FAILED( x )                  ( ( x ) != IOT_TASKPOOL_SUCCESS )
 
 /**
  * @brief Jump to the cleanup area.
  */
-#define TASKPOOL_GOTO_CLEANUP()                       IOT_GOTO_CLEANUP()
+#define TASKPOOL_GOTO_CLEANUP()               IOT_GOTO_CLEANUP()
 
 /**
  * @brief Declare the storage for the error status variable.
  */
-#define  TASKPOOL_FUNCTION_ENTRY( result )            IOT_FUNCTION_ENTRY( IotTaskPoolError_t, result )
+#define  TASKPOOL_FUNCTION_ENTRY( result )    IOT_FUNCTION_ENTRY( IotTaskPoolError_t, result )
 
 /**
  * @brief Check error and leave in case of failure.
  */
-#define TASKPOOL_ON_ERROR_GOTO_CLEANUP( expr )        { if( TASKPOOL_FAILED( status = ( expr ) ) ) { IOT_GOTO_CLEANUP(); } }
+#define TASKPOOL_ON_ERROR_GOTO_CLEANUP( expr )                           \
+    { if( TASKPOOL_FAILED( status = ( expr ) ) ) { IOT_GOTO_CLEANUP(); } \
+    }
 
 /**
  * @brief Exit if an argument is NULL.
@@ -129,9 +131,9 @@
 #define LIBRARY_LOG_NAME    ( "TASKPOOL" )
 #include "iot_logging_setup.h"
 
-/**
- * @brief Overridable allocator and deallocator: provide default values for undefined memory
- * allocation functions based on the usage of dynamic memory allocation.
+/*
+ * Provide default values for undefined memory allocation functions based on
+ * the usage of dynamic memory allocation.
  */
 #if IOT_STATIC_MEMORY_ONLY == 1
     #include "private/iot_static_memory.h"
@@ -140,60 +142,40 @@
  * @brief Allocate an #IotTaskPoolJob_t. This function should have the
  * same signature as [malloc].
  */
-    #ifndef IotTaskPool_MallocJob
-        #define IotTaskPool_MallocJob    Iot_MallocTaskPoolJob
-    #endif
-
-/**
- * @brief Allocate an #_taskPoolTimerEvent_t. This function should have the
- * same signature as [malloc].
- */
-    #ifndef IotTaskPool_MallocTimerEvent
-        #define IotTaskPool_MallocTimerEvent    Iot_MallocTaskPoolTimerEvent
-    #endif
+    void * IotTaskPool_MallocJob( size_t size );
 
 /**
  * @brief Free an #IotTaskPoolJob_t. This function should have the same
  * signature as [free]
  */
-    #ifndef IotTaskPool_FreeJob
-        #define IotTaskPool_FreeJob    Iot_FreeTaskPoolJob
-    #endif
+    void IotTaskPool_FreeJob( void * ptr );
+
+/**
+ * @brief Allocate an #_taskPoolTimerEvent_t. This function should have the
+ * same signature as [malloc].
+ */
+    void * IotTaskPool_MallocTimerEvent( size_t size );
 
 /**
  * @brief Free an #_taskPoolTimerEvent_t. This function should have the
  * same signature as[ free ].
  */
-    #ifndef IotTaskPool_FreeTimerEvent
-        #define IotTaskPool_FreeTimerEvent    Iot_FreeTaskPoolTimerEvent
-    #endif
-
+    void IotTaskPool_FreeTimerEvent( void * ptr );
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
-
     #include <stdlib.h>
 
-/**
- * @brief Overridable allocator.
- */
     #ifndef IotTaskPool_MallocJob
         #define IotTaskPool_MallocJob    malloc
     #endif
-
+    #ifndef IotTaskPool_FreeJob
+        #define IotTaskPool_FreeJob      free
+    #endif
     #ifndef IotTaskPool_MallocTimerEvent
         #define IotTaskPool_MallocTimerEvent    malloc
     #endif
-
-/**
- * @brief Overridable deallocator.
- */
-    #ifndef IotTaskPool_FreeJob
-        #define IotTaskPool_FreeJob    free
-    #endif
-
     #ifndef IotTaskPool_FreeTimerEvent
-        #define IotTaskPool_FreeTimerEvent    free
+        #define IotTaskPool_FreeTimerEvent      free
     #endif
-
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
 /* ---------------------------------------------------------------------------------------------- */
