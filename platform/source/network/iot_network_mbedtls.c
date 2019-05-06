@@ -28,10 +28,6 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
-/* mbed TLS includes. */
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-
 /* mbed TLS network include. */
 #include "iot_network_mbedtls.h"
 
@@ -50,15 +46,3 @@
 #include "iot_logging_setup.h"
 
 /*-----------------------------------------------------------*/
-
-static mbedtls_entropy_context _entropyContext;
-static mbedtls_ctr_drbg_context _ctrDrbgContext;
-
-/*-----------------------------------------------------------*/
-
-IotNetworkError_t IotNetworkMbedtls_Init( void )
-{
-    mbedtls_ctr_drbg_init( &_ctrDrbgContext );
-
-    IotLogInfo( "Network library initialized." );
-}
