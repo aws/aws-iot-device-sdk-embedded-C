@@ -80,8 +80,8 @@
 /* Empty callback structure passed to startInfo. */
 static const AwsIotDefenderCallback_t _EMPTY_CALLBACK = { .function = NULL, .param1 = NULL };
 
-static IotNetworkServerInfoOpenssl_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
-static IotNetworkCredentialsOpenssl_t _credential = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
+static IotNetworkServerInfo_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
+static IotNetworkCredentials_t _credential = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
 
 /*------------------ global variables -----------------------------*/
 
@@ -159,7 +159,7 @@ TEST_SETUP( Full_DEFENDER )
     }
 
     /* Reset server info. */
-    _serverInfo = ( IotNetworkServerInfoOpenssl_t ) IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
+    _serverInfo = ( IotNetworkServerInfo_t ) IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 
     /* Set fields of start info. */
     _startInfo.mqttNetworkInfo = ( IotMqttNetworkInfo_t ) IOT_MQTT_NETWORK_INFO_INITIALIZER;

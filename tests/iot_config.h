@@ -138,9 +138,9 @@
 #define IOT_TEST_NETWORK_HEADER    "posix/iot_network_openssl.h"
 
 /* Network types to use in the tests. These are forward declarations. */
-typedef struct _networkConnection             IotTestNetworkConnection_t;
-typedef struct IotNetworkServerInfoOpenssl    IotTestNetworkServerInfo_t;
-typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
+typedef struct _networkConnection       IotTestNetworkConnection_t;
+typedef struct IotNetworkServerInfo     IotTestNetworkServerInfo_t;
+typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
 
 /* Initializers for the tests' network types. */
 #define IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER \
@@ -152,9 +152,9 @@ typedef struct IotNetworkCredentialsOpenssl   IotTestNetworkCredentials_t;
     #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER \
     {                                                \
         .pAlpnProtos = "\x0ex-amzn-mqtt-ca",         \
-        .pRootCaPath = IOT_TEST_ROOT_CA,             \
-        .pClientCertPath = IOT_TEST_CLIENT_CERT,     \
-        .pPrivateKeyPath = IOT_TEST_PRIVATE_KEY      \
+        .pRootCa = IOT_TEST_ROOT_CA,                 \
+        .pClientCert = IOT_TEST_CLIENT_CERT,         \
+        .pPrivateKey = IOT_TEST_PRIVATE_KEY          \
     }
 #else
     #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER    IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER

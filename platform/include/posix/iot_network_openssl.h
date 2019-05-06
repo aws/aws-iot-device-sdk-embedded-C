@@ -56,76 +56,21 @@
 typedef struct _networkConnection IotNetworkConnectionOpenssl_t;
 
 /**
- * @brief Information on the remote server for connection setup.
+ * @brief Provides a default value for an #IotNetworkServerInfo_t.
  *
- * Passed to #IotNetworkOpenssl_Create as `pConnectionInfo`.
+ * All instances of #IotNetworkServerInfo_t should be initialized with
+ * this constant when using this OpenSSL network stack.
  *
- * All instances of #IotNetworkServerInfoOpenssl_t should be initialized with
- * #IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER.
- */
-typedef struct IotNetworkServerInfoOpenssl
-{
-    const char * pHostName; /**< @brief Server host name. Must be NULL-terminated. */
-    uint16_t port;          /**< @brief Server port in host-order. */
-} IotNetworkServerInfoOpenssl_t;
-
-/**
- * @brief Contains the credentials necessary for connection setup with OpenSSL.
- *
- * Passed to #IotNetworkOpenssl_Create as `pCredentialInfo`.
- *
- * All instances of #IotNetworkCredentialsOpenssl_t should be initialized with either
- * #AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER (for connections to AWS IoT) or
- * #IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER (for other connections).
- */
-typedef struct IotNetworkCredentialsOpenssl
-{
-    /**
-     * @brief Set this to a non-NULL value to use ALPN.
-     *
-     * This string must be NULL-terminated.
-     *
-     * See [this link]
-     * (https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/)
-     * for more information.
-     */
-    const char * pAlpnProtos;
-
-    /**
-     * @brief Set this to a non-zero value to use TLS max fragment length
-     * negotiation (TLS MFLN).
-     *
-     * @note OpenSSL may have a minimum value for this parameter;
-     * #IotNetworkOpenssl_Create may return an error if this parameter is too small.
-     */
-    size_t maxFragmentLength;
-
-    /**
-     * @brief Disable server name indication (SNI) for a TLS session.
-     */
-    bool disableSni;
-
-    /* These paths must be NULL-terminated. */
-    const char * pRootCaPath;     /**< @brief Filesystem path of a trusted server root certificate. */
-    const char * pClientCertPath; /**< @brief Filesystem path of the client certificate. */
-    const char * pPrivateKeyPath; /**< @brief Filesystem path of the client certificate's private key. */
-} IotNetworkCredentialsOpenssl_t;
-
-/**
- * @brief Provides a default value for an #IotNetworkServerInfoOpenssl_t.
- *
- * All instances of #IotNetworkServerInfoOpenssl_t should be initialized with
- * this constant.
- *
- * @warning Failing to initialize an #IotNetworkServerInfoOpenssl_t with this
- * initializer may result in undefined behavior!
+ * @warning Failing to initialize an #IotNetworkServerInfo_t may result in
+ * a crash!
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
  */
 #define IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER    { 0 }
 
 /**
- * @brief Initialize an #IotNetworkCredentialsOpenssl_t for AWS IoT with ALPN enabled.
+ * @brief Initialize an #IotNetworkCredentials_t for AWS IoT with ALPN enabled
+ * when using this OpenSSL network stack.
  *
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
@@ -136,7 +81,8 @@ typedef struct IotNetworkCredentialsOpenssl
     }
 
 /**
- * @brief Generic initializer for an #IotNetworkCredentialsOpenssl_t.
+ * @brief Generic initializer for an #IotNetworkCredentials_t when using this
+ * OpenSSL network stack.
  *
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
