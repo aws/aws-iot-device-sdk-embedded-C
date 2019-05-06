@@ -134,13 +134,31 @@
     #define AwsIotShadow_FreeSubscription        unity_free_mt
 #endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
 
-/* Network header to include in the tests. */
-#define IOT_TEST_NETWORK_HEADER    "posix/iot_network_openssl.h"
-
 /* Network types to use in the tests. These are forward declarations. */
 typedef struct _networkConnection       IotTestNetworkConnection_t;
 typedef struct IotNetworkServerInfo     IotTestNetworkServerInfo_t;
 typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
+
+/* Choose the appropriate network abstraction implementation. */
+#if IOT_NETWORK_USE_OPENSSL == 1
+    /* POSIX+OpenSSL network include. */
+    #define IOT_TEST_NETWORK_HEADER       "posix/iot_network_openssl.h"
+
+    #define IOT_TEST_ALPN_PROTOS          "\x0ex-amzn-mqtt-ca"
+    #define IOT_TEST_NETWORK_INTERFACE    IOT_NETWORK_INTERFACE_OPENSSL
+
+    #define IotTestNetwork_Init           IotNetworkOpenssl_Init
+    #define IotTestNetwork_Cleanup        IotNetworkOpenssl_Cleanup
+#else
+    /* mbed TLS network include. */
+    #define IOT_TEST_NETWORK_HEADER       "iot_network_mbedtls.h"
+
+    #define IOT_TEST_ALPN_PROTOS          "x-amzn-mqtt-ca"
+    #define IOT_TEST_NETWORK_INTERFACE    IOT_NETWORK_INTERFACE_MBEDTLS
+
+    #define IotTestNetwork_Init()         IOT_NETWORK_SUCCESS
+    #define IotTestNetwork_Cleanup()
+#endif
 
 /* Initializers for the tests' network types. */
 #define IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER \
@@ -148,24 +166,18 @@ typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
         .pHostName = IOT_TEST_SERVER,            \
         .port = IOT_TEST_PORT                    \
     }
+
 #if IOT_TEST_SECURED_CONNECTION == 1
     #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER \
     {                                                \
-        .pAlpnProtos = "\x0ex-amzn-mqtt-ca",         \
+        .pAlpnProtos = IOT_TEST_ALPN_PROTOS,         \
         .pRootCa = IOT_TEST_ROOT_CA,                 \
         .pClientCert = IOT_TEST_CLIENT_CERT,         \
         .pPrivateKey = IOT_TEST_PRIVATE_KEY          \
     }
 #else
-    #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER    IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER
+    #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER    { 0 }
 #endif
-
-/* Network interface to use in the tests. */
-#define IOT_TEST_NETWORK_INTERFACE    IOT_NETWORK_INTERFACE_OPENSSL
-
-/* Network initialization and cleanup functions to use in the tests. */
-#define IotTestNetwork_Init           IotNetworkOpenssl_Init
-#define IotTestNetwork_Cleanup        IotNetworkOpenssl_Cleanup
 
 /* Macro for placing inline assembly in test code. */
 #define IOT_TEST_ASM_VOLATILE( x )    __asm__ __volatile__ ( x )

@@ -28,17 +28,8 @@
 /* POSIX includes. */
 #include <signal.h>
 
-/* Network includes. */
-#include "posix/iot_network_openssl.h"
-
-/* SDK initialization include. */
-#include "iot_init.h"
-
-/* Metrics include. */
-#include "platform/iot_metrics.h"
-
-/* MQTT include. */
-#include "iot_mqtt.h"
+/* Error handling include. */
+#include "private/iot_error.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -54,12 +45,12 @@ static void _signalHandler( int signum )
     if( signum == SIGSEGV )
     {
         printf( "\nSegmentation fault.\n" );
-        exit( EXIT_FAILURE );
+        _Exit( EXIT_FAILURE );
     }
     else if( signum == SIGABRT )
     {
         printf( "\nAssertion failed.\n" );
-        exit( EXIT_FAILURE );
+        _Exit( EXIT_FAILURE );
     }
 }
 
@@ -68,11 +59,12 @@ static void _signalHandler( int signum )
 int main( int argc,
           char ** argv )
 {
+    IOT_FUNCTION_ENTRY( int, EXIT_SUCCESS );
     struct sigaction signalAction;
 
     /* Silence warnings about unused parameters. */
-    ( void )argc;
-    ( void )argv;
+    ( void ) argc;
+    ( void ) argv;
 
     /* Set a signal handler for segmentation faults and assertion failures. */
     ( void ) memset( &signalAction, 0x00, sizeof( struct sigaction ) );
@@ -80,35 +72,12 @@ int main( int argc,
 
     if( sigaction( SIGSEGV, &signalAction, NULL ) != 0 )
     {
-        return EXIT_FAILURE;
+        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
     if( sigaction( SIGABRT, &signalAction, NULL ) != 0 )
     {
-        return EXIT_FAILURE;
-    }
-
-    /* Initialize the SDK before running the tests. */
-    if( IotSdk_Init() == false )
-    {
-        return EXIT_FAILURE;
-    }
-
-    if (IotMetrics_Init() == false)
-    {
-        return EXIT_FAILURE;
-    }
-
-    /* Set up the network stack. */
-    if ( IotNetworkOpenssl_Init() != IOT_NETWORK_SUCCESS )
-    {
-        return EXIT_FAILURE;
-    }
-
-    /* Initialize the MQTT library before running the tests. */
-    if ( IotMqtt_Init() != IOT_MQTT_SUCCESS )
-    {
-        return EXIT_FAILURE;
+        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
     /* Unity setup. */
@@ -118,25 +87,16 @@ int main( int argc,
     UnityFixture.GroupFilter = NULL;
     UNITY_BEGIN();
 
-    /* Run short tests. */
-    RUN_TEST_GROUP(Full_DEFENDER);
-
-    /* Clean up SDK. */
-    IotSdk_Cleanup();
-
-    /* Clean up the network stack. */
-    IotNetworkOpenssl_Cleanup();
-
-    /* Clean up MQTT library. */
-    IotMqtt_Cleanup();
+    /* Run Defender tests. */
+    RUN_TEST_GROUP( Defender_System );
 
     /* Return failure if any tests failed. */
     if( UNITY_END() != 0 )
     {
-        return EXIT_FAILURE;
+        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
-    return EXIT_SUCCESS;
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/

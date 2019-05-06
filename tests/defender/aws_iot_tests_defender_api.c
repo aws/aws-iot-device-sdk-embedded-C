@@ -35,10 +35,9 @@
 /* Defender internal includes. */
 #include "private/aws_iot_defender_internal.h"
 
-/* Openssl includes. */
-#include "posix/iot_network_openssl.h"
-
 #include "iot_network_metrics.h"
+
+#include "iot_init.h"
 
 /* Serializer includes. */
 #include "iot_serializer.h"
@@ -131,10 +130,30 @@ static void _resetCalbackInfo( void );
 
 static char * _getIotAddress( void );
 
-TEST_GROUP( Full_DEFENDER );
+TEST_GROUP( Defender_System );
 
-TEST_SETUP( Full_DEFENDER )
+TEST_SETUP( Defender_System )
 {
+    if( IotSdk_Init() == false )
+    {
+        TEST_FAIL_MESSAGE( "Failed to initialize SDK." );
+    }
+
+    if( IotTestNetwork_Init() != IOT_NETWORK_SUCCESS )
+    {
+        TEST_FAIL_MESSAGE( "Failed to initialize network stack." );
+    }
+
+    if( IotMqtt_Init() != IOT_MQTT_SUCCESS )
+    {
+        TEST_FAIL_MESSAGE( "Failed to initialize MQTT." );
+    }
+
+    if( IotMetrics_Init() == false )
+    {
+        TEST_FAIL_MESSAGE( "Failed to initialize metrics." );
+    }
+
     /* Create a binary semaphore with initial value 0. */
     if( !IotSemaphore_Create( &_callbackInfoSem, 0, 1 ) )
     {
@@ -176,7 +195,7 @@ TEST_SETUP( Full_DEFENDER )
     _startInfo.callback = _EMPTY_CALLBACK;
 }
 
-TEST_TEAR_DOWN( Full_DEFENDER )
+TEST_TEAR_DOWN( Defender_System )
 {
     AwsIotDefender_Stop();
 
@@ -188,16 +207,21 @@ TEST_TEAR_DOWN( Full_DEFENDER )
     }
 
     IotSemaphore_Destroy( &_callbackInfoSem );
+
+    IotMetrics_Cleanup();
+    IotMqtt_Cleanup();
+    IotTestNetwork_Cleanup();
+    IotSdk_Cleanup();
 }
 
-TEST_GROUP_RUNNER( Full_DEFENDER )
+TEST_GROUP_RUNNER( Defender_System )
 {
     /*
      * Setup: none
      * Action: call Start API with invliad IoT endpoint
      * Expectation: Start API returns network connection failure
      */
-    RUN_TEST_CASE( Full_DEFENDER, Start_with_wrong_network_information );
+    RUN_TEST_CASE( Defender_System, Start_with_wrong_network_information );
 
     /*
      * Setup: defender not started yet
@@ -206,7 +230,7 @@ TEST_GROUP_RUNNER( Full_DEFENDER )
      * - SetMetrics API return invalid input
      * - global metrics flag array are untouched
      */
-    RUN_TEST_CASE( Full_DEFENDER, SetMetrics_with_invalid_metrics_group );
+    RUN_TEST_CASE( Defender_System, SetMetrics_with_invalid_metrics_group );
 
     /*
      * Setup: defender not started yet
@@ -215,7 +239,7 @@ TEST_GROUP_RUNNER( Full_DEFENDER )
      * - SetMetrics API return success
      * - global metrics flag array are updated correctly
      */
-    RUN_TEST_CASE( Full_DEFENDER, SetMetrics_with_TCP_connections_all );
+    RUN_TEST_CASE( Defender_System, SetMetrics_with_TCP_connections_all );
 
     /*
      * Setup: defender is started
@@ -224,7 +248,7 @@ TEST_GROUP_RUNNER( Full_DEFENDER )
      * - SetMetrics API return success
      * - global metrics flag array are updated correctly
      */
-    RUN_TEST_CASE( Full_DEFENDER, SetMetrics_after_defender_started );
+    RUN_TEST_CASE( Defender_System, SetMetrics_after_defender_started );
 
     /*
      * Setup: defender not started yet
@@ -232,7 +256,7 @@ TEST_GROUP_RUNNER( Full_DEFENDER )
      * Expectation:
      * - SetPeriod API return "period too short" error
      */
-    /*RUN_TEST_CASE( Full_DEFENDER, SetPeriod_too_short ); */
+    /*RUN_TEST_CASE( Defender_System, SetPeriod_too_short ); */
 
     /*
      * Setup: defender not started yet
@@ -240,7 +264,7 @@ TEST_GROUP_RUNNER( Full_DEFENDER )
      * Expectation:
      * - SetPeriod API return success
      */
-    RUN_TEST_CASE( Full_DEFENDER, SetPeriod_with_proper_value );
+    RUN_TEST_CASE( Defender_System, SetPeriod_with_proper_value );
 
     /*
      * Setup: defender is started
@@ -248,28 +272,28 @@ TEST_GROUP_RUNNER( Full_DEFENDER )
      * Expectation:
      * - SetPeriod API return success
      */
-    RUN_TEST_CASE( Full_DEFENDER, SetPeriod_after_started );
+    RUN_TEST_CASE( Defender_System, SetPeriod_after_started );
 
     /*
      * Setup: kept from publishing metrics report
      * Action: call Start API with correct network information
      * Expectation: Start API return success
      */
-    RUN_TEST_CASE( Full_DEFENDER, Start_should_return_success );
+    RUN_TEST_CASE( Defender_System, Start_should_return_success );
 
     /*
      * Setup: call Start API the first time; kept from publishing metrics report
      * Action: call Start API second time
      * Expectation: Start API return "already started" error
      */
-    RUN_TEST_CASE( Full_DEFENDER, Start_should_return_err_if_already_started );
+    RUN_TEST_CASE( Defender_System, Start_should_return_err_if_already_started );
 
     /*
      * Setup: not set any metrics; register test callback
      * Action: call Start API
      * Expectation: metrics are accepted by defender service
      */
-    RUN_TEST_CASE( Full_DEFENDER, Metrics_empty_are_published );
+    RUN_TEST_CASE( Defender_System, Metrics_empty_are_published );
 
     /*
      * Setup: set "tcp connections" with "all metrics"; register test callback
@@ -278,7 +302,7 @@ TEST_GROUP_RUNNER( Full_DEFENDER )
      * - metrics are accepted by defender service
      * - verify metrics report has correct content
      */
-    RUN_TEST_CASE( Full_DEFENDER, Metrics_TCP_connections_all_are_published );
+    RUN_TEST_CASE( Defender_System, Metrics_TCP_connections_all_are_published );
 
     /*
      * Setup: set "tcp connections" with "total count"; register test callback
@@ -287,7 +311,7 @@ TEST_GROUP_RUNNER( Full_DEFENDER )
      * - metrics are accepted by defender service
      * - verify metrics report has correct content
      */
-    RUN_TEST_CASE( Full_DEFENDER, Metrics_TCP_connections_total_are_published );
+    RUN_TEST_CASE( Defender_System, Metrics_TCP_connections_total_are_published );
 
     /*
      * Setup: set "tcp connections" with "remote address"; register test callback
@@ -296,7 +320,7 @@ TEST_GROUP_RUNNER( Full_DEFENDER )
      * - metrics are accepted by defender service
      * - verify metrics report has correct content
      */
-    RUN_TEST_CASE( Full_DEFENDER, Metrics_TCP_connections_remote_addr_are_published );
+    RUN_TEST_CASE( Defender_System, Metrics_TCP_connections_remote_addr_are_published );
 
     /*
      * Setup: set "tcp connections" with "total count"; register test callback; call Start API
@@ -305,10 +329,10 @@ TEST_GROUP_RUNNER( Full_DEFENDER )
      * - metrics are accepted by defender service in both times
      * - verify metrics report has correct content respectively in both times
      */
-    RUN_TEST_CASE( Full_DEFENDER, Restart_and_updated_metrics_are_published );
+    RUN_TEST_CASE( Defender_System, Restart_and_updated_metrics_are_published );
 }
 
-TEST( Full_DEFENDER, SetMetrics_with_invalid_metrics_group )
+TEST( Defender_System, SetMetrics_with_invalid_metrics_group )
 {
     uint8_t i = 0;
 
@@ -326,7 +350,7 @@ TEST( Full_DEFENDER, SetMetrics_with_invalid_metrics_group )
     }
 }
 
-TEST( Full_DEFENDER, SetMetrics_with_TCP_connections_all )
+TEST( Defender_System, SetMetrics_with_TCP_connections_all )
 {
     /* Set "all metrics" for TCP connections metrics group. */
     AwsIotDefenderError_t error = AwsIotDefender_SetMetrics( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS,
@@ -337,7 +361,7 @@ TEST( Full_DEFENDER, SetMetrics_with_TCP_connections_all )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_METRICS_ALL, _AwsIotDefenderMetrics.metricsFlag[ AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS ] );
 }
 
-TEST( Full_DEFENDER, SetMetrics_after_defender_started )
+TEST( Defender_System, SetMetrics_after_defender_started )
 {
     _publishMetricsNotNeeded();
 
@@ -354,7 +378,7 @@ TEST( Full_DEFENDER, SetMetrics_after_defender_started )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_METRICS_ALL, _AwsIotDefenderMetrics.metricsFlag[ AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS ] );
 }
 
-TEST( Full_DEFENDER, Start_with_wrong_network_information )
+TEST( Defender_System, Start_with_wrong_network_information )
 {
     _publishMetricsNotNeeded();
 
@@ -368,7 +392,7 @@ TEST( Full_DEFENDER, Start_with_wrong_network_information )
     _assertEvent( AWS_IOT_DEFENDER_FAILURE_MQTT, WAIT_STATE_TOTAL_SECONDS );
 }
 
-TEST( Full_DEFENDER, Start_should_return_success )
+TEST( Defender_System, Start_should_return_success )
 {
     _publishMetricsNotNeeded();
 
@@ -377,7 +401,7 @@ TEST( Full_DEFENDER, Start_should_return_success )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, error );
 }
 
-TEST( Full_DEFENDER, Start_should_return_err_if_already_started )
+TEST( Defender_System, Start_should_return_err_if_already_started )
 {
     _publishMetricsNotNeeded();
 
@@ -391,7 +415,7 @@ TEST( Full_DEFENDER, Start_should_return_err_if_already_started )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_ALREADY_STARTED, error );
 }
 
-TEST( Full_DEFENDER, Metrics_empty_are_published )
+TEST( Defender_System, Metrics_empty_are_published )
 {
     AwsIotDefenderError_t error;
 
@@ -409,7 +433,7 @@ TEST( Full_DEFENDER, Metrics_empty_are_published )
     _verifyTcpConections( 0 );
 }
 
-TEST( Full_DEFENDER, Metrics_TCP_connections_all_are_published )
+TEST( Defender_System, Metrics_TCP_connections_all_are_published )
 {
     AwsIotDefenderError_t error;
 
@@ -437,7 +461,7 @@ TEST( Full_DEFENDER, Metrics_TCP_connections_all_are_published )
     _verifyTcpConections( 1, pIotAddress );
 }
 
-TEST( Full_DEFENDER, Metrics_TCP_connections_total_are_published )
+TEST( Defender_System, Metrics_TCP_connections_total_are_published )
 {
     AwsIotDefenderError_t error;
 
@@ -462,7 +486,7 @@ TEST( Full_DEFENDER, Metrics_TCP_connections_total_are_published )
     _verifyTcpConections( 1 );
 }
 
-TEST( Full_DEFENDER, Metrics_TCP_connections_remote_addr_are_published )
+TEST( Defender_System, Metrics_TCP_connections_remote_addr_are_published )
 {
     AwsIotDefenderError_t error;
 
@@ -490,7 +514,7 @@ TEST( Full_DEFENDER, Metrics_TCP_connections_remote_addr_are_published )
     _verifyTcpConections( 1, pIotAddress );
 }
 
-TEST( Full_DEFENDER, Restart_and_updated_metrics_are_published )
+TEST( Defender_System, Restart_and_updated_metrics_are_published )
 {
     char * pIotAddress = NULL;
 
@@ -534,19 +558,19 @@ TEST( Full_DEFENDER, Restart_and_updated_metrics_are_published )
     _verifyTcpConections( 1, pIotAddress );
 }
 
-TEST( Full_DEFENDER, SetPeriod_too_short )
+TEST( Defender_System, SetPeriod_too_short )
 {
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_PERIOD_TOO_SHORT, AwsIotDefender_SetPeriod( 299 ) );
 }
 
-TEST( Full_DEFENDER, SetPeriod_with_proper_value )
+TEST( Defender_System, SetPeriod_with_proper_value )
 {
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, AwsIotDefender_SetPeriod( 301 ) );
 
     TEST_ASSERT_EQUAL( 301, AwsIotDefender_GetPeriod() );
 }
 
-TEST( Full_DEFENDER, SetPeriod_after_started )
+TEST( Defender_System, SetPeriod_after_started )
 {
     _publishMetricsNotNeeded();
 

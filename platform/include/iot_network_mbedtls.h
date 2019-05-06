@@ -37,4 +37,98 @@
 /* Platform network include. */
 #include "platform/iot_network.h"
 
+/**
+ * @brief Provides a default value for an #IotNetworkServerInfo_t.
+ *
+ * All instances of #IotNetworkServerInfo_t should be initialized with
+ * this constant when using this mbed TLS network stack.
+ *
+ * @warning Failing to initialize an #IotNetworkServerInfo_t may result in
+ * a crash!
+ * @note This initializer may change at any time in future versions, but its
+ * name will remain the same.
+ */
+#define IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER    { 0 }
+
+/**
+ * @brief Initialize an #IotNetworkCredentials_t for AWS IoT with ALPN enabled
+ * when using this mbed TLS network stack.
+ *
+ * @note This initializer may change at any time in future versions, but its
+ * name will remain the same.
+ */
+#define AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER \
+    {                                                   \
+        .pAlpnProtos = "x-amzn-mqtt-ca"                 \
+    }
+
+/**
+ * @brief Generic initializer for an #IotNetworkCredentials_t when using this
+ * mbed TLS network stack.
+ *
+ * @note This initializer may change at any time in future versions, but its
+ * name will remain the same.
+ */
+#define IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER    { 0 }
+
+/**
+ * @brief Provides a pointer to an #IotNetworkInterface_t that uses the functions
+ * declared in this file.
+ */
+#define IOT_NETWORK_INTERFACE_MBEDTLS                  ( &( IotNetworkMbedtls ) )
+
+/**
+ * @brief An implementation of #IotNetworkInterface_t::create for mbed TLS.
+ */
+IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
+                                            void * pCredentialInfo,
+                                            void ** pConnection );
+
+/**
+ * @brief An implementation of #IotNetworkInterface_t::setReceiveCallback for
+ * mbed TLS.
+ */
+IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( void * pConnection,
+                                                        IotNetworkReceiveCallback_t receiveCallback,
+                                                        void * pContext );
+
+/**
+ * @brief An implementation of #IotNetworkInterface_t::send for mbed TLS.
+ */
+size_t IotNetworkMbedtls_Send( void * pConnection,
+                               const uint8_t * pMessage,
+                               size_t messageLength );
+
+/**
+ * @brief An implementation of #IotNetworkInterface_t::receive for mbed TLS.
+ */
+size_t IotNetworkMbedtls_Receive( void * pConnection,
+                                  uint8_t * pBuffer,
+                                  size_t bytesRequested );
+
+/**
+ * @brief An implementation of #IotNetworkInterface_t::close for mbed TLS.
+ */
+IotNetworkError_t IotNetworkMbedtls_Close( void * pConnection );
+
+/**
+ * @brief An implementation of #IotNetworkInterface_t::destroy for mbed TLS.
+ */
+IotNetworkError_t IotNetworkMbedtls_Destroy( void * pConnection );
+
+/**
+ * @brief Used by metrics to retrieve remote server and port of a connection.
+ */
+void IotNetworkMbedtls_GetServerInfo( void * pConnection,
+                                      IotMetricsTcpConnection_t * pServerInfo );
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Declaration of a network interface struct using the functions in this file.
+ */
+extern const IotNetworkInterface_t IotNetworkMbedtls;
+/** @endcond */
+
 #endif /* ifndef IOT_NETWORK_MBEDTLS_H_ */

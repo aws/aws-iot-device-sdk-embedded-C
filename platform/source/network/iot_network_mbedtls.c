@@ -46,3 +46,75 @@
 #include "iot_logging_setup.h"
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief An #IotNetworkInterface_t that uses the functions in this file.
+ */
+const IotNetworkInterface_t IotNetworkMbedtls =
+{
+    .create             = IotNetworkMbedtls_Create,
+    .setReceiveCallback = IotNetworkMbedtls_SetReceiveCallback,
+    .send               = IotNetworkMbedtls_Send,
+    .receive            = IotNetworkMbedtls_Receive,
+    .close              = IotNetworkMbedtls_Close,
+    .destroy            = IotNetworkMbedtls_Destroy
+};
+
+/*-----------------------------------------------------------*/
+
+IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
+                                            void * pCredentialInfo,
+                                            void ** pConnection )
+{
+    return IOT_NETWORK_FAILURE;
+}
+
+/*-----------------------------------------------------------*/
+
+IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( void * pConnection,
+                                                        IotNetworkReceiveCallback_t receiveCallback,
+                                                        void * pContext )
+{
+    return IOT_NETWORK_FAILURE;
+}
+
+/*-----------------------------------------------------------*/
+
+size_t IotNetworkMbedtls_Send( void * pConnection,
+                               const uint8_t * pMessage,
+                               size_t messageLength )
+{
+    return 0;
+}
+
+/*-----------------------------------------------------------*/
+
+size_t IotNetworkMbedtls_Receive( void * pConnection,
+                                  uint8_t * pBuffer,
+                                  size_t bytesRequested )
+{
+    return 0;
+}
+
+/*-----------------------------------------------------------*/
+
+IotNetworkError_t IotNetworkMbedtls_Close( void * pConnection )
+{
+    return IOT_NETWORK_FAILURE;
+}
+
+/*-----------------------------------------------------------*/
+
+IotNetworkError_t IotNetworkMbedtls_Destroy( void * pConnection )
+{
+    return IOT_NETWORK_FAILURE;
+}
+
+/*-----------------------------------------------------------*/
+
+void IotNetworkMbedtls_GetServerInfo( void * pConnection,
+                                      IotMetricsTcpConnection_t * pServerInfo )
+{
+}
+
+/*-----------------------------------------------------------*/

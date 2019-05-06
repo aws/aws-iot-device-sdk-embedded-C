@@ -99,38 +99,74 @@ static IotMutex_t _connectionListMutex;
 
 /*-----------------------------------------------------------*/
 
-/* OpenSSL networking include. */
-#include "posix/iot_network_openssl.h"
+/* Choose the appropriate network abstraction implementation. */
+#if IOT_NETWORK_USE_OPENSSL == 1
+    /* OpenSSL networking include. */
+    #include "posix/iot_network_openssl.h"
 
-/**
- * @brief Pointer to the metrics-wrapped network creation function.
- */
-static IotNetworkError_t ( * _networkCreate )( void *, void *, void ** ) = IotNetworkOpenssl_Create;
+    /**
+     * @brief Pointer to the metrics-wrapped network creation function.
+     */
+    static IotNetworkError_t ( * _networkCreate )( void *, void *, void ** ) = IotNetworkOpenssl_Create;
 
-/**
- * @brief Pointer to the metrics-wrapped network close function.
- */
-static IotNetworkError_t ( * _networkClose )( void * ) = IotNetworkOpenssl_Close;
+    /**
+     * @brief Pointer to the metrics-wrapped network close function.
+     */
+    static IotNetworkError_t ( * _networkClose )( void * ) = IotNetworkOpenssl_Close;
 
-/**
- * @brief Pointer to the function that retrieves the server info for a connection.
- */
-static void ( * _networkServerInfo )( void *,
-                                      IotMetricsTcpConnection_t * ) = IotNetworkOpenssl_GetServerInfo;
+    /**
+     * @brief Pointer to the function that retrieves the server info for a connection.
+     */
+    static void ( * _networkServerInfo )( void *,
+                                        IotMetricsTcpConnection_t * ) = IotNetworkOpenssl_GetServerInfo;
 
-/**
- * @brief An #IotNetworkInterface_t that wraps network abstration functions with
- * metrics.
- */
-const IotNetworkInterface_t IotNetworkMetrics =
-{
-    .create             = _metricsNetworkCreate,
-    .setReceiveCallback = IotNetworkOpenssl_SetReceiveCallback,
-    .send               = IotNetworkOpenssl_Send,
-    .receive            = IotNetworkOpenssl_Receive,
-    .close              = _metricsNetworkClose,
-    .destroy            = IotNetworkOpenssl_Destroy
-};
+    /**
+     * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
+     * metrics.
+     */
+    const IotNetworkInterface_t IotNetworkMetrics =
+    {
+        .create             = _metricsNetworkCreate,
+        .setReceiveCallback = IotNetworkOpenssl_SetReceiveCallback,
+        .send               = IotNetworkOpenssl_Send,
+        .receive            = IotNetworkOpenssl_Receive,
+        .close              = _metricsNetworkClose,
+        .destroy            = IotNetworkOpenssl_Destroy
+    };
+#else
+    /* mbed TLS networking include. */
+    #include "iot_network_mbedtls.h"
+
+    /**
+     * @brief Pointer to the metrics-wrapped network creation function.
+     */
+    static IotNetworkError_t ( * _networkCreate )( void *, void *, void ** ) = IotNetworkMbedtls_Create;
+
+    /**
+     * @brief Pointer to the metrics-wrapped network close function.
+     */
+    static IotNetworkError_t ( * _networkClose )( void * ) = IotNetworkMbedtls_Close;
+
+    /**
+     * @brief Pointer to the function that retrieves the server info for a connection.
+     */
+    static void ( * _networkServerInfo )( void *,
+                                        IotMetricsTcpConnection_t * ) = IotNetworkMbedtls_GetServerInfo;
+
+    /**
+     * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
+     * metrics.
+     */
+    const IotNetworkInterface_t IotNetworkMetrics =
+    {
+        .create             = _metricsNetworkCreate,
+        .setReceiveCallback = IotNetworkMbedtls_SetReceiveCallback,
+        .send               = IotNetworkMbedtls_Send,
+        .receive            = IotNetworkMbedtls_Receive,
+        .close              = _metricsNetworkClose,
+        .destroy            = IotNetworkMbedtls_Destroy
+    };
+#endif
 
 /*-----------------------------------------------------------*/
 

@@ -39,8 +39,30 @@
 #include "iot_demo_arguments.h"
 #include "iot_demo_logging.h"
 
-/* POSIX+OpenSSL network include. */
-#include "posix/iot_network_openssl.h"
+/* Choose the appropriate network header, initializers, and initialization
+ * function. */
+#if IOT_NETWORK_USE_OPENSSL == 1
+    /* POSIX+OpenSSL network include. */
+    #include "posix/iot_network_openssl.h"
+
+    #define IOT_DEMO_NETWORK_INTERFACE          IOT_NETWORK_INTERFACE_OPENSSL
+    #define IOT_DEMO_SERVER_INFO_INITIALIZER    IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER
+    #define IOT_DEMO_CREDENTIALS_INITIALIZER    AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER
+
+    #define IotDemoNetwork_Init                 IotNetworkOpenssl_Init
+    #define IotDemoNetwork_Cleanup              IotNetworkOpenssl_Cleanup
+#else
+    /* mbed TLS network include. */
+    #include "iot_network_mbedtls.h"
+
+    #define IOT_DEMO_NETWORK_INTERFACE          IOT_NETWORK_INTERFACE_MBEDTLS
+    #define IOT_DEMO_SERVER_INFO_INITIALIZER    IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER
+    #define IOT_DEMO_CREDENTIALS_INITIALIZER    AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER
+
+    /* No global initialization and cleanup needed for mbed TLS. */
+    #define IotDemoNetwork_Init()               IOT_NETWORK_SUCCESS
+    #define IotDemoNetwork_Cleanup()
+#endif
 
 /* This file calls a generic placeholder demo function. The build system selects
  * the actual demo function to run by defining it. */
@@ -75,8 +97,8 @@ int main( int argc,
     IotDemoArguments_t demoArguments = IOT_DEMO_ARGUMENTS_INITIALIZER;
 
     /* Network server info and credentials. */
-    IotNetworkServerInfo_t serverInfo = IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER;
-    IotNetworkCredentials_t credentials = AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER,
+    IotNetworkServerInfo_t serverInfo = IOT_DEMO_SERVER_INFO_INITIALIZER;
+    IotNetworkCredentials_t credentials = IOT_DEMO_CREDENTIALS_INITIALIZER,
                                    * pCredentials = NULL;
 
     /* Set default identifier if defined. The identifier is used as either the
@@ -135,7 +157,7 @@ int main( int argc,
     /* Initialize the network stack. */
     if( status == EXIT_SUCCESS )
     {
-        networkInitStatus = IotNetworkOpenssl_Init();
+        networkInitStatus = IotDemoNetwork_Init();
 
         if( networkInitStatus == IOT_NETWORK_SUCCESS )
         {
@@ -155,7 +177,7 @@ int main( int argc,
                           demoArguments.pIdentifier,
                           &serverInfo,
                           pCredentials,
-                          IOT_NETWORK_INTERFACE_OPENSSL );
+                          IOT_DEMO_NETWORK_INTERFACE );
     }
 
     /* Clean up the SDK if initialized. */
@@ -167,7 +189,7 @@ int main( int argc,
     /* Clean up the network stack if initialized. */
     if( networkInitialized == true )
     {
-        IotNetworkOpenssl_Cleanup();
+        IotDemoNetwork_Cleanup();
     }
 
     /* Log the demo status. */
