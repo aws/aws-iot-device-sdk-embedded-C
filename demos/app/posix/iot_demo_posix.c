@@ -75,8 +75,8 @@ int main( int argc,
     IotDemoArguments_t demoArguments = IOT_DEMO_ARGUMENTS_INITIALIZER;
 
     /* Network server info and credentials. */
-    IotNetworkServerInfoOpenssl_t serverInfo = IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER;
-    IotNetworkCredentialsOpenssl_t credentials = AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER,
+    IotNetworkServerInfo_t serverInfo = IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER;
+    IotNetworkCredentials_t credentials = AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER,
                                    * pCredentials = NULL;
 
     /* Set default identifier if defined. The identifier is used as either the
@@ -99,9 +99,9 @@ int main( int argc,
         if( demoArguments.securedConnection == true )
         {
             /* Set credential paths. */
-            credentials.pClientCertPath = demoArguments.pClientCertPath;
-            credentials.pPrivateKeyPath = demoArguments.pPrivateKeyPath;
-            credentials.pRootCaPath = demoArguments.pRootCaPath;
+            credentials.pClientCert = demoArguments.pClientCertPath;
+            credentials.pPrivateKey = demoArguments.pPrivateKeyPath;
+            credentials.pRootCa = demoArguments.pRootCaPath;
 
             /* By default, the credential initializer enables ALPN with AWS IoT,
              * which only works over port 443. Disable ALPN if another port is
