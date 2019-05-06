@@ -45,6 +45,9 @@ include_directories( ${PROJECT_SOURCE_DIR}/lib/include
 # TinyCBOR include path.
 include_directories( SYSTEM ${PROJECT_SOURCE_DIR}/third_party/tinycbor/tinycbor/src )
 
+# mbed TLS include path.
+include_directories( SYSTEM ${PROJECT_SOURCE_DIR}/third_party/mbedtls/mbedtls/include )
+
 # Demo include path. Always required because the tests also build the demos.
 include_directories( ${PROJECT_SOURCE_DIR}/demos/include )
 
@@ -95,6 +98,9 @@ add_subdirectory( lib/source/defender )
 
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
+
+# mbed TLS library (third-party)
+add_subdirectory( third_party/mbedtls )
 
 # Determine the demo executable to build based on system.
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
