@@ -19,7 +19,37 @@ endif()
 
 # mbed TLS source files.
 add_library( mbedtls
-             mbedtls/library/ssl_tls.c )
+             mbedtls/library/aes.c
+             mbedtls/library/aesni.c
+             mbedtls/library/asn1parse.c
+             mbedtls/library/asn1write.c
+             mbedtls/library/base64.c
+             mbedtls/library/bignum.c
+             mbedtls/library/ecdh.c
+             mbedtls/library/ecdsa.c
+             mbedtls/library/ecp.c
+             mbedtls/library/ecp_curves.c
+             mbedtls/library/cipher.c
+             mbedtls/library/cipher_wrap.c
+             mbedtls/library/ctr_drbg.c
+             mbedtls/library/hmac_drbg.c
+             mbedtls/library/md.c
+             mbedtls/library/md_wrap.c
+             mbedtls/library/oid.c
+             mbedtls/library/pem.c
+             mbedtls/library/pk.c
+             mbedtls/library/pkparse.c
+             mbedtls/library/pk_wrap.c
+             mbedtls/library/platform_util.c
+             mbedtls/library/rsa.c
+             mbedtls/library/rsa_internal.c
+             mbedtls/library/sha256.c
+             mbedtls/library/sha512.c
+             mbedtls/library/ssl_ciphersuites.c
+             mbedtls/library/ssl_cli.c
+             mbedtls/library/ssl_tls.c
+             mbedtls/library/x509.c
+             mbedtls/library/x509_crt.c )
 
 # mbed TLS config header.
 target_include_directories( mbedtls
