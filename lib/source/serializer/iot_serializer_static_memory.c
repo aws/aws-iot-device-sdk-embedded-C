@@ -26,216 +26,204 @@
 #if IOT_STATIC_MEMORY_ONLY == 1
 
 /* Standard includes. */
-    #include <stdbool.h>
-    #include <stddef.h>
-    #include <string.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
 
 /* Static memory include. */
-    #include "private/iot_static_memory.h"
+#include "private/iot_static_memory.h"
 
 /* Metrics include. */
-    #include "iot_serializer.h"
+#include "iot_serializer.h"
 
-    #include "cbor.h"
+/* TinyCBOR include. */
+#include "cbor.h"
 
-    #ifndef IOT_SERIALIZER_CBOR_ENCODERS
-        #define IOT_SERIALIZER_CBOR_ENCODERS    ( 10 )
-    #endif
+#ifndef IOT_SERIALIZER_CBOR_ENCODERS
+    #define IOT_SERIALIZER_CBOR_ENCODERS    ( 10 )
+#endif
 
-    #ifndef IOT_SERIALIZER_CBOR_PARSERS
-        #define IOT_SERIALIZER_CBOR_PARSERS    ( 10 )
-    #endif
+#ifndef IOT_SERIALIZER_CBOR_PARSERS
+    #define IOT_SERIALIZER_CBOR_PARSERS    ( 10 )
+#endif
 
-    #ifndef IOT_SERIALIZER_CBOR_VALUES
-        #define IOT_SERIALIZER_CBOR_VALUES    ( 10 )
-    #endif
+#ifndef IOT_SERIALIZER_CBOR_VALUES
+    #define IOT_SERIALIZER_CBOR_VALUES    ( 10 )
+#endif
 
-    #ifndef IOT_SERIALIZER_DECODER_OBJECTS
-        #define IOT_SERIALIZER_DECODER_OBJECTS    ( 10 )
-    #endif
+#ifndef IOT_SERIALIZER_DECODER_OBJECTS
+    #define IOT_SERIALIZER_DECODER_OBJECTS    ( 10 )
+#endif
 
 /* Validate static memory configuration settings. */
-    #if IOT_SERIALIZER_CBOR_ENCODERS <= 0
-        #error "IOT_SERIALIZER_CBOR_ENCODERS cannot be 0 or negative."
-    #endif
+#if IOT_SERIALIZER_CBOR_ENCODERS <= 0
+    #error "IOT_SERIALIZER_CBOR_ENCODERS cannot be 0 or negative."
+#endif
 
-    #if IOT_SERIALIZER_CBOR_PARSERS <= 0
-        #error "IOT_SERIALIZER_CBOR_PARSERS cannot be 0 or negative."
-    #endif
+#if IOT_SERIALIZER_CBOR_PARSERS <= 0
+    #error "IOT_SERIALIZER_CBOR_PARSERS cannot be 0 or negative."
+#endif
 
-    #if IOT_SERIALIZER_CBOR_VALUES <= 0
-        #error "IOT_SERIALIZER_CBOR_VALUES cannot be 0 or negative."
-    #endif
+#if IOT_SERIALIZER_CBOR_VALUES <= 0
+    #error "IOT_SERIALIZER_CBOR_VALUES cannot be 0 or negative."
+#endif
 
-    #if IOT_SERIALIZER_DECODER_OBJECTS <= 0
-        #error "IOT_SERIALIZER_DECODER_OBJECTS cannot be 0 or negative."
-    #endif
+#if IOT_SERIALIZER_DECODER_OBJECTS <= 0
+    #error "IOT_SERIALIZER_DECODER_OBJECTS cannot be 0 or negative."
+#endif
 
-    /**
-     * @todo Placeholder.
-     */
-    typedef struct _cborValueWrapper
-    {
-        CborValue cborValue; /**< @brief Placeholder. */
-        bool isOutermost;    /**< @brief Placeholder. */
-    } _cborValueWrapper_t;
-
-/*-----------------------------------------------------------*/
-
-/* Extern declarations of common static memory functions in iot_static_memory_common.c
- * Because these functions are specific to this static memory implementation, they are
- * not placed in the common static memory header file. */
-    extern int IotStaticMemory_FindFree( bool * const pInUse,
-                                         int limit );
-    extern void IotStaticMemory_ReturnInUse( void * ptr,
-                                             void * const pPool,
-                                             bool * const pInUse,
-                                             int limit,
-                                             size_t elementSize );
+/**
+ * @todo Placeholder.
+ */
+typedef struct _cborValueWrapper
+{
+    CborValue cborValue; /**< @brief Placeholder. */
+    bool isOutermost;    /**< @brief Placeholder. */
+} _cborValueWrapper_t;
 
 /*-----------------------------------------------------------*/
 
 /*
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
-    static bool _inUseCborEncoders[ IOT_SERIALIZER_CBOR_ENCODERS ] = { 0 };
-    static CborEncoder _cborEncoders[ IOT_SERIALIZER_CBOR_ENCODERS ] = { { .data = { 0 } } };
+static bool _inUseCborEncoders[ IOT_SERIALIZER_CBOR_ENCODERS ] = { 0 };
+static CborEncoder _cborEncoders[ IOT_SERIALIZER_CBOR_ENCODERS ] = { { .data = { 0 } } };
 
-    static bool _inUseCborParsers[ IOT_SERIALIZER_CBOR_PARSERS ] = { 0 };
-    static CborParser _cborParsers[ IOT_SERIALIZER_CBOR_PARSERS ] = { { 0 } };
+static bool _inUseCborParsers[ IOT_SERIALIZER_CBOR_PARSERS ] = { 0 };
+static CborParser _cborParsers[ IOT_SERIALIZER_CBOR_PARSERS ] = { { 0 } };
 
-    static bool _inUseCborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { 0 };
-    static _cborValueWrapper_t _cborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { { .isOutermost = false } };
+static bool _inUseCborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { 0 };
+static _cborValueWrapper_t _cborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { { .isOutermost = false } };
 
-    static bool _inUseDecoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { 0 };
-    static IotSerializerDecoderObject_t _decoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { { 0 } };
+static bool _inUseDecoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { 0 };
+static IotSerializerDecoderObject_t _decoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { { 0 } };
 
 /*-----------------------------------------------------------*/
 
-    void * Iot_MallocSerializerCborEncoder( size_t size )
-    {
-        int freeIndex = -1;
-        void * pNewCborEncoder = NULL;
+void * IotSerializer_MallocCborEncoder( size_t size )
+{
+    int32_t freeIndex = -1;
+    void * pNewCborEncoder = NULL;
 
-        if( size == sizeof( CborEncoder ) )
+    if( size == sizeof( CborEncoder ) )
+    {
+        freeIndex = IotStaticMemory_FindFree( _inUseCborEncoders,
+                                              IOT_SERIALIZER_CBOR_ENCODERS );
+
+        if( freeIndex != -1 )
         {
-            freeIndex = IotStaticMemory_FindFree( _inUseCborEncoders,
-                                                  IOT_SERIALIZER_CBOR_ENCODERS );
-
-            if( freeIndex != -1 )
-            {
-                pNewCborEncoder = &( _cborEncoders[ freeIndex ] );
-            }
+            pNewCborEncoder = &( _cborEncoders[ freeIndex ] );
         }
-
-        return pNewCborEncoder;
     }
+
+    return pNewCborEncoder;
+}
 
 /*-----------------------------------------------------------*/
 
-    void Iot_FreeSerializerCborEncoder( void * ptr )
-    {
-        IotStaticMemory_ReturnInUse( ptr,
-                                     _cborEncoders,
-                                     _inUseCborEncoders,
-                                     IOT_SERIALIZER_CBOR_ENCODERS,
-                                     sizeof( CborEncoder ) );
-    }
+void IotSerializer_FreeCborEncoder( void * ptr )
+{
+    IotStaticMemory_ReturnInUse( ptr,
+                                 _cborEncoders,
+                                 _inUseCborEncoders,
+                                 IOT_SERIALIZER_CBOR_ENCODERS,
+                                 sizeof( CborEncoder ) );
+}
 
 /*-----------------------------------------------------------*/
 
-    void * Iot_MallocSerializerCborParser( size_t size )
-    {
-        int freeIndex = -1;
-        void * pNewCborParser = NULL;
+void * IotSerializer_MallocCborParser( size_t size )
+{
+    int32_t freeIndex = -1;
+    void * pNewCborParser = NULL;
 
-        if( size == sizeof( CborParser ) )
+    if( size == sizeof( CborParser ) )
+    {
+        freeIndex = IotStaticMemory_FindFree( _inUseCborParsers,
+                                              IOT_SERIALIZER_CBOR_PARSERS );
+
+        if( freeIndex != -1 )
         {
-            freeIndex = IotStaticMemory_FindFree( _inUseCborParsers,
-                                                  IOT_SERIALIZER_CBOR_PARSERS );
-
-            if( freeIndex != -1 )
-            {
-                pNewCborParser = &( _cborParsers[ freeIndex ] );
-            }
+            pNewCborParser = &( _cborParsers[ freeIndex ] );
         }
-
-        return pNewCborParser;
     }
+
+    return pNewCborParser;
+}
 
 /*-----------------------------------------------------------*/
 
-    void Iot_FreeSerializerCborParser( void * ptr )
-    {
-        IotStaticMemory_ReturnInUse( ptr,
-                                     _cborParsers,
-                                     _inUseCborParsers,
-                                     IOT_SERIALIZER_CBOR_PARSERS,
-                                     sizeof( CborParser ) );
-    }
+void IotSerializer_FreeCborParser( void * ptr )
+{
+    IotStaticMemory_ReturnInUse( ptr,
+                                 _cborParsers,
+                                 _inUseCborParsers,
+                                 IOT_SERIALIZER_CBOR_PARSERS,
+                                 sizeof( CborParser ) );
+}
 
 /*-----------------------------------------------------------*/
 
-    void * Iot_MallocSerializerCborValue( size_t size )
-    {
-        int freeIndex = -1;
-        void * pNewCborValue = NULL;
+void * IotSerializer_MallocCborValue( size_t size )
+{
+    int32_t freeIndex = -1;
+    void * pNewCborValue = NULL;
 
-        if( size == sizeof( _cborValueWrapper_t ) )
+    if( size == sizeof( _cborValueWrapper_t ) )
+    {
+        freeIndex = IotStaticMemory_FindFree( _inUseCborValues,
+                                              IOT_SERIALIZER_CBOR_VALUES );
+
+        if( freeIndex != -1 )
         {
-            freeIndex = IotStaticMemory_FindFree( _inUseCborValues,
-                                                  IOT_SERIALIZER_CBOR_VALUES );
-
-            if( freeIndex != -1 )
-            {
-                pNewCborValue = &( _cborValues[ freeIndex ] );
-            }
+            pNewCborValue = &( _cborValues[ freeIndex ] );
         }
-
-        return pNewCborValue;
     }
+
+    return pNewCborValue;
+}
 
 /*-----------------------------------------------------------*/
 
-    void Iot_FreeSerializerCborValue( void * ptr )
-    {
-        IotStaticMemory_ReturnInUse( ptr,
-                                     _cborValues,
-                                     _inUseCborValues,
-                                     IOT_SERIALIZER_CBOR_VALUES,
-                                     sizeof( _cborValueWrapper_t ) );
-    }
+void IotSerializer_FreeCborValue( void * ptr )
+{
+    IotStaticMemory_ReturnInUse( ptr,
+                                 _cborValues,
+                                 _inUseCborValues,
+                                 IOT_SERIALIZER_CBOR_VALUES,
+                                 sizeof( _cborValueWrapper_t ) );
+}
 
 /*-----------------------------------------------------------*/
 
-    void * Iot_MallocSerializerDecoderObject( size_t size )
-    {
-        int freeIndex = -1;
-        void * pNewDecoderObject = NULL;
+void * IotSerializer_MallocDecoderObject( size_t size )
+{
+    int32_t freeIndex = -1;
+    void * pNewDecoderObject = NULL;
 
-        if( size == sizeof( IotSerializerDecoderObject_t ) )
+    if( size == sizeof( IotSerializerDecoderObject_t ) )
+    {
+        freeIndex = IotStaticMemory_FindFree( _inUseDecoderObjects,
+                                              IOT_SERIALIZER_DECODER_OBJECTS );
+
+        if( freeIndex != -1 )
         {
-            freeIndex = IotStaticMemory_FindFree( _inUseDecoderObjects,
-                                                  IOT_SERIALIZER_DECODER_OBJECTS );
-
-            if( freeIndex != -1 )
-            {
-                pNewDecoderObject = &( _decoderObjects[ freeIndex ] );
-            }
+            pNewDecoderObject = &( _decoderObjects[ freeIndex ] );
         }
-
-        return pNewDecoderObject;
     }
+
+    return pNewDecoderObject;
+}
 
 /*-----------------------------------------------------------*/
 
-    void Iot_FreeSerializerDecoderObject( void * ptr )
-    {
-        IotStaticMemory_ReturnInUse( ptr,
-                                     _decoderObjects,
-                                     _inUseDecoderObjects,
-                                     IOT_SERIALIZER_DECODER_OBJECTS,
-                                     sizeof( IotSerializerDecoderObject_t ) );
-    }
+void IotSerializer_FreeDecoderObject( void * ptr )
+{
+    IotStaticMemory_ReturnInUse( ptr,
+                                 _decoderObjects,
+                                 _inUseDecoderObjects,
+                                 IOT_SERIALIZER_DECODER_OBJECTS,
+                                 sizeof( IotSerializerDecoderObject_t ) );
+}
 
-#endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
+#endif
