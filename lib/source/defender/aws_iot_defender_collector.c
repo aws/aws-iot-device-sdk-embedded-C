@@ -30,19 +30,19 @@
 #include "platform/iot_clock.h"
 
 /* Used in debugging. It will decode the report with cbor format and print to stdout. */
-#define _DEBUG_CBOR_PRINT    0
+#define DEBUG_CBOR_PRINT    0
 
-#define  HEADER_TAG          AwsIotDefenderInternal_SelectTag( "header", "hed" )
-#define  REPORTID_TAG        AwsIotDefenderInternal_SelectTag( "report_id", "rid" )
-#define  VERSION_TAG         AwsIotDefenderInternal_SelectTag( "version", "v" )
-#define  VERSION_1_0         "1.0"  /* Used by defender service to indicate the schema change of report, e.g. adding new field. */
-#define  METRICS_TAG         AwsIotDefenderInternal_SelectTag( "metrics", "met" )
+#define  HEADER_TAG         AwsIotDefenderInternal_SelectTag( "header", "hed" )
+#define  REPORTID_TAG       AwsIotDefenderInternal_SelectTag( "report_id", "rid" )
+#define  VERSION_TAG        AwsIotDefenderInternal_SelectTag( "version", "v" )
+#define  VERSION_1_0        "1.0"   /* Used by defender service to indicate the schema change of report, e.g. adding new field. */
+#define  METRICS_TAG        AwsIotDefenderInternal_SelectTag( "metrics", "met" )
 
-#define TCP_CONN_TAG         AwsIotDefenderInternal_SelectTag( "tcp_connections", "tc" )
-#define EST_CONN_TAG         AwsIotDefenderInternal_SelectTag( "established_connections", "ec" )
-#define TOTAL_TAG            AwsIotDefenderInternal_SelectTag( "total", "t" )
-#define CONN_TAG             AwsIotDefenderInternal_SelectTag( "connections", "cs" )
-#define REMOTE_ADDR_TAG      AwsIotDefenderInternal_SelectTag( "remote_addr", "rad" )
+#define TCP_CONN_TAG        AwsIotDefenderInternal_SelectTag( "tcp_connections", "tc" )
+#define EST_CONN_TAG        AwsIotDefenderInternal_SelectTag( "established_connections", "ec" )
+#define TOTAL_TAG           AwsIotDefenderInternal_SelectTag( "total", "t" )
+#define CONN_TAG            AwsIotDefenderInternal_SelectTag( "connections", "cs" )
+#define REMOTE_ADDR_TAG     AwsIotDefenderInternal_SelectTag( "remote_addr", "rad" )
 
 /**
  * Structure to hold a metrics report.
@@ -79,9 +79,11 @@ static void _copyMetricsFlag( void );
 static void _serialize( void );
 
 static void _serializeTcpConnections( void * param1,
-                                      IotListDouble_t * pTcpConnectionsMetricsList );
+                                      const IotListDouble_t * pTcpConnectionsMetricsList );
 
-static void _printReport();
+#if DEBUG_CBOR_PRINT == 1
+    static void _printReport();
+#endif
 
 /*-----------------------------------------------------------*/
 
@@ -156,7 +158,7 @@ bool AwsIotDefenderInternal_CreateReport( void )
         _serialize();
 
         /* Ouput the report to stdout if debugging mode is enabled. */
-        #if _DEBUG_CBOR_PRINT == 1
+        #if DEBUG_CBOR_PRINT == 1
             _printReport();
         #endif
     }
@@ -299,7 +301,7 @@ static void _copyMetricsFlag( void )
 /*-----------------------------------------------------------*/
 
 static void _serializeTcpConnections( void * param1,
-                                      IotListDouble_t * pTcpConnectionsMetricsList )
+                                      const IotListDouble_t * pTcpConnectionsMetricsList )
 {
     IotSerializerEncoderObject_t * pMetricsObject = ( IotSerializerEncoderObject_t * ) param1;
 
@@ -399,7 +401,7 @@ static void _serializeTcpConnections( void * param1,
     assertNoError( serializerError );
 }
 
-#if _DEBUG_CBOR_PRINT == 1
+#if DEBUG_CBOR_PRINT == 1
     #include "cbor.h"
     /*-----------------------------------------------------------*/
 
@@ -416,4 +418,4 @@ static void _serializeTcpConnections( void * param1,
             &cborValue );
         cbor_value_to_pretty( stdout, &cborValue );
     }
-#endif /* if _DEBUG_CBOR_PRINT == 1 */
+#endif /* if DEBUG_CBOR_PRINT == 1 */

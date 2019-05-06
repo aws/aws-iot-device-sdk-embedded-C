@@ -7,7 +7,6 @@ add_library( iotcommon
              static_memory/iot_static_memory_taskpool.c
              static_memory/iot_static_memory_mqtt.c
              static_memory/aws_iot_static_memory_shadow.c
-             static_memory/iot_static_memory_metrics.c
              static_memory/iot_static_memory_serializer.c
              static_memory/aws_iot_static_memory_defender.c )
 
