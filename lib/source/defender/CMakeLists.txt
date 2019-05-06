@@ -2,7 +2,8 @@
 add_library( awsiotdefender
              aws_iot_defender_api.c
              aws_iot_defender_collector.c
-             aws_iot_defender_mqtt.c )
+             aws_iot_defender_mqtt.c
+             aws_iot_defender_static_memory.c )
 
 # Library version.
 set_target_properties( awsiotdefender PROPERTIES VERSION ${PROJECT_VERSION} )

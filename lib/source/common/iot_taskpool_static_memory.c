@@ -20,7 +20,7 @@
  */
 
 /**
- * @file iot_static_memory_taskpool.c
+ * @file iot_taskpool_static_memory.c
  * @brief Implementation of task pool static memory functions in iot_static_memory.h
  */
 

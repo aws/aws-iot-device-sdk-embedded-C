@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_static_memory_shadow.c
+ * @file aws_iot_shadow_static_memory.c
  * @brief Implementation of Shadow static memory functions in iot_static_memory.h
  */
 

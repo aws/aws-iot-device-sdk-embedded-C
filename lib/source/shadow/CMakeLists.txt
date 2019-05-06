@@ -3,6 +3,7 @@ add_library( awsiotshadow
              aws_iot_shadow_api.c
              aws_iot_shadow_operation.c
              aws_iot_shadow_parser.c
+             aws_iot_shadow_static_memory.c
              aws_iot_shadow_subscription.c )
 
 # Library version.
