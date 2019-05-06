@@ -21,10 +21,16 @@ jobs:
 
 # Matrix of tests to always run.
 env:
-  - RUN_TEST=common   # Common libraries (linear containers, common libraries, etc.)
-  - RUN_TEST=mqtt     # MQTT
-  - RUN_TEST=shadow   # AWS IoT Thing Shadows
-  - RUN_TEST=defender # AWS IoT Device Defender
+  - RUN_TEST=common
+  - RUN_TEST=mqtt
+    NETWORK_STACK=mbedtls
+  - RUN_TEST=mqtt
+    NETWORK_STACK=openssl
+  - RUN_TEST=shadow
+    NETWORK_STACK=mbedtls
+  - RUN_TEST=shadow
+    NETWORK_STACK=openssl
+  - RUN_TEST=defender
 
 # Update repositories.
 before_install:
@@ -43,6 +49,8 @@ script:
   - export IOT_IDENTIFIER="$IOT_IDENTIFIER_PREFIX$RUN_TEST"
   # Set default compiler options. Individual test scripts may override this.
   - export COMPILER_OPTIONS="-Wall -Wextra -fsanitize=thread"
+  # Choose the network abstraction.
+  - if [ "$NETWORK_STACK" = "openssl" ]; then export IOT_NETWORK_USE_OPENSSL=1; else export IOT_NETWORK_USE_OPENSSL=0; fi
   # Get AWS credentials when not a pull request build.
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then mkdir credentials; fi
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; fi
