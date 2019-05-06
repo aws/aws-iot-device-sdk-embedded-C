@@ -21,7 +21,7 @@
 
 /**
  * @file iot_taskpool_static_memory.c
- * @brief Implementation of task pool static memory functions in iot_static_memory.h
+ * @brief Implementation of task pool static memory functions.
  */
 
 /* The config header is always included first. */
@@ -50,19 +50,6 @@
 
 /*-----------------------------------------------------------*/
 
-/* Extern declarations of common static memory functions in iot_static_memory_common.c
- * Because these functions are specific to this static memory implementation, they are
- * not placed in the common static memory header file. */
-extern int IotStaticMemory_FindFree( bool * const pInUse,
-                                     int limit );
-extern void IotStaticMemory_ReturnInUse( void * ptr,
-                                         void * const pPool,
-                                         bool * const pInUse,
-                                         int limit,
-                                         size_t elementSize );
-
-/*-----------------------------------------------------------*/
-
 /*
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
@@ -74,9 +61,9 @@ static _taskPoolTimerEvent_t _pTaskPoolTimerEvents[ IOT_TASKPOOL_JOBS_RECYCLE_LI
 
 /*-----------------------------------------------------------*/
 
-void * Iot_MallocTaskPoolJob( size_t size )
+void * IotTaskPool_MallocJob( size_t size )
 {
-    int freeIndex = -1;
+    int32_t freeIndex = -1;
     void * pNewJob = NULL;
 
     /* Check size argument. */
@@ -97,7 +84,7 @@ void * Iot_MallocTaskPoolJob( size_t size )
 
 /*-----------------------------------------------------------*/
 
-void Iot_FreeTaskPoolJob( void * ptr )
+void IotTaskPool_FreeJob( void * ptr )
 {
     /* Return the in-use task pool job. */
     IotStaticMemory_ReturnInUse( ptr,
@@ -109,9 +96,9 @@ void Iot_FreeTaskPoolJob( void * ptr )
 
 /*-----------------------------------------------------------*/
 
-void * Iot_MallocTaskPoolTimerEvent( size_t size )
+void * IotTaskPool_MallocTimerEvent( size_t size )
 {
-    int freeIndex = -1;
+    int32_t freeIndex = -1;
     void * pNewTimerEvent = NULL;
 
     /* Check size argument. */
@@ -132,7 +119,7 @@ void * Iot_MallocTaskPoolTimerEvent( size_t size )
 
 /*-----------------------------------------------------------*/
 
-void Iot_FreeTaskPoolTimerEvent( void * ptr )
+void IotTaskPool_FreeTimerEvent( void * ptr )
 {
     /* Return the in-use task pool timer event. */
     IotStaticMemory_ReturnInUse( ptr,
