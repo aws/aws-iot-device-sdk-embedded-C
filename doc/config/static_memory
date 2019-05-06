@@ -15,12 +15,11 @@ GENERATE_TAGFILE = doc/tag/static_memory.tag
 # Directories containing library source code.
 INPUT = doc/lib \
         lib/include/private \
-        lib/source/common/static_memory
+        lib/source/common
 
 # Library file names.
-FILE_PATTERNS = *static_memory*.h *static_memory*.c *static_memory*.txt
+FILE_PATTERNS = *static_memory*.h *static_memory_common*.c *static_memory*.txt
 
 # External tag files required by this library.
 TAGFILES = doc/tag/main.tag=../main \
-           doc/tag/mqtt.tag=../mqtt \
-           doc/tag/shadow.tag=../shadow
+           doc/tag/platform.tag=../platform
