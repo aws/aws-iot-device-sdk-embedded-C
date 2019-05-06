@@ -114,14 +114,6 @@
     #define IotMqtt_FreeOperation                unity_free_mt
     #define IotMqtt_MallocSubscription           unity_malloc_mt
     #define IotMqtt_FreeSubscription             unity_free_mt
-    #define IotMqtt_MallocTimerEvent             unity_malloc_mt
-    #define IotMqtt_FreeTimerEvent               unity_free_mt
-    #define AwsIotShadow_MallocOperation         unity_malloc_mt
-    #define AwsIotShadow_FreeOperation           unity_free_mt
-    #define AwsIotShadow_MallocString            unity_malloc_mt
-    #define AwsIotShadow_FreeString              unity_free_mt
-    #define AwsIotShadow_MallocSubscription      unity_malloc_mt
-    #define AwsIotShadow_FreeSubscription        unity_free_mt
     #define IotSerializer_MallocCborEncoder      unity_malloc_mt
     #define IotSerializer_FreeCborEncoder        unity_free_mt
     #define IotSerializer_MallocCborParser       unity_malloc_mt
@@ -134,6 +126,12 @@
     #define AwsIotDefender_FreeReport            unity_free_mt
     #define AwsIotDefender_MallocTopic           unity_malloc_mt
     #define AwsIotDefender_FreeTopic             unity_free_mt
+    #define AwsIotShadow_MallocOperation         unity_malloc_mt
+    #define AwsIotShadow_FreeOperation           unity_free_mt
+    #define AwsIotShadow_MallocString            unity_malloc_mt
+    #define AwsIotShadow_FreeString              unity_free_mt
+    #define AwsIotShadow_MallocSubscription      unity_malloc_mt
+    #define AwsIotShadow_FreeSubscription        unity_free_mt
 #endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
 
 /* Network header to include in the tests. */
