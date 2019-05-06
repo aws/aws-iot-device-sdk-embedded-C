@@ -248,7 +248,7 @@
 
 #elif AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_JSON
 
-    #define _DEFENDER_FORMAT          "json"
+    #define DEFENDER_FORMAT           "json"
     #define _defenderEncoder          _IotSerializerJsonEncoder /**< Global defined in iot_serializer.h . */
     #define _defenderDecoder          _IotSerializerJsonDecoder /**< Global defined in iot_serializer.h . */
 

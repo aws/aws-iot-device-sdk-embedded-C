@@ -78,7 +78,7 @@
  * #AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH is used for the length of
  * #_mqttSubscription_t.pTopicFilter.
  */
-#define _MQTT_SUBSCRIPTION_SIZE    ( sizeof( _mqttSubscription_t ) + AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
+#define MQTT_SUBSCRIPTION_SIZE    ( sizeof( _mqttSubscription_t ) + AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
 
 /*-----------------------------------------------------------*/
 
@@ -105,7 +105,7 @@ static bool _pInUseMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { 0 }
 static _mqttOperation_t _pMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { { .link = { 0 } } }; /**< @brief MQTT operations. */
 
 static bool _pInUseMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ] = { 0 };                           /**< @brief MQTT subscription in-use flags. */
-static char _pMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ][ _MQTT_SUBSCRIPTION_SIZE ] = { { 0 } }; /**< @brief MQTT subscriptions. */
+static char _pMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ][ MQTT_SUBSCRIPTION_SIZE ] = { { 0 } };  /**< @brief MQTT subscriptions. */
 
 /*-----------------------------------------------------------*/
 
@@ -184,7 +184,7 @@ void * Iot_MallocMqttSubscription( size_t size )
     int freeIndex = -1;
     void * pNewSubscription = NULL;
 
-    if( size <= _MQTT_SUBSCRIPTION_SIZE )
+    if( size <= MQTT_SUBSCRIPTION_SIZE )
     {
         /* Get the index of a free MQTT subscription. */
         freeIndex = IotStaticMemory_FindFree( _pInUseMqttSubscriptions,
@@ -208,7 +208,7 @@ void Iot_FreeMqttSubscription( void * ptr )
                                  _pMqttSubscriptions,
                                  _pInUseMqttSubscriptions,
                                  IOT_MQTT_SUBSCRIPTIONS,
-                                 _MQTT_SUBSCRIPTION_SIZE );
+                                 MQTT_SUBSCRIPTION_SIZE );
 }
 
 /*-----------------------------------------------------------*/

@@ -72,7 +72,7 @@
  * the constant #MAX_THING_NAME_LENGTH is used for the length of
  * #_shadowSubscription_t.pThingName.
  */
-#define _SHADOW_SUBSCRIPTION_SIZE    ( sizeof( _shadowSubscription_t ) + MAX_THING_NAME_LENGTH )
+#define SHADOW_SUBSCRIPTION_SIZE    ( sizeof( _shadowSubscription_t ) + MAX_THING_NAME_LENGTH )
 
 /*-----------------------------------------------------------*/
 
@@ -96,7 +96,7 @@ static bool _pInUseShadowOperations[ AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS ]
 static _shadowOperation_t _pShadowOperations[ AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS ] = { { .link = { 0 } } }; /**< @brief Shadow operations. */
 
 static bool _pInUseShadowSubscriptions[ AWS_IOT_SHADOW_SUBSCRIPTIONS ] = { 0 };                             /**< @brief Shadow subscription in-use flags. */
-static char _pShadowSubscriptions[ AWS_IOT_SHADOW_SUBSCRIPTIONS ][ _SHADOW_SUBSCRIPTION_SIZE ] = { { 0 } }; /**< @brief Shadow subscriptions. */
+static char _pShadowSubscriptions[ AWS_IOT_SHADOW_SUBSCRIPTIONS ][ SHADOW_SUBSCRIPTION_SIZE ] = { { 0 } };  /**< @brief Shadow subscriptions. */
 
 /*-----------------------------------------------------------*/
 
@@ -140,7 +140,7 @@ void * AwsIot_MallocShadowSubscription( size_t size )
     int freeIndex = -1;
     void * pNewSubscription = NULL;
 
-    if( size <= _SHADOW_SUBSCRIPTION_SIZE )
+    if( size <= SHADOW_SUBSCRIPTION_SIZE )
     {
         /* Get the index of a free Shadow subscription. */
         freeIndex = IotStaticMemory_FindFree( _pInUseShadowSubscriptions,
@@ -164,7 +164,7 @@ void AwsIot_FreeShadowSubscription( void * ptr )
                                  _pShadowSubscriptions,
                                  _pInUseShadowSubscriptions,
                                  AWS_IOT_SHADOW_SUBSCRIPTIONS,
-                                 _SHADOW_SUBSCRIPTION_SIZE );
+                                 SHADOW_SUBSCRIPTION_SIZE );
 }
 
 /*-----------------------------------------------------------*/

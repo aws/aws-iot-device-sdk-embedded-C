@@ -53,10 +53,10 @@
         #error "AWS_IOT_DEFENDER_TOPICS cannot be 0 or negative."
     #endif
 
-    #define _DEFENDER_REPORT_SIZE    200
+    #define DEFENDER_REPORT_SIZE    200
 
 /* Prefix(30) + esimated "thing name"(128) + sufix(30). */
-    #define _DEFENDER_TOPIC_SIZE     200
+    #define DEFENDER_TOPIC_SIZE     200
 
 /*-----------------------------------------------------------*/
 
@@ -77,10 +77,10 @@
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
     static bool _inUseDefenderReports[ AWS_IOT_DEFENDER_REPORTS ] = { 0 };
-    static uint8_t _defenderReports[ AWS_IOT_DEFENDER_REPORTS ][ _DEFENDER_REPORT_SIZE ] = { { 0 } };
+    static uint8_t _defenderReports[ AWS_IOT_DEFENDER_REPORTS ][ DEFENDER_REPORT_SIZE ] = { { 0 } };
 
     static bool _inUseDefenderTopics[ AWS_IOT_DEFENDER_TOPICS ] = { 0 };
-    static char _defenderTopics[ AWS_IOT_DEFENDER_TOPICS ][ _DEFENDER_TOPIC_SIZE ] = { { 0 } };
+    static char _defenderTopics[ AWS_IOT_DEFENDER_TOPICS ][ DEFENDER_TOPIC_SIZE ] = { { 0 } };
 
 /*-----------------------------------------------------------*/
 
@@ -89,7 +89,7 @@
         int freeIndex = -1;
         void * pNewReport = NULL;
 
-        if( size <= _DEFENDER_REPORT_SIZE )
+        if( size <= DEFENDER_REPORT_SIZE )
         {
             freeIndex = IotStaticMemory_FindFree( _inUseDefenderReports,
                                                   AWS_IOT_DEFENDER_REPORTS );
@@ -111,7 +111,7 @@
                                      _defenderReports,
                                      _inUseDefenderReports,
                                      AWS_IOT_DEFENDER_REPORTS,
-                                     _DEFENDER_REPORT_SIZE );
+                                     DEFENDER_REPORT_SIZE );
     }
 
 /*-----------------------------------------------------------*/
@@ -121,7 +121,7 @@
         int freeIndex = -1;
         void * pNewTopic = NULL;
 
-        if( size <= _DEFENDER_TOPIC_SIZE )
+        if( size <= DEFENDER_TOPIC_SIZE )
         {
             freeIndex = IotStaticMemory_FindFree( _inUseDefenderTopics,
                                                   AWS_IOT_DEFENDER_TOPICS );
@@ -143,7 +143,7 @@
                                      _defenderTopics,
                                      _inUseDefenderTopics,
                                      AWS_IOT_DEFENDER_TOPICS,
-                                     _DEFENDER_TOPIC_SIZE );
+                                     DEFENDER_TOPIC_SIZE );
     }
 
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
