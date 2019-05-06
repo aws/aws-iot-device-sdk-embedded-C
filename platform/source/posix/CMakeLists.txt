@@ -49,25 +49,26 @@ foreach( POSIX_FUNCTION ${REQUIRED_POSIX_FUNCTIONS} )
     endif()
 endforeach()
 
-# Check for OpenSSL.
-find_package( OpenSSL )
+# Choose either OpenSSL or mbed TLS.
+if( ${IOT_NETWORK_USE_OPENSSL} )
+    # Check for OpenSSL.
+    find_package( OpenSSL )
 
-# Minimum supported OpenSSL version is 1.0.2g.
-if( ${OPENSSL_FOUND} )
-    if( ${OPENSSL_VERSION} STRLESS "1.0.2g" )
-        message( FATAL_ERROR "OpenSSL 1.0.2g or later required, found ${OPENSSL_VERSION}." )
+    # Minimum supported OpenSSL version is 1.0.2g.
+    if( ${OPENSSL_FOUND} )
+        if( ${OPENSSL_VERSION} STRLESS "1.0.2g" )
+            message( FATAL_ERROR "OpenSSL 1.0.2g or later required, found ${OPENSSL_VERSION}." )
+        endif()
+
+        # Choose OpenSSL network source file.
+        set( NETWORK_SOURCE_FILE iot_network_openssl.c )
+
+        # Link OpenSSL.
+        set( TLS_LIBRARY_LINKER_FLAG OpenSSL::SSL OpenSSL::Crypto )
     endif()
-
-    # Choose OpenSSL network source file.
-    set( NETWORK_SOURCE_FILE iot_network_openssl.c )
-
-    # Link OpenSSL.
-    set( TLS_LIBRARY_LINKER_FLAG OpenSSL::SSL OpenSSL::Crypto )
-endif()
-
-# Ensure that a compatible TLS library was found.
-if( NOT DEFINED TLS_LIBRARY_LINKER_FLAG )
-    message( FATAL_ERROR "No compatible TLS library was found." )
+else()
+    set( NETWORK_SOURCE_FILE ../network/iot_network_mbedtls.c )
+    set( TLS_LIBRARY_LINKER_FLAG mbedtls )
 endif()
 
 # Platform libraries source files.
@@ -76,9 +77,6 @@ add_library( iotplatform
              iot_threads_posix.c
              ../network/iot_network_metrics.c
              ${NETWORK_SOURCE_FILE} )
-
-# Library version.
-set_target_properties( iotplatform PROPERTIES VERSION ${PROJECT_VERSION} )
 
 # Link required libraries.
 target_link_libraries( iotplatform Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )
