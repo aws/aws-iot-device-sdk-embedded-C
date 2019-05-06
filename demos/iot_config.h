@@ -65,9 +65,6 @@
 #define IOT_LOG_LEVEL_MQTT                      IOT_LOG_INFO
 #define AWS_IOT_LOG_LEVEL_SHADOW                IOT_LOG_INFO
 
-/* This is supposed to be defined as the socket data type. In linux, it is "int". */
-#define IotMetricsConnectionId_t                int
-
 /* The build system will choose the appropriate system types file for the platform
  * layer based on the host operating system. */
 #include IOT_SYSTEM_TYPES_FILE

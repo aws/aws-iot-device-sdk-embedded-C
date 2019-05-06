@@ -38,6 +38,8 @@
 /* Openssl includes. */
 #include "posix/iot_network_openssl.h"
 
+#include "iot_network_metrics.h"
+
 /* Serializer includes. */
 #include "iot_serializer.h"
 
@@ -46,7 +48,7 @@
 #include "unity_fixture.h"
 
 /* Total time to wait for a state to be true. */
-#define WAIT_STATE_TOTAL_SECONDS    5
+#define WAIT_STATE_TOTAL_SECONDS    10
 
 /* Time interval for defender agent to publish metrics. It will be throttled if too frequent. */
 /* TODO: if we can change "thingname" in each test, this can be lowered. */
@@ -81,7 +83,6 @@ static const AwsIotDefenderCallback_t _EMPTY_CALLBACK = { .function = NULL, .par
 static IotNetworkServerInfoOpenssl_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 static IotNetworkCredentialsOpenssl_t _credential = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
 
-extern const IotNetworkInterface_t _IotNetworkOpensslMetrics;
 /*------------------ global variables -----------------------------*/
 
 static uint8_t _payloadBuffer[ PAYLOAD_MAX_SIZE ];
@@ -166,7 +167,7 @@ TEST_SETUP( Full_DEFENDER )
     _startInfo.mqttNetworkInfo.u.setup.pNetworkServerInfo = &_serverInfo;
     _startInfo.mqttNetworkInfo.u.setup.pNetworkCredentialInfo = &_credential;
 
-    _startInfo.mqttNetworkInfo.pNetworkInterface = &_IotNetworkOpensslMetrics;
+    _startInfo.mqttNetworkInfo.pNetworkInterface = &IotNetworkMetrics;
 
     _startInfo.mqttConnectionInfo = ( IotMqttConnectInfo_t ) IOT_MQTT_CONNECT_INFO_INITIALIZER;
     _startInfo.mqttConnectionInfo.pClientIdentifier = AWS_IOT_TEST_SHADOW_THING_NAME;

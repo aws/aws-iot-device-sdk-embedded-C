@@ -20,9 +20,9 @@ INPUT = doc/lib \
 # Library file names.
 FILE_PATTERNS = platform.txt \
                 iot_clock.h \
-                iot_metrics.h \
-                iot_network.h \
                 iot_threads.h \
+                iot_network.h \
+                iot_metrics.h \
                 iot_platform_types.h
 
 # External tag files required by this library.
