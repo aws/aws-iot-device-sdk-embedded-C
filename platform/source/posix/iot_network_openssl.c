@@ -198,7 +198,7 @@ static void * _networkReceiveThread( void * pArgument )
  *
  * @return A connected TCP socket number; `-1` if the DNS lookup failed.
  */
-static int _dnsLookup( const IotNetworkServerInfoOpenssl_t * pServerInfo )
+static int _dnsLookup( const IotNetworkServerInfo_t * pServerInfo )
 {
     IOT_FUNCTION_ENTRY( int, 0 );
     int tcpSocket = -1;
@@ -412,7 +412,7 @@ static bool _readCredentials( SSL_CTX * pSslContext,
  */
 static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
                                     const char * pServerName,
-                                    const IotNetworkCredentialsOpenssl_t * pOpensslCredentials )
+                                    const IotNetworkCredentials_t * pOpensslCredentials )
 {
     IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
     SSL_CTX * pSslContext = NULL;
@@ -438,9 +438,9 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
 
     /* Import all credentials. */
     if( _readCredentials( pSslContext,
-                          pOpensslCredentials->pRootCaPath,
-                          pOpensslCredentials->pClientCertPath,
-                          pOpensslCredentials->pPrivateKeyPath ) == false )
+                          pOpensslCredentials->pRootCa,
+                          pOpensslCredentials->pClientCert,
+                          pOpensslCredentials->pPrivateKey ) == false )
     {
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
@@ -664,8 +664,8 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
     _networkConnection_t * pNewNetworkConnection = NULL;
 
     /* Cast function parameters to correct types. */
-    const IotNetworkServerInfoOpenssl_t * const pServerInfo = pConnectionInfo;
-    const IotNetworkCredentialsOpenssl_t * const pOpensslCredentials = pCredentialInfo;
+    const IotNetworkServerInfo_t * const pServerInfo = pConnectionInfo;
+    const IotNetworkCredentials_t * const pOpensslCredentials = pCredentialInfo;
     _networkConnection_t ** const pNetworkConnection = ( _networkConnection_t ** const ) pConnection;
 
     /* Allocate memory for a new connection. */
