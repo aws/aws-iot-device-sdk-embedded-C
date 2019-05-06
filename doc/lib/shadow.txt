@@ -147,7 +147,7 @@ Log messages from the Shadow library at or below this setting will be printed.
 @configdefault Standard library [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function if @ref AWS_IOT_SHADOW_ENABLE_ASSERTS is `1`; otherwise, nothing.
 
 @section shadow_config_memory Memory allocation
-@brief If @ref IOT_STATIC_MEMORY_ONLY is `1`, then the following functions must be re-implemented for the Shadow library.
+@brief The following functions may be re-implemented for the Shadow library.
 - #AwsIotShadow_MallocOperation <br>
   @copybrief AwsIotShadow_MallocOperation
 - #AwsIotShadow_FreeOperation <br>
@@ -160,4 +160,10 @@ Log messages from the Shadow library at or below this setting will be printed.
   @copybrief AwsIotShadow_MallocSubscription
 - #AwsIotShadow_FreeSubscription <br>
   @copybrief AwsIotShadow_FreeSubscription
+
+When @ref IOT_STATIC_MEMORY_ONLY is `1`, the following settings configure the number of statically-allocated buffers for Shadow.
+- @anchor AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS <br>
+  Maximum number of Shadow operations that may be in-progress at any time. Defaults to `10` if undefined.
+- @anchor AWS_IOT_SHADOW_SUBSCRIPTIONS AWS_IOT_SHADOW_SUBSCRIPTIONS <br>
+  Maximum number of Shadow subscriptions at any time. Defaults to `2` if undefined.
 */

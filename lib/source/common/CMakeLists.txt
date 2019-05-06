@@ -2,13 +2,9 @@
 add_library( iotcommon
              iot_init.c
              iot_logging.c
+             iot_static_memory_common.c
              iot_taskpool.c
-             static_memory/iot_static_memory_common.c
-             static_memory/iot_static_memory_taskpool.c
-             static_memory/iot_static_memory_mqtt.c
-             static_memory/aws_iot_static_memory_shadow.c
-             static_memory/iot_static_memory_serializer.c
-             static_memory/aws_iot_static_memory_defender.c )
+             iot_taskpool_static_memory.c )
 
 # Library version.
 set_target_properties( iotcommon PROPERTIES VERSION ${PROJECT_VERSION} )

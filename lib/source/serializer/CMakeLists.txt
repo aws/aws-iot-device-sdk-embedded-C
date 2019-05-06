@@ -1,6 +1,7 @@
 # Serializer library source files.
 add_library( iotserializer
              iot_json_utils.c
+             iot_serializer_static_memory.c
              cbor/iot_serializer_tinycbor_decoder.c
              cbor/iot_serializer_tinycbor_encoder.c )
 

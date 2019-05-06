@@ -82,41 +82,32 @@
     #include "private/iot_static_memory.h"
 
 /**
- * @brief Allocate an array of uint8_t. This function should have the same
+ * @brief Allocate a Defender report. This function should have the same
  * signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotDefender_MallocReport
-        #define AwsIotDefender_MallocReport    AwsIot_MallocDefenderReport
-    #endif
+    #define AwsIotDefender_MallocReport    Iot_MallocMessageBuffer
 
 /**
- * @brief Free an array of uint8_t. This function should have the same
+ * @brief Free a Defender report. This function should have the same
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotDefender_FreeReport
-        #define AwsIotDefender_FreeReport    AwsIot_FreeDefenderReport
-    #endif
+    #define AwsIotDefender_FreeReport      Iot_FreeMessageBuffer
 
 /**
- * @brief Allocate an array of char. This function should have the same
+ * @brief Allocate a Defender topic. This function should have the same
  * signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
-    #ifndef AwsIotDefender_MallocTopic
-        #define AwsIotDefender_MallocTopic    AwsIot_MallocDefenderTopic
-    #endif
+    #define AwsIotDefender_MallocTopic     Iot_MallocMessageBuffer
 
 /**
- * @brief Free an array of char. This function should have the same
+ * @brief Free a Defender topic. This function should have the same
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
-    #ifndef AwsIotDefender_FreeTopic
-        #define AwsIotDefender_FreeTopic    AwsIot_FreeDefenderTopic
-    #endif
-
+    #define AwsIotDefender_FreeTopic       Iot_FreeMessageBuffer
 #else /* if IOT_STATIC_MEMORY_ONLY */
     #include <stdlib.h>
 
@@ -242,15 +233,15 @@
  */
 #if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR
 
-    #define DEFENDER_FORMAT           "cbor"
-    #define _defenderEncoder          _IotSerializerCborEncoder /**< Global defined in iot_serializer.h . */
-    #define _defenderDecoder          _IotSerializerCborDecoder /**< Global defined in iot_serializer.h . */
+    #define DEFENDER_FORMAT     "cbor"
+    #define _defenderEncoder    _IotSerializerCborEncoder       /**< Global defined in iot_serializer.h . */
+    #define _defenderDecoder    _IotSerializerCborDecoder       /**< Global defined in iot_serializer.h . */
 
 #elif AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_JSON
 
-    #define _DEFENDER_FORMAT          "json"
-    #define _defenderEncoder          _IotSerializerJsonEncoder /**< Global defined in iot_serializer.h . */
-    #define _defenderDecoder          _IotSerializerJsonDecoder /**< Global defined in iot_serializer.h . */
+    #define DEFENDER_FORMAT     "json"
+    #define _defenderEncoder    _IotSerializerJsonEncoder       /**< Global defined in iot_serializer.h . */
+    #define _defenderDecoder    _IotSerializerJsonDecoder       /**< Global defined in iot_serializer.h . */
 
 #else /* if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR */
     #error "AWS_IOT_DEFENDER_FORMAT must be either AWS_IOT_DEFENDER_FORMAT_CBOR or AWS_IOT_DEFENDER_FORMAT_JSON."
