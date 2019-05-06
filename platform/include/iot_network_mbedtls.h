@@ -20,45 +20,21 @@
  */
 
 /**
- * @file iot_network_mbedtls.c
- * @brief Implementation of the network interface functions in iot_network.h
- * for mbed TLS.
+ * @file iot_network_mbedtls.h
+ * @brief Declares the network stack functions specified in iot_network.h for
+ * mbed TLS.
  */
+
+#ifndef IOT_NETWORK_MBEDTLS_H_
+#define IOT_NETWORK_MBEDTLS_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
 
-/* mbed TLS includes. */
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
+/* Platform types include. */
+#include "types/iot_platform_types.h"
 
-/* mbed TLS network include. */
-#include "iot_network_mbedtls.h"
+/* Platform network include. */
+#include "platform/iot_network.h"
 
-/* Configure logs for the functions in this file. */
-#ifdef IOT_LOG_LEVEL_NETWORK
-    #define LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_NETWORK
-#else
-    #ifdef IOT_LOG_LEVEL_GLOBAL
-        #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
-    #else
-        #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
-    #endif
-#endif
-
-#define LIBRARY_LOG_NAME    ( "NET" )
-#include "iot_logging_setup.h"
-
-/*-----------------------------------------------------------*/
-
-static mbedtls_entropy_context _entropyContext;
-static mbedtls_ctr_drbg_context _ctrDrbgContext;
-
-/*-----------------------------------------------------------*/
-
-IotNetworkError_t IotNetworkMbedtls_Init( void )
-{
-    mbedtls_ctr_drbg_init( &_ctrDrbgContext );
-
-    IotLogInfo( "Network library initialized." );
-}
+#endif /* ifndef IOT_NETWORK_MBEDTLS_H_ */

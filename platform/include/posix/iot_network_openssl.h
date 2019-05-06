@@ -31,13 +31,6 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
-/* POSIX types include. */
-#ifdef POSIX_TYPES_HEADER
-    #include POSIX_TYPES_HEADER
-#else
-    #include <sys/types.h>
-#endif
-
 /* Standard bool include. */
 #include <stdbool.h>
 
