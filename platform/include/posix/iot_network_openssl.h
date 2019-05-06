@@ -41,9 +41,6 @@
 /* Standard bool include. */
 #include <stdbool.h>
 
-/* OpenSSL types include. */
-#include <openssl/ossl_typ.h>
-
 /* Platform types include. */
 #include "types/iot_platform_types.h"
 
@@ -222,6 +219,12 @@ IotNetworkError_t IotNetworkOpenssl_Close( void * pConnection );
  * with OpenSSL.
  */
 IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection );
+
+/**
+ * @brief Used by metrics to retrieve remote server and port of a connection.
+ */
+void IotNetworkOpenssl_GetServerInfo( void * pConnection,
+                                      IotMetricsTcpConnection_t * pServerInfo );
 
 /**
  * @cond DOXYGEN_IGNORE
