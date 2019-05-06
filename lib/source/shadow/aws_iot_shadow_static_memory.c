@@ -21,7 +21,7 @@
 
 /**
  * @file aws_iot_shadow_static_memory.c
- * @brief Implementation of Shadow static memory functions in iot_static_memory.h
+ * @brief Implementation of Shadow static memory functions.
  */
 
 /* The config header is always included first. */
@@ -76,19 +76,6 @@
 
 /*-----------------------------------------------------------*/
 
-/* Extern declarations of common static memory functions in iot_static_memory_common.c
- * Because these functions are specific to this static memory implementation, they are
- * not placed in the common static memory header file. */
-extern int IotStaticMemory_FindFree( bool * const pInUse,
-                                     int limit );
-extern void IotStaticMemory_ReturnInUse( void * ptr,
-                                         void * const pPool,
-                                         bool * const pInUse,
-                                         int limit,
-                                         size_t elementSize );
-
-/*-----------------------------------------------------------*/
-
 /*
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
@@ -100,9 +87,9 @@ static char _pShadowSubscriptions[ AWS_IOT_SHADOW_SUBSCRIPTIONS ][ SHADOW_SUBSCR
 
 /*-----------------------------------------------------------*/
 
-void * AwsIot_MallocShadowOperation( size_t size )
+void * AwsIotShadow_MallocOperation( size_t size )
 {
-    int freeIndex = -1;
+    int32_t freeIndex = -1;
     void * pNewOperation = NULL;
 
     /* Check size argument. */
@@ -123,7 +110,7 @@ void * AwsIot_MallocShadowOperation( size_t size )
 
 /*-----------------------------------------------------------*/
 
-void AwsIot_FreeShadowOperation( void * ptr )
+void AwsIotShadow_FreeOperation( void * ptr )
 {
     /* Return the in-use Shadow operation. */
     IotStaticMemory_ReturnInUse( ptr,
@@ -135,9 +122,9 @@ void AwsIot_FreeShadowOperation( void * ptr )
 
 /*-----------------------------------------------------------*/
 
-void * AwsIot_MallocShadowSubscription( size_t size )
+void * AwsIotShadow_MallocSubscription( size_t size )
 {
-    int freeIndex = -1;
+    int32_t freeIndex = -1;
     void * pNewSubscription = NULL;
 
     if( size <= SHADOW_SUBSCRIPTION_SIZE )
@@ -157,7 +144,7 @@ void * AwsIot_MallocShadowSubscription( size_t size )
 
 /*-----------------------------------------------------------*/
 
-void AwsIot_FreeShadowSubscription( void * ptr )
+void AwsIotShadow_FreeSubscription( void * ptr )
 {
     /* Return the in-use Shadow subscription. */
     IotStaticMemory_ReturnInUse( ptr,

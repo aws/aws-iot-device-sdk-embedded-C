@@ -309,6 +309,6 @@ When @ref IOT_STATIC_MEMORY_ONLY is `1`, the following settings configure the nu
   Number of MQTT connections that may be opened. Defaults to `1` if undefined.
 - @anchor IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS <br>
   Maximum number of MQTT operations that may be in-progress at any time. Defaults to `10` if undefined.
-- @anchor IOT_MQTT_SUBSCRIPTIONS IOT_MQTT_SUBSCRIPTIONS
+- @anchor IOT_MQTT_SUBSCRIPTIONS IOT_MQTT_SUBSCRIPTIONS <br>
   Maximum number of MQTT subscriptions at any time. Defaults to `8` if undefined.
 */
