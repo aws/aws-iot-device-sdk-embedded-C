@@ -72,9 +72,6 @@
 /* Shadow library configuration. */
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 
-/* Metrics library configuration. */
-#define IOT_METRICS_ENABLE_ASSERTS              ( 1 )
-
 /* Serializer library configuration. */
 #define IOT_SERIALIZER_ENABLE_ASSERTS           ( 1 )
 
