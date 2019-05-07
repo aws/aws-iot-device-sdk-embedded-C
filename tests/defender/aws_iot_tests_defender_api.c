@@ -39,6 +39,9 @@
 
 #include "iot_init.h"
 
+/* Test network header include. */
+#include IOT_TEST_NETWORK_HEADER
+
 /* Serializer includes. */
 #include "iot_serializer.h"
 

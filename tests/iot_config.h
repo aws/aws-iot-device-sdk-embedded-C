@@ -25,6 +25,10 @@
 #ifndef IOT_CONFIG_H_
 #define IOT_CONFIG_H_
 
+/* The build system will choose the appropriate system types file for the platform
+ * layer based on the host operating system. */
+#include IOT_SYSTEM_TYPES_FILE
+
 /* Test framework include. */
 #include "unity_fixture_malloc_overrides.h"
 
@@ -156,8 +160,8 @@ typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
     #define IOT_TEST_ALPN_PROTOS          "x-amzn-mqtt-ca"
     #define IOT_TEST_NETWORK_INTERFACE    IOT_NETWORK_INTERFACE_MBEDTLS
 
-    #define IotTestNetwork_Init()         IOT_NETWORK_SUCCESS
-    #define IotTestNetwork_Cleanup()
+    #define IotTestNetwork_Init           IotNetworkMbedtls_Init
+    #define IotTestNetwork_Cleanup        IotNetworkMbedtls_Cleanup
 #endif
 
 /* Initializers for the tests' network types. */
@@ -239,9 +243,5 @@ typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
         return 1;
     }
 #endif /* if IOT_TEST_COVERAGE == 1 */
-
-/* The build system will choose the appropriate system types file for the platform
- * layer based on the host operating system. */
-#include IOT_SYSTEM_TYPES_FILE
 
 #endif /* ifndef IOT_CONFIG_H_ */

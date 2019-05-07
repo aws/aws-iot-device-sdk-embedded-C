@@ -19,6 +19,7 @@ endif()
 
 # mbed TLS source files.
 add_library( mbedtls
+             iot_mbedtls_threading.c
              mbedtls/library/aes.c
              mbedtls/library/aesni.c
              mbedtls/library/asn1parse.c
@@ -48,14 +49,15 @@ add_library( mbedtls
              mbedtls/library/ssl_ciphersuites.c
              mbedtls/library/ssl_cli.c
              mbedtls/library/ssl_tls.c
+             mbedtls/library/threading.c
              mbedtls/library/x509.c
              mbedtls/library/x509_crt.c )
 
 # mbed TLS config header.
 target_include_directories( mbedtls
-                            PRIVATE ${PROJECT_SOURCE_DIR}/third_party/mbedtls )
+                            PUBLIC ${PROJECT_SOURCE_DIR}/third_party/mbedtls )
 target_compile_definitions( mbedtls
-                            PRIVATE -DMBEDTLS_CONFIG_FILE="iot_config_mbedtls.h" )
+                            PUBLIC -DMBEDTLS_CONFIG_FILE="iot_config_mbedtls.h" )
 
 # Disable all warnings for this third-party library.
 target_compile_options( mbedtls

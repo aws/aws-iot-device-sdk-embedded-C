@@ -31,6 +31,9 @@
 /* mbed TLS network include. */
 #include "iot_network_mbedtls.h"
 
+/* mbed TLS includes. */
+#include <mbedtls/threading.h>
+
 /* Configure logs for the functions in this file. */
 #ifdef IOT_LOG_LEVEL_NETWORK
     #define LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_NETWORK
@@ -59,6 +62,31 @@ const IotNetworkInterface_t IotNetworkMbedtls =
     .close              = IotNetworkMbedtls_Close,
     .destroy            = IotNetworkMbedtls_Destroy
 };
+
+/*-----------------------------------------------------------*/
+
+IotNetworkError_t IotNetworkMbedtls_Init( void )
+{
+    /* Set the mutex functions for mbed TLS thread safety. */
+    mbedtls_threading_set_alt( mbedtlsMutex_Init,
+                               mbedtlsMutex_Free,
+                               mbedtlsMutex_Lock,
+                               mbedtlsMutex_Unlock );
+
+    IotLogInfo( "Network library initialized." );
+
+    return IOT_NETWORK_SUCCESS;
+}
+
+/*-----------------------------------------------------------*/
+
+void IotNetworkMbedtls_Cleanup( void )
+{
+    /* Clear the mutex functions for mbed TLS thread safety. */
+    mbedtls_threading_free_alt();
+
+    IotLogInfo( "Network library cleanup done." );
+}
 
 /*-----------------------------------------------------------*/
 

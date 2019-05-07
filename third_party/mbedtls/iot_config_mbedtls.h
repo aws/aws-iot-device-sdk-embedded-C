@@ -126,6 +126,10 @@
 #define MBEDTLS_X509_USE_C
 #define MBEDTLS_X509_CRT_PARSE_C
 
+/* Use platform mutexes in mbed TLS. */
+#define MBEDTLS_THREADING_C
+#define MBEDTLS_THREADING_ALT
+
 /* Validate mbed TLS configuration. */
 #include "mbedtls/check_config.h"
 

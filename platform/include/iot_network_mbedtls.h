@@ -77,6 +77,33 @@
  */
 #define IOT_NETWORK_INTERFACE_MBEDTLS                  ( &( IotNetworkMbedtls ) )
 
+ /**
+  * @brief One-time initialization function for this network stack.
+  *
+  * This function performs internal setup of this network stack. <b>It must be
+  * called once (and only once) before calling any other function in this network
+  * stack</b>. Calling this function more than once without first calling
+  * #IotNetworkMbedtls_Cleanup may result in a crash.
+  *
+  * @return #IOT_NETWORK_SUCCESS or #IOT_NETWORK_FAILURE.
+  *
+  * @warning No thread-safety guarantees are provided for this function.
+  */
+IotNetworkError_t IotNetworkMbedtls_Init( void );
+
+/**
+ * @brief One-time deinitialization function for this network stack.
+ *
+ * This function frees resources taken in #IotNetworkMbedtls_Init. It should be
+ * called after destroying all network connections to clean up this network
+ * stack. After this function returns, #IotNetworkMbedtls_Init must be called
+ * again before calling any other function in this network stack.
+ *
+ * @warning No thread-safety guarantees are provided for this function. Do not
+ * call this function if any network connections exist!
+ */
+void IotNetworkMbedtls_Cleanup( void );
+
 /**
  * @brief An implementation of #IotNetworkInterface_t::create for mbed TLS.
  */

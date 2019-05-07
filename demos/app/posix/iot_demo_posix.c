@@ -59,9 +59,8 @@
     #define IOT_DEMO_SERVER_INFO_INITIALIZER    IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER
     #define IOT_DEMO_CREDENTIALS_INITIALIZER    AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER
 
-    /* No global initialization and cleanup needed for mbed TLS. */
-    #define IotDemoNetwork_Init()               IOT_NETWORK_SUCCESS
-    #define IotDemoNetwork_Cleanup()
+    #define IotDemoNetwork_Init                 IotNetworkMbedtls_Init
+    #define IotDemoNetwork_Cleanup              IotNetworkMbedtls_Cleanup
 #endif
 
 /* This file calls a generic placeholder demo function. The build system selects
