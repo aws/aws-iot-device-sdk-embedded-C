@@ -39,6 +39,7 @@ add_library( mbedtls
              mbedtls/library/hmac_drbg.c
              mbedtls/library/md.c
              mbedtls/library/md_wrap.c
+             mbedtls/library/net_sockets.c
              mbedtls/library/oid.c
              mbedtls/library/pem.c
              mbedtls/library/pk.c
