@@ -30,6 +30,9 @@ add_library( mbedtls
              mbedtls/library/ecdsa.c
              mbedtls/library/ecp.c
              mbedtls/library/ecp_curves.c
+             mbedtls/library/entropy.c
+             mbedtls/library/entropy_poll.c
+             mbedtls/library/error.c
              mbedtls/library/cipher.c
              mbedtls/library/cipher_wrap.c
              mbedtls/library/ctr_drbg.c
@@ -49,6 +52,7 @@ add_library( mbedtls
              mbedtls/library/ssl_ciphersuites.c
              mbedtls/library/ssl_cli.c
              mbedtls/library/ssl_tls.c
+             mbedtls/library/timing.c
              mbedtls/library/threading.c
              mbedtls/library/x509.c
              mbedtls/library/x509_crt.c )

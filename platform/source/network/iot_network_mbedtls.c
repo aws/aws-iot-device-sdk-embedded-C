@@ -32,6 +32,9 @@
 #include "iot_network_mbedtls.h"
 
 /* mbed TLS includes. */
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/error.h>
 #include <mbedtls/threading.h>
 
 /* Configure logs for the functions in this file. */
@@ -48,7 +51,31 @@
 #define LIBRARY_LOG_NAME    ( "NET" )
 #include "iot_logging_setup.h"
 
+/* Logging macro for mbed TLS errors. */
+#if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+    #define _logMbedtlsError( error, message )        \
+    {                                                 \
+        char pErrorMessage[ 64 ] = { 0 };             \
+        mbedtls_strerror( error, pErrorMessage, 64 ); \
+        IotLogError( "%s error: %s. ",                \
+                     message,                         \
+                     pErrorMessage );                 \
+    }
+#else
+    #define _logMbedtlsError( error, message )
+#endif /* if LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
+
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief mbed TLS entropy context for generation of random numbers.
+ */
+static mbedtls_entropy_context _entropyContext;
+
+/**
+ * @brief mbed TLS CTR DRBG context for generation of random numbers.
+ */
+static mbedtls_ctr_drbg_context _ctrDrbgContext;
 
 /**
  * @brief An #IotNetworkInterface_t that uses the functions in this file.
@@ -67,21 +94,49 @@ const IotNetworkInterface_t IotNetworkMbedtls =
 
 IotNetworkError_t IotNetworkMbedtls_Init( void )
 {
+    int mbedtlsError = 0;
+    IotNetworkError_t status = IOT_NETWORK_SUCCESS;
+
     /* Set the mutex functions for mbed TLS thread safety. */
     mbedtls_threading_set_alt( mbedtlsMutex_Init,
                                mbedtlsMutex_Free,
                                mbedtlsMutex_Lock,
                                mbedtlsMutex_Unlock );
 
-    IotLogInfo( "Network library initialized." );
+    /* Initialize contexts for random number generation. */
+    mbedtls_entropy_init( &_entropyContext );
+    mbedtls_ctr_drbg_init( &_ctrDrbgContext );
 
-    return IOT_NETWORK_SUCCESS;
+    /* Seed the random number generator. */
+    mbedtlsError = mbedtls_ctr_drbg_seed( &_ctrDrbgContext,
+                                          mbedtls_entropy_func,
+                                          &_entropyContext,
+                                          NULL,
+                                          0 );
+
+    if( mbedtlsError != 0 )
+    {
+        status = IOT_NETWORK_FAILURE;
+        _logMbedtlsError( mbedtlsError, "Failed to seed PRNG in initialization." );
+
+        IotNetworkMbedtls_Cleanup();
+    }
+    else
+    {
+        IotLogInfo( "Network library initialized." );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
 
 void IotNetworkMbedtls_Cleanup( void )
 {
+    /* Free the contexts for random number generation. */
+    mbedtls_ctr_drbg_free( &_ctrDrbgContext );
+    mbedtls_entropy_free( &_entropyContext );
+
     /* Clear the mutex functions for mbed TLS thread safety. */
     mbedtls_threading_free_alt();
 
