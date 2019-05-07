@@ -758,29 +758,25 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
     /* Cast function parameter to correct type. */
     _networkConnection_t * const pNetworkConnection = pConnection;
 
-    /* Create a new receive thread if a callback is given. */
-    if( receiveCallback != NULL )
+    /* Set the callback and parameter. */
+    pNetworkConnection->receiveCallback = receiveCallback;
+    pNetworkConnection->pReceiveContext = pContext;
+
+    posixError = pthread_create( &pNetworkConnection->receiveThread,
+                                    NULL,
+                                    _networkReceiveThread,
+                                    pNetworkConnection );
+
+    if( posixError != 0 )
     {
-        /* Update the callback and parameter. */
-        pNetworkConnection->receiveCallback = receiveCallback;
-        pNetworkConnection->pReceiveContext = pContext;
-
-        posixError = pthread_create( &pNetworkConnection->receiveThread,
-                                     NULL,
-                                     _networkReceiveThread,
-                                     pNetworkConnection );
-
-        if( posixError != 0 )
-        {
-            IotLogError( "Failed to create socket %d network receive thread. errno=%d.",
-                         pNetworkConnection->socket,
-                         posixError );
-            status = IOT_NETWORK_SYSTEM_ERROR;
-        }
-        else
-        {
-            pNetworkConnection->receiveThreadCreated = true;
-        }
+        IotLogError( "Failed to create socket %d network receive thread. errno=%d.",
+                        pNetworkConnection->socket,
+                        posixError );
+        status = IOT_NETWORK_SYSTEM_ERROR;
+    }
+    else
+    {
+        pNetworkConnection->receiveThreadCreated = true;
     }
 
     return status;

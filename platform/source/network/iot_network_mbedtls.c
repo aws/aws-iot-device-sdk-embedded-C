@@ -48,6 +48,9 @@
 /* Error handling include. */
 #include "private/iot_error.h"
 
+/* Platform threads include. */
+#include "platform/iot_threads.h"
+
 /* Configure logs for the functions in this file. */
 #ifdef IOT_LOG_LEVEL_NETWORK
     #define LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_NETWORK
@@ -66,8 +69,8 @@
 #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
     #define _logMbedtlsError( error, pConnection, pMessage )       \
     {                                                              \
-        char pErrorMessage[ 64 ] = { 0 };                          \
-        mbedtls_strerror( error, pErrorMessage, 64 );              \
+        char pErrorMessage[ 80 ] = { 0 };                          \
+        mbedtls_strerror( error, pErrorMessage, 80 );              \
                                                                    \
         if( pConnection != NULL )                                  \
         {                                                          \
@@ -116,8 +119,11 @@
  */
 typedef struct _networkConnection
 {
-    bool secured;                       /**< @brief Whether this connection is secured. */
-    mbedtls_net_context networkContext; /**< @brief mbed TLS wrapper for system's sockets. */
+    bool secured;                                /**< @brief Whether this connection is secured. */
+    mbedtls_net_context networkContext;          /**< @brief mbed TLS wrapper for system's sockets. */
+
+    IotNetworkReceiveCallback_t receiveCallback; /**< @brief Network receive callback, if any. */
+    void * pReceiveContext;                      /**< @brief The context for the receive callback. */
 
     /**
      * @brief Secured connection context. Valid if `secured` is `true`.
@@ -198,6 +204,20 @@ static void _sslContextFree( _networkConnection_t * pNetworkConnection )
     mbedtls_x509_crt_free( &( pNetworkConnection->ssl.credentials.clientCert ) );
     mbedtls_x509_crt_free( &( pNetworkConnection->ssl.credentials.rootCa ) );
     mbedtls_ssl_config_free( &( pNetworkConnection->ssl.config ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Network receive thread.
+ *
+ * This thread polls the network socket and reads data when data is available.
+ * It then invokes the receive callback, if any.
+ *
+ * @param[in] pArgument The connection associated with this receive thread.
+ */
+static void _receiveThread( void * pArgument )
+{
 }
 
 /*-----------------------------------------------------------*/
@@ -649,7 +669,31 @@ IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( void * pConnection,
                                                         IotNetworkReceiveCallback_t receiveCallback,
                                                         void * pContext )
 {
-    return IOT_NETWORK_FAILURE;
+    IotNetworkError_t status = IOT_NETWORK_SUCCESS;
+
+    /* Cast function parameter to correct type. */
+    _networkConnection_t * const pNetworkConnection = pConnection;
+
+    /* Set the callback and parameter. */
+    pNetworkConnection->receiveCallback = receiveCallback;
+    pNetworkConnection->pReceiveContext = pContext;
+
+    /* Create the thread to receive incoming data. */
+    if( Iot_CreateDetachedThread( _receiveThread,
+                                  pNetworkConnection,
+                                  IOT_THREAD_DEFAULT_PRIORITY,
+                                  IOT_THREAD_DEFAULT_STACK_SIZE ) == false )
+    {
+        IotLogError( "(Network connection %p) Failed to create thread for receiving data.",
+                     pNetworkConnection );
+
+        status = IOT_NETWORK_SYSTEM_ERROR;
+    }
+    else
+    {
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -658,7 +702,70 @@ size_t IotNetworkMbedtls_Send( void * pConnection,
                                const uint8_t * pMessage,
                                size_t messageLength )
 {
-    return 0;
+    int mbedtlsError = 0;
+    size_t bytesSent = 0;
+
+    /* Cast function parameter to correct type. */
+    _networkConnection_t * const pNetworkConnection = pConnection;
+
+    IotLogDebug( "(Network connection %p) Sending %lu bytes.",
+                 pNetworkConnection,
+                 ( unsigned long ) messageLength );
+
+    /* Check that it's possible to send right now. */
+    mbedtlsError = mbedtls_net_poll( &( pNetworkConnection->networkContext ),
+                                     MBEDTLS_NET_POLL_WRITE,
+                                     0 );
+
+    if( mbedtlsError == MBEDTLS_NET_POLL_WRITE )
+    {
+        /* Choose the send function based on state of the SSL context. */
+        if( pNetworkConnection->secured == true )
+        {
+            /* Secured send. */
+            while( bytesSent < messageLength )
+            {
+                mbedtlsError = mbedtls_ssl_write( &( pNetworkConnection->ssl.context ),
+                                                  pMessage + bytesSent,
+                                                  messageLength - bytesSent );
+
+                if( ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_WRITE ) || ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_READ ) )
+                {
+                    /* Call SSL write again with the same arguments. */
+                    continue;
+                }
+                else if( mbedtlsError < 0 )
+                {
+                    /* Error sending, exit. */
+                    break;
+                }
+                else
+                {
+                    bytesSent += ( size_t ) mbedtlsError;
+                }
+            }
+        }
+        else
+        {
+            /* Unsecured send. */
+            mbedtlsError = mbedtls_net_send( &( pNetworkConnection->networkContext ),
+                                             pMessage,
+                                             messageLength );
+        }
+
+        /* Log errors. */
+        if( mbedtlsError < 0 )
+        {
+            _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to send." );
+            bytesSent = 0;
+        }
+    }
+    else
+    {
+        _logMbedtlsError( mbedtlsError, pNetworkConnection, "Cannot send right now." );
+    }
+
+    return bytesSent;
 }
 
 /*-----------------------------------------------------------*/
