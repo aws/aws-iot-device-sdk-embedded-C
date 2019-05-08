@@ -177,8 +177,7 @@ static void * _networkReceiveThread( void * pArgument )
             break;
         }
 
-        /* Invoke the callback function. But if there's no callback to invoke,
-         * terminate this thread. */
+        /* Invoke the callback function. */
         pNetworkConnection->receiveCallback( pNetworkConnection,
                                              pNetworkConnection->pReceiveContext );
     }
@@ -311,14 +310,14 @@ static int _dnsLookup( const IotNetworkServerInfo_t * pServerInfo )
  * Uses OpenSSL to import the root CA certificate, client certificate, and
  * client certificate private key.
  * @param[in] pSslContext Destination for the imported credentials.
- * @param[in] pRootCAPath Path to the root CA certificate.
+ * @param[in] pRootCaPath Path to the root CA certificate.
  * @param[in] pClientCertPath Path to the client certificate.
  * @param[in] pCertPrivateKeyPath Path to the client certificate private key.
  *
  * @return `true` if all credentials were successfully read; `false` otherwise.
  */
 static bool _readCredentials( SSL_CTX * pSslContext,
-                              const char * pRootCAPath,
+                              const char * pRootCaPath,
                               const char * pClientCertPath,
                               const char * pCertPrivateKeyPath )
 {
@@ -327,12 +326,12 @@ static bool _readCredentials( SSL_CTX * pSslContext,
 
     /* OpenSSL does not provide a single function for reading and loading certificates
      * from files into stores, so the file API must be called. */
-    IotLogDebug( "Opening root certificate %s", pRootCAPath );
-    FILE * pRootCaFile = fopen( pRootCAPath, "r" );
+    IotLogDebug( "Opening root certificate %s", pRootCaPath );
+    FILE * pRootCaFile = fopen( pRootCaPath, "r" );
 
     if( pRootCaFile == NULL )
     {
-        IotLogError( "Failed to open %s", pRootCAPath );
+        IotLogError( "Failed to open %s", pRootCaPath );
 
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
@@ -342,7 +341,7 @@ static bool _readCredentials( SSL_CTX * pSslContext,
 
     if( fclose( pRootCaFile ) != 0 )
     {
-        IotLogWarn( "Failed to close file %s", pRootCAPath );
+        IotLogWarn( "Failed to close file %s", pRootCaPath );
     }
 
     if( pRootCa == NULL )
@@ -510,6 +509,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
         #endif
     }
 
+    /* Enable SNI if requested. */
     if( pOpensslCredentials->disableSni == false )
     {
         IotLogDebug( "Setting server name %s for SNI.", pServerName );
@@ -757,29 +757,25 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
     /* Cast function parameter to correct type. */
     _networkConnection_t * const pNetworkConnection = pConnection;
 
-    /* Create a new receive thread if a callback is given. */
-    if( receiveCallback != NULL )
+    /* Set the callback and parameter. */
+    pNetworkConnection->receiveCallback = receiveCallback;
+    pNetworkConnection->pReceiveContext = pContext;
+
+    posixError = pthread_create( &pNetworkConnection->receiveThread,
+                                    NULL,
+                                    _networkReceiveThread,
+                                    pNetworkConnection );
+
+    if( posixError != 0 )
     {
-        /* Update the callback and parameter. */
-        pNetworkConnection->receiveCallback = receiveCallback;
-        pNetworkConnection->pReceiveContext = pContext;
-
-        posixError = pthread_create( &pNetworkConnection->receiveThread,
-                                     NULL,
-                                     _networkReceiveThread,
-                                     pNetworkConnection );
-
-        if( posixError != 0 )
-        {
-            IotLogError( "Failed to create socket %d network receive thread. errno=%d.",
-                         pNetworkConnection->socket,
-                         posixError );
-            status = IOT_NETWORK_SYSTEM_ERROR;
-        }
-        else
-        {
-            pNetworkConnection->receiveThreadCreated = true;
-        }
+        IotLogError( "Failed to create socket %d network receive thread. errno=%d.",
+                        pNetworkConnection->socket,
+                        posixError );
+        status = IOT_NETWORK_SYSTEM_ERROR;
+    }
+    else
+    {
+        pNetworkConnection->receiveThreadCreated = true;
     }
 
     return status;

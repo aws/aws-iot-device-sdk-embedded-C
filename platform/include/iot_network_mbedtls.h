@@ -20,19 +20,16 @@
  */
 
 /**
- * @file iot_network_openssl.h
+ * @file iot_network_mbedtls.h
  * @brief Declares the network stack functions specified in iot_network.h for
- * POSIX systems with OpenSSL.
+ * mbed TLS.
  */
 
-#ifndef IOT_NETWORK_OPENSSL_H_
-#define IOT_NETWORK_OPENSSL_H_
+#ifndef IOT_NETWORK_MBEDTLS_H_
+#define IOT_NETWORK_MBEDTLS_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
-
-/* Standard bool include. */
-#include <stdbool.h>
 
 /* Platform types include. */
 #include "types/iot_platform_types.h"
@@ -41,128 +38,115 @@
 #include "platform/iot_network.h"
 
 /**
- * @brief Represents a network connection that uses OpenSSL.
- *
- * This is an incomplete type. In application code, only pointers to this type
- * should be used.
- */
-typedef struct _networkConnection IotNetworkConnectionOpenssl_t;
-
-/**
  * @brief Provides a default value for an #IotNetworkServerInfo_t.
  *
  * All instances of #IotNetworkServerInfo_t should be initialized with
- * this constant when using this OpenSSL network stack.
+ * this constant when using this mbed TLS network stack.
  *
  * @warning Failing to initialize an #IotNetworkServerInfo_t may result in
  * a crash!
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
  */
-#define IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER    { 0 }
+#define IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER    { 0 }
 
 /**
  * @brief Initialize an #IotNetworkCredentials_t for AWS IoT with ALPN enabled
- * when using this OpenSSL network stack.
+ * when using this mbed TLS network stack.
  *
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
  */
-#define AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER \
+#define AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER \
     {                                                   \
-        .pAlpnProtos = "\x0ex-amzn-mqtt-ca"             \
+        .pAlpnProtos = "x-amzn-mqtt-ca"                 \
     }
 
 /**
  * @brief Generic initializer for an #IotNetworkCredentials_t when using this
- * OpenSSL network stack.
+ * mbed TLS network stack.
  *
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
  */
-#define IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER    { 0 }
+#define IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER    { 0 }
 
 /**
  * @brief Provides a pointer to an #IotNetworkInterface_t that uses the functions
  * declared in this file.
  */
-#define IOT_NETWORK_INTERFACE_OPENSSL                  ( &( IotNetworkOpenssl ) )
+#define IOT_NETWORK_INTERFACE_MBEDTLS                  ( &( IotNetworkMbedtls ) )
 
-/**
- * @brief One-time initialization function for this network stack.
- *
- * This function performs internal setup of this network stack. <b>It must be
- * called once (and only once) before calling any other function in this network
- * stack</b>. Calling this function more than once without first calling
- * #IotNetworkOpenssl_Cleanup may result in a crash.
- *
- * @return #IOT_NETWORK_SUCCESS or #IOT_NETWORK_FAILURE.
- *
- * @warning No thread-safety guarantees are provided for this function.
- */
-IotNetworkError_t IotNetworkOpenssl_Init( void );
+ /**
+  * @brief One-time initialization function for this network stack.
+  *
+  * This function performs internal setup of this network stack. <b>It must be
+  * called once (and only once) before calling any other function in this network
+  * stack</b>. Calling this function more than once without first calling
+  * #IotNetworkMbedtls_Cleanup may result in a crash.
+  *
+  * @return #IOT_NETWORK_SUCCESS or #IOT_NETWORK_FAILURE.
+  *
+  * @warning No thread-safety guarantees are provided for this function.
+  */
+IotNetworkError_t IotNetworkMbedtls_Init( void );
 
 /**
  * @brief One-time deinitialization function for this network stack.
  *
- * This function frees resources taken in #IotNetworkOpenssl_Init. It should be
+ * This function frees resources taken in #IotNetworkMbedtls_Init. It should be
  * called after destroying all network connections to clean up this network
- * stack. After this function returns, #IotNetworkOpenssl_Init must be called
+ * stack. After this function returns, #IotNetworkMbedtls_Init must be called
  * again before calling any other function in this network stack.
  *
  * @warning No thread-safety guarantees are provided for this function. Do not
  * call this function if any network connections exist!
  */
-void IotNetworkOpenssl_Cleanup( void );
+void IotNetworkMbedtls_Cleanup( void );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::create for POSIX systems
- * with OpenSSL.
+ * @brief An implementation of #IotNetworkInterface_t::create for mbed TLS.
  */
-IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
+IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
                                             void * pCredentialInfo,
                                             void ** pConnection );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::setReceiveCallback for
- * POSIX systems with OpenSSL.
+ * mbed TLS.
  */
-IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
+IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( void * pConnection,
                                                         IotNetworkReceiveCallback_t receiveCallback,
                                                         void * pContext );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::send for POSIX systems
- * with OpenSSL.
+ * @brief An implementation of #IotNetworkInterface_t::send for mbed TLS.
  */
-size_t IotNetworkOpenssl_Send( void * pConnection,
+size_t IotNetworkMbedtls_Send( void * pConnection,
                                const uint8_t * pMessage,
                                size_t messageLength );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::receive for POSIX systems
- * with OpenSSL.
+ * @brief An implementation of #IotNetworkInterface_t::receive for mbed TLS.
  */
-size_t IotNetworkOpenssl_Receive( void * pConnection,
+size_t IotNetworkMbedtls_Receive( void * pConnection,
                                   uint8_t * pBuffer,
                                   size_t bytesRequested );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::close for POSIX systems
- * with OpenSSL.
+ * @brief An implementation of #IotNetworkInterface_t::close for mbed TLS.
  */
-IotNetworkError_t IotNetworkOpenssl_Close( void * pConnection );
+IotNetworkError_t IotNetworkMbedtls_Close( void * pConnection );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::destroy for POSIX systems
- * with OpenSSL.
+ * @brief An implementation of #IotNetworkInterface_t::destroy for mbed TLS.
  */
-IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection );
+IotNetworkError_t IotNetworkMbedtls_Destroy( void * pConnection );
 
 /**
  * @brief Used by metrics to retrieve remote server and port of a connection.
  */
-void IotNetworkOpenssl_GetServerInfo( void * pConnection,
+void IotNetworkMbedtls_GetServerInfo( void * pConnection,
                                       IotMetricsTcpConnection_t * pServerInfo );
 
 /**
@@ -171,7 +155,7 @@ void IotNetworkOpenssl_GetServerInfo( void * pConnection,
  *
  * Declaration of a network interface struct using the functions in this file.
  */
-extern const IotNetworkInterface_t IotNetworkOpenssl;
+extern const IotNetworkInterface_t IotNetworkMbedtls;
 /** @endcond */
 
-#endif /* ifndef IOT_NETWORK_OPENSSL_H_ */
+#endif /* ifndef IOT_NETWORK_MBEDTLS_H_ */

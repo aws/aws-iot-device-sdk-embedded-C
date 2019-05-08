@@ -12,19 +12,19 @@ language: c
 compiler:
   - clang
 
+# Matrix of tests to run.
 jobs:
   include:
-    # Run code coverage job for commit builds.
+    - env: RUN_TEST=common
+    - env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
+    - env: RUN_TEST=mqtt NETWORK_STACK=openssl
+    - env: RUN_TEST=shadow NETWORK_STACK=mbedtls
+    - if: type = push
+      env: RUN_TEST=shadow NETWORK_STACK=openssl
+    - env: RUN_TEST=defender
     - if: type = push
       compiler: gcc
       env: RUN_TEST=coverage
-
-# Matrix of tests to always run.
-env:
-  - RUN_TEST=common   # Common libraries (linear containers, common libraries, etc.)
-  - RUN_TEST=mqtt     # MQTT
-  - RUN_TEST=shadow   # AWS IoT Thing Shadows
-  - RUN_TEST=defender # AWS IoT Device Defender
 
 # Update repositories.
 before_install:
@@ -43,6 +43,8 @@ script:
   - export IOT_IDENTIFIER="$IOT_IDENTIFIER_PREFIX$RUN_TEST"
   # Set default compiler options. Individual test scripts may override this.
   - export COMPILER_OPTIONS="-Wall -Wextra -fsanitize=thread"
+  # Choose the network abstraction.
+  - if [ "$NETWORK_STACK" = "openssl" ]; then export IOT_NETWORK_USE_OPENSSL=1; else export IOT_NETWORK_USE_OPENSSL=0; fi
   # Get AWS credentials when not a pull request build.
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then mkdir credentials; fi
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; fi

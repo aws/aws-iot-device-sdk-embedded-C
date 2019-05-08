@@ -34,15 +34,10 @@
     extern void UNITY_FIXTURE_FREE(void* ptr);
 #endif
 
-#define malloc  unity_malloc
-#define calloc  unity_calloc
-#define realloc unity_realloc
-#define free    unity_free
-
-void* unity_malloc(size_t size);
-void* unity_calloc(size_t num, size_t size);
-void* unity_realloc(void * oldMem, size_t size);
-void unity_free(void * mem);
+#define malloc  unity_malloc_mt
+#define calloc  unity_calloc_mt
+#define realloc unity_realloc_mt
+#define free    unity_free_mt
 
 /* Thread-safety wrappers for the unity memory functions. */
 extern pthread_mutex_t CriticalSectionMutex;

@@ -56,7 +56,6 @@ This Beta library is a new design that inherits from both the AWS IoT Device SDK
 
 Compared to the AWS IoT Device SDK Embedded C v3.0.1, the following features are missing:
 - Auto-reconnect for MQTT connections.
-- mbedTLS network stack.
 - Shadow JSON document generator.
 - Jobs API.
 - Build support for Apple macOS.
