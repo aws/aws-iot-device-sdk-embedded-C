@@ -121,6 +121,7 @@ typedef struct _networkConnection
 {
     bool secured;                                /**< @brief Whether this connection is secured. */
     mbedtls_net_context networkContext;          /**< @brief mbed TLS wrapper for system's sockets. */
+    IotMutex_t networkMutex;                     /**< @brief Protects this network context from concurrent access. */
 
     IotNetworkReceiveCallback_t receiveCallback; /**< @brief Network receive callback, if any. */
     void * pReceiveContext;                      /**< @brief The context for the receive callback. */
@@ -218,6 +219,27 @@ static void _sslContextFree( _networkConnection_t * pNetworkConnection )
  */
 static void _receiveThread( void * pArgument )
 {
+    int pollStatus = 0;
+
+    /* Cast function parameter to correct type. */
+    _networkConnection_t * const pNetworkConnection = pArgument;
+
+    /* Continuously poll the network connection for events. */
+    while( true )
+    {
+        pollStatus = mbedtls_net_poll( &( pNetworkConnection->networkContext ),
+                                       MBEDTLS_NET_POLL_READ,
+                                       0xffffffff );
+
+        if( pollStatus != MBEDTLS_NET_POLL_READ )
+        {
+            _logMbedtlsError( pollStatus, pNetworkConnection, "Error polling network connection." );
+            break;
+        }
+
+        pNetworkConnection->receiveCallback( pNetworkConnection,
+                                             pNetworkConnection->pReceiveContext );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -570,7 +592,7 @@ IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
     char pServerPort[ 6 ] = { 0 };
 
     /* Flags to track initialization. */
-    bool networkContextInitialized = false;
+    bool networkContextInitialized = false, networkMutexCreated = false;
 
     /* Cast function parameters to correct types. */
     const IotNetworkServerInfo_t * const pServerInfo = pConnectionInfo;
@@ -589,6 +611,10 @@ IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
 
     /* Clear connection data. */
     memset( pNewNetworkConnection, 0x00, sizeof( _networkConnection_t ) );
+
+    /* Initialize the network context mutex. */
+    networkMutexCreated = IotMutex_Create( &( pNewNetworkConnection->networkMutex ),
+                                           false );
 
     /* Initialize mbed TLS network context. */
     mbedtls_net_init( &( pNewNetworkConnection->networkContext ) );
@@ -641,6 +667,11 @@ IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
     /* Clean up on error. */
     if( status != IOT_NETWORK_SUCCESS )
     {
+        if( networkMutexCreated == true )
+        {
+            IotMutex_Destroy( &( pNewNetworkConnection->networkMutex ) );
+        }
+
         if( networkContextInitialized == true )
         {
             mbedtls_net_free( &( pNewNetworkConnection->networkContext ) );
@@ -712,6 +743,8 @@ size_t IotNetworkMbedtls_Send( void * pConnection,
                  pNetworkConnection,
                  ( unsigned long ) messageLength );
 
+    IotMutex_Lock( &( pNetworkConnection->networkMutex ) );
+
     /* Check that it's possible to send right now. */
     mbedtlsError = mbedtls_net_poll( &( pNetworkConnection->networkContext ),
                                      MBEDTLS_NET_POLL_WRITE,
@@ -729,7 +762,8 @@ size_t IotNetworkMbedtls_Send( void * pConnection,
                                                   pMessage + bytesSent,
                                                   messageLength - bytesSent );
 
-                if( ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_WRITE ) || ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_READ ) )
+                if( ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_WRITE ) ||
+                    ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_READ ) )
                 {
                     /* Call SSL write again with the same arguments. */
                     continue;
@@ -765,6 +799,8 @@ size_t IotNetworkMbedtls_Send( void * pConnection,
         _logMbedtlsError( mbedtlsError, pNetworkConnection, "Cannot send right now." );
     }
 
+    IotMutex_Unlock( &( pNetworkConnection->networkMutex ) );
+
     return bytesSent;
 }
 
@@ -774,7 +810,51 @@ size_t IotNetworkMbedtls_Receive( void * pConnection,
                                   uint8_t * pBuffer,
                                   size_t bytesRequested )
 {
-    return 0;
+    int mbedtlsError = 0;
+    size_t bytesReceived = 0;
+
+    /* Cast function parameter to correct type. */
+    _networkConnection_t * const pNetworkConnection = pConnection;
+
+    IotMutex_Lock( &( pNetworkConnection->networkMutex ) );
+
+    while( bytesReceived < bytesRequested )
+    {
+        /* Choose the receive function based on state of the SSL context. */
+        if( pNetworkConnection->secured == true )
+        {
+            mbedtlsError = mbedtls_ssl_read( &( pNetworkConnection->ssl.context ),
+                                             pBuffer + bytesReceived,
+                                             bytesRequested - bytesReceived );
+        }
+        else
+        {
+            mbedtlsError = mbedtls_net_recv( &( pNetworkConnection->networkContext ),
+                                             pBuffer + bytesReceived,
+                                             bytesRequested - bytesReceived );
+        }
+
+        if( ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_WRITE ) ||
+            ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_READ ) )
+        {
+            /* Call receive again with the same arguments. */
+            continue;
+        }
+        else if( mbedtlsError < 0 )
+        {
+            /* Error receiving, exit. */
+            _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to receive." );
+            break;
+        }
+        else
+        {
+            bytesReceived += ( size_t ) mbedtlsError;
+        }
+    }
+
+    IotMutex_Unlock( &( pNetworkConnection->networkMutex ) );
+
+    return bytesReceived;
 }
 
 /*-----------------------------------------------------------*/
