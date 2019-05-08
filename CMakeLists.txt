@@ -42,12 +42,6 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 include_directories( ${PROJECT_SOURCE_DIR}/lib/include
                      ${PROJECT_SOURCE_DIR}/platform/include )
 
-# TinyCBOR include path.
-include_directories( SYSTEM ${PROJECT_SOURCE_DIR}/third_party/tinycbor/tinycbor/src )
-
-# mbed TLS include path.
-include_directories( SYSTEM ${PROJECT_SOURCE_DIR}/third_party/mbedtls/mbedtls/include )
-
 # Demo include path. Always required because the tests also build the demos.
 include_directories( ${PROJECT_SOURCE_DIR}/demos/include )
 
@@ -59,10 +53,6 @@ if( ${IOT_BUILD_TESTS} )
     # Test include paths.
     include_directories( ${PROJECT_SOURCE_DIR}/tests
                          tests/mqtt/access )
-
-    # Unity test framework include paths.
-    include_directories( SYSTEM third_party/unity/unity
-                         third_party/unity/unity/fixture )
 
     # Build unity test framework.
     add_subdirectory( third_party/unity )
