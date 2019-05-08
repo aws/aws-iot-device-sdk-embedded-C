@@ -254,6 +254,13 @@ bool IotDemo_ParseArguments( int argc,
 
     IotLogInfo( "Command line arguments successfully parsed." );
 
+    /* AWS IoT only uses secured connections; disable AWS IoT mode if the connection
+     * is unsecured. */
+    if( pArguments->securedConnection == false )
+    {
+        pArguments->awsIotMqttMode = false;
+    }
+
     IotLogDebug( "AWS IoT MQTT mode: %s", pArguments->awsIotMqttMode == true ? "true" : "false" );
     IotLogDebug( "Secured connection: %s", pArguments->securedConnection == true ? "true" : "false" );
     IotLogDebug( "Host: %s", pArguments->pHostName );

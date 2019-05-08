@@ -6,6 +6,11 @@
 
 pthread_mutex_t CriticalSectionMutex = PTHREAD_MUTEX_INITIALIZER;
 
+extern void* unity_malloc(size_t size);
+extern void* unity_calloc(size_t num, size_t size);
+extern void* unity_realloc(void* oldMem, size_t size);
+extern void unity_free_mt(void* mem);
+
 void* unity_malloc_mt(size_t size)
 {
     void* mem = NULL;
