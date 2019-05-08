@@ -177,8 +177,7 @@ static void * _networkReceiveThread( void * pArgument )
             break;
         }
 
-        /* Invoke the callback function. But if there's no callback to invoke,
-         * terminate this thread. */
+        /* Invoke the callback function. */
         pNetworkConnection->receiveCallback( pNetworkConnection,
                                              pNetworkConnection->pReceiveContext );
     }
