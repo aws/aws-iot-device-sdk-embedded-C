@@ -990,7 +990,7 @@ size_t IotNetworkMbedtls_Receive( void * pConnection,
         while( bytesReceived < bytesRequested )
         {
             /* Choose the receive function based on state of the SSL context. */
-            if( ( pNetworkConnection->flags & FLAG_CLOSED ) == FLAG_CLOSED )
+            if( ( pNetworkConnection->flags & FLAG_SECURED ) == FLAG_SECURED )
             {
                 mbedtlsError = mbedtls_ssl_read( &( pNetworkConnection->ssl.context ),
                                                  pBuffer + bytesReceived,
@@ -1045,7 +1045,7 @@ IotNetworkError_t IotNetworkMbedtls_Close( void * pConnection )
         {
             mbedtlsError = mbedtls_ssl_close_notify( &( pNetworkConnection->ssl.context ) );
         } while( ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_READ ) ||
-                ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_WRITE ) );
+                 ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_WRITE ) );
 
         if( mbedtlsError != 0 )
         {

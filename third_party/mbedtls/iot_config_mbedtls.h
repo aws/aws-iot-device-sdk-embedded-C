@@ -24,6 +24,9 @@
 #ifndef IOT_CONFIG_MBEDTLS_H_
 #define IOT_CONFIG_MBEDTLS_H_
 
+/* The config header is always included first. */
+#include "iot_config.h"
+
 /* System support for assembly and time. */
 #define MBEDTLS_HAVE_ASM
 #define MBEDTLS_HAVE_TIME
