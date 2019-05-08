@@ -1,10 +1,17 @@
+# Defender system test sources.
+set( DEFENDER_SYSTEM_TEST_SOURCES
+     system/aws_iot_tests_defender_system.c )
+
 # Defender tests executable.
 add_executable( aws_iot_tests_defender
+                ${DEFENDER_SYSTEM_TEST_SOURCES}
                 aws_iot_tests_defender.c
-                aws_iot_tests_defender_api.c )
+                ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
 
 # Defender tests library dependencies.
 target_link_libraries( aws_iot_tests_defender iotcommon iotplatform iotmqtt awsiotdefender unity )
 
-# Not produce warning on missing braces case.
-target_compile_options( aws_iot_tests_defender PRIVATE "-Wno-missing-braces")
+# Organization of Defender tests in folders.
+set_property( TARGET aws_iot_tests_defender PROPERTY FOLDER "tests" )
+source_group( system FILES ${DEFENDER_SYSTEM_TEST_SOURCES} )
+source_group( "" FILES aws_iot_tests_defender.c ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
