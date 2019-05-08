@@ -785,6 +785,11 @@ size_t IotNetworkMbedtls_Send( void * pConnection,
             mbedtlsError = mbedtls_net_send( &( pNetworkConnection->networkContext ),
                                              pMessage,
                                              messageLength );
+
+            if( mbedtlsError > 0 )
+            {
+                bytesSent = ( size_t ) mbedtlsError;
+            }
         }
 
         /* Log errors. */
