@@ -12,26 +12,24 @@ language: c
 compiler:
   - clang
 
-# Matrix of tests to always run.
-env:
-  - RUN_TEST=common
-  - RUN_TEST=mqtt NETWORK_STACK=mbedtls
-  - RUN_TEST=mqtt NETWORK_STACK=openssl
-  - RUN_TEST=shadow NETWORK_STACK=mbedtls
-  - RUN_TEST=shadow NETWORK_STACK=openssl
-  - RUN_TEST=defender
-
+# Matrix of tests to run.
 jobs:
   include:
-    # Run code coverage job for commit builds.
+    # Jobs to always run.
+    - env: RUN_TEST=common
+    - env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
+    - env: RUN_TEST=mqtt NETWORK_STACK=openssl
+    - env: RUN_TEST=shadow NETWORK_STACK=mbedtls
+    - env: RUN_TEST=defender
+
+    # Conditional: run Shadow with OpenSSL only on pushes. Shadow pull request tests
+    # do not use the network, so only one build is needed.
+    - if: type = push
+      env: RUN_TEST=shadow NETWORK_STACK=openssl
+    # Conditional: coverage on pushes only. Use gcc instead of clang.
     - if: type = push
       compiler: gcc
       env: RUN_TEST=coverage
-  exclude:
-  # Shadow PR tests do not use the network, so it's not necessary to build with
-  # more than one network stack.
-  - if: type = pull_request
-    env: RUN_TEST=shadow NETWORK_STACK=openssl
 
 # Update repositories.
 before_install:
