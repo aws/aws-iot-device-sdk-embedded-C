@@ -139,6 +139,18 @@
     #include "private/iot_static_memory.h"
 
 /**
+ * @brief Allocate an #_taskPool_t. This function should have the
+ * same signature as [malloc].
+ */
+    void * IotTaskPool_MallocTaskPool( size_t size );
+
+/**
+ * @brief Free an #_taskPool_t. This function should have the
+ * same signature as [malloc].
+ */
+    void IotTaskPool_FreeTaskPool( void * ptr );
+
+/**
  * @brief Allocate an #IotTaskPoolJob_t. This function should have the
  * same signature as [malloc].
  */
@@ -146,7 +158,8 @@
 
 /**
  * @brief Free an #IotTaskPoolJob_t. This function should have the same
- * signature as [free]
+ * same signature as [malloc].
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
     void IotTaskPool_FreeJob( void * ptr );
 
@@ -161,21 +174,34 @@
  * same signature as[ free ].
  */
     void IotTaskPool_FreeTimerEvent( void * ptr );
+
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
     #include <stdlib.h>
+
+    #ifndef IotTaskPool_MallocTaskPool
+        #define IotTaskPool_MallocTaskPool    malloc
+    #endif
+
+    #ifndef IotTaskPool_FreeTaskPool
+        #define IotTaskPool_FreeTaskPool    free
+    #endif
 
     #ifndef IotTaskPool_MallocJob
         #define IotTaskPool_MallocJob    malloc
     #endif
+
     #ifndef IotTaskPool_FreeJob
-        #define IotTaskPool_FreeJob      free
+        #define IotTaskPool_FreeJob    free
     #endif
+
     #ifndef IotTaskPool_MallocTimerEvent
         #define IotTaskPool_MallocTimerEvent    malloc
     #endif
+    
     #ifndef IotTaskPool_FreeTimerEvent
         #define IotTaskPool_FreeTimerEvent      free
     #endif
+
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -190,6 +216,60 @@
 /** @endcond */
 
 /**
+ * @brief Task pool jobs cache.
+ *
+ * @warning This is a system-level data type that should not be modified or used directly in any application.
+ * @warning This is a system-level data type that can and will change across different versions of the platform, with no regards for backward compatibility.
+ *
+ */
+typedef struct _taskPoolCache
+{
+    IotListDouble_t freeList; /**< @brief A list ot hold cached jobs. */
+    uint32_t freeCount;       /**< @brief A counter to track the number of jobs in the cache. */
+} _taskPoolCache_t;
+
+/**
+ * @brief The task pool data structure keeps track of the internal state and the signals for the dispatcher threads.
+ * The task pool is a thread safe data structure.
+ *
+ * @warning This is a system-level data type that should not be modified or used directly in any application.
+ * @warning This is a system-level data type that can and will change across different versions of the platform, with no regards for backward compatibility.
+ *
+ */
+typedef struct _taskPool
+{
+    IotDeQueue_t dispatchQueue;      /**< @brief The queue for the jobs waiting to be executed. */
+    IotListDouble_t timerEventsList; /**< @brief The timeouts queue for all deferred jobs waiting to be executed. */
+    _taskPoolCache_t jobsCache;      /**< @brief A cache to re-use jobs in order to limit memory allocations. */
+    uint32_t minThreads;             /**< @brief The minimum number of threads for the task pool. */
+    uint32_t maxThreads;             /**< @brief The maximum number of threads for the task pool. */
+    uint32_t activeThreads;          /**< @brief The number of threads in the task pool at any given time. */
+    uint32_t activeJobs;             /**< @brief The number of active jobs in the task pool at any given time. */
+    uint32_t stackSize;              /**< @brief The stack size for all task pool threads. */
+    int32_t priority;                /**< @brief The priority for all task pool threads. */
+    IotSemaphore_t dispatchSignal;   /**< @brief The synchronization object on which threads are waiting for incoming jobs. */
+    IotSemaphore_t startStopSignal;  /**< @brief The synchronization object for threads to signal start and stop condition. */
+    IotTimer_t timer;                /**< @brief The timer for deferred jobs. */
+    IotMutex_t lock;                 /**< @brief The lock to protect the task pool data structure access. */
+} _taskPool_t;
+
+/**
+ * @brief The job data structure keeps track of the user callback and context, as well as the status of the job.
+ *
+ * @warning This is a system-level data type that should not be modified or used directly in any application.
+ * @warning This is a system-level data type that can and will change across different versions of the platform, with no regards for backward compatibility.
+ *
+ */
+typedef struct _taskPoolJob
+{
+    IotLink_t link;                    /**< @brief The link to insert the job in the dispatch queue. */
+    IotTaskPoolRoutine_t userCallback; /**< @brief The user provided callback. */
+    void * pUserContext;               /**< @brief The user provided context. */
+    uint32_t flags;                    /**< @brief Internal flags. */
+    IotTaskPoolJobStatus_t status;     /**< @brief The status for the job. */
+} _taskPoolJob_t;
+
+/**
  * @brief Represents an operation that is subject to a timer.
  *
  * These events are queued per MQTT connection. They are sorted by their
@@ -198,19 +278,8 @@
 typedef struct _taskPoolTimerEvent
 {
     IotLink_t link;          /**< @brief List link member. */
-
     uint64_t expirationTime; /**< @brief When this event should be processed. */
-    IotTaskPoolJob_t * pJob; /**< @brief The task pool job associated with this event. */
+    _taskPoolJob_t * pJob;   /**< @brief The task pool job associated with this event. */
 } _taskPoolTimerEvent_t;
-
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * System task pool.
- */
-extern IotTaskPool_t _IotSystemTaskPool;
-/** @endcond */
 
 #endif /* ifndef IOT_TASKPOOL_INTERNAL_H_ */

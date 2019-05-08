@@ -89,6 +89,7 @@
     #define IOT_MQTT_CONNECTIONS                   ( 2 )
     #define IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS    ( 10 )
     #define IOT_MQTT_SUBSCRIPTIONS                 ( 80 )
+    #define IOT_TASKPOOLS                          ( 4 )
 #endif
 
 /* Memory allocation function configuration. Note that these functions will not
@@ -106,6 +107,8 @@
 /* Memory allocation function configuration for libraries affected by
  * IOT_STATIC_MEMORY_ONLY. */
 #if IOT_STATIC_MEMORY_ONLY == 0
+    #define IotTaskPool_MallocTaskPool           unity_malloc_mt
+    #define IotTaskPool_FreeTaskPool             unity_free_mt
     #define IotTaskPool_MallocJob                unity_malloc_mt
     #define IotTaskPool_FreeJob                  unity_free_mt
     #define IotTaskPool_MallocTimerEvent         unity_malloc_mt

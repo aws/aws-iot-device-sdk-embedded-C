@@ -135,4 +135,5 @@ Log messages from the task pool library at or below this setting will be printed
 @paramstructs{taskpool,task pool}
 @functionpointers{taskpool,task pool}
 @structs{taskpool,task pool}
+@handles{taskpool,task pool}
 */

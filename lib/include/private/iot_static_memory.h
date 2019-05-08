@@ -242,5 +242,5 @@ void * Iot_MallocMessageBuffer( size_t size );
 /* @[declare_static_memory_freemessagebuffer] */
 void Iot_FreeMessageBuffer( void * ptr );
 /* @[declare_static_memory_freemessagebuffer] */
-
+ 
 #endif /* if !defined( IOT_STATIC_MEMORY_H_ ) && ( IOT_STATIC_MEMORY_ONLY == 1 ) */
