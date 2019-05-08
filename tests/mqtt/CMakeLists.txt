@@ -1,9 +1,3 @@
-# MQTT test access files.
-set( MQTT_TEST_ACCESS_FILES
-     access/iot_test_access_mqtt.h
-     access/iot_test_access_mqtt_api.c
-     access/iot_test_access_mqtt_subscription.c )
-
 # MQTT system test sources.
 set( MQTT_SYSTEM_TEST_SOURCES
      system/iot_tests_mqtt_system.c
@@ -18,7 +12,6 @@ set( MQTT_UNIT_TEST_SOURCES
 
 # MQTT tests executable.
 add_executable( iot_tests_mqtt
-                ${MQTT_TEST_ACCESS_FILES}
                 ${MQTT_SYSTEM_TEST_SOURCES}
                 ${MQTT_UNIT_TEST_SOURCES}
                 iot_tests_mqtt.c
@@ -29,7 +22,6 @@ target_link_libraries( iot_tests_mqtt iotcommon iotplatform iotmqtt unity pthrea
 
 # Organization of MQTT tests in folders.
 set_property( TARGET iot_tests_mqtt PROPERTY FOLDER "tests" )
-source_group( access FILES ${MQTT_TEST_ACCESS_FILES} )
 source_group( system FILES ${MQTT_SYSTEM_TEST_SOURCES} )
 source_group( unit FILES ${MQTT_UNIT_TEST_SOURCES} )
 source_group( "" FILES iot_tests_mqtt.c ${PROJECT_SOURCE_DIR}/tests/iot_config.h )

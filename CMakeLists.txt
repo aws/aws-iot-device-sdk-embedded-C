@@ -81,7 +81,7 @@ if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
 
     add_definitions( -DIOT_SYSTEM_TYPES_FILE="posix/iot_platform_types_posix.h" )
     add_subdirectory( platform/source/posix )
-elseif()
+elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
     add_definitions( -DIOT_SYSTEM_TYPES_FILE="windows/iot_platform_types_windows.h" )
     add_subdirectory( platform/source/windows )
 endif()
