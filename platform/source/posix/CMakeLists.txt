@@ -80,3 +80,7 @@ add_library( iotplatform
 
 # Link required libraries.
 target_link_libraries( iotplatform Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )
+
+if( ${IOT_BUILD_TESTS} )
+    target_link_libraries( iotplatform unity )
+endif()

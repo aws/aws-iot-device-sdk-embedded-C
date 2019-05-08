@@ -58,11 +58,17 @@ add_library( mbedtls
              mbedtls/library/x509.c
              mbedtls/library/x509_crt.c )
 
-# mbed TLS config header.
-target_include_directories( mbedtls
-                            PUBLIC ${PROJECT_SOURCE_DIR}/third_party/mbedtls )
+# mbed TLS config header and include directories.
+target_include_directories( mbedtls SYSTEM
+                            PUBLIC ${PROJECT_SOURCE_DIR}/third_party/mbedtls
+                            PUBLIC ${PROJECT_SOURCE_DIR}/third_party/mbedtls/mbedtls/include )
 target_compile_definitions( mbedtls
                             PUBLIC -DMBEDTLS_CONFIG_FILE="iot_config_mbedtls.h" )
+
+# Link the unity test framework when testing.
+if( ${IOT_BUILD_TESTS} )
+    target_link_libraries( mbedtls unity )
+endif()
 
 # Disable all warnings for this third-party library.
 target_compile_options( mbedtls

@@ -27,6 +27,10 @@ add_library( tinycbor
              tinycbor/src/cborpretty.c
              tinycbor/src/cborpretty_stdio.c )
 
+# TinyCBOR include path.
+target_include_directories( tinycbor SYSTEM
+                            PUBLIC ${PROJECT_SOURCE_DIR}/third_party/tinycbor/tinycbor/src )
+
 # Link math library.
 target_link_libraries( tinycbor m )
 
