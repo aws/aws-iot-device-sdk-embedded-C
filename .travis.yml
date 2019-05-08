@@ -15,18 +15,13 @@ compiler:
 # Matrix of tests to run.
 jobs:
   include:
-    # Jobs to always run.
     - env: RUN_TEST=common
     - env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
     - env: RUN_TEST=mqtt NETWORK_STACK=openssl
     - env: RUN_TEST=shadow NETWORK_STACK=mbedtls
-    - env: RUN_TEST=defender
-
-    # Conditional: run Shadow with OpenSSL only on pushes. Shadow pull request tests
-    # do not use the network, so only one build is needed.
     - if: type = push
       env: RUN_TEST=shadow NETWORK_STACK=openssl
-    # Conditional: coverage on pushes only. Use gcc instead of clang.
+    - env: RUN_TEST=defender
     - if: type = push
       compiler: gcc
       env: RUN_TEST=coverage
