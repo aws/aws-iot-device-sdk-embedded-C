@@ -28,10 +28,10 @@ jobs:
       compiler: gcc
       env: RUN_TEST=coverage
   exclude:
-	# Shadow PR tests do not use the network, so it's not necessary to build with
-	# more than one network stack.
-	- if: type = pull_request
-	  env: RUN_TEST=shadow NETWORK_STACK=openssl
+  # Shadow PR tests do not use the network, so it's not necessary to build with
+  # more than one network stack.
+  - if: type = pull_request
+    env: RUN_TEST=shadow NETWORK_STACK=openssl
 
 # Update repositories.
 before_install:
