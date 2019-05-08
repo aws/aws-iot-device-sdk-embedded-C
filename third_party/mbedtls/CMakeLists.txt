@@ -18,45 +18,52 @@ if( NOT EXISTS ${PROJECT_SOURCE_DIR}/third_party/mbedtls/mbedtls/library/ )
 endif()
 
 # mbed TLS source files.
+set( MBEDTLS_SOURCES
+     iot_mbedtls_threading.c
+     mbedtls/library/aes.c
+     mbedtls/library/aesni.c
+     mbedtls/library/asn1parse.c
+     mbedtls/library/asn1write.c
+     mbedtls/library/base64.c
+     mbedtls/library/bignum.c
+     mbedtls/library/ecdh.c
+     mbedtls/library/ecdsa.c
+     mbedtls/library/ecp.c
+     mbedtls/library/ecp_curves.c
+     mbedtls/library/entropy.c
+     mbedtls/library/entropy_poll.c
+     mbedtls/library/error.c
+     mbedtls/library/cipher.c
+     mbedtls/library/cipher_wrap.c
+     mbedtls/library/ctr_drbg.c
+     mbedtls/library/hmac_drbg.c
+     mbedtls/library/md.c
+     mbedtls/library/md_wrap.c
+     mbedtls/library/net_sockets.c
+     mbedtls/library/oid.c
+     mbedtls/library/pem.c
+     mbedtls/library/pk.c
+     mbedtls/library/pkparse.c
+     mbedtls/library/pk_wrap.c
+     mbedtls/library/platform_util.c
+     mbedtls/library/rsa.c
+     mbedtls/library/rsa_internal.c
+     mbedtls/library/sha256.c
+     mbedtls/library/sha512.c
+     mbedtls/library/ssl_ciphersuites.c
+     mbedtls/library/ssl_cli.c
+     mbedtls/library/ssl_tls.c
+     mbedtls/library/timing.c
+     mbedtls/library/threading.c
+     mbedtls/library/x509.c
+     mbedtls/library/x509_crt.c )
+
+# mbed TLS headers (for folder organization only).
+file( GLOB MBEDTLS_HEADERS "mbedtls/include/mbedtls/*.h" )
+
+# mbed TLS library target.
 add_library( mbedtls
-             iot_mbedtls_threading.c
-             mbedtls/library/aes.c
-             mbedtls/library/aesni.c
-             mbedtls/library/asn1parse.c
-             mbedtls/library/asn1write.c
-             mbedtls/library/base64.c
-             mbedtls/library/bignum.c
-             mbedtls/library/ecdh.c
-             mbedtls/library/ecdsa.c
-             mbedtls/library/ecp.c
-             mbedtls/library/ecp_curves.c
-             mbedtls/library/entropy.c
-             mbedtls/library/entropy_poll.c
-             mbedtls/library/error.c
-             mbedtls/library/cipher.c
-             mbedtls/library/cipher_wrap.c
-             mbedtls/library/ctr_drbg.c
-             mbedtls/library/hmac_drbg.c
-             mbedtls/library/md.c
-             mbedtls/library/md_wrap.c
-             mbedtls/library/net_sockets.c
-             mbedtls/library/oid.c
-             mbedtls/library/pem.c
-             mbedtls/library/pk.c
-             mbedtls/library/pkparse.c
-             mbedtls/library/pk_wrap.c
-             mbedtls/library/platform_util.c
-             mbedtls/library/rsa.c
-             mbedtls/library/rsa_internal.c
-             mbedtls/library/sha256.c
-             mbedtls/library/sha512.c
-             mbedtls/library/ssl_ciphersuites.c
-             mbedtls/library/ssl_cli.c
-             mbedtls/library/ssl_tls.c
-             mbedtls/library/timing.c
-             mbedtls/library/threading.c
-             mbedtls/library/x509.c
-             mbedtls/library/x509_crt.c )
+             ${MBEDTLS_SOURCES} ${MBEDTLS_HEADERS} )
 
 # mbed TLS config header and include directories.
 target_include_directories( mbedtls SYSTEM
@@ -75,3 +82,8 @@ target_compile_options( mbedtls
                         PRIVATE
                         $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
                         -w> )
+
+# Organization of mbed TLS in folders.
+set_property( TARGET mbedtls PROPERTY FOLDER "third_party" )
+source_group( include\\mbedtls FILES ${MBEDTLS_HEADERS} )
+source_group( source FILES ${MBEDTLS_SOURCES} )
