@@ -1,15 +1,7 @@
 #!/bin/sh
 
 # Download and build the correct version of doxygen on CI.
-if [ ! -z "$TRAVIS_PULL_REQUEST" ] && [ "$TRAVIS_PULL_REQUEST" != "false"]; then
-    set -ev
-    wget -O doxygen_source.tar.gz https://downloads.sourceforge.net/project/doxygen/rel-1.8.14/doxygen-1.8.14.src.tar.gz
-    tar xf doxygen_source.tar.gz
-    cmake doxygen-1.8.14 -DCMAKE_CXX_FLAGS="-w"
-    make -j2
-    sudo make install
-    cd ..
-else
+if [ -z "$TRAVIS_PULL_REQUEST" ]; then
     if [ $# -ne 1 ]; then
         echo "Usage: ./generate_doc.sh sdk_root_directory"
         exit 1
@@ -17,6 +9,14 @@ else
 
     # Change to SDK root directory.
     cd $1
+else
+    set -ev
+    wget -O doxygen_source.tar.gz https://downloads.sourceforge.net/project/doxygen/rel-1.8.14/doxygen-1.8.14.src.tar.gz
+    tar xf doxygen_source.tar.gz
+    cmake doxygen-1.8.14 -DCMAKE_CXX_FLAGS="-w"
+    make -j2
+    sudo make install
+    cd ..
 fi
 
 # Check for doxygen.
