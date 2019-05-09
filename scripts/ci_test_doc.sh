@@ -1,15 +1,27 @@
 #!/bin/sh
 
-# Check for doxygen.
-command -v doxygen > /dev/null || { echo "Doxygen not found. Exiting."; exit 1; }
+# Check arguments when running locally. If running on CI, install the correct
+# version of doxygen.
+if [ -z "$TRAVIS_PULL_REQUEST" ]; then
+    if [ $# -ne 1 ]; then
+        echo "Usage: ./generate_doc.sh sdk_root_directory"
+        exit 1
+    fi
 
-if [ $# -ne 1 ]; then
-    echo "Usage: ./generate_doc.sh sdk_root_directory"
-    exit 1
+    # Change to SDK root directory.
+    cd $1
+else
+    set -ev
+    wget -O doxygen_source.tar.gz https://downloads.sourceforge.net/project/doxygen/rel-1.8.14/doxygen-1.8.14.src.tar.gz
+    tar xf doxygen_source.tar.gz
+    cmake doxygen-1.8.14 -DCMAKE_CXX_FLAGS="-w"
+    make -j2
+    sudo make install
+    cd ..
 fi
 
-# Change to SDK root directory.
-cd $1
+# Check for doxygen.
+command -v doxygen > /dev/null || { echo "Doxygen not found. Exiting."; exit 1; }
 
 # Create tag directory if needed.
 mkdir -p doc/tag

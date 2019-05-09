@@ -106,9 +106,11 @@ Thing Names are used to manage devices with AWS IoT. <b>No default value is prov
 @section shadow_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
 @brief The keep-alive interval to use in the Shadow system tests.
 
-This constant is shared with the [MQTT tests](@ref mqtt_tests).
+MQTT PINGREQ packets will be sent at this interval.
 
-@see @ref IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S on the MQTT tests config page.
+@configpossible Any positive integer. <br>
+@configrecommended This value should be the shortest keep-alive interval supported by the connection. <br>
+@configdefault `30`
 */
 
 /**
