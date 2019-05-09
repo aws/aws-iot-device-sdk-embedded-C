@@ -37,9 +37,9 @@ install:
   # Dependencies required across the entire build matrix.
   - sudo apt-get install -y cmake
   # Install unique dependencies needed by documentation builds.
-  - if[ "$RUN_TEST" = "doc" ]; then sudo apt-get install -y graphviz; fi
+  - if [ "$RUN_TEST" = "doc" ]; then sudo apt-get install -y graphviz; fi
   # Install OpenSSL if needed.
-  - if[ "$NETWORK_STACK" = "openssl" ]; then sudo apt-get install -y libssl-dev; fi
+  - if [ "$NETWORK_STACK" = "openssl" ]; then sudo apt-get install -y libssl-dev; fi
   # Install lcov and coveralls only for coverage builds.
   - if [ "$RUN_TEST" = "coverage" ]; then sudo apt-get install -y lcov; pip install --user cpp-coveralls; fi
 
