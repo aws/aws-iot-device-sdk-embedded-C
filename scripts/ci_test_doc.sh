@@ -1,6 +1,7 @@
 #!/bin/sh
 
-# Download and build the correct version of doxygen on CI.
+# Check arguments when running locally. If running on CI, install the correct
+# version of doxygen.
 if [ -z "$TRAVIS_PULL_REQUEST" ]; then
     if [ $# -ne 1 ]; then
         echo "Usage: ./generate_doc.sh sdk_root_directory"
