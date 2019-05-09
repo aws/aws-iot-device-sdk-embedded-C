@@ -74,7 +74,7 @@ target_include_directories( mbedtls SYSTEM
 target_compile_definitions( mbedtls
                             PUBLIC -DMBEDTLS_CONFIG_FILE="iot_config_mbedtls.h" )
 
-# Link the unity test framework when testing.
+# Link the Unity test framework when testing.
 if( ${IOT_BUILD_TESTS} )
     target_link_libraries( mbedtls unity )
 endif()
