@@ -19,6 +19,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file iot_tests_serializer.c
+ * @brief Test runner for the Serializer tests on POSIX systems.
+ */
+
 /* Standard includes. */
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,8 +33,8 @@
 /* POSIX includes. */
 #include <signal.h>
 
-/* SDK initialization include. */
-#include "iot_init.h"
+/* Error handling include. */
+#include "private/iot_error.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -45,12 +50,12 @@ static void _signalHandler( int signum )
     if( signum == SIGSEGV )
     {
         printf( "\nSegmentation fault.\n" );
-        exit( EXIT_FAILURE );
+        _Exit( EXIT_FAILURE );
     }
     else if( signum == SIGABRT )
     {
         printf( "\nAssertion failed.\n" );
-        exit( EXIT_FAILURE );
+        _Exit( EXIT_FAILURE );
     }
 }
 
@@ -59,11 +64,12 @@ static void _signalHandler( int signum )
 int main( int argc,
           char ** argv )
 {
+    IOT_FUNCTION_ENTRY( int, EXIT_SUCCESS );
     struct sigaction signalAction;
 
     /* Silence warnings about unused parameters. */
-    ( void )argc;
-    ( void )argv;
+    ( void ) argc;
+    ( void ) argv;
 
     /* Set a signal handler for segmentation faults and assertion failures. */
     ( void ) memset( &signalAction, 0x00, sizeof( struct sigaction ) );
@@ -71,18 +77,12 @@ int main( int argc,
 
     if( sigaction( SIGSEGV, &signalAction, NULL ) != 0 )
     {
-        return EXIT_FAILURE;
+        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
     if( sigaction( SIGABRT, &signalAction, NULL ) != 0 )
     {
-        return EXIT_FAILURE;
-    }
-
-    /* Initialize the common libraries before running the tests. */
-    if( IotSdk_Init() == false )
-    {
-        return EXIT_FAILURE;
+        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
     /* Unity setup. */
@@ -92,19 +92,16 @@ int main( int argc,
     UnityFixture.GroupFilter = NULL;
     UNITY_BEGIN();
 
-    /* Run short tests. */
-    RUN_TEST_GROUP( Full_Serializer_CBOR );
-
-    /* Clean up common libraries. */
-    IotSdk_Cleanup();
+    /* Run unit tests. */
+    RUN_TEST_GROUP( Serializer_Unit_CBOR );
 
     /* Return failure if any tests failed. */
     if( UNITY_END() != 0 )
     {
-        return EXIT_FAILURE;
+        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
-    return EXIT_SUCCESS;
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/

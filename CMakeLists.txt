@@ -1,8 +1,11 @@
 # Project information.
 cmake_minimum_required( VERSION 3.5.0 )
-project( AwsIotDeviceSdkC
+project( AwsIotDeviceSdkEmbeddedC
          VERSION 4.0.0
          LANGUAGES C )
+
+# Allow the project to be organized into folders.
+set_property( GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Use C99.
 set( CMAKE_C_STANDARD 99 )
@@ -28,7 +31,7 @@ option( IOT_BUILD_CLONE_SUBMODULES
         ON )
 
 # Check for system support.
-list( APPEND SUPPORTED_SYSTEMS "Linux" )
+list( APPEND SUPPORTED_SYSTEMS "Linux" "Windows" )
 
 if( NOT ${CMAKE_SYSTEM_NAME} IN_LIST SUPPORTED_SYSTEMS )
     message( FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}. Currently supported systems are: ${SUPPORTED_SYSTEMS}." )
@@ -78,6 +81,9 @@ if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
 
     add_definitions( -DIOT_SYSTEM_TYPES_FILE="posix/iot_platform_types_posix.h" )
     add_subdirectory( platform/source/posix )
+elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
+    add_definitions( -DIOT_SYSTEM_TYPES_FILE="windows/iot_platform_types_windows.h" )
+    add_subdirectory( platform/source/windows )
 endif()
 
 # Common libraries (linear containers, logging, etc.)
