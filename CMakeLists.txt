@@ -5,7 +5,7 @@ project( AwsIotDeviceSdkEmbeddedC
          LANGUAGES C )
 
 # Allow the project to be organized into folders.
-set_property( GLOBAL PROPERTY USE_FOLDERS ON)
+set_property( GLOBAL PROPERTY USE_FOLDERS ON )
 
 # Use C99.
 set( CMAKE_C_STANDARD 99 )
@@ -110,6 +110,8 @@ add_subdirectory( third_party/mbedtls )
 # Determine the demo executable to build based on system.
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     add_subdirectory( demos/app/posix )
+elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
+    add_subdirectory( demos/app/windows )
 endif()
 
 # Test executables.

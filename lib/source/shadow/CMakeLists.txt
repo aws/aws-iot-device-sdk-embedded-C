@@ -14,11 +14,11 @@ add_library( awsiotshadow
              ${PROJECT_SOURCE_DIR}/lib/include/private/aws_iot_shadow_internal.h )
 
 # Link required libraries.
-target_link_libraries( awsiotshadow iotserializer iotplatform iotmqtt )
+target_link_libraries( awsiotshadow PUBLIC iotserializer iotmqtt )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
-    target_link_libraries( awsiotshadow unity )
+    target_link_libraries( awsiotshadow PRIVATE unity )
 endif()
 
 # Organization of Shadow in folders.

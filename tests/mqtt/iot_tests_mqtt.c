@@ -99,7 +99,6 @@ int main( int argc,
      * -l command line argument was given. */
     if( getopt( argc, argv, "l" ) != -1 )
     {
-        RUN_TEST_GROUP( MQTT_Stress );
     }
 
     /* Return failure if any tests failed. */

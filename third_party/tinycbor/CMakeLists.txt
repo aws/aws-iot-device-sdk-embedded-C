@@ -39,13 +39,15 @@ target_include_directories( tinycbor SYSTEM
                             PUBLIC ${PROJECT_SOURCE_DIR}/third_party/tinycbor/tinycbor/src )
 
 # Link math library.
-target_link_libraries( tinycbor m )
+target_link_libraries( tinycbor PRIVATE m )
 
 # Disable all warnings for this third-party library.
 target_compile_options( tinycbor
                         PRIVATE
                         $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-                        -w> )
+                        -w>
+                        $<$<C_COMPILER_ID:MSVC>:
+                        /W0 /D_CRT_SECURE_NO_WARNINGS> )
 
 # Organization of TinyCBOR in folders.
 set_property( TARGET tinycbor PROPERTY FOLDER "third_party" )

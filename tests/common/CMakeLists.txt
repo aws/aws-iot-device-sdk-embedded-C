@@ -11,7 +11,7 @@ add_executable( iot_tests_common
                 ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
 
 # Common tests library dependencies.
-target_link_libraries( iot_tests_common unity iotcommon )
+target_link_libraries( iot_tests_common PRIVATE iotcommon unity )
 
 # Organization of common tests in folders.
 set_property( TARGET iot_tests_common PROPERTY FOLDER "tests" )

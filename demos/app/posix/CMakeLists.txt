@@ -13,7 +13,11 @@ target_compile_definitions( iot_demo_mqtt
                             PRIVATE RunDemo=RunMqttDemo )
 
 # MQTT demo library dependencies.
-target_link_libraries( iot_demo_mqtt iotplatform iotmqtt )
+target_link_libraries( iot_demo_mqtt PRIVATE iotmqtt )
+
+if( ${IOT_BUILD_TESTS} )
+    target_link_libraries( iot_demo_mqtt PRIVATE unity )
+endif()
 
 # Shadow demo source files.
 add_executable( aws_iot_demo_shadow
@@ -25,4 +29,8 @@ target_compile_definitions( aws_iot_demo_shadow
                             PRIVATE RunDemo=RunShadowDemo )
 
 # Shadow demo library dependencies.
-target_link_libraries( aws_iot_demo_shadow iotplatform iotmqtt awsiotshadow )
+target_link_libraries( aws_iot_demo_shadow PRIVATE awsiotshadow )
+
+if( ${IOT_BUILD_TESTS} )
+    target_link_libraries( aws_iot_demo_shadow PRIVATE unity )
+endif()

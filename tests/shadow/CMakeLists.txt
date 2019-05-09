@@ -15,7 +15,7 @@ add_executable( aws_iot_tests_shadow
                 ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
 
 # Shadow tests library dependencies.
-target_link_libraries( aws_iot_tests_shadow iotcommon iotplatform iotmqtt awsiotshadow unity )
+target_link_libraries( aws_iot_tests_shadow PRIVATE awsiotshadow unity )
 
 # Organization of Shadow tests in folders.
 set_property( TARGET aws_iot_tests_shadow PROPERTY FOLDER "tests" )
