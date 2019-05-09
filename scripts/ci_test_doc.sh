@@ -4,7 +4,7 @@
 set -ev
 
 # Download and build the correct version of doxygen on CI.
-if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then
+if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
     wget -O doxygen_source.tar.gz https://downloads.sourceforge.net/project/doxygen/rel-1.8.14/doxygen-1.8.14.src.tar.gz
     tar xf doxygen_source.tar.gz
     cmake doxygen-1.8.14
