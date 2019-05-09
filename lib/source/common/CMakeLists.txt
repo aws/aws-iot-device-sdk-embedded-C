@@ -26,11 +26,11 @@ add_library( iotcommon
              ${COMMON_SOURCES} ${COMMON_PUBLIC_HEADERS} ${COMMON_PRIVATE_HEADERS} ${COMMON_TYPES_HEADERS} )
 
 # Link required libraries.
-target_link_libraries( iotcommon iotplatform )
+target_link_libraries( iotcommon PUBLIC iotplatform )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
-    target_link_libraries( iotcommon unity )
+    target_link_libraries( iotcommon PRIVATE unity )
 endif()
 
 # Organization of common libraries in folders.

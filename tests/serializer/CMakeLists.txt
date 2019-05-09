@@ -9,7 +9,7 @@ add_executable( iot_tests_serializer
                 ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
 
 # Serializer tests library dependencies.
-target_link_libraries( iot_tests_serializer iotcommon iotplatform iotserializer unity )
+target_link_libraries( iot_tests_serializer PRIVATE iotserializer iotcommon unity )
 
 # Organization of Serializer tests in folders.
 set_property( TARGET iot_tests_serializer PROPERTY FOLDER "tests" )

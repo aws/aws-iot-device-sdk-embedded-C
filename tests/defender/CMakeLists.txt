@@ -9,7 +9,7 @@ add_executable( aws_iot_tests_defender
                 ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
 
 # Defender tests library dependencies.
-target_link_libraries( aws_iot_tests_defender iotcommon iotplatform iotmqtt awsiotdefender unity )
+target_link_libraries( aws_iot_tests_defender PRIVATE awsiotdefender unity )
 
 # Organization of Defender tests in folders.
 set_property( TARGET aws_iot_tests_defender PROPERTY FOLDER "tests" )

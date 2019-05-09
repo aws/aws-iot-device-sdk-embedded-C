@@ -67,7 +67,7 @@ if( ${IOT_NETWORK_USE_OPENSSL} )
         set( TLS_LIBRARY_LINKER_FLAG OpenSSL::SSL OpenSSL::Crypto )
     endif()
 else()
-    set( NETWORK_SOURCE_FILE ../network/iot_network_mbedtls.c )
+    set( NETWORK_SOURCE_FILE ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_mbedtls.c )
     set( TLS_LIBRARY_LINKER_FLAG mbedtls )
 endif()
 
@@ -75,12 +75,13 @@ endif()
 add_library( iotplatform
              iot_clock_posix.c
              iot_threads_posix.c
-             ../network/iot_network_metrics.c
+             ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_metrics.c
              ${NETWORK_SOURCE_FILE} )
 
 # Link required libraries.
-target_link_libraries( iotplatform Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )
+target_link_libraries( iotplatform
+                       PRIVATE Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )
 
 if( ${IOT_BUILD_TESTS} )
-    target_link_libraries( iotplatform unity )
+    target_link_libraries( iotplatform PRIVATE unity )
 endif()

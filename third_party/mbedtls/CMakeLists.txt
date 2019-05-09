@@ -76,14 +76,16 @@ target_compile_definitions( mbedtls
 
 # Link the Unity test framework when testing.
 if( ${IOT_BUILD_TESTS} )
-    target_link_libraries( mbedtls unity )
+    target_link_libraries( mbedtls PRIVATE unity )
 endif()
 
 # Disable all warnings for this third-party library.
 target_compile_options( mbedtls
                         PRIVATE
                         $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-                        -w> )
+                        -w>
+                        $<$<C_COMPILER_ID:MSVC>:
+                        /W0 /D_CRT_SECURE_NO_WARNINGS> )
 
 # Organization of mbed TLS in folders.
 set_property( TARGET mbedtls PROPERTY FOLDER "third_party" )
