@@ -45,6 +45,7 @@ set( MBEDTLS_SOURCES
      mbedtls/library/pk.c
      mbedtls/library/pkparse.c
      mbedtls/library/pk_wrap.c
+     mbedtls/library/platform.c
      mbedtls/library/platform_util.c
      mbedtls/library/rsa.c
      mbedtls/library/rsa_internal.c
@@ -63,7 +64,8 @@ file( GLOB MBEDTLS_HEADERS "mbedtls/include/mbedtls/*.h" )
 
 # mbed TLS library target.
 add_library( mbedtls
-             ${MBEDTLS_SOURCES} ${MBEDTLS_HEADERS} )
+             ${MBEDTLS_SOURCES} ${MBEDTLS_HEADERS}
+             iot_config_mbedtls.h threading_alt.h )
 
 # mbed TLS config header and include directories.
 target_include_directories( mbedtls SYSTEM
@@ -87,3 +89,4 @@ target_compile_options( mbedtls
 set_property( TARGET mbedtls PROPERTY FOLDER "third_party" )
 source_group( include\\mbedtls FILES ${MBEDTLS_HEADERS} )
 source_group( source FILES ${MBEDTLS_SOURCES} )
+source_group( "" FILES iot_config_mbedtls.h threading_alt.h )

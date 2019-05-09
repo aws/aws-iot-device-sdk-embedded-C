@@ -1,5 +1,7 @@
 # Common demo files.
-set( DEMO_COMMON_SOURCE_FILES "iot_demo_arguments_posix.c;iot_demo_posix.c" )
+set( DEMO_COMMON_SOURCE_FILES
+     iot_demo_arguments_posix.c
+     iot_demo_posix.c )
 
 # MQTT demo source files.
 add_executable( iot_demo_mqtt
