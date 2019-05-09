@@ -353,10 +353,10 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t taskPool,
  * } JobUserContext_t;
  *
  * // An example of a user callback to invoke through a task pool thread.
- * static void ExecutionCb( IotTaskPool_t * pTaskPool, IotTaskPoolJob_t pJob, void * context )
+ * static void ExecutionCb( IotTaskPool_t taskPool, IotTaskPoolJob_t job, void * context )
  * {
- *     ( void )pTaskPool;
- *     ( void )pJob;
+ *     ( void )taskPool;
+ *     ( void )job;
  *
  *     JobUserContext_t * pUserContext = ( JobUserContext_t * )context;
  *
@@ -367,7 +367,7 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t taskPool,
  * {
  *     JobUserContext_t userContext = { 0 };
  *     IotTaskPoolJob_t job;
- *     IotTaskPool_t * pTaskPool;
+ *     IotTaskPool_t taskPool;
  *
  *     // Configure the task pool to hold at least two threads and three at the maximum.
  *     // Provide proper stack size and priority per the application needs.
@@ -375,12 +375,12 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t taskPool,
  *     const IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 3, .stackSize = 512, .priority = 0 };
  *
  *     // Create a task pool.
- *     IotTaskPool_Create( &tpInfo, &pTaskPool );
+ *     IotTaskPool_Create( &tpInfo, &taskPool );
  *
  *     // Statically allocate one job, schedule it.
  *     IotTaskPool_CreateJob( &ExecutionCb, &userContext, &job );
  *
- *     IotTaskPoolError_t errorSchedule = IotTaskPool_Schedule( pTaskPool, &job, 0 );
+ *     IotTaskPoolError_t errorSchedule = IotTaskPool_Schedule( taskPool, &job, 0 );
  *
  *     switch ( errorSchedule )
  *     {
@@ -400,7 +400,7 @@ IotTaskPoolError_t IotTaskPool_RecycleJob( IotTaskPool_t taskPool,
  *     // ... Perform other operations ...
  *     //
  *
- *     IotTaskPool_Destroy( pTaskPool );
+ *     IotTaskPool_Destroy( taskPool );
  * }
  * @endcode
  */
