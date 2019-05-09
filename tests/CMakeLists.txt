@@ -1,8 +1,3 @@
-# Tests are currently only supported on Linux.
-if( NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-    message( FATAL_ERROR "Currently, tests must run on Linux. Detected system: ${CMAKE_SYSTEM_NAME}." )
-endif()
-
 # Common tests.
 add_subdirectory( common )
 

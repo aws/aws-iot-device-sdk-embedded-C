@@ -30,6 +30,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* SDK initialization include. */
+#include "iot_init.h"
+
 /* Unity framework includes. */
 #include "unity_fixture.h"
 #include "unity.h"
@@ -47,10 +50,12 @@ static IotSerializerEncoderObject_t _encoderObject;
 
 static uint8_t _buffer[ BUFFER_SIZE ];
 
-TEST_GROUP( Full_Serializer_CBOR );
+TEST_GROUP( Serializer_Unit_CBOR );
 
-TEST_SETUP( Full_Serializer_CBOR )
+TEST_SETUP( Serializer_Unit_CBOR )
 {
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
+
     /* Reset buffer to zero. */
     memset( _buffer, 0, BUFFER_SIZE );
 
@@ -59,35 +64,37 @@ TEST_SETUP( Full_Serializer_CBOR )
                        _encoder.init( &_encoderObject, _buffer, BUFFER_SIZE ) );
 }
 
-TEST_TEAR_DOWN( Full_Serializer_CBOR )
+TEST_TEAR_DOWN( Serializer_Unit_CBOR )
 {
     /* Destroy encoder object. */
     _encoder.destroy( &_encoderObject );
 
     TEST_ASSERT_NULL( _encoderObject.pHandle );
+
+    IotSdk_Cleanup();
 }
 
 /* TODO:
  * - append NULL
  * - append bool
  */
-TEST_GROUP_RUNNER( Full_Serializer_CBOR )
+TEST_GROUP_RUNNER( Serializer_Unit_CBOR )
 {
-    RUN_TEST_CASE( Full_Serializer_CBOR, Encoder_init_with_null_buffer );
+    RUN_TEST_CASE( Serializer_Unit_CBOR, Encoder_init_with_null_buffer );
 
-    RUN_TEST_CASE( Full_Serializer_CBOR, Encoder_append_integer );
-    RUN_TEST_CASE( Full_Serializer_CBOR, Encoder_append_text_string );
-    RUN_TEST_CASE( Full_Serializer_CBOR, Encoder_append_byte_string );
+    RUN_TEST_CASE( Serializer_Unit_CBOR, Encoder_append_integer );
+    RUN_TEST_CASE( Serializer_Unit_CBOR, Encoder_append_text_string );
+    RUN_TEST_CASE( Serializer_Unit_CBOR, Encoder_append_byte_string );
 
-    RUN_TEST_CASE( Full_Serializer_CBOR, Encoder_open_a_scalar );
-    RUN_TEST_CASE( Full_Serializer_CBOR, Encoder_open_map );
-    RUN_TEST_CASE( Full_Serializer_CBOR, Encoder_open_array );
+    RUN_TEST_CASE( Serializer_Unit_CBOR, Encoder_open_a_scalar );
+    RUN_TEST_CASE( Serializer_Unit_CBOR, Encoder_open_map );
+    RUN_TEST_CASE( Serializer_Unit_CBOR, Encoder_open_array );
 
-    RUN_TEST_CASE( Full_Serializer_CBOR, Encoder_map_nest_map );
-    RUN_TEST_CASE( Full_Serializer_CBOR, Encoder_map_nest_array );
+    RUN_TEST_CASE( Serializer_Unit_CBOR, Encoder_map_nest_map );
+    RUN_TEST_CASE( Serializer_Unit_CBOR, Encoder_map_nest_array );
 }
 
-TEST( Full_Serializer_CBOR, Encoder_init_with_null_buffer )
+TEST( Serializer_Unit_CBOR, Encoder_init_with_null_buffer )
 {
     IotSerializerEncoderObject_t encoderObject = { .type = ( IotSerializerDataType_t ) 0 };
 
@@ -111,7 +118,7 @@ TEST( Full_Serializer_CBOR, Encoder_init_with_null_buffer )
     TEST_ASSERT_NULL( encoderObject.pHandle );
 }
 
-TEST( Full_Serializer_CBOR, Encoder_append_integer )
+TEST( Serializer_Unit_CBOR, Encoder_append_integer )
 {
     int64_t value = 6;
 
@@ -137,7 +144,7 @@ TEST( Full_Serializer_CBOR, Encoder_append_integer )
     TEST_ASSERT_EQUAL( 1, _encoder.getEncodedSize( &_encoderObject, _buffer ) );
 }
 
-TEST( Full_Serializer_CBOR, Encoder_append_text_string )
+TEST( Serializer_Unit_CBOR, Encoder_append_text_string )
 {
     char * str = "hello world";
 
@@ -161,7 +168,7 @@ TEST( Full_Serializer_CBOR, Encoder_append_text_string )
     TEST_ASSERT_TRUE( equal );
 }
 
-TEST( Full_Serializer_CBOR, Encoder_append_byte_string )
+TEST( Serializer_Unit_CBOR, Encoder_append_byte_string )
 {
     uint8_t inputBytes[] = "hello world";
     size_t inputLength = strlen( ( const char * ) inputBytes );
@@ -190,7 +197,7 @@ TEST( Full_Serializer_CBOR, Encoder_append_byte_string )
     TEST_ASSERT_EQUAL( 0, strcmp( ( const char * ) inputBytes, ( const char * ) outputBytes ) );
 }
 
-TEST( Full_Serializer_CBOR, Encoder_open_a_scalar )
+TEST( Serializer_Unit_CBOR, Encoder_open_a_scalar )
 {
     IotSerializerEncoderObject_t integerObject = { .pHandle = NULL, .type = IOT_SERIALIZER_SCALAR_SIGNED_INT };
 
@@ -198,7 +205,7 @@ TEST( Full_Serializer_CBOR, Encoder_open_a_scalar )
                        _encoder.openContainer( &_encoderObject, &integerObject, 1 ) );
 }
 
-TEST( Full_Serializer_CBOR, Encoder_open_map )
+TEST( Serializer_Unit_CBOR, Encoder_open_map )
 {
     IotSerializerEncoderObject_t mapObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
 
@@ -233,7 +240,7 @@ TEST( Full_Serializer_CBOR, Encoder_open_map )
     TEST_ASSERT_TRUE( equal );
 }
 
-TEST( Full_Serializer_CBOR, Encoder_open_array )
+TEST( Serializer_Unit_CBOR, Encoder_open_array )
 {
     uint8_t i = 0;
     IotSerializerEncoderObject_t arrayObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_ARRAY;
@@ -278,7 +285,7 @@ TEST( Full_Serializer_CBOR, Encoder_open_array )
     TEST_ASSERT_TRUE( cbor_value_at_end( &arrayValue ) );
 }
 
-TEST( Full_Serializer_CBOR, Encoder_map_nest_map )
+TEST( Serializer_Unit_CBOR, Encoder_map_nest_map )
 {
     IotSerializerEncoderObject_t mapObject_1 = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
     IotSerializerEncoderObject_t mapObject_2 = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
@@ -325,7 +332,7 @@ TEST( Full_Serializer_CBOR, Encoder_map_nest_map )
     TEST_ASSERT_TRUE( equal );
 }
 
-TEST( Full_Serializer_CBOR, Encoder_map_nest_array )
+TEST( Serializer_Unit_CBOR, Encoder_map_nest_array )
 {
     uint8_t i = 0;
     IotSerializerEncoderObject_t mapObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
