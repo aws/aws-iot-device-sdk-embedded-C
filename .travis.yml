@@ -57,4 +57,4 @@ script:
   # Create build directory. Not needed when testing documentation.
   - if [ "$RUN_TEST" != "doc" ]; then mkdir build; cd build; fi
   # Run test script.
-  - bash ../scripts/ci_test_$RUN_TEST.sh
+  - if [ "$RUN_TEST" != "doc" ]; then bash ../scripts/ci_test_$RUN_TEST.sh; else ./scripts/ci_test_doc.sh; fi
