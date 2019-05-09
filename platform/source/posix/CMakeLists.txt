@@ -61,7 +61,7 @@ if( ${IOT_NETWORK_USE_OPENSSL} )
         endif()
 
         # Choose OpenSSL network source file.
-        set( NETWORK_SOURCE_FILE iot_network_openssl.c )
+        set( NETWORK_SOURCE_FILE ${CMAKE_SOURCE_DIR}/platform/source/network/posix/iot_network_openssl.c )
 
         # Link OpenSSL.
         set( TLS_LIBRARY_LINKER_FLAG OpenSSL::SSL OpenSSL::Crypto )
@@ -70,6 +70,19 @@ else()
     set( NETWORK_SOURCE_FILE ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_mbedtls.c )
     set( TLS_LIBRARY_LINKER_FLAG mbedtls )
 endif()
+
+# Split platform into interface libraries.
+add_library( iotplatformclock INTERFACE )
+target_sources( iotplatformclock INTERFACE ${CMAKE_SOURCE_DIR}/platform/source/posix/iot_clock_posix.c )
+target_link_libraries( iotplatformclock INTERFACE rt )
+
+add_library( iotplatformthreads INTERFACE )
+target_sources( iotplatformthreads INTERFACE ${CMAKE_SOURCE_DIR}/platform/source/posix/iot_threads_posix.c )
+target_link_libraries( iotplatformthreads INTERFACE Threads::Threads )
+
+add_library( iotplatformnetwork INTERFACE )
+target_sources( iotplatformnetwork INTERFACE ${NETWORK_SOURCE_FILE} )
+target_link_libraries( iotplatformnetwork INTERFACE ${TLS_LIBRARY_LINKER_FLAG} )
 
 # Platform libraries source files.
 add_library( iotplatform
@@ -80,7 +93,7 @@ add_library( iotplatform
 
 # Link required libraries.
 target_link_libraries( iotplatform
-                       PRIVATE Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )
+                       PRIVATE iotplatformclock iotplatformthreads iotplatformnetwork )
 
 if( ${IOT_BUILD_TESTS} )
     target_link_libraries( iotplatform PRIVATE unity )

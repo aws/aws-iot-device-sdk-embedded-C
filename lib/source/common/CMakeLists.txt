@@ -1,7 +1,6 @@
-# Common libraries source files.
+# Common libraries source files. The logging source is built in an interface library.
 set( COMMON_SOURCES
      iot_init.c
-     iot_logging.c
      iot_static_memory_common.c
      iot_taskpool.c
      iot_taskpool_static_memory.c )
@@ -21,12 +20,17 @@ set( COMMON_PRIVATE_HEADERS
 set( COMMON_TYPES_HEADERS
      ${PROJECT_SOURCE_DIR}/lib/include/types/iot_taskpool_types.h )
 
+# Make logging an interface library so that it may be linked independently.
+add_library( iotlogging INTERFACE )
+target_sources( iotlogging INTERFACE ${PROJECT_SOURCE_DIR}/lib/source/common/iot_logging.c )
+
 # Common library target.
 add_library( iotcommon
              ${COMMON_SOURCES} ${COMMON_PUBLIC_HEADERS} ${COMMON_PRIVATE_HEADERS} ${COMMON_TYPES_HEADERS} )
 
 # Link required libraries.
 target_link_libraries( iotcommon PUBLIC iotplatform )
+target_link_libraries( iotcommon PRIVATE iotlogging )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
