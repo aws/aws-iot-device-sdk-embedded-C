@@ -25,6 +25,8 @@ jobs:
     - if: type = push
       compiler: gcc
       env: RUN_TEST=coverage
+    - if: type = pull_request
+      env: RUN_TEST=doc
 
 # Update repositories.
 before_install:
@@ -33,7 +35,11 @@ before_install:
 # Install dependencies.
 install:
   # Dependencies required across the entire build matrix.
-  - sudo apt-get install -y cmake libssl-dev
+  - sudo apt-get install -y cmake
+  # Install OpenSSL if needed.
+  - if [ "$NETWORK_STACK" = "openssl" ]; then sudo apt-get install -y libssl-dev; fi
+  # Install graphviz only for documentation builds.
+  - if [ "$RUN_TEST" = "doc" ]; then sudo apt-get install -y graphviz; fi
   # Install lcov and coveralls only for coverage builds.
   - if [ "$RUN_TEST" = "coverage" ]; then sudo apt-get install -y lcov; pip install --user cpp-coveralls; fi
 

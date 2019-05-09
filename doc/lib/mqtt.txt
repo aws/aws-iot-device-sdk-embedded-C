@@ -143,7 +143,7 @@ When this setting is `1`, the MQTT tests will be built to test against an unsecu
 @configpossible `0` (use AWS IoT MQTT server) or `1` (use public Mosquitto server) <br>
 @configdefault `0`
 
-<div class="configpagedivider">The settings below only affect the [system](@ref iot_tests_mqtt_system.c) and [stress](@ref iot_tests_mqtt_stress.c) tests.</div>
+<div class="configpagedivider">The settings below only affect the [system](@ref iot_tests_mqtt_system.c) tests.</div>
 
 @section IOT_TEST_MQTT_TIMEOUT_MS
 @brief Timeout in milliseconds for MQTT operations.
@@ -161,58 +161,6 @@ This string will be prepended as the common part of topic filters as a way to di
 
 @configpossible Any string that adheres to the [specification for MQTT client identifiers](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349242). <br>
 @configdefault `"iotmqtttest"`
-
-<div class="configpagedivider">The settings below only affect the [stress](@ref iot_tests_mqtt_stress.c) tests.</div>
-
-@section IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
-@brief The keep-alive interval for the stress tests.
-
-MQTT PINGREQ packets will be sent at this interval.
-
-@configpossible Any positive integer. <br>
-@configrecommended This value should be the shortest keep-alive interval supported by the connection. <br>
-@configdefault `30` when using the AWS IoT MQTT server; `5` otherwise
-
-@section IOT_TEST_MQTT_RETRY_MS
-@brief The value of #IotMqttPublishInfo_t.retryMs used in the stress tests.
-
-Any lost publish messages will be retransmitted at this time.
-
-@configpossible Any positive integer. <br>
-@configrecommended This setting should be at least `250` to avoid excessive network congestion caused by retransmissions. <br>
-@configdefault `350`
-
-@section IOT_TEST_MQTT_RETRY_LIMIT
-@brief The value of #IotMqttPublishInfo_t.retryLimit used in the stress tests.
-
-Any lost publish messages will be retried up to this limit.
-
-@configpossible Any positive integer. <br>
-@configdefault `32`
-
-@section IOT_TEST_MQTT_DECONGEST_S
-@brief The time to wait for resources to be freed.
-
-Should an MQTT operation fail due to insufficient resources (such as a return value of @ref IOT_MQTT_NO_MEMORY), the test thread will sleep for this amount to time before retrying to wait for resources to be freed. Larger values for this setting provide a higher change for a successful retry, but will cause the tests to run longer.
-
-@configpossible Any positive integer. <br>
-@configdefault `30`
-
-@section IOT_TEST_MQTT_THREADS
-@brief The number of threads to use in the stress tests.
-
-The number of threads to spawn for the stress tests. Up to @ref IOT_TEST_MQTT_THREADS `*` @ref IOT_TEST_MQTT_PUBLISHES_PER_THREAD publish messages are sent by stress test.
-
-@configpossible Any positive integer. <br>
-@configdefault `16`
-
-@section IOT_TEST_MQTT_PUBLISHES_PER_THREAD
-@brief The number of publish messages each thread in the stress test should send.
-
-Up to @ref IOT_TEST_MQTT_THREADS `*` @ref IOT_TEST_MQTT_PUBLISHES_PER_THREAD publish messages are sent by stress test.
-
-@configpossible Any non-negative integer. <br>
-@configdefault When @ref IOT_STATIC_MEMORY_ONLY is `1`, this value defaults to @ref IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS. Otherwise, it defaults to `100`.
 */
 
 /**
