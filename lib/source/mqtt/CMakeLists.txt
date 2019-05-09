@@ -16,11 +16,11 @@ add_library( iotmqtt
              ${PROJECT_SOURCE_DIR}/lib/include/private/iot_mqtt_internal.h )
 
 # Link required libraries.
-target_link_libraries( iotmqtt iotcommon iotplatform )
+target_link_libraries( iotmqtt PUBLIC iotcommon )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
-    target_link_libraries( iotmqtt unity )
+    target_link_libraries( iotmqtt PRIVATE unity )
 endif()
 
 # Organization of MQTT in folders.

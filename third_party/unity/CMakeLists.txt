@@ -25,7 +25,9 @@ target_include_directories( unity SYSTEM
 target_compile_options( unity
                         PRIVATE
                         $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-                        -w> )
+                        -w>
+                        $<$<C_COMPILER_ID:MSVC>:
+                        /W0 /D_CRT_SECURE_NO_WARNINGS> )
 
 # Organization of Unity in folders.
 set_property( TARGET unity PROPERTY FOLDER "third_party" )
