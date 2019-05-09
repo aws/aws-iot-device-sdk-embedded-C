@@ -1,15 +1,28 @@
 #!/bin/sh
 
-# Check for doxygen.
-command -v doxygen > /dev/null || { echo "Doxygen not found. Exiting."; exit 1; }
+# Exit on any nonzero return code.
+set -ev
 
-if [ $# -ne 1 ]; then
-    echo "Usage: ./generate_doc.sh sdk_root_directory"
-    exit 1
+# Download and build the correct version of doxygen on CI.
+if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then
+    wget -O doxygen_source.tar.gz https://downloads.sourceforge.net/project/doxygen/rel-1.8.14/doxygen-1.8.14.src.tar.gz
+    tar xf doxygen_source.tar.gz
+    cmake doxygen-1.8.14
+    make -j2
+    sudo make install
+    cd ..
+else
+    if [ $# -ne 1 ]; then
+        echo "Usage: ./generate_doc.sh sdk_root_directory"
+        exit 1
+    fi
+
+    # Change to SDK root directory.
+    cd $1
 fi
 
-# Change to SDK root directory.
-cd $1
+# Check for doxygen.
+command -v doxygen > /dev/null || { echo "Doxygen not found. Exiting."; exit 1; }
 
 # Create tag directory if needed.
 mkdir -p doc/tag
