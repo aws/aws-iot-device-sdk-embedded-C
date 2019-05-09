@@ -25,6 +25,8 @@ jobs:
     - if: type = push
       compiler: gcc
       env: RUN_TEST=coverage
+    - if: type = pull_request
+      env: RUN_TEST=doc
 
 # Update repositories.
 before_install:
@@ -52,8 +54,7 @@ script:
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; fi
   # Set credential defines passed to CMake when not a pull request build.
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then export AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"../credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"../credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"../credentials/privateKey.pem\\\"\""; fi
-  # Create build directory.
-  - mkdir build
-  - cd build
+  # Create build directory. Not needed when testing documentation.
+  - if [ "$RUN_TEST" != "doc" ]; then mkdir build; cd build; fi
   # Run test script.
   - bash ../scripts/ci_test_$RUN_TEST.sh
