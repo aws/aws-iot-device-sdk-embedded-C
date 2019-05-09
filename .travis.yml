@@ -55,7 +55,7 @@ script:
   # Set credential defines passed to CMake when not a pull request build.
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then export AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"../credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"../credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"../credentials/privateKey.pem\\\"\""; fi
   # Create build directory.
-  - then mkdir build
+  - mkdir build
   - cd build
   # Run test script.
   - bash ../scripts/ci_test_$RUN_TEST.sh
