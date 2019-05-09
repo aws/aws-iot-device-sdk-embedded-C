@@ -59,6 +59,13 @@ set( MBEDTLS_SOURCES
      mbedtls/library/x509.c
      mbedtls/library/x509_crt.c )
 
+# Choose the correct interface library source.
+if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
+	list( APPEND MBEDTLS_SOURCES ${PROJECT_SOURCE_DIR}/platform/source/posix/iot_threads_posix.c )
+elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
+	list( APPEND MBEDTLS_SOURCES ${PROJECT_SOURCE_DIR}/platform/source/windows/iot_threads_windows.c )
+endif()
+
 # mbed TLS headers (for folder organization only).
 file( GLOB MBEDTLS_HEADERS "mbedtls/include/mbedtls/*.h" )
 

@@ -61,7 +61,7 @@ if( ${IOT_NETWORK_USE_OPENSSL} )
         endif()
 
         # Choose OpenSSL network source file.
-        set( NETWORK_SOURCE_FILE ${CMAKE_SOURCE_DIR}/platform/source/network/posix/iot_network_openssl.c )
+        set( NETWORK_SOURCE_FILE ${CMAKE_SOURCE_DIR}/platform/source/posix/iot_network_openssl.c )
 
         # Link OpenSSL.
         set( TLS_LIBRARY_LINKER_FLAG OpenSSL::SSL OpenSSL::Crypto )
