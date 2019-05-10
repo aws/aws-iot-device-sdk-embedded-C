@@ -71,19 +71,6 @@ else()
     set( TLS_LIBRARY_LINKER_FLAG mbedtls )
 endif()
 
-# Split platform into interface libraries.
-add_library( iotplatformclock INTERFACE )
-target_sources( iotplatformclock INTERFACE ${CMAKE_SOURCE_DIR}/platform/source/posix/iot_clock_posix.c )
-target_link_libraries( iotplatformclock INTERFACE rt )
-
-add_library( iotplatformthreads INTERFACE )
-target_sources( iotplatformthreads INTERFACE ${CMAKE_SOURCE_DIR}/platform/source/posix/iot_threads_posix.c )
-target_link_libraries( iotplatformthreads INTERFACE Threads::Threads )
-
-add_library( iotplatformnetwork INTERFACE )
-target_sources( iotplatformnetwork INTERFACE ${NETWORK_SOURCE_FILE} )
-target_link_libraries( iotplatformnetwork INTERFACE ${TLS_LIBRARY_LINKER_FLAG} )
-
 # Platform libraries source files.
 add_library( iotplatform
              iot_clock_posix.c
@@ -93,7 +80,7 @@ add_library( iotplatform
 
 # Link required libraries.
 target_link_libraries( iotplatform
-                       PRIVATE iotplatformclock iotplatformthreads iotplatformnetwork )
+                       PRIVATE Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )
 
 if( ${IOT_BUILD_TESTS} )
     target_link_libraries( iotplatform PRIVATE unity )

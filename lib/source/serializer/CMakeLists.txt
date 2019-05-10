@@ -12,7 +12,7 @@ add_library( iotserializer
              ${PROJECT_SOURCE_DIR}/lib/include/iot_json_utils.h )
 
 # Link required libraries.
-target_link_libraries( iotserializer PUBLIC tinycbor )
+target_link_libraries( iotserializer PRIVATE tinycbor )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
