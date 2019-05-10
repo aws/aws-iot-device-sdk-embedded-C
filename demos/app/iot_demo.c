@@ -297,16 +297,16 @@ int main( int argc,
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
-    /* Clean up the SDK if initialized. */
-    if( sdkInitialized == true )
-    {
-        IotSdk_Cleanup();
-    }
-
     /* Clean up the network stack if initialized. */
     if( networkInitialized == true )
     {
         IotDemoNetwork_Cleanup();
+    }
+
+    /* Clean up the SDK if initialized. */
+    if( sdkInitialized == true )
+    {
+        IotSdk_Cleanup();
     }
 
     /* Log the demo status. */
