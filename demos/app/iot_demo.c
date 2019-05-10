@@ -30,9 +30,13 @@
 /* Standard includes. */
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* SDK initialization include. */
 #include "iot_init.h"
+
+/* Error handling include. */
+#include "private/iot_error.h"
 
 /* Common demo includes. */
 #include "iot_demo_arguments.h"
@@ -60,7 +64,7 @@
 
     #define IotDemoNetwork_Init                 IotNetworkMbedtls_Init
     #define IotDemoNetwork_Cleanup              IotNetworkMbedtls_Cleanup
-#endif
+#endif /* if IOT_NETWORK_USE_OPENSSL == 1 */
 
 /* This file calls a generic placeholder demo function. The build system selects
  * the actual demo function to run by defining it. */
@@ -79,11 +83,131 @@ extern int RunDemo( bool awsIotMqttMode,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Set the default values of an #IotDemoArguments_t based on compile-time
+ * defined constants.
+ *
+ * @param[out] pArguments Default values will be placed here.
+ */
+static void _setDefaultArguments( IotDemoArguments_t * pArguments )
+{
+    /* Default to AWS IoT MQTT mode. */
+    pArguments->awsIotMqttMode = true;
+
+    /* Set default secured connection status if defined. */
+    #ifdef IOT_DEMO_SECURED_CONNECTION
+        pArguments->securedConnection = IOT_DEMO_SECURED_CONNECTION;
+    #endif
+
+    /* Set default MQTT server if defined. */
+    #ifdef IOT_DEMO_SERVER
+        pArguments->pHostName = IOT_DEMO_SERVER;
+    #endif
+
+    /* Set default MQTT server port if defined. */
+    #ifdef IOT_DEMO_PORT
+        pArguments->port = IOT_DEMO_PORT;
+    #endif
+
+    /* Set default root CA path if defined. */
+    #ifdef IOT_DEMO_ROOT_CA
+        pArguments->pRootCaPath = IOT_DEMO_ROOT_CA;
+    #endif
+
+    /* Set default client certificate path if defined. */
+    #ifdef IOT_DEMO_CLIENT_CERT
+        pArguments->pClientCertPath = IOT_DEMO_CLIENT_CERT;
+    #endif
+
+    /* Set default client certificate private key path if defined. */
+    #ifdef IOT_DEMO_PRIVATE_KEY
+        pArguments->pPrivateKeyPath = IOT_DEMO_PRIVATE_KEY;
+    #endif
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validates the members of an #IotDemoArguments_t.
+ *
+ * @param[in] pArguments The #IotDemoArguments_t to validate.
+ *
+ * @return `true` if every member of the #IotDemoArguments_t is valid; `false`
+ * otherwise.
+ */
+static bool _validateArguments( const IotDemoArguments_t * pArguments )
+{
+    /* Declare a status variable for this function. */
+    IOT_FUNCTION_ENTRY( bool, true );
+
+    /* Check that a server was set. */
+    if( ( pArguments->pHostName == NULL ) ||
+        ( strlen( pArguments->pHostName ) == 0 ) )
+    {
+        IotLogError( "MQTT server not set. Exiting." );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* Check that a server port was set. */
+    if( pArguments->port == 0 )
+    {
+        IotLogError( "MQTT server port not set. Exiting." );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* Check credentials for a secured connection. */
+    if( pArguments->securedConnection == true )
+    {
+        /* Check that a root CA path was set. */
+        if( ( pArguments->pRootCaPath == NULL ) ||
+            ( strlen( pArguments->pRootCaPath ) == 0 ) )
+        {
+            IotLogError( "Root CA path not set. Exiting." );
+
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+
+        /* Check that a client certificate path was set. */
+        if( ( pArguments->pClientCertPath == NULL ) ||
+            ( strlen( pArguments->pClientCertPath ) == 0 ) )
+        {
+            IotLogError( "Client certificate path not set. Exiting." );
+
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+
+        /* Check that a client certificate private key was set. */
+        if( ( pArguments->pPrivateKeyPath == NULL ) ||
+            ( strlen( pArguments->pPrivateKeyPath ) == 0 ) )
+        {
+            IotLogError( "Client certificate private key not set. Exiting." );
+
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+    }
+    else
+    {
+        if( pArguments->awsIotMqttMode == true )
+        {
+            IotLogError( "AWS IoT does not support unsecured connections." );
+
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+    }
+
+    /* No cleanup is required for this function. */
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
 int main( int argc,
           char ** argv )
 {
     /* Return value of this function and the exit status of this program. */
-    int status = EXIT_SUCCESS;
+    IOT_FUNCTION_ENTRY( int, EXIT_SUCCESS );
 
     /* Status returned from network stack initialization. */
     IotNetworkError_t networkInitStatus = IOT_NETWORK_SUCCESS;
@@ -97,7 +221,7 @@ int main( int argc,
     /* Network server info and credentials. */
     IotNetworkServerInfo_t serverInfo = IOT_DEMO_SERVER_INFO_INITIALIZER;
     IotNetworkCredentials_t credentials = IOT_DEMO_CREDENTIALS_INITIALIZER,
-                                   * pCredentials = NULL;
+                            * pCredentials = NULL;
 
     /* Set default identifier if defined. The identifier is used as either the
      * MQTT client identifier or the Thing Name, which identifies this client to
@@ -106,77 +230,72 @@ int main( int argc,
         demoArguments.pIdentifier = IOT_DEMO_IDENTIFIER;
     #endif
 
+    /* Load the default demo arguments from the demo config header. */
+    _setDefaultArguments( &demoArguments );
+
     /* Parse any command line arguments. */
-    if( IotDemo_ParseArguments( argc,
-                                argv,
-                                &demoArguments ) == true )
+    IotDemo_ParseArguments( argc,
+                            argv,
+                            &demoArguments );
+
+    /* Validate arguments. */
+    if( _validateArguments( &demoArguments ) == false )
     {
-        /* Set the members of the server info. */
-        serverInfo.pHostName = demoArguments.pHostName;
-        serverInfo.port = demoArguments.port;
-
-        /* For a secured connection, set the members of the credentials. */
-        if( demoArguments.securedConnection == true )
-        {
-            /* Set credential paths. */
-            credentials.pClientCert = demoArguments.pClientCertPath;
-            credentials.pPrivateKey = demoArguments.pPrivateKeyPath;
-            credentials.pRootCa = demoArguments.pRootCaPath;
-
-            /* By default, the credential initializer enables ALPN with AWS IoT,
-             * which only works over port 443. Disable ALPN if another port is
-             * used. */
-            if( demoArguments.port != 443 )
-            {
-                credentials.pAlpnProtos = NULL;
-            }
-
-            /* Set the pointer to the credentials. */
-            pCredentials = &credentials;
-        }
+        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
-    else
+
+    /* Set the members of the server info. */
+    serverInfo.pHostName = demoArguments.pHostName;
+    serverInfo.port = demoArguments.port;
+
+    /* For a secured connection, set the members of the credentials. */
+    if( demoArguments.securedConnection == true )
     {
-        /* Failed to parse arguments. */
-        status = EXIT_FAILURE;
+        /* Set credential paths. */
+        credentials.pClientCert = demoArguments.pClientCertPath;
+        credentials.pPrivateKey = demoArguments.pPrivateKeyPath;
+        credentials.pRootCa = demoArguments.pRootCaPath;
+
+        /* By default, the credential initializer enables ALPN with AWS IoT,
+         * which only works over port 443. Disable ALPN if another port is
+         * used. */
+        if( demoArguments.port != 443 )
+        {
+            credentials.pAlpnProtos = NULL;
+        }
+
+        /* Set the pointer to the credentials. */
+        pCredentials = &credentials;
     }
 
     /* Call the SDK initialization function. */
-    if( status == EXIT_SUCCESS )
-    {
-        sdkInitialized = IotSdk_Init();
+    sdkInitialized = IotSdk_Init();
 
-        if( sdkInitialized == false )
-        {
-            status = EXIT_FAILURE;
-        }
+    if( sdkInitialized == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
     /* Initialize the network stack. */
-    if( status == EXIT_SUCCESS )
-    {
-        networkInitStatus = IotDemoNetwork_Init();
+    networkInitStatus = IotDemoNetwork_Init();
 
-        if( networkInitStatus == IOT_NETWORK_SUCCESS )
-        {
-            networkInitialized = true;
-        }
-        else
-        {
-            /* Network stack failed to initialize. */
-            status = EXIT_FAILURE;
-        }
+    if( networkInitStatus == IOT_NETWORK_SUCCESS )
+    {
+        networkInitialized = true;
+    }
+    else
+    {
+        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
     /* Run the demo. */
-    if( status == EXIT_SUCCESS )
-    {
-        status = RunDemo( demoArguments.awsIotMqttMode,
-                          demoArguments.pIdentifier,
-                          &serverInfo,
-                          pCredentials,
-                          IOT_DEMO_NETWORK_INTERFACE );
-    }
+    status = RunDemo( demoArguments.awsIotMqttMode,
+                      demoArguments.pIdentifier,
+                      &serverInfo,
+                      pCredentials,
+                      IOT_DEMO_NETWORK_INTERFACE );
+
+    IOT_FUNCTION_CLEANUP_BEGIN();
 
     /* Clean up the SDK if initialized. */
     if( sdkInitialized == true )
@@ -200,7 +319,7 @@ int main( int argc,
         IotLogError( "Error occurred while running demo." );
     }
 
-    return status;
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
