@@ -20,8 +20,8 @@
  */
 
 /**
- * @file iot_demo_posix.c
- * @brief Generic demo runner for POSIX systems.
+ * @file iot_demo.c
+ * @brief Generic demo runner.
  */
 
 /* The config header is always included first. */
@@ -30,7 +30,6 @@
 /* Standard includes. */
 #include <stdbool.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 /* SDK initialization include. */
 #include "iot_init.h"

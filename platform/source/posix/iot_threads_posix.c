@@ -94,6 +94,17 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Holds information about an active detached thread.
+ */
+typedef struct _threadInfo
+{
+    void * pArgument;                 /**< @brief First argument to `threadRoutine`. */
+    IotThreadRoutine_t threadRoutine; /**< @brief Thread function to run. */
+} _threadInfo_t;
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Wraps an #IotThreadRoutine_t with a POSIX-compliant one.
  *
  * @param[in] pArgument The value passed as `arg` to `pthread_create`.
@@ -105,17 +116,6 @@ static void * _threadRoutineWrapper( void * pArgument );
 /* Platform-specific function implemented in iot_clock_posix.c */
 extern bool IotClock_TimeoutToTimespec( uint32_t timeoutMs,
                                         struct timespec * pOutput );
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Holds information about an active detached thread.
- */
-typedef struct _threadInfo
-{
-    void * pArgument;                 /**< @brief First argument to `threadRoutine`. */
-    IotThreadRoutine_t threadRoutine; /**< @brief Thread function to run. */
-} _threadInfo_t;
 
 /*-----------------------------------------------------------*/
 
@@ -155,7 +155,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
 
     IotLogDebug( "Creating new thread." );
 
-    /* Allocate memory for the new thread. */
+    /* Allocate memory for the new thread info. */
     pThreadInfo = IotThreads_Malloc( sizeof( _threadInfo_t ) );
 
     if( pThreadInfo == NULL )
