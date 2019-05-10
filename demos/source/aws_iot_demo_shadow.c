@@ -798,7 +798,7 @@ int RunShadowDemo( bool awsIotMqttMode,
     IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
     /* Length of Shadow Thing Name. */
-    const size_t thingNameLength = strlen( pIdentifier );
+    size_t thingNameLength = 0;
 
     /* Allows the Shadow update function to wait for the delta callback to complete
      * a state change before continuing. */
@@ -811,8 +811,30 @@ int RunShadowDemo( bool awsIotMqttMode,
      * to AWS IoT, so this value is hardcoded to true whenever needed. */
     ( void ) awsIotMqttMode;
 
+    /* Determine the length of the Thing Name. */
+    if( pIdentifier != NULL )
+    {
+        thingNameLength = strlen( pIdentifier );
+
+        if( thingNameLength == 0 )
+        {
+            IotLogError( "The length of the Thing Name (identifier) must be nonzero." );
+
+            status = EXIT_FAILURE;
+        }
+    }
+    else
+    {
+        IotLogError( "A Thing Name (identifier) must be provided for the Shadow demo." );
+
+        status = EXIT_FAILURE;
+    }
+
     /* Initialize the libraries required for this demo. */
-    status = _initializeDemo();
+    if( status == EXIT_SUCCESS )
+    {
+        status = _initializeDemo();
+    }
 
     if( status == EXIT_SUCCESS )
     {
