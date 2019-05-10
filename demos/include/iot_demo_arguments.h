@@ -29,6 +29,7 @@
 #define IOT_DEMO_ARGUMENTS_H_
 
 /* Standard includes. */
+#include <stdbool.h>
 #include <stdint.h>
 
 /**
@@ -86,12 +87,8 @@ typedef struct IotDemoArguments
  * @param[in] argc The argument count originally passed to main().
  * @param[in] argv The argument vector originally passed to main().
  * @param[out] pArguments Set to the arguments parsed from the command line.
- *
- * @return `true` if arguments were successfully parsed and all necessary variables
- * were set; `false` otherwise. If this function returns `false`, the demo program
- * should exit.
  */
-bool IotDemo_ParseArguments( int argc,
+void IotDemo_ParseArguments( int argc,
                              char ** argv,
                              IotDemoArguments_t * pArguments );
 
