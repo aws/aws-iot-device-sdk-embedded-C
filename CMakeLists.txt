@@ -107,12 +107,8 @@ add_subdirectory( third_party/tinycbor )
 # mbed TLS library (third-party).
 add_subdirectory( third_party/mbedtls )
 
-# Determine the demo executable to build based on system.
-if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-    add_subdirectory( demos/app/posix )
-elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-    add_subdirectory( demos/app/windows )
-endif()
+# Build demo executable.
+add_subdirectory( demos/app )
 
 # Test executables.
 if( ${IOT_BUILD_TESTS} )
