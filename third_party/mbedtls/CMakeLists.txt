@@ -19,7 +19,6 @@ endif()
 
 # mbed TLS source files.
 set( MBEDTLS_SOURCES
-     iot_mbedtls_threading.c
      mbedtls/library/aes.c
      mbedtls/library/aesni.c
      mbedtls/library/asn1parse.c
@@ -59,20 +58,14 @@ set( MBEDTLS_SOURCES
      mbedtls/library/x509.c
      mbedtls/library/x509_crt.c )
 
-# Choose the correct interface library source.
-if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-	list( APPEND MBEDTLS_SOURCES ${PROJECT_SOURCE_DIR}/platform/source/posix/iot_threads_posix.c )
-elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-	list( APPEND MBEDTLS_SOURCES ${PROJECT_SOURCE_DIR}/platform/source/windows/iot_threads_windows.c )
-endif()
-
 # mbed TLS headers (for folder organization only).
 file( GLOB MBEDTLS_HEADERS "mbedtls/include/mbedtls/*.h" )
 
 # mbed TLS library target.
 add_library( mbedtls
              ${MBEDTLS_SOURCES} ${MBEDTLS_HEADERS}
-             iot_config_mbedtls.h threading_alt.h )
+             iot_config_mbedtls.h threading_alt.h
+             iot_mbedtls_threading.c )
 
 # mbed TLS config header and include directories.
 target_include_directories( mbedtls SYSTEM
@@ -80,9 +73,6 @@ target_include_directories( mbedtls SYSTEM
                             PUBLIC ${PROJECT_SOURCE_DIR}/third_party/mbedtls/mbedtls/include )
 target_compile_definitions( mbedtls
                             PUBLIC -DMBEDTLS_CONFIG_FILE="iot_config_mbedtls.h" )
-
-# Link the platform threading component.
-target_link_libraries( mbedtls PRIVATE iotplatformthreads )
 
 # Link the Unity test framework when testing.
 if( ${IOT_BUILD_TESTS} )
@@ -101,4 +91,4 @@ target_compile_options( mbedtls
 set_property( TARGET mbedtls PROPERTY FOLDER "third_party" )
 source_group( include\\mbedtls FILES ${MBEDTLS_HEADERS} )
 source_group( source FILES ${MBEDTLS_SOURCES} )
-source_group( "" FILES iot_config_mbedtls.h threading_alt.h )
+source_group( "" FILES iot_config_mbedtls.h threading_alt.h iot_mbedtls_threading.c )
