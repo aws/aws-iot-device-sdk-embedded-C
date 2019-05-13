@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,9 +20,12 @@
  */
 
 /**
- * @file iot_tests_serializer.c
- * @brief Test runner for the Serializer tests on POSIX systems.
+ * @file iot_tests_posix.c
+ * @brief Common test runner on POSIX systems.
  */
+
+/* The config header is always included first. */
+#include "iot_config.h"
 
 /* Standard includes. */
 #include <stdio.h>
@@ -92,8 +95,45 @@ int main( int argc,
     UnityFixture.GroupFilter = NULL;
     UNITY_BEGIN();
 
-    /* Run unit tests. */
-    RUN_TEST_GROUP( Serializer_Unit_CBOR );
+    /* Common tests. */
+    #if IOT_TEST_COMMON == 1
+        RUN_TEST_GROUP( Common_Unit_Linear_Containers );
+        RUN_TEST_GROUP( Common_Unit_Task_Pool );
+        RUN_TEST_GROUP( Common_Unit_Atomic );
+    #endif
+
+    /* Defender tests. */
+    #if AWS_IOT_TEST_DEFENDER == 1
+        RUN_TEST_GROUP( Defender_System );
+    #endif
+
+    /* MQTT tests. */
+    #if IOT_TEST_MQTT == 1
+        RUN_TEST_GROUP( MQTT_Unit_Subscription );
+        RUN_TEST_GROUP( MQTT_Unit_Validate );
+        RUN_TEST_GROUP( MQTT_Unit_Receive );
+        RUN_TEST_GROUP( MQTT_Unit_API );
+        RUN_TEST_GROUP( MQTT_System );
+    #endif
+
+    /* Serializer tests. */
+    #if IOT_TEST_SERIALIZER == 1
+        RUN_TEST_GROUP( Serializer_Unit_CBOR );
+    #endif
+
+    /* Shadow tests. */
+    #if AWS_IOT_TEST_SHADOW == 1
+        /* Always run tests that do not require the network. */
+        RUN_TEST_GROUP( Shadow_Unit_Parser );
+        RUN_TEST_GROUP( Shadow_Unit_API );
+
+        /* Disable the Shadow tests that require the network if the -n command line
+         * option is set. */
+        if( getopt( argc, argv, "n" ) == -1 )
+        {
+            RUN_TEST_GROUP( Shadow_System );
+        }
+    #endif
 
     /* Return failure if any tests failed. */
     if( UNITY_END() != 0 )
