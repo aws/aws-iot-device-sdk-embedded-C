@@ -5,8 +5,10 @@
 This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 
 @pre
-- CMake version 3.5.0 or later and a supported C compiler.
-- One of the following security libraries:
+- CMake version 3.5.0 or later and a supported C99 compiler.
+
+@pre
+If using the OpenSSL network implementation.
   - OpenSSL development libraries and header files, version 1.0.2g or later.
 
 @pre
@@ -15,6 +17,23 @@ Additional requirements for POSIX systems:
 - POSIX timers.
 
 In addition, credentials and Things for AWS IoT must be provisioned before running the demos. See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/iot-gs.html) for a tutorial on setting up AWS IoT.
+
+@section building_configuration Build system configuration
+@brief Configuration of the CMake build system.
+
+The following options may be passed to the CMake build system to modify the build. Options are passed with `-D` on the command line, or selected through [CMake GUI](https://cmake.org/cmake/help/v3.0/manual/cmake-gui.1.html). If an option is not set, the default value will be used.
+- [BUILD_SHARED_LIBS](https://cmake.org/cmake/help/latest/variable/BUILD_SHARED_LIBS.html) <br>
+  <i>Default:</i> `ON` <br>
+  Set this to `ON` to build all libraries as shared libraries. When `OFF`, libraries build as static libraries.
+- <b>`IOT_ATOMIC_USE_PORT`</b> <br>
+  <i>Default:</i> `OFF` <br>
+  Set this to `ON` to use a custom atomic port. When `OFF`, the build system will choose an atomic port. This option also sets the preprocessor setting @ref IOT_ATOMIC_USE_PORT.
+- <b>`IOT_BUILD_CLONE_SUBMODULES`</b> <br>
+  <i>Default:</i> `OFF` <br>
+  Set this to `ON` to automatically clone any required Git submodules. When `OFF`, submodules must be manually cloned.
+- <b>`IOT_BUILD_TESTS`</b> <br>
+  <i>Default:</i> `OFF` <br>
+  Set this to `ON` to build both demo and test executables. When `OFF`, only demo executables are built.
 
 @section building_demo Building the demo applications
 @brief How to build the demo applications.
