@@ -11,11 +11,12 @@ set( SHADOW_UNIT_TEST_SOURCES
 add_executable( aws_iot_tests_shadow
                 ${SHADOW_SYSTEM_TEST_SOURCES}
                 ${SHADOW_UNIT_TEST_SOURCES}
+                aws_iot_tests_shadow.c
                 ${IOT_TEST_APP_FILES} )
 
 # Define the test to run.
 target_compile_definitions( aws_iot_tests_shadow PRIVATE
-                            -DAWS_IOT_TEST_SHADOW=1 )
+                            -DRunTests=RunShadowTests )
 
 # Shadow tests library dependencies.
 target_link_libraries( aws_iot_tests_shadow PRIVATE awsiotshadow unity )
@@ -24,4 +25,4 @@ target_link_libraries( aws_iot_tests_shadow PRIVATE awsiotshadow unity )
 set_property( TARGET aws_iot_tests_shadow PROPERTY FOLDER "tests" )
 source_group( system FILES ${SHADOW_SYSTEM_TEST_SOURCES} )
 source_group( unit FILES ${SHADOW_UNIT_TEST_SOURCES} )
-source_group( "" FILES ${IOT_TEST_APP_FILES} )
+source_group( "" FILES ${IOT_TEST_APP_FILES} aws_iot_tests_shadow.c )

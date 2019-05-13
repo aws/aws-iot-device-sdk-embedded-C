@@ -5,11 +5,12 @@ set( DEFENDER_SYSTEM_TEST_SOURCES
 # Defender tests executable.
 add_executable( aws_iot_tests_defender
                 ${DEFENDER_SYSTEM_TEST_SOURCES}
+                aws_iot_tests_defender.c
                 ${IOT_TEST_APP_FILES} )
 
 # Define the test to run.
 target_compile_definitions( aws_iot_tests_defender PRIVATE
-                            -DAWS_IOT_TEST_DEFENDER=1 )
+                            -DRunTests=RunDefenderTests )
 
 # Defender tests library dependencies.
 target_link_libraries( aws_iot_tests_defender PRIVATE awsiotdefender tinycbor unity )
@@ -17,4 +18,4 @@ target_link_libraries( aws_iot_tests_defender PRIVATE awsiotdefender tinycbor un
 # Organization of Defender tests in folders.
 set_property( TARGET aws_iot_tests_defender PROPERTY FOLDER "tests" )
 source_group( system FILES ${DEFENDER_SYSTEM_TEST_SOURCES} )
-source_group( "" FILES ${IOT_TEST_APP_FILES} )
+source_group( "" FILES ${IOT_TEST_APP_FILES} aws_iot_tests_defender.c )

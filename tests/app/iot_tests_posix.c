@@ -28,6 +28,7 @@
 #include "iot_config.h"
 
 /* Standard includes. */
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,6 +42,17 @@
 
 /* Test framework includes. */
 #include "unity_fixture.h"
+
+/* This file calls a generic placeholder test runner function. The build system selects
+ * the actual test runner function by defining it. */
+#ifndef RunTests
+    #error "Test runner function undefined."
+#endif
+
+/*-----------------------------------------------------------*/
+
+/* Declaration of generic test runner function. */
+extern void RunTests( bool disableNetworkTests, bool disableLongTests );
 
 /*-----------------------------------------------------------*/
 
@@ -68,11 +80,8 @@ int main( int argc,
           char ** argv )
 {
     IOT_FUNCTION_ENTRY( int, EXIT_SUCCESS );
+    bool disableNetworkTests = false, disableLongTests = false;
     struct sigaction signalAction;
-
-    /* Silence warnings about unused parameters. */
-    ( void ) argc;
-    ( void ) argv;
 
     /* Set a signal handler for segmentation faults and assertion failures. */
     ( void ) memset( &signalAction, 0x00, sizeof( struct sigaction ) );
@@ -95,45 +104,19 @@ int main( int argc,
     UnityFixture.GroupFilter = NULL;
     UNITY_BEGIN();
 
-    /* Common tests. */
-    #if IOT_TEST_COMMON == 1
-        RUN_TEST_GROUP( Common_Unit_Linear_Containers );
-        RUN_TEST_GROUP( Common_Unit_Task_Pool );
-        RUN_TEST_GROUP( Common_Unit_Atomic );
-    #endif
+    /* Check if any tests should be disabled. */
+    if( getopt( argc, argv, "n" ) == ( ( int ) 'n' ) )
+    {
+        disableNetworkTests = true;
+    }
 
-    /* Defender tests. */
-    #if AWS_IOT_TEST_DEFENDER == 1
-        RUN_TEST_GROUP( Defender_System );
-    #endif
+    if( getopt( argc, argv, "l" ) == -1 )
+    {
+        disableLongTests = true;
+    }
 
-    /* MQTT tests. */
-    #if IOT_TEST_MQTT == 1
-        RUN_TEST_GROUP( MQTT_Unit_Subscription );
-        RUN_TEST_GROUP( MQTT_Unit_Validate );
-        RUN_TEST_GROUP( MQTT_Unit_Receive );
-        RUN_TEST_GROUP( MQTT_Unit_API );
-        RUN_TEST_GROUP( MQTT_System );
-    #endif
-
-    /* Serializer tests. */
-    #if IOT_TEST_SERIALIZER == 1
-        RUN_TEST_GROUP( Serializer_Unit_CBOR );
-    #endif
-
-    /* Shadow tests. */
-    #if AWS_IOT_TEST_SHADOW == 1
-        /* Always run tests that do not require the network. */
-        RUN_TEST_GROUP( Shadow_Unit_Parser );
-        RUN_TEST_GROUP( Shadow_Unit_API );
-
-        /* Disable the Shadow tests that require the network if the -n command line
-         * option is set. */
-        if( getopt( argc, argv, "n" ) == -1 )
-        {
-            RUN_TEST_GROUP( Shadow_System );
-        }
-    #endif
+    /* Call the test runner function. */
+    RunTests( disableNetworkTests, disableLongTests );
 
     /* Return failure if any tests failed. */
     if( UNITY_END() != 0 )
