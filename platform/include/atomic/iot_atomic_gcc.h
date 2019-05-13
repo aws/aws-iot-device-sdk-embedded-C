@@ -26,8 +26,8 @@
  * Compatible with GCC and clang.
  */
 
-#ifndef IOT_ATOMIC_GCC_H
-#define IOT_ATOMIC_GCC_H
+#ifndef IOT_ATOMIC_GCC_H_
+#define IOT_ATOMIC_GCC_H_
 
 /* Standard includes. */
 #include <stdbool.h>
@@ -38,208 +38,153 @@
  */
 #define FORCE_INLINE    inline __attribute__( ( always_inline ) )
 
-/*----------------------- Swap and Compare-and-Swap -------------------------*/
+/*---------------- Swap and compare-and-swap ------------------*/
 
 /**
- * Atomic compare-and-swap
- *
- * @brief Performs an atomic compare-and-swap operation on the specified values.
- *
- * @param[in, out] pDestination  Pointer to memory location from where value is to be loaded and checked.
- * @param[in] ulExchange         If condition meets, write this value to memory.
- * @param[in] ulComparand        Swap condition, checks and waits for *pDestination to be equal to ulComparand.
- *
- * @return unsigned integer of value 1 or 0. 1 for swapped, 0 for not swapped.
- *
- * @note This function only swaps *pDestination with ulExchange, if previous *pDestination value equals ulComparand.
+ * @brief Implementation of atomic compare-and-swap for gcc.
  */
 static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDestination,
-                                                        uint32_t ulExchange,
-                                                        uint32_t ulComparand )
+                                                        uint32_t newValue,
+                                                        uint32_t comparand )
 {
-    uint32_t ulReturnValue = 0;
+    uint32_t swapped = 0;
 
-    if( __atomic_compare_exchange( pDestination, &ulComparand, &ulExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST ) )
+    if( __atomic_compare_exchange( pDestination,
+                                   &comparand,
+                                   &newValue,
+                                   false,
+                                   __ATOMIC_SEQ_CST,
+                                   __ATOMIC_SEQ_CST ) == true )
     {
-        ulReturnValue = 1;
+        swapped = 1;
     }
 
-    return ulReturnValue;
+    return swapped;
 }
 
+/*-----------------------------------------------------------*/
+
 /**
- * Atomic swap (pointers)
- *
- * @brief Atomically sets the address pointed to by *ppDestination to the value of *pExchange.
- *
- * @param[in, out] ppDestination  Pointer to memory location from where a pointer value is to be loaded and writen back to.
- * @param[in] pExchange           Pointer value to be written to *ppDestination.
- *
- * @return The initial value of *ppDestination.
+ * @brief Implementation of atomic pointer swap for gcc.
  */
-static FORCE_INLINE void * Atomic_SwapPointers_p32( void * volatile * ppDestination,
-                                                    void * pExchange )
+static FORCE_INLINE void * Atomic_Swap_Pointer( void * volatile * pDestination,
+                                                void * pNewValue )
 {
-    void * pReturnValue;
+    void * pOldValue = NULL;
 
-    __atomic_exchange( ppDestination, &pExchange, &pReturnValue, __ATOMIC_SEQ_CST );
+    __atomic_exchange( pDestination, &pNewValue, &pOldValue, __ATOMIC_SEQ_CST );
 
-    return pReturnValue;
+    return pOldValue;
 }
 
-/**
- * Atomic compare-and-swap (pointers)
- *
- * @brief Performs an atomic compare-and-swap operation on the specified pointer values.
- *
- * @param[in, out] ppDestination Pointer to memory location from where a pointer value is to be loaded and checked.
- * @param[in] pExchange          If condition meets, write this value to memory.
- * @param[in] pComparand         Swap condition, checks and waits for *ppDestination to be equal to *pComparand.
- *
- * @return unsigned integer of value 1 or 0. 1 for swapped, 0 for not swapped.
- *
- * @note This function only swaps *ppDestination with pExchange, if previous *ppDestination value equals pComparand.
- */
-static FORCE_INLINE uint32_t Atomic_CompareAndSwapPointers_p32( void * volatile * ppDestination,
-                                                                void * pExchange,
-                                                                void * pComparand )
-{
-    uint32_t ulReturnValue = 0;
+/*-----------------------------------------------------------*/
 
-    if( __atomic_compare_exchange( ppDestination, &pComparand, &pExchange, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST ) )
+/**
+ * @brief Implementation of atomic pointer compare-and-swap for gcc.
+ */
+static FORCE_INLINE uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pDestination,
+                                                            void * pNewValue,
+                                                            void * pComparand )
+{
+    uint32_t swapped = 0;
+
+    if( __atomic_compare_exchange( pDestination,
+                                   &pComparand,
+                                   &pNewValue,
+                                   false,
+                                   __ATOMIC_SEQ_CST,
+                                   __ATOMIC_SEQ_CST ) == true )
     {
-        ulReturnValue = 1;
+        swapped = 1;
     }
 
-    return ulReturnValue;
+    return swapped;
 }
 
-
-/*----------------------------- Arithmetic ------------------------------*/
+/*----------------------- Arithmetic --------------------------*/
 
 /**
- * Atomic add
- *
- * @brief Adds count to the value of the specified 32-bit variable as an atomic operation.
- *
- * @param[in,out] pAddend  Pointer to memory location from where value is to be loaded and written back to.
- * @param[in] lCount       Value to be added to *pAddend.
- *
- * @return previous *pAddend value.
+ * @brief Implementation of atomic addition for gcc.
  */
-static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAddend,
-                                             uint32_t lCount )
+static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAugend,
+                                             uint32_t addend )
 {
-    return __atomic_fetch_add( pAddend, lCount, __ATOMIC_SEQ_CST );
+    return __atomic_fetch_add( pAugend, addend, __ATOMIC_SEQ_CST );
 }
+
+/*-----------------------------------------------------------*/
 
 /**
- * Atomic sub
- *
- * @brief Subtracts count from the value of the specified 32-bit variable as an atomic operation.
- *
- * @param[in,out] pAddend  Pointer to memory location from where value is to be loaded and written back to.
- * @param[in] lCount       Value to be subtract from *pAddend.
- *
- * @return previous *pAddend value.
+ * @brief Implementation of atomic subtraction for gcc.
  */
-static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pAddend,
-                                                  uint32_t lCount )
+static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pMinuend,
+                                                  uint32_t subtrahend )
 {
-    return __atomic_fetch_sub( pAddend, lCount, __ATOMIC_SEQ_CST );
+    return __atomic_fetch_sub( pMinuend, subtrahend, __ATOMIC_SEQ_CST );
 }
+
+/*-----------------------------------------------------------*/
 
 /**
- * Atomic increment
- *
- * @brief Increments the value of the specified 32-bit variable as an atomic operation.
- *
- * @param[in,out] pAddend  Pointer to memory location from where value is to be loaded and written back to.
- *
- * @return *pAddend value before increment.
+ * @brief Implementation of atomic increment for gcc.
  */
-static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAddend )
+static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAugend )
 {
-    return __atomic_fetch_add( pAddend, 1, __ATOMIC_SEQ_CST );
+    return __atomic_fetch_add( pAugend, 1, __ATOMIC_SEQ_CST );
 }
+
+/*-----------------------------------------------------------*/
 
 /**
- * Atomic decrement
- *
- * @brief Decrements the value of the specified 32-bit variable as an atomic operation.
- *
- * @param[in,out] pAddend  Pointer to memory location from where value is to be loaded and written back to.
- *
- * @return *pAddend value before decrement.
+ * @brief Implementation of atomic decrement for gcc.
  */
-static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pAddend )
+static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pMinuend )
 {
-    return __atomic_fetch_sub( pAddend, 1, __ATOMIC_SEQ_CST );
+    return __atomic_fetch_sub( pMinuend, 1, __ATOMIC_SEQ_CST );
 }
 
-/*----------------------------- Bitwise Logical ------------------------------*/
+/*--------------------- Bitwise logic -------------------------*/
 
 /**
- * Atomic OR
- *
- * @brief Performs an atomic OR operation on the specified values.
- *
- * @param [in, out] pDestination Pointer to memory location from where value is to be loaded and written back to.
- * @param [in] ulValue           Value to be ORed with *pDestination.
- *
- * @return The original value of *pDestination.
+ * @brief Implementation of atomic OR for gcc.
  */
-static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pDestination,
-                                            uint32_t ulValue )
+static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pOperand,
+                                            uint32_t mask )
 {
-    return __atomic_fetch_or( pDestination, ulValue, __ATOMIC_SEQ_CST );
+    return __atomic_fetch_or( pOperand, mask, __ATOMIC_SEQ_CST );
 }
+
+/*-----------------------------------------------------------*/
 
 /**
- * Atomic AND
- *
- * @brief Performs an atomic AND operation on the specified values.
- *
- * @param [in, out] pDestination Pointer to memory location from where value is to be loaded and written back to.
- * @param [in] ulValue           Value to be ANDed with *pDestination.
- *
- * @return The original value of *pDestination.
+ * @brief Implementation of atomic AND for gcc.
  */
-static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pDestination,
-                                             uint32_t ulValue )
+static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pOperand,
+                                             uint32_t mask )
 {
-    return __atomic_fetch_and( pDestination, ulValue, __ATOMIC_SEQ_CST );
+    return __atomic_fetch_and( pOperand, mask, __ATOMIC_SEQ_CST );
 }
+
+/*-----------------------------------------------------------*/
 
 /**
- * Atomic NAND
- *
- * @brief Performs an atomic NAND operation on the specified values.
- *
- * @param [in, out] pDestination Pointer to memory location from where value is to be loaded and written back to.
- * @param [in] ulValue           Value to be NANDed with *pDestination.
- *
- * @return The original value of *pDestination.
+ * @brief Implementation of atomic NAND for gcc.
  */
-static FORCE_INLINE uint32_t Atomic_NAND_u32( uint32_t volatile * pDestination,
-                                              uint32_t ulValue )
+static FORCE_INLINE uint32_t Atomic_NAND_u32( uint32_t volatile * pOperand,
+                                              uint32_t mask )
 {
-    return __atomic_fetch_nand( pDestination, ulValue, __ATOMIC_SEQ_CST );
+    return __atomic_fetch_nand( pOperand, mask, __ATOMIC_SEQ_CST );
 }
+
+/*-----------------------------------------------------------*/
 
 /**
- * Atomic XOR
- * @brief Performs an atomic XOR operation on the specified values.
- *
- * @param [in, out] pDestination Pointer to memory location from where value is to be loaded and written back to.
- * @param [in] ulValue           Value to be XORed with *pDestination.
- *
- * @return The original value of *pDestination.
+ * @brief Implementation of atomic XOR for gcc.
  */
-static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pDestination,
-                                             uint32_t ulValue )
+static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pOperand,
+                                             uint32_t mask )
 {
-    return __atomic_fetch_xor( pDestination, ulValue, __ATOMIC_SEQ_CST );
+    return __atomic_fetch_xor( pOperand, mask, __ATOMIC_SEQ_CST );
 }
 
-#endif /* IOT_ATOMIC_GCC_H */
+#endif /* IOT_ATOMIC_GCC_H_ */
