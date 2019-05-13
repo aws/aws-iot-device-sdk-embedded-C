@@ -135,7 +135,7 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     pReturnValue_32 = NULL;
 
     IOT_TEST_ASM_VOLATILE( "atomic_xchg_32bit: " );
-    pReturnValue_32 = Atomic_SwapPointers_p32( ( void ** ) &pSwapDestination_32, pSwapNewValue_32 );
+    pReturnValue_32 = Atomic_Swap_Pointer( ( void ** ) &pSwapDestination_32, pSwapNewValue_32 );
     IOT_TEST_ASM_VOLATILE( "atomic_xchg_32bit_end: " );
 
     TEST_ASSERT_MESSAGE( pSwapDestination_32 == &ulCasNewValue_32, "Atomic_SwapPointers_p32 -- did not swap." );
@@ -147,7 +147,7 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     pReturnValue_8 = NULL;
 
     IOT_TEST_ASM_VOLATILE( "atomic_xchg_8bit: nop" );
-    pReturnValue_8 = Atomic_SwapPointers_p32( ( void ** ) &pSwapDestination_8, pSwapNewValue_8 );
+    pReturnValue_8 = Atomic_Swap_Pointer( ( void ** ) &pSwapDestination_8, pSwapNewValue_8 );
     IOT_TEST_ASM_VOLATILE( "atomic_xchg_8bit_end: nop" );
 
     TEST_ASSERT_MESSAGE( pSwapDestination_8 == &uCasComparator_8, "Atomic_SwapPointers_p32 -- did not swap." );
@@ -158,7 +158,7 @@ TEST( Common_Unit_Atomic, AtomicCasHappyPath )
     pSwapNewValue_32 = &ulCasNewValue_32;
 
     IOT_TEST_ASM_VOLATILE( "atomic_CAS_pointers: nop" );
-    ulReturnValue_32 = Atomic_CompareAndSwapPointers_p32( ( void ** ) &pSwapDestination_32, pSwapNewValue_32, &ulCasDestination_32 );
+    ulReturnValue_32 = Atomic_CompareAndSwap_Pointer( ( void ** ) &pSwapDestination_32, pSwapNewValue_32, &ulCasDestination_32 );
     IOT_TEST_ASM_VOLATILE( "atomic_CAS_pointers_end: nop" );
 
     TEST_ASSERT_MESSAGE( ( intptr_t ) pSwapDestination_32 == ( intptr_t ) pSwapNewValue_32, "Atomic_CompareAndSwapPointers_p32 -- did not swap." );
@@ -350,7 +350,7 @@ TEST( Common_Unit_Atomic, AtomicCasFailToSwap )
     pCasNewValue_32 = &ulCasNewValue_32;
 
     IOT_TEST_ASM_VOLATILE( "atomic_cas_pointers_neq: " );
-    ulReturnValue_32 = Atomic_CompareAndSwapPointers_p32( ( void ** ) &pCasDestination_32, pCasNewValue_32, pCasComparator_32 );
+    ulReturnValue_32 = Atomic_CompareAndSwap_Pointer( ( void ** ) &pCasDestination_32, pCasNewValue_32, pCasComparator_32 );
     IOT_TEST_ASM_VOLATILE( "atomic_cas_pointers_neq_end: " );
 
     TEST_ASSERT_MESSAGE( ( intptr_t ) pCasDestination_32 == ( intptr_t ) &ulCasDestination_32, "Atomic_CompareAndSwapPointers_p32 -- should not swap." );

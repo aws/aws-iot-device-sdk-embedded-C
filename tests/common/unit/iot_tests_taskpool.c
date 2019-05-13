@@ -60,7 +60,7 @@ typedef struct JobUserContext
 /**
  * @brief The initializer for the user context.
  */
-#define IOT_TASKPOOL_TEST_JOB_CONTEXT_INITIALIZER { { 0 }, 0 };
+#define IOT_TASKPOOL_TEST_JOB_CONTEXT_INITIALIZER { .counter = 0 };
 
 /**
  * @brief A simple user context to prove the taskpool grows as expected.
