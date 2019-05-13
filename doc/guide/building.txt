@@ -16,6 +16,10 @@ Additional requirements for POSIX systems:
 - POSIX threads, mutexes, and semaphores.
 - POSIX timers.
 
+This SDK uses third-party libraries as Git submodules in the `third_party` directory. If the source code was downloaded via `git clone`, nothing further needs to be done. The CMake build system can automatically clone submodules in this case. However, for any other download, the submodules must be downloaded and placed in their respective `third_party` directory.
+- [mbed TLS](https://github.com/ARMmbed/mbedtls/tree/mbedtls-2.17) → `third_party/mbedtls/mbedtls`
+- [tinyCBOR](https://github.com/intel/tinycbor) → `third_party/tinycbor/tinycbor`
+
 In addition, credentials and Things for AWS IoT must be provisioned before running the demos. See [this page](https://docs.aws.amazon.com/iot/latest/developerguide/iot-gs.html) for a tutorial on setting up AWS IoT.
 
 @section building_configuration Build system configuration
