@@ -15,7 +15,8 @@ GENERATE_TAGFILE = doc/tag/platform.tag
 # Directories containing library source code.
 INPUT = doc/lib \
         lib/include/platform \
-        lib/include/types
+        lib/include/types \
+        platform/include/atomic
 
 # Library file names.
 FILE_PATTERNS = platform.txt \
@@ -23,7 +24,8 @@ FILE_PATTERNS = platform.txt \
                 iot_threads.h \
                 iot_network.h \
                 iot_metrics.h \
-                iot_platform_types.h
+                iot_platform_types.h \
+                iot_atomic_generic.h
 
 # External tag files required by this library.
 TAGFILES = doc/tag/main.tag=../main \

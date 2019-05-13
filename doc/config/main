@@ -13,7 +13,8 @@ GENERATE_TAGFILE = doc/tag/main.tag
 
 # Input directories.
 INPUT = doc/ \
-        doc/guide
+        doc/guide \
+        doc/guide/developer
 
 # Library file names.
 FILE_PATTERNS = *.txt

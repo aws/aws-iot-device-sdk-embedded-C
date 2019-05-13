@@ -157,6 +157,17 @@ static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pOperand,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Implementation of atomic XOR for gcc.
+ */
+static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pOperand,
+                                             uint32_t mask )
+{
+    return __atomic_fetch_xor( pOperand, mask, __ATOMIC_SEQ_CST );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Implementation of atomic AND for gcc.
  */
 static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pOperand,
@@ -174,17 +185,6 @@ static FORCE_INLINE uint32_t Atomic_NAND_u32( uint32_t volatile * pOperand,
                                               uint32_t mask )
 {
     return __atomic_fetch_nand( pOperand, mask, __ATOMIC_SEQ_CST );
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Implementation of atomic XOR for gcc.
- */
-static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pOperand,
-                                             uint32_t mask )
-{
-    return __atomic_fetch_xor( pOperand, mask, __ATOMIC_SEQ_CST );
 }
 
 #endif /* IOT_ATOMIC_GCC_H_ */
