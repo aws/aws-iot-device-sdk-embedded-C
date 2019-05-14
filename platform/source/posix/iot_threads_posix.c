@@ -316,7 +316,7 @@ void IotMutex_Destroy( IotMutex_t * pMutex )
         IotLogError( "Failed to destroy mutex %p. errno=%d.",
                      pMutex,
                      mutexError );
-        
+
         abort();
     }
 }
@@ -325,8 +325,6 @@ void IotMutex_Destroy( IotMutex_t * pMutex )
 
 void IotMutex_Lock( IotMutex_t * pMutex )
 {
-    IotLogDebug( "Locking mutex %p.", pMutex );
-
     int mutexError = pthread_mutex_lock( pMutex );
 
     if( mutexError != 0 )
@@ -335,7 +333,7 @@ void IotMutex_Lock( IotMutex_t * pMutex )
         IotLogError( "Failed to lock mutex %p. errno=%d.",
                      pMutex,
                      mutexError );
-        
+
         abort();
     }
 }
@@ -366,8 +364,6 @@ bool IotMutex_TryLock( IotMutex_t * pMutex )
 
 void IotMutex_Unlock( IotMutex_t * pMutex )
 {
-    IotLogDebug( "Unlocking mutex %p.", pMutex );
-
     int mutexError = pthread_mutex_unlock( pMutex );
 
     if( mutexError != 0 )
@@ -376,7 +372,7 @@ void IotMutex_Unlock( IotMutex_t * pMutex )
         IotLogError( "Failed to unlock mutex %p. errno=%d.",
                      pMutex,
                      mutexError );
-        
+
         abort();
     }
 }
@@ -425,7 +421,7 @@ uint32_t IotSemaphore_GetCount( IotSemaphore_t * pSemaphore )
         IotLogError( "Failed to query semaphore count of %p. errno=%d.",
                      pSemaphore,
                      errno );
-        
+
         abort();
     }
 
@@ -446,7 +442,7 @@ void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
         IotLogError( "Failed to destroy semaphore %p. errno=%d.",
                      pSemaphore,
                      errno );
-        
+
         abort();
     }
 }
@@ -463,7 +459,7 @@ void IotSemaphore_Wait( IotSemaphore_t * pSemaphore )
         IotLogError( "Failed to wait on semaphore %p. errno=%d.",
                      pSemaphore,
                      errno );
-        
+
         abort();
     }
 }
@@ -533,7 +529,7 @@ void IotSemaphore_Post( IotSemaphore_t * pSemaphore )
         IotLogError( "Failed to post to semaphore %p. errno=%d.",
                      pSemaphore,
                      errno );
-        
+
         abort();
     }
 }
