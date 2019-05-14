@@ -121,7 +121,7 @@ The MQTT tests reside in the `tests/mqtt` directory. They are divided into the f
 
 See @subpage mqtt_tests_config for configuration settings that change the behavior of the tests.
 
-The current MQTT tests use the [Unity test framework](http://www.throwtheswitch.org/unity/) and only run on POSIX systems. See @ref building_tests for a guide on running the tests.
+The current MQTT tests use the [Unity test framework](http://www.throwtheswitch.org/unity/). See @ref building_tests for a guide on running the tests.
 */
 
 /**
