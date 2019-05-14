@@ -90,7 +90,7 @@ The Shadow tests reside in the `tests/shadow` directory. They are divided into t
 
 See @subpage shadow_tests_config for configuration settings that change the behavior of the Shadow system tests. The Shadow unit tests require no special configuration.
 
-The current Shadow tests use the [Unity test framework](http://www.throwtheswitch.org/unity/) and only run on POSIX systems. See @ref building_tests for a guide on running the tests.
+The current Shadow tests use the [Unity test framework](http://www.throwtheswitch.org/unity/). See @ref building_tests for a guide on running the tests.
 */
 
 /**

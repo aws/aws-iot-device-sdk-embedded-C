@@ -14,7 +14,11 @@ add_executable( iot_tests_mqtt
                 ${MQTT_SYSTEM_TEST_SOURCES}
                 ${MQTT_UNIT_TEST_SOURCES}
                 iot_tests_mqtt.c
-                ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
+                ${IOT_TEST_APP_FILES} )
+
+# Define the test to run.
+target_compile_definitions( iot_tests_mqtt PRIVATE
+                            -DRunTests=RunMqttTests )
 
 # MQTT tests library dependencies.
 target_link_libraries( iot_tests_mqtt PRIVATE iotmqtt unity )
@@ -23,4 +27,4 @@ target_link_libraries( iot_tests_mqtt PRIVATE iotmqtt unity )
 set_property( TARGET iot_tests_mqtt PROPERTY FOLDER "tests" )
 source_group( system FILES ${MQTT_SYSTEM_TEST_SOURCES} )
 source_group( unit FILES ${MQTT_UNIT_TEST_SOURCES} )
-source_group( "" FILES iot_tests_mqtt.c ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
+source_group( "" FILES ${IOT_TEST_APP_FILES} iot_tests_mqtt.c )

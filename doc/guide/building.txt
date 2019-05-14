@@ -126,9 +126,8 @@ See @ref IOT_DEMO_IDENTIFIER for the compile-time default settings of this optio
 @section building_tests Building and running the tests
 @brief How to build and run the SDK tests.
 
-Like the demo applications, the tests also build with CMake. [Global test configuration settings](@ref global_tests_config), as well as specific library test settings, should be defined in `tests/iot_config.h`.
+Like the demo applications, the tests also build with CMake. [Global test configuration settings](@ref global_tests_config), as well as specific library test settings, should be defined in `tests/iot_config.h`. They are built by passing the option `IOT_BUILD_TESTS=1` to CMake.
 
-Unlike the demos, the tests are currently only supported on POSIX systems that support all of the POSIX prerequisites. They are built by passing the option `IOT_BUILD_TESTS=1` to CMake.
 @code{sh}
 # Create build directory and change to build directory.
 mkdir build
@@ -143,5 +142,5 @@ make
 
 Test executables will be placed in a `bin` directory of the CMake build directory (i.e. `build/bin`) alongside the demo applications. They will be named `aws_iot_tests_library` or `iot_tests_library`, depending on whether the tests are specific to AWS IoT. For example, the MQTT tests application, which may be used with any MQTT server, will be named `iot_tests_mqtt`. The Thing Shadow tests, which are specific to AWS IoT, will be named `aws_iot_tests_shadow`.
 
-By default, running a test executable with no command line arguments will only run the basic unit tests and system tests. This run is expected to take up to a few minutes per library test. The command line option `-l` may be passed to a test executable to enable long-running tests (such as stress tests) which may run for several hours. Individual tests may support other command line options; see the test application files for more information.
+By default, running a test executable with no command line arguments will only run the basic unit tests and system tests. This run is expected to take up to a few minutes per library test. The command line option `-l` may be passed to a test executable to enable long-running tests (such as stress tests) which may run for several hours. The command line option `-n` may be passed to the test executable to disable tests that require network connectivity.
 */

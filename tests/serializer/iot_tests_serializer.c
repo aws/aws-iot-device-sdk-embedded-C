@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,87 +21,24 @@
 
 /**
  * @file iot_tests_serializer.c
- * @brief Test runner for the Serializer tests on POSIX systems.
+ * @brief Test runner for Serializer tests.
  */
 
 /* Standard includes. */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-/* POSIX includes. */
-#include <signal.h>
-
-/* Error handling include. */
-#include "private/iot_error.h"
+#include <stdbool.h>
 
 /* Test framework includes. */
 #include "unity_fixture.h"
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Signal handler. Terminates the tests if called.
- */
-static void _signalHandler( int signum )
+void RunSerializerTests( bool disableNetworkTests, bool disableLongTests )
 {
-    /* Immediately terminate the tests if this signal handler is called. */
-    if( signum == SIGSEGV )
-    {
-        printf( "\nSegmentation fault.\n" );
-        _Exit( EXIT_FAILURE );
-    }
-    else if( signum == SIGABRT )
-    {
-        printf( "\nAssertion failed.\n" );
-        _Exit( EXIT_FAILURE );
-    }
-}
-
-/*-----------------------------------------------------------*/
-
-int main( int argc,
-          char ** argv )
-{
-    IOT_FUNCTION_ENTRY( int, EXIT_SUCCESS );
-    struct sigaction signalAction;
-
     /* Silence warnings about unused parameters. */
-    ( void ) argc;
-    ( void ) argv;
+    ( void ) disableNetworkTests;
+    ( void ) disableLongTests;
 
-    /* Set a signal handler for segmentation faults and assertion failures. */
-    ( void ) memset( &signalAction, 0x00, sizeof( struct sigaction ) );
-    signalAction.sa_handler = _signalHandler;
-
-    if( sigaction( SIGSEGV, &signalAction, NULL ) != 0 )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
-    }
-
-    if( sigaction( SIGABRT, &signalAction, NULL ) != 0 )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
-    }
-
-    /* Unity setup. */
-    UnityFixture.Verbose = 1;
-    UnityFixture.RepeatCount = 1;
-    UnityFixture.NameFilter = NULL;
-    UnityFixture.GroupFilter = NULL;
-    UNITY_BEGIN();
-
-    /* Run unit tests. */
     RUN_TEST_GROUP( Serializer_Unit_CBOR );
-
-    /* Return failure if any tests failed. */
-    if( UNITY_END() != 0 )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
-    }
-
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
