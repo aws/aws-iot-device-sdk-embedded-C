@@ -30,16 +30,30 @@ option( IOT_BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
 
-# Check for system support.
-list( APPEND SUPPORTED_SYSTEMS "Linux" "Windows" )
+# Check for system support and set platform name.
+if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
+    # Provide an option to use the OpenSSL network abstraction on Linux.
+    option( IOT_NETWORK_USE_OPENSSL
+            "Set this to ON to use a network abstraction implemented on OpenSSL. When OFF, the mbed TLS network abstraction is used."
+            OFF )
 
-if( NOT ${CMAKE_SYSTEM_NAME} IN_LIST SUPPORTED_SYSTEMS )
-    message( FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}. Currently supported systems are: ${SUPPORTED_SYSTEMS}." )
+    if( ${IOT_NETWORK_USE_OPENSSL} )
+        add_definitions( -DIOT_NETWORK_USE_OPENSSL=1 )
+    endif()
+
+    set( IOT_PLATFORM_NAME posix )
+elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
+    set( IOT_PLATFORM_NAME win32 )
+else()
+    message( FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}. Currently supported systems are: Linux, Windows." )
 endif()
 
 # Set output directories.
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
+
+# Platform types file.
+add_definitions( -DIOT_SYSTEM_TYPES_FILE="${IOT_PLATFORM_NAME}/iot_platform_types_${IOT_PLATFORM_NAME}.h" )
 
 # SDK include paths.
 include_directories( ${PROJECT_SOURCE_DIR}/lib/include
@@ -69,22 +83,7 @@ if( ${IOT_ATOMIC_USE_PORT} )
 endif()
 
 # Platform libraries.
-if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-    # Provide an option to use the OpenSSL network abstraction on Linux.
-    option( IOT_NETWORK_USE_OPENSSL
-            "Set this to ON to use a network abstraction implemented on OpenSSL. When OFF, the mbed TLS network abstraction is used."
-            OFF )
-
-    if( ${IOT_NETWORK_USE_OPENSSL} )
-        add_definitions( -DIOT_NETWORK_USE_OPENSSL=1 )
-    endif()
-
-    add_definitions( -DIOT_SYSTEM_TYPES_FILE="posix/iot_platform_types_posix.h" )
-    add_subdirectory( platform/source/posix )
-elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-    add_definitions( -DIOT_SYSTEM_TYPES_FILE="win32/iot_platform_types_win32.h" )
-    add_subdirectory( platform/source/win32 )
-endif()
+add_subdirectory( platform/source/${IOT_PLATFORM_NAME} )
 
 # Common libraries (linear containers, logging, etc.)
 add_subdirectory( lib/source/common )

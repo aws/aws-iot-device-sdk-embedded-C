@@ -1,9 +1,5 @@
 # Source file for parsing arguments.
-if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-    set( DEMO_ARGUMENTS_SOURCE_FILE posix/iot_demo_arguments_posix.c )
-elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-    set( DEMO_ARGUMENTS_SOURCE_FILE win32/iot_demo_arguments_win32.c )
-endif()
+set( DEMO_ARGUMENTS_SOURCE_FILE ${IOT_PLATFORM_NAME}/iot_demo_arguments_${IOT_PLATFORM_NAME}.c )
 
 # Common demo source files.
 set( DEMO_COMMON_SOURCES
