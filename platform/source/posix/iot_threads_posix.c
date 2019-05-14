@@ -443,9 +443,9 @@ void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
     if( sem_destroy( pSemaphore ) != 0 )
     {
         /* This block should not be reached; log an error and abort if it is. */
-        IotLogWarn( "Failed to destroy semaphore %p. errno=%d.",
-                    pSemaphore,
-                    errno );
+        IotLogError( "Failed to destroy semaphore %p. errno=%d.",
+                     pSemaphore,
+                     errno );
         
         abort();
     }
@@ -460,9 +460,9 @@ void IotSemaphore_Wait( IotSemaphore_t * pSemaphore )
     if( sem_wait( pSemaphore ) != 0 )
     {
         /* This block should not be reached; log an error and abort if it is. */
-        IotLogWarn( "Failed to wait on semaphore %p. errno=%d.",
-                    pSemaphore,
-                    errno );
+        IotLogError( "Failed to wait on semaphore %p. errno=%d.",
+                     pSemaphore,
+                     errno );
         
         abort();
     }
