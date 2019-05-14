@@ -10,7 +10,8 @@
 #include <string.h>
 
 /* For thread safety. */
-#include <pthread.h>
+#include "iot_config.h"
+#include "platform/iot_threads.h"
 
 struct UNITY_FIXTURE_T UnityFixture;
 
@@ -137,34 +138,33 @@ void UnityIgnoreTest(const char* printableName, const char* group, const char* n
 #define MALLOC_DONT_FAIL -1
 static int malloc_count;
 static int malloc_fail_countdown = MALLOC_DONT_FAIL;
-extern pthread_mutex_t CriticalSectionMutex;
 
 void UnityMalloc_StartTest(void)
 {
-    pthread_mutex_lock(&CriticalSectionMutex);
+    pthread_mutex_lock(&UnityMallocMutex);
     malloc_count = 0;
     malloc_fail_countdown = MALLOC_DONT_FAIL;
-    pthread_mutex_unlock(&CriticalSectionMutex);
+    pthread_mutex_unlock(&UnityMallocMutex);
 }
 
 void UnityMalloc_EndTest(void)
 {
-    pthread_mutex_lock(&CriticalSectionMutex);
+    pthread_mutex_lock(&UnityMallocMutex);
     malloc_fail_countdown = MALLOC_DONT_FAIL;
     if (malloc_count != 0)
     {
-        pthread_mutex_unlock(&CriticalSectionMutex);
+        pthread_mutex_unlock(&UnityMallocMutex);
         UNITY_TEST_FAIL(Unity.CurrentTestLineNumber, "This test leaks!");
     }
 
-    pthread_mutex_unlock(&CriticalSectionMutex);
+    pthread_mutex_unlock(&UnityMallocMutex);
 }
 
 void UnityMalloc_MakeMallocFailAfterCount(int countdown)
 {
-    pthread_mutex_lock(&CriticalSectionMutex);
+    pthread_mutex_lock(&UnityMallocMutex);
     malloc_fail_countdown = countdown;
-    pthread_mutex_unlock(&CriticalSectionMutex);
+    pthread_mutex_unlock(&UnityMallocMutex);
 }
 
 /* These definitions are always included from unity_fixture_malloc_overrides.h */

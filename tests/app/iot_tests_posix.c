@@ -40,6 +40,9 @@
 /* Error handling include. */
 #include "private/iot_error.h"
 
+/* Platform threads include. */
+#include "platform/iot_threads.h"
+
 /* Test framework includes. */
 #include "unity_fixture.h"
 
@@ -80,6 +83,7 @@ int main( int argc,
           char ** argv )
 {
     IOT_FUNCTION_ENTRY( int, EXIT_SUCCESS );
+    bool mallocMutexCreated = false;
     bool disableNetworkTests = false, disableLongTests = false;
     struct sigaction signalAction;
 
@@ -93,6 +97,14 @@ int main( int argc,
     }
 
     if( sigaction( SIGABRT, &signalAction, NULL ) != 0 )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
+    }
+
+    /* Create the mutex that guards the Unity malloc overrides. */
+    mallocMutexCreated = IotMutex_Create( &UnityMallocMutex, false );
+
+    if( mallocMutexCreated == false )
     {
         IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
@@ -124,7 +136,14 @@ int main( int argc,
         IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+    IOT_FUNCTION_CLEANUP_BEGIN();
+
+    if( mallocMutexCreated == true )
+    {
+        IotMutex_Destroy( &UnityMallocMutex );
+    }
+
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
