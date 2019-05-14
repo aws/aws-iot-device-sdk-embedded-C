@@ -41,6 +41,7 @@
 #include "iot_json_utils.h"
 
 /* Platform layer includes. */
+#include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
 /* Test network header include. */
