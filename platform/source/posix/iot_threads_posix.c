@@ -156,8 +156,6 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
     ( void ) priority;
     ( void ) stackSize;
 
-    IotLogDebug( "Creating new thread." );
-
     /* Allocate memory for the new thread info. */
     pThreadInfo = IotThreads_Malloc( sizeof( _threadInfo_t ) );
 
@@ -247,8 +245,6 @@ bool IotMutex_Create( IotMutex_t * pNewMutex,
 
     if( recursive == true )
     {
-        IotLogDebug( "Creating new recursive mutex %p.", pNewMutex );
-
         /* Create new mutex attributes object. */
         mutexError = pthread_mutexattr_init( &mutexAttributes );
 
@@ -277,10 +273,6 @@ bool IotMutex_Create( IotMutex_t * pNewMutex,
             }
         }
     }
-    else
-    {
-        IotLogDebug( "Creating new mutex %p.", pNewMutex );
-    }
 
     mutexError = pthread_mutex_init( pNewMutex, pMutexAttributes );
 
@@ -306,8 +298,6 @@ bool IotMutex_Create( IotMutex_t * pNewMutex,
 
 void IotMutex_Destroy( IotMutex_t * pMutex )
 {
-    IotLogDebug( "Destroying mutex %p.", pMutex );
-
     int mutexError = pthread_mutex_destroy( pMutex );
 
     if( mutexError != 0 )
@@ -343,9 +333,6 @@ void IotMutex_Lock( IotMutex_t * pMutex )
 bool IotMutex_TryLock( IotMutex_t * pMutex )
 {
     bool status = true;
-
-    IotLogDebug( "Attempting to lock mutex %p.", pMutex );
-
     int mutexError = pthread_mutex_trylock( pMutex );
 
     if( mutexError != 0 )
@@ -385,8 +372,6 @@ bool IotSemaphore_Create( IotSemaphore_t * pNewSemaphore,
 {
     bool status = true;
 
-    IotLogDebug( "Creating new semaphore %p.", pNewSemaphore );
-
     if( maxValue > ( uint32_t ) SEM_VALUE_MAX )
     {
         IotLogError( "%lu is larger than the maximum value a semaphore may"
@@ -425,8 +410,6 @@ uint32_t IotSemaphore_GetCount( IotSemaphore_t * pSemaphore )
         abort();
     }
 
-    IotLogDebug( "Semaphore %p has count %d.", pSemaphore, count );
-
     return ( uint32_t ) count;
 }
 
@@ -434,8 +417,6 @@ uint32_t IotSemaphore_GetCount( IotSemaphore_t * pSemaphore )
 
 void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
 {
-    IotLogDebug( "Destroying semaphore %p.", pSemaphore );
-
     if( sem_destroy( pSemaphore ) != 0 )
     {
         /* This block should not be reached; log an error and abort if it is. */
@@ -451,8 +432,6 @@ void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
 
 void IotSemaphore_Wait( IotSemaphore_t * pSemaphore )
 {
-    IotLogDebug( "Waiting on semaphore %p.", pSemaphore );
-
     if( sem_wait( pSemaphore ) != 0 )
     {
         /* This block should not be reached; log an error and abort if it is. */
@@ -469,8 +448,6 @@ void IotSemaphore_Wait( IotSemaphore_t * pSemaphore )
 bool IotSemaphore_TryWait( IotSemaphore_t * pSemaphore )
 {
     bool status = true;
-
-    IotLogDebug( "Attempting to wait on semaphore %p.", pSemaphore );
 
     if( sem_trywait( pSemaphore ) != 0 )
     {
@@ -491,10 +468,6 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
 {
     bool status = true;
     struct timespec timeout = { 0 };
-
-    IotLogDebug( "Attempting to wait on semaphore %p with timeout %llu.",
-                 pSemaphore,
-                 timeoutMs );
 
     if( IotClock_TimeoutToTimespec( timeoutMs, &timeout ) == false )
     {
@@ -521,8 +494,6 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
 
 void IotSemaphore_Post( IotSemaphore_t * pSemaphore )
 {
-    IotLogDebug( "Posting to semaphore %p.", pSemaphore );
-
     if( sem_post( pSemaphore ) != 0 )
     {
         /* This block should not be reached; log an error and abort if it is. */
