@@ -1,9 +1,7 @@
 # Test runner executable and config header.
-if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-    set( IOT_TEST_APP_FILES
-         ${PROJECT_SOURCE_DIR}/tests/app/iot_tests_posix.c
-         ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
-endif()
+set( IOT_TEST_APP_FILES
+     ${PROJECT_SOURCE_DIR}/tests/iot_config.h
+     ${PROJECT_SOURCE_DIR}/tests/app/iot_tests_${IOT_PLATFORM_NAME}.c )
 
 # Common tests.
 add_subdirectory( common )

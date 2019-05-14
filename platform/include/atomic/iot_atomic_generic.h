@@ -217,7 +217,7 @@ static inline uint32_t Atomic_Subtract_u32( uint32_t volatile * pMinuend,
 
     IotMutex_Lock( &IotAtomicMutex );
     oldValue = *pMinuend;
-    *pMinuend = oldValue + subtrahend;
+    *pMinuend = oldValue - subtrahend;
     IotMutex_Unlock( &IotAtomicMutex );
 
     return oldValue;

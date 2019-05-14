@@ -1,10 +1,9 @@
-/* Wrappers that make the unity memory functions thread-safe. Implemented for
- * POSIX systems. */
+/* Wrappers that make the unity memory functions thread-safe. */
 
-#include "unity_fixture_malloc_overrides.h"
-#include <pthread.h>
+#include "iot_config.h"
+#include "platform/iot_threads.h"
 
-pthread_mutex_t CriticalSectionMutex = PTHREAD_MUTEX_INITIALIZER;
+IotMutex_t UnityMallocMutex;
 
 extern void* unity_malloc(size_t size);
 extern void* unity_calloc(size_t num, size_t size);
@@ -15,15 +14,11 @@ void* unity_malloc_mt(size_t size)
 {
     void* mem = NULL;
 
-    if (pthread_mutex_lock(&CriticalSectionMutex) != 0) return NULL;
+    IotMutex_Lock(&UnityMallocMutex);
 
     mem = unity_malloc(size);
 
-    if (pthread_mutex_unlock(&CriticalSectionMutex) != 0)
-    {
-        unity_free(mem);
-        mem = NULL;
-    }
+    IotMutex_Unlock(&UnityMallocMutex);
 
     return mem;
 }
@@ -32,15 +27,11 @@ void* unity_calloc_mt(size_t num, size_t size)
 {
     void* mem = NULL;
 
-    if (pthread_mutex_lock(&CriticalSectionMutex) != 0) return NULL;
+    IotMutex_Lock(&UnityMallocMutex);
 
     mem = unity_calloc(num, size);
 
-    if (pthread_mutex_unlock(&CriticalSectionMutex) != 0)
-    {
-        unity_free(mem);
-        mem = NULL;
-    }
+    IotMutex_Unlock(&UnityMallocMutex);
 
     return mem;
 }
@@ -49,24 +40,20 @@ void* unity_realloc_mt(void * oldMem, size_t size)
 {
     void* mem = NULL;
 
-    if (pthread_mutex_lock(&CriticalSectionMutex) != 0) return NULL;
+    IotMutex_Lock(&UnityMallocMutex);
 
     mem = unity_realloc(oldMem, size);
 
-    if (pthread_mutex_unlock(&CriticalSectionMutex) != 0)
-    {
-        unity_free(mem);
-        mem = NULL;
-    }
+    IotMutex_Unlock(&UnityMallocMutex);
 
     return mem;
 }
 
 void unity_free_mt(void * mem)
 {
-    pthread_mutex_lock(&CriticalSectionMutex);
+    IotMutex_Lock(&UnityMallocMutex);
 
     unity_free(mem);
 
-    pthread_mutex_unlock(&CriticalSectionMutex);
+    IotMutex_Unlock(&UnityMallocMutex);
 }

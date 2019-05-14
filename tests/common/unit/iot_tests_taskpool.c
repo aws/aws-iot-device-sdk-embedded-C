@@ -33,11 +33,14 @@
 #include <stdint.h>
 #include <string.h>
 
+/* SDK initialization include. */
+#include "iot_init.h"
+
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
 #include "platform/iot_clock.h"
 
-/* MQTT internal include. */
+/* Task pool internal include. */
 #include "private/iot_taskpool_internal.h"
 
 /* Task pool include. */
@@ -85,6 +88,7 @@ TEST_GROUP( Common_Unit_Task_Pool );
  */
 TEST_SETUP( Common_Unit_Task_Pool )
 {
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
 }
 
 /*-----------------------------------------------------------*/
@@ -94,6 +98,7 @@ TEST_SETUP( Common_Unit_Task_Pool )
  */
 TEST_TEAR_DOWN( Common_Unit_Task_Pool )
 {
+    IotSdk_Cleanup();
 }
 
 /*-----------------------------------------------------------*/

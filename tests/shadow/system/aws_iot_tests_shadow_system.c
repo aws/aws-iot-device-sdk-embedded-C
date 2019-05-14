@@ -597,7 +597,7 @@ TEST( Shadow_System, DeltaCallback )
     IotSemaphore_t waitSem;
 
     /* Create a semaphore to wait on. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 2 ) );
 
     /* Set the delta callback information. */
     deltaCallback.pCallbackContext = &waitSem;
