@@ -179,14 +179,33 @@ void IotClock_TimerDestroy( IotTimer_t * pTimer )
 
     if( pTimer->timer != INVALID_HANDLE_VALUE )
     {
-        timerStatus = DeleteTimerQueueTimer( NULL,
-                                             pTimer->timer,
-                                             NULL );
-
-        if( timerStatus == 0 )
+        /* Per the Win32 API docs, DeleteTimerQueueTimer should be retried until
+         * successful. */
+        while( true )
         {
-            _logWin32TimerError( pTimer, "Failed to destroy timer." );
-            abort();
+            timerStatus = DeleteTimerQueueTimer( NULL,
+                                                 pTimer->timer,
+                                                 NULL );
+
+            /* Check if the timer was successfully deleted. */
+            if( timerStatus == 0 )
+            {
+                if( GetLastError() == ERROR_IO_PENDING )
+                {
+                    /* Nothing further needs to be done for ERROR_IO_PENDING. */
+                    break;
+                }
+                else
+                {
+                    /* Sleep a short time before trying again. */
+                    Sleep( 100 );
+                }
+            }
+            else
+            {
+                /* Timer was successfully deleted. */
+                break;
+            }
         }
 
         IotLogDebug( "(Timer %p) Timer destroyed.", pTimer );

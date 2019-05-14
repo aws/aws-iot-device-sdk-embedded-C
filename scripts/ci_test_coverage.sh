@@ -20,9 +20,10 @@ make -j2
 ./bin/aws_iot_tests_shadow
 ./bin/aws_iot_demo_shadow -h "$AWS_IOT_ENDPOINT" -p 443 -s -r ../credentials/AmazonRootCA1.pem -c ../credentials/clientCert.pem -k ../credentials/privateKey.pem -i "$IOT_IDENTIFIER"
 
-# Generate code coverage results, excluding demo files, tests files, and third party files.
+# Generate code coverage results, but only for files in lib/.
 lcov --directory . --capture --output-file coverage.info
 lcov --remove coverage.info '*demo*' --output-file coverage.info
+lcov --remove coverage.info '*platform*' --output-file coverage.info
 lcov --remove coverage.info '*tests*' --output-file coverage.info
 lcov --remove coverage.info '*third_party*' --output-file coverage.info
 
