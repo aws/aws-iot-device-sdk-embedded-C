@@ -181,7 +181,7 @@ void IotClock_TimerDestroy( IotTimer_t * pTimer )
     {
         timerStatus = DeleteTimerQueueTimer( NULL,
                                              pTimer->timer,
-                                             INVALID_HANDLE_VALUE );
+                                             NULL );
 
         if( timerStatus == 0 )
         {
@@ -190,6 +190,7 @@ void IotClock_TimerDestroy( IotTimer_t * pTimer )
         }
 
         IotLogDebug( "(Timer %p) Timer destroyed.", pTimer );
+        pTimer->timer = INVALID_HANDLE_VALUE;
     }
 }
 
@@ -199,13 +200,19 @@ bool IotClock_TimerArm( IotTimer_t * pTimer,
                         uint32_t relativeTimeoutMs,
                         uint32_t periodMs )
 {
-    BOOL timerStatus = CreateTimerQueueTimer( &( pTimer->timer ),
-                                              NULL,
-                                              _timerExpirationWrapper,
-                                              pTimer,
-                                              ( DWORD ) relativeTimeoutMs,
-                                              ( DWORD ) periodMs,
-                                              WT_EXECUTEDEFAULT );
+    BOOL timerStatus = 0;
+
+    /* Any previous timer must be destroyed before scheduling a new one in the
+     * Win32 API. */
+    IotClock_TimerDestroy( pTimer );
+
+    timerStatus = CreateTimerQueueTimer( &( pTimer->timer ),
+                                         NULL,
+                                         _timerExpirationWrapper,
+                                         pTimer,
+                                         ( DWORD ) relativeTimeoutMs,
+                                         ( DWORD ) periodMs,
+                                         WT_EXECUTEDEFAULT );
 
     if( timerStatus == 0 )
     {
