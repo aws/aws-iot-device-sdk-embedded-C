@@ -27,6 +27,9 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* Standard includes. */
+#include <stdlib.h>
+
 /* POSIX includes. Allow the default POSIX headers to be overridden. */
 #ifdef POSIX_ERRNO_HEADER
     #include POSIX_ERRNO_HEADER
@@ -198,8 +201,11 @@ uint64_t IotClock_GetTimeMs( void )
 
     if( clock_gettime( CLOCK_MONOTONIC, &currentTime ) != 0 )
     {
-        IotLogWarn( "Failed to read time from CLOCK_MONOTONIC. errno=%d",
-                    errno );
+        /* This block should not be reached; log an error and abort if it is. */
+        IotLogError( "Failed to read time from CLOCK_MONOTONIC. errno=%d",
+                     errno );
+
+        abort();
     }
 
     return ( ( uint64_t ) currentTime.tv_sec ) * 1000ULL +
@@ -219,7 +225,10 @@ void IotClock_SleepMs( uint32_t sleepTimeMs )
 
     if( nanosleep( &sleepTime, NULL ) == -1 )
     {
-        IotLogWarn( "Sleep failed. errno=%d.", errno );
+        /* This block should not be reached; log an error and abort if it is. */
+        IotLogError( "Sleep failed. errno=%d.", errno );
+        
+        abort();
     }
 }
 
@@ -266,7 +275,10 @@ void IotClock_TimerDestroy( IotTimer_t * pTimer )
     /* Destroy the underlying POSIX timer. */
     if( timer_delete( pTimer->timer ) != 0 )
     {
-        IotLogWarn( "Failed to destroy timer %p. errno=%d.", pTimer, errno );
+        /* This block should not be reached; log an error and abort if it is. */
+        IotLogError( "Failed to destroy timer %p. errno=%d.", pTimer, errno );
+        
+        abort();
     }
 }
 

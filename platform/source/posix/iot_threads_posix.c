@@ -27,6 +27,9 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* Standard includes. */
+#include <stdlib.h>
+
 /* POSIX includes. Allow the default POSIX headers to be overridden. */
 #ifdef POSIX_ERRNO_HEADER
     #include POSIX_ERRNO_HEADER
@@ -309,9 +312,12 @@ void IotMutex_Destroy( IotMutex_t * pMutex )
 
     if( mutexError != 0 )
     {
-        IotLogWarn( "Failed to destroy mutex %p. errno=%d.",
-                    pMutex,
-                    mutexError );
+        /* This block should not be reached; log an error and abort if it is. */
+        IotLogError( "Failed to destroy mutex %p. errno=%d.",
+                     pMutex,
+                     mutexError );
+        
+        abort();
     }
 }
 
@@ -325,9 +331,12 @@ void IotMutex_Lock( IotMutex_t * pMutex )
 
     if( mutexError != 0 )
     {
-        IotLogWarn( "Failed to lock mutex %p. errno=%d.",
-                    pMutex,
-                    mutexError );
+        /* This block should not be reached; log an error and abort if it is. */
+        IotLogError( "Failed to lock mutex %p. errno=%d.",
+                     pMutex,
+                     mutexError );
+        
+        abort();
     }
 }
 
@@ -363,9 +372,12 @@ void IotMutex_Unlock( IotMutex_t * pMutex )
 
     if( mutexError != 0 )
     {
-        IotLogWarn( "Failed to unlock mutex %p. errno=%d.",
-                    pMutex,
-                    mutexError );
+        /* This block should not be reached; log an error and abort if it is. */
+        IotLogError( "Failed to unlock mutex %p. errno=%d.",
+                     pMutex,
+                     mutexError );
+        
+        abort();
     }
 }
 
@@ -409,9 +421,12 @@ uint32_t IotSemaphore_GetCount( IotSemaphore_t * pSemaphore )
 
     if( sem_getvalue( pSemaphore, &count ) != 0 )
     {
-        IotLogWarn( "Failed to query semaphore count of %p. errno=%d.",
-                    pSemaphore,
-                    errno );
+        /* This block should not be reached; log an error and abort if it is. */
+        IotLogError( "Failed to query semaphore count of %p. errno=%d.",
+                     pSemaphore,
+                     errno );
+        
+        abort();
     }
 
     IotLogDebug( "Semaphore %p has count %d.", pSemaphore, count );
@@ -427,9 +442,12 @@ void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
 
     if( sem_destroy( pSemaphore ) != 0 )
     {
-        IotLogWarn( "Failed to destroy semaphore %p. errno=%d.",
-                    pSemaphore,
-                    errno );
+        /* This block should not be reached; log an error and abort if it is. */
+        IotLogError( "Failed to destroy semaphore %p. errno=%d.",
+                     pSemaphore,
+                     errno );
+        
+        abort();
     }
 }
 
@@ -441,9 +459,12 @@ void IotSemaphore_Wait( IotSemaphore_t * pSemaphore )
 
     if( sem_wait( pSemaphore ) != 0 )
     {
-        IotLogWarn( "Failed to wait on semaphore %p. errno=%d.",
-                    pSemaphore,
-                    errno );
+        /* This block should not be reached; log an error and abort if it is. */
+        IotLogError( "Failed to wait on semaphore %p. errno=%d.",
+                     pSemaphore,
+                     errno );
+        
+        abort();
     }
 }
 
@@ -508,9 +529,12 @@ void IotSemaphore_Post( IotSemaphore_t * pSemaphore )
 
     if( sem_post( pSemaphore ) != 0 )
     {
-        IotLogWarn( "Failed to post to semaphore %p. errno=%d.",
-                    pSemaphore,
-                    errno );
+        /* This block should not be reached; log an error and abort if it is. */
+        IotLogError( "Failed to post to semaphore %p. errno=%d.",
+                     pSemaphore,
+                     errno );
+        
+        abort();
     }
 }
 
