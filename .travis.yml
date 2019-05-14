@@ -18,10 +18,7 @@ jobs:
     - env: RUN_TEST=common
     - env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
     - env: RUN_TEST=mqtt NETWORK_STACK=openssl
-    - env: RUN_TEST=shadow NETWORK_STACK=mbedtls
-    - if: type = push
-      env: RUN_TEST=shadow NETWORK_STACK=openssl
-    - env: RUN_TEST=defender
+    - env: RUN_TEST=shadow
     - if: type = push
       compiler: gcc
       env: RUN_TEST=coverage
@@ -34,8 +31,6 @@ before_install:
 
 # Install dependencies.
 install:
-  # Dependencies required across the entire build matrix.
-  - sudo apt-get install -y cmake
   # Install OpenSSL if needed.
   - if [ "$NETWORK_STACK" = "openssl" ]; then sudo apt-get install -y libssl-dev; fi
   # Install graphviz only for documentation builds.

@@ -41,6 +41,7 @@
 #include "iot_json_utils.h"
 
 /* Platform layer includes. */
+#include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
 /* Test network header include. */
@@ -430,6 +431,9 @@ TEST_GROUP( Shadow_System );
  */
 TEST_SETUP( Shadow_System )
 {
+    int32_t i = 0;
+    uint32_t sleepTimeMs = 1000;
+    IotMqttError_t connectStatus = IOT_MQTT_STATUS_PENDING;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
 
@@ -478,11 +482,25 @@ TEST_SETUP( Shadow_System )
     connectInfo.clientIdentifierLength = ( uint16_t ) ( sizeof( AWS_IOT_TEST_SHADOW_THING_NAME ) - 1 );
     connectInfo.keepAliveSeconds = IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
-    /* Establish an MQTT connection. */
-    if( IotMqtt_Connect( &_networkInfo,
-                         &connectInfo,
-                         AWS_IOT_TEST_SHADOW_TIMEOUT,
-                         &_mqttConnection ) != IOT_MQTT_SUCCESS )
+    /* Establish an MQTT connection. Retry up to 5 times. */
+    for( i = 0; i < 5; i++ )
+    {
+        connectStatus = IotMqtt_Connect( &_networkInfo,
+                                         &connectInfo,
+                                         AWS_IOT_TEST_SHADOW_TIMEOUT,
+                                         &_mqttConnection );
+
+        if( connectStatus != IOT_MQTT_TIMEOUT )
+        {
+            break;
+        }
+
+        /* Sleep for some time before retrying. */
+        IotClock_SleepMs( sleepTimeMs );
+        sleepTimeMs *= 2;
+    }
+
+    if( connectStatus != IOT_MQTT_SUCCESS )
     {
         TEST_FAIL_MESSAGE( "Failed to establish MQTT connection for Shadow tests." );
     }
