@@ -189,21 +189,14 @@ typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
     #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER    { 0 }
 #endif
 
-/* Macro for placing inline assembly in test code. */
-#if defined( __GNUC__ )
-    #define IOT_TEST_ASM_VOLATILE( x )    __asm__ __volatile__ ( x )
-#elif defined( _MSC_VER )
-    #define IOT_TEST_ASM_VOLATILE( x )    __asm { x }
-#endif
-
 /* Configure code coverage testing if enabled. */
 #if IOT_TEST_COVERAGE == 1
     #ifndef __GNUC__
-        #error "Unsupported compiler. Only gcc and clang are supported."
+        #error "Unsupported compiler. Only gcc and clang are supported for coverage."
     #endif
 
     /* Define the empty else marker if test coverage is enabled. */
-    #define EMPTY_ELSE_MARKER    IOT_TEST_ASM_VOLATILE( "nop" )
+    #define EMPTY_ELSE_MARKER    __asm__ __volatile__ ( "nop" )
 
     /* Define a custom logging puts function. This function allows coverage
      * testing of logging functions, but prevents excessive logs from being
