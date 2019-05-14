@@ -68,6 +68,9 @@
 /* Linear containers library configuration. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )
 
+/* Task pool library configuration. */
+#define IOT_TASKPOOL_ENABLE_ASSERTS             ( 1 )
+
 /* MQTT library configuration. */
 #define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
 #define IOT_MQTT_ENABLE_METRICS                 ( 0 )
@@ -187,14 +190,18 @@ typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
 #endif
 
 /* Macro for placing inline assembly in test code. */
-#define IOT_TEST_ASM_VOLATILE( x )    __asm__ __volatile__ ( x )
-
-#ifndef __GNUC__
-    #error "Unsupported compiler. Only gcc and clang are supported."
+#if defined( __GNUC__ )
+    #define IOT_TEST_ASM_VOLATILE( x )    __asm__ __volatile__ ( x )
+#elif defined( _MSC_VER )
+    #define IOT_TEST_ASM_VOLATILE( x )    __asm { x }
 #endif
 
 /* Configure code coverage testing if enabled. */
 #if IOT_TEST_COVERAGE == 1
+    #ifndef __GNUC__
+        #error "Unsupported compiler. Only gcc and clang are supported."
+    #endif
+
     /* Define the empty else marker if test coverage is enabled. */
     #define EMPTY_ELSE_MARKER    IOT_TEST_ASM_VOLATILE( "nop" )
 

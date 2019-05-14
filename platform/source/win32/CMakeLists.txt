@@ -34,6 +34,10 @@ add_library( iotplatform
 # Link required libraries.
 target_link_libraries( iotplatform PRIVATE mbedtls )
 
+if( ${IOT_BUILD_TESTS} )
+    target_link_libraries( iotplatform PRIVATE unity )
+endif()
+
 # Organization of platform in folders.
 source_group( interface FILES ${PLATFORM_INTERFACE_HEADERS} )
 source_group( include\\types FILES ${PLATFORM_TYPES_HEADERS} )

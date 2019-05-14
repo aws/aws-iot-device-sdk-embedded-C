@@ -288,6 +288,11 @@ bool IotSemaphore_Create( IotSemaphore_t * pNewSemaphore,
 
         status = false;
     }
+    else
+    {
+        /* Set initial semaphore count. */
+        pNewSemaphore->count = initialValue;
+    }
 
     return status;
 }
@@ -324,7 +329,12 @@ void IotSemaphore_Wait( IotSemaphore_t * pSemaphore )
         abort();
     }
 
-    Atomic_Decrement_u32( &( pSemaphore->count ) );
+    if( Atomic_Decrement_u32( &( pSemaphore->count ) ) == 0 )
+    {
+        IotLogError( "(Semaphore %p) Semaphore count decremented beyond 0.", pSemaphore );
+
+        abort();
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -345,7 +355,12 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
 
     if( status == WAIT_OBJECT_0 )
     {
-        Atomic_Decrement_u32( &( pSemaphore->count ) );
+        if( Atomic_Decrement_u32( &( pSemaphore->count ) ) == 0 )
+        {
+            IotLogError( "(Semaphore %p) Semaphore count decremented beyond 0.", pSemaphore );
+
+            abort();
+        }
     }
     else if( status != WAIT_TIMEOUT )
     {
@@ -362,6 +377,8 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
 
 void IotSemaphore_Post( IotSemaphore_t * pSemaphore )
 {
+    Atomic_Increment_u32( &( pSemaphore->count ) );
+
     if( ReleaseSemaphore( pSemaphore->semaphore, 1, NULL ) == 0 )
     {
         /* This should never happen, log an error and abort if it does. */
@@ -369,8 +386,6 @@ void IotSemaphore_Post( IotSemaphore_t * pSemaphore )
 
         abort();
     }
-
-    Atomic_Increment_u32( &( pSemaphore->count ) );
 }
 
 /*-----------------------------------------------------------*/
