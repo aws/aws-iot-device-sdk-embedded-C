@@ -640,7 +640,7 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
     IotSemaphore_t waitSem;
 
     /* An arbitrary MQTT packet for this test. */
-    static uint8_t pPacket[ 2 ] = { MQTT_PACKET_TYPE_DISCONNECT, 0x00 };
+    static uint8_t pPacket[ 2 ] = { MQTT_PACKET_TYPE_PINGREQ, 0x00 };
 
     /* Create the wait semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
@@ -666,7 +666,7 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
                                                                        &pOperation ) );
 
         /* Set an arbitrary MQTT packet for the operation. */
-        pOperation->u.operation.type = IOT_MQTT_DISCONNECT;
+        pOperation->u.operation.type = IOT_MQTT_PINGREQ;
         pOperation->u.operation.pMqttPacket = pPacket;
         pOperation->u.operation.packetSize = 2;
 

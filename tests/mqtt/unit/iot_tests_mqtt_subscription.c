@@ -72,8 +72,8 @@
 /*
  * Constants relating to the test subscription list.
  */
-#define LIST_ITEM_COUNT             ( 10 )                                      /**< @brief Number of subscriptions. */
-#define TEST_TOPIC_FILTER_FORMAT    ( "/test%lu" )                              /**< @brief Format of each topic filter. */
+#define LIST_ITEM_COUNT             ( 10 )                                     /**< @brief Number of subscriptions. */
+#define TEST_TOPIC_FILTER_FORMAT    ( "/test%lu" )                             /**< @brief Format of each topic filter. */
 #define TEST_TOPIC_FILTER_LENGTH    ( sizeof( TEST_TOPIC_FILTER_FORMAT ) + 1 ) /**< @brief Maximum length of each topic filter. */
 
 /*
@@ -87,8 +87,8 @@
  * @brief A non-NULL function pointer to use for subscription callback. This
  * "function" should cause a crash if actually called.
  */
-#define CALLBACK_FUNCTION   \
-    ( ( void ( * )( void *, \
+#define SUBSCRIPTION_CALLBACK_FUNCTION \
+    ( ( void ( * )( void *,            \
                     IotMqttCallbackParam_t * ) ) 0x1 )
 
 /**
@@ -165,7 +165,7 @@ static void _populateList( void )
         ( void ) memset( pSubscription, 0x00, sizeof( _mqttSubscription_t ) + TEST_TOPIC_FILTER_LENGTH );
         pSubscription->packetInfo.identifier = 1;
         pSubscription->packetInfo.order = i;
-        pSubscription->callback.function = CALLBACK_FUNCTION;
+        pSubscription->callback.function = SUBSCRIPTION_CALLBACK_FUNCTION;
         pSubscription->topicFilterLength = ( uint16_t ) snprintf( pSubscription->pTopicFilter,
                                                                   TEST_TOPIC_FILTER_LENGTH,
                                                                   TEST_TOPIC_FILTER_FORMAT,
@@ -290,7 +290,7 @@ static void _multithreadTestThread( void * pArgument )
     /* Add items to the subscription list. */
     for( i = 0; i < LIST_ITEM_COUNT; i++ )
     {
-        subscription[ i ].callback.function = CALLBACK_FUNCTION;
+        subscription[ i ].callback.function = SUBSCRIPTION_CALLBACK_FUNCTION;
         subscription[ i ].pTopicFilter = pTopicFilters[ i ];
         subscription[ i ].topicFilterLength = ( uint16_t ) snprintf( pTopicFilters[ i ],
                                                                      MT_TOPIC_FILTER_LENGTH,
@@ -640,7 +640,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionAddDuplicate )
     /* Set valid values in the subscription list. */
     for( i = 0; i < LIST_ITEM_COUNT; i++ )
     {
-        subscription[ i ].callback.function = CALLBACK_FUNCTION;
+        subscription[ i ].callback.function = SUBSCRIPTION_CALLBACK_FUNCTION;
         subscription[ i ].pTopicFilter = pTopicFilters[ i ];
         subscription[ i ].topicFilterLength = ( uint16_t ) snprintf( pTopicFilters[ i ],
                                                                      TEST_TOPIC_FILTER_LENGTH,
@@ -709,7 +709,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionAddMallocFail )
     /* Set valid values in the subscription list. */
     for( i = 0; i < LIST_ITEM_COUNT; i++ )
     {
-        subscription[ i ].callback.function = CALLBACK_FUNCTION;
+        subscription[ i ].callback.function = SUBSCRIPTION_CALLBACK_FUNCTION;
         subscription[ i ].pTopicFilter = pTopicFilters[ i ];
         subscription[ i ].topicFilterLength = ( uint16_t ) snprintf( pTopicFilters[ i ],
                                                                      TEST_TOPIC_FILTER_LENGTH,

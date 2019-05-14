@@ -68,6 +68,9 @@
 /* Linear containers library configuration. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )
 
+/* Task pool library configuration. */
+#define IOT_TASKPOOL_ENABLE_ASSERTS             ( 1 )
+
 /* MQTT library configuration. */
 #define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
 #define IOT_MQTT_ENABLE_METRICS                 ( 0 )
@@ -186,17 +189,14 @@ typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
     #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER    { 0 }
 #endif
 
-/* Macro for placing inline assembly in test code. */
-#define IOT_TEST_ASM_VOLATILE( x )    __asm__ __volatile__ ( x )
-
-#ifndef __GNUC__
-    #error "Unsupported compiler. Only gcc and clang are supported."
-#endif
-
 /* Configure code coverage testing if enabled. */
 #if IOT_TEST_COVERAGE == 1
+    #ifndef __GNUC__
+        #error "Unsupported compiler. Only gcc and clang are supported for coverage."
+    #endif
+
     /* Define the empty else marker if test coverage is enabled. */
-    #define EMPTY_ELSE_MARKER    IOT_TEST_ASM_VOLATILE( "nop" )
+    #define EMPTY_ELSE_MARKER    __asm__ __volatile__ ( "nop" )
 
     /* Define a custom logging puts function. This function allows coverage
      * testing of logging functions, but prevents excessive logs from being

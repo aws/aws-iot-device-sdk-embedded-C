@@ -20,22 +20,12 @@
  */
 
 /**
- * @file iot_tests_posix.c
- * @brief Common test runner on POSIX systems.
+ * @file iot_tests_win32.c
+ * @brief Common test runner on Win32 systems.
  */
 
 /* The config header is always included first. */
 #include "iot_config.h"
-
-/* Standard includes. */
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-/* POSIX includes. */
-#include <signal.h>
 
 /* Error handling include. */
 #include "private/iot_error.h"
@@ -60,47 +50,12 @@ extern void RunTests( bool disableNetworkTests,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Signal handler. Terminates the tests if called.
- */
-static void _signalHandler( int signum )
-{
-    /* Immediately terminate the tests if this signal handler is called. */
-    if( signum == SIGSEGV )
-    {
-        printf( "\nSegmentation fault.\n" );
-        _Exit( EXIT_FAILURE );
-    }
-    else if( signum == SIGABRT )
-    {
-        printf( "\nAssertion failed.\n" );
-        _Exit( EXIT_FAILURE );
-    }
-}
-
-/*-----------------------------------------------------------*/
-
 int main( int argc,
           char ** argv )
 {
     IOT_FUNCTION_ENTRY( int, EXIT_SUCCESS );
     bool mallocMutexCreated = false;
     bool disableNetworkTests = false, disableLongTests = false;
-    struct sigaction signalAction;
-
-    /* Set a signal handler for segmentation faults and assertion failures. */
-    ( void ) memset( &signalAction, 0x00, sizeof( struct sigaction ) );
-    signalAction.sa_handler = _signalHandler;
-
-    if( sigaction( SIGSEGV, &signalAction, NULL ) != 0 )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
-    }
-
-    if( sigaction( SIGABRT, &signalAction, NULL ) != 0 )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
-    }
 
     /* Create the mutex that guards the Unity malloc overrides. */
     mallocMutexCreated = IotMutex_Create( &UnityMallocMutex, false );
@@ -116,17 +71,6 @@ int main( int argc,
     UnityFixture.NameFilter = NULL;
     UnityFixture.GroupFilter = NULL;
     UNITY_BEGIN();
-
-    /* Check if any tests should be disabled. */
-    if( getopt( argc, argv, "n" ) == ( ( int ) 'n' ) )
-    {
-        disableNetworkTests = true;
-    }
-
-    if( getopt( argc, argv, "l" ) == -1 )
-    {
-        disableLongTests = true;
-    }
 
     /* Call the test runner function. */
     RunTests( disableNetworkTests, disableLongTests );
