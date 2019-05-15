@@ -106,25 +106,24 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
 /**
  * @brief Declare a buffer holding a packet and its size.
  */
-#define DECLARE_PACKET( pTemplate, bufferName, sizeName )  \
-    uint8_t bufferName[ sizeof( pTemplate ) ] = { 0 };     \
-    const size_t sizeName = sizeof( pTemplate );           \
+#define DECLARE_PACKET( pTemplate, bufferName, sizeName ) \
+    uint8_t bufferName[ sizeof( pTemplate ) ] = { 0 };    \
+    const size_t sizeName = sizeof( pTemplate );          \
     ( void ) memcpy( bufferName, pTemplate, sizeName );
 
 /**
  * @brief Initializer for operations in the tests.
  */
-#define INITIALIZE_OPERATION( name )                                                                \
-    {                                                                                               \
-        .link = { 0 }, .incomingPublish = false, .pMqttConnection = _pMqttConnection,               \
-        .jobStorage = IOT_TASKPOOL_JOB_STORAGE_INITIALIZER, .job = IOT_TASKPOOL_JOB_INITIALIZER,    \
-        .u.operation =                                                                              \
-        {                                                                                           \
-            .jobReference = 1, .type = name, .flags = IOT_MQTT_FLAG_WAITABLE,                       \
-            .packetIdentifier = 1, .pMqttPacket = NULL, .packetSize = 0,                            \
-            .notify= { .callback = { 0 } }, .status = IOT_MQTT_STATUS_PENDING,                      \
-            .retry = { 0 }                                                                          \
-        }                                                                                           \
+#define INITIALIZE_OPERATION( name )                                                             \
+    {                                                                                            \
+        .link = { 0 }, .incomingPublish = false, .pMqttConnection = _pMqttConnection,            \
+        .jobStorage = IOT_TASKPOOL_JOB_STORAGE_INITIALIZER, .job = IOT_TASKPOOL_JOB_INITIALIZER, \
+        .u.operation =                                                                           \
+        {                                                                                        \
+            .jobReference = 1, .type = name, .flags = IOT_MQTT_FLAG_WAITABLE,                    \
+            .packetIdentifier = 1, .pMqttPacket = NULL, .packetSize = 0,                         \
+            .notify = { .callback = { 0 } }, .status = IOT_MQTT_STATUS_PENDING, .retry = { 0 }   \
+        }                                                                                        \
     }
 
 /*-----------------------------------------------------------*/
@@ -1337,10 +1336,15 @@ TEST( MQTT_Unit_Receive, SubackValid )
                                                            pSubscriptions[ 0 ].pTopicFilter,
                                                            pSubscriptions[ 0 ].topicFilterLength,
                                                            &currentSubscription ) );
-        currentSubscription.qos = pSubscriptions[ 0 ].qos;
-        TEST_ASSERT_EQUAL_MEMORY( &pSubscriptions[ 0 ],
-                                  &currentSubscription,
-                                  sizeof( IotMqttSubscription_t ) );
+        TEST_ASSERT_EQUAL_UINT16( currentSubscription.topicFilterLength,
+                                  pSubscriptions[ 0 ].topicFilterLength );
+        TEST_ASSERT_EQUAL_STRING_LEN( currentSubscription.pTopicFilter,
+                                      pSubscriptions[ 0 ].pTopicFilter,
+                                      currentSubscription.topicFilterLength );
+        TEST_ASSERT_EQUAL_PTR( currentSubscription.callback.function,
+                               pSubscriptions[ 0 ].callback.function );
+        TEST_ASSERT_EQUAL_PTR( currentSubscription.callback.pCallbackContext,
+                               pSubscriptions[ 0 ].callback.pCallbackContext );
     }
 
     /* Process a valid SUBACK where some subscriptions were rejected. */
