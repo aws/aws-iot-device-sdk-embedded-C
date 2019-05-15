@@ -97,10 +97,10 @@
     "{"                          \
     "\"state\":{"                \
     "\"desired\":{"              \
-    "\"powerOn\":%.1d"           \
+    "\"powerOn\":%01d"           \
     "}"                          \
     "},"                         \
-    "\"clientToken\":\"%.6llu\"" \
+    "\"clientToken\":\"%06lu\""  \
     "}"
 
 /**
@@ -109,7 +109,7 @@
  * Because all the format specifiers in #SHADOW_DESIRED_JSON include a length,
  * its full size is known at compile-time.
  */
-#define EXPECTED_DESIRED_JSON_SIZE    ( sizeof( SHADOW_DESIRED_JSON ) - 4 )
+#define EXPECTED_DESIRED_JSON_SIZE    ( sizeof( SHADOW_DESIRED_JSON ) - 3 )
 
 /**
  * @brief Format string representing a Shadow document with a "reported" state.
@@ -122,10 +122,10 @@
     "{"                          \
     "\"state\":{"                \
     "\"reported\":{"             \
-    "\"powerOn\":%.1d"           \
+    "\"powerOn\":%01d"           \
     "}"                          \
     "},"                         \
-    "\"clientToken\":\"%.6llu\"" \
+    "\"clientToken\":\"%06lu\""  \
     "}"
 
 /**
@@ -134,7 +134,7 @@
  * Because all the format specifiers in #SHADOW_REPORTED_JSON include a length,
  * its full size is known at compile-time.
  */
-#define EXPECTED_REPORTED_JSON_SIZE    ( sizeof( SHADOW_REPORTED_JSON ) - 4 )
+#define EXPECTED_REPORTED_JSON_SIZE    ( sizeof( SHADOW_REPORTED_JSON ) - 3 )
 
 /*-----------------------------------------------------------*/
 
@@ -320,8 +320,8 @@ static void _shadowDeltaCallback( void * pCallbackContext,
         updateDocumentLength = snprintf( pUpdateDocument,
                                          EXPECTED_REPORTED_JSON_SIZE + 1,
                                          SHADOW_REPORTED_JSON,
-                                         currentState,
-                                         ( long long unsigned ) IotClock_GetTimeMs() % 1000000 );
+                                         ( int ) currentState,
+                                         ( long unsigned ) ( IotClock_GetTimeMs() % 1000000 ) );
 
         if( ( size_t ) updateDocumentLength != EXPECTED_REPORTED_JSON_SIZE )
         {
@@ -704,8 +704,8 @@ static int _sendShadowUpdates( IotSemaphore_t * pDeltaSemaphore,
         status = snprintf( pUpdateDocument,
                            EXPECTED_DESIRED_JSON_SIZE + 1,
                            SHADOW_DESIRED_JSON,
-                           desiredState,
-                           ( long long unsigned ) IotClock_GetTimeMs() % 1000000 );
+                           ( int ) desiredState,
+                           ( long unsigned ) ( IotClock_GetTimeMs() % 1000000 ) );
 
         /* Check for errors from snprintf. The expected value is the length of
          * the desired JSON document less the format specifier for the state. */
