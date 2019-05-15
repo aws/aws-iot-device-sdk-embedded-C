@@ -42,6 +42,7 @@ install:
 script:
   # Set identifier (client identifier OR Thing Name).
   - export IOT_IDENTIFIER="$IOT_IDENTIFIER_PREFIX$RUN_TEST"
+  - if [ "$NETWORK_STACK" = "openssl" ]; then export IOT_IDENTIFIER="$IOT_IDENTIFIERossl"; fi
   # Set default compiler options. Individual test scripts may override this.
   - export COMPILER_OPTIONS="-Wall -Wextra -fsanitize=thread"
   # Choose the network abstraction.
