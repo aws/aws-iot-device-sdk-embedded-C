@@ -94,6 +94,13 @@ static void _setDefaultArguments( IotDemoArguments_t * pArguments )
     /* Default to AWS IoT MQTT mode. */
     pArguments->awsIotMqttMode = true;
 
+    /* Set default identifier if defined. The identifier is used as either the
+     * MQTT client identifier or the Thing Name, which identifies this client to
+     * the cloud. */
+    #ifdef IOT_DEMO_IDENTIFIER
+        pArguments->pIdentifier = IOT_DEMO_IDENTIFIER;
+    #endif
+
     /* Set default secured connection status if defined. */
     #ifdef IOT_DEMO_SECURED_CONNECTION
         pArguments->securedConnection = IOT_DEMO_SECURED_CONNECTION;
@@ -222,13 +229,6 @@ int main( int argc,
     IotNetworkServerInfo_t serverInfo = IOT_DEMO_SERVER_INFO_INITIALIZER;
     IotNetworkCredentials_t credentials = IOT_DEMO_CREDENTIALS_INITIALIZER,
                             * pCredentials = NULL;
-
-    /* Set default identifier if defined. The identifier is used as either the
-     * MQTT client identifier or the Thing Name, which identifies this client to
-     * the cloud. */
-    #ifdef IOT_DEMO_IDENTIFIER
-        demoArguments.pIdentifier = IOT_DEMO_IDENTIFIER;
-    #endif
 
     /* Load the default demo arguments from the demo config header. */
     _setDefaultArguments( &demoArguments );
