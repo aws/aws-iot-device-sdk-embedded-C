@@ -1,10 +1,7 @@
-# Source file for parsing arguments.
-set( DEMO_ARGUMENTS_SOURCE_FILE ${IOT_PLATFORM_NAME}/iot_demo_arguments_${IOT_PLATFORM_NAME}.c )
-
 # Common demo source files.
 set( DEMO_COMMON_SOURCES
-     ${DEMO_ARGUMENTS_SOURCE_FILE}
-     iot_demo.c )
+     iot_demo.c
+     iot_demo_arguments.c )
 
 # Common demo header files.
 set( DEMO_COMMON_HEADERS
