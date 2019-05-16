@@ -20,22 +20,15 @@
  */
 
 /**
- * @file iot_tests_posix.c
- * @brief Common test runner on POSIX systems.
+ * @file iot_tests.c
+ * @brief Common test runner.
  */
 
 /* The config header is always included first. */
 #include "iot_config.h"
 
 /* Standard includes. */
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-
-/* POSIX includes. */
-#include <signal.h>
 
 /* Error handling include. */
 #include "private/iot_error.h"
@@ -61,20 +54,59 @@ extern void RunTests( bool disableNetworkTests,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Signal handler. Terminates the tests if called.
+ * @brief Parses command line arguments.
+ *
+ * @param[in] argc Number of arguments passed to main().
+ * @param[in] argv Arguments vector passed to main().
+ * @param[out] pDisableNetworkTests Set to `true` if `-n` is given, `false` otherwise.
+ * @param[out] pDisableLongTests Set to `true` if `-l` is not given, `true` otherwise.
  */
-static void _signalHandler( int signum )
+static void _parseArguments( int argc,
+                             char ** argv,
+                             bool * pDisableNetworkTests,
+                             bool * pDisableLongTests )
 {
-    /* Immediately terminate the tests if this signal handler is called. */
-    if( signum == SIGSEGV )
+    int i = 1;
+    const char * pOption = NULL;
+    size_t optionLength = 0;
+
+    /* Set default values. */
+    *pDisableNetworkTests = false;
+    *pDisableLongTests = true;
+
+    for( i = 1; i < argc; i++ )
     {
-        printf( "\nSegmentation fault.\n" );
-        _Exit( EXIT_FAILURE );
-    }
-    else if( signum == SIGABRT )
-    {
-        printf( "\nAssertion failed.\n" );
-        _Exit( EXIT_FAILURE );
+        /* Get argument string and length. */
+        pOption = argv[ i ];
+        optionLength = strlen( pOption );
+
+        /* Valid options have the format "-X", so they must be 2 characters long. */
+        if( optionLength != 2 )
+        {
+            continue;
+        }
+
+        /* The first character of a valid option must be '-'. */
+        if( pOption[ 0 ] != '-' )
+        {
+            continue;
+        }
+
+        switch( pOption[ 1 ] )
+        {
+            /* Disable tests requiring network if -n is given. */
+            case 'n':
+                *pDisableNetworkTests = true;
+                break;
+
+            /* Enable long tests if -l is given. */
+            case 'l':
+                *pDisableLongTests = false;
+                break;
+
+            default:
+                break;
+        }
     }
 }
 
@@ -86,21 +118,6 @@ int main( int argc,
     IOT_FUNCTION_ENTRY( int, EXIT_SUCCESS );
     bool mallocMutexCreated = false;
     bool disableNetworkTests = false, disableLongTests = false;
-    struct sigaction signalAction;
-
-    /* Set a signal handler for segmentation faults and assertion failures. */
-    ( void ) memset( &signalAction, 0x00, sizeof( struct sigaction ) );
-    signalAction.sa_handler = _signalHandler;
-
-    if( sigaction( SIGSEGV, &signalAction, NULL ) != 0 )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
-    }
-
-    if( sigaction( SIGABRT, &signalAction, NULL ) != 0 )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
-    }
 
     /* Create the mutex that guards the Unity malloc overrides. */
     mallocMutexCreated = IotMutex_Create( &UnityMallocMutex, false );
@@ -110,23 +127,15 @@ int main( int argc,
         IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
+    /* Parse command-line arguments. */
+    _parseArguments( argc, argv, &disableNetworkTests, &disableLongTests );
+
     /* Unity setup. */
     UnityFixture.Verbose = 1;
     UnityFixture.RepeatCount = 1;
     UnityFixture.NameFilter = NULL;
     UnityFixture.GroupFilter = NULL;
     UNITY_BEGIN();
-
-    /* Check if any tests should be disabled. */
-    if( getopt( argc, argv, "n" ) == ( ( int ) 'n' ) )
-    {
-        disableNetworkTests = true;
-    }
-
-    if( getopt( argc, argv, "l" ) == -1 )
-    {
-        disableLongTests = true;
-    }
 
     /* Call the test runner function. */
     RunTests( disableNetworkTests, disableLongTests );

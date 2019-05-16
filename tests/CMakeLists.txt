@@ -1,7 +1,7 @@
 # Test runner executable and config header.
 set( IOT_TEST_APP_FILES
      ${PROJECT_SOURCE_DIR}/tests/iot_config.h
-     ${PROJECT_SOURCE_DIR}/tests/app/iot_tests_${IOT_PLATFORM_NAME}.c )
+     ${PROJECT_SOURCE_DIR}/tests/iot_tests.c )
 
 # Common tests.
 add_subdirectory( common )

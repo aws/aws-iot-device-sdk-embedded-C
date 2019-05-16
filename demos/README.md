@@ -2,7 +2,7 @@
 
 This directory contains source files for demo executables. Its subdirectories are organized as follows:
 - `app` <br>
-  Source files for demo runner executables (i.e. the `main()` function). The file `app/iot_demo.c` contains the platform-independent demo runner, while platform-dependent functions (for parsing arguments) are found in a subdirectory matching the platform name (`app/posix`, `app/win32`, etc.).
+  Source files for demo runner executables (i.e. the `main()` function).
 - `include` <br>
   Common headers for the demo executables. These headers handle argument parsing and logging which are common to all demos.
 - `source` <br>
