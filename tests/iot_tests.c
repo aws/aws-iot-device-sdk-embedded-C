@@ -54,6 +54,33 @@ extern void RunTests( bool disableNetworkTests,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Used to provide unity_malloc with critical sections.
+ */
+static IotMutex_t _unityMallocMutex;
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Enter a critical section for unity_malloc.
+ */
+static void _unityEnterCritical( void )
+{
+    IotMutex_Lock( &_unityMallocMutex );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Exit a critical section for unity_malloc.
+ */
+static void _unityExitCritical( void )
+{
+    IotMutex_Unlock( &_unityMallocMutex );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Parses command line arguments.
  *
  * @param[in] argc Number of arguments passed to main().
@@ -120,12 +147,15 @@ int main( int argc,
     bool disableNetworkTests = false, disableLongTests = false;
 
     /* Create the mutex that guards the Unity malloc overrides. */
-    mallocMutexCreated = IotMutex_Create( &UnityMallocMutex, false );
+    mallocMutexCreated = IotMutex_Create( &_unityMallocMutex, false );
 
     if( mallocMutexCreated == false )
     {
         IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
+
+    /* Provide the functions for unity critical sections. */
+    unity_provide_critical_section( _unityEnterCritical, _unityExitCritical );
 
     /* Parse command-line arguments. */
     _parseArguments( argc, argv, &disableNetworkTests, &disableLongTests );
@@ -150,7 +180,7 @@ int main( int argc,
 
     if( mallocMutexCreated == true )
     {
-        IotMutex_Destroy( &UnityMallocMutex );
+        IotMutex_Destroy( &_unityMallocMutex );
     }
 
     IOT_FUNCTION_CLEANUP_END();
