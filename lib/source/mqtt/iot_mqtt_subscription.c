@@ -364,9 +364,9 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
                 pNewSubscription->packetInfo.order = i;
                 pNewSubscription->callback = pSubscriptionList[ i ].callback;
                 pNewSubscription->topicFilterLength = pSubscriptionList[ i ].topicFilterLength;
-                ( void ) strncpy( pNewSubscription->pTopicFilter,
-                                  pSubscriptionList[ i ].pTopicFilter,
-                                  pSubscriptionList[ i ].topicFilterLength );
+                ( void ) memcpy( pNewSubscription->pTopicFilter,
+                                 pSubscriptionList[ i ].pTopicFilter,
+                                 ( size_t ) ( pSubscriptionList[ i ].topicFilterLength ) );
 
                 IotListDouble_InsertHead( &( pMqttConnection->subscriptionList ),
                                           &( pNewSubscription->link ) );

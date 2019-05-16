@@ -433,10 +433,8 @@ void IotLog_GenericPrintBuffer( const char * const pLibraryName,
             offset = 0;
         }
 
-        /* Print a single byte into pMessageBuffer. This call to sprintf won't
-         * cause any buffer overflows because it always prints 4 characters per
-         * invocation and sufficient memory has been allocated. */
-        ( void ) sprintf( pMessageBuffer + offset, "%02x ", pBuffer[ i ] );
+        /* Print a single byte into pMessageBuffer. */
+        ( void ) snprintf( pMessageBuffer + offset, 4, "%02x ", pBuffer[ i ] );
 
         /* Move the offset where the next character is printed. */
         offset += 3;
