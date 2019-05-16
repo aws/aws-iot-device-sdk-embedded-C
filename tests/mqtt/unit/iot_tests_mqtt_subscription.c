@@ -76,13 +76,6 @@
 #define TEST_TOPIC_FILTER_FORMAT    ( "/test%lu" )                             /**< @brief Format of each topic filter. */
 #define TEST_TOPIC_FILTER_LENGTH    ( sizeof( TEST_TOPIC_FILTER_FORMAT ) + 1 ) /**< @brief Maximum length of each topic filter. */
 
-/*
- * Constants relating to the multithreaded subscription test.
- */
-#define MT_THREAD_COUNT             ( 8 )         /**< @brief Number of threads. */
-#define MT_TOPIC_FILTER_FORMAT      ( "/%p-%lu" ) /**< @brief Format of each topic filter. */
-#define MT_TOPIC_FILTER_LENGTH      ( 16 )        /**< @brief Maximum length of each topic filter. */
-
 /**
  * @brief A non-NULL function pointer to use for subscription callback. This
  * "function" should cause a crash if actually called.
@@ -136,16 +129,6 @@ static bool _connectionCreated = false;
  * @brief The MQTT connection shared by all tests.
  */
 static _mqttConnection_t * _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
-
-/**
- * @brief Synchronizes threads in the multithreaded test at start.
- */
-static IotSemaphore_t _mtTestStart;
-
-/**
- * @brief Synchronizes threads in the multithreaded test at exit.
- */
-static IotSemaphore_t _mtTestExit;
 
 /*-----------------------------------------------------------*/
 
@@ -275,57 +258,6 @@ static void _blockingCallback( void * pArgument,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Thread routing of the multithreaded test.
- */
-static void _multithreadTestThread( void * pArgument )
-{
-    size_t i = 0;
-    bool * pThreadResult = ( bool * ) pArgument;
-    char pTopicFilters[ LIST_ITEM_COUNT ][ MT_TOPIC_FILTER_LENGTH ] = { { 0 } };
-    IotMqttSubscription_t subscription[ LIST_ITEM_COUNT ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
-
-    /* Synchronize with the other threads before starting the test. */
-    IotSemaphore_Wait( &( _mtTestStart ) );
-
-    /* Add items to the subscription list. */
-    for( i = 0; i < LIST_ITEM_COUNT; i++ )
-    {
-        subscription[ i ].callback.function = SUBSCRIPTION_CALLBACK_FUNCTION;
-        subscription[ i ].pTopicFilter = pTopicFilters[ i ];
-        subscription[ i ].topicFilterLength = ( uint16_t ) snprintf( pTopicFilters[ i ],
-                                                                     MT_TOPIC_FILTER_LENGTH,
-                                                                     MT_TOPIC_FILTER_FORMAT,
-                                                                     ( void * ) &i,
-                                                                     ( unsigned long ) i );
-
-        if( _IotMqtt_AddSubscriptions( _pMqttConnection,
-                                       1,
-                                       &( subscription[ i ] ),
-                                       1 ) != IOT_MQTT_SUCCESS )
-        {
-            *pThreadResult = false;
-
-            return;
-        }
-    }
-
-    /* Remove the previously added items from the list. */
-    for( i = 0; i < LIST_ITEM_COUNT; i++ )
-    {
-        _IotMqtt_RemoveSubscriptionByTopicFilter( _pMqttConnection,
-                                                  &( subscription[ i ] ),
-                                                  1 );
-    }
-
-    *pThreadResult = true;
-
-    /* Synchronize with the other threads before exiting the test. */
-    IotSemaphore_Post( &( _mtTestExit ) );
-}
-
-/*-----------------------------------------------------------*/
-
-/**
  * @brief Test group for MQTT subscription tests.
  */
 TEST_GROUP( MQTT_Unit_Subscription );
@@ -390,7 +322,6 @@ TEST_GROUP_RUNNER( MQTT_Unit_Subscription )
     RUN_TEST_CASE( MQTT_Unit_Subscription, SubscriptionRemoveByTopicFilter );
     RUN_TEST_CASE( MQTT_Unit_Subscription, SubscriptionAddDuplicate );
     RUN_TEST_CASE( MQTT_Unit_Subscription, SubscriptionAddMallocFail );
-    RUN_TEST_CASE( MQTT_Unit_Subscription, SubscriptionMultithreaded );
     RUN_TEST_CASE( MQTT_Unit_Subscription, ProcessPublish );
     RUN_TEST_CASE( MQTT_Unit_Subscription, ProcessPublishMultiple );
     RUN_TEST_CASE( MQTT_Unit_Subscription, SubscriptionReferences );
@@ -735,74 +666,6 @@ TEST( MQTT_Unit_Subscription, SubscriptionAddMallocFail )
         TEST_ASSERT_EQUAL( IOT_MQTT_NO_MEMORY, status );
         TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) );
     }
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Tests adding and removing subscriptions in a multithreaded environment.
- */
-TEST( MQTT_Unit_Subscription, SubscriptionMultithreaded )
-{
-    int32_t i = 0, threadsCreated = 0, threadsExited = 0;
-    bool threadResults[ MT_THREAD_COUNT ] = { 0 };
-
-    /* Create the synchronization semaphores. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( _mtTestStart ), 0, MT_THREAD_COUNT ) );
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( _mtTestExit ), 0, MT_THREAD_COUNT ) );
-
-    /* Spawn threads for the test. */
-    for( i = 0; i < MT_THREAD_COUNT; i++ )
-    {
-        if( Iot_CreateDetachedThread( _multithreadTestThread,
-                                      &( threadResults[ i ] ),
-                                      IOT_THREAD_DEFAULT_PRIORITY,
-                                      IOT_THREAD_DEFAULT_STACK_SIZE ) == false )
-        {
-            break;
-        }
-    }
-
-    /* Record how many threads were created. */
-    threadsCreated = i;
-
-    /* Signal all created threads to start. */
-    for( i = 0; i < threadsCreated; i++ )
-    {
-        IotSemaphore_Post( &_mtTestStart );
-    }
-
-    /* Wait for all created threads to finish. */
-    for( i = 0; i < threadsCreated; i++ )
-    {
-        if( IotSemaphore_TimedWait( &_mtTestExit,
-                                    IOT_TEST_MQTT_TIMEOUT_MS ) == false )
-        {
-            break;
-        }
-
-        threadsExited++;
-    }
-
-    if( TEST_PROTECT() )
-    {
-        /* Check how many threads ran. */
-        TEST_ASSERT_EQUAL_INT( threadsCreated, threadsExited );
-        TEST_ASSERT_EQUAL_INT( threadsCreated, MT_THREAD_COUNT );
-
-        /* Check the results of the test threads. */
-        for( i = 0; i < MT_THREAD_COUNT; i++ )
-        {
-            TEST_ASSERT_EQUAL_INT( true, threadResults[ i ] );
-        }
-
-        /* The subscription list should be empty. */
-        TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) );
-    }
-
-    /* Destroy the synchronization semaphores. */
-    IotSemaphore_Destroy( &_mtTestStart );
-    IotSemaphore_Destroy( &_mtTestExit );
 }
 
 /*-----------------------------------------------------------*/
