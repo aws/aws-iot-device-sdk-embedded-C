@@ -64,8 +64,7 @@ file( GLOB MBEDTLS_HEADERS "mbedtls/include/mbedtls/*.h" )
 # mbed TLS library target.
 add_library( mbedtls
              ${MBEDTLS_SOURCES} ${MBEDTLS_HEADERS}
-             iot_config_mbedtls.h threading_alt.h
-             iot_mbedtls_threading.c )
+             iot_config_mbedtls.h threading_alt.h )
 
 # mbed TLS config header and include directories.
 target_include_directories( mbedtls SYSTEM

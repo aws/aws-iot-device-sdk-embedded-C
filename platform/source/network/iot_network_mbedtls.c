@@ -213,6 +213,87 @@ const IotNetworkInterface_t IotNetworkMbedtls =
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Initializes a new mutex. Used by mbed TLS to provide thread-safety.
+ *
+ * Sets the valid member of `mbedtls_threading_mutex_t`.
+ *
+ * @param[in] pMutex The mutex to initialize.
+ */
+static void _mbedtlsMutexInit( mbedtls_threading_mutex_t * pMutex )
+{
+    pMutex->valid = IotMutex_Create( &( pMutex->mutex ), false );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Frees a mutex. Used by mbed TLS to provide thread-safety.
+ *
+ * @param[in] pMutex The mutex to destroy.
+ */
+static void _mbedtlsMutexFree( mbedtls_threading_mutex_t * pMutex )
+{
+    if( pMutex->valid == true )
+    {
+        IotMutex_Destroy( &( pMutex->mutex ) );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Locks a mutex. Used by mbed TLS to provide thread-safety.
+ *
+ * @param[in] pMutex The mutex to lock.
+ *
+ * @return `0` on success; one of `MBEDTLS_ERR_THREADING_BAD_INPUT_DATA`
+ * or `MBEDTLS_ERR_THREADING_MUTEX_ERROR` on error.
+ */
+static int _mbedtlsMutexLock( mbedtls_threading_mutex_t * pMutex )
+{
+    int status = 0;
+
+    if( pMutex->valid == false )
+    {
+        status = MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
+    }
+    else
+    {
+        IotMutex_Lock( &( pMutex->mutex ) );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Unlocks a mutex. Used by mbed TLS to provide thread-safety.
+ *
+ * @param[in] pMutex The mutex to unlock.
+ *
+ * @return `0` on success; one of `MBEDTLS_ERR_THREADING_BAD_INPUT_DATA`
+ * or `MBEDTLS_ERR_THREADING_MUTEX_ERROR` on error.
+ */
+static int _mbedtlsMutexUnlock( mbedtls_threading_mutex_t * pMutex )
+{
+    int status = 0;
+
+    if( pMutex->valid == false )
+    {
+        status = MBEDTLS_ERR_THREADING_BAD_INPUT_DATA;
+    }
+    else
+    {
+        IotMutex_Unlock( &( pMutex->mutex ) );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Initialize the mbed TLS structures in a network connection.
  *
  * @param[in] pNetworkConnection The network connection to initialize.
@@ -636,10 +717,10 @@ IotNetworkError_t IotNetworkMbedtls_Init( void )
     _receiveThreadCount = 0;
 
     /* Set the mutex functions for mbed TLS thread safety. */
-    mbedtls_threading_set_alt( mbedtlsMutex_Init,
-                               mbedtlsMutex_Free,
-                               mbedtlsMutex_Lock,
-                               mbedtlsMutex_Unlock );
+    mbedtls_threading_set_alt( _mbedtlsMutexInit,
+                               _mbedtlsMutexFree,
+                               _mbedtlsMutexLock,
+                               _mbedtlsMutexUnlock );
 
     /* Initialize contexts for random number generation. */
     mbedtls_entropy_init( &_entropyContext );
