@@ -64,8 +64,7 @@ file( GLOB MBEDTLS_HEADERS "mbedtls/include/mbedtls/*.h" )
 # mbed TLS library target.
 add_library( mbedtls
              ${MBEDTLS_SOURCES} ${MBEDTLS_HEADERS}
-             iot_config_mbedtls.h threading_alt.h
-             iot_mbedtls_threading.c )
+             iot_config_mbedtls.h threading_alt.h )
 
 # mbed TLS config header and include directories.
 target_include_directories( mbedtls SYSTEM
@@ -86,6 +85,9 @@ target_compile_options( mbedtls
                         -w>
                         $<$<C_COMPILER_ID:MSVC>:
                         /W0 /D_CRT_SECURE_NO_WARNINGS> )
+
+# Automatically export all symbols when building DLLs on Windows.
+set_property( TARGET mbedtls PROPERTY WINDOWS_EXPORT_ALL_SYMBOLS TRUE )
 
 # Organization of mbed TLS in folders.
 set_property( TARGET mbedtls PROPERTY FOLDER "third_party" )

@@ -29,6 +29,9 @@ target_compile_options( unity
                         $<$<C_COMPILER_ID:MSVC>:
                         /W0 /D_CRT_SECURE_NO_WARNINGS> )
 
+# Automatically export all symbols when building DLLs on Windows.
+set_property( TARGET unity PROPERTY WINDOWS_EXPORT_ALL_SYMBOLS TRUE )
+
 # Organization of Unity in folders.
 set_property( TARGET unity PROPERTY FOLDER "third_party" )
 source_group( include FILES ${UNITY_HEADERS} )

@@ -77,7 +77,8 @@
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
  */
-extern IotMutex_t IotAtomicMutex;
+extern void Iot_EnterCritical( void );
+extern void Iot_ExitCritical( void );
 /** @endcond */
 
 /*---------------- Swap and compare-and-swap ------------------*/
@@ -101,7 +102,7 @@ static inline uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDestinati
 {
     uint32_t swapped = 0;
 
-    IotMutex_Lock( &IotAtomicMutex );
+    Iot_EnterCritical();
 
     if( *pDestination == comparand )
     {
@@ -109,7 +110,7 @@ static inline uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDestinati
         swapped = 1;
     }
 
-    IotMutex_Unlock( &IotAtomicMutex );
+    Iot_ExitCritical();
 
     return swapped;
 }
@@ -131,10 +132,10 @@ static inline void * Atomic_Swap_Pointer( void * volatile * pDestination,
 {
     void * pOldValue = NULL;
 
-    IotMutex_Lock( &IotAtomicMutex );
+    Iot_EnterCritical();
     pOldValue = *pDestination;
     *pDestination = pNewValue;
-    IotMutex_Unlock( &IotAtomicMutex );
+    Iot_ExitCritical();
 
     return pOldValue;
 }
@@ -160,7 +161,7 @@ static inline uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pDestina
 {
     uint32_t swapped = 0;
 
-    IotMutex_Lock( &IotAtomicMutex );
+    Iot_EnterCritical();
 
     if( *pDestination == pComparand )
     {
@@ -168,7 +169,7 @@ static inline uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pDestina
         swapped = 1;
     }
 
-    IotMutex_Unlock( &IotAtomicMutex );
+    Iot_ExitCritical();
 
     return swapped;
 }
@@ -190,10 +191,10 @@ static inline uint32_t Atomic_Add_u32( uint32_t volatile * pAugend,
 {
     uint32_t oldValue = 0;
 
-    IotMutex_Lock( &IotAtomicMutex );
+    Iot_EnterCritical();
     oldValue = *pAugend;
     *pAugend = oldValue + addend;
-    IotMutex_Unlock( &IotAtomicMutex );
+    Iot_ExitCritical();
 
     return oldValue;
 }
@@ -215,10 +216,10 @@ static inline uint32_t Atomic_Subtract_u32( uint32_t volatile * pMinuend,
 {
     uint32_t oldValue = 0;
 
-    IotMutex_Lock( &IotAtomicMutex );
+    Iot_EnterCritical();
     oldValue = *pMinuend;
     *pMinuend = oldValue - subtrahend;
-    IotMutex_Unlock( &IotAtomicMutex );
+    Iot_ExitCritical();
 
     return oldValue;
 }
@@ -272,10 +273,10 @@ static inline uint32_t Atomic_OR_u32( uint32_t volatile * pOperand,
 {
     uint32_t oldValue = 0;
 
-    IotMutex_Lock( &IotAtomicMutex );
+    Iot_EnterCritical();
     oldValue = *pOperand;
     *pOperand = ( oldValue | mask );
-    IotMutex_Unlock( &IotAtomicMutex );
+    Iot_ExitCritical();
 
     return oldValue;
 }
@@ -297,10 +298,10 @@ static inline uint32_t Atomic_XOR_u32( uint32_t volatile * pOperand,
 {
     uint32_t oldValue = 0;
 
-    IotMutex_Lock( &IotAtomicMutex );
+    Iot_EnterCritical();
     oldValue = *pOperand;
     *pOperand = ( oldValue ^ mask );
-    IotMutex_Unlock( &IotAtomicMutex );
+    Iot_ExitCritical();
 
     return oldValue;
 }
@@ -322,10 +323,10 @@ static inline uint32_t Atomic_AND_u32( uint32_t volatile * pOperand,
 {
     uint32_t oldValue = 0;
 
-    IotMutex_Lock( &IotAtomicMutex );
+    Iot_EnterCritical();
     oldValue = *pOperand;
     *pOperand = ( oldValue & mask );
-    IotMutex_Unlock( &IotAtomicMutex );
+    Iot_ExitCritical();
 
     return oldValue;
 }
@@ -347,10 +348,10 @@ static inline uint32_t Atomic_NAND_u32( uint32_t volatile * pOperand,
 {
     uint32_t oldValue = 0;
 
-    IotMutex_Lock( &IotAtomicMutex );
+    Iot_EnterCritical();
     oldValue = *pOperand;
     *pOperand = ~( oldValue & mask );
-    IotMutex_Unlock( &IotAtomicMutex );
+    Iot_ExitCritical();
 
     return oldValue;
 }

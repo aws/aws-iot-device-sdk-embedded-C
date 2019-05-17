@@ -10,9 +10,6 @@
 
 #include <stddef.h>
 
-#include IOT_SYSTEM_TYPES_FILE
-typedef _IotSystemMutex_t IotMutex_t;
-
 #ifdef UNITY_EXCLUDE_STDLIB_MALLOC
 /* Define this macro to remove the use of stdlib.h, malloc, and free.
  * Many embedded systems do not have a heap or malloc/free by default.
@@ -42,8 +39,9 @@ typedef _IotSystemMutex_t IotMutex_t;
 #define realloc unity_realloc_mt
 #define free    unity_free_mt
 
-/* Thread-safety wrappers for the unity memory functions. */
-extern IotMutex_t UnityMallocMutex;
+void unity_provide_critical_section(void(*start)(void), void(*end)(void));
+void unity_enter_critical_section(void);
+void unity_exit_critical_section(void);
 
 void* unity_malloc_mt(size_t size);
 void* unity_calloc_mt(size_t num, size_t size);

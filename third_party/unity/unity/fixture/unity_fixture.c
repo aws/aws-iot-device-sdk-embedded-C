@@ -9,10 +9,6 @@
 #include "unity_internals.h"
 #include <string.h>
 
-/* For thread safety. */
-#include "iot_config.h"
-#include "platform/iot_threads.h"
-
 struct UNITY_FIXTURE_T UnityFixture;
 
 /* If you decide to use the function pointer approach.
@@ -141,30 +137,30 @@ static int malloc_fail_countdown = MALLOC_DONT_FAIL;
 
 void UnityMalloc_StartTest(void)
 {
-    IotMutex_Lock(&UnityMallocMutex);
+    unity_enter_critical_section();
     malloc_count = 0;
     malloc_fail_countdown = MALLOC_DONT_FAIL;
-    IotMutex_Unlock(&UnityMallocMutex);
+    unity_exit_critical_section();
 }
 
 void UnityMalloc_EndTest(void)
 {
-    IotMutex_Lock(&UnityMallocMutex);
+    unity_enter_critical_section();
     malloc_fail_countdown = MALLOC_DONT_FAIL;
     if (malloc_count != 0)
     {
-        IotMutex_Unlock(&UnityMallocMutex);
+        unity_exit_critical_section();
         UNITY_TEST_FAIL(Unity.CurrentTestLineNumber, "This test leaks!");
     }
 
-    IotMutex_Unlock(&UnityMallocMutex);
+    unity_exit_critical_section();
 }
 
 void UnityMalloc_MakeMallocFailAfterCount(int countdown)
 {
-    IotMutex_Lock(&UnityMallocMutex);
+    unity_enter_critical_section();
     malloc_fail_countdown = countdown;
-    IotMutex_Unlock(&UnityMallocMutex);
+    unity_exit_critical_section();
 }
 
 /* These definitions are always included from unity_fixture_malloc_overrides.h */
