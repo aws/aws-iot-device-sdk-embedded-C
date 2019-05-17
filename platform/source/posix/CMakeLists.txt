@@ -9,13 +9,6 @@ if( NOT HAS_C_FLAG_lrt )
     message( FATAL_ERROR "Compiler flag -lrt must be supported." )
 endif()
 
-# Check for POSIX threads.
-find_package( Threads REQUIRED )
-
-if( NOT ${CMAKE_USE_PTHREADS_INIT} )
-    message( FATAL_ERROR "POSIX threads required." )
-endif()
-
 # Check for required POSIX types.
 set( CMAKE_EXTRA_INCLUDE_FILES "pthread.h" "time.h" "semaphore.h" )
 list( APPEND REQUIRED_POSIX_TYPES
@@ -34,7 +27,7 @@ foreach( POSIX_TYPE ${REQUIRED_POSIX_TYPES} )
 endforeach()
 
 # Check for some required POSIX functions. This is not intended to be a comprehensive list.
-set( CMAKE_REQUIRED_LIBRARIES rt Threads::Threads )
+set( CMAKE_REQUIRED_LIBRARIES rt pthread )
 list( APPEND REQUIRED_POSIX_FUNCTIONS
       clock_gettime time localtime_r strftime timer_create timer_delete
       timer_settime pthread_create pthread_attr_init pthread_attr_setdetachstate
@@ -61,27 +54,31 @@ if( ${IOT_NETWORK_USE_OPENSSL} )
         endif()
 
         # Choose OpenSSL network source file.
+        set( NETWORK_HEADER ${CMAKE_SOURCE_DIR}/platform/include/posix/iot_network_openssl.h )
         set( NETWORK_SOURCE_FILE ${CMAKE_SOURCE_DIR}/platform/source/posix/iot_network_openssl.c )
 
         # Link OpenSSL.
         set( TLS_LIBRARY_LINKER_FLAG OpenSSL::SSL OpenSSL::Crypto )
     endif()
 else()
+    set( NETWORK_HEADER ${CMAKE_SOURCE_DIR}/platform/include/iot_network_mbedtls.h )
     set( NETWORK_SOURCE_FILE ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_mbedtls.c )
     set( TLS_LIBRARY_LINKER_FLAG mbedtls )
 endif()
 
+# Add the network header for this platform.
+set( PLATFORM_COMMON_HEADERS ${PLATFORM_COMMON_HEADERS}
+     ${NETWORK_HEADER}
+     PARENT_SCOPE )
+
 # Platform libraries source files.
-add_library( iotplatform
-             iot_clock_posix.c
-             iot_threads_posix.c
-             ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_metrics.c
-             ${NETWORK_SOURCE_FILE} )
+set( PLATFORM_SOURCES
+     ${CMAKE_SOURCE_DIR}/platform/source/posix/iot_clock_posix.c
+     ${CMAKE_SOURCE_DIR}/platform/source/posix/iot_threads_posix.c
+     ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_metrics.c
+     ${NETWORK_SOURCE_FILE}
+     PARENT_SCOPE )
 
-# Link required libraries.
-target_link_libraries( iotplatform
-                       PRIVATE Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )
-
-if( ${IOT_BUILD_TESTS} )
-    target_link_libraries( iotplatform PRIVATE unity )
-endif()
+# Set the dependencies of this platform layer.
+set( IOT_BASE_DEPENDENCIES ${IOT_BASE_DEPENDENCIES}
+     pthread rt ${TLS_LIBRARY_LINKER_FLAG} PARENT_SCOPE )

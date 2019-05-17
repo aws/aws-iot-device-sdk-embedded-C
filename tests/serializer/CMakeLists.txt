@@ -13,7 +13,7 @@ target_compile_definitions( iot_tests_serializer PRIVATE
                             -DRunTests=RunSerializerTests )
 
 # Serializer tests library dependencies.
-target_link_libraries( iot_tests_serializer PRIVATE iotserializer iotcommon unity tinycbor )
+target_link_libraries( iot_tests_serializer PRIVATE iotserializer iotbase unity tinycbor )
 
 # Organization of Serializer tests in folders.
 set_property( TARGET iot_tests_serializer PROPERTY FOLDER "tests" )

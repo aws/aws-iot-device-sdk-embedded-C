@@ -15,7 +15,7 @@ target_compile_definitions( iot_tests_common PRIVATE
                             -DRunTests=RunCommonTests )
 
 # Common tests library dependencies.
-target_link_libraries( iot_tests_common PRIVATE iotcommon unity )
+target_link_libraries( iot_tests_common PRIVATE iotbase unity )
 
 # Organization of common tests in folders.
 set_property( TARGET iot_tests_common PROPERTY FOLDER "tests" )
