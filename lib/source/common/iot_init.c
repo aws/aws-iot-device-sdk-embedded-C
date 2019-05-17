@@ -54,13 +54,30 @@
 
 /*-----------------------------------------------------------*/
 
-#if IOT_ATOMIC_GENERIC == 1
+/* A mutex for critical sections is needed for the generic atomic implementation
+ * or test framework. */
+#if ( IOT_ATOMIC_GENERIC == 1 ) || ( IOT_BUILD_TESTS == 1 )
 
 /**
- * @brief Provides atomic operations with thread safety.
+ * @brief Provides critical sections.
  */
-    IotMutex_t IotAtomicMutex;
-#endif
+    static IotMutex_t _atomicMutex;
+
+/*-----------------------------------------------------------*/
+
+    void Iot_EnterCritical( void )
+    {
+        IotMutex_Lock( &_atomicMutex );
+    }
+
+/*-----------------------------------------------------------*/
+
+    void Iot_ExitCritical( void )
+    {
+        IotMutex_Unlock( &_atomicMutex );
+    }
+
+#endif /* if ( IOT_ATOMIC_GENERIC == 1 ) || ( IOT_BUILD_TESTS == 1 ) */
 
 /*-----------------------------------------------------------*/
 
@@ -70,15 +87,20 @@ bool IotSdk_Init( void )
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER_LARGE;
 
-    /* Initialize the mutex for generic atomic operations if needed. */
-    #if IOT_ATOMIC_GENERIC == 1
-        bool genericAtomicInitialized = IotMutex_Create( &IotAtomicMutex, false );
+    /* Initialize the mutex for atomic operations if needed. */
+    #if ( IOT_ATOMIC_GENERIC == 1 ) || ( IOT_BUILD_TESTS == 1 )
+        bool atomicInitialized = IotMutex_Create( &_atomicMutex, false );
 
-        if( genericAtomicInitialized == false )
+        if( atomicInitialized == false )
         {
             IotLogError( "Failed to initialize atomic operations." );
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
+    #endif
+
+    /* Provide the functions for test framework critical sections. */
+    #if IOT_BUILD_TESTS == 1
+        unity_provide_critical_section( Iot_EnterCritical, Iot_ExitCritical );
     #endif
 
     /* Initialize static memory if dynamic memory allocation is disabled. */
@@ -106,9 +128,9 @@ bool IotSdk_Init( void )
     if( status == false )
     {
         #if IOT_ATOMIC_GENERIC == 1
-            if( genericAtomicInitialized == true )
+            if( atomicInitialized == true )
             {
-                IotMutex_Destroy( &IotAtomicMutex );
+                IotMutex_Destroy( &_atomicMutex );
             }
         #endif
         #if IOT_STATIC_MEMORY_ONLY == 1
@@ -143,7 +165,7 @@ void IotSdk_Cleanup( void )
 
     /* Clean up the mutex for generic atomic operations if needed. */
     #if IOT_ATOMIC_GENERIC == 1
-        IotMutex_Destroy( &IotAtomicMutex );
+        IotMutex_Destroy( &_atomicMutex );
     #endif
 }
 

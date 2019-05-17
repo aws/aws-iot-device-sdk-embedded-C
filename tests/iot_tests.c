@@ -154,9 +154,6 @@ int main( int argc,
         IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
 
-    /* Provide the functions for unity critical sections. */
-    unity_provide_critical_section( _unityEnterCritical, _unityExitCritical );
-
     /* Parse command-line arguments. */
     _parseArguments( argc, argv, &disableNetworkTests, &disableLongTests );
 
