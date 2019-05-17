@@ -8,8 +8,16 @@ set( PLATFORM_SOURCES
      ${CMAKE_SOURCE_DIR}/platform/source/win32/iot_clock_win32.c
      ${CMAKE_SOURCE_DIR}/platform/source/win32/iot_threads_win32.c
      ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_mbedtls.c
-     ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_metrics.c
-     PARENT_SCOPE )
+     ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_metrics.c )
+
+# Add platform as an interface library. It will be built into iotbase.
+add_library( iotplatform INTERFACE )
+
+target_sources( iotplatform INTERFACE
+                ${PLATFORM_SOURCES} )
 
 # This platform layer uses mbed TLS.
-set( IOT_BASE_DEPENDENCIES ${IOT_BASE_DEPENDENCIES} mbedtls PARENT_SCOPE )
+target_link_libraries( iotplatform INTERFACE mbedtls )
+
+# Set platform sources in the parent scope for directory organization.
+set( PLATFORM_SOURCES ${PLATFORM_SOURCES} PARENT_SCOPE )

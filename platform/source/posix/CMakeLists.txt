@@ -9,6 +9,13 @@ if( NOT HAS_C_FLAG_lrt )
     message( FATAL_ERROR "Compiler flag -lrt must be supported." )
 endif()
 
+# Check for POSIX threads.
+find_package( Threads REQUIRED )
+
+if( NOT ${CMAKE_USE_PTHREADS_INIT} )
+    message( FATAL_ERROR "POSIX threads required." )
+endif()
+
 # Check for required POSIX types.
 set( CMAKE_EXTRA_INCLUDE_FILES "pthread.h" "time.h" "semaphore.h" )
 list( APPEND REQUIRED_POSIX_TYPES
@@ -76,9 +83,16 @@ set( PLATFORM_SOURCES
      ${CMAKE_SOURCE_DIR}/platform/source/posix/iot_clock_posix.c
      ${CMAKE_SOURCE_DIR}/platform/source/posix/iot_threads_posix.c
      ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_metrics.c
-     ${NETWORK_SOURCE_FILE}
-     PARENT_SCOPE )
+     ${NETWORK_SOURCE_FILE} )
+
+# Add platform as an interface library. It will be built into iotbase.
+add_library( iotplatform INTERFACE )
+
+target_sources( iotplatform INTERFACE
+                ${PLATFORM_SOURCES} )
 
 # Set the dependencies of this platform layer.
-set( IOT_BASE_DEPENDENCIES ${IOT_BASE_DEPENDENCIES}
-     pthread rt ${TLS_LIBRARY_LINKER_FLAG} PARENT_SCOPE )
+target_link_libraries( iotplatform INTERFACE Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )
+
+# Set platform sources in the parent scope for directory organization.
+set( PLATFORM_SOURCES ${PLATFORM_SOURCES} PARENT_SCOPE )

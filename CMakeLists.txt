@@ -106,17 +106,15 @@ add_subdirectory( lib/source/common )
 # The sources of the common libraries and platform layer will be built into a
 # single library that is used as a dependency by other libraries.
 add_library( iotbase
-             ${PLATFORM_SOURCES}
              ${PLATFORM_INTERFACE_HEADERS}
              ${PLATFORM_TYPES_HEADERS}
              ${PLATFORM_COMMON_HEADERS}
-             ${COMMON_SOURCES}
              ${COMMON_PUBLIC_HEADERS}
              ${COMMON_PRIVATE_HEADERS}
              ${COMMON_TYPES_HEADERS} )
 
 # Link required libraries.
-target_link_libraries( iotbase PRIVATE ${IOT_BASE_DEPENDENCIES} )
+target_link_libraries( iotbase PRIVATE iotplatform iotcommon )
 
 if( ${IOT_BUILD_TESTS} )
     target_link_libraries( iotbase PRIVATE unity )
