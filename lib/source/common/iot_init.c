@@ -57,6 +57,8 @@
 /* A mutex for critical sections is needed for the generic atomic implementation
  * or test framework. */
 #if ( IOT_ATOMIC_GENERIC == 1 ) || ( IOT_BUILD_TESTS == 1 )
+    /* Platform threads include. */
+    #include "platform/iot_threads.h"
 
 /**
  * @brief Provides critical sections.

@@ -82,11 +82,53 @@ if( ${IOT_ATOMIC_USE_PORT} )
     add_definitions( -DIOT_ATOMIC_USE_PORT=1 )
 endif()
 
+# Platform headers.
+set( PLATFORM_INTERFACE_HEADERS
+     ${CMAKE_SOURCE_DIR}/lib/include/platform/iot_clock.h
+     ${CMAKE_SOURCE_DIR}/lib/include/platform/iot_metrics.h
+     ${CMAKE_SOURCE_DIR}/lib/include/platform/iot_network.h
+     ${CMAKE_SOURCE_DIR}/lib/include/platform/iot_threads.h )
+
+set( PLATFORM_TYPES_HEADERS
+     ${CMAKE_SOURCE_DIR}/lib/include/types/iot_platform_types.h
+     ${CMAKE_SOURCE_DIR}/platform/include/${IOT_PLATFORM_NAME}/iot_platform_types_${IOT_PLATFORM_NAME}.h )
+
+set( PLATFORM_COMMON_HEADERS
+     ${CMAKE_SOURCE_DIR}/platform/include/iot_atomic.h
+     ${CMAKE_SOURCE_DIR}/platform/include/iot_network_metrics.h )
+
 # Platform libraries.
 add_subdirectory( platform/source/${IOT_PLATFORM_NAME} )
 
 # Common libraries (linear containers, logging, etc.)
 add_subdirectory( lib/source/common )
+
+# The sources of the common libraries and platform layer will be built into a
+# single library that is used as a dependency by other libraries.
+add_library( iotbase
+             ${PLATFORM_INTERFACE_HEADERS}
+             ${PLATFORM_TYPES_HEADERS}
+             ${PLATFORM_COMMON_HEADERS}
+             ${COMMON_PUBLIC_HEADERS}
+             ${COMMON_PRIVATE_HEADERS}
+             ${COMMON_TYPES_HEADERS} )
+
+# Link required libraries.
+target_link_libraries( iotbase PRIVATE iotplatform iotcommon )
+
+if( ${IOT_BUILD_TESTS} )
+    target_link_libraries( iotbase PRIVATE unity )
+endif()
+
+# Organization of iotbase in folders.
+source_group( platform\\interface FILES ${PLATFORM_INTERFACE_HEADERS} )
+source_group( platform\\include FILES ${PLATFORM_COMMON_HEADERS} )
+source_group( platform\\include\\types FILES ${PLATFORM_TYPES_HEADERS} )
+source_group( platform\\source FILES ${PLATFORM_SOURCES} )
+source_group( common\\include FILES ${COMMON_PUBLIC_HEADERS} )
+source_group( common\\include\\private FILES ${COMMON_PRIVATE_HEADERS} )
+source_group( common\\include\\types FILES ${COMMON_TYPES_HEADERS} )
+source_group( common\\source FILES ${COMMON_SOURCES} )
 
 # MQTT library.
 add_subdirectory( lib/source/mqtt )
