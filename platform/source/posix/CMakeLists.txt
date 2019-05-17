@@ -34,7 +34,7 @@ foreach( POSIX_TYPE ${REQUIRED_POSIX_TYPES} )
 endforeach()
 
 # Check for some required POSIX functions. This is not intended to be a comprehensive list.
-set( CMAKE_REQUIRED_LIBRARIES rt pthread )
+set( CMAKE_REQUIRED_LIBRARIES rt Threads::Threads )
 list( APPEND REQUIRED_POSIX_FUNCTIONS
       clock_gettime time localtime_r strftime timer_create timer_delete
       timer_settime pthread_create pthread_attr_init pthread_attr_setdetachstate
