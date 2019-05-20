@@ -34,67 +34,17 @@
 #define IOT_STATIC_MEMORY_H_
 
 /* Standard includes. */
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
 /**
  * @functionspage{static_memory,static memory component}
- * - @functionname{static_memory_function_init}
- * - @functionname{static_memory_function_cleanup}
  * - @functionname{static_memory_function_findfree}
  * - @functionname{static_memory_function_returninuse}
  * - @functionname{static_memory_function_messagebuffersize}
  * - @functionname{static_memory_function_mallocmessagebuffer}
  * - @functionname{static_memory_function_freemessagebuffer}
  */
-
-/*----------------------- Initialization and cleanup ------------------------*/
-
-/**
- * @functionpage{IotStaticMemory_Init,static_memory,init}
- * @functionpage{IotStaticMemory_Cleanup,static_memory,cleanup}
- */
-
-/**
- * @brief One-time initialization function for static memory.
- *
- * This function performs internal setup of static memory. <b>It must be called
- * once (and only once) before calling any other static memory function.</b>
- * Calling this function more than once without first calling
- * @ref static_memory_function_cleanup may result in a crash.
- *
- * @return `true` if initialization succeeded; `false` otherwise.
- *
- * @attention This function is called by `IotSdk_Init` and does not need to be
- * called by itself.
- *
- * @warning No thread-safety guarantees are provided for this function.
- *
- * @see static_memory_function_cleanup
- */
-/* @[declare_static_memory_init] */
-bool IotStaticMemory_Init( void );
-/* @[declare_static_memory_init] */
-
-/**
- * @brief One-time deinitialization function for static memory.
- *
- * This function frees resources taken in @ref static_memory_function_init.
- * It should be called after to clean up static memory. After this function
- * returns, @ref static_memory_function_init must be called again before
- * calling any other static memory function.
- *
- * @attention This function is called by `IotSdk_Cleanup` and does not need
- * to be called by itself.
- *
- * @warning No thread-safety guarantees are provided for this function.
- *
- * @see static_memory_function_init
- */
-/* @[declare_static_memory_cleanup] */
-void IotStaticMemory_Cleanup( void );
-/* @[declare_static_memory_cleanup] */
 
 /*------------------------- Buffer allocation and free ----------------------*/
 
@@ -120,7 +70,7 @@ void IotStaticMemory_Cleanup( void );
  * // objects, the other provides flags to determine which objects are in-use.
  * #define NUMBER_OF_OBJECTS    ...
  * #define OBJECT_SIZE          ...
- * static bool _pInUseObjects[ NUMBER_OF_OBJECTS ] = { 0 };
+ * static uint32_t _pInUseObjects[ NUMBER_OF_OBJECTS ] = { 0 };
  * static uint8_t _pObjects[ NUMBER_OF_OBJECTS ][ OBJECT_SIZE ] = { { 0 } }; // Placeholder for objects.
  *
  * // The function to statically allocate objects. Must have the same signature
@@ -148,7 +98,7 @@ void IotStaticMemory_Cleanup( void );
  * @endcode
  */
 /* @[declare_static_memory_findfree] */
-int32_t IotStaticMemory_FindFree( bool * pInUse,
+int32_t IotStaticMemory_FindFree( uint32_t * pInUse,
                                   size_t limit );
 /* @[declare_static_memory_findfree] */
 
@@ -169,7 +119,7 @@ int32_t IotStaticMemory_FindFree( bool * pInUse,
  * // objects, the other provides flags to determine which objects are in-use.
  * #define NUMBER_OF_OBJECTS    ...
  * #define OBJECT_SIZE          ...
- * static bool _pInUseObjects[ NUMBER_OF_OBJECTS ] = { 0 };
+ * static uint32_t _pInUseObjects[ NUMBER_OF_OBJECTS ] = { 0 };
  * static uint8_t _pObjects[ NUMBER_OF_OBJECTS ][ OBJECT_SIZE ] = { { 0 } }; // Placeholder for objects.
  *
  * // The function to free statically-allocated objects. Must have the same signature
@@ -187,7 +137,7 @@ int32_t IotStaticMemory_FindFree( bool * pInUse,
 /* @[declare_static_memory_returninuse] */
 void IotStaticMemory_ReturnInUse( void * ptr,
                                   void * pPool,
-                                  bool * pInUse,
+                                  uint32_t * pInUse,
                                   size_t limit,
                                   size_t elementSize );
 /* @[declare_static_memory_returninuse] */

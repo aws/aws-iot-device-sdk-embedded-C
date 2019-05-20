@@ -63,7 +63,7 @@ static IotMutex_t _unityMallocMutex;
 /**
  * @brief Enter a critical section for unity_malloc.
  */
-static void _unityEnterCritical( void )
+static void IotTest_EnterCritical( void )
 {
     IotMutex_Lock( &_unityMallocMutex );
 }
@@ -73,7 +73,7 @@ static void _unityEnterCritical( void )
 /**
  * @brief Exit a critical section for unity_malloc.
  */
-static void _unityExitCritical( void )
+static void IotTest_ExitCritical( void )
 {
     IotMutex_Unlock( &_unityMallocMutex );
 }
@@ -153,6 +153,9 @@ int main( int argc,
     {
         IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
     }
+
+    /* Provide Unity with functions for critical sections. */
+    unity_provide_critical_section( IotTest_EnterCritical, IotTest_ExitCritical );
 
     /* Parse command-line arguments. */
     _parseArguments( argc, argv, &disableNetworkTests, &disableLongTests );

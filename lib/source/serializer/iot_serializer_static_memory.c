@@ -26,7 +26,6 @@
 #if IOT_STATIC_MEMORY_ONLY == 1
 
 /* Standard includes. */
-#include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -86,16 +85,16 @@ typedef struct _cborValueWrapper
 /*
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
-static bool _inUseCborEncoders[ IOT_SERIALIZER_CBOR_ENCODERS ] = { 0 };
+static uint32_t _inUseCborEncoders[ IOT_SERIALIZER_CBOR_ENCODERS ] = { 0U };
 static CborEncoder _cborEncoders[ IOT_SERIALIZER_CBOR_ENCODERS ] = { { .data = { 0 } } };
 
-static bool _inUseCborParsers[ IOT_SERIALIZER_CBOR_PARSERS ] = { 0 };
+static uint32_t _inUseCborParsers[ IOT_SERIALIZER_CBOR_PARSERS ] = { 0U };
 static CborParser _cborParsers[ IOT_SERIALIZER_CBOR_PARSERS ] = { { 0 } };
 
-static bool _inUseCborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { 0 };
+static uint32_t _inUseCborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { 0U };
 static _cborValueWrapper_t _cborValues[ IOT_SERIALIZER_CBOR_VALUES ] = { { .isOutermost = false } };
 
-static bool _inUseDecoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { 0 };
+static uint32_t _inUseDecoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { 0U };
 static IotSerializerDecoderObject_t _decoderObjects[ IOT_SERIALIZER_DECODER_OBJECTS ] = { { 0 } };
 
 /*-----------------------------------------------------------*/
