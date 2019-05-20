@@ -54,9 +54,8 @@
 
 /*-----------------------------------------------------------*/
 
-/* A mutex for critical sections is needed for the generic atomic implementation
- * or test framework. */
-#if ( IOT_ATOMIC_GENERIC == 1 ) || ( IOT_BUILD_TESTS == 1 )
+/* A mutex for critical sections is needed for the generic atomic implementation. */
+#if ( IOT_ATOMIC_GENERIC == 1 )
     /* Platform threads include. */
     #include "platform/iot_threads.h"
 
@@ -79,7 +78,7 @@
         IotMutex_Unlock( &_atomicMutex );
     }
 
-#endif /* if ( IOT_ATOMIC_GENERIC == 1 ) || ( IOT_BUILD_TESTS == 1 ) */
+#endif /* if ( IOT_ATOMIC_GENERIC == 1 ) */
 
 /*-----------------------------------------------------------*/
 
@@ -90,28 +89,12 @@ bool IotSdk_Init( void )
     IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER_LARGE;
 
     /* Initialize the mutex for atomic operations if needed. */
-    #if ( IOT_ATOMIC_GENERIC == 1 ) || ( IOT_BUILD_TESTS == 1 )
+    #if ( IOT_ATOMIC_GENERIC == 1 )
         bool atomicInitialized = IotMutex_Create( &_atomicMutex, false );
 
         if( atomicInitialized == false )
         {
             IotLogError( "Failed to initialize atomic operations." );
-            IOT_SET_AND_GOTO_CLEANUP( false );
-        }
-    #endif
-
-    /* Provide the functions for test framework critical sections. */
-    #if IOT_BUILD_TESTS == 1
-        unity_provide_critical_section( Iot_EnterCritical, Iot_ExitCritical );
-    #endif
-
-    /* Initialize static memory if dynamic memory allocation is disabled. */
-    #if IOT_STATIC_MEMORY_ONLY == 1
-        bool staticMemoryInitialized = IotStaticMemory_Init();
-
-        if( staticMemoryInitialized == false )
-        {
-            IotLogError( "Failed to initialize static memory." );
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
     #endif
@@ -135,12 +118,6 @@ bool IotSdk_Init( void )
                 IotMutex_Destroy( &_atomicMutex );
             }
         #endif
-        #if IOT_STATIC_MEMORY_ONLY == 1
-            if( staticMemoryInitialized == true )
-            {
-                IotStaticMemory_Cleanup();
-            }
-        #endif
     }
     else
     {
@@ -160,13 +137,8 @@ void IotSdk_Cleanup( void )
      * cleaned up. */
     IotLogInfo( "SDK cleanup done." );
 
-    /* Cleanup static memory if dynamic memory allocation is disabled. */
-    #if IOT_STATIC_MEMORY_ONLY == 1
-        IotStaticMemory_Cleanup();
-    #endif
-
     /* Clean up the mutex for generic atomic operations if needed. */
-    #if IOT_ATOMIC_GENERIC == 1
+    #if ( IOT_ATOMIC_GENERIC == 1 )
         IotMutex_Destroy( &_atomicMutex );
     #endif
 }

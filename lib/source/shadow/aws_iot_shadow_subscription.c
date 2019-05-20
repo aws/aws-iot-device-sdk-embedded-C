@@ -219,7 +219,7 @@ _shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * pThingName,
 
             /* Set the Thing Name length and copy the Thing Name into the new subscription. */
             pSubscription->thingNameLength = thingNameLength;
-            ( void ) strncpy( pSubscription->pThingName, pThingName, thingNameLength );
+            ( void ) memcpy( pSubscription->pThingName, pThingName, thingNameLength );
 
             /* Add the new subscription to the subscription list. */
             IotListDouble_InsertHead( &( _AwsIotShadowSubscriptions ),

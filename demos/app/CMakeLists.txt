@@ -3,6 +3,13 @@ set( DEMO_COMMON_SOURCES
      iot_demo.c
      iot_demo_arguments.c )
 
+# When testing the demos, add the test sources and redefine the demo main function.
+if( ${IOT_BUILD_TESTS} )
+    list( APPEND DEMO_COMMON_SOURCES ${PROJECT_SOURCE_DIR}/tests/iot_tests.c )
+    set_property( SOURCE iot_demo.c PROPERTY COMPILE_DEFINITIONS main=DemoMain )
+    set_property( SOURCE ${PROJECT_SOURCE_DIR}/tests/iot_tests.c PROPERTY COMPILE_DEFINITIONS IOT_TEST_DEMO=1 )
+endif()
+
 # Common demo header files.
 set( DEMO_COMMON_HEADERS
      ${PROJECT_SOURCE_DIR}/demos/include/iot_demo_arguments.h
