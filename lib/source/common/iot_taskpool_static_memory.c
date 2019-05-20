@@ -31,7 +31,6 @@
 #if IOT_STATIC_MEMORY_ONLY == 1
 
 /* Standard includes. */
-#include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -53,13 +52,13 @@
 /*
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
-static bool _pInUseTaskPools[ IOT_TASKPOOLS ] = { 0 };                                                /**< @brief Task pools in-use flags. */
+static uint32_t _pInUseTaskPools[ IOT_TASKPOOLS ] = { 0U };                                           /**< @brief Task pools in-use flags. */
 static _taskPool_t _pTaskPools[ IOT_TASKPOOLS ] = { { .dispatchQueue = IOT_DEQUEUE_INITIALIZER } };   /**< @brief Task pools. */
 
-static bool _pInUseTaskPoolJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };                                     /**< @brief Task pool jobs in-use flags. */
+static uint32_t _pInUseTaskPoolJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0U };                                /**< @brief Task pool jobs in-use flags. */
 static _taskPoolJob_t _pTaskPoolJobs[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { { .link = IOT_LINK_INITIALIZER } }; /**< @brief Task pool jobs. */
 
-static bool _pInUseTaskPoolTimerEvents[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0 };                              /**< @brief Task pool timer event in-use flags. */
+static uint32_t _pInUseTaskPoolTimerEvents[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { 0U };                         /**< @brief Task pool timer event in-use flags. */
 static _taskPoolTimerEvent_t _pTaskPoolTimerEvents[ IOT_TASKPOOL_JOBS_RECYCLE_LIMIT ] = { { .link = { 0 } } };  /**< @brief Task pool timer events. */
 
 /*-----------------------------------------------------------*/

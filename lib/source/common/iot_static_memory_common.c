@@ -42,6 +42,9 @@
 /* Static memory include. */
 #include "private/iot_static_memory.h"
 
+/* Atomic include. */
+#include "iot_atomic.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -68,41 +71,28 @@
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Guards access to critical sections.
- */
-static IotMutex_t _mutex;
-
 /*
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
-static bool _pInUseMessageBuffers[ IOT_MESSAGE_BUFFERS ] = { 0 };                           /**< @brief Message buffer in-use flags. */
+static uint32_t _pInUseMessageBuffers[ IOT_MESSAGE_BUFFERS ] = { 0U };                      /**< @brief Message buffer in-use flags. */
 static char _pMessageBuffers[ IOT_MESSAGE_BUFFERS ][ IOT_MESSAGE_BUFFER_SIZE ] = { { 0 } }; /**< @brief Message buffers. */
 
 /*-----------------------------------------------------------*/
 
-int32_t IotStaticMemory_FindFree( bool * pInUse,
+int32_t IotStaticMemory_FindFree( uint32_t * pInUse,
                                   size_t limit )
 {
     size_t i = 0;
     int32_t freeIndex = -1;
 
-    /* Perform the search for a free buffer in a critical section. */
-    IotMutex_Lock( &( _mutex ) );
-
     for( i = 0; i < limit; i++ )
     {
-        if( pInUse[ i ] == false )
+        if( Atomic_CompareAndSwap_u32( &( pInUse[ i ] ), 1U, 0U ) == 1U )
         {
-            /* If a free buffer is found, mark it "in-use" and return its index. */
-            pInUse[ i ] = true;
             freeIndex = ( int32_t ) i;
             break;
         }
     }
-
-    /* Exit the critical section. */
-    IotMutex_Unlock( &( _mutex ) );
 
     return freeIndex;
 }
@@ -111,50 +101,30 @@ int32_t IotStaticMemory_FindFree( bool * pInUse,
 
 void IotStaticMemory_ReturnInUse( void * ptr,
                                   void * pPool,
-                                  bool * pInUse,
+                                  uint32_t * pInUse,
                                   size_t limit,
                                   size_t elementSize )
 {
     size_t i = 0;
-    uint8_t * element = NULL;
+    uint8_t * pElement = NULL;
 
     /* Clear ptr. */
     ( void ) memset( ptr, 0x00, elementSize );
 
-    /* Perform a search for ptr to make sure it's part of pPool. This search
-     * is done in a critical section. */
-    IotMutex_Lock( &( _mutex ) );
-
     for( i = 0; i < limit; i++ )
     {
         /* Calculate address of the i-th element in pPool. */
-        element = ( ( uint8_t * ) pPool ) + elementSize * i;
+        pElement = ( ( uint8_t * ) pPool ) + elementSize * i;
 
         /* Check for a match. */
-        if( ( ( void * ) element == ptr ) &&
-            ( pInUse[ i ] == true ) )
+        if( pElement == ptr )
         {
-            pInUse[ i ] = false;
-            break;
+            if( Atomic_CompareAndSwap_u32( &( pInUse[ i ] ), 0, 1 ) == 1 )
+            {
+                break;
+            }
         }
     }
-
-    /* Exit the critical section. */
-    IotMutex_Unlock( &( _mutex ) );
-}
-
-/*-----------------------------------------------------------*/
-
-bool IotStaticMemory_Init( void )
-{
-    return IotMutex_Create( &( _mutex ), false );
-}
-
-/*-----------------------------------------------------------*/
-
-void IotStaticMemory_Cleanup( void )
-{
-    IotMutex_Destroy( &( _mutex ) );
 }
 
 /*-----------------------------------------------------------*/

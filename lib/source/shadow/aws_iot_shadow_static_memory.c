@@ -79,10 +79,10 @@
 /*
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
-static bool _pInUseShadowOperations[ AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS ] = { 0 };                          /**< @brief Shadow operation in-use flags. */
+static uint32_t _pInUseShadowOperations[ AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS ] = { 0U };                     /**< @brief Shadow operation in-use flags. */
 static _shadowOperation_t _pShadowOperations[ AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS ] = { { .link = { 0 } } }; /**< @brief Shadow operations. */
 
-static bool _pInUseShadowSubscriptions[ AWS_IOT_SHADOW_SUBSCRIPTIONS ] = { 0 };                             /**< @brief Shadow subscription in-use flags. */
+static uint32_t _pInUseShadowSubscriptions[ AWS_IOT_SHADOW_SUBSCRIPTIONS ] = { 0U };                        /**< @brief Shadow subscription in-use flags. */
 static char _pShadowSubscriptions[ AWS_IOT_SHADOW_SUBSCRIPTIONS ][ SHADOW_SUBSCRIPTION_SIZE ] = { { 0 } };  /**< @brief Shadow subscriptions. */
 
 /*-----------------------------------------------------------*/
