@@ -8,9 +8,9 @@ set -e
 # For pull request builds, run against test.mosquitto.org. Otherwise, run against AWS IoT.
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
     CMAKE_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DIOT_TEST_MQTT_CLIENT_IDENTIFIER=\"\\\"$IOT_IDENTIFIER\\\"\" -DIOT_TEST_MQTT_TOPIC_PREFIX=\"\\\"$IOT_IDENTIFIER\\\"\" -DIOT_DEMO_MQTT_TOPIC_PREFIX=\"\\\"$IOT_IDENTIFIER\\\"\" $COMPILER_OPTIONS"
-    DEMO_OPTIONS="-n"
 else
     CMAKE_FLAGS="-DIOT_TEST_MQTT_MOSQUITTO=1 $COMPILER_OPTIONS"
+    DEMO_OPTIONS="-n"
 fi
 
 # Build executables.
