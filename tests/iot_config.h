@@ -36,34 +36,47 @@
 #if IOT_TEST_MQTT_MOSQUITTO == 1
     /* Mosquitto test server. */
     #define IOT_TEST_SECURED_CONNECTION    ( 0 )
+    #define IOT_DEMO_SECURED_CONNECTION    ( 0 )
     #define IOT_TEST_SERVER                "test.mosquitto.org"
+    #define IOT_DEMO_SERVER                IOT_TEST_SERVER
     #define IOT_TEST_PORT                  ( 1883 )
+    #define IOT_DEMO_PORT                  IOT_TEST_PORT
 #else
     /* AWS IoT MQTT server. */
     #define IOT_TEST_SECURED_CONNECTION    ( 1 )
+    #define IOT_DEMO_SECURED_CONNECTION    ( 1 )
 
     /* AWS IoT endpoint and credentials. */
     #ifndef IOT_TEST_SERVER
         #define IOT_TEST_SERVER         ""
+        #define IOT_DEMO_SERVER         IOT_TEST_SERVER
     #endif
     #ifndef IOT_TEST_PORT
         #define IOT_TEST_PORT           ( 443 )
+        #define IOT_DEMO_PORT           IOT_TEST_PORT
     #endif
     #ifndef IOT_TEST_ROOT_CA
         #define IOT_TEST_ROOT_CA        ""
+        #define IOT_DEMO_ROOT_CA        IOT_TEST_ROOT_CA
     #endif
     #ifndef IOT_TEST_CLIENT_CERT
         #define IOT_TEST_CLIENT_CERT    ""
+        #define IOT_DEMO_CLIENT_CERT    IOT_TEST_CLIENT_CERT
     #endif
     #ifndef IOT_TEST_PRIVATE_KEY
         #define IOT_TEST_PRIVATE_KEY    ""
+        #define IOT_DEMO_PRIVATE_KEY    IOT_TEST_PRIVATE_KEY
     #endif
 #endif /* if IOT_TEST_MQTT_MOSQUITTO == 1 */
 
 /* Shadow tests configuration. */
 #ifndef AWS_IOT_TEST_SHADOW_THING_NAME
     #define AWS_IOT_TEST_SHADOW_THING_NAME    ""
+    #define IOT_DEMO_IDENTIFIER               AWS_IOT_TEST_SHADOW_THING_NAME
 #endif
+
+/* Log level for testing the demos. */
+#define IOT_LOG_LEVEL_DEMO    IOT_LOG_INFO
 
 /* Linear containers library configuration. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )

@@ -39,17 +39,19 @@
 /* Test framework includes. */
 #include "unity_fixture.h"
 
-/* This file calls a generic placeholder test runner function. The build system selects
- * the actual test runner function by defining it. */
-#ifndef RunTests
-    #error "Test runner function undefined."
-#endif
-
 /*-----------------------------------------------------------*/
 
-/* Declaration of generic test runner function. */
-extern void RunTests( bool disableNetworkTests,
-                      bool disableLongTests );
+/* This file calls a generic placeholder test runner function. The build system selects
+ * the actual function by defining it. When testing demos applications, the demo main
+ * function is called. */
+#if IOT_TEST_DEMO == 1
+    extern int DemoMain( int argc,
+                         char ** argv );
+
+#else
+    extern void RunTests( bool disableNetworkTests,
+                          bool disableLongTests );
+#endif
 
 /*-----------------------------------------------------------*/
 
@@ -88,54 +90,56 @@ static void IotTest_ExitCritical( void )
  * @param[out] pDisableNetworkTests Set to `true` if `-n` is given, `false` otherwise.
  * @param[out] pDisableLongTests Set to `true` if `-l` is not given, `true` otherwise.
  */
-static void _parseArguments( int argc,
-                             char ** argv,
-                             bool * pDisableNetworkTests,
-                             bool * pDisableLongTests )
-{
-    int i = 1;
-    const char * pOption = NULL;
-    size_t optionLength = 0;
-
-    /* Set default values. */
-    *pDisableNetworkTests = false;
-    *pDisableLongTests = true;
-
-    for( i = 1; i < argc; i++ )
+#if IOT_TEST_DEMO != 1
+    static void _parseArguments( int argc,
+                                 char ** argv,
+                                 bool * pDisableNetworkTests,
+                                 bool * pDisableLongTests )
     {
-        /* Get argument string and length. */
-        pOption = argv[ i ];
-        optionLength = strlen( pOption );
+        int i = 1;
+        const char * pOption = NULL;
+        size_t optionLength = 0;
 
-        /* Valid options have the format "-X", so they must be 2 characters long. */
-        if( optionLength != 2 )
+        /* Set default values. */
+        *pDisableNetworkTests = false;
+        *pDisableLongTests = true;
+
+        for( i = 1; i < argc; i++ )
         {
-            continue;
-        }
+            /* Get argument string and length. */
+            pOption = argv[ i ];
+            optionLength = strlen( pOption );
 
-        /* The first character of a valid option must be '-'. */
-        if( pOption[ 0 ] != '-' )
-        {
-            continue;
-        }
+            /* Valid options have the format "-X", so they must be 2 characters long. */
+            if( optionLength != 2 )
+            {
+                continue;
+            }
 
-        switch( pOption[ 1 ] )
-        {
-            /* Disable tests requiring network if -n is given. */
-            case 'n':
-                *pDisableNetworkTests = true;
-                break;
+            /* The first character of a valid option must be '-'. */
+            if( pOption[ 0 ] != '-' )
+            {
+                continue;
+            }
 
-            /* Enable long tests if -l is given. */
-            case 'l':
-                *pDisableLongTests = false;
-                break;
+            switch( pOption[ 1 ] )
+            {
+                /* Disable tests requiring network if -n is given. */
+                case 'n':
+                    *pDisableNetworkTests = true;
+                    break;
 
-            default:
-                break;
+                /* Enable long tests if -l is given. */
+                case 'l':
+                    *pDisableLongTests = false;
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
-}
+#endif /* if IOT_TEST_DEMO == 1 */
 
 /*-----------------------------------------------------------*/
 
@@ -144,7 +148,6 @@ int main( int argc,
 {
     IOT_FUNCTION_ENTRY( int, EXIT_SUCCESS );
     bool mallocMutexCreated = false;
-    bool disableNetworkTests = false, disableLongTests = false;
 
     /* Create the mutex that guards the Unity malloc overrides. */
     mallocMutexCreated = IotMutex_Create( &_unityMallocMutex, false );
@@ -157,24 +160,30 @@ int main( int argc,
     /* Provide Unity with functions for critical sections. */
     unity_provide_critical_section( IotTest_EnterCritical, IotTest_ExitCritical );
 
-    /* Parse command-line arguments. */
-    _parseArguments( argc, argv, &disableNetworkTests, &disableLongTests );
+    /* This file is also used to test the demos. When testing demos, the demo main
+     * function is called. */
+    #if IOT_TEST_DEMO == 1
+        status = DemoMain( argc, argv );
+    #else
+        /* Unity setup. */
+        UnityFixture.Verbose = 1;
+        UnityFixture.RepeatCount = 1;
+        UnityFixture.NameFilter = NULL;
+        UnityFixture.GroupFilter = NULL;
+        UNITY_BEGIN();
+        /* Parse command-line arguments for the tests. */
+        bool disableNetworkTests = false, disableLongTests = false;
+        _parseArguments( argc, argv, &disableNetworkTests, &disableLongTests );
 
-    /* Unity setup. */
-    UnityFixture.Verbose = 1;
-    UnityFixture.RepeatCount = 1;
-    UnityFixture.NameFilter = NULL;
-    UnityFixture.GroupFilter = NULL;
-    UNITY_BEGIN();
+        /* Call the test runner function. */
+        RunTests( disableNetworkTests, disableLongTests );
 
-    /* Call the test runner function. */
-    RunTests( disableNetworkTests, disableLongTests );
-
-    /* Return failure if any tests failed. */
-    if( UNITY_END() != 0 )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
-    }
+        /* Return failure if any tests failed. */
+        if( UNITY_END() != 0 )
+        {
+            IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
+        }
+    #endif /* if IOT_TEST_DEMO == 1 */
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
