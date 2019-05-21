@@ -17,9 +17,6 @@ if( ${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR} )
 endif()
 
 # Configure options to always show in CMake GUI.
-option( BUILD_SHARED_LIBS
-        "Set this to ON to build all libraries as shared libraries. When OFF, libraries build as static libraries."
-        ON )
 option( IOT_ATOMIC_USE_PORT
         "Set this to ON to use a custom atomic port. When OFF, the build system will choose an atomic port."
         OFF )
@@ -29,6 +26,20 @@ option( IOT_BUILD_TESTS
 option( IOT_BUILD_CLONE_SUBMODULES
         "Set this to ON to automatically clone any required Git submodules. When OFF, submodules must be manually cloned."
         ON )
+
+# Unity test framework does not export the correct symbols for DLLs.
+# Do not allow allow shared libraries to be built when building tests on Windows.
+if( ${IOT_BUILD_TESTS} AND ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
+    set( ALLOW_SHARED_LIBRARIES OFF )
+else()
+    set( ALLOW_SHARED_LIBRARIES ON )
+endif()
+
+include( CMakeDependentOption )
+CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
+                        "Set this to ON to build all libraries as shared libraries. When OFF, libraries build as static libraries."
+                        ON "${ALLOW_SHARED_LIBRARIES}"
+                        OFF )
 
 # Check for system support and set platform name.
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
@@ -44,6 +55,9 @@ if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     set( IOT_PLATFORM_NAME posix )
 elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
     set( IOT_PLATFORM_NAME win32 )
+
+    # Export all symbols when building Windows DLLs.
+    set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE )
 else()
     message( FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}. Currently supported systems are: Linux, Windows." )
 endif()

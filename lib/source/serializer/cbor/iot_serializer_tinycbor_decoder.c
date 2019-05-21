@@ -60,7 +60,7 @@ static bool _isEndOfContainer( IotSerializerDecoderIterator_t iterator );
 
 static void _destroy( IotSerializerDecoderObject_t * pDecoderObject );
 
-IotSerializerDecodeInterface_t _IotSerializerCborDecoder =
+static const IotSerializerDecodeInterface_t _cborDecoder =
 {
     .init             = _init,
     .get              = _get,
@@ -483,3 +483,12 @@ static bool _isEndOfContainer( IotSerializerDecoderIterator_t iterator )
 
     return cbor_value_at_end( &pCborValueWrapper->cborValue );
 }
+
+/*-----------------------------------------------------------*/
+
+const IotSerializerDecodeInterface_t * IotSerializer_GetCborDecoder( void )
+{
+    return &_cborDecoder;
+}
+
+/*-----------------------------------------------------------*/
