@@ -124,7 +124,7 @@ static IotMutex_t _connectionListMutex;
      * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
      * metrics.
      */
-    const IotNetworkInterface_t IotNetworkMetrics =
+    static const IotNetworkInterface_t _networkMetrics =
     {
         .create             = _metricsNetworkCreate,
         .setReceiveCallback = IotNetworkOpenssl_SetReceiveCallback,
@@ -157,7 +157,7 @@ static IotMutex_t _connectionListMutex;
      * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
      * metrics.
      */
-    const IotNetworkInterface_t IotNetworkMetrics =
+    static const IotNetworkInterface_t _networkMetrics =
     {
         .create             = _metricsNetworkCreate,
         .setReceiveCallback = IotNetworkMbedtls_SetReceiveCallback,
@@ -262,6 +262,13 @@ static IotNetworkError_t _metricsNetworkClose( void * pConnection )
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+const IotNetworkInterface_t * IotNetworkMetrics_GetInterface( void )
+{
+    return &_networkMetrics;
 }
 
 /*-----------------------------------------------------------*/

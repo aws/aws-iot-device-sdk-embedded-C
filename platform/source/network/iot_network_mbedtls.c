@@ -200,7 +200,7 @@ static uint32_t _receiveThreadCount = 0;
 /**
  * @brief An #IotNetworkInterface_t that uses the functions in this file.
  */
-const IotNetworkInterface_t IotNetworkMbedtls =
+static const IotNetworkInterface_t _networkMbedtls =
 {
     .create             = IotNetworkMbedtls_Create,
     .setReceiveCallback = IotNetworkMbedtls_SetReceiveCallback,
@@ -704,6 +704,13 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     }
 
     IOT_FUNCTION_CLEANUP_END();
+}
+
+/*-----------------------------------------------------------*/
+
+const IotNetworkInterface_t * IotNetworkMbedtls_GetInterface( void )
+{
+    return &_networkMbedtls;
 }
 
 /*-----------------------------------------------------------*/

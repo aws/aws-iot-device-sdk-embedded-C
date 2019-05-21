@@ -86,7 +86,12 @@ typedef struct _networkConnection IotNetworkConnectionOpenssl_t;
  * @brief Provides a pointer to an #IotNetworkInterface_t that uses the functions
  * declared in this file.
  */
-#define IOT_NETWORK_INTERFACE_OPENSSL                  ( &( IotNetworkOpenssl ) )
+#define IOT_NETWORK_INTERFACE_OPENSSL                  ( IotNetworkOpenssl_GetInterface() )
+
+/**
+ * @brief Retrieve the network interface using the functions in this file.
+ */
+const IotNetworkInterface_t * IotNetworkOpenssl_GetInterface( void );
 
 /**
  * @brief One-time initialization function for this network stack.
@@ -164,14 +169,5 @@ IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection );
  */
 void IotNetworkOpenssl_GetServerInfo( void * pConnection,
                                       IotMetricsTcpConnection_t * pServerInfo );
-
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Declaration of a network interface struct using the functions in this file.
- */
-extern const IotNetworkInterface_t IotNetworkOpenssl;
-/** @endcond */
 
 #endif /* ifndef IOT_NETWORK_OPENSSL_H_ */

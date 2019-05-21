@@ -43,15 +43,11 @@
  * @brief Provides a pointer to an #IotNetworkInterface_t that uses that provides
  * metrics.
  */
-#define IOT_NETWORK_INTERFACE_METRICS    ( &( IotNetworkMetrics ) )
+#define IOT_NETWORK_INTERFACE_METRICS    ( IotNetworkMetrics_GetInterface() )
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Declaration of a network interface struct with metrics.
+ * @brief Retrieve the network interface with metrics.
  */
-extern const IotNetworkInterface_t IotNetworkMetrics;
-/** @endcond */
+const IotNetworkInterface_t * IotNetworkMetrics_GetInterface( void );
 
 #endif /* ifndef IOT_NETWORK_METRICS_H_ */
