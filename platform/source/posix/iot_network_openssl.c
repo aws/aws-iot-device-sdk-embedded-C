@@ -607,7 +607,7 @@ static void _tlsClose( _networkConnection_t * pNetworkConnection )
 
 const IotNetworkInterface_t * IotNetworkOpenssl_GetInterface( void )
 {
-    return _networkOpenssl;
+    return &_networkOpenssl;
 }
 
 /*-----------------------------------------------------------*/
