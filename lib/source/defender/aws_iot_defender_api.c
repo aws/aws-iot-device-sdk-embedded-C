@@ -149,6 +149,15 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
 
     if( !_started )
     {
+        /* Get the pointers to the encoder function tables. */
+        #if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR
+            _pAwsIotDefenderDecoder = IotSerializer_GetCborDecoder();
+            _pAwsIotDefenderEncoder = IotSerializer_GetCborEncoder();
+        #else
+            _pAwsIotDefenderDecoder = IotSerializer_GetJsonDecoder();
+            _pAwsIotDefenderEncoder = IotSerializer_GetJsonEncoder();
+        #endif
+
         /* copy input start info into global variable _startInfo */
         _startInfo = *pStartInfo;
 
@@ -397,13 +406,14 @@ static void _metricsPublishRoutine( IotTaskPool_t pTaskPool,
             }
         }
     }
+
     /* If no MQTT error and report has been created, it indicates everything is good. */
     if( ( mqttError == IOT_MQTT_SUCCESS ) && reportCreated )
     {
         IotTaskPoolError_t taskPoolError = IotTaskPool_CreateJob( _disconnectRoutine, NULL, &_disconnectJobStorage, &_disconnectJob );
 
         /* Silence warnigns when asserts are disabled. */
-        ( void ) taskPoolError;		
+        ( void ) taskPoolError;
         AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
 
         IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
@@ -479,10 +489,10 @@ static void _disconnectRoutine( IotTaskPool_t pTaskPool,
     AwsIotDefenderInternal_MqttDisconnect();
     /* Re-create metrics job. */
     IotTaskPoolError_t taskPoolError = IotTaskPool_CreateJob( _metricsPublishRoutine, NULL, &_metricsPublishJobStorage, &_metricsPublishJob );
-	
+
     /* Silence warnigns when asserts are disabled. */
     ( void ) taskPoolError;
-	
+
     AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
 
     /* Re-schedule metrics job with period as deferred interval. */

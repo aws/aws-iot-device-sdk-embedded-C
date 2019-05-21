@@ -62,7 +62,7 @@ static IotSerializerError_t _appendKeyValue( IotSerializerEncoderObject_t * pEnc
                                              IotSerializerScalarData_t scalarData );
 
 
-IotSerializerEncodeInterface_t _IotSerializerCborEncoder =
+static const IotSerializerEncodeInterface_t _cborEncoder =
 {
     .getEncodedSize           = _getEncodedSize,
     .getExtraBufferSizeNeeded = _getExtraBufferSizeNeeded,
@@ -318,3 +318,12 @@ static IotSerializerError_t _appendKeyValue( IotSerializerEncoderObject_t * pEnc
 
     return returnedError;
 }
+
+/*-----------------------------------------------------------*/
+
+const IotSerializerEncodeInterface_t * IotSerializer_GetCborEncoder( void )
+{
+    return &_cborEncoder;
+}
+
+/*-----------------------------------------------------------*/
