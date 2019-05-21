@@ -72,7 +72,7 @@
  * the system libraries as well. The system task pool needs to be initialized before any library is used or
  * before any code that posts jobs to the task pool runs.
  */
-_taskPool_t _IotSystemTaskPool = { .dispatchQueue = IOT_DEQUEUE_INITIALIZER };
+static _taskPool_t _IotSystemTaskPool = { .dispatchQueue = IOT_DEQUEUE_INITIALIZER };
 
 /* -------------- Convenience functions to create/recycle/destroy jobs -------------- */
 

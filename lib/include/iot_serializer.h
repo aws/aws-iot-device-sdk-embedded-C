@@ -445,12 +445,12 @@ typedef struct IotSerializerDecodeInterface
 } IotSerializerDecodeInterface_t;
 
 /* Global reference of CBOR/JSON encoder and decoder. */
-extern IotSerializerEncodeInterface_t _IotSerializerCborEncoder;
+const IotSerializerEncodeInterface_t * IotSerializer_GetCborEncoder( void );
 
-extern IotSerializerDecodeInterface_t _IotSerializerCborDecoder;
+const IotSerializerDecodeInterface_t * IotSerializer_GetCborDecoder( void );
 
-extern IotSerializerEncodeInterface_t _IotSerializerJsonEncoder;
+const IotSerializerEncodeInterface_t * IotSerializer_GetJsonEncoder( void );
 
-extern IotSerializerDecodeInterface_t _IotSerializerJsonDecoder;
+const IotSerializerDecodeInterface_t * IotSerializer_GetJsonDecoder( void );
 
 #endif /* ifndef IOT_SERIALIZER_H_ */

@@ -119,7 +119,7 @@ typedef struct _networkConnection
 /**
  * @brief An #IotNetworkInterface_t that uses the functions in this file.
  */
-const IotNetworkInterface_t IotNetworkOpenssl =
+static const IotNetworkInterface_t _networkOpenssl =
 {
     .create             = IotNetworkOpenssl_Create,
     .setReceiveCallback = IotNetworkOpenssl_SetReceiveCallback,
@@ -601,6 +601,13 @@ static void _tlsClose( _networkConnection_t * pNetworkConnection )
     IotMutex_Unlock( &( pNetworkConnection->sslMutex ) );
 
     IotLogInfo( "TLS connection closed." );
+}
+
+/*-----------------------------------------------------------*/
+
+const IotNetworkInterface_t * IotNetworkOpenssl_GetInterface( void )
+{
+    return &_networkOpenssl;
 }
 
 /*-----------------------------------------------------------*/
