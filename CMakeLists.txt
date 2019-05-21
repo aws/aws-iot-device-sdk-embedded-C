@@ -44,6 +44,9 @@ if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     set( IOT_PLATFORM_NAME posix )
 elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
     set( IOT_PLATFORM_NAME win32 )
+
+    # Export all symbols when building Windows DLLs.
+    set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE )
 else()
     message( FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}. Currently supported systems are: Linux, Windows." )
 endif()
