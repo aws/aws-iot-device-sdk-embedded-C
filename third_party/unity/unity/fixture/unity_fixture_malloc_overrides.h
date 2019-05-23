@@ -39,6 +39,9 @@
 #define realloc unity_realloc_mt
 #define free    unity_free_mt
 
+void UnityMalloc_IncrementMallocCount(void);
+void UnityMalloc_DecrementMallocCount(void);
+
 void unity_provide_critical_section(void(*start)(void), void(*end)(void));
 void unity_enter_critical_section(void);
 void unity_exit_critical_section(void);

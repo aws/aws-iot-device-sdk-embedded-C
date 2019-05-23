@@ -69,6 +69,15 @@
 #define LIBRARY_LOG_NAME    ( "CLOCK" )
 #include "iot_logging_setup.h"
 
+/* When building tests, the Unity framework's malloc overrides are used to track
+ * calls to platform resource creation and destruction. This ensures that all
+ * platform resources are destroyed before the tests finish. When not testing,
+ * define the Unity malloc functions to nothing. */
+#if IOT_BUILD_TESTS != 1
+    #define UnityMalloc_IncrementMallocCount()
+    #define UnityMalloc_DecrementMallocCount()
+#endif
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -227,7 +236,7 @@ void IotClock_SleepMs( uint32_t sleepTimeMs )
     {
         /* This block should not be reached; log an error and abort if it is. */
         IotLogError( "Sleep failed. errno=%d.", errno );
-        
+
         abort();
     }
 }
@@ -262,6 +271,11 @@ bool IotClock_TimerCreate( IotTimer_t * pNewTimer,
         IotLogError( "Failed to create new timer %p. errno=%d.", pNewTimer, errno );
         status = false;
     }
+    else
+    {
+        /* Increment the number of platform resources in use. */
+        UnityMalloc_IncrementMallocCount();
+    }
 
     return status;
 }
@@ -277,9 +291,12 @@ void IotClock_TimerDestroy( IotTimer_t * pTimer )
     {
         /* This block should not be reached; log an error and abort if it is. */
         IotLogError( "Failed to destroy timer %p. errno=%d.", pTimer, errno );
-        
+
         abort();
     }
+
+    /* Decrement the number of platform resources in use. */
+    UnityMalloc_DecrementMallocCount();
 }
 
 /*-----------------------------------------------------------*/

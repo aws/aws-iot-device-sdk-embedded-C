@@ -94,6 +94,15 @@
     #define IotThreads_Free    free
 #endif
 
+/* When building tests, the Unity framework's malloc overrides are used to track
+ * calls to platform resource creation and destruction. This ensures that all
+ * platform resources are destroyed before the tests finish. When not testing,
+ * define the Unity malloc functions to nothing. */
+#if IOT_BUILD_TESTS != 1
+    #define UnityMalloc_IncrementMallocCount()
+    #define UnityMalloc_DecrementMallocCount()
+#endif
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -239,7 +248,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
 bool IotMutex_Create( IotMutex_t * pNewMutex,
                       bool recursive )
 {
-    bool status = true;
+    IOT_FUNCTION_ENTRY( bool, true );
     int mutexError = 0;
     pthread_mutexattr_t mutexAttributes, * pMutexAttributes = NULL;
 
@@ -253,24 +262,21 @@ bool IotMutex_Create( IotMutex_t * pNewMutex,
             IotLogError( "Failed to initialize mutex attributes. errno=%d.",
                          mutexError );
 
-            status = false;
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
 
-        if( status == true )
+        pMutexAttributes = &mutexAttributes;
+
+        /* Set recursive mutex type. */
+        mutexError = pthread_mutexattr_settype( &mutexAttributes,
+                                                PTHREAD_MUTEX_RECURSIVE );
+
+        if( mutexError != 0 )
         {
-            pMutexAttributes = &mutexAttributes;
+            IotLogError( "Failed to set recursive mutex type. errno=%d.",
+                            mutexError );
 
-            /* Set recursive mutex type. */
-            mutexError = pthread_mutexattr_settype( &mutexAttributes,
-                                                    PTHREAD_MUTEX_RECURSIVE );
-
-            if( mutexError != 0 )
-            {
-                IotLogError( "Failed to set recursive mutex type. errno=%d.",
-                             mutexError );
-
-                status = false;
-            }
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
     }
 
@@ -282,8 +288,15 @@ bool IotMutex_Create( IotMutex_t * pNewMutex,
                      pNewMutex,
                      mutexError );
 
-        status = false;
+        IOT_SET_AND_GOTO_CLEANUP( false );
     }
+    else
+    {
+        /* Increment the number of platform resources in use. */
+        UnityMalloc_IncrementMallocCount();
+    }
+
+    IOT_FUNCTION_CLEANUP_BEGIN();
 
     /* Destroy any created mutex attributes. */
     if( pMutexAttributes != NULL )
@@ -291,7 +304,7 @@ bool IotMutex_Create( IotMutex_t * pNewMutex,
         ( void ) pthread_mutexattr_destroy( &mutexAttributes );
     }
 
-    return status;
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
@@ -309,6 +322,9 @@ void IotMutex_Destroy( IotMutex_t * pMutex )
 
         abort();
     }
+
+    /* Decrement the number of platform resources in use. */
+    UnityMalloc_DecrementMallocCount();
 }
 
 /*-----------------------------------------------------------*/
@@ -389,6 +405,11 @@ bool IotSemaphore_Create( IotSemaphore_t * pNewSemaphore,
 
             status = false;
         }
+        else
+        {
+            /* Increment the number of platform resources in use. */
+            UnityMalloc_IncrementMallocCount();
+        }
     }
 
     return status;
@@ -426,6 +447,9 @@ void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
 
         abort();
     }
+
+    /* Decrement the number of platform resources in use. */
+    UnityMalloc_DecrementMallocCount();
 }
 
 /*-----------------------------------------------------------*/
