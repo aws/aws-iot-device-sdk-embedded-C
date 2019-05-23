@@ -286,6 +286,9 @@ void IotClock_TimerDestroy( IotTimer_t * pTimer )
 {
     IotLogDebug( "Destroying timer %p.", pTimer );
 
+    /* Decrement the number of platform resources in use. */
+    UnityMalloc_DecrementMallocCount();
+
     /* Destroy the underlying POSIX timer. */
     if( timer_delete( pTimer->timer ) != 0 )
     {
@@ -294,9 +297,6 @@ void IotClock_TimerDestroy( IotTimer_t * pTimer )
 
         abort();
     }
-
-    /* Decrement the number of platform resources in use. */
-    UnityMalloc_DecrementMallocCount();
 }
 
 /*-----------------------------------------------------------*/

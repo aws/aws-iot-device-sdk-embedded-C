@@ -311,6 +311,9 @@ bool IotMutex_Create( IotMutex_t * pNewMutex,
 
 void IotMutex_Destroy( IotMutex_t * pMutex )
 {
+    /* Decrement the number of platform resources in use. */
+    UnityMalloc_DecrementMallocCount();
+
     int mutexError = pthread_mutex_destroy( pMutex );
 
     if( mutexError != 0 )
@@ -322,9 +325,6 @@ void IotMutex_Destroy( IotMutex_t * pMutex )
 
         abort();
     }
-
-    /* Decrement the number of platform resources in use. */
-    UnityMalloc_DecrementMallocCount();
 }
 
 /*-----------------------------------------------------------*/
@@ -438,6 +438,9 @@ uint32_t IotSemaphore_GetCount( IotSemaphore_t * pSemaphore )
 
 void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
 {
+    /* Decrement the number of platform resources in use. */
+    UnityMalloc_DecrementMallocCount();
+
     if( sem_destroy( pSemaphore ) != 0 )
     {
         /* This block should not be reached; log an error and abort if it is. */
@@ -447,9 +450,6 @@ void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
 
         abort();
     }
-
-    /* Decrement the number of platform resources in use. */
-    UnityMalloc_DecrementMallocCount();
 }
 
 /*-----------------------------------------------------------*/
