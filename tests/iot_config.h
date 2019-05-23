@@ -93,25 +93,17 @@
     #define IOT_DEMO_IDENTIFIER     AWS_IOT_TEST_SHADOW_THING_NAME
 #endif
 
-/* Linear containers library configuration. */
+/* Enable asserts in the libraries. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )
-
-/* Task pool library configuration. */
+#define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
 #define IOT_TASKPOOL_ENABLE_ASSERTS             ( 1 )
+#define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
+#define AWS_IOT_DEFENDER_ENABLE_ASSERTS         ( 1 )
 
 /* MQTT library configuration. */
-#define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
-#define IOT_MQTT_ENABLE_METRICS                 ( 0 )
 #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 1 )
 
-/* Shadow library configuration. */
-#define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
-
-/* Serializer library configuration. */
-#define IOT_SERIALIZER_ENABLE_ASSERTS           ( 1 )
-
 /* Defender library configuration. */
-#define AWS_IOT_DEFENDER_ENABLE_ASSERTS         ( 1 )
 #define AWS_IOT_DEFENDER_USE_LONG_TAG           ( 1 )
 
 /* Static memory resource settings for the tests. These values must be large
@@ -144,6 +136,7 @@
     #define IotTaskPool_FreeJob                  unity_free_mt
     #define IotTaskPool_MallocTimerEvent         unity_malloc_mt
     #define IotTaskPool_FreeTimerEvent           unity_free_mt
+
     #define IotMqtt_MallocMessage                unity_malloc_mt
     #define IotMqtt_FreeMessage                  unity_free_mt
     #define IotMqtt_MallocConnection             unity_malloc_mt
@@ -152,6 +145,7 @@
     #define IotMqtt_FreeOperation                unity_free_mt
     #define IotMqtt_MallocSubscription           unity_malloc_mt
     #define IotMqtt_FreeSubscription             unity_free_mt
+
     #define IotSerializer_MallocCborEncoder      unity_malloc_mt
     #define IotSerializer_FreeCborEncoder        unity_free_mt
     #define IotSerializer_MallocCborParser       unity_malloc_mt
@@ -160,16 +154,18 @@
     #define IotSerializer_FreeCborValue          unity_free_mt
     #define IotSerializer_MallocDecoderObject    unity_malloc_mt
     #define IotSerializer_FreeDecoderObject      unity_free_mt
-    #define AwsIotDefender_MallocReport          unity_malloc_mt
-    #define AwsIotDefender_FreeReport            unity_free_mt
-    #define AwsIotDefender_MallocTopic           unity_malloc_mt
-    #define AwsIotDefender_FreeTopic             unity_free_mt
+
     #define AwsIotShadow_MallocOperation         unity_malloc_mt
     #define AwsIotShadow_FreeOperation           unity_free_mt
     #define AwsIotShadow_MallocString            unity_malloc_mt
     #define AwsIotShadow_FreeString              unity_free_mt
     #define AwsIotShadow_MallocSubscription      unity_malloc_mt
     #define AwsIotShadow_FreeSubscription        unity_free_mt
+
+    #define AwsIotDefender_MallocReport          unity_malloc_mt
+    #define AwsIotDefender_FreeReport            unity_free_mt
+    #define AwsIotDefender_MallocTopic           unity_malloc_mt
+    #define AwsIotDefender_FreeTopic             unity_free_mt
 #endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
 
 /* Network types to use in the tests. These are forward declarations. */

@@ -50,9 +50,12 @@
 #define AWS_IOT_DEMO_SHADOW_UPDATE_COUNT        ( 20 )   /* Number of updates to publish. */
 #define AWS_IOT_DEMO_SHADOW_UPDATE_PERIOD_MS    ( 3000 ) /* Period of Shadow updates. */
 
-/* Enable asserts in linear containers and MQTT. */
+/* Enable asserts in the libraries. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )
 #define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
+#define IOT_TASKPOOL_ENABLE_ASSERTS             ( 1 )
+#define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
+#define AWS_IOT_DEFENDER_ENABLE_ASSERTS         ( 1 )
 
 /* Library logging configuration. IOT_LOG_LEVEL_GLOBAL provides a global log
  * level for all libraries; the library-specific settings override the global
@@ -60,10 +63,12 @@
  * no logs will be printed. */
 #define IOT_LOG_LEVEL_GLOBAL                    IOT_LOG_INFO
 #define IOT_LOG_LEVEL_DEMO                      IOT_LOG_INFO
-#define IOT_LOG_LEVEL_PLATFORM                  IOT_LOG_INFO
+#define IOT_LOG_LEVEL_PLATFORM                  IOT_LOG_NONE
 #define IOT_LOG_LEVEL_NETWORK                   IOT_LOG_INFO
+#define IOT_LOG_LEVEL_TASKPOOL                  IOT_LOG_NONE
 #define IOT_LOG_LEVEL_MQTT                      IOT_LOG_INFO
 #define AWS_IOT_LOG_LEVEL_SHADOW                IOT_LOG_INFO
+#define AWS_IOT_LOG_LEVEL_DEFENDER              IOT_LOG_INFO
 
 /* The build system will choose the appropriate system types file for the platform
  * layer based on the host operating system. */
