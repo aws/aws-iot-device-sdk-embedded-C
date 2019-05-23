@@ -270,7 +270,7 @@ IotTaskPool_t IotTaskPool_GetSystemTaskPool( void )
 
 /*-----------------------------------------------------------*/
 
-IotTaskPoolError_t IotTaskPool_CreateSystemTaskPool( const IotTaskPoolInfo_t * const pInfo )
+IotTaskPoolError_t IotTaskPool_CreateSystemTaskPool( const IotTaskPoolInfo_t * pInfo )
 {
     TASKPOOL_FUNCTION_ENTRY( IOT_TASKPOOL_SUCCESS );
 
@@ -285,7 +285,7 @@ IotTaskPoolError_t IotTaskPool_CreateSystemTaskPool( const IotTaskPoolInfo_t * c
 
 /*-----------------------------------------------------------*/
 
-IotTaskPoolError_t IotTaskPool_Create( const IotTaskPoolInfo_t * const pInfo,
+IotTaskPoolError_t IotTaskPool_Create( const IotTaskPoolInfo_t * pInfo,
                                        IotTaskPool_t * const pTaskPool )
 {
     TASKPOOL_FUNCTION_ENTRY( IOT_TASKPOOL_SUCCESS );
@@ -523,7 +523,7 @@ IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t taskPoolHandle,
 
 IotTaskPoolError_t IotTaskPool_CreateJob( IotTaskPoolRoutine_t userCallback,
                                           void * pUserContext,
-                                          IotTaskPoolJobStorage_t * const pJobStorage,
+                                          IotTaskPoolJobStorage_t * pJobStorage,
                                           IotTaskPoolJob_t * const ppJob )
 {
     TASKPOOL_FUNCTION_ENTRY( IOT_TASKPOOL_SUCCESS );
