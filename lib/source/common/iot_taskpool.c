@@ -253,7 +253,7 @@ static IotTaskPoolError_t _tryCancelInternal( _taskPool_t * const pTaskPool,
  *
  * @param[in] pTaskPool The task pool to safely extract a job from.
  * @param[in] pJob The job to extract.
- * @param[in] atCompletion A flag to indicate whether the job is being scheduled or 
+ * @param[in] atCompletion A flag to indicate whether the job is being scheduled or
  * was completed already.
  *
  */
@@ -270,7 +270,7 @@ IotTaskPool_t IotTaskPool_GetSystemTaskPool( void )
 
 /*-----------------------------------------------------------*/
 
-IotTaskPoolError_t IotTaskPool_CreateSystemTaskPool( const IotTaskPoolInfo_t * const pInfo )
+IotTaskPoolError_t IotTaskPool_CreateSystemTaskPool( const IotTaskPoolInfo_t * pInfo )
 {
     TASKPOOL_FUNCTION_ENTRY( IOT_TASKPOOL_SUCCESS );
 
@@ -285,19 +285,19 @@ IotTaskPoolError_t IotTaskPool_CreateSystemTaskPool( const IotTaskPoolInfo_t * c
 
 /*-----------------------------------------------------------*/
 
-IotTaskPoolError_t IotTaskPool_Create( const IotTaskPoolInfo_t * const pInfo,
+IotTaskPoolError_t IotTaskPool_Create( const IotTaskPoolInfo_t * pInfo,
                                        IotTaskPool_t * const pTaskPool )
 {
     TASKPOOL_FUNCTION_ENTRY( IOT_TASKPOOL_SUCCESS );
 
     _taskPool_t * pTempTaskPool = NULL;
 
-    /* Verify that the task pool storage is valid. */ 
+    /* Verify that the task pool storage is valid. */
     TASKPOOL_ON_NULL_ARG_GOTO_CLEANUP( pTaskPool );
 
     /* Parameter checking. */
     TASKPOOL_ON_ERROR_GOTO_CLEANUP( _performTaskPoolParameterValidation( pInfo ) );
-    
+
     /* Allocate the memory for the task pool */
     pTempTaskPool = ( _taskPool_t * )IotTaskPool_MallocTaskPool( sizeof( _taskPool_t ) );
 
@@ -305,7 +305,7 @@ IotTaskPoolError_t IotTaskPool_Create( const IotTaskPoolInfo_t * const pInfo,
     {
         TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_NO_MEMORY );
     }
-    
+
     memset( pTempTaskPool, 0x00, sizeof( _taskPool_t ) );
 
     TASKPOOL_SET_AND_GOTO_CLEANUP( _createTaskPool( pInfo, pTempTaskPool ) );
@@ -323,7 +323,7 @@ IotTaskPoolError_t IotTaskPool_Create( const IotTaskPoolInfo_t * const pInfo,
     {
         *pTaskPool = pTempTaskPool;
     }
-    
+
 
     TASKPOOL_FUNCTION_CLEANUP_END();
 }
@@ -973,7 +973,7 @@ static IotTaskPoolError_t _initTaskPoolControlStructures( const IotTaskPoolInfo_
             if( IotSemaphore_Create( &pTaskPool->dispatchSignal, 0, TASKPOOL_MAX_SEM_VALUE ) == true )
             {
                 semDispatchInit = true;
-                            
+
                 /* Create the timer mutex for a new connection. */
                 if( IotClock_TimerCreate( &( pTaskPool->timer ), _timerThread, pTaskPool ) == true )
                 {
@@ -1764,7 +1764,7 @@ static void _timerThread( void * pArgument )
 
             /* Complete the shutdown sequence. */
             _destroyTaskPool( pTaskPool );
-            
+
             IotTaskPool_FreeTaskPool( pTaskPool );
 
             return;

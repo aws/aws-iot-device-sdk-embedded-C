@@ -137,7 +137,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            size_t subscriptionCount,
                                            uint32_t flags,
                                            const IotMqttCallbackInfo_t * pCallbackInfo,
-                                           IotMqttOperation_t * pOperationReference );
+                                           IotMqttOperation_t * const pOperationReference );
 
 /*-----------------------------------------------------------*/
 
@@ -542,7 +542,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            size_t subscriptionCount,
                                            uint32_t flags,
                                            const IotMqttCallbackInfo_t * pCallbackInfo,
-                                           IotMqttOperation_t * pOperationReference )
+                                           IotMqttOperation_t * const pOperationReference )
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     _mqttOperation_t * pSubscriptionOperation = NULL;
@@ -1385,7 +1385,7 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
                                   size_t subscriptionCount,
                                   uint32_t flags,
                                   const IotMqttCallbackInfo_t * pCallbackInfo,
-                                  IotMqttOperation_t * pSubscribeOperation )
+                                  IotMqttOperation_t * const pSubscribeOperation )
 {
     return _subscriptionCommon( IOT_MQTT_SUBSCRIBE,
                                 mqttConnection,
@@ -1441,7 +1441,7 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
                                     size_t subscriptionCount,
                                     uint32_t flags,
                                     const IotMqttCallbackInfo_t * pCallbackInfo,
-                                    IotMqttOperation_t * pUnsubscribeOperation )
+                                    IotMqttOperation_t * const pUnsubscribeOperation )
 {
     return _subscriptionCommon( IOT_MQTT_UNSUBSCRIBE,
                                 mqttConnection,
@@ -1496,7 +1496,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
                                 const IotMqttPublishInfo_t * pPublishInfo,
                                 uint32_t flags,
                                 const IotMqttCallbackInfo_t * pCallbackInfo,
-                                IotMqttOperation_t * pPublishOperation )
+                                IotMqttOperation_t * const pPublishOperation )
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     _mqttOperation_t * pOperation = NULL;
