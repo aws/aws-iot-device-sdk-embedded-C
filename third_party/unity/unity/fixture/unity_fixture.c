@@ -163,6 +163,20 @@ void UnityMalloc_MakeMallocFailAfterCount(int countdown)
     unity_exit_critical_section();
 }
 
+void UnityMalloc_IncrementMallocCount(void)
+{
+    unity_enter_critical_section();
+    malloc_count++;
+    unity_exit_critical_section();
+}
+
+void UnityMalloc_DecrementMallocCount(void)
+{
+    unity_enter_critical_section();
+    malloc_count--;
+    unity_exit_critical_section();
+}
+
 /* These definitions are always included from unity_fixture_malloc_overrides.h */
 /* We undef to use them or avoid conflict with <stdlib.h> per the C standard */
 #undef malloc
