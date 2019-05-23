@@ -203,7 +203,7 @@ IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t taskPool,
  *
  * @param[in] userCallback A user-specified callback for the job.
  * @param[in] pUserContext A user-specified context for the callback.
- * @param[in] pJobStorage The storage for the job data structure.
+ * @param[in,out] pJobStorage The storage for the job data structure.
  * @param[out] pJob A pointer to an instance of @ref IotTaskPoolJob_t that will be initialized when this
  * function returns succesfully. This handle can be used to inspect the job status with
  * @ref IotTaskPool_GetStatus or cancel the job with @ref IotTaskPool_TryCancel, etc....
@@ -217,7 +217,7 @@ IotTaskPoolError_t IotTaskPool_SetMaxThreads( IotTaskPool_t taskPool,
 /* @[declare_taskpool_createjob] */
 IotTaskPoolError_t IotTaskPool_CreateJob( IotTaskPoolRoutine_t userCallback,
                                           void * pUserContext,
-                                          IotTaskPoolJobStorage_t * pJobStorage,
+                                          IotTaskPoolJobStorage_t * const pJobStorage,
                                           IotTaskPoolJob_t * const pJob );
 /* @[declare_taskpool_createjob] */
 
