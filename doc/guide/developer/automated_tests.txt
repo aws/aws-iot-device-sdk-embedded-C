@@ -12,10 +12,35 @@ The following files on the GitHub repo control the automated tests:
 - `.travis.yml` <br>
   Provides the job matrix to run on Travis CI.
 - `scripts/` directory <br>
-  Shell scripts (`sh`) that run on Travis CI servers. See @ref guide_developer_automated_tests_scripts for more information.
+  Shell scripts (`sh`) that run on Travis CI servers.
   - The scripts that test the libraries are named after the library they test. For example, `ci_test_mqtt.sh` tests the MQTT library.
   - `ci_test_doc.sh` tests the documentation build. Runs for pull requests only.
   - `ci_test_coverage.sh` generates and submits coverage results to Coveralls. Runs for commits only.
+
+@section guide_developer_automated_tests_setup Setup
+@brief How to set up the automated testing services.
+
+All of the automated testing services have web interfaces that can be connected to a GitHub account.
+
+@subsection guide_developer_automated_tests_setup_travis Travis CI
+@brief How to set up Travis CI.
+
+<b>Link to Travis CI:</b> https://travis-ci.org/
+
+1. Click <i>Sign in with GitHub</i> in the upper right corner to log in with your GitHub account. On your first login, Travis CI will prompt for GitHub permissions access.
+2. Once signed in, hover over your GitHub account in the upper right corner. Click <i>Settings</i> in the menu that pops up.
+3. On the <i>Settings</i> page, toggle the switch next to your fork of the C SDK to <i>On</i>.
+4. Travis CI is now set up. See @ref guide_developer_automated_tests_credentials_policy_travis for adding commit credentials to Travis CI.
+
+@subsection guide_developer_automated_tests_setup_coveralls Coveralls
+@brief How to set up Coveralls.
+
+<b>Link to Coveralls:</b> https://coveralls.io/
+
+1. Click <i>SIGN IN</i> in the upper right corner.  Then select <i>GITHUB SIGN IN</i> to log in with your GitHub account. On your first login, Coveralls will prompt for GitHub permissions access.
+2. Once signed in, hover over the menu on the left and click <i>ADD REPOS</i>.
+3. On the <i>ADD REPO</i> page, toggle the switch next to your fork of the C SDK to <i>ON</i>.
+4. Coveralls is now set up up. Travis CI will automatically submit coverage data on commit check builds.
 
 @section guide_developer_automated_tests_commit_pr Commit vs. Pull Request
 @brief The automated tests distinguish between GitHub commits and pull requests. Different sets of tests run on commits and pull requests.
@@ -135,7 +160,4 @@ AWS recommends using the most restrictive policy possible. The following policy 
 @endcode
 
 This policy only allows the CI to interact with topics that contain a matching client identifier (which is prefixed with the Travis CI variable `IOT_IDENTIFIER_PREFIX`). A few special topics used by the MQTT tests are also present. The policy will need to be updated if any new topics are used by the tests in the future.
-
-@section guide_developer_automated_tests_scripts Travis CI Scripts
-@brief
 */
