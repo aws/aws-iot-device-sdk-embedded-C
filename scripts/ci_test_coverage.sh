@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Travis CI uses this script to build an submit code coverage results.
+# It does not run tests that require the network.
 
 # Exit on any nonzero return code.
 set -ev
@@ -13,12 +14,10 @@ make -j2
 ./bin/iot_tests_common
 
 # Run MQTT tests and demo against AWS IoT with code coverage.
-./bin/iot_tests_mqtt
-./bin/iot_demo_mqtt -h "$AWS_IOT_ENDPOINT" -p 443 -s -r ../credentials/AmazonRootCA1.pem -c ../credentials/clientCert.pem -k ../credentials/privateKey.pem -i "$IOT_IDENTIFIER"
+./bin/iot_tests_mqtt -n
 
 # Run Shadow tests and demo with code coverage.
-./bin/aws_iot_tests_shadow
-./bin/aws_iot_demo_shadow -h "$AWS_IOT_ENDPOINT" -p 443 -s -r ../credentials/AmazonRootCA1.pem -c ../credentials/clientCert.pem -k ../credentials/privateKey.pem -i "$IOT_IDENTIFIER"
+./bin/aws_iot_tests_shadow -n
 
 # Generate code coverage results, but only for files in lib/.
 lcov --directory . --capture --output-file coverage.info
