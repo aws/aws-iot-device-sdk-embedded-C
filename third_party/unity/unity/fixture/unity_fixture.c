@@ -163,14 +163,32 @@ void UnityMalloc_MakeMallocFailAfterCount(int countdown)
     unity_exit_critical_section();
 }
 
-void UnityMalloc_IncrementMallocCount(void)
+bool UnityMalloc_AllocateResource(void)
 {
+    bool status = true;
+
     unity_enter_critical_section();
-    malloc_count++;
+
+    switch(malloc_fail_countdown)
+    {
+        case MALLOC_DONT_FAIL:
+            malloc_count++;
+            break;
+        case 0:
+            status = false;
+            break;
+        default:
+            malloc_count++;
+            malloc_fail_countdown--;
+            break;
+    }
+
     unity_exit_critical_section();
+
+    return status;
 }
 
-void UnityMalloc_DecrementMallocCount(void)
+void UnityMalloc_FreeResource(void)
 {
     unity_enter_critical_section();
     malloc_count--;
