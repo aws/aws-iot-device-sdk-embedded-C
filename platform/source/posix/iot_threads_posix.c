@@ -99,8 +99,8 @@
  * platform resources are destroyed before the tests finish. When not testing,
  * define the Unity malloc functions to nothing. */
 #if IOT_BUILD_TESTS != 1
-    #define UnityMalloc_IncrementMallocCount()
-    #define UnityMalloc_DecrementMallocCount()
+    #define UnityMalloc_AllocateResource()    true
+    #define UnityMalloc_FreeResource()
 #endif
 
 /*-----------------------------------------------------------*/
@@ -280,20 +280,21 @@ bool IotMutex_Create( IotMutex_t * pNewMutex,
         }
     }
 
-    mutexError = pthread_mutex_init( pNewMutex, pMutexAttributes );
+    status = UnityMalloc_AllocateResource();
 
-    if( mutexError != 0 )
+    if( status == true )
     {
-        IotLogError( "Failed to create new mutex %p. errno=%d.",
-                     pNewMutex,
-                     mutexError );
+        mutexError = pthread_mutex_init( pNewMutex, pMutexAttributes );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
-    }
-    else
-    {
-        /* Increment the number of platform resources in use. */
-        UnityMalloc_IncrementMallocCount();
+        if( mutexError != 0 )
+        {
+            IotLogError( "Failed to create new mutex %p. errno=%d.",
+                        pNewMutex,
+                        mutexError );
+
+            UnityMalloc_FreeResource();
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
     }
 
     IOT_FUNCTION_CLEANUP_BEGIN();
@@ -312,7 +313,7 @@ bool IotMutex_Create( IotMutex_t * pNewMutex,
 void IotMutex_Destroy( IotMutex_t * pMutex )
 {
     /* Decrement the number of platform resources in use. */
-    UnityMalloc_DecrementMallocCount();
+    UnityMalloc_FreeResource();
 
     int mutexError = pthread_mutex_destroy( pMutex );
 
@@ -397,18 +398,19 @@ bool IotSemaphore_Create( IotSemaphore_t * pNewSemaphore,
     }
     else
     {
-        if( sem_init( pNewSemaphore, 0, ( unsigned int ) initialValue ) != 0 )
-        {
-            IotLogError( "Failed to create new semaphore %p. errno=%d.",
-                         pNewSemaphore,
-                         errno );
+        status = UnityMalloc_AllocateResource();
 
-            status = false;
-        }
-        else
+        if( status == true )
         {
-            /* Increment the number of platform resources in use. */
-            UnityMalloc_IncrementMallocCount();
+            if( sem_init( pNewSemaphore, 0, ( unsigned int ) initialValue ) != 0 )
+            {
+                IotLogError( "Failed to create new semaphore %p. errno=%d.",
+                            pNewSemaphore,
+                            errno );
+
+                UnityMalloc_FreeResource();
+                status = false;
+            }
         }
     }
 
@@ -439,7 +441,7 @@ uint32_t IotSemaphore_GetCount( IotSemaphore_t * pSemaphore )
 void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
 {
     /* Decrement the number of platform resources in use. */
-    UnityMalloc_DecrementMallocCount();
+    UnityMalloc_FreeResource();
 
     if( sem_destroy( pSemaphore ) != 0 )
     {

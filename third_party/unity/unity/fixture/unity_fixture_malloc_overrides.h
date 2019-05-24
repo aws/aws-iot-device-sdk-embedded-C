@@ -8,6 +8,7 @@
 #ifndef UNITY_FIXTURE_MALLOC_OVERRIDES_H_
 #define UNITY_FIXTURE_MALLOC_OVERRIDES_H_
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #ifdef UNITY_EXCLUDE_STDLIB_MALLOC
@@ -39,8 +40,8 @@
 #define realloc unity_realloc_mt
 #define free    unity_free_mt
 
-void UnityMalloc_IncrementMallocCount(void);
-void UnityMalloc_DecrementMallocCount(void);
+bool UnityMalloc_AllocateResource(void);
+void UnityMalloc_FreeResource(void);
 
 void unity_provide_critical_section(void(*start)(void), void(*end)(void));
 void unity_enter_critical_section(void);

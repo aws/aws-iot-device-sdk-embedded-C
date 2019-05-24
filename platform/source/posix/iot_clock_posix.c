@@ -74,8 +74,8 @@
  * platform resources are destroyed before the tests finish. When not testing,
  * define the Unity malloc functions to nothing. */
 #if IOT_BUILD_TESTS != 1
-    #define UnityMalloc_IncrementMallocCount()
-    #define UnityMalloc_DecrementMallocCount()
+    #define UnityMalloc_AllocateResource()    true
+    #define UnityMalloc_FreeResource()
 #endif
 
 /*-----------------------------------------------------------*/
@@ -247,7 +247,7 @@ bool IotClock_TimerCreate( IotTimer_t * pNewTimer,
                            IotThreadRoutine_t expirationRoutine,
                            void * pArgument )
 {
-    bool status = true;
+    bool status = UnityMalloc_AllocateResource();
     struct sigevent expirationNotification =
     {
         .sigev_notify            = SIGEV_THREAD,
@@ -257,24 +257,23 @@ bool IotClock_TimerCreate( IotTimer_t * pNewTimer,
         .sigev_notify_attributes = NULL
     };
 
-    IotLogDebug( "Creating new timer %p.", pNewTimer );
-
-    /* Set the timer expiration routine and argument. */
-    pNewTimer->threadRoutine = expirationRoutine;
-    pNewTimer->pArgument = pArgument;
-
-    /* Create the underlying POSIX timer. */
-    if( timer_create( CLOCK_REALTIME,
-                      &expirationNotification,
-                      &( pNewTimer->timer ) ) != 0 )
+    if( status == true )
     {
-        IotLogError( "Failed to create new timer %p. errno=%d.", pNewTimer, errno );
-        status = false;
-    }
-    else
-    {
-        /* Increment the number of platform resources in use. */
-        UnityMalloc_IncrementMallocCount();
+        IotLogDebug( "Creating new timer %p.", pNewTimer );
+
+        /* Set the timer expiration routine and argument. */
+        pNewTimer->threadRoutine = expirationRoutine;
+        pNewTimer->pArgument = pArgument;
+
+        /* Create the underlying POSIX timer. */
+        if( timer_create( CLOCK_REALTIME,
+                        &expirationNotification,
+                        &( pNewTimer->timer ) ) != 0 )
+        {
+            IotLogError( "Failed to create new timer %p. errno=%d.", pNewTimer, errno );
+            UnityMalloc_FreeResource();
+            status = false;
+        }
     }
 
     return status;
@@ -287,7 +286,7 @@ void IotClock_TimerDestroy( IotTimer_t * pTimer )
     IotLogDebug( "Destroying timer %p.", pTimer );
 
     /* Decrement the number of platform resources in use. */
-    UnityMalloc_DecrementMallocCount();
+    UnityMalloc_FreeResource();
 
     /* Destroy the underlying POSIX timer. */
     if( timer_delete( pTimer->timer ) != 0 )
