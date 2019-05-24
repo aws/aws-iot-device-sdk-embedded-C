@@ -12,7 +12,7 @@ The following files on the GitHub repo control the automated tests:
 - `.travis.yml` <br>
   Provides the job matrix to run on Travis CI.
 - `scripts/` directory <br>
-  Shell scripts (`sh`) that run on Travis CI servers. See @ref guide_developer_automated_tests_scripts for more information.
+  Shell scripts (`sh`) that run on Travis CI servers.
   - The scripts that test the libraries are named after the library they test. For example, `ci_test_mqtt.sh` tests the MQTT library.
   - `ci_test_doc.sh` tests the documentation build. Runs for pull requests only.
   - `ci_test_coverage.sh` generates and submits coverage results to Coveralls. Runs for commits only.
