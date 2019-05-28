@@ -102,7 +102,7 @@ static IotMutex_t _connectionListMutex;
 /* Choose the appropriate network abstraction implementation. */
 #if IOT_NETWORK_USE_OPENSSL == 1
     /* OpenSSL networking include. */
-    #include "posix/iot_network_openssl.h"
+    #include "iot_network_openssl.h"
 
     /**
      * @brief Pointer to the metrics-wrapped network creation function.

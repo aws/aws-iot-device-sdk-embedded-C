@@ -30,9 +30,6 @@
 /* Standard includes. */
 #include <stdlib.h>
 
-/* Windows include. */
-#include <windows.h>
-
 /* Platform threads include. */
 #include "platform/iot_threads.h"
 

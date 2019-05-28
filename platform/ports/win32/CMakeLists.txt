@@ -5,10 +5,10 @@ set( PLATFORM_COMMON_HEADERS ${PLATFORM_COMMON_HEADERS}
 
 # Platform library source files.
 set( PLATFORM_SOURCES
-     ${CMAKE_SOURCE_DIR}/platform/source/win32/iot_clock_win32.c
-     ${CMAKE_SOURCE_DIR}/platform/source/win32/iot_threads_win32.c
-     ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_mbedtls.c
-     ${CMAKE_SOURCE_DIR}/platform/source/network/iot_network_metrics.c )
+     ${CMAKE_SOURCE_DIR}/platform/ports/win32/source/iot_clock_win32.c
+     ${CMAKE_SOURCE_DIR}/platform/ports/win32/source/iot_threads_win32.c
+     ${CMAKE_SOURCE_DIR}/platform/network/iot_network_mbedtls.c
+     ${CMAKE_SOURCE_DIR}/platform/network/iot_network_metrics.c )
 
 # Add platform as an interface library. It will be built into iotbase.
 add_library( iotplatform INTERFACE )

@@ -52,7 +52,7 @@
 #include <openssl/ssl.h>
 
 /* POSIX+OpenSSL network include. */
-#include "posix/iot_network_openssl.h"
+#include "iot_network_openssl.h"
 
 /* Platform threads include. */
 #include "platform/iot_threads.h"

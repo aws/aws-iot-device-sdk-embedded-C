@@ -75,6 +75,8 @@ See the documentation page [Building the SDK](https://docs.aws.amazon.com/freert
 
 Please refer to the [Porting Guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/main/guide_developer_porting.html) for instructions on porting this SDK.
 
+Existing ports (which may be used as examples) are present in `platform/ports`. A blank template for implementing new ports is in `platform/ports/template`.
+
 ## License
 
 This library is licensed under the [MIT License](LICENSE).
