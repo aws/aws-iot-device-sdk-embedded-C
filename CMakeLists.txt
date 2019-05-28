@@ -113,7 +113,7 @@ set( PLATFORM_COMMON_HEADERS
      ${CMAKE_SOURCE_DIR}/platform/include/iot_network_metrics.h )
 
 # Platform libraries.
-add_subdirectory( platform/ports/${IOT_PLATFORM_NAME}/source )
+add_subdirectory( platform/ports/${IOT_PLATFORM_NAME} )
 
 # Common libraries (linear containers, logging, etc.)
 add_subdirectory( lib/source/common )
