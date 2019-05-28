@@ -16,7 +16,7 @@ In general, this SDK should build with C compilers in C99 mode. Currently, we do
 @subsection guide_developer_porting_directory_layout Directory layout
 @brief The following directories contain the SDK's source code and are relevant for porting.
 
-Of the directories listed below, only <b style="color:#ff0000">`platform/`</b> should be modified during porting. Some directories present in the GitHub repo (such as `cbmc`, `doc`, and `scripts`) are not relevant for porting and therefore not listed.
+Of the directories listed below, only <b style="color:#ff0000">`platform/`</b> should be modified during porting. Empty templates of a new port are placed in `platform/ports/template`. Some directories present in the GitHub repo (such as `cbmc`, `doc`, and `scripts`) are not relevant for porting and therefore not listed.
 
 As relative paths from the SDK's root directory:
 - `demos/` <br>
@@ -45,15 +45,18 @@ As relative paths from the SDK's root directory:
           Individual library sources are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
 - <b style="color:#ff0000">`platform/` <br>
   Platform-dependent SDK files that must be ported. The existing ports in this directory may be useful examples. </b>
-    - <b style="color:#ff0000">`include/` <br>
-      Platform header files. Unlike the headers in `lib/include/`, headers in this directory may directly use system types. </b>
+    - `include/` <br>
+      Platform layer headers that are not specific to a specific port, such as the atomic and network headers.
         - <b style="color:#ff0000">`atomic/` <br>
-          Existing ports of atomic operations. See @ref platform_atomic for how to create a new port. </b>
-        - <b style="color:#ff0000">`posix, ...` <br>
-          Headers for existing ports of the [platform layer](@ref platform), named after the platform they target. See @ref guide_developer_porting_platform for how to create a new port. </b>
-    - <b style="color:#ff0000">`source/`</b>
-        - <b style="color:#ff0000">`posix, ...` <br>
-          Headers for existing ports of the [platform layer](@ref platform), named after the platform they target. See @ref guide_developer_porting_platform for how to create a new port. </b>
+          Existing ports of atomic operations. See @ref platform_atomic for how to create a new port. New atomic ports should be placed here. </b>
+    - `network/` <br>
+      Implementations of the platform network layer that are not specific to a port.
+    - <b style="color:#ff0000">`ports` <br>
+      Existing ports that can be used as a reference. New ports should also be placed here.</b>
+      - `posix, win32, ...` <br>
+        Port source and headers are placed in a directory matching the port name.
+      - <b style="color:#ff0000">`template` <br>
+        Empty port with stubbed out functions. This should be the starting point of a new port.</b>
 - `tests/` <br>
   SDK tests that can be used to verify ports.
     - `common, defender, mqtt, ...` <br>
@@ -74,6 +77,7 @@ SDK include paths that are always required:
 - The path of the [config file](@ref global_config), `iot_config.h`. For example:
     - In the SDK demos, `iot_config.h` is in `demos/`.
     - In the SDK tests, `iot_config.h` is in `tests/`.
+- The path of the port types file. For example, `platform/ports/posix/types` when using the POSIX port.
 - `lib/include`
 - `platform/include`
 
@@ -102,7 +106,7 @@ In addition to the tests include paths, @ref IOT_BUILD_TESTS should be set to `1
 @brief [Types](@ref platform_datatypes_handles) that must be set in the platform layer.
 
 @see [Platform types](@ref platform_datatypes_handles) for a list of all types that must be set. <br>
-`platform/include/posix/iot_platform_types_posix.h` for an example of setting the types on POSIX systems.
+`platform/ports/posix/types/iot_platform_types_posix.h` for an example of setting the types on POSIX systems.
 
 The platform types should be set in the [config file](@ref global_config), `iot_config.h`, or in another header included by the config file. As an example, the header `iot_platform_types_posix.h` sets the platform types to the matching POSIX system types. This header is then included in `iot_config.h` by the provided CMake build system.
 
@@ -113,5 +117,5 @@ The platform types should be set in the [config file](@ref global_config), `iot_
 
 @see [Platform functions](@ref platform_functions) for a list of all functions that must be implemented. <br>
 `lib/include/platform` for the interfaces of the platform functions. <br>
-`platform/source/posix` for examples of functions implemented for POSIX systems.
+`platform/ports/posix/source` for examples of functions implemented for POSIX systems.
 */
