@@ -175,8 +175,8 @@ typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
 
 /* Choose the appropriate network abstraction implementation. */
 #if IOT_NETWORK_USE_OPENSSL == 1
-    /* POSIX+OpenSSL network include. */
-    #define IOT_TEST_NETWORK_HEADER       "posix/iot_network_openssl.h"
+    /* OpenSSL network include. */
+    #define IOT_TEST_NETWORK_HEADER       "iot_network_openssl.h"
 
     #define IOT_TEST_ALPN_PROTOS          "\x0ex-amzn-mqtt-ca"
     #define IOT_TEST_NETWORK_INTERFACE    IOT_NETWORK_INTERFACE_OPENSSL

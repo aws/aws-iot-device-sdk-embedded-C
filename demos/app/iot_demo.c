@@ -45,8 +45,8 @@
 /* Choose the appropriate network header, initializers, and initialization
  * function. */
 #if IOT_NETWORK_USE_OPENSSL == 1
-    /* POSIX+OpenSSL network include. */
-    #include "posix/iot_network_openssl.h"
+    /* OpenSSL network include. */
+    #include "iot_network_openssl.h"
 
     #define IOT_DEMO_NETWORK_INTERFACE          IOT_NETWORK_INTERFACE_OPENSSL
     #define IOT_DEMO_SERVER_INFO_INITIALIZER    IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER
