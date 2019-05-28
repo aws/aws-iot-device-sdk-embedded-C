@@ -67,7 +67,8 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
 # Platform types file.
-add_definitions( -DIOT_SYSTEM_TYPES_FILE="${IOT_PLATFORM_NAME}/iot_platform_types_${IOT_PLATFORM_NAME}.h" )
+include_directories( ${PROJECT_SOURCE_DIR}/platform/ports/${IOT_PLATFORM_NAME}/types )
+add_definitions( -DIOT_SYSTEM_TYPES_FILE="iot_platform_types_${IOT_PLATFORM_NAME}.h" )
 
 # SDK include paths.
 include_directories( ${PROJECT_SOURCE_DIR}/lib/include
@@ -105,14 +106,14 @@ set( PLATFORM_INTERFACE_HEADERS
 
 set( PLATFORM_TYPES_HEADERS
      ${CMAKE_SOURCE_DIR}/lib/include/types/iot_platform_types.h
-     ${CMAKE_SOURCE_DIR}/platform/include/${IOT_PLATFORM_NAME}/iot_platform_types_${IOT_PLATFORM_NAME}.h )
+     ${CMAKE_SOURCE_DIR}/platform/ports/${IOT_PLATFORM_NAME}/types/iot_platform_types_${IOT_PLATFORM_NAME}.h )
 
 set( PLATFORM_COMMON_HEADERS
      ${CMAKE_SOURCE_DIR}/platform/include/iot_atomic.h
      ${CMAKE_SOURCE_DIR}/platform/include/iot_network_metrics.h )
 
 # Platform libraries.
-add_subdirectory( platform/source/${IOT_PLATFORM_NAME} )
+add_subdirectory( platform/ports/${IOT_PLATFORM_NAME}/source )
 
 # Common libraries (linear containers, logging, etc.)
 add_subdirectory( lib/source/common )
