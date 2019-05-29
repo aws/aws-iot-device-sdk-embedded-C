@@ -5,7 +5,7 @@
 # Exit on any nonzero return code.
 set -e
 
-CMAKE_FLAGS="-DIOT_TEST_MQTT_CLIENT_IDENTIFIER=\"\\\"$IOT_IDENTIFIER\\\"\" -DIOT_TEST_MQTT_TOPIC_PREFIX=\"\\\"$IOT_IDENTIFIER\\\"\" -DIOT_DEMO_MQTT_TOPIC_PREFIX=\"\\\"$IOT_IDENTIFIER\\\"\" "
+CMAKE_FLAGS="-DIOT_DEMO_MQTT_TOPIC_PREFIX=\"\\\"$IOT_IDENTIFIER\\\"\" "
 
 # For pull request builds, run against test.mosquitto.org. Otherwise, run against AWS IoT.
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
