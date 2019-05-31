@@ -166,7 +166,7 @@ static void _timerThread( void * pArgument );
  * @param[in] pInfo The initialization information for the task pool.
  *
  */
-IotTaskPoolError_t _performTaskPoolParameterValidation( const IotTaskPoolInfo_t * const pInfo );
+static IotTaskPoolError_t _performTaskPoolParameterValidation( const IotTaskPoolInfo_t * const pInfo );
 
 /**
  * Initializes a pre-allocated instance of a task pool.
@@ -929,7 +929,7 @@ const char * IotTaskPool_strerror( IotTaskPoolError_t status )
 /* ---------------------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------------------- */
 
-IotTaskPoolError_t _performTaskPoolParameterValidation( const IotTaskPoolInfo_t * const pInfo )
+static IotTaskPoolError_t _performTaskPoolParameterValidation( const IotTaskPoolInfo_t * const pInfo )
 {
     TASKPOOL_FUNCTION_ENTRY( IOT_TASKPOOL_SUCCESS );
 
