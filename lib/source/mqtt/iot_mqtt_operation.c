@@ -328,7 +328,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
         {
             IotLogError( "Callback should not be set for a waitable operation." );
 
-            return IOT_MQTT_BAD_PARAMETER;
+            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
         }
         else
         {
