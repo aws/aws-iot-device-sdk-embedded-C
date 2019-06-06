@@ -13,7 +13,7 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
     DEMO_OPTIONS="-i $IOT_IDENTIFIER"
 else
     CMAKE_FLAGS+="-DIOT_TEST_MQTT_MOSQUITTO=1 $COMPILER_OPTIONS"
-    DEMO_OPTIONS="-n"
+    DEMO_OPTIONS="-n -i $IOT_IDENTIFIER"
 fi
 
 # Build executables.
