@@ -120,14 +120,7 @@ AWS recommends using the most restrictive policy possible. The following policy 
       "Effect": "Allow",
       "Action": "iot:Connect",
       "Resource": [
-        "arn:aws:iot:<region>:<account>:client/CSDKCIcoverage",
-        "arn:aws:iot:<region>:<account>:client/CSDKCIcoverageLWT",
-        "arn:aws:iot:<region>:<account>:client/CSDKCImqtt",
-        "arn:aws:iot:<region>:<account>:client/CSDKCImqttLWT",
-        "arn:aws:iot:<region>:<account>:client/CSDKCImqttossl",
-        "arn:aws:iot:<region>:<account>:client/CSDKCImqttosslLWT",
-        "arn:aws:iot:<region>:<account>:client/CSDKCIshadow",
-        "arn:aws:iot:<region>:<account>:client/CSDKCIdefender"
+        "arn:aws:iot:<region>:<account>:client/*"
       ]
     },
     {
@@ -138,9 +131,7 @@ AWS recommends using the most restrictive policy possible. The following policy 
       ],
       "Resource": [
         "arn:aws:iot:<region>:<account>:topic/${iot:ClientId}/*",
-        "arn:aws:iot:<region>:<account>:topic/CSDKCIcoverage/LastWillAndTestament",
-        "arn:aws:iot:<region>:<account>:topic/CSDKCImqtt/LastWillAndTestament",
-        "arn:aws:iot:<region>:<account>:topic/CSDKCImqttossl/LastWillAndTestament",
+        "arn:aws:iot:<region>:<account>:topic/*/LastWillAndTestament",
         "arn:aws:iot:<region>:<account>:topic/$aws/things/${iot:ClientId}/shadow/*"
       ]
     },
@@ -149,9 +140,7 @@ AWS recommends using the most restrictive policy possible. The following policy 
       "Action": "iot:Subscribe",
       "Resource": [
         "arn:aws:iot:<region>:<account>:topicfilter/${iot:ClientId}/*",
-        "arn:aws:iot:<region>:<account>:topicfilter/CSDKCIcoverage/LastWillAndTestament",
-        "arn:aws:iot:<region>:<account>:topicfilter/CSDKCImqtt/LastWillAndTestament",
-        "arn:aws:iot:<region>:<account>:topicfilter/CSDKCImqttossl/LastWillAndTestament",
+        "arn:aws:iot:<region>:<account>:topicfilter/*/LastWillAndTestament",
         "arn:aws:iot:<region>:<account>:topicfilter/$aws/things/${iot:ClientId}/shadow/*"
       ]
     }

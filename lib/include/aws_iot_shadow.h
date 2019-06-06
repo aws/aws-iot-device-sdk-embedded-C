@@ -76,6 +76,10 @@
  * Calling this function more than once without first calling @ref
  * shadow_function_cleanup may result in a crash.
  *
+ * @param[in] mqttTimeout The amount of time (in milliseconds) that the Shadow
+ * library will wait for MQTT operations. Optional; set this to `0` to use
+ * @ref AWS_IOT_SHADOW_DEFAULT_MQTT_TIMEOUT_MS.
+ *
  * @return One of the following:
  * - #AWS_IOT_SHADOW_SUCCESS
  * - #AWS_IOT_SHADOW_INIT_FAILED

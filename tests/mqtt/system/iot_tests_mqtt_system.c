@@ -56,10 +56,7 @@
  * Provide default values of test configuration constants.
  */
 #ifndef IOT_TEST_MQTT_TIMEOUT_MS
-    #define IOT_TEST_MQTT_TIMEOUT_MS      ( 5000 )
-#endif
-#ifndef IOT_TEST_MQTT_TOPIC_PREFIX
-    #define IOT_TEST_MQTT_TOPIC_PREFIX    "iotmqtttest"
+    #define IOT_TEST_MQTT_TIMEOUT_MS    ( 5000 )
 #endif
 /** @endcond */
 
@@ -86,6 +83,21 @@
 #else
     #define CLIENT_IDENTIFIER_MAX_LENGTH    ( 24 )
 #endif
+
+/**
+ * @brief Generates a topic by suffixing the client identifier with a suffix.
+ *
+ * @param[in] bufferName The name of the buffer for the topic.
+ * @param[in] suffix The suffix to place at the end of the client identifier.
+ */
+#define GENERATE_TOPIC_WITH_SUFFIX( bufferName, suffix )                        \
+    char bufferName[ CLIENT_IDENTIFIER_MAX_LENGTH + sizeof( suffix ) ] = { 0 }; \
+    ( void ) snprintf( bufferName,                                              \
+                       CLIENT_IDENTIFIER_MAX_LENGTH + sizeof( suffix ),         \
+                       "%s%s",                                                  \
+                       _pClientIdentifier,                                      \
+                       suffix );
+
 
 /*-----------------------------------------------------------*/
 
@@ -380,8 +392,8 @@ static void _reentrantCallback( void * pArgument,
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     IotMqttOperation_t unsubscribeOperation = IOT_MQTT_OPERATION_INITIALIZER;
 
-    /* Topic used in this test. */
-    const char * const pTopic = IOT_TEST_MQTT_TOPIC_PREFIX "/Reentrancy";
+    /* The topic to use for this test. */
+    GENERATE_TOPIC_WITH_SUFFIX( pTopic, "/Reentrancy" );
     const uint16_t topicLength = ( uint16_t ) strlen( pTopic );
 
     publishInfo.qos = IOT_MQTT_QOS_1;
@@ -480,6 +492,9 @@ static void _subscribePublishWait( IotMqttQos_t qos )
     /* Set the serializer function pointers. */
     networkInfo.pMqttSerializer = &serializer;
 
+    /* The topic to use for this test. */
+    GENERATE_TOPIC_WITH_SUFFIX( pTopic, "/SubscribePublishWait" );
+
     /* Create the wait semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
@@ -502,7 +517,7 @@ static void _subscribePublishWait( IotMqttQos_t qos )
         {
             /* Set the members of the subscription. */
             subscription.qos = qos;
-            subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishWait";
+            subscription.pTopicFilter = pTopic;
             subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
             subscription.callback.function = _publishReceived;
             subscription.callback.pCallbackContext = &waitSem;
@@ -518,7 +533,7 @@ static void _subscribePublishWait( IotMqttQos_t qos )
 
             /* Set the members of the publish info. */
             publishInfo.qos = qos;
-            publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishWait";
+            publishInfo.pTopicName = pTopic;
             publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
             publishInfo.pPayload = _pSamplePayload;
             publishInfo.payloadLength = _samplePayloadLength;
@@ -711,12 +726,15 @@ TEST( MQTT_System, SubscribePublishAsync )
     _operationCompleteParams_t callbackParam = { .expectedOperation = ( IotMqttOperationType_t ) 0 };
     IotSemaphore_t publishWaitSem;
 
+    /* The topic to use for this test. */
+    GENERATE_TOPIC_WITH_SUFFIX( pTopic, "/SubscribePublishAsync" );
+
     /* Initialize members of the operation callback info. */
     callbackInfo.function = _operationComplete;
     callbackInfo.pCallbackContext = &callbackParam;
 
     /* Initialize members of the subscription. */
-    subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishAsync";
+    subscription.pTopicFilter = pTopic;
     subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
     subscription.callback.function = _publishReceived;
     subscription.callback.pCallbackContext = &publishWaitSem;
@@ -729,7 +747,7 @@ TEST( MQTT_System, SubscribePublishAsync )
 
     /* Initialize members of the publish info. */
     publishInfo.qos = IOT_MQTT_QOS_1;
-    publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/SubscribePublishAsync";
+    publishInfo.pTopicName = pTopic;
     publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
     publishInfo.pPayload = _pSamplePayload;
     publishInfo.payloadLength = _samplePayloadLength;
@@ -831,6 +849,9 @@ TEST( MQTT_System, LastWillAndTestament )
     IotMqttPublishInfo_t willInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     IotSemaphore_t waitSem;
 
+    /* The topic to use for this test. */
+    GENERATE_TOPIC_WITH_SUFFIX( pTopic, "/LastWillAndTestament" );
+
     /* Create the wait semaphore. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
@@ -873,7 +894,7 @@ TEST( MQTT_System, LastWillAndTestament )
         if( TEST_PROTECT() )
         {
             /* Register a subscription for the LWT. */
-            willSubscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/LastWillAndTestament";
+            willSubscription.pTopicFilter = pTopic;
             willSubscription.topicFilterLength = ( uint16_t ) strlen( willSubscription.pTopicFilter );
             willSubscription.callback.function = _publishReceived;
             willSubscription.callback.pCallbackContext = &waitSem;
@@ -892,7 +913,7 @@ TEST( MQTT_System, LastWillAndTestament )
             connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );
             connectInfo.pWillInfo = &willInfo;
 
-            willInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/LastWillAndTestament";
+            willInfo.pTopicName = pTopic;
             willInfo.topicNameLength = ( uint16_t ) strlen( willInfo.pTopicName );
             willInfo.pPayload = _pSamplePayload;
             willInfo.payloadLength = _samplePayloadLength;
@@ -934,6 +955,9 @@ TEST( MQTT_System, RestorePreviousSession )
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     IotSemaphore_t waitSem;
 
+    /* The topic to use for this test. */
+    GENERATE_TOPIC_WITH_SUFFIX( pTopic, "/RestorePreviousSession" );
+
     /* Create the wait semaphore for operations. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &waitSem, 0, 1 ) );
 
@@ -952,7 +976,7 @@ TEST( MQTT_System, RestorePreviousSession )
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         /* Add a subscription. */
-        subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/RestorePreviousSession";
+        subscription.pTopicFilter = pTopic;
         subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
         subscription.callback.pCallbackContext = &waitSem;
         subscription.callback.function = _publishReceived;
@@ -980,7 +1004,7 @@ TEST( MQTT_System, RestorePreviousSession )
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         /* Publish a message to the subscription added in the previous session. */
-        publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/RestorePreviousSession";
+        publishInfo.pTopicName = pTopic;
         publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
         publishInfo.pPayload = _pSamplePayload;
         publishInfo.payloadLength = _samplePayloadLength;
@@ -1049,9 +1073,12 @@ TEST( MQTT_System, WaitAfterDisconnect )
     connectInfo.pClientIdentifier = _pClientIdentifier;
     connectInfo.clientIdentifierLength = ( uint16_t ) strlen( _pClientIdentifier );
 
+    /* The topic to use for this test. */
+    GENERATE_TOPIC_WITH_SUFFIX( pTopic, "/WaitAfterDisconnect" );
+
     /* Set the members of the publish info. */
     publishInfo.qos = IOT_MQTT_QOS_1;
-    publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/WaitAfterDisconnect";
+    publishInfo.pTopicName = pTopic;
     publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
     publishInfo.pPayload = _pSamplePayload;
     publishInfo.payloadLength = _samplePayloadLength;
@@ -1111,6 +1138,9 @@ TEST( MQTT_System, SubscribeCompleteReentrancy )
      * for test completion. */
     IotSemaphore_t pWaitSemaphores[ 2 ];
 
+    /* The topic to use for this test. */
+    GENERATE_TOPIC_WITH_SUFFIX( pTopic, "/Reentrancy" );
+
     /* Create the semaphores. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( pWaitSemaphores[ 0 ] ), 0, 1 ) );
 
@@ -1135,7 +1165,7 @@ TEST( MQTT_System, SubscribeCompleteReentrancy )
 
                 /* Subscribe with a completion callback. */
                 subscription.qos = IOT_MQTT_QOS_1;
-                subscription.pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/Reentrancy";
+                subscription.pTopicFilter = pTopic;
                 subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
                 subscription.callback.function = _publishReceived;
                 subscription.callback.pCallbackContext = &( pWaitSemaphores[ 0 ] );
@@ -1183,6 +1213,10 @@ TEST( MQTT_System, IncomingPublishReentrancy )
      * for test completion. */
     IotSemaphore_t pWaitSemaphores[ 2 ];
 
+    /* The topics to use for this test. */
+    GENERATE_TOPIC_WITH_SUFFIX( pTopic1, "/IncomingPublishReentrancy" );
+    GENERATE_TOPIC_WITH_SUFFIX( pTopic2, "/Reentrancy" );
+
     /* Create the semaphores. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( pWaitSemaphores[ 0 ] ), 0, 1 ) );
 
@@ -1207,13 +1241,13 @@ TEST( MQTT_System, IncomingPublishReentrancy )
 
                 /* Subscribe with to the test topics. */
                 pSubscription[ 0 ].qos = IOT_MQTT_QOS_1;
-                pSubscription[ 0 ].pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/IncomingPublishReentrancy";
+                pSubscription[ 0 ].pTopicFilter = pTopic1;
                 pSubscription[ 0 ].topicFilterLength = ( uint16_t ) strlen( pSubscription[ 0 ].pTopicFilter );
                 pSubscription[ 0 ].callback.function = _reentrantCallback;
                 pSubscription[ 0 ].callback.pCallbackContext = pWaitSemaphores;
 
                 pSubscription[ 1 ].qos = IOT_MQTT_QOS_1;
-                pSubscription[ 1 ].pTopicFilter = IOT_TEST_MQTT_TOPIC_PREFIX "/Reentrancy";
+                pSubscription[ 1 ].pTopicFilter = pTopic2;
                 pSubscription[ 1 ].topicFilterLength = ( uint16_t ) strlen( pSubscription[ 1 ].pTopicFilter );
                 pSubscription[ 1 ].callback.function = _publishReceived;
                 pSubscription[ 1 ].callback.pCallbackContext = &( pWaitSemaphores[ 0 ] );
@@ -1227,7 +1261,7 @@ TEST( MQTT_System, IncomingPublishReentrancy )
 
                 /* Publish a message to the test topic. */
                 publishInfo.qos = IOT_MQTT_QOS_1;
-                publishInfo.pTopicName = IOT_TEST_MQTT_TOPIC_PREFIX "/IncomingPublishReentrancy";
+                publishInfo.pTopicName = pTopic1;
                 publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
                 publishInfo.pPayload = _pSamplePayload;
                 publishInfo.payloadLength = _samplePayloadLength;
