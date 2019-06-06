@@ -9,8 +9,10 @@ set -e
 run_tests_and_demos() {
     # For commit builds, run the full Shadow demo and tests. For pull request builds,
     # run only the unit tests (credentials are not available for pull request builds).
+    # Sleep for 1.1 seconds between the runs to respect AWS service limits.
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
         ./bin/aws_iot_tests_shadow
+        sleep 1.1
         ./bin/aws_iot_demo_shadow
     else
         # Run only Shadow unit tests.

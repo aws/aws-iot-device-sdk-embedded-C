@@ -41,6 +41,7 @@
 #include "iot_json_utils.h"
 
 /* Platform layer includes. */
+#include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
 /* Test network header include. */
@@ -430,6 +431,8 @@ TEST_GROUP( Shadow_System );
  */
 TEST_SETUP( Shadow_System )
 {
+    static uint64_t lastConnectTime = 0;
+    uint64_t elapsedTime = 0;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
 
@@ -478,6 +481,15 @@ TEST_SETUP( Shadow_System )
     connectInfo.clientIdentifierLength = ( uint16_t ) ( sizeof( AWS_IOT_TEST_SHADOW_THING_NAME ) - 1 );
     connectInfo.keepAliveSeconds = IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
+    /* AWS IoT Service limits only allow 1 connection per MQTT client ID per second.
+     * Wait until 1100 ms have elapsed since the last connection. */
+    elapsedTime = IotClock_GetTimeMs() - lastConnectTime;
+
+    if( elapsedTime < 1100ULL )
+    {
+        IotClock_SleepMs( 1100UL - ( uint32_t ) elapsedTime );
+    }
+
     /* Establish an MQTT connection. */
     if( IotMqtt_Connect( &_networkInfo,
                          &connectInfo,
@@ -486,6 +498,9 @@ TEST_SETUP( Shadow_System )
     {
         TEST_FAIL_MESSAGE( "Failed to establish MQTT connection for Shadow tests." );
     }
+
+    /* Update the time of the last MQTT connect. */
+    lastConnectTime = IotClock_GetTimeMs();
 
     /* Delete any existing Shadow so all tests start with no Shadow. */
     status = AwsIotShadow_TimedDelete( _mqttConnection,
