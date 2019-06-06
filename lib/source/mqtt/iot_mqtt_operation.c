@@ -230,7 +230,7 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
     {
         scheduleDelay = pOperation->u.operation.retry.nextPeriod;
 
-        /* Double the retry peiod, subject to a ceiling value. */
+        /* Double the retry period, subject to a ceiling value. */
         pOperation->u.operation.retry.nextPeriod *= 2;
 
         if( pOperation->u.operation.retry.nextPeriod > IOT_MQTT_RETRY_MS_CEILING )
