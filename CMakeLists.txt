@@ -170,3 +170,10 @@ add_subdirectory( demos/app )
 if( ${IOT_BUILD_TESTS} )
     add_subdirectory( tests/ )
 endif()
+
+# Set startup projects in Visual Studio.
+if( ${IOT_BUILD_TESTS} )
+    set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT iot_tests_mqtt )
+else()
+    set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT iot_demo_mqtt )
+endif()
