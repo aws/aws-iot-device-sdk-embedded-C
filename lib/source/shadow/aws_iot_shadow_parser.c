@@ -154,7 +154,7 @@ _shadowOperationStatus_t _AwsIotShadow_ParseShadowStatus( const char * pTopicNam
                      SHADOW_ACCEPTED_SUFFIX,
                      SHADOW_ACCEPTED_SUFFIX_LENGTH ) == 0 )
         {
-            return _SHADOW_ACCEPTED;
+            return SHADOW_ACCEPTED;
         }
     }
 
@@ -174,12 +174,12 @@ _shadowOperationStatus_t _AwsIotShadow_ParseShadowStatus( const char * pTopicNam
                      SHADOW_REJECTED_SUFFIX,
                      SHADOW_REJECTED_SUFFIX_LENGTH ) == 0 )
         {
-            return _SHADOW_REJECTED;
+            return SHADOW_REJECTED;
         }
     }
 
     /* The topic name matched neither "accepted" nor "rejected". */
-    return _UNKNOWN_STATUS;
+    return UNKNOWN_STATUS;
 }
 
 /*-----------------------------------------------------------*/

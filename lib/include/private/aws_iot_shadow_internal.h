@@ -327,13 +327,13 @@ typedef void ( * _mqttCallbackFunction_t )( void *,
 typedef enum _shadowOperationType
 {
     /* Shadow operations. */
-    _SHADOW_DELETE = 0, /**< @ref shadow_function_delete */
-    _SHADOW_GET = 1,    /**< @ref shadow_function_get */
-    _SHADOW_UPDATE = 2, /**< @ref shadow_function_update */
+    SHADOW_DELETE = 0, /**< @ref shadow_function_delete */
+    SHADOW_GET = 1,    /**< @ref shadow_function_get */
+    SHADOW_UPDATE = 2, /**< @ref shadow_function_update */
 
     /* Shadow callbacks. */
-    _SET_DELTA_CALLBACK = 3,  /**< @ref shadow_function_setdeltacallback */
-    _SET_UPDATED_CALLBACK = 4 /**< @ref shadow_function_setupdatedcallback */
+    SET_DELTA_CALLBACK = 3,  /**< @ref shadow_function_setdeltacallback */
+    SET_UPDATED_CALLBACK = 4 /**< @ref shadow_function_setupdatedcallback */
 } _shadowOperationType_t;
 
 /**
@@ -341,8 +341,8 @@ typedef enum _shadowOperationType
  */
 typedef enum _shadowCallbackType
 {
-    _DELTA_CALLBACK = 0,  /**< Delta callback. */
-    _UPDATED_CALLBACK = 1 /**< Updated callback. */
+    DELTA_CALLBACK = 0,  /**< Delta callback. */
+    UPDATED_CALLBACK = 1 /**< Updated callback. */
 } _shadowCallbackType_t;
 
 /**
@@ -351,9 +351,9 @@ typedef enum _shadowCallbackType
  */
 typedef enum _shadowOperationStatus
 {
-    _SHADOW_ACCEPTED = 0, /**< Shadow operation accepted. */
-    _SHADOW_REJECTED = 1, /**< Shadow operation rejected. */
-    _UNKNOWN_STATUS = 2   /**< Parsed value matched neither accepted nor rejected. */
+    SHADOW_ACCEPTED = 0, /**< Shadow operation accepted. */
+    SHADOW_REJECTED = 1, /**< Shadow operation rejected. */
+    UNKNOWN_STATUS = 2   /**< Parsed value matched neither accepted nor rejected. */
 } _shadowOperationStatus_t;
 
 /**
