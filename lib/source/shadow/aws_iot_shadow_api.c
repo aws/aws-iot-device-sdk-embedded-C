@@ -988,6 +988,7 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
     if( pOperation->u.update.pClientToken == NULL )
     {
         IotLogError( "Failed to allocate memory for Shadow update client token." );
+        _AwsIotShadow_DestroyOperation( pOperation );
 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NO_MEMORY );
     }
@@ -1020,18 +1021,7 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
         *pUpdateOperation = AWS_IOT_SHADOW_OPERATION_INITIALIZER;
     }
 
-    IOT_FUNCTION_CLEANUP_BEGIN();
-
-    /* Clean up on error. */
-    if( status != AWS_IOT_SHADOW_SUCCESS )
-    {
-        if( pOperation != NULL )
-        {
-            _AwsIotShadow_DestroyOperation( pOperation );
-        }
-    }
-
-    IOT_FUNCTION_CLEANUP_END();
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
