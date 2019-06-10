@@ -34,6 +34,9 @@
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
 
+/* Error handling include. */
+#include "private/iot_error.h"
+
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
 
@@ -131,6 +134,7 @@ static AwsIotShadowError_t _modifyOperationSubscriptions( IotMqttConnection_t mq
                                                           _mqttCallbackFunction_t callback,
                                                           _mqttOperationFunction_t mqttOperation )
 {
+    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
     IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
 
@@ -171,20 +175,18 @@ static AwsIotShadowError_t _modifyOperationSubscriptions( IotMqttConnection_t mq
         /* Convert the MQTT "NO MEMORY" error to a Shadow "NO MEMORY" error. */
         if( mqttStatus == IOT_MQTT_NO_MEMORY )
         {
-            return AWS_IOT_SHADOW_NO_MEMORY;
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NO_MEMORY );
         }
 
-        return AWS_IOT_SHADOW_MQTT_ERROR;
-    }
-    else
-    {
-        IotLogDebug( "Successfully %s %.*s",
-                     mqttOperation == IotMqtt_TimedSubscribe ? "subscribed to" : "unsubscribed from",
-                     topicFilterLength,
-                     pTopicFilter );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_MQTT_ERROR );
     }
 
-    return AWS_IOT_SHADOW_STATUS_PENDING;
+    IotLogDebug( "Successfully %s %.*s",
+                 mqttOperation == IotMqtt_TimedSubscribe ? "subscribed to" : "unsubscribed from",
+                 topicFilterLength,
+                 pTopicFilter );
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
@@ -253,14 +255,15 @@ _shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * pThingName,
 void _AwsIotShadow_RemoveSubscription( _shadowSubscription_t * pSubscription,
                                        _shadowSubscription_t ** pRemovedSubscription )
 {
-    int i = 0;
+    int32_t i = 0;
+    bool removeSubscription = true;
 
     IotLogDebug( "Checking if subscription object for %.*s can be removed.",
                  pSubscription->thingNameLength,
                  pSubscription->pThingName );
 
-    /* If any Shadow operation's subscription reference count is not 0, then the
-     * subscription cannot be removed. */
+    /* Check for active operations. If any Shadow operation's subscription
+     * reference count is not 0, then the subscription cannot be removed. */
     for( i = 0; i < SHADOW_OPERATION_COUNT; i++ )
     {
         if( pSubscription->references[ i ] > 0 )
@@ -271,7 +274,7 @@ void _AwsIotShadow_RemoveSubscription( _shadowSubscription_t * pSubscription,
                          pSubscription->thingNameLength,
                          pSubscription->pThingName );
 
-            return;
+            removeSubscription = false;
         }
         else if( pSubscription->references[ i ] == PERSISTENT_SUBSCRIPTION )
         {
@@ -280,42 +283,56 @@ void _AwsIotShadow_RemoveSubscription( _shadowSubscription_t * pSubscription,
                          pSubscription->thingNameLength,
                          pSubscription->pThingName );
 
-            return;
+            removeSubscription = false;
         }
-    }
 
-    /* If any Shadow callbacks are active, then the subscription cannot be removed. */
-    for( i = 0; i < SHADOW_CALLBACK_COUNT; i++ )
-    {
-        if( pSubscription->callbacks[ i ].function != NULL )
+        if( removeSubscription == false )
         {
-            IotLogDebug( "Found active Shadow %s callback for %.*s subscription object. "
-                         "Subscription cannot be removed yet.",
-                         _pAwsIotShadowCallbackNames[ i ],
-                         pSubscription->thingNameLength,
-                         pSubscription->pThingName );
-
-            return;
+            break;
         }
     }
 
-    /* No Shadow operation subscription references or active Shadow callbacks.
-     * Remove the subscription object. */
-    IotListDouble_Remove( &( pSubscription->link ) );
-
-    IotLogDebug( "Removed subscription object for %.*s.",
-                 pSubscription->thingNameLength,
-                 pSubscription->pThingName );
-
-    /* If the caller requested the removed subscription, set the output parameter.
-     * Otherwise, free the memory used by the subscription. */
-    if( pRemovedSubscription != NULL )
+    /* Check for active subscriptions. If any Shadow callbacks are active, then the
+     * subscription cannot be removed. */
+    if( removeSubscription == true )
     {
-        *pRemovedSubscription = pSubscription;
+        for( i = 0; i < SHADOW_CALLBACK_COUNT; i++ )
+        {
+            if( pSubscription->callbacks[ i ].function != NULL )
+            {
+                IotLogDebug( "Found active Shadow %s callback for %.*s subscription object. "
+                             "Subscription cannot be removed yet.",
+                             _pAwsIotShadowCallbackNames[ i ],
+                             pSubscription->thingNameLength,
+                             pSubscription->pThingName );
+
+                removeSubscription = false;
+                break;
+            }
+        }
     }
-    else
+
+    /* Remove the subscription if unused. */
+    if( removeSubscription == true )
     {
-        _AwsIotShadow_DestroySubscription( pSubscription );
+        /* No Shadow operation subscription references or active Shadow callbacks.
+         * Remove the subscription object. */
+        IotListDouble_Remove( &( pSubscription->link ) );
+
+        IotLogDebug( "Removed subscription object for %.*s.",
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName );
+
+        /* If the caller requested the removed subscription, set the output parameter.
+         * Otherwise, free the memory used by the subscription. */
+        if( pRemovedSubscription != NULL )
+        {
+            *pRemovedSubscription = pSubscription;
+        }
+        else
+        {
+            _AwsIotShadow_DestroySubscription( pSubscription );
+        }
     }
 }
 
@@ -340,8 +357,8 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
                                                        uint16_t operationTopicLength,
                                                        _mqttCallbackFunction_t callback )
 {
+    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
     uint16_t topicFilterLength = 0;
-    AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     const _shadowOperationType_t type = pOperation->type;
     _shadowSubscription_t * pSubscription = pOperation->pSubscription;
 
@@ -354,7 +371,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
                      pSubscription->thingNameLength,
                      pSubscription->pThingName );
 
-        return AWS_IOT_SHADOW_STATUS_PENDING;
+        IOT_GOTO_CLEANUP();
     }
 
     /* When persistent subscriptions are not present, the reference count must
@@ -385,7 +402,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
 
         if( status != AWS_IOT_SHADOW_STATUS_PENDING )
         {
-            return status;
+            IOT_GOTO_CLEANUP();
         }
 
         /* Place the topic "rejected" suffix at the end of the Shadow topic buffer. */
@@ -422,7 +439,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
                                                     callback,
                                                     IotMqtt_TimedUnsubscribe );
 
-            return status;
+            IOT_GOTO_CLEANUP();
         }
     }
 
@@ -449,7 +466,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
                      pSubscription->pThingName );
     }
 
-    return status;
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
@@ -464,83 +481,83 @@ void _AwsIotShadow_DecrementReferences( _shadowOperation_t * pOperation,
     uint16_t operationTopicLength = 0;
 
     /* Do nothing if this Shadow operation has persistent subscriptions. */
-    if( pSubscription->references[ type ] == PERSISTENT_SUBSCRIPTION )
+    if( pSubscription->references[ type ] != PERSISTENT_SUBSCRIPTION )
+    {
+        /* Decrement the number of subscription references for this operation.
+         * Ensure that it's positive. */
+        ( pSubscription->references[ type ] )--;
+        AwsIotShadow_Assert( pSubscription->references[ type ] >= 0 );
+
+        /* Check if the number of references has reached 0. */
+        if( pSubscription->references[ type ] == 0 )
+        {
+            IotLogDebug( "Reference count for %.*s %s is 0. Unsubscribing.",
+                         pSubscription->thingNameLength,
+                         pSubscription->pThingName,
+                         _pAwsIotShadowOperationNames[ type ] );
+
+            /* Subscription must have a topic buffer. */
+            AwsIotShadow_Assert( pSubscription->pTopicBuffer != NULL );
+
+            /* Generate the prefix of the Shadow topic. This function will not
+             * fail when given a buffer. */
+            ( void ) _AwsIotShadow_GenerateShadowTopic( ( _shadowOperationType_t ) type,
+                                                        pSubscription->pThingName,
+                                                        pSubscription->thingNameLength,
+                                                        &( pSubscription->pTopicBuffer ),
+                                                        &operationTopicLength );
+
+            /* Place the topic "accepted" suffix at the end of the Shadow topic buffer. */
+            ( void ) memcpy( pTopicBuffer + operationTopicLength,
+                             SHADOW_ACCEPTED_SUFFIX,
+                             SHADOW_ACCEPTED_SUFFIX_LENGTH );
+            topicFilterLength = ( uint16_t ) ( operationTopicLength + SHADOW_ACCEPTED_SUFFIX_LENGTH );
+
+            /* There should be an active subscription for the accepted topic. */
+            AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
+                                                       pTopicBuffer,
+                                                       topicFilterLength,
+                                                       NULL ) == true );
+
+            /* Remove the subscription from the Shadow "accepted" topic. */
+            ( void ) _modifyOperationSubscriptions( pOperation->mqttConnection,
+                                                    pTopicBuffer,
+                                                    topicFilterLength,
+                                                    NULL,
+                                                    IotMqtt_TimedUnsubscribe );
+
+            /* Place the topic "rejected" suffix at the end of the Shadow topic buffer. */
+            ( void ) memcpy( pTopicBuffer + operationTopicLength,
+                             SHADOW_REJECTED_SUFFIX,
+                             SHADOW_REJECTED_SUFFIX_LENGTH );
+            topicFilterLength = ( uint16_t ) ( operationTopicLength + SHADOW_ACCEPTED_SUFFIX_LENGTH );
+
+            /* There should be an active subscription for the accepted topic. */
+            AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
+                                                       pTopicBuffer,
+                                                       topicFilterLength,
+                                                       NULL ) == true );
+
+            /* Remove the subscription from the Shadow "rejected" topic. */
+            ( void ) _modifyOperationSubscriptions( pOperation->mqttConnection,
+                                                    pTopicBuffer,
+                                                    topicFilterLength,
+                                                    NULL,
+                                                    IotMqtt_TimedUnsubscribe );
+        }
+
+        /* Check if this subscription should be deleted. */
+        _AwsIotShadow_RemoveSubscription( pSubscription,
+                                          pRemovedSubscription );
+    }
+    else
     {
         IotLogDebug( "Shadow %s for %.*s has persistent subscriptions. Reference "
                      "count will not be decremented.",
                      _pAwsIotShadowOperationNames[ type ],
                      pSubscription->thingNameLength,
                      pSubscription->pThingName );
-
-        return;
     }
-
-    /* Decrement the number of subscription references for this operation.
-     * Ensure that it's positive. */
-    ( pSubscription->references[ type ] )--;
-    AwsIotShadow_Assert( pSubscription->references[ type ] >= 0 );
-
-    /* Check if the number of references has reached 0. */
-    if( pSubscription->references[ type ] == 0 )
-    {
-        IotLogDebug( "Reference count for %.*s %s is 0. Unsubscribing.",
-                     pSubscription->thingNameLength,
-                     pSubscription->pThingName,
-                     _pAwsIotShadowOperationNames[ type ] );
-
-        /* Subscription must have a topic buffer. */
-        AwsIotShadow_Assert( pSubscription->pTopicBuffer != NULL );
-
-        /* Generate the prefix of the Shadow topic. This function will not
-         * fail when given a buffer. */
-        ( void ) _AwsIotShadow_GenerateShadowTopic( ( _shadowOperationType_t ) type,
-                                                    pSubscription->pThingName,
-                                                    pSubscription->thingNameLength,
-                                                    &( pSubscription->pTopicBuffer ),
-                                                    &operationTopicLength );
-
-        /* Place the topic "accepted" suffix at the end of the Shadow topic buffer. */
-        ( void ) memcpy( pTopicBuffer + operationTopicLength,
-                         SHADOW_ACCEPTED_SUFFIX,
-                         SHADOW_ACCEPTED_SUFFIX_LENGTH );
-        topicFilterLength = ( uint16_t ) ( operationTopicLength + SHADOW_ACCEPTED_SUFFIX_LENGTH );
-
-        /* There should be an active subscription for the accepted topic. */
-        AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
-                                                   pTopicBuffer,
-                                                   topicFilterLength,
-                                                   NULL ) == true );
-
-        /* Remove the subscription from the Shadow "accepted" topic. */
-        ( void ) _modifyOperationSubscriptions( pOperation->mqttConnection,
-                                                pTopicBuffer,
-                                                topicFilterLength,
-                                                NULL,
-                                                IotMqtt_TimedUnsubscribe );
-
-        /* Place the topic "rejected" suffix at the end of the Shadow topic buffer. */
-        ( void ) memcpy( pTopicBuffer + operationTopicLength,
-                         SHADOW_REJECTED_SUFFIX,
-                         SHADOW_REJECTED_SUFFIX_LENGTH );
-        topicFilterLength = ( uint16_t ) ( operationTopicLength + SHADOW_ACCEPTED_SUFFIX_LENGTH );
-
-        /* There should be an active subscription for the accepted topic. */
-        AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
-                                                   pTopicBuffer,
-                                                   topicFilterLength,
-                                                   NULL ) == true );
-
-        /* Remove the subscription from the Shadow "rejected" topic. */
-        ( void ) _modifyOperationSubscriptions( pOperation->mqttConnection,
-                                                pTopicBuffer,
-                                                topicFilterLength,
-                                                NULL,
-                                                IotMqtt_TimedUnsubscribe );
-    }
-
-    /* Check if this subscription should be deleted. */
-    _AwsIotShadow_RemoveSubscription( pSubscription,
-                                      pRemovedSubscription );
 }
 
 /*-----------------------------------------------------------*/
@@ -550,9 +567,10 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
                                                                 size_t thingNameLength,
                                                                 uint32_t flags )
 {
-    int i = 0;
+    int32_t i = 0;
     uint16_t operationTopicLength = 0, topicFilterLength = 0;
-    AwsIotShadowError_t removeAcceptedStatus = AWS_IOT_SHADOW_STATUS_PENDING,
+    AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING,
+                        removeAcceptedStatus = AWS_IOT_SHADOW_STATUS_PENDING,
                         removeRejectedStatus = AWS_IOT_SHADOW_STATUS_PENDING;
     _shadowSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
@@ -666,15 +684,18 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
     /* Check the results of the MQTT unsubscribes. */
     if( removeAcceptedStatus != AWS_IOT_SHADOW_STATUS_PENDING )
     {
-        return removeAcceptedStatus;
+        status = removeAcceptedStatus;
     }
-
-    if( removeRejectedStatus != AWS_IOT_SHADOW_STATUS_PENDING )
+    else if( removeRejectedStatus != AWS_IOT_SHADOW_STATUS_PENDING )
     {
-        return removeRejectedStatus;
+        status = removeRejectedStatus;
+    }
+    else
+    {
+        status = AWS_IOT_SHADOW_SUCCESS;
     }
 
-    return AWS_IOT_SHADOW_SUCCESS;
+    return status;
 }
 
 /*-----------------------------------------------------------*/
