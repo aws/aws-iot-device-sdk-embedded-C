@@ -188,17 +188,17 @@ TEST_GROUP_RUNNER( Shadow_Unit_Parser )
  */
 TEST( Shadow_Unit_Parser, StatusValid )
 {
-    _shadowOperationStatus_t status = _UNKNOWN_STATUS;
+    _shadowOperationStatus_t status = UNKNOWN_STATUS;
 
     /* Parse "accepted" status. */
     status = _AwsIotShadow_ParseShadowStatus( "$aws/things/Test_device/shadow/accepted",
                                               39 );
-    TEST_ASSERT_EQUAL( _SHADOW_ACCEPTED, status );
+    TEST_ASSERT_EQUAL( SHADOW_ACCEPTED, status );
 
     /* Parse "rejected" status. */
     status = _AwsIotShadow_ParseShadowStatus( "$aws/things/Test_device/shadow/rejected",
                                               39 );
-    TEST_ASSERT_EQUAL( _SHADOW_REJECTED, status );
+    TEST_ASSERT_EQUAL( SHADOW_REJECTED, status );
 }
 
 /*-----------------------------------------------------------*/
@@ -209,22 +209,22 @@ TEST( Shadow_Unit_Parser, StatusValid )
 TEST( Shadow_Unit_Parser, StatusInvalid )
 {
     /* Topic too short. */
-    TEST_ASSERT_EQUAL( _UNKNOWN_STATUS,
+    TEST_ASSERT_EQUAL( UNKNOWN_STATUS,
                        _AwsIotShadow_ParseShadowStatus( "accepted",
                                                         8 ) );
 
     /* Topic missing last character. */
-    TEST_ASSERT_EQUAL( _UNKNOWN_STATUS,
+    TEST_ASSERT_EQUAL( UNKNOWN_STATUS,
                        _AwsIotShadow_ParseShadowStatus( "$aws/things/Test_device/shadow/accepte",
                                                         38 ) );
 
     /* Topic missing level separator. */
-    TEST_ASSERT_EQUAL( _UNKNOWN_STATUS,
+    TEST_ASSERT_EQUAL( UNKNOWN_STATUS,
                        _AwsIotShadow_ParseShadowStatus( "$aws/things/Test_device/shadowaccepted",
                                                         38 ) );
 
     /* Topic suffix isn't "accepted" or "rejected". */
-    TEST_ASSERT_EQUAL( _UNKNOWN_STATUS,
+    TEST_ASSERT_EQUAL( UNKNOWN_STATUS,
                        _AwsIotShadow_ParseShadowStatus( "$aws/things/Test_device/shadow/unknown",
                                                         38 ) );
 }

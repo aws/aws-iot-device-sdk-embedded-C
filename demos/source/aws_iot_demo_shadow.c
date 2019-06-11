@@ -341,9 +341,10 @@ static void _shadowDeltaCallback( void * pCallbackContext,
 
             if( updateStatus != AWS_IOT_SHADOW_STATUS_PENDING )
             {
-                IotLogWarn( "%.*s failed to report new state.",
+                IotLogWarn( "%.*s failed to report new state, error %s.",
                             pCallbackParam->thingNameLength,
-                            pCallbackParam->pThingName );
+                            pCallbackParam->pThingName,
+                            updateStatus );
             }
             else
             {

@@ -175,7 +175,7 @@ static bool _shadowOperation_match( const IotLink_t * pOperationLink,
                             pParam->thingNameLength ) == 0 );
 
     /* For a Shadow UPDATE operation, compare the client tokens. */
-    if( ( match == true ) && ( pOperation->type == _SHADOW_UPDATE ) )
+    if( ( match == true ) && ( pOperation->type == SHADOW_UPDATE ) )
     {
         /* Check document pointers. */
         AwsIotShadow_Assert( pParam->pDocument != NULL );
@@ -221,7 +221,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
 {
     _shadowOperation_t * pOperation = NULL;
     IotLink_t * pOperationLink = NULL;
-    _shadowOperationStatus_t status = _UNKNOWN_STATUS;
+    _shadowOperationStatus_t status = UNKNOWN_STATUS;
     _operationMatchParams_t param = { .type = ( _shadowOperationType_t ) 0 };
     uint32_t flags = 0;
 
@@ -229,7 +229,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     param.type = type;
 
     /* Set the response document for a Shadow UPDATE. */
-    if( type == _SHADOW_UPDATE )
+    if( type == SHADOW_UPDATE )
     {
         param.pDocument = pMessage->u.message.info.pPayload;
         param.documentLength = pMessage->u.message.info.payloadLength;
@@ -291,7 +291,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
 
     switch( status )
     {
-        case _SHADOW_ACCEPTED:
+        case SHADOW_ACCEPTED:
             IotLogInfo( "Shadow %s of %.*s was ACCEPTED.",
                         _pAwsIotShadowOperationNames[ type ],
                         pOperation->pSubscription->thingNameLength,
@@ -299,7 +299,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
 
             /* Process the retrieved document for a Shadow GET. Otherwise, set
              * status to success. */
-            if( type == _SHADOW_GET )
+            if( type == SHADOW_GET )
             {
                 pOperation->status = _processAcceptedGet( pOperation,
                                                           &( pMessage->u.message.info ) );
@@ -311,7 +311,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
 
             break;
 
-        case _SHADOW_REJECTED:
+        case SHADOW_REJECTED:
             IotLogWarn( "Shadow %s of %.*s was REJECTED.",
                         _pAwsIotShadowOperationNames[ type ],
                         pOperation->pSubscription->thingNameLength,
@@ -353,7 +353,7 @@ static void _deleteCallback( void * pArgument,
     /* Silence warnings about unused parameter. */
     ( void ) pArgument;
 
-    _commonOperationCallback( _SHADOW_DELETE, pMessage );
+    _commonOperationCallback( SHADOW_DELETE, pMessage );
 }
 
 /*-----------------------------------------------------------*/
@@ -364,7 +364,7 @@ static void _getCallback( void * pArgument,
     /* Silence warnings about unused parameter. */
     ( void ) pArgument;
 
-    _commonOperationCallback( _SHADOW_GET, pMessage );
+    _commonOperationCallback( SHADOW_GET, pMessage );
 }
 
 /*-----------------------------------------------------------*/
@@ -421,7 +421,7 @@ static void _updateCallback( void * pArgument,
     /* Silence warnings about unused parameter. */
     ( void ) pArgument;
 
-    _commonOperationCallback( _SHADOW_UPDATE, pMessage );
+    _commonOperationCallback( SHADOW_UPDATE, pMessage );
 }
 
 /*-----------------------------------------------------------*/
@@ -505,7 +505,7 @@ void _AwsIotShadow_DestroyOperation( void * pData )
     }
 
     /* If this is a Shadow update, free any allocated client token. */
-    if( ( pOperation->type == _SHADOW_UPDATE ) &&
+    if( ( pOperation->type == SHADOW_UPDATE ) &&
         ( pOperation->u.update.pClientToken != NULL ) )
     {
         AwsIotShadow_Assert( pOperation->u.update.clientTokenLength > 0 );
@@ -547,9 +547,9 @@ AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t ty
 
     /* Only Shadow delete, get, and update operation types should be passed to this
      * function. */
-    AwsIotShadow_Assert( ( type == _SHADOW_DELETE ) ||
-                         ( type == _SHADOW_GET ) ||
-                         ( type == _SHADOW_UPDATE ) );
+    AwsIotShadow_Assert( ( type == SHADOW_DELETE ) ||
+                         ( type == SHADOW_GET ) ||
+                         ( type == SHADOW_UPDATE ) );
 
     /* Calculate the required topic buffer length. */
     bufferLength = ( uint16_t ) ( SHADOW_TOPIC_PREFIX_LENGTH +
@@ -716,7 +716,7 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
                      publishInfo.pTopicName );
 
         /* Set the document info if this operation is not a Shadow DELETE. */
-        if( pOperation->type != _SHADOW_DELETE )
+        if( pOperation->type != SHADOW_DELETE )
         {
             publishInfo.qos = pDocumentInfo->qos;
             publishInfo.retryLimit = pDocumentInfo->retryLimit;
@@ -731,7 +731,7 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
         }
 
         /* Set the PUBLISH payload to the update document for Shadow UPDATE. */
-        if( pOperation->type == _SHADOW_UPDATE )
+        if( pOperation->type == SHADOW_UPDATE )
         {
             publishInfo.pPayload = pDocumentInfo->u.update.pUpdateDocument;
             publishInfo.payloadLength = pDocumentInfo->u.update.updateDocumentLength;
@@ -860,7 +860,7 @@ void _AwsIotShadow_Notify( _shadowOperation_t * pOperation )
         callbackParam.thingNameLength = pSubscription->thingNameLength;
 
         /* Set the members of the callback parameter for a received document. */
-        if( pOperation->type == _SHADOW_GET )
+        if( pOperation->type == SHADOW_GET )
         {
             callbackParam.u.operation.get.pDocument = pOperation->u.get.pDocument;
             callbackParam.u.operation.get.documentLength = pOperation->u.get.documentLength;
