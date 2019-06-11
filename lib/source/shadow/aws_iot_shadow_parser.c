@@ -34,6 +34,9 @@
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
 
+/* Error handling include. */
+#include "private/iot_error.h"
+
 /* JSON utilities include. */
 #include "iot_json_utils.h"
 
@@ -86,49 +89,53 @@ static AwsIotShadowError_t _codeToShadowStatus( uint32_t code );
 
 static AwsIotShadowError_t _codeToShadowStatus( uint32_t code )
 {
+    AwsIotShadowError_t errorCode = AWS_IOT_SHADOW_STATUS_PENDING;
+
     /* Convert the Shadow response code to an AwsIotShadowError_t. */
     switch( code )
     {
         case 400UL:
-
-            return AWS_IOT_SHADOW_BAD_REQUEST;
+            errorCode = AWS_IOT_SHADOW_BAD_REQUEST;
+            break;
 
         case 401UL:
-
-            return AWS_IOT_SHADOW_UNAUTHORIZED;
+            errorCode = AWS_IOT_SHADOW_UNAUTHORIZED;
+            break;
 
         case 403UL:
-
-            return AWS_IOT_SHADOW_FORBIDDEN;
+            errorCode = AWS_IOT_SHADOW_FORBIDDEN;
+            break;
 
         case 404UL:
-
-            return AWS_IOT_SHADOW_NOT_FOUND;
+            errorCode = AWS_IOT_SHADOW_NOT_FOUND;
+            break;
 
         case 409UL:
-
-            return AWS_IOT_SHADOW_CONFLICT;
+            errorCode = AWS_IOT_SHADOW_CONFLICT;
+            break;
 
         case 413UL:
-
-            return AWS_IOT_SHADOW_TOO_LARGE;
+            errorCode = AWS_IOT_SHADOW_TOO_LARGE;
+            break;
 
         case 415UL:
-
-            return AWS_IOT_SHADOW_UNSUPPORTED;
+            errorCode = AWS_IOT_SHADOW_UNSUPPORTED;
+            break;
 
         case 429UL:
-
-            return AWS_IOT_SHADOW_TOO_MANY_REQUESTS;
+            errorCode = AWS_IOT_SHADOW_TOO_MANY_REQUESTS;
+            break;
 
         case 500UL:
-
-            return AWS_IOT_SHADOW_SERVER_ERROR;
+            errorCode = AWS_IOT_SHADOW_SERVER_ERROR;
+            break;
 
         default:
-
-            return AWS_IOT_SHADOW_BAD_RESPONSE;
+            errorCode = AWS_IOT_SHADOW_BAD_RESPONSE;
+            break;
     }
+
+    return errorCode;
 }
 
 /*-----------------------------------------------------------*/
@@ -136,6 +143,7 @@ static AwsIotShadowError_t _codeToShadowStatus( uint32_t code )
 _shadowOperationStatus_t _AwsIotShadow_ParseShadowStatus( const char * pTopicName,
                                                           size_t topicNameLength )
 {
+    IOT_FUNCTION_ENTRY( _shadowOperationStatus_t, UNKNOWN_STATUS );
     const char * pSuffixStart = NULL;
 
     /* Check that the Shadow status topic name is at least as long as the
@@ -154,7 +162,7 @@ _shadowOperationStatus_t _AwsIotShadow_ParseShadowStatus( const char * pTopicNam
                      SHADOW_ACCEPTED_SUFFIX,
                      SHADOW_ACCEPTED_SUFFIX_LENGTH ) == 0 )
         {
-            return _SHADOW_ACCEPTED;
+            IOT_SET_AND_GOTO_CLEANUP( SHADOW_ACCEPTED );
         }
     }
 
@@ -174,12 +182,11 @@ _shadowOperationStatus_t _AwsIotShadow_ParseShadowStatus( const char * pTopicNam
                      SHADOW_REJECTED_SUFFIX,
                      SHADOW_REJECTED_SUFFIX_LENGTH ) == 0 )
         {
-            return _SHADOW_REJECTED;
+            IOT_SET_AND_GOTO_CLEANUP( SHADOW_REJECTED );
         }
     }
 
-    /* The topic name matched neither "accepted" nor "rejected". */
-    return _UNKNOWN_STATUS;
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
@@ -187,6 +194,7 @@ _shadowOperationStatus_t _AwsIotShadow_ParseShadowStatus( const char * pTopicNam
 AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * pErrorDocument,
                                                       size_t errorDocumentLength )
 {
+    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
     const char * pCode = NULL, * pMessage = NULL;
     size_t codeLength = 0, messageLength = 0;
     uint32_t code = 0;
@@ -204,7 +212,7 @@ AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * pErrorDocumen
                     errorDocumentLength,
                     pErrorDocument );
 
-        return AWS_IOT_SHADOW_BAD_RESPONSE;
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_RESPONSE );
     }
 
     /* Code must be in error document. */
@@ -236,10 +244,13 @@ AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * pErrorDocumen
                     pErrorDocument );
 
         /* An error document must contain a message; if it does not, then it is invalid. */
-        return AWS_IOT_SHADOW_BAD_RESPONSE;
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_RESPONSE );
     }
 
-    return _codeToShadowStatus( code );
+    /* Convert a successfully parsed JSON code to a Shadow status. */
+    status = _codeToShadowStatus( code );
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
@@ -249,13 +260,14 @@ AwsIotShadowError_t _AwsIotShadow_ParseThingName( const char * pTopicName,
                                                   const char ** pThingName,
                                                   size_t * pThingNameLength )
 {
+    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_SUCCESS );
     const char * pThingNameStart = NULL;
     size_t thingNameLength = 0;
 
     /* Check that the topic name length exceeds the minimum possible length. */
     if( topicNameLength < MINIMUM_SHADOW_TOPIC_NAME_LENGTH )
     {
-        return AWS_IOT_SHADOW_BAD_RESPONSE;
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_RESPONSE );
     }
 
     /* All Shadow topic names must start with the same prefix. */
@@ -263,7 +275,7 @@ AwsIotShadowError_t _AwsIotShadow_ParseThingName( const char * pTopicName,
                  pTopicName,
                  SHADOW_TOPIC_PREFIX_LENGTH ) != 0 )
     {
-        return AWS_IOT_SHADOW_BAD_RESPONSE;
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_RESPONSE );
     }
 
     /* The Thing Name starts immediately after the topic prefix. */
@@ -280,14 +292,14 @@ AwsIotShadowError_t _AwsIotShadow_ParseThingName( const char * pTopicName,
      * name is invalid. */
     if( thingNameLength + SHADOW_TOPIC_PREFIX_LENGTH >= ( size_t ) topicNameLength )
     {
-        return AWS_IOT_SHADOW_BAD_RESPONSE;
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_RESPONSE );
     }
 
     /* Set the output parameters. */
     *pThingName = pThingNameStart;
     *pThingNameLength = thingNameLength;
 
-    return AWS_IOT_SHADOW_SUCCESS;
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/

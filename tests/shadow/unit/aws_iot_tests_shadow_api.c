@@ -659,7 +659,7 @@ TEST( Shadow_Unit_API, WaitInvalidParameters )
 
     /* NULL output parameters for Shadow GET. */
     operation.flags = AWS_IOT_SHADOW_FLAG_WAITABLE;
-    operation.type = _SHADOW_GET;
+    operation.type = SHADOW_GET;
     status = AwsIotShadow_Wait( &operation, 0, NULL, NULL );
 }
 
