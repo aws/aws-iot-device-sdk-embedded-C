@@ -44,22 +44,22 @@ CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
 # Set the platform named based on the host OS if not defined.
 if( NOT DEFINED IOT_PLATFORM_NAME )
     if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
+        set( IOT_PLATFORM_NAME "posix" CACHE STRING "Port to use for building the SDK." )
+
         # Provide an option to use the OpenSSL network abstraction on Linux.
         option( IOT_NETWORK_USE_OPENSSL
                 "Set this to ON to use a network abstraction implemented on OpenSSL. When OFF, the mbed TLS network abstraction is used."
                 OFF )
-
-        if( ${IOT_NETWORK_USE_OPENSSL} )
-            add_definitions( -DIOT_NETWORK_USE_OPENSSL=1 )
-        endif()
-
-        set( IOT_PLATFORM_NAME "posix" CACHE STRING "Port to use for building the SDK." )
     elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
         set( IOT_PLATFORM_NAME "win32" CACHE STRING "Port to use for building the SDK." )
 
         # Export all symbols when building Windows DLLs.
         set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE )
     endif()
+endif()
+
+if( ${IOT_NETWORK_USE_OPENSSL} )
+    add_definitions( -DIOT_NETWORK_USE_OPENSSL=1 )
 endif()
 
 # Validate the platform name.
