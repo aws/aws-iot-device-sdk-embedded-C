@@ -41,25 +41,34 @@ CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
                         ON "${ALLOW_SHARED_LIBRARIES}"
                         OFF )
 
-# Check for system support and set platform name.
-if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-    # Provide an option to use the OpenSSL network abstraction on Linux.
-    option( IOT_NETWORK_USE_OPENSSL
-            "Set this to ON to use a network abstraction implemented on OpenSSL. When OFF, the mbed TLS network abstraction is used."
-            OFF )
+# Set the platform named based on the host OS if not defined.
+if( NOT DEFINED IOT_PLATFORM_NAME )
+    if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
+        # Provide an option to use the OpenSSL network abstraction on Linux.
+        option( IOT_NETWORK_USE_OPENSSL
+                "Set this to ON to use a network abstraction implemented on OpenSSL. When OFF, the mbed TLS network abstraction is used."
+                OFF )
 
-    if( ${IOT_NETWORK_USE_OPENSSL} )
-        add_definitions( -DIOT_NETWORK_USE_OPENSSL=1 )
+        if( ${IOT_NETWORK_USE_OPENSSL} )
+            add_definitions( -DIOT_NETWORK_USE_OPENSSL=1 )
+        endif()
+
+        set( IOT_PLATFORM_NAME "posix" CACHE STRING "Port to use for building the SDK." )
+    elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
+        set( IOT_PLATFORM_NAME "win32" CACHE STRING "Port to use for building the SDK." )
+
+        # Export all symbols when building Windows DLLs.
+        set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE )
     endif()
+endif()
 
-    set( IOT_PLATFORM_NAME posix )
-elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-    set( IOT_PLATFORM_NAME win32 )
+# Validate the platform name.
+if( NOT DEFINED IOT_PLATFORM_NAME )
+    message( FATAL_ERROR "IOT_PLATFORM_NAME was not set and could not be automatically determined." )
+endif()
 
-    # Export all symbols when building Windows DLLs.
-    set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE )
-else()
-    message( FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}. Currently supported systems are: Linux, Windows." )
+if( NOT EXISTS ${PROJECT_SOURCE_DIR}/platform/ports/${IOT_PLATFORM_NAME} )
+    message( FATAL_ERROR "A port for ${IOT_PLATFORM_NAME} does not exist in platform/ports." )
 endif()
 
 # Set output directories.
