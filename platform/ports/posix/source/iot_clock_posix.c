@@ -217,8 +217,8 @@ uint64_t IotClock_GetTimeMs( void )
         abort();
     }
 
-    return ( ( uint64_t ) currentTime.tv_sec ) * 1000ULL +
-           ( ( uint64_t ) currentTime.tv_nsec ) / 1000000ULL;
+    return ( ( uint64_t ) currentTime.tv_sec ) * MILLISECONDS_PER_SECOND +
+           ( ( uint64_t ) currentTime.tv_nsec ) / NANOSECONDS_PER_MILLISECOND;
 }
 
 /*-----------------------------------------------------------*/
