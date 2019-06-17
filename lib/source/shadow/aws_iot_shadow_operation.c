@@ -221,7 +221,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
 {
     _shadowOperation_t * pOperation = NULL;
     IotLink_t * pOperationLink = NULL;
-    _shadowOperationStatus_t status = UNKNOWN_STATUS;
+    AwsIotStatus_t status = AWS_IOT_UNKNOWN;
     _operationMatchParams_t param = { .type = ( _shadowOperationType_t ) 0 };
     uint32_t flags = 0;
 
@@ -287,12 +287,12 @@ static void _commonOperationCallback( _shadowOperationType_t type,
                  pMessage->u.message.info.pTopicName );
 
     /* Parse the status from the topic name. */
-    status = _AwsIotShadow_ParseShadowStatus( pMessage->u.message.info.pTopicName,
-                                              pMessage->u.message.info.topicNameLength );
+    status = AwsIot_ParseStatus( pMessage->u.message.info.pTopicName,
+                                 pMessage->u.message.info.topicNameLength );
 
     switch( status )
     {
-        case SHADOW_ACCEPTED:
+        case AWS_IOT_ACCEPTED:
             IotLogInfo( "Shadow %s of %.*s was ACCEPTED.",
                         _pAwsIotShadowOperationNames[ type ],
                         pOperation->pSubscription->thingNameLength,
@@ -312,7 +312,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
 
             break;
 
-        case SHADOW_REJECTED:
+        case AWS_IOT_REJECTED:
             IotLogWarn( "Shadow %s of %.*s was REJECTED.",
                         _pAwsIotShadowOperationNames[ type ],
                         pOperation->pSubscription->thingNameLength,
