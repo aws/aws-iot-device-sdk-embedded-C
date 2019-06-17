@@ -512,7 +512,7 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
     /* Thing Name too long. */
     status = AwsIotShadow_Delete( _pMqttConnection,
                                   TEST_THING_NAME,
-                                  MAX_THING_NAME_LENGTH + 1,
+                                  AWS_IOT_MAX_THING_NAME_LENGTH + 1,
                                   0,
                                   NULL,
                                   NULL );
