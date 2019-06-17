@@ -166,6 +166,9 @@ add_subdirectory( lib/source/serializer )
 # Defender library.
 add_subdirectory( lib/source/defender )
 
+# Jobs library.
+add_subdirectory( lib/source/jobs )
+
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
 

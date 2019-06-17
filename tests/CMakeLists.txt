@@ -17,3 +17,6 @@ add_subdirectory( serializer )
 
 # Shadow tests.
 add_subdirectory( shadow )
+
+# Jobs tests.
+add_subdirectory( jobs )
