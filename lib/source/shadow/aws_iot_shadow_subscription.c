@@ -383,9 +383,9 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
     {
         /* Place the topic "accepted" suffix at the end of the Shadow topic buffer. */
         ( void ) memcpy( pTopicBuffer + operationTopicLength,
-                         SHADOW_ACCEPTED_SUFFIX,
-                         SHADOW_ACCEPTED_SUFFIX_LENGTH );
-        topicFilterLength = ( uint16_t ) ( operationTopicLength + SHADOW_ACCEPTED_SUFFIX_LENGTH );
+                         AWS_IOT_ACCEPTED_SUFFIX,
+                         AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
+        topicFilterLength = ( uint16_t ) ( operationTopicLength + AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
 
         /* There should not be an active subscription for the accepted topic. */
         AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
@@ -407,9 +407,9 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
 
         /* Place the topic "rejected" suffix at the end of the Shadow topic buffer. */
         ( void ) memcpy( pTopicBuffer + operationTopicLength,
-                         SHADOW_REJECTED_SUFFIX,
-                         SHADOW_REJECTED_SUFFIX_LENGTH );
-        topicFilterLength = ( uint16_t ) ( operationTopicLength + SHADOW_REJECTED_SUFFIX_LENGTH );
+                         AWS_IOT_REJECTED_SUFFIX,
+                         AWS_IOT_REJECTED_SUFFIX_LENGTH );
+        topicFilterLength = ( uint16_t ) ( operationTopicLength + AWS_IOT_REJECTED_SUFFIX_LENGTH );
 
         /* There should not be an active subscription for the rejected topic. */
         AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
@@ -429,9 +429,9 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
             /* Failed to add subscription to Shadow "rejected" topic. Remove
              * subscription for the Shadow "accepted" topic. */
             ( void ) memcpy( pTopicBuffer + operationTopicLength,
-                             SHADOW_ACCEPTED_SUFFIX,
-                             SHADOW_ACCEPTED_SUFFIX_LENGTH );
-            topicFilterLength = ( uint16_t ) ( operationTopicLength + SHADOW_ACCEPTED_SUFFIX_LENGTH );
+                             AWS_IOT_ACCEPTED_SUFFIX,
+                             AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
+            topicFilterLength = ( uint16_t ) ( operationTopicLength + AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
 
             ( void ) _modifyOperationSubscriptions( pOperation->mqttConnection,
                                                     pTopicBuffer,
@@ -509,9 +509,9 @@ void _AwsIotShadow_DecrementReferences( _shadowOperation_t * pOperation,
 
             /* Place the topic "accepted" suffix at the end of the Shadow topic buffer. */
             ( void ) memcpy( pTopicBuffer + operationTopicLength,
-                             SHADOW_ACCEPTED_SUFFIX,
-                             SHADOW_ACCEPTED_SUFFIX_LENGTH );
-            topicFilterLength = ( uint16_t ) ( operationTopicLength + SHADOW_ACCEPTED_SUFFIX_LENGTH );
+                             AWS_IOT_ACCEPTED_SUFFIX,
+                             AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
+            topicFilterLength = ( uint16_t ) ( operationTopicLength + AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
 
             /* There should be an active subscription for the accepted topic. */
             AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
@@ -528,9 +528,9 @@ void _AwsIotShadow_DecrementReferences( _shadowOperation_t * pOperation,
 
             /* Place the topic "rejected" suffix at the end of the Shadow topic buffer. */
             ( void ) memcpy( pTopicBuffer + operationTopicLength,
-                             SHADOW_REJECTED_SUFFIX,
-                             SHADOW_REJECTED_SUFFIX_LENGTH );
-            topicFilterLength = ( uint16_t ) ( operationTopicLength + SHADOW_ACCEPTED_SUFFIX_LENGTH );
+                             AWS_IOT_REJECTED_SUFFIX,
+                             AWS_IOT_REJECTED_SUFFIX_LENGTH );
+            topicFilterLength = ( uint16_t ) ( operationTopicLength + AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
 
             /* There should be an active subscription for the accepted topic. */
             AwsIotShadow_Assert( IotMqtt_IsSubscribed( pOperation->mqttConnection,
@@ -626,9 +626,9 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
 
                     /* Remove the "accepted" topic. */
                     ( void ) memcpy( pSubscription->pTopicBuffer + operationTopicLength,
-                                     SHADOW_ACCEPTED_SUFFIX,
-                                     SHADOW_ACCEPTED_SUFFIX_LENGTH );
-                    topicFilterLength = ( uint16_t ) ( operationTopicLength + SHADOW_ACCEPTED_SUFFIX_LENGTH );
+                                     AWS_IOT_ACCEPTED_SUFFIX,
+                                     AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
+                    topicFilterLength = ( uint16_t ) ( operationTopicLength + AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
 
                     removeAcceptedStatus = _modifyOperationSubscriptions( mqttConnection,
                                                                           pSubscription->pTopicBuffer,
@@ -643,10 +643,10 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
 
                     /* Remove the "rejected" topic. */
                     ( void ) memcpy( pSubscription->pTopicBuffer + operationTopicLength,
-                                     SHADOW_REJECTED_SUFFIX,
-                                     SHADOW_ACCEPTED_SUFFIX_LENGTH );
+                                     AWS_IOT_REJECTED_SUFFIX,
+                                     AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
                     topicFilterLength = ( uint16_t ) ( operationTopicLength +
-                                                       SHADOW_REJECTED_SUFFIX_LENGTH );
+                                                       AWS_IOT_REJECTED_SUFFIX_LENGTH );
 
                     removeRejectedStatus = _modifyOperationSubscriptions( mqttConnection,
                                                                           pSubscription->pTopicBuffer,

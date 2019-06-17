@@ -33,12 +33,44 @@
 
 /* Standard includes. */
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
- * @brief The longest Thing Name accepted by the Shadow service, per the [AWS IoT
+ * @brief The longest Thing Name accepted by AWS IoT, per the [AWS IoT
  * Service Limits](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_iot).
  */
 #define AWS_IOT_MAX_THING_NAME_LENGTH    ( 128 )
+
+/**
+ * @brief The suffix for an AWS IoT operation "accepted" topic.
+ */
+#define AWS_IOT_ACCEPTED_SUFFIX           "/accepted"
+
+/**
+ * @brief The length of #AWS_IOT_ACCEPTED_SUFFIX.
+ */
+#define AWS_IOT_ACCEPTED_SUFFIX_LENGTH    ( ( uint16_t ) ( sizeof( AWS_IOT_ACCEPTED_SUFFIX ) - 1 ) )
+
+/**
+ * @brief The suffix for an AWS IoT operation "rejected" topic.
+ */
+#define AWS_IOT_REJECTED_SUFFIX           "/rejected"
+
+/**
+ * @brief The length of #AWS_IOT_REJECTED_SUFFIX.
+ */
+#define AWS_IOT_REJECTED_SUFFIX_LENGTH    ( ( uint16_t ) ( sizeof( AWS_IOT_REJECTED_SUFFIX ) - 1 ) )
+
+/**
+ * @brief Enumerations representing each of the statuses that may be parsed
+ * from a topic.
+ */
+typedef enum AwsIotStatus
+{
+    AWS_IOT_ACCEPTED = 0, /**< Operation accepted. */
+    AWS_IOT_REJECTED = 1, /**< Operation rejected. */
+    AWS_IOT_UNKNOWN = 2   /**< Unknown status (neither accepted nor rejected). */
+} AwsIotStatus_t;
 
 /**
  * @brief Checks that a Thing Name is valid for AWS IoT.
@@ -50,5 +82,16 @@
  */
 bool AwsIot_ValidateThingName( const char * pThingName,
                                size_t thingNameLength );
+
+/**
+ * @brief Parse the operation status (accepted or rejected) from an MQTT topic.
+ *
+ * @param[in] pTopicName The topic to parse.
+ * @param[in] topicNameLength The length of `pTopicName`.
+ *
+ * @return Any #AwsIotStatus_t.
+ */
+AwsIotStatus_t AwsIot_ParseStatus( const char * pTopicName,
+                                   uint16_t topicNameLength );
 
 #endif /* ifndef AWS_IOT_H_ */

@@ -219,26 +219,6 @@
 #define SHADOW_UPDATE_OPERATION_STRING_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_UPDATE_OPERATION_STRING ) - 1 ) )
 
 /**
- * @brief The suffix for a Shadow operation "accepted" topic.
- */
-#define SHADOW_ACCEPTED_SUFFIX                   "/accepted"
-
-/**
- * @brief The length of #SHADOW_ACCEPTED_SUFFIX.
- */
-#define SHADOW_ACCEPTED_SUFFIX_LENGTH            ( ( uint16_t ) ( sizeof( SHADOW_ACCEPTED_SUFFIX ) - 1 ) )
-
-/**
- * @brief The suffix for a Shadow operation "rejected" topic.
- */
-#define SHADOW_REJECTED_SUFFIX                   "/rejected"
-
-/**
- * @brief The length of #SHADOW_REJECTED_SUFFIX.
- */
-#define SHADOW_REJECTED_SUFFIX_LENGTH            ( ( uint16_t ) ( sizeof( SHADOW_REJECTED_SUFFIX ) - 1 ) )
-
-/**
  * @brief The suffix for a Shadow delta topic.
  */
 #define SHADOW_DELTA_SUFFIX                      "/delta"
@@ -341,17 +321,6 @@ typedef enum _shadowCallbackType
     DELTA_CALLBACK = 0,  /**< Delta callback. */
     UPDATED_CALLBACK = 1 /**< Updated callback. */
 } _shadowCallbackType_t;
-
-/**
- * @brief Enumerations representing each of the statuses that may be parsed
- * from a Shadow status topic.
- */
-typedef enum _shadowOperationStatus
-{
-    SHADOW_ACCEPTED = 0, /**< Shadow operation accepted. */
-    SHADOW_REJECTED = 1, /**< Shadow operation rejected. */
-    UNKNOWN_STATUS = 2   /**< Parsed value matched neither accepted nor rejected. */
-} _shadowOperationStatus_t;
 
 /**
  * @brief Internal structure representing a single Shadow operation (DELETE,
@@ -614,17 +583,6 @@ void _AwsIotShadow_DecrementReferences( _shadowOperation_t * pOperation,
                                         _shadowSubscription_t ** pRemovedSubscription );
 
 /*------------------------- Shadow parser functions -------------------------*/
-
-/**
- * @brief Parse the operation status (accepted or rejected) from a Shadow topic.
- *
- * @param[in] pTopicName The topic to parse.
- * @param[in] topicNameLength The length of `pTopicName`.
- *
- * @return Any #_shadowOperationStatus_t.
- */
-_shadowOperationStatus_t _AwsIotShadow_ParseShadowStatus( const char * pTopicName,
-                                                          size_t topicNameLength );
 
 /**
  * @brief Parse the Thing Name from a Shadow topic.

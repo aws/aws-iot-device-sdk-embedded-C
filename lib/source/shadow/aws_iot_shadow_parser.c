@@ -21,7 +21,7 @@
 
 /**
  * @file aws_iot_shadow_parser.c
- * @brief Implements topic name and JSON parsing functions of the Shadow library.
+ * @brief Implements JSON parsing functions of the Shadow library.
  */
 
 /* The config header is always included first. */
@@ -66,12 +66,12 @@
  * @brief The minimum possible length of a Shadow topic name, per the Shadow
  * spec.
  */
-#define MINIMUM_SHADOW_TOPIC_NAME_LENGTH                                \
-    ( SHADOW_TOPIC_PREFIX_LENGTH +                                      \
-      ( uint16_t ) sizeof( SHADOW_GET_OPERATION_STRING ) +              \
-      ( SHADOW_ACCEPTED_SUFFIX_LENGTH < SHADOW_REJECTED_SUFFIX_LENGTH ? \
-        SHADOW_ACCEPTED_SUFFIX_LENGTH :                                 \
-        SHADOW_REJECTED_SUFFIX_LENGTH ) )
+#define MINIMUM_SHADOW_TOPIC_NAME_LENGTH                                  \
+    ( SHADOW_TOPIC_PREFIX_LENGTH +                                        \
+      ( uint16_t ) sizeof( SHADOW_GET_OPERATION_STRING ) +                \
+      ( AWS_IOT_ACCEPTED_SUFFIX_LENGTH < AWS_IOT_REJECTED_SUFFIX_LENGTH ? \
+        AWS_IOT_ACCEPTED_SUFFIX_LENGTH :                                  \
+        AWS_IOT_REJECTED_SUFFIX_LENGTH ) )
 
 /*-----------------------------------------------------------*/
 
@@ -136,57 +136,6 @@ static AwsIotShadowError_t _codeToShadowStatus( uint32_t code )
     }
 
     return errorCode;
-}
-
-/*-----------------------------------------------------------*/
-
-_shadowOperationStatus_t _AwsIotShadow_ParseShadowStatus( const char * pTopicName,
-                                                          size_t topicNameLength )
-{
-    IOT_FUNCTION_ENTRY( _shadowOperationStatus_t, UNKNOWN_STATUS );
-    const char * pSuffixStart = NULL;
-
-    /* Check that the Shadow status topic name is at least as long as the
-     * "accepted" suffix. */
-    if( topicNameLength > SHADOW_ACCEPTED_SUFFIX_LENGTH )
-    {
-        /* Calculate where the "accepted" suffix should start. */
-        pSuffixStart = pTopicName + topicNameLength - SHADOW_ACCEPTED_SUFFIX_LENGTH;
-
-        /* pSuffixStart must be in pTopicName. */
-        AwsIotShadow_Assert( ( pSuffixStart > pTopicName ) &&
-                             ( pSuffixStart < pTopicName + topicNameLength ) );
-
-        /* Check if the end of the Shadow status topic name is "accepted". */
-        if( strncmp( pSuffixStart,
-                     SHADOW_ACCEPTED_SUFFIX,
-                     SHADOW_ACCEPTED_SUFFIX_LENGTH ) == 0 )
-        {
-            IOT_SET_AND_GOTO_CLEANUP( SHADOW_ACCEPTED );
-        }
-    }
-
-    /* Check that the Shadow status topic name is at least as long as the
-     * "rejected" suffix. */
-    if( topicNameLength > SHADOW_REJECTED_SUFFIX_LENGTH )
-    {
-        /* Calculate where the "rejected" suffix should start. */
-        pSuffixStart = pTopicName + topicNameLength - SHADOW_REJECTED_SUFFIX_LENGTH;
-
-        /* pSuffixStart must be in pTopicName. */
-        AwsIotShadow_Assert( ( pSuffixStart > pTopicName ) &&
-                             ( pSuffixStart < pTopicName + topicNameLength ) );
-
-        /* Check if the end of the Shadow status topic name is "rejected". */
-        if( strncmp( pSuffixStart,
-                     SHADOW_REJECTED_SUFFIX,
-                     SHADOW_REJECTED_SUFFIX_LENGTH ) == 0 )
-        {
-            IOT_SET_AND_GOTO_CLEANUP( SHADOW_REJECTED );
-        }
-    }
-
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
