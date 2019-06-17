@@ -7,7 +7,8 @@ set( COMMON_SOURCES
      ${PROJECT_SOURCE_DIR}/lib/source/common/iot_taskpool_static_memory.c )
 
 set( AWS_IOT_COMMON_SOURCES
-     ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_validate.c )
+     ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_validate.c
+     ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_parser.c )
 
 # Lists of common header files. These are only used for directory organization
 # (not for build).
