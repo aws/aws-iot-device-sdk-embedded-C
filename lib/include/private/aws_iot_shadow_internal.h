@@ -178,17 +178,6 @@
 #define SHADOW_CALLBACK_COUNT                    ( 2 )
 
 /**
- * @brief The common prefix of all Shadow MQTT topics, per the [AWS IoT Shadow
- * spec](https://docs.aws.amazon.com/iot/latest/developerguide/device-shadow-mqtt.html).
- */
-#define SHADOW_TOPIC_PREFIX                      "$aws/things/"
-
-/**
- * @brief The length of #SHADOW_TOPIC_PREFIX.
- */
-#define SHADOW_TOPIC_PREFIX_LENGTH               ( ( uint16_t ) ( sizeof( SHADOW_TOPIC_PREFIX ) - 1 ) )
-
-/**
  * @brief The string representing a Shadow DELETE operation in a Shadow MQTT topic.
  */
 #define SHADOW_DELETE_OPERATION_STRING           "/shadow/delete"
@@ -583,21 +572,6 @@ void _AwsIotShadow_DecrementReferences( _shadowOperation_t * pOperation,
                                         _shadowSubscription_t ** pRemovedSubscription );
 
 /*------------------------- Shadow parser functions -------------------------*/
-
-/**
- * @brief Parse the Thing Name from a Shadow topic.
- *
- * @param[in] pTopicName The topic to parse.
- * @param[in] topicNameLength The length of `pTopicName`.
- * @param[out] pThingName Set to point to the Thing Name.
- * @param[out] pThingNameLength Set to the length of the Thing Name.
- *
- * @return #AWS_IOT_SHADOW_SUCCESS or #AWS_IOT_SHADOW_BAD_RESPONSE.
- */
-AwsIotShadowError_t _AwsIotShadow_ParseThingName( const char * pTopicName,
-                                                  uint16_t topicNameLength,
-                                                  const char ** pThingName,
-                                                  size_t * pThingNameLength );
 
 /**
  * @brief Parse a Shadow error document.

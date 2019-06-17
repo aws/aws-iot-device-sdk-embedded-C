@@ -62,17 +62,6 @@
  */
 #define ERROR_DOCUMENT_MESSAGE_KEY_LENGTH    ( sizeof( ERROR_DOCUMENT_MESSAGE_KEY ) - 1 )
 
-/**
- * @brief The minimum possible length of a Shadow topic name, per the Shadow
- * spec.
- */
-#define MINIMUM_SHADOW_TOPIC_NAME_LENGTH                                  \
-    ( SHADOW_TOPIC_PREFIX_LENGTH +                                        \
-      ( uint16_t ) sizeof( SHADOW_GET_OPERATION_STRING ) +                \
-      ( AWS_IOT_ACCEPTED_SUFFIX_LENGTH < AWS_IOT_REJECTED_SUFFIX_LENGTH ? \
-        AWS_IOT_ACCEPTED_SUFFIX_LENGTH :                                  \
-        AWS_IOT_REJECTED_SUFFIX_LENGTH ) )
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -198,55 +187,6 @@ AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * pErrorDocumen
 
     /* Convert a successfully parsed JSON code to a Shadow status. */
     status = _codeToShadowStatus( code );
-
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
-}
-
-/*-----------------------------------------------------------*/
-
-AwsIotShadowError_t _AwsIotShadow_ParseThingName( const char * pTopicName,
-                                                  uint16_t topicNameLength,
-                                                  const char ** pThingName,
-                                                  size_t * pThingNameLength )
-{
-    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_SUCCESS );
-    const char * pThingNameStart = NULL;
-    size_t thingNameLength = 0;
-
-    /* Check that the topic name length exceeds the minimum possible length. */
-    if( topicNameLength < MINIMUM_SHADOW_TOPIC_NAME_LENGTH )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_RESPONSE );
-    }
-
-    /* All Shadow topic names must start with the same prefix. */
-    if( strncmp( SHADOW_TOPIC_PREFIX,
-                 pTopicName,
-                 SHADOW_TOPIC_PREFIX_LENGTH ) != 0 )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_RESPONSE );
-    }
-
-    /* The Thing Name starts immediately after the topic prefix. */
-    pThingNameStart = pTopicName + SHADOW_TOPIC_PREFIX_LENGTH;
-
-    /* Calculate the length of the Thing Name. */
-    while( ( thingNameLength + SHADOW_TOPIC_PREFIX_LENGTH < ( size_t ) topicNameLength ) &&
-           ( pThingNameStart[ thingNameLength ] != '/' ) )
-    {
-        thingNameLength++;
-    }
-
-    /* The end of the topic name was reached without finding a '/'. The topic
-     * name is invalid. */
-    if( thingNameLength + SHADOW_TOPIC_PREFIX_LENGTH >= ( size_t ) topicNameLength )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_RESPONSE );
-    }
-
-    /* Set the output parameters. */
-    *pThingName = pThingNameStart;
-    *pThingNameLength = thingNameLength;
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
