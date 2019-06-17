@@ -40,6 +40,9 @@
 /* Shadow include. */
 #include "aws_iot_shadow.h"
 
+/* AWS IoT include. */
+#include "aws_iot.h"
+
 /**
  * @def AwsIotShadow_Assert( expression )
  * @brief Assertion macro for the Shadow library.
@@ -158,12 +161,6 @@
     #define AWS_IOT_SHADOW_DEFAULT_MQTT_TIMEOUT_MS    ( 5000 )
 #endif
 /** @endcond */
-
-/**
- * @brief The longest Thing Name accepted by the Shadow service, per the [AWS IoT
- * Service Limits](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_iot).
- */
-#define MAX_THING_NAME_LENGTH                    ( 128 )
 
 /**
  * @brief The number of currently available Shadow operations.

@@ -69,10 +69,10 @@
  * @brief The size of a static memory Shadow subscription.
  *
  * Since the pThingName member of #_shadowSubscription_t is variable-length,
- * the constant #MAX_THING_NAME_LENGTH is used for the length of
+ * the constant `AWS_IOT_MAX_THING_NAME_LENGTH` is used for the length of
  * #_shadowSubscription_t.pThingName.
  */
-#define SHADOW_SUBSCRIPTION_SIZE    ( sizeof( _shadowSubscription_t ) + MAX_THING_NAME_LENGTH )
+#define SHADOW_SUBSCRIPTION_SIZE    ( sizeof( _shadowSubscription_t ) + AWS_IOT_MAX_THING_NAME_LENGTH )
 
 /*-----------------------------------------------------------*/
 
