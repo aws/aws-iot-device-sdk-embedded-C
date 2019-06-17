@@ -53,6 +53,9 @@ TEST_SETUP( Jobs_Unit_API )
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Test tear down for Jobs API tests.
+ */
 TEST_TEAR_DOWN( Jobs_Unit_API )
 {
     IotSdk_Cleanup();
