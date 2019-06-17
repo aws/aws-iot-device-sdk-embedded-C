@@ -269,7 +269,8 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     {
         pOperation = IotLink_Container( _shadowOperation_t, pOperationLink, link );
 
-        /* Remove a non-waitable operation from the pending operation list. */
+        /* Remove a non-waitable operation from the pending operation list.
+         * Waitable operations are removed by the Wait function. */
         if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0 )
         {
             IotListDouble_Remove( &( pOperation->link ) );
@@ -337,8 +338,8 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     /* Notify of operation completion. */
     _AwsIotShadow_Notify( pOperation );
 
-    /* For waitable operations, unlock the pending operation list mutex to signal
-     * this function's completion. */
+    /* For waitable operations, unlock the pending operation list mutex to allow
+     * the Wait function to run. */
     if( ( flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
     {
         IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );

@@ -184,20 +184,10 @@ static AwsIotShadowError_t _validateThingNameFlags( _shadowOperationType_t type,
     ( void ) type;
 
     /* Check Thing Name. */
-    if( ( pThingName == NULL ) || ( thingNameLength == 0 ) )
+    if( AwsIot_ValidateThingName( pThingName, thingNameLength ) == false )
     {
-        IotLogError( "Thing name for Shadow %s cannot be NULL or have length 0.",
+        IotLogError( "Thing Name for Shadow %s is not valid.",
                      _pAwsIotShadowOperationNames[ type ] );
-
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_PARAMETER );
-    }
-
-    if( thingNameLength > MAX_THING_NAME_LENGTH )
-    {
-        IotLogError( "Thing Name length of %lu exceeds the maximum allowed"
-                     "length of %d.",
-                     ( unsigned long ) thingNameLength,
-                     MAX_THING_NAME_LENGTH );
 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_PARAMETER );
     }

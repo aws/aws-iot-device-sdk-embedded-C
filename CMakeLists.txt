@@ -152,6 +152,7 @@ source_group( platform\\source FILES ${PLATFORM_SOURCES} )
 source_group( common\\include FILES ${COMMON_PUBLIC_HEADERS} )
 source_group( common\\include\\private FILES ${COMMON_PRIVATE_HEADERS} )
 source_group( common\\include\\types FILES ${COMMON_TYPES_HEADERS} )
+source_group( common\\source\\aws_iot FILES ${AWS_IOT_COMMON_SOURCES} )
 source_group( common\\source FILES ${COMMON_SOURCES} )
 
 # MQTT library.
