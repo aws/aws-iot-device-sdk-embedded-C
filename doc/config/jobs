@@ -1,0 +1,32 @@
+# Include common configuration options.
+@INCLUDE_PATH = doc/config
+@INCLUDE = common
+
+# Basic project information.
+PROJECT_NAME = "Jobs"
+PROJECT_BRIEF = "AWS IoT Jobs library"
+
+# Library documentation output directory.
+HTML_OUTPUT = jobs
+
+# Generate Doxygen tag file for this library.
+GENERATE_TAGFILE = doc/tag/jobs.tag
+
+# Directories containing library source code.
+INPUT = doc/lib/ \
+        lib/include \
+        lib/include/private \
+        lib/include/types \
+        lib/source/jobs \
+        demos \
+        tests/jobs/unit
+
+# Library file names.
+FILE_PATTERNS = *jobs*.h *jobs*.c *jobs*.txt
+
+# External tag files required by this library.
+TAGFILES = doc/tag/main.tag=../main \
+           doc/tag/mqtt.tag=../mqtt \
+           doc/tag/logging.tag=../logging \
+           doc/tag/static_memory.tag=../static_memory \
+           doc/tag/platform.tag=../platform
