@@ -33,6 +33,7 @@
 
 /* Standard includes. */
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
  * @brief The longest Thing Name accepted by AWS IoT, per the [AWS IoT
