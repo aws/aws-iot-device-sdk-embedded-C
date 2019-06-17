@@ -115,21 +115,21 @@ static void _generateParseErrorDocument( char * pErrorDocument,
  * @brief Wrapper for parsing Shadow Thing Names and checking the result.
  */
 static void _parseThingName( const char * pTopicName,
-                             AwsIotShadowError_t expectedResult,
+                             bool expectedResult,
                              const char * pExpectedThingName )
 {
-    AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
+    bool status = true;
     uint16_t topicNameLength = ( uint16_t ) strlen( pTopicName );
     const char * pThingName = NULL;
     size_t thingNameLength = 0;
 
-    status = _AwsIotShadow_ParseThingName( pTopicName,
-                                           topicNameLength,
-                                           &pThingName,
-                                           &thingNameLength );
+    status = AwsIot_ParseThingName( pTopicName,
+                                    topicNameLength,
+                                    &pThingName,
+                                    &thingNameLength );
     TEST_ASSERT_EQUAL( expectedResult, status );
 
-    if( expectedResult == AWS_IOT_SHADOW_SUCCESS )
+    if( expectedResult == true )
     {
         TEST_ASSERT_EQUAL( strlen( pExpectedThingName ), thingNameLength );
         TEST_ASSERT_EQUAL_STRING_LEN( pExpectedThingName, pThingName, thingNameLength );
@@ -432,27 +432,27 @@ TEST( Shadow_Unit_Parser, ThingName )
 {
     /* Valid operation topic. */
     _parseThingName( "$aws/things/TEST/shadow/get/accepted",
-                     AWS_IOT_SHADOW_SUCCESS,
+                     true,
                      "TEST" );
 
     /* Valid callback topic. */
     _parseThingName( "$aws/things/TEST/shadow/update/delta",
-                     AWS_IOT_SHADOW_SUCCESS,
+                     true,
                      "TEST" );
 
     /* Topic too short. */
     _parseThingName( "$aws/things/TEST/",
-                     AWS_IOT_SHADOW_BAD_RESPONSE,
+                     false,
                      "TEST" );
 
     /* Incorrect prefix. */
     _parseThingName( "$awsshadow/TEST/shadow/update/accepted",
-                     AWS_IOT_SHADOW_BAD_RESPONSE,
+                     false,
                      "TEST" );
 
     /* Thing Name unterminated. */
     _parseThingName( "$aws/things/TESTTESTTESTTESTTESTTEST",
-                     AWS_IOT_SHADOW_BAD_RESPONSE,
+                     false,
                      "TESTTESTTESTTESTTESTTEST" );
 }
 

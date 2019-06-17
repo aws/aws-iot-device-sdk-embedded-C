@@ -39,7 +39,17 @@
  * @brief The longest Thing Name accepted by AWS IoT, per the [AWS IoT
  * Service Limits](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_iot).
  */
-#define AWS_IOT_MAX_THING_NAME_LENGTH    ( 128 )
+#define AWS_IOT_MAX_THING_NAME_LENGTH     ( 128 )
+
+/**
+ * @brief The common prefix of all AWS IoT MQTT topics.
+ */
+#define AWS_IOT_TOPIC_PREFIX           "$aws/things/"
+
+/**
+ * @brief The length of #AWS_IOT_TOPIC_PREFIX.
+ */
+#define AWS_IOT_TOPIC_PREFIX_LENGTH    ( ( uint16_t ) ( sizeof( AWS_IOT_TOPIC_PREFIX ) - 1 ) )
 
 /**
  * @brief The suffix for an AWS IoT operation "accepted" topic.
@@ -67,9 +77,9 @@
  */
 typedef enum AwsIotStatus
 {
-    AWS_IOT_ACCEPTED = 0, /**< Operation accepted. */
-    AWS_IOT_REJECTED = 1, /**< Operation rejected. */
-    AWS_IOT_UNKNOWN = 2   /**< Unknown status (neither accepted nor rejected). */
+    AWS_IOT_ACCEPTED = 0,    /**< Operation accepted. */
+    AWS_IOT_REJECTED = 1,    /**< Operation rejected. */
+    AWS_IOT_UNKNOWN = 2      /**< Unknown status (neither accepted nor rejected). */
 } AwsIotStatus_t;
 
 /**
@@ -82,6 +92,21 @@ typedef enum AwsIotStatus
  */
 bool AwsIot_ValidateThingName( const char * pThingName,
                                size_t thingNameLength );
+
+/**
+ * @brief Parse the Thing Name from an MQTT topic.
+ *
+ * @param[in] pTopicName The topic to parse.
+ * @param[in] topicNameLength The length of `pTopicName`.
+ * @param[out] pThingName Set to point to the Thing Name.
+ * @param[out] pThingNameLength Set to the length of the Thing Name.
+ *
+ * @return `true` if a Thing Name was successfully parsed; `false` otherwise.
+ */
+bool AwsIot_ParseThingName( const char * pTopicName,
+                            uint16_t topicNameLength,
+                            const char ** pThingName,
+                            size_t * pThingNameLength );
 
 /**
  * @brief Parse the operation status (accepted or rejected) from an MQTT topic.

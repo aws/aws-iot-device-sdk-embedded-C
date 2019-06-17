@@ -236,10 +236,10 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     }
 
     /* Parse the Thing Name from the MQTT topic name. */
-    if( _AwsIotShadow_ParseThingName( pMessage->u.message.info.pTopicName,
-                                      pMessage->u.message.info.topicNameLength,
-                                      &( param.pThingName ),
-                                      &( param.thingNameLength ) ) != AWS_IOT_SHADOW_SUCCESS )
+    if( AwsIot_ParseThingName( pMessage->u.message.info.pTopicName,
+                               pMessage->u.message.info.topicNameLength,
+                               &( param.pThingName ),
+                               &( param.thingNameLength ) ) == false )
     {
         return;
     }
@@ -553,7 +553,7 @@ AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t ty
                          ( type == SHADOW_UPDATE ) );
 
     /* Calculate the required topic buffer length. */
-    bufferLength = ( uint16_t ) ( SHADOW_TOPIC_PREFIX_LENGTH +
+    bufferLength = ( uint16_t ) ( AWS_IOT_TOPIC_PREFIX_LENGTH +
                                   thingNameLength +
                                   pOperationStringLength[ type ] +
                                   SHADOW_LONGEST_SUFFIX_LENGTH );
@@ -574,9 +574,9 @@ AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t ty
         pBuffer = *pTopicBuffer;
     }
 
-    /* Copy the Shadow topic prefix into the topic buffer. */
-    ( void ) memcpy( pBuffer, SHADOW_TOPIC_PREFIX, SHADOW_TOPIC_PREFIX_LENGTH );
-    operationTopicLength = ( uint16_t ) ( operationTopicLength + SHADOW_TOPIC_PREFIX_LENGTH );
+    /* Copy the AWS IoT topic prefix into the topic buffer. */
+    ( void ) memcpy( pBuffer, AWS_IOT_TOPIC_PREFIX, AWS_IOT_TOPIC_PREFIX_LENGTH );
+    operationTopicLength = ( uint16_t ) ( operationTopicLength + AWS_IOT_TOPIC_PREFIX_LENGTH );
 
     /* Copy the Thing Name into the topic buffer. */
     ( void ) memcpy( pBuffer + operationTopicLength, pThingName, thingNameLength );

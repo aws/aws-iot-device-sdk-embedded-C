@@ -36,6 +36,69 @@
 /* Error handling include. */
 #include "private/iot_error.h"
 
+/**
+ * @brief Minimum allowed topic length for an AWS IoT status topic.
+ *
+ * Topics must contain at least:
+ * - The common prefix
+ * - The suffix "/accepted" or "/rejected"
+ * - 1 character for the Thing Name
+ * - 2 characters for the operation name and the enclosing slashes
+ */
+#define MINIMUM_TOPIC_NAME_LENGTH                   \
+    ( uint16_t ) ( AWS_IOT_TOPIC_PREFIX_LENGTH +    \
+                   AWS_IOT_ACCEPTED_SUFFIX_LENGTH + \
+                   1 + 2 )
+
+/*-----------------------------------------------------------*/
+
+bool AwsIot_ParseThingName( const char * pTopicName,
+                            uint16_t topicNameLength,
+                            const char ** pThingName,
+                            size_t * pThingNameLength )
+{
+    IOT_FUNCTION_ENTRY( bool, true );
+    const char * pThingNameStart = NULL;
+    size_t thingNameLength = 0;
+
+    /* Check that the topic name is at least as long as the minimum allowed. */
+    if( topicNameLength < MINIMUM_TOPIC_NAME_LENGTH )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* Check that the given topic starts with the common prefix. */
+    if( strncmp( AWS_IOT_TOPIC_PREFIX,
+                 pTopicName,
+                 AWS_IOT_TOPIC_PREFIX_LENGTH ) != 0 )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* The Thing Name starts immediately after the topic prefix. */
+    pThingNameStart = pTopicName + AWS_IOT_TOPIC_PREFIX_LENGTH;
+
+    /* Calculate the length of the Thing Name, which is terminated with a '/'. */
+    while( ( thingNameLength + AWS_IOT_TOPIC_PREFIX_LENGTH < ( size_t ) topicNameLength ) &&
+           ( pThingNameStart[ thingNameLength ] != '/' ) )
+    {
+        thingNameLength++;
+    }
+
+    /* The end of the topic name was reached without finding a '/'. The topic
+     * name is invalid. */
+    if( thingNameLength + AWS_IOT_TOPIC_PREFIX_LENGTH >= ( size_t ) topicNameLength )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* Set the output parameters. */
+    *pThingName = pThingNameStart;
+    *pThingNameLength = thingNameLength;
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
 /*-----------------------------------------------------------*/
 
 AwsIotStatus_t AwsIot_ParseStatus( const char * pTopicName,
