@@ -37,7 +37,8 @@ set( AWS_IOT_COMMON_SOURCES ${AWS_IOT_COMMON_SOURCES} PARENT_SCOPE )
 # AWS IoT common sources.
 set( AWS_IOT_COMMON_SOURCES
      ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_validate.c
-     ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_parser.c )
+     ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_parser.c
+     ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_operation.c )
 
 # AWS IoT common library target.
 add_library( awsiotcommon
