@@ -39,9 +39,6 @@
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
 
-/* JSON utilities include. */
-#include "iot_json_utils.h"
-
 /* MQTT include. */
 #include "iot_mqtt.h"
 
@@ -930,26 +927,12 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
     }
 
     /* Check UPDATE document for a client token. */
-    if( IotJsonUtils_FindJsonValue( pUpdateInfo->u.update.pUpdateDocument,
-                                    pUpdateInfo->u.update.updateDocumentLength,
-                                    CLIENT_TOKEN_KEY,
-                                    CLIENT_TOKEN_KEY_LENGTH,
-                                    &pClientToken,
-                                    &clientTokenLength ) == false )
+    if( AwsIot_GetClientToken( pUpdateInfo->u.update.pUpdateDocument,
+                               pUpdateInfo->u.update.updateDocumentLength,
+                               &pClientToken,
+                               &clientTokenLength ) == false )
     {
-        IotLogError( "Shadow document for Shadow UPDATE must have a %s key.",
-                     CLIENT_TOKEN_KEY );
-
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_PARAMETER );
-    }
-
-    /* Check the client token length. It must be greater than the length of its
-     * enclosing double quotes (2) and less than the maximum allowed by the Shadow
-     * service. */
-    if( ( clientTokenLength < 2 ) || ( clientTokenLength > MAX_CLIENT_TOKEN_LENGTH ) )
-    {
-        IotLogError( "Client token length must be between 2 and %d (including "
-                     "enclosing quotes).", MAX_CLIENT_TOKEN_LENGTH + 2 );
+        IotLogError( "Shadow document for Shadow UPDATE does not contain a valid client token." );
 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_PARAMETER );
     }
