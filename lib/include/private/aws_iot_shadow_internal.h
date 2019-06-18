@@ -233,22 +233,6 @@
 #define SHADOW_LONGEST_SUFFIX_LENGTH             SHADOW_UPDATED_SUFFIX_LENGTH
 
 /**
- * @brief The JSON key used to represent client tokens in a Shadow update document.
- */
-#define CLIENT_TOKEN_KEY                         "clientToken"
-
-/**
- * @brief The length of #CLIENT_TOKEN_KEY.
- */
-#define CLIENT_TOKEN_KEY_LENGTH                  ( sizeof( CLIENT_TOKEN_KEY ) - 1 )
-
-/**
- * @brief The longest client token accepted by the Shadow service, per AWS IoT
- * service limits.
- */
-#define MAX_CLIENT_TOKEN_LENGTH                  ( 64 )
-
-/**
  * @brief A flag to represent persistent subscriptions in a Shadow subscriptions
  * object.
  *

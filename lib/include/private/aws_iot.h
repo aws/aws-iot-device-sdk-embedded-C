@@ -44,12 +44,12 @@
 /**
  * @brief The common prefix of all AWS IoT MQTT topics.
  */
-#define AWS_IOT_TOPIC_PREFIX           "$aws/things/"
+#define AWS_IOT_TOPIC_PREFIX              "$aws/things/"
 
 /**
  * @brief The length of #AWS_IOT_TOPIC_PREFIX.
  */
-#define AWS_IOT_TOPIC_PREFIX_LENGTH    ( ( uint16_t ) ( sizeof( AWS_IOT_TOPIC_PREFIX ) - 1 ) )
+#define AWS_IOT_TOPIC_PREFIX_LENGTH       ( ( uint16_t ) ( sizeof( AWS_IOT_TOPIC_PREFIX ) - 1 ) )
 
 /**
  * @brief The suffix for an AWS IoT operation "accepted" topic.
@@ -92,6 +92,25 @@ typedef enum AwsIotStatus
  */
 bool AwsIot_ValidateThingName( const char * pThingName,
                                size_t thingNameLength );
+
+/**
+ * @brief Extracts the client token from a JSON document.
+ *
+ * The client token is used to differentiate AWS IoT operations. It is unique per
+ * operation.
+ *
+ * @param[in] pJsonDocument The JSON document to parse.
+ * @param[in] jsonDocumentLength The length of `pJsonDocument`.
+ * @param[out] pClientToken Set to point to the client token in `pJsonDocument`.
+ * @param[out] pClientTokenLength Set to the length of the client token.
+ *
+ * @return `true` if the client token was found; `false` otherwise. The output
+ * parameters are only valid if this function returns `true`.
+ */
+bool AwsIot_GetClientToken( const char * pJsonDocument,
+                            size_t jsonDocumentLength,
+                            const char ** pClientToken,
+                            size_t * pClientTokenLength );
 
 /**
  * @brief Parse the Thing Name from an MQTT topic.
