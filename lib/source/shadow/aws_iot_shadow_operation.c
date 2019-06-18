@@ -39,6 +39,9 @@
 /* MQTT include. */
 #include "iot_mqtt.h"
 
+/* Error handling include. */
+#include "private/iot_error.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -427,6 +430,7 @@ AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOpe
                                                    uint32_t flags,
                                                    const AwsIotShadowCallbackInfo_t * pCallbackInfo )
 {
+    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_SUCCESS );
     _shadowOperation_t * pOperation = NULL;
 
     IotLogDebug( "Creating operation record for Shadow %s.",
@@ -440,7 +444,7 @@ AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOpe
         IotLogError( "Failed to allocate memory for Shadow %s.",
                      _pAwsIotShadowOperationNames[ type ] );
 
-        return AWS_IOT_SHADOW_NO_MEMORY;
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NO_MEMORY );
     }
 
     /* Clear the operation data. */
@@ -455,9 +459,7 @@ AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOpe
             IotLogError( "Failed to create semaphore for waitable Shadow %s.",
                          _pAwsIotShadowOperationNames[ type ] );
 
-            AwsIotShadow_FreeOperation( pOperation );
-
-            return AWS_IOT_SHADOW_NO_MEMORY;
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NO_MEMORY );
         }
     }
     else
@@ -475,10 +477,22 @@ AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOpe
     pOperation->flags = flags;
     pOperation->status = AWS_IOT_SHADOW_STATUS_PENDING;
 
-    /* Set the output parameter. */
-    *pNewOperation = pOperation;
+    IOT_FUNCTION_CLEANUP_BEGIN();
 
-    return AWS_IOT_SHADOW_SUCCESS;
+    if( status != AWS_IOT_SHADOW_SUCCESS )
+    {
+        if( pOperation != NULL )
+        {
+            AwsIotShadow_FreeOperation( pOperation );
+        }
+    }
+    else
+    {
+        /* Set the output parameter. */
+        *pNewOperation = pOperation;
+    }
+
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
@@ -521,9 +535,8 @@ AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t ty
                                                        char ** pTopicBuffer,
                                                        uint16_t * pOperationTopicLength )
 {
-    uint16_t bufferLength = 0;
-    uint16_t operationTopicLength = 0;
-    char * pBuffer = NULL;
+    AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
+    AwsIotTopicInfo_t topicInfo = { 0 };
 
     /* Lookup table for Shadow operation strings. */
     const char * const pOperationString[ SHADOW_OPERATION_COUNT ] =
@@ -547,54 +560,22 @@ AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t ty
                          ( type == SHADOW_GET ) ||
                          ( type == SHADOW_UPDATE ) );
 
-    /* Calculate the required topic buffer length. */
-    bufferLength = ( uint16_t ) ( AWS_IOT_TOPIC_PREFIX_LENGTH +
-                                  thingNameLength +
-                                  pOperationStringLength[ type ] +
-                                  SHADOW_LONGEST_SUFFIX_LENGTH );
+    /* Set the members needed to generate an operation topic. */
+    topicInfo.pThingName = pThingName;
+    topicInfo.thingNameLength = thingNameLength;
+    topicInfo.pOperationName = pOperationString[ type ];
+    topicInfo.operationNameLength = pOperationStringLength[ type ];
+    topicInfo.longestSuffixLength = SHADOW_LONGEST_SUFFIX_LENGTH;
+    topicInfo.mallocString = AwsIotShadow_MallocString;
 
-    /* Allocate memory for the topic buffer if no topic buffer is given. */
-    if( *pTopicBuffer == NULL )
+    if( AwsIot_GenerateOperationTopic( &topicInfo,
+                                       pTopicBuffer,
+                                       pOperationTopicLength ) == false )
     {
-        pBuffer = AwsIotShadow_MallocString( ( size_t ) bufferLength );
-
-        if( pBuffer == NULL )
-        {
-            return AWS_IOT_SHADOW_NO_MEMORY;
-        }
-    }
-    /* Otherwise, use the given topic buffer. */
-    else
-    {
-        pBuffer = *pTopicBuffer;
+        status = AWS_IOT_SHADOW_NO_MEMORY;
     }
 
-    /* Copy the AWS IoT topic prefix into the topic buffer. */
-    ( void ) memcpy( pBuffer, AWS_IOT_TOPIC_PREFIX, AWS_IOT_TOPIC_PREFIX_LENGTH );
-    operationTopicLength = ( uint16_t ) ( operationTopicLength + AWS_IOT_TOPIC_PREFIX_LENGTH );
-
-    /* Copy the Thing Name into the topic buffer. */
-    ( void ) memcpy( pBuffer + operationTopicLength, pThingName, thingNameLength );
-    operationTopicLength = ( uint16_t ) ( operationTopicLength + thingNameLength );
-
-    /* Copy the Shadow operation string into the topic buffer. */
-    ( void ) memcpy( pBuffer + operationTopicLength,
-                     pOperationString[ type ],
-                     pOperationStringLength[ type ] );
-    operationTopicLength = ( uint16_t ) ( operationTopicLength + pOperationStringLength[ type ] );
-
-    /* Ensure that the topic length is in the topic buffer. */
-    AwsIotShadow_Assert( operationTopicLength < bufferLength );
-
-    /* Set the output parameters. */
-    if( *pTopicBuffer == NULL )
-    {
-        *pTopicBuffer = pBuffer;
-    }
-
-    *pOperationTopicLength = operationTopicLength;
-
-    return AWS_IOT_SHADOW_SUCCESS;
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -823,56 +804,56 @@ void _AwsIotShadow_Notify( _shadowOperation_t * pOperation )
     if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
     {
         IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
-
-        return;
     }
-
-    /* Decrement the reference count. This also removes subscriptions if the
-     * count reaches 0. */
-    IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
-    _AwsIotShadow_DecrementReferences( pOperation,
-                                       pSubscription->pTopicBuffer,
-                                       &pRemovedSubscription );
-    IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
-
-    /* Set the subscription pointer used for the user callback based on whether
-     * a subscription was removed from the list. */
-    if( pRemovedSubscription != NULL )
+    else
     {
-        pSubscription = pRemovedSubscription;
-    }
+        /* Decrement the reference count. This also removes subscriptions if the
+         * count reaches 0. */
+        IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
+        _AwsIotShadow_DecrementReferences( pOperation,
+                                           pSubscription->pTopicBuffer,
+                                           &pRemovedSubscription );
+        IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
 
-    AwsIotShadow_Assert( pSubscription != NULL );
-
-    /* Invoke the user callback if provided. */
-    if( pOperation->notify.callback.function != NULL )
-    {
-        /* Set the common members of the callback parameter. */
-        callbackParam.callbackType = ( AwsIotShadowCallbackType_t ) pOperation->type;
-        callbackParam.mqttConnection = pOperation->mqttConnection;
-        callbackParam.u.operation.result = pOperation->status;
-        callbackParam.u.operation.reference = pOperation;
-        callbackParam.pThingName = pSubscription->pThingName;
-        callbackParam.thingNameLength = pSubscription->thingNameLength;
-
-        /* Set the members of the callback parameter for a received document. */
-        if( pOperation->type == SHADOW_GET )
+        /* Set the subscription pointer used for the user callback based on whether
+         * a subscription was removed from the list. */
+        if( pRemovedSubscription != NULL )
         {
-            callbackParam.u.operation.get.pDocument = pOperation->u.get.pDocument;
-            callbackParam.u.operation.get.documentLength = pOperation->u.get.documentLength;
+            pSubscription = pRemovedSubscription;
         }
 
-        pOperation->notify.callback.function( pOperation->notify.callback.pCallbackContext,
-                                              &callbackParam );
-    }
+        AwsIotShadow_Assert( pSubscription != NULL );
 
-    /* Destroy a removed subscription. */
-    if( pRemovedSubscription != NULL )
-    {
-        _AwsIotShadow_DestroySubscription( pRemovedSubscription );
-    }
+        /* Invoke the user callback if provided. */
+        if( pOperation->notify.callback.function != NULL )
+        {
+            /* Set the common members of the callback parameter. */
+            callbackParam.callbackType = ( AwsIotShadowCallbackType_t ) pOperation->type;
+            callbackParam.mqttConnection = pOperation->mqttConnection;
+            callbackParam.u.operation.result = pOperation->status;
+            callbackParam.u.operation.reference = pOperation;
+            callbackParam.pThingName = pSubscription->pThingName;
+            callbackParam.thingNameLength = pSubscription->thingNameLength;
 
-    _AwsIotShadow_DestroyOperation( pOperation );
+            /* Set the members of the callback parameter for a received document. */
+            if( pOperation->type == SHADOW_GET )
+            {
+                callbackParam.u.operation.get.pDocument = pOperation->u.get.pDocument;
+                callbackParam.u.operation.get.documentLength = pOperation->u.get.documentLength;
+            }
+
+            pOperation->notify.callback.function( pOperation->notify.callback.pCallbackContext,
+                                                  &callbackParam );
+        }
+
+        /* Destroy a removed subscription. */
+        if( pRemovedSubscription != NULL )
+        {
+            _AwsIotShadow_DestroySubscription( pRemovedSubscription );
+        }
+
+        _AwsIotShadow_DestroyOperation( pOperation );
+    }
 }
 
 /*-----------------------------------------------------------*/
