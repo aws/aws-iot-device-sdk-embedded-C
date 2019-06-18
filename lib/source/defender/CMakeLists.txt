@@ -11,7 +11,7 @@ add_library( awsiotdefender
              ${PROJECT_SOURCE_DIR}/lib/include/private/aws_iot_defender_internal.h )
 
 # Link required libraries.
-target_link_libraries( awsiotdefender PUBLIC iotserializer iotmqtt )
+target_link_libraries( awsiotdefender PUBLIC awsiotcommon )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
