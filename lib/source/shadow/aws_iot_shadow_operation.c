@@ -36,9 +36,6 @@
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
 
-/* JSON utils include. */
-#include "iot_json_utils.h"
-
 /* MQTT include. */
 #include "iot_mqtt.h"
 
@@ -186,12 +183,10 @@ static bool _shadowOperation_match( const IotLink_t * pOperationLink,
         IotLogDebug( "Verifying client tokens for Shadow UPDATE." );
 
         /* Check for the client token in the UPDATE response document. */
-        match = IotJsonUtils_FindJsonValue( pParam->pDocument,
-                                            pParam->documentLength,
-                                            CLIENT_TOKEN_KEY,
-                                            CLIENT_TOKEN_KEY_LENGTH,
-                                            &pClientToken,
-                                            &clientTokenLength );
+        match = AwsIot_GetClientToken( pParam->pDocument,
+                                       pParam->documentLength,
+                                       &pClientToken,
+                                       &clientTokenLength );
 
         /* If the UPDATE response document has a client token, check that it
          * matches. */

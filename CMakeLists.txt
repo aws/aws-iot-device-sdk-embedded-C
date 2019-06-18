@@ -138,7 +138,7 @@ add_library( iotbase
              ${COMMON_TYPES_HEADERS} )
 
 # Link required libraries.
-target_link_libraries( iotbase PRIVATE iotplatform iotcommon )
+target_link_libraries( iotbase PRIVATE iotplatform iotcommon iotserializer )
 
 if( ${IOT_BUILD_TESTS} )
     target_link_libraries( iotbase PRIVATE unity )

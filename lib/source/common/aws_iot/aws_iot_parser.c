@@ -36,6 +36,9 @@
 /* Error handling include. */
 #include "private/iot_error.h"
 
+/* JSON utils include. */
+#include "iot_json_utils.h"
+
 /**
  * @brief Minimum allowed topic length for an AWS IoT status topic.
  *
@@ -49,6 +52,50 @@
     ( uint16_t ) ( AWS_IOT_TOPIC_PREFIX_LENGTH +    \
                    AWS_IOT_ACCEPTED_SUFFIX_LENGTH + \
                    1 + 2 )
+
+/**
+ * @brief The JSON key used to represent client tokens for AWS IoT.
+ */
+#define CLIENT_TOKEN_KEY           "clientToken"
+
+/**
+ * @brief The length of #CLIENT_TOKEN_KEY.
+ */
+#define CLIENT_TOKEN_KEY_LENGTH    ( sizeof( CLIENT_TOKEN_KEY ) - 1 )
+
+/**
+ * @brief The longest client token accepted by AWS IoT service, per AWS IoT
+ * service limits.
+ */
+#define MAX_CLIENT_TOKEN_LENGTH    ( 64 )
+
+/*-----------------------------------------------------------*/
+
+bool AwsIot_GetClientToken( const char * pJsonDocument,
+                            size_t jsonDocumentLength,
+                            const char ** pClientToken,
+                            size_t * pClientTokenLength )
+{
+    /* Extract the client token from the JSON document. */
+    bool status = IotJsonUtils_FindJsonValue( pJsonDocument,
+                                              jsonDocumentLength,
+                                              CLIENT_TOKEN_KEY,
+                                              CLIENT_TOKEN_KEY_LENGTH,
+                                              pClientToken,
+                                              pClientTokenLength );
+
+    if( status == true )
+    {
+        /* Check that the length of the client token is valid. */
+        if( ( *pClientTokenLength < 2 ) ||
+            ( *pClientTokenLength > MAX_CLIENT_TOKEN_LENGTH ) )
+        {
+            status = false;
+        }
+    }
+
+    return status;
+}
 
 /*-----------------------------------------------------------*/
 
