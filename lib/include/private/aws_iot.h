@@ -77,10 +77,23 @@
  */
 typedef enum AwsIotStatus
 {
-    AWS_IOT_ACCEPTED = 0,    /**< Operation accepted. */
-    AWS_IOT_REJECTED = 1,    /**< Operation rejected. */
-    AWS_IOT_UNKNOWN = 2      /**< Unknown status (neither accepted nor rejected). */
+    AWS_IOT_ACCEPTED = 0, /**< Operation accepted. */
+    AWS_IOT_REJECTED = 1, /**< Operation rejected. */
+    AWS_IOT_UNKNOWN = 2   /**< Unknown status (neither accepted nor rejected). */
 } AwsIotStatus_t;
+
+/**
+ * @brief Information required to generate a topic for AWS IoT.
+ */
+typedef struct AwsIotTopicInfo
+{
+    const char * pThingName;                 /**< @brief The Thing Name associated with the operation. */
+    size_t thingNameLength;                  /**< @brief The length of `pThingName`. */
+    const char * pOperationName;             /**< @brief The operation name to place in the topic. */
+    uint16_t operationNameLength;            /**< @brief The length of `pOperationName`. */
+    uint16_t longestSuffixLength;            /**< @brief The length of longest suffix that will be placed at the end of the topic. */
+    void * ( *mallocString )( size_t size ); /**< @brief Function used to allocate a string, if needed. */
+} AwsIotTopicInfo_t;
 
 /**
  * @brief Checks that a Thing Name is valid for AWS IoT.
@@ -137,5 +150,25 @@ bool AwsIot_ParseThingName( const char * pTopicName,
  */
 AwsIotStatus_t AwsIot_ParseStatus( const char * pTopicName,
                                    uint16_t topicNameLength );
+
+/**
+ * @brief Generate a topic to use for an AWS IoT operation.
+ *
+ * @param[in] pTopicInfo Information needed to generate an AWS IoT topic.
+ * @param[in,out] pTopicBuffer Where to place the generated topic. An existing
+ * buffer may be passed in. If `NULL`, this function will attempt to allocate a
+ * new buffer.
+ * @param[out] pOperationTopicLength Set to the length of the generated topic.
+ *
+ * @warning This function does not check the length of `pTopicBuffer`! Any provided
+ * buffer must be long enough to accomodate the Thing Name, operation name, and
+ * any other suffixes.
+ *
+ * @return `true` if the topic was successfully generated; `false` otherwise.
+ * This function will always succeed when an input buffer is provided.
+ */
+bool AwsIot_GenerateOperationTopic( const AwsIotTopicInfo_t * pTopicInfo,
+                                    char ** pTopicBuffer,
+                                    uint16_t * pOperationTopicLength );
 
 #endif /* ifndef AWS_IOT_H_ */
