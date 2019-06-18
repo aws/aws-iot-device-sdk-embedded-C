@@ -10,7 +10,7 @@ add_library( awsiotjobs
              ${PROJECT_SOURCE_DIR}/lib/include/private/aws_iot_jobs_internal.h )
 
 # Link required libraries.
-target_link_libraries( awsiotjobs PUBLIC iotmqtt )
+target_link_libraries( awsiotjobs PUBLIC awsiotcommon )
 
 # Link Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
