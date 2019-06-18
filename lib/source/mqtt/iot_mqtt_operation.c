@@ -129,7 +129,7 @@ static bool _mqttOperation_match( const IotLink_t * pOperationLink,
 static bool _checkRetryLimit( _mqttOperation_t * pOperation )
 {
     _mqttConnection_t * pMqttConnection = pOperation->pMqttConnection;
-    bool status = true;
+    bool status = true, setDup = false;
 
     /* Choose a set DUP function. */
     void ( * publishSetDup )( uint8_t *,
@@ -171,23 +171,51 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
 
         status = false;
     }
-    /* Check if this is the first retry. */
-    else if( pOperation->u.operation.retry.count == 1 )
-    {
-        /* Always set the DUP flag on the first retry. */
-        publishSetDup( pOperation->u.operation.pMqttPacket,
-                       pOperation->u.operation.pPacketIdentifierHigh,
-                       &( pOperation->u.operation.packetIdentifier ) );
-    }
     else
     {
-        /* In AWS IoT MQTT mode, the DUP flag (really a change to the packet
-         * identifier) must be reset on every retry. */
-        if( pMqttConnection->awsIotMqttMode == true )
+        if( pOperation->u.operation.retry.count == 1 )
         {
+            /* The DUP flag should always be set on the first retry. */
+            setDup = true;
+        }
+        else if( pMqttConnection->awsIotMqttMode == true )
+        {
+            /* In AWS IoT MQTT mode, the DUP flag (really a change to the packet
+             * identifier) must be reset on every retry. */
+            setDup = true;
+        }
+        else
+        {
+            EMPTY_ELSE_MARKER;
+        }
+
+        if( setDup == true )
+        {
+            /* In AWS IoT MQTT mode, the references mutex must be locked to
+             * prevent the packet identifier from being read while it is being
+             * changed. */
+            if( pMqttConnection->awsIotMqttMode == true )
+            {
+                IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+            }
+            else
+            {
+                EMPTY_ELSE_MARKER;
+            }
+
+            /* Always set the DUP flag on the first retry. */
             publishSetDup( pOperation->u.operation.pMqttPacket,
                            pOperation->u.operation.pPacketIdentifierHigh,
                            &( pOperation->u.operation.packetIdentifier ) );
+
+            if( pMqttConnection->awsIotMqttMode == true )
+            {
+                IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+            }
+            else
+            {
+                EMPTY_ELSE_MARKER;
+            }
         }
         else
         {
