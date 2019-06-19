@@ -168,7 +168,10 @@
  */
 typedef struct _jobsSubscription
 {
-    IotLink_t link; /**< @brief List link member. */
+    IotLink_t link;         /**< @brief List link member. */
+
+    size_t thingNameLength; /**< @brief Length of Thing Name. */
+    char pThingName[];      /**< @brief Thing Name associated with this subscriptions object. */
 } _jobsSubscription_t;
 
 /**
