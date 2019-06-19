@@ -86,6 +86,15 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation completed successfully.
      *
      * Functions that may return this value:
+     * - @ref jobs_function_init
+     * - @ref jobs_function_wait
+     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_timedstartnext
+     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_setnotifypendingcallback
+     * - @ref jobs_function_setnotifynextcallback
+     * - @ref jobs_function_removepersistentsubscriptions
      *
      * Will also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
@@ -95,41 +104,105 @@ typedef enum AwsIotJobsError
 
     /**
      * @brief Jobs operation queued, awaiting result.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_getpending
+     * - @ref jobs_function_startnext
+     * - @ref jobs_function_describe
+     * - @ref jobs_function_update
      */
     AWS_IOT_JOBS_STATUS_PENDING,
 
     /**
      * @brief Initialization failed.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_init
      */
     AWS_IOT_JOBS_INIT_FAILED,
 
     /**
      * @brief At least one parameter is invalid.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_getpending and @ref jobs_function_timedgetpending
+     * - @ref jobs_function_startnext and @ref jobs_function_timedstartnext
+     * - @ref jobs_function_describe and @ref jobs_function_timeddescribe
+     * - @ref jobs_function_update and @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     * - @ref jobs_function_setnotifypendingcallback
+     * - @ref jobs_function_setnotifynextcallback
      */
     AWS_IOT_JOBS_BAD_PARAMETER,
 
     /**
      * @brief Jobs operation failed because of memory allocation failure.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_getpending and @ref jobs_function_timedgetpending
+     * - @ref jobs_function_startnext and @ref jobs_function_timedstartnext
+     * - @ref jobs_function_describe and @ref jobs_function_timeddescribe
+     * - @ref jobs_function_update and @ref jobs_function_timedupdate
+     * - @ref jobs_function_setnotifypendingcallback
+     * - @ref jobs_function_setnotifynextcallback
      */
     AWS_IOT_JOBS_NO_MEMORY,
 
     /**
      * @brief Jobs operation failed because of failure in MQTT library.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_getpending and @ref jobs_function_timedgetpending
+     * - @ref jobs_function_startnext and @ref jobs_function_timedstartnext
+     * - @ref jobs_function_describe and @ref jobs_function_timeddescribe
+     * - @ref jobs_function_update and @ref jobs_function_timedupdate
+     * - @ref jobs_function_setnotifypendingcallback
+     * - @ref jobs_function_setnotifynextcallback
+     * - @ref jobs_function_removepersistentsubscriptions
      */
     AWS_IOT_JOBS_MQTT_ERROR,
 
     /**
      * @brief Response received from Jobs service not understood.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_timedstartnext
+     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     *
+     * May also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
     AWS_IOT_JOBS_BAD_RESPONSE,
 
     /**
      * @brief A blocking Jobs operation timed out.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_timedstartnext
+     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     * - @ref jobs_function_setnotifypendingcallback
+     * - @ref jobs_function_setnotifynextcallback
      */
     AWS_IOT_JOBS_TIMEOUT,
 
     /**
      * @brief Jobs operation failed: A request was sent to an unknown topic.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_timedstartnext
+     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     *
+     * May also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
     AWS_IOT_JOBS_INVALID_TOPIC,
 
@@ -137,43 +210,117 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: The contents of the request were not understood.
      *
      * Jobs requests must be UTF-8 encoded JSON documents.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_timedstartnext
+     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     *
+     * May also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
     AWS_IOT_JOBS_INVALID_JSON,
 
     /**
      * @brief Jobs operation failed: The contents of the request were invalid.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_timedstartnext
+     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     *
+     * May also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
     AWS_IOT_JOBS_INVALID_REQUEST,
 
     /**
      * @brief Jobs operation failed: An update attempted to change the job execution
      * to an invalid state.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_timedstartnext
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     *
+     * May also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
+     * following a call to @ref jobs_function_startnext or @ref jobs_function_update.
      */
     AWS_IOT_JOBS_INVALID_STATE,
 
     /**
      * @brief Jobs operation failed: The specified job execution does not exist.
+     *
+     * * Functions that may return this value:
+     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     *
+     * May also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
+     * following a call to @ref jobs_function_describe or @ref jobs_function_update.
      */
     AWS_IOT_JOBS_NOT_FOUND,
 
     /**
      * @brief Jobs operation failed: The Jobs service expected a version that did
      * not match what was in the request.
+     *
+     * * Functions that may return this value:
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     *
+     * May also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
+     * following a call to @ref jobs_function_update.
      */
     AWS_IOT_JOBS_VERSION_MISMATCH,
 
     /**
      * @brief Jobs operation failed: The Jobs service encountered an internal error.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_timedstartnext
+     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     *
+     * May also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
     AWS_IOT_JOBS_INTERNAL_ERROR,
 
     /**
      * @brief Jobs operation failed: The request was throttled.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_timedstartnext
+     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_wait
+     *
+     * May also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
     AWS_IOT_JOBS_THROTTLED,
 
     /**
      * @brief Jobs operation failed: Attempt to describe a Job in a terminal state.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_wait
+     *
+     * May also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
+     * following a call to @ref jobs_function_describe.
      */
     AWS_IOT_JOBS_TERMINAL_STATE
 } AwsIotJobsError_t;
@@ -349,8 +496,10 @@ typedef struct AwsIotJobsCallbackInfo
  * @ingroup jobs_datatypes_paramstructs
  * @brief Common information provided to Jobs requests.
  *
- * @paramfor @ref jobs_function_getpending, @ref jobs_function_startnext,
- * @ref jobs_function_describe, @ref jobs_function_update
+ * @paramfor @ref jobs_function_getpending, @ref jobs_function_timedgetpending,
+ * @ref jobs_function_startnext, @ref jobs_function_timedstartnext
+ * @ref jobs_function_describe, @ref jobs_function_timeddescribe,
+ * @ref jobs_function_update, @ref jobs_function_timedupdate
  *
  * @initializer{AwsIotJobsRequestInfo_t,AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER}
  */
@@ -383,11 +532,19 @@ typedef struct AwsIotJobsRequestInfo
      * This may be set to #AWS_IOT_JOBS_NEXT_JOB to update the next pending Job.
      * When using #AWS_IOT_JOBS_NEXT_JOB, #AwsIotJobsRequestInfo_t.jobIdLength
      * should be set to #AWS_IOT_JOBS_NEXT_JOB_LENGTH.
+     *
+     * This parameter is ignored for calls to @ref jobs_function_getpending,
+     * @ref jobs_function_timedgetpending, @ref jobs_function_startnext,
+     * and @ref jobs_function_timedstartnext.
      */
     const char * pJobId;
 
     /**
      * @brief Length of #AwsIotJobsRequestInfo_t.pJobId.
+     *
+     * This parameter is ignored for calls to @ref jobs_function_getpending,
+     * @ref jobs_function_timedgetpending, @ref jobs_function_startnext,
+     * and @ref jobs_function_timedstartnext.
      */
     size_t jobIdLength;
 
@@ -407,9 +564,11 @@ typedef struct AwsIotJobsRequestInfo
 
 /**
  * @ingroup jobs_datatypes_paramstructs
- * @brief Information on a Job update for @ref jobs_function_update.
+ * @brief Information on a Job update for @ref jobs_function_startnext and
+ * @ref jobs_function_update. These functions modify a Job's state.
  *
- * @paramfor jobs_function_update
+ * @paramfor @ref jobs_function_startnext, @ref jobs_function_timedstartnext,
+ * @ref jobs_function_update, and @ref jobs_function_timedupdate.
  *
  * @initializer{AwsIotJobsUpdateInfo_t,AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER}
  */
@@ -423,6 +582,10 @@ typedef struct AwsIotJobsUpdateInfo
      * - #AWS_IOT_JOB_STATE_FAILED
      * - #AWS_IOT_JOB_STATE_SUCCEEDED
      * - #AWS_IOT_JOB_STATE_REJECTED
+     *
+     * This parameter is ignored for calls to @ref jobs_function_startnext and
+     * @ref jobs_function_timedstartnext. These functions always set the state
+     * to #AWS_IOT_JOB_STATE_IN_PROGRESS.
      */
     AwsIotJobState_t newStatus;
 
@@ -437,6 +600,9 @@ typedef struct AwsIotJobsUpdateInfo
      * This value is useful for ensuring the order of Job updates, i.e. that the
      * Jobs service does not overwrite a later update with a previous one. If not
      * needed, it can be set to #AWS_IOT_JOBS_NO_VERSION.
+     *
+     * This parameter is ignored for calls to @ref jobs_function_startnext and
+     * @ref jobs_function_timedstartnext.
      */
     uint32_t expectedVersion;
 
@@ -450,6 +616,9 @@ typedef struct AwsIotJobsUpdateInfo
      *
      * This value is optional. It may be set to #AWS_IOT_JOBS_NO_EXECUTION_NUMBER
      * if not needed.
+     *
+     * This parameter is ignored for calls to @ref jobs_function_startnext and
+     * @ref jobs_function_timedstartnext.
      */
     int32_t executionNumber;
 
@@ -470,6 +639,9 @@ typedef struct AwsIotJobsUpdateInfo
      * @brief Whether the Job response document should contain the `JobExecutionState`.
      *
      * The default value is `false`.
+     *
+     * This parameter is ignored for calls to @ref jobs_function_startnext and
+     * @ref jobs_function_timedstartnext.
      */
     bool includeJobExecutionState;
 
@@ -477,6 +649,9 @@ typedef struct AwsIotJobsUpdateInfo
      * @brief Whether the Job response document should contain the `JobDocument`.
      *
      * The default value is `false`.
+     *
+     * This parameter is ignored for calls to @ref jobs_function_startnext and
+     * @ref jobs_function_timedstartnext.
      */
     bool includeJobDocument;
 
