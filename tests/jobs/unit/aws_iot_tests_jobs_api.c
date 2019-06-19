@@ -93,6 +93,9 @@ TEST_GROUP_RUNNER( Jobs_Unit_API )
  */
 TEST( Jobs_Unit_API, Init )
 {
+    int32_t i = 0;
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+
     /* Check that test set up set the default value. */
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS, _AwsIotJobsMqttTimeoutMs );
 
@@ -108,8 +111,21 @@ TEST( Jobs_Unit_API, Init )
     AwsIotJobs_Cleanup();
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS, _AwsIotJobsMqttTimeoutMs );
 
-    /* Initialize the Jobs library for test clean up. */
-    AwsIotJobs_Init( 0 );
+    /* Test jobs initialization with mutex creation failures. */
+    for( i = 0; ; i++ )
+    {
+        UnityMalloc_MakeMallocFailAfterCount( i );
+
+        status = AwsIotJobs_Init( 0 );
+
+        /* Check that the status is either success or "INIT FAILED". */
+        if( status == AWS_IOT_JOBS_SUCCESS )
+        {
+            break;
+        }
+
+        TEST_ASSERT_EQUAL( AWS_IOT_JOBS_INIT_FAILED, status );
+    }
 }
 
 /*-----------------------------------------------------------*/
