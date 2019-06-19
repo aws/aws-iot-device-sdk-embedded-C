@@ -37,24 +37,164 @@
 
 /**
  * @functionspage{jobs,Jobs library}
+ * - @functionname{jobs_function_getpending}
+ * - @functionname{jobs_function_timedgetpending}
+ * - @functionname{jobs_function_startnext}
+ * - @functionname{jobs_function_timedstartnext}
+ * - @functionname{jobs_function_describe}
+ * - @functionname{jobs_function_timeddescribe}
  * - @functionname{jobs_function_update}
+ * - @functionname{jobs_function_timedupdate}
+ * - @functionname{jobs_function_wait}
+ * - @functionname{jobs_function_setnotifypendingcallback}
+ * - @functionname{jobs_function_setnotifynextcallback}
+ * - @functionname{jobs_function_removepersistentsubscriptions}
  * - @functionname{jobs_function_strerror}
  * - @functionname{jobs_function_statename}
  */
 
 /**
+ * @functionpage{AwsIotJobs_GetPending,jobs,getpending}
+ * @functionpage{AwsIotJobs_TimedGetPending,jobs,timedgetpending}
+ * @functionpage{AwsIotJobs_StartNext,jobs,startnext}
+ * @functionpage{AwsIotJobs_TimedStartNext,jobs,timedstartnext}
+ * @functionpage{AwsIotJobs_Describe,jobs,describe}
+ * @functionpage{AwsIotJobs_TimedDescribe,jobs,timeddescribe}
  * @functionpage{AwsIotJobs_Update,jobs,update}
+ * @functionpage{AwsIotJobs_TimedUpdate,jobs,timedupdate}
+ * @functionpage{AwsIotJobs_Wait,jobs,wait}
+ * @functionpage{AwsIotJobs_SetNotifyPendingCallback,jobs,setnotifypendingcallback}
+ * @functionpage{AwsIotJobs_SetNotifyNextCallback,jobs,setnotifynextcallback}
+ * @functionpage{AwsIotJobs_RemovePersistentSubscriptions,jobs,removepersistentsubscriptions}
  * @functionpage{AwsIotJobs_strerror,jobs,strerror}
  * @functionpage{AwsIotJobs_StateName,jobs,statename}
  */
+
+/**
+ * @brief Get the list of all pending jobs for a Thing and receive an asynchronous
+ * notification when the response arrives.
+ */
+/* @[declare_jobs_getpending] */
+AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                         const AwsIotJobsCallbackInfo_t pCallbackInfo,
+                                         AwsIotJobsOperation_t * const pGetPendingOperation );
+/* @[declare_jobs_getpending] */
+
+/**
+ * @brief Get the list of all pending jobs for a Thing with a timeout for receiving
+ * the response.
+ */
+/* @[declare_jobs_timedgetpending] */
+AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                              uint32_t timeout );
+/* @[declare_jobs_timedgetpending] */
+
+/**
+ * @brief Start the next pending job execution for a Thing and receive an asynchronous
+ * notification when the response arrives.
+ */
+/* @[declare_jobs_startnext] */
+AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                        const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                        const AwsIotJobsCallbackInfo_t pCallbackInfo,
+                                        AwsIotJobsOperation_t * const pStartNextOperation );
+/* @[declare_jobs_startnext] */
+
+/**
+ * @brief Start the next pending job execution for a Thing with a timeout for
+ * receiving the response.
+ */
+/* @[declare_jobs_timedstartnext] */
+AwsIotJobsError_t AwsIotJobs_TimedStartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                             const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                             uint32_t timeout );
+/* @[declare_jobs_timedstartnext] */
+
+/**
+ * @brief Get detailed information about a job execution and receive an asynchronous
+ * notification when the response arrives.
+ */
+/* @[declare_jobs_describe] */
+AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                       int32_t executionNumber,
+                                       bool includeJobDocument,
+                                       const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                       AwsIotJobsOperation_t * const pJobsOperation );
+/* @[declare_jobs_describe] */
+
+/**
+ * @brief Get detailed information about a job execution with a timeout for receiving
+ * the response.
+ */
+/* @[declare_jobs_timeddescribe] */
+AwsIotJobsError_t AwsIotJobs_TimedDescribe( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                            int32_t executionNumber,
+                                            bool includeJobDocument,
+                                            uint32_t timeout );
+/* @[declare_jobs_timeddescribe] */
 
 /**
  * @brief Update the status of a job execution and receive an asynchronous
  * notification when the Job update completes.
  */
 /* @[declare_jobs_update] */
-AwsIotJobsError_t AwsIotJobs_Update( void );
+AwsIotJobsError_t AwsIotJobs_Update( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                     const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                     const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                     AwsIotJobsOperation_t * const pUpdateOperation );
 /* @[declare_jobs_update] */
+
+/**
+ * @brief Update the status of a job execution with a timeout for receiving the
+ * response.
+ */
+/* @[declare_jobs_timedupdate] */
+AwsIotJobsError_t AwsIotJobs_TimedUpdate( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                          const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                          uint32_t timeout );
+/* @[declare_jobs_timedupdate] */
+
+/**
+ * @brief Wait for a Jobs operation to complete.
+ */
+/* @[declare_jobs_wait] */
+AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
+                                   uint32_t timeoutMs,
+                                   const char ** const pResponse,
+                                   size_t * const pResponseLength );
+/* @[declare_jobs_wait] */
+
+/**
+ * @brief Set a callback to be invoked when the list of pending Jobs changes.
+ */
+/* @[declare_jobs_setnotifypendingcallback] */
+AwsIotJobsError_t AwsIotJobs_SetNotifyPendingCallback( IotMqttConnection_t mqttConnection,
+                                                       const char * pThingName,
+                                                       size_t thingNameLength,
+                                                       uint32_t flags,
+                                                       const AwsIotJobsCallbackInfo_t * pNotifyPendingCallback );
+/* @[declare_jobs_setnotifypendingcallback] */
+
+/**
+ * @brief Set a callback to be invoked when the next pending Job changes.
+ */
+/* @[declare_jobs_setnotifynextcallback] */
+AwsIotJobsError_t AwsIotJobs_SetNotifyNextCallback( IotMqttConnection_t mqttConnection,
+                                                    const char * pThingName,
+                                                    size_t thingNameLength,
+                                                    uint32_t flags,
+                                                    const AwsIotJobsCallbackInfo_t * pNotifyNextCallback );
+/* @[declare_jobs_setnotifynextcallback] */
+
+/**
+ * @brief Remove persistent Jobs operation topic subscriptions.
+ */
+/* @[declare_jobs_removepersistentsubscriptions] */
+AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( IotMqttConnection_t mqttConnection,
+                                                            const char * pThingName,
+                                                            size_t thingNameLength,
+                                                            uint32_t flags );
+/* @[declare_jobs_removepersistentsubscriptions] */
 
 /*-------------------------- Jobs helper functions --------------------------*/
 

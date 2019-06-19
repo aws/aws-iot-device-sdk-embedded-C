@@ -554,7 +554,8 @@ typedef struct AwsIotShadowDocumentInfo
  * this function returns.
  *
  * This flag is only valid if passed to the functions @ref shadow_function_delete,
- * @ref shadow_function_get, or @ref shadow_function_update.
+ * @ref shadow_function_get, @ref shadow_function_update, or their <i>Timed</i>
+ * variants.
  *
  * The Shadow service reports results of Shadow operations by publishing
  * messages to MQTT topics. By default, the functions @ref shadow_function_delete,
@@ -585,7 +586,7 @@ typedef struct AwsIotShadowDocumentInfo
  *
  * This flag may be passed to @ref shadow_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref shadow_function_delete.
+ * call to @ref shadow_function_delete or @ref shadow_function_timeddelete.
  *
  * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Shadow delete operations.
@@ -600,7 +601,7 @@ typedef struct AwsIotShadowDocumentInfo
  *
  * This flag may be passed to @ref shadow_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref shadow_function_get.
+ * call to @ref shadow_function_get or @ref shadow_function_timedget.
  *
  * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Shadow get operations.
@@ -615,7 +616,7 @@ typedef struct AwsIotShadowDocumentInfo
  *
  * This flag may be passed to @ref shadow_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref shadow_function_update.
+ * call to @ref shadow_function_update or @ref shadow_function_timedupdate.
  *
  * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Shadow update operations.
