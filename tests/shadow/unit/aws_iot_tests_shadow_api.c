@@ -502,6 +502,14 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
                                   NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
+    status = AwsIotShadow_Delete( _pMqttConnection,
+                                  TEST_THING_NAME,
+                                  0,
+                                  0,
+                                  NULL,
+                                  NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
+
     status = AwsIotShadow_Update( _pMqttConnection,
                                   &documentInfo,
                                   0,

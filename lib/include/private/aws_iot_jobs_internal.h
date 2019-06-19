@@ -184,4 +184,34 @@ typedef struct _jobsOperation
     IotLink_t link; /**< @brief List link member. */
 } _jobsOperation_t;
 
+/* Declarations of variables for internal Jobs files. */
+extern uint32_t _AwsIotJobsMqttTimeoutMs;
+extern IotListDouble_t _AwsIotJobsPendingOperations;
+extern IotListDouble_t _AwsIotJobsSubscriptions;
+extern IotMutex_t _AwsIotJobsPendingOperationsMutex;
+extern IotMutex_t _AwsIotJobsSubscriptionsMutex;
+
+/*------------------------ Jobs operation functions -------------------------*/
+
+/**
+ * @brief Free resources used to record a Jobs operation. This is called when
+ * the operation completes.
+ *
+ * @param[in] pData The operation which completed. This parameter is of type
+ * `void*` to match the signature of [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
+void _AwsIotJobs_DestroyOperation( void * pData );
+
+/*----------------------- Jobs subscription functions -----------------------*/
+
+/**
+ * @brief Free resources used for a Jobs subscription object.
+ *
+ * @param[in] pData The subscription object to destroy. This parameter is of type
+ * `void*` to match the signature of [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
+void _AwsIotJobs_DestroySubscription( void * pData );
+
 #endif /* ifndef AWS_IOT_JOBS_INTERNAL_H_ */

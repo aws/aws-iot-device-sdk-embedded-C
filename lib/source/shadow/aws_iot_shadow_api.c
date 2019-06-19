@@ -587,57 +587,32 @@ static void _updatedCallbackWrapper( void * pArgument,
 
 AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeoutMs )
 {
-    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_SUCCESS );
+    AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
 
-    /* Flags to track cleanup. */
-    bool pendingOperationsMutexCreated = false, subscriptionsMutexCreated = false;
+    /* Initialize Shadow lists and mutexes. */
+    bool listInitStatus = AwsIot_InitLists( &_AwsIotShadowPendingOperations,
+                                            &_AwsIotShadowSubscriptions,
+                                            &_AwsIotShadowPendingOperationsMutex,
+                                            &_AwsIotShadowSubscriptionsMutex );
 
-    /* Create the Shadow pending operation list mutex. */
-    pendingOperationsMutexCreated = IotMutex_Create( &( _AwsIotShadowPendingOperationsMutex ), false );
-
-    if( pendingOperationsMutexCreated == false )
+    if( listInitStatus == false )
     {
-        IotLogError( "Failed to create Shadow pending operation list." );
+        IotLogInfo( "Failed to create Shadow lists." );
 
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
-    }
-
-    /* Create the Shadow subscription list mutex. */
-    subscriptionsMutexCreated = IotMutex_Create( &( _AwsIotShadowSubscriptionsMutex ), false );
-
-    if( subscriptionsMutexCreated == false )
-    {
-        IotLogError( "Failed to create Shadow subscription list." );
-
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
-    }
-
-    /* Create Shadow linear containers. */
-    IotListDouble_Create( &( _AwsIotShadowPendingOperations ) );
-    IotListDouble_Create( &( _AwsIotShadowSubscriptions ) );
-
-    /* Save the MQTT timeout option. */
-    if( mqttTimeoutMs != 0 )
-    {
-        _AwsIotShadowMqttTimeoutMs = mqttTimeoutMs;
-    }
-
-    IOT_FUNCTION_CLEANUP_BEGIN();
-
-    /* Clean up on error. */
-    if( status != AWS_IOT_SHADOW_SUCCESS )
-    {
-        if( pendingOperationsMutexCreated == true )
-        {
-            IotMutex_Destroy( &_AwsIotShadowPendingOperationsMutex );
-        }
+        status = AWS_IOT_SHADOW_INIT_FAILED;
     }
     else
     {
+        /* Save the MQTT timeout option. */
+        if( mqttTimeoutMs != 0 )
+        {
+            _AwsIotShadowMqttTimeoutMs = mqttTimeoutMs;
+        }
+
         IotLogInfo( "Shadow library successfully initialized." );
     }
 
-    IOT_FUNCTION_CLEANUP_END();
+    return status;
 }
 
 /*-----------------------------------------------------------*/

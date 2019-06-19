@@ -30,8 +30,60 @@
 /* Standard includes. */
 #include <string.h>
 
+/* Platform threads include. */
+#include "platform/iot_threads.h"
+
 /* AWS IoT include. */
 #include "private/aws_iot.h"
+
+/* Error handling include. */
+#include "private/iot_error.h"
+
+/*-----------------------------------------------------------*/
+
+bool AwsIot_InitLists( IotListDouble_t * pPendingOperationsList,
+                       IotListDouble_t * pSubscriptionsList,
+                       IotMutex_t * pPendingOperationsMutex,
+                       IotMutex_t * pSubscriptionsMutex )
+{
+    IOT_FUNCTION_ENTRY( bool, true );
+
+    /* Flags to track cleanup. */
+    bool operationsMutexCreated = false, subscriptionsMutexCreated = false;
+
+    /* Create the mutex guarding the pending operations list. */
+    operationsMutexCreated = IotMutex_Create( pPendingOperationsMutex, false );
+
+    if( operationsMutexCreated == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* Create the mutex guarding the subscriptions list. */
+    subscriptionsMutexCreated = IotMutex_Create( pSubscriptionsMutex, false );
+
+    if( subscriptionsMutexCreated == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* Initialize lists. */
+    IotListDouble_Create( pPendingOperationsList );
+    IotListDouble_Create( pSubscriptionsList );
+
+    IOT_FUNCTION_CLEANUP_BEGIN();
+
+    /* Clean up on error. */
+    if( status == false )
+    {
+        if( operationsMutexCreated == true )
+        {
+            IotMutex_Destroy( pPendingOperationsMutex );
+        }
+    }
+
+    IOT_FUNCTION_CLEANUP_END();
+}
 
 /*-----------------------------------------------------------*/
 
