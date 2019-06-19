@@ -118,6 +118,27 @@ void AwsIotJobs_Cleanup( void );
 /**
  * @brief Get the list of all pending jobs for a Thing and receive an asynchronous
  * notification when the response arrives.
+ *
+ * @param[in] pRequestInfo Jobs request parameters.
+ * @param[in] pCallbackInfo Asynchronous notification of this function's completion.
+ * @param[out] pGetPendingOperation Set to a handle by which this operation may be referenced
+ * after this function returns. This reference is invalidated once the Jobs operation
+ * completes.
+ *
+ * @return This function will return #AWS_IOT_JOBS_STATUS_PENDING upon successfully
+ * queuing the Jobs operation.
+ * @return If this function fails before queuing the Jobs operation, it will return one of:
+ * - #AWS_IOT_JOBS_BAD_PARAMETER
+ * - #AWS_IOT_JOBS_NO_MEMORY
+ * @return Upon successful completion of the Jobs operation (either through an #AwsIotJobsCallbackInfo_t
+ * or #AwsIotJobs_Wait), the status will be #AWS_IOT_JOBS_SUCCESS.
+ * @return Should the Jobs operation fail, the status will be one of:
+ * - #AWS_IOT_JOBS_NO_MEMORY (Memory could not be allocated for incoming document)
+ * - #AWS_IOT_JOBS_MQTT_ERROR
+ * - #AWS_IOT_JOBS_BAD_RESPONSE
+ * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
+ *
+ * @see @ref jobs_function_timedgetpending for a blocking variant of this function.
  */
 /* @[declare_jobs_getpending] */
 AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
