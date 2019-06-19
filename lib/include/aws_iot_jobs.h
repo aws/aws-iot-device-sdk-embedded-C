@@ -82,7 +82,7 @@
  * Calling this function more than once without first calling @ref
  * jobs_function_cleanup may result in a crash.
  *
- * @param[in] mqttTimeout The amount of time (in milliseconds) that the Jobs
+ * @param[in] mqttTimeoutMs The amount of time (in milliseconds) that the Jobs
  * library will wait for MQTT operations. Optional; set this to `0` to use
  * @ref AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS.
  *
@@ -95,7 +95,7 @@
  * @see @ref jobs_function_cleanup
  */
 /* @[declare_jobs_init] */
-AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeout );
+AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs );
 /* @[declare_jobs_init] */
 
 /**

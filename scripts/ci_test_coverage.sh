@@ -13,11 +13,14 @@ make -j2
 # Run common tests with code coverage.
 ./bin/iot_tests_common
 
-# Run MQTT tests and demo against AWS IoT with code coverage.
+# Run MQTT tests against AWS IoT with code coverage.
 ./bin/iot_tests_mqtt
 
-# Run Shadow tests and demo with code coverage.
+# Run Shadow tests with code coverage.
 ./bin/aws_iot_tests_shadow
+
+# Run Jobs tests with code coverage.
+./bin/aws_iot_tests_jobs
 
 # Generate code coverage results, but only for files in lib/.
 lcov --directory . --capture --output-file coverage.info
