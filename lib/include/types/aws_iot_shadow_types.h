@@ -57,7 +57,7 @@
  * @initializer{AwsIotShadowOperation_t,AWS_IOT_SHADOW_OPERATION_INITIALIZER}
  *
  * @see @ref shadow_function_wait and #AWS_IOT_SHADOW_FLAG_WAITABLE for waiting on
- * a reference. #AwsIotShadowCallbackInfo_t and #AwsIotShadowCallbackParam_t for an
+ * a reference; or #AwsIotShadowCallbackInfo_t and #AwsIotShadowCallbackParam_t for an
  * asynchronous notification of completion.
  */
 typedef struct _shadowOperation * AwsIotShadowOperation_t;

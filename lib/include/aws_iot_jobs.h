@@ -37,6 +37,8 @@
 
 /**
  * @functionspage{jobs,Jobs library}
+ * - @functionname{jobs_function_init}
+ * - @functionname{jobs_function_cleanup}
  * - @functionname{jobs_function_getpending}
  * - @functionname{jobs_function_timedgetpending}
  * - @functionname{jobs_function_startnext}
@@ -54,6 +56,8 @@
  */
 
 /**
+ * @functionpage{AwsIotJobs_Init,jobs,init}
+ * @functionpage{AwsIotJobs_Cleanup,jobs,cleanup}
  * @functionpage{AwsIotJobs_GetPending,jobs,getpending}
  * @functionpage{AwsIotJobs_TimedGetPending,jobs,timedgetpending}
  * @functionpage{AwsIotJobs_StartNext,jobs,startnext}
@@ -69,6 +73,47 @@
  * @functionpage{AwsIotJobs_strerror,jobs,strerror}
  * @functionpage{AwsIotJobs_StateName,jobs,statename}
  */
+
+/**
+ * @brief One-time initialization function for the Jobs library.
+ *
+ * This function performs internal setup of the Jobs library. <b>It must be
+ * called once (and only once) before calling any other Jobs function.</b>
+ * Calling this function more than once without first calling @ref
+ * jobs_function_cleanup may result in a crash.
+ *
+ * @param[in] mqttTimeout The amount of time (in milliseconds) that the Jobs
+ * library will wait for MQTT operations. Optional; set this to `0` to use
+ * @ref AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS.
+ *
+ * @return One of the following:
+ * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_INIT_FAILED
+ *
+ * @warning No thread-safety guarantees are provided for this function.
+ *
+ * @see @ref jobs_function_cleanup
+ */
+/* @[declare_jobs_init] */
+AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeout );
+/* @[declare_jobs_init] */
+
+/**
+ * @brief One-time deinitialization function for the Jobs library.
+ *
+ * This function frees resources taken in @ref jobs_function_init and deletes
+ * any [persistent subscriptions.](@ref AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS)
+ * It should be called to clean up the Jobs library. After this function returns,
+ * @ref jobs_function_init must be called again before calling any other Jobs
+ * function.
+ *
+ * @warning No thread-safety guarantees are provided for this function.
+ *
+ * @see @ref jobs_function_init
+ */
+/* @[declare_jobs_cleanup] */
+void AwsIotJobs_Cleanup( void );
+/* @[declare_jobs_cleanup] */
 
 /**
  * @brief Get the list of all pending jobs for a Thing and receive an asynchronous

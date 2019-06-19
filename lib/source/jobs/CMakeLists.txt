@@ -1,6 +1,7 @@
 # Jobs library source files.
 set( JOBS_SOURCES
-     aws_iot_jobs_api.c )
+     aws_iot_jobs_api.c
+     aws_iot_jobs_static_memory.c )
 
 # Jobs library target.
 add_library( awsiotjobs
