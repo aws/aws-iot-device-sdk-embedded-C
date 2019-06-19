@@ -42,6 +42,23 @@
 /**
  * @ingroup jobs_datatypes_handles
  * @brief Opaque handle that references an in-progress Jobs operation.
+ *
+ * Set as an output parameter of @ref jobs_function_getpending, @ref jobs_function_startnext,
+ * @ref jobs_function_describe, and @ref jobs_function_update. These functions send a
+ * message to the Jobs service requesting a Jobs operation; the result of this operation
+ * is unknown until the Jobs service sends a response. Therefore, this handle serves as a
+ * reference to Jobs operations awaiting a response from the Jobs service.
+ *
+ * This reference will be valid from the successful return of @ref jobs_function_getpending,
+ * @ref jobs_function_startnext, @ref jobs_function_describe, and @ref jobs_function_update.
+ * The reference becomes invalid once the [completion callback](@ref AwsIotJobsCallbackInfo_t)
+ * is invoked, or @ref jobs_function_wait returns.
+ *
+ * @initializer{AwsIotJobsOperation_t,AWS_IOT_JOBS_OPERATION_INITIALIZER}
+ *
+ * @see @ref jobs_function_wait and #AWS_IOT_JOBS_FLAG_WAITABLE for waiting on
+ * a reference; or #AwsIotJobsCallbackInfo_t and #AwsIotJobsCallbackParam_t for an
+ * asynchronous notification of completion.
  */
 typedef struct _jobsOperation * AwsIotJobsOperation_t;
 
@@ -67,6 +84,12 @@ typedef enum AwsIotJobsError
 {
     /**
      * @brief Jobs operation completed successfully.
+     *
+     * Functions that may return this value:
+     *
+     * Will also be the value of a Jobs operation completion callback's<br>
+     * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
+     * when successful.
      */
     AWS_IOT_JOBS_SUCCESS = 0,
 
@@ -608,7 +631,7 @@ typedef struct AwsIotJobsUpdateInfo
       .includeJobExecutionState = false,                   \
       .includeJobExecutionDocument = false,                \
       .pStatusDetails = AWS_IOT_JOBS_NO_STATUS_DETAILS }
-#define AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER    NULL /**< @brief Initializer for #AwsIotJobsOperation_t. */
+#define AWS_IOT_JOBS_OPERATION_INITIALIZER    NULL /**< @brief Initializer for #AwsIotJobsOperation_t. */
 /* @[define_jobs_initializers] */
 
 /**
@@ -623,7 +646,7 @@ typedef struct AwsIotJobsUpdateInfo
  * @note If this flag is set, @ref jobs_function_wait <b>MUST</b> be called to
  * clean up resources.
  */
-#define AWS_IOT_JOBS_FLAG_WAITABLE                       ( 0x00000001 )
+#define AWS_IOT_JOBS_FLAG_WAITABLE                            ( 0x00000001 )
 
 /**
  * @brief Maintain the subscriptions for the Jobs operation topics, even after
@@ -650,7 +673,7 @@ typedef struct AwsIotJobsUpdateInfo
  * jobs_function_removepersistentsubscriptions may be used to remove
  * subscriptions maintained by this flag.
  */
-#define AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS             ( 0x00000002 )
+#define AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS                  ( 0x00000002 )
 
 /**
  * @brief Remove the persistent subscriptions from a Jobs get pending operation.
@@ -680,7 +703,7 @@ typedef struct AwsIotJobsUpdateInfo
  * @warning Do not call @ref jobs_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Jobs start next operations.
  */
-#define AWS_IOT_JOBS_FLAG_REMOVE_START_NEXT_SUBSCRIPTIONS    ( 0x00000002 )
+#define AWS_IOT_JOBS_FLAG_REMOVE_START_NEXT_SUBSCRIPTIONS     ( 0x00000002 )
 
 /**
  * @brief Remove the persistent subscriptions from a Jobs describe operation.
@@ -695,7 +718,7 @@ typedef struct AwsIotJobsUpdateInfo
  * @warning Do not call @ref jobs_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Jobs describe operations.
  */
-#define AWS_IOT_JOBS_FLAG_REMOVE_DESCRIBE_SUBSCRIPTIONS    ( 0x00000004 )
+#define AWS_IOT_JOBS_FLAG_REMOVE_DESCRIBE_SUBSCRIPTIONS       ( 0x00000004 )
 
 /**
  * @brief Remove the persistent subscriptions from a Jobs update operation.
@@ -710,6 +733,6 @@ typedef struct AwsIotJobsUpdateInfo
  * @warning Do not call @ref jobs_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Jobs update operations.
  */
-#define AWS_IOT_JOBS_FLAG_REMOVE_UPDATE_SUBSCRIPTIONS    ( 0x00000008 )
+#define AWS_IOT_JOBS_FLAG_REMOVE_UPDATE_SUBSCRIPTIONS         ( 0x00000008 )
 
 #endif /* ifndef AWS_IOT_JOBS_TYPES_H_ */

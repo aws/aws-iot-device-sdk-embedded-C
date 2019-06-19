@@ -28,5 +28,6 @@ FILE_PATTERNS = *jobs*.h *jobs*.c *jobs*.txt
 TAGFILES = doc/tag/main.tag=../main \
            doc/tag/mqtt.tag=../mqtt \
            doc/tag/logging.tag=../logging \
+           doc/tag/linear_containers.tag=../linear_containers \
            doc/tag/static_memory.tag=../static_memory \
            doc/tag/platform.tag=../platform

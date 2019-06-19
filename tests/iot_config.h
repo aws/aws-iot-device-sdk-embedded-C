@@ -99,6 +99,7 @@
 #define IOT_TASKPOOL_ENABLE_ASSERTS             ( 1 )
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 #define AWS_IOT_DEFENDER_ENABLE_ASSERTS         ( 1 )
+#define AWS_IOT_JOBS_ENABLE_ASSERTS             ( 1 )
 
 /* MQTT library configuration. */
 #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 1 )
@@ -166,6 +167,13 @@
     #define AwsIotDefender_FreeReport            unity_free_mt
     #define AwsIotDefender_MallocTopic           unity_malloc_mt
     #define AwsIotDefender_FreeTopic             unity_free_mt
+
+    #define AwsIotJobs_MallocOperation           unity_malloc_mt
+    #define AwsIotJobs_FreeOperation             unity_free_mt
+    #define AwsIotJobs_MallocString              unity_malloc_mt
+    #define AwsIotJobs_FreeString                unity_free_mt
+    #define AwsIotJobs_MallocSubscription        unity_malloc_mt
+    #define AwsIotJobs_FreeSubscription          unity_free_mt
 #endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
 
 /* Network types to use in the tests. These are forward declarations. */

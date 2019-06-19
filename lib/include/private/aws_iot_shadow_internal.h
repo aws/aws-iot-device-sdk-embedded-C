@@ -244,16 +244,6 @@
 /*----------------------- Shadow internal data types ------------------------*/
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Forward declarations.
- */
-struct _shadowOperation;
-struct _shadowSubscription;
-/** @endcond */
-
-/**
  * @brief Function pointer representing an MQTT timed operation.
  *
  * Currently, this is used to represent @ref mqtt_function_timedsubscribe or
@@ -296,6 +286,30 @@ typedef enum _shadowCallbackType
 } _shadowCallbackType_t;
 
 /**
+ * @brief Represents a Shadow subscriptions object.
+ *
+ * These structures are stored in a list.
+ */
+typedef struct _shadowSubscription
+{
+    IotLink_t link;                                                /**< @brief List link member. */
+
+    int32_t references[ SHADOW_OPERATION_COUNT ];                  /**< @brief Reference counter for Shadow operation topics. */
+    AwsIotShadowCallbackInfo_t callbacks[ SHADOW_CALLBACK_COUNT ]; /**< @brief Shadow callbacks for this Thing. */
+
+    /**
+     * @brief Buffer allocated for removing Shadow topics.
+     *
+     * This buffer is pre-allocated to ensure that memory is available when
+     * unsubscribing.
+     */
+    char * pTopicBuffer;
+
+    size_t thingNameLength; /**< @brief Length of Thing Name. */
+    char pThingName[];      /**< @brief Thing Name associated with this subscriptions object. */
+} _shadowSubscription_t;
+
+/**
  * @brief Internal structure representing a single Shadow operation (DELETE,
  * GET, or UPDATE).
  *
@@ -306,12 +320,12 @@ typedef struct _shadowOperation
     IotLink_t link; /**< @brief List link member. */
 
     /* Basic operation information. */
-    _shadowOperationType_t type;                /**< @brief Operation type. */
-    uint32_t flags;                             /**< @brief Flags passed to operation API function. */
-    AwsIotShadowError_t status;                 /**< @brief Status of operation. */
+    _shadowOperationType_t type;           /**< @brief Operation type. */
+    uint32_t flags;                        /**< @brief Flags passed to operation API function. */
+    AwsIotShadowError_t status;            /**< @brief Status of operation. */
 
-    IotMqttConnection_t mqttConnection;         /**< @brief MQTT connection associated with this operation. */
-    struct _shadowSubscription * pSubscription; /**< @brief Shadow subscriptions object associated with this operation. */
+    IotMqttConnection_t mqttConnection;    /**< @brief MQTT connection associated with this operation. */
+    _shadowSubscription_t * pSubscription; /**< @brief Shadow subscriptions object associated with this operation. */
 
     union
     {
@@ -344,30 +358,6 @@ typedef struct _shadowOperation
         AwsIotShadowCallbackInfo_t callback; /**< @brief User-provided callback function and parameter. */
     } notify;                                /**< @brief How to notify of an operation's completion. */
 } _shadowOperation_t;
-
-/**
- * @brief Represents a Shadow subscriptions object.
- *
- * These structures are stored in a list.
- */
-typedef struct _shadowSubscription
-{
-    IotLink_t link;                                                /**< @brief List link member. */
-
-    int32_t references[ SHADOW_OPERATION_COUNT ];                  /**< @brief Reference counter for Shadow operation topics. */
-    AwsIotShadowCallbackInfo_t callbacks[ SHADOW_CALLBACK_COUNT ]; /**< @brief Shadow callbacks for this Thing. */
-
-    /**
-     * @brief Buffer allocated for removing Shadow topics.
-     *
-     * This buffer is pre-allocated to ensure that memory is available when
-     * unsubscribing.
-     */
-    char * pTopicBuffer;
-
-    size_t thingNameLength; /**< @brief Length of Thing Name. */
-    char pThingName[];      /**< @brief Thing Name associated with this subscriptions object. */
-} _shadowSubscription_t;
 
 /* Declarations of names printed in logs. */
 #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
