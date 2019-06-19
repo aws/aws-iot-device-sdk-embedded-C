@@ -27,8 +27,85 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* Platform threads include. */
+#include "platform/iot_threads.h"
+
 /* Jobs internal include. */
 #include "private/aws_iot_jobs_internal.h"
+
+/* Validate Jobs configuration settings. */
+#if AWS_IOT_JOBS_ENABLE_ASSERTS != 0 && AWS_IOT_JOBS_ENABLE_ASSERTS != 1
+    #error "AWS_IOT_JOBS_ENABLE_ASSERTS must be 0 or 1."
+#endif
+#if AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS <= 0
+    #error "AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS cannot be 0 or negative."
+#endif
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Timeout used for MQTT operations.
+ */
+uint32_t _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
+
+/*-----------------------------------------------------------*/
+
+AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_SUCCESS;
+
+    bool listInitStatus = AwsIot_InitLists( &_AwsIotJobsPendingOperations,
+                                            &_AwsIotJobsSubscriptions,
+                                            &_AwsIotJobsPendingOperationsMutex,
+                                            &_AwsIotJobsSubscriptionsMutex );
+
+    if( listInitStatus == false )
+    {
+        IotLogInfo( "Failed to create Jobs lists." );
+
+        status = AWS_IOT_JOBS_INIT_FAILED;
+    }
+    else
+    {
+        /* Save the MQTT timeout option. */
+        if( mqttTimeoutMs != 0 )
+        {
+            _AwsIotJobsMqttTimeoutMs = mqttTimeoutMs;
+        }
+
+        IotLogInfo( "Shadow library successfully initialized." );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+void AwsIotJobs_Cleanup( void )
+{
+    /* Remove and free all items in the Jobs pending operation list. */
+    IotMutex_Lock( &_AwsIotJobsPendingOperationsMutex );
+    IotListDouble_RemoveAll( &_AwsIotJobsPendingOperations,
+                             _AwsIotJobs_DestroyOperation,
+                             offsetof( _jobsOperation_t, link ) );
+    IotMutex_Unlock( &_AwsIotJobsPendingOperationsMutex );
+
+    /* Remove and free all items in the Jobs subscription list. */
+    IotMutex_Lock( &_AwsIotJobsSubscriptionsMutex );
+    IotListDouble_RemoveAll( &_AwsIotJobsSubscriptions,
+                             _AwsIotJobs_DestroySubscription,
+                             offsetof( _jobsSubscription_t, link ) );
+    IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
+
+    /* Restore the default MQTT timeout. */
+    _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
+
+    /* Destroy Shadow library mutexes. */
+    IotMutex_Destroy( &_AwsIotJobsPendingOperationsMutex );
+    IotMutex_Destroy( &_AwsIotJobsSubscriptionsMutex );
+
+    IotLogInfo( "Jobs library cleanup done." );
+}
 
 /*-----------------------------------------------------------*/
 

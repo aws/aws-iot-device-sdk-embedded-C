@@ -35,6 +35,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/* Platform types include. */
+#include "types/iot_platform_types.h"
+
 /**
  * @brief The longest Thing Name accepted by AWS IoT, per the [AWS IoT
  * Service Limits](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_iot).
@@ -94,6 +97,23 @@ typedef struct AwsIotTopicInfo
     uint16_t longestSuffixLength;            /**< @brief The length of longest suffix that will be placed at the end of the topic. */
     void * ( *mallocString )( size_t size ); /**< @brief Function used to allocate a string, if needed. */
 } AwsIotTopicInfo_t;
+
+/**
+ * @brief Initializes the lists used by AWS IoT operations.
+ *
+ * @param[in] pPendingOperationsList The list that holds pending operations for
+ * a library.
+ * @param[in] pSubscriptionsList The list that holds subscriptions for a library.
+ * @param[in] pPendingOperationsMutex The mutex that guards the pending operations
+ * list.
+ * @param[in] pSubscriptionsMutex The mutex that guards the subscriptions list.
+ *
+ * @return `true` if all initialization succeeded; `false` otherwise.
+ */
+bool AwsIot_InitLists( IotListDouble_t * pPendingOperationsList,
+                       IotListDouble_t * pSubscriptionsList,
+                       IotMutex_t * pPendingOperationsMutex,
+                       IotMutex_t * pSubscriptionsMutex );
 
 /**
  * @brief Checks that a Thing Name is valid for AWS IoT.
