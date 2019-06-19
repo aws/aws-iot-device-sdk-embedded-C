@@ -30,6 +30,12 @@
 /* SDK initialization include. */
 #include "iot_init.h"
 
+/* MQTT include. */
+#include "iot_mqtt.h"
+
+/* Jobs internal include. */
+#include "private/aws_iot_jobs_internal.h"
+
 /* Test framework includes. */
 #include "unity_fixture.h"
 
@@ -49,6 +55,12 @@ TEST_SETUP( Jobs_Unit_API )
 {
     /* Initialize SDK. */
     TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
+
+    /* Initialize the MQTT library. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
+
+    /* Initialize the Jobs library. */
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, AwsIotJobs_Init( 0 ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -58,6 +70,9 @@ TEST_SETUP( Jobs_Unit_API )
  */
 TEST_TEAR_DOWN( Jobs_Unit_API )
 {
+    /* Clean up libraries. */
+    AwsIotJobs_Cleanup();
+    IotMqtt_Cleanup();
     IotSdk_Cleanup();
 }
 
@@ -68,6 +83,33 @@ TEST_TEAR_DOWN( Jobs_Unit_API )
  */
 TEST_GROUP_RUNNER( Jobs_Unit_API )
 {
+    RUN_TEST_CASE( Jobs_Unit_API, Init );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the function @ref jobs_function_init.
+ */
+TEST( Jobs_Unit_API, Init )
+{
+    /* Check that test set up set the default value. */
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS, _AwsIotJobsMqttTimeoutMs );
+
+    /* The Jobs library was already initialized by test set up. Clean it up
+     * before running this test. */
+    AwsIotJobs_Cleanup();
+
+    /* Set a MQTT timeout. */
+    AwsIotJobs_Init( AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS + 1 );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS + 1, _AwsIotJobsMqttTimeoutMs );
+
+    /* Cleanup should restore the default MQTT timeout. */
+    AwsIotJobs_Cleanup();
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS, _AwsIotJobsMqttTimeoutMs );
+
+    /* Initialize the Jobs library for test clean up. */
+    AwsIotJobs_Init( 0 );
 }
 
 /*-----------------------------------------------------------*/
