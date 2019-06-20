@@ -115,7 +115,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
 static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttConnection,
                                                          _shadowCallbackType_t type,
                                                          _shadowSubscription_t * pSubscription,
-                                                         _mqttOperationFunction_t mqttOperation );
+                                                         AwsIotMqttFunction_t mqttOperation );
 
 /**
  * @brief Common function for incoming Shadow callbacks.
@@ -424,7 +424,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
 static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttConnection,
                                                          _shadowCallbackType_t type,
                                                          _shadowSubscription_t * pSubscription,
-                                                         _mqttOperationFunction_t mqttOperation )
+                                                         AwsIotMqttFunction_t mqttOperation )
 {
     IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_SUCCESS );
     IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
@@ -447,7 +447,7 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
     };
 
     /* Lookup table for Shadow callback function wrappers. */
-    const _mqttCallbackFunction_t pCallbackWrapper[ SHADOW_CALLBACK_COUNT ] =
+    const AwsIotMqttCallbackFunction_t pCallbackWrapper[ SHADOW_CALLBACK_COUNT ] =
     {
         _deltaCallbackWrapper,   /* Delta callback. */
         _updatedCallbackWrapper, /* Updated callback. */

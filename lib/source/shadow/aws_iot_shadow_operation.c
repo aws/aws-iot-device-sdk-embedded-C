@@ -595,7 +595,7 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
     /* Lookup table for Shadow operation callbacks. */
-    const _mqttCallbackFunction_t shadowCallbacks[ SHADOW_OPERATION_COUNT ] =
+    const AwsIotMqttCallbackFunction_t shadowCallbacks[ SHADOW_OPERATION_COUNT ] =
     {
         _deleteCallback,
         _getCallback,
