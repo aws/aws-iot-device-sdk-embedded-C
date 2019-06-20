@@ -1042,7 +1042,7 @@ static IotTaskPoolError_t _createTaskPool( const IotTaskPoolInfo_t * const pInfo
 
     uint32_t count;
     uint32_t threadsCreated = 0;
-    bool controlInit = false;
+    bool controlInit = false, threadCreated = false;
 
     /* Initialize all internal data structure prior to creating all threads. */
     TASKPOOL_ON_ERROR_GOTO_CLEANUP( _initTaskPoolControlStructures( pInfo, pTaskPool ) );
@@ -1060,20 +1060,29 @@ static IotTaskPoolError_t _createTaskPool( const IotTaskPoolInfo_t * const pInfo
     /* Create the minimum number of threads specified by the user, and if one fails shutdown and return error. */
     for( ; threadsCreated < pTaskPool->minThreads; )
     {
+        TASKPOOL_ENTER_CRITICAL();
+
         /* Create one thread. */
-        if( Iot_CreateDetachedThread( _taskPoolWorker,
-                                      pTaskPool,
-                                      pTaskPool->priority,
-                                      pTaskPool->stackSize ) == false )
+        threadCreated = Iot_CreateDetachedThread( _taskPoolWorker,
+                                                  pTaskPool,
+                                                  pTaskPool->priority,
+                                                  pTaskPool->stackSize );
+
+        if( threadCreated == true )
+        {
+            /* Upon successful thread creation, increase the number of active threads. */
+            pTaskPool->activeThreads++;
+        }
+
+        TASKPOOL_EXIT_CRITICAL();
+
+        /* If creating one thread fails, set error condition and exit the loop. */
+        if( threadCreated == false )
         {
             IotLogError( "Could not create worker thread! Exiting..." );
 
-            /* If creating one thread fails, set error condition and exit the loop. */
             TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_NO_MEMORY );
         }
-
-        /* Upon successful thread creation, increase the number of active threads. */
-        pTaskPool->activeThreads++;
 
         ++threadsCreated;
     }
