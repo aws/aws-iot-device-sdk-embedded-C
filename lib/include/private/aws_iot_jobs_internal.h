@@ -341,7 +341,7 @@ typedef struct _jobsOperation
     {
         IotSemaphore_t waitSemaphore;      /**< @brief Semaphore to be used with @ref jobs_function_wait. */
         AwsIotJobsCallbackInfo_t callback; /**< @brief User-provided callback function and parameter. */
-    } notify;
+    } notify;                              /**< @brief How to notify of an operation's completion. */
 } _jobsOperation_t;
 
 /* Declarations of names printed in logs. */

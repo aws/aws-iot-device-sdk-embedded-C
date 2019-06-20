@@ -819,7 +819,7 @@ typedef struct AwsIotJobsUpdateInfo
  * An #AwsIotJobsOperation_t <b>MUST</b> be provided if this flag is set.
  * Additionally, an #AwsIotJobsCallbackInfo_t <b>MUST NOT</b> be provided.
  *
- * When this flag is set, #AwsIotJobsResponseInfo_t.mallocResponse must be set
+ * When this flag is set, #AwsIotJobsRequestInfo_t.mallocResponse must be set
  * to a function that can be used to allocate memory to hold an incoming response.
  *
  * @note If this flag is set, @ref jobs_function_wait <b>MUST</b> be called to
