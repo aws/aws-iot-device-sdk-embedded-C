@@ -159,6 +159,106 @@
 #endif
 /** @endcond */
 
+/**
+ * @brief The number of currently available Jobs operations.
+ *
+ * The 4 Jobs operations are GET PENDING, START NEXT, DESCRIBE, and UPDATE.
+ */
+#define JOBS_OPERATION_COUNT                          ( 4 )
+
+/**
+ * @brief The number of currently available Jobs callbacks.
+ *
+ * The 2 Jobs callbacks are `jobs/notify` (AKA "Notify Pending") and
+ * `/jobs/notify-next` (AKA "Notify Next").
+ */
+#define JOBS_CALLBACK_COUNT                           ( 2 )
+
+/**
+ * @brief The string representing a Jobs GET PENDING operation in a Jobs MQTT topic.
+ */
+#define JOBS_GET_PENDING_OPERATION_STRING             "/jobs/get"
+
+/**
+ * @brief The length of #JOBS_GET_PENDING_OPERATION_STRING.
+ */
+#define JOBS_GET_PENDING_OPERATION_STRING_LENGTH      ( ( uint16_t ) ( sizeof( JOBS_GET_PENDING_OPERATION_STRING ) - 1 ) )
+
+/**
+ * @brief The string representing a Jobs START NEXT operation in a Jobs MQTT topic.
+ */
+#define JOBS_START_NEXT_OPERATION_STRING              "/jobs/start-next"
+
+/**
+ * @brief The length of #JOBS_START_NEXT_OPERATION_STRING.
+ */
+#define JOBS_START_NEXT_OPERATION_STRING_LENGTH       ( ( uint16_t ) ( sizeof( JOBS_START_NEXT_OPERATION_STRING ) - 1 ) )
+
+/**
+ * @brief The string representing a Jobs DESCRIBE operation in a Jobs MQTT topic.
+ *
+ * The %s is a placeholder for a Job ID.
+ */
+#define JOBS_DESCRIBE_OPERATION_STRING                "/jobs/%s/get"
+
+/**
+ * @brief The length of #JOBS_DESCRIBE_OPERATION_STRING.
+ *
+ * This length excludes the length of the placeholder %s.
+ */
+#define JOBS_DESCRIBE_OPERATION_STRING_LENGTH         ( ( uint16_t ) ( sizeof( JOBS_DESCRIBE_OPERATION_STRING ) - 3 ) )
+
+/**
+ * @brief The string representing a Jobs UPDATE operation in a Jobs MQTT topic.
+ *
+ * The %s is a placeholder for a Job ID.
+ */
+#define JOBS_UPDATE_OPERATION_STRING                  "/jobs/%s/update"
+
+/**
+ * @brief The length of #JOBS_UPDATE_OPERATION_STRING.
+ *
+ * This length excludes the length of the placeholder %s.
+ */
+#define JOBS_UPDATE_OPERATION_STRING_LENGTH           ( ( uint16_t ) ( sizeof( JOBS_UPDATE_OPERATION_STRING ) - 3 ) )
+
+/**
+ * @brief The string representing the Jobs MQTT topic for receiving notifications
+ * of pending Jobs.
+ */
+#define JOBS_NOTIFY_PENDING_CALLBACK_STRING           "/jobs/notify"
+
+/**
+ * @brief The length of #JOBS_NOTIFY_PENDING_CALLBACK_STRING.
+ */
+#define JOBS_NOTIFY_PENDING_CALLBACK_STRING_LENGTH    ( ( uint16_t ) ( sizeof( JOBS_NOTIFY_PENDING_CALLBACK_STRING ) - 1 ) )
+
+/**
+ * @brief The string representing the Jobs MQTT topic for receiving notifications
+ * of the next pending Job.
+ */
+#define JOBS_NOTIFY_NEXT_CALLBACK_STRING              "/jobs/notify-next"
+
+/**
+ * @brief The length of #JOBS_NOTIFY_NEXT_CALLBACK_STRING.
+ */
+#define JOBS_NOTIFY_NEXT_CALLBACK_STRING_LENGTH       ( ( uint16_t ) ( sizeof( JOBS_NOTIFY_NEXT_CALLBACK_STRING ) - 1 ) )
+
+/**
+ * @brief The maximum length of a Job ID, per AWS IoT Service Limits.
+ *
+ * See https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#job-limits
+ */
+#define JOBS_MAX_ID_LENGTH                            ( 64 )
+
+/**
+ * @brief The length of the longest Jobs topic suffix.
+ *
+ * This is the length of the longest Job ID plus the length of the "UPDATE"
+ * operation suffix.
+ */
+#define JOBS_LONGEST_SUFFIX_LENGTH                    ( JOBS_MAX_ID_LENGTH + JOBS_UPDATE_OPERATION_STRING_LENGTH )
+
 /*------------------------ Jobs internal data types -------------------------*/
 
 /**
@@ -184,7 +284,18 @@ typedef enum _jobsOperationType
  */
 typedef struct _jobsSubscription
 {
-    IotLink_t link;         /**< @brief List link member. */
+    IotLink_t link;                                           /**< @brief List link member. */
+
+    int32_t references[ JOBS_OPERATION_COUNT ];               /**< @brief Reference counter for Jobs operation topics. */
+    AwsIotJobsCallbackInfo_t callback[ JOBS_CALLBACK_COUNT ]; /**< @brief Jobs callbacks for this Thing. */
+
+    /**
+     * @brief Buffer allocated for removing Jobs topics.
+     *
+     * This buffer is pre-allocated to ensure that memory is available when
+     * unsubscribing.
+     */
+    char * pTopicBuffer;
 
     size_t thingNameLength; /**< @brief Length of Thing Name. */
     char pThingName[];      /**< @brief Thing Name associated with this subscriptions object. */
@@ -198,6 +309,39 @@ typedef struct _jobsSubscription
 typedef struct _jobsOperation
 {
     IotLink_t link; /**< @brief List link member. */
+
+    /* Basic operation information. */
+    _jobsOperationType_t type;           /**< @brief Operation type. */
+    uint32_t flags;                      /**< @brief Flags passed to operation API function. */
+    AwsIotJobsError_t status;            /**< @brief Status of operation. */
+
+    IotMqttConnection_t mqttConnection;  /**< @brief MQTT connection associated with this operation. */
+    _jobsSubscription_t * pSubscription; /**< @brief Jobs subscriptions object associated with this operation. */
+
+    /* Jobs request information. */
+    const char * pJobsRequest; /**< @brief JSON document to send to the Jobs service. */
+    size_t jobsRequestLength;  /**< @brief Length of #_jobsOperation_t.pJobsRequest. */
+
+    const char * pClientToken; /**< @brief Client token sent with request. */
+    size_t clientTokenLength;  /**< @brief Length of #_jobsOperation_t.pClientToken. */
+
+    /* Jobs response information. */
+    const char * pJobsResponse; /**< @brief Response received from the Jobs service. */
+    size_t jobsResponseLength;  /**< @brief Length of #_jobsOperation_t.pJobsResponse. */
+
+    /**
+     * @brief Function to allocate memory for an incoming Jobs response.
+     *
+     * Only used when the flag #AWS_IOT_JOBS_FLAG_WAITABLE is set.
+     */
+    void * ( *mallocResponse )( size_t );
+
+    /* How to notify of an operation's completion. */
+    union
+    {
+        IotSemaphore_t waitSemaphore;      /**< @brief Semaphore to be used with @ref jobs_function_wait. */
+        AwsIotJobsCallbackInfo_t callback; /**< @brief User-provided callback function and parameter. */
+    } notify;                              /**< @brief How to notify of an operation's completion. */
 } _jobsOperation_t;
 
 /* Declarations of names printed in logs. */
