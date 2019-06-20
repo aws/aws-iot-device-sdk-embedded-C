@@ -1060,40 +1060,40 @@ static IotTaskPoolError_t _createTaskPool( const IotTaskPoolInfo_t * const pInfo
     IotTaskPool_Assert( pInfo->minThreads == pTaskPool->minThreads );
     IotTaskPool_Assert( pInfo->maxThreads == pTaskPool->maxThreads );
 
-    /* The task pool will initialize the minimum number of threads reqeusted by the user upon start. */
+    /* The task pool will initialize the minimum number of threads requested by the user upon start. */
     /* When a thread is created, it will signal a semaphore to signify that it is about to wait on incoming */
     /* jobs. A thread can be woken up for exit or for new jobs only at that point in time.  */
     /* The exit condition is setting the maximum number of threads to 0. */
 
-    /* Create the minimum number of threads specified by the user, and if one fails shutdown and return error. */
-    for( ; threadsCreated < pTaskPool->minThreads; )
+    TASKPOOL_ENTER_CRITICAL();
     {
-        TASKPOOL_ENTER_CRITICAL();
-
-        /* Create one thread. */
-        threadCreated = Iot_CreateDetachedThread( _taskPoolWorker,
-                                                  pTaskPool,
-                                                  pTaskPool->priority,
-                                                  pTaskPool->stackSize );
-
-        if( threadCreated == true )
+        /* Create the minimum number of threads specified by the user, and if one fails shutdown and return error. */
+        for( ; threadsCreated < pTaskPool->minThreads; )
         {
-            /* Upon successful thread creation, increase the number of active threads. */
-            pTaskPool->activeThreads++;
+            /* Create one thread. */
+            threadCreated = Iot_CreateDetachedThread( _taskPoolWorker,
+                                                      pTaskPool,
+                                                      pTaskPool->priority,
+                                                      pTaskPool->stackSize );
+
+            if( threadCreated == true )
+            {
+                /* Upon successful thread creation, increase the number of active threads. */
+                pTaskPool->activeThreads++;
+            }
+            else
+            {
+                TASKPOOL_EXIT_CRITICAL();
+
+                IotLogError( "Could not create worker thread! Exiting..." );
+
+                TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_NO_MEMORY );
+            }
+
+            ++threadsCreated;
         }
-
-        TASKPOOL_EXIT_CRITICAL();
-
-        /* If creating one thread fails, set error condition and exit the loop. */
-        if( threadCreated == false )
-        {
-            IotLogError( "Could not create worker thread! Exiting..." );
-
-            TASKPOOL_SET_AND_GOTO_CLEANUP( IOT_TASKPOOL_NO_MEMORY );
-        }
-
-        ++threadsCreated;
     }
+    TASKPOOL_EXIT_CRITICAL();
 
     TASKPOOL_FUNCTION_CLEANUP();
 
