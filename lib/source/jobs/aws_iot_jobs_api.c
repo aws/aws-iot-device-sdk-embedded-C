@@ -33,6 +33,9 @@
 /* Jobs internal include. */
 #include "private/aws_iot_jobs_internal.h"
 
+/* Error handling include. */
+#include "private/iot_error.h"
+
 /* Validate Jobs configuration settings. */
 #if AWS_IOT_JOBS_ENABLE_ASSERTS != 0 && AWS_IOT_JOBS_ENABLE_ASSERTS != 1
     #error "AWS_IOT_JOBS_ENABLE_ASSERTS must be 0 or 1."
@@ -44,9 +47,107 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Validate the #AwsIotJobsRequestInfo_t passed to a Jobs API function.
+ *
+ * @param[in] type The Jobs API function type.
+ * @param[in] pRequestInfo The request info passed to a Jobs API function.
+ * @param[in] flags Flags used by the Jobs API function.
+ * @param[in] pCallbackInfo The callback info passed with the request info.
+ * @param[in] pOperation Operation reference pointer passed to a Jobs API function.
+ *
+ * @return #AWS_IOT_JOBS_SUCCESS or #AWS_IOT_JOBS_BAD_PARAMETER.
+ */
+static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
+                                               const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                               uint32_t flags,
+                                               const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                               const AwsIotJobsOperation_t * pOperation );
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Timeout used for MQTT operations.
  */
 uint32_t _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
+
+/*-----------------------------------------------------------*/
+
+static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
+                                               const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                               uint32_t flags,
+                                               const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                               const AwsIotJobsOperation_t * pOperation )
+{
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_SUCCESS );
+
+    /* Type is not used when logging is disabled. */
+    ( void ) type;
+
+    /* Check that the given MQTT connection is valid. */
+    if( pRequestInfo->mqttConnection == IOT_MQTT_CONNECTION_INITIALIZER )
+    {
+        IotLogError( "MQTT connection is not initialized for Jobs %s.",
+                     _pAwsIotJobsOperationNames[ type ] );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+    }
+
+    /* Check Thing Name. */
+    if( AwsIot_ValidateThingName( pRequestInfo->pThingName,
+                                  pRequestInfo->thingNameLength ) == false )
+    {
+        IotLogError( "Thing Name is not valid for Jobs %s.",
+                     _pAwsIotJobsOperationNames[ type ] );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+    }
+
+    /* Checks for waitable operations. */
+    if( ( flags & AWS_IOT_JOBS_FLAG_WAITABLE ) == AWS_IOT_JOBS_FLAG_WAITABLE )
+    {
+        if( pOperation == NULL )
+        {
+            IotLogError( "Reference must be provided for a waitable Jobs %s.",
+                         _pAwsIotJobsOperationNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+
+        if( pCallbackInfo != NULL )
+        {
+            IotLogError( "Callback should not be set for a waitable Jobs %s.",
+                         _pAwsIotJobsOperationNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+    }
+
+    /* Check that a callback function is set. */
+    if( pCallbackInfo != NULL )
+    {
+        if( pCallbackInfo->function == NULL )
+        {
+            IotLogError( "Callback function must be set for Jobs %s callback.",
+                         _pAwsIotJobsOperationNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+    }
+
+    /* Check that Thing Name length is set. */
+    if( pRequestInfo->pClientToken != AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE )
+    {
+        if( pRequestInfo->clientTokenLength == 0 )
+        {
+            IotLogError( "Client token length must be set for Jobs %s.",
+                         _pAwsIotJobsOperationNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+    }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
 
 /*-----------------------------------------------------------*/
 
@@ -73,10 +174,36 @@ AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs )
             _AwsIotJobsMqttTimeoutMs = mqttTimeoutMs;
         }
 
-        IotLogInfo( "Shadow library successfully initialized." );
+        IotLogInfo( "Jobs library successfully initialized." );
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                         uint32_t flags,
+                                         const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                         AwsIotJobsOperation_t * const pGetPendingOperation )
+{
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_SUCCESS );
+
+    /* Check Thing Name. */
+    status = _validateRequestInfo( JOBS_GET_PENDING,
+                                   pRequestInfo,
+                                   flags,
+                                   pCallbackInfo,
+                                   pGetPendingOperation );
+
+    if( status != AWS_IOT_JOBS_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    IOT_FUNCTION_CLEANUP_BEGIN();
+
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
@@ -100,7 +227,7 @@ void AwsIotJobs_Cleanup( void )
     /* Restore the default MQTT timeout. */
     _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
 
-    /* Destroy Shadow library mutexes. */
+    /* Destroy Jobs library mutexes. */
     IotMutex_Destroy( &_AwsIotJobsPendingOperationsMutex );
     IotMutex_Destroy( &_AwsIotJobsSubscriptionsMutex );
 

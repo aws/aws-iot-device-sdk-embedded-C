@@ -162,6 +162,22 @@
 /*------------------------ Jobs internal data types -------------------------*/
 
 /**
+ * @brief Enumerations representing each of the Jobs library's API functions.
+ */
+typedef enum _jobsOperationType
+{
+    /* Jobs operations. */
+    JOBS_GET_PENDING = 0, /**< @ref jobs_function_getpending */
+    JOBS_START_NEXT = 1,  /**< @ref jobs_function_startnext */
+    JOBS_DESCRIBE = 2,    /**< @ref jobs_function_describe */
+    JOBS_UPDATE = 3,      /**< @ref jobs_function_update */
+
+    /* Jobs callbacks. */
+    SET_NOTIFY_PENDING_CALLBACK = 4, /**< @ref jobs_function_setnotifypendingcallback */
+    SET_NOTIFY_NEXT_CALLBACK = 5     /**< @ref jobs_function_setnotifynextcallback */
+} _jobsOperationType_t;
+
+/**
  * @brief Represents a Jobs subscriptions object.
  *
  * These structures are stored in a list.
@@ -183,6 +199,11 @@ typedef struct _jobsOperation
 {
     IotLink_t link; /**< @brief List link member. */
 } _jobsOperation_t;
+
+/* Declarations of names printed in logs. */
+#if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+    extern const char * const _pAwsIotJobsOperationNames[];
+#endif
 
 /* Declarations of variables for internal Jobs files. */
 extern uint32_t _AwsIotJobsMqttTimeoutMs;

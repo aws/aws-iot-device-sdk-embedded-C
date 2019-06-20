@@ -32,6 +32,22 @@
 
 /*-----------------------------------------------------------*/
 
+#if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+
+/**
+ * @brief Printable names for each of the Jobs operations.
+ */
+    const char * const _pAwsIotJobsOperationNames[] =
+    {
+        "GET PENDING",
+        "START NEXT",
+        "DESCRIBE",
+        "UPDATE",
+        "SET NOTIFY-PENDING",
+        "SET NOTIFY-NEXT"
+    };
+#endif /* if LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
+
 /**
  * @brief List of active Jobs operations awaiting a response from the Jobs
  * service.
