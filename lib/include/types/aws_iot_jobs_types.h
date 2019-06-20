@@ -511,6 +511,13 @@ typedef struct AwsIotJobsRequestInfo
     IotMqttConnection_t mqttConnection;
 
     /**
+     * @brief Function to allocate memory for an incoming response.
+     *
+     * This only needs to be set if #AWS_IOT_JOBS_FLAG_WAITABLE is passed.
+     */
+    void * ( *mallocResponse )( size_t );
+
+    /**
      * @brief The Thing Name associated with the Job.
      */
     const char * pThingName;
@@ -811,6 +818,9 @@ typedef struct AwsIotJobsUpdateInfo
  *
  * An #AwsIotJobsOperation_t <b>MUST</b> be provided if this flag is set.
  * Additionally, an #AwsIotJobsCallbackInfo_t <b>MUST NOT</b> be provided.
+ *
+ * When this flag is set, #AwsIotJobsRequestInfo_t.mallocResponse must be set
+ * to a function that can be used to allocate memory to hold an incoming response.
  *
  * @note If this flag is set, @ref jobs_function_wait <b>MUST</b> be called to
  * clean up resources.
