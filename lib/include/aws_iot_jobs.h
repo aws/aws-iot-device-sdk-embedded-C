@@ -120,6 +120,8 @@ void AwsIotJobs_Cleanup( void );
  * notification when the response arrives.
  *
  * @param[in] pRequestInfo Jobs request parameters.
+ * @param[in] flags Flags which modify the behavior of the Jobs request. See
+ * @ref jobs_constants_flags.
  * @param[in] pCallbackInfo Asynchronous notification of this function's completion.
  * @param[out] pGetPendingOperation Set to a handle by which this operation may be referenced
  * after this function returns. This reference is invalidated once the Jobs operation
@@ -142,7 +144,8 @@ void AwsIotJobs_Cleanup( void );
  */
 /* @[declare_jobs_getpending] */
 AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                         const AwsIotJobsCallbackInfo_t pCallbackInfo,
+                                         uint32_t flags,
+                                         const AwsIotJobsCallbackInfo_t * pCallbackInfo,
                                          AwsIotJobsOperation_t * const pGetPendingOperation );
 /* @[declare_jobs_getpending] */
 
@@ -152,6 +155,7 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
  */
 /* @[declare_jobs_timedgetpending] */
 AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                              uint32_t flags,
                                               uint32_t timeout );
 /* @[declare_jobs_timedgetpending] */
 
@@ -162,7 +166,8 @@ AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pR
 /* @[declare_jobs_startnext] */
 AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                         const AwsIotJobsUpdateInfo_t * pUpdateInfo,
-                                        const AwsIotJobsCallbackInfo_t pCallbackInfo,
+                                        uint32_t flags,
+                                        const AwsIotJobsCallbackInfo_t * pCallbackInfo,
                                         AwsIotJobsOperation_t * const pStartNextOperation );
 /* @[declare_jobs_startnext] */
 
@@ -173,6 +178,7 @@ AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequest
 /* @[declare_jobs_timedstartnext] */
 AwsIotJobsError_t AwsIotJobs_TimedStartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                              const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                             uint32_t flags,
                                              uint32_t timeout );
 /* @[declare_jobs_timedstartnext] */
 
@@ -184,6 +190,7 @@ AwsIotJobsError_t AwsIotJobs_TimedStartNext( const AwsIotJobsRequestInfo_t * pRe
 AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                        int32_t executionNumber,
                                        bool includeJobDocument,
+                                       uint32_t flags,
                                        const AwsIotJobsCallbackInfo_t * pCallbackInfo,
                                        AwsIotJobsOperation_t * const pJobsOperation );
 /* @[declare_jobs_describe] */
@@ -196,6 +203,7 @@ AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestI
 AwsIotJobsError_t AwsIotJobs_TimedDescribe( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                             int32_t executionNumber,
                                             bool includeJobDocument,
+                                            uint32_t flags,
                                             uint32_t timeout );
 /* @[declare_jobs_timeddescribe] */
 
@@ -206,6 +214,7 @@ AwsIotJobsError_t AwsIotJobs_TimedDescribe( const AwsIotJobsRequestInfo_t * pReq
 /* @[declare_jobs_update] */
 AwsIotJobsError_t AwsIotJobs_Update( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                      const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                     uint32_t flags,
                                      const AwsIotJobsCallbackInfo_t * pCallbackInfo,
                                      AwsIotJobsOperation_t * const pUpdateOperation );
 /* @[declare_jobs_update] */
@@ -217,6 +226,7 @@ AwsIotJobsError_t AwsIotJobs_Update( const AwsIotJobsRequestInfo_t * pRequestInf
 /* @[declare_jobs_timedupdate] */
 AwsIotJobsError_t AwsIotJobs_TimedUpdate( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                           const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                          uint32_t flags,
                                           uint32_t timeout );
 /* @[declare_jobs_timedupdate] */
 
