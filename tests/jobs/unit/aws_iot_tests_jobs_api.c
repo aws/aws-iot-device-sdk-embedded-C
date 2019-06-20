@@ -182,7 +182,7 @@ TEST( Jobs_Unit_API, OperationInvalidParameters )
     status = AwsIotJobs_GetPending( &requestInfo,
                                     AWS_IOT_JOBS_FLAG_WAITABLE,
                                     &callbackInfo,
-                                    NULL );
+                                    &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Callback function not set. */
