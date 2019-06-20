@@ -159,6 +159,21 @@
 #endif
 /** @endcond */
 
+/**
+ * @brief The number of currently available Jobs operations.
+ *
+ * The 4 Jobs operations are GET PENDING, START NEXT, DESCRIBE, and UPDATE.
+ */
+#define JOBS_OPERATION_COUNT    ( 4 )
+
+/**
+ * @brief The number of currently available Jobs callbacks.
+ *
+ * The 2 Jobs callbacks are `jobs/notify` (AKA "Notify Pending") and
+ * `/jobs/notify-next` (AKA "Notify Next").
+ */
+#define JOBS_CALLBACK_COUNT     ( 2 )
+
 /*------------------------ Jobs internal data types -------------------------*/
 
 /**
@@ -184,7 +199,18 @@ typedef enum _jobsOperationType
  */
 typedef struct _jobsSubscription
 {
-    IotLink_t link;         /**< @brief List link member. */
+    IotLink_t link;                                           /**< @brief List link member. */
+
+    int32_t references[ JOBS_OPERATION_COUNT ];               /**< @brief Reference counter for Jobs operation topics. */
+    AwsIotJobsCallbackInfo_t callback[ JOBS_CALLBACK_COUNT ]; /**< @brief Jobs callbacks for this Thing. */
+
+    /**
+     * @brief Buffer allocated for removing Jobs topics.
+     *
+     * This buffer is pre-allocated to ensure that memory is available when
+     * unsubscribing.
+     */
+    char * pTopicBuffer;
 
     size_t thingNameLength; /**< @brief Length of Thing Name. */
     char pThingName[];      /**< @brief Thing Name associated with this subscriptions object. */
@@ -198,6 +224,39 @@ typedef struct _jobsSubscription
 typedef struct _jobsOperation
 {
     IotLink_t link; /**< @brief List link member. */
+
+    /* Basic operation information. */
+    _jobsOperationType_t type;           /**< @brief Operation type. */
+    uint32_t flags;                      /**< @brief Flags passed to operation API function. */
+    AwsIotJobsError_t status;            /**< @brief Status of operation. */
+
+    IotMqttConnection_t mqttConnection;  /**< @brief MQTT connection associated with this operation. */
+    _jobsSubscription_t * pSubscription; /**< @brief Jobs subscriptions object associated with this operation. */
+
+    /* Jobs request information. */
+    const char * pJobsRequest; /**< @brief JSON document to send to the Jobs service. */
+    size_t jobsRequestLength;  /**< @brief Length of #_jobsOperation_t.pJobsRequest. */
+
+    const char * pClientToken; /**< @brief Client token sent with request. */
+    size_t clientTokenLength;  /**< @brief Length of #_jobsOperation_t.pClientToken. */
+
+    /* Jobs response information. */
+    const char * pJobsResponse; /**< @brief Response received from the Jobs service. */
+    size_t jobsResponseLength;  /**< @brief Length of #_jobsOperation_t.pJobsResponse. */
+
+    /**
+     * @brief Function to allocate memory for an incoming Jobs response.
+     *
+     * Only used when the flag #AWS_IOT_JOBS_FLAG_WAITABLE is set.
+     */
+    void * ( *mallocResponse )( size_t );
+
+    /* How to notify of an operation's completion. */
+    union
+    {
+        IotSemaphore_t waitSemaphore;      /**< @brief Semaphore to be used with @ref jobs_function_wait. */
+        AwsIotJobsCallbackInfo_t callback; /**< @brief User-provided callback function and parameter. */
+    } notify;
 } _jobsOperation_t;
 
 /* Declarations of names printed in logs. */
