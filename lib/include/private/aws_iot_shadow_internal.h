@@ -244,24 +244,6 @@
 /*----------------------- Shadow internal data types ------------------------*/
 
 /**
- * @brief Function pointer representing an MQTT timed operation.
- *
- * Currently, this is used to represent @ref mqtt_function_timedsubscribe or
- * @ref mqtt_function_timedunsubscribe.
- */
-typedef IotMqttError_t ( * _mqttOperationFunction_t )( IotMqttConnection_t,
-                                                       const IotMqttSubscription_t *,
-                                                       size_t,
-                                                       uint32_t,
-                                                       uint32_t );
-
-/**
- * @brief Function pointer representing an MQTT library callback function.
- */
-typedef void ( * _mqttCallbackFunction_t )( void *,
-                                            IotMqttCallbackParam_t * );
-
-/**
  * @brief Enumerations representing each of the Shadow library's API functions.
  */
 typedef enum _shadowOperationType
@@ -520,7 +502,7 @@ void _AwsIotShadow_DestroySubscription( void * pData );
 AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOperation,
                                                        char * pTopicBuffer,
                                                        uint16_t operationTopicLength,
-                                                       _mqttCallbackFunction_t callback );
+                                                       AwsIotMqttCallbackFunction_t callback );
 
 /**
  * @brief Decrement the reference count of a Shadow subscriptions object.

@@ -38,6 +38,9 @@
 /* Platform types include. */
 #include "types/iot_platform_types.h"
 
+/* MQTT types include. */
+#include "types/iot_mqtt_types.h"
+
 /**
  * @brief The longest Thing Name accepted by AWS IoT, per the [AWS IoT
  * Service Limits](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_iot).
@@ -75,6 +78,24 @@
 #define AWS_IOT_REJECTED_SUFFIX_LENGTH    ( ( uint16_t ) ( sizeof( AWS_IOT_REJECTED_SUFFIX ) - 1 ) )
 
 /**
+ * @brief Function pointer representing an MQTT timed operation.
+ *
+ * Currently, this is used to represent @ref mqtt_function_timedsubscribe or
+ * @ref mqtt_function_timedunsubscribe.
+ */
+typedef IotMqttError_t ( * AwsIotMqttFunction_t )( IotMqttConnection_t,
+                                                   const IotMqttSubscription_t *,
+                                                   size_t,
+                                                   uint32_t,
+                                                   uint32_t );
+
+/**
+ * @brief Function pointer representing an MQTT library callback function.
+ */
+typedef void ( * AwsIotMqttCallbackFunction_t )( void *,
+                                                 IotMqttCallbackParam_t * );
+
+/**
  * @brief Enumerations representing each of the statuses that may be parsed
  * from a topic.
  */
@@ -97,6 +118,23 @@ typedef struct AwsIotTopicInfo
     uint16_t longestSuffixLength;            /**< @brief The length of longest suffix that will be placed at the end of the topic. */
     void * ( *mallocString )( size_t size ); /**< @brief Function used to allocate a string, if needed. */
 } AwsIotTopicInfo_t;
+
+/**
+ * @brief Information needed to modify AWS IoT subscription topics.
+ *
+ * @warning The buffer passed as `pTopicFilterBase` must be large enough to
+ * accommodate the "/accepted" and "/rejected" suffixes.
+ */
+typedef struct AwsIotSubscriptionInfo_t
+{
+    IotMqttConnection_t mqttConnection;            /**< @brief The MQTT connection to use. */
+    AwsIotMqttCallbackFunction_t callbackFunction; /**< @brief Callback function for MQTT subscribe. */
+    uint32_t timeout;                              /**< @brief Timeout for MQTT function. */
+
+    /* Topic filter. */
+    char * pTopicFilterBase;        /**< @brief Contains the base topic filter, without "/accepted" or "/rejected". */
+    uint16_t topicFilterBaseLength; /**< @brief Length of the base topic filter. */
+} AwsIotSubscriptionInfo_t;
 
 /**
  * @brief Initializes the lists used by AWS IoT operations.
@@ -190,5 +228,19 @@ AwsIotStatus_t AwsIot_ParseStatus( const char * pTopicName,
 bool AwsIot_GenerateOperationTopic( const AwsIotTopicInfo_t * pTopicInfo,
                                     char ** pTopicBuffer,
                                     uint16_t * pOperationTopicLength );
+
+/**
+ * @brief Add or remove subscriptions for AWS IoT operations.
+ *
+ * @param[in] mqttOperation Either @ref mqtt_function_timedsubscribe or
+ * @ref mqtt_function_timedunsubscribe.
+ * @param[in] pSubscriptionInfo Information needed to process an MQTT
+ * operation.
+ *
+ * @return See the return values of @ref mqtt_function_timedsubscribe or
+ * @ref mqtt_function_timedunsubscribe.
+ */
+IotMqttError_t AwsIot_ModifySubscriptions( AwsIotMqttFunction_t mqttOperation,
+                                           const AwsIotSubscriptionInfo_t * pSubscriptionInfo );
 
 #endif /* ifndef AWS_IOT_H_ */
