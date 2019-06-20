@@ -314,7 +314,7 @@ static size_t _receive( void * pConnection,
 
 /*-----------------------------------------------------------*/
 
-bool IotTest_InitMqttMock( IotMqttConnection_t * pMqttConnection )
+bool IotTest_MqttMockInit( IotMqttConnection_t * pMqttConnection )
 {
     IOT_FUNCTION_ENTRY( bool, true );
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;

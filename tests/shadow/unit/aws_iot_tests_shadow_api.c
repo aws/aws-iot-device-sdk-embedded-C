@@ -112,7 +112,8 @@ TEST_SETUP( Shadow_Unit_API )
     /* Initialize the Shadow library. */
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, AwsIotShadow_Init( 0 ) );
 
-    TEST_ASSERT_EQUAL_INT( true, IotTest_InitMqttMock( &_pMqttConnection ) );
+    /* Initialize MQTT mock. */
+    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &_pMqttConnection ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -122,6 +123,7 @@ TEST_SETUP( Shadow_Unit_API )
  */
 TEST_TEAR_DOWN( Shadow_Unit_API )
 {
+    /* Clean up MQTT mock. */
     IotTest_MqttMockCleanup();
 
     /* Clean up the Shadow library. */
