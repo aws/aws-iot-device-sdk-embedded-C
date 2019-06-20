@@ -235,4 +235,24 @@ void _AwsIotJobs_DestroyOperation( void * pData );
  */
 void _AwsIotJobs_DestroySubscription( void * pData );
 
+/*--------------------------- Jobs JSON functions ---------------------------*/
+
+/**
+ * @brief Generates a Jobs JSON request document from an #AwsIotJobsRequestInfo_t
+ * and an #AwsIotJobsUpdateInfo_t.
+ *
+ * @param[in] type The type of Jobs operation for the request.
+ * @param[in] pRequestInfo Common Jobs request parameters.
+ * @param[in] pUpdateInfo Jobs update parameters.
+ * @param[out] pRequestJson Set to a buffer containing the request JSON.
+ * @param[out] pRequestJsonLength Set to the length of the request JSON.
+ *
+ * @return #AWS_IOT_JOBS_SUCCESS on success; otherwise, #AWS_IOT_JOBS_NO_MEMORY.
+ */
+AwsIotJobsError_t _AwsIotJobs_GenerateJsonRequest( _jobsOperationType_t type,
+                                                   const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                                   const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                                   const char ** pRequestJson,
+                                                   size_t * pRequestJsonLength );
+
 #endif /* ifndef AWS_IOT_JOBS_INTERNAL_H_ */
