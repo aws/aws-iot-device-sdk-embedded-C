@@ -489,7 +489,7 @@ typedef struct AwsIotJobsCallbackInfo
      * @see #AwsIotJobsCallbackParam_t for more information on the second parameter.
      */
     void ( * function )( void *,
-                         AwsIotJobsCallbackParam_t );
+                         AwsIotJobsCallbackParam_t * );
 } AwsIotJobsCallbackInfo_t;
 
 /**
@@ -509,12 +509,6 @@ typedef struct AwsIotJobsRequestInfo
      * @brief The MQTT connection to use for the Jobs request.
      */
     IotMqttConnection_t mqttConnection;
-
-    /**
-     * @brief Flags which modify the behavior of the Jobs request. See
-     * @ref jobs_constants_flags.
-     */
-    uint32_t flags;
 
     /**
      * @brief The Thing Name associated with the Job.
@@ -796,7 +790,7 @@ typedef struct AwsIotJobsUpdateInfo
 #define AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER    { 0 } /**< @brief Initializer for #AwsIotJobsCallbackInfo_t. */
 /** @brief Initializer for #AwsIotJobsRequestInfo_t. */
 #define AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER \
-    { .pClentToken = AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE }
+    { .pClientToken = AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE }
 /** @brief Initializer for #AwsIotJobsUpdateInfo_t. */
 #define AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER               \
     { .newStatus = AWS_IOT_JOB_STATE_IN_PROGRESS,          \
