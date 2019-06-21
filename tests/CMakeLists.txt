@@ -3,6 +3,11 @@ set( IOT_TEST_APP_FILES
      ${PROJECT_SOURCE_DIR}/tests/iot_config.h
      ${PROJECT_SOURCE_DIR}/tests/iot_tests.c )
 
+# MQTT mock sources.
+set( MQTT_MOCK_SOURCES
+    ${PROJECT_SOURCE_DIR}/tests/mqtt/mock/iot_tests_mqtt_mock.c
+    ${PROJECT_SOURCE_DIR}/tests/mqtt/mock/iot_tests_mqtt_mock.h )
+
 # Common tests.
 add_subdirectory( common )
 
