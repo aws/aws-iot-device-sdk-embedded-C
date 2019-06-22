@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_jobs_json.c
+ * @file aws_iot_jobs_serialize.c
  * @brief Implements functions that generate and parse Jobs JSON documents.
  */
 
