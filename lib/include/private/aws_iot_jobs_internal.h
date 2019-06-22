@@ -359,6 +359,25 @@ extern IotMutex_t _AwsIotJobsSubscriptionsMutex;
 /*------------------------ Jobs operation functions -------------------------*/
 
 /**
+ * @brief Create a record for a new in-progress Jobs operation.
+ *
+ * @param[in] type The type of Jobs operation for the request.
+ * @param[in] pRequestInfo Common Jobs request parameters.
+ * @param[in] pUpdateInfo Jobs update parameters.
+ * @param[in] flags Flags variables passed to a user-facing Jobs function.
+ * @param[in] pCallbackInfo User-provided callback function and parameter.
+ * @param[out] pNewOperation Set to point to the new operation on success.
+ *
+ * @return #AWS_IOT_JOBS_SUCCESS or #AWS_IOT_JOBS_NO_MEMORY
+ */
+AwsIotJobsError_t _AwsIotJobs_CreateOperation( _jobsOperationType_t type,
+                                               const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                               const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                               uint32_t flags,
+                                               const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                               _jobsOperation_t ** pNewOperation );
+
+/**
  * @brief Free resources used to record a Jobs operation. This is called when
  * the operation completes.
  *
@@ -367,6 +386,18 @@ extern IotMutex_t _AwsIotJobsSubscriptionsMutex;
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
 void _AwsIotJobs_DestroyOperation( void * pData );
+
+/**
+ * @brief Process a Jobs operation by sending the necessary MQTT packets.
+ *
+ * @param[in] pRequestInfo Common Jobs request parameters.
+ * @param[in] pOperation Operation data to process.
+ *
+ * @return #AWS_IOT_JOBS_STATUS_PENDING on success. On error, one of
+ * #AWS_IOT_JOBS_NO_MEMORY or #AWS_IOT_JOBS_MQTT_ERROR.
+ */
+AwsIotJobsError_t _AwsIotJobs_ProcessOperation( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                                _jobsOperation_t * pOperation );
 
 /*----------------------- Jobs subscription functions -----------------------*/
 
@@ -388,15 +419,13 @@ void _AwsIotJobs_DestroySubscription( void * pData );
  * @param[in] type The type of Jobs operation for the request.
  * @param[in] pRequestInfo Common Jobs request parameters.
  * @param[in] pUpdateInfo Jobs update parameters.
- * @param[out] pRequestJson Set to a buffer containing the request JSON.
- * @param[out] pRequestJsonLength Set to the length of the request JSON.
+ * @param[in] pOperation Operation associated with the Jobs request.
  *
  * @return #AWS_IOT_JOBS_SUCCESS on success; otherwise, #AWS_IOT_JOBS_NO_MEMORY.
  */
 AwsIotJobsError_t _AwsIotJobs_GenerateJsonRequest( _jobsOperationType_t type,
                                                    const AwsIotJobsRequestInfo_t * pRequestInfo,
                                                    const AwsIotJobsUpdateInfo_t * pUpdateInfo,
-                                                   const char ** pRequestJson,
-                                                   size_t * pRequestJsonLength );
+                                                   _jobsOperation_t * pOperation );
 
 #endif /* ifndef AWS_IOT_JOBS_INTERNAL_H_ */

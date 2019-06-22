@@ -188,8 +188,6 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
                                          AwsIotJobsOperation_t * const pGetPendingOperation )
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
-    const char * pRequestJson = NULL;
-    size_t requestJsonLength = 0;
 
     /* Check Thing Name. */
     status = _validateRequestInfo( JOBS_GET_PENDING,
@@ -197,18 +195,6 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
                                    flags,
                                    pCallbackInfo,
                                    pGetPendingOperation );
-
-    if( status != AWS_IOT_JOBS_SUCCESS )
-    {
-        IOT_GOTO_CLEANUP();
-    }
-
-    /* Generate the request JSON for the Jobs request. */
-    status = _AwsIotJobs_GenerateJsonRequest( JOBS_GET_PENDING,
-                                              pRequestInfo,
-                                              NULL,
-                                              &pRequestJson,
-                                              &requestJsonLength );
 
     if( status != AWS_IOT_JOBS_SUCCESS )
     {
