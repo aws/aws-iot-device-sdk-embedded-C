@@ -50,7 +50,7 @@
  *
  * @param[in] pSubscriptionLink Pointer to the link member of a #_shadowSubscription_t
  * containing the Thing Name to check.
- * @param[in] pMatch Pointer to a #_thingName_t.
+ * @param[in] pMatch Pointer to an `AwsIotThingName_t`.
  *
  * @return `true` if the Thing Names match; `false` otherwise.
  */
