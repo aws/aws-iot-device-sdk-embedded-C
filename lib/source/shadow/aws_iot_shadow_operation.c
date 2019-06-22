@@ -133,16 +133,17 @@ static void _updateCallback( void * pArgument,
  * @param[in] pTopicBuffer Contains the topic to use for subscribing.
  * @param[in] operationTopicLength The length of the base topic in `pTopicBuffer`.
  * @param[in] pOperation Shadow operation that needs a subscription.
+ * @param[out] Whether the caller may free `pTopicBuffer` (which may be assigned to
+ * a subscription).
  *
  * @return #AWS_IOT_SHADOW_SUCCESS or #AWS_IOT_SHADOW_NO_MEMORY
- *
- * @note This function should be called with the subscription list mutex locked.
  */
 static AwsIotShadowError_t _findSubscription( const char * pThingName,
                                               size_t thingNameLength,
                                               char * pTopicBuffer,
                                               uint16_t operationTopicLength,
-                                              _shadowOperation_t * pOperation );
+                                              _shadowOperation_t * pOperation,
+                                              bool * pFreeTopicBuffer );
 
 /*-----------------------------------------------------------*/
 
@@ -451,7 +452,8 @@ static AwsIotShadowError_t _findSubscription( const char * pThingName,
                                               size_t thingNameLength,
                                               char * pTopicBuffer,
                                               uint16_t operationTopicLength,
-                                              _shadowOperation_t * pOperation )
+                                              _shadowOperation_t * pOperation,
+                                              bool * pFreeTopicBuffer )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
     _shadowSubscription_t * pSubscription = NULL;
@@ -463,6 +465,9 @@ static AwsIotShadowError_t _findSubscription( const char * pThingName,
         _getCallback,
         _updateCallback
     };
+
+    /* Lock the subscriptions mutex for exclusive access. */
+    IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
 
     /* Check for an existing subscription. This function will attempt to allocate
      * a new subscription if not found. */
@@ -490,6 +495,13 @@ static AwsIotShadowError_t _findSubscription( const char * pThingName,
         if( pSubscription->pTopicBuffer == NULL )
         {
             pSubscription->pTopicBuffer = pTopicBuffer;
+
+            /* Don't free the topic buffer if it was allocated to the subscription. */
+            *pFreeTopicBuffer = false;
+        }
+        else
+        {
+            *pFreeTopicBuffer = true;
         }
 
         /* Increment the reference count for this Shadow operation's
@@ -507,6 +519,9 @@ static AwsIotShadowError_t _findSubscription( const char * pThingName,
             _AwsIotShadow_RemoveSubscription( pSubscription, NULL );
         }
     }
+
+    /* Unlock the Shadow subscription list mutex. */
+    IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
 
     return status;
 }
@@ -703,27 +718,13 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NO_MEMORY );
     }
 
-    /* Lock the subscriptions mutex for exclusive access. */
-    IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
-
     /* Get a subscription object for this Shadow operation. */
     status = _findSubscription( pThingName,
                                 thingNameLength,
                                 pTopicBuffer,
                                 operationTopicLength,
-                                pOperation );
-
-    /* Don't free the topic buffer if it was allocated to the subscription. */
-    if( pOperation->pSubscription != NULL )
-    {
-        if( pOperation->pSubscription->pTopicBuffer == pTopicBuffer )
-        {
-            freeTopicBuffer = false;
-        }
-    }
-
-    /* Unlock the Shadow subscription list mutex. */
-    IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
+                                pOperation,
+                                &freeTopicBuffer );
 
     if( status != AWS_IOT_SHADOW_SUCCESS )
     {
