@@ -46,22 +46,11 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief First parameter to #_shadowSubscription_match.
- */
-typedef struct _thingName
-{
-    const char * pThingName; /**< @brief Thing Name to compare. */
-    size_t thingNameLength;  /**< @brief Length of `pThingName`. */
-} _thingName_t;
-
-/*-----------------------------------------------------------*/
-
-/**
  * @brief Match two #_shadowSubscription_t by Thing Name.
  *
  * @param[in] pSubscriptionLink Pointer to the link member of a #_shadowSubscription_t
  * containing the Thing Name to check.
- * @param[in] pMatch Pointer to a #_thingName_t.
+ * @param[in] pMatch Pointer to an `AwsIotThingName_t`.
  *
  * @return `true` if the Thing Names match; `false` otherwise.
  */
@@ -94,7 +83,7 @@ static bool _shadowSubscription_match( const IotLink_t * pSubscriptionLink,
     const _shadowSubscription_t * pSubscription = IotLink_Container( _shadowSubscription_t,
                                                                      pSubscriptionLink,
                                                                      link );
-    const _thingName_t * pThingName = ( _thingName_t * ) pMatch;
+    const AwsIotThingName_t * pThingName = ( AwsIotThingName_t * ) pMatch;
 
     if( pThingName->thingNameLength == pSubscription->thingNameLength )
     {
@@ -114,7 +103,7 @@ _shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * pThingName,
 {
     _shadowSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
-    _thingName_t thingName =
+    AwsIotThingName_t thingName =
     {
         .pThingName      = pThingName,
         .thingNameLength = thingNameLength
@@ -194,7 +183,7 @@ void _AwsIotShadow_RemoveSubscription( _shadowSubscription_t * pSubscription,
 
             removeSubscription = false;
         }
-        else if( pSubscription->references[ i ] == PERSISTENT_SUBSCRIPTION )
+        else if( pSubscription->references[ i ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
         {
             IotLogDebug( "Subscription object for %.*s has persistent subscriptions. "
                          "Subscription will not be removed.",
@@ -282,7 +271,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
     AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
 
     /* Do nothing if this operation has persistent subscriptions. */
-    if( pSubscription->references[ type ] == PERSISTENT_SUBSCRIPTION )
+    if( pSubscription->references[ type ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
     {
         IotLogDebug( "Shadow %s for %.*s has persistent subscriptions. Reference "
                      "count will not be incremented.",
@@ -347,7 +336,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
     /* Otherwise, set the persistent subscriptions flag. */
     else
     {
-        pSubscription->references[ type ] = PERSISTENT_SUBSCRIPTION;
+        pSubscription->references[ type ] = AWS_IOT_PERSISTENT_SUBSCRIPTION;
 
         IotLogDebug( "Set persistent subscriptions flag for Shadow %s of %.*s.",
                      _pAwsIotShadowOperationNames[ type ],
@@ -370,7 +359,7 @@ void _AwsIotShadow_DecrementReferences( _shadowOperation_t * pOperation,
     AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
 
     /* Do nothing if this Shadow operation has persistent subscriptions. */
-    if( pSubscription->references[ type ] != PERSISTENT_SUBSCRIPTION )
+    if( pSubscription->references[ type ] != AWS_IOT_PERSISTENT_SUBSCRIPTION )
     {
         /* Decrement the number of subscription references for this operation.
          * Ensure that it's positive. */
@@ -434,7 +423,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
     AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
     _shadowSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
-    _thingName_t thingName =
+    AwsIotThingName_t thingName =
     {
         .pThingName      = pThingName,
         .thingNameLength = thingNameLength
@@ -474,7 +463,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
                 /* Subscription must have a topic buffer. */
                 AwsIotShadow_Assert( pSubscription->pTopicBuffer != NULL );
 
-                if( pSubscription->references[ i ] == PERSISTENT_SUBSCRIPTION )
+                if( pSubscription->references[ i ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
                 {
                     /* Generate the prefix of the Shadow topic. This function will not
                      * fail when given a buffer. */
