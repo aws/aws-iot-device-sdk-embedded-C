@@ -232,15 +232,6 @@
  */
 #define SHADOW_LONGEST_SUFFIX_LENGTH             SHADOW_UPDATED_SUFFIX_LENGTH
 
-/**
- * @brief A flag to represent persistent subscriptions in a Shadow subscriptions
- * object.
- *
- * Its value is negative to distinguish it from valid subscription counts, which
- * are 0 or positive.
- */
-#define PERSISTENT_SUBSCRIPTION                  ( -1 )
-
 /*----------------------- Shadow internal data types ------------------------*/
 
 /**

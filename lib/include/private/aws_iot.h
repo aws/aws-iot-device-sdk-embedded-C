@@ -45,37 +45,37 @@
  * @brief The longest Thing Name accepted by AWS IoT, per the [AWS IoT
  * Service Limits](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_iot).
  */
-#define AWS_IOT_MAX_THING_NAME_LENGTH     ( 128 )
+#define AWS_IOT_MAX_THING_NAME_LENGTH      ( 128 )
 
 /**
  * @brief The common prefix of all AWS IoT MQTT topics.
  */
-#define AWS_IOT_TOPIC_PREFIX              "$aws/things/"
+#define AWS_IOT_TOPIC_PREFIX               "$aws/things/"
 
 /**
  * @brief The length of #AWS_IOT_TOPIC_PREFIX.
  */
-#define AWS_IOT_TOPIC_PREFIX_LENGTH       ( ( uint16_t ) ( sizeof( AWS_IOT_TOPIC_PREFIX ) - 1 ) )
+#define AWS_IOT_TOPIC_PREFIX_LENGTH        ( ( uint16_t ) ( sizeof( AWS_IOT_TOPIC_PREFIX ) - 1 ) )
 
 /**
  * @brief The suffix for an AWS IoT operation "accepted" topic.
  */
-#define AWS_IOT_ACCEPTED_SUFFIX           "/accepted"
+#define AWS_IOT_ACCEPTED_SUFFIX            "/accepted"
 
 /**
  * @brief The length of #AWS_IOT_ACCEPTED_SUFFIX.
  */
-#define AWS_IOT_ACCEPTED_SUFFIX_LENGTH    ( ( uint16_t ) ( sizeof( AWS_IOT_ACCEPTED_SUFFIX ) - 1 ) )
+#define AWS_IOT_ACCEPTED_SUFFIX_LENGTH     ( ( uint16_t ) ( sizeof( AWS_IOT_ACCEPTED_SUFFIX ) - 1 ) )
 
 /**
  * @brief The suffix for an AWS IoT operation "rejected" topic.
  */
-#define AWS_IOT_REJECTED_SUFFIX           "/rejected"
+#define AWS_IOT_REJECTED_SUFFIX            "/rejected"
 
 /**
  * @brief The length of #AWS_IOT_REJECTED_SUFFIX.
  */
-#define AWS_IOT_REJECTED_SUFFIX_LENGTH    ( ( uint16_t ) ( sizeof( AWS_IOT_REJECTED_SUFFIX ) - 1 ) )
+#define AWS_IOT_REJECTED_SUFFIX_LENGTH     ( ( uint16_t ) ( sizeof( AWS_IOT_REJECTED_SUFFIX ) - 1 ) )
 
 /**
  * @brief The JSON key used to represent client tokens for AWS IoT.
@@ -86,6 +86,16 @@
  * @brief The length of #AWS_IOT_CLIENT_TOKEN_KEY.
  */
 #define AWS_IOT_CLIENT_TOKEN_KEY_LENGTH    ( sizeof( AWS_IOT_CLIENT_TOKEN_KEY ) - 1 )
+
+
+/**
+ * @brief A flag to represent persistent subscriptions in a subscriptions
+ * object.
+ *
+ * Its value is negative to distinguish it from valid subscription counts, which
+ * are 0 or positive.
+ */
+#define AWS_IOT_PERSISTENT_SUBSCRIPTION    ( -1 )
 
 /**
  * @brief Function pointer representing an MQTT timed operation.
@@ -145,6 +155,15 @@ typedef struct AwsIotSubscriptionInfo_t
     char * pTopicFilterBase;        /**< @brief Contains the base topic filter, without "/accepted" or "/rejected". */
     uint16_t topicFilterBaseLength; /**< @brief Length of the base topic filter. */
 } AwsIotSubscriptionInfo_t;
+
+/**
+ * @brief Thing Name and length, used to match subscriptions.
+ */
+typedef struct AwsIotThingName
+{
+    const char * pThingName; /**< @brief Thing Name to compare. */
+    size_t thingNameLength;  /**< @brief Length of `pThingName`. */
+} AwsIotThingName_t;
 
 /**
  * @brief Initializes the lists used by AWS IoT operations.

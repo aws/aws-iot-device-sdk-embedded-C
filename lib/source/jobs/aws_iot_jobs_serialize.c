@@ -154,6 +154,10 @@ static AwsIotJobsError_t _generateGetPendingRequest( const AwsIotJobsRequestInfo
     AwsIotJobs_Assert( pOperation->pClientToken <
                        pOperation->pJobsRequest + pOperation->jobsRequestLength );
 
+    IotLogDebug( "Jobs GET PENDING request: %.*s",
+                 pOperation->jobsRequestLength,
+                 pOperation->pJobsRequest );
+
     IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
