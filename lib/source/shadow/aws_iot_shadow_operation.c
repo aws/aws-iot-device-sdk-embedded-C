@@ -133,8 +133,8 @@ static void _updateCallback( void * pArgument,
  * @param[in] pTopicBuffer Contains the topic to use for subscribing.
  * @param[in] operationTopicLength The length of the base topic in `pTopicBuffer`.
  * @param[in] pOperation Shadow operation that needs a subscription.
- * @param[out] Whether the caller may free `pTopicBuffer` (which may be assigned to
- * a subscription).
+ * @param[out] pFreeTopicBuffer Whether the caller may free `pTopicBuffer`
+ * (which may be assigned to a subscription).
  *
  * @return #AWS_IOT_SHADOW_SUCCESS or #AWS_IOT_SHADOW_NO_MEMORY
  */
