@@ -112,13 +112,13 @@ TEST_SETUP( Jobs_Unit_API )
  */
 TEST_TEAR_DOWN( Jobs_Unit_API )
 {
-    /* Clean up MQTT mock. */
-    IotTest_MqttMockCleanup();
-
     /* Clean up libraries. */
     AwsIotJobs_Cleanup();
     IotMqtt_Cleanup();
     IotSdk_Cleanup();
+
+    /* Clean up MQTT mock. */
+    IotTest_MqttMockCleanup();
 }
 
 /*-----------------------------------------------------------*/
