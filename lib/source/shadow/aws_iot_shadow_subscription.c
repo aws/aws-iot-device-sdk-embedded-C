@@ -275,7 +275,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
                                                        uint16_t operationTopicLength,
                                                        AwsIotMqttCallbackFunction_t callback )
 {
-    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
+    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_SUCCESS );
     const _shadowOperationType_t type = pOperation->type;
     _shadowSubscription_t * pSubscription = pOperation->pSubscription;
     IotMqttError_t subscriptionStatus = IOT_MQTT_STATUS_PENDING;
@@ -314,7 +314,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
         switch( subscriptionStatus )
         {
             case IOT_MQTT_SUCCESS:
-                status = AWS_IOT_SHADOW_STATUS_PENDING;
+                status = AWS_IOT_SHADOW_SUCCESS;
                 break;
 
             case IOT_MQTT_NO_MEMORY:
@@ -326,7 +326,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
                 break;
         }
 
-        if( status != AWS_IOT_SHADOW_STATUS_PENDING )
+        if( status != AWS_IOT_SHADOW_SUCCESS )
         {
             IOT_GOTO_CLEANUP();
         }
@@ -364,7 +364,6 @@ void _AwsIotShadow_DecrementReferences( _shadowOperation_t * pOperation,
                                         char * pTopicBuffer,
                                         _shadowSubscription_t ** pRemovedSubscription )
 {
-    uint16_t topicFilterLength = 0;
     const _shadowOperationType_t type = pOperation->type;
     _shadowSubscription_t * pSubscription = pOperation->pSubscription;
     uint16_t operationTopicLength = 0;
