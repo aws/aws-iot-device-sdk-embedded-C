@@ -78,6 +78,16 @@
 #define AWS_IOT_REJECTED_SUFFIX_LENGTH    ( ( uint16_t ) ( sizeof( AWS_IOT_REJECTED_SUFFIX ) - 1 ) )
 
 /**
+ * @brief The JSON key used to represent client tokens for AWS IoT.
+ */
+#define AWS_IOT_CLIENT_TOKEN_KEY           "clientToken"
+
+/**
+ * @brief The length of #AWS_IOT_CLIENT_TOKEN_KEY.
+ */
+#define AWS_IOT_CLIENT_TOKEN_KEY_LENGTH    ( sizeof( AWS_IOT_CLIENT_TOKEN_KEY ) - 1 )
+
+/**
  * @brief Function pointer representing an MQTT timed operation.
  *
  * Currently, this is used to represent @ref mqtt_function_timedsubscribe or

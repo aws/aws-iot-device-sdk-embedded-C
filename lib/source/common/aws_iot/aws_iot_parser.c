@@ -54,16 +54,6 @@
                    1 + 2 )
 
 /**
- * @brief The JSON key used to represent client tokens for AWS IoT.
- */
-#define CLIENT_TOKEN_KEY           "clientToken"
-
-/**
- * @brief The length of #CLIENT_TOKEN_KEY.
- */
-#define CLIENT_TOKEN_KEY_LENGTH    ( sizeof( CLIENT_TOKEN_KEY ) - 1 )
-
-/**
  * @brief The longest client token accepted by AWS IoT service, per AWS IoT
  * service limits.
  */
@@ -79,8 +69,8 @@ bool AwsIot_GetClientToken( const char * pJsonDocument,
     /* Extract the client token from the JSON document. */
     bool status = IotJsonUtils_FindJsonValue( pJsonDocument,
                                               jsonDocumentLength,
-                                              CLIENT_TOKEN_KEY,
-                                              CLIENT_TOKEN_KEY_LENGTH,
+                                              AWS_IOT_CLIENT_TOKEN_KEY,
+                                              AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
                                               pClientToken,
                                               pClientTokenLength );
 
