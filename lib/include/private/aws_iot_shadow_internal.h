@@ -494,7 +494,7 @@ void _AwsIotShadow_DestroySubscription( void * pData );
  * buffer must already contain the Shadow operation topic, plus enough space for the
  * status suffix.
  *
- * @return #AWS_IOT_SHADOW_STATUS_PENDING on success. On error, one of
+ * @return #AWS_IOT_SHADOW_SUCCESS on success. On error, one of
  * #AWS_IOT_SHADOW_NO_MEMORY or #AWS_IOT_SHADOW_MQTT_ERROR.
  *
  * @note This function should be called with the subscription list mutex locked.
