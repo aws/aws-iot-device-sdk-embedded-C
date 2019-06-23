@@ -130,6 +130,7 @@ TEST_GROUP_RUNNER( Jobs_Unit_API )
 {
     RUN_TEST_CASE( Jobs_Unit_API, Init );
     RUN_TEST_CASE( Jobs_Unit_API, OperationInvalidParameters );
+    RUN_TEST_CASE( Jobs_Unit_API, WaitInvalidParameters );
     RUN_TEST_CASE( Jobs_Unit_API, GetPendingMallocFail );
 }
 
@@ -246,6 +247,30 @@ TEST( Jobs_Unit_API, OperationInvalidParameters )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Tests the behavior of @ref jobs_function_wait with various
+ * invalid parameters.
+ */
+TEST( Jobs_Unit_API, WaitInvalidParameters )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    _jobsOperation_t operation = { .link = { 0 } };
+
+    /* NULL reference. */
+    status = AwsIotJobs_Wait( NULL, 0, NULL, NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
+    /* No waitable flag set. */
+    status = AwsIotJobs_Wait( &operation, 0, NULL, NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
+    /* NULL output parameters. */
+    operation.flags = AWS_IOT_JOBS_FLAG_WAITABLE;
+    status = AwsIotJobs_Wait( &operation, 0, NULL, NULL );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Tests the behavior of @ref jobs_function_getpending when memory
  * allocation fails at various points.
  */
@@ -255,6 +280,8 @@ TEST( Jobs_Unit_API, GetPendingMallocFail )
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
     AwsIotJobsOperation_t getPendingOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
     AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    const char * pResponse = NULL;
+    size_t responseLength = 0;
 
     /* Set a short timeout so this test runs faster. */
     _AwsIotJobsMqttTimeoutMs = 75;
@@ -279,6 +306,13 @@ TEST( Jobs_Unit_API, GetPendingMallocFail )
         /* Once the Jobs GET PENDING call succeeds, wait for it to complete. */
         if( status == AWS_IOT_JOBS_STATUS_PENDING )
         {
+            /* No response will be received from the network, so the Jobs operation
+             * is expected to time out. */
+            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_TIMEOUT,
+                               AwsIotJobs_Wait( getPendingOperation,
+                                                0,
+                                                &pResponse,
+                                                &responseLength ) );
             break;
         }
 

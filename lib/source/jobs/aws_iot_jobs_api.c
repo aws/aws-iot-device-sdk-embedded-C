@@ -291,6 +291,72 @@ AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
                                    const char ** const pResponse,
                                    size_t * const pResponseLength )
 {
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
+
+    /* Check that reference is set. */
+    if( operation == NULL )
+    {
+        IotLogError( "Operation reference cannot be NULL." );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+    }
+
+    /* Check that reference is waitable. */
+    if( ( operation->flags & AWS_IOT_JOBS_FLAG_WAITABLE ) == 0 )
+    {
+        IotLogError( "Operation is not waitable." );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+    }
+
+    /* Check that output parameters are set. */
+    if( ( pResponse == NULL ) || ( pResponseLength == NULL ) )
+    {
+        IotLogError( "Output buffer and size pointer must be set for Jobs %s.",
+                     _pAwsIotJobsOperationNames[ type ] );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+    }
+
+    /* Wait for a response to the Jobs operation. */
+    if( IotSemaphore_TimedWait( &( operation->notify.waitSemaphore ),
+                                timeoutMs ) == true )
+    {
+        status = operation->status;
+    }
+    else
+    {
+        status = AWS_IOT_JOBS_TIMEOUT;
+    }
+
+    /* Remove the completed operation from the pending operation list. */
+    IotMutex_Lock( &( _AwsIotJobsPendingOperationsMutex ) );
+    IotListDouble_Remove( &( operation->link ) );
+    IotMutex_Unlock( &( _AwsIotJobsPendingOperationsMutex ) );
+
+    /* Decrement the reference count. This also removes subscriptions if the
+     * count reaches 0. */
+    IotMutex_Lock( &_AwsIotJobsSubscriptionsMutex );
+    _AwsIotJobs_DecrementReferences( operation,
+                                     operation->pSubscription->pTopicBuffer,
+                                     NULL );
+    IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
+
+    /* Set the output parameters. Jobs responses are available on success or
+     * when the Jobs service returns an error document. */
+    if( ( status == AWS_IOT_JOBS_SUCCESS ) || ( status > AWS_IOT_JOBS_INVALID_TOPIC ) )
+    {
+        AwsIotJobs_Assert( operation->pJobsResponse != NULL );
+        AwsIotJobs_Assert( operation->jobsResponseLength > 0 );
+
+        *pResponse = operation->pJobsResponse;
+        *pResponseLength = operation->jobsResponseLength;
+    }
+
+    /* Destroy the Jobs operation. */
+    _AwsIotJobs_DestroyOperation( operation );
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
