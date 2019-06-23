@@ -46,13 +46,6 @@
 /* MQTT mock include. */
 #include "iot_tests_mqtt_mock.h"
 
-/* Require Shadow library asserts to be enabled for these tests. The Shadow
- * assert function is used to abort the tests on failure from the MQTT send
- * or receive threads. */
-#if AWS_IOT_SHADOW_ENABLE_ASSERTS == 0
-    #error "Shadow API unit tests require AWS_IOT_SHADOW_ENABLE_ASSERTS to be 1."
-#endif
-
 /**
  * @brief Whether to check the number of MQTT library errors in the malloc
  * failure tests.

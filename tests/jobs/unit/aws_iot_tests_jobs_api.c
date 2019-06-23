@@ -30,14 +30,34 @@
 /* SDK initialization include. */
 #include "iot_init.h"
 
-/* MQTT include. */
-#include "iot_mqtt.h"
-
 /* Jobs internal include. */
 #include "private/aws_iot_jobs_internal.h"
 
+/* MQTT include. */
+#include "iot_mqtt.h"
+
+/* MQTT mock include. */
+#include "iot_tests_mqtt_mock.h"
+
 /* Test framework includes. */
 #include "unity_fixture.h"
+
+/**
+ * @brief Whether to check the number of MQTT library errors in the malloc
+ * failure tests.
+ *
+ * Should only be checked if malloc overrides are available and not testing for
+ * code coverage. In static memory mode, there should be no MQTT library errors.
+ */
+#if ( IOT_TEST_COVERAGE == 1 ) || ( IOT_TEST_NO_MALLOC_OVERRIDES == 1 )
+    #define CHECK_MQTT_ERROR_COUNT( expected, actual )
+#else
+    #if ( IOT_STATIC_MEMORY_ONLY == 1 )
+        #define CHECK_MQTT_ERROR_COUNT( expected, actual )    TEST_ASSERT_EQUAL( 0, actual )
+    #else
+        #define CHECK_MQTT_ERROR_COUNT( expected, actual )    TEST_ASSERT_EQUAL( expected, actual )
+    #endif
+#endif
 
 /*-----------------------------------------------------------*/
 
@@ -50,6 +70,13 @@
  * @brief The length of #TEST_THING_NAME.
  */
 #define TEST_THING_NAME_LENGTH    ( sizeof( TEST_THING_NAME ) - 1 )
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief The MQTT connection shared among the tests.
+ */
+static IotMqttConnection_t _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /*-----------------------------------------------------------*/
 
@@ -73,6 +100,9 @@ TEST_SETUP( Jobs_Unit_API )
 
     /* Initialize the Jobs library. */
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, AwsIotJobs_Init( 0 ) );
+
+    /* Initialize MQTT mock. */
+    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &_pMqttConnection ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -82,6 +112,9 @@ TEST_SETUP( Jobs_Unit_API )
  */
 TEST_TEAR_DOWN( Jobs_Unit_API )
 {
+    /* Clean up MQTT mock. */
+    IotTest_MqttMockCleanup();
+
     /* Clean up libraries. */
     AwsIotJobs_Cleanup();
     IotMqtt_Cleanup();
@@ -97,6 +130,7 @@ TEST_GROUP_RUNNER( Jobs_Unit_API )
 {
     RUN_TEST_CASE( Jobs_Unit_API, Init );
     RUN_TEST_CASE( Jobs_Unit_API, OperationInvalidParameters );
+    RUN_TEST_CASE( Jobs_Unit_API, GetPendingMallocFail );
 }
 
 /*-----------------------------------------------------------*/
@@ -200,6 +234,63 @@ TEST( Jobs_Unit_API, OperationInvalidParameters )
                                     0,
                                     &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref jobs_function_getpending when memory
+ * allocation fails at various points.
+ */
+TEST( Jobs_Unit_API, GetPendingMallocFail )
+{
+    int32_t i = 0, mqttErrorCount = 0;
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsOperation_t getPendingOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+
+    /* Set a short timeout so this test runs faster. */
+    _AwsIotJobsMqttTimeoutMs = 75;
+
+    /* Set MQTT connection. */
+    requestInfo.mqttConnection = _pMqttConnection;
+
+    /* Set the Thing Name and length. */
+    requestInfo.pThingName = TEST_THING_NAME;
+    requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
+
+    for( i = 0; ; i++ )
+    {
+        UnityMalloc_MakeMallocFailAfterCount( i );
+
+        /* Call Jobs GET PENDING. Memory allocation will fail at various times
+         * during this call. */
+        status = AwsIotJobs_GetPending( &requestInfo,
+                                        AWS_IOT_JOBS_FLAG_WAITABLE,
+                                        NULL,
+                                        &getPendingOperation );
+
+        /* Once the Jobs GET PENDING call succeeds, wait for it to complete. */
+        if( status == AWS_IOT_JOBS_STATUS_PENDING )
+        {
+            break;
+        }
+
+        /* Count the number of MQTT library errors. Otherwise, check that the error
+         * is a "No memory" error. */
+        if( status == AWS_IOT_JOBS_MQTT_ERROR )
+        {
+            mqttErrorCount++;
+        }
+        else
+        {
+            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, status );
+        }
+    }
+
+    /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
+     * for incoming packets (SUBSCRIBE, PUBLISH). */
+    CHECK_MQTT_ERROR_COUNT( 2, mqttErrorCount );
 }
 
 /*-----------------------------------------------------------*/
