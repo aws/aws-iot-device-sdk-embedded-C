@@ -313,7 +313,7 @@ AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
     if( ( pResponse == NULL ) || ( pResponseLength == NULL ) )
     {
         IotLogError( "Output buffer and size pointer must be set for Jobs %s.",
-                     _pAwsIotJobsOperationNames[ type ] );
+                     _pAwsIotJobsOperationNames[ operation->type ] );
 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
     }
