@@ -289,28 +289,6 @@ AwsIotJobsError_t _AwsIotJobs_CreateOperation( _jobsOperationType_t type,
     /* Clear the operation data. */
     ( void ) memset( pOperation, 0x00, sizeof( _jobsOperation_t ) );
 
-    /* Check if the waitable flag is set. If it is, create a semaphore to
-     * wait on. */
-    if( ( flags & AWS_IOT_JOBS_FLAG_WAITABLE ) == AWS_IOT_JOBS_FLAG_WAITABLE )
-    {
-        if( IotSemaphore_Create( &( pOperation->notify.waitSemaphore ), 0, 1 ) == false )
-        {
-            IotLogError( "Failed to create semaphore for waitable Jobs %s.",
-                         _pAwsIotJobsOperationNames[ type ] );
-
-            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
-        }
-    }
-    else
-    {
-        /* If the waitable flag isn't set but a callback is, copy the callback
-         * information. */
-        if( pCallbackInfo != NULL )
-        {
-            pOperation->notify.callback = *pCallbackInfo;
-        }
-    }
-
     /* Set the remaining common members of the Jobs operation. */
     pOperation->type = type;
     pOperation->flags = flags;
@@ -335,10 +313,38 @@ AwsIotJobsError_t _AwsIotJobs_CreateOperation( _jobsOperationType_t type,
         IOT_GOTO_CLEANUP();
     }
 
+    /* Check if the waitable flag is set. If it is, create a semaphore to
+     * wait on. */
+    if( ( flags & AWS_IOT_JOBS_FLAG_WAITABLE ) == AWS_IOT_JOBS_FLAG_WAITABLE )
+    {
+        if( IotSemaphore_Create( &( pOperation->notify.waitSemaphore ), 0, 1 ) == false )
+        {
+            IotLogError( "Failed to create semaphore for waitable Jobs %s.",
+                         _pAwsIotJobsOperationNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
+        }
+    }
+    else
+    {
+        /* If the waitable flag isn't set but a callback is, copy the callback
+         * information. */
+        if( pCallbackInfo != NULL )
+        {
+            pOperation->notify.callback = *pCallbackInfo;
+        }
+    }
+
     IOT_FUNCTION_CLEANUP_BEGIN();
 
+    /* Clean up on error. */
     if( status != AWS_IOT_JOBS_SUCCESS )
     {
+        if( pOperation->pJobsRequest != NULL )
+        {
+            AwsIotJobs_FreeString( pOperation->pJobsRequest );
+        }
+
         if( pOperation != NULL )
         {
             AwsIotJobs_FreeOperation( pOperation );
