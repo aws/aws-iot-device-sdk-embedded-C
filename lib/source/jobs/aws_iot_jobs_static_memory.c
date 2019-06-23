@@ -66,6 +66,15 @@
 #endif
 
 /**
+ * @brief The size of a static memory Jobs operation.
+ *
+ * Since the pJobId member of #_jobsOperation_t is variable-length,
+ * the constant `JOBS_MAX_ID_LENGTH` is used for the length of
+ * #_jobsOperation_t.pJobId.
+ */
+#define JOBS_OPERATION_SIZE    ( sizeof( _jobsOperation_t ) + JOBS_MAX_ID_LENGTH )
+
+/**
  * @brief The size of a static memory Jobs subscription.
  *
  * Since the pThingName member of #_jobsSubscription_t is variable-length,
@@ -80,7 +89,7 @@
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
 static uint32_t _pInUseJobsOperations[ AWS_IOT_JOBS_MAX_IN_PROGRESS_OPERATIONS ] = { 0U };                   /**< @brief Jobs operation in-use flags. */
-static _jobsOperation_t _pJobsOperations[ AWS_IOT_JOBS_MAX_IN_PROGRESS_OPERATIONS ] = { { .link = { 0 } } }; /**< @brief Jobs operations. */
+static _jobsOperation_t _pJobsOperations[ AWS_IOT_JOBS_MAX_IN_PROGRESS_OPERATIONS ][ JOBS_OPERATION_SIZE ] = { { 0 } }; /**< @brief Jobs operations. */
 
 static uint32_t _pInUseJobsSubscriptions[ AWS_IOT_JOBS_SUBSCRIPTIONS ] = { 0U };                             /**< @brief Jobs subscription in-use flags. */
 static char _pJobsSubscriptions[ AWS_IOT_JOBS_SUBSCRIPTIONS ][ JOBS_SUBSCRIPTION_SIZE ] = { { 0 } };         /**< @brief Jobs subscriptions. */
@@ -93,7 +102,7 @@ void * AwsIotJobs_MallocOperation( size_t size )
     void * pNewOperation = NULL;
 
     /* Check size argument. */
-    if( size == sizeof( _jobsOperation_t ) )
+    if( size <= JOBS_OPERATION_SIZE )
     {
         /* Find a free Jobs operation. */
         freeIndex = IotStaticMemory_FindFree( _pInUseJobsOperations,
@@ -117,7 +126,7 @@ void AwsIotJobs_FreeOperation( void * ptr )
                                  _pJobsOperations,
                                  _pInUseJobsOperations,
                                  AWS_IOT_JOBS_MAX_IN_PROGRESS_OPERATIONS,
-                                 sizeof( _jobsOperation_t ) );
+                                 JOBS_OPERATION_SIZE );
 }
 
 /*-----------------------------------------------------------*/

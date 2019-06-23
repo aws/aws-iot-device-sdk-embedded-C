@@ -28,8 +28,31 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* Standard includes. */
+#include <string.h>
+
 /* Jobs internal include. */
 #include "private/aws_iot_jobs_internal.h"
+
+/* Error handling include. */
+#include "private/iot_error.h"
+
+/* MQTT include. */
+#include "iot_mqtt.h"
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Match two #_jobsSubscription_t by Thing Name.
+ *
+ * @param[in] pSubscriptionLink Pointer to the link member of a #_jobsSubscription_t
+ * containing the Thing Name to check.
+ * @param[in] pMatch Pointer to a `AwsIotThingName_t`.
+ *
+ * @return `true` if the Thing Names match; `false` otherwise.
+ */
+static bool _jobsSubscription_match( const IotLink_t * pSubscriptionLink,
+                                     void * pMatch );
 
 /*-----------------------------------------------------------*/
 
@@ -45,9 +68,348 @@ IotMutex_t _AwsIotJobsSubscriptionsMutex;
 
 /*-----------------------------------------------------------*/
 
+static bool _jobsSubscription_match( const IotLink_t * pSubscriptionLink,
+                                     void * pMatch )
+{
+    bool match = false;
+
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    AwsIotJobs_Assert( pSubscriptionLink != NULL );
+
+    const _jobsSubscription_t * pSubscription = IotLink_Container( _jobsSubscription_t,
+                                                                   pSubscriptionLink,
+                                                                   link );
+    const AwsIotThingName_t * pThingName = ( AwsIotThingName_t * ) pMatch;
+
+    if( pThingName->thingNameLength == pSubscription->thingNameLength )
+    {
+        /* Check for matching Thing Names. */
+        match = ( strncmp( pThingName->pThingName,
+                           pSubscription->pThingName,
+                           pThingName->thingNameLength ) == 0 );
+    }
+
+    return match;
+}
+
+/*-----------------------------------------------------------*/
+
+_jobsSubscription_t * _AwsIotJobs_FindSubscription( const char * pThingName,
+                                                    size_t thingNameLength )
+{
+    _jobsSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
+    AwsIotThingName_t thingName =
+    {
+        .pThingName      = pThingName,
+        .thingNameLength = thingNameLength
+    };
+
+    /* Search the list for an existing subscription for Thing Name. */
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _AwsIotJobsSubscriptions ),
+                                                      NULL,
+                                                      _jobsSubscription_match,
+                                                      &thingName );
+
+    /* Check if a subscription was found. */
+    if( pSubscriptionLink == NULL )
+    {
+        /* No subscription found. Allocate a new subscription. */
+        pSubscription = AwsIotJobs_MallocSubscription( sizeof( _jobsSubscription_t ) + thingNameLength );
+
+        if( pSubscription != NULL )
+        {
+            /* Clear the new subscription. */
+            ( void ) memset( pSubscription, 0x00, sizeof( _jobsSubscription_t ) + thingNameLength );
+
+            /* Set the Thing Name length and copy the Thing Name into the new subscription. */
+            pSubscription->thingNameLength = thingNameLength;
+            ( void ) memcpy( pSubscription->pThingName, pThingName, thingNameLength );
+
+            /* Add the new subscription to the subscription list. */
+            IotListDouble_InsertHead( &( _AwsIotJobsSubscriptions ),
+                                      &( pSubscription->link ) );
+
+            IotLogDebug( "Created new Jobs subscriptions object for %.*s.",
+                         thingNameLength,
+                         pThingName );
+        }
+        else
+        {
+            IotLogError( "Failed to allocate memory for %.*s Jobs subscriptions.",
+                         thingNameLength,
+                         pThingName );
+        }
+    }
+    else
+    {
+        IotLogDebug( "Found existing Jobs subscriptions object for %.*s.",
+                     thingNameLength,
+                     pThingName );
+
+        pSubscription = IotLink_Container( _jobsSubscription_t, pSubscriptionLink, link );
+    }
+
+    return pSubscription;
+}
+
+/*-----------------------------------------------------------*/
+
+void _AwsIotJobs_RemoveSubscription( _jobsSubscription_t * pSubscription,
+                                     _jobsSubscription_t ** pRemovedSubscription )
+{
+    int32_t i = 0;
+    bool removeSubscription = true;
+
+    IotLogDebug( "Checking if subscription object for %.*s can be removed.",
+                 pSubscription->thingNameLength,
+                 pSubscription->pThingName );
+
+    /* Check for active operations. If any Jobs operation's subscription
+     * reference count is not 0, then the subscription cannot be removed. */
+    for( i = 0; i < JOBS_OPERATION_COUNT; i++ )
+    {
+        if( pSubscription->references[ i ] > 0 )
+        {
+            IotLogDebug( "Reference count %ld for %.*s subscription object. "
+                         "Subscription cannot be removed yet.",
+                         ( long int ) pSubscription->references[ i ],
+                         pSubscription->thingNameLength,
+                         pSubscription->pThingName );
+
+            removeSubscription = false;
+        }
+        else if( pSubscription->references[ i ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
+        {
+            IotLogDebug( "Subscription object for %.*s has persistent subscriptions. "
+                         "Subscription will not be removed.",
+                         pSubscription->thingNameLength,
+                         pSubscription->pThingName );
+
+            removeSubscription = false;
+        }
+
+        if( removeSubscription == false )
+        {
+            break;
+        }
+    }
+
+    /* Check for active subscriptions. If any Jobs callbacks are active, then the
+     * subscription cannot be removed. */
+    if( removeSubscription == true )
+    {
+        for( i = 0; i < JOBS_CALLBACK_COUNT; i++ )
+        {
+            if( pSubscription->callbacks[ i ].function != NULL )
+            {
+                IotLogDebug( "Found active Jobs %s callback for %.*s subscription object. "
+                             "Subscription cannot be removed yet.",
+                             _pAwsIotJobsCallbackNames[ i ],
+                             pSubscription->thingNameLength,
+                             pSubscription->pThingName );
+
+                removeSubscription = false;
+                break;
+            }
+        }
+    }
+
+    /* Remove the subscription if unused. */
+    if( removeSubscription == true )
+    {
+        /* No Jobs operation subscription references or active Jobs callbacks.
+         * Remove the subscription object. */
+        IotListDouble_Remove( &( pSubscription->link ) );
+
+        IotLogDebug( "Removed subscription object for %.*s.",
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName );
+
+        /* If the caller requested the removed subscription, set the output parameter.
+         * Otherwise, free the memory used by the subscription. */
+        if( pRemovedSubscription != NULL )
+        {
+            *pRemovedSubscription = pSubscription;
+        }
+        else
+        {
+            _AwsIotJobs_DestroySubscription( pSubscription );
+        }
+    }
+}
+
+/*-----------------------------------------------------------*/
+
 void _AwsIotJobs_DestroySubscription( void * pData )
 {
     _jobsSubscription_t * pSubscription = ( _jobsSubscription_t * ) pData;
+
+    /* Free the topic buffer. It should not be NULL. */
+    AwsIotJobs_Assert( pSubscription->pTopicBuffer != NULL );
+    AwsIotJobs_FreeString( pSubscription->pTopicBuffer );
+
+    /* Free memory used by subscription. */
+    AwsIotJobs_FreeSubscription( pSubscription );
+}
+
+/*-----------------------------------------------------------*/
+
+AwsIotJobsError_t _AwsIotJobs_IncrementReferences( _jobsOperation_t * pOperation,
+                                                   char * pTopicBuffer,
+                                                   uint16_t operationTopicLength,
+                                                   AwsIotMqttCallbackFunction_t callback )
+{
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_SUCCESS );
+    const _jobsOperationType_t type = pOperation->type;
+    _jobsSubscription_t * pSubscription = pOperation->pSubscription;
+    IotMqttError_t subscriptionStatus = IOT_MQTT_STATUS_PENDING;
+    AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
+
+    /* Do nothing if this operation has persistent subscriptions. */
+    if( pSubscription->references[ type ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
+    {
+        IotLogDebug( "Jobs %s for %.*s has persistent subscriptions. Reference "
+                     "count will not be incremented.",
+                     _pAwsIotJobsOperationNames[ type ],
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName );
+
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* When persistent subscriptions are not present, the reference count must
+     * not be negative. */
+    AwsIotJobs_Assert( pSubscription->references[ type ] >= 0 );
+
+    /* Check if there are any existing references for this operation. */
+    if( pSubscription->references[ type ] == 0 )
+    {
+        /* Set the parameters needed to add subscriptions. */
+        subscriptionInfo.mqttConnection = pOperation->mqttConnection;
+        subscriptionInfo.callbackFunction = callback;
+        subscriptionInfo.timeout = _AwsIotJobsMqttTimeoutMs;
+        subscriptionInfo.pTopicFilterBase = pTopicBuffer;
+        subscriptionInfo.topicFilterBaseLength = operationTopicLength;
+
+        subscriptionStatus = AwsIot_ModifySubscriptions( IotMqtt_TimedSubscribe,
+                                                         &subscriptionInfo );
+
+        /* Convert MQTT return code to Jobs return code. */
+        switch( subscriptionStatus )
+        {
+            case IOT_MQTT_SUCCESS:
+                status = AWS_IOT_JOBS_SUCCESS;
+                break;
+
+            case IOT_MQTT_NO_MEMORY:
+                status = AWS_IOT_JOBS_NO_MEMORY;
+                break;
+
+            default:
+                status = AWS_IOT_JOBS_MQTT_ERROR;
+                break;
+        }
+
+        if( status != AWS_IOT_JOBS_SUCCESS )
+        {
+            IOT_GOTO_CLEANUP();
+        }
+    }
+
+    /* Increment the number of subscription references for this operation when
+     * the keep subscriptions flag is not set. */
+    if( ( pOperation->flags & AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS ) == 0 )
+    {
+        ( pSubscription->references[ type ] )++;
+
+        IotLogDebug( "Jobs %s subscriptions for %.*s now has count %d.",
+                     _pAwsIotJobsOperationNames[ type ],
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName,
+                     pSubscription->references[ type ] );
+    }
+    /* Otherwise, set the persistent subscriptions flag. */
+    else
+    {
+        pSubscription->references[ type ] = AWS_IOT_PERSISTENT_SUBSCRIPTION;
+
+        IotLogDebug( "Set persistent subscriptions flag for Jobs %s of %.*s.",
+                     _pAwsIotJobsOperationNames[ type ],
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName );
+    }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
+void _AwsIotJobs_DecrementReferences( _jobsOperation_t * pOperation,
+                                      char * pTopicBuffer,
+                                      _jobsSubscription_t ** pRemovedSubscription )
+{
+    const _jobsOperationType_t type = pOperation->type;
+    _jobsSubscription_t * pSubscription = pOperation->pSubscription;
+    uint16_t operationTopicLength = 0;
+    AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+
+    /* Do nothing if this Jobs operation has persistent subscriptions. */
+    if( pSubscription->references[ type ] != AWS_IOT_PERSISTENT_SUBSCRIPTION )
+    {
+        /* Decrement the number of subscription references for this operation.
+         * Ensure that it's positive. */
+        ( pSubscription->references[ type ] )--;
+        AwsIotJobs_Assert( pSubscription->references[ type ] >= 0 );
+
+        /* Check if the number of references has reached 0. */
+        if( pSubscription->references[ type ] == 0 )
+        {
+            IotLogDebug( "Reference count for %.*s %s is 0. Unsubscribing.",
+                         pSubscription->thingNameLength,
+                         pSubscription->pThingName,
+                         _pAwsIotJobsOperationNames[ type ] );
+
+            /* Subscription must have a topic buffer. */
+            AwsIotJobs_Assert( pSubscription->pTopicBuffer != NULL );
+
+            /* Set the parameters needed to generate a Jobs topic. */
+            requestInfo.pThingName = pSubscription->pThingName;
+            requestInfo.thingNameLength = pSubscription->thingNameLength;
+            requestInfo.pJobId = pOperation->pJobId;
+            requestInfo.jobIdLength = pOperation->jobIdLength;
+
+            /* Generate the prefix of the Jobs topic. This function will not
+             * fail when given a buffer. */
+            ( void ) _AwsIotJobs_GenerateJobsTopic( ( _jobsOperationType_t ) type,
+                                                    &requestInfo,
+                                                    &( pSubscription->pTopicBuffer ),
+                                                    &operationTopicLength );
+
+            /* Set the parameters needed to remove subscriptions. */
+            subscriptionInfo.mqttConnection = pOperation->mqttConnection;
+            subscriptionInfo.timeout = _AwsIotJobsMqttTimeoutMs;
+            subscriptionInfo.pTopicFilterBase = pTopicBuffer;
+            subscriptionInfo.topicFilterBaseLength = operationTopicLength;
+
+            ( void ) AwsIot_ModifySubscriptions( IotMqtt_TimedUnsubscribe,
+                                                 &subscriptionInfo );
+        }
+
+        /* Check if this subscription should be deleted. */
+        _AwsIotJobs_RemoveSubscription( pSubscription,
+                                        pRemovedSubscription );
+    }
+    else
+    {
+        IotLogDebug( "Jobs %s for %.*s has persistent subscriptions. Reference "
+                     "count will not be decremented.",
+                     _pAwsIotJobsOperationNames[ type ],
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName );
+    }
 }
 
 /*-----------------------------------------------------------*/

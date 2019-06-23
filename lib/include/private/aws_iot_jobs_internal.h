@@ -197,30 +197,28 @@
 /**
  * @brief The string representing a Jobs DESCRIBE operation in a Jobs MQTT topic.
  *
- * The %s is a placeholder for a Job ID.
+ * This string should be placed after a Job ID.
  */
-#define JOBS_DESCRIBE_OPERATION_STRING                "/jobs/%s/get"
+#define JOBS_DESCRIBE_OPERATION_STRING                "/get"
 
 /**
  * @brief The length of #JOBS_DESCRIBE_OPERATION_STRING.
- *
- * This length excludes the length of the placeholder %s.
  */
-#define JOBS_DESCRIBE_OPERATION_STRING_LENGTH         ( ( uint16_t ) ( sizeof( JOBS_DESCRIBE_OPERATION_STRING ) - 3 ) )
+#define JOBS_DESCRIBE_OPERATION_STRING_LENGTH         ( ( uint16_t ) ( sizeof( JOBS_DESCRIBE_OPERATION_STRING ) - 1 ) )
 
 /**
  * @brief The string representing a Jobs UPDATE operation in a Jobs MQTT topic.
  *
- * The %s is a placeholder for a Job ID.
+ * This string should be placed after a Job ID.
  */
-#define JOBS_UPDATE_OPERATION_STRING                  "/jobs/%s/update"
+#define JOBS_UPDATE_OPERATION_STRING                  "/update"
 
 /**
  * @brief The length of #JOBS_UPDATE_OPERATION_STRING.
  *
  * This length excludes the length of the placeholder %s.
  */
-#define JOBS_UPDATE_OPERATION_STRING_LENGTH           ( ( uint16_t ) ( sizeof( JOBS_UPDATE_OPERATION_STRING ) - 3 ) )
+#define JOBS_UPDATE_OPERATION_STRING_LENGTH           ( ( uint16_t ) ( sizeof( JOBS_UPDATE_OPERATION_STRING ) - 1 ) )
 
 /**
  * @brief The string representing the Jobs MQTT topic for receiving notifications
@@ -254,10 +252,10 @@
 /**
  * @brief The length of the longest Jobs topic suffix.
  *
- * This is the length of the longest Job ID plus the length of the "UPDATE"
- * operation suffix.
+ * This is the length of the longest Job ID, plus the length of the "UPDATE"
+ * operation suffix, plus the length of "/jobs/".
  */
-#define JOBS_LONGEST_SUFFIX_LENGTH                    ( JOBS_MAX_ID_LENGTH + JOBS_UPDATE_OPERATION_STRING_LENGTH )
+#define JOBS_LONGEST_SUFFIX_LENGTH                    ( JOBS_MAX_ID_LENGTH + JOBS_UPDATE_OPERATION_STRING_LENGTH + 6 )
 
 /*------------------------ Jobs internal data types -------------------------*/
 
@@ -284,10 +282,10 @@ typedef enum _jobsOperationType
  */
 typedef struct _jobsSubscription
 {
-    IotLink_t link;                                           /**< @brief List link member. */
+    IotLink_t link;                                            /**< @brief List link member. */
 
-    int32_t references[ JOBS_OPERATION_COUNT ];               /**< @brief Reference counter for Jobs operation topics. */
-    AwsIotJobsCallbackInfo_t callback[ JOBS_CALLBACK_COUNT ]; /**< @brief Jobs callbacks for this Thing. */
+    int32_t references[ JOBS_OPERATION_COUNT ];                /**< @brief Reference counter for Jobs operation topics. */
+    AwsIotJobsCallbackInfo_t callbacks[ JOBS_CALLBACK_COUNT ]; /**< @brief Jobs callbacks for this Thing. */
 
     /**
      * @brief Buffer allocated for removing Jobs topics.
@@ -342,11 +340,15 @@ typedef struct _jobsOperation
         IotSemaphore_t waitSemaphore;      /**< @brief Semaphore to be used with @ref jobs_function_wait. */
         AwsIotJobsCallbackInfo_t callback; /**< @brief User-provided callback function and parameter. */
     } notify;                              /**< @brief How to notify of an operation's completion. */
+
+    size_t jobIdLength;                    /**< @brief Length of #_jobsOperation_t.pJobId. */
+    char pJobId[];                         /**< @brief Job ID, saved for DESCRIBE and UPDATE operations. */
 } _jobsOperation_t;
 
 /* Declarations of names printed in logs. */
 #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
     extern const char * const _pAwsIotJobsOperationNames[];
+    extern const char * const _pAwsIotJobsCallbackNames[];
 #endif
 
 /* Declarations of variables for internal Jobs files. */
@@ -388,6 +390,29 @@ AwsIotJobsError_t _AwsIotJobs_CreateOperation( _jobsOperationType_t type,
 void _AwsIotJobs_DestroyOperation( void * pData );
 
 /**
+ * @brief Fill a buffer with a Jobs topic.
+ *
+ * @param[in] type One of: GET PENDING, START NEXT, DESCRIBE, or UPDATE.
+ * @param[in] pRequestInfo Common Jobs request parameters.
+ * @param[out] pTopicBuffer Address of the buffer for the Jobs topic. If the
+ * pointer at this address is `NULL`, this function will allocate a new buffer;
+ * otherwise, it will use the provided buffer.
+ * @param[out] pOperationTopicLength Length of the Jobs operation topic (excluding
+ * any suffix) placed in `pTopicBuffer`.
+ *
+ * @warning This function does not check the length of `pTopicBuffer`! Any provided
+ * buffer must be large enough to accommodate the full Jobs topic, plus
+ * #JOBS_LONGEST_SUFFIX_LENGTH.
+ *
+ * @return #AWS_IOT_JOBS_SUCCESS or #AWS_IOT_JOBS_NO_MEMORY. This function
+ * will not return #AWS_IOT_JOBS_NO_MEMORY when a buffer is provided.
+ */
+AwsIotJobsError_t _AwsIotJobs_GenerateJobsTopic( _jobsOperationType_t type,
+                                                 const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                                 char ** pTopicBuffer,
+                                                 uint16_t * pOperationTopicLength );
+
+/**
  * @brief Process a Jobs operation by sending the necessary MQTT packets.
  *
  * @param[in] pRequestInfo Common Jobs request parameters.
@@ -402,6 +427,37 @@ AwsIotJobsError_t _AwsIotJobs_ProcessOperation( const AwsIotJobsRequestInfo_t * 
 /*----------------------- Jobs subscription functions -----------------------*/
 
 /**
+ * @brief Find a Jobs subscription object. Creates a new subscription object
+ * and adds it to the subscription list if not found.
+ *
+ * @param[in] pThingName Thing Name in the subscription object.
+ * @param[in] thingNameLength Length of `pThingName`.
+ *
+ * @return Pointer to a Jobs subscription object, either found or newly
+ * allocated. Returns `NULL` if no subscription object is found and a new
+ * subscription object could not be allocated.
+ *
+ * @note This function should be called with the subscription list mutex locked.
+ */
+_jobsSubscription_t * _AwsIotJobs_FindSubscription( const char * pThingName,
+                                                    size_t thingNameLength );
+
+/**
+ * @brief Remove a Jobs subscription object from the subscription list if
+ * unreferenced.
+ *
+ * @param[in] pSubscription Subscription object to check. If this object has no
+ * active references, it is removed from the subscription list.
+ * @param[out] pRemovedSubscription Removed subscription object, if any. Optional;
+ * pass `NULL` to ignore. If not `NULL`, this parameter will be set to the removed
+ * subscription and that subscription will not be destroyed.
+ *
+ * @note This function should be called with the subscription list mutex locked.
+ */
+void _AwsIotJobs_RemoveSubscription( _jobsSubscription_t * pSubscription,
+                                     _jobsSubscription_t ** pRemovedSubscription );
+
+/**
  * @brief Free resources used for a Jobs subscription object.
  *
  * @param[in] pData The subscription object to destroy. This parameter is of type
@@ -410,7 +466,56 @@ AwsIotJobsError_t _AwsIotJobs_ProcessOperation( const AwsIotJobsRequestInfo_t * 
  */
 void _AwsIotJobs_DestroySubscription( void * pData );
 
-/*--------------------------- Jobs JSON functions ---------------------------*/
+/**
+ * @brief Increment the reference count of a Jobs subscriptions object.
+ *
+ * Also adds MQTT subscriptions if necessary.
+ *
+ * @param[in] pOperation The operation for which the reference count should be
+ * incremented.
+ * @param[in] pTopicBuffer Topic buffer containing the operation topic, used if
+ * subscriptions need to be added.
+ * @param[in] operationTopicLength The length of the operation topic in `pTopicBuffer`.
+ * @param[in] callback MQTT callback function for when this operation completes.
+ *
+ * @warning This function does not check the length of `pTopicBuffer`! Any provided
+ * buffer must already contain the Jobs operation topic, plus enough space for the
+ * status suffix.
+ *
+ * @return #AWS_IOT_JOBS_SUCCESS on success. On error, one of
+ * #AWS_IOT_JOBS_NO_MEMORY or #AWS_IOT_JOBS_MQTT_ERROR.
+ *
+ * @note This function should be called with the subscription list mutex locked.
+ */
+AwsIotJobsError_t _AwsIotJobs_IncrementReferences( _jobsOperation_t * pOperation,
+                                                   char * pTopicBuffer,
+                                                   uint16_t operationTopicLength,
+                                                   AwsIotMqttCallbackFunction_t callback );
+
+/**
+ * @brief Decrement the reference count of a Jobs subscriptions object.
+ *
+ * Also removed MQTT subscriptions and deletes the subscription object if necessary.
+ *
+ * @param[in] pOperation The operation for which the reference count should be
+ * decremented.
+ * @param[in] pTopicBuffer Topic buffer containing the operation topic, used if
+ * subscriptions need to be removed.
+ * @param[out] pRemovedSubscription Set to point to a removed subscription.
+ * Optional; pass `NULL` to ignore. If not `NULL`, this function will not destroy
+ * a removed subscription.
+ *
+ * @warning This function does not check the length of `pTopicBuffer`! Any provided
+ * buffer must be large enough to accommodate the full Jobs topic, plus
+ * #JOBS_LONGEST_SUFFIX_LENGTH.
+ *
+ * @note This function should be called with the subscription list mutex locked.
+ */
+void _AwsIotJobs_DecrementReferences( _jobsOperation_t * pOperation,
+                                      char * pTopicBuffer,
+                                      _jobsSubscription_t ** pRemovedSubscription );
+
+/*------------------------ Jobs serializer functions ------------------------*/
 
 /**
  * @brief Generates a Jobs JSON request document from an #AwsIotJobsRequestInfo_t

@@ -70,6 +70,18 @@ static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
  */
 uint32_t _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
 
+#if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+
+/**
+ * @brief Printable names for the Jobs callbacks.
+ */
+    const char * const _pAwsIotJobsCallbackNames[] =
+    {
+        "NOTIFY PENDING",
+        "NOTIFY NEXT"
+    };
+#endif
+
 /*-----------------------------------------------------------*/
 
 static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
@@ -188,6 +200,7 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
                                          AwsIotJobsOperation_t * const pGetPendingOperation )
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
+    _jobsOperation_t * pOperation = NULL;
 
     /* Check Thing Name. */
     status = _validateRequestInfo( JOBS_GET_PENDING,
@@ -201,9 +214,38 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
         IOT_GOTO_CLEANUP();
     }
 
-    IOT_FUNCTION_CLEANUP_BEGIN();
+    /* Allocate a new Jobs operation. */
+    status = _AwsIotJobs_CreateOperation( JOBS_GET_PENDING,
+                                          pRequestInfo,
+                                          NULL,
+                                          flags,
+                                          pCallbackInfo,
+                                          &pOperation );
 
-    IOT_FUNCTION_CLEANUP_END();
+    if( status != AWS_IOT_JOBS_SUCCESS )
+    {
+        /* No memory for Jobs operation. */
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Set the reference if provided. This must be done before the Jobs operation
+     * is processed. */
+    if( pGetPendingOperation != NULL )
+    {
+        *pGetPendingOperation = pOperation;
+    }
+
+    /* Process the Jobs operation. This subscribes to any required topics and
+     * sends the MQTT message for the Jobs operation. */
+    status = _AwsIotJobs_ProcessOperation( pRequestInfo, pOperation );
+
+    /* If the Jobs operation failed, clear the now invalid reference. */
+    if( ( status != AWS_IOT_JOBS_STATUS_PENDING ) && ( pGetPendingOperation != NULL ) )
+    {
+        *pGetPendingOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+    }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
