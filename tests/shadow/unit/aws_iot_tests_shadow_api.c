@@ -27,10 +27,6 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
-/* Standard includes. */
-#include <stdint.h>
-#include <string.h>
-
 /* SDK initialization include. */
 #include "iot_init.h"
 
@@ -344,9 +340,7 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
 TEST( Shadow_Unit_API, WaitInvalidParameters )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
-    _shadowOperation_t operation;
-
-    ( void ) memset( &operation, 0x00, sizeof( _shadowOperation_t ) );
+    _shadowOperation_t operation = { .link = { 0 } };
 
     /* NULL reference. */
     status = AwsIotShadow_Wait( NULL, 0, NULL, NULL );
