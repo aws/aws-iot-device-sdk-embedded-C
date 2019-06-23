@@ -125,6 +125,14 @@ static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
         }
 
+        if( pRequestInfo->mallocResponse == NULL )
+        {
+            IotLogError( "Memory allocation function must be set for waitable Jobs %s.",
+                         _pAwsIotJobsOperationNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+
         if( pCallbackInfo != NULL )
         {
             IotLogError( "Callback should not be set for a waitable Jobs %s.",
@@ -194,6 +202,34 @@ AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs )
 
 /*-----------------------------------------------------------*/
 
+void AwsIotJobs_Cleanup( void )
+{
+    /* Remove and free all items in the Jobs pending operation list. */
+    IotMutex_Lock( &_AwsIotJobsPendingOperationsMutex );
+    IotListDouble_RemoveAll( &_AwsIotJobsPendingOperations,
+                             _AwsIotJobs_DestroyOperation,
+                             offsetof( _jobsOperation_t, link ) );
+    IotMutex_Unlock( &_AwsIotJobsPendingOperationsMutex );
+
+    /* Remove and free all items in the Jobs subscription list. */
+    IotMutex_Lock( &_AwsIotJobsSubscriptionsMutex );
+    IotListDouble_RemoveAll( &_AwsIotJobsSubscriptions,
+                             _AwsIotJobs_DestroySubscription,
+                             offsetof( _jobsSubscription_t, link ) );
+    IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
+
+    /* Restore the default MQTT timeout. */
+    _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
+
+    /* Destroy Jobs library mutexes. */
+    IotMutex_Destroy( &_AwsIotJobsPendingOperationsMutex );
+    IotMutex_Destroy( &_AwsIotJobsSubscriptionsMutex );
+
+    IotLogInfo( "Jobs library cleanup done." );
+}
+
+/*-----------------------------------------------------------*/
+
 AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                          uint32_t flags,
                                          const AwsIotJobsCallbackInfo_t * pCallbackInfo,
@@ -250,30 +286,11 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
 
 /*-----------------------------------------------------------*/
 
-void AwsIotJobs_Cleanup( void )
+AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
+                                   uint32_t timeoutMs,
+                                   const char ** const pResponse,
+                                   size_t * const pResponseLength )
 {
-    /* Remove and free all items in the Jobs pending operation list. */
-    IotMutex_Lock( &_AwsIotJobsPendingOperationsMutex );
-    IotListDouble_RemoveAll( &_AwsIotJobsPendingOperations,
-                             _AwsIotJobs_DestroyOperation,
-                             offsetof( _jobsOperation_t, link ) );
-    IotMutex_Unlock( &_AwsIotJobsPendingOperationsMutex );
-
-    /* Remove and free all items in the Jobs subscription list. */
-    IotMutex_Lock( &_AwsIotJobsSubscriptionsMutex );
-    IotListDouble_RemoveAll( &_AwsIotJobsSubscriptions,
-                             _AwsIotJobs_DestroySubscription,
-                             offsetof( _jobsSubscription_t, link ) );
-    IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
-
-    /* Restore the default MQTT timeout. */
-    _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
-
-    /* Destroy Jobs library mutexes. */
-    IotMutex_Destroy( &_AwsIotJobsPendingOperationsMutex );
-    IotMutex_Destroy( &_AwsIotJobsSubscriptionsMutex );
-
-    IotLogInfo( "Jobs library cleanup done." );
 }
 
 /*-----------------------------------------------------------*/

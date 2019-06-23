@@ -219,6 +219,13 @@ TEST( Jobs_Unit_API, OperationInvalidParameters )
                                     &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
+    /* Malloc function not set. */
+    status = AwsIotJobs_GetPending( &requestInfo,
+                                    AWS_IOT_JOBS_FLAG_WAITABLE,
+                                    NULL,
+                                    &operation );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
     /* Callback function not set. */
     status = AwsIotJobs_GetPending( &requestInfo,
                                     0,
@@ -252,12 +259,11 @@ TEST( Jobs_Unit_API, GetPendingMallocFail )
     /* Set a short timeout so this test runs faster. */
     _AwsIotJobsMqttTimeoutMs = 75;
 
-    /* Set MQTT connection. */
+    /* Set the members of the request info. */
     requestInfo.mqttConnection = _pMqttConnection;
-
-    /* Set the Thing Name and length. */
     requestInfo.pThingName = TEST_THING_NAME;
     requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
+    requestInfo.mallocResponse = IotTest_Malloc;
 
     for( i = 0; ; i++ )
     {
