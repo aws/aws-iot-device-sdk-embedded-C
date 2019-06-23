@@ -116,6 +116,9 @@ TEST_SETUP( Shadow_Unit_API )
  */
 TEST_TEAR_DOWN( Shadow_Unit_API )
 {
+    /* Clean up MQTT mock. */
+    IotTest_MqttMockCleanup();
+
     /* Clean up the Shadow library. */
     AwsIotShadow_Cleanup();
 
@@ -124,9 +127,6 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
 
     /* Clean up SDK. */
     IotSdk_Cleanup();
-
-    /* Clean up MQTT mock. */
-    IotTest_MqttMockCleanup();
 }
 
 /*-----------------------------------------------------------*/

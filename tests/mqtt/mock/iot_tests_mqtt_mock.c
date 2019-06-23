@@ -394,11 +394,10 @@ void IotTest_MqttMockCleanup( void )
     /* Destroy the receive thread timer. */
     IotClock_TimerDestroy( &_receiveTimer );
 
-    /* Wait for the receive thread to finish and release the last packet mutex. */
-    IotMutex_Lock( &_lastPacketMutex );
+    /* Wait a short time for the timer thread to finish. */
+    IotClock_SleepMs( NETWORK_ROUND_TRIP_TIME_MS * 2 );
 
     /* Destroy the last packet mutex. */
-    IotMutex_Unlock( &_lastPacketMutex );
     IotMutex_Destroy( &_lastPacketMutex );
 }
 
