@@ -549,8 +549,8 @@ AwsIotJobsError_t _AwsIotJobs_ProcessOperation( const AwsIotJobsRequestInfo_t * 
     {
         IotLogError( "Failed to publish MQTT message to %s %.*s Jobs, error %s.",
                      _pAwsIotJobsOperationNames[ pOperation->type ],
-                     thingNameLength,
-                     pThingName,
+                     pRequestInfo->thingNameLength,
+                     pRequestInfo->pThingName,
                      IotMqtt_strerror( publishStatus ) );
 
         /* Convert the MQTT "NO MEMORY" error to a Jobs "NO MEMORY" error. */
