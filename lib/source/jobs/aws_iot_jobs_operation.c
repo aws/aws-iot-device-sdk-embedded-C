@@ -340,13 +340,13 @@ AwsIotJobsError_t _AwsIotJobs_CreateOperation( _jobsOperationType_t type,
     /* Clean up on error. */
     if( status != AWS_IOT_JOBS_SUCCESS )
     {
-        if( pOperation->pJobsRequest != NULL )
-        {
-            AwsIotJobs_FreeString( pOperation->pJobsRequest );
-        }
-
         if( pOperation != NULL )
         {
+            if( pOperation->pJobsRequest != NULL )
+            {
+                AwsIotJobs_FreeString( ( void * ) ( pOperation->pJobsRequest ) );
+            }
+
             AwsIotJobs_FreeOperation( pOperation );
         }
     }
