@@ -322,10 +322,6 @@ bool IotTest_MqttMockInit( IotMqttConnection_t * pMqttConnection )
     /* Flags to track clean up */
     bool packetMutexCreated = false, timerCreated = false;
 
-    /* Clear the last packet type and identifier. */
-    _lastPacketType = 0;
-    _lastPacketIdentifier = 0;
-
     /* Set the network interface send and receive functions. */
     ( void ) memset( &_networkInterface, 0x00, sizeof( IotNetworkInterface_t ) );
     _networkInterface.send = _sendSuccess;
@@ -396,6 +392,14 @@ void IotTest_MqttMockCleanup( void )
 
     /* Wait a short time for the timer thread to finish. */
     IotClock_SleepMs( NETWORK_ROUND_TRIP_TIME_MS * 2 );
+
+    /* Clear the last packet type and identifier. */
+    IotMutex_Lock( &_lastPacketMutex );
+
+    _lastPacketType = 0;
+    _lastPacketIdentifier = 0;
+
+    IotMutex_Unlock( &_lastPacketMutex );
 
     /* Destroy the last packet mutex. */
     IotMutex_Destroy( &_lastPacketMutex );
