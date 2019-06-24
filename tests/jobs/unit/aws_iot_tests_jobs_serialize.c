@@ -345,6 +345,10 @@ TEST( Jobs_Unit_Serialize, SerializeStartNextStatusDetails )
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Tests generation of status details in JSON documents for DESCRIBE
+ * requests.
+ */
 TEST( Jobs_Unit_Serialize, SerializeDescribe )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
