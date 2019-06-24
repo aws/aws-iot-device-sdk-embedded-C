@@ -805,7 +805,7 @@ typedef struct AwsIotJobsUpdateInfo
       .executionNumber = AWS_IOT_JOBS_NO_EXECUTION_NUMBER, \
       .stepTimeoutInMinutes = AWS_IOT_JOBS_NO_TIMEOUT,     \
       .includeJobExecutionState = false,                   \
-      .includeJobExecutionDocument = false,                \
+      .includeJobDocument = false,                         \
       .pStatusDetails = AWS_IOT_JOBS_NO_STATUS_DETAILS }
 #define AWS_IOT_JOBS_OPERATION_INITIALIZER    NULL /**< @brief Initializer for #AwsIotJobsOperation_t. */
 /* @[define_jobs_initializers] */

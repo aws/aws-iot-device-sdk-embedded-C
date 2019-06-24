@@ -250,6 +250,13 @@
 #define JOBS_MAX_ID_LENGTH                            ( 64 )
 
 /**
+ * @brief The maximum value of the Jobs step timeout, per AWS IoT Service Limits.
+ *
+ * See https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#job-limits
+ */
+#define JOBS_MAX_TIMEOUT                              ( 10080 )
+
+/**
  * @brief The length of the longest Jobs topic suffix.
  *
  * This is the length of the longest Job ID, plus the length of the "UPDATE"

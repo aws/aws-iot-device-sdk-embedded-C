@@ -186,6 +186,7 @@ TEST( Jobs_Unit_API, OperationInvalidParameters )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
     AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
     AwsIotJobsOperation_t operation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
     AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
 
@@ -195,7 +196,7 @@ TEST( Jobs_Unit_API, OperationInvalidParameters )
                                     NULL,
                                     NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
-    requestInfo.mqttConnection = ( IotMqttConnection_t ) 0x1;
+    requestInfo.mqttConnection = _pMqttConnection;
 
     /* Invalid Thing Name. */
     status = AwsIotJobs_GetPending( &requestInfo,
@@ -207,10 +208,11 @@ TEST( Jobs_Unit_API, OperationInvalidParameters )
     requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
 
     /* No reference with waitable operation. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    AWS_IOT_JOBS_FLAG_WAITABLE,
-                                    NULL,
-                                    NULL );
+    status = AwsIotJobs_StartNext( &requestInfo,
+                                   &updateInfo,
+                                   AWS_IOT_JOBS_FLAG_WAITABLE,
+                                   NULL,
+                                   NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Both callback and waitable flag set. */
