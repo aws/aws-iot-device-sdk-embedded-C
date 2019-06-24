@@ -252,7 +252,7 @@ static AwsIotJobsError_t _findSubscription( const AwsIotJobsRequestInfo_t * pReq
 
 AwsIotJobsError_t _AwsIotJobs_CreateOperation( _jobsOperationType_t type,
                                                const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                               const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                               const _jsonRequestContents_t * pRequestContents,
                                                uint32_t flags,
                                                const AwsIotJobsCallbackInfo_t * pCallbackInfo,
                                                _jobsOperation_t ** pNewOperation )
@@ -305,7 +305,7 @@ AwsIotJobsError_t _AwsIotJobs_CreateOperation( _jobsOperationType_t type,
     /* Generate a Jobs request document. */
     status = _AwsIotJobs_GenerateJsonRequest( type,
                                               pRequestInfo,
-                                              pUpdateInfo,
+                                              pRequestContents,
                                               pOperation );
 
     if( status != AWS_IOT_JOBS_SUCCESS )
