@@ -81,7 +81,7 @@
  */
 #define APPEND_STRING( pBuffer, copyOffset, pString, stringLength ) \
     ( void ) memcpy( pBuffer + copyOffset, pString, stringLength ); \
-    copyOffset += stringLength;
+    copyOffset += ( size_t ) stringLength;
 
 /*-----------------------------------------------------------*/
 
@@ -221,7 +221,132 @@ static AwsIotJobsError_t _generateStartNextRequest( const AwsIotJobsRequestInfo_
                                                     const AwsIotJobsUpdateInfo_t * pUpdateInfo,
                                                     _jobsOperation_t * pOperation )
 {
-    return AWS_IOT_JOBS_NO_MEMORY;
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_SUCCESS );
+    char * pJobsRequest = NULL;
+    size_t copyOffset = 0;
+    size_t requestLength = MINIMUM_REQUEST_LENGTH;
+    char pStepTimeout[ 6 ] = { 0 };
+    int stepTimeoutLength = 0;
+
+    /* Add the length of status details if provided. */
+    if( pUpdateInfo->pStatusDetails != AWS_IOT_JOBS_NO_STATUS_DETAILS )
+    {
+        /* Add 4 for the 2 quotes, colon, and comma. */
+        requestLength += STATUS_DETAILS_KEY_LENGTH + 4;
+        requestLength += pUpdateInfo->statusDetailsLength;
+    }
+
+    /* Calculate the length of the step timeout. Add 4 for the 2 quotes, colon, and comma. */
+    requestLength += STEP_TIMEOUT_KEY_LENGTH + 4;
+
+    if( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_NO_TIMEOUT )
+    {
+        /* Convert the step timeout to a string. */
+        stepTimeoutLength = snprintf( pStepTimeout, 6, "%d", pUpdateInfo->stepTimeoutInMinutes );
+        AwsIotJobs_Assert( stepTimeoutLength > 0 );
+        AwsIotJobs_Assert( stepTimeoutLength < 6 );
+    }
+    else
+    {
+        /* Step timeout will be set to -1. */
+        pStepTimeout[ 0 ] = '-';
+        pStepTimeout[ 1 ] = '1';
+        stepTimeoutLength = 2;
+    }
+
+    requestLength += ( size_t ) stepTimeoutLength;
+
+    /* Add the length of the client token. */
+    if( pRequestInfo->pClientToken != AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE )
+    {
+        AwsIotJobs_Assert( pRequestInfo->clientTokenLength > 0 );
+
+        requestLength += pRequestInfo->clientTokenLength;
+    }
+    else
+    {
+        requestLength += CLIENT_TOKEN_AUTOGENERATE_LENGTH;
+    }
+
+    /* Allocate memory for the request JSON. */
+    pJobsRequest = AwsIotJobs_MallocString( requestLength );
+
+    if( pJobsRequest == NULL )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
+    }
+
+    /* Clear the request JSON. */
+    ( void ) memset( pJobsRequest, 0x00, requestLength );
+
+    /* Construct the request JSON. */
+    APPEND_STRING( pJobsRequest, copyOffset, "{\"", 2 );
+
+    /* Add status details if present. */
+    if( pUpdateInfo->pStatusDetails != AWS_IOT_JOBS_NO_STATUS_DETAILS )
+    {
+        APPEND_STRING( pJobsRequest, copyOffset, STATUS_DETAILS_KEY, STATUS_DETAILS_KEY_LENGTH );
+        APPEND_STRING( pJobsRequest, copyOffset, "\":", 2 );
+        APPEND_STRING( pJobsRequest,
+                       copyOffset,
+                       pUpdateInfo->pStatusDetails,
+                       pUpdateInfo->statusDetailsLength );
+        APPEND_STRING( pJobsRequest, copyOffset, ",\"", 2 );
+    }
+
+    /* Add step timeout. */
+    APPEND_STRING( pJobsRequest,
+                   copyOffset,
+                   STEP_TIMEOUT_KEY,
+                   STEP_TIMEOUT_KEY_LENGTH );
+    APPEND_STRING( pJobsRequest, copyOffset, "\":", 2 );
+    APPEND_STRING( pJobsRequest, copyOffset, pStepTimeout, stepTimeoutLength );
+    APPEND_STRING( pJobsRequest, copyOffset, ",\"", 2 );
+
+    /* Add client token. */
+    APPEND_STRING( pJobsRequest,
+                   copyOffset,
+                   AWS_IOT_CLIENT_TOKEN_KEY,
+                   AWS_IOT_CLIENT_TOKEN_KEY_LENGTH );
+    APPEND_STRING( pJobsRequest, copyOffset, "\":\"", 3 );
+
+    /* Set the pointer to the client token. */
+    pOperation->pClientToken = pJobsRequest + copyOffset - 1;
+
+    if( pRequestInfo->pClientToken == AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE )
+    {
+        _generateClientToken( pJobsRequest + copyOffset );
+        copyOffset += CLIENT_TOKEN_AUTOGENERATE_LENGTH;
+
+        pOperation->clientTokenLength = CLIENT_TOKEN_AUTOGENERATE_LENGTH + 2;
+    }
+    else
+    {
+        APPEND_STRING( pJobsRequest,
+                       copyOffset,
+                       pRequestInfo->pClientToken,
+                       pRequestInfo->clientTokenLength );
+
+        pOperation->clientTokenLength = pRequestInfo->clientTokenLength + 2;
+    }
+
+    APPEND_STRING( pJobsRequest, copyOffset, "\"}", 2 );
+
+    /* Set the output parameters. */
+    pOperation->pJobsRequest = pJobsRequest;
+    pOperation->jobsRequestLength = requestLength;
+
+    /* Ensure offsets are valid. */
+    AwsIotJobs_Assert( copyOffset == requestLength );
+    AwsIotJobs_Assert( pOperation->pClientToken > pOperation->pJobsRequest );
+    AwsIotJobs_Assert( pOperation->pClientToken <
+                       pOperation->pJobsRequest + pOperation->jobsRequestLength );
+
+    IotLogDebug( "Jobs START NEXT request: %.*s",
+                 pOperation->jobsRequestLength,
+                 pOperation->pJobsRequest );
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
