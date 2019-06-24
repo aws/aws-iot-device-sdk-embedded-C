@@ -391,6 +391,37 @@ AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequest
         IOT_GOTO_CLEANUP();
     }
 
+    /* Allocate a new Jobs operation. */
+    status = _AwsIotJobs_CreateOperation( JOBS_START_NEXT,
+                                          pRequestInfo,
+                                          pUpdateInfo,
+                                          flags,
+                                          pCallbackInfo,
+                                          &pOperation );
+
+    if( status != AWS_IOT_JOBS_SUCCESS )
+    {
+        /* No memory for Jobs operation. */
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Set the reference if provided. This must be done before the Jobs operation
+     * is processed. */
+    if( pStartNextOperation != NULL )
+    {
+        *pStartNextOperation = pOperation;
+    }
+
+    /* Process the Jobs operation. This subscribes to any required topics and
+     * sends the MQTT message for the Jobs operation. */
+    status = _AwsIotJobs_ProcessOperation( pRequestInfo, pOperation );
+
+    /* If the Jobs operation failed, clear the now invalid reference. */
+    if( ( status != AWS_IOT_JOBS_STATUS_PENDING ) && ( pStartNextOperation != NULL ) )
+    {
+        *pStartNextOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+    }
+
     IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
