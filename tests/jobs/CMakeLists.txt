@@ -1,6 +1,7 @@
 # Jobs unit test sources.
 set( JOBS_UNIT_TEST_SOURCES
-     unit/aws_iot_tests_jobs_api.c )
+     unit/aws_iot_tests_jobs_api.c
+     unit/aws_iot_tests_jobs_serialize.c )
 
 # Jobs tests executable.
 add_executable( aws_iot_tests_jobs
