@@ -129,7 +129,8 @@ TEST_TEAR_DOWN( Jobs_Unit_API )
 TEST_GROUP_RUNNER( Jobs_Unit_API )
 {
     RUN_TEST_CASE( Jobs_Unit_API, Init );
-    RUN_TEST_CASE( Jobs_Unit_API, OperationInvalidParameters );
+    RUN_TEST_CASE( Jobs_Unit_API, OperationInvalidRequestInfo );
+    RUN_TEST_CASE( Jobs_Unit_API, OperationInvalidUpdateInfo );
     RUN_TEST_CASE( Jobs_Unit_API, WaitInvalidParameters );
     RUN_TEST_CASE( Jobs_Unit_API, GetPendingMallocFail );
 }
@@ -180,9 +181,9 @@ TEST( Jobs_Unit_API, Init )
 
 /**
  * @brief Tests the behavior of Jobs operation functions with various
- * invalid parameters.
+ * invalid #AwsIotJobsRequestInfo_t.
  */
-TEST( Jobs_Unit_API, OperationInvalidParameters )
+TEST( Jobs_Unit_API, OperationInvalidRequestInfo )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
     AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
@@ -243,6 +244,53 @@ TEST( Jobs_Unit_API, OperationInvalidParameters )
                                     AWS_IOT_JOBS_FLAG_WAITABLE,
                                     0,
                                     &operation );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of Jobs operation functions with various
+ * invalid #AwsIotJobsUpdateInfo_t.
+ */
+TEST( Jobs_Unit_API, OperationInvalidUpdateInfo )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
+
+    /* Set the members of the request info. */
+    requestInfo.mqttConnection = _pMqttConnection;
+    requestInfo.pThingName = TEST_THING_NAME;
+    requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
+    requestInfo.mallocResponse = IotTest_Malloc;
+
+    /* Step timeout too small. */
+    updateInfo.stepTimeoutInMinutes = 0;
+    status = AwsIotJobs_StartNext( &requestInfo,
+                                   &updateInfo,
+                                   0,
+                                   NULL,
+                                   NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
+    /* Step timeout too large. */
+    updateInfo.stepTimeoutInMinutes = JOBS_MAX_TIMEOUT + 1;
+    status = AwsIotJobs_StartNext( &requestInfo,
+                                   &updateInfo,
+                                   0,
+                                   NULL,
+                                   NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+    updateInfo.stepTimeoutInMinutes = AWS_IOT_JOBS_NO_TIMEOUT;
+
+    /* Status details length not set. */
+    updateInfo.pStatusDetails = "test";
+    status = AwsIotJobs_StartNext( &requestInfo,
+                                   &updateInfo,
+                                   0,
+                                   NULL,
+                                   NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 }
 
