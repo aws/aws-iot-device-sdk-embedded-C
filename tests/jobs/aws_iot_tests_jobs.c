@@ -40,6 +40,7 @@ void RunJobsTests( bool disableNetworkTests,
     ( void ) disableLongTests;
 
     RUN_TEST_GROUP( Jobs_Unit_API );
+    RUN_TEST_GROUP( Jobs_Unit_Serialize )
 }
 
 /*-----------------------------------------------------------*/
