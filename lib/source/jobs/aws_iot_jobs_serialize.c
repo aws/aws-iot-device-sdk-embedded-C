@@ -153,6 +153,8 @@ static AwsIotJobsError_t _generateGetPendingRequest( const AwsIotJobsRequestInfo
     /* Add the length of the client token. */
     if( pRequestInfo->pClientToken != AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE )
     {
+        AwsIotJobs_Assert( pRequestInfo->clientTokenLength > 0 );
+
         requestLength += pRequestInfo->clientTokenLength;
     }
     else
