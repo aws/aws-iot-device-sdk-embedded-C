@@ -20,27 +20,69 @@
  */
 
 /**
- * @file aws_iot_tests_jobs.c
- * @brief Test runner for Jobs tests.
+ * @file aws_iot_tests_jobs_serialize.c
+ * @brief Tests for the Jobs JSON functions.
  */
 
-/* Standard includes. */
-#include <stdbool.h>
+/* The config header is always included first. */
+#include "iot_config.h"
+
+/* SDK initialization include. */
+#include "iot_init.h"
+
+/* Jobs internal include. */
+#include "private/aws_iot_jobs_internal.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
 
 /*-----------------------------------------------------------*/
 
-void RunJobsTests( bool disableNetworkTests,
-                   bool disableLongTests )
-{
-    /* Silence warnings about unused parameters. */
-    ( void ) disableNetworkTests;
-    ( void ) disableLongTests;
+/**
+ * @brief Test group for Jobs Serialize tests.
+ */
+TEST_GROUP( Jobs_Unit_Serialize );
 
-    RUN_TEST_GROUP( Jobs_Unit_API );
-    RUN_TEST_GROUP( Jobs_Unit_Serialize )
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test setup for Jobs Serialize tests.
+ */
+TEST_SETUP( Jobs_Unit_Serialize )
+{
+    /* Initialize SDK. */
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
+
+    /* Initialize the Jobs library. */
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, AwsIotJobs_Init( 0 ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test tear down for Jobs Serialize tests.
+ */
+TEST_TEAR_DOWN( Jobs_Unit_Serialize )
+{
+    /* Clean up libraries. */
+    AwsIotJobs_Cleanup();
+    IotSdk_Cleanup();
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test group runner for Jobs Serialize tests.
+ */
+TEST_GROUP_RUNNER( Jobs_Unit_Serialize )
+{
+    RUN_TEST_CASE( Jobs_Unit_Serialize, SerializeGetPending )
+}
+
+/*-----------------------------------------------------------*/
+
+TEST( Jobs_Unit_Serialize, SerializeGetPending )
+{
 }
 
 /*-----------------------------------------------------------*/
