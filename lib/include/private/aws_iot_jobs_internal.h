@@ -283,6 +283,20 @@ typedef enum _jobsOperationType
 } _jobsOperationType_t;
 
 /**
+ * @brief Parameter to #_AwsIotJobs_GenerateJsonRequest.
+ */
+typedef union _jsonRequestContents
+{
+    const AwsIotJobsUpdateInfo_t * pUpdateInfo; /**< @brief Valid for #JOBS_START_NEXT and #JOBS_UPDATE. */
+
+    struct
+    {
+        int32_t executionNumber; /**< @brief Execution number. */
+        bool includeJobDocument; /**< @brief Whether the response should include the Job document. */
+    } describe;                  /**< @brief Valid for #JOBS_DESCRIBE. */
+} _jsonRequestContents_t;
+
+/**
  * @brief Represents a Jobs subscriptions object.
  *
  * These structures are stored in a list.
@@ -372,7 +386,8 @@ extern IotMutex_t _AwsIotJobsSubscriptionsMutex;
  *
  * @param[in] type The type of Jobs operation for the request.
  * @param[in] pRequestInfo Common Jobs request parameters.
- * @param[in] pUpdateInfo Jobs update parameters.
+ * @param[in] pRequestContents Additional values to place in tne JSON document,
+ * depending on `type`.
  * @param[in] flags Flags variables passed to a user-facing Jobs function.
  * @param[in] pCallbackInfo User-provided callback function and parameter.
  * @param[out] pNewOperation Set to point to the new operation on success.
@@ -381,7 +396,7 @@ extern IotMutex_t _AwsIotJobsSubscriptionsMutex;
  */
 AwsIotJobsError_t _AwsIotJobs_CreateOperation( _jobsOperationType_t type,
                                                const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                               const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                               const _jsonRequestContents_t * pRequestContents,
                                                uint32_t flags,
                                                const AwsIotJobsCallbackInfo_t * pCallbackInfo,
                                                _jobsOperation_t ** pNewOperation );
@@ -530,14 +545,15 @@ void _AwsIotJobs_DecrementReferences( _jobsOperation_t * pOperation,
  *
  * @param[in] type The type of Jobs operation for the request.
  * @param[in] pRequestInfo Common Jobs request parameters.
- * @param[in] pUpdateInfo Jobs update parameters.
+ * @param[in] pRequestContents Additional values to place in tne JSON document,
+ * depending on `type`.
  * @param[in] pOperation Operation associated with the Jobs request.
  *
  * @return #AWS_IOT_JOBS_SUCCESS on success; otherwise, #AWS_IOT_JOBS_NO_MEMORY.
  */
 AwsIotJobsError_t _AwsIotJobs_GenerateJsonRequest( _jobsOperationType_t type,
                                                    const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                                   const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                                   const _jsonRequestContents_t * pRequestContents,
                                                    _jobsOperation_t * pOperation );
 
 #endif /* ifndef AWS_IOT_JOBS_INTERNAL_H_ */
