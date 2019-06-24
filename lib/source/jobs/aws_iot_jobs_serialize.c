@@ -353,7 +353,7 @@ static AwsIotJobsError_t _generateStartNextRequest( const AwsIotJobsRequestInfo_
 
 AwsIotJobsError_t _AwsIotJobs_GenerateJsonRequest( _jobsOperationType_t type,
                                                    const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                                   const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                                   const _jsonRequestContents_t * pRequestContents,
                                                    _jobsOperation_t * pOperation )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
@@ -366,7 +366,9 @@ AwsIotJobsError_t _AwsIotJobs_GenerateJsonRequest( _jobsOperationType_t type,
             break;
 
         case JOBS_START_NEXT:
-            status = _generateStartNextRequest( pRequestInfo, pUpdateInfo, pOperation );
+            status = _generateStartNextRequest( pRequestInfo,
+                                                pRequestContents->pUpdateInfo,
+                                                pOperation );
             break;
 
         case JOBS_DESCRIBE:

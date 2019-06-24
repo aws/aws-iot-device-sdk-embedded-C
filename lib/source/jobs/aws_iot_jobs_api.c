@@ -369,6 +369,7 @@ AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequest
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
     _jobsOperation_t * pOperation = NULL;
+    _jsonRequestContents_t requestContents = { 0 };
 
     /* Check request info. */
     status = _validateRequestInfo( JOBS_START_NEXT,
@@ -392,9 +393,11 @@ AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequest
     }
 
     /* Allocate a new Jobs operation. */
+    requestContents.pUpdateInfo = pUpdateInfo;
+
     status = _AwsIotJobs_CreateOperation( JOBS_START_NEXT,
                                           pRequestInfo,
-                                          pUpdateInfo,
+                                          &requestContents,
                                           flags,
                                           pCallbackInfo,
                                           &pOperation );
