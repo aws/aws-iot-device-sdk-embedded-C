@@ -133,6 +133,7 @@ TEST_GROUP_RUNNER( Jobs_Unit_API )
     RUN_TEST_CASE( Jobs_Unit_API, OperationInvalidUpdateInfo );
     RUN_TEST_CASE( Jobs_Unit_API, WaitInvalidParameters );
     RUN_TEST_CASE( Jobs_Unit_API, GetPendingMallocFail );
+    RUN_TEST_CASE( Jobs_Unit_API, StartNextMallocFail );
 }
 
 /*-----------------------------------------------------------*/
@@ -216,17 +217,18 @@ TEST( Jobs_Unit_API, OperationInvalidRequestInfo )
                                    NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
-    /* Both callback and waitable flag set. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    AWS_IOT_JOBS_FLAG_WAITABLE,
-                                    &callbackInfo,
-                                    &operation );
-    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
-
     /* Malloc function not set. */
     status = AwsIotJobs_GetPending( &requestInfo,
                                     AWS_IOT_JOBS_FLAG_WAITABLE,
                                     NULL,
+                                    &operation );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+    requestInfo.mallocResponse = IotTest_Malloc;
+
+    /* Both callback and waitable flag set. */
+    status = AwsIotJobs_GetPending( &requestInfo,
+                                    AWS_IOT_JOBS_FLAG_WAITABLE,
+                                    &callbackInfo,
                                     &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
@@ -360,6 +362,73 @@ TEST( Jobs_Unit_API, GetPendingMallocFail )
              * is expected to time out. */
             TEST_ASSERT_EQUAL( AWS_IOT_JOBS_TIMEOUT,
                                AwsIotJobs_Wait( getPendingOperation,
+                                                0,
+                                                &pResponse,
+                                                &responseLength ) );
+            break;
+        }
+
+        /* Count the number of MQTT library errors. Otherwise, check that the error
+         * is a "No memory" error. */
+        if( status == AWS_IOT_JOBS_MQTT_ERROR )
+        {
+            mqttErrorCount++;
+        }
+        else
+        {
+            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, status );
+        }
+    }
+
+    /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
+     * for incoming packets (SUBSCRIBE, PUBLISH). */
+    CHECK_MQTT_ERROR_COUNT( 2, mqttErrorCount );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref jobs_function_startnext when memory
+ * allocation fails at various points.
+ */
+TEST( Jobs_Unit_API, StartNextMallocFail )
+{
+    int32_t i = 0, mqttErrorCount = 0;
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsOperation_t startNextOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+    AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    const char * pResponse = NULL;
+    size_t responseLength = 0;
+
+    /* Set a short timeout so this test runs faster. */
+    _AwsIotJobsMqttTimeoutMs = 75;
+
+    /* Set the members of the request info. */
+    requestInfo.mqttConnection = _pMqttConnection;
+    requestInfo.pThingName = TEST_THING_NAME;
+    requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
+    requestInfo.mallocResponse = IotTest_Malloc;
+
+    for( i = 0; ; i++ )
+    {
+        UnityMalloc_MakeMallocFailAfterCount( i );
+
+        /* Call Jobs START NEXT. Memory allocation will fail at various times
+         * during this call. */
+        status = AwsIotJobs_StartNext( &requestInfo,
+                                       &updateInfo,
+                                       AWS_IOT_JOBS_FLAG_WAITABLE,
+                                       NULL,
+                                       &startNextOperation );
+
+        /* Once the Jobs START NEXT call succeeds, wait for it to complete. */
+        if( status == AWS_IOT_JOBS_STATUS_PENDING )
+        {
+            /* No response will be received from the network, so the Jobs operation
+             * is expected to time out. */
+            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_TIMEOUT,
+                               AwsIotJobs_Wait( startNextOperation,
                                                 0,
                                                 &pResponse,
                                                 &responseLength ) );
