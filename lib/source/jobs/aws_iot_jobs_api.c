@@ -63,6 +63,17 @@ static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
                                                const AwsIotJobsCallbackInfo_t * pCallbackInfo,
                                                const AwsIotJobsOperation_t * pOperation );
 
+/**
+ * @brief Validate the #AwsIotJobsUpdateInfo_t passed to a Jobs API function.
+ *
+ * @param[in] type The Jobs API function type.
+ * @param[in] pUpdateInfo The update info passed to a Jobs API function.
+ *
+ * @return #AWS_IOT_JOBS_SUCCESS or #AWS_IOT_JOBS_BAD_PARAMETER.
+ */
+static AwsIotJobsError_t _validateUpdateInfo( _jobsOperationType_t type,
+                                              const AwsIotJobsUpdateInfo_t * pUpdateInfo );
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -171,6 +182,70 @@ static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
 
 /*-----------------------------------------------------------*/
 
+static AwsIotJobsError_t _validateUpdateInfo( _jobsOperationType_t type,
+                                              const AwsIotJobsUpdateInfo_t * pUpdateInfo )
+{
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_SUCCESS );
+
+    /* Only START NEXT and UPDATE operations need an update info. */
+    AwsIotJobs_Assert( ( type == JOBS_START_NEXT ) || ( type == JOBS_UPDATE ) );
+
+    /* Check that Job status to report is valid for Jobs UPDATE. */
+    if( type == JOBS_UPDATE )
+    {
+        switch( pUpdateInfo->newStatus )
+        {
+            case AWS_IOT_JOB_STATE_IN_PROGRESS:
+            case AWS_IOT_JOB_STATE_FAILED:
+            case AWS_IOT_JOB_STATE_SUCCEEDED:
+            case AWS_IOT_JOB_STATE_REJECTED:
+                break;
+
+            default:
+                IotLogError( "Job state %s is not valid for Jobs UPDATE.",
+                             AwsIotJobs_StateName( pUpdateInfo->newStatus ) );
+
+                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+    }
+
+    /* Check that step timeout is valid. */
+    if( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_NO_TIMEOUT )
+    {
+        if( pUpdateInfo->stepTimeoutInMinutes < 1 )
+        {
+            IotLogError( "Step timeout for Jobs %s must be at least 1.",
+                         _pAwsIotJobsOperationNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+        else if( pUpdateInfo->stepTimeoutInMinutes > JOBS_MAX_TIMEOUT )
+        {
+            IotLogError( "Step timeout for Jobs %s cannot exceed %d.",
+                         _pAwsIotJobsOperationNames[ type ],
+                         JOBS_MAX_TIMEOUT );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+    }
+
+    /* Check status details. */
+    if( pUpdateInfo->pStatusDetails != AWS_IOT_JOBS_NO_STATUS_DETAILS )
+    {
+        if( pUpdateInfo->statusDetailsLength == 0 )
+        {
+            IotLogError( "Status details length not set for Jobs %s.",
+                         _pAwsIotJobsOperationNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+    }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
 AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_SUCCESS;
@@ -238,7 +313,7 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
     _jobsOperation_t * pOperation = NULL;
 
-    /* Check Thing Name. */
+    /* Check request info. */
     status = _validateRequestInfo( JOBS_GET_PENDING,
                                    pRequestInfo,
                                    flags,
@@ -279,6 +354,41 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
     if( ( status != AWS_IOT_JOBS_STATUS_PENDING ) && ( pGetPendingOperation != NULL ) )
     {
         *pGetPendingOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+    }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
+AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                        const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                        uint32_t flags,
+                                        const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                        AwsIotJobsOperation_t * const pStartNextOperation )
+{
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
+    _jobsOperation_t * pOperation = NULL;
+
+    /* Check request info. */
+    status = _validateRequestInfo( JOBS_START_NEXT,
+                                   pRequestInfo,
+                                   flags,
+                                   pCallbackInfo,
+                                   pStartNextOperation );
+
+    if( status != AWS_IOT_JOBS_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Check update info. */
+    status = _validateUpdateInfo( JOBS_START_NEXT,
+                                  pUpdateInfo );
+
+    if( status != AWS_IOT_JOBS_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
