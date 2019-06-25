@@ -63,6 +63,33 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief First parameter to #_jobsOperation_match.
+ */
+typedef struct _operationMatchParams
+{
+    _jobsOperationType_t type; /**< @brief GET PENDING, START NEXT, DESCRIBE, or UPDATE. */
+    const char * pThingName;   /**< @brief Thing Name of Jobs operation. */
+    size_t thingNameLength;    /**< @brief Length of #_operationMatchParams_t.pThingName. */
+    const char * pResponse;    /**< @brief Jobs response document. */
+    size_t responseLength;     /**< @brief Length of #_operationMatchParams_t.pResponse. */
+} _operationMatchParams_t;
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Match a received Jobs response with a Jobs operation awaiting a
+ * response.
+ *
+ * @param[in] pOperationLink Pointer to the link member of the #_jobsOperation_t
+ * to check.
+ * @param[in] pMatch Pointer to an #_operationMatchParams_t.
+ *
+ * @return `true` if `pMatch` matches the received response; `false` otherwise.
+ */
+static bool _jobsOperation_match( const IotLink_t * pOperationLink,
+                                  void * pMatch );
+
+/**
  * @brief Invoked when a Jobs response is received for Jobs GET PENDING.
  *
  * @param[in] pArgument Ignored.
@@ -97,6 +124,26 @@ static void _describeCallback( void * pArgument,
  */
 static void _updateCallback( void * pArgument,
                              IotMqttCallbackParam_t * pMessage );
+
+/**
+ * @brief Common function for processing received Jobs responses.
+ *
+ * @param[in] type GET PENDING, START NEXT, DESCRIBE, or UPDATE.
+ * @param[in] pMessage Received Jobs response (as an MQTT PUBLISH message).
+ */
+static void _commonOperationCallback( _jobsOperationType_t type,
+                                      IotMqttCallbackParam_t * pMessage );
+
+/**
+ * @brief Notify of a completed Jobs operation.
+ *
+ * @param[in] pOperation The operation which completed.
+ *
+ * Depending on the parameters passed to a user-facing Jobs function, the
+ * notification will cause @ref jobs_function_wait to return or invoke a
+ * user-provided callback.
+ */
+static void _notifyCompletion( _jobsOperation_t * pOperation );
 
 /**
  * @brief Get a Jobs subscription to use with a Jobs operation.
@@ -134,11 +181,67 @@ IotMutex_t _AwsIotJobsPendingOperationsMutex;
 
 /*-----------------------------------------------------------*/
 
+static bool _jobsOperation_match( const IotLink_t * pOperationLink,
+                                  void * pMatch )
+{
+    /* Because this function is called from a container function, the given link
+     * must never be NULL. */
+    AwsIotJobs_Assert( pOperationLink != NULL );
+
+    _jobsOperation_t * pOperation = IotLink_Container( _jobsOperation_t,
+                                                       pOperationLink,
+                                                       link );
+    _operationMatchParams_t * pParam = ( _operationMatchParams_t * ) pMatch;
+    _jobsSubscription_t * pSubscription = pOperation->pSubscription;
+    const char * pClientToken = NULL;
+    size_t clientTokenLength = 0;
+
+    /* Check for matching Thing Name and operation type. */
+    bool match = ( pOperation->type == pParam->type ) &&
+                 ( pParam->thingNameLength == pSubscription->thingNameLength ) &&
+                 ( strncmp( pParam->pThingName,
+                            pSubscription->pThingName,
+                            pParam->thingNameLength ) == 0 );
+
+    if( match == true )
+    {
+        IotLogDebug( "Verifying client tokens for Jobs %s.",
+                     _pAwsIotJobsOperationNames[ pParam->type ] );
+
+        /* Check the response for a client token. */
+        match = AwsIot_GetClientToken( pParam->pResponse,
+                                       pParam->responseLength,
+                                       &pClientToken,
+                                       &clientTokenLength );
+
+        /* If the response contains a client token, check for a match. */
+        if( match == true )
+        {
+            match = ( pOperation->clientTokenLength == clientTokenLength ) &&
+                    ( strncmp( pOperation->pClientToken, pClientToken, clientTokenLength ) == 0 );
+        }
+        else
+        {
+            IotLogWarn( "Received a Jobs %s response with no client token. "
+                        "This is possibly a response to a bad JSON document:\r\n%.*s",
+                        _pAwsIotJobsOperationNames[ pParam->type ]
+                        pParam->documentLength,
+                        pParam->pDocument );
+        }
+    }
+
+    return match;
+}
+
+/*-----------------------------------------------------------*/
+
 static void _getPendingCallback( void * pArgument,
                                  IotMqttCallbackParam_t * pMessage )
 {
     /* Silence warnings about unused parameter. */
     ( void ) pArgument;
+
+    _commonOperationCallback( JOBS_GET_PENDING, pMessage );
 }
 
 /*-----------------------------------------------------------*/
@@ -148,6 +251,8 @@ static void _startNextCallback( void * pArgument,
 {
     /* Silence warnings about unused parameter. */
     ( void ) pArgument;
+
+    _commonOperationCallback( JOBS_START_NEXT, pMessage );
 }
 
 /*-----------------------------------------------------------*/
@@ -157,6 +262,8 @@ static void _describeCallback( void * pArgument,
 {
     /* Silence warnings about unused parameter. */
     ( void ) pArgument;
+
+    _commonOperationCallback( JOBS_DESCRIBE, pMessage );
 }
 
 /*-----------------------------------------------------------*/
@@ -166,6 +273,168 @@ static void _updateCallback( void * pArgument,
 {
     /* Silence warnings about unused parameter. */
     ( void ) pArgument;
+
+    _commonOperationCallback( JOBS_UPDATE, pMessage );
+}
+
+/*-----------------------------------------------------------*/
+
+static void _commonOperationCallback( _jobsOperationType_t type,
+                                      IotMqttCallbackParam_t * pMessage )
+{
+    _jobsOperation_t * pOperation = NULL;
+    IotLink_t * pOperationLink = NULL;
+    _operationMatchParams_t param = { 0 };
+    AwsIotStatus_t status = AWS_IOT_UNKNOWN;
+    uint32_t flags = 0;
+
+    /* Set operation type and response. */
+    param.type = type;
+    param.pResponse = pMessage->u.message.info.pPayload;
+    param.responseLength = pMessage->u.message.info.payloadLength;
+
+    /* Parse the Thing Name from the MQTT topic name. */
+    if( AwsIot_ParseThingName( pMessage->u.message.info.pTopicName,
+                               pMessage->u.message.info.topicNameLength,
+                               &( param.pThingName ),
+                               &( param.thingNameLength ) ) == false )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Lock the pending operations list for exclusive access. */
+    IotMutex_Lock( &( _AwsIotJobsPendingOperationsMutex ) );
+
+    /* Search for a matching pending operation. */
+    pOperationLink = IotListDouble_FindFirstMatch( &_AwsIotJobsPendingOperations,
+                                                   NULL,
+                                                   _jobsOperation_match,
+                                                   &param );
+
+    /* Find and remove the first Jobs operation of the given type. */
+    if( pOperationLink == NULL )
+    {
+        /* Operation is not pending. It may have already been processed. Return
+         * without doing anything */
+        IotMutex_Unlock( &( _AwsIotJobsPendingOperationsMutex ) );
+
+        IotLogWarn( "Jobs %s callback received an unknown operation.",
+                    _pAwsIotJobsOperationNames[ type ] );
+
+        IOT_GOTO_CLEANUP();
+    }
+    else
+    {
+        pOperation = IotLink_Container( _jobsOperation_t, pOperationLink, link );
+
+        /* Copy the flags from the Jobs operation. */
+        flags = pOperation->flags;
+
+        /* Remove a non-waitable operation from the pending operation list.
+         * Waitable operations are removed by the Wait function. */
+        if( ( flags & AWS_IOT_JOBS_FLAG_WAITABLE ) == 0 )
+        {
+            IotListDouble_Remove( &( pOperation->link ) );
+            IotMutex_Unlock( &( _AwsIotJobsPendingOperationsMutex ) );
+        }
+    }
+
+    /* Parse the status from the topic name. */
+    status = AwsIot_ParseStatus( pMessage->u.message.info.pTopicName,
+                                 pMessage->u.message.info.topicNameLength );
+
+    switch( status )
+    {
+        case AWS_IOT_ACCEPTED:
+        case AWS_IOT_REJECTED:
+            _AwsIotJobs_ParseResponse( status,
+                                       pMessage->u.message.info.pPayload,
+                                       pMessage->u.message.info.payloadLength,
+                                       pOperation );
+            break;
+
+        default:
+            IotLogWarn( "Unknown status for %s of %.*s Jobs. Ignoring message.",
+                        _pAwsIotJobsOperationNames[ type ],
+                        pOperation->pSubscription->thingNameLength,
+                        pOperation->pSubscription->pThingName );
+
+            pOperation->status = AWS_IOT_JOBS_BAD_RESPONSE;
+
+            break;
+    }
+
+    _notifyCompletion( pOperation );
+
+    /* For waitable operations, unlock the pending operation list mutex to allow
+     * the Wait function to run. */
+    if( ( flags & AWS_IOT_JOBS_FLAG_WAITABLE ) == AWS_IOT_JOBS_FLAG_WAITABLE )
+    {
+        IotMutex_Unlock( &( _AwsIotJobsPendingOperationsMutex ) );
+    }
+
+    /* This function has no return value and no cleanup, but uses the cleanup
+     * label to exit on error. */
+    IOT_FUNCTION_CLEANUP_BEGIN();
+}
+
+/*-----------------------------------------------------------*/
+
+static void _notifyCompletion( _jobsOperation_t * pOperation )
+{
+    AwsIotJobsCallbackParam_t callbackParam = { .callbackType = ( AwsIotJobsCallbackType_t ) 0 };
+    _jobsSubscription_t * pSubscription = pOperation->pSubscription,
+                        * pRemovedSubscription = NULL;
+
+    /* If the operation is waiting, post to its wait semaphore and return. */
+    if( ( pOperation->flags & AWS_IOT_JOBS_FLAG_WAITABLE ) == AWS_IOT_JOBS_FLAG_WAITABLE )
+    {
+        IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
+    }
+    else
+    {
+        /* Decrement the reference count. This also removes subscriptions if the
+         * count reaches 0. */
+        IotMutex_Lock( &_AwsIotJobsSubscriptionsMutex );
+        _AwsIotJobs_DecrementReferences( pOperation,
+                                         pSubscription->pTopicBuffer,
+                                         &pRemovedSubscription );
+        IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
+
+        /* Set the subscription pointer used for the user callback based on whether
+         * a subscription was removed from the list. */
+        if( pRemovedSubscription != NULL )
+        {
+            pSubscription = pRemovedSubscription;
+        }
+
+        AwsIotJobs_Assert( pSubscription != NULL );
+
+        /* Invoke the user callback if provided. */
+        if( pOperation->notify.callback.function != NULL )
+        {
+            /* Set the common members of the callback parameter. */
+            callbackParam.callbackType = ( AwsIotJobsCallbackType_t ) pOperation->type;
+            callbackParam.mqttConnection = pOperation->mqttConnection;
+            callbackParam.pThingName = pSubscription->pThingName;
+            callbackParam.thingNameLength = pSubscription->thingNameLength;
+            callbackParam.u.operation.result = pOperation->status;
+            callbackParam.u.operation.reference = pOperation;
+            callbackParam.u.operation.pResponse = pOperation->pJobsResponse;
+            callbackParam.u.operation.responseLength = pOperation->jobsResponseLength;
+
+            pOperation->notify.callback.function( pOperation->notify.callback.pCallbackContext,
+                                                  &callbackParam );
+        }
+
+        /* Destroy a removed subscription. */
+        if( pRemovedSubscription != NULL )
+        {
+            _AwsIotJobs_DestroySubscription( pRemovedSubscription );
+        }
+
+        _AwsIotJobs_DestroyOperation( pOperation );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -293,6 +562,7 @@ AwsIotJobsError_t _AwsIotJobs_CreateOperation( _jobsOperationType_t type,
     pOperation->type = type;
     pOperation->flags = flags;
     pOperation->status = AWS_IOT_JOBS_STATUS_PENDING;
+    pOperation->mallocResponse = pRequestInfo->mallocResponse;
 
     /* Save the Job ID for DESCRIBE and UPDATE operations. */
     if( ( type == JOBS_DESCRIBE ) || ( type == JOBS_UPDATE ) )
