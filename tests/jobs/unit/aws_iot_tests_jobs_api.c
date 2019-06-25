@@ -27,6 +27,9 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* Standard includes. */
+#include <string.h>
+
 /* SDK initialization include. */
 #include "iot_init.h"
 
@@ -229,6 +232,7 @@ TEST_TEAR_DOWN( Jobs_Unit_API )
 TEST_GROUP_RUNNER( Jobs_Unit_API )
 {
     RUN_TEST_CASE( Jobs_Unit_API, Init );
+    RUN_TEST_CASE( Jobs_Unit_API, StringCoverage );
     RUN_TEST_CASE( Jobs_Unit_API, OperationInvalidRequestInfo );
     RUN_TEST_CASE( Jobs_Unit_API, OperationInvalidUpdateInfo );
     RUN_TEST_CASE( Jobs_Unit_API, WaitInvalidParameters );
@@ -277,6 +281,48 @@ TEST( Jobs_Unit_API, Init )
         }
 
         TEST_ASSERT_EQUAL( AWS_IOT_JOBS_INIT_FAILED, status );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Provides code coverage of the Jobs enum-to-string functions,
+ * @ref jobs_function_strerror and @ref jobs_function_statename.
+ */
+TEST( Jobs_Unit_API, StringCoverage )
+{
+    int32_t i = 0;
+    const char * pMessage = NULL;
+
+    /* For each Jobs Error, check the returned string. */
+    while( true )
+    {
+        pMessage = AwsIotJobs_strerror( ( AwsIotJobsError_t ) i );
+        TEST_ASSERT_NOT_NULL( pMessage );
+
+        if( strncmp( "INVALID STATUS", pMessage, 14 ) == 0 )
+        {
+            break;
+        }
+
+        i++;
+    }
+
+    /* For each Jobs State, check the returned string. */
+    i = 0;
+
+    while( true )
+    {
+        pMessage = AwsIotJobs_StateName( ( AwsIotJobState_t ) i );
+        TEST_ASSERT_NOT_NULL( pMessage );
+
+        if( strncmp( "INVALID STATE", pMessage, 13 ) == 0 )
+        {
+            break;
+        }
+
+        i++;
     }
 }
 
@@ -349,6 +395,36 @@ TEST( Jobs_Unit_API, OperationInvalidRequestInfo )
                                     0,
                                     &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
+    /* Client token too long. */
+    requestInfo.clientTokenLength = AWS_IOT_CLIENT_TOKEN_MAX_LENGTH + 1;
+
+    status = AwsIotJobs_GetPending( &requestInfo,
+                                    0,
+                                    NULL,
+                                    NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+    requestInfo.pClientToken = AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE;
+
+    /* Job ID not set. */
+    status = AwsIotJobs_Describe( &requestInfo,
+                                  AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                  false,
+                                  0,
+                                  NULL,
+                                  NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
+    /* Job ID too long. */
+    requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
+    requestInfo.jobIdLength = JOBS_MAX_ID_LENGTH + 1;
+
+    status = AwsIotJobs_Update( &requestInfo,
+                                &updateInfo,
+                                0,
+                                NULL,
+                                NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 }
 
 /*-----------------------------------------------------------*/
@@ -395,6 +471,29 @@ TEST( Jobs_Unit_API, OperationInvalidUpdateInfo )
                                    0,
                                    NULL,
                                    NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
+    /* Status details too large. */
+    updateInfo.statusDetailsLength = JOBS_MAX_STATUS_DETAILS_LENGTH + 1;
+
+    status = AwsIotJobs_StartNext( &requestInfo,
+                                   &updateInfo,
+                                   0,
+                                   NULL,
+                                   NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+    updateInfo.pStatusDetails = AWS_IOT_JOBS_NO_STATUS_DETAILS;
+
+    /* Invalid UPDATE state. */
+    requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
+    requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
+    updateInfo.newStatus = AWS_IOT_JOB_STATE_QUEUED;
+
+    status = AwsIotJobs_Update( &requestInfo,
+                                &updateInfo,
+                                0,
+                                NULL,
+                                NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 }
 
