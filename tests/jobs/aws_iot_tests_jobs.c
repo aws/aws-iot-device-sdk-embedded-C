@@ -36,11 +36,15 @@ void RunJobsTests( bool disableNetworkTests,
                    bool disableLongTests )
 {
     /* Silence warnings about unused parameters. */
-    ( void ) disableNetworkTests;
     ( void ) disableLongTests;
 
     RUN_TEST_GROUP( Jobs_Unit_API );
-    RUN_TEST_GROUP( Jobs_Unit_Serialize )
+    RUN_TEST_GROUP( Jobs_Unit_Serialize );
+
+    if( disableNetworkTests == false )
+    {
+        RUN_TEST_GROUP( Jobs_System );
+    }
 }
 
 /*-----------------------------------------------------------*/
