@@ -50,6 +50,7 @@ In addition to the components above, the Jobs library also depends on C standard
 @brief Tests written for the Jobs library.
 
 The Jobs tests reside in the `tests/jobs` directory. They are divided into the following subdirectories:
+- `system`: Jobs system tests. These tests require a network connection and AWS IoT credentials. The command line option `-n` may be passed to the test executable to disable these tests.
 - `unit`: Jobs unit tests. These tests do not require a network connection or credentials. These tests use the [MQTT mocks.](@ref mqtt_tests)
 
 The Jobs unit tests require no special configuration.

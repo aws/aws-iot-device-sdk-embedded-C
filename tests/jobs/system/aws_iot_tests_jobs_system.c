@@ -20,31 +20,60 @@
  */
 
 /**
- * @file aws_iot_tests_jobs.c
- * @brief Test runner for Jobs tests.
+ * @file aws_iot_tests_jobs_system.c
+ * @brief Full system tests for the AWS IoT Jobs library.
  */
 
-/* Standard includes. */
-#include <stdbool.h>
+/* The config header is always included first. */
+#include "iot_config.h"
+
+/* SDK initialization include. */
+#include "iot_init.h"
+
+/* SDK initialization include. */
+#include "iot_init.h"
+
+/* MQTT include. */
+#include "iot_mqtt.h"
+
+/* Jobs include. */
+#include "aws_iot_jobs.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
 
 /*-----------------------------------------------------------*/
 
-void RunJobsTests( bool disableNetworkTests,
-                   bool disableLongTests )
+/**
+ * @brief Test group for Jobs system tests.
+ */
+TEST_GROUP( Jobs_System );
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test setup for Jobs system tests.
+ */
+TEST_SETUP( Jobs_System )
 {
-    /* Silence warnings about unused parameters. */
-    ( void ) disableLongTests;
+}
 
-    RUN_TEST_GROUP( Jobs_Unit_API );
-    RUN_TEST_GROUP( Jobs_Unit_Serialize );
+/*-----------------------------------------------------------*/
 
-    if( disableNetworkTests == false )
-    {
-        RUN_TEST_GROUP( Jobs_System );
-    }
+/**
+ * @brief Test tear down for Jobs system tests.
+ */
+TEST_TEAR_DOWN( Jobs_System )
+{
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test group runner for Jobs system tests.
+ */
+TEST_GROUP_RUNNER( Jobs_System )
+{
 }
 
 /*-----------------------------------------------------------*/
