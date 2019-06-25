@@ -81,6 +81,106 @@ static IotMqttConnection_t _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Common code of the MallocFail tests.
+ */
+static void _jobsMallocFail( _jobsOperationType_t type )
+{
+    int32_t i = 0, mqttErrorCount = 0;
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsOperation_t operation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+    AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    const char * pResponse = NULL;
+    size_t responseLength = 0;
+
+    /* Set a short timeout so this test runs faster. */
+    _AwsIotJobsMqttTimeoutMs = 75;
+
+    /* Set the members of the request info. */
+    requestInfo.mqttConnection = _pMqttConnection;
+    requestInfo.pThingName = TEST_THING_NAME;
+    requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
+    requestInfo.mallocResponse = IotTest_Malloc;
+    requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
+    requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
+
+    for( i = 0; ; i++ )
+    {
+        UnityMalloc_MakeMallocFailAfterCount( i );
+
+        /* Call Jobs operation. Memory allocation will fail at various times
+         * during this call. */
+        switch( type )
+        {
+            case JOBS_GET_PENDING:
+                status = AwsIotJobs_GetPending( &requestInfo,
+                                                AWS_IOT_JOBS_FLAG_WAITABLE,
+                                                NULL,
+                                                &operation );
+                break;
+
+            case JOBS_START_NEXT:
+                status = AwsIotJobs_StartNext( &requestInfo,
+                                               &updateInfo,
+                                               AWS_IOT_JOBS_FLAG_WAITABLE,
+                                               NULL,
+                                               &operation );
+                break;
+
+            case JOBS_DESCRIBE:
+                status = AwsIotJobs_Describe( &requestInfo,
+                                              AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                              false,
+                                              AWS_IOT_JOBS_FLAG_WAITABLE,
+                                              NULL,
+                                              &operation );
+                break;
+
+            default:
+                /* The only remaining valid type is update. */
+                TEST_ASSERT_EQUAL( JOBS_UPDATE, type );
+
+                status = AwsIotJobs_Update( &requestInfo,
+                                            &updateInfo,
+                                            AWS_IOT_JOBS_FLAG_WAITABLE,
+                                            NULL,
+                                            &operation );
+                break;
+        }
+
+        /* Once the Jobs operation call succeeds, wait for it to complete. */
+        if( status == AWS_IOT_JOBS_STATUS_PENDING )
+        {
+            /* No response will be received from the network, so the Jobs operation
+             * is expected to time out. */
+            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_TIMEOUT,
+                               AwsIotJobs_Wait( operation,
+                                                0,
+                                                &pResponse,
+                                                &responseLength ) );
+            break;
+        }
+
+        /* Count the number of MQTT library errors. Otherwise, check that the error
+         * is a "No memory" error. */
+        if( status == AWS_IOT_JOBS_MQTT_ERROR )
+        {
+            mqttErrorCount++;
+        }
+        else
+        {
+            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, status );
+        }
+    }
+
+    /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
+     * for incoming packets (SUBSCRIBE, PUBLISH). */
+    CHECK_MQTT_ERROR_COUNT( 2, mqttErrorCount );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group for Jobs API tests.
  */
 TEST_GROUP( Jobs_Unit_API );
@@ -134,6 +234,8 @@ TEST_GROUP_RUNNER( Jobs_Unit_API )
     RUN_TEST_CASE( Jobs_Unit_API, WaitInvalidParameters );
     RUN_TEST_CASE( Jobs_Unit_API, GetPendingMallocFail );
     RUN_TEST_CASE( Jobs_Unit_API, StartNextMallocFail );
+    RUN_TEST_CASE( Jobs_Unit_API, DescribeMallocFail );
+    RUN_TEST_CASE( Jobs_Unit_API, UpdateMallocFail );
 }
 
 /*-----------------------------------------------------------*/
@@ -328,61 +430,7 @@ TEST( Jobs_Unit_API, WaitInvalidParameters )
  */
 TEST( Jobs_Unit_API, GetPendingMallocFail )
 {
-    int32_t i = 0, mqttErrorCount = 0;
-    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
-    AwsIotJobsOperation_t getPendingOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
-    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
-    const char * pResponse = NULL;
-    size_t responseLength = 0;
-
-    /* Set a short timeout so this test runs faster. */
-    _AwsIotJobsMqttTimeoutMs = 75;
-
-    /* Set the members of the request info. */
-    requestInfo.mqttConnection = _pMqttConnection;
-    requestInfo.pThingName = TEST_THING_NAME;
-    requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
-    requestInfo.mallocResponse = IotTest_Malloc;
-
-    for( i = 0; ; i++ )
-    {
-        UnityMalloc_MakeMallocFailAfterCount( i );
-
-        /* Call Jobs GET PENDING. Memory allocation will fail at various times
-         * during this call. */
-        status = AwsIotJobs_GetPending( &requestInfo,
-                                        AWS_IOT_JOBS_FLAG_WAITABLE,
-                                        NULL,
-                                        &getPendingOperation );
-
-        /* Once the Jobs GET PENDING call succeeds, wait for it to complete. */
-        if( status == AWS_IOT_JOBS_STATUS_PENDING )
-        {
-            /* No response will be received from the network, so the Jobs operation
-             * is expected to time out. */
-            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_TIMEOUT,
-                               AwsIotJobs_Wait( getPendingOperation,
-                                                0,
-                                                &pResponse,
-                                                &responseLength ) );
-            break;
-        }
-
-        /* Count the number of MQTT library errors. Otherwise, check that the error
-         * is a "No memory" error. */
-        if( status == AWS_IOT_JOBS_MQTT_ERROR )
-        {
-            mqttErrorCount++;
-        }
-        else
-        {
-            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, status );
-        }
-    }
-
-    /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
-     * for incoming packets (SUBSCRIBE, PUBLISH). */
-    CHECK_MQTT_ERROR_COUNT( 2, mqttErrorCount );
+    _jobsMallocFail( JOBS_GET_PENDING );
 }
 
 /*-----------------------------------------------------------*/
@@ -393,63 +441,29 @@ TEST( Jobs_Unit_API, GetPendingMallocFail )
  */
 TEST( Jobs_Unit_API, StartNextMallocFail )
 {
-    int32_t i = 0, mqttErrorCount = 0;
-    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
-    AwsIotJobsOperation_t startNextOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
-    AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
-    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
-    const char * pResponse = NULL;
-    size_t responseLength = 0;
+    _jobsMallocFail( JOBS_START_NEXT );
+}
 
-    /* Set a short timeout so this test runs faster. */
-    _AwsIotJobsMqttTimeoutMs = 75;
+/*-----------------------------------------------------------*/
 
-    /* Set the members of the request info. */
-    requestInfo.mqttConnection = _pMqttConnection;
-    requestInfo.pThingName = TEST_THING_NAME;
-    requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
-    requestInfo.mallocResponse = IotTest_Malloc;
+/**
+ * @brief Tests the behavior of @ref jobs_function_describe when memory
+ * allocation fails at various points.
+ */
+TEST( Jobs_Unit_API, DescribeMallocFail )
+{
+    _jobsMallocFail( JOBS_DESCRIBE );
+}
 
-    for( i = 0; ; i++ )
-    {
-        UnityMalloc_MakeMallocFailAfterCount( i );
+/*-----------------------------------------------------------*/
 
-        /* Call Jobs START NEXT. Memory allocation will fail at various times
-         * during this call. */
-        status = AwsIotJobs_StartNext( &requestInfo,
-                                       &updateInfo,
-                                       AWS_IOT_JOBS_FLAG_WAITABLE,
-                                       NULL,
-                                       &startNextOperation );
-
-        /* Once the Jobs START NEXT call succeeds, wait for it to complete. */
-        if( status == AWS_IOT_JOBS_STATUS_PENDING )
-        {
-            /* No response will be received from the network, so the Jobs operation
-             * is expected to time out. */
-            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_TIMEOUT,
-                               AwsIotJobs_Wait( startNextOperation,
-                                                0,
-                                                &pResponse,
-                                                &responseLength ) );
-            break;
-        }
-
-        /* Count the number of MQTT library errors. Otherwise, check that the error
-         * is a "No memory" error. */
-        if( status == AWS_IOT_JOBS_MQTT_ERROR )
-        {
-            mqttErrorCount++;
-        }
-        else
-        {
-            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, status );
-        }
-    }
-
-    /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
-     * for incoming packets (SUBSCRIBE, PUBLISH). */
-    CHECK_MQTT_ERROR_COUNT( 2, mqttErrorCount );
+/**
+ * @brief Tests the behavior of @ref jobs_function_update when memory
+ * allocation fails at various points.
+ */
+TEST( Jobs_Unit_API, UpdateMallocFail )
+{
+    _jobsMallocFail( JOBS_UPDATE );
 }
 
 /*-----------------------------------------------------------*/
