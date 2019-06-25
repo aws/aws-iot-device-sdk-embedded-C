@@ -28,7 +28,7 @@ Compared to the AWS IoT Device SDK Embedded C v3.0.1, the following features are
 
 ## Building and Running Demos
 
-**Main documentation page:** [Building the SDK](https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/main/building.html)
+**Main documentation page:** [Building the SDK](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/building.html)
 
 This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. **As of now, this Beta release only builds on Linux.**
 
@@ -69,11 +69,11 @@ If using the OpenSSL network implementation:
     make
     ```
 
-See the documentation page [Building the SDK](https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/main/building.html) for a list of options that can be used to configure the build system.
+See the documentation page [Building the SDK](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/building.html) for a list of options that can be used to configure the build system.
 
 ## Porting the SDK
 
-Please refer to the [Porting Guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/main/guide_developer_porting.html) for instructions on porting this SDK.
+Please refer to the [Porting Guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/guide_developer_porting.html) for instructions on porting this SDK.
 
 Existing ports (which may be used as examples) are present in `platform/ports`. A blank template for implementing new ports is in `platform/ports/template`.
 

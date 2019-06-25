@@ -51,7 +51,7 @@ bool IotClock_GetTimestring( char * pBuffer,
                              size_t * pTimestringLength )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_clock_function_gettimestring.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_clock_function_gettimestring.html
      */
     return false;
 }
@@ -61,7 +61,7 @@ bool IotClock_GetTimestring( char * pBuffer,
 uint64_t IotClock_GetTimeMs( void )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_clock_function_gettimems.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_clock_function_gettimems.html
      */
     return 0;
 }
@@ -71,7 +71,7 @@ uint64_t IotClock_GetTimeMs( void )
 void IotClock_SleepMs( uint32_t sleepTimeMs )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_clock_function_sleepms.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_clock_function_sleepms.html
      */
 }
 
@@ -82,7 +82,7 @@ bool IotClock_TimerCreate( IotTimer_t * pNewTimer,
                            void * pArgument )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_clock_function_timercreate.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_clock_function_timercreate.html
      */
     return false;
 }
@@ -92,7 +92,7 @@ bool IotClock_TimerCreate( IotTimer_t * pNewTimer,
 void IotClock_TimerDestroy( IotTimer_t * pTimer )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_clock_function_timerdestroy.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_clock_function_timerdestroy.html
      */
 }
 
@@ -103,7 +103,7 @@ bool IotClock_TimerArm( IotTimer_t * pTimer,
                         uint32_t periodMs )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_clock_function_timerarm.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_clock_function_timerarm.html
      */
     return false;
 }
