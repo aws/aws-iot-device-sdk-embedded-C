@@ -87,6 +87,10 @@
  */
 #define AWS_IOT_CLIENT_TOKEN_KEY_LENGTH    ( sizeof( AWS_IOT_CLIENT_TOKEN_KEY ) - 1 )
 
+/**
+ * @brief The length of the longest client token allowed by AWS IoT.
+ */
+#define AWS_IOT_CLIENT_TOKEN_MAX_LENGTH    ( 64 )
 
 /**
  * @brief A flag to represent persistent subscriptions in a subscriptions

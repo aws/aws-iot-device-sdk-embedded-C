@@ -103,9 +103,6 @@ static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_SUCCESS );
 
-    /* Type is not used when logging is disabled. */
-    ( void ) type;
-
     /* Check that the given MQTT connection is valid. */
     if( pRequestInfo->mqttConnection == IOT_MQTT_CONNECTION_INITIALIZER )
     {
@@ -165,13 +162,43 @@ static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
         }
     }
 
-    /* Check that Thing Name length is set. */
+    /* Check client token length. */
     if( pRequestInfo->pClientToken != AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE )
     {
         if( pRequestInfo->clientTokenLength == 0 )
         {
             IotLogError( "Client token length must be set for Jobs %s.",
                          _pAwsIotJobsOperationNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+
+        if( pRequestInfo->clientTokenLength > AWS_IOT_CLIENT_TOKEN_MAX_LENGTH )
+        {
+            IotLogError( "Client token for Jobs %s cannot be longer than %d.",
+                         _pAwsIotJobsOperationNames[ type ],
+                         AWS_IOT_CLIENT_TOKEN_MAX_LENGTH );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+    }
+
+    /* Check Job ID for DESCRIBE and UPDATE. */
+    if( ( type == JOBS_DESCRIBE ) || ( type == JOBS_UPDATE ) )
+    {
+        if( ( pRequestInfo->pJobId == NULL ) || ( pRequestInfo->jobIdLength == 0 ) )
+        {
+            IotLogError( "Job ID must be set for Jobs %s.",
+                         _pAwsIotJobsOperationNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+
+        if( pRequestInfo->jobIdLength > JOBS_MAX_ID_LENGTH )
+        {
+            IotLogError( "Job ID for Jobs %s cannot be longer than %d.",
+                         _pAwsIotJobsOperationNames[ type ],
+                         JOBS_MAX_ID_LENGTH );
 
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
         }
@@ -238,6 +265,13 @@ static AwsIotJobsError_t _validateUpdateInfo( _jobsOperationType_t type,
                          _pAwsIotJobsOperationNames[ type ] );
 
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+
+        if( pUpdateInfo->statusDetailsLength > JOBS_MAX_STATUS_DETAILS_LENGTH )
+        {
+            IotLogError( "Status details length for Jobs %s cannot exceed %d.",
+                         _pAwsIotJobsOperationNames[ type ],
+                         JOBS_MAX_STATUS_DETAILS_LENGTH );
         }
     }
 
