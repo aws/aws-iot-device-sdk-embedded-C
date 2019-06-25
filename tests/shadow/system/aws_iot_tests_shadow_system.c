@@ -57,7 +57,7 @@
  * assert function is used to abort the tests on failure from the Shadow operation
  * complete callback. */
 #if AWS_IOT_SHADOW_ENABLE_ASSERTS == 0
-    #error "Shadow API unit tests require AWS_IOT_SHADOW_ENABLE_ASSERTS to be 1."
+    #error "Shadow system tests require AWS_IOT_SHADOW_ENABLE_ASSERTS to be 1."
 #endif
 
 /*-----------------------------------------------------------*/

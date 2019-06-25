@@ -50,11 +50,32 @@ In addition to the components above, the Jobs library also depends on C standard
 @brief Tests written for the Jobs library.
 
 The Jobs tests reside in the `tests/jobs` directory. They are divided into the following subdirectories:
+- `system`: Jobs system tests. These tests require a network connection and AWS IoT credentials. The command line option `-n` may be passed to the test executable to disable these tests.
 - `unit`: Jobs unit tests. These tests do not require a network connection or credentials. These tests use the [MQTT mocks.](@ref mqtt_tests)
 
-The Jobs unit tests require no special configuration.
+See @subpage jobs_tests_config for configuration settings that change the behavior of the Jobs system tests. The Jobs unit tests require no special configuration.
 
 The current Jobs tests use the [Unity test framework](http://www.throwtheswitch.org/unity/). See @ref building_tests for a guide on running the tests.
+*/
+
+/**
+@configpage{jobs_tests,Jobs system tests,Test,tests}
+
+@section AWS_IOT_TEST_JOBS_THING_NAME
+@brief The Thing Name to use in the Jobs system tests.
+
+Thing Names are used to manage devices with AWS IoT. <b>No default value is provided for Thing Names, so this constant must be defined.</b> In addition to the Thing Name, AWS IoT credentials ([root CA certificate](@ref IOT_TEST_ROOT_CA), [client certificate](@ref IOT_TEST_CLIENT_CERT), and [client certificate private key](@ref IOT_TEST_PRIVATE_KEY)) must be provided to run the system tests. The [AWS IoT policy](https://docs.aws.amazon.com/iot/latest/developerguide/iot-policies.html) must also be properly configured.
+
+@configpossible A string representing an AWS IoT Thing Name.
+
+@section jobs_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
+@brief The keep-alive interval to use in the Jobs system tests.
+
+MQTT PINGREQ packets will be sent at this interval.
+
+@configpossible Any positive integer. <br>
+@configrecommended This value should be the shortest keep-alive interval supported by the connection. <br>
+@configdefault `30`
 */
 
 /**
