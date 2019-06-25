@@ -262,7 +262,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
                                &( param.pThingName ),
                                &( param.thingNameLength ) ) == false )
     {
-        return;
+        IOT_GOTO_CLEANUP();
     }
 
     /* Lock the pending operations list for exclusive access. */
@@ -284,7 +284,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
         IotLogWarn( "Shadow %s callback received an unknown operation.",
                     _pAwsIotShadowOperationNames[ type ] );
 
-        return;
+        IOT_GOTO_CLEANUP();
     }
     else
     {
@@ -365,6 +365,10 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     {
         IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
     }
+
+    /* This function has no return value and no cleanup, but uses the cleanup
+     * label to exit on error. */
+    IOT_FUNCTION_CLEANUP_BEGIN();
 }
 
 /*-----------------------------------------------------------*/
