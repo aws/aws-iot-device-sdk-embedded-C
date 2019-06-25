@@ -93,8 +93,7 @@ static void _jobsMallocFail( _jobsOperationType_t type )
     AwsIotJobsOperation_t operation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
     AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
     AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
-    const char * pResponse = NULL;
-    size_t responseLength = 0;
+    AwsIotJobsResponse_t jobsResponse = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
 
     /* Set a short timeout so this test runs faster. */
     _AwsIotJobsMqttTimeoutMs = 75;
@@ -159,8 +158,7 @@ static void _jobsMallocFail( _jobsOperationType_t type )
             TEST_ASSERT_EQUAL( AWS_IOT_JOBS_TIMEOUT,
                                AwsIotJobs_Wait( operation,
                                                 0,
-                                                &pResponse,
-                                                &responseLength ) );
+                                                &jobsResponse ) );
             break;
         }
 
@@ -509,16 +507,16 @@ TEST( Jobs_Unit_API, WaitInvalidParameters )
     _jobsOperation_t operation = { .link = { 0 } };
 
     /* NULL reference. */
-    status = AwsIotJobs_Wait( NULL, 0, NULL, NULL );
+    status = AwsIotJobs_Wait( NULL, 0, NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* No waitable flag set. */
-    status = AwsIotJobs_Wait( &operation, 0, NULL, NULL );
+    status = AwsIotJobs_Wait( &operation, 0, NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
-    /* NULL output parameters. */
+    /* NULL output parameter. */
     operation.flags = AWS_IOT_JOBS_FLAG_WAITABLE;
-    status = AwsIotJobs_Wait( &operation, 0, NULL, NULL );
+    status = AwsIotJobs_Wait( &operation, 0, NULL );
 }
 
 /*-----------------------------------------------------------*/

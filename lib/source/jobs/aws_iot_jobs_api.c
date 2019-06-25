@@ -599,8 +599,7 @@ AwsIotJobsError_t AwsIotJobs_Update( const AwsIotJobsRequestInfo_t * pRequestInf
 
 AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
                                    uint32_t timeoutMs,
-                                   const char ** const pResponse,
-                                   size_t * const pResponseLength )
+                                   AwsIotJobsResponse_t * pJobsResponse )
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
 
@@ -620,10 +619,10 @@ AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
     }
 
-    /* Check that output parameters are set. */
-    if( ( pResponse == NULL ) || ( pResponseLength == NULL ) )
+    /* Check that output parameter is set. */
+    if( pJobsResponse == NULL )
     {
-        IotLogError( "Output buffer and size pointer must be set for Jobs %s.",
+        IotLogError( "Output Jobs response parameter must be set for Jobs %s.",
                      _pAwsIotJobsOperationNames[ operation->type ] );
 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
@@ -660,8 +659,8 @@ AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
         AwsIotJobs_Assert( operation->pJobsResponse != NULL );
         AwsIotJobs_Assert( operation->jobsResponseLength > 0 );
 
-        *pResponse = operation->pJobsResponse;
-        *pResponseLength = operation->jobsResponseLength;
+        pJobsResponse->pJobsResponse = operation->pJobsResponse;
+        pJobsResponse->jobsResponseLength = operation->jobsResponseLength;
     }
 
     /* Destroy the Jobs operation. */
