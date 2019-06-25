@@ -464,6 +464,68 @@ AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequest
 
 /*-----------------------------------------------------------*/
 
+AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                       int32_t executionNumber,
+                                       bool includeJobDocument,
+                                       uint32_t flags,
+                                       const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                       AwsIotJobsOperation_t * const pDescribeOperation )
+{
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
+    _jobsOperation_t * pOperation = NULL;
+    _jsonRequestContents_t requestContents = { 0 };
+
+    /* Check request info. */
+    status = _validateRequestInfo( JOBS_DESCRIBE,
+                                   pRequestInfo,
+                                   flags,
+                                   pCallbackInfo,
+                                   pDescribeOperation );
+
+    if( status != AWS_IOT_JOBS_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Allocate a new Jobs operation. */
+    requestContents.describe.executionNumber = executionNumber;
+    requestContents.describe.includeJobDocument = includeJobDocument;
+
+    status = _AwsIotJobs_CreateOperation( JOBS_DESCRIBE,
+                                          pRequestInfo,
+                                          &requestContents,
+                                          flags,
+                                          pCallbackInfo,
+                                          &pOperation );
+
+    if( status != AWS_IOT_JOBS_SUCCESS )
+    {
+        /* No memory for Jobs operation. */
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Set the reference if provided. This must be done before the Jobs operation
+     * is processed. */
+    if( pDescribeOperation != NULL )
+    {
+        *pDescribeOperation = pOperation;
+    }
+
+    /* Process the Jobs operation. This subscribes to any required topics and
+     * sends the MQTT message for the Jobs operation. */
+    status = _AwsIotJobs_ProcessOperation( pRequestInfo, pOperation );
+
+    /* If the Jobs operation failed, clear the now invalid reference. */
+    if( ( status != AWS_IOT_JOBS_STATUS_PENDING ) && ( pDescribeOperation != NULL ) )
+    {
+        *pDescribeOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+    }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
 AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
                                    uint32_t timeoutMs,
                                    const char ** const pResponse,

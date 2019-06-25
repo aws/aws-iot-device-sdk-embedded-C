@@ -192,7 +192,7 @@ AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestI
                                        bool includeJobDocument,
                                        uint32_t flags,
                                        const AwsIotJobsCallbackInfo_t * pCallbackInfo,
-                                       AwsIotJobsOperation_t * const pJobsOperation );
+                                       AwsIotJobsOperation_t * const pDescribeOperation );
 /* @[declare_jobs_describe] */
 
 /**
