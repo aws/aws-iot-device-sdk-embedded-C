@@ -137,6 +137,14 @@ static void _jobsMallocFail( _jobsOperationType_t type )
                 break;
 
             default:
+                /* The only remaining valid type is update. */
+                TEST_ASSERT_EQUAL( JOBS_UPDATE, type );
+
+                status = AwsIotJobs_Update( &requestInfo,
+                                            &updateInfo,
+                                            AWS_IOT_JOBS_FLAG_WAITABLE,
+                                            NULL,
+                                            &operation );
                 break;
         }
 
@@ -227,6 +235,7 @@ TEST_GROUP_RUNNER( Jobs_Unit_API )
     RUN_TEST_CASE( Jobs_Unit_API, GetPendingMallocFail );
     RUN_TEST_CASE( Jobs_Unit_API, StartNextMallocFail );
     RUN_TEST_CASE( Jobs_Unit_API, DescribeMallocFail );
+    RUN_TEST_CASE( Jobs_Unit_API, UpdateMallocFail );
 }
 
 /*-----------------------------------------------------------*/
@@ -444,6 +453,17 @@ TEST( Jobs_Unit_API, StartNextMallocFail )
 TEST( Jobs_Unit_API, DescribeMallocFail )
 {
     _jobsMallocFail( JOBS_DESCRIBE );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref jobs_function_update when memory
+ * allocation fails at various points.
+ */
+TEST( Jobs_Unit_API, UpdateMallocFail )
+{
+    _jobsMallocFail( JOBS_UPDATE );
 }
 
 /*-----------------------------------------------------------*/
