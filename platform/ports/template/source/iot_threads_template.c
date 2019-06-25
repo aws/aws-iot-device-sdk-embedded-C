@@ -52,7 +52,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
                                size_t stackSize )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_createdetachedthread.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_createdetachedthread.html
      */
     return false;
 }
@@ -62,7 +62,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
 bool IotMutex_Create( IotMutex_t * pNewMutex, bool recursive )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_mutexcreate.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_mutexcreate.html
      */
     return false;
 }
@@ -72,7 +72,7 @@ bool IotMutex_Create( IotMutex_t * pNewMutex, bool recursive )
 void IotMutex_Destroy( IotMutex_t * pMutex )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_mutexdestroy.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_mutexdestroy.html
      */
 }
 
@@ -81,7 +81,7 @@ void IotMutex_Destroy( IotMutex_t * pMutex )
 void IotMutex_Lock( IotMutex_t * pMutex )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_mutexlock.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_mutexlock.html
      */
 }
 
@@ -90,7 +90,7 @@ void IotMutex_Lock( IotMutex_t * pMutex )
 bool IotMutex_TryLock( IotMutex_t * pMutex )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_mutextrylock.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_mutextrylock.html
      */
     return false;
 }
@@ -100,7 +100,7 @@ bool IotMutex_TryLock( IotMutex_t * pMutex )
 void IotMutex_Unlock( IotMutex_t * pMutex )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_mutexunlock.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_mutexunlock.html
      */
 }
 
@@ -111,7 +111,7 @@ bool IotSemaphore_Create( IotSemaphore_t * pNewSemaphore,
                           uint32_t maxValue )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_semaphorecreate.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_semaphorecreate.html
      */
     return false;
 }
@@ -121,7 +121,7 @@ bool IotSemaphore_Create( IotSemaphore_t * pNewSemaphore,
 void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_semaphoredestroy.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_semaphoredestroy.html
      */
 }
 
@@ -130,7 +130,7 @@ void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
 uint32_t IotSemaphore_GetCount( IotSemaphore_t * pSemaphore )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_semaphoregetcount.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_semaphoregetcount.html
      */
     return 0;
 }
@@ -140,7 +140,7 @@ uint32_t IotSemaphore_GetCount( IotSemaphore_t * pSemaphore )
 void IotSemaphore_Wait( IotSemaphore_t * pSemaphore )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_semaphorewait.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_semaphorewait.html
      */
 }
 
@@ -149,7 +149,7 @@ void IotSemaphore_Wait( IotSemaphore_t * pSemaphore )
 bool IotSemaphore_TryWait( IotSemaphore_t * pSemaphore )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_semaphoretrywait.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_semaphoretrywait.html
      */
     return false;
 }
@@ -160,7 +160,7 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
                              uint32_t timeoutMs )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_semaphoretimedwait.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_semaphoretimedwait.html
      */
     return false;
 }
@@ -170,7 +170,7 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
 void IotSemaphore_Post( IotSemaphore_t * pSemaphore )
 {
     /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_semaphorepost.html
+     * https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/platform_threads_function_semaphorepost.html
      */
 }
 

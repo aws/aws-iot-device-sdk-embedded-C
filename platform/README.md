@@ -1,6 +1,6 @@
 # Platform layer
 
-**Main documentation page:** [Platform layer](https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/index.html)
+**Main documentation page:** [Platform layer](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/index.html)
 
 This directory contains the headers and sources of the platform layer, implemented for various ports. Its subdirectories are organized as follows:
 - `include` <br>
@@ -16,4 +16,4 @@ This directory contains the headers and sources of the platform layer, implement
   - `template` <br>
     Empty port sources containing stubbed-out functions.
 
-When porting this SDK to a new platform, only files in this directory should be modified. See [Porting guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/main/guide_developer_porting.html) for instructions.
+When porting this SDK to a new platform, only files in this directory should be modified. See [Porting guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/guide_developer_porting.html) for instructions.
