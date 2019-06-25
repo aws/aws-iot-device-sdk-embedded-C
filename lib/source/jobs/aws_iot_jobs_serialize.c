@@ -50,6 +50,16 @@
 #define CLIENT_TOKEN_AUTOGENERATE_LENGTH          ( 8 )
 
 /**
+ * @brief JSON key representing Jobs status.
+ */
+#define STATUS_KEY                                "status"
+
+/**
+ * @brief Length of #STATUS_KEY.
+ */
+#define STATUS_KEY_LENGTH                         ( sizeof( STATUS_KEY ) - 1 )
+
+/**
  * @brief JSON key representing Jobs status details.
  */
 #define STATUS_DETAILS_KEY                        "statusDetails"
@@ -60,6 +70,24 @@
 #define STATUS_DETAILS_KEY_LENGTH                 ( sizeof( STATUS_DETAILS_KEY ) - 1 )
 
 /**
+ * @brief JSON key representing Jobs expected version.
+ */
+#define EXPECTED_VERSION_KEY                      "expectedVersion"
+
+/**
+ * @brief Length of #EXPECTED_VERSION_KEY.
+ */
+#define EXPECTED_VERSION_KEY_LENGTH               ( sizeof( EXPECTED_VERSION_KEY ) - 1 )
+
+/**
+ * @brief Maximum length of the expected version when represented as a string.
+ *
+ * The expected version is a 32-bit unsigned integer. This can be represented in
+ * 10 digits plus a NULL-terminator.
+ */
+#define EXPECTED_VERSION_STRING_LENGTH            ( 11 )
+
+/**
  * @brief JSON key representing Jobs step timeout.
  */
 #define STEP_TIMEOUT_KEY                          "stepTimeoutInMinutes"
@@ -68,6 +96,14 @@
  * @brief Length of #STEP_TIMEOUT_KEY.
  */
 #define STEP_TIMEOUT_KEY_LENGTH                   ( sizeof( STEP_TIMEOUT_KEY ) - 1 )
+
+/**
+ * @brief Maximum length of the step timeout when represented as a string.
+ *
+ * The step timeout is in the range of [-1,10080]. This can be represented as
+ * 5 digits plus a NULL-terminator.
+ */
+#define STEP_TIMEOUT_STRING_LENGTH                ( 6 )
 
 /**
  * @brief JSON key representing the "include Job document" flag.
@@ -429,6 +465,8 @@ static AwsIotJobsError_t _generateGetPendingRequest( const AwsIotJobsRequestInfo
 
     if( pJobsRequest == NULL )
     {
+        IotLogError( "No memory for Jobs GET PENDING request." );
+
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
     }
 
@@ -467,7 +505,7 @@ static AwsIotJobsError_t _generateStartNextRequest( const AwsIotJobsRequestInfo_
     char * pJobsRequest = NULL;
     size_t copyOffset = 0;
     size_t requestLength = MINIMUM_REQUEST_LENGTH;
-    char pStepTimeout[ 6 ] = { 0 };
+    char pStepTimeout[ STEP_TIMEOUT_STRING_LENGTH ] = { 0 };
     int stepTimeoutLength = 0;
 
     /* Add the length of status details if provided. */
@@ -484,9 +522,12 @@ static AwsIotJobsError_t _generateStartNextRequest( const AwsIotJobsRequestInfo_
     if( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_NO_TIMEOUT )
     {
         /* Convert the step timeout to a string. */
-        stepTimeoutLength = snprintf( pStepTimeout, 6, "%d", pUpdateInfo->stepTimeoutInMinutes );
+        stepTimeoutLength = snprintf( pStepTimeout,
+                                      STEP_TIMEOUT_STRING_LENGTH,
+                                      "%d",
+                                      pUpdateInfo->stepTimeoutInMinutes );
         AwsIotJobs_Assert( stepTimeoutLength > 0 );
-        AwsIotJobs_Assert( stepTimeoutLength < 6 );
+        AwsIotJobs_Assert( stepTimeoutLength < STEP_TIMEOUT_STRING_LENGTH );
     }
     else
     {
@@ -515,6 +556,8 @@ static AwsIotJobsError_t _generateStartNextRequest( const AwsIotJobsRequestInfo_
 
     if( pJobsRequest == NULL )
     {
+        IotLogError( "No memory for Jobs START NEXT request." );
+
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
     }
 
@@ -619,6 +662,8 @@ static AwsIotJobsError_t _generateDescribeRequest( const AwsIotJobsRequestInfo_t
 
     if( pJobsRequest == NULL )
     {
+        IotLogError( "No memory for Jobs DESCRIBE request." );
+
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
     }
 
@@ -681,8 +726,15 @@ static AwsIotJobsError_t _generateUpdateRequest( const AwsIotJobsRequestInfo_t *
     size_t requestLength = MINIMUM_REQUEST_LENGTH;
     const char * pStatus = NULL;
     size_t statusLength = 0;
+    char pExpectedVersion[ EXPECTED_VERSION_STRING_LENGTH ] = { 0 };
+    char pExecutionNumber[ EXECUTION_NUMBER_STRING_LENGTH ] = { 0 };
+    char pStepTimeout[ STEP_TIMEOUT_STRING_LENGTH ] = { 0 };
+    int expectedVersionLength = 0, executionNumberLength = 0, stepTimeoutLength = 0;
 
-    /* Determine the status string and length to report to the Jobs service. */
+    /* Determine the status string and length to report to the Jobs service.
+     * Add 6 for the 4 quotes, colon, and comma. */
+    requestLength += STATUS_KEY_LENGTH + 6;
+
     switch( pUpdateInfo->newStatus )
     {
         case AWS_IOT_JOB_STATE_IN_PROGRESS:
@@ -714,6 +766,187 @@ static AwsIotJobsError_t _generateUpdateRequest( const AwsIotJobsRequestInfo_t *
         requestLength += STATUS_DETAILS_KEY_LENGTH + 4;
         requestLength += pUpdateInfo->statusDetailsLength;
     }
+
+    /* Add the expected version if provided. */
+    if( pUpdateInfo->expectedVersion != AWS_IOT_JOBS_NO_VERSION )
+    {
+        /* Convert the expected version to a string. */
+        expectedVersionLength = snprintf( pExpectedVersion,
+                                          EXPECTED_VERSION_STRING_LENGTH,
+                                          "%u",
+                                          pUpdateInfo->expectedVersion );
+        AwsIotJobs_Assert( expectedVersionLength > 0 );
+        AwsIotJobs_Assert( expectedVersionLength < EXPECTED_VERSION_STRING_LENGTH );
+
+        /* Add 6 for the 4 quotes, colon, and comma. */
+        requestLength += EXPECTED_VERSION_KEY_LENGTH + 6;
+        requestLength += ( size_t ) expectedVersionLength;
+    }
+
+    /* Add the length of the execution number if present. */
+    if( pUpdateInfo->executionNumber != AWS_IOT_JOBS_NO_EXECUTION_NUMBER )
+    {
+        /* Convert the execution number to a string. */
+        executionNumberLength = snprintf( pExecutionNumber,
+                                          EXECUTION_NUMBER_STRING_LENGTH,
+                                          "%d",
+                                          pUpdateInfo->executionNumber );
+        AwsIotJobs_Assert( executionNumberLength > 0 );
+        AwsIotJobs_Assert( executionNumberLength < EXECUTION_NUMBER_STRING_LENGTH );
+
+        requestLength += EXECUTION_NUMBER_KEY_LENGTH + 4;
+        requestLength += ( size_t ) executionNumberLength;
+    }
+
+    /* Add the flags if true. The default values are false, so the flags are not
+     * needed if false. */
+    if( pUpdateInfo->includeJobExecutionState == true )
+    {
+        /* Add the length of "includeJobExecutionState" plus 4 for 2 quotes, a colon,
+         * and a comma. */
+        requestLength += INCLUDE_JOB_EXECUTION_STATE_KEY_LENGTH + 4;
+
+        /* Add the length of "true". */
+        requestLength += 4;
+    }
+
+    if( pUpdateInfo->includeJobDocument == true )
+    {
+        /* Add the length of "includeJobDocument" plus 4 for 2 quotes, a colon,
+         * and a comma. */
+        requestLength += INCLUDE_JOB_DOCUMENT_KEY_LENGTH + 4;
+
+        /* Add the length of "true". */
+        requestLength += 4;
+    }
+
+    /* Calculate the length of the step timeout. Add 4 for the 2 quotes, colon, and comma. */
+    requestLength += STEP_TIMEOUT_KEY_LENGTH + 4;
+
+    if( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_NO_TIMEOUT )
+    {
+        /* Convert the step timeout to a string. */
+        stepTimeoutLength = snprintf( pStepTimeout,
+                                      STEP_TIMEOUT_STRING_LENGTH,
+                                      "%d",
+                                      pUpdateInfo->stepTimeoutInMinutes );
+        AwsIotJobs_Assert( stepTimeoutLength > 0 );
+        AwsIotJobs_Assert( stepTimeoutLength < STEP_TIMEOUT_STRING_LENGTH );
+    }
+    else
+    {
+        /* Step timeout will be set to -1. */
+        pStepTimeout[ 0 ] = '-';
+        pStepTimeout[ 1 ] = '1';
+        stepTimeoutLength = 2;
+    }
+
+    requestLength += ( size_t ) stepTimeoutLength;
+
+    /* Add the length of the client token. */
+    if( pRequestInfo->pClientToken != AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE )
+    {
+        AwsIotJobs_Assert( pRequestInfo->clientTokenLength > 0 );
+
+        requestLength += pRequestInfo->clientTokenLength;
+    }
+    else
+    {
+        requestLength += CLIENT_TOKEN_AUTOGENERATE_LENGTH;
+    }
+
+    /* Allocate memory for the request JSON. */
+    pJobsRequest = AwsIotJobs_MallocString( requestLength );
+
+    if( pJobsRequest == NULL )
+    {
+        IotLogError( "No memory for Jobs UPDATE request." );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
+    }
+
+    /* Clear the request JSON. */
+    ( void ) memset( pJobsRequest, 0x00, requestLength );
+
+    /* Construct the request JSON. */
+    APPEND_STRING( pJobsRequest, copyOffset, "{\"", 2 );
+
+    /* Add the status. */
+    APPEND_STRING( pJobsRequest, copyOffset, STATUS_KEY, STATUS_KEY_LENGTH );
+    APPEND_STRING( pJobsRequest, copyOffset, "\":\"", 3 );
+    APPEND_STRING( pJobsRequest, copyOffset, pStatus, statusLength );
+    APPEND_STRING( pJobsRequest, copyOffset, "\",\"", 3 );
+
+    /* Add status details if present. */
+    if( pUpdateInfo->pStatusDetails != AWS_IOT_JOBS_NO_STATUS_DETAILS )
+    {
+        copyOffset = _appendStatusDetails( pJobsRequest,
+                                           copyOffset,
+                                           pUpdateInfo->pStatusDetails,
+                                           pUpdateInfo->statusDetailsLength );
+    }
+
+    /* Add expected version. */
+    if( pUpdateInfo->expectedVersion != AWS_IOT_JOBS_NO_VERSION )
+    {
+        APPEND_STRING( pJobsRequest,
+                       copyOffset,
+                       EXPECTED_VERSION_KEY,
+                       EXPECTED_VERSION_KEY_LENGTH );
+        APPEND_STRING( pJobsRequest, copyOffset, "\":\"", 3 );
+        APPEND_STRING( pJobsRequest, copyOffset, pExpectedVersion, expectedVersionLength );
+        APPEND_STRING( pJobsRequest, copyOffset, "\",\"", 3 );
+    }
+
+    /* Add execution number. */
+    if( pUpdateInfo->executionNumber != AWS_IOT_JOBS_NO_EXECUTION_NUMBER )
+    {
+        copyOffset = _appendExecutionNumber( pJobsRequest,
+                                             copyOffset,
+                                             pExecutionNumber,
+                                             executionNumberLength );
+    }
+
+    /* Add flags if not default values. */
+    if( pUpdateInfo->includeJobExecutionState == true )
+    {
+        copyOffset = _appendFlag( pJobsRequest,
+                                  copyOffset,
+                                  INCLUDE_JOB_EXECUTION_STATE_KEY,
+                                  INCLUDE_JOB_EXECUTION_STATE_KEY_LENGTH,
+                                  true );
+    }
+
+    if( pUpdateInfo->includeJobDocument == true )
+    {
+        copyOffset = _appendFlag( pJobsRequest,
+                                  copyOffset,
+                                  INCLUDE_JOB_DOCUMENT_KEY,
+                                  INCLUDE_JOB_DOCUMENT_KEY_LENGTH,
+                                  true );
+    }
+
+    /* Add step timeout. */
+    copyOffset = _appendStepTimeout( pJobsRequest, copyOffset, pStepTimeout, stepTimeoutLength );
+
+    /* Add the client token. */
+    copyOffset = _appendClientToken( pJobsRequest, copyOffset, pRequestInfo, pOperation );
+
+    APPEND_STRING( pJobsRequest, copyOffset, "\"}", 2 );
+
+    /* Set the output parameters. */
+    pOperation->pJobsRequest = pJobsRequest;
+    pOperation->jobsRequestLength = requestLength;
+
+    /* Ensure offsets are valid. */
+    AwsIotJobs_Assert( copyOffset == requestLength );
+    AwsIotJobs_Assert( pOperation->pClientToken > pOperation->pJobsRequest );
+    AwsIotJobs_Assert( pOperation->pClientToken <
+                       pOperation->pJobsRequest + pOperation->jobsRequestLength );
+
+    IotLogDebug( "Jobs UPDATE request: %.*s",
+                 pOperation->jobsRequestLength,
+                 pOperation->pJobsRequest );
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
 }

@@ -257,6 +257,17 @@
 #define JOBS_MAX_TIMEOUT                              ( 10080 )
 
 /**
+ * @brief A limit on the maximum length of a Jobs status details, per AWS IoT
+ * Service Limits.
+ *
+ * See https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#job-limits
+ *
+ * This is actually the limit on the length of an entire Jobs document; but the
+ * status details must also not exceed this length,
+ */
+#define JOBS_MAX_STATUS_DETAILS_LENGTH                ( 32768 )
+
+/**
  * @brief The length of the longest Jobs topic suffix.
  *
  * This is the length of the longest Job ID, plus the length of the "UPDATE"
