@@ -272,6 +272,8 @@ static AwsIotJobsError_t _validateUpdateInfo( _jobsOperationType_t type,
             IotLogError( "Status details length for Jobs %s cannot exceed %d.",
                          _pAwsIotJobsOperationNames[ type ],
                          JOBS_MAX_STATUS_DETAILS_LENGTH );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
         }
     }
 
