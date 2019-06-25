@@ -565,6 +565,25 @@ typedef struct AwsIotJobsRequestInfo
 
 /**
  * @ingroup jobs_datatypes_paramstructs
+ * @brief Output parameter of blocking Jobs API functions.
+ *
+ * @paramfor @ref jobs_function_timedgetpending, @ref jobs_function_timedstartnext,
+ * @ref jobs_function_timeddescribe, @ref jobs_function_timedupdate,
+ * @ref jobs_function_wait
+ *
+ * Provides the response received from the Jobs service. The buffer for the
+ * response is allocated with #AwsIotJobsRequestInfo_t.mallocResponse.
+ *
+ * @initializer{AwsIotJobsResponse_t,AWS_IOT_JOBS_RESPONSE_INITIALIZER}
+ */
+typedef struct AwsIotJobsResponse
+{
+    const char * pJobsResponse; /**< @brief JSON response received from the Jobs service. */
+    size_t jobsResponseLength;  /**< @brief Length of #AwsIotJobsResponse_t.pJobsResponse. */
+} AwsIotJobsResponse_t;
+
+/**
+ * @ingroup jobs_datatypes_paramstructs
  * @brief Information on a Job update for @ref jobs_function_startnext and
  * @ref jobs_function_update. These functions modify a Job's state.
  *
@@ -760,6 +779,7 @@ typedef struct AwsIotJobsUpdateInfo
  * AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
  * AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
  * AwsIotJobsOperation_t operation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+ * AwsIotJobsResponse_t response = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
  * @endcode
  *
  * @section jobs_constants_flags Jobs Function Flags
@@ -807,7 +827,8 @@ typedef struct AwsIotJobsUpdateInfo
       .includeJobExecutionState = false,                   \
       .includeJobDocument = false,                         \
       .pStatusDetails = AWS_IOT_JOBS_NO_STATUS_DETAILS }
-#define AWS_IOT_JOBS_OPERATION_INITIALIZER    NULL /**< @brief Initializer for #AwsIotJobsOperation_t. */
+#define AWS_IOT_JOBS_OPERATION_INITIALIZER    NULL  /**< @brief Initializer for #AwsIotJobsOperation_t. */
+#define AWS_IOT_JOBS_RESPONSE_INITIALIZER     { 0 } /**< @brief Initializer for #AwsIotJobsResponse_t. */
 /* @[define_jobs_initializers] */
 
 /**
