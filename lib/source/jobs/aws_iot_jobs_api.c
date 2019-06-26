@@ -397,6 +397,36 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
 
 /*-----------------------------------------------------------*/
 
+AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                              uint32_t flags,
+                                              uint32_t timeout,
+                                              AwsIotJobsResponse_t * const pJobsResponse )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsOperation_t getPendingOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+
+    /* Set the waitable flag. */
+    flags |= AWS_IOT_JOBS_FLAG_WAITABLE;
+
+    /* Call the asynchronous Jobs Get Pending function. */
+    status = AwsIotJobs_GetPending( pRequestInfo,
+                                    flags,
+                                    NULL,
+                                    &getPendingOperation );
+
+    /* Wait for the Jobs Get Pending operation to complete. */
+    if( status == AWS_IOT_JOBS_STATUS_PENDING )
+    {
+        status = AwsIotJobs_Wait( getPendingOperation,
+                                  timeout,
+                                  pJobsResponse );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                         const AwsIotJobsUpdateInfo_t * pUpdateInfo,
                                         uint32_t flags,

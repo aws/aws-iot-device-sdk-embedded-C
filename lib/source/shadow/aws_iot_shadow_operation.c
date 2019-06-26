@@ -123,6 +123,17 @@ static void _updateCallback( void * pArgument,
                              IotMqttCallbackParam_t * pMessage );
 
 /**
+ * @brief Notify of a completed Shadow operation.
+ *
+ * @param[in] pOperation The operation which completed.
+ *
+ * Depending on the parameters passed to a user-facing Shadow function, the
+ * notification will cause @ref shadow_function_wait to return or invoke a
+ * user-provided callback.
+ */
+static void _notifyCompletion( _shadowOperation_t * pOperation );
+
+/**
  * @brief Get a Shadow subscription to use with a Shadow operation.
  *
  * This function may use an existing Shadow subscription, or it may allocate a
@@ -226,7 +237,7 @@ static bool _shadowOperation_match( const IotLink_t * pOperationLink,
         else
         {
             IotLogWarn( "Received a Shadow UPDATE response with no client token. "
-                        "This is possibly a response to a bad JSON document:\n%.*s",
+                        "This is possibly a response to a bad JSON document:\r\n%.*s",
                         pParam->documentLength,
                         pParam->pDocument );
         }
@@ -357,7 +368,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     flags = pOperation->flags;
 
     /* Notify of operation completion. */
-    _AwsIotShadow_Notify( pOperation );
+    _notifyCompletion( pOperation );
 
     /* For waitable operations, unlock the pending operation list mutex to allow
      * the Wait function to run. */
@@ -448,6 +459,70 @@ static void _updateCallback( void * pArgument,
     ( void ) pArgument;
 
     _commonOperationCallback( SHADOW_UPDATE, pMessage );
+}
+
+/*-----------------------------------------------------------*/
+
+static void _notifyCompletion( _shadowOperation_t * pOperation )
+{
+    AwsIotShadowCallbackParam_t callbackParam = { .callbackType = ( AwsIotShadowCallbackType_t ) 0 };
+    _shadowSubscription_t * pSubscription = pOperation->pSubscription,
+                          * pRemovedSubscription = NULL;
+
+    /* If the operation is waiting, post to its wait semaphore and return. */
+    if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
+    {
+        IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
+    }
+    else
+    {
+        /* Decrement the reference count. This also removes subscriptions if the
+         * count reaches 0. */
+        IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
+        _AwsIotShadow_DecrementReferences( pOperation,
+                                           pSubscription->pTopicBuffer,
+                                           &pRemovedSubscription );
+        IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
+
+        /* Set the subscription pointer used for the user callback based on whether
+         * a subscription was removed from the list. */
+        if( pRemovedSubscription != NULL )
+        {
+            pSubscription = pRemovedSubscription;
+        }
+
+        AwsIotShadow_Assert( pSubscription != NULL );
+
+        /* Invoke the user callback if provided. */
+        if( pOperation->notify.callback.function != NULL )
+        {
+            /* Set the common members of the callback parameter. */
+            callbackParam.callbackType = ( AwsIotShadowCallbackType_t ) pOperation->type;
+            callbackParam.mqttConnection = pOperation->mqttConnection;
+            callbackParam.u.operation.result = pOperation->status;
+            callbackParam.u.operation.reference = pOperation;
+            callbackParam.pThingName = pSubscription->pThingName;
+            callbackParam.thingNameLength = pSubscription->thingNameLength;
+
+            /* Set the members of the callback parameter for a received document. */
+            if( pOperation->type == SHADOW_GET )
+            {
+                callbackParam.u.operation.get.pDocument = pOperation->u.get.pDocument;
+                callbackParam.u.operation.get.documentLength = pOperation->u.get.documentLength;
+            }
+
+            pOperation->notify.callback.function( pOperation->notify.callback.pCallbackContext,
+                                                  &callbackParam );
+        }
+
+        /* Destroy a removed subscription. */
+        if( pRemovedSubscription != NULL )
+        {
+            _AwsIotShadow_DestroySubscription( pRemovedSubscription );
+        }
+
+        _AwsIotShadow_DestroyOperation( pOperation );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -850,70 +925,6 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
     }
 
     IOT_FUNCTION_CLEANUP_END();
-}
-
-/*-----------------------------------------------------------*/
-
-void _AwsIotShadow_Notify( _shadowOperation_t * pOperation )
-{
-    AwsIotShadowCallbackParam_t callbackParam = { .callbackType = ( AwsIotShadowCallbackType_t ) 0 };
-    _shadowSubscription_t * pSubscription = pOperation->pSubscription,
-                          * pRemovedSubscription = NULL;
-
-    /* If the operation is waiting, post to its wait semaphore and return. */
-    if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
-    {
-        IotSemaphore_Post( &( pOperation->notify.waitSemaphore ) );
-    }
-    else
-    {
-        /* Decrement the reference count. This also removes subscriptions if the
-         * count reaches 0. */
-        IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
-        _AwsIotShadow_DecrementReferences( pOperation,
-                                           pSubscription->pTopicBuffer,
-                                           &pRemovedSubscription );
-        IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
-
-        /* Set the subscription pointer used for the user callback based on whether
-         * a subscription was removed from the list. */
-        if( pRemovedSubscription != NULL )
-        {
-            pSubscription = pRemovedSubscription;
-        }
-
-        AwsIotShadow_Assert( pSubscription != NULL );
-
-        /* Invoke the user callback if provided. */
-        if( pOperation->notify.callback.function != NULL )
-        {
-            /* Set the common members of the callback parameter. */
-            callbackParam.callbackType = ( AwsIotShadowCallbackType_t ) pOperation->type;
-            callbackParam.mqttConnection = pOperation->mqttConnection;
-            callbackParam.u.operation.result = pOperation->status;
-            callbackParam.u.operation.reference = pOperation;
-            callbackParam.pThingName = pSubscription->pThingName;
-            callbackParam.thingNameLength = pSubscription->thingNameLength;
-
-            /* Set the members of the callback parameter for a received document. */
-            if( pOperation->type == SHADOW_GET )
-            {
-                callbackParam.u.operation.get.pDocument = pOperation->u.get.pDocument;
-                callbackParam.u.operation.get.documentLength = pOperation->u.get.documentLength;
-            }
-
-            pOperation->notify.callback.function( pOperation->notify.callback.pCallbackContext,
-                                                  &callbackParam );
-        }
-
-        /* Destroy a removed subscription. */
-        if( pRemovedSubscription != NULL )
-        {
-            _AwsIotShadow_DestroySubscription( pRemovedSubscription );
-        }
-
-        _AwsIotShadow_DestroyOperation( pOperation );
-    }
 }
 
 /*-----------------------------------------------------------*/

@@ -416,17 +416,6 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
                                                     _shadowOperation_t * pOperation,
                                                     const AwsIotShadowDocumentInfo_t * pDocumentInfo );
 
-/**
- * @brief Notify of a completed Shadow operation.
- *
- * @param[in] pOperation The operation which completed.
- *
- * Depending on the parameters passed to a user-facing Shadow function, the
- * notification will cause @ref shadow_function_wait to return or invoke a
- * user-provided callback.
- */
-void _AwsIotShadow_Notify( _shadowOperation_t * pOperation );
-
 /*---------------------- Shadow subscription functions ----------------------*/
 
 /**

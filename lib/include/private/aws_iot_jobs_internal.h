@@ -567,4 +567,18 @@ AwsIotJobsError_t _AwsIotJobs_GenerateJsonRequest( _jobsOperationType_t type,
                                                    const _jsonRequestContents_t * pRequestContents,
                                                    _jobsOperation_t * pOperation );
 
+/**
+ * @brief Parse a response received from the Jobs service.
+ *
+ * @param[in] status Either ACCEPTED or REJECTED.
+ * @param[in] pResponse The response received from the Jobs service.
+ * @param[in] responseLength Length of `pResponse`.
+ * @param[out] pOperation Associated Jobs operation, where parse results are
+ * written.
+ */
+void _AwsIotJobs_ParseResponse( AwsIotStatus_t status,
+                                const char * pResponse,
+                                size_t responseLength,
+                                _jobsOperation_t * pOperation );
+
 #endif /* ifndef AWS_IOT_JOBS_INTERNAL_H_ */

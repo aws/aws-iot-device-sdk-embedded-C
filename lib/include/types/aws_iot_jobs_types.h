@@ -393,12 +393,12 @@ typedef enum AwsIotJobsState
  */
 typedef enum AwsIotJobsCallbackType
 {
-    AWS_IOT_JOBS_GET_PENDING_COMPLETE,    /**< Callback invoked because a [Jobs get pending](@ref jobs_function_getpending) completed. */
-    AWS_IOT_JOBS_START_NEXT_COMPLETE,     /**< Callback invoked because a [Jobs start next](@ref jobs_function_startnext) completed. */
-    AWS_IOT_JOBS_DESCRIBE_COMPLETE,       /**< Callback invoked because a [Jobs describe](@ref jobs_function_describe) completed. */
-    AWS_IOT_JOBS_UPDATE_COMPLETE,         /**< Callback invoked because a [Jobs update](@ref jobs_function_update) completed. */
-    AWS_IOT_JOBS_NOTIFY_PENDING_CALLBACK, /**< Callback invoked for an incoming message on a [Jobs notify-pending](@ref jobs_function_setnotifypendingcallback) topic. */
-    AWS_IOT_JOBS_NOTIFY_NEXT_CALLBACK     /**< Callback invoked for an incoming message on a [Jobs notify-next](@ref jobs_function_setnotifynextcallback) topic. */
+    AWS_IOT_JOBS_GET_PENDING_COMPLETE = 0,    /**< Callback invoked because a [Jobs get pending](@ref jobs_function_getpending) completed. */
+    AWS_IOT_JOBS_START_NEXT_COMPLETE = 1,     /**< Callback invoked because a [Jobs start next](@ref jobs_function_startnext) completed. */
+    AWS_IOT_JOBS_DESCRIBE_COMPLETE = 2,       /**< Callback invoked because a [Jobs describe](@ref jobs_function_describe) completed. */
+    AWS_IOT_JOBS_UPDATE_COMPLETE = 3,         /**< Callback invoked because a [Jobs update](@ref jobs_function_update) completed. */
+    AWS_IOT_JOBS_NOTIFY_PENDING_CALLBACK = 4, /**< Callback invoked for an incoming message on a [Jobs notify-pending](@ref jobs_function_setnotifypendingcallback) topic. */
+    AWS_IOT_JOBS_NOTIFY_NEXT_CALLBACK = 5     /**< Callback invoked for an incoming message on a [Jobs notify-next](@ref jobs_function_setnotifynextcallback) topic. */
 } AwsIotJobsCallbackType_t;
 
 /*-------------------------- Jobs parameter structs -------------------------*/
