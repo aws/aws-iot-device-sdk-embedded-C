@@ -37,6 +37,9 @@
 /* Error handling include. */
 #include "private/iot_error.h"
 
+/* JSON utilities include. */
+#include "iot_json_utils.h"
+
 /**
  * @brief Minimum length of a Jobs request.
  *
@@ -142,6 +145,16 @@
  * plus 1 for a possible negative sign, plus a NULL-terminator.
  */
 #define EXECUTION_NUMBER_STRING_LENGTH            ( 12 )
+
+/**
+ * @brief JSON key representing Jobs error code in error responses.
+ */
+#define CODE_KEY                                  "code"
+
+/**
+ * @brief Length of #CODE_KEY.
+ */
+#define CODE_KEY_LENGTH                           ( sizeof( CODE_KEY ) - 1 )
 
 /**
  * @brief Append a string to a buffer.
@@ -968,6 +981,116 @@ static AwsIotJobsError_t _generateUpdateRequest( const AwsIotJobsRequestInfo_t *
 static AwsIotJobsError_t _parseErrorDocument( const char * pErrorDocument,
                                               size_t errorDocumentLength )
 {
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
+    const char * pCode = NULL;
+    size_t codeLength = 0;
+
+    /* Find the error code. */
+    if( IotJsonUtils_FindJsonValue( pErrorDocument,
+                                    errorDocumentLength,
+                                    CODE_KEY,
+                                    CODE_KEY_LENGTH,
+                                    &pCode,
+                                    &codeLength ) == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_RESPONSE );
+    }
+
+    /* Match the JSON error code to a Jobs return value. Assume invalid status
+     * unless matched.*/
+    status = AWS_IOT_JOBS_BAD_RESPONSE;
+
+    switch( codeLength )
+    {
+        /* InvalidJson */
+        case 13:
+
+            if( strncmp( "\"InvalidJson\"", pCode, codeLength ) == 0 )
+            {
+                status = AWS_IOT_JOBS_INVALID_JSON;
+            }
+
+            break;
+
+        /* InvalidTopic */
+        case 14:
+
+            if( strncmp( "\"InvalidTopic\"", pCode, codeLength ) == 0 )
+            {
+                status = AWS_IOT_JOBS_INVALID_TOPIC;
+            }
+
+            break;
+
+        /* InternalError */
+        case 15:
+
+            if( strncmp( "\"InternalError\"", pCode, codeLength ) == 0 )
+            {
+                status = AWS_IOT_JOBS_INTERNAL_ERROR;
+            }
+
+            break;
+
+        /* InvalidRequest */
+        case 16:
+
+            if( strncmp( "\"InvalidRequest\"", pCode, codeLength ) == 0 )
+            {
+                status = AWS_IOT_JOBS_INVALID_REQUEST;
+            }
+
+            break;
+
+        /* VersionMismatch */
+        case 17:
+
+            if( strncmp( "\"VersionMismatch\"", pCode, codeLength ) == 0 )
+            {
+                status = AWS_IOT_JOBS_VERSION_MISMATCH;
+            }
+
+            break;
+
+        /* ResourceNotFound, RequestThrottled */
+        case 18:
+
+            if( strncmp( "\"ResourceNotFound\"", pCode, codeLength ) == 0 )
+            {
+                status = AWS_IOT_JOBS_NOT_FOUND;
+            }
+            else if( strncmp( "\"RequestThrottled\"", pCode, codeLength ) == 0 )
+            {
+                status = AWS_IOT_JOBS_THROTTLED;
+            }
+
+            break;
+
+        /* TerminalStateReached */
+        case 22:
+
+            if( strncmp( "\"TerminalStateReached\"", pCode, codeLength ) == 0 )
+            {
+                status = AWS_IOT_JOBS_TERMINAL_STATE;
+            }
+
+            break;
+
+        /* InvalidStateTransition */
+        case 24:
+
+            if( strncmp( "\"InvalidStateTransition\"", pCode, codeLength ) == 0 )
+            {
+                status = AWS_IOT_JOBS_INVALID_STATE;
+            }
+
+            break;
+
+        default:
+            break;
+    }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
