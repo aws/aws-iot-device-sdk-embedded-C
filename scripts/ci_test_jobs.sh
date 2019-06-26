@@ -20,6 +20,8 @@ run_tests() {
 # CMake compiler flags for building Jobs.
 CMAKE_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_JOBS_THING_NAME=\"\\\"$IOT_IDENTIFIER\\\"\" $COMPILER_OPTIONS"
 
+echo $CMAKE_FLAGS
+
 # Build executables.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FLAGS"
 make -j2 aws_iot_tests_jobs
