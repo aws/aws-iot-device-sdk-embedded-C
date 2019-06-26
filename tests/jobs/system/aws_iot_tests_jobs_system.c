@@ -215,6 +215,38 @@ TEST_TEAR_DOWN( Jobs_System )
  */
 TEST_GROUP_RUNNER( Jobs_System )
 {
+    RUN_TEST_CASE( Jobs_System, GetPendingBlocking );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Retrieves a list of Jobs using @ref jobs_function_timedgetpending.
+ */
+TEST( Jobs_System, GetPendingBlocking )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    AwsIotJobsResponse_t jobsResponse = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
+
+    requestInfo.mqttConnection = _mqttConnection;
+    requestInfo.pThingName = AWS_IOT_TEST_JOBS_THING_NAME;
+    requestInfo.thingNameLength = ( sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1 );
+    requestInfo.mallocResponse = IotTest_Malloc;
+
+    /* Get pending Jobs. */
+    status = AwsIotJobs_TimedGetPending( &requestInfo,
+                                         0,
+                                         AWS_IOT_TEST_JOBS_TIMEOUT,
+                                         &jobsResponse );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    /* Check the Jobs response. */
+    TEST_ASSERT_NOT_NULL( jobsResponse.pJobsResponse );
+    TEST_ASSERT_GREATER_THAN( 0, jobsResponse.jobsResponseLength );
+
+    /* Free the allocated Jobs response. */
+    IotTest_Free( ( void * ) jobsResponse.pJobsResponse );
 }
 
 /*-----------------------------------------------------------*/

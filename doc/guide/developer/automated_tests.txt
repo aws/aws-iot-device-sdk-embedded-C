@@ -132,7 +132,8 @@ AWS recommends using the most restrictive policy possible. The following policy 
       "Resource": [
         "arn:aws:iot:<region>:<account>:topic/${iot:ClientId}/*",
         "arn:aws:iot:<region>:<account>:topic/*/LastWillAndTestament",
-        "arn:aws:iot:<region>:<account>:topic/$aws/things/${iot:ClientId}/shadow/*"
+        "arn:aws:iot:<region>:<account>:topic/$aws/things/${iot:ClientId}/shadow/*",
+        "arn:aws:iot:<region>:<account>:topicfilter/$aws/things/${iot:ClientId}/jobs/*"
       ]
     },
     {
@@ -141,7 +142,8 @@ AWS recommends using the most restrictive policy possible. The following policy 
       "Resource": [
         "arn:aws:iot:<region>:<account>:topicfilter/${iot:ClientId}/*",
         "arn:aws:iot:<region>:<account>:topicfilter/*/LastWillAndTestament",
-        "arn:aws:iot:<region>:<account>:topicfilter/$aws/things/${iot:ClientId}/shadow/*"
+        "arn:aws:iot:<region>:<account>:topicfilter/$aws/things/${iot:ClientId}/shadow/*",
+        "arn:aws:iot:<region>:<account>:topicfilter/$aws/things/${iot:ClientId}/jobs/*"
       ]
     }
   ]

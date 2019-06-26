@@ -303,6 +303,18 @@ static AwsIotJobsError_t _generateUpdateRequest( const AwsIotJobsRequestInfo_t *
                                                  const AwsIotJobsUpdateInfo_t * pUpdateInfo,
                                                  _jobsOperation_t * pOperation );
 
+/**
+ * @brief Parse an error from a Jobs error document.
+ *
+ * @param[in] pErrorDocument Jobs error document.
+ * @param[in] errorDocumentLength Length of `pErrorDocument`.
+ *
+ * @return A Jobs error code between #AWS_IOT_JOBS_INVALID_TOPIC and
+ * #AWS_IOT_JOBS_TERMINAL_STATE.
+ */
+static AwsIotJobsError_t _parseErrorDocument( const char * pErrorDocument,
+                                              size_t errorDocumentLength );
+
 /*-----------------------------------------------------------*/
 
 static size_t _appendFlag( char * pBuffer,
@@ -953,6 +965,13 @@ static AwsIotJobsError_t _generateUpdateRequest( const AwsIotJobsRequestInfo_t *
 
 /*-----------------------------------------------------------*/
 
+static AwsIotJobsError_t _parseErrorDocument( const char * pErrorDocument,
+                                              size_t errorDocumentLength )
+{
+}
+
+/*-----------------------------------------------------------*/
+
 AwsIotJobsError_t _AwsIotJobs_GenerateJsonRequest( _jobsOperationType_t type,
                                                    const AwsIotJobsRequestInfo_t * pRequestInfo,
                                                    const _jsonRequestContents_t * pRequestContents,
@@ -991,6 +1010,65 @@ AwsIotJobsError_t _AwsIotJobs_GenerateJsonRequest( _jobsOperationType_t type,
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+void _AwsIotJobs_ParseResponse( AwsIotStatus_t status,
+                                const char * pResponse,
+                                size_t responseLength,
+                                _jobsOperation_t * pOperation )
+{
+    AwsIotJobs_Assert( pOperation->status == AWS_IOT_JOBS_STATUS_PENDING );
+
+    /* A non-waitable operation can re-use the pointers from the publish info,
+     * since those are guaranteed to be in-scope throughout the user callback.
+     * But a waitable operation must copy the data from the publish info because
+     * AwsIotJobs_Wait may be called after the MQTT library frees the publish
+     * info. */
+    if( ( pOperation->flags & AWS_IOT_JOBS_FLAG_WAITABLE ) == 0 )
+    {
+        pOperation->pJobsResponse = pResponse;
+        pOperation->jobsResponseLength = responseLength;
+    }
+    else
+    {
+        IotLogDebug( "Allocating new buffer for waitable Jobs %s.",
+                     _pAwsIotJobsOperationNames[ pOperation->type ] );
+
+        /* Parameter validation should not have allowed a NULL malloc function. */
+        AwsIotJobs_Assert( pOperation->mallocResponse != NULL );
+
+        /* Allocate a buffer for the retrieved document. */
+        pOperation->pJobsResponse = pOperation->mallocResponse( responseLength );
+
+        if( pOperation->pJobsResponse == NULL )
+        {
+            IotLogError( "Failed to allocate buffer for retrieved Jobs %s response.",
+                         _pAwsIotJobsOperationNames[ pOperation->type ] );
+
+            pOperation->status = AWS_IOT_JOBS_NO_MEMORY;
+        }
+        else
+        {
+            /* Copy the response. */
+            ( void ) memcpy( ( void * ) pOperation->pJobsResponse, pResponse, responseLength );
+            pOperation->jobsResponseLength = responseLength;
+        }
+    }
+
+    /* Set the status of the Jobs operation. */
+    if( pOperation->status == AWS_IOT_JOBS_STATUS_PENDING )
+    {
+        if( status == AWS_IOT_ACCEPTED )
+        {
+            pOperation->status = AWS_IOT_JOBS_SUCCESS;
+        }
+        else
+        {
+            pOperation->status = _parseErrorDocument( pResponse, responseLength );
+        }
+    }
 }
 
 /*-----------------------------------------------------------*/
