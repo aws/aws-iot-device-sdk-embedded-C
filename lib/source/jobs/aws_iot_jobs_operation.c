@@ -224,9 +224,9 @@ static bool _jobsOperation_match( const IotLink_t * pOperationLink,
         {
             IotLogWarn( "Received a Jobs %s response with no client token. "
                         "This is possibly a response to a bad JSON document:\r\n%.*s",
-                        _pAwsIotJobsOperationNames[ pParam->type ]
-                        pParam->documentLength,
-                        pParam->pDocument );
+                        _pAwsIotJobsOperationNames[ pParam->type ],
+                        pParam->responseLength,
+                        pParam->pResponse );
         }
     }
 
