@@ -38,12 +38,13 @@
 
 /* Platform layer includes. */
 #include "platform/iot_clock.h"
+#include "platform/iot_threads.h"
 
 /* MQTT include. */
 #include "iot_mqtt.h"
 
 /* Jobs include. */
-#include "aws_iot_jobs.h"
+#include "private/aws_iot_jobs_internal.h"
 
 /* Test network header include. */
 #include IOT_TEST_NETWORK_HEADER
@@ -72,6 +73,26 @@
     #error "Please define AWS_IOT_TEST_JOBS_THING_NAME."
 #endif
 
+/* Require Jobs library asserts to be enabled for these tests. The Jobs
+ * assert function is used to abort the tests on failure from the Jobs operation
+ * complete callback. */
+#if AWS_IOT_JOBS_ENABLE_ASSERTS == 0
+    #error "Jobs system tests require AWS_IOT_JOBS_ENABLE_ASSERTS to be 1."
+#endif
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Parameter 1 of #_operationComplete.
+ */
+typedef struct _operationCompleteParams
+{
+    AwsIotJobsCallbackType_t expectedType; /**< @brief Expected callback type. */
+    AwsIotJobsError_t expectedResult;      /**< @brief Expected operation result. */
+    IotSemaphore_t waitSem;                /**< @brief Used to unblock waiting test thread. */
+    AwsIotJobsOperation_t operation;       /**< @brief Reference to expected completed operation. */
+} _operationCompleteParams_t;
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -95,6 +116,35 @@ static IotMqttNetworkInfo_t _networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
  * @brief An MQTT connection to share among the tests.
  */
 static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Jobs operation completion callback function. Checks parameters
+ * and unblocks the main test thread.
+ */
+static void _operationComplete( void * pArgument,
+                                AwsIotJobsCallbackParam_t * pOperation )
+{
+    _operationCompleteParams_t * pParams = ( _operationCompleteParams_t * ) pArgument;
+
+    /* Check parameters against expected values. */
+    AwsIotJobs_Assert( pParams->expectedType == pOperation->callbackType );
+    AwsIotJobs_Assert( pParams->operation == pOperation->u.operation.reference );
+    AwsIotJobs_Assert( pParams->expectedResult == pOperation->u.operation.result );
+
+    AwsIotJobs_Assert( pOperation->mqttConnection == _mqttConnection );
+    AwsIotJobs_Assert( pOperation->thingNameLength == sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1 );
+    AwsIotJobs_Assert( strncmp( pOperation->pThingName,
+                                AWS_IOT_TEST_JOBS_THING_NAME,
+                                pOperation->thingNameLength ) == 0 );
+
+    AwsIotJobs_Assert( pOperation->u.operation.pResponse != NULL );
+    AwsIotJobs_Assert( pOperation->u.operation.responseLength > 0 );
+
+    /* Unblock the main test thead. */
+    IotSemaphore_Post( &( pParams->waitSem ) );
+}
 
 /*-----------------------------------------------------------*/
 
@@ -215,7 +265,53 @@ TEST_TEAR_DOWN( Jobs_System )
  */
 TEST_GROUP_RUNNER( Jobs_System )
 {
+    RUN_TEST_CASE( Jobs_System, GetPendingAsync );
     RUN_TEST_CASE( Jobs_System, GetPendingBlocking );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Retrieves a list of Jobs using @ref jobs_function_timedgetpending.
+ */
+TEST( Jobs_System, GetPendingAsync )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+    _operationCompleteParams_t callbackParam = { .expectedType = ( AwsIotJobsCallbackType_t ) 0 };
+
+    /* Initialize the wait semaphore. */
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( callbackParam.waitSem ), 0, 1 ) );
+
+    if( TEST_PROTECT() )
+    {
+        /* Set the callback information. */
+        callbackParam.expectedType = AWS_IOT_JOBS_GET_PENDING_COMPLETE;
+        callbackParam.expectedResult = AWS_IOT_JOBS_SUCCESS;
+        callbackInfo.function = _operationComplete;
+        callbackInfo.pCallbackContext = &callbackParam;
+
+        /* Set the Jobs request parameters. */
+        requestInfo.mqttConnection = _mqttConnection;
+        requestInfo.pThingName = AWS_IOT_TEST_JOBS_THING_NAME;
+        requestInfo.thingNameLength = ( sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1 );
+
+        /* Get pending Jobs. */
+        status = AwsIotJobs_GetPending( &requestInfo,
+                                        0,
+                                        &callbackInfo,
+                                        &( callbackParam.operation ) );
+        TEST_ASSERT_EQUAL( AWS_IOT_JOBS_STATUS_PENDING, status );
+
+        if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
+                                    AWS_IOT_TEST_JOBS_TIMEOUT ) == false )
+        {
+            TEST_FAIL_MESSAGE( "Timed out waiting for pending Jobs." );
+        }
+    }
+
+    IotSemaphore_Destroy( &( callbackParam.waitSem ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -229,6 +325,7 @@ TEST( Jobs_System, GetPendingBlocking )
     AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
     AwsIotJobsResponse_t jobsResponse = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
 
+    /* Set the Jobs request parameters. */
     requestInfo.mqttConnection = _mqttConnection;
     requestInfo.pThingName = AWS_IOT_TEST_JOBS_THING_NAME;
     requestInfo.thingNameLength = ( sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1 );
