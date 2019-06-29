@@ -591,6 +591,40 @@ AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestI
 
 /*-----------------------------------------------------------*/
 
+AwsIotJobsError_t AwsIotJobs_TimedDescribe( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                            int32_t executionNumber,
+                                            bool includeJobDocument,
+                                            uint32_t flags,
+                                            uint32_t timeoutMs,
+                                            AwsIotJobsResponse_t * const pJobsResponse )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsOperation_t describeOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+
+    /* Set the waitable flag. */
+    flags |= AWS_IOT_JOBS_FLAG_WAITABLE;
+
+    /* Call the asynchronous Jobs Describe function. */
+    status = AwsIotJobs_Describe( pRequestInfo,
+                                  executionNumber,
+                                  includeJobDocument,
+                                  flags,
+                                  NULL,
+                                  &describeOperation );
+
+    /* Wait for the Jobs Describe operation to complete. */
+    if( status == AWS_IOT_JOBS_STATUS_PENDING )
+    {
+        status = AwsIotJobs_Wait( describeOperation,
+                                  timeoutMs,
+                                  pJobsResponse );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 AwsIotJobsError_t AwsIotJobs_Update( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                      const AwsIotJobsUpdateInfo_t * pUpdateInfo,
                                      uint32_t flags,
