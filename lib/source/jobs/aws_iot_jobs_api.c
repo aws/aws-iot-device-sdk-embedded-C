@@ -27,6 +27,9 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* Standard includes. */
+#include <string.h>
+
 /* Platform threads include. */
 #include "platform/iot_threads.h"
 
@@ -199,6 +202,20 @@ static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
             IotLogError( "Job ID for Jobs %s cannot be longer than %d.",
                          _pAwsIotJobsOperationNames[ type ],
                          JOBS_MAX_ID_LENGTH );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+    }
+
+    /* A Job ID (not $next job) must be specified for UPDATE. */
+    if( type == JOBS_UPDATE )
+    {
+        if( ( pRequestInfo->jobIdLength == AWS_IOT_JOBS_NEXT_JOB_LENGTH ) &&
+            ( strncmp( AWS_IOT_JOBS_NEXT_JOB,
+                       pRequestInfo->pJobId,
+                       AWS_IOT_JOBS_NEXT_JOB_LENGTH ) == 0 ) )
+        {
+            IotLogError( "Job ID $next is not valid for Jobs UPDATE." );
 
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
         }
