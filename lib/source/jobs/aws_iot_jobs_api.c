@@ -237,7 +237,8 @@ static AwsIotJobsError_t _validateUpdateInfo( _jobsOperationType_t type,
     }
 
     /* Check that step timeout is valid. */
-    if( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_NO_TIMEOUT )
+    if( ( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_NO_TIMEOUT ) &&
+        ( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_CANCEL_TIMEOUT ) )
     {
         if( pUpdateInfo->stepTimeoutInMinutes < 1 )
         {
