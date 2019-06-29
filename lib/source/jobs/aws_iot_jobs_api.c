@@ -27,6 +27,9 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* Standard includes. */
+#include <string.h>
+
 /* Platform threads include. */
 #include "platform/iot_threads.h"
 
@@ -199,6 +202,20 @@ static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
             IotLogError( "Job ID for Jobs %s cannot be longer than %d.",
                          _pAwsIotJobsOperationNames[ type ],
                          JOBS_MAX_ID_LENGTH );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+    }
+
+    /* A Job ID (not $next job) must be specified for UPDATE. */
+    if( type == JOBS_UPDATE )
+    {
+        if( ( pRequestInfo->jobIdLength == AWS_IOT_JOBS_NEXT_JOB_LENGTH ) &&
+            ( strncmp( AWS_IOT_JOBS_NEXT_JOB,
+                       pRequestInfo->pJobId,
+                       AWS_IOT_JOBS_NEXT_JOB_LENGTH ) == 0 ) )
+        {
+            IotLogError( "Job ID $next is not valid for Jobs UPDATE." );
 
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
         }
@@ -690,6 +707,38 @@ AwsIotJobsError_t AwsIotJobs_Update( const AwsIotJobsRequestInfo_t * pRequestInf
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
+AwsIotJobsError_t AwsIotJobs_TimedUpdate( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                          const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                          uint32_t flags,
+                                          uint32_t timeoutMs,
+                                          AwsIotJobsResponse_t * const pJobsResponse )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsOperation_t updateOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+
+    /* Set the waitable flag. */
+    flags |= AWS_IOT_JOBS_FLAG_WAITABLE;
+
+    /* Call the asynchronous Jobs Update function. */
+    status = AwsIotJobs_Update( pRequestInfo,
+                                pUpdateInfo,
+                                flags,
+                                NULL,
+                                &updateOperation );
+
+    /* Wait for the Jobs Update operation to complete. */
+    if( status == AWS_IOT_JOBS_STATUS_PENDING )
+    {
+        status = AwsIotJobs_Wait( updateOperation,
+                                  timeoutMs,
+                                  pJobsResponse );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/

@@ -103,8 +103,8 @@ static void _jobsMallocFail( _jobsOperationType_t type )
     requestInfo.pThingName = TEST_THING_NAME;
     requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
     requestInfo.mallocResponse = IotTest_Malloc;
-    requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
-    requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
+    requestInfo.pJobId = "jobid";
+    requestInfo.jobIdLength = 5;
 
     for( i = 0; ; i++ )
     {
@@ -414,8 +414,19 @@ TEST( Jobs_Unit_API, OperationInvalidRequestInfo )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Job ID too long. */
-    requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
+    requestInfo.pJobId = "jobid";
     requestInfo.jobIdLength = JOBS_MAX_ID_LENGTH + 1;
+
+    status = AwsIotJobs_Update( &requestInfo,
+                                &updateInfo,
+                                0,
+                                NULL,
+                                NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
+    /* Using $next with UPDATE is invalid. */
+    requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
+    requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
 
     status = AwsIotJobs_Update( &requestInfo,
                                 &updateInfo,

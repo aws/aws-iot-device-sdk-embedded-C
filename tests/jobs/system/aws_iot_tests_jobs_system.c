@@ -208,6 +208,16 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
             default:
                 /* The only remaining valid type is UPDATE. */
                 TEST_ASSERT_EQUAL( JOBS_UPDATE, type );
+
+                /* Set a Job ID that doesn't exist. */
+                requestInfo.pJobId = "NOTAJOBID";
+                requestInfo.jobIdLength = 9;
+
+                status = AwsIotJobs_Update( &requestInfo,
+                                            &updateInfo,
+                                            0,
+                                            &callbackInfo,
+                                            &( callbackParam.operation ) );
                 break;
         }
 
@@ -271,6 +281,16 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
         default:
             /* The only remaining valid type is UPDATE. */
             TEST_ASSERT_EQUAL( JOBS_UPDATE, type );
+
+            /* Set a Job ID that doesn't exist. */
+            requestInfo.pJobId = "NOTAJOBID";
+            requestInfo.jobIdLength = 9;
+
+            status = AwsIotJobs_TimedUpdate( &requestInfo,
+                                             &updateInfo,
+                                             0,
+                                             AWS_IOT_TEST_JOBS_TIMEOUT,
+                                             &jobsResponse );
             break;
     }
 
@@ -409,6 +429,8 @@ TEST_GROUP_RUNNER( Jobs_System )
     RUN_TEST_CASE( Jobs_System, StartNextBlocking );
     RUN_TEST_CASE( Jobs_System, DescribeAsync );
     RUN_TEST_CASE( Jobs_System, DescribeBlocking );
+    RUN_TEST_CASE( Jobs_System, UpdateAsync );
+    RUN_TEST_CASE( Jobs_System, UpdateBlocking );
 }
 
 /*-----------------------------------------------------------*/
@@ -454,7 +476,7 @@ TEST( Jobs_System, StartNextBlocking )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Describe a Job @ref jobs_function_describe.
+ * @brief Describe a Job using @ref jobs_function_describe.
  */
 TEST( Jobs_System, DescribeAsync )
 {
@@ -464,11 +486,33 @@ TEST( Jobs_System, DescribeAsync )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Describe a Job @ref jobs_function_timeddescribe.
+ * @brief Describe a Job using @ref jobs_function_timeddescribe.
  */
 TEST( Jobs_System, DescribeBlocking )
 {
     _jobsBlockingTest( JOBS_DESCRIBE, AWS_IOT_JOBS_SUCCESS );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Update a Job status using @ref jobs_function_update.
+ */
+TEST( Jobs_System, UpdateAsync )
+{
+    /* The Job ID used in this test does not exist, expect NOT_FOUND. */
+    _jobsAsyncTest( JOBS_UPDATE, AWS_IOT_JOBS_NOT_FOUND );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Update a Job status using @ref jobs_function_timedupdate.
+ */
+TEST( Jobs_System, UpdateBlocking )
+{
+    /* The Job ID used in this test does not exist, expect NOT_FOUND. */
+    _jobsBlockingTest( JOBS_UPDATE, AWS_IOT_JOBS_NOT_FOUND );
 }
 
 /*-----------------------------------------------------------*/
