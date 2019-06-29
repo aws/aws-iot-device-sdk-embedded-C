@@ -400,7 +400,7 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
 
 AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                               uint32_t flags,
-                                              uint32_t timeout,
+                                              uint32_t timeoutMs,
                                               AwsIotJobsResponse_t * const pJobsResponse )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
@@ -419,7 +419,7 @@ AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pR
     if( status == AWS_IOT_JOBS_STATUS_PENDING )
     {
         status = AwsIotJobs_Wait( getPendingOperation,
-                                  timeout,
+                                  timeoutMs,
                                   pJobsResponse );
     }
 
@@ -497,6 +497,38 @@ AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequest
 
 /*-----------------------------------------------------------*/
 
+AwsIotJobsError_t AwsIotJobs_TimedStartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                             const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                             uint32_t flags,
+                                             uint32_t timeoutMs,
+                                             AwsIotJobsResponse_t * const pJobsResponse )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsOperation_t startNextOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+
+    /* Set the waitable flag. */
+    flags |= AWS_IOT_JOBS_FLAG_WAITABLE;
+
+    /* Call the asynchronous Jobs Start Next function. */
+    status = AwsIotJobs_StartNext( pRequestInfo,
+                                   pUpdateInfo,
+                                   flags,
+                                   NULL,
+                                   &startNextOperation );
+
+    /* Wait for the Jobs Start Next operation to complete. */
+    if( status == AWS_IOT_JOBS_STATUS_PENDING )
+    {
+        status = AwsIotJobs_Wait( startNextOperation,
+                                  timeoutMs,
+                                  pJobsResponse );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                        int32_t executionNumber,
                                        bool includeJobDocument,
@@ -555,6 +587,40 @@ AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestI
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
+AwsIotJobsError_t AwsIotJobs_TimedDescribe( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                            int32_t executionNumber,
+                                            bool includeJobDocument,
+                                            uint32_t flags,
+                                            uint32_t timeoutMs,
+                                            AwsIotJobsResponse_t * const pJobsResponse )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsOperation_t describeOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+
+    /* Set the waitable flag. */
+    flags |= AWS_IOT_JOBS_FLAG_WAITABLE;
+
+    /* Call the asynchronous Jobs Describe function. */
+    status = AwsIotJobs_Describe( pRequestInfo,
+                                  executionNumber,
+                                  includeJobDocument,
+                                  flags,
+                                  NULL,
+                                  &describeOperation );
+
+    /* Wait for the Jobs Describe operation to complete. */
+    if( status == AWS_IOT_JOBS_STATUS_PENDING )
+    {
+        status = AwsIotJobs_Wait( describeOperation,
+                                  timeoutMs,
+                                  pJobsResponse );
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/

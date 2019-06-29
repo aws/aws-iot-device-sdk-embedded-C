@@ -709,7 +709,7 @@ AwsIotJobsError_t _AwsIotJobs_GenerateJobsTopic( _jobsOperationType_t type,
 
         /* Construct the Jobs operation name with the Job ID. */
         ( void ) memcpy( pJobOperationName, "/jobs/", 6 );
-        operationNameLength = 5;
+        operationNameLength = 6;
 
         ( void ) memcpy( pJobOperationName + operationNameLength,
                          pRequestInfo->pJobId,
