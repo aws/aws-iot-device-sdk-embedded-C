@@ -149,6 +149,77 @@ static void _operationComplete( void * pArgument,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Common code of the Jobs Async tests.
+ */
+static void _jobsAsyncTest( _jobsOperationType_t type,
+                            AwsIotJobsError_t expectedResult )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
+    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+    _operationCompleteParams_t callbackParam = { .expectedType = ( AwsIotJobsCallbackType_t ) 0 };
+
+    /* Initialize the wait semaphore. */
+    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( callbackParam.waitSem ), 0, 1 ) );
+
+    if( TEST_PROTECT() )
+    {
+        /* Set the callback information. */
+        callbackParam.expectedType = ( AwsIotJobsCallbackType_t ) type;
+        callbackParam.expectedResult = expectedResult;
+        callbackInfo.function = _operationComplete;
+        callbackInfo.pCallbackContext = &callbackParam;
+
+        /* Set the Jobs request parameters. */
+        requestInfo.mqttConnection = _mqttConnection;
+        requestInfo.pThingName = AWS_IOT_TEST_JOBS_THING_NAME;
+        requestInfo.thingNameLength = ( sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1 );
+        requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
+        requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
+
+        /* Call Jobs function. */
+        switch( type )
+        {
+            case JOBS_GET_PENDING:
+                status = AwsIotJobs_GetPending( &requestInfo,
+                                                0,
+                                                &callbackInfo,
+                                                &( callbackParam.operation ) );
+                break;
+
+            case JOBS_START_NEXT:
+                status = AwsIotJobs_StartNext( &requestInfo,
+                                               &updateInfo,
+                                               0,
+                                               &callbackInfo,
+                                               &( callbackParam.operation ) );
+                break;
+
+            case JOBS_DESCRIBE:
+                break;
+
+            default:
+                /* The only remaining valid type is UPDATE. */
+                TEST_ASSERT_EQUAL( JOBS_UPDATE, type );
+                break;
+        }
+
+        TEST_ASSERT_EQUAL( AWS_IOT_JOBS_STATUS_PENDING, status );
+
+        if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
+                                    AWS_IOT_TEST_JOBS_TIMEOUT ) == false )
+        {
+            TEST_FAIL_MESSAGE( "Timed out waiting for pending Jobs." );
+        }
+    }
+
+    IotSemaphore_Destroy( &( callbackParam.waitSem ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group for Jobs system tests.
  */
 TEST_GROUP( Jobs_System );
@@ -267,6 +338,8 @@ TEST_GROUP_RUNNER( Jobs_System )
 {
     RUN_TEST_CASE( Jobs_System, GetPendingAsync );
     RUN_TEST_CASE( Jobs_System, GetPendingBlocking );
+
+    RUN_TEST_CASE( Jobs_System, StartNextAsync );
 }
 
 /*-----------------------------------------------------------*/
@@ -276,42 +349,7 @@ TEST_GROUP_RUNNER( Jobs_System )
  */
 TEST( Jobs_System, GetPendingAsync )
 {
-    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
-    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
-    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
-    _operationCompleteParams_t callbackParam = { .expectedType = ( AwsIotJobsCallbackType_t ) 0 };
-
-    /* Initialize the wait semaphore. */
-    TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( callbackParam.waitSem ), 0, 1 ) );
-
-    if( TEST_PROTECT() )
-    {
-        /* Set the callback information. */
-        callbackParam.expectedType = AWS_IOT_JOBS_GET_PENDING_COMPLETE;
-        callbackParam.expectedResult = AWS_IOT_JOBS_SUCCESS;
-        callbackInfo.function = _operationComplete;
-        callbackInfo.pCallbackContext = &callbackParam;
-
-        /* Set the Jobs request parameters. */
-        requestInfo.mqttConnection = _mqttConnection;
-        requestInfo.pThingName = AWS_IOT_TEST_JOBS_THING_NAME;
-        requestInfo.thingNameLength = ( sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1 );
-
-        /* Get pending Jobs. */
-        status = AwsIotJobs_GetPending( &requestInfo,
-                                        0,
-                                        &callbackInfo,
-                                        &( callbackParam.operation ) );
-        TEST_ASSERT_EQUAL( AWS_IOT_JOBS_STATUS_PENDING, status );
-
-        if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
-                                    AWS_IOT_TEST_JOBS_TIMEOUT ) == false )
-        {
-            TEST_FAIL_MESSAGE( "Timed out waiting for pending Jobs." );
-        }
-    }
-
-    IotSemaphore_Destroy( &( callbackParam.waitSem ) );
+    _jobsAsyncTest( JOBS_GET_PENDING, AWS_IOT_JOBS_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
@@ -344,6 +382,13 @@ TEST( Jobs_System, GetPendingBlocking )
 
     /* Free the allocated Jobs response. */
     IotTest_Free( ( void * ) jobsResponse.pJobsResponse );
+}
+
+/*-----------------------------------------------------------*/
+
+TEST( Jobs_System, StartNextAsync )
+{
+    _jobsAsyncTest( JOBS_START_NEXT, AWS_IOT_JOBS_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/

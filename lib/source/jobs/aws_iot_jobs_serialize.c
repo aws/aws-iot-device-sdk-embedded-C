@@ -541,28 +541,31 @@ static AwsIotJobsError_t _generateStartNextRequest( const AwsIotJobsRequestInfo_
         requestLength += pUpdateInfo->statusDetailsLength;
     }
 
-    /* Calculate the length of the step timeout. Add 4 for the 2 quotes, colon, and comma. */
-    requestLength += STEP_TIMEOUT_KEY_LENGTH + 4;
-
     if( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_NO_TIMEOUT )
     {
-        /* Convert the step timeout to a string. */
-        stepTimeoutLength = snprintf( pStepTimeout,
-                                      STEP_TIMEOUT_STRING_LENGTH,
-                                      "%d",
-                                      pUpdateInfo->stepTimeoutInMinutes );
-        AwsIotJobs_Assert( stepTimeoutLength > 0 );
-        AwsIotJobs_Assert( stepTimeoutLength < STEP_TIMEOUT_STRING_LENGTH );
-    }
-    else
-    {
-        /* Step timeout will be set to -1. */
-        pStepTimeout[ 0 ] = '-';
-        pStepTimeout[ 1 ] = '1';
-        stepTimeoutLength = 2;
-    }
+        /* Calculate the length of the step timeout. Add 4 for the 2 quotes, colon, and comma. */
+        requestLength += STEP_TIMEOUT_KEY_LENGTH + 4;
 
-    requestLength += ( size_t ) stepTimeoutLength;
+        if( pUpdateInfo->stepTimeoutInMinutes == AWS_IOT_JOBS_CANCEL_TIMEOUT )
+        {
+            /* Step timeout will be set to -1. */
+            pStepTimeout[ 0 ] = '-';
+            pStepTimeout[ 1 ] = '1';
+            stepTimeoutLength = 2;
+        }
+        else
+        {
+            /* Convert the step timeout to a string. */
+            stepTimeoutLength = snprintf( pStepTimeout,
+                                          STEP_TIMEOUT_STRING_LENGTH,
+                                          "%d",
+                                          pUpdateInfo->stepTimeoutInMinutes );
+            AwsIotJobs_Assert( stepTimeoutLength > 0 );
+            AwsIotJobs_Assert( stepTimeoutLength < STEP_TIMEOUT_STRING_LENGTH );
+        }
+
+        requestLength += ( size_t ) stepTimeoutLength;
+    }
 
     /* Add the length of the client token. */
     if( pRequestInfo->pClientToken != AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE )
@@ -601,11 +604,14 @@ static AwsIotJobsError_t _generateStartNextRequest( const AwsIotJobsRequestInfo_
                                            pUpdateInfo->statusDetailsLength );
     }
 
-    /* Add step timeout. */
-    copyOffset = _appendStepTimeout( pJobsRequest,
-                                     copyOffset,
-                                     pStepTimeout,
-                                     stepTimeoutLength );
+    /* Add step timeout if present. */
+    if( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_NO_TIMEOUT )
+    {
+        copyOffset = _appendStepTimeout( pJobsRequest,
+                                         copyOffset,
+                                         pStepTimeout,
+                                         stepTimeoutLength );
+    }
 
     /* Add client token. */
     copyOffset = _appendClientToken( pJobsRequest, copyOffset, pRequestInfo, pOperation );
@@ -845,28 +851,32 @@ static AwsIotJobsError_t _generateUpdateRequest( const AwsIotJobsRequestInfo_t *
         requestLength += 4;
     }
 
-    /* Calculate the length of the step timeout. Add 4 for the 2 quotes, colon, and comma. */
-    requestLength += STEP_TIMEOUT_KEY_LENGTH + 4;
-
+    /* Add the step timeout if provided. */
     if( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_NO_TIMEOUT )
     {
-        /* Convert the step timeout to a string. */
-        stepTimeoutLength = snprintf( pStepTimeout,
-                                      STEP_TIMEOUT_STRING_LENGTH,
-                                      "%d",
-                                      pUpdateInfo->stepTimeoutInMinutes );
-        AwsIotJobs_Assert( stepTimeoutLength > 0 );
-        AwsIotJobs_Assert( stepTimeoutLength < STEP_TIMEOUT_STRING_LENGTH );
-    }
-    else
-    {
-        /* Step timeout will be set to -1. */
-        pStepTimeout[ 0 ] = '-';
-        pStepTimeout[ 1 ] = '1';
-        stepTimeoutLength = 2;
-    }
+        /* Calculate the length of the step timeout. Add 4 for the 2 quotes, colon, and comma. */
+        requestLength += STEP_TIMEOUT_KEY_LENGTH + 4;
 
-    requestLength += ( size_t ) stepTimeoutLength;
+        if( pUpdateInfo->stepTimeoutInMinutes == AWS_IOT_JOBS_CANCEL_TIMEOUT )
+        {
+            /* Step timeout will be set to -1. */
+            pStepTimeout[ 0 ] = '-';
+            pStepTimeout[ 1 ] = '1';
+            stepTimeoutLength = 2;
+        }
+        else
+        {
+            /* Convert the step timeout to a string. */
+            stepTimeoutLength = snprintf( pStepTimeout,
+                                          STEP_TIMEOUT_STRING_LENGTH,
+                                          "%d",
+                                          pUpdateInfo->stepTimeoutInMinutes );
+            AwsIotJobs_Assert( stepTimeoutLength > 0 );
+            AwsIotJobs_Assert( stepTimeoutLength < STEP_TIMEOUT_STRING_LENGTH );
+        }
+
+        requestLength += ( size_t ) stepTimeoutLength;
+    }
 
     /* Add the length of the client token. */
     if( pRequestInfo->pClientToken != AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE )
@@ -951,8 +961,14 @@ static AwsIotJobsError_t _generateUpdateRequest( const AwsIotJobsRequestInfo_t *
                                   true );
     }
 
-    /* Add step timeout. */
-    copyOffset = _appendStepTimeout( pJobsRequest, copyOffset, pStepTimeout, stepTimeoutLength );
+    /* Add step timeout if provided. */
+    if( pUpdateInfo->stepTimeoutInMinutes != AWS_IOT_JOBS_NO_TIMEOUT )
+    {
+        copyOffset = _appendStepTimeout( pJobsRequest,
+                                         copyOffset,
+                                         pStepTimeout,
+                                         stepTimeoutLength );
+    }
 
     /* Add the client token. */
     copyOffset = _appendClientToken( pJobsRequest, copyOffset, pRequestInfo, pOperation );
