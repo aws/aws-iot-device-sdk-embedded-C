@@ -746,7 +746,19 @@ typedef struct AwsIotJobsUpdateInfo
  * @note The value of this constant may change at any time in future versions, but
  * its name will remain the same.
  */
-#define AWS_IOT_JOBS_NO_TIMEOUT                   ( -1 )
+#define AWS_IOT_JOBS_NO_TIMEOUT                   ( 0 )
+
+/**
+ * @brief Set #AwsIotJobsUpdateInfo_t.stepTimeoutInMinutes to this value to cancel
+ * any previously set step timeout.
+ *
+ * The Jobs service will return an (InvalidRequest)[@ref AWS_IOT_JOBS_INVALID_REQUEST]
+ * error if this value is used without an existing step timeout.
+ *
+ * @note The value of this constant may change at any time in future versions, but
+ * its name will remain the same.
+ */
+#define AWS_IOT_JOBS_CANCEL_TIMEOUT               ( -1 )
 
 /**
  * @brief Set #AwsIotJobsUpdateInfo_t.pStatusDetails to this value to omit the

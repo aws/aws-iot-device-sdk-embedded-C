@@ -443,8 +443,8 @@ TEST( Jobs_Unit_API, OperationInvalidUpdateInfo )
     requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
     requestInfo.mallocResponse = IotTest_Malloc;
 
-    /* Step timeout too small. */
-    updateInfo.stepTimeoutInMinutes = 0;
+    /* Negative, invalid step timeout. */
+    updateInfo.stepTimeoutInMinutes = -5;
     status = AwsIotJobs_StartNext( &requestInfo,
                                    &updateInfo,
                                    0,
