@@ -197,6 +197,12 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
                 break;
 
             case JOBS_DESCRIBE:
+                status = AwsIotJobs_Describe( &requestInfo,
+                                              AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                              true,
+                                              0,
+                                              &callbackInfo,
+                                              &( callbackParam.operation ) );
                 break;
 
             default:
@@ -395,6 +401,7 @@ TEST_GROUP_RUNNER( Jobs_System )
     RUN_TEST_CASE( Jobs_System, GetPendingBlocking );
     RUN_TEST_CASE( Jobs_System, StartNextAsync );
     RUN_TEST_CASE( Jobs_System, StartNextBlocking );
+    RUN_TEST_CASE( Jobs_System, DescribeAsync );
 }
 
 /*-----------------------------------------------------------*/
@@ -420,7 +427,7 @@ TEST( Jobs_System, GetPendingBlocking )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Starts the next jobs using @ref jobs_function_startnext.
+ * @brief Starts the next Job using @ref jobs_function_startnext.
  */
 TEST( Jobs_System, StartNextAsync )
 {
@@ -430,11 +437,21 @@ TEST( Jobs_System, StartNextAsync )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Starts the next jobs using @ref jobs_function_timedstartnext.
+ * @brief Starts the next Job using @ref jobs_function_timedstartnext.
  */
 TEST( Jobs_System, StartNextBlocking )
 {
     _jobsBlockingTest( JOBS_START_NEXT, AWS_IOT_JOBS_SUCCESS );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Describe a Job @ref jobs_function_describe.
+ */
+TEST( Jobs_System, DescribeAsync )
+{
+    _jobsAsyncTest( JOBS_DESCRIBE, AWS_IOT_JOBS_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
