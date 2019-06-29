@@ -219,6 +219,61 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
 
 /*-----------------------------------------------------------*/
 
+static void _jobsBlockingTest( _jobsOperationType_t type,
+                               AwsIotJobsError_t expectedResult )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
+    AwsIotJobsResponse_t jobsResponse = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
+
+    /* Set the Jobs request parameters. */
+    requestInfo.mqttConnection = _mqttConnection;
+    requestInfo.pThingName = AWS_IOT_TEST_JOBS_THING_NAME;
+    requestInfo.thingNameLength = ( sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1 );
+    requestInfo.mallocResponse = IotTest_Malloc;
+    requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
+    requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
+
+    /* Call Jobs function. */
+    switch( type )
+    {
+        case JOBS_GET_PENDING:
+            status = AwsIotJobs_TimedGetPending( &requestInfo,
+                                                 0,
+                                                 AWS_IOT_TEST_JOBS_TIMEOUT,
+                                                 &jobsResponse );
+            break;
+
+        case JOBS_START_NEXT:
+            status = AwsIotJobs_TimedStartNext( &requestInfo,
+                                                &updateInfo,
+                                                0,
+                                                AWS_IOT_TEST_JOBS_TIMEOUT,
+                                                &jobsResponse );
+            break;
+
+        case JOBS_DESCRIBE:
+            break;
+
+        default:
+            /* The only remaining valid type is UPDATE. */
+            TEST_ASSERT_EQUAL( JOBS_UPDATE, type );
+            break;
+    }
+
+    TEST_ASSERT_EQUAL( expectedResult, status );
+
+    /* Check the Jobs response. */
+    TEST_ASSERT_NOT_NULL( jobsResponse.pJobsResponse );
+    TEST_ASSERT_GREATER_THAN( 0, jobsResponse.jobsResponseLength );
+
+    /* Free the allocated Jobs response. */
+    IotTest_Free( ( void * ) jobsResponse.pJobsResponse );
+}
+
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Test group for Jobs system tests.
  */
@@ -338,8 +393,8 @@ TEST_GROUP_RUNNER( Jobs_System )
 {
     RUN_TEST_CASE( Jobs_System, GetPendingAsync );
     RUN_TEST_CASE( Jobs_System, GetPendingBlocking );
-
     RUN_TEST_CASE( Jobs_System, StartNextAsync );
+    RUN_TEST_CASE( Jobs_System, StartNextBlocking );
 }
 
 /*-----------------------------------------------------------*/
@@ -359,36 +414,27 @@ TEST( Jobs_System, GetPendingAsync )
  */
 TEST( Jobs_System, GetPendingBlocking )
 {
-    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
-    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
-    AwsIotJobsResponse_t jobsResponse = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
-
-    /* Set the Jobs request parameters. */
-    requestInfo.mqttConnection = _mqttConnection;
-    requestInfo.pThingName = AWS_IOT_TEST_JOBS_THING_NAME;
-    requestInfo.thingNameLength = ( sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1 );
-    requestInfo.mallocResponse = IotTest_Malloc;
-
-    /* Get pending Jobs. */
-    status = AwsIotJobs_TimedGetPending( &requestInfo,
-                                         0,
-                                         AWS_IOT_TEST_JOBS_TIMEOUT,
-                                         &jobsResponse );
-    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
-
-    /* Check the Jobs response. */
-    TEST_ASSERT_NOT_NULL( jobsResponse.pJobsResponse );
-    TEST_ASSERT_GREATER_THAN( 0, jobsResponse.jobsResponseLength );
-
-    /* Free the allocated Jobs response. */
-    IotTest_Free( ( void * ) jobsResponse.pJobsResponse );
+    _jobsBlockingTest( JOBS_GET_PENDING, AWS_IOT_JOBS_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Starts the next jobs using @ref jobs_function_startnext.
+ */
 TEST( Jobs_System, StartNextAsync )
 {
     _jobsAsyncTest( JOBS_START_NEXT, AWS_IOT_JOBS_SUCCESS );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Starts the next jobs using @ref jobs_function_timedstartnext.
+ */
+TEST( Jobs_System, StartNextBlocking )
+{
+    _jobsBlockingTest( JOBS_START_NEXT, AWS_IOT_JOBS_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
