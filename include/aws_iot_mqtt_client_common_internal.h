@@ -105,6 +105,9 @@ void aws_iot_mqtt_internal_write_char(unsigned char **pptr, unsigned char c);
 void aws_iot_mqtt_internal_write_utf8_string(unsigned char **pptr, const char *string, uint16_t stringLen);
 
 IoT_Error_t aws_iot_mqtt_internal_flushBuffers( AWS_IoT_Client *pClient );
+#ifdef AWS_IOT_MEMORY_OPTMIZED_TX
+IoT_Error_t aws_iot_mqtt_internal_send_packet_memory_optmized(AWS_IoT_Client *pClient, size_t length, Timer *pTimer, IoT_Publish_Message_Params *pParams);
+#endif
 IoT_Error_t aws_iot_mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t length, Timer *pTimer);
 IoT_Error_t aws_iot_mqtt_internal_cycle_read(AWS_IoT_Client *pClient, Timer *pTimer, uint8_t *pPacketType);
 IoT_Error_t aws_iot_mqtt_internal_wait_for_read(AWS_IoT_Client *pClient, uint8_t packetType, Timer *pTimer);

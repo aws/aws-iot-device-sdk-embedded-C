@@ -264,6 +264,93 @@ IoT_Error_t aws_iot_mqtt_internal_init_header(MQTTHeader *pHeader, MessageTypes 
 	FUNC_EXIT_RC(SUCCESS);
 }
 
+#ifdef AWS_IOT_MEMORY_OPTIMIZED_TX
+IoT_Error_t aws_iot_mqtt_internal_send_packet_memory_optmized(AWS_IoT_Client *pClient, size_t length, Timer *pTimer, IoT_Publish_Message_Params *pParams) {
+
+	size_t sentLen, sent;
+	IoT_Error_t rc;
+
+	FUNC_ENTRY;
+
+	if(NULL == pClient || NULL == pTimer) {
+		FUNC_EXIT_RC(NULL_VALUE_ERROR);
+	}
+
+	if(length >= pClient->clientData.writeBufSize) {
+		FUNC_EXIT_RC(MQTT_TX_BUFFER_TOO_SHORT_ERROR);
+	}
+
+#ifdef _ENABLE_THREAD_SUPPORT_
+	rc = aws_iot_mqtt_client_lock_mutex(pClient, &(pClient->clientData.tls_write_mutex));
+	if(SUCCESS != rc) {
+		FUNC_EXIT_RC(rc);
+	}
+#endif
+
+	sentLen = 0;
+	sent = 0;
+
+    /* Send MQTT/AWS IOT data first */
+
+	while(sent < length && !has_timer_expired(pTimer)) {
+		rc = pClient->networkStack.write(&(pClient->networkStack),
+						 &pClient->clientData.writeBuf[sent],
+						 (length - sent),
+						 pTimer,
+						 &sentLen);
+		if(SUCCESS != rc) {
+			/* there was an error writing the data */
+			break;
+		}
+		sent += sentLen;
+	}
+
+    if(sent != length) {
+		FUNC_EXIT_RC(rc);
+	}
+
+	/* Now send the payload data */
+    if(pParams->payload != NULL) {
+
+        IOT_ERROR("Payload length = %d \n", pParams->payloadLen);
+
+        length = pParams->payloadLen;
+	    sentLen = 0;
+	    sent = 0;
+
+        while(sent < length && !has_timer_expired(pTimer)) {
+	        rc = pClient->networkStack.write(&(pClient->networkStack),
+					 &pParams->payload[sent],
+					 (length - sent),
+					 pTimer,
+					 &sentLen);
+	        if(SUCCESS != rc) {
+		        /* there was an error writing the data */
+		        break;
+	        }
+	        sent += sentLen;
+        }
+    }
+
+#ifdef _ENABLE_THREAD_SUPPORT_
+	rc = aws_iot_mqtt_client_unlock_mutex(pClient, &(pClient->clientData.tls_write_mutex));
+	if(SUCCESS != rc) {
+		FUNC_EXIT_RC(rc);
+	}
+#endif
+
+	if(sent == length) {
+		/* record the fact that we have successfully sent the packet */
+		//countdown_sec(&c->pingTimer, c->clientData.keepAliveInterval);
+		FUNC_EXIT_RC(SUCCESS);
+	}
+
+	FUNC_EXIT_RC(rc) 
+
+
+}
+#endif
+
 IoT_Error_t aws_iot_mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t length, Timer *pTimer) {
 
 	size_t sentLen, sent;
