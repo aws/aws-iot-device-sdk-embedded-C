@@ -106,16 +106,9 @@ static IoT_Error_t _aws_iot_mqtt_internal_serialize_publish(unsigned char *pTxBu
 	if(qos > 0) {
 		rem_len += 2; /* packetId */
 	}
-
-#ifdef AWS_IOT_MEMORY_OPTIMIZED_TX
-	if(aws_iot_mqtt_internal_get_final_packet_length_from_remaining_length(rem_len - payloadLen) > txBufLen) {
-		FUNC_EXIT_RC(MQTT_TX_BUFFER_TOO_SHORT_ERROR);
-	}
-#else
 	if(aws_iot_mqtt_internal_get_final_packet_length_from_remaining_length(rem_len) > txBufLen) {
 		FUNC_EXIT_RC(MQTT_TX_BUFFER_TOO_SHORT_ERROR);
 	}
-#endif
 
 	rc = aws_iot_mqtt_internal_init_header(&header, PUBLISH, qos, dup, retained);
 	if(SUCCESS != rc) {
@@ -131,10 +124,8 @@ static IoT_Error_t _aws_iot_mqtt_internal_serialize_publish(unsigned char *pTxBu
 		aws_iot_mqtt_internal_write_uint_16(&ptr, packetId);
 	}
 
-#ifndef AWS_IOT_MEMORY_OPTIMIZED_TX
 	memcpy(ptr, pPayload, payloadLen);
 	ptr += payloadLen;
-#endif
 
 	*pSerializedLen = (uint32_t) (ptr - pTxBuf);
 
@@ -228,19 +219,11 @@ static IoT_Error_t _aws_iot_mqtt_internal_publish(AWS_IoT_Client *pClient, const
 		FUNC_EXIT_RC(rc);
 	}
 
-#ifdef AWS_IOT_MEMORY_OPTIMIZED_TX
-    /* send the publish packet */
-    rc = aws_iot_mqtt_internal_send_packet_memory_optmized(pClient, len, &timer, pParams);
-    if(SUCCESS != rc) {
-	    FUNC_EXIT_RC(rc);
-    }
-#else
 	/* send the publish packet */
 	rc = aws_iot_mqtt_internal_send_packet(pClient, len, &timer);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
-#endif
 
 	/* Wait for ack if QoS1 */
 	if(QOS1 == pParams->qos) {
