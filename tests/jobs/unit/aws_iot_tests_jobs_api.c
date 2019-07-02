@@ -238,6 +238,7 @@ TEST_GROUP_RUNNER( Jobs_Unit_API )
     RUN_TEST_CASE( Jobs_Unit_API, StartNextMallocFail );
     RUN_TEST_CASE( Jobs_Unit_API, DescribeMallocFail );
     RUN_TEST_CASE( Jobs_Unit_API, UpdateMallocFail );
+    RUN_TEST_CASE( Jobs_Unit_API, RemovePersistentSubscriptions );
 }
 
 /*-----------------------------------------------------------*/
@@ -494,9 +495,21 @@ TEST( Jobs_Unit_API, OperationInvalidUpdateInfo )
     updateInfo.pStatusDetails = AWS_IOT_JOBS_NO_STATUS_DETAILS;
 
     /* Invalid UPDATE state. */
+    updateInfo.newStatus = AWS_IOT_JOB_STATE_QUEUED;
+    requestInfo.pJobId = "jobid";
+    requestInfo.jobIdLength = 5;
+
+    status = AwsIotJobs_Update( &requestInfo,
+                                &updateInfo,
+                                0,
+                                NULL,
+                                NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+    updateInfo.newStatus = AWS_IOT_JOB_STATE_IN_PROGRESS;
+
+    /* Invalid UPDATE Job ID. */
     requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
     requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
-    updateInfo.newStatus = AWS_IOT_JOB_STATE_QUEUED;
 
     status = AwsIotJobs_Update( &requestInfo,
                                 &updateInfo,
@@ -572,6 +585,49 @@ TEST( Jobs_Unit_API, DescribeMallocFail )
 TEST( Jobs_Unit_API, UpdateMallocFail )
 {
     _jobsMallocFail( JOBS_UPDATE );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref jobs_function_removepersistentsubscriptions
+ * with various parameters.
+ */
+TEST( Jobs_Unit_API, RemovePersistentSubscriptions )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+
+    /* MQTT connection not set. */
+    status = AwsIotJobs_RemovePersistentSubscriptions( &requestInfo,
+                                                       AWS_IOT_JOBS_FLAG_REMOVE_GET_PENDING_SUBSCRIPTIONS );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+    requestInfo.mqttConnection = _pMqttConnection;
+
+    /* Thing Name not set. */
+    status = AwsIotJobs_RemovePersistentSubscriptions( &requestInfo,
+                                                       AWS_IOT_JOBS_FLAG_REMOVE_GET_PENDING_SUBSCRIPTIONS );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+    requestInfo.pThingName = TEST_THING_NAME;
+    requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
+
+    /* Job ID not set for DESCRIBE/UPDATE. */
+    status = AwsIotJobs_RemovePersistentSubscriptions( &requestInfo,
+                                                       AWS_IOT_JOBS_FLAG_REMOVE_DESCRIBE_SUBSCRIPTIONS );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+    requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
+
+    /* Job ID too long. */
+    requestInfo.jobIdLength = JOBS_MAX_ID_LENGTH + 1;
+    status = AwsIotJobs_RemovePersistentSubscriptions( &requestInfo,
+                                                       AWS_IOT_JOBS_FLAG_REMOVE_DESCRIBE_SUBSCRIPTIONS );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+    requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
+
+    /* No subscription present. */
+    status = AwsIotJobs_RemovePersistentSubscriptions( &requestInfo,
+                                                       AWS_IOT_JOBS_FLAG_REMOVE_DESCRIBE_SUBSCRIPTIONS );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 }
 
 /*-----------------------------------------------------------*/
