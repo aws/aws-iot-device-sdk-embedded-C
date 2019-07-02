@@ -269,9 +269,7 @@ AwsIotJobsError_t AwsIotJobs_SetNotifyNextCallback( IotMqttConnection_t mqttConn
  * @brief Remove persistent Jobs operation topic subscriptions.
  */
 /* @[declare_jobs_removepersistentsubscriptions] */
-AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( IotMqttConnection_t mqttConnection,
-                                                            const char * pThingName,
-                                                            size_t thingNameLength,
+AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                                             uint32_t flags );
 /* @[declare_jobs_removepersistentsubscriptions] */
 
