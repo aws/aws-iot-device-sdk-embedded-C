@@ -386,10 +386,10 @@ static void _receiveThread( void * pArgument )
         }
         else
         {
-            IotMutex_Lock( &( pNetworkConnection->networkMutex ) );
-
             /* Check if connection is closed. */
+            IotMutex_Lock( &( pNetworkConnection->networkMutex ) );
             connectionClosed = ( ( pNetworkConnection->flags & FLAG_CLOSED ) == FLAG_CLOSED );
+            IotMutex_Unlock( &( pNetworkConnection->networkMutex ) );
 
             if( connectionClosed == false )
             {
@@ -400,11 +400,7 @@ static void _receiveThread( void * pArgument )
                                                          pNetworkConnection->pReceiveContext );
                 }
             }
-
-            IotMutex_Unlock( &( pNetworkConnection->networkMutex ) );
-
-            /* Exit if the connection is closed. */
-            if( connectionClosed == true )
+            else
             {
                 break;
             }
