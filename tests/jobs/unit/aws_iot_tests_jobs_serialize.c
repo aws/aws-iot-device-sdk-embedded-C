@@ -788,10 +788,16 @@ TEST( Jobs_Unit_Serialize, ParseErrorResponse )
 
     /* Test parsing of invalid code. */
     operation.status = AWS_IOT_JOBS_STATUS_PENDING;
-
     _AwsIotJobs_ParseResponse( AWS_IOT_REJECTED,
-                               "{\"code\": \"InvalidCode\"}",
-                               23,
+                               "{\"code\": \"NotAnErrorCodeNotAnErrorCode\"}",
+                               40,
+                               &operation );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_RESPONSE, operation.status );
+
+    operation.status = AWS_IOT_JOBS_STATUS_PENDING;
+    _AwsIotJobs_ParseResponse( AWS_IOT_REJECTED,
+                               "{}",
+                               2,
                                &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_RESPONSE, operation.status );
 }
