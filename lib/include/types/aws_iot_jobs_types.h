@@ -132,6 +132,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_wait
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
+     * - @ref jobs_function_removepersistentsubscriptions
      */
     AWS_IOT_JOBS_BAD_PARAMETER,
 

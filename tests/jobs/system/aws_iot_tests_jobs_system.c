@@ -431,6 +431,7 @@ TEST_GROUP_RUNNER( Jobs_System )
     RUN_TEST_CASE( Jobs_System, DescribeBlocking );
     RUN_TEST_CASE( Jobs_System, UpdateAsync );
     RUN_TEST_CASE( Jobs_System, UpdateBlocking );
+    RUN_TEST_CASE( Jobs_System, PersistentSubscriptions );
 }
 
 /*-----------------------------------------------------------*/
@@ -513,6 +514,64 @@ TEST( Jobs_System, UpdateBlocking )
 {
     /* The Job ID used in this test does not exist, expect NOT_FOUND. */
     _jobsBlockingTest( JOBS_UPDATE, AWS_IOT_JOBS_NOT_FOUND );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests a Job operation with perisistent subscriptions.
+ */
+TEST( Jobs_System, PersistentSubscriptions )
+{
+    uint64_t startTime = 0, elapsedTime1 = 0, elapsedTime2 = 0;
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    AwsIotJobsResponse_t response = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
+
+    /* Set the Jobs request parameters. */
+    requestInfo.mqttConnection = _mqttConnection;
+    requestInfo.pThingName = AWS_IOT_TEST_JOBS_THING_NAME;
+    requestInfo.thingNameLength = ( sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1 );
+    requestInfo.mallocResponse = IotTest_Malloc;
+
+    /* Time a Jobs function that sets persistent subscriptions. */
+    startTime = IotClock_GetTimeMs();
+    status = AwsIotJobs_TimedGetPending( &requestInfo,
+                                         AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS,
+                                         AWS_IOT_TEST_JOBS_TIMEOUT,
+                                         &response );
+    elapsedTime1 = IotClock_GetTimeMs() - startTime;
+
+    /* Check results. */
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+    TEST_ASSERT_NOT_NULL( response.pJobsResponse );
+    TEST_ASSERT_GREATER_THAN( 0, response.jobsResponseLength );
+
+    IotTest_Free( ( void * ) response.pJobsResponse );
+
+    /* Time a Jobs functions that has persistent subscriptions set. */
+    startTime = IotClock_GetTimeMs();
+    status = AwsIotJobs_TimedGetPending( &requestInfo,
+                                         0,
+                                         AWS_IOT_TEST_JOBS_TIMEOUT,
+                                         &response );
+    elapsedTime2 = IotClock_GetTimeMs() - startTime;
+
+    /* Check results */
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+    TEST_ASSERT_NOT_NULL( response.pJobsResponse );
+    TEST_ASSERT_GREATER_THAN( 0, response.jobsResponseLength );
+
+    IotTest_Free( ( void * ) response.pJobsResponse );
+
+    /* Becuase the second operation has persistent subscriptions and does not
+     * need to subscribe to anything, it should be significantly faster. */
+    TEST_ASSERT_LESS_THAN( elapsedTime1, elapsedTime2 );
+
+    /* Remove persistent subscriptions. */
+    status = AwsIotJobs_RemovePersistentSubscriptions( &requestInfo,
+                                                       AWS_IOT_JOBS_FLAG_REMOVE_GET_PENDING_SUBSCRIPTIONS );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 }
 
 /*-----------------------------------------------------------*/
