@@ -465,7 +465,7 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
 
         if( pRequestInfo->jobIdLength > JOBS_MAX_ID_LENGTH )
         {
-            IotLogError( "Job ID for cannot be longer than %d."
+            IotLogError( "Job ID cannot be longer than %d.",
                          JOBS_MAX_ID_LENGTH );
 
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
