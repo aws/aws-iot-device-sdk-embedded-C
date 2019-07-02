@@ -434,8 +434,8 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
     };
 
     IotLogInfo( "Removing persistent subscriptions for %.*s.",
-                thingNameLength,
-                pThingName );
+                pRequestInfo->thingNameLength,
+                pRequestInfo->pThingName );
 
     /* Check parameters. */
     if( pRequestInfo->mqttConnection == IOT_MQTT_CONNECTION_INITIALIZER )
@@ -484,8 +484,8 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
     {
         IotLogDebug( "Found subscription object for %.*s. Checking for persistent "
                      "subscriptions to remove.",
-                     thingNameLength,
-                     pThingName );
+                     pRequestInfo->thingNameLength,
+                     pRequestInfo->pThingName );
 
         pSubscription = IotLink_Container( _jobsSubscription_t, pSubscriptionLink, link );
 
@@ -494,8 +494,8 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
             if( ( flags & ( 0x1UL << i ) ) != 0 )
             {
                 IotLogDebug( "Removing %.*s %s persistent subscriptions.",
-                             thingNameLength,
-                             pThingName,
+                             pRequestInfo->thingNameLength,
+                             pRequestInfo->pThingName,
                              _pAwsIotJobsOperationNames[ i ] );
 
                 /* Subscription must have a topic buffer. */
@@ -546,8 +546,8 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
                 else
                 {
                     IotLogDebug( "%.*s %s does not have persistent subscriptions.",
-                                 thingNameLength,
-                                 pThingName,
+                                 pRequestInfo->thingNameLength,
+                                 pRequestInfo->pThingName,
                                  _pAwsIotJobsOperationNames[ i ] );
                 }
             }
@@ -556,8 +556,8 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
     else
     {
         IotLogWarn( "No subscription object found for %.*s",
-                    thingNameLength,
-                    pThingName );
+                    pRequestInfo->thingNameLength,
+                    pRequestInfo->pThingName );
     }
 
     IotMutex_Unlock( &( _AwsIotJobsSubscriptionsMutex ) );
