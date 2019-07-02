@@ -420,7 +420,7 @@ void _AwsIotJobs_DecrementReferences( _jobsOperation_t * pOperation,
 AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequestInfo_t * pRequestInfo,
                                                             uint32_t flags )
 {
-    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_SUCCESS );
     int32_t i = 0;
     uint16_t operationTopicLength = 0;
     IotMqttError_t unsubscribeStatus = IOT_MQTT_STATUS_PENDING;
