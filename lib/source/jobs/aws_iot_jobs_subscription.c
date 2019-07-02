@@ -37,6 +37,9 @@
 /* Error handling include. */
 #include "private/iot_error.h"
 
+/* Platform layer includes. */
+#include "platform/iot_threads.h"
+
 /* MQTT include. */
 #include "iot_mqtt.h"
 
@@ -410,6 +413,156 @@ void _AwsIotJobs_DecrementReferences( _jobsOperation_t * pOperation,
                      pSubscription->thingNameLength,
                      pSubscription->pThingName );
     }
+}
+
+/*-----------------------------------------------------------*/
+
+AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                                            uint32_t flags )
+{
+    IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
+    int32_t i = 0;
+    uint16_t operationTopicLength = 0;
+    IotMqttError_t unsubscribeStatus = IOT_MQTT_STATUS_PENDING;
+    AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
+    _jobsSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink = NULL;
+    AwsIotThingName_t thingName =
+    {
+        .pThingName      = pRequestInfo->pThingName,
+        .thingNameLength = pRequestInfo->thingNameLength
+    };
+
+    IotLogInfo( "Removing persistent subscriptions for %.*s.",
+                pRequestInfo->thingNameLength,
+                pRequestInfo->pThingName );
+
+    /* Check parameters. */
+    if( pRequestInfo->mqttConnection == IOT_MQTT_CONNECTION_INITIALIZER )
+    {
+        IotLogError( "MQTT connection is not initialized." );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+    }
+
+    if( AwsIot_ValidateThingName( pRequestInfo->pThingName,
+                                  pRequestInfo->thingNameLength ) == false )
+    {
+        IotLogError( "Thing Name is not valid." );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+    }
+
+    if( ( ( flags & AWS_IOT_JOBS_FLAG_REMOVE_DESCRIBE_SUBSCRIPTIONS ) != 0 ) ||
+        ( ( flags & AWS_IOT_JOBS_FLAG_REMOVE_UPDATE_SUBSCRIPTIONS ) != 0 ) )
+    {
+        if( ( pRequestInfo->pJobId == NULL ) || ( pRequestInfo->jobIdLength == 0 ) )
+        {
+            IotLogError( "Job ID must be set." );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+
+        if( pRequestInfo->jobIdLength > JOBS_MAX_ID_LENGTH )
+        {
+            IotLogError( "Job ID cannot be longer than %d.",
+                         JOBS_MAX_ID_LENGTH );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+        }
+    }
+
+    IotMutex_Lock( &( _AwsIotJobsSubscriptionsMutex ) );
+
+    /* Search the list for an existing subscription for Thing Name. */
+    pSubscriptionLink = IotListDouble_FindFirstMatch( &( _AwsIotJobsSubscriptions ),
+                                                      NULL,
+                                                      _jobsSubscription_match,
+                                                      &thingName );
+
+    if( pSubscriptionLink != NULL )
+    {
+        IotLogDebug( "Found subscription object for %.*s. Checking for persistent "
+                     "subscriptions to remove.",
+                     pRequestInfo->thingNameLength,
+                     pRequestInfo->pThingName );
+
+        pSubscription = IotLink_Container( _jobsSubscription_t, pSubscriptionLink, link );
+
+        for( i = 0; i < JOBS_OPERATION_COUNT; i++ )
+        {
+            if( ( flags & ( 0x1UL << i ) ) != 0 )
+            {
+                IotLogDebug( "Removing %.*s %s persistent subscriptions.",
+                             pRequestInfo->thingNameLength,
+                             pRequestInfo->pThingName,
+                             _pAwsIotJobsOperationNames[ i ] );
+
+                /* Subscription must have a topic buffer. */
+                AwsIotJobs_Assert( pSubscription->pTopicBuffer != NULL );
+
+                if( pSubscription->references[ i ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
+                {
+                    /* Generate the prefix of the Jobs topic. This function will not
+                     * fail when given a buffer. */
+                    ( void ) _AwsIotJobs_GenerateJobsTopic( ( _jobsOperationType_t ) i,
+                                                            pRequestInfo,
+                                                            &( pSubscription->pTopicBuffer ),
+                                                            &operationTopicLength );
+
+                    /* Set the parameters needed to remove subscriptions. */
+                    subscriptionInfo.mqttConnection = pRequestInfo->mqttConnection;
+                    subscriptionInfo.timeout = _AwsIotJobsMqttTimeoutMs;
+                    subscriptionInfo.pTopicFilterBase = pSubscription->pTopicBuffer;
+                    subscriptionInfo.topicFilterBaseLength = operationTopicLength;
+
+                    unsubscribeStatus = AwsIot_ModifySubscriptions( IotMqtt_TimedUnsubscribe,
+                                                                    &subscriptionInfo );
+
+                    /* Convert MQTT return code to Shadow return code. */
+                    switch( unsubscribeStatus )
+                    {
+                        case IOT_MQTT_SUCCESS:
+                            status = AWS_IOT_JOBS_SUCCESS;
+                            break;
+
+                        case IOT_MQTT_NO_MEMORY:
+                            status = AWS_IOT_JOBS_NO_MEMORY;
+                            break;
+
+                        default:
+                            status = AWS_IOT_JOBS_MQTT_ERROR;
+                            break;
+                    }
+
+                    if( status != AWS_IOT_JOBS_SUCCESS )
+                    {
+                        break;
+                    }
+
+                    /* Clear the persistent subscriptions flag. */
+                    pSubscription->references[ i ] = 0;
+                }
+                else
+                {
+                    IotLogDebug( "%.*s %s does not have persistent subscriptions.",
+                                 pRequestInfo->thingNameLength,
+                                 pRequestInfo->pThingName,
+                                 _pAwsIotJobsOperationNames[ i ] );
+                }
+            }
+        }
+    }
+    else
+    {
+        IotLogWarn( "No subscription object found for %.*s",
+                    pRequestInfo->thingNameLength,
+                    pRequestInfo->pThingName );
+    }
+
+    IotMutex_Unlock( &( _AwsIotJobsSubscriptionsMutex ) );
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
