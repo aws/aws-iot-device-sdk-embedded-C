@@ -77,21 +77,21 @@
 /*
  * Client identifier and length to use for the MQTT API tests.
  */
-#define CLIENT_IDENTIFIER           ( "test" )                                            /**< @brief Client identifier. */
+#define CLIENT_IDENTIFIER           ( "test" )                                           /**< @brief Client identifier. */
 #define CLIENT_IDENTIFIER_LENGTH    ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) ) /**< @brief Length of client identifier. */
 
 /*
  * Will topic name and length to use for the MQTT API tests.
  */
-#define TEST_TOPIC_NAME             ( "/test/topic" )                                   /**< @brief An arbitrary topic name. */
+#define TEST_TOPIC_NAME             ( "/test/topic" )                                  /**< @brief An arbitrary topic name. */
 #define TEST_TOPIC_NAME_LENGTH      ( ( uint16_t ) ( sizeof( TEST_TOPIC_NAME ) - 1 ) ) /**< @brief Length of topic name. */
 
 /**
  * @brief A non-NULL function pointer to use for subscription callback. This
  * "function" should cause a crash if actually called.
  */
-#define SUBSCRIPTION_CALLBACK  \
-    ( ( void ( * )( void *,    \
+#define SUBSCRIPTION_CALLBACK \
+    ( ( void ( * )( void *,   \
                     IotMqttCallbackParam_t * ) ) 0x01 )
 
 /**
@@ -110,7 +110,7 @@
 #define DUP_CHECK_RETRY_MS         ( 100 )  /**< @brief When to start sending duplicate packets. */
 #define DUP_CHECK_RETRY_LIMIT      ( 3 )    /**< @brief How many duplicate packets to send. */
 #define DUP_CHECK_TIMEOUT          ( 3000 ) /**< @brief Total time allowed to send all duplicate packets.
-                                              * Duplicates are sent using an exponential backoff strategy. */
+                                             * Duplicates are sent using an exponential backoff strategy. */
 /** @brief The minimum amount of time the test can take. */
 #define DUP_CHECK_MINIMUM_WAIT \
     ( DUP_CHECK_RETRY_MS +     \
@@ -584,7 +584,7 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
     TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Adjustment to reference count based on keep-alive status. */
-    const int32_t keepAliveReference = 1 + ( ( _pMqttConnection->keepAliveMs != 0 ) ? 1 : 0 );
+    const int32_t keepAliveReference = 1 + ( ( _pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0 ) ? 1 : 0 );
 
     /* A new MQTT connection should only have a possible reference for keep-alive. */
     TEST_ASSERT_EQUAL_INT32( keepAliveReference, _pMqttConnection->references );
@@ -1380,14 +1380,14 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
     TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Set a short keep-alive interval so this test runs faster. */
-    _pMqttConnection->keepAliveMs = SHORT_KEEP_ALIVE_MS;
-    _pMqttConnection->nextKeepAliveMs = SHORT_KEEP_ALIVE_MS;
+    _pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = SHORT_KEEP_ALIVE_MS;
+    _pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs = SHORT_KEEP_ALIVE_MS;
 
     /* Schedule the initial PINGREQ. */
     TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS,
                        IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
-                                                     _pMqttConnection->keepAliveJob,
-                                                     _pMqttConnection->nextKeepAliveMs ) );
+                                                     _pMqttConnection->pingreq.job,
+                                                     _pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs ) );
 
     /* Sleep to allow ample time for periodic PINGREQ sends and PINGRESP responses. */
     IotClock_SleepMs( sleepTimeMs );
@@ -1431,14 +1431,14 @@ TEST( MQTT_Unit_API, KeepAliveJobCleanup )
         _pMqttConnection->pNetworkConnection = &waitSem;
 
         /* Set a short keep-alive interval so this test runs faster. */
-        _pMqttConnection->keepAliveMs = SHORT_KEEP_ALIVE_MS;
-        _pMqttConnection->nextKeepAliveMs = SHORT_KEEP_ALIVE_MS;
+        _pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = SHORT_KEEP_ALIVE_MS;
+        _pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs = SHORT_KEEP_ALIVE_MS;
 
         /* Schedule the initial PINGREQ. */
         TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS,
                            IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
-                                                         _pMqttConnection->keepAliveJob,
-                                                         _pMqttConnection->nextKeepAliveMs ) );
+                                                         _pMqttConnection->pingreq.job,
+                                                         _pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs ) );
 
         /* Wait for the keep-alive job to send a PINGREQ. */
         IotSemaphore_Wait( &waitSem );
