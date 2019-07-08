@@ -1674,7 +1674,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
     /* Even though no PINGREQ is expected, the keep-alive failure flag should
      * be cleared (should not crash). */
     {
-        _pMqttConnection->keepAliveFailure = false;
+        _pMqttConnection->pingreq.u.operation.periodic.ping.failure = 0;
 
         DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
@@ -1682,14 +1682,14 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( false, _pMqttConnection->keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( 0, _pMqttConnection->pingreq.u.operation.periodic.ping.failure );
         TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
         TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
     }
 
     /* Process a valid PINGRESP. */
     {
-        _pMqttConnection->keepAliveFailure = true;
+        _pMqttConnection->pingreq.u.operation.periodic.ping.failure = 1;
 
         DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
@@ -1697,7 +1697,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( false, _pMqttConnection->keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( 0, _pMqttConnection->pingreq.u.operation.periodic.ping.failure );
         TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
         TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
     }
@@ -1705,7 +1705,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
     /* An incomplete PINGRESP should not be processed, and the keep-alive failure
      * flag should not be cleared. */
     {
-        _pMqttConnection->keepAliveFailure = true;
+        _pMqttConnection->pingreq.u.operation.periodic.ping.failure = 1;
 
         DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
@@ -1713,7 +1713,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pingrespSize - 1,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( 1, _pMqttConnection->pingreq.u.operation.periodic.ping.failure );
         TEST_ASSERT_EQUAL_INT( true, _networkCloseCalled );
         TEST_ASSERT_EQUAL_INT( true, _disconnectCallbackCalled );
         _networkCloseCalled = false;
@@ -1722,7 +1722,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
 
     /* A PINGRESP should have a remaining length of 0. */
     {
-        _pMqttConnection->keepAliveFailure = true;
+        _pMqttConnection->pingreq.u.operation.periodic.ping.failure = 1;
 
         DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         pPingresp[ 1 ] = 0x01;
@@ -1731,7 +1731,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( 1, _pMqttConnection->pingreq.u.operation.periodic.ping.failure );
         TEST_ASSERT_EQUAL_INT( true, _networkCloseCalled );
         TEST_ASSERT_EQUAL_INT( true, _disconnectCallbackCalled );
         _networkCloseCalled = false;
@@ -1740,7 +1740,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
 
     /* The PINGRESP control packet type must be 0xd0. */
     {
-        _pMqttConnection->keepAliveFailure = true;
+        _pMqttConnection->pingreq.u.operation.periodic.ping.failure = 1;
 
         DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
         pPingresp[ 0 ] = 0xd1;
@@ -1749,7 +1749,7 @@ TEST( MQTT_Unit_Receive, Pingresp )
                                                      pingrespSize,
                                                      IOT_MQTT_SUCCESS ) );
 
-        TEST_ASSERT_EQUAL_INT( true, _pMqttConnection->keepAliveFailure );
+        TEST_ASSERT_EQUAL_INT( 1, _pMqttConnection->pingreq.u.operation.periodic.ping.failure );
         TEST_ASSERT_EQUAL_INT( true, _networkCloseCalled );
         TEST_ASSERT_EQUAL_INT( true, _disconnectCallbackCalled );
         _networkCloseCalled = false;

@@ -244,69 +244,13 @@
 /*---------------------- MQTT internal data structures ----------------------*/
 
 /**
- * @brief Represents an MQTT connection.
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Forward declaration of MQTT connection type.
  */
-typedef struct _mqttConnection
-{
-    bool awsIotMqttMode;                             /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
-    bool ownNetworkConnection;                       /**< @brief Whether this MQTT connection owns its network connection. */
-    void * pNetworkConnection;                       /**< @brief References the transport-layer network connection. */
-    const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
-    IotMqttCallbackInfo_t disconnectCallback;        /**< @brief A function to invoke when this connection is disconnected. */
-
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
-    #endif
-
-    bool disconnected;                           /**< @brief Tracks if this connection has been disconnected. */
-    IotMutex_t referencesMutex;                  /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
-    int32_t references;                          /**< @brief Counts callbacks and operations using this connection. */
-    IotListDouble_t pendingProcessing;           /**< @brief List of operations waiting to be processed by a task pool routine. */
-    IotListDouble_t pendingResponse;             /**< @brief List of processed operations awaiting a server response. */
-
-    IotListDouble_t subscriptionList;            /**< @brief Holds subscriptions associated with this connection. */
-    IotMutex_t subscriptionMutex;                /**< @brief Grants exclusive access to the subscription list. */
-
-    bool keepAliveFailure;                       /**< @brief Failure flag for keep-alive operation. */
-    uint32_t keepAliveMs;                        /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
-    uint32_t nextKeepAliveMs;                    /**< @brief Relative delay for next keep-alive job. */
-    IotTaskPoolJobStorage_t keepAliveJobStorage; /**< @brief Task pool job for processing this connection's keep-alive. */
-    IotTaskPoolJob_t keepAliveJob;               /**< @brief Task pool job for processing this connection's keep-alive. */
-    uint8_t * pPingreqPacket;                    /**< @brief An MQTT PINGREQ packet, allocated if keep-alive is active. */
-    size_t pingreqPacketSize;                    /**< @brief The size of an allocated PINGREQ packet. */
-} _mqttConnection_t;
-
-/**
- * @brief Represents a subscription stored in an MQTT connection.
- */
-typedef struct _mqttSubscription
-{
-    IotLink_t link;     /**< @brief List link member. */
-
-    int32_t references; /**< @brief How many subscription callbacks are using this subscription. */
-
-    /**
-     * @brief Tracks whether @ref mqtt_function_unsubscribe has been called for
-     * this subscription.
-     *
-     * If there are active subscription callbacks, @ref mqtt_function_unsubscribe
-     * cannot remove this subscription. Instead, it will set this flag, which
-     * schedules the removal of this subscription once all subscription callbacks
-     * terminate.
-     */
-    bool unsubscribed;
-
-    struct
-    {
-        uint16_t identifier;        /**< @brief Packet identifier. */
-        size_t order;               /**< @brief Order in the packet's list of subscriptions. */
-    } packetInfo;                   /**< @brief Information about the SUBSCRIBE packet that registered this subscription. */
-
-    IotMqttCallbackInfo_t callback; /**< @brief Callback information for this subscription. */
-
-    uint16_t topicFilterLength;     /**< @brief Length of #_mqttSubscription_t.pTopicFilter. */
-    char pTopicFilter[];            /**< @brief The subscription topic filter. */
-} _mqttSubscription_t;
+struct _mqttConnection;
+/** @endcond */
 
 /**
  * @brief Internal structure representing a single MQTT operation, such as
@@ -317,13 +261,13 @@ typedef struct _mqttSubscription
 typedef struct _mqttOperation
 {
     /* Pointers to neighboring queue elements. */
-    IotLink_t link;                      /**< @brief List link member. */
+    IotLink_t link;                           /**< @brief List link member. */
 
-    bool incomingPublish;                /**< @brief Set to true if this operation an incoming PUBLISH. */
-    _mqttConnection_t * pMqttConnection; /**< @brief MQTT connection associated with this operation. */
+    bool incomingPublish;                     /**< @brief Set to true if this operation an incoming PUBLISH. */
+    struct _mqttConnection * pMqttConnection; /**< @brief MQTT connection associated with this operation. */
 
-    IotTaskPoolJobStorage_t jobStorage;  /**< @brief Task pool job storage associated with this operation. */
-    IotTaskPoolJob_t job;                /**< @brief Task pool job associated with this operation. */
+    IotTaskPoolJobStorage_t jobStorage;       /**< @brief Task pool job storage associated with this operation. */
+    IotTaskPoolJob_t job;                     /**< @brief Task pool job associated with this operation. */
 
     union
     {
@@ -361,7 +305,7 @@ typedef struct _mqttOperation
                 struct
                 {
                     uint32_t failure;      /**< @brief Flag tracking keep-alive status. */
-                    uint32_t periodMs;     /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
+                    uint32_t keepAliveMs;     /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
                     uint32_t nextPeriodMs; /**< @brief Relative delay for next keep-alive job. */
                 } ping;                    /**< @brief Additional information for keep-alive pings. */
             } periodic;                    /**< @brief Additional information for periodic operations. */
@@ -375,6 +319,65 @@ typedef struct _mqttOperation
         } publish;
     } u;                                      /**< @brief Valid member depends on _mqttOperation_t.incomingPublish. */
 } _mqttOperation_t;
+
+/**
+ * @brief Represents an MQTT connection.
+ */
+typedef struct _mqttConnection
+{
+    bool awsIotMqttMode;                             /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
+    bool ownNetworkConnection;                       /**< @brief Whether this MQTT connection owns its network connection. */
+    void * pNetworkConnection;                       /**< @brief References the transport-layer network connection. */
+    const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
+    IotMqttCallbackInfo_t disconnectCallback;        /**< @brief A function to invoke when this connection is disconnected. */
+
+    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+        const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
+    #endif
+
+    bool disconnected;                 /**< @brief Tracks if this connection has been disconnected. */
+    IotMutex_t referencesMutex;        /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
+    int32_t references;                /**< @brief Counts callbacks and operations using this connection. */
+    IotListDouble_t pendingProcessing; /**< @brief List of operations waiting to be processed by a task pool routine. */
+    IotListDouble_t pendingResponse;   /**< @brief List of processed operations awaiting a server response. */
+
+    IotListDouble_t subscriptionList;  /**< @brief Holds subscriptions associated with this connection. */
+    IotMutex_t subscriptionMutex;      /**< @brief Grants exclusive access to the subscription list. */
+
+    _mqttOperation_t pingreq;          /**< @brief Operation used for MQTT keep-alive. */
+} _mqttConnection_t;
+
+/**
+ * @brief Represents a subscription stored in an MQTT connection.
+ */
+typedef struct _mqttSubscription
+{
+    IotLink_t link;     /**< @brief List link member. */
+
+    int32_t references; /**< @brief How many subscription callbacks are using this subscription. */
+
+    /**
+     * @brief Tracks whether @ref mqtt_function_unsubscribe has been called for
+     * this subscription.
+     *
+     * If there are active subscription callbacks, @ref mqtt_function_unsubscribe
+     * cannot remove this subscription. Instead, it will set this flag, which
+     * schedules the removal of this subscription once all subscription callbacks
+     * terminate.
+     */
+    bool unsubscribed;
+
+    struct
+    {
+        uint16_t identifier;        /**< @brief Packet identifier. */
+        size_t order;               /**< @brief Order in the packet's list of subscriptions. */
+    } packetInfo;                   /**< @brief Information about the SUBSCRIBE packet that registered this subscription. */
+
+    IotMqttCallbackInfo_t callback; /**< @brief Callback information for this subscription. */
+
+    uint16_t topicFilterLength;     /**< @brief Length of #_mqttSubscription_t.pTopicFilter. */
+    char pTopicFilter[];            /**< @brief The subscription topic filter. */
+} _mqttSubscription_t;
 
 /**
  * @brief Represents an MQTT packet received from the network.
