@@ -258,22 +258,22 @@ typedef struct _mqttConnection
         const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
     #endif
 
-    bool disconnected;                              /**< @brief Tracks if this connection has been disconnected. */
-    IotMutex_t referencesMutex;                     /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
-    int32_t references;                             /**< @brief Counts callbacks and operations using this connection. */
-    IotListDouble_t pendingProcessing;              /**< @brief List of operations waiting to be processed by a task pool routine. */
-    IotListDouble_t pendingResponse;                /**< @brief List of processed operations awaiting a server response. */
+    bool disconnected;                           /**< @brief Tracks if this connection has been disconnected. */
+    IotMutex_t referencesMutex;                  /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
+    int32_t references;                          /**< @brief Counts callbacks and operations using this connection. */
+    IotListDouble_t pendingProcessing;           /**< @brief List of operations waiting to be processed by a task pool routine. */
+    IotListDouble_t pendingResponse;             /**< @brief List of processed operations awaiting a server response. */
 
-    IotListDouble_t subscriptionList;               /**< @brief Holds subscriptions associated with this connection. */
-    IotMutex_t subscriptionMutex;                   /**< @brief Grants exclusive access to the subscription list. */
+    IotListDouble_t subscriptionList;            /**< @brief Holds subscriptions associated with this connection. */
+    IotMutex_t subscriptionMutex;                /**< @brief Grants exclusive access to the subscription list. */
 
-    bool keepAliveFailure;                          /**< @brief Failure flag for keep-alive operation. */
-    uint32_t keepAliveMs;                           /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
-    uint32_t nextKeepAliveMs;                       /**< @brief Relative delay for next keep-alive job. */
-    IotTaskPoolJobStorage_t keepAliveJobStorage;     /**< @brief Task pool job for processing this connection's keep-alive. */
-    IotTaskPoolJob_t keepAliveJob;                  /**< @brief Task pool job for processing this connection's keep-alive. */
-    uint8_t * pPingreqPacket;                       /**< @brief An MQTT PINGREQ packet, allocated if keep-alive is active. */
-    size_t pingreqPacketSize;                       /**< @brief The size of an allocated PINGREQ packet. */
+    bool keepAliveFailure;                       /**< @brief Failure flag for keep-alive operation. */
+    uint32_t keepAliveMs;                        /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
+    uint32_t nextKeepAliveMs;                    /**< @brief Relative delay for next keep-alive job. */
+    IotTaskPoolJobStorage_t keepAliveJobStorage; /**< @brief Task pool job for processing this connection's keep-alive. */
+    IotTaskPoolJob_t keepAliveJob;               /**< @brief Task pool job for processing this connection's keep-alive. */
+    uint8_t * pPingreqPacket;                    /**< @brief An MQTT PINGREQ packet, allocated if keep-alive is active. */
+    size_t pingreqPacketSize;                    /**< @brief The size of an allocated PINGREQ packet. */
 } _mqttConnection_t;
 
 /**
@@ -349,12 +349,22 @@ typedef struct _mqttOperation
             } notify;                           /**< @brief How to notify of this operation's completion. */
             IotMqttError_t status;              /**< @brief Result of this operation. This is reported once a response is received. */
 
-            struct
+            union
             {
-                uint32_t count;
-                uint32_t limit;
-                uint32_t nextPeriod;
-            } retry;
+                struct
+                {
+                    uint32_t count;        /**< @brief Current number of retries. */
+                    uint32_t limit;        /**< @brief Maximum number of retries allowed. */
+                    uint32_t nextPeriodMs; /**< @brief Next retry period. */
+                } retry;                   /**< @brief Additional information for PUBLISH retry. */
+
+                struct
+                {
+                    uint32_t failure;      /**< @brief Flag tracking keep-alive status. */
+                    uint32_t periodMs;     /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
+                    uint32_t nextPeriodMs; /**< @brief Relative delay for next keep-alive job. */
+                } ping;                    /**< @brief Additional information for keep-alive pings. */
+            } periodic;                    /**< @brief Additional information for periodic operations. */
         } operation;
 
         /* If incomingPublish is true, this struct is valid. */

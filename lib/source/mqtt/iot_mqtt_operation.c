@@ -158,22 +158,23 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
     IotMqtt_Assert( pOperation->u.operation.type == IOT_MQTT_PUBLISH_TO_SERVER );
 
     /* Check if the retry limit is exhausted. */
-    if( pOperation->u.operation.retry.count > pOperation->u.operation.retry.limit )
+    if( pOperation->u.operation.periodic.retry.count > pOperation->u.operation.periodic.retry.limit )
     {
         /* The retry count may be at most one more than the retry limit, which
          * accounts for the final check for a PUBACK. */
-        IotMqtt_Assert( pOperation->u.operation.retry.count == pOperation->u.operation.retry.limit + 1 );
+        IotMqtt_Assert( pOperation->u.operation.periodic.retry.count ==
+                        pOperation->u.operation.periodic.retry.limit + 1 );
 
         IotLogDebug( "(MQTT connection %p, PUBLISH operation %p) No response received after %lu retries.",
                      pMqttConnection,
                      pOperation,
-                     pOperation->u.operation.retry.limit );
+                     pOperation->u.operation.periodic.retry.limit );
 
         status = false;
     }
     else
     {
-        if( pOperation->u.operation.retry.count == 1 )
+        if( pOperation->u.operation.periodic.retry.count == 1 )
         {
             /* The DUP flag should always be set on the first retry. */
             setDup = true;
@@ -237,14 +238,16 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
 
     /* This function should never be called with retry count greater than
      * retry limit. */
-    IotMqtt_Assert( pOperation->u.operation.retry.count <= pOperation->u.operation.retry.limit );
+    IotMqtt_Assert( pOperation->u.operation.periodic.retry.count <=
+                    pOperation->u.operation.periodic.retry.limit );
 
     /* Increment the retry count. */
-    ( pOperation->u.operation.retry.count )++;
+    ( pOperation->u.operation.periodic.retry.count )++;
 
     /* Check for a response shortly for the final retry. Otherwise, calculate the
      * next retry period. */
-    if( pOperation->u.operation.retry.count > pOperation->u.operation.retry.limit )
+    if( pOperation->u.operation.periodic.retry.count >
+        pOperation->u.operation.periodic.retry.limit )
     {
         scheduleDelay = IOT_MQTT_RESPONSE_WAIT_MS;
 
@@ -256,14 +259,14 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
     }
     else
     {
-        scheduleDelay = pOperation->u.operation.retry.nextPeriod;
+        scheduleDelay = pOperation->u.operation.periodic.retry.nextPeriodMs;
 
         /* Double the retry period, subject to a ceiling value. */
-        pOperation->u.operation.retry.nextPeriod *= 2;
+        pOperation->u.operation.periodic.retry.nextPeriodMs *= 2;
 
-        if( pOperation->u.operation.retry.nextPeriod > IOT_MQTT_RETRY_MS_CEILING )
+        if( pOperation->u.operation.periodic.retry.nextPeriodMs > IOT_MQTT_RETRY_MS_CEILING )
         {
-            pOperation->u.operation.retry.nextPeriod = IOT_MQTT_RETRY_MS_CEILING;
+            pOperation->u.operation.periodic.retry.nextPeriodMs = IOT_MQTT_RETRY_MS_CEILING;
         }
         else
         {
@@ -273,12 +276,12 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
         IotLogDebug( "(MQTT connection %p, PUBLISH operation %p) Scheduling retry %lu of %lu in %lu ms.",
                      pMqttConnection,
                      pOperation,
-                     ( unsigned long ) pOperation->u.operation.retry.count,
-                     ( unsigned long ) pOperation->u.operation.retry.limit,
+                     ( unsigned long ) pOperation->u.operation.periodic.retry.count,
+                     ( unsigned long ) pOperation->u.operation.periodic.retry.limit,
                      ( unsigned long ) scheduleDelay );
 
         /* Check if this is the first retry. */
-        firstRetry = ( pOperation->u.operation.retry.count == 1 );
+        firstRetry = ( pOperation->u.operation.periodic.retry.count == 1 );
 
         /* On the first retry, the PUBLISH will be moved from the pending processing
          * list to the pending responses list. Lock the connection references mutex
@@ -875,7 +878,7 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
     waitable = ( pOperation->u.operation.flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE;
 
     /* Check PUBLISH retry counts and limits. */
-    if( pOperation->u.operation.retry.limit > 0 )
+    if( pOperation->u.operation.periodic.retry.limit > 0 )
     {
         if( _checkRetryLimit( pOperation ) == false )
         {
@@ -947,7 +950,7 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
     if( pOperation->u.operation.status == IOT_MQTT_STATUS_PENDING )
     {
         /* Check if this operation should be scheduled for retransmission. */
-        if( pOperation->u.operation.retry.limit > 0 )
+        if( pOperation->u.operation.periodic.retry.limit > 0 )
         {
             if( _scheduleNextRetry( pOperation ) == false )
             {
@@ -1162,7 +1165,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
 
         /* Check if the matched operation is a PUBLISH with retry. If it is, cancel
          * the retry job. */
-        if( pResult->u.operation.retry.limit > 0 )
+        if( pResult->u.operation.periodic.retry.limit > 0 )
         {
             taskPoolStatus = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
                                                     pResult->job,

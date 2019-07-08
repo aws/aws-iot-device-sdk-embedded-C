@@ -122,7 +122,8 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
         {                                                                                        \
             .jobReference = 1, .type = name, .flags = IOT_MQTT_FLAG_WAITABLE,                    \
             .packetIdentifier = 1, .pMqttPacket = NULL, .packetSize = 0,                         \
-            .notify = { .callback = { 0 } }, .status = IOT_MQTT_STATUS_PENDING, .retry = { 0 }   \
+            .notify = { .callback = { 0 } }, .status = IOT_MQTT_STATUS_PENDING,                  \
+            .periodic = { .retry = { 0 } }                                                       \
         }                                                                                        \
     }
 

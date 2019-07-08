@@ -662,7 +662,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
     /* Check the subscription operation data and set the operation type. */
     IotMqtt_Assert( pSubscriptionOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
-    IotMqtt_Assert( pSubscriptionOperation->u.operation.retry.limit == 0 );
+    IotMqtt_Assert( pSubscriptionOperation->u.operation.periodic.retry.limit == 0 );
     pSubscriptionOperation->u.operation.type = operation;
 
     /* Generate a subscription packet from the subscription list. */
@@ -1055,7 +1055,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     IotMqtt_Assert( pOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
     IotMqtt_Assert( ( pOperation->u.operation.flags & IOT_MQTT_FLAG_WAITABLE )
                     == IOT_MQTT_FLAG_WAITABLE );
-    IotMqtt_Assert( pOperation->u.operation.retry.limit == 0 );
+    IotMqtt_Assert( pOperation->u.operation.periodic.retry.limit == 0 );
 
     /* Set the operation type. */
     pOperation->u.operation.type = IOT_MQTT_CONNECT;
@@ -1264,7 +1264,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                 IotMqtt_Assert( pOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
                 IotMqtt_Assert( ( pOperation->u.operation.flags & IOT_MQTT_FLAG_WAITABLE )
                                 == IOT_MQTT_FLAG_WAITABLE );
-                IotMqtt_Assert( pOperation->u.operation.retry.limit == 0 );
+                IotMqtt_Assert( pOperation->u.operation.periodic.retry.limit == 0 );
 
                 /* Set the operation type. */
                 pOperation->u.operation.type = IOT_MQTT_DISCONNECT;
@@ -1647,8 +1647,8 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
         /* A QoS 0 PUBLISH may not be retried. */
         if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
         {
-            pOperation->u.operation.retry.limit = pPublishInfo->retryLimit;
-            pOperation->u.operation.retry.nextPeriod = pPublishInfo->retryMs;
+            pOperation->u.operation.periodic.retry.limit = pPublishInfo->retryLimit;
+            pOperation->u.operation.periodic.retry.nextPeriodMs = pPublishInfo->retryMs;
         }
         else
         {
