@@ -209,6 +209,20 @@ static size_t _getRemainingLength( void * pNetworkConnection,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Serializer override for PUBACK.
+ */
+static IotMqttError_t _serializePuback( uint16_t packetIdentifier,
+                                        uint8_t ** pPubackPacket,
+                                        size_t * pPacketSize )
+{
+    return _IotMqtt_SerializePuback( packetIdentifier,
+                                     pPubackPacket,
+                                     pPacketSize );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Deserializer override for CONNACK.
  */
 static IotMqttError_t _deserializeConnack( _mqttPacket_t * pConnack )
@@ -413,24 +427,6 @@ static void _publishCallback( void * pCallbackContext,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief A PUBACK serializer function that does nothing, but always returns failure.
- *
- * Prevents any tests on QoS 1 PUBLISH packets from sending any PUBACKS.
- */
-static IotMqttError_t _serializePuback( uint16_t packetIdentifier,
-                                        uint8_t ** pPubackPacket,
-                                        size_t * pPacketSize )
-{
-    ( void ) packetIdentifier;
-    ( void ) pPubackPacket;
-    ( void ) pPacketSize;
-
-    return IOT_MQTT_NO_MEMORY;
-}
-
-/*-----------------------------------------------------------*/
-
-/**
  * @brief Simulates a network receive function.
  */
 static size_t _receive( void * pConnection,
@@ -469,6 +465,37 @@ static size_t _receive( void * pConnection,
     }
 
     return bytesReceived;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief A network send function that checks the message is a PUBACK.
+ */
+static size_t _checkPuback( void * pConnection,
+                            const uint8_t * pMessage,
+                            size_t messageLength )
+{
+    _mqttPacket_t pubackPacket = { .u = { 0 } };
+    IotMqttError_t deserializeStatus = IOT_MQTT_STATUS_PENDING;
+
+    /* Silence warnings about unused parameters. */
+    ( void ) pConnection;
+
+    /* All PUBACK packets should be 4 bytes long. */
+    TEST_ASSERT_EQUAL( 4, messageLength );
+
+    /* Deserialize the PUBACK. */
+    pubackPacket.type = MQTT_PACKET_TYPE_PUBACK;
+    pubackPacket.remainingLength = 2;
+    pubackPacket.pRemainingData = ( uint8_t * ) ( pMessage + 2 );
+    deserializeStatus = _IotMqtt_DeserializePuback( &pubackPacket );
+
+    /* Check the results of the PUBACK deserialization. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, deserializeStatus );
+    TEST_ASSERT_EQUAL( 1, pubackPacket.packetIdentifier );
+
+    return messageLength;
 }
 
 /*-----------------------------------------------------------*/
@@ -539,6 +566,7 @@ TEST_SETUP( MQTT_Unit_Receive )
     serializer.getPacketType = _getPacketType;
     serializer.getRemainingLength = _getRemainingLength;
 
+    _networkInterface.send = _checkPuback;
     _networkInterface.receive = _receive;
     _networkInterface.close = _close;
     networkInfo.pNetworkInterface = &_networkInterface;

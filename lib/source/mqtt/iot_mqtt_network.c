@@ -633,15 +633,13 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 static void _sendPuback( _mqttConnection_t * pMqttConnection,
                          uint16_t packetIdentifier )
 {
-    IotMqttError_t serializeStatus = IOT_MQTT_SUCCESS;
-    uint8_t * pPuback = NULL;
-    size_t pubackSize = 0, bytesSent = 0;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    _mqttOperation_t * pPubackOperation = NULL;
 
-    /* Default PUBACK serializer and free packet functions. */
+    /* Default PUBACK serializer function. */
     IotMqttError_t ( * serializePuback )( uint16_t,
                                           uint8_t **,
                                           size_t * ) = _IotMqtt_SerializePuback;
-    void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
 
     IotLogDebug( "(MQTT connection %p) Sending PUBACK for received PUBLISH %hu.",
                  pMqttConnection,
@@ -665,57 +663,65 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
             EMPTY_ELSE_MARKER;
         }
     #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pMqttConnection->pSerializer != NULL )
+
+    /* Create a PUBACK operation. */
+    status = _IotMqtt_CreateOperation( pMqttConnection,
+                                       0,
+                                       NULL,
+                                       &pPubackOperation );
+
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Set the operation type. */
+    pPubackOperation->u.operation.type = IOT_MQTT_PUBACK;
+
+    /* Generate a PUBACK packet from the packet identifier. */
+    status = serializePuback( packetIdentifier,
+                              &( pPubackOperation->u.operation.pMqttPacket ),
+                              &( pPubackOperation->u.operation.packetSize ) );
+
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Add the PUBACK operation to the send queue for network transmission. */
+    status = _IotMqtt_ScheduleOperation( pPubackOperation,
+                                         _IotMqtt_ProcessSend,
+                                         0 );
+
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        IotLogError( "(MQTT connection %p) Failed to enqueue PUBACK for sending.",
+                     pMqttConnection );
+
+        IOT_GOTO_CLEANUP();
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+
+    /* Clean up on error. */
+    IOT_FUNCTION_CLEANUP_BEGIN();
+
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        if( pPubackOperation != NULL )
         {
-            if( pMqttConnection->pSerializer->freePacket != NULL )
-            {
-                freePacket = pMqttConnection->pSerializer->freePacket;
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
+            _IotMqtt_DestroyOperation( pPubackOperation );
         }
         else
         {
             EMPTY_ELSE_MARKER;
         }
-    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
-    /* Generate a PUBACK packet from the packet identifier. */
-    serializeStatus = serializePuback( packetIdentifier,
-                                       &pPuback,
-                                       &pubackSize );
-
-    if( serializeStatus != IOT_MQTT_SUCCESS )
-    {
-        IotLogWarn( "(MQTT connection %p) Failed to generate PUBACK packet for "
-                    "received PUBLISH %hu.",
-                    pMqttConnection,
-                    packetIdentifier );
     }
     else
     {
-        bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
-                                                              pPuback,
-                                                              pubackSize );
-
-        if( bytesSent != pubackSize )
-        {
-            IotLogWarn( "(MQTT connection %p) Failed to send PUBACK for received"
-                        " PUBLISH %hu.",
-                        pMqttConnection,
-                        packetIdentifier );
-        }
-        else
-        {
-            IotLogDebug( "(MQTT connection %p) PUBACK for received PUBLISH %hu sent.",
-                         pMqttConnection,
-                         packetIdentifier );
-        }
-
-        freePacket( pPuback );
+        EMPTY_ELSE_MARKER;
     }
 }
 
