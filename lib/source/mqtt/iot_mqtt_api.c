@@ -90,7 +90,7 @@ static void _mqttSubscription_tryDestroy( void * pData );
 static void _mqttOperation_tryDestroy( void * pData );
 
 /**
- * @brief Create a keep-alive job for an MQTT connection.
+ * @brief Initialize the keep-alive operation for an MQTT connection.
  *
  * @param[in] pNetworkInfo User-provided network information for the new
  * connection.
@@ -99,9 +99,9 @@ static void _mqttOperation_tryDestroy( void * pData );
  *
  * @return `true` if the keep-alive job was successfully created; `false` otherwise.
  */
-static bool _createKeepAliveJob( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                 uint16_t keepAliveSeconds,
-                                 _mqttConnection_t * pMqttConnection );
+static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo,
+                                       uint16_t keepAliveSeconds,
+                                       _mqttConnection_t * pMqttConnection );
 
 /**
  * @brief Creates a new MQTT connection and initializes its members.
@@ -234,9 +234,9 @@ static void _mqttOperation_tryDestroy( void * pData )
 
 /*-----------------------------------------------------------*/
 
-static bool _createKeepAliveJob( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                 uint16_t keepAliveSeconds,
-                                 _mqttConnection_t * pMqttConnection )
+static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo,
+                                       uint16_t keepAliveSeconds,
+                                       _mqttConnection_t * pMqttConnection )
 {
     bool status = true;
     IotMqttError_t serializeStatus = IOT_MQTT_SUCCESS;
@@ -249,9 +249,12 @@ static bool _createKeepAliveJob( const IotMqttNetworkInfo_t * pNetworkInfo,
     IotMqttError_t ( * serializePingreq )( uint8_t **,
                                            size_t * ) = _IotMqtt_SerializePingreq;
 
+    /* Set PINGREQ operation members. */
+    pMqttConnection->pingreq.u.operation.type = IOT_MQTT_PINGREQ;
+
     /* Convert the keep-alive interval to milliseconds. */
-    pMqttConnection->keepAliveMs = keepAliveSeconds * 1000;
-    pMqttConnection->nextKeepAliveMs = pMqttConnection->keepAliveMs;
+    pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = keepAliveSeconds * 1000;
+    pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs = keepAliveSeconds * 1000;
 
     /* Choose a PINGREQ serializer function. */
     #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
@@ -273,8 +276,8 @@ static bool _createKeepAliveJob( const IotMqttNetworkInfo_t * pNetworkInfo,
     #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
     /* Generate a PINGREQ packet. */
-    serializeStatus = serializePingreq( &( pMqttConnection->pPingreqPacket ),
-                                        &( pMqttConnection->pingreqPacketSize ) );
+    serializeStatus = serializePingreq( &( pMqttConnection->pingreq.u.operation.pMqttPacket ),
+                                        &( pMqttConnection->pingreq.u.operation.packetSize ) );
 
     if( serializeStatus != IOT_MQTT_SUCCESS )
     {
@@ -287,8 +290,8 @@ static bool _createKeepAliveJob( const IotMqttNetworkInfo_t * pNetworkInfo,
         /* Create the task pool job that processes keep-alive. */
         jobStatus = IotTaskPool_CreateJob( _IotMqtt_ProcessKeepAlive,
                                            pMqttConnection,
-                                           &( pMqttConnection->keepAliveJobStorage ),
-                                           &( pMqttConnection->keepAliveJob ) );
+                                           &( pMqttConnection->pingreq.jobStorage ),
+                                           &( pMqttConnection->pingreq.job ) );
 
         /* Task pool job creation for a pre-allocated job should never fail.
          * Abort the program if it does. */
@@ -404,9 +407,9 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     /* Check if keep-alive is active for this connection. */
     if( keepAliveSeconds != 0 )
     {
-        if( _createKeepAliveJob( pNetworkInfo,
-                                 keepAliveSeconds,
-                                 pMqttConnection ) == false )
+        if( _createKeepAliveOperation( pNetworkInfo,
+                                       keepAliveSeconds,
+                                       pMqttConnection ) == false )
         {
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
@@ -467,17 +470,31 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 {
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
 
+    /* Default free packet function. */
+    void (* freePacket)( uint8_t * ) = _IotMqtt_FreePacket;
+
     /* Clean up keep-alive if still allocated. */
-    if( pMqttConnection->keepAliveMs != 0 )
+    if( pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0 )
     {
         IotLogDebug( "(MQTT connection %p) Cleaning up keep-alive.", pMqttConnection );
 
-        _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
+        /* Choose a function to free the packet. */
+        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            if( pMqttConnection->pSerializer != NULL )
+            {
+                if( pMqttConnection->pSerializer->freePacket != NULL )
+                {
+                    freePacket = pMqttConnection->pSerializer->freePacket;
+                }
+            }
+        #endif
+
+        freePacket( pMqttConnection->pingreq.u.operation.pMqttPacket );
 
         /* Clear data about the keep-alive. */
-        pMqttConnection->keepAliveMs = 0;
-        pMqttConnection->pPingreqPacket = NULL;
-        pMqttConnection->pingreqPacketSize = 0;
+        pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = 0;
+        pMqttConnection->pingreq.u.operation.pMqttPacket = NULL;
+        pMqttConnection->pingreq.u.operation.packetSize = 0;
 
         /* Decrement reference count. */
         pMqttConnection->references--;
@@ -490,9 +507,9 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
     /* A connection to be destroyed should have no keep-alive and at most 1
      * reference. */
     IotMqtt_Assert( pMqttConnection->references <= 1 );
-    IotMqtt_Assert( pMqttConnection->keepAliveMs == 0 );
-    IotMqtt_Assert( pMqttConnection->pPingreqPacket == NULL );
-    IotMqtt_Assert( pMqttConnection->pingreqPacketSize == 0 );
+    IotMqtt_Assert( pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs == 0 );
+    IotMqtt_Assert( pMqttConnection->pingreq.u.operation.pMqttPacket == NULL );
+    IotMqtt_Assert( pMqttConnection->pingreq.u.operation.packetSize == 0 );
 
     /* Remove all subscriptions. */
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
@@ -662,7 +679,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
     /* Check the subscription operation data and set the operation type. */
     IotMqtt_Assert( pSubscriptionOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
-    IotMqtt_Assert( pSubscriptionOperation->u.operation.retry.limit == 0 );
+    IotMqtt_Assert( pSubscriptionOperation->u.operation.periodic.retry.limit == 0 );
     pSubscriptionOperation->u.operation.type = operation;
 
     /* Generate a subscription packet from the subscription list. */
@@ -1055,7 +1072,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     IotMqtt_Assert( pOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
     IotMqtt_Assert( ( pOperation->u.operation.flags & IOT_MQTT_FLAG_WAITABLE )
                     == IOT_MQTT_FLAG_WAITABLE );
-    IotMqtt_Assert( pOperation->u.operation.retry.limit == 0 );
+    IotMqtt_Assert( pOperation->u.operation.periodic.retry.limit == 0 );
 
     /* Set the operation type. */
     pOperation->u.operation.type = IOT_MQTT_CONNECT;
@@ -1146,13 +1163,13 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     if( status == IOT_MQTT_SUCCESS )
     {
         /* Check if a keep-alive job should be scheduled. */
-        if( pNewMqttConnection->keepAliveMs != 0 )
+        if( pNewMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0 )
         {
             IotLogDebug( "Scheduling first MQTT keep-alive job." );
 
             taskPoolStatus = IotTaskPool_ScheduleDeferred( IOT_SYSTEM_TASKPOOL,
-                                                           pNewMqttConnection->keepAliveJob,
-                                                           pNewMqttConnection->nextKeepAliveMs );
+                                                           pNewMqttConnection->pingreq.job,
+                                                           pNewMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs );
 
             if( taskPoolStatus != IOT_TASKPOOL_SUCCESS )
             {
@@ -1264,7 +1281,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                 IotMqtt_Assert( pOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
                 IotMqtt_Assert( ( pOperation->u.operation.flags & IOT_MQTT_FLAG_WAITABLE )
                                 == IOT_MQTT_FLAG_WAITABLE );
-                IotMqtt_Assert( pOperation->u.operation.retry.limit == 0 );
+                IotMqtt_Assert( pOperation->u.operation.periodic.retry.limit == 0 );
 
                 /* Set the operation type. */
                 pOperation->u.operation.type = IOT_MQTT_DISCONNECT;
@@ -1647,8 +1664,8 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
         /* A QoS 0 PUBLISH may not be retried. */
         if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
         {
-            pOperation->u.operation.retry.limit = pPublishInfo->retryLimit;
-            pOperation->u.operation.retry.nextPeriod = pPublishInfo->retryMs;
+            pOperation->u.operation.periodic.retry.limit = pPublishInfo->retryLimit;
+            pOperation->u.operation.periodic.retry.nextPeriodMs = pPublishInfo->retryMs;
         }
         else
         {

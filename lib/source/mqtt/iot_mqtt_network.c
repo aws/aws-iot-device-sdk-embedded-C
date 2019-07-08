@@ -591,7 +591,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
             {
                 IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
 
-                if( pMqttConnection->keepAliveFailure == false )
+                if( pMqttConnection->pingreq.u.operation.periodic.ping.failure == 0 )
                 {
                     IotLogWarn( "(MQTT connection %p) Unexpected PINGRESP received.",
                                 pMqttConnection );
@@ -601,7 +601,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
                     IotLogDebug( "(MQTT connection %p) PINGRESP successfully parsed.",
                                  pMqttConnection );
 
-                    pMqttConnection->keepAliveFailure = false;
+                    pMqttConnection->pingreq.u.operation.periodic.ping.failure = 0;
                 }
 
                 IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
@@ -764,16 +764,19 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
     IotNetworkError_t closeStatus = IOT_NETWORK_SUCCESS;
     IotMqttCallbackParam_t callbackParam = { .u.message = { 0 } };
 
+    /* Default free packet function. */
+    void (* freePacket)( uint8_t * ) = _IotMqtt_FreePacket;
+
     /* Mark the MQTT connection as disconnected and the keep-alive as failed. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
     pMqttConnection->disconnected = true;
-    pMqttConnection->keepAliveFailure = true;
+    pMqttConnection->pingreq.u.operation.periodic.ping.failure = 1;
 
-    if( pMqttConnection->keepAliveMs != 0 )
+    if( pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0 )
     {
         /* Keep-alive must have a PINGREQ allocated. */
-        IotMqtt_Assert( pMqttConnection->pPingreqPacket != NULL );
-        IotMqtt_Assert( pMqttConnection->pingreqPacketSize != 0 );
+        IotMqtt_Assert( pMqttConnection->pingreq.u.operation.pMqttPacket != NULL );
+        IotMqtt_Assert( pMqttConnection->pingreq.u.operation.packetSize != 0 );
 
         /* PINGREQ provides a reference to the connection, so reference count must
          * be nonzero. */
@@ -781,7 +784,7 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
 
         /* Attempt to cancel the keep-alive job. */
         taskPoolStatus = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
-                                                pMqttConnection->keepAliveJob,
+                                                pMqttConnection->pingreq.job,
                                                 NULL );
 
         /* If the keep-alive job was not canceled, it must be already executing.
@@ -793,13 +796,23 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
          * the executing keep-alive job will clean up itself. */
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
-            /* Clean up PINGREQ packet and job. */
-            _IotMqtt_FreePacket( pMqttConnection->pPingreqPacket );
+            /* Choose a function to free the packet. */
+            #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+                if( pMqttConnection->pSerializer != NULL )
+                {
+                    if( pMqttConnection->pSerializer->freePacket != NULL )
+                    {
+                        freePacket = pMqttConnection->pSerializer->freePacket;
+                    }
+                }
+            #endif
+
+            freePacket( pMqttConnection->pingreq.u.operation.pMqttPacket );
 
             /* Clear data about the keep-alive. */
-            pMqttConnection->keepAliveMs = 0;
-            pMqttConnection->pPingreqPacket = NULL;
-            pMqttConnection->pingreqPacketSize = 0;
+            pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = 0;
+            pMqttConnection->pingreq.u.operation.pMqttPacket = NULL;
+            pMqttConnection->pingreq.u.operation.packetSize = 0;
 
             /* Keep-alive is cleaned up; decrement reference count. Since this
              * function must be followed with a call to DISCONNECT, a check to
