@@ -695,8 +695,8 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        IotLogError( "(MQTT connection %p) Failed to enqueue PUBLISH for sending.",
-                     mqttConnection );
+        IotLogError( "(MQTT connection %p) Failed to enqueue PUBACK for sending.",
+                     pMqttConnection );
 
         IOT_GOTO_CLEANUP();
     }
