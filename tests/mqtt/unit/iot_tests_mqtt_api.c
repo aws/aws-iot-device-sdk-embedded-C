@@ -1404,7 +1404,7 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
 
     /* Check that the disconnect callback was invoked once (with reason
      * "keep-alive timeout"). */
-    TEST_ASSERT_EQUAL_INT32( 1, _disconnectCallbackCount );
+    TEST_ASSERT_EQUAL_INT32( 1, Atomic_Add_u32( &_disconnectCallback, 0 ) );
 }
 
 /*-----------------------------------------------------------*/
