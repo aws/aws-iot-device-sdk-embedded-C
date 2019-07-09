@@ -94,6 +94,7 @@ Additional include paths required to build the tests:
 - `third_party/unity/unity`
 - `third_party/unity/unity/fixture`
 - `tests/mqtt/access` (when building the MQTT or Shadow tests)
+- `tests/mqtt/mock` (when building tests that use the MQTT mocks, such as Shadow or Jobs)
 
 In addition to the tests include paths, @ref IOT_BUILD_TESTS should be set to `1` globally when building tests.
 
