@@ -17,6 +17,14 @@ run_tests() {
     fi
 }
 
+# Function to create Jobs to use in the tests.
+create_jobs() {
+    aws iot create-job \
+        --job-id $IOT_IDENTIFIER-$(jot -r 1 1 100000)-1 \
+        --targets $AWS_IOT_THING_ARN \
+        --document '{"action":"print","message":"Hello world!"}'
+}
+
 # CMake compiler flags for building Jobs.
 CMAKE_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_JOBS_THING_NAME=\"\\\"$IOT_IDENTIFIER\\\"\" $COMPILER_OPTIONS"
 
@@ -25,6 +33,7 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FL
 make -j2 aws_iot_tests_jobs
 
 # Run tests.
+create_jobs
 run_tests
 
 # Rebuild in static memory mode.
