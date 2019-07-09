@@ -46,6 +46,9 @@
 /* MQTT test access include. */
 #include "iot_test_access_mqtt.h"
 
+/* Atomics include. */
+#include "iot_atomic.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -128,17 +131,17 @@ static bool _publishSetDupCalled = false;
 /**
  * @brief Counts how many time #_sendPingreq has been called.
  */
-static int32_t _pingreqSendCount = 0;
+static uint32_t _pingreqSendCount = 0;
 
 /**
  * @brief Counts how many times #_close has been called.
  */
-static int32_t _closeCount = 0;
+static uint32_t _closeCount = 0;
 
 /**
  * @brief Counts how many times #_disconnectCallback has been called.
  */
-static int32_t _disconnectCallbackCount = 0;
+static uint32_t _disconnectCallbackCount = 0;
 
 /**
  * @brief An MQTT connection to share among the tests.
@@ -454,7 +457,7 @@ static IotNetworkError_t _close( void * pCloseContext )
     /* Silence warnings about unused parameters. */
     ( void ) pCloseContext;
 
-    _closeCount++;
+    Atomic_Increment_u32( &_closeCount );
 
     return IOT_NETWORK_SUCCESS;
 }
@@ -472,7 +475,7 @@ static void _disconnectCallback( void * pCallbackContext,
     /* Only increment counter if the reasons match. */
     if( pCallbackParam->u.disconnectReason == *pExpectedReason )
     {
-        _disconnectCallbackCount++;
+        Atomic_Increment_u32( &_disconnectCallbackCount );
     }
 }
 
