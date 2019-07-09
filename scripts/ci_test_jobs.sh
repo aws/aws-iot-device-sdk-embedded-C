@@ -8,6 +8,9 @@ set -e
 # Query the AWS account ID.
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
 
+# Prefix of Job IDs used in the tests, set by the create_jobs function.
+JOB_PREFIX=""
+
 # Function for running the existing test executables.
 run_tests() {
     # For commit builds, run the full Jobs tests. For pull request builds,
@@ -33,6 +36,12 @@ create_jobs() {
         --document '{"action":"print","message":"Hello world!"}'
 }
 
+# Function to delete Jobs and clean up the tests.
+delete_jobs() {
+    aws iot delete-job --job-id $JOB_PREFIX-1 --force
+    aws iot delete-job --job-id $JOB_PREFIX-2 --force
+}
+
 # CMake compiler flags for building Jobs.
 CMAKE_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_JOBS_THING_NAME=\"\\\"$IOT_IDENTIFIER\\\"\" $COMPILER_OPTIONS"
 
@@ -41,13 +50,15 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FL
 make -j2 aws_iot_tests_jobs
 
 # Run tests.
-JOB_PREFIX=""
 create_jobs
 run_tests
+delete_jobs
 
 # Rebuild in static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FLAGS -DIOT_STATIC_MEMORY_ONLY=1"
 make -j2 aws_iot_tests_jobs
 
 # Run tests in static memory mode.
+create_jobs
 run_tests
+delete_jobs
