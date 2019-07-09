@@ -37,8 +37,6 @@ install:
   # Install and configure AWS CLI for Jobs tests.
   - if [ "$RUN_TEST" = "jobs" ]; then sudo apt-get install -y athena-jot; fi
   - if [ "$RUN_TEST" = "jobs" ]; then pip install awscli --upgrade --user; fi
-  - if [ "$RUN_TEST" = "jobs" ]; then aws configure set access_key $AWS_ACCESS_KEY_ID; fi
-  - if [ "$RUN_TEST" = "jobs" ]; then aws configure set secret_key $AWS_ACCESS_SECRET_KEY; fi
   # Install graphviz only for documentation builds.
   - if [ "$RUN_TEST" = "doc" ]; then sudo apt-get install -y graphviz; fi
   # Install lcov and coveralls only for coverage builds.
