@@ -818,6 +818,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionReferences )
         pIncomingPublish[ i ]->u.publish.publishInfo.pTopicName = "/test";
         pIncomingPublish[ i ]->u.publish.publishInfo.topicNameLength = 5;
         pIncomingPublish[ i ]->u.publish.publishInfo.pPayload = "";
+        pIncomingPublish[ i ]->u.publish.pReceivedData = IotMqtt_MallocMessage( 1 );
 
         IotListDouble_InsertHead( &( _pMqttConnection->pendingProcessing ),
                                   &( pIncomingPublish[ i ]->link ) );
