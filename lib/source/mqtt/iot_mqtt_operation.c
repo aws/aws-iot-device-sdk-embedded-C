@@ -791,6 +791,8 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
         EMPTY_ELSE_MARKER;
     }
 
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
     /* Close the connection on failures. */
     if( status == false )
     {
@@ -801,8 +803,6 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     {
         EMPTY_ELSE_MARKER;
     }
-
-    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -831,6 +831,8 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t pTaskPool,
     }
     else
     {
+        /* This operation may have already been removed by cleanup of pending
+         * operations (called from Disconnect). In that case, do nothing here. */
         EMPTY_ELSE_MARKER;
     }
 
@@ -842,15 +844,9 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t pTaskPool,
     _IotMqtt_InvokeSubscriptionCallback( pOperation->pMqttConnection,
                                          &callbackParam );
 
-    /* Free any buffers associated with the current PUBLISH message. */
-    if( pOperation->u.publish.pReceivedData != NULL )
-    {
-        IotMqtt_FreeMessage( ( void * ) pOperation->u.publish.pReceivedData );
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
+    /* Free buffers associated with the current PUBLISH message. */
+    IotMqtt_Assert( pOperation->u.publish.pReceivedData != NULL );
+    IotMqtt_FreeMessage( ( void * ) pOperation->u.publish.pReceivedData );
 
     /* Free the incoming PUBLISH operation. */
     IotMqtt_FreeOperation( pOperation );

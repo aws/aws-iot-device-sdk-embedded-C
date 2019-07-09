@@ -763,9 +763,17 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     IotNetworkError_t closeStatus = IOT_NETWORK_SUCCESS;
     IotMqttCallbackParam_t callbackParam = { .u.message = { 0 } };
+    void * pNetworkConnection = NULL, * pDisconnectCallbackContext = NULL;
+
+    /* Disconnect callback function. */
+    void ( * disconnectCallback )( void *,
+                                   IotMqttCallbackParam_t * ) = NULL;
+
+    /* Network close function. */
+    IotNetworkError_t ( * closeConnection) ( void * ) = NULL;
 
     /* Default free packet function. */
-    void (* freePacket)( uint8_t * ) = _IotMqtt_FreePacket;
+    void ( * freePacket )( uint8_t * ) = _IotMqtt_FreePacket;
 
     /* Mark the MQTT connection as disconnected and the keep-alive as failed. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
@@ -832,12 +840,20 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
         EMPTY_ELSE_MARKER;
     }
 
+    /* Copy the function pointers and contexts, as the MQTT connection may be
+     * modified after the mutex is released. */
+    disconnectCallback = pMqttConnection->disconnectCallback.function;
+    pDisconnectCallbackContext = pMqttConnection->disconnectCallback.pCallbackContext;
+
+    closeConnection = pMqttConnection->pNetworkInterface->close;
+    pNetworkConnection = pMqttConnection->pNetworkConnection;
+
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
     /* Close the network connection. */
-    if( pMqttConnection->pNetworkInterface->close != NULL )
+    if( closeConnection != NULL )
     {
-        closeStatus = pMqttConnection->pNetworkInterface->close( pMqttConnection->pNetworkConnection );
+        closeStatus = closeConnection( pNetworkConnection );
 
         if( closeStatus == IOT_NETWORK_SUCCESS )
         {
@@ -857,14 +873,14 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
     }
 
     /* Invoke the disconnect callback. */
-    if( pMqttConnection->disconnectCallback.function != NULL )
+    if( disconnectCallback != NULL )
     {
         /* Set the members of the callback parameter. */
         callbackParam.mqttConnection = pMqttConnection;
         callbackParam.u.disconnectReason = disconnectReason;
 
-        pMqttConnection->disconnectCallback.function( pMqttConnection->disconnectCallback.pCallbackContext,
-                                                      &callbackParam );
+        disconnectCallback( pDisconnectCallbackContext,
+                            &callbackParam );
     }
     else
     {
