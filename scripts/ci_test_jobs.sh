@@ -5,6 +5,9 @@
 # Exit on any nonzero return code.
 set -e
 
+# Query the AWS account ID.
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
+
 # Function for running the existing test executables.
 run_tests() {
     # For commit builds, run the full Jobs tests. For pull request builds,
@@ -19,9 +22,14 @@ run_tests() {
 
 # Function to create Jobs to use in the tests.
 create_jobs() {
+    JOB_PREFIX=$IOT_IDENTIFIER-$(jot -r 1 1 100000)
     aws iot create-job \
-        --job-id $IOT_IDENTIFIER-$(jot -r 1 1 100000)-1 \
-        --targets $AWS_IOT_THING_ARN \
+        --job-id $JOB_PREFIX-1 \
+        --targets arn:aws:iot:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:thing/$IOT_IDENTIFIER \
+        --document '{"action":"print","message":"Hello world!"}'
+    aws iot create-job \
+        --job-id $JOB_PREFIX-2 \
+        --targets arn:aws:iot:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:thing/$IOT_IDENTIFIER \
         --document '{"action":"print","message":"Hello world!"}'
 }
 
@@ -33,6 +41,7 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FL
 make -j2 aws_iot_tests_jobs
 
 # Run tests.
+JOB_PREFIX=""
 create_jobs
 run_tests
 
