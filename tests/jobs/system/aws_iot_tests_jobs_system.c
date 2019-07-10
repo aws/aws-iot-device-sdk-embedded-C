@@ -52,6 +52,9 @@
 /* Test framework includes. */
 #include "unity_fixture.h"
 
+/* JSON utilities include. */
+#include "iot_json_utils.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -117,6 +120,16 @@ static IotMqttNetworkInfo_t _networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
  */
 static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
+/**
+ * @brief Job IDs retrieved from the AWS IoT Jobs service.
+ */
+static char _pJobIds[ 2 ][ JOBS_MAX_ID_LENGTH + 1 ] = { { 0 } };
+
+/**
+ * @brief Lengths of the Job IDs retrieved from the AWS IoT Jobs service.
+ */
+static size_t _pJobIdLengths[ 2 ] = { 0 };
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -144,6 +157,60 @@ static void _operationComplete( void * pArgument,
 
     /* Unblock the main test thead. */
     IotSemaphore_Post( &( pParams->waitSem ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Parses Job IDs from a GET PENDING Jobs response.
+ */
+static void _parseJobIds( const AwsIotJobsResponse_t * pJobsResponse )
+{
+    bool status = true;
+    int32_t i = 0;
+    const char * pParseStart = NULL, * pJobId = NULL;
+    size_t parseLength = 0, jobIdLength = 0;
+
+    /* Parse for the list of queued Jobs. This is where parsing for Job IDs will
+     * start. */
+    status = IotJsonUtils_FindJsonValue( pJobsResponse->pJobsResponse,
+                                         pJobsResponse->jobsResponseLength,
+                                         "queuedJobs",
+                                         10,
+                                         &pParseStart,
+                                         &parseLength );
+    TEST_ASSERT_EQUAL_INT_MESSAGE( true, status, "Response did not contain any queued Jobs." );
+    TEST_ASSERT_NOT_NULL( pParseStart );
+    TEST_ASSERT_GREATER_THAN( 0, parseLength );
+
+    /* Parse the Job IDs of the first two queued Jobs. */
+    for( i = 0; i < 2; i++ )
+    {
+        status = IotJsonUtils_FindJsonValue( pParseStart,
+                                             parseLength,
+                                             "jobId",
+                                             5,
+                                             &pJobId,
+                                             &jobIdLength );
+        TEST_ASSERT_EQUAL_INT_MESSAGE( true, status, "Response did not contain enough queued Jobs." );
+        TEST_ASSERT_NOT_NULL( pJobId );
+        TEST_ASSERT_GREATER_THAN( 0, jobIdLength );
+        TEST_ASSERT_LESS_THAN_MESSAGE( JOBS_MAX_ID_LENGTH,
+                                       jobIdLength - 2,
+                                       "Response contains a Job ID that is too long." );
+
+        /* Job ID must start and end with quotes, as it is a string. */
+        TEST_ASSERT_EQUAL( '"', *pJobId );
+        TEST_ASSERT_EQUAL( '"', *( pJobId + jobIdLength - 1 ) );
+
+        /* Copy the Job ID, excluding the quotes. Save its length too. */
+        ( void ) memcpy( _pJobIds[ i ], pJobId + 1, jobIdLength - 2 );
+        _pJobIdLengths[ i ] = jobIdLength - 2;
+
+        /* To find the next Job ID, it's sufficient to search again after the current one. */
+        parseLength -= ( pJobId - pParseStart );
+        pParseStart = pJobId;
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -300,6 +367,20 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
     TEST_ASSERT_NOT_NULL( jobsResponse.pJobsResponse );
     TEST_ASSERT_GREATER_THAN( 0, jobsResponse.jobsResponseLength );
 
+    /* Save the list of queued Jobs. */
+    if( type == JOBS_GET_PENDING )
+    {
+        _parseJobIds( &jobsResponse );
+
+        /* Job IDs must be unique; check that the parsed IDs are different. */
+        if( _pJobIdLengths[ 0 ] == _pJobIdLengths[ 1 ] )
+        {
+            TEST_ASSERT_NOT_EQUAL( 0, strncmp( _pJobIds[ 0 ],
+                                               _pJobIds[ 1 ],
+                                               _pJobIdLengths[ 0 ] ) );
+        }
+    }
+
     /* Free the allocated Jobs response. */
     IotTest_Free( ( void * ) jobsResponse.pJobsResponse );
 }
@@ -423,14 +504,22 @@ TEST_TEAR_DOWN( Jobs_System )
  */
 TEST_GROUP_RUNNER( Jobs_System )
 {
+    /* The tests for Get Pending must run first, as they retrieve the list of
+     * Jobs for the other tests. */
     RUN_TEST_CASE( Jobs_System, GetPendingAsync );
     RUN_TEST_CASE( Jobs_System, GetPendingBlocking );
-    RUN_TEST_CASE( Jobs_System, StartNextAsync );
-    RUN_TEST_CASE( Jobs_System, StartNextBlocking );
-    RUN_TEST_CASE( Jobs_System, DescribeAsync );
-    RUN_TEST_CASE( Jobs_System, DescribeBlocking );
-    RUN_TEST_CASE( Jobs_System, UpdateAsync );
-    RUN_TEST_CASE( Jobs_System, UpdateBlocking );
+
+    /* Only run the following tests if 2 queued Jobs are available. */
+    if( ( _pJobIdLengths[ 0 ] > 0 ) && ( _pJobIdLengths[ 1 ] > 0 ) )
+    {
+        RUN_TEST_CASE( Jobs_System, StartNextAsync );
+        RUN_TEST_CASE( Jobs_System, StartNextBlocking );
+        RUN_TEST_CASE( Jobs_System, DescribeAsync );
+        RUN_TEST_CASE( Jobs_System, DescribeBlocking );
+        RUN_TEST_CASE( Jobs_System, UpdateAsync );
+        RUN_TEST_CASE( Jobs_System, UpdateBlocking );
+    }
+
     RUN_TEST_CASE( Jobs_System, PersistentSubscriptions );
 }
 
