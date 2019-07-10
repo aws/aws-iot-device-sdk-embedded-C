@@ -35,12 +35,12 @@ install:
   # Install OpenSSL if needed.
   - if [ "$NETWORK_STACK" = "openssl" ]; then sudo apt-get install -y libssl-dev; fi
   # Install and AWS CLI and jot for Jobs tests.
-  - if [ "$RUN_TEST" = "jobs" ]; then sudo apt-get install -y python3-pip athena-jot; fi
-  - if [ "$RUN_TEST" = "jobs" ]; then pip3 install awscli --user; fi
+  - if [ "$RUN_TEST" = "jobs" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then sudo apt-get install -y python3 python3-pip athena-jot; fi
+  - if [ "$RUN_TEST" = "jobs" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then pip3 install awscli --user; fi
   # Install graphviz only for documentation builds.
   - if [ "$RUN_TEST" = "doc" ]; then sudo apt-get install -y graphviz; fi
   # Install jot, lcov, coveralls, and AWS CLI for coverage builds.
-  - if [ "$RUN_TEST" = "coverage" ]; then sudo apt-get install -y python3-pip lcov athena-jot; fi
+  - if [ "$RUN_TEST" = "coverage" ]; then sudo apt-get install -y python3 python3-pip lcov athena-jot; fi
   - if [ "$RUN_TEST" = "coverage" ]; then pip3 install --user cpp-coveralls; fi
   - if [ "$RUN_TEST" = "coverage" ]; then pip3 install --user awscli; fi
 
