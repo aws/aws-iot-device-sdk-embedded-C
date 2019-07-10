@@ -397,7 +397,7 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
         /* Check that the Job ID matches the first queued Job. The Jobs service
          * provides an ordering guarantee. Don't check for UPDATE; its response
          * does not include the Job ID. */
-        //if( type != JOBS_UPDATE )
+        if( type != JOBS_UPDATE )
         {
             TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( jobsResponse.pJobsResponse,
                                                                      jobsResponse.jobsResponseLength,
