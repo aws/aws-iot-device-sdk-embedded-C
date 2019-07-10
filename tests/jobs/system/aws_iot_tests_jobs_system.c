@@ -168,8 +168,19 @@ static void _parseJobIds( const AwsIotJobsResponse_t * pJobsResponse )
 {
     bool status = true;
     int32_t i = 0;
-    const char * pParseStart = NULL, * pJobId = NULL;
-    size_t parseLength = 0, jobIdLength = 0;
+    const char * pInProgressJobs = NULL, * pParseStart = NULL, * pJobId = NULL;
+    size_t inProgressJobsLength = 0, parseLength = 0, jobIdLength = 0;
+
+    /* In-progress Jobs for this device will interfere with the tests; fail if
+     * any in-progress Jobs are present. */
+    status = IotJsonUtils_FindJsonValue( pJobsResponse->pJobsResponse,
+                                         pJobsResponse->jobsResponseLength,
+                                         "inProgressJobs", 14,
+                                         &pInProgressJobs,
+                                         &inProgressJobsLength );
+    TEST_ASSERT_EQUAL_INT( true, status );
+    TEST_ASSERT_NOT_NULL( pInProgressJobs );
+    TEST_ASSERT_EQUAL_MESSAGE( 2, inProgressJobsLength, "In-progress Jobs detected. Tests will not run." );
 
     /* Parse for the list of queued Jobs. This is where parsing for Job IDs will
      * start. */
@@ -277,8 +288,8 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
                 TEST_ASSERT_EQUAL( JOBS_UPDATE, type );
 
                 /* Set a Job ID that doesn't exist. */
-                requestInfo.pJobId = "NOTAJOBID";
-                requestInfo.jobIdLength = 9;
+                requestInfo.pJobId = _pJobIds[ 0 ];
+                requestInfo.jobIdLength = _pJobIdLengths[ 0 ];
 
                 status = AwsIotJobs_Update( &requestInfo,
                                             &updateInfo,
@@ -309,6 +320,8 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
     AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
     AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
     AwsIotJobsResponse_t jobsResponse = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
+    const char * pJobId = NULL;
+    size_t jobIdLength = 0;
 
     /* Set the Jobs request parameters. */
     requestInfo.mqttConnection = _mqttConnection;
@@ -349,9 +362,8 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
             /* The only remaining valid type is UPDATE. */
             TEST_ASSERT_EQUAL( JOBS_UPDATE, type );
 
-            /* Set a Job ID that doesn't exist. */
-            requestInfo.pJobId = "NOTAJOBID";
-            requestInfo.jobIdLength = 9;
+            requestInfo.pJobId = _pJobIds[ 0 ];
+            requestInfo.jobIdLength = _pJobIdLengths[ 0 ];
 
             status = AwsIotJobs_TimedUpdate( &requestInfo,
                                              &updateInfo,
@@ -378,6 +390,23 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
             TEST_ASSERT_NOT_EQUAL( 0, strncmp( _pJobIds[ 0 ],
                                                _pJobIds[ 1 ],
                                                _pJobIdLengths[ 0 ] ) );
+        }
+    }
+    else
+    {
+        /* Check that the Job ID matches the first queued Job. The Jobs service
+         * provides an ordering guarantee. Don't check for UPDATE; its response
+         * does not include the Job ID. */
+        //if( type != JOBS_UPDATE )
+        {
+            TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( jobsResponse.pJobsResponse,
+                                                                     jobsResponse.jobsResponseLength,
+                                                                     "jobId",
+                                                                     5,
+                                                                     &pJobId,
+                                                                     &jobIdLength ) );
+            TEST_ASSERT_EQUAL( _pJobIdLengths[ 0 ], jobIdLength - 2 );
+            TEST_ASSERT_EQUAL_STRING_LEN( _pJobIds[ 0 ], pJobId + 1, _pJobIdLengths[ 0 ] );
         }
     }
 
@@ -590,8 +619,7 @@ TEST( Jobs_System, DescribeBlocking )
  */
 TEST( Jobs_System, UpdateAsync )
 {
-    /* The Job ID used in this test does not exist, expect NOT_FOUND. */
-    _jobsAsyncTest( JOBS_UPDATE, AWS_IOT_JOBS_NOT_FOUND );
+    _jobsAsyncTest( JOBS_UPDATE, AWS_IOT_JOBS_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
@@ -601,8 +629,7 @@ TEST( Jobs_System, UpdateAsync )
  */
 TEST( Jobs_System, UpdateBlocking )
 {
-    /* The Job ID used in this test does not exist, expect NOT_FOUND. */
-    _jobsBlockingTest( JOBS_UPDATE, AWS_IOT_JOBS_NOT_FOUND );
+    _jobsBlockingTest( JOBS_UPDATE, AWS_IOT_JOBS_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
