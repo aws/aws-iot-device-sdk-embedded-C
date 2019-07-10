@@ -50,12 +50,58 @@ In addition to the components above, the Jobs library also depends on C standard
 @brief Tests written for the Jobs library.
 
 The Jobs tests reside in the `tests/jobs` directory. They are divided into the following subdirectories:
-- `system`: Jobs system tests. These tests require a network connection and AWS IoT credentials. The command line option `-n` may be passed to the test executable to disable these tests.
+- `system`: Jobs system tests. These tests require a network connection and AWS IoT credentials. They also need an AWS account and registered Thing; see @ref jobs_system_tests_setup for instructions to configure an AWS account to run these tests. The command line option `-n` may be passed to the test executable to disable these tests.
 - `unit`: Jobs unit tests. These tests do not require a network connection or credentials. These tests use the [MQTT mocks.](@ref mqtt_tests)
 
 See @subpage jobs_tests_config for configuration settings that change the behavior of the Jobs system tests. The Jobs unit tests require no special configuration.
 
 The current Jobs tests use the [Unity test framework](http://www.throwtheswitch.org/unity/). See @ref building_tests for a guide on running the tests.
+
+@section jobs_system_tests_setup Setting up Jobs system tests
+@brief How to set up the Jobs system tests.
+
+@pre The steps below assume basic familiarity with AWS and AWS CLI.
+
+The Jobs system tests require Jobs to be created with an AWS account. AWS does not provide the functionality to create Jobs using the Device API; therefore, Jobs will have to be created using another method.
+
+See @ref guide_developer_automated_tests_jobs for additional setup for running the Jobs tests on Travis CI.
+
+1. Register a Thing for the tests. This needs to be done only once. <br>
+Follow [this guide](https://docs.aws.amazon.com/iot/latest/developerguide/register-device.html) to register a new Thing.
+2. Create an IAM user for the tests. This needs to be done only once. <br>
+Follow [this guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) to create an IAM user for the Jobs tests.
+    - Only <b>programmatic access</b> is required.
+    - Save the <b>access key</b> and <b>secret access key</b> for this user.
+    - The following policy grants the necessary permissions for this user. Replace `<region>` and `<account>` with your AWS region and account number, respectively; replace `<ThingName>` with the name of the Thing registered in step 1.
+```
+{
+    "Version": "2012-10-17",
+    "Statement": {
+        "Effect": "Allow",
+        "Action": [
+            "iot:CreateJob",
+            "iot:DeleteJob",
+            "iot:DeleteJobExecution"
+        ],
+        "Resource": [
+            "arn:aws:iot:<region>:<account>:job/*",
+            "arn:aws:iot:<region>:<account>:thing/<ThingName>"
+        ]
+    }
+}
+```
+3. Create two Jobs for the tests. This must be done every time the system tests are run. <br>
+At least <b>two</b> new jobs should be in the `QUEUED` state each time the tests are run. To create a Job, the following AWS CLI command may be used. Replace `UniqueId` with a Job ID that is unique, and `ThingARN` with the ARN of the Thing registered in step 1. The `--document` argument can be followed by any JSON string.
+```sh
+aws iot create-job \
+        --job-id UniqueId \
+        --targets ThingARN \
+        --document '{"action":"print","message":"Hello world!"}'
+```
+When the Jobs tests are finished, the Jobs it uses are no longer needed. Jobs can be deleted with the following command, where `UniqueId` is the Job ID used to create the Job.
+```sh
+aws iot delete-job --job-id UniqueId --force
+```
 */
 
 /**
