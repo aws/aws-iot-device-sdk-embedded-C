@@ -419,7 +419,7 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
                 }
             }
 
-            TEST_ASSERT_EQUAL_INT_MESS( true, jobIdMatch );
+            TEST_ASSERT_EQUAL_INT( true, jobIdMatch );
         }
     }
 
