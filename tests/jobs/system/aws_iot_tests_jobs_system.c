@@ -316,6 +316,8 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
 static void _jobsBlockingTest( _jobsOperationType_t type,
                                AwsIotJobsError_t expectedResult )
 {
+    int32_t i = 0;
+    bool jobIdMatch = false;
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
     AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
     AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
@@ -394,9 +396,8 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
     }
     else
     {
-        /* Check that the Job ID matches the first queued Job. The Jobs service
-         * provides an ordering guarantee. Don't check for UPDATE; its response
-         * does not include the Job ID. */
+        /* Check that the Job ID matches one of the queued jobs. Don't check for
+         * UPDATE; its response does not include the Job ID. */
         if( type != JOBS_UPDATE )
         {
             TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( jobsResponse.pJobsResponse,
@@ -405,8 +406,20 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
                                                                      5,
                                                                      &pJobId,
                                                                      &jobIdLength ) );
-            TEST_ASSERT_EQUAL( _pJobIdLengths[ 0 ], jobIdLength - 2 );
-            TEST_ASSERT_EQUAL_STRING_LEN( _pJobIds[ 0 ], pJobId + 1, _pJobIdLengths[ 0 ] );
+
+            for( i = 0; i < 2; i++ )
+            {
+                if( _pJobIdLengths[ i ] == jobIdLength - 2 )
+                {
+                    if( strncmp( _pJobIds[ i ], pJobId + 1, jobIdLength - 2 ) == 0 )
+                    {
+                        jobIdMatch = true;
+                        break;
+                    }
+                }
+            }
+
+            TEST_ASSERT_EQUAL_INT( true, jobIdMatch );
         }
     }
 
