@@ -6,7 +6,9 @@
 set -e
 
 # Query the AWS account ID.
-AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+    AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
+fi
 
 # Prefix of Job IDs used in the tests, set by the create_jobs function.
 JOB_PREFIX=""
@@ -50,15 +52,15 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FL
 make -j2 aws_iot_tests_jobs
 
 # Run tests.
-create_jobs
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then create_jobs fi
 run_tests
-delete_jobs
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then delete_jobs fi
 
 # Rebuild in static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FLAGS -DIOT_STATIC_MEMORY_ONLY=1"
 make -j2 aws_iot_tests_jobs
 
 # Run tests in static memory mode.
-create_jobs
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then create_jobs fi
 run_tests
-delete_jobs
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then delete_jobs fi
