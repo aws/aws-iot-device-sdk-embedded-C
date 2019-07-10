@@ -157,7 +157,7 @@ This policy only allows the CI to interact with topics that contain a matching c
 
 The Jobs system tests use AWS CLI to create and delete Jobs. Therefore, additional setup is needed in Travis CI.
 
-@pre See @ref jobs_system_tests_setup first to set up an AWS account for the Jobs system tests.
+@pre See @ref jobs_system_tests_setup first to set up an AWS account for the Jobs system tests. Note that the coverage tests require an additional Thing to be registered (but can reuse the same AWS credentials).
 
 Under the "Environment Variables" section of the Travis CI "Settings" page, set the following additional environment variables.
 | Name                  | Value | Notes |
