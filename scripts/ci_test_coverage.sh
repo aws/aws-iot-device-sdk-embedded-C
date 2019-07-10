@@ -46,8 +46,10 @@ make -j2
 
 # Run Jobs tests with code coverage.
 create_jobs
+trap "delete_jobs" EXIT
 ./bin/aws_iot_tests_jobs
 delete_jobs
+trap - EXIT
 
 # Generate code coverage results, but only for files in lib/.
 lcov --directory . --capture --output-file coverage.info
