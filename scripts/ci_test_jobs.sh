@@ -53,7 +53,7 @@ make -j2 aws_iot_tests_jobs
 
 # Run tests.
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then create_jobs; fi
-if [ "$TRAVIS_PULL_REQUEST" = "false" ]; trap "delete_jobs" EXIT; fi
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then trap "delete_jobs" EXIT; fi
 run_tests
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then delete_jobs; fi
 
