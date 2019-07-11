@@ -111,6 +111,9 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
  * @param[in] pSubscription Shadow subscriptions object for callback.
  * @param[in] mqttOperation Either @ref mqtt_function_timedsubscribe or
  * @ref mqtt_function_timedunsubscribe.
+ *
+ * @return #AWS_IOT_SHADOW_SUCCESS, #AWS_IOT_SHADOW_NO_MEMORY, or
+ * #AWS_IOT_SHADOW_MQTT_ERROR.
  */
 static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttConnection,
                                                          _shadowCallbackType_t type,
@@ -132,7 +135,7 @@ static void _callbackWrapperCommon( _shadowCallbackType_t type,
 /**
  * @brief Invoked when a document is received on the Shadow DELTA callback.
  *
- * @param[in] pArgument Ignored.
+ * @param[in] pArgument Associated Shadow subscription.
  * @param[in] pMessage The received DELTA document (as an MQTT PUBLISH message).
  */
 static void _deltaCallbackWrapper( void * pArgument,
@@ -141,7 +144,7 @@ static void _deltaCallbackWrapper( void * pArgument,
 /**
  * @brief Invoked when a document is received on the Shadow UPDATED callback.
  *
- * @param[in] pArgument Ignored.
+ * @param[in] pArgument Associated Shadow subscription.
  * @param[in] pMessage The received UPDATED document (as an MQTT PUBLISH message).
  */
 static void _updatedCallbackWrapper( void * pArgument,
@@ -390,11 +393,20 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
                         pThingName,
                         _pAwsIotShadowCallbackNames[ type ] );
 
-            pSubscription->callbacks[ type ] = *pCallbackInfo;
             status = _modifyCallbackSubscriptions( mqttConnection,
                                                    type,
                                                    pSubscription,
                                                    IotMqtt_TimedSubscribe );
+
+            if( status == AWS_IOT_SHADOW_SUCCESS )
+            {
+                pSubscription->callbacks[ type ] = *pCallbackInfo;
+            }
+            else
+            {
+                /* On failure, check if this subscription can be removed. */
+                _AwsIotShadow_RemoveSubscription( pSubscription, NULL );
+            }
         }
         /* Do nothing; set return value to success. */
         else
@@ -527,18 +539,20 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
                  pSubscription->pThingName,
                  _pAwsIotShadowCallbackNames[ type ] );
 
+    IOT_FUNCTION_CLEANUP_BEGIN();
+
     /* MQTT subscribe should check the subscription topic buffer. */
     if( mqttOperation == IotMqtt_TimedSubscribe )
     {
         /* If the current subscription has no topic buffer, assign it the current
-         * topic buffer. Otherwise, free the current topic buffer. */
+         * topic buffer. */
         if( pSubscription->pTopicBuffer == NULL )
         {
             pSubscription->pTopicBuffer = pTopicFilter;
         }
     }
 
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
