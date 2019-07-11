@@ -162,6 +162,17 @@ static void _operationComplete( void * pArgument,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Jobs GET PENDING and GET NEXT callback. Checks parameters and unblocks
+ * the main test thread.
+ */
+static void _jobsCallback( void * pArgument,
+                           AwsIotJobsCallbackParam_t * pCallbackParam )
+{
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Parses Job IDs from a GET PENDING Jobs response.
  */
 static void _parseJobIds( const AwsIotJobsResponse_t * pJobsResponse )
@@ -560,6 +571,7 @@ TEST_GROUP_RUNNER( Jobs_System )
         RUN_TEST_CASE( Jobs_System, DescribeBlocking );
         RUN_TEST_CASE( Jobs_System, UpdateAsync );
         RUN_TEST_CASE( Jobs_System, UpdateBlocking );
+        RUN_TEST_CASE( Jobs_System, JobsCallbacks );
     }
 
     RUN_TEST_CASE( Jobs_System, PersistentSubscriptions );
@@ -700,6 +712,55 @@ TEST( Jobs_System, PersistentSubscriptions )
     /* Remove persistent subscriptions. */
     status = AwsIotJobs_RemovePersistentSubscriptions( &requestInfo,
                                                        AWS_IOT_JOBS_FLAG_REMOVE_GET_PENDING_SUBSCRIPTIONS );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the Jobs callbacks.
+ */
+TEST( Jobs_System, JobsCallbacks )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+    IotSemaphore_t waitSem;
+
+    /* Create the wait semaphore. */
+    IotSemaphore_Create( &waitSem, 0, 2 );
+
+    /* Set the callback function and context. */
+    callbackInfo.pCallbackContext = &waitSem;
+    callbackInfo.function = _jobsCallback;
+
+    /* Set the Jobs callbacks to notify of Jobs changes. */
+    status = AwsIotJobs_SetNotifyNextCallback( _mqttConnection,
+                                               AWS_IOT_TEST_JOBS_THING_NAME,
+                                               sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1,
+                                               0,
+                                               &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    status = AwsIotJobs_SetNotifyPendingCallback( _mqttConnection,
+                                                  AWS_IOT_TEST_JOBS_THING_NAME,
+                                                  sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1,
+                                                  0,
+                                                  &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    /* Remove Jobs callbacks. */
+    status = AwsIotJobs_SetNotifyNextCallback( _mqttConnection,
+                                               AWS_IOT_TEST_JOBS_THING_NAME,
+                                               sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1,
+                                               0,
+                                               NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    status = AwsIotJobs_SetNotifyPendingCallback( _mqttConnection,
+                                                  AWS_IOT_TEST_JOBS_THING_NAME,
+                                                  sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1,
+                                                  0,
+                                                  NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 }
 
