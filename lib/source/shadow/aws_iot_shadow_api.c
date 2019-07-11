@@ -584,6 +584,7 @@ static void _callbackWrapperCommon( _shadowCallbackType_t type,
     if( pSubscription == NULL )
     {
         /* No subscription found. */
+        IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
         IOT_GOTO_CLEANUP();
     }
 
