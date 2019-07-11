@@ -249,9 +249,11 @@ void _AwsIotShadow_DestroySubscription( void * pData )
 {
     _shadowSubscription_t * pSubscription = ( _shadowSubscription_t * ) pData;
 
-    /* Free the topic buffer. It should not be NULL. */
-    AwsIotShadow_Assert( pSubscription->pTopicBuffer != NULL );
-    AwsIotShadow_FreeString( pSubscription->pTopicBuffer );
+    /* Free the topic buffer if allocated. */
+    if( pSubscription->pTopicBuffer != NULL )
+    {
+        AwsIotShadow_FreeString( pSubscription->pTopicBuffer );
+    }
 
     /* Free memory used by subscription. */
     AwsIotShadow_FreeSubscription( pSubscription );

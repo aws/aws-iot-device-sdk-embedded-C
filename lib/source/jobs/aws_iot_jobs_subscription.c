@@ -249,9 +249,11 @@ void _AwsIotJobs_DestroySubscription( void * pData )
 {
     _jobsSubscription_t * pSubscription = ( _jobsSubscription_t * ) pData;
 
-    /* Free the topic buffer. It should not be NULL. */
-    AwsIotJobs_Assert( pSubscription->pTopicBuffer != NULL );
-    AwsIotJobs_FreeString( pSubscription->pTopicBuffer );
+    /* Free the topic buffer if allocated. */
+    if( pSubscription->pTopicBuffer != NULL )
+    {
+        AwsIotJobs_FreeString( pSubscription->pTopicBuffer );
+    }
 
     /* Free memory used by subscription. */
     AwsIotJobs_FreeSubscription( pSubscription );
