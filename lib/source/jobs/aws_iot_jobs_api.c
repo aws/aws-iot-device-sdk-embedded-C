@@ -134,6 +134,16 @@ static void _notifyPendingCallbackWrapper( void * pArgument,
 static void _notifyNextCallbackWrapper( void * pArgument,
                                         IotMqttCallbackParam_t * pMessage );
 
+/**
+ * @brief Common function for incoming Jobs callbacks.
+ *
+ * @param[in] type Jobs callback type.
+ * @param[in] pMessage The received Jobs callback document (as an MQTT PUBLISH
+ * message).
+ */
+static void _callbackWrapperCommon( _jobsCallbackType_t type,
+                                    IotMqttCallbackParam_t * pMessage );
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -581,7 +591,7 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
                      _pAwsIotJobsCallbackNames[ type ],
                      IotMqtt_strerror( mqttStatus ) );
 
-        /* Convert the MQTT "NO MEMORY" error to a Shadow "NO MEMORY" error. */
+        /* Convert the MQTT "NO MEMORY" error to a Jobs "NO MEMORY" error. */
         if( mqttStatus == IOT_MQTT_NO_MEMORY )
         {
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
@@ -621,6 +631,9 @@ static void _notifyPendingCallbackWrapper( void * pArgument,
 {
     /* Silence warnings about unused parameters. */
     ( void ) pArgument;
+
+    _callbackWrapperCommon( NOTIFY_PENDING_CALLBACK,
+                            pMessage );
 }
 
 /*-----------------------------------------------------------*/
@@ -630,6 +643,70 @@ static void _notifyNextCallbackWrapper( void * pArgument,
 {
     /* Silence warnings about unused parameters. */
     ( void ) pArgument;
+
+    _callbackWrapperCommon( NOTIFY_NEXT_CALLBACK,
+                            pMessage );
+}
+
+/*-----------------------------------------------------------*/
+
+static void _callbackWrapperCommon( _jobsCallbackType_t type,
+                                    IotMqttCallbackParam_t * pMessage )
+{
+    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+    AwsIotJobsCallbackParam_t callbackParam = { .callbackType = ( AwsIotJobsCallbackType_t ) 0 };
+    _jobsSubscription_t * pSubscription = NULL;
+    const char * pThingName = NULL;
+    size_t thingNameLength = 0;
+
+    /* Parse the Thing Name from the topic. */
+    if( AwsIot_ParseThingName( pMessage->u.message.info.pTopicName,
+                               pMessage->u.message.info.topicNameLength,
+                               &pThingName,
+                               &thingNameLength ) == false )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Search for a matching subscription. */
+    IotMutex_Lock( &_AwsIotJobsSubscriptionsMutex );
+
+    pSubscription = _AwsIotJobs_FindSubscription( pThingName,
+                                                  thingNameLength,
+                                                  false );
+
+    if( pSubscription == NULL )
+    {
+        /* No subscription found. */
+        IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Ensure that a callback function is set. */
+    AwsIotJobs_Assert( pSubscription->callbacks[ type ].function != NULL );
+
+    /* Copy the subscription callback info, as the subscription may be modified
+     * when the subscriptions mutex is released. */
+    callbackInfo = pSubscription->callbacks[ type ];
+
+    IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
+
+    /* Set the callback type. Jobs callbacks are enumerated after the operations. */
+    callbackParam.callbackType = ( AwsIotJobsCallbackType_t ) ( type + JOBS_OPERATION_COUNT );
+
+    /* Set the remaining members of the callback param. */
+    callbackParam.mqttConnection = pMessage->mqttConnection;
+    callbackParam.pThingName = pThingName;
+    callbackParam.thingNameLength = thingNameLength;
+    callbackParam.u.callback.pDocument = pMessage->u.message.info.pPayload;
+    callbackParam.u.callback.documentLength = pMessage->u.message.info.payloadLength;
+
+    /* Invoke the callback function. */
+    callbackInfo.function( callbackInfo.pCallbackContext,
+                           &callbackParam );
+
+    /* This function uses cleanup sections to exit on error. */
+    IOT_FUNCTION_CLEANUP_BEGIN();
 }
 
 /*-----------------------------------------------------------*/
