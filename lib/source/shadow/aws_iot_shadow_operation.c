@@ -551,7 +551,8 @@ static AwsIotShadowError_t _findSubscription( const char * pThingName,
     /* Check for an existing subscription. This function will attempt to allocate
      * a new subscription if not found. */
     pSubscription = _AwsIotShadow_FindSubscription( pThingName,
-                                                    thingNameLength );
+                                                    thingNameLength,
+                                                    true );
 
     if( pSubscription == NULL )
     {

@@ -294,6 +294,15 @@ typedef enum _jobsOperationType
 } _jobsOperationType_t;
 
 /**
+ * @brief Enumerations representing each of the Jobs callback functions.
+ */
+typedef enum _jobsCallbackType
+{
+    NOTIFY_PENDING_CALLBACK = 0, /**< Pending Job notification callback. */
+    NOTIFY_NEXT_CALLBACK = 1     /**< Next Job notification callback. */
+} _jobsCallbackType_t;
+
+/**
  * @brief Parameter to #_AwsIotJobs_GenerateJsonRequest.
  */
 typedef union _jsonRequestContents
@@ -460,11 +469,13 @@ AwsIotJobsError_t _AwsIotJobs_ProcessOperation( const AwsIotJobsRequestInfo_t * 
 /*----------------------- Jobs subscription functions -----------------------*/
 
 /**
- * @brief Find a Jobs subscription object. Creates a new subscription object
+ * @brief Find a Jobs subscription object. May create a new subscription object
  * and adds it to the subscription list if not found.
  *
  * @param[in] pThingName Thing Name in the subscription object.
  * @param[in] thingNameLength Length of `pThingName`.
+ * @param[in] createIfNotFound If `true`, attempt to create a new subscription
+ * object if no match is found.
  *
  * @return Pointer to a Jobs subscription object, either found or newly
  * allocated. Returns `NULL` if no subscription object is found and a new
@@ -473,7 +484,8 @@ AwsIotJobsError_t _AwsIotJobs_ProcessOperation( const AwsIotJobsRequestInfo_t * 
  * @note This function should be called with the subscription list mutex locked.
  */
 _jobsSubscription_t * _AwsIotJobs_FindSubscription( const char * pThingName,
-                                                    size_t thingNameLength );
+                                                    size_t thingNameLength,
+                                                    bool createIfNotFound );
 
 /**
  * @brief Remove a Jobs subscription object from the subscription list if

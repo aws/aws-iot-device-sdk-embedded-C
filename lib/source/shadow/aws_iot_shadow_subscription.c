@@ -99,7 +99,8 @@ static bool _shadowSubscription_match( const IotLink_t * pSubscriptionLink,
 /*-----------------------------------------------------------*/
 
 _shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * pThingName,
-                                                        size_t thingNameLength )
+                                                        size_t thingNameLength,
+                                                        bool createIfNotFound )
 {
     _shadowSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
@@ -118,31 +119,34 @@ _shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * pThingName,
     /* Check if a subscription was found. */
     if( pSubscriptionLink == NULL )
     {
-        /* No subscription found. Allocate a new subscription. */
-        pSubscription = AwsIotShadow_MallocSubscription( sizeof( _shadowSubscription_t ) + thingNameLength );
-
-        if( pSubscription != NULL )
+        if( createIfNotFound == true )
         {
-            /* Clear the new subscription. */
-            ( void ) memset( pSubscription, 0x00, sizeof( _shadowSubscription_t ) + thingNameLength );
+            /* No subscription found. Allocate a new subscription. */
+            pSubscription = AwsIotShadow_MallocSubscription( sizeof( _shadowSubscription_t ) + thingNameLength );
 
-            /* Set the Thing Name length and copy the Thing Name into the new subscription. */
-            pSubscription->thingNameLength = thingNameLength;
-            ( void ) memcpy( pSubscription->pThingName, pThingName, thingNameLength );
+            if( pSubscription != NULL )
+            {
+                /* Clear the new subscription. */
+                ( void ) memset( pSubscription, 0x00, sizeof( _shadowSubscription_t ) + thingNameLength );
 
-            /* Add the new subscription to the subscription list. */
-            IotListDouble_InsertHead( &( _AwsIotShadowSubscriptions ),
-                                      &( pSubscription->link ) );
+                /* Set the Thing Name length and copy the Thing Name into the new subscription. */
+                pSubscription->thingNameLength = thingNameLength;
+                ( void ) memcpy( pSubscription->pThingName, pThingName, thingNameLength );
 
-            IotLogDebug( "Created new Shadow subscriptions object for %.*s.",
-                         thingNameLength,
-                         pThingName );
-        }
-        else
-        {
-            IotLogError( "Failed to allocate memory for %.*s Shadow subscriptions.",
-                         thingNameLength,
-                         pThingName );
+                /* Add the new subscription to the subscription list. */
+                IotListDouble_InsertHead( &( _AwsIotShadowSubscriptions ),
+                                          &( pSubscription->link ) );
+
+                IotLogDebug( "Created new Shadow subscriptions object for %.*s.",
+                             thingNameLength,
+                             pThingName );
+            }
+            else
+            {
+                IotLogError( "Failed to allocate memory for %.*s Shadow subscriptions.",
+                             thingNameLength,
+                             pThingName );
+            }
         }
     }
     else

@@ -99,7 +99,8 @@ static bool _jobsSubscription_match( const IotLink_t * pSubscriptionLink,
 /*-----------------------------------------------------------*/
 
 _jobsSubscription_t * _AwsIotJobs_FindSubscription( const char * pThingName,
-                                                    size_t thingNameLength )
+                                                    size_t thingNameLength,
+                                                    bool createIfNotFound )
 {
     _jobsSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
@@ -118,31 +119,34 @@ _jobsSubscription_t * _AwsIotJobs_FindSubscription( const char * pThingName,
     /* Check if a subscription was found. */
     if( pSubscriptionLink == NULL )
     {
-        /* No subscription found. Allocate a new subscription. */
-        pSubscription = AwsIotJobs_MallocSubscription( sizeof( _jobsSubscription_t ) + thingNameLength );
-
-        if( pSubscription != NULL )
+        if( createIfNotFound == true )
         {
-            /* Clear the new subscription. */
-            ( void ) memset( pSubscription, 0x00, sizeof( _jobsSubscription_t ) + thingNameLength );
+            /* No subscription found. Allocate a new subscription. */
+            pSubscription = AwsIotJobs_MallocSubscription( sizeof( _jobsSubscription_t ) + thingNameLength );
 
-            /* Set the Thing Name length and copy the Thing Name into the new subscription. */
-            pSubscription->thingNameLength = thingNameLength;
-            ( void ) memcpy( pSubscription->pThingName, pThingName, thingNameLength );
+            if( pSubscription != NULL )
+            {
+                /* Clear the new subscription. */
+                ( void ) memset( pSubscription, 0x00, sizeof( _jobsSubscription_t ) + thingNameLength );
 
-            /* Add the new subscription to the subscription list. */
-            IotListDouble_InsertHead( &( _AwsIotJobsSubscriptions ),
-                                      &( pSubscription->link ) );
+                /* Set the Thing Name length and copy the Thing Name into the new subscription. */
+                pSubscription->thingNameLength = thingNameLength;
+                ( void ) memcpy( pSubscription->pThingName, pThingName, thingNameLength );
 
-            IotLogDebug( "Created new Jobs subscriptions object for %.*s.",
-                         thingNameLength,
-                         pThingName );
-        }
-        else
-        {
-            IotLogError( "Failed to allocate memory for %.*s Jobs subscriptions.",
-                         thingNameLength,
-                         pThingName );
+                /* Add the new subscription to the subscription list. */
+                IotListDouble_InsertHead( &( _AwsIotJobsSubscriptions ),
+                                          &( pSubscription->link ) );
+
+                IotLogDebug( "Created new Jobs subscriptions object for %.*s.",
+                             thingNameLength,
+                             pThingName );
+            }
+            else
+            {
+                IotLogError( "Failed to allocate memory for %.*s Jobs subscriptions.",
+                             thingNameLength,
+                             pThingName );
+            }
         }
     }
     else

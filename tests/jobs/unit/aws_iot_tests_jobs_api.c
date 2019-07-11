@@ -239,6 +239,7 @@ TEST_GROUP_RUNNER( Jobs_Unit_API )
     RUN_TEST_CASE( Jobs_Unit_API, DescribeMallocFail );
     RUN_TEST_CASE( Jobs_Unit_API, UpdateMallocFail );
     RUN_TEST_CASE( Jobs_Unit_API, RemovePersistentSubscriptions );
+    RUN_TEST_CASE( Jobs_Unit_API, SetCallbackMallocFail );
 }
 
 /*-----------------------------------------------------------*/
@@ -628,6 +629,54 @@ TEST( Jobs_Unit_API, RemovePersistentSubscriptions )
     status = AwsIotJobs_RemovePersistentSubscriptions( &requestInfo,
                                                        AWS_IOT_JOBS_FLAG_REMOVE_DESCRIBE_SUBSCRIPTIONS );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of the Jobs set callback functions when memory
+ * allocation fails at various points.
+ */
+TEST( Jobs_Unit_API, SetCallbackMallocFail )
+{
+    int32_t i = 0, mqttErrorCount = 0;
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+
+    /* Set a short timeout so this test runs faster. */
+    _AwsIotJobsMqttTimeoutMs = 75;
+
+    /* A non-NULL callback function. */
+    callbackInfo.function = ( void ( * )( void *, AwsIotJobsCallbackParam_t * ) ) 0x01;
+
+    for( i = 0; ; i++ )
+    {
+        UnityMalloc_MakeMallocFailAfterCount( i );
+
+        /* Call Jobs set callback. Memory allocation will fail at various times
+         * during this call. */
+        status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection,
+                                                   TEST_THING_NAME,
+                                                   TEST_THING_NAME_LENGTH,
+                                                   0,
+                                                   &callbackInfo );
+
+        if( status == AWS_IOT_JOBS_SUCCESS )
+        {
+            break;
+        }
+        else if( status == AWS_IOT_JOBS_MQTT_ERROR )
+        {
+            mqttErrorCount++;
+        }
+        else
+        {
+            TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, status );
+        }
+    }
+
+    /* Allow 1 MQTT error, caused by failure to allocate memory for a SUBACK. */
+    CHECK_MQTT_ERROR_COUNT( 1, mqttErrorCount );
 }
 
 /*-----------------------------------------------------------*/
