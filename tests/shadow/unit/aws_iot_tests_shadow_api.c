@@ -588,7 +588,7 @@ TEST( Shadow_Unit_API, SetCallbackMallocFail )
     }
 
     /* Allow 1 MQTT error, caused by failure to allocate memory for a SUBACK. */
-    TEST_ASSERT_EQUAL( 1, mqttErrorCount );
+    CHECK_MQTT_ERROR_COUNT( 1, mqttErrorCount );
 }
 
 /*-----------------------------------------------------------*/
