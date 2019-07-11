@@ -762,6 +762,9 @@ TEST( Jobs_System, JobsCallbacks )
                                                   0,
                                                   NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    /* Destroy the wait semaphore. */
+    IotSemaphore_Destroy( &waitSem );
 }
 
 /*-----------------------------------------------------------*/
