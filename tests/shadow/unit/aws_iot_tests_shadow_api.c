@@ -555,6 +555,9 @@ TEST( Shadow_Unit_API, SetCallbackMallocFail )
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
 
+    /* Set a short timeout so this test runs faster. */
+    _AwsIotShadowMqttTimeoutMs = 75;
+
     /* A non-NULL callback function. */
     callbackInfo.function = ( void ( * )( void *, AwsIotShadowCallbackParam_t * ) ) 0x01;
 
