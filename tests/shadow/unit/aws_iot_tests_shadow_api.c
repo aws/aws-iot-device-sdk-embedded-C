@@ -139,6 +139,7 @@ TEST_GROUP_RUNNER( Shadow_Unit_API )
     RUN_TEST_CASE( Shadow_Unit_API, DeleteMallocFail );
     RUN_TEST_CASE( Shadow_Unit_API, GetMallocFail );
     RUN_TEST_CASE( Shadow_Unit_API, UpdateMallocFail );
+    RUN_TEST_CASE( Shadow_Unit_API, SetCallbackMallocFail );
 }
 
 /*-----------------------------------------------------------*/
@@ -540,6 +541,51 @@ TEST( Shadow_Unit_API, UpdateMallocFail )
     /* Allow 3 MQTT library errors, which are caused by failure to allocate memory
      * for incoming packets (SUBSCRIBE, PUBLISH, UNSUBSCRIBE). */
     CHECK_MQTT_ERROR_COUNT( 3, mqttErrorCount );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of the Shadow set callback functions when memory
+ * allocation fails at various points.
+ */
+TEST( Shadow_Unit_API, SetCallbackMallocFail )
+{
+    int32_t i = 0, mqttErrorCount = 0;
+    AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
+    AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
+
+    /* A non-NULL callback function. */
+    callbackInfo.function = ( void ( * )( void *, AwsIotShadowCallbackParam_t * ) ) 0x01;
+
+    for( i = 0; ; i++ )
+    {
+        UnityMalloc_MakeMallocFailAfterCount( i );
+
+        /* Call Shadow set callback. Memory allocation will fail at various times
+         * during this call. */
+        status = AwsIotShadow_SetDeltaCallback( _pMqttConnection,
+                                                TEST_THING_NAME,
+                                                TEST_THING_NAME_LENGTH,
+                                                0,
+                                                &callbackInfo );
+
+        if( status == AWS_IOT_SHADOW_SUCCESS )
+        {
+            break;
+        }
+        else if( status == AWS_IOT_SHADOW_MQTT_ERROR )
+        {
+            mqttErrorCount++;
+        }
+        else
+        {
+            TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NO_MEMORY, status );
+        }
+    }
+
+    /* Allow 1 MQTT error, caused by failure to allocate memory for a SUBACK. */
+    TEST_ASSERT_EQUAL( 1, mqttErrorCount );
 }
 
 /*-----------------------------------------------------------*/
