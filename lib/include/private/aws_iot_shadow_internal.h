@@ -419,11 +419,13 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
 /*---------------------- Shadow subscription functions ----------------------*/
 
 /**
- * @brief Find a Shadow subscription object. Creates a new subscription object
+ * @brief Find a Shadow subscription object. May create a new subscription object
  * and adds it to the subscription list if not found.
  *
  * @param[in] pThingName Thing Name in the subscription object.
  * @param[in] thingNameLength Length of `pThingName`.
+ * @param[in] createIfNotFound If `true`, attempt to create a new subscription
+ * object if no match is found.
  *
  * @return Pointer to a Shadow subscription object, either found or newly
  * allocated. Returns `NULL` if no subscription object is found and a new
@@ -432,7 +434,8 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
  * @note This function should be called with the subscription list mutex locked.
  */
 _shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * pThingName,
-                                                        size_t thingNameLength );
+                                                        size_t thingNameLength,
+                                                        bool createIfNotFound );
 
 /**
  * @brief Remove a Shadow subscription object from the subscription list if

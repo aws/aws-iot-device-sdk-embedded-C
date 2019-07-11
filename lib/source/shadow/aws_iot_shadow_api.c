@@ -129,13 +129,12 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
  * message).
  */
 static void _callbackWrapperCommon( _shadowCallbackType_t type,
-                                    const _shadowSubscription_t * pSubscription,
                                     IotMqttCallbackParam_t * pMessage );
 
 /**
  * @brief Invoked when a document is received on the Shadow DELTA callback.
  *
- * @param[in] pArgument Associated Shadow subscription.
+ * @param[in] pArgument Ignored.
  * @param[in] pMessage The received DELTA document (as an MQTT PUBLISH message).
  */
 static void _deltaCallbackWrapper( void * pArgument,
@@ -144,7 +143,7 @@ static void _deltaCallbackWrapper( void * pArgument,
 /**
  * @brief Invoked when a document is received on the Shadow UPDATED callback.
  *
- * @param[in] pArgument Associated Shadow subscription.
+ * @param[in] pArgument Ignored.
  * @param[in] pMessage The received UPDATED document (as an MQTT PUBLISH message).
  */
 static void _updatedCallbackWrapper( void * pArgument,
@@ -339,7 +338,8 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
     /* Check for an existing subscription. This function will attempt to allocate
      * a new subscription if not found. */
     pSubscription = _AwsIotShadow_FindSubscription( pThingName,
-                                                    thingNameLength );
+                                                    thingNameLength,
+                                                    true );
 
     if( pSubscription == NULL )
     {
@@ -502,7 +502,7 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
     subscription.qos = IOT_MQTT_QOS_1;
     subscription.pTopicFilter = pTopicFilter;
     subscription.topicFilterLength = ( uint16_t ) ( operationTopicLength + pCallbackSuffixLength[ type ] );
-    subscription.callback.pCallbackContext = ( void * ) pSubscription;
+    subscription.callback.pCallbackContext = NULL;
     subscription.callback.function = pCallbackWrapper[ type ];
 
     /* Call the MQTT operation function. */
@@ -558,27 +558,61 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
 /*-----------------------------------------------------------*/
 
 static void _callbackWrapperCommon( _shadowCallbackType_t type,
-                                    const _shadowSubscription_t * pSubscription,
                                     IotMqttCallbackParam_t * pMessage )
 {
+    AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
     AwsIotShadowCallbackParam_t callbackParam = { .callbackType = ( AwsIotShadowCallbackType_t ) 0 };
+    _shadowSubscription_t * pSubscription = NULL;
+    const char * pThingName = NULL;
+    size_t thingNameLength = 0;
+
+    /* Parse the Thing Name from the topic. */
+    if( AwsIot_ParseThingName( pMessage->u.message.info.pTopicName,
+                               pMessage->u.message.info.topicNameLength,
+                               &pThingName,
+                               &thingNameLength ) == false )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Search for a matching subscription. */
+    IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
+
+    pSubscription = _AwsIotShadow_FindSubscription( pThingName,
+                                                    thingNameLength,
+                                                    false );
+
+    if( pSubscription == NULL )
+    {
+        /* No subscription found. */
+        IOT_GOTO_CLEANUP();
+    }
 
     /* Ensure that a callback function is set. */
     AwsIotShadow_Assert( pSubscription->callbacks[ type ].function != NULL );
+
+    /* Copy the subscription callback info, as the subscription may be modified
+     * when the subscriptions mutex is released. */
+    callbackInfo = pSubscription->callbacks[ type ];
+
+    IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
 
     /* Set the callback type. Shadow callbacks are enumerated after the operations. */
     callbackParam.callbackType = ( AwsIotShadowCallbackType_t ) ( type + SHADOW_OPERATION_COUNT );
 
     /* Set the remaining members of the callback param. */
     callbackParam.mqttConnection = pMessage->mqttConnection;
-    callbackParam.pThingName = pSubscription->pThingName;
-    callbackParam.thingNameLength = pSubscription->thingNameLength;
+    callbackParam.pThingName = pThingName;
+    callbackParam.thingNameLength = thingNameLength;
     callbackParam.u.callback.pDocument = pMessage->u.message.info.pPayload;
     callbackParam.u.callback.documentLength = pMessage->u.message.info.payloadLength;
 
     /* Invoke the callback function. */
-    pSubscription->callbacks[ type ].function( pSubscription->callbacks[ type ].pCallbackContext,
-                                               &callbackParam );
+    callbackInfo.function( callbackInfo.pCallbackContext,
+                           &callbackParam );
+
+    /* This function uses cleanup sections to exit on error. */
+    IOT_FUNCTION_CLEANUP_BEGIN();
 }
 
 /*-----------------------------------------------------------*/
@@ -586,7 +620,10 @@ static void _callbackWrapperCommon( _shadowCallbackType_t type,
 static void _deltaCallbackWrapper( void * pArgument,
                                    IotMqttCallbackParam_t * pMessage )
 {
-    _callbackWrapperCommon( DELTA_CALLBACK, pArgument, pMessage );
+    /* Silence warnings about unused parameters. */
+    ( void ) pArgument;
+
+    _callbackWrapperCommon( DELTA_CALLBACK, pMessage );
 }
 
 /*-----------------------------------------------------------*/
@@ -594,7 +631,10 @@ static void _deltaCallbackWrapper( void * pArgument,
 static void _updatedCallbackWrapper( void * pArgument,
                                      IotMqttCallbackParam_t * pMessage )
 {
-    _callbackWrapperCommon( UPDATED_CALLBACK, pArgument, pMessage );
+    /* Silence warnings about unused parameters. */
+    ( void ) pArgument;
+
+    _callbackWrapperCommon( UPDATED_CALLBACK, pMessage );
 }
 
 /*-----------------------------------------------------------*/
