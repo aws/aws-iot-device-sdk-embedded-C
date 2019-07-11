@@ -463,7 +463,8 @@ static AwsIotJobsError_t _findSubscription( const AwsIotJobsRequestInfo_t * pReq
     /* Check for an existing subscription. This function will attempt to allocate
      * a new subscription if not found. */
     pSubscription = _AwsIotJobs_FindSubscription( pRequestInfo->pThingName,
-                                                  pRequestInfo->thingNameLength );
+                                                  pRequestInfo->thingNameLength,
+                                                  true );
 
     if( pSubscription == NULL )
     {
