@@ -537,11 +537,6 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
         pTopicFilter = pSubscription->pTopicBuffer;
     }
 
-    IotLogDebug( "%s subscription for %.*s",
-                 mqttOperation == IotMqtt_TimedSubscribe ? "Adding" : "Removing",
-                 topicFilterLength,
-                 pTopicFilter );
-
     /* Generate the topic for the MQTT subscription. */
     topicInfo.pThingName = pSubscription->pThingName;
     topicInfo.thingNameLength = pSubscription->thingNameLength;
@@ -556,6 +551,11 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
     {
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
     }
+
+    IotLogDebug( "%s subscription for %.*s",
+                 mqttOperation == IotMqtt_TimedSubscribe ? "Adding" : "Removing",
+                 topicFilterLength,
+                 pTopicFilter );
 
     /* Set the members of the MQTT subscription. */
     subscription.qos = IOT_MQTT_QOS_1;
