@@ -185,36 +185,29 @@ static void _jobsCallback( void * pArgument,
                                 AWS_IOT_TEST_JOBS_THING_NAME,
                                 pCallbackParam->thingNameLength ) == 0 );
 
-    if( pCallbackParam->callbackType == AWS_IOT_JOBS_NOTIFY_PENDING_CALLBACK )
+    /* Check the Job ID that was not previously IN_PROGRESS. */
+    if( _inProgressJob == 0 )
     {
-        /* Check the Job ID that was not previously IN_PROGRESS. */
-        if( _inProgressJob == 0 )
-        {
-            checkJobId = 1;
-        }
-        else
-        {
-            checkJobId = 0;
-        }
-
-        /* Parse the next Job ID. */
-        AwsIotJobs_Assert( IotJsonUtils_FindJsonValue( pCallbackParam->u.callback.pDocument,
-                                                       pCallbackParam->u.callback.documentLength,
-                                                       "jobId",
-                                                       5,
-                                                       &pJobId,
-                                                       &jobIdLength ) == true );
-
-        /* Verify that the previously queued Job is next. */
-        AwsIotJobs_Assert( jobIdLength - 2 == _pJobIdLengths[ checkJobId ] );
-        AwsIotJobs_Assert( strncmp( _pJobIds[ checkJobId ],
-                                    pJobId + 1,
-                                    _pJobIdLengths[ checkJobId ] ) == 0 );
+        checkJobId = 1;
     }
     else
     {
-        AwsIotJobs_Assert( pCallbackParam->callbackType == AWS_IOT_JOBS_NOTIFY_NEXT_CALLBACK );
+        checkJobId = 0;
     }
+
+    /* Parse the next Job ID. */
+    AwsIotJobs_Assert( IotJsonUtils_FindJsonValue( pCallbackParam->u.callback.pDocument,
+                                                   pCallbackParam->u.callback.documentLength,
+                                                   "jobId",
+                                                   5,
+                                                   &pJobId,
+                                                   &jobIdLength ) == true );
+
+    /* Verify that the previously queued Job is next. */
+    AwsIotJobs_Assert( jobIdLength - 2 == _pJobIdLengths[ checkJobId ] );
+    AwsIotJobs_Assert( strncmp( _pJobIds[ checkJobId ],
+                                pJobId + 1,
+                                _pJobIdLengths[ checkJobId ] ) == 0 );
 
     /* Unblock the main test thead. */
     IotSemaphore_Post( pWaitSem );
@@ -808,7 +801,8 @@ TEST( Jobs_System, JobsCallbacks )
                                                   &callbackInfo );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
-    /* Set a Job status to completed. This should trigger both callbacks. */
+    /* Set a Job status to completed. This should trigger both Jobs
+     * callbacks. */
     requestInfo.pJobId = _pJobIds[ _inProgressJob ];
     requestInfo.jobIdLength = _pJobIdLengths[ _inProgressJob ];
     requestInfo.mallocResponse = IotTest_Malloc;
@@ -826,6 +820,17 @@ TEST( Jobs_System, JobsCallbacks )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
     IotTest_Free( ( void * ) response.pJobsResponse );
 
+    /* Wait for both callbacks to be invoked. */
+    if( IotSemaphore_TimedWait( &waitSem, AWS_IOT_TEST_JOBS_TIMEOUT ) == false )
+    {
+        TEST_FAIL_MESSAGE( "Timed out waiting for Jobs callback." );
+    }
+
+    if( IotSemaphore_TimedWait( &waitSem, AWS_IOT_TEST_JOBS_TIMEOUT ) == false )
+    {
+        TEST_FAIL_MESSAGE( "Timed out waiting for Jobs callback." );
+    }
+
     /* Remove Jobs callbacks. */
     status = AwsIotJobs_SetNotifyNextCallback( _mqttConnection,
                                                AWS_IOT_TEST_JOBS_THING_NAME,
@@ -833,12 +838,6 @@ TEST( Jobs_System, JobsCallbacks )
                                                0,
                                                NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
-
-    /* Wait for the callbacks to be invoked. */
-    if( IotSemaphore_TimedWait( &waitSem, AWS_IOT_TEST_JOBS_TIMEOUT ) == false )
-    {
-        TEST_FAIL_MESSAGE( "Timed out waiting for Jobs callback." );
-    }
 
     status = AwsIotJobs_SetNotifyPendingCallback( _mqttConnection,
                                                   AWS_IOT_TEST_JOBS_THING_NAME,
