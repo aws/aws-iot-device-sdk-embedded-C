@@ -124,7 +124,6 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
  * @brief Common function for incoming Shadow callbacks.
  *
  * @param[in] type Shadow callback type.
- * @param[in] pSubscription Shadow subscriptions object for callback.
  * @param[in] pMessage The received Shadow callback document (as an MQTT PUBLISH
  * message).
  */
