@@ -671,6 +671,38 @@ AwsIotJobsError_t AwsIotJobs_SetNotifyNextCallback( IotMqttConnection_t mqttConn
 
 /**
  * @brief Remove persistent Jobs operation topic subscriptions.
+ *
+ * Passing the flag @ref AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS to @ref jobs_function_getpending,
+ * @ref jobs_function_startnext, @ref jobs_function_describe, @ref jobs_function_update,
+ * or their <i>Timed</i> variants causes the Jobs operation topic subscriptions to be
+ * maintained for future calls to the same function. If a persistent subscription for a
+ * Jobs topic are no longer needed, this function may be used to remove it.
+ *
+ * @param[in] pRequestInfo Jobs request info. Only the [pThingName]
+ * (@ref #AwsIotJobsRequestInfo_t.pThingName), [thingNameLength]
+ * (@ref #AwsIotJobsRequestInfo_t.thingNameLength), and [mqttConnection]
+ * (@ref #AwsIotJobsRequestInfo_t.mqttConnection) members need to be set for this
+ * function.
+ * @param[in] flags Flags that determine which subscriptions to remove. Valid values are
+ * the bitwise OR of the following individual flags:
+ * - @ref AWS_IOT_JOBS_FLAG_REMOVE_GET_PENDING_SUBSCRIPTIONS
+ * - @ref AWS_IOT_JOBS_FLAG_REMOVE_START_NEXT_SUBSCRIPTIONS
+ * - @ref AWS_IOT_JOBS_FLAG_REMOVE_DESCRIBE_SUBSCRIPTIONS
+ * - @ref AWS_IOT_JOBS_FLAG_REMOVE_UPDATE_SUBSCRIPTIONS
+ *
+ * @return On success:
+ * - #AWS_IOT_JOBS_SUCCESS
+ * @return If an MQTT UNSUBSCRIBE packet cannot be sent, one of the following:
+ * - #AWS_IOT_JOBS_NO_MEMORY
+ * - #AWS_IOT_JOBS_MQTT_ERROR
+ *
+ * @note @ref jobs_function_cleanup removes persistent sessions as well.
+ *
+ * @warning This function is not safe to call with any in-progress operations!
+ * It also does not affect NOTIFY PENDING and NOTIFY NEXT callbacks registered
+ * with @ref jobs_function_setnotifypendingcallback and
+ * @ref jobs_function_setnotifynextcallback, respectively. (See documentation for
+ * those functions on how to remove their callbacks).
  */
 /* @[declare_jobs_removepersistentsubscriptions] */
 AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequestInfo_t * pRequestInfo,
