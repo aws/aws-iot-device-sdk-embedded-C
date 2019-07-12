@@ -139,7 +139,7 @@ void AwsIotJobs_Cleanup( void );
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * @return Upon successful completion of the Jobs operation (either through an #AwsIotJobsCallbackInfo_t
- * or #AwsIotJobs_Wait), the status will be #AWS_IOT_JOBS_SUCCESS.
+ * or @ref jobs_function_wait), the status will be #AWS_IOT_JOBS_SUCCESS.
  * @return Should the Jobs operation fail, the status will be one of:
  * - #AWS_IOT_JOBS_NO_MEMORY (Memory could not be allocated for incoming document)
  * - #AWS_IOT_JOBS_MQTT_ERROR
@@ -220,6 +220,68 @@ AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pR
 /**
  * @brief Start the next pending job execution for a Thing and receive an asynchronous
  * notification when the response arrives.
+ *
+ * This function implements the [StartNextPendingJobExecution]
+ * (https://docs.aws.amazon.com/iot/latest/developerguide/jobs-api.html#mqtt-startnextpendingjobexecution)
+ * command of the Jobs API, which gets and starts the next pending job execution
+ * for a Thing.
+ *
+ * @param[in] pRequestInfo Jobs request parameters.
+ * @param[in] pUpdateInfo Jobs update parameters.
+ * @param[in] flags Flags which modify the behavior of the Jobs request. See
+ * @ref jobs_constants_flags.
+ * @param[in] pCallbackInfo Asynchronous notification of this function's completion.
+ * @param[out] pStartNextOperation Set to a handle by which this operation may be referenced
+ * after this function returns. This reference is invalidated once the Jobs operation
+ * completes.
+ *
+ * @return This function will return #AWS_IOT_JOBS_STATUS_PENDING upon successfully
+ * queuing the Jobs operation.
+ * @return If this function fails before queuing the Jobs operation, it will return one of:
+ * - #AWS_IOT_JOBS_BAD_PARAMETER
+ * - #AWS_IOT_JOBS_NO_MEMORY
+ * @return Upon successful completion of the Jobs operation (either through an #AwsIotJobsCallbackInfo_t
+ * or @ref jobs_function_wait), the status will be #AWS_IOT_JOBS_SUCCESS.
+ * @return Should the Jobs operation fail, the status will be one of:
+ * - #AWS_IOT_JOBS_NO_MEMORY (Memory could not be allocated for incoming document)
+ * - #AWS_IOT_JOBS_MQTT_ERROR
+ * - #AWS_IOT_JOBS_BAD_RESPONSE
+ * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
+ *
+ * @see @ref jobs_function_timedstartnext for a blocking variant of this function.
+ *
+ * <b>Example</b>
+ * @code{c}
+ * #define THING_NAME "Test_device"
+ * #define THING_NAME_LENGTH ( sizeof( THING_NAME ) - 1 )
+ *
+ * // Signature of Jobs callback function.
+ * void _jobsCallback( void * pCallbackContext, AwsIotJobsCallbackParam_t * pCallbackParam );
+ *
+ * AwsIotJobsOperation_t startNextOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+ * AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+ * AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
+ * AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+ *
+ * // Set the request info. The update info generally does not need to be
+ * // changed, as its defaults are suitable.
+ * requestInfo.mqttConnection = _mqttConnection;
+ * requestInfo.pThingName = THING_NAME;
+ * requestInfo.thingNameLength = THING_NAME_LENGTH;
+ *
+ * // Set the callback function to invoke.
+ * callbackInfo.function = _jobsCallback;
+ *
+ * // Queue Jobs START NEXT.
+ * AwsIotJobsError_t startNextResult = AwsIotJobs_StartNext( &requestInfo,
+ *                                                           &updateInfo,
+ *                                                           0,
+ *                                                           &callbackInfo,
+ *                                                           &startNextOperation );
+ *
+ * // START NEXT should have returned AWS_IOT_JOBS_STATUS_PENDING. The function
+ * // _jobsCallback will be invoked once the Jobs response is received.
+ * @endcode
  */
 /* @[declare_jobs_startnext] */
 AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
@@ -232,6 +294,28 @@ AwsIotJobsError_t AwsIotJobs_StartNext( const AwsIotJobsRequestInfo_t * pRequest
 /**
  * @brief Start the next pending job execution for a Thing with a timeout for
  * receiving the response.
+ *
+ * This function queues a Jobs START NEXT, then waits for the result. Internally,
+ * this function is a call to @ref jobs_function_startnext followed by
+ * @ref jobs_function_wait. See @ref jobs_function_startnext for more information
+ * on the Jobs START NEXT command.
+ *
+ * @param[in] pRequestInfo Jobs request parameters.
+ * @param[in] pUpdateInfo Jobs update parameters.
+ * @param[in] flags Flags which modify the behavior of the Jobs request. See
+ * @ref jobs_constants_flags.
+ * @param[in] timeoutMs If a response is not received within this timeout, this
+ * function returns #AWS_IOT_JOBS_TIMEOUT.
+ * @param[out] pJobsResponse The response received from the Jobs service.
+ *
+ * @return One of the following:
+ * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_BAD_PARAMETER
+ * - #AWS_IOT_JOBS_NO_MEMORY
+ * - #AWS_IOT_JOBS_MQTT_ERROR
+ * - #AWS_IOT_JOBS_BAD_RESPONSE
+ * - #AWS_IOT_JOBS_TIMEOUT
+ * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  */
 /* @[declare_jobs_timedstartnext] */
 AwsIotJobsError_t AwsIotJobs_TimedStartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
