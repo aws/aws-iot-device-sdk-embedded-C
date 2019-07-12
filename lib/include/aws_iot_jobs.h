@@ -123,7 +123,8 @@ void AwsIotJobs_Cleanup( void );
  * (https://docs.aws.amazon.com/iot/latest/developerguide/jobs-api.html#mqtt-getpendingjobexecutions)
  * command of the Jobs API, which gets the list of all Jobs for a Thing that are
  * not in a terminal state. The list of retrieved Jobs is returned as the `pResponse`
- * member in #AwsIotJobsCallbackParam_t.
+ * member in #AwsIotJobsCallbackParam_t, or through the #AwsIotJobsResponse_t
+ * parameter of @ref jobs_function_wait.
  *
  * @param[in] pRequestInfo Jobs request parameters.
  * @param[in] flags Flags which modify the behavior of the Jobs request. See
@@ -328,6 +329,75 @@ AwsIotJobsError_t AwsIotJobs_TimedStartNext( const AwsIotJobsRequestInfo_t * pRe
 /**
  * @brief Get detailed information about a job execution and receive an asynchronous
  * notification when the response arrives.
+ *
+ * This function implements the [DescribeJobExecution]
+ * (https://docs.aws.amazon.com/iot/latest/developerguide/jobs-api.html#mqtt-describejobexecution)
+ * command of the Jobs API, which gets detailed information about a job execution.
+ * The description is returned as the `pResponse` member in #AwsIotJobsCallbackParam_t,
+ * or through the #AwsIotJobsResponse_t parameter of @ref jobs_function_wait.
+ *
+ * @param[in] pRequestInfo Jobs request parameters.
+ * @param[in] executionNumber The execution number to describe. Optional; pass
+ * #AWS_IOT_JOBS_NO_EXECUTION_NUMBER to ignore.
+ * @param[in] includeJobDocument Whether the response should include the full
+ * Job document.
+ * @param[in] flags Flags which modify the behavior of the Jobs request. See
+ * @ref jobs_constants_flags.
+ * @param[in] pCallbackInfo Asynchronous notification of this function's completion.
+ * @param[out] pDescribeOperation Set to a handle by which this operation may be referenced
+ * after this function returns. This reference is invalidated once the Jobs operation
+ * completes.
+ *
+ * @return This function will return #AWS_IOT_JOBS_STATUS_PENDING upon successfully
+ * queuing the Jobs operation.
+ * @return If this function fails before queuing the Jobs operation, it will return one of:
+ * - #AWS_IOT_JOBS_BAD_PARAMETER
+ * - #AWS_IOT_JOBS_NO_MEMORY
+ * @return Upon successful completion of the Jobs operation (either through an #AwsIotJobsCallbackInfo_t
+ * or @ref jobs_function_wait), the status will be #AWS_IOT_JOBS_SUCCESS.
+ * @return Should the Jobs operation fail, the status will be one of:
+ * - #AWS_IOT_JOBS_NO_MEMORY (Memory could not be allocated for incoming document)
+ * - #AWS_IOT_JOBS_MQTT_ERROR
+ * - #AWS_IOT_JOBS_BAD_RESPONSE
+ * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
+ *
+ * @see @ref jobs_function_timeddescribe for a blocking variant of this function.
+ *
+ * <b>Example</b>
+ * @code{c}
+ * #define THING_NAME "Test_device"
+ * #define THING_NAME_LENGTH ( sizeof( THING_NAME ) - 1 )
+ *
+ * // Signature of Jobs callback function.
+ * void _jobsCallback( void * pCallbackContext, AwsIotJobsCallbackParam_t * pCallbackParam );
+ *
+ * AwsIotJobsOperation_t describeOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+ * AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+ * AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+ *
+ * // Set the request info.
+ * requestInfo.mqttConnection = _mqttConnection;
+ * requestInfo.pThingName = THING_NAME;
+ * requestInfo.thingNameLength = THING_NAME_LENGTH;
+ *
+ * // Describe the next Job. Or, this may be set to a specific Job ID.
+ * requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
+ * requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
+ *
+ * // Set the callback function to invoke.
+ * callbackInfo.function = _jobsCallback;
+ *
+ * // Queue Jobs DESCRIBE.
+ * AwsIotJobsError_t describeResult = AwsIotJobs_Describe( &requestInfo,
+ *                                                         AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+ *                                                         false,
+ *                                                         0,
+ *                                                         &callbackInfo,
+ *                                                         &describeOperation );
+ *
+ * // DESCRIBE should have returned AWS_IOT_JOBS_STATUS_PENDING. The function
+ * // _jobsCallback will be invoked once the Jobs response is received.
+ * @endcode
  */
 /* @[declare_jobs_describe] */
 AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestInfo,
@@ -341,6 +411,31 @@ AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestI
 /**
  * @brief Get detailed information about a job execution with a timeout for receiving
  * the response.
+ *
+ * This function queues a Jobs DESCRIBE, then waits for the result. Internally,
+ * this function is a call to @ref jobs_function_describe followed by
+ * @ref jobs_function_wait. See @ref jobs_function_describe for more information
+ * on the Jobs DESCRIBE command.
+ *
+ * @param[in] pRequestInfo Jobs request parameters.
+ * @param[in] executionNumber The execution number to describe. Optional; pass
+ * #AWS_IOT_JOBS_NO_EXECUTION_NUMBER to ignore.
+ * @param[in] includeJobDocument Whether the response should include the full
+ * Job document.
+ * @param[in] flags Flags which modify the behavior of the Jobs request. See
+ * @ref jobs_constants_flags.
+ * @param[in] timeoutMs If a response is not received within this timeout, this
+ * function returns #AWS_IOT_JOBS_TIMEOUT.
+ * @param[out] pJobsResponse The response received from the Jobs service.
+ *
+ * @return One of the following:
+ * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_BAD_PARAMETER
+ * - #AWS_IOT_JOBS_NO_MEMORY
+ * - #AWS_IOT_JOBS_MQTT_ERROR
+ * - #AWS_IOT_JOBS_BAD_RESPONSE
+ * - #AWS_IOT_JOBS_TIMEOUT
+ * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  */
 /* @[declare_jobs_timeddescribe] */
 AwsIotJobsError_t AwsIotJobs_TimedDescribe( const AwsIotJobsRequestInfo_t * pRequestInfo,
