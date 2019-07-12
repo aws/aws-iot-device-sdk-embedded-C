@@ -733,6 +733,79 @@ AwsIotJobsError_t AwsIotJobs_SetNotifyPendingCallback( IotMqttConnection_t mqttC
 
 /**
  * @brief Set a callback to be invoked when the next pending Job changes.
+ *
+ * The Jobs service publishes a [NextJobExecutionChanged]
+ * (https://docs.aws.amazon.com/iot/latest/developerguide/jobs-api.html#mqtt-nextjobexecutionchanged)
+ * message to the `jobs/notify-next` topic whenever the next Job execution in
+ * the list of pending Job executions changes for a Thing. The message sent is
+ * useful for being notified of changes to the next Job.
+ *
+ * A <i>NOTIFY NEXT</i> callback may be invoked whenever a message is published
+ * to `jobs/notify-next`. Each Thing may have a single NOTIFY NEXT callback set. This
+ * function modifies the NOTIFY NEXT callback for a specific Thing depending on
+ * the `pNotifyNextCallback` parameter and the presence of any existing NOTIFY
+ * NEXT callback.
+ * - When no existing NOTIFY NEXT callback exists for a specific Thing, a new
+ * callback is added.
+ * - If there is an existing NOTIFY NEXT callback and `pNotifyNextCallback` is not `NULL`,
+ * then the existing callback function and parameter are replaced with `pNotifyNextCallback`.
+ * - If there is an existing NOTIFY NEXT callback and `pNotifyNextCallback` is `NULL`,
+ * then the callback is removed.
+ *
+ * @param[in] mqttConnection The MQTT connection to use for the subscription to `jobs/notify-next`.
+ * @param[in] pThingName The subscription to `jobs/notify-next` will be added for
+ * this Thing Name.
+ * @param[in] thingNameLength The length of `pThingName`.
+ * @param[in] flags This parameter is for future-compatibility. Currently, flags are
+ * not supported for this function and this parameter is ignored.
+ * @param[in] pNotifyNextCallback Callback function to invoke for incoming messages.
+ *
+ * @return One of the following:
+ * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_BAD_PARAMETER
+ * - #AWS_IOT_JOBS_NO_MEMORY
+ * - #AWS_IOT_JOBS_MQTT_ERROR
+ * - #AWS_IOT_JOBS_TIMEOUT
+ *
+ * @see @ref jobs_function_setnotifypendingcallback for the function to register callbacks
+ * for all pending Job changes.
+ *
+ * <b>Example</b>:
+ * @code{c}
+ * #define THING_NAME "Test_device"
+ * #define THING_NAME_LENGTH ( sizeof( THING_NAME ) - 1 )
+ *
+ * AwsIotJobsError_t result = AWS_IOT_JOBS_STATUS_PENDING;
+ * AwsIotJobsCallbackInfo_t notifyNextCallback = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+ *
+ * // _jobsCallback will be invoked when any messages are received.
+ * notifyNextCallback.function = _jobsCallback;
+ *
+ * // Set the NOTIFY NEXT callback for the Thing "Test_device".
+ * result = AwsIotJobs_SetNotifyNextCallback( mqttConnection,
+ *                                            THING_NAME,
+ *                                            THING_NAME_LENGTH,
+ *                                            0,
+ *                                            &notifyNextCallback );
+ *
+ * // Check if the callback was successfully set.
+ * if( status == AWS_IOT_JOBS_SUCCESS )
+ * {
+ *     // The callback will now be invoked whenever the next pending Job
+ *     // execution changes.
+ *
+ *     // Once the callback is no longer needed, it may be removed by passing
+ *     // NULL as pNotifyNextCallback.
+ *     status = AwsIotJobs_SetNotifyNextCallback( mqttConnection,
+ *                                                THING_NAME,
+ *                                                THING_NAME_LENGTH,
+ *                                                0,
+ *                                                NULL );
+ *
+ *     // The return value from removing a callback should always be success.
+ *     assert( status == AWS_IOT_JOBS_SUCCESS );
+ * }
+ * @endcode
  */
 /* @[declare_jobs_setnotifynextcallback] */
 AwsIotJobsError_t AwsIotJobs_SetNotifyNextCallback( IotMqttConnection_t mqttConnection,
