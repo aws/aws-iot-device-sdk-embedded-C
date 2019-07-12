@@ -496,6 +496,10 @@ AwsIotJobsError_t AwsIotJobs_TimedDescribe( const AwsIotJobsRequestInfo_t * pReq
  * requestInfo.pThingName = THING_NAME;
  * requestInfo.thingNameLength = THING_NAME_LENGTH;
  *
+ * // A Job ID must be set. AWS_IOT_JOBS_NEXT_JOB is not valid for UPDATE.
+ * requestInfo.pJobId = "job-id";
+ * requestInfo.jobIdLength = 6;
+ *
  * // Set the update info.
  * updateInfo.newStatus = AWS_IOT_JOB_STATE_SUCCEEDED;
  *
@@ -557,6 +561,85 @@ AwsIotJobsError_t AwsIotJobs_TimedUpdate( const AwsIotJobsRequestInfo_t * pReque
 
 /**
  * @brief Wait for a Jobs operation to complete.
+ *
+ * This function blocks to wait for a [GET PENDING](@ref jobs_function_getpending),
+ * [START NEXT](@ref jobs_function_startnext), [DESCRIBE](@ref jobs_function_describe),
+ * or [UPDATE](@ref jobs_function_update) operation to complete. These operations are
+ * by default asynchronous; the function calls queue an operation for processing,
+ * and a callback is invoked once the operation is complete.
+ *
+ * To use this function, the flag #AWS_IOT_JOBS_FLAG_WAITABLE must have been
+ * set in the operation's function call. Additionally, this function must always
+ * be called with any waitable operation to clean up resources.
+ *
+ * Regardless of its return value, this function always clean up resources used
+ * by the waitable operation. This means `operation` is invalidated as soon as
+ * this function returns, even if it returns #AWS_IOT_JOBS_TIMEOUT or another
+ * error.
+ *
+ * @param[in] operation Reference to the Jobs operation to wait for. The flag
+ * #AWS_IOT_JOBS_FLAG_WAITABLE must have been set for this operation.
+ * @param[in] timeoutMs How long to wait before returning #AWS_IOT_JOBS_TIMEOUT.
+ * @param[out] pJobsResponse The response received from the Jobs service.
+ *
+ * @return One of the following:
+ * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_BAD_PARAMETER
+ * - #AWS_IOT_JOBS_BAD_RESPONSE
+ * - #AWS_IOT_JOBS_TIMEOUT
+ * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
+ *
+ * <b>Example</b>:
+ * @code{c}
+ * #define THING_NAME "Test_device"
+ * #define THING_NAME_LENGTH ( sizeof( THING_NAME ) - 1 )
+ *
+ * AwsIotJobsOperation_t updateOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+ * AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+ * AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
+ * AwsIotJobsResponse_t jobsResponse = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
+ *
+ * // Set the request info.
+ * requestInfo.mqttConnection = _mqttConnection;
+ * requestInfo.pThingName = THING_NAME;
+ * requestInfo.thingNameLength = THING_NAME_LENGTH;
+ *
+ * // Set the function used to allocte memory for an incoming response.
+ * requestInfo.mallocResponse = malloc;
+ *
+ * // A Job ID must be set. AWS_IOT_JOBS_NEXT_JOB is not valid for UPDATE.
+ * requestInfo.pJobId = "job-id";
+ * requestInfo.jobIdLength = 6;
+ *
+ * // Set the update info.
+ * updateInfo.newStatus = AWS_IOT_JOB_STATE_SUCCEEDED;
+ *
+ * // Queue Jobs UPDATE.
+ * AwsIotJobsError_t updateResult = AwsIotJobs_Update( &requestInfo,
+ *                                                     &updateInfo,
+ *                                                     AWS_IOT_JOBS_FLAG_WAITABLE,
+ *                                                     NULL,
+ *                                                     &updateOperation );
+ *
+ * // UPDATE should have returned AWS_IOT_JOBS_STATUS_PENDING. The call to wait
+ * // returns once the result of the UPDATE is available or the timeout expires.
+ * if( updateResult == AWS_IOT_JOBS_STATUS_PENDING )
+ * {
+ *     updateResult = AwsIotJobs_Wait( updateOperation, 5000, &jobsResponse );
+ *
+ *     if( updateResult == AWS_IOT_JOBS_SUCCESS )
+ *     {
+ *         // Jobs operation succeeded. Do something with the Jobs response.
+ *
+ *         // Once the Jobs response is no longer needed, free it.
+ *         free( jobsResponse.pJobsResponse );
+ *     }
+ *     else
+ *     {
+ *         // Jobs operation failed.
+ *     }
+ * }
+ * @endcode
  */
 /* @[declare_jobs_wait] */
 AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
