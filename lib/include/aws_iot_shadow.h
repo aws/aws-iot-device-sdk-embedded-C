@@ -156,7 +156,7 @@ void AwsIotShadow_Cleanup( void );
  * AwsIotShadowError_t deleteResult = AwsIotShadow_Delete( mqttConnection,
  *                                                         THING_NAME,
  *                                                         THING_NAME_LENGTH,
- *                                                         0,
+ *                                                         AWS_IOT_SHADOW_FLAG_WAITABLE,
  *                                                         NULL,
  *                                                         &deleteOperation );
  *

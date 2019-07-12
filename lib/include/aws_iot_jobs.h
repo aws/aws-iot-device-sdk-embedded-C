@@ -119,6 +119,12 @@ void AwsIotJobs_Cleanup( void );
  * @brief Get the list of all pending jobs for a Thing and receive an asynchronous
  * notification when the response arrives.
  *
+ * This function implements the [GetPendingJobExecutions]
+ * (https://docs.aws.amazon.com/iot/latest/developerguide/jobs-api.html#mqtt-getpendingjobexecutions)
+ * command of the Jobs API, which gets the list of all Jobs for a Thing that are
+ * not in a terminal state. The list of retrieved Jobs is returned as the `pResponse`
+ * member in #AwsIotJobsCallbackParam_t.
+ *
  * @param[in] pRequestInfo Jobs request parameters.
  * @param[in] flags Flags which modify the behavior of the Jobs request. See
  * @ref jobs_constants_flags.
@@ -141,6 +147,36 @@ void AwsIotJobs_Cleanup( void );
  * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  *
  * @see @ref jobs_function_timedgetpending for a blocking variant of this function.
+ *
+ * <b>Example</b>
+ * @code{c}
+ * #define THING_NAME "Test_device"
+ * #define THING_NAME_LENGTH ( sizeof( THING_NAME ) - 1 )
+ *
+ * // Signature of Jobs callback function.
+ * void _jobsCallback( void * pCallbackContext, AwsIotJobsCallbackParam_t * pCallbackParam );
+ *
+ * AwsIotJobsOperation_t getPendingOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+ * AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+ * AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+ *
+ * // Set the request info.
+ * requestInfo.mqttConnection = _mqttConnection;
+ * requestInfo.pThingName = THING_NAME;
+ * requestInfo.thingNameLength = THING_NAME_LENGTH;
+ *
+ * // Set the callback function to invoke.
+ * callbackInfo.function = _jobsCallback;
+ *
+ * // Queue Jobs GET PENDING.
+ * AwsIotJobsError_t getPendingResult = AwsIotJobs_GetPending( &requestInfo,
+ *                                                             0,
+ *                                                             &callbackInfo,
+ *                                                             &getPendingOperation );
+ *
+ * // GET PENDING should have returned AWS_IOT_JOBS_STATUS_PENDING. The function
+ * // _jobsCallback will be invoked once the Jobs response is received.
+ * @endcode
  */
 /* @[declare_jobs_getpending] */
 AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
@@ -152,6 +188,27 @@ AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pReques
 /**
  * @brief Get the list of all pending jobs for a Thing with a timeout for receiving
  * the response.
+ *
+ * This function queues a Jobs GET PENDING, then waits for the result. Internally,
+ * this function is a call to @ref jobs_function_getpending followed by
+ * @ref jobs_function_wait. See @ref jobs_function_getpending for more information
+ * on the Jobs GET PENDING command.
+ *
+ * @param[in] pRequestInfo Jobs request parameters.
+ * @param[in] flags Flags which modify the behavior of the Jobs request. See
+ * @ref jobs_constants_flags.
+ * @param[in] timeoutMs If a response is not received within this timeout, this
+ * function returns #AWS_IOT_JOBS_TIMEOUT.
+ * @param[out] pJobsResponse The response received from the Jobs service.
+ *
+ * @return One of the following:
+ * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_BAD_PARAMETER
+ * - #AWS_IOT_JOBS_NO_MEMORY
+ * - #AWS_IOT_JOBS_MQTT_ERROR
+ * - #AWS_IOT_JOBS_BAD_RESPONSE
+ * - #AWS_IOT_JOBS_TIMEOUT
+ * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  */
 /* @[declare_jobs_timedgetpending] */
 AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
