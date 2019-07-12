@@ -156,7 +156,7 @@ void AwsIotShadow_Cleanup( void );
  * AwsIotShadowError_t deleteResult = AwsIotShadow_Delete( mqttConnection,
  *                                                         THING_NAME,
  *                                                         THING_NAME_LENGTH,
- *                                                         0,
+ *                                                         AWS_IOT_SHADOW_FLAG_WAITABLE,
  *                                                         NULL,
  *                                                         &deleteOperation );
  *
@@ -825,10 +825,10 @@ AwsIotShadowError_t AwsIotShadow_SetUpdatedCallback( IotMqttConnection_t mqttCon
  * @brief Remove persistent Thing Shadow operation topic subscriptions.
  *
  * Passing the flag @ref AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS to @ref shadow_function_delete,
- * @ref shadow_function_get, or @ref shadow_function_update causes the Shadow operation topic
- * subscriptions to be maintained for future calls to the same function. If a persistent
- * subscription for a Shadow topic are no longer needed, this function may be used to
- * remove it.
+ * @ref shadow_function_get, @ref shadow_function_update, or their <i>Timed</i> variants
+ * causes the Shadow operation topic subscriptions to be maintained for future calls to the
+ * same function. If a persistent subscription for a Shadow topic are no longer needed,
+ * this function may be used to remove it.
  *
  * @param[in] mqttConnection The MQTT connection associated with the persistent subscription.
  * @param[in] pThingName The Thing Name associated with the persistent subscription.
