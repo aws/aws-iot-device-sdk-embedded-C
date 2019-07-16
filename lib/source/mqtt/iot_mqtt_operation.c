@@ -40,6 +40,9 @@
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
+/* Atomics include. */
+#include "iot_atomic.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -676,8 +679,12 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
                                 void * pContext )
 {
     bool status = true;
+    uint32_t swapStatus = 0;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     size_t bytesSent = 0;
+
+    /* Swap status is not checked when asserts are disabled. */
+    ( void ) swapStatus;
 
     /* Retrieve the MQTT connection from the context. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
@@ -706,8 +713,6 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
                                             &pKeepAliveJob );
     IotMqtt_Assert( taskPoolStatus == IOT_TASKPOOL_SUCCESS );
 
-    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-
     /* Determine whether to send a PINGREQ or check for PINGRESP. */
     if( pPingreqOperation->u.operation.periodic.ping.nextPeriodMs ==
         pPingreqOperation->u.operation.periodic.ping.keepAliveMs )
@@ -730,7 +735,10 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
         {
             /* Assume the keep-alive will fail. The network receive callback will
              * clear the failure flag upon receiving a PINGRESP. */
-            pPingreqOperation->u.operation.periodic.ping.failure = 1;
+            swapStatus = Atomic_CompareAndSwap_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ),
+                                                    1,
+                                                    0 );
+            IotMqtt_Assert( swapStatus == 1 );
 
             /* Schedule a check for PINGRESP. */
             pPingreqOperation->u.operation.periodic.ping.nextPeriodMs = IOT_MQTT_RESPONSE_WAIT_MS;
@@ -744,7 +752,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     {
         IotLogDebug( "(MQTT connection %p) Checking for PINGRESP.", pMqttConnection );
 
-        if( pPingreqOperation->u.operation.periodic.ping.failure == 0 )
+        if( Atomic_Add_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ), 0 ) == 0 )
         {
             IotLogDebug( "(MQTT connection %p) PINGRESP was received.", pMqttConnection );
 
@@ -790,8 +798,6 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     {
         EMPTY_ELSE_MARKER;
     }
-
-    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
     /* Close the connection on failures. */
     if( status == false )
