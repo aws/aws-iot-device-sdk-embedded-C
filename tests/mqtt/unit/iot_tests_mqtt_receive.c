@@ -782,9 +782,9 @@ TEST( MQTT_Unit_Receive, InvalidPacket )
  */
 TEST( MQTT_Unit_Receive, ReceiveMallocFail )
 {
-    /* Logging uses malloc and will interfere with this test.
-     * Only run if logging is disabled. */
-    #if LIBRARY_LOG_LEVEL == IOT_LOG_NONE
+    /* Logging uses malloc and will interfere with this test. Only run if logging
+     * is disabled. */
+    #if ( LIBRARY_LOG_LEVEL == IOT_LOG_NONE )
         _receiveContext_t receiveContext = { 0 };
 
         /* Data stream to process. Contains 2 SUBACKs. */
@@ -811,6 +811,12 @@ TEST( MQTT_Unit_Receive, ReceiveMallocFail )
         /* Network close function should not have been invoked. */
         TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
         TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
+    #else
+        /* Test tear down for this test group checks that deserializer overrides
+         * were called. Set these values to true so that the checks pass. */
+        _deserializeOverrideCalled = true;
+        _getPacketTypeCalled = true;
+        _getRemainingLengthCalled = true;
     #endif /* if LIBRARY_LOG_LEVEL != IOT_LOG_NONE */
 }
 
