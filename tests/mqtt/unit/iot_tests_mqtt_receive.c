@@ -791,6 +791,11 @@ TEST( MQTT_Unit_Receive, ReceiveMallocFail )
         0x90, 0x05, 0x00, 0x01, 0x00, 0x01, 0x02
     };
 
+    /* Logging uses malloc and will interfere with this test. */
+    #if LIBRARY_LOG_LEVEL != IOT_LOG_NONE
+        #error "This test does not work when logging is enabled."
+    #endif
+
     /* Set the members of the receive context. */
     receiveContext.pData = pDataStream;
     receiveContext.dataLength = sizeof( pDataStream );
