@@ -626,9 +626,14 @@ TEST_TEAR_DOWN( MQTT_Unit_Receive )
  */
 TEST_GROUP_RUNNER( MQTT_Unit_Receive )
 {
+    /* Logging uses malloc and will interfere with this test.
+     * Only run if logs are disabled. */
+    #if LIBRARY_LOG_LEVEL == IOT_LOG_NONE
+        RUN_TEST_CASE( MQTT_Unit_Receive, ReceiveMallocFail );
+    #endif
+
     RUN_TEST_CASE( MQTT_Unit_Receive, DecodeRemainingLength );
     RUN_TEST_CASE( MQTT_Unit_Receive, InvalidPacket );
-    RUN_TEST_CASE( MQTT_Unit_Receive, ReceiveMallocFail );
     RUN_TEST_CASE( MQTT_Unit_Receive, ConnackValid );
     RUN_TEST_CASE( MQTT_Unit_Receive, ConnackInvalid );
     RUN_TEST_CASE( MQTT_Unit_Receive, PublishValid );
@@ -790,11 +795,6 @@ TEST( MQTT_Unit_Receive, ReceiveMallocFail )
         0x90, 0x05, 0x00, 0x01, 0x00, 0x01, 0x02,
         0x90, 0x05, 0x00, 0x01, 0x00, 0x01, 0x02
     };
-
-    /* Logging uses malloc and will interfere with this test. */
-    #if LIBRARY_LOG_LEVEL != IOT_LOG_NONE
-        #error "This test does not work when logging is enabled."
-    #endif
 
     /* Set the members of the receive context. */
     receiveContext.pData = pDataStream;
