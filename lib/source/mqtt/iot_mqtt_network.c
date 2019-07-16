@@ -39,6 +39,9 @@
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
 
+/* Atomics include. */
+#include "iot_atomic.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -613,22 +616,18 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
             if( status == IOT_MQTT_SUCCESS )
             {
-                IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-
-                if( pMqttConnection->pingreq.u.operation.periodic.ping.failure == 0 )
+                if( Atomic_CompareAndSwap_u32( &( pMqttConnection->pingreq.u.operation.periodic.ping.failure ),
+                                               0,
+                                               1 ) == 1 )
+                {
+                    IotLogDebug( "(MQTT connection %p) PINGRESP successfully parsed.",
+                                 pMqttConnection );
+                }
+                else
                 {
                     IotLogWarn( "(MQTT connection %p) Unexpected PINGRESP received.",
                                 pMqttConnection );
                 }
-                else
-                {
-                    IotLogDebug( "(MQTT connection %p) PINGRESP successfully parsed.",
-                                 pMqttConnection );
-
-                    pMqttConnection->pingreq.u.operation.periodic.ping.failure = 0;
-                }
-
-                IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
             }
             else
             {
@@ -819,7 +818,6 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
     /* Mark the MQTT connection as disconnected and the keep-alive as failed. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
     pMqttConnection->disconnected = true;
-    pMqttConnection->pingreq.u.operation.periodic.ping.failure = 1;
 
     if( pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0 )
     {
