@@ -626,14 +626,9 @@ TEST_TEAR_DOWN( MQTT_Unit_Receive )
  */
 TEST_GROUP_RUNNER( MQTT_Unit_Receive )
 {
-    /* Logging uses malloc and will interfere with this test.
-     * Only run if logs are disabled. */
-    #if LIBRARY_LOG_LEVEL == IOT_LOG_NONE
-        RUN_TEST_CASE( MQTT_Unit_Receive, ReceiveMallocFail );
-    #endif
-
     RUN_TEST_CASE( MQTT_Unit_Receive, DecodeRemainingLength );
     RUN_TEST_CASE( MQTT_Unit_Receive, InvalidPacket );
+    RUN_TEST_CASE( MQTT_Unit_Receive, ReceiveMallocFail );
     RUN_TEST_CASE( MQTT_Unit_Receive, ConnackValid );
     RUN_TEST_CASE( MQTT_Unit_Receive, ConnackInvalid );
     RUN_TEST_CASE( MQTT_Unit_Receive, PublishValid );
@@ -787,32 +782,36 @@ TEST( MQTT_Unit_Receive, InvalidPacket )
  */
 TEST( MQTT_Unit_Receive, ReceiveMallocFail )
 {
-    _receiveContext_t receiveContext = { 0 };
+    /* Logging uses malloc and will interfere with this test.
+     * Only run if logging is disabled. */
+    #if LIBRARY_LOG_LEVEL == IOT_LOG_NONE
+        _receiveContext_t receiveContext = { 0 };
 
-    /* Data stream to process. Contains 2 SUBACKs. */
-    const uint8_t pDataStream[] =
-    {
-        0x90, 0x05, 0x00, 0x01, 0x00, 0x01, 0x02,
-        0x90, 0x05, 0x00, 0x01, 0x00, 0x01, 0x02
-    };
+        /* Data stream to process. Contains 2 SUBACKs. */
+        const uint8_t pDataStream[] =
+        {
+            0x90, 0x05, 0x00, 0x01, 0x00, 0x01, 0x02,
+            0x90, 0x05, 0x00, 0x01, 0x00, 0x01, 0x02
+        };
 
-    /* Set the members of the receive context. */
-    receiveContext.pData = pDataStream;
-    receiveContext.dataLength = sizeof( pDataStream );
+        /* Set the members of the receive context. */
+        receiveContext.pData = pDataStream;
+        receiveContext.dataLength = sizeof( pDataStream );
 
-    /* Set malloc to fail and process the first SUBACK. */
-    UnityMalloc_MakeMallocFailAfterCount( 0 );
-    IotMqtt_ReceiveCallback( &receiveContext,
-                             _pMqttConnection );
+        /* Set malloc to fail and process the first SUBACK. */
+        UnityMalloc_MakeMallocFailAfterCount( 0 );
+        IotMqtt_ReceiveCallback( &receiveContext,
+                                 _pMqttConnection );
 
-    /* Allow the use of malloc and process the second SUBACK. */
-    UnityMalloc_MakeMallocFailAfterCount( -1 );
-    IotMqtt_ReceiveCallback( &receiveContext,
-                             _pMqttConnection );
+        /* Allow the use of malloc and process the second SUBACK. */
+        UnityMalloc_MakeMallocFailAfterCount( -1 );
+        IotMqtt_ReceiveCallback( &receiveContext,
+                                 _pMqttConnection );
 
-    /* Network close function should not have been invoked. */
-    TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
-    TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
+        /* Network close function should not have been invoked. */
+        TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
+        TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
+    #endif /* if LIBRARY_LOG_LEVEL != IOT_LOG_NONE */
 }
 
 /*-----------------------------------------------------------*/
