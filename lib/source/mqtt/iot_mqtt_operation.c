@@ -539,8 +539,8 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
                      pMqttConnection,
                      IotMqtt_OperationType( pOperation->u.operation.type ),
                      pOperation,
-                     pOperation->u.operation.jobReference + 1,
-                     pOperation->u.operation.jobReference );
+                     ( long ) ( pOperation->u.operation.jobReference + 1 ),
+                     ( long ) ( pOperation->u.operation.jobReference ) );
 
         /* The job reference count must be 0 or 1 after the decrement. */
         IotMqtt_Assert( ( pOperation->u.operation.jobReference == 0 ) ||
