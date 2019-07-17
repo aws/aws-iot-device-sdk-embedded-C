@@ -688,7 +688,7 @@ TEST_GROUP_RUNNER( MQTT_System )
     RUN_TEST_CASE( MQTT_System, RestorePreviousSession );
     RUN_TEST_CASE( MQTT_System, WaitAfterDisconnect );
     RUN_TEST_CASE( MQTT_System, SubscribeCompleteReentrancy );
-    RUN_TEST_CASE( MQTT_System, IncomingPublishReentrancy )
+    RUN_TEST_CASE( MQTT_System, IncomingPublishReentrancy );
 }
 
 /*-----------------------------------------------------------*/
