@@ -46,6 +46,9 @@
 /* MQTT test access include. */
 #include "iot_test_access_mqtt.h"
 
+/* MQTT mock include. */
+#include "iot_tests_mqtt_mock.h"
+
 /* Atomics include. */
 #include "iot_atomic.h"
 
@@ -567,6 +570,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeUnsubscribeParameters );
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeMallocFail );
     RUN_TEST_CASE( MQTT_Unit_API, UnsubscribeMallocFail );
+    RUN_TEST_CASE( MQTT_Unit_API, SingleThreaded );
     RUN_TEST_CASE( MQTT_Unit_API, KeepAlivePeriodic );
     RUN_TEST_CASE( MQTT_Unit_API, KeepAliveJobCleanup );
 }
@@ -1350,6 +1354,46 @@ TEST( MQTT_Unit_API, UnsubscribeMallocFail )
     }
 
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test that MQTT can work in a single thread without the task pool.
+ */
+TEST( MQTT_Unit_API, SingleThreaded )
+{
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+    IotTaskPoolInfo_t taskPoolInfo = IOT_TASKPOOL_INFO_INITIALIZER_SMALL;
+
+    /* Shut down the system task pool to test if MQTT works without it. */
+    IotTaskPool_Destroy( IOT_SYSTEM_TASKPOOL );
+
+    /* Set the members of the subscription. */
+    subscription.pTopicFilter = TEST_TOPIC_NAME;
+    subscription.topicFilterLength = TEST_TOPIC_NAME_LENGTH;
+    subscription.callback.function = SUBSCRIPTION_CALLBACK;
+
+    if( TEST_PROTECT() )
+    {
+        /* Set up a mocked MQTT connection. */
+        TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &mqttConnection ) );
+
+        /* Add a subscription. */
+        status = IotMqtt_TimedSubscribe( mqttConnection, &subscription, 1, 0, TIMEOUT_MS );
+        TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+
+        /* Remove the subscription. */
+        status = IotMqtt_TimedUnsubscribe( mqttConnection, &subscription, 1, 0, TIMEOUT_MS );
+        TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+
+        IotTest_MqttMockCleanup();
+    }
+
+    /* Re-initialize the system task pool for test tear down. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateSystemTaskPool( &taskPoolInfo ) );
 }
 
 /*-----------------------------------------------------------*/
