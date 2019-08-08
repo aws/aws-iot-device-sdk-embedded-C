@@ -1156,7 +1156,7 @@ AwsIotJobsError_t AwsIotJobs_TimedUpdate( const AwsIotJobsRequestInfo_t * pReque
 
 AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
                                    uint32_t timeoutMs,
-                                   AwsIotJobsResponse_t * pJobsResponse )
+                                   AwsIotJobsResponse_t * const pJobsResponse )
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
 
