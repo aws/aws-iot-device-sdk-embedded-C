@@ -1313,36 +1313,27 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                 IotMqtt_Assert( pOperation->u.operation.pMqttPacket != NULL );
                 IotMqtt_Assert( pOperation->u.operation.packetSize > 0 );
 
-                /* Schedule the DISCONNECT operation for network transmission. */
-                if( _IotMqtt_ScheduleOperation( pOperation,
-                                                _IotMqtt_ProcessSend,
-                                                0 ) != IOT_MQTT_SUCCESS )
+                /* Send the DISCONNECT packet. */
+                _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+
+                /* Wait a short time for the DISCONNECT packet to be transmitted. */
+                status = IotMqtt_Wait( pOperation,
+                                       IOT_MQTT_RESPONSE_WAIT_MS );
+
+                /* A wait on DISCONNECT should only ever return SUCCESS, TIMEOUT,
+                 * or NETWORK ERROR. */
+                if( status == IOT_MQTT_SUCCESS )
                 {
-                    IotLogWarn( "(MQTT connection %p) Failed to schedule DISCONNECT for sending.",
-                                mqttConnection );
-                    _IotMqtt_DestroyOperation( pOperation );
+                    IotLogInfo( "(MQTT connection %p) Connection disconnected.", mqttConnection );
                 }
                 else
                 {
-                    /* Wait a short time for the DISCONNECT packet to be transmitted. */
-                    status = IotMqtt_Wait( pOperation,
-                                           IOT_MQTT_RESPONSE_WAIT_MS );
+                    IotMqtt_Assert( ( status == IOT_MQTT_TIMEOUT ) ||
+                                    ( status == IOT_MQTT_NETWORK_ERROR ) );
 
-                    /* A wait on DISCONNECT should only ever return SUCCESS, TIMEOUT,
-                     * or NETWORK ERROR. */
-                    if( status == IOT_MQTT_SUCCESS )
-                    {
-                        IotLogInfo( "(MQTT connection %p) Connection disconnected.", mqttConnection );
-                    }
-                    else
-                    {
-                        IotMqtt_Assert( ( status == IOT_MQTT_TIMEOUT ) ||
-                                        ( status == IOT_MQTT_NETWORK_ERROR ) );
-
-                        IotLogWarn( "(MQTT connection %p) DISCONNECT not sent, error %s.",
-                                    mqttConnection,
-                                    IotMqtt_strerror( status ) );
-                    }
+                    IotLogWarn( "(MQTT connection %p) DISCONNECT not sent, error %s.",
+                                mqttConnection,
+                                IotMqtt_strerror( status ) );
                 }
             }
             else
