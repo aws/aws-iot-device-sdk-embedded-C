@@ -709,7 +709,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     }
 
     /* Send the SUBSCRIBE packet. */
-    if( (flags & MQTT_INTERNAL_FLAG_SERIAL) == MQTT_INTERNAL_FLAG_SERIAL )
+    if( ( flags & MQTT_INTERNAL_FLAG_SERIAL ) == MQTT_INTERNAL_FLAG_SERIAL )
     {
         _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pSubscriptionOperation->job, pSubscriptionOperation );
     }
@@ -1684,38 +1684,45 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
         EMPTY_ELSE_MARKER;
     }
 
-    /* Add the PUBLISH operation to the send queue for network transmission. */
-    status = _IotMqtt_ScheduleOperation( pOperation,
-                                         _IotMqtt_ProcessSend,
-                                         0 );
-
-    if( status != IOT_MQTT_SUCCESS )
+    /* Send the PUBLISH packet. */
+    if( ( flags & MQTT_INTERNAL_FLAG_SERIAL ) == MQTT_INTERNAL_FLAG_SERIAL )
     {
-        IotLogError( "(MQTT connection %p) Failed to enqueue PUBLISH for sending.",
-                     mqttConnection );
+        _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+    }
+    else
+    {
+        status = _IotMqtt_ScheduleOperation( pOperation,
+                                             _IotMqtt_ProcessSend,
+                                             0 );
 
-        /* Clear the previously set (and now invalid) reference. */
-        if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
+        if( status != IOT_MQTT_SUCCESS )
         {
-            if( pPublishOperation != NULL )
+            IotLogError( "(MQTT connection %p) Failed to enqueue PUBLISH for sending.",
+                         mqttConnection );
+
+            /* Clear the previously set (and now invalid) reference. */
+            if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
             {
-                *pPublishOperation = IOT_MQTT_OPERATION_INITIALIZER;
+                if( pPublishOperation != NULL )
+                {
+                    *pPublishOperation = IOT_MQTT_OPERATION_INITIALIZER;
+                }
+                else
+                {
+                    EMPTY_ELSE_MARKER;
+                }
             }
             else
             {
                 EMPTY_ELSE_MARKER;
             }
+
+            IOT_GOTO_CLEANUP();
         }
         else
         {
             EMPTY_ELSE_MARKER;
         }
-
-        IOT_GOTO_CLEANUP();
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Clean up the PUBLISH operation if this function fails. Otherwise, set the
@@ -1762,13 +1769,13 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
     IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER,
                        * pPublishOperation = NULL;
 
-    /* Clear the flags. */
-    flags = 0;
+    /* Clear the flags, setting only the "serial" flag. */
+    flags = MQTT_INTERNAL_FLAG_SERIAL;
 
     /* Set the waitable flag and reference for QoS 1 PUBLISH. */
     if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
     {
-        flags = IOT_MQTT_FLAG_WAITABLE;
+        flags |= IOT_MQTT_FLAG_WAITABLE;
         pPublishOperation = &publishOperation;
     }
     else
