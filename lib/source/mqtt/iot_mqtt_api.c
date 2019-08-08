@@ -1143,8 +1143,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
 
     /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
-    status = IotMqtt_Wait( pOperation,
-                           timeoutMs );
+    status = IotMqtt_Wait( pOperation, timeoutMs );
 
     /* The call to wait cleans up the CONNECT operation, so set the pointer
      * to NULL. */
