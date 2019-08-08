@@ -1139,25 +1139,16 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     IotMqtt_Assert( pOperation->u.operation.pMqttPacket != NULL );
     IotMqtt_Assert( pOperation->u.operation.packetSize > 0 );
 
-    /* Add the CONNECT operation to the send queue for network transmission. */
-    status = _IotMqtt_ScheduleOperation( pOperation,
-                                         _IotMqtt_ProcessSend,
-                                         0 );
+    /* Send the CONNECT packet. */
+    _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
 
-    if( status != IOT_MQTT_SUCCESS )
-    {
-        IotLogError( "Failed to enqueue CONNECT for sending." );
-    }
-    else
-    {
-        /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
-        status = IotMqtt_Wait( pOperation,
-                               timeoutMs );
+    /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
+    status = IotMqtt_Wait( pOperation,
+                           timeoutMs );
 
-        /* The call to wait cleans up the CONNECT operation, so set the pointer
-         * to NULL. */
-        pOperation = NULL;
-    }
+    /* The call to wait cleans up the CONNECT operation, so set the pointer
+     * to NULL. */
+    pOperation = NULL;
 
     /* When a connection is successfully established, schedule keep-alive job. */
     if( status == IOT_MQTT_SUCCESS )
