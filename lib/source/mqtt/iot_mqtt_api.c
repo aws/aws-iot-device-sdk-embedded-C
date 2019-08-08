@@ -650,6 +650,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     {
         IOT_GOTO_CLEANUP();
     }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
     /* Check the subscription operation data and set the operation type. */
     IotMqtt_Assert( pSubscriptionOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
@@ -666,6 +670,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     if( status != IOT_MQTT_SUCCESS )
     {
         IOT_GOTO_CLEANUP();
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
     }
 
     /* Check the serialized MQTT packet. */
@@ -684,6 +692,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
         {
             IOT_GOTO_CLEANUP();
         }
+        else
+        {
+            EMPTY_ELSE_MARKER;
+        }
     }
 
     /* Set the reference, if provided. */
@@ -691,32 +703,51 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     {
         *pOperationReference = pSubscriptionOperation;
     }
-
-    /* Schedule the subscription operation for network transmission. */
-    status = _IotMqtt_ScheduleOperation( pSubscriptionOperation,
-                                         _IotMqtt_ProcessSend,
-                                         0 );
-
-    if( status != IOT_MQTT_SUCCESS )
+    else
     {
-        IotLogError( "(MQTT connection %p) Failed to schedule %s for sending.",
-                     mqttConnection,
-                     IotMqtt_OperationType( operation ) );
+        EMPTY_ELSE_MARKER;
+    }
 
-        if( operation == IOT_MQTT_SUBSCRIBE )
+    /* Send the SUBSCRIBE packet. */
+    if( (flags & MQTT_INTERNAL_FLAG_SERIAL) == MQTT_INTERNAL_FLAG_SERIAL )
+    {
+        _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pSubscriptionOperation->job, pSubscriptionOperation );
+    }
+    else
+    {
+        status = _IotMqtt_ScheduleOperation( pSubscriptionOperation,
+                                             _IotMqtt_ProcessSend,
+                                             0 );
+
+        if( status != IOT_MQTT_SUCCESS )
         {
-            _IotMqtt_RemoveSubscriptionByPacket( mqttConnection,
-                                                 pSubscriptionOperation->u.operation.packetIdentifier,
-                                                 -1 );
-        }
+            IotLogError( "(MQTT connection %p) Failed to schedule %s for sending.",
+                         mqttConnection,
+                         IotMqtt_OperationType( operation ) );
 
-        /* Clear the previously set (and now invalid) reference. */
-        if( pOperationReference != NULL )
-        {
-            *pOperationReference = IOT_MQTT_OPERATION_INITIALIZER;
-        }
+            if( operation == IOT_MQTT_SUBSCRIBE )
+            {
+                _IotMqtt_RemoveSubscriptionByPacket( mqttConnection,
+                                                     pSubscriptionOperation->u.operation.packetIdentifier,
+                                                     -1 );
+            }
+            else
+            {
+                EMPTY_ELSE_MARKER;
+            }
 
-        IOT_GOTO_CLEANUP();
+            /* Clear the previously set (and now invalid) reference. */
+            if( pOperationReference != NULL )
+            {
+                *pOperationReference = IOT_MQTT_OPERATION_INITIALIZER;
+            }
+            else
+            {
+                EMPTY_ELSE_MARKER;
+            }
+
+            IOT_GOTO_CLEANUP();
+        }
     }
 
     /* Clean up if this function failed. */
@@ -727,6 +758,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
         if( pSubscriptionOperation != NULL )
         {
             _IotMqtt_DestroyOperation( pSubscriptionOperation );
+        }
+        else
+        {
+            EMPTY_ELSE_MARKER;
         }
     }
     else
@@ -1386,7 +1421,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
     status = IotMqtt_Subscribe( mqttConnection,
                                 pSubscriptionList,
                                 subscriptionCount,
-                                IOT_MQTT_FLAG_WAITABLE,
+                                IOT_MQTT_FLAG_WAITABLE | MQTT_INTERNAL_FLAG_SERIAL,
                                 NULL,
                                 &subscribeOperation );
 
@@ -1442,7 +1477,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
     status = IotMqtt_Unsubscribe( mqttConnection,
                                   pSubscriptionList,
                                   subscriptionCount,
-                                  IOT_MQTT_FLAG_WAITABLE,
+                                  IOT_MQTT_FLAG_WAITABLE | MQTT_INTERNAL_FLAG_SERIAL,
                                   NULL,
                                   &unsubscribeOperation );
 

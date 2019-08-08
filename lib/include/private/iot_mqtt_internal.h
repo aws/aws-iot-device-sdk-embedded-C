@@ -239,6 +239,16 @@
  */
 #define MQTT_REMAINING_LENGTH_INVALID                          ( ( size_t ) 268435456 )
 
+/**
+ * @brief When this flag is passed, MQTT functions will execute jobs on the calling
+ * thread, bypassing the task pool.
+ *
+ * This flag is used along with @ref mqtt_constants_flags, but is intended for internal
+ * use only. Nevertheless, its value must be bitwise exclusive of all conflicting
+ * @ref mqtt_constants_flags.
+ */
+#define MQTT_INTERNAL_FLAG_SERIAL                              ( 0x80000000 )
+
 /*---------------------- MQTT internal data structures ----------------------*/
 
 /**
@@ -303,7 +313,7 @@ typedef struct _mqttOperation
                 struct
                 {
                     uint32_t failure;      /**< @brief Flag tracking keep-alive status. */
-                    uint32_t keepAliveMs;     /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
+                    uint32_t keepAliveMs;  /**< @brief Keep-alive interval in milliseconds. Its max value (per spec) is 65,535,000. */
                     uint32_t nextPeriodMs; /**< @brief Relative delay for next keep-alive job. */
                 } ping;                    /**< @brief Additional information for keep-alive pings. */
             } periodic;                    /**< @brief Additional information for periodic operations. */
