@@ -1384,32 +1384,40 @@ TEST( MQTT_Unit_API, SingleThreaded )
     publishInfo.payloadLength = 4;
     publishInfo.qos = IOT_MQTT_QOS_1;
 
-    /* Set up a mocked MQTT connection. */
-    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &mqttConnection ) );
+    if( TEST_PROTECT() )
+    {
+        /* Set up a mocked MQTT connection. */
+        TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &mqttConnection ) );
 
-    /* Add a subscription. */
-    status = IotMqtt_TimedSubscribe( mqttConnection, &subscription, 1, 0, DUP_CHECK_TIMEOUT );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+        /* Add a subscription. */
+        status = IotMqtt_TimedSubscribe( mqttConnection, &subscription, 1, 0, DUP_CHECK_TIMEOUT );
+        TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
-    /* Transmit a message with no retry. */
-    status = IotMqtt_TimedPublish( mqttConnection, &publishInfo, 0, DUP_CHECK_TIMEOUT );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+        /* Transmit a message with no retry. */
+        status = IotMqtt_TimedPublish( mqttConnection, &publishInfo, 0, DUP_CHECK_TIMEOUT );
+        TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
-    /* Remove the subscription. */
-    status = IotMqtt_TimedUnsubscribe( mqttConnection, &subscription, 1, 0, DUP_CHECK_TIMEOUT );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+        /* Remove the subscription. */
+        status = IotMqtt_TimedUnsubscribe( mqttConnection, &subscription, 1, 0, DUP_CHECK_TIMEOUT );
+        TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
-    /* Re-initialize the system task pool. The task pool must be available to
-     * send messages with a retry. */
-    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateSystemTaskPool( &taskPoolInfo ) );
+        /* Re-initialize the system task pool. The task pool must be available to
+         * send messages with a retry. */
+        TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateSystemTaskPool( &taskPoolInfo ) );
 
-    /* Transmit a message with a retry. */
-    publishInfo.retryLimit = DUP_CHECK_RETRY_LIMIT;
-    publishInfo.retryMs = DUP_CHECK_RETRY_MS;
-    status = IotMqtt_TimedPublish( mqttConnection, &publishInfo, 0, DUP_CHECK_TIMEOUT );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+        /* Transmit a message with a retry. */
+        publishInfo.retryLimit = DUP_CHECK_RETRY_LIMIT;
+        publishInfo.retryMs = DUP_CHECK_RETRY_MS;
+        status = IotMqtt_TimedPublish( mqttConnection, &publishInfo, 0, DUP_CHECK_TIMEOUT );
+        TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
-    IotTest_MqttMockCleanup();
+        IotTest_MqttMockCleanup();
+    }
+    else
+    {
+        /* Re-initialize the system task pool for test tear down. */
+        TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateSystemTaskPool( &taskPoolInfo ) );
+    }
 }
 
 /*-----------------------------------------------------------*/
