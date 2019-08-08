@@ -378,32 +378,6 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     IotListDouble_Create( &( pMqttConnection->pendingProcessing ) );
     IotListDouble_Create( &( pMqttConnection->pendingResponse ) );
 
-    /* AWS IoT service limits set minimum and maximum values for keep-alive interval.
-     * Adjust the user-provided keep-alive interval based on these requirements. */
-    if( awsIotMqttMode == true )
-    {
-        if( keepAliveSeconds < AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE )
-        {
-            keepAliveSeconds = AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE;
-        }
-        else if( keepAliveSeconds > AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE )
-        {
-            keepAliveSeconds = AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE;
-        }
-        else if( keepAliveSeconds == 0 )
-        {
-            keepAliveSeconds = AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE;
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
-
     /* Check if keep-alive is active for this connection. */
     if( keepAliveSeconds != 0 )
     {
