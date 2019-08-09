@@ -1116,7 +1116,7 @@ TEST( MQTT_System, WaitAfterDisconnect )
          * timing of publish versus disconnect, so the statuses are not checked. */
         for( i = 0; i < 3; i++ )
         {
-            status = IotMqtt_Wait( pPublishOperation[ i ], 100 );
+            ( void ) IotMqtt_Wait( pPublishOperation[ i ], 100 );
         }
     }
 }
