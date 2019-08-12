@@ -1338,23 +1338,21 @@ void _IotMqtt_Notify( _mqttOperation_t * pOperation )
         }
         else
         {
-            EMPTY_ELSE_MARKER;
-        }
+            /* Post to a waitable operation's semaphore. */
+            if( waitable == true )
+            {
+                IotLogDebug( "(MQTT connection %p, %s operation %p) Waitable operation "
+                             "notified of completion.",
+                             pOperation->pMqttConnection,
+                             IotMqtt_OperationType( pOperation->u.operation.type ),
+                             pOperation );
 
-        /* Post to a waitable operation's semaphore. */
-        if( waitable == true )
-        {
-            IotLogDebug( "(MQTT connection %p, %s operation %p) Waitable operation "
-                         "notified of completion.",
-                         pOperation->pMqttConnection,
-                         IotMqtt_OperationType( pOperation->u.operation.type ),
-                         pOperation );
-
-            IotSemaphore_Post( &( pOperation->u.operation.notify.waitSemaphore ) );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
+                IotSemaphore_Post( &( pOperation->u.operation.notify.waitSemaphore ) );
+            }
+            else
+            {
+                EMPTY_ELSE_MARKER;
+            }
         }
     }
     else
