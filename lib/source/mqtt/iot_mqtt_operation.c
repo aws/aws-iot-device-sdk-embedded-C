@@ -506,11 +506,6 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
                                                 pOperation->job,
                                                 NULL );
 
-        /* If the operation's job was not canceled, it must be already executing.
-         * Any other return value is invalid. */
-        IotMqtt_Assert( ( taskPoolStatus == IOT_TASKPOOL_SUCCESS ) ||
-                        ( taskPoolStatus == IOT_TASKPOOL_CANCEL_FAILED ) );
-
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
             IotLogDebug( "(MQTT connection %p, %s operation %p) Job canceled.",

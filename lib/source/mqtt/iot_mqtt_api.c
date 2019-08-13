@@ -378,32 +378,6 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
     IotListDouble_Create( &( pMqttConnection->pendingProcessing ) );
     IotListDouble_Create( &( pMqttConnection->pendingResponse ) );
 
-    /* AWS IoT service limits set minimum and maximum values for keep-alive interval.
-     * Adjust the user-provided keep-alive interval based on these requirements. */
-    if( awsIotMqttMode == true )
-    {
-        if( keepAliveSeconds < AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE )
-        {
-            keepAliveSeconds = AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE;
-        }
-        else if( keepAliveSeconds > AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE )
-        {
-            keepAliveSeconds = AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE;
-        }
-        else if( keepAliveSeconds == 0 )
-        {
-            keepAliveSeconds = AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE;
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
-
     /* Check if keep-alive is active for this connection. */
     if( keepAliveSeconds != 0 )
     {
@@ -676,6 +650,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     {
         IOT_GOTO_CLEANUP();
     }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
     /* Check the subscription operation data and set the operation type. */
     IotMqtt_Assert( pSubscriptionOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
@@ -692,6 +670,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     if( status != IOT_MQTT_SUCCESS )
     {
         IOT_GOTO_CLEANUP();
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
     }
 
     /* Check the serialized MQTT packet. */
@@ -710,6 +692,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
         {
             IOT_GOTO_CLEANUP();
         }
+        else
+        {
+            EMPTY_ELSE_MARKER;
+        }
     }
 
     /* Set the reference, if provided. */
@@ -717,32 +703,51 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     {
         *pOperationReference = pSubscriptionOperation;
     }
-
-    /* Schedule the subscription operation for network transmission. */
-    status = _IotMqtt_ScheduleOperation( pSubscriptionOperation,
-                                         _IotMqtt_ProcessSend,
-                                         0 );
-
-    if( status != IOT_MQTT_SUCCESS )
+    else
     {
-        IotLogError( "(MQTT connection %p) Failed to schedule %s for sending.",
-                     mqttConnection,
-                     IotMqtt_OperationType( operation ) );
+        EMPTY_ELSE_MARKER;
+    }
 
-        if( operation == IOT_MQTT_SUBSCRIBE )
+    /* Send the SUBSCRIBE packet. */
+    if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
+    {
+        _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pSubscriptionOperation->job, pSubscriptionOperation );
+    }
+    else
+    {
+        status = _IotMqtt_ScheduleOperation( pSubscriptionOperation,
+                                             _IotMqtt_ProcessSend,
+                                             0 );
+
+        if( status != IOT_MQTT_SUCCESS )
         {
-            _IotMqtt_RemoveSubscriptionByPacket( mqttConnection,
-                                                 pSubscriptionOperation->u.operation.packetIdentifier,
-                                                 -1 );
-        }
+            IotLogError( "(MQTT connection %p) Failed to schedule %s for sending.",
+                         mqttConnection,
+                         IotMqtt_OperationType( operation ) );
 
-        /* Clear the previously set (and now invalid) reference. */
-        if( pOperationReference != NULL )
-        {
-            *pOperationReference = IOT_MQTT_OPERATION_INITIALIZER;
-        }
+            if( operation == IOT_MQTT_SUBSCRIBE )
+            {
+                _IotMqtt_RemoveSubscriptionByPacket( mqttConnection,
+                                                     pSubscriptionOperation->u.operation.packetIdentifier,
+                                                     -1 );
+            }
+            else
+            {
+                EMPTY_ELSE_MARKER;
+            }
 
-        IOT_GOTO_CLEANUP();
+            /* Clear the previously set (and now invalid) reference. */
+            if( pOperationReference != NULL )
+            {
+                *pOperationReference = IOT_MQTT_OPERATION_INITIALIZER;
+            }
+            else
+            {
+                EMPTY_ELSE_MARKER;
+            }
+
+            IOT_GOTO_CLEANUP();
+        }
     }
 
     /* Clean up if this function failed. */
@@ -753,6 +758,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
         if( pSubscriptionOperation != NULL )
         {
             _IotMqtt_DestroyOperation( pSubscriptionOperation );
+        }
+        else
+        {
+            EMPTY_ELSE_MARKER;
         }
     }
     else
@@ -1139,25 +1148,15 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     IotMqtt_Assert( pOperation->u.operation.pMqttPacket != NULL );
     IotMqtt_Assert( pOperation->u.operation.packetSize > 0 );
 
-    /* Add the CONNECT operation to the send queue for network transmission. */
-    status = _IotMqtt_ScheduleOperation( pOperation,
-                                         _IotMqtt_ProcessSend,
-                                         0 );
+    /* Send the CONNECT packet. */
+    _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
 
-    if( status != IOT_MQTT_SUCCESS )
-    {
-        IotLogError( "Failed to enqueue CONNECT for sending." );
-    }
-    else
-    {
-        /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
-        status = IotMqtt_Wait( pOperation,
-                               timeoutMs );
+    /* Wait for the CONNECT operation to complete, i.e. wait for CONNACK. */
+    status = IotMqtt_Wait( pOperation, timeoutMs );
 
-        /* The call to wait cleans up the CONNECT operation, so set the pointer
-         * to NULL. */
-        pOperation = NULL;
-    }
+    /* The call to wait cleans up the CONNECT operation, so set the pointer
+     * to NULL. */
+    pOperation = NULL;
 
     /* When a connection is successfully established, schedule keep-alive job. */
     if( status == IOT_MQTT_SUCCESS )
@@ -1323,36 +1322,27 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                 IotMqtt_Assert( pOperation->u.operation.pMqttPacket != NULL );
                 IotMqtt_Assert( pOperation->u.operation.packetSize > 0 );
 
-                /* Schedule the DISCONNECT operation for network transmission. */
-                if( _IotMqtt_ScheduleOperation( pOperation,
-                                                _IotMqtt_ProcessSend,
-                                                0 ) != IOT_MQTT_SUCCESS )
+                /* Send the DISCONNECT packet. */
+                _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+
+                /* Wait a short time for the DISCONNECT packet to be transmitted. */
+                status = IotMqtt_Wait( pOperation,
+                                       IOT_MQTT_RESPONSE_WAIT_MS );
+
+                /* A wait on DISCONNECT should only ever return SUCCESS, TIMEOUT,
+                 * or NETWORK ERROR. */
+                if( status == IOT_MQTT_SUCCESS )
                 {
-                    IotLogWarn( "(MQTT connection %p) Failed to schedule DISCONNECT for sending.",
-                                mqttConnection );
-                    _IotMqtt_DestroyOperation( pOperation );
+                    IotLogInfo( "(MQTT connection %p) Connection disconnected.", mqttConnection );
                 }
                 else
                 {
-                    /* Wait a short time for the DISCONNECT packet to be transmitted. */
-                    status = IotMqtt_Wait( pOperation,
-                                           IOT_MQTT_RESPONSE_WAIT_MS );
+                    IotMqtt_Assert( ( status == IOT_MQTT_TIMEOUT ) ||
+                                    ( status == IOT_MQTT_NETWORK_ERROR ) );
 
-                    /* A wait on DISCONNECT should only ever return SUCCESS, TIMEOUT,
-                     * or NETWORK ERROR. */
-                    if( status == IOT_MQTT_SUCCESS )
-                    {
-                        IotLogInfo( "(MQTT connection %p) Connection disconnected.", mqttConnection );
-                    }
-                    else
-                    {
-                        IotMqtt_Assert( ( status == IOT_MQTT_TIMEOUT ) ||
-                                        ( status == IOT_MQTT_NETWORK_ERROR ) );
-
-                        IotLogWarn( "(MQTT connection %p) DISCONNECT not sent, error %s.",
-                                    mqttConnection,
-                                    IotMqtt_strerror( status ) );
-                    }
+                    IotLogWarn( "(MQTT connection %p) DISCONNECT not sent, error %s.",
+                                mqttConnection,
+                                IotMqtt_strerror( status ) );
                 }
             }
             else
@@ -1431,7 +1421,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
     status = IotMqtt_Subscribe( mqttConnection,
                                 pSubscriptionList,
                                 subscriptionCount,
-                                IOT_MQTT_FLAG_WAITABLE,
+                                IOT_MQTT_FLAG_WAITABLE | MQTT_INTERNAL_FLAG_BLOCK_ON_SEND,
                                 NULL,
                                 &subscribeOperation );
 
@@ -1487,7 +1477,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
     status = IotMqtt_Unsubscribe( mqttConnection,
                                   pSubscriptionList,
                                   subscriptionCount,
-                                  IOT_MQTT_FLAG_WAITABLE,
+                                  IOT_MQTT_FLAG_WAITABLE | MQTT_INTERNAL_FLAG_BLOCK_ON_SEND,
                                   NULL,
                                   &unsubscribeOperation );
 
@@ -1694,38 +1684,45 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
         EMPTY_ELSE_MARKER;
     }
 
-    /* Add the PUBLISH operation to the send queue for network transmission. */
-    status = _IotMqtt_ScheduleOperation( pOperation,
-                                         _IotMqtt_ProcessSend,
-                                         0 );
-
-    if( status != IOT_MQTT_SUCCESS )
+    /* Send the PUBLISH packet. */
+    if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
     {
-        IotLogError( "(MQTT connection %p) Failed to enqueue PUBLISH for sending.",
-                     mqttConnection );
+        _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+    }
+    else
+    {
+        status = _IotMqtt_ScheduleOperation( pOperation,
+                                             _IotMqtt_ProcessSend,
+                                             0 );
 
-        /* Clear the previously set (and now invalid) reference. */
-        if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
+        if( status != IOT_MQTT_SUCCESS )
         {
-            if( pPublishOperation != NULL )
+            IotLogError( "(MQTT connection %p) Failed to enqueue PUBLISH for sending.",
+                         mqttConnection );
+
+            /* Clear the previously set (and now invalid) reference. */
+            if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
             {
-                *pPublishOperation = IOT_MQTT_OPERATION_INITIALIZER;
+                if( pPublishOperation != NULL )
+                {
+                    *pPublishOperation = IOT_MQTT_OPERATION_INITIALIZER;
+                }
+                else
+                {
+                    EMPTY_ELSE_MARKER;
+                }
             }
             else
             {
                 EMPTY_ELSE_MARKER;
             }
+
+            IOT_GOTO_CLEANUP();
         }
         else
         {
             EMPTY_ELSE_MARKER;
         }
-
-        IOT_GOTO_CLEANUP();
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Clean up the PUBLISH operation if this function fails. Otherwise, set the
@@ -1772,13 +1769,13 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
     IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER,
                        * pPublishOperation = NULL;
 
-    /* Clear the flags. */
-    flags = 0;
+    /* Clear the flags, setting only the "serial" flag. */
+    flags = MQTT_INTERNAL_FLAG_BLOCK_ON_SEND;
 
     /* Set the waitable flag and reference for QoS 1 PUBLISH. */
     if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
     {
-        flags = IOT_MQTT_FLAG_WAITABLE;
+        flags |= IOT_MQTT_FLAG_WAITABLE;
         pPublishOperation = &publishOperation;
     }
     else

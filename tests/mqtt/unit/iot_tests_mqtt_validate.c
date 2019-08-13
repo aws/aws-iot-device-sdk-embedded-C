@@ -143,21 +143,6 @@ TEST( MQTT_Unit_Validate, ValidateConnectInfo )
         validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
         TEST_ASSERT_EQUAL_INT( false, validateStatus );
         connectInfo.clientIdentifierLength = 24;
-
-        /* Keep-alive disabled. */
-        connectInfo.keepAliveSeconds = 0;
-        validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
-        TEST_ASSERT_EQUAL_INT( true, validateStatus );
-
-        /* Keep-alive too small. */
-        connectInfo.keepAliveSeconds = AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE - 1;
-        validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
-        TEST_ASSERT_EQUAL_INT( true, validateStatus );
-
-        /* Keep-alive too large. */
-        connectInfo.keepAliveSeconds = AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE + 1;
-        validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
-        TEST_ASSERT_EQUAL_INT( true, validateStatus );
     #endif /* if AWS_IOT_MQTT_SERVER == true */
 }
 
