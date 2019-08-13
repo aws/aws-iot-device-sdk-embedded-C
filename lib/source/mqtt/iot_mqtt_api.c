@@ -709,7 +709,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     }
 
     /* Send the SUBSCRIBE packet. */
-    if( ( flags & MQTT_INTERNAL_FLAG_SERIAL ) == MQTT_INTERNAL_FLAG_SERIAL )
+    if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
     {
         _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pSubscriptionOperation->job, pSubscriptionOperation );
     }
@@ -1421,7 +1421,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
     status = IotMqtt_Subscribe( mqttConnection,
                                 pSubscriptionList,
                                 subscriptionCount,
-                                IOT_MQTT_FLAG_WAITABLE | MQTT_INTERNAL_FLAG_SERIAL,
+                                IOT_MQTT_FLAG_WAITABLE | MQTT_INTERNAL_FLAG_BLOCK_ON_SEND,
                                 NULL,
                                 &subscribeOperation );
 
@@ -1477,7 +1477,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
     status = IotMqtt_Unsubscribe( mqttConnection,
                                   pSubscriptionList,
                                   subscriptionCount,
-                                  IOT_MQTT_FLAG_WAITABLE | MQTT_INTERNAL_FLAG_SERIAL,
+                                  IOT_MQTT_FLAG_WAITABLE | MQTT_INTERNAL_FLAG_BLOCK_ON_SEND,
                                   NULL,
                                   &unsubscribeOperation );
 
@@ -1685,7 +1685,7 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
     }
 
     /* Send the PUBLISH packet. */
-    if( ( flags & MQTT_INTERNAL_FLAG_SERIAL ) == MQTT_INTERNAL_FLAG_SERIAL )
+    if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
     {
         _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
     }
@@ -1770,7 +1770,7 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
                        * pPublishOperation = NULL;
 
     /* Clear the flags, setting only the "serial" flag. */
-    flags = MQTT_INTERNAL_FLAG_SERIAL;
+    flags = MQTT_INTERNAL_FLAG_BLOCK_ON_SEND;
 
     /* Set the waitable flag and reference for QoS 1 PUBLISH. */
     if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
