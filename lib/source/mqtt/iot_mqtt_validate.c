@@ -139,32 +139,6 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
         {
             EMPTY_ELSE_MARKER;
         }
-
-        /* Check for compliance with AWS IoT keep-alive limits. */
-        if( pConnectInfo->keepAliveSeconds == 0 )
-        {
-            IotLogWarn( "AWS IoT does not support disabling keep-alive. Default keep-alive "
-                        "of %d seconds will be used.",
-                        AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE );
-        }
-        else if( pConnectInfo->keepAliveSeconds < AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE )
-        {
-            IotLogWarn( "AWS IoT does not support keep-alive intervals less than %d seconds. "
-                        "An interval of %d seconds will be used.",
-                        AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE,
-                        AWS_IOT_MQTT_SERVER_MIN_KEEPALIVE );
-        }
-        else if( pConnectInfo->keepAliveSeconds > AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE )
-        {
-            IotLogWarn( "AWS IoT does not support keep-alive intervals greater than %d seconds. "
-                        "An interval of %d seconds will be used.",
-                        AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE,
-                        AWS_IOT_MQTT_SERVER_MAX_KEEPALIVE );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
     }
     else
     {
