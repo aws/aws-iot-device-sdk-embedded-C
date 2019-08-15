@@ -819,7 +819,6 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pPublishJob;
-    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pOperation->incomingPublish == true );
     IotMqtt_Assert( pPublishJob == pOperation->job );
 
@@ -868,7 +867,6 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pSendJob;
-    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pSendJob == pOperation->job );
 
     /* The given operation must have an allocated packet and be waiting for a status. */
@@ -1134,7 +1132,11 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     _mqttOperation_t * pResult = NULL;
     IotLink_t * pResultLink = NULL;
-    _operationMatchParam_t param = { .type = type, .pPacketIdentifier = pPacketIdentifier };
+    _operationMatchParam_t operationMatchParams = { 0 };
+
+    /* Set the members of the search parameter. */
+    operationMatchParams.type = type;
+    operationMatchParams.pPacketIdentifier = pPacketIdentifier;
 
     if( pPacketIdentifier != NULL )
     {
@@ -1156,7 +1158,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
     pResultLink = IotListDouble_FindFirstMatch( &( pMqttConnection->pendingResponse ),
                                                 NULL,
                                                 _mqttOperation_match,
-                                                &param );
+                                                &operationMatchParams );
 
     /* Check if a match was found. */
     if( pResultLink != NULL )
