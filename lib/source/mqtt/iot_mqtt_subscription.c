@@ -402,12 +402,12 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
 
     void ( * callbackFunction )( void *,
                                  IotMqttCallbackParam_t * ) = NULL;
-    _topicMatchParams_t topicMatchParams =
-    {
-        .pTopicName      = pCallbackParam->u.message.info.pTopicName,
-        .topicNameLength = pCallbackParam->u.message.info.topicNameLength,
-        .exactMatchOnly  = false
-    };
+    _topicMatchParams_t topicMatchParams = { 0 };
+
+    /* Set the members of the search parameter. */
+    topicMatchParams.pTopicName = pCallbackParam->u.message.info.pTopicName;
+    topicMatchParams.topicNameLength = pCallbackParam->u.message.info.topicNameLength;
+    topicMatchParams.exactMatchOnly = false;
 
     /* Prevent any other thread from modifying the subscription list while this
      * function is searching. */
@@ -504,11 +504,11 @@ void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * pMqttConnection,
                                           uint16_t packetIdentifier,
                                           int32_t order )
 {
-    const _packetMatchParams_t packetMatchParams =
-    {
-        .packetIdentifier = packetIdentifier,
-        .order            = order
-    };
+    _packetMatchParams_t packetMatchParams = { 0 };
+
+    /* Set the members of the search parameter. */
+    packetMatchParams.packetIdentifier = packetIdentifier;
+    packetMatchParams.order = order;
 
     IotMutex_Lock( &( pMqttConnection->subscriptionMutex ) );
     IotListDouble_RemoveAllMatches( &( pMqttConnection->subscriptionList ),
@@ -589,12 +589,12 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
     bool status = false;
     _mqttSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
-    _topicMatchParams_t topicMatchParams =
-    {
-        .pTopicName      = pTopicFilter,
-        .topicNameLength = topicFilterLength,
-        .exactMatchOnly  = true
-    };
+    _topicMatchParams_t topicMatchParams = { 0 };
+
+    /* Set the members of the search parameter. */
+    topicMatchParams.pTopicName = pTopicFilter;
+    topicMatchParams.topicNameLength = topicFilterLength;
+    topicMatchParams.exactMatchOnly = true;
 
     /* Prevent any other thread from modifying the subscription list while this
      * function is running. */
