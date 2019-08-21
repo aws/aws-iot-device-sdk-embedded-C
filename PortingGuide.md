@@ -126,11 +126,6 @@ Destroy the mutex provided as argument.
 
 The threading layer provides the implementation of mutexes used for thread-safe operations.
 
-### Sample Porting:
-
-Marvell has ported the SDK for their development boards. [These](https://github.com/marvell-iot/aws_starter_sdk/tree/master/sdk/external/aws_iot/platform/wmsdk) files are example implementations of the above mentioned functions.
-This provides a port of the timer and network layer. The threading layer is not a part of this port.
-
 ## Time source for certificate validation
 
 As part of the TLS handshake the device (client) needs to validate the server certificate which includes validation of the certificate lifetime requiring that the device is aware of the actual time. Devices should be equipped with a real time clock or should be able to obtain the current time via NTP. Bypassing validation of the lifetime of a certificate is not recommended as it exposes the device to a security vulnerability, as it will still accept server certificates even when they have already has_timer_expired.
