@@ -701,13 +701,6 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
 
     IotLogDebug( "(MQTT connection %p) Keep-alive job started.", pMqttConnection );
 
-    /* Re-create the keep-alive job for rescheduling. This should never fail. */
-    taskPoolStatus = IotTaskPool_CreateJob( _IotMqtt_ProcessKeepAlive,
-                                            pContext,
-                                            IotTaskPool_GetJobStorageFromHandle( pKeepAliveJob ),
-                                            &pKeepAliveJob );
-    IotMqtt_Assert( taskPoolStatus == IOT_TASKPOOL_SUCCESS );
-
     /* Determine whether to send a PINGREQ or check for PINGRESP. */
     if( pPingreqOperation->u.operation.periodic.ping.nextPeriodMs ==
         pPingreqOperation->u.operation.periodic.ping.keepAliveMs )
@@ -770,6 +763,15 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
      * response shortly. */
     if( status == true )
     {
+        IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+
+        /* Re-create the keep-alive job for rescheduling. This should never fail. */
+        taskPoolStatus = IotTaskPool_CreateJob( _IotMqtt_ProcessKeepAlive,
+                                                pContext,
+                                                IotTaskPool_GetJobStorageFromHandle( pKeepAliveJob ),
+                                                &pKeepAliveJob );
+        IotMqtt_Assert( taskPoolStatus == IOT_TASKPOOL_SUCCESS );
+
         taskPoolStatus = IotTaskPool_ScheduleDeferred( pTaskPool,
                                                        pKeepAliveJob,
                                                        pPingreqOperation->u.operation.periodic.ping.nextPeriodMs );
@@ -788,6 +790,8 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
 
             status = false;
         }
+
+        IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
     }
     else
     {
@@ -799,6 +803,9 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     {
         _IotMqtt_CloseNetworkConnection( IOT_MQTT_KEEP_ALIVE_TIMEOUT,
                                          pMqttConnection );
+
+        /* Keep-alive has failed and will no longer use this MQTT connection. */
+        _IotMqtt_DecrementConnectionReferences( pMqttConnection );
     }
     else
     {

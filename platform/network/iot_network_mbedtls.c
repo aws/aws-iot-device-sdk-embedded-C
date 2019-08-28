@@ -157,7 +157,7 @@ typedef struct _networkConnection
     IotSemaphore_t destroyNotification;          /**< @brief Notifies the receive callback that the connection was destroyed. */
 
     /**
-     * @brief Secured connection context. Valid if `secured` is `true`.
+     * @brief Secured connection context. Valid if #FLAG_SECURED is set.
      */
     struct
     {
