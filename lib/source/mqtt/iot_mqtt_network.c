@@ -834,11 +834,6 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
                                                 pMqttConnection->pingreq.job,
                                                 NULL );
 
-        /* If the keep-alive job was not canceled, it must be already executing.
-         * Any other return value is invalid. */
-        IotMqtt_Assert( ( taskPoolStatus == IOT_TASKPOOL_SUCCESS ) ||
-                        ( taskPoolStatus == IOT_TASKPOOL_CANCEL_FAILED ) );
-
         /* Clean up keep-alive if its job was successfully canceled. Otherwise,
          * the executing keep-alive job will clean up itself. */
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
