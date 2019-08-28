@@ -252,6 +252,9 @@ static size_t _sendSuccess( void * pSendContext,
     if( pWaitSem != NULL )
     {
         IotSemaphore_Post( pWaitSem );
+
+        /* Yield the processor to context switch. */
+        IotClock_SleepMs( 10 );
     }
 
     /* This function returns the message length to simulate a successful send. */
