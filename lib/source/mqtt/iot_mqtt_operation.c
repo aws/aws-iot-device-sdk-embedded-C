@@ -311,11 +311,11 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
          * list to the pending responses list on the first retry. */
         if( firstRetry == true )
         {
-            /* Operation must be linked. */
-            IotMqtt_Assert( IotLink_IsLinked( &( pOperation->link ) ) == true );
+            if( IotLink_IsLinked( &( pOperation->link ) ) == true )
+            {
+                IotListDouble_Remove( &( pOperation->link ) );
+            }
 
-            /* Transfer to pending response list. */
-            IotListDouble_Remove( &( pOperation->link ) );
             IotListDouble_InsertHead( &( pMqttConnection->pendingResponse ),
                                       &( pOperation->link ) );
         }
@@ -989,11 +989,11 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
             {
                 IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
 
-                /* Operation must be linked. */
-                IotMqtt_Assert( IotLink_IsLinked( &( pOperation->link ) ) );
+                if( IotLink_IsLinked( &( pOperation->link ) ) == true )
+                {
+                    IotListDouble_Remove( &( pOperation->link ) );
+                }
 
-                /* Transfer to pending response list. */
-                IotListDouble_Remove( &( pOperation->link ) );
                 IotListDouble_InsertHead( &( pMqttConnection->pendingResponse ),
                                           &( pOperation->link ) );
 
