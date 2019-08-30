@@ -974,6 +974,8 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
         {
             /* Decrement reference count to signal completion of send job. Check
              * if the operation should be destroyed. */
+            IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+
             if( waitable == true )
             {
                 destroyOperation = _IotMqtt_DecrementOperationReferences( pOperation, false );
@@ -987,8 +989,6 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
              * pending processing to the pending response list. */
             if( destroyOperation == false )
             {
-                IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-
                 if( IotLink_IsLinked( &( pOperation->link ) ) == true )
                 {
                     IotListDouble_Remove( &( pOperation->link ) );
@@ -997,8 +997,6 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
                 IotListDouble_InsertHead( &( pMqttConnection->pendingResponse ),
                                           &( pOperation->link ) );
 
-                IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
-
                 /* This operation is now awaiting a response from the network. */
                 networkPending = true;
             }
@@ -1006,6 +1004,8 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
             {
                 EMPTY_ELSE_MARKER;
             }
+
+            IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
         }
     }
     else
