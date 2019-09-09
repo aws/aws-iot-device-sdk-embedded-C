@@ -230,6 +230,7 @@ typedef void (*pApplicationHandler_t)(AWS_IoT_Client *pClient, char *pTopicName,
 typedef struct _MessageHandlers {
 	const char *topicName;
 	uint16_t topicNameLen;
+	char resubscribed;
 	QoS qos;
 	pApplicationHandler_t pApplicationHandler;
 	void *pApplicationHandlerData;
