@@ -27,7 +27,9 @@ script:
 
   # Build and run unit tests.
   - cd ../../../
-  - make build-cpputest
+  - make build-cpputest -j2
+  - make all_no_tests -j2
+  - ./IotSdkC_tests -v
 
   # Set up integration tests if not a pull request.
   - cd tests/integration
