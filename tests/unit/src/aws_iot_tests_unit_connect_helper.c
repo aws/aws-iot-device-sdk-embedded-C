@@ -781,7 +781,7 @@ TEST_C(ConnectTests, ConnectAndResubscribe) {
 	// 7. Add 2 more SUBACKs to complete the resubscribe
 	setTLSRxBufferForDoubleSuback("sdk/topic1", 10, QOS0, publish);
 	rc = aws_iot_mqtt_yield(&iotClient, 2 * AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL + 100);
-	CHECK_EQUAL_C_INT(NETWORK_RECONNECTED, rc);
+	CHECK_EQUAL_C_INT(SUCCESS, rc);
 	CHECK_EQUAL_C_INT(CLIENT_STATE_CONNECTED_IDLE, aws_iot_mqtt_get_client_state(&iotClient));
 	CHECK_EQUAL_C_INT(1, iotClient.clientData.messageHandlers[0].resubscribed);
 	CHECK_EQUAL_C_INT(1, iotClient.clientData.messageHandlers[1].resubscribed);
