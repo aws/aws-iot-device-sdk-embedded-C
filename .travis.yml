@@ -42,4 +42,4 @@ script:
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then echo -e $AWS_IOT_PRIVATE_KEY > ../../certs/privkey.pem; fi
 
   # Run integration tests.
-  - ./integration_tests_mbedtls
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then ./integration_tests_mbedtls; fi
