@@ -430,8 +430,7 @@ IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient) {
 	}
 
 	if(CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS != currentState) {
-		rc = aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_IDLE,
-											CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS);
+		rc = aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_IDLE, CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS);
 
 		if(SUCCESS != rc) {
 			FUNC_EXIT_RC(MQTT_CLIENT_NOT_IDLE_ERROR);
@@ -441,8 +440,7 @@ IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient) {
 	resubRc = _aws_iot_mqtt_internal_resubscribe(pClient);
 
 	if(SUCCESS == resubRc) {
-		resubRc = aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS,
-												CLIENT_STATE_CONNECTED_IDLE);
+		resubRc = aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS, CLIENT_STATE_CONNECTED_IDLE);
 	}
 
 	FUNC_EXIT_RC(resubRc);
