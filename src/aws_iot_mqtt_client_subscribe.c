@@ -361,6 +361,8 @@ static IoT_Error_t _aws_iot_mqtt_internal_resubscribe(AWS_IoT_Client *pClient) {
 			continue;
 		}
 
+		/* Do not attempt to subscribe to topics which have already been subscribed
+		 to in the previous re-subscribe attempts. */
 		if(pClient->clientData.messageHandlers[itr].resubscribed == 1) {
 			continue;
 		}
@@ -396,6 +398,8 @@ static IoT_Error_t _aws_iot_mqtt_internal_resubscribe(AWS_IoT_Client *pClient) {
 			FUNC_EXIT_RC(rc);
 		}
 
+		/* Record that this topic has been subscribed to, so that we do not
+		 * attempt to subscribe again to the same topic. */
 		pClient->clientData.messageHandlers[itr].resubscribed = 1;
 	}
 
@@ -429,16 +433,29 @@ IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient) {
 		FUNC_EXIT_RC(NETWORK_DISCONNECTED_ERROR);
 	}
 
-	if(CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS != currentState) {
+	/* At this point, the client state should be either CLIENT_STATE_CONNECTED_IDLE
+	 or CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS. The former means that it
+	 is the first re-subscribe attempt while the latter means that it is second
+	 or subsequent re-subscribe attempt. */
+	if((CLIENT_STATE_CONNECTED_IDLE != currentState) && (CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS != currentState)) {
+		FUNC_EXIT_RC(MQTT_UNEXPECTED_CLIENT_STATE_ERROR);
+	}
+
+	/* If it is the first re-subscribe attempt (i.e. client state is CLIENT_STATE_CONNECTED_IDLE),
+	 set the client state to CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS. */
+	if(CLIENT_STATE_CONNECTED_IDLE == currentState) {
 		rc = aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_IDLE, CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS);
 
 		if(SUCCESS != rc) {
-			FUNC_EXIT_RC(MQTT_CLIENT_NOT_IDLE_ERROR);
+			FUNC_EXIT_RC(rc);
 		}
 	}
 
 	resubRc = _aws_iot_mqtt_internal_resubscribe(pClient);
 
+	/* It is possible that the subscribe operation fails, do not change the state
+	 in that case so that the subscribe is attempted again in the next iteration
+	 of yield. */
 	if(SUCCESS == resubRc) {
 		resubRc = aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS, CLIENT_STATE_CONNECTED_IDLE);
 	}

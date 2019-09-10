@@ -602,6 +602,7 @@ IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient) {
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);
 	}
 
+	/* Only attempt a connect if not already connected. */
 	if(!aws_iot_mqtt_is_client_connected(pClient)) {
 		/* Ignoring return code. failures expected if network is disconnected */
 		aws_iot_mqtt_connect(pClient, NULL);
@@ -613,8 +614,9 @@ IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient) {
 		}
 	}
 	else {
-		/* Don't need to do anything if not resubscribing */
-		if(currentState != CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS) {
+		/* If already connected and no subscribe operation pending, then return
+		already connected error. */
+		if(CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS != aws_iot_mqtt_get_client_state(pClient)) {
 			FUNC_EXIT_RC(NETWORK_ALREADY_CONNECTED_ERROR);
 		}
 	}

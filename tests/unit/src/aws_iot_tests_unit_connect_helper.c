@@ -720,16 +720,21 @@ TEST_C(ConnectTests, PowerCycleWithCleanSessionFalse) {
 	IOT_DEBUG("-->Success - B:28 - Connect attempt, power cycle with clean session false \n");
 }
 
-/* B:29 - Reconnect attempt succeeds, but resubscribes fail */
-TEST_C(ConnectTests, ConnectAndResubscribe) {
+/* B:29 - Reconnect attempt succeeds, but resubscribes fail.
+ * This test verifies the behaviour that if a subscribe operation fails after
+ * connect during the auto-reconnect sequence, the client must not disconnect
+ * and must only re-attempt the subscribe operation. */
+TEST_C(ConnectTests, ReconnectAndResubscribe) {
 	IoT_Error_t rc = SUCCESS;
 	int itr = 0;
 	char subTestTopic[12] = { 0 };
 	uint16_t subTestTopicLen = 0;
 	IoT_Publish_Message_Params publish = { 0 };
 
+	IOT_DEBUG("-->Running Connect Tests - B:29 - Reconnect attempt succeeds, but resubscribes fail \n");
+
 	#if AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS < 3
-		#error "ConnectAndResubscribe needs at least 3 subscription handlers to run"
+		#error "ReconnectAndResubscribe needs at least 3 subscription handlers to run"
 	#endif
 
 	// 1. Initialize client
@@ -745,11 +750,7 @@ TEST_C(ConnectTests, ConnectAndResubscribe) {
 	rc = aws_iot_mqtt_connect(&iotClient, &connectParams);
 	CHECK_EQUAL_C_INT(SUCCESS, rc);
 
-	// 3. Set reconnect parameters
-	iotClient.clientData.currentReconnectWaitInterval = AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL;
-	countdown_ms(&(iotClient.reconnectDelayTimer), iotClient.clientData.currentReconnectWaitInterval);
-
-	// 4. Add 3 subscriptions
+	// 3. Add 3 subscriptions
 	for(itr = 0; itr < 3; itr++)
 	{
 		snprintf(subTestTopic, 12, "sdk/topic%d", itr + 1);
@@ -760,17 +761,18 @@ TEST_C(ConnectTests, ConnectAndResubscribe) {
 		CHECK_EQUAL_C_INT(SUCCESS, rc);
 	}
 
-	// 5. Set the state to pending reconnect, then trigger a reconnect by calling yield
-	// Place a CONNACK and SUBACK in the rx buffer so connect and 1 subscribe succeed
-	rc = aws_iot_mqtt_set_client_state(&iotClient, CLIENT_STATE_CONNECTED_IDLE, CLIENT_STATE_PENDING_RECONNECT);
-	CHECK_EQUAL_C_INT(SUCCESS, rc);
+	// 4. Trigger a reconnect by mocking NETWORK_SSL_READ_ERROR and calling yield.
+	// Place a CONNACK and SUBACK in the Rx buffer so that connect and 1 subscribe
+	// succeed. Note that the CONNACK and SUBACK placed in the Rx buffer are not
+	// effected by the mocked error as it does not change thr content of the Rx
+	// buffer.
+	setTLSRxBufferForError(NETWORK_SSL_READ_ERROR);
 	setTLSRxBufferForConnackAndSuback(&connectParams, 0, "sdk/topic0", 10, QOS0);
-	rc = aws_iot_mqtt_yield(&iotClient, AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL + 100);
+	rc = aws_iot_mqtt_yield(&iotClient, AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL * 2);
 
-	// 6. Check results of yield call
-	// As only 1 SUBACK was present, some resubscribes must fail
-	// Client should be in a pending resubscribe state
-	// Auto reconnect interval should have doubled
+	// 5. Check results of yield call. As only 1 SUBACK was present in the Rx
+	// buffer, 2 resubscribes must fail. Client should be in a pending
+	// resubscribe state and the auto reconnect interval should have doubled.
 	CHECK_EQUAL_C_INT(NETWORK_ATTEMPTING_RECONNECT, rc);
 	CHECK_EQUAL_C_INT(1, iotClient.clientData.messageHandlers[0].resubscribed);
 	CHECK_EQUAL_C_INT(0, iotClient.clientData.messageHandlers[1].resubscribed);
@@ -778,12 +780,13 @@ TEST_C(ConnectTests, ConnectAndResubscribe) {
 	CHECK_EQUAL_C_INT(CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS, aws_iot_mqtt_get_client_state(&iotClient));
 	CHECK_EQUAL_C_INT(2 * AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL, (int) iotClient.clientData.currentReconnectWaitInterval);
 
-	// 7. Add 2 more SUBACKs to complete the resubscribe
+	// 6. Add 2 more SUBACKs to the Rx buffer to complete the resubscribe.
 	setTLSRxBufferForDoubleSuback("sdk/topic1", 10, QOS0, publish);
-	rc = aws_iot_mqtt_yield(&iotClient, 2 * AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL + 100);
-	CHECK_EQUAL_C_INT(SUCCESS, rc);
+	rc = aws_iot_mqtt_yield(&iotClient, 2 * AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL * 2);
 	CHECK_EQUAL_C_INT(CLIENT_STATE_CONNECTED_IDLE, aws_iot_mqtt_get_client_state(&iotClient));
 	CHECK_EQUAL_C_INT(1, iotClient.clientData.messageHandlers[0].resubscribed);
 	CHECK_EQUAL_C_INT(1, iotClient.clientData.messageHandlers[1].resubscribed);
 	CHECK_EQUAL_C_INT(1, iotClient.clientData.messageHandlers[2].resubscribed);
+
+	IOT_DEBUG("-->Success - B:29 - Reconnect attempt succeeds, but resubscribes fail \n");
 }

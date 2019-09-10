@@ -83,4 +83,4 @@ TEST_GROUP_C_WRAPPER(ConnectTests, cleanSessionInitSubscribers)
 /* B:28 - Connect attempt, power cycle with clean session false */
 TEST_GROUP_C_WRAPPER(ConnectTests, PowerCycleWithCleanSessionFalse)
 /* B:29 - Reconnect attempt succeeds, but resubscribes fail */
-TEST_GROUP_C_WRAPPER(ConnectTests, ConnectAndResubscribe)
+TEST_GROUP_C_WRAPPER(ConnectTests, ReconnectAndResubscribe)
