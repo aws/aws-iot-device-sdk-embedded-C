@@ -204,8 +204,8 @@ static IoT_Error_t _aws_iot_mqtt_serialize_connect(unsigned char *pTxBuf, size_t
 	if (pConnectParams->isWillMsgPresent)
 	{
 		flags.all |= 1 << 2;
-		flags.all |= pConnectParams->will.qos << 3;
-		flags.all |= pConnectParams->will.isRetained << 5;
+		flags.all |= (uint8_t) (pConnectParams->will.qos << 3);
+		flags.all |= (uint8_t) (pConnectParams->will.isRetained << 5);
 	}
 
 	if(pConnectParams->pPassword) {
@@ -594,6 +594,7 @@ IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient) {
  */
 IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient) {
 	IoT_Error_t rc;
+	ClientState currentState = aws_iot_mqtt_get_client_state(pClient);
 
 	FUNC_ENTRY;
 
@@ -601,22 +602,28 @@ IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient) {
 		FUNC_EXIT_RC(NULL_VALUE_ERROR);
 	}
 
-	if(aws_iot_mqtt_is_client_connected(pClient)) {
-		FUNC_EXIT_RC(NETWORK_ALREADY_CONNECTED_ERROR);
+	/* Only attempt a connect if not already connected. */
+	if(!aws_iot_mqtt_is_client_connected(pClient)) {
+		/* Ignoring return code. failures expected if network is disconnected */
+		aws_iot_mqtt_connect(pClient, NULL);
+
+		/* If still disconnected handle disconnect */
+		if(CLIENT_STATE_CONNECTED_IDLE != aws_iot_mqtt_get_client_state(pClient)) {
+			aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_DISCONNECTED_ERROR, CLIENT_STATE_PENDING_RECONNECT);
+			FUNC_EXIT_RC(NETWORK_ATTEMPTING_RECONNECT);
+		}
 	}
-
-	/* Ignoring return code. failures expected if network is disconnected */
-	rc = aws_iot_mqtt_connect(pClient, NULL);
-
-	/* If still disconnected handle disconnect */
-	if(CLIENT_STATE_CONNECTED_IDLE != aws_iot_mqtt_get_client_state(pClient)) {
-		aws_iot_mqtt_set_client_state(pClient, CLIENT_STATE_DISCONNECTED_ERROR, CLIENT_STATE_PENDING_RECONNECT);
-		FUNC_EXIT_RC(NETWORK_ATTEMPTING_RECONNECT);
+	else {
+		/* If already connected and no subscribe operation pending, then return
+		already connected error. */
+		if(CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS != aws_iot_mqtt_get_client_state(pClient)) {
+			FUNC_EXIT_RC(NETWORK_ALREADY_CONNECTED_ERROR);
+		}
 	}
 
 	rc = aws_iot_mqtt_resubscribe(pClient);
 	if(SUCCESS != rc) {
-		FUNC_EXIT_RC(rc);
+		FUNC_EXIT_RC(NETWORK_ATTEMPTING_RECONNECT);
 	}
 
 	FUNC_EXIT_RC(NETWORK_RECONNECTED);

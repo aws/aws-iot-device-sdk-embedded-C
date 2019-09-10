@@ -180,6 +180,7 @@ static IoT_Error_t _aws_iot_mqtt_keep_alive(AWS_IoT_Client *pClient) {
 
 static IoT_Error_t _aws_iot_mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms) {
 	IoT_Error_t yieldRc = SUCCESS;
+	int itr = 0;
 
 	uint8_t packet_type;
 	ClientState clientState;
@@ -192,7 +193,13 @@ static IoT_Error_t _aws_iot_mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_
 	// evaluate timeout at the end of the loop to make sure the actual yield runs at least once
 	do {
 		clientState = aws_iot_mqtt_get_client_state(pClient);
-		if(CLIENT_STATE_PENDING_RECONNECT == clientState) {
+
+		/* If the client state is pending reconnect or resubscribe in progress,
+		 we keep retrying _aws_iot_mqtt_handle_reconnect. This function only
+		 attempts to connect if not already connected thereby ensuring that the
+		 subsequent invocations only attempt remaining subscribes.  */
+		if((CLIENT_STATE_PENDING_RECONNECT == clientState) ||
+			(CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS == clientState)) {
 			if(AWS_IOT_MQTT_MAX_RECONNECT_WAIT_INTERVAL < pClient->clientData.currentReconnectWaitInterval) {
 				yieldRc = NETWORK_RECONNECT_TIMED_OUT_ERROR;
 				break;
@@ -224,6 +231,11 @@ static IoT_Error_t _aws_iot_mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_
 
 				pClient->clientData.currentReconnectWaitInterval = AWS_IOT_MQTT_MIN_RECONNECT_WAIT_INTERVAL;
 				countdown_ms(&(pClient->reconnectDelayTimer), pClient->clientData.currentReconnectWaitInterval);
+
+				for(itr = 0; itr < AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS; itr++) {
+					pClient->clientData.messageHandlers[itr].resubscribed = 0;
+				}
+
 				/* Depending on timer values, it is possible that yield timer has expired
 				 * Set to rc to attempting reconnect to inform client that autoreconnect
 				 * attempt has started */
@@ -272,9 +284,11 @@ IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms) {
 		FUNC_EXIT_RC(NETWORK_MANUALLY_DISCONNECTED);
 	}
 
-	/* If we are in the pending reconnect state, skip other checks.
-	 * Pending reconnect state is only set when auto-reconnect is enabled */
-	if(CLIENT_STATE_PENDING_RECONNECT != clientState) {
+	/* If we are in the pending reconnect or resubscribe in progress state, skip other checks.
+	 * Pending reconnect or resubscribe in progress state is only set when auto-reconnect
+	 * is enabled */
+	if((CLIENT_STATE_PENDING_RECONNECT != clientState) &&
+		(CLIENT_STATE_CONNECTED_RESUBSCRIBE_IN_PROGRESS != clientState)) {
 		/* Check if network is disconnected and auto-reconnect is not enabled */
 		if(!aws_iot_mqtt_is_client_connected(pClient)) {
 			FUNC_EXIT_RC(NETWORK_DISCONNECTED_ERROR);
@@ -308,4 +322,3 @@ IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms) {
 #ifdef __cplusplus
 }
 #endif
-
