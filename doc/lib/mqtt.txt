@@ -137,9 +137,9 @@ No two clients may connect using the same client identifier simultaneously. If t
 @configdefault The tests will generate a unique client identifier if this setting is undefined.
 
 @section IOT_TEST_MQTT_MOSQUITTO
-@brief Test the MQTT library against the [public Mosquitto test server](https://test.mosquitto.org/).
+@brief Test the MQTT library against the [a Mosquitto test server](https://test.mosquitto.org/).
 
-When this setting is `1`, the MQTT tests will be built to test against an unsecured [public Mosquitto test server](https://test.mosquitto.org/). This allows the MQTT library to be tested against a fully-compliant MQTT server. Because the connection is unsecured, no credentials are needed for testing against Mosquitto.
+When this setting is `1`, the MQTT tests will be built to test against an unsecured [a Mosquitto test server](https://test.mosquitto.org/). This allows the MQTT library to be tested against a fully-compliant MQTT server. Because the connection is unsecured, no credentials are needed for testing against Mosquitto. A Mosquitto test server may also be installed locally.
 
 @configpossible `0` (use AWS IoT MQTT server) or `1` (use public Mosquitto server) <br>
 @configdefault `0`
