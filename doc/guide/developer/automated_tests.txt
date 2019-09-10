@@ -47,15 +47,13 @@ All of the automated testing services have web interfaces that can be connected 
 
 Because pull requests come from other repos and contain unknown code, Travis CI will not provide encrypted environment variables for pull requests. Therefore, pull requests are tested against unsecured servers. The following tests are run for pull requests.
 - Common (`ci_test_common.sh`): this script tests common components like the task pool, atomics, etc. These tests do not use the network.
-- MQTT (`ci_test_mqtt.sh`): the MQTT tests run on an unsecured connection against the broker provided by [test.mosquitto.org](http://test.mosquitto.org/).
+- MQTT (`ci_test_mqtt.sh`): the MQTT tests run on an unsecured connection against a locally-installed Mosquitto broker on the Travis CI VM.
 - Shadow (`ci_test_shadow.sh`): only the Shadow unit tests are run for a pull request build. These tests do not use the network.
 - Documentation (`ci_test_doc.sh`): checks that the documentation builds against the code in the pull request.
 
-@note Rarely, the broker at test.mosquitto.org goes offline. This will cause all of the [MQTT system tests](@ref iot_tests_mqtt_system.c) to fail. Should this happen, try again in a few hours.
-
 For commits, the credentials necessary for connecting to AWS IoT are provided by Travis CI. The following tests are run for commits.
 - Common (`ci_test_common.sh`): runs the same tests as the common pull request tests.
-- MQTT (`ci_test_mqtt.sh`): runs the same MQTT tests as the MQTT pull request tests, but against the AWS IoT MQTT broker instead of test.mosquitto.org.
+- MQTT (`ci_test_mqtt.sh`): runs the same MQTT tests as the MQTT pull request tests, but against the AWS IoT MQTT broker instead of a Mosquitto broker.
 - Shadow (`ci_test_shadow.sh`): runs both the Shadow unit tests and the Shadow system tests. Requires connection to AWS IoT.
 - Coverage (`ci_test_coverage.sh`): Gathers code coverage data and submits it to Coveralls.
 

@@ -34,6 +34,8 @@ before_install:
 install:
   # Install OpenSSL if needed.
   - if [ "$NETWORK_STACK" = "openssl" ]; then sudo apt-get install -y libssl-dev; fi
+  # Install Mosquitto for MQTT pull request builds.
+  - if [ "$RUN_TEST" = "mqtt" ] && [ "$TRAVIS_PULL_REQUEST" != "false" ]; then sudo apt-get install -y mosquitto; fi
   # Install dependencies for Jobs tests.
   - if [ "$RUN_TEST" = "jobs" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then sudo apt-get install -y python3-setuptools python3-pip athena-jot; fi
   - if [ "$RUN_TEST" = "jobs" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then pip3 install --user wheel; fi

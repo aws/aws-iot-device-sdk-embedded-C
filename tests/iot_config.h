@@ -36,8 +36,13 @@
 #if IOT_TEST_MQTT_MOSQUITTO == 1
     /* Mosquitto test server. */
     #define IOT_TEST_SECURED_CONNECTION    ( 0 )
-    #define IOT_TEST_SERVER                "test.mosquitto.org"
-    #define IOT_TEST_PORT                  ( 1883 )
+
+    #ifndef IOT_TEST_SERVER
+        #define IOT_TEST_SERVER                "test.mosquitto.org"
+    #endif
+    #ifndef IOT_TEST_PORT
+        #define IOT_TEST_PORT                  ( 1883 )
+    #endif
 #else
     /* AWS IoT MQTT server. */
     #define IOT_TEST_SECURED_CONNECTION    ( 1 )
