@@ -35,7 +35,6 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 - Only fixed-width integer types should be used. Exceptions for `bool` and types required by third-party APIs.
 - The default integer in the libraries should be 32 bits wide, i.e. `int32_t` or `uint32_t`.
 - Sizes and lengths should be represented with `size_t`, and Boolean variables with `bool`.
-- The portable format specifiers in `<inttypes.h>` should be used for logging fixed-width integers.
 
 @subsection guide_developer_styleguide_codingstyle_example Example File
 @brief An example file that follows the coding style rules.
