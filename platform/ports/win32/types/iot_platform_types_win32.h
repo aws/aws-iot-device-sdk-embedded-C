@@ -33,6 +33,7 @@
 /* Win32 includes. WinSock2 is needed to prevent the usage of the WinSock
  * header in Windows.h */
 #include <WinSock2.h>
+#include <ws2tcpip.h>
 #include <Windows.h>
 
 /**

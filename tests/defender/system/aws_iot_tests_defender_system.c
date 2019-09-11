@@ -27,10 +27,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-/* Network includes. */
-#include <netdb.h>
-#include <arpa/inet.h>
-
 #include "platform/iot_clock.h"
 
 /* Defender internal includes. */
@@ -113,15 +109,12 @@ static void _waitForMetricsAccepted( uint32_t timeoutSec );
 static void _verifyMetricsCommon( void );
 
 /* Verify tcp connections in metrics report. */
-static void _verifyTcpConections( int total,
-                                  ... );
+static void _verifyTcpConnections( int total );
 
 /* Indicate this test doesn't actually publish report. */
 static void _publishMetricsNotNeeded( void );
 
 static void _resetCalbackInfo( void );
-
-static char * _getIotAddress( void );
 
 TEST_GROUP( Defender_System );
 
@@ -183,7 +176,7 @@ TEST_SETUP( Defender_System )
 
     _startInfo.mqttConnectionInfo = ( IotMqttConnectInfo_t ) IOT_MQTT_CONNECT_INFO_INITIALIZER;
     _startInfo.mqttConnectionInfo.pClientIdentifier = AWS_IOT_TEST_SHADOW_THING_NAME;
-    _startInfo.mqttConnectionInfo.clientIdentifierLength = strlen( AWS_IOT_TEST_SHADOW_THING_NAME );
+    _startInfo.mqttConnectionInfo.clientIdentifierLength = ( uint16_t ) strlen( AWS_IOT_TEST_SHADOW_THING_NAME );
 
     _startInfo.callback = _EMPTY_CALLBACK;
 }
@@ -423,7 +416,7 @@ TEST( Defender_System, Metrics_empty_are_published )
     _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
-    _verifyTcpConections( 0 );
+    _verifyTcpConnections( 0 );
 }
 
 TEST( Defender_System, Metrics_TCP_connections_all_are_published )
@@ -439,9 +432,6 @@ TEST( Defender_System, Metrics_TCP_connections_all_are_published )
     /* Set test callback to verify report. */
     _startInfo.callback = _testCallback;
 
-    /* Get Iot address from DNS. */
-    char * pIotAddress = _getIotAddress();
-
     /* Start defender. */
     error = AwsIotDefender_Start( &_startInfo );
 
@@ -451,7 +441,7 @@ TEST( Defender_System, Metrics_TCP_connections_all_are_published )
     _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
-    _verifyTcpConections( 1, pIotAddress );
+    _verifyTcpConnections( 1 );
 }
 
 TEST( Defender_System, Metrics_TCP_connections_total_are_published )
@@ -476,7 +466,7 @@ TEST( Defender_System, Metrics_TCP_connections_total_are_published )
     _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
-    _verifyTcpConections( 1 );
+    _verifyTcpConnections( 1 );
 }
 
 TEST( Defender_System, Metrics_TCP_connections_remote_addr_are_published )
@@ -492,9 +482,6 @@ TEST( Defender_System, Metrics_TCP_connections_remote_addr_are_published )
     /* Set test callback to verify report. */
     _startInfo.callback = _testCallback;
 
-    /* Get Iot address from DNS. */
-    char * pIotAddress = _getIotAddress();
-
     /* Start defender. */
     error = AwsIotDefender_Start( &_startInfo );
 
@@ -504,7 +491,7 @@ TEST( Defender_System, Metrics_TCP_connections_remote_addr_are_published )
     _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
-    _verifyTcpConections( 1, pIotAddress );
+    _verifyTcpConnections( 1 );
 }
 
 TEST( Defender_System, Restart_and_updated_metrics_are_published )
@@ -518,8 +505,6 @@ TEST( Defender_System, Restart_and_updated_metrics_are_published )
     /* Set test callback to verify report. */
     _startInfo.callback = _testCallback;
 
-    pIotAddress = _getIotAddress();
-
     /* Start defender. */
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, AwsIotDefender_Start( &_startInfo ) );
 
@@ -527,7 +512,7 @@ TEST( Defender_System, Restart_and_updated_metrics_are_published )
     _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
-    _verifyTcpConections( 1, pIotAddress );
+    _verifyTcpConnections( 1 );
 
     AwsIotDefender_Stop();
 
@@ -539,8 +524,6 @@ TEST( Defender_System, Restart_and_updated_metrics_are_published )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS,
                        AwsIotDefender_SetMetrics( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS, AWS_IOT_DEFENDER_METRICS_ALL ) );
 
-    pIotAddress = _getIotAddress();
-
     /* Restart defender. */
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, AwsIotDefender_Start( &_startInfo ) );
 
@@ -548,7 +531,7 @@ TEST( Defender_System, Restart_and_updated_metrics_are_published )
     _waitForMetricsAccepted( WAIT_STATE_TOTAL_SECONDS );
 
     _verifyMetricsCommon();
-    _verifyTcpConections( 1, pIotAddress );
+    _verifyTcpConnections( 1 );
 }
 
 TEST( Defender_System, SetPeriod_too_short )
@@ -769,8 +752,7 @@ static void _verifyMetricsCommon( void )
 
 /*-----------------------------------------------------------*/
 
-static void _verifyTcpConections( int total,
-                                  ... )
+static void _verifyTcpConnections( int total )
 {
     uint8_t i = 0;
 
@@ -833,10 +815,6 @@ static void _verifyTcpConections( int total,
                 error = _pAwsIotDefenderDecoder->stepIn( &connsObject, &connIterator );
                 TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
-                /* Create argument list for expected remote addresses. */
-                va_list valist;
-                va_start( valist, total );
-
                 for( i = 0; i < total; i++ )
                 {
                     /* Assert find one "connection" map in "connections" */
@@ -855,11 +833,6 @@ static void _verifyTcpConections( int total,
                         TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, error );
 
                         TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_TEXT_STRING, remoteAddrObject.type );
-
-                        /* Verify the passed address matching. */
-                        TEST_ASSERT_EQUAL_STRING_LEN( va_arg( valist, char * ),
-                                                      remoteAddrObject.u.value.u.string.pString,
-                                                      remoteAddrObject.u.value.u.string.length );
                     }
                     else
                     {
@@ -872,8 +845,6 @@ static void _verifyTcpConections( int total,
 
                     _pAwsIotDefenderDecoder->destroy( &connMap );
                 }
-
-                va_end( valist );
 
                 TEST_ASSERT_TRUE( _pAwsIotDefenderDecoder->isEndOfContainer( connIterator ) );
 
@@ -907,21 +878,3 @@ static void _verifyTcpConections( int total,
 }
 
 /*-----------------------------------------------------------*/
-
-static char * _getIotAddress( void )
-{
-    static char iotAddress[ MAX_ADDRESS_LENGTH ];
-
-    struct addrinfo * pListHead = NULL;
-    char * pIotAddressIp = NULL;
-
-    /* Query DNS to get all the records. */
-    getaddrinfo( IOT_TEST_SERVER, NULL, NULL, &pListHead );
-
-    /* Convert the first record to string format of IP. */
-    pIotAddressIp = inet_ntoa( ( ( struct sockaddr_in * ) pListHead->ai_addr )->sin_addr );
-
-    sprintf( iotAddress, "%s:%d", pIotAddressIp, IOT_TEST_PORT );
-
-    return iotAddress;
-}
