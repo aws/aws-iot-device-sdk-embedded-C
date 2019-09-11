@@ -147,7 +147,6 @@
 #define FLAG_HAS_RECEIVE_CALLBACK    ( 0x00000002UL ) /**< @brief Connection has receive callback. */
 #define FLAG_CLOSED                  ( 0x00000004UL ) /**< @brief Connection is closed. */
 
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -1217,7 +1216,7 @@ void IotNetworkMbedtls_GetServerInfo( void * pConnection,
         /* Get peer info. */
         status = getpeername( pNetworkConnection->networkContext.fd,
                               ( struct sockaddr * ) &server,
-                              &length );
+                              ( int * ) &length );
     }
     else
     {
