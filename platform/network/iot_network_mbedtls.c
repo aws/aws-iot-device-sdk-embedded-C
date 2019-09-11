@@ -147,7 +147,6 @@
 #define FLAG_HAS_RECEIVE_CALLBACK    ( 0x00000002UL ) /**< @brief Connection has receive callback. */
 #define FLAG_CLOSED                  ( 0x00000004UL ) /**< @brief Connection is closed. */
 
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -1207,16 +1206,17 @@ void IotNetworkMbedtls_GetServerInfo( void * pConnection,
     const char * pPortFormat = NULL;
     uint16_t remotePort = 0;
     size_t addressLength = 0;
+    const _networkConnection_t * pNetworkConnection = NULL;
 
     /* Cast function parameter to correct type. */
     if( ( pConnection != NULL ) && ( pServerInfo != NULL ) )
     {
-        _networkConnection_t * const pNetworkConnection = pConnection;
+        pNetworkConnection = pConnection;
 
         /* Get peer info. */
         status = getpeername( pNetworkConnection->networkContext.fd,
                               ( struct sockaddr * ) &server,
-                              &length );
+                              ( int * ) &length );
     }
     else
     {
@@ -1270,7 +1270,7 @@ void IotNetworkMbedtls_GetServerInfo( void * pConnection,
                 pServerInfo->addressLength = addressLength + ( size_t ) portLength;
 
                 IotLogInfo( "(Socket %d) Collecting network metrics for %s.",
-                            pNetworkConnection->socket,
+                            pNetworkConnection->networkContext.fd,
                             pServerInfo->pRemoteAddress );
             }
             else
@@ -1281,14 +1281,13 @@ void IotNetworkMbedtls_GetServerInfo( void * pConnection,
         else
         {
             IotLogError( "(Socket %d) Failed to convert IP address to text format.",
-                         pNetworkConnection->socket );
+                         pNetworkConnection->networkContext.fd );
         }
     }
     else
     {
-        IotLogError( "(Socket %d) Failed to query peer name. errno=%d.",
-                     pNetworkConnection->socket,
-                     errno );
+        IotLogError( "(Socket %d) Failed to query peer name.",
+                     pNetworkConnection->networkContext.fd );
     }
 }
 
