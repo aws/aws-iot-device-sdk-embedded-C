@@ -268,6 +268,7 @@ static void _shadowDeltaCallback( void * pCallbackContext,
     int updateDocumentLength = 0;
     AwsIotShadowError_t updateStatus = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowDocumentInfo_t updateDocument = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
+    int32_t newState = 0;
 
     /* Stored state. */
     static int32_t currentState = 0;
@@ -288,79 +289,86 @@ static void _shadowDeltaCallback( void * pCallbackContext,
         /* Change the current state based on the value in the delta document. */
         if( *pDelta == '0' )
         {
-            IotLogInfo( "%.*s changing state from %d to 0.",
-                        pCallbackParam->thingNameLength,
-                        pCallbackParam->pThingName,
-                        currentState );
-
-            currentState = 0;
+            newState = 0;
         }
         else if( *pDelta == '1' )
         {
-            IotLogInfo( "%.*s changing state from %d to 1.",
-                        pCallbackParam->thingNameLength,
-                        pCallbackParam->pThingName,
-                        currentState );
-
-            currentState = 1;
+            newState = 1;
         }
         else
         {
             IotLogWarn( "Unknown powerOn state parsed from delta document." );
+
+            /* Set new state to current state to ignore the delta document. */
+            newState = currentState;
         }
 
-        /* Set the common members to report the new state. */
-        updateDocument.pThingName = pCallbackParam->pThingName;
-        updateDocument.thingNameLength = pCallbackParam->thingNameLength;
-        updateDocument.u.update.pUpdateDocument = pUpdateDocument;
-        updateDocument.u.update.updateDocumentLength = EXPECTED_REPORTED_JSON_SIZE;
-
-        /* Generate a Shadow document for the reported state. To keep the client
-         * token within 6 characters, it is modded by 1000000. */
-        updateDocumentLength = snprintf( pUpdateDocument,
-                                         EXPECTED_REPORTED_JSON_SIZE + 1,
-                                         SHADOW_REPORTED_JSON,
-                                         ( int ) currentState,
-                                         ( long unsigned ) ( IotClock_GetTimeMs() % 1000000 ) );
-
-        if( ( size_t ) updateDocumentLength != EXPECTED_REPORTED_JSON_SIZE )
+        if( newState != currentState )
         {
-            IotLogError( "Failed to generate reported state document for Shadow update." );
-        }
-        else
-        {
-            /* Send the Shadow update. Its result is not checked, as the Shadow updated
-             * callback will report if the Shadow was successfully updated. Because the
-             * Shadow is constantly updated in this demo, the "Keep Subscriptions" flag
-             * is passed to this function. */
-            updateStatus = AwsIotShadow_Update( pCallbackParam->mqttConnection,
-                                                &updateDocument,
-                                                AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
-                                                NULL,
-                                                NULL );
+            /* Toggle state. */
+            IotLogInfo( "%.*s changing state from %d to %d.",
+                        pCallbackParam->thingNameLength,
+                        pCallbackParam->pThingName,
+                        currentState,
+                        newState );
 
-            if( updateStatus != AWS_IOT_SHADOW_STATUS_PENDING )
+            currentState = newState;
+
+            /* Set the common members to report the new state. */
+            updateDocument.pThingName = pCallbackParam->pThingName;
+            updateDocument.thingNameLength = pCallbackParam->thingNameLength;
+            updateDocument.u.update.pUpdateDocument = pUpdateDocument;
+            updateDocument.u.update.updateDocumentLength = EXPECTED_REPORTED_JSON_SIZE;
+
+            /* Generate a Shadow document for the reported state. To keep the client
+             * token within 6 characters, it is modded by 1000000. */
+            updateDocumentLength = snprintf( pUpdateDocument,
+                                             EXPECTED_REPORTED_JSON_SIZE + 1,
+                                             SHADOW_REPORTED_JSON,
+                                             ( int ) currentState,
+                                             ( long unsigned ) ( IotClock_GetTimeMs() % 1000000 ) );
+
+            if( ( size_t ) updateDocumentLength != EXPECTED_REPORTED_JSON_SIZE )
             {
-                IotLogWarn( "%.*s failed to report new state, error %s.",
-                            pCallbackParam->thingNameLength,
-                            pCallbackParam->pThingName,
-                            AwsIotShadow_strerror( updateStatus ) );
+                IotLogError( "Failed to generate reported state document for Shadow update." );
             }
             else
             {
-                IotLogInfo( "%.*s sent new state report.",
-                            pCallbackParam->thingNameLength,
-                            pCallbackParam->pThingName );
+                /* Send the Shadow update. Its result is not checked, as the Shadow updated
+                 * callback will report if the Shadow was successfully updated. Because the
+                 * Shadow is constantly updated in this demo, the "Keep Subscriptions" flag
+                 * is passed to this function. */
+                updateStatus = AwsIotShadow_Update( pCallbackParam->mqttConnection,
+                                                    &updateDocument,
+                                                    AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
+                                                    NULL,
+                                                    NULL );
+
+                if( updateStatus != AWS_IOT_SHADOW_STATUS_PENDING )
+                {
+                    IotLogWarn( "%.*s failed to report new state, error %s.",
+                                pCallbackParam->thingNameLength,
+                                pCallbackParam->pThingName,
+                                AwsIotShadow_strerror( updateStatus ) );
+                }
+                else
+                {
+                    IotLogInfo( "%.*s sent new state report: %.*s",
+                                pCallbackParam->thingNameLength,
+                                pCallbackParam->pThingName,
+                                EXPECTED_REPORTED_JSON_SIZE,
+                                pUpdateDocument );
+                }
             }
+
+            /* Post to the delta semaphore to unblock the thread sending Shadow updates. */
+            IotSemaphore_Post( pDeltaSemaphore );
         }
     }
     else
     {
         IotLogWarn( "Failed to parse powerOn state from delta document." );
     }
-
-    /* Post to the delta semaphore to unblock the thread sending Shadow updates. */
-    IotSemaphore_Post( pDeltaSemaphore );
 }
 
 /*-----------------------------------------------------------*/
