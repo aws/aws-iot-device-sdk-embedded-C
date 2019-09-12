@@ -1200,7 +1200,7 @@ void IotNetworkMbedtls_GetServerInfo( void * pConnection,
 {
     int status = 0, portLength = 0;
     struct sockaddr_storage server = { 0 };
-    size_t length = sizeof( struct sockaddr_storage );
+    socklen_t length = sizeof( struct sockaddr_storage );
     const void * pServerAddress = NULL;
     char * pAddressStart = NULL;
     const char * pPortFormat = NULL;
@@ -1216,7 +1216,7 @@ void IotNetworkMbedtls_GetServerInfo( void * pConnection,
         /* Get peer info. */
         status = getpeername( pNetworkConnection->networkContext.fd,
                               ( struct sockaddr * ) &server,
-                              ( int * ) &length );
+                              &length );
     }
     else
     {
