@@ -120,6 +120,7 @@
 /* Static memory resource settings for the tests. These values must be large
  * enough to support the stress tests. */
 #if IOT_STATIC_MEMORY_ONLY == 1
+    #define IOT_MESSAGE_BUFFERS                    ( 16 )
     #define IOT_MQTT_CONNECTIONS                   ( 2 )
     #define IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS    ( 10 )
     #define IOT_MQTT_SUBSCRIPTIONS                 ( 80 )
