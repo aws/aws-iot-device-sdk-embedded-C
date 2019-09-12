@@ -8,6 +8,9 @@ if( ${IOT_BUILD_TESTS} )
     list( APPEND DEMO_COMMON_SOURCES ${PROJECT_SOURCE_DIR}/tests/iot_tests.c )
     set_property( SOURCE iot_demo.c PROPERTY COMPILE_DEFINITIONS main=DemoMain )
     set_property( SOURCE ${PROJECT_SOURCE_DIR}/tests/iot_tests.c PROPERTY COMPILE_DEFINITIONS IOT_TEST_DEMO=1 )
+    set( CONFIG_HEADER ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
+else()
+    set( CONFIG_HEADER ${PROJECT_SOURCE_DIR}/demos/iot_config.h )
 endif()
 
 # Common demo header files.
@@ -20,7 +23,7 @@ add_executable( iot_demo_mqtt
                 ${PROJECT_SOURCE_DIR}/demos/source/iot_demo_mqtt.c
                 ${DEMO_COMMON_SOURCES}
                 ${DEMO_COMMON_HEADERS}
-                ${PROJECT_SOURCE_DIR}/demos/iot_config.h )
+                ${CONFIG_HEADER} )
 
 # Select the demo function for the MQTT demo.
 target_compile_definitions( iot_demo_mqtt
@@ -38,14 +41,14 @@ set_property( TARGET iot_demo_mqtt PROPERTY FOLDER "demos" )
 source_group( include FILES ${DEMO_COMMON_HEADERS} )
 source_group( "" FILES ${DEMO_COMMON_SOURCES}
               ${PROJECT_SOURCE_DIR}/demos/source/iot_demo_mqtt.c
-              ${PROJECT_SOURCE_DIR}/demos/iot_config.h )
+              ${CONFIG_HEADER} )
 
 # Shadow demo source files.
 add_executable( aws_iot_demo_shadow
                 ${PROJECT_SOURCE_DIR}/demos/source/aws_iot_demo_shadow.c
                 ${DEMO_COMMON_SOURCES}
                 ${DEMO_COMMON_HEADERS}
-                ${PROJECT_SOURCE_DIR}/demos/iot_config.h )
+                ${CONFIG_HEADER} )
 
 # Select the demo function for the Shadow demo.
 target_compile_definitions( aws_iot_demo_shadow
@@ -63,4 +66,4 @@ set_property( TARGET aws_iot_demo_shadow PROPERTY FOLDER "demos" )
 source_group( include FILES ${DEMO_COMMON_HEADERS} )
 source_group( "" FILES ${DEMO_COMMON_SOURCES}
               ${PROJECT_SOURCE_DIR}/demos/source/aws_iot_demo_shadow.c
-              ${PROJECT_SOURCE_DIR}/demos/iot_config.h )
+              ${CONFIG_HEADER} )
