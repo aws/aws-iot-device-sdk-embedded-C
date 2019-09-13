@@ -1499,11 +1499,11 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
-                                const IotMqttPublishInfo_t * pPublishInfo,
-                                uint32_t flags,
-                                const IotMqttCallbackInfo_t * pCallbackInfo,
-                                IotMqttOperation_t * const pPublishOperation )
+IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
+                                     const IotMqttPublishInfo_t * pPublishInfo,
+                                     uint32_t flags,
+                                     const IotMqttCallbackInfo_t * pCallbackInfo,
+                                     IotMqttOperation_t * const pPublishOperation )
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     _mqttOperation_t * pOperation = NULL;
@@ -1784,11 +1784,11 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
     }
 
     /* Call the asynchronous PUBLISH function. */
-    status = IotMqtt_Publish( mqttConnection,
-                              pPublishInfo,
-                              flags,
-                              NULL,
-                              pPublishOperation );
+    status = IotMqtt_PublishAsync( mqttConnection,
+                                   pPublishInfo,
+                                   flags,
+                                   NULL,
+                                   pPublishOperation );
 
     /* Wait for a queued QoS 1 PUBLISH to complete. */
     if( pPublishInfo->qos == IOT_MQTT_QOS_1 )

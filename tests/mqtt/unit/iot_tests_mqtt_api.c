@@ -933,7 +933,7 @@ TEST( MQTT_Unit_API, DisconnectMallocFail )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref mqtt_function_publish (QoS 0) with various
+ * @brief Tests the behavior of @ref mqtt_function_publishasync (QoS 0) with various
  * valid and invalid parameters.
  */
 TEST( MQTT_Unit_API, PublishQoS0Parameters )
@@ -955,19 +955,19 @@ TEST( MQTT_Unit_API, PublishQoS0Parameters )
     if( TEST_PROTECT() )
     {
         /* Check that the publish info is validated. */
-        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, NULL, NULL );
+        status = IotMqtt_PublishAsync( _pMqttConnection, &publishInfo, 0, NULL, NULL );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
         publishInfo.pTopicName = TEST_TOPIC_NAME;
         publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
 
         /* Check that a QoS 0 publish is refused if a notification is requested. */
-        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, IOT_MQTT_FLAG_WAITABLE, NULL, &publishOperation );
+        status = IotMqtt_PublishAsync( _pMqttConnection, &publishInfo, IOT_MQTT_FLAG_WAITABLE, NULL, &publishOperation );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
-        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, &callbackInfo, NULL );
+        status = IotMqtt_PublishAsync( _pMqttConnection, &publishInfo, 0, &callbackInfo, NULL );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
         /* If valid parameters are passed, QoS 0 publish should always return success. */
-        status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, 0, &publishOperation );
+        status = IotMqtt_PublishAsync( _pMqttConnection, &publishInfo, 0, 0, &publishOperation );
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
     }
 
@@ -977,7 +977,7 @@ TEST( MQTT_Unit_API, PublishQoS0Parameters )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref mqtt_function_publish (QoS 0) when memory
+ * @brief Tests the behavior of @ref mqtt_function_publishasync (QoS 0) when memory
  * allocation fails at various points.
  */
 TEST( MQTT_Unit_API, PublishQoS0MallocFail )
@@ -1007,7 +1007,7 @@ TEST( MQTT_Unit_API, PublishQoS0MallocFail )
 
             /* Call PUBLISH. Memory allocation will fail at various times during
              * this call. */
-            status = IotMqtt_Publish( _pMqttConnection, &publishInfo, 0, NULL, NULL );
+            status = IotMqtt_PublishAsync( _pMqttConnection, &publishInfo, 0, NULL, NULL );
 
             /* Once PUBLISH succeeds, the loop can exit. */
             if( status == IOT_MQTT_SUCCESS )
@@ -1027,8 +1027,8 @@ TEST( MQTT_Unit_API, PublishQoS0MallocFail )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref mqtt_function_publish (QoS 1) with various
- * invalid parameters. Also tests the behavior of @ref mqtt_function_publish
+ * @brief Tests the behavior of @ref mqtt_function_publishasync (QoS 1) with various
+ * invalid parameters. Also tests the behavior of @ref mqtt_function_publishasync
  * (QoS 1) when memory allocation fails at various points.
  */
 TEST( MQTT_Unit_API, PublishQoS1 )
@@ -1056,19 +1056,19 @@ TEST( MQTT_Unit_API, PublishQoS1 )
     if( TEST_PROTECT() )
     {
         /* Setting the waitable flag with no reference is not allowed. */
-        status = IotMqtt_Publish( _pMqttConnection,
-                                  &publishInfo,
-                                  IOT_MQTT_FLAG_WAITABLE,
-                                  NULL,
-                                  NULL );
+        status = IotMqtt_PublishAsync( _pMqttConnection,
+                                       &publishInfo,
+                                       IOT_MQTT_FLAG_WAITABLE,
+                                       NULL,
+                                       NULL );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
         /* Setting both the waitable flag and callback info is not allowed. */
-        status = IotMqtt_Publish( _pMqttConnection,
-                                  &publishInfo,
-                                  IOT_MQTT_FLAG_WAITABLE,
-                                  &callbackInfo,
-                                  &publishOperation );
+        status = IotMqtt_PublishAsync( _pMqttConnection,
+                                       &publishInfo,
+                                       IOT_MQTT_FLAG_WAITABLE,
+                                       &callbackInfo,
+                                       &publishOperation );
         TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
         /* Check QoS 1 PUBLISH behavior with malloc failures. */
@@ -1078,11 +1078,11 @@ TEST( MQTT_Unit_API, PublishQoS1 )
 
             /* Call PUBLISH. Memory allocation will fail at various times during
              * this call. */
-            status = IotMqtt_Publish( _pMqttConnection,
-                                      &publishInfo,
-                                      IOT_MQTT_FLAG_WAITABLE,
-                                      NULL,
-                                      &publishOperation );
+            status = IotMqtt_PublishAsync( _pMqttConnection,
+                                           &publishInfo,
+                                           IOT_MQTT_FLAG_WAITABLE,
+                                           NULL,
+                                           &publishOperation );
 
             /* If the PUBLISH succeeded, the loop can exit after waiting for the QoS
              * 1 PUBLISH to be cleaned up. */
@@ -1148,11 +1148,11 @@ TEST( MQTT_Unit_API, PublishDuplicates )
     {
         /* Send a PUBLISH with retransmissions enabled. */
         TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING,
-                           IotMqtt_Publish( _pMqttConnection,
-                                            &publishInfo,
-                                            IOT_MQTT_FLAG_WAITABLE,
-                                            NULL,
-                                            &publishOperation ) );
+                           IotMqtt_PublishAsync( _pMqttConnection,
+                                                 &publishInfo,
+                                                 IOT_MQTT_FLAG_WAITABLE,
+                                                 NULL,
+                                                 &publishOperation ) );
 
         /* Since _dupChecker doesn't actually transmit a PUBLISH, no PUBACK is
          * expected. */

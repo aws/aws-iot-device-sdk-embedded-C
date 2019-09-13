@@ -311,11 +311,11 @@ static void _mqttSubscriptionCallback( void * param1,
              * the MQTT library will still guarantee at-least-once delivery (subject
              * to the retransmission strategy) because the acknowledgement message is
              * sent at QoS 1. */
-            if( IotMqtt_Publish( pPublish->mqttConnection,
-                                 &acknowledgementInfo,
-                                 0,
-                                 NULL,
-                                 NULL ) == IOT_MQTT_STATUS_PENDING )
+            if( IotMqtt_PublishAsync( pPublish->mqttConnection,
+                                      &acknowledgementInfo,
+                                      0,
+                                      NULL,
+                                      NULL ) == IOT_MQTT_STATUS_PENDING )
             {
                 IotLogInfo( "Acknowledgement message for PUBLISH %.*s will be sent.",
                             ( int ) messageNumberLength,
@@ -668,11 +668,11 @@ static int _publishAllMessages( IotMqttConnection_t mqttConnection,
 
         /* PUBLISH a message. This is an asynchronous function that notifies of
          * completion through a callback. */
-        publishStatus = IotMqtt_Publish( mqttConnection,
-                                         &publishInfo,
-                                         0,
-                                         &publishComplete,
-                                         NULL );
+        publishStatus = IotMqtt_PublishAsync( mqttConnection,
+                                              &publishInfo,
+                                              0,
+                                              &publishComplete,
+                                              NULL );
 
         if( publishStatus != IOT_MQTT_STATUS_PENDING )
         {

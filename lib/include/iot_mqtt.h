@@ -46,7 +46,7 @@
  * - @functionname{mqtt_function_subscribesync}
  * - @functionname{mqtt_function_unsubscribeasync}
  * - @functionname{mqtt_function_unsubscribesync}
- * - @functionname{mqtt_function_publish}
+ * - @functionname{mqtt_function_publishasync}
  * - @functionname{mqtt_function_timedpublish}
  * - @functionname{mqtt_function_wait}
  * - @functionname{mqtt_function_strerror}
@@ -64,7 +64,7 @@
  * @functionpage{IotMqtt_SubscribeSync,mqtt,subscribesync}
  * @functionpage{IotMqtt_UnsubscribeAsync,mqtt,unsubscribeasync}
  * @functionpage{IotMqtt_UnsubscribeSync,mqtt,unsubscribesync}
- * @functionpage{IotMqtt_Publish,mqtt,publish}
+ * @functionpage{IotMqtt_PublishAsync,mqtt,publishasync}
  * @functionpage{IotMqtt_TimedPublish,mqtt,timedpublish}
  * @functionpage{IotMqtt_Wait,mqtt,wait}
  * @functionpage{IotMqtt_strerror,mqtt,strerror}
@@ -167,7 +167,7 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
  * (@ref IotMqttPublishInfo_t.retryLimit) members of #IotMqttPublishInfo_t
  * are ignored for LWT messages. The LWT message is optional; `pWillInfo` may be NULL.
  *
- * Unlike @ref mqtt_function_publish, @ref mqtt_function_subscribeasync, and
+ * Unlike @ref mqtt_function_publishasync, @ref mqtt_function_subscribeasync, and
  * @ref mqtt_function_unsubscribeasync, this function is always blocking. Additionally,
  * because the MQTT connection acknowledgement packet (CONNACK packet) does not
  * contain any information on <i>which</i> CONNECT packet it acknowledges, only one
@@ -607,11 +607,11 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
  * publishInfo.payloadLength = 8;
  *
  * // QoS 0 publish should return IOT_MQTT_SUCCESS upon success.
- * IotMqttError_t qos0Result = IotMqtt_Publish( mqttConnection,
- *                                              &publishInfo,
- *                                              0,
- *                                              NULL,
- *                                              NULL );
+ * IotMqttError_t qos0Result = IotMqtt_PublishAsync( mqttConnection,
+ *                                                   &publishInfo,
+ *                                                   0,
+ *                                                   NULL,
+ *                                                   NULL );
  *
  * // QoS 1 with retry example (using same topic name and payload as QoS 0 example):
  * IotMqttOperation_t qos1Operation = IOT_MQTT_OPERATION_INITIALIZER;
@@ -620,11 +620,11 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
  * publishInfo.retryLimit = 5; // Retry up to 5 times.
  *
  * // QoS 1 publish should return IOT_MQTT_STATUS_PENDING upon success.
- * IotMqttError_t qos1Result = IotMqtt_Publish( mqttConnection,
- *                                              &publishInfo,
- *                                              IOT_MQTT_FLAG_WAITABLE,
- *                                              NULL,
- *                                              &qos1Operation );
+ * IotMqttError_t qos1Result = IotMqtt_PublishAsync( mqttConnection,
+ *                                                   &publishInfo,
+ *                                                   IOT_MQTT_FLAG_WAITABLE,
+ *                                                   NULL,
+ *                                                   &qos1Operation );
  *
  * // Wait up to 5 seconds for the publish to complete.
  * if( qos1Result == IOT_MQTT_STATUS_PENDING )
@@ -633,21 +633,21 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
  * }
  * @endcode
  */
-/* @[declare_mqtt_publish] */
-IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
-                                const IotMqttPublishInfo_t * pPublishInfo,
-                                uint32_t flags,
-                                const IotMqttCallbackInfo_t * pCallbackInfo,
-                                IotMqttOperation_t * const pPublishOperation );
-/* @[declare_mqtt_publish] */
+/* @[declare_mqtt_publishasync] */
+IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
+                                     const IotMqttPublishInfo_t * pPublishInfo,
+                                     uint32_t flags,
+                                     const IotMqttCallbackInfo_t * pCallbackInfo,
+                                     IotMqttOperation_t * const pPublishOperation );
+/* @[declare_mqtt_publishasync] */
 
 /**
  * @brief Publish a message to the given topic name with a timeout.
  *
  * This function transmits an MQTT PUBLISH packet to the server, then waits for
  * a server response to the packet. Internally, this function is a call to @ref
- * mqtt_function_publish followed by @ref mqtt_function_wait. See @ref
- * mqtt_function_publish for more information about the MQTT PUBLISH operation.
+ * mqtt_function_publishasync followed by @ref mqtt_function_wait. See @ref
+ * mqtt_function_publishasync for more information about the MQTT PUBLISH operation.
  *
  * @attention QoS 2 messages are currently unsupported. Only 0 or 1 are valid
  * for message QoS.
@@ -683,7 +683,7 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
  *
  * This function blocks to wait for a [subscribe](@ref mqtt_function_subscribeasync),
  * [unsubscribe](@ref mqtt_function_unsubscribeasync), or [publish]
- * (@ref mqtt_function_publish) to complete. These operations are by default
+ * (@ref mqtt_function_publishasync) to complete. These operations are by default
  * asynchronous; the function calls queue an operation for processing, and a
  * callback is invoked once the operation is complete.
  *
@@ -709,11 +709,11 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
  * uint32_t timeoutMs = 5000; // 5 seconds
  *
  * // MQTT operation to wait for.
- * IotMqttError_t result = IotMqtt_Publish( mqttConnection,
- *                                          &publishInfo,
- *                                          IOT_MQTT_FLAG_WAITABLE,
- *                                          NULL,
- *                                          &publishOperation );
+ * IotMqttError_t result = IotMqtt_PublishAsync( mqttConnection,
+ *                                               &publishInfo,
+ *                                               IOT_MQTT_FLAG_WAITABLE,
+ *                                               NULL,
+ *                                               &publishOperation );
  *
  * // Publish should have returned IOT_MQTT_STATUS_PENDING. The call to wait
  * // returns once the result of the publish is available or the timeout expires.

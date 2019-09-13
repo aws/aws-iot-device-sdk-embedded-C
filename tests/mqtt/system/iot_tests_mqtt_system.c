@@ -788,11 +788,11 @@ TEST( MQTT_System, SubscribePublishAsync )
 
                 /* Publish the message. */
                 callbackParam.expectedOperation = IOT_MQTT_PUBLISH_TO_SERVER;
-                status = IotMqtt_Publish( _mqttConnection,
-                                          &publishInfo,
-                                          0,
-                                          &callbackInfo,
-                                          &( callbackParam.operation ) );
+                status = IotMqtt_PublishAsync( _mqttConnection,
+                                               &publishInfo,
+                                               0,
+                                               &callbackInfo,
+                                               &( callbackParam.operation ) );
 
                 if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
                                             IOT_TEST_MQTT_TIMEOUT_MS ) == false )
@@ -1097,11 +1097,11 @@ TEST( MQTT_System, WaitAfterDisconnect )
         /* Publish a sequence of messages. */
         for( i = 0; i < 3; i++ )
         {
-            status = IotMqtt_Publish( _mqttConnection,
-                                      &publishInfo,
-                                      IOT_MQTT_FLAG_WAITABLE,
-                                      NULL,
-                                      &( pPublishOperation[ i ] ) );
+            status = IotMqtt_PublishAsync( _mqttConnection,
+                                           &publishInfo,
+                                           IOT_MQTT_FLAG_WAITABLE,
+                                           NULL,
+                                           &( pPublishOperation[ i ] ) );
             TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING, status );
         }
     }
