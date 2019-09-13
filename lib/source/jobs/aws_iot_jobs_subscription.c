@@ -302,7 +302,7 @@ AwsIotJobsError_t _AwsIotJobs_IncrementReferences( _jobsOperation_t * pOperation
         subscriptionInfo.pTopicFilterBase = pTopicBuffer;
         subscriptionInfo.topicFilterBaseLength = operationTopicLength;
 
-        subscriptionStatus = AwsIot_ModifySubscriptions( IotMqtt_TimedSubscribe,
+        subscriptionStatus = AwsIot_ModifySubscriptions( IotMqtt_SubscribeSync,
                                                          &subscriptionInfo );
 
         /* Convert MQTT return code to Jobs return code. */

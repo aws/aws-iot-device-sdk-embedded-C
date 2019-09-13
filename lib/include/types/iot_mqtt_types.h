@@ -109,7 +109,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_publish with QoS 0 parameter
      * - @ref mqtt_function_wait
-     * - @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_subscribesync
      * - @ref mqtt_function_timedunsubscribe
      * - @ref mqtt_function_timedpublish
      *
@@ -141,7 +141,7 @@ typedef enum IotMqttError
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
-     * - @ref mqtt_function_subscribeasync and @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_subscribeasync and @ref mqtt_function_subscribesync
      * - @ref mqtt_function_unsubscribe and @ref mqtt_function_timedunsubscribe
      * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
      * - @ref mqtt_function_wait
@@ -153,7 +153,7 @@ typedef enum IotMqttError
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
-     * - @ref mqtt_function_subscribeasync and @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_subscribeasync and @ref mqtt_function_subscribesync
      * - @ref mqtt_function_unsubscribe and @ref mqtt_function_timedunsubscribe
      * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
      */
@@ -167,7 +167,7 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait
-     * - @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_subscribesync
      * - @ref mqtt_function_timedunsubscribe
      * - @ref mqtt_function_timedpublish
      *
@@ -181,7 +181,7 @@ typedef enum IotMqttError
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
-     * - @ref mqtt_function_subscribeasync and @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_subscribeasync and @ref mqtt_function_subscribesync
      * - @ref mqtt_function_unsubscribe and @ref mqtt_function_timedunsubscribe
      * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
      */
@@ -193,7 +193,7 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait
-     * - @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_subscribesync
      * - @ref mqtt_function_timedunsubscribe
      * - @ref mqtt_function_timedpublish
      *
@@ -210,7 +210,7 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait
-     * - @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_subscribesync
      * - @ref mqtt_function_timedunsubscribe
      * - @ref mqtt_function_timedpublish
      */
@@ -223,13 +223,13 @@ typedef enum IotMqttError
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait, but only when its #IotMqttOperation_t parameter
      * is associated with a SUBSCRIBE operation.
-     * - @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_subscribesync
      *
      * May also be the value of an operation completion callback's
      * #IotMqttCallbackParam_t.result for a SUBSCRIBE.
      *
      * @note If this value is returned and multiple subscriptions were passed to
-     * @ref mqtt_function_subscribeasync (or @ref mqtt_function_timedsubscribe), it's
+     * @ref mqtt_function_subscribeasync (or @ref mqtt_function_subscribesync), it's
      * still possible that some of the subscriptions succeeded. This value only
      * signifies that AT LEAST ONE subscription was rejected. The function @ref
      * mqtt_function_issubscribed can be used to determine which subscriptions
@@ -520,7 +520,7 @@ typedef struct IotMqttCallbackInfo
  * @brief Information on an MQTT subscription.
  *
  * @paramfor @ref mqtt_function_subscribeasync, @ref mqtt_function_unsubscribe,
- * @ref mqtt_function_timedsubscribe, @ref mqtt_function_timedunsubscribe
+ * @ref mqtt_function_subscribesync, @ref mqtt_function_timedunsubscribe
  *
  * An array of these is passed to @ref mqtt_function_subscribeasync and @ref
  * mqtt_function_unsubscribe. However, #IotMqttSubscription_t.callback and

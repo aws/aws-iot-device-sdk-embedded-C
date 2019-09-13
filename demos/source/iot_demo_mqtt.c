@@ -317,13 +317,13 @@ static void _mqttSubscriptionCallback( void * param1,
                                  NULL,
                                  NULL ) == IOT_MQTT_STATUS_PENDING )
             {
-                IotLogInfo( "Acknowledgment message for PUBLISH %.*s will be sent.",
+                IotLogInfo( "Acknowledgement message for PUBLISH %.*s will be sent.",
                             ( int ) messageNumberLength,
                             pPayload + messageNumberIndex );
             }
             else
             {
-                IotLogWarn( "Acknowledgment message for PUBLISH %.*s will NOT be sent.",
+                IotLogWarn( "Acknowledgement message for PUBLISH %.*s will NOT be sent.",
                             ( int ) messageNumberLength,
                             pPayload + messageNumberIndex );
             }
@@ -520,11 +520,11 @@ static int _modifySubscriptions( IotMqttConnection_t mqttConnection,
     /* Modify subscriptions by either subscribing or unsubscribing. */
     if( operation == IOT_MQTT_SUBSCRIBE )
     {
-        subscriptionStatus = IotMqtt_TimedSubscribe( mqttConnection,
-                                                     pSubscriptions,
-                                                     TOPIC_FILTER_COUNT,
-                                                     0,
-                                                     MQTT_TIMEOUT_MS );
+        subscriptionStatus = IotMqtt_SubscribeSync( mqttConnection,
+                                                    pSubscriptions,
+                                                    TOPIC_FILTER_COUNT,
+                                                    0,
+                                                    MQTT_TIMEOUT_MS );
 
         /* Check the status of SUBSCRIBE. */
         switch( subscriptionStatus )

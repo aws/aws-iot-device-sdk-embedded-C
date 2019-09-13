@@ -43,7 +43,7 @@
  * - @functionname{mqtt_function_connect}
  * - @functionname{mqtt_function_disconnect}
  * - @functionname{mqtt_function_subscribeasync}
- * - @functionname{mqtt_function_timedsubscribe}
+ * - @functionname{mqtt_function_subscribesync}
  * - @functionname{mqtt_function_unsubscribe}
  * - @functionname{mqtt_function_timedunsubscribe}
  * - @functionname{mqtt_function_publish}
@@ -61,7 +61,7 @@
  * @functionpage{IotMqtt_Connect,mqtt,connect}
  * @functionpage{IotMqtt_Disconnect,mqtt,disconnect}
  * @functionpage{IotMqtt_SubscribeAsync,mqtt,subscribeasync}
- * @functionpage{IotMqtt_TimedSubscribe,mqtt,timedsubscribe}
+ * @functionpage{IotMqtt_SubscribeSync,mqtt,subscribesync}
  * @functionpage{IotMqtt_Unsubscribe,mqtt,unsubscribe}
  * @functionpage{IotMqtt_TimedUnsubscribe,mqtt,timedunsubscribe}
  * @functionpage{IotMqtt_Publish,mqtt,publish}
@@ -341,7 +341,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  *
- * @see @ref mqtt_function_timedsubscribe for a blocking variant of this function.
+ * @see @ref mqtt_function_subscribesync for a blocking variant of this function.
  * @see @ref mqtt_function_unsubscribe for the function that removes subscriptions.
  *
  * <b>Example</b>
@@ -457,13 +457,13 @@ IotMqttError_t IotMqtt_SubscribeAsync( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_TIMEOUT
  * - #IOT_MQTT_SERVER_REFUSED
  */
-/* @[declare_mqtt_timedsubscribe] */
-IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
-                                       const IotMqttSubscription_t * pSubscriptionList,
-                                       size_t subscriptionCount,
-                                       uint32_t flags,
-                                       uint32_t timeoutMs );
-/* @[declare_mqtt_timedsubscribe] */
+/* @[declare_mqtt_subscribesync] */
+IotMqttError_t IotMqtt_SubscribeSync( IotMqttConnection_t mqttConnection,
+                                      const IotMqttSubscription_t * pSubscriptionList,
+                                      size_t subscriptionCount,
+                                      uint32_t flags,
+                                      uint32_t timeoutMs );
+/* @[declare_mqtt_subscribesync] */
 
 /**
  * @brief Unsubscribes from the given array of topic filters and receive an asynchronous
@@ -499,7 +499,7 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  *
- * @see @ref mqtt_function_timedsubscribe for a blocking variant of this function.
+ * @see @ref mqtt_function_timedunsubscribe for a blocking variant of this function.
  * @see @ref mqtt_function_subscribeasync for the function that adds subscriptions.
  */
 /* @[declare_mqtt_unsubscribe] */

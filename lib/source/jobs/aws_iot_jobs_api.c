@@ -105,7 +105,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
  * @param[in] mqttConnection The MQTT connection to use.
  * @param[in] type Type of Jobs callback.
  * @param[in] pSubscription Jobs subscriptions object for callback.
- * @param[in] mqttOperation Either @ref mqtt_function_timedsubscribe or
+ * @param[in] mqttOperation Either @ref mqtt_function_subscribesync or
  * @ref mqtt_function_timedunsubscribe.
  *
  * @return #AWS_IOT_JOBS_SUCCESS, #AWS_IOT_JOBS_NO_MEMORY, or
@@ -467,7 +467,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
             status = _modifyCallbackSubscriptions( mqttConnection,
                                                    type,
                                                    pSubscription,
-                                                   IotMqtt_TimedSubscribe );
+                                                   IotMqtt_SubscribeSync );
 
             if( status == AWS_IOT_JOBS_SUCCESS )
             {
@@ -538,7 +538,7 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
     };
 
     /* MQTT operation may only be subscribe or unsubscribe. */
-    AwsIotJobs_Assert( ( mqttOperation == IotMqtt_TimedSubscribe ) ||
+    AwsIotJobs_Assert( ( mqttOperation == IotMqtt_SubscribeSync ) ||
                        ( mqttOperation == IotMqtt_TimedUnsubscribe ) );
 
     /* Use the subscription's topic buffer if available. */
@@ -563,7 +563,7 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
     }
 
     IotLogDebug( "%s subscription for %.*s",
-                 mqttOperation == IotMqtt_TimedSubscribe ? "Adding" : "Removing",
+                 mqttOperation == IotMqtt_SubscribeSync ? "Adding" : "Removing",
                  topicFilterLength,
                  pTopicFilter );
 
@@ -585,7 +585,7 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
     if( mqttStatus != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Failed to %s callback for %.*s %s callback, error %s.",
-                     mqttOperation == IotMqtt_TimedSubscribe ? "subscribe to" : "unsubscribe from",
+                     mqttOperation == IotMqtt_SubscribeSync ? "subscribe to" : "unsubscribe from",
                      pSubscription->thingNameLength,
                      pSubscription->pThingName,
                      _pAwsIotJobsCallbackNames[ type ],
@@ -603,7 +603,7 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
     }
 
     IotLogDebug( "Successfully %s %.*s Jobs %s callback.",
-                 mqttOperation == IotMqtt_TimedSubscribe ? "subscribed to" : "unsubscribed from",
+                 mqttOperation == IotMqtt_SubscribeSync ? "subscribed to" : "unsubscribed from",
                  pSubscription->thingNameLength,
                  pSubscription->pThingName,
                  _pAwsIotJobsCallbackNames[ type ] );
@@ -611,7 +611,7 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
     IOT_FUNCTION_CLEANUP_BEGIN();
 
     /* MQTT subscribe should check the subscription topic buffer. */
-    if( mqttOperation == IotMqtt_TimedSubscribe )
+    if( mqttOperation == IotMqtt_SubscribeSync )
     {
         /* If the current subscription has no topic buffer, assign it the current
          * topic buffer. */

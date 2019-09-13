@@ -1393,7 +1393,7 @@ TEST( MQTT_Unit_API, SingleThreaded )
         TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &mqttConnection ) );
 
         /* Add a subscription. */
-        status = IotMqtt_TimedSubscribe( mqttConnection, &subscription, 1, 0, DUP_CHECK_TIMEOUT );
+        status = IotMqtt_SubscribeSync( mqttConnection, &subscription, 1, 0, DUP_CHECK_TIMEOUT );
         TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
         /* Transmit a message with no retry. */

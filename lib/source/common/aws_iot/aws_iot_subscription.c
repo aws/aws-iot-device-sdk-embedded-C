@@ -42,14 +42,14 @@
 /**
  * @brief Modify subscriptions, either by unsubscribing or subscribing.
  *
- * @param[in] mqttOperation Either @ref mqtt_function_timedsubscribe or @ref
+ * @param[in] mqttOperation Either @ref mqtt_function_subscribesync or @ref
  * mqtt_function_timedunsubscribe.
  * @param[in] pSubscriptionInfo Information needed to process an MQTT
  * operation.
  * @param[in] pTopicFilter The topic filter to modify.
  * @param[in] topicFilterLength The length of `pTopicFilter`.
  *
- * @return See the return values of @ref mqtt_function_timedsubscribe or
+ * @return See the return values of @ref mqtt_function_subscribesync or
  * @ref mqtt_function_timedunsubscribe.
  */
 static IotMqttError_t _modifySubscriptions( AwsIotMqttFunction_t mqttOperation,
@@ -137,7 +137,7 @@ IotMqttError_t AwsIot_ModifySubscriptions( AwsIotMqttFunction_t mqttOperation,
     {
         /* Remove the subscription to the "accepted" topic if the subscription
          * to the "rejected" topic failed. */
-        if( ( mqttOperation == IotMqtt_TimedSubscribe ) &&
+        if( ( mqttOperation == IotMqtt_SubscribeSync ) &&
             ( acceptedStatus == IOT_MQTT_SUCCESS ) )
         {
             /* Place the topic "accepted" suffix at the end of the topic buffer. */

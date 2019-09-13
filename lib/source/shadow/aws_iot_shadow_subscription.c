@@ -302,7 +302,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
         subscriptionInfo.pTopicFilterBase = pTopicBuffer;
         subscriptionInfo.topicFilterBaseLength = operationTopicLength;
 
-        subscriptionStatus = AwsIot_ModifySubscriptions( IotMqtt_TimedSubscribe,
+        subscriptionStatus = AwsIot_ModifySubscriptions( IotMqtt_SubscribeSync,
                                                          &subscriptionInfo );
 
         /* Convert MQTT return code to Shadow return code. */

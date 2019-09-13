@@ -524,11 +524,11 @@ static void _subscribePublishWait( IotMqttQos_t qos )
 
             /* Subscribe to the test topic filter using the blocking SUBSCRIBE
              * function. */
-            status = IotMqtt_TimedSubscribe( _mqttConnection,
-                                             &subscription,
-                                             1,
-                                             0,
-                                             IOT_TEST_MQTT_TIMEOUT_MS );
+            status = IotMqtt_SubscribeSync( _mqttConnection,
+                                            &subscription,
+                                            1,
+                                            0,
+                                            IOT_TEST_MQTT_TIMEOUT_MS );
             TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
             /* Set the members of the publish info. */
@@ -899,11 +899,11 @@ TEST( MQTT_System, LastWillAndTestament )
             willSubscription.callback.function = _publishReceived;
             willSubscription.callback.pCallbackContext = &waitSem;
 
-            status = IotMqtt_TimedSubscribe( lwtListener,
-                                             &willSubscription,
-                                             1,
-                                             0,
-                                             IOT_TEST_MQTT_TIMEOUT_MS );
+            status = IotMqtt_SubscribeSync( lwtListener,
+                                            &willSubscription,
+                                            1,
+                                            0,
+                                            IOT_TEST_MQTT_TIMEOUT_MS );
             TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
             /* Create a connection that requests the LWT. */
@@ -981,11 +981,11 @@ TEST( MQTT_System, RestorePreviousSession )
         subscription.callback.pCallbackContext = &waitSem;
         subscription.callback.function = _publishReceived;
 
-        status = IotMqtt_TimedSubscribe( _mqttConnection,
-                                         &subscription,
-                                         1,
-                                         0,
-                                         IOT_TEST_MQTT_TIMEOUT_MS );
+        status = IotMqtt_SubscribeSync( _mqttConnection,
+                                        &subscription,
+                                        1,
+                                        0,
+                                        IOT_TEST_MQTT_TIMEOUT_MS );
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         /* Disconnect the MQTT connection and clean up network connection. */
@@ -1252,11 +1252,11 @@ TEST( MQTT_System, IncomingPublishReentrancy )
                 pSubscription[ 1 ].callback.function = _publishReceived;
                 pSubscription[ 1 ].callback.pCallbackContext = &( pWaitSemaphores[ 0 ] );
 
-                status = IotMqtt_TimedSubscribe( _mqttConnection,
-                                                 pSubscription,
-                                                 2,
-                                                 0,
-                                                 IOT_TEST_MQTT_TIMEOUT_MS );
+                status = IotMqtt_SubscribeSync( _mqttConnection,
+                                                pSubscription,
+                                                2,
+                                                0,
+                                                IOT_TEST_MQTT_TIMEOUT_MS );
                 TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
                 /* Publish a message to the test topic. */

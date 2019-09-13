@@ -1405,11 +1405,11 @@ IotMqttError_t IotMqtt_SubscribeAsync( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
-                                       const IotMqttSubscription_t * pSubscriptionList,
-                                       size_t subscriptionCount,
-                                       uint32_t flags,
-                                       uint32_t timeoutMs )
+IotMqttError_t IotMqtt_SubscribeSync( IotMqttConnection_t mqttConnection,
+                                      const IotMqttSubscription_t * pSubscriptionList,
+                                      size_t subscriptionCount,
+                                      uint32_t flags,
+                                      uint32_t timeoutMs )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttOperation_t subscribeOperation = IOT_MQTT_OPERATION_INITIALIZER;

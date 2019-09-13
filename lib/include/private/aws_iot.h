@@ -102,10 +102,10 @@
 #define AWS_IOT_PERSISTENT_SUBSCRIPTION    ( -1 )
 
 /**
- * @brief Function pointer representing an MQTT timed operation.
+ * @brief Function pointer representing an MQTT blocking operation.
  *
- * Currently, this is used to represent @ref mqtt_function_timedsubscribe or
- * @ref mqtt_function_timedunsubscribe.
+ * Currently, this is used to represent @ref mqtt_function_subscribesync or
+ * @ref mqtt_function_unsubscribesync.
  */
 typedef IotMqttError_t ( * AwsIotMqttFunction_t )( IotMqttConnection_t,
                                                    const IotMqttSubscription_t *,
@@ -265,13 +265,13 @@ bool AwsIot_GenerateOperationTopic( const AwsIotTopicInfo_t * pTopicInfo,
 /**
  * @brief Add or remove subscriptions for AWS IoT operations.
  *
- * @param[in] mqttOperation Either @ref mqtt_function_timedsubscribe or
- * @ref mqtt_function_timedunsubscribe.
+ * @param[in] mqttOperation Either @ref mqtt_function_subscribesync or
+ * @ref mqtt_function_unsubscribesync.
  * @param[in] pSubscriptionInfo Information needed to process an MQTT
  * operation.
  *
- * @return See the return values of @ref mqtt_function_timedsubscribe or
- * @ref mqtt_function_timedunsubscribe.
+ * @return See the return values of @ref mqtt_function_subscribesync or
+ * @ref mqtt_function_unsubscribesync.
  */
 IotMqttError_t AwsIot_ModifySubscriptions( AwsIotMqttFunction_t mqttOperation,
                                            const AwsIotSubscriptionInfo_t * pSubscriptionInfo );

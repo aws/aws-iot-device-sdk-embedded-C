@@ -128,7 +128,7 @@ Asserts are useful for debugging, but should be disabled in production code. If 
 @section AWS_IOT_SHADOW_DEFAULT_MQTT_TIMEOUT_MS
 @brief Set the default timeout (in milliseconds) for [MQTT library](@ref mqtt_functions) called by the Shadow library.
 
-If the `mqttTimeout` argument of @ref shadow_function_init is `0`, the Shadow library uses this setting for MQTT timeouts. This timeout is passed to functions such as @ref mqtt_function_timedsubscribe, @ref mqtt_function_timedunsubscribe, and @ref mqtt_function_timedpublish to limit amount of time an MQTT function may block.
+If the `mqttTimeout` argument of @ref shadow_function_init is `0`, the Shadow library uses this setting for MQTT timeouts. This timeout is passed to functions such as @ref mqtt_function_subscribesync, @ref mqtt_function_timedunsubscribe, and @ref mqtt_function_timedpublish to limit amount of time an MQTT function may block.
 
 @configpossible Any positive integer.<br>
 @configrecommended This setting must be at least the network round-trip time, as an MQTT packet must be sent to the AWS IoT server and a response must be received. The recommended minimum value is `500`.<br>
