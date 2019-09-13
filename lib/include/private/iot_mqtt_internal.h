@@ -365,13 +365,12 @@ typedef struct _mqttSubscription
     int32_t references; /**< @brief How many subscription callbacks are using this subscription. */
 
     /**
-     * @brief Tracks whether @ref mqtt_function_unsubscribe has been called for
+     * @brief Tracks whether an unsubscribe function has been called for
      * this subscription.
      *
-     * If there are active subscription callbacks, @ref mqtt_function_unsubscribe
-     * cannot remove this subscription. Instead, it will set this flag, which
-     * schedules the removal of this subscription once all subscription callbacks
-     * terminate.
+     * If there are active subscription callbacks, this subscription cannot be removed.
+     * Instead, this flag will be set, which schedules the removal of this subscription
+     * once all subscription callbacks terminate.
      */
     bool unsubscribed;
 

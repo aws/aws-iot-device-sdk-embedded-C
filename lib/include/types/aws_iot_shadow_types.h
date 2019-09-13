@@ -509,7 +509,7 @@ typedef struct AwsIotShadowDocumentInfo
  *
  * The following flags are valid for the Shadow operation functions:
  * @ref shadow_function_delete, @ref shadow_function_get, @ref shadow_function_update,
- * and their <i>Timed</i> variants.
+ * and their blocking versions.
  * - #AWS_IOT_SHADOW_FLAG_WAITABLE <br>
  *   @copybrief AWS_IOT_SHADOW_FLAG_WAITABLE
  * - #AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS <br>
@@ -554,8 +554,7 @@ typedef struct AwsIotShadowDocumentInfo
  * this function returns.
  *
  * This flag is only valid if passed to the functions @ref shadow_function_delete,
- * @ref shadow_function_get, @ref shadow_function_update, or their <i>Timed</i>
- * variants.
+ * @ref shadow_function_get, @ref shadow_function_update, or their blocking versions.
  *
  * The Shadow service reports results of Shadow operations by publishing
  * messages to MQTT topics. By default, the functions @ref shadow_function_delete,

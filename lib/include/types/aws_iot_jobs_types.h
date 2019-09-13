@@ -804,7 +804,7 @@ typedef struct AwsIotJobsUpdateInfo
  * The following flags are valid for the Jobs operation functions:
  * @ref jobs_function_getpending, @ref jobs_function_startnext,
  * @ref jobs_function_describe, @ref jobs_function_update,
- * and their <i>Timed</i> variants.
+ * and their blocking versions.
  * - #AWS_IOT_JOBS_FLAG_WAITABLE <br>
  *   @copybrief AWS_IOT_JOBS_FLAG_WAITABLE
  * - #AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS <br>
@@ -867,7 +867,7 @@ typedef struct AwsIotJobsUpdateInfo
  *
  * This flag is only valid if passed to the functions @ref jobs_function_getpending,
  * @ref jobs_function_startnext, @ref jobs_function_describe, or @ref jobs_function_update,
- * and their <i>Timed</i> variants.
+ * and their blocking versions.
  *
  * The Jobs service reports results of Jobs operations by publishing
  * messages to MQTT topics. By default, the Job operation functions subscribe to the

@@ -134,11 +134,11 @@ IotMqttError_t AwsIotDefenderInternal_MqttSubscribe( IotMqttCallbackInfo_t accep
     subscriptions[ 1 ].topicFilterLength = ( uint16_t ) strlen( _pRejectTopic );
     subscriptions[ 1 ].callback = rejectCallback;
 
-    return IotMqtt_TimedSubscribe( _mqttConnection,
-                                   subscriptions,
-                                   2,
-                                   0,
-                                   _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_SUBSCRIBE_TIMEOUT_SECONDS ) );
+    return IotMqtt_SubscribeSync( _mqttConnection,
+                                  subscriptions,
+                                  2,
+                                  0,
+                                  _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_SUBSCRIBE_TIMEOUT_SECONDS ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -154,10 +154,10 @@ IotMqttError_t AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
     publishInfo.pPayload = pData;
     publishInfo.payloadLength = dataLength;
 
-    return IotMqtt_TimedPublish( _mqttConnection,
-                                 &publishInfo,
-                                 0,
-                                 _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_PUBLISH_TIMEOUT_SECONDS ) );
+    return IotMqtt_PublishSync( _mqttConnection,
+                                &publishInfo,
+                                0,
+                                _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_PUBLISH_TIMEOUT_SECONDS ) );
 }
 
 /*-----------------------------------------------------------*/
