@@ -40,7 +40,7 @@
  * - @functionname{shadow_function_init}
  * - @functionname{shadow_function_cleanup}
  * - @functionname{shadow_function_deleteasync}
- * - @functionname{shadow_function_timeddelete}
+ * - @functionname{shadow_function_deletesync}
  * - @functionname{shadow_function_get}
  * - @functionname{shadow_function_timedget}
  * - @functionname{shadow_function_update}
@@ -56,7 +56,7 @@
  * @functionpage{AwsIotShadow_Init,shadow,init}
  * @functionpage{AwsIotShadow_Cleanup,shadow,cleanup}
  * @functionpage{AwsIotShadow_DeleteAsync,shadow,deleteasync}
- * @functionpage{AwsIotShadow_TimedDelete,shadow,timeddelete}
+ * @functionpage{AwsIotShadow_DeleteSync,shadow,deletesync}
  * @functionpage{AwsIotShadow_Get,shadow,get}
  * @functionpage{AwsIotShadow_TimedGet,shadow,timedget}
  * @functionpage{AwsIotShadow_Update,shadow,update}
@@ -142,7 +142,7 @@ void AwsIotShadow_Cleanup( void );
  * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
  * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  *
- * @see @ref shadow_function_timeddelete for a blocking variant of this function.
+ * @see @ref shadow_function_deletesync for a blocking variant of this function.
  *
  * <b>Example</b>
  * @code{c}
@@ -204,13 +204,13 @@ AwsIotShadowError_t AwsIotShadow_DeleteAsync( IotMqttConnection_t mqttConnection
  * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
  * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  */
-/* @[declare_shadow_timeddelete] */
-AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t mqttConnection,
-                                              const char * pThingName,
-                                              size_t thingNameLength,
-                                              uint32_t flags,
-                                              uint32_t timeoutMs );
-/* @[declare_shadow_timeddelete] */
+/* @[declare_shadow_deletesync] */
+AwsIotShadowError_t AwsIotShadow_DeleteSync( IotMqttConnection_t mqttConnection,
+                                             const char * pThingName,
+                                             size_t thingNameLength,
+                                             uint32_t flags,
+                                             uint32_t timeoutMs );
+/* @[declare_shadow_deletesync] */
 
 /**
  * @brief Retrieve a Thing Shadow and receive an asynchronous notification when

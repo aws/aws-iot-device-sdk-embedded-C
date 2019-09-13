@@ -646,11 +646,11 @@ static void _clearShadowDocument( IotMqttConnection_t mqttConnection,
 
     /* Delete any existing Shadow document so that this demo starts with an empty
      * Shadow. */
-    deleteStatus = AwsIotShadow_TimedDelete( mqttConnection,
-                                             pThingName,
-                                             thingNameLength,
-                                             0,
-                                             TIMEOUT_MS );
+    deleteStatus = AwsIotShadow_DeleteSync( mqttConnection,
+                                            pThingName,
+                                            thingNameLength,
+                                            0,
+                                            TIMEOUT_MS );
 
     /* Check for return values of "SUCCESS" and "NOT FOUND". Both of these values
      * mean that the Shadow document is now empty. */

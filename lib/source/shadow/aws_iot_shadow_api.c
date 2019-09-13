@@ -767,11 +767,11 @@ AwsIotShadowError_t AwsIotShadow_DeleteAsync( IotMqttConnection_t mqttConnection
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t mqttConnection,
-                                              const char * pThingName,
-                                              size_t thingNameLength,
-                                              uint32_t flags,
-                                              uint32_t timeoutMs )
+AwsIotShadowError_t AwsIotShadow_DeleteSync( IotMqttConnection_t mqttConnection,
+                                             const char * pThingName,
+                                             size_t thingNameLength,
+                                             uint32_t flags,
+                                             uint32_t timeoutMs )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowOperation_t deleteOperation = AWS_IOT_SHADOW_OPERATION_INITIALIZER;

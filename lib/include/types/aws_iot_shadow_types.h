@@ -89,7 +89,7 @@ typedef enum AwsIotShadowError
      * Functions that may return this value:
      * - @ref shadow_function_init
      * - @ref shadow_function_wait
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_setdeltacallback
@@ -124,7 +124,7 @@ typedef enum AwsIotShadowError
      * @brief At least one parameter is invalid.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_deleteasync and @ref shadow_function_timeddelete
+     * - @ref shadow_function_deleteasync and @ref shadow_function_deletesync
      * - @ref shadow_function_get and @ref shadow_function_timedget
      * - @ref shadow_function_update and @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -137,7 +137,7 @@ typedef enum AwsIotShadowError
      * @brief Shadow operation failed because of memory allocation failure.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_deleteasync and @ref shadow_function_timeddelete
+     * - @ref shadow_function_deleteasync and @ref shadow_function_deletesync
      * - @ref shadow_function_get and @ref shadow_function_timedget
      * - @ref shadow_function_update and @ref shadow_function_timedupdate
      * - @ref shadow_function_setdeltacallback
@@ -152,7 +152,7 @@ typedef enum AwsIotShadowError
      * library.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_deleteasync and @ref shadow_function_timeddelete
+     * - @ref shadow_function_deleteasync and @ref shadow_function_deletesync
      * - @ref shadow_function_get and @ref shadow_function_timedget
      * - @ref shadow_function_update and @ref shadow_function_timedupdate
      * - @ref shadow_function_setdeltacallback
@@ -165,7 +165,7 @@ typedef enum AwsIotShadowError
      * @brief Reponse received from Shadow service not understood.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -179,7 +179,7 @@ typedef enum AwsIotShadowError
      * @brief A blocking Shadow operation timed out.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -192,7 +192,7 @@ typedef enum AwsIotShadowError
      * @brief Shadow operation rejected: Bad request.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -206,7 +206,7 @@ typedef enum AwsIotShadowError
      * @brief Shadow operation rejected: Unauthorized.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -220,7 +220,7 @@ typedef enum AwsIotShadowError
      * @brief Shadow operation rejected: Forbidden.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -234,7 +234,7 @@ typedef enum AwsIotShadowError
      * @brief Shadow operation rejected: Thing not found.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -248,7 +248,7 @@ typedef enum AwsIotShadowError
      * @brief Shadow operation rejected: Version conflict.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -263,7 +263,7 @@ typedef enum AwsIotShadowError
      * allowed.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -278,7 +278,7 @@ typedef enum AwsIotShadowError
      * encoding is UTF-8.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -293,7 +293,7 @@ typedef enum AwsIotShadowError
      * this error message when there are more than 10 in-flight requests.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -307,7 +307,7 @@ typedef enum AwsIotShadowError
      * @brief Shadow operation rejected: Internal service failure.
      *
      * Functions that may return this value:
-     * - @ref shadow_function_timeddelete
+     * - @ref shadow_function_deletesync
      * - @ref shadow_function_timedget
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
@@ -585,7 +585,7 @@ typedef struct AwsIotShadowDocumentInfo
  *
  * This flag may be passed to @ref shadow_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref shadow_function_deleteasync or @ref shadow_function_timeddelete.
+ * call to @ref shadow_function_deleteasync or @ref shadow_function_deletesync.
  *
  * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Shadow delete operations.

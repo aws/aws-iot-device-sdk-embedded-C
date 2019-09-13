@@ -409,11 +409,11 @@ static void _updateGetDeleteBlocking( IotMqttQos_t qos )
     IotTest_Free( ( void * ) pShadowDocument );
 
     /* Delete the Shadow document. */
-    status = AwsIotShadow_TimedDelete( _mqttConnection,
-                                       AWS_IOT_TEST_SHADOW_THING_NAME,
-                                       THING_NAME_LENGTH,
-                                       0,
-                                       AWS_IOT_TEST_SHADOW_TIMEOUT );
+    status = AwsIotShadow_DeleteSync( _mqttConnection,
+                                      AWS_IOT_TEST_SHADOW_THING_NAME,
+                                      THING_NAME_LENGTH,
+                                      0,
+                                      AWS_IOT_TEST_SHADOW_TIMEOUT );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 }
 
@@ -503,11 +503,11 @@ TEST_SETUP( Shadow_System )
     lastConnectTime = IotClock_GetTimeMs();
 
     /* Delete any existing Shadow so all tests start with no Shadow. */
-    status = AwsIotShadow_TimedDelete( _mqttConnection,
-                                       AWS_IOT_TEST_SHADOW_THING_NAME,
-                                       THING_NAME_LENGTH,
-                                       0,
-                                       AWS_IOT_TEST_SHADOW_TIMEOUT );
+    status = AwsIotShadow_DeleteSync( _mqttConnection,
+                                      AWS_IOT_TEST_SHADOW_THING_NAME,
+                                      THING_NAME_LENGTH,
+                                      0,
+                                      AWS_IOT_TEST_SHADOW_TIMEOUT );
 
     /* Acceptable statuses are SUCCESS and NOT FOUND. Both of these statuses allow
      * the tests to start with no Shadow. */
