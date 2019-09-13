@@ -1019,12 +1019,12 @@ AwsIotJobsError_t AwsIotJobs_DescribeAsync( const AwsIotJobsRequestInfo_t * pReq
 
 /*-----------------------------------------------------------*/
 
-AwsIotJobsError_t AwsIotJobs_TimedDescribe( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                            int32_t executionNumber,
-                                            bool includeJobDocument,
-                                            uint32_t flags,
-                                            uint32_t timeoutMs,
-                                            AwsIotJobsResponse_t * const pJobsResponse )
+AwsIotJobsError_t AwsIotJobs_DescribeSync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                           int32_t executionNumber,
+                                           bool includeJobDocument,
+                                           uint32_t flags,
+                                           uint32_t timeoutMs,
+                                           AwsIotJobsResponse_t * const pJobsResponse )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
     AwsIotJobsOperation_t describeOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;

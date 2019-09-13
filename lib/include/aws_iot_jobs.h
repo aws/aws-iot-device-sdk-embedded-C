@@ -44,7 +44,7 @@
  * - @functionname{jobs_function_startnextasync}
  * - @functionname{jobs_function_startnextsync}
  * - @functionname{jobs_function_describeasync}
- * - @functionname{jobs_function_timeddescribe}
+ * - @functionname{jobs_function_describesync}
  * - @functionname{jobs_function_update}
  * - @functionname{jobs_function_timedupdate}
  * - @functionname{jobs_function_wait}
@@ -63,7 +63,7 @@
  * @functionpage{AwsIotJobs_StartNextAsync,jobs,startnextasync}
  * @functionpage{AwsIotJobs_StartNextSync,jobs,startnextsync}
  * @functionpage{AwsIotJobs_DescribeAsync,jobs,describeasync}
- * @functionpage{AwsIotJobs_TimedDescribe,jobs,timeddescribe}
+ * @functionpage{AwsIotJobs_DescribeSync,jobs,describesync}
  * @functionpage{AwsIotJobs_Update,jobs,update}
  * @functionpage{AwsIotJobs_TimedUpdate,jobs,timedupdate}
  * @functionpage{AwsIotJobs_Wait,jobs,wait}
@@ -361,7 +361,7 @@ AwsIotJobsError_t AwsIotJobs_StartNextSync( const AwsIotJobsRequestInfo_t * pReq
  * - #AWS_IOT_JOBS_BAD_RESPONSE
  * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  *
- * @see @ref jobs_function_timeddescribe for a blocking variant of this function.
+ * @see @ref jobs_function_describesync for a blocking variant of this function.
  *
  * <b>Example</b>
  * @code{c}
@@ -437,14 +437,14 @@ AwsIotJobsError_t AwsIotJobs_DescribeAsync( const AwsIotJobsRequestInfo_t * pReq
  * - #AWS_IOT_JOBS_TIMEOUT
  * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  */
-/* @[declare_jobs_timeddescribe] */
-AwsIotJobsError_t AwsIotJobs_TimedDescribe( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                            int32_t executionNumber,
-                                            bool includeJobDocument,
-                                            uint32_t flags,
-                                            uint32_t timeoutMs,
-                                            AwsIotJobsResponse_t * const pJobsResponse );
-/* @[declare_jobs_timeddescribe] */
+/* @[declare_jobs_describesync] */
+AwsIotJobsError_t AwsIotJobs_DescribeSync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                           int32_t executionNumber,
+                                           bool includeJobDocument,
+                                           uint32_t flags,
+                                           uint32_t timeoutMs,
+                                           AwsIotJobsResponse_t * const pJobsResponse );
+/* @[declare_jobs_describesync] */
 
 /**
  * @brief Update the status of a job execution and receive an asynchronous

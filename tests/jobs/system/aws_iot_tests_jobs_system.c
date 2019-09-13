@@ -406,12 +406,12 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
             break;
 
         case JOBS_DESCRIBE:
-            status = AwsIotJobs_TimedDescribe( &requestInfo,
-                                               AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
-                                               true,
-                                               0,
-                                               AWS_IOT_TEST_JOBS_TIMEOUT,
-                                               &jobsResponse );
+            status = AwsIotJobs_DescribeSync( &requestInfo,
+                                              AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                              true,
+                                              0,
+                                              AWS_IOT_TEST_JOBS_TIMEOUT,
+                                              &jobsResponse );
             break;
 
         default:
@@ -680,7 +680,7 @@ TEST( Jobs_System, DescribeAsync )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Describe a Job using @ref jobs_function_timeddescribe.
+ * @brief Describe a Job using @ref jobs_function_describesync.
  */
 TEST( Jobs_System, DescribeBlocking )
 {
