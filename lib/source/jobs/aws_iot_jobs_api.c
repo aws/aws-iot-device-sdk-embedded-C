@@ -1053,11 +1053,11 @@ AwsIotJobsError_t AwsIotJobs_DescribeSync( const AwsIotJobsRequestInfo_t * pRequ
 
 /*-----------------------------------------------------------*/
 
-AwsIotJobsError_t AwsIotJobs_Update( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                     const AwsIotJobsUpdateInfo_t * pUpdateInfo,
-                                     uint32_t flags,
-                                     const AwsIotJobsCallbackInfo_t * pCallbackInfo,
-                                     AwsIotJobsOperation_t * const pUpdateOperation )
+AwsIotJobsError_t AwsIotJobs_UpdateAsync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                          const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                          uint32_t flags,
+                                          const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                          AwsIotJobsOperation_t * const pUpdateOperation )
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
     _jobsOperation_t * pOperation = NULL;
@@ -1135,11 +1135,11 @@ AwsIotJobsError_t AwsIotJobs_TimedUpdate( const AwsIotJobsRequestInfo_t * pReque
     flags |= AWS_IOT_JOBS_FLAG_WAITABLE;
 
     /* Call the asynchronous Jobs Update function. */
-    status = AwsIotJobs_Update( pRequestInfo,
-                                pUpdateInfo,
-                                flags,
-                                NULL,
-                                &updateOperation );
+    status = AwsIotJobs_UpdateAsync( pRequestInfo,
+                                     pUpdateInfo,
+                                     flags,
+                                     NULL,
+                                     &updateOperation );
 
     /* Wait for the Jobs Update operation to complete. */
     if( status == AWS_IOT_JOBS_STATUS_PENDING )

@@ -345,11 +345,11 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
                 requestInfo.pJobId = _pJobIds[ 0 ];
                 requestInfo.jobIdLength = _pJobIdLengths[ 0 ];
 
-                status = AwsIotJobs_Update( &requestInfo,
-                                            &updateInfo,
-                                            0,
-                                            &callbackInfo,
-                                            &( callbackParam.operation ) );
+                status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                                 &updateInfo,
+                                                 0,
+                                                 &callbackInfo,
+                                                 &( callbackParam.operation ) );
                 break;
         }
 
@@ -690,7 +690,7 @@ TEST( Jobs_System, DescribeBlocking )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Update a Job status using @ref jobs_function_update.
+ * @brief Update a Job status using @ref jobs_function_updateasync.
  */
 TEST( Jobs_System, UpdateAsync )
 {

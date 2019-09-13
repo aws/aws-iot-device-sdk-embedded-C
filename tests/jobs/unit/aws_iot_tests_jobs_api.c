@@ -142,11 +142,11 @@ static void _jobsMallocFail( _jobsOperationType_t type )
                 /* The only remaining valid type is update. */
                 TEST_ASSERT_EQUAL( JOBS_UPDATE, type );
 
-                status = AwsIotJobs_Update( &requestInfo,
-                                            &updateInfo,
-                                            AWS_IOT_JOBS_FLAG_WAITABLE,
-                                            NULL,
-                                            &operation );
+                status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                                 &updateInfo,
+                                                 AWS_IOT_JOBS_FLAG_WAITABLE,
+                                                 NULL,
+                                                 &operation );
                 break;
         }
 
@@ -419,22 +419,22 @@ TEST( Jobs_Unit_API, OperationInvalidRequestInfo )
     requestInfo.pJobId = "jobid";
     requestInfo.jobIdLength = JOBS_MAX_ID_LENGTH + 1;
 
-    status = AwsIotJobs_Update( &requestInfo,
-                                &updateInfo,
-                                0,
-                                NULL,
-                                NULL );
+    status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                     &updateInfo,
+                                     0,
+                                     NULL,
+                                     NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Using $next with UPDATE is invalid. */
     requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
     requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
 
-    status = AwsIotJobs_Update( &requestInfo,
-                                &updateInfo,
-                                0,
-                                NULL,
-                                NULL );
+    status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                     &updateInfo,
+                                     0,
+                                     NULL,
+                                     NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 }
 
@@ -500,11 +500,11 @@ TEST( Jobs_Unit_API, OperationInvalidUpdateInfo )
     requestInfo.pJobId = "jobid";
     requestInfo.jobIdLength = 5;
 
-    status = AwsIotJobs_Update( &requestInfo,
-                                &updateInfo,
-                                0,
-                                NULL,
-                                NULL );
+    status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                     &updateInfo,
+                                     0,
+                                     NULL,
+                                     NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     updateInfo.newStatus = AWS_IOT_JOB_STATE_IN_PROGRESS;
 
@@ -512,11 +512,11 @@ TEST( Jobs_Unit_API, OperationInvalidUpdateInfo )
     requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
     requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
 
-    status = AwsIotJobs_Update( &requestInfo,
-                                &updateInfo,
-                                0,
-                                NULL,
-                                NULL );
+    status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                     &updateInfo,
+                                     0,
+                                     NULL,
+                                     NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 }
 
@@ -580,7 +580,7 @@ TEST( Jobs_Unit_API, DescribeMallocFail )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref jobs_function_update when memory
+ * @brief Tests the behavior of @ref jobs_function_updateasync when memory
  * allocation fails at various points.
  */
 TEST( Jobs_Unit_API, UpdateMallocFail )
