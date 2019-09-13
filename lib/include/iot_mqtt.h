@@ -816,4 +816,18 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
                            IotMqttSubscription_t * const pCurrentSubscription );
 /* @[declare_mqtt_issubscribed] */
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Backwards compatibility macros for previous function names.
+ */
+#define IotMqtt_Subscribe           IotMqtt_SubscribeAsync
+#define IotMqtt_TimedSubscribe      IotMqtt_SubscribeSync
+#define IotMqtt_Unsubscribe         IotMqtt_UnsubscribeAsync
+#define IotMqtt_TimedUnsubscribe    IotMqtt_UnsubscribeSync
+#define IotMqtt_Publish             IotMqtt_PublishAsync
+#define IotMqtt_TimedPublish        IotMqtt_PublishSync
+/** @endcond */
+
 #endif /* ifndef IOT_MQTT_H_ */
