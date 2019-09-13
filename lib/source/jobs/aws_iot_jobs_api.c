@@ -1122,11 +1122,11 @@ AwsIotJobsError_t AwsIotJobs_UpdateAsync( const AwsIotJobsRequestInfo_t * pReque
 
 /*-----------------------------------------------------------*/
 
-AwsIotJobsError_t AwsIotJobs_TimedUpdate( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                          const AwsIotJobsUpdateInfo_t * pUpdateInfo,
-                                          uint32_t flags,
-                                          uint32_t timeoutMs,
-                                          AwsIotJobsResponse_t * const pJobsResponse )
+AwsIotJobsError_t AwsIotJobs_UpdateSync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                         const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                         uint32_t flags,
+                                         uint32_t timeoutMs,
+                                         AwsIotJobsResponse_t * const pJobsResponse )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
     AwsIotJobsOperation_t updateOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;

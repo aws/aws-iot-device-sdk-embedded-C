@@ -46,7 +46,7 @@
  * - @functionname{jobs_function_describeasync}
  * - @functionname{jobs_function_describesync}
  * - @functionname{jobs_function_updateasync}
- * - @functionname{jobs_function_timedupdate}
+ * - @functionname{jobs_function_updatesync}
  * - @functionname{jobs_function_wait}
  * - @functionname{jobs_function_setnotifypendingcallback}
  * - @functionname{jobs_function_setnotifynextcallback}
@@ -65,7 +65,7 @@
  * @functionpage{AwsIotJobs_DescribeAsync,jobs,describeasync}
  * @functionpage{AwsIotJobs_DescribeSync,jobs,describesync}
  * @functionpage{AwsIotJobs_UpdateAsync,jobs,updateasync}
- * @functionpage{AwsIotJobs_TimedUpdate,jobs,timedupdate}
+ * @functionpage{AwsIotJobs_UpdateSync,jobs,updatesync}
  * @functionpage{AwsIotJobs_Wait,jobs,wait}
  * @functionpage{AwsIotJobs_SetNotifyPendingCallback,jobs,setnotifypendingcallback}
  * @functionpage{AwsIotJobs_SetNotifyNextCallback,jobs,setnotifynextcallback}
@@ -476,7 +476,7 @@ AwsIotJobsError_t AwsIotJobs_DescribeSync( const AwsIotJobsRequestInfo_t * pRequ
  * - #AWS_IOT_JOBS_BAD_RESPONSE
  * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  *
- * @see @ref jobs_function_timedupdate for a blocking variant of this function.
+ * @see @ref jobs_function_updatesync for a blocking variant of this function.
  *
  * <b>Example</b>
  * @code{c}
@@ -551,13 +551,13 @@ AwsIotJobsError_t AwsIotJobs_UpdateAsync( const AwsIotJobsRequestInfo_t * pReque
  * - #AWS_IOT_JOBS_TIMEOUT
  * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  */
-/* @[declare_jobs_timedupdate] */
-AwsIotJobsError_t AwsIotJobs_TimedUpdate( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                          const AwsIotJobsUpdateInfo_t * pUpdateInfo,
-                                          uint32_t flags,
-                                          uint32_t timeoutMs,
-                                          AwsIotJobsResponse_t * const pJobsResponse );
-/* @[declare_jobs_timedupdate] */
+/* @[declare_jobs_updatesync] */
+AwsIotJobsError_t AwsIotJobs_UpdateSync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                         const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                         uint32_t flags,
+                                         uint32_t timeoutMs,
+                                         AwsIotJobsResponse_t * const pJobsResponse );
+/* @[declare_jobs_updatesync] */
 
 /**
  * @brief Wait for a Jobs operation to complete.

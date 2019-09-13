@@ -91,7 +91,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextsync
      * - @ref jobs_function_describesync
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
      * - @ref jobs_function_removepersistentsubscriptions
@@ -128,7 +128,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingasync and @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextasync and @ref jobs_function_startnextsync
      * - @ref jobs_function_describeasync and @ref jobs_function_describesync
-     * - @ref jobs_function_updateasync and @ref jobs_function_timedupdate
+     * - @ref jobs_function_updateasync and @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
@@ -143,7 +143,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingasync and @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextasync and @ref jobs_function_startnextsync
      * - @ref jobs_function_describeasync and @ref jobs_function_describesync
-     * - @ref jobs_function_updateasync and @ref jobs_function_timedupdate
+     * - @ref jobs_function_updateasync and @ref jobs_function_updatesync
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
      */
@@ -156,7 +156,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingasync and @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextasync and @ref jobs_function_startnextsync
      * - @ref jobs_function_describeasync and @ref jobs_function_describesync
-     * - @ref jobs_function_updateasync and @ref jobs_function_timedupdate
+     * - @ref jobs_function_updateasync and @ref jobs_function_updatesync
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
      * - @ref jobs_function_removepersistentsubscriptions
@@ -170,7 +170,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextsync
      * - @ref jobs_function_describesync
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -185,7 +185,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextsync
      * - @ref jobs_function_describesync
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
@@ -199,7 +199,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextsync
      * - @ref jobs_function_describesync
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -216,7 +216,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextsync
      * - @ref jobs_function_describesync
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -231,7 +231,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextsync
      * - @ref jobs_function_describesync
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -245,7 +245,7 @@ typedef enum AwsIotJobsError
      *
      * Functions that may return this value:
      * - @ref jobs_function_startnextsync
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -259,7 +259,7 @@ typedef enum AwsIotJobsError
      *
      * * Functions that may return this value:
      * - @ref jobs_function_describesync
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -273,7 +273,7 @@ typedef enum AwsIotJobsError
      * not match what was in the request.
      *
      * * Functions that may return this value:
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -289,7 +289,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextsync
      * - @ref jobs_function_describesync
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -304,7 +304,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnextsync
      * - @ref jobs_function_describesync
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -500,7 +500,7 @@ typedef struct AwsIotJobsCallbackInfo
  * @paramfor @ref jobs_function_getpendingasync, @ref jobs_function_getpendingsync,
  * @ref jobs_function_startnextasync, @ref jobs_function_startnextsync
  * @ref jobs_function_describeasync, @ref jobs_function_describesync,
- * @ref jobs_function_updateasync, @ref jobs_function_timedupdate
+ * @ref jobs_function_updateasync, @ref jobs_function_updatesync
  *
  * @initializer{AwsIotJobsRequestInfo_t,AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER}
  */
@@ -569,7 +569,7 @@ typedef struct AwsIotJobsRequestInfo
  * @brief Output parameter of blocking Jobs API functions.
  *
  * @paramfor @ref jobs_function_getpendingsync, @ref jobs_function_startnextsync,
- * @ref jobs_function_describesync, @ref jobs_function_timedupdate,
+ * @ref jobs_function_describesync, @ref jobs_function_updatesync,
  * @ref jobs_function_wait
  *
  * Provides the response received from the Jobs service. The buffer for the
@@ -589,7 +589,7 @@ typedef struct AwsIotJobsResponse
  * @ref jobs_function_updateasync. These functions modify a Job's state.
  *
  * @paramfor @ref jobs_function_startnextasync, @ref jobs_function_startnextsync,
- * @ref jobs_function_updateasync, and @ref jobs_function_timedupdate.
+ * @ref jobs_function_updateasync, and @ref jobs_function_updatesync.
  *
  * @initializer{AwsIotJobsUpdateInfo_t,AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER}
  */
@@ -941,7 +941,7 @@ typedef struct AwsIotJobsUpdateInfo
  *
  * This flag may be passed to @ref jobs_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref jobs_function_updateasync or @ref jobs_function_timedupdate.
+ * call to @ref jobs_function_updateasync or @ref jobs_function_updatesync.
  *
  * @warning Do not call @ref jobs_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Jobs update operations.

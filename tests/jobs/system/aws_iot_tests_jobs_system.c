@@ -421,11 +421,11 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
             requestInfo.pJobId = _pJobIds[ _inProgressJob ];
             requestInfo.jobIdLength = _pJobIdLengths[ _inProgressJob ];
 
-            status = AwsIotJobs_TimedUpdate( &requestInfo,
-                                             &updateInfo,
-                                             0,
-                                             AWS_IOT_TEST_JOBS_TIMEOUT,
-                                             &jobsResponse );
+            status = AwsIotJobs_UpdateSync( &requestInfo,
+                                            &updateInfo,
+                                            0,
+                                            AWS_IOT_TEST_JOBS_TIMEOUT,
+                                            &jobsResponse );
             break;
     }
 
@@ -700,7 +700,7 @@ TEST( Jobs_System, UpdateAsync )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Update a Job status using @ref jobs_function_timedupdate.
+ * @brief Update a Job status using @ref jobs_function_updatesync.
  */
 TEST( Jobs_System, UpdateBlocking )
 {
@@ -812,11 +812,11 @@ TEST( Jobs_System, JobsCallbacks )
 
     updateInfo.newStatus = AWS_IOT_JOB_STATE_SUCCEEDED;
 
-    status = AwsIotJobs_TimedUpdate( &requestInfo,
-                                     &updateInfo,
-                                     0,
-                                     AWS_IOT_TEST_JOBS_TIMEOUT,
-                                     &response );
+    status = AwsIotJobs_UpdateSync( &requestInfo,
+                                    &updateInfo,
+                                    0,
+                                    AWS_IOT_TEST_JOBS_TIMEOUT,
+                                    &response );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
     IotTest_Free( ( void * ) response.pJobsResponse );
 
