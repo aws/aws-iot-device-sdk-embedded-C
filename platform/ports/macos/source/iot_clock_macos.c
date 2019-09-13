@@ -30,6 +30,9 @@
 /* Platform clock include. */
 #include "platform/iot_clock.h"
 
+/* Standard includes. */
+#include <stdlib.h>
+
 /* POSIX includes. Allow the default POSIX headers to be overridden. */
 #ifdef POSIX_ERRNO_HEADER
     #include POSIX_ERRNO_HEADER
@@ -204,7 +207,7 @@ bool IotClock_TimerArm( IotTimer_t * pTimer,
 
     /* Get the handle to a global concurrent queue. Work will be submitted to
      * this queue. */
-    dispatch_queue_global_t globalDispatchQueue = dispatch_get_global_queue( QOS_CLASS_DEFAULT, 0 );
+    dispatch_queue_t globalDispatchQueue = dispatch_get_global_queue( QOS_CLASS_DEFAULT, 0 );
 
     /* Calculate when the timer should first expire. */
     int64_t delta = ( int64_t ) relativeTimeoutMs * NANOSECONDS_PER_MILLISECOND;
