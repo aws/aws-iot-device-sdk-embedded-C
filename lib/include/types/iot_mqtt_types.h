@@ -110,7 +110,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_publish with QoS 0 parameter
      * - @ref mqtt_function_wait
      * - @ref mqtt_function_subscribesync
-     * - @ref mqtt_function_timedunsubscribe
+     * - @ref mqtt_function_unsubscribesync
      * - @ref mqtt_function_timedpublish
      *
      * Will also be the value of an operation completion callback's
@@ -142,7 +142,7 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_subscribeasync and @ref mqtt_function_subscribesync
-     * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_timedunsubscribe
+     * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_unsubscribesync
      * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
      * - @ref mqtt_function_wait
      */
@@ -154,7 +154,7 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_subscribeasync and @ref mqtt_function_subscribesync
-     * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_timedunsubscribe
+     * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_unsubscribesync
      * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
      */
     IOT_MQTT_NO_MEMORY,
@@ -168,7 +168,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait
      * - @ref mqtt_function_subscribesync
-     * - @ref mqtt_function_timedunsubscribe
+     * - @ref mqtt_function_unsubscribesync
      * - @ref mqtt_function_timedpublish
      *
      * May also be the value of an operation completion callback's
@@ -182,7 +182,7 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_subscribeasync and @ref mqtt_function_subscribesync
-     * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_timedunsubscribe
+     * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_unsubscribesync
      * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
      */
     IOT_MQTT_SCHEDULING_ERROR,
@@ -194,7 +194,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait
      * - @ref mqtt_function_subscribesync
-     * - @ref mqtt_function_timedunsubscribe
+     * - @ref mqtt_function_unsubscribesync
      * - @ref mqtt_function_timedpublish
      *
      * May also be the value of an operation completion callback's
@@ -211,7 +211,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait
      * - @ref mqtt_function_subscribesync
-     * - @ref mqtt_function_timedunsubscribe
+     * - @ref mqtt_function_unsubscribesync
      * - @ref mqtt_function_timedpublish
      */
     IOT_MQTT_TIMEOUT,
@@ -520,7 +520,7 @@ typedef struct IotMqttCallbackInfo
  * @brief Information on an MQTT subscription.
  *
  * @paramfor @ref mqtt_function_subscribeasync, @ref mqtt_function_unsubscribeasync,
- * @ref mqtt_function_subscribesync, @ref mqtt_function_timedunsubscribe
+ * @ref mqtt_function_subscribesync, @ref mqtt_function_unsubscribesync
  *
  * An array of these is passed to @ref mqtt_function_subscribeasync and @ref
  * mqtt_function_unsubscribeasync. However, #IotMqttSubscription_t.callback and

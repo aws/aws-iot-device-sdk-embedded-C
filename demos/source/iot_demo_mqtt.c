@@ -566,11 +566,11 @@ static int _modifySubscriptions( IotMqttConnection_t mqttConnection,
     }
     else if( operation == IOT_MQTT_UNSUBSCRIBE )
     {
-        subscriptionStatus = IotMqtt_TimedUnsubscribe( mqttConnection,
-                                                       pSubscriptions,
-                                                       TOPIC_FILTER_COUNT,
-                                                       0,
-                                                       MQTT_TIMEOUT_MS );
+        subscriptionStatus = IotMqtt_UnsubscribeSync( mqttConnection,
+                                                      pSubscriptions,
+                                                      TOPIC_FILTER_COUNT,
+                                                      0,
+                                                      MQTT_TIMEOUT_MS );
 
         /* Check the status of UNSUBSCRIBE. */
         if( subscriptionStatus != IOT_MQTT_SUCCESS )

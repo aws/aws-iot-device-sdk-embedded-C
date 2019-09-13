@@ -110,7 +110,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
  * @param[in] type Type of Shadow callback.
  * @param[in] pSubscription Shadow subscriptions object for callback.
  * @param[in] mqttOperation Either @ref mqtt_function_subscribesync or
- * @ref mqtt_function_timedunsubscribe.
+ * @ref mqtt_function_unsubscribesync.
  *
  * @return #AWS_IOT_SHADOW_SUCCESS, #AWS_IOT_SHADOW_NO_MEMORY, or
  * #AWS_IOT_SHADOW_MQTT_ERROR.
@@ -372,7 +372,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
             ( void ) _modifyCallbackSubscriptions( mqttConnection,
                                                    type,
                                                    pSubscription,
-                                                   IotMqtt_TimedUnsubscribe );
+                                                   IotMqtt_UnsubscribeSync );
             ( void ) memset( &( pSubscription->callbacks[ type ] ),
                              0x00,
                              sizeof( AwsIotShadowCallbackInfo_t ) );
@@ -466,7 +466,7 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
 
     /* MQTT operation may only be subscribe or unsubscribe. */
     AwsIotShadow_Assert( ( mqttOperation == IotMqtt_SubscribeSync ) ||
-                         ( mqttOperation == IotMqtt_TimedUnsubscribe ) );
+                         ( mqttOperation == IotMqtt_UnsubscribeSync ) );
 
     /* Use the subscription's topic buffer if available. */
     if( pSubscription->pTopicBuffer != NULL )

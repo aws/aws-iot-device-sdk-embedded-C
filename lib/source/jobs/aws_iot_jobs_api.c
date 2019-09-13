@@ -106,7 +106,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
  * @param[in] type Type of Jobs callback.
  * @param[in] pSubscription Jobs subscriptions object for callback.
  * @param[in] mqttOperation Either @ref mqtt_function_subscribesync or
- * @ref mqtt_function_timedunsubscribe.
+ * @ref mqtt_function_unsubscribesync.
  *
  * @return #AWS_IOT_JOBS_SUCCESS, #AWS_IOT_JOBS_NO_MEMORY, or
  * #AWS_IOT_JOBS_MQTT_ERROR.
@@ -444,7 +444,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
             ( void ) _modifyCallbackSubscriptions( mqttConnection,
                                                    type,
                                                    pSubscription,
-                                                   IotMqtt_TimedUnsubscribe );
+                                                   IotMqtt_UnsubscribeSync );
             ( void ) memset( &( pSubscription->callbacks[ type ] ),
                              0x00,
                              sizeof( AwsIotJobsCallbackInfo_t ) );
@@ -539,7 +539,7 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
 
     /* MQTT operation may only be subscribe or unsubscribe. */
     AwsIotJobs_Assert( ( mqttOperation == IotMqtt_SubscribeSync ) ||
-                       ( mqttOperation == IotMqtt_TimedUnsubscribe ) );
+                       ( mqttOperation == IotMqtt_UnsubscribeSync ) );
 
     /* Use the subscription's topic buffer if available. */
     if( pSubscription->pTopicBuffer != NULL )

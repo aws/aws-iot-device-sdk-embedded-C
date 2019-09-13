@@ -403,7 +403,7 @@ void _AwsIotJobs_DecrementReferences( _jobsOperation_t * pOperation,
             subscriptionInfo.pTopicFilterBase = pTopicBuffer;
             subscriptionInfo.topicFilterBaseLength = operationTopicLength;
 
-            ( void ) AwsIot_ModifySubscriptions( IotMqtt_TimedUnsubscribe,
+            ( void ) AwsIot_ModifySubscriptions( IotMqtt_UnsubscribeSync,
                                                  &subscriptionInfo );
         }
 
@@ -522,7 +522,7 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
                     subscriptionInfo.pTopicFilterBase = pSubscription->pTopicBuffer;
                     subscriptionInfo.topicFilterBaseLength = operationTopicLength;
 
-                    unsubscribeStatus = AwsIot_ModifySubscriptions( IotMqtt_TimedUnsubscribe,
+                    unsubscribeStatus = AwsIot_ModifySubscriptions( IotMqtt_UnsubscribeSync,
                                                                     &subscriptionInfo );
 
                     /* Convert MQTT return code to Shadow return code. */

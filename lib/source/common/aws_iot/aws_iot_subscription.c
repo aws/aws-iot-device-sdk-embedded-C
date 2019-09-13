@@ -43,14 +43,14 @@
  * @brief Modify subscriptions, either by unsubscribing or subscribing.
  *
  * @param[in] mqttOperation Either @ref mqtt_function_subscribesync or @ref
- * mqtt_function_timedunsubscribe.
+ * mqtt_function_unsubscribesync.
  * @param[in] pSubscriptionInfo Information needed to process an MQTT
  * operation.
  * @param[in] pTopicFilter The topic filter to modify.
  * @param[in] topicFilterLength The length of `pTopicFilter`.
  *
  * @return See the return values of @ref mqtt_function_subscribesync or
- * @ref mqtt_function_timedunsubscribe.
+ * @ref mqtt_function_unsubscribesync.
  */
 static IotMqttError_t _modifySubscriptions( AwsIotMqttFunction_t mqttOperation,
                                             const AwsIotSubscriptionInfo_t * pSubscriptionInfo,
@@ -148,7 +148,7 @@ IotMqttError_t AwsIot_ModifySubscriptions( AwsIotMqttFunction_t mqttOperation,
             topicFilterLength = ( uint16_t ) ( pSubscriptionInfo->topicFilterBaseLength
                                                + AWS_IOT_ACCEPTED_SUFFIX_LENGTH );
 
-            ( void ) _modifySubscriptions( IotMqtt_TimedUnsubscribe,
+            ( void ) _modifySubscriptions( IotMqtt_UnsubscribeSync,
                                            pSubscriptionInfo,
                                            pSubscriptionInfo->pTopicFilterBase,
                                            topicFilterLength );

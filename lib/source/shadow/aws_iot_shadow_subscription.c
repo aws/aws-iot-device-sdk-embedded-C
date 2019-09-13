@@ -397,7 +397,7 @@ void _AwsIotShadow_DecrementReferences( _shadowOperation_t * pOperation,
             subscriptionInfo.pTopicFilterBase = pTopicBuffer;
             subscriptionInfo.topicFilterBaseLength = operationTopicLength;
 
-            ( void ) AwsIot_ModifySubscriptions( IotMqtt_TimedUnsubscribe,
+            ( void ) AwsIot_ModifySubscriptions( IotMqtt_UnsubscribeSync,
                                                  &subscriptionInfo );
         }
 
@@ -485,7 +485,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
                     subscriptionInfo.pTopicFilterBase = pSubscription->pTopicBuffer;
                     subscriptionInfo.topicFilterBaseLength = operationTopicLength;
 
-                    unsubscribeStatus = AwsIot_ModifySubscriptions( IotMqtt_TimedUnsubscribe,
+                    unsubscribeStatus = AwsIot_ModifySubscriptions( IotMqtt_UnsubscribeSync,
                                                                     &subscriptionInfo );
 
                     /* Convert MQTT return code to Shadow return code. */

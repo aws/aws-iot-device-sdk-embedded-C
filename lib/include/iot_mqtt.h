@@ -45,7 +45,7 @@
  * - @functionname{mqtt_function_subscribeasync}
  * - @functionname{mqtt_function_subscribesync}
  * - @functionname{mqtt_function_unsubscribeasync}
- * - @functionname{mqtt_function_timedunsubscribe}
+ * - @functionname{mqtt_function_unsubscribesync}
  * - @functionname{mqtt_function_publish}
  * - @functionname{mqtt_function_timedpublish}
  * - @functionname{mqtt_function_wait}
@@ -63,7 +63,7 @@
  * @functionpage{IotMqtt_SubscribeAsync,mqtt,subscribeasync}
  * @functionpage{IotMqtt_SubscribeSync,mqtt,subscribesync}
  * @functionpage{IotMqtt_UnsubscribeAsync,mqtt,unsubscribeasync}
- * @functionpage{IotMqtt_TimedUnsubscribe,mqtt,timedunsubscribe}
+ * @functionpage{IotMqtt_UnsubscribeSync,mqtt,unsubscribesync}
  * @functionpage{IotMqtt_Publish,mqtt,publish}
  * @functionpage{IotMqtt_TimedPublish,mqtt,timedpublish}
  * @functionpage{IotMqtt_Wait,mqtt,wait}
@@ -499,7 +499,7 @@ IotMqttError_t IotMqtt_SubscribeSync( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  *
- * @see @ref mqtt_function_timedunsubscribe for a blocking variant of this function.
+ * @see @ref mqtt_function_unsubscribesync for a blocking variant of this function.
  * @see @ref mqtt_function_subscribeasync for the function that adds subscriptions.
  */
 /* @[declare_mqtt_unsubscribeasync] */
@@ -538,13 +538,13 @@ IotMqttError_t IotMqtt_UnsubscribeAsync( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  */
-/* @[declare_mqtt_timedunsubscribe] */
-IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
-                                         const IotMqttSubscription_t * pSubscriptionList,
-                                         size_t subscriptionCount,
-                                         uint32_t flags,
-                                         uint32_t timeoutMs );
-/* @[declare_mqtt_timedunsubscribe] */
+/* @[declare_mqtt_unsubscribesync] */
+IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
+                                        const IotMqttSubscription_t * pSubscriptionList,
+                                        size_t subscriptionCount,
+                                        uint32_t flags,
+                                        uint32_t timeoutMs );
+/* @[declare_mqtt_unsubscribesync] */
 
 /**
  * @brief Publishes a message to the given topic name and receive an asynchronous

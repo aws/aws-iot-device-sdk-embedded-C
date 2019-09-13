@@ -1401,7 +1401,7 @@ TEST( MQTT_Unit_API, SingleThreaded )
         TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
         /* Remove the subscription. */
-        status = IotMqtt_TimedUnsubscribe( mqttConnection, &subscription, 1, 0, DUP_CHECK_TIMEOUT );
+        status = IotMqtt_UnsubscribeSync( mqttConnection, &subscription, 1, 0, DUP_CHECK_TIMEOUT );
         TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
         /* Re-initialize the system task pool. The task pool must be available to

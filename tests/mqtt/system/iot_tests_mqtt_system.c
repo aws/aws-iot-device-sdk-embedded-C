@@ -552,11 +552,11 @@ static void _subscribePublishWait( IotMqttQos_t qos )
             }
 
             /* Unsubscribe from the test topic filter. */
-            status = IotMqtt_TimedUnsubscribe( _mqttConnection,
-                                               &subscription,
-                                               1,
-                                               0,
-                                               IOT_TEST_MQTT_TIMEOUT_MS );
+            status = IotMqtt_UnsubscribeSync( _mqttConnection,
+                                              &subscription,
+                                              1,
+                                              0,
+                                              IOT_TEST_MQTT_TIMEOUT_MS );
             TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
         }
 
