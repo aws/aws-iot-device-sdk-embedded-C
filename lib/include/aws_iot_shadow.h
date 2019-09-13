@@ -42,7 +42,7 @@
  * - @functionname{shadow_function_deleteasync}
  * - @functionname{shadow_function_deletesync}
  * - @functionname{shadow_function_getasync}
- * - @functionname{shadow_function_timedget}
+ * - @functionname{shadow_function_getsync}
  * - @functionname{shadow_function_update}
  * - @functionname{shadow_function_timedupdate}
  * - @functionname{shadow_function_wait}
@@ -58,7 +58,7 @@
  * @functionpage{AwsIotShadow_DeleteAsync,shadow,deleteasync}
  * @functionpage{AwsIotShadow_DeleteSync,shadow,deletesync}
  * @functionpage{AwsIotShadow_GetAsync,shadow,getasync}
- * @functionpage{AwsIotShadow_TimedGet,shadow,timedget}
+ * @functionpage{AwsIotShadow_GetSync,shadow,getsync}
  * @functionpage{AwsIotShadow_Update,shadow,update}
  * @functionpage{AwsIotShadow_TimedUpdate,shadow,timedupdate}
  * @functionpage{AwsIotShadow_Wait,shadow,wait}
@@ -260,7 +260,7 @@ AwsIotShadowError_t AwsIotShadow_DeleteSync( IotMqttConnection_t mqttConnection,
  * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
  * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  *
- * @see @ref shadow_function_timedget for a blocking variant of this function.
+ * @see @ref shadow_function_getsync for a blocking variant of this function.
  *
  * <b>Example</b>
  * @code{c}
@@ -331,14 +331,14 @@ AwsIotShadowError_t AwsIotShadow_GetAsync( IotMqttConnection_t mqttConnection,
  * - A Shadow service rejection reason between 400 (#AWS_IOT_SHADOW_BAD_REQUEST)
  * and 500 (#AWS_IOT_SHADOW_SERVER_ERROR)
  */
-/* @[declare_shadow_timedget] */
-AwsIotShadowError_t AwsIotShadow_TimedGet( IotMqttConnection_t mqttConnection,
-                                           const AwsIotShadowDocumentInfo_t * pGetInfo,
-                                           uint32_t flags,
-                                           uint32_t timeoutMs,
-                                           const char ** const pShadowDocument,
-                                           size_t * const pShadowDocumentLength );
-/* @[declare_shadow_timedget] */
+/* @[declare_shadow_getsync] */
+AwsIotShadowError_t AwsIotShadow_GetSync( IotMqttConnection_t mqttConnection,
+                                          const AwsIotShadowDocumentInfo_t * pGetInfo,
+                                          uint32_t flags,
+                                          uint32_t timeoutMs,
+                                          const char ** const pShadowDocument,
+                                          size_t * const pShadowDocumentLength );
+/* @[declare_shadow_getsync] */
 
 /**
  * @brief Send a Thing Shadow update and receive an asynchronous notification when

@@ -90,7 +90,7 @@ typedef enum AwsIotShadowError
      * - @ref shadow_function_init
      * - @ref shadow_function_wait
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_setdeltacallback
      * - @ref shadow_function_setupdatedcallback
@@ -125,7 +125,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deleteasync and @ref shadow_function_deletesync
-     * - @ref shadow_function_getasync and @ref shadow_function_timedget
+     * - @ref shadow_function_getasync and @ref shadow_function_getsync
      * - @ref shadow_function_update and @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      * - @ref shadow_function_setdeltacallback
@@ -138,7 +138,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deleteasync and @ref shadow_function_deletesync
-     * - @ref shadow_function_getasync and @ref shadow_function_timedget
+     * - @ref shadow_function_getasync and @ref shadow_function_getsync
      * - @ref shadow_function_update and @ref shadow_function_timedupdate
      * - @ref shadow_function_setdeltacallback
      * - @ref shadow_function_setupdatedcallback
@@ -153,7 +153,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deleteasync and @ref shadow_function_deletesync
-     * - @ref shadow_function_getasync and @ref shadow_function_timedget
+     * - @ref shadow_function_getasync and @ref shadow_function_getsync
      * - @ref shadow_function_update and @ref shadow_function_timedupdate
      * - @ref shadow_function_setdeltacallback
      * - @ref shadow_function_setupdatedcallback
@@ -166,7 +166,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      *
@@ -180,7 +180,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      * - @ref shadow_function_setdeltacallback
@@ -193,7 +193,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      *
@@ -207,7 +207,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      *
@@ -221,7 +221,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      *
@@ -235,7 +235,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      *
@@ -249,7 +249,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      *
@@ -264,7 +264,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      *
@@ -279,7 +279,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      *
@@ -294,7 +294,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      *
@@ -308,7 +308,7 @@ typedef enum AwsIotShadowError
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync
-     * - @ref shadow_function_timedget
+     * - @ref shadow_function_getsync
      * - @ref shadow_function_timedupdate
      * - @ref shadow_function_wait
      *
@@ -600,7 +600,7 @@ typedef struct AwsIotShadowDocumentInfo
  *
  * This flag may be passed to @ref shadow_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref shadow_function_getasync or @ref shadow_function_timedget.
+ * call to @ref shadow_function_getasync or @ref shadow_function_getsync.
  *
  * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Shadow get operations.

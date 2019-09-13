@@ -882,12 +882,12 @@ AwsIotShadowError_t AwsIotShadow_GetAsync( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_TimedGet( IotMqttConnection_t mqttConnection,
-                                           const AwsIotShadowDocumentInfo_t * pGetInfo,
-                                           uint32_t flags,
-                                           uint32_t timeoutMs,
-                                           const char ** const pShadowDocument,
-                                           size_t * const pShadowDocumentLength )
+AwsIotShadowError_t AwsIotShadow_GetSync( IotMqttConnection_t mqttConnection,
+                                          const AwsIotShadowDocumentInfo_t * pGetInfo,
+                                          uint32_t flags,
+                                          uint32_t timeoutMs,
+                                          const char ** const pShadowDocument,
+                                          size_t * const pShadowDocumentLength )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowOperation_t getOperation = AWS_IOT_SHADOW_OPERATION_INITIALIZER;

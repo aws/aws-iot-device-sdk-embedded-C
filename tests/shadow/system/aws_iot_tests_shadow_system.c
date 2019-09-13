@@ -385,12 +385,12 @@ static void _updateGetDeleteBlocking( IotMqttQos_t qos )
     documentInfo.u.get.mallocDocument = IotTest_Malloc;
 
     /* Retrieve the Shadow document. */
-    status = AwsIotShadow_TimedGet( _mqttConnection,
-                                    &documentInfo,
-                                    0,
-                                    AWS_IOT_TEST_SHADOW_TIMEOUT,
-                                    &pShadowDocument,
-                                    &shadowDocumentLength );
+    status = AwsIotShadow_GetSync( _mqttConnection,
+                                   &documentInfo,
+                                   0,
+                                   AWS_IOT_TEST_SHADOW_TIMEOUT,
+                                   &pShadowDocument,
+                                   &shadowDocumentLength );
     TEST_ASSERT_EQUAL_INT( AWS_IOT_SHADOW_SUCCESS, status );
 
     /* Check the retrieved Shadow document. */
