@@ -182,20 +182,20 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
     AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
 
     /* Missing Thing Name. */
-    status = AwsIotShadow_Delete( _pMqttConnection,
-                                  NULL,
-                                  0,
-                                  0,
-                                  NULL,
-                                  NULL );
+    status = AwsIotShadow_DeleteAsync( _pMqttConnection,
+                                       NULL,
+                                       0,
+                                       0,
+                                       NULL,
+                                       NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
-    status = AwsIotShadow_Delete( _pMqttConnection,
-                                  TEST_THING_NAME,
-                                  0,
-                                  0,
-                                  NULL,
-                                  NULL );
+    status = AwsIotShadow_DeleteAsync( _pMqttConnection,
+                                       TEST_THING_NAME,
+                                       0,
+                                       0,
+                                       NULL,
+                                       NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     status = AwsIotShadow_Update( _pMqttConnection,
@@ -206,30 +206,30 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Thing Name too long. */
-    status = AwsIotShadow_Delete( _pMqttConnection,
-                                  TEST_THING_NAME,
-                                  AWS_IOT_MAX_THING_NAME_LENGTH + 1,
-                                  0,
-                                  NULL,
-                                  NULL );
+    status = AwsIotShadow_DeleteAsync( _pMqttConnection,
+                                       TEST_THING_NAME,
+                                       AWS_IOT_MAX_THING_NAME_LENGTH + 1,
+                                       0,
+                                       NULL,
+                                       NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* No reference with waitable operation. */
-    status = AwsIotShadow_Delete( _pMqttConnection,
-                                  TEST_THING_NAME,
-                                  TEST_THING_NAME_LENGTH,
-                                  AWS_IOT_SHADOW_FLAG_WAITABLE,
-                                  NULL,
-                                  NULL );
+    status = AwsIotShadow_DeleteAsync( _pMqttConnection,
+                                       TEST_THING_NAME,
+                                       TEST_THING_NAME_LENGTH,
+                                       AWS_IOT_SHADOW_FLAG_WAITABLE,
+                                       NULL,
+                                       NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Both callback and waitable flag set. */
-    status = AwsIotShadow_Delete( _pMqttConnection,
-                                  TEST_THING_NAME,
-                                  TEST_THING_NAME_LENGTH,
-                                  AWS_IOT_SHADOW_FLAG_WAITABLE,
-                                  &callbackInfo,
-                                  &operation );
+    status = AwsIotShadow_DeleteAsync( _pMqttConnection,
+                                       TEST_THING_NAME,
+                                       TEST_THING_NAME_LENGTH,
+                                       AWS_IOT_SHADOW_FLAG_WAITABLE,
+                                       &callbackInfo,
+                                       &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* No callback for non-waitable GET. */
@@ -243,12 +243,12 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Callback function not set. */
-    status = AwsIotShadow_Delete( _pMqttConnection,
-                                  TEST_THING_NAME,
-                                  TEST_THING_NAME_LENGTH,
-                                  0,
-                                  &callbackInfo,
-                                  &operation );
+    status = AwsIotShadow_DeleteAsync( _pMqttConnection,
+                                       TEST_THING_NAME,
+                                       TEST_THING_NAME_LENGTH,
+                                       0,
+                                       &callbackInfo,
+                                       &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 }
 
@@ -360,7 +360,7 @@ TEST( Shadow_Unit_API, WaitInvalidParameters )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref shadow_function_delete when memory
+ * @brief Tests the behavior of @ref shadow_function_deleteasync when memory
  * allocation fails at various points.
  */
 TEST( Shadow_Unit_API, DeleteMallocFail )
@@ -378,12 +378,12 @@ TEST( Shadow_Unit_API, DeleteMallocFail )
 
         /* Call Shadow DELETE. Memory allocation will fail at various times
          * during this call. */
-        status = AwsIotShadow_Delete( _pMqttConnection,
-                                      TEST_THING_NAME,
-                                      TEST_THING_NAME_LENGTH,
-                                      AWS_IOT_SHADOW_FLAG_WAITABLE,
-                                      NULL,
-                                      &deleteOperation );
+        status = AwsIotShadow_DeleteAsync( _pMqttConnection,
+                                           TEST_THING_NAME,
+                                           TEST_THING_NAME_LENGTH,
+                                           AWS_IOT_SHADOW_FLAG_WAITABLE,
+                                           NULL,
+                                           &deleteOperation );
 
         /* Once the Shadow DELETE call succeeds, wait for it to complete. */
         if( status == AWS_IOT_SHADOW_STATUS_PENDING )

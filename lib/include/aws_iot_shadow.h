@@ -39,7 +39,7 @@
  * @functionspage{shadow,Shadow library}
  * - @functionname{shadow_function_init}
  * - @functionname{shadow_function_cleanup}
- * - @functionname{shadow_function_delete}
+ * - @functionname{shadow_function_deleteasync}
  * - @functionname{shadow_function_timeddelete}
  * - @functionname{shadow_function_get}
  * - @functionname{shadow_function_timedget}
@@ -55,7 +55,7 @@
 /**
  * @functionpage{AwsIotShadow_Init,shadow,init}
  * @functionpage{AwsIotShadow_Cleanup,shadow,cleanup}
- * @functionpage{AwsIotShadow_Delete,shadow,delete}
+ * @functionpage{AwsIotShadow_DeleteAsync,shadow,deleteasync}
  * @functionpage{AwsIotShadow_TimedDelete,shadow,timeddelete}
  * @functionpage{AwsIotShadow_Get,shadow,get}
  * @functionpage{AwsIotShadow_TimedGet,shadow,timedget}
@@ -153,12 +153,12 @@ void AwsIotShadow_Cleanup( void );
  * AwsIotShadowOperation_t deleteOperation = AWS_IOT_SHADOW_OPERATION_INITIALIZER;
  *
  * // Queue a Shadow delete.
- * AwsIotShadowError_t deleteResult = AwsIotShadow_Delete( mqttConnection,
- *                                                         THING_NAME,
- *                                                         THING_NAME_LENGTH,
- *                                                         AWS_IOT_SHADOW_FLAG_WAITABLE,
- *                                                         NULL,
- *                                                         &deleteOperation );
+ * AwsIotShadowError_t deleteResult = AwsIotShadow_DeleteAsync( mqttConnection,
+ *                                                              THING_NAME,
+ *                                                              THING_NAME_LENGTH,
+ *                                                              AWS_IOT_SHADOW_FLAG_WAITABLE,
+ *                                                              NULL,
+ *                                                              &deleteOperation );
  *
  * // Shadow delete should return AWS_IOT_SHADOW_STATUS_PENDING upon success.
  * if( deleteResult == AWS_IOT_SHADOW_STATUS_PENDING )
@@ -171,21 +171,21 @@ void AwsIotShadow_Cleanup( void );
  * }
  * @endcode
  */
-/* @[declare_shadow_delete] */
-AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t mqttConnection,
-                                         const char * pThingName,
-                                         size_t thingNameLength,
-                                         uint32_t flags,
-                                         const AwsIotShadowCallbackInfo_t * pCallbackInfo,
-                                         AwsIotShadowOperation_t * const pDeleteOperation );
-/* @[declare_shadow_delete] */
+/* @[declare_shadow_deleteasync] */
+AwsIotShadowError_t AwsIotShadow_DeleteAsync( IotMqttConnection_t mqttConnection,
+                                              const char * pThingName,
+                                              size_t thingNameLength,
+                                              uint32_t flags,
+                                              const AwsIotShadowCallbackInfo_t * pCallbackInfo,
+                                              AwsIotShadowOperation_t * const pDeleteOperation );
+/* @[declare_shadow_deleteasync] */
 
 /**
  * @brief Delete a Thing Shadow with a timeout.
  *
  * This function queues a Shadow delete, then waits for the result. Internally, this
- * function is a call to @ref shadow_function_delete followed by @ref shadow_function_wait.
- * See @ref shadow_function_delete for more information on the Shadow delete operation.
+ * function is a call to @ref shadow_function_deleteasync followed by @ref shadow_function_wait.
+ * See @ref shadow_function_deleteasync for more information on the Shadow delete operation.
  *
  * @param[in] mqttConnection The MQTT connection to use for Shadow delete.
  * @param[in] pThingName The Thing Name associated with the Shadow to delete.
@@ -469,7 +469,7 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection
 /**
  * @brief Wait for a Shadow operation to complete.
  *
- * This function blocks to wait for a [delete](@ref shadow_function_delete),
+ * This function blocks to wait for a [delete](@ref shadow_function_deleteasync),
  * [get](@ref shadow_function_get), or [update](@ref shadow_function_update) to
  * complete. These operations are by default asynchronous; the function calls
  * queue an operation for processing, and a callback is invoked once the operation
@@ -824,7 +824,7 @@ AwsIotShadowError_t AwsIotShadow_SetUpdatedCallback( IotMqttConnection_t mqttCon
 /**
  * @brief Remove persistent Thing Shadow operation topic subscriptions.
  *
- * Passing the flag @ref AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS to @ref shadow_function_delete,
+ * Passing the flag @ref AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS to @ref shadow_function_deleteasync,
  * @ref shadow_function_get, @ref shadow_function_update, or their blocking versions.
  * causes the Shadow operation topic subscriptions to be maintained for future calls to the
  * same function. If a persistent subscription for a Shadow topic are no longer needed,

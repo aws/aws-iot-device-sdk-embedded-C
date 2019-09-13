@@ -699,12 +699,12 @@ void AwsIotShadow_Cleanup( void )
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_Delete( IotMqttConnection_t mqttConnection,
-                                         const char * pThingName,
-                                         size_t thingNameLength,
-                                         uint32_t flags,
-                                         const AwsIotShadowCallbackInfo_t * pCallbackInfo,
-                                         AwsIotShadowOperation_t * const pDeleteOperation )
+AwsIotShadowError_t AwsIotShadow_DeleteAsync( IotMqttConnection_t mqttConnection,
+                                              const char * pThingName,
+                                              size_t thingNameLength,
+                                              uint32_t flags,
+                                              const AwsIotShadowCallbackInfo_t * pCallbackInfo,
+                                              AwsIotShadowOperation_t * const pDeleteOperation )
 {
     IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
     _shadowOperation_t * pOperation = NULL;
@@ -780,12 +780,12 @@ AwsIotShadowError_t AwsIotShadow_TimedDelete( IotMqttConnection_t mqttConnection
     flags |= AWS_IOT_SHADOW_FLAG_WAITABLE;
 
     /* Call the asynchronous Shadow delete function. */
-    status = AwsIotShadow_Delete( mqttConnection,
-                                  pThingName,
-                                  thingNameLength,
-                                  flags,
-                                  NULL,
-                                  &deleteOperation );
+    status = AwsIotShadow_DeleteAsync( mqttConnection,
+                                       pThingName,
+                                       thingNameLength,
+                                       flags,
+                                       NULL,
+                                       &deleteOperation );
 
     /* Wait for the Shadow delete operation to complete. */
     if( status == AWS_IOT_SHADOW_STATUS_PENDING )

@@ -336,12 +336,12 @@ static void _updateGetDeleteAsync( IotMqttQos_t qos )
         callbackParam.expectedType = AWS_IOT_SHADOW_DELETE_COMPLETE;
 
         /* Delete the Shadow document. */
-        status = AwsIotShadow_Delete( _mqttConnection,
-                                      AWS_IOT_TEST_SHADOW_THING_NAME,
-                                      THING_NAME_LENGTH,
-                                      0,
-                                      &callbackInfo,
-                                      &( callbackParam.operation ) );
+        status = AwsIotShadow_DeleteAsync( _mqttConnection,
+                                           AWS_IOT_TEST_SHADOW_THING_NAME,
+                                           THING_NAME_LENGTH,
+                                           0,
+                                           &callbackInfo,
+                                           &( callbackParam.operation ) );
 
         if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
                                     AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
