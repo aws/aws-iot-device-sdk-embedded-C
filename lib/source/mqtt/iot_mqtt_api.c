@@ -125,10 +125,10 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
 static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection );
 
 /**
- * @brief The common component of both @ref mqtt_function_subscribe and @ref
+ * @brief The common component of both @ref mqtt_function_subscribeasync and @ref
  * mqtt_function_unsubscribe.
  *
- * See @ref mqtt_function_subscribe or @ref mqtt_function_unsubscribe for a
+ * See @ref mqtt_function_subscribeasync or @ref mqtt_function_unsubscribe for a
  * description of the parameters and return values.
  */
 static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
@@ -1387,12 +1387,12 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
-                                  const IotMqttSubscription_t * pSubscriptionList,
-                                  size_t subscriptionCount,
-                                  uint32_t flags,
-                                  const IotMqttCallbackInfo_t * pCallbackInfo,
-                                  IotMqttOperation_t * const pSubscribeOperation )
+IotMqttError_t IotMqtt_SubscribeAsync( IotMqttConnection_t mqttConnection,
+                                       const IotMqttSubscription_t * pSubscriptionList,
+                                       size_t subscriptionCount,
+                                       uint32_t flags,
+                                       const IotMqttCallbackInfo_t * pCallbackInfo,
+                                       IotMqttOperation_t * const pSubscribeOperation )
 {
     return _subscriptionCommon( IOT_MQTT_SUBSCRIBE,
                                 mqttConnection,
@@ -1418,12 +1418,12 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
     ( void ) flags;
 
     /* Call the asynchronous SUBSCRIBE function. */
-    status = IotMqtt_Subscribe( mqttConnection,
-                                pSubscriptionList,
-                                subscriptionCount,
-                                IOT_MQTT_FLAG_WAITABLE | MQTT_INTERNAL_FLAG_BLOCK_ON_SEND,
-                                NULL,
-                                &subscribeOperation );
+    status = IotMqtt_SubscribeAsync( mqttConnection,
+                                     pSubscriptionList,
+                                     subscriptionCount,
+                                     IOT_MQTT_FLAG_WAITABLE | MQTT_INTERNAL_FLAG_BLOCK_ON_SEND,
+                                     NULL,
+                                     &subscribeOperation );
 
     /* Wait for the SUBSCRIBE operation to complete. */
     if( status == IOT_MQTT_STATUS_PENDING )

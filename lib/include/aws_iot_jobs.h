@@ -820,7 +820,7 @@ AwsIotJobsError_t AwsIotJobs_SetNotifyNextCallback( IotMqttConnection_t mqttConn
  *
  * Passing the flag @ref AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS to @ref jobs_function_getpending,
  * @ref jobs_function_startnext, @ref jobs_function_describe, @ref jobs_function_update,
- * or their <i>Timed</i> variants causes the Jobs operation topic subscriptions to be
+ * or their blocking versions causes the Jobs operation topic subscriptions to be
  * maintained for future calls to the same function. If a persistent subscription for a
  * Jobs topic are no longer needed, this function may be used to remove it.
  *

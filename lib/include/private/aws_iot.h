@@ -252,7 +252,7 @@ AwsIotStatus_t AwsIot_ParseStatus( const char * pTopicName,
  * @param[out] pOperationTopicLength Set to the length of the generated topic.
  *
  * @warning This function does not check the length of `pTopicBuffer`! Any provided
- * buffer must be long enough to accomodate the Thing Name, operation name, and
+ * buffer must be long enough to accommodate the Thing Name, operation name, and
  * any other suffixes.
  *
  * @return `true` if the topic was successfully generated; `false` otherwise.

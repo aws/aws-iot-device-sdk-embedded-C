@@ -1179,7 +1179,7 @@ TEST( MQTT_Unit_API, PublishDuplicates )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref mqtt_function_subscribe and
+ * @brief Tests the behavior of @ref mqtt_function_subscribeasync and
  * @ref mqtt_function_unsubscribe with various invalid parameters.
  */
 TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
@@ -1195,12 +1195,12 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
     TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Check that subscription info is validated. */
-    status = IotMqtt_Subscribe( _pMqttConnection,
-                                &subscription,
-                                1,
-                                IOT_MQTT_FLAG_WAITABLE,
-                                NULL,
-                                &subscribeOperation );
+    status = IotMqtt_SubscribeAsync( _pMqttConnection,
+                                     &subscription,
+                                     1,
+                                     IOT_MQTT_FLAG_WAITABLE,
+                                     NULL,
+                                     &subscribeOperation );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     status = IotMqtt_Unsubscribe( _pMqttConnection,
@@ -1216,12 +1216,12 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
     subscription.callback.function = SUBSCRIPTION_CALLBACK;
 
     /* A reference must be provided for a waitable SUBSCRIBE. */
-    status = IotMqtt_Subscribe( _pMqttConnection,
-                                &subscription,
-                                1,
-                                IOT_MQTT_FLAG_WAITABLE,
-                                NULL,
-                                NULL );
+    status = IotMqtt_SubscribeAsync( _pMqttConnection,
+                                     &subscription,
+                                     1,
+                                     IOT_MQTT_FLAG_WAITABLE,
+                                     NULL,
+                                     NULL );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     status = IotMqtt_Unsubscribe( _pMqttConnection,
@@ -1238,7 +1238,7 @@ TEST( MQTT_Unit_API, SubscribeUnsubscribeParameters )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref mqtt_function_subscribe when memory allocation
+ * @brief Tests the behavior of @ref mqtt_function_subscribeasync when memory allocation
  * fails at various points.
  */
 TEST( MQTT_Unit_API, SubscribeMallocFail )
@@ -1270,12 +1270,12 @@ TEST( MQTT_Unit_API, SubscribeMallocFail )
 
             /* Call SUBSCRIBE. Memory allocation will fail at various times during
              * this call. */
-            status = IotMqtt_Subscribe( _pMqttConnection,
-                                        &subscription,
-                                        1,
-                                        IOT_MQTT_FLAG_WAITABLE,
-                                        NULL,
-                                        &subscribeOperation );
+            status = IotMqtt_SubscribeAsync( _pMqttConnection,
+                                             &subscription,
+                                             1,
+                                             IOT_MQTT_FLAG_WAITABLE,
+                                             NULL,
+                                             &subscribeOperation );
 
             /* If the SUBSCRIBE succeeded, the loop can exit after waiting for
              * the SUBSCRIBE to be cleaned up. */

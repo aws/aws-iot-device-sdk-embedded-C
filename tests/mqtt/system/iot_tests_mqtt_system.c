@@ -773,12 +773,12 @@ TEST( MQTT_System, SubscribePublishAsync )
             {
                 /* Subscribe to the test topic filter. */
                 callbackParam.expectedOperation = IOT_MQTT_SUBSCRIBE;
-                status = IotMqtt_Subscribe( _mqttConnection,
-                                            &subscription,
-                                            1,
-                                            0,
-                                            &callbackInfo,
-                                            &( callbackParam.operation ) );
+                status = IotMqtt_SubscribeAsync( _mqttConnection,
+                                                 &subscription,
+                                                 1,
+                                                 0,
+                                                 &callbackInfo,
+                                                 &( callbackParam.operation ) );
 
                 if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
                                             IOT_TEST_MQTT_TIMEOUT_MS ) == false )
@@ -1173,12 +1173,12 @@ TEST( MQTT_System, SubscribeCompleteReentrancy )
                 callbackInfo.function = _reentrantCallback;
                 callbackInfo.pCallbackContext = pWaitSemaphores;
 
-                status = IotMqtt_Subscribe( _mqttConnection,
-                                            &subscription,
-                                            1,
-                                            0,
-                                            &callbackInfo,
-                                            NULL );
+                status = IotMqtt_SubscribeAsync( _mqttConnection,
+                                                 &subscription,
+                                                 1,
+                                                 0,
+                                                 &callbackInfo,
+                                                 NULL );
                 TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING, status );
 
                 /* Wait for the reentrant callback to complete. */
