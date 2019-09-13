@@ -882,4 +882,18 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
 const char * AwsIotShadow_strerror( AwsIotShadowError_t status );
 /* @[declare_shadow_strerror] */
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Backwards compatibility macros for previous function names.
+ */
+#define AwsIotShadow_Delete         AwsIotShadow_DeleteAsync
+#define AwsIotShadow_TimedDelete    AwsIotShadow_DeleteSync
+#define AwsIotShadow_Get            AwsIotShadow_GetAsync
+#define AwsIotShadow_TimedGet       AwsIotShadow_GetSync
+#define AwsIotShadow_Update         AwsIotShadow_UpdateAsync
+#define AwsIotShadow_TimedUpdate    AwsIotShadow_UpdateSync
+/** @endcond */
+
 #endif /* ifndef AWS_IOT_SHADOW_H_ */
