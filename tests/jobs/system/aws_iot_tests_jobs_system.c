@@ -314,18 +314,18 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
         switch( type )
         {
             case JOBS_GET_PENDING:
-                status = AwsIotJobs_AsyncGetPending( &requestInfo,
+                status = AwsIotJobs_GetPendingAsync( &requestInfo,
                                                      0,
                                                      &callbackInfo,
                                                      &( callbackParam.operation ) );
                 break;
 
             case JOBS_START_NEXT:
-                status = AwsIotJobs_StartNext( &requestInfo,
-                                               &updateInfo,
-                                               0,
-                                               &callbackInfo,
-                                               &( callbackParam.operation ) );
+                status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                                    &updateInfo,
+                                                    0,
+                                                    &callbackInfo,
+                                                    &( callbackParam.operation ) );
                 break;
 
             case JOBS_DESCRIBE:
@@ -650,7 +650,7 @@ TEST( Jobs_System, GetPendingBlocking )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Starts the next Job using @ref jobs_function_startnext.
+ * @brief Starts the next Job using @ref jobs_function_startnextasync.
  */
 TEST( Jobs_System, StartNextAsync )
 {

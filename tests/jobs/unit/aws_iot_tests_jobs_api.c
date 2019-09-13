@@ -122,11 +122,11 @@ static void _jobsMallocFail( _jobsOperationType_t type )
                 break;
 
             case JOBS_START_NEXT:
-                status = AwsIotJobs_StartNext( &requestInfo,
-                                               &updateInfo,
-                                               AWS_IOT_JOBS_FLAG_WAITABLE,
-                                               NULL,
-                                               &operation );
+                status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                                    &updateInfo,
+                                                    AWS_IOT_JOBS_FLAG_WAITABLE,
+                                                    NULL,
+                                                    &operation );
                 break;
 
             case JOBS_DESCRIBE:
@@ -358,11 +358,11 @@ TEST( Jobs_Unit_API, OperationInvalidRequestInfo )
     requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
 
     /* No reference with waitable operation. */
-    status = AwsIotJobs_StartNext( &requestInfo,
-                                   &updateInfo,
-                                   AWS_IOT_JOBS_FLAG_WAITABLE,
-                                   NULL,
-                                   NULL );
+    status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                        &updateInfo,
+                                        AWS_IOT_JOBS_FLAG_WAITABLE,
+                                        NULL,
+                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Malloc function not set. */
@@ -458,40 +458,40 @@ TEST( Jobs_Unit_API, OperationInvalidUpdateInfo )
 
     /* Negative, invalid step timeout. */
     updateInfo.stepTimeoutInMinutes = -5;
-    status = AwsIotJobs_StartNext( &requestInfo,
-                                   &updateInfo,
-                                   0,
-                                   NULL,
-                                   NULL );
+    status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                        &updateInfo,
+                                        0,
+                                        NULL,
+                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Step timeout too large. */
     updateInfo.stepTimeoutInMinutes = JOBS_MAX_TIMEOUT + 1;
-    status = AwsIotJobs_StartNext( &requestInfo,
-                                   &updateInfo,
-                                   0,
-                                   NULL,
-                                   NULL );
+    status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                        &updateInfo,
+                                        0,
+                                        NULL,
+                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     updateInfo.stepTimeoutInMinutes = AWS_IOT_JOBS_NO_TIMEOUT;
 
     /* Status details length not set. */
     updateInfo.pStatusDetails = "test";
-    status = AwsIotJobs_StartNext( &requestInfo,
-                                   &updateInfo,
-                                   0,
-                                   NULL,
-                                   NULL );
+    status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                        &updateInfo,
+                                        0,
+                                        NULL,
+                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Status details too large. */
     updateInfo.statusDetailsLength = JOBS_MAX_STATUS_DETAILS_LENGTH + 1;
 
-    status = AwsIotJobs_StartNext( &requestInfo,
-                                   &updateInfo,
-                                   0,
-                                   NULL,
-                                   NULL );
+    status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                        &updateInfo,
+                                        0,
+                                        NULL,
+                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     updateInfo.pStatusDetails = AWS_IOT_JOBS_NO_STATUS_DETAILS;
 
@@ -558,7 +558,7 @@ TEST( Jobs_Unit_API, GetPendingMallocFail )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref jobs_function_startnext when memory
+ * @brief Tests the behavior of @ref jobs_function_startnextasync when memory
  * allocation fails at various points.
  */
 TEST( Jobs_Unit_API, StartNextMallocFail )
