@@ -314,10 +314,10 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
         switch( type )
         {
             case JOBS_GET_PENDING:
-                status = AwsIotJobs_GetPending( &requestInfo,
-                                                0,
-                                                &callbackInfo,
-                                                &( callbackParam.operation ) );
+                status = AwsIotJobs_AsyncGetPending( &requestInfo,
+                                                     0,
+                                                     &callbackInfo,
+                                                     &( callbackParam.operation ) );
                 break;
 
             case JOBS_START_NEXT:

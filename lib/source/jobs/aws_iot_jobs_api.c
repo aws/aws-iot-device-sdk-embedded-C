@@ -770,10 +770,10 @@ void AwsIotJobs_Cleanup( void )
 
 /*-----------------------------------------------------------*/
 
-AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                         uint32_t flags,
-                                         const AwsIotJobsCallbackInfo_t * pCallbackInfo,
-                                         AwsIotJobsOperation_t * const pGetPendingOperation )
+AwsIotJobsError_t AwsIotJobs_GetPendingAsync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                              uint32_t flags,
+                                              const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                              AwsIotJobsOperation_t * const pGetPendingOperation )
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
     _jobsOperation_t * pOperation = NULL;
@@ -838,10 +838,10 @@ AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pR
     flags |= AWS_IOT_JOBS_FLAG_WAITABLE;
 
     /* Call the asynchronous Jobs Get Pending function. */
-    status = AwsIotJobs_GetPending( pRequestInfo,
-                                    flags,
-                                    NULL,
-                                    &getPendingOperation );
+    status = AwsIotJobs_GetPendingAsync( pRequestInfo,
+                                         flags,
+                                         NULL,
+                                         &getPendingOperation );
 
     /* Wait for the Jobs Get Pending operation to complete. */
     if( status == AWS_IOT_JOBS_STATUS_PENDING )

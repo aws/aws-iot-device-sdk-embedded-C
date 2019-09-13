@@ -39,7 +39,7 @@
  * @functionspage{jobs,Jobs library}
  * - @functionname{jobs_function_init}
  * - @functionname{jobs_function_cleanup}
- * - @functionname{jobs_function_getpending}
+ * - @functionname{jobs_function_getpendingasync}
  * - @functionname{jobs_function_timedgetpending}
  * - @functionname{jobs_function_startnext}
  * - @functionname{jobs_function_timedstartnext}
@@ -58,7 +58,7 @@
 /**
  * @functionpage{AwsIotJobs_Init,jobs,init}
  * @functionpage{AwsIotJobs_Cleanup,jobs,cleanup}
- * @functionpage{AwsIotJobs_GetPending,jobs,getpending}
+ * @functionpage{AwsIotJobs_GetPendingAsync,jobs,getpendingasync}
  * @functionpage{AwsIotJobs_TimedGetPending,jobs,timedgetpending}
  * @functionpage{AwsIotJobs_StartNext,jobs,startnext}
  * @functionpage{AwsIotJobs_TimedStartNext,jobs,timedstartnext}
@@ -170,29 +170,29 @@ void AwsIotJobs_Cleanup( void );
  * callbackInfo.function = _jobsCallback;
  *
  * // Queue Jobs GET PENDING.
- * AwsIotJobsError_t getPendingResult = AwsIotJobs_GetPending( &requestInfo,
- *                                                             0,
- *                                                             &callbackInfo,
- *                                                             &getPendingOperation );
+ * AwsIotJobsError_t getPendingResult = AwsIotJobs_GetPendingAsync( &requestInfo,
+ *                                                                  0,
+ *                                                                  &callbackInfo,
+ *                                                                  &getPendingOperation );
  *
  * // GET PENDING should have returned AWS_IOT_JOBS_STATUS_PENDING. The function
  * // _jobsCallback will be invoked once the Jobs response is received.
  * @endcode
  */
-/* @[declare_jobs_getpending] */
-AwsIotJobsError_t AwsIotJobs_GetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                         uint32_t flags,
-                                         const AwsIotJobsCallbackInfo_t * pCallbackInfo,
-                                         AwsIotJobsOperation_t * const pGetPendingOperation );
-/* @[declare_jobs_getpending] */
+/* @[declare_jobs_getpendingasync] */
+AwsIotJobsError_t AwsIotJobs_GetPendingAsync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                              uint32_t flags,
+                                              const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                              AwsIotJobsOperation_t * const pGetPendingOperation );
+/* @[declare_jobs_getpendingasync] */
 
 /**
  * @brief Get the list of all pending jobs for a Thing with a timeout for receiving
  * the response.
  *
  * This function queues a Jobs GET PENDING, then waits for the result. Internally,
- * this function is a call to @ref jobs_function_getpending followed by
- * @ref jobs_function_wait. See @ref jobs_function_getpending for more information
+ * this function is a call to @ref jobs_function_getpendingasync followed by
+ * @ref jobs_function_wait. See @ref jobs_function_getpendingasync for more information
  * on the Jobs GET PENDING command.
  *
  * @param[in] pRequestInfo Jobs request parameters.
@@ -562,7 +562,7 @@ AwsIotJobsError_t AwsIotJobs_TimedUpdate( const AwsIotJobsRequestInfo_t * pReque
 /**
  * @brief Wait for a Jobs operation to complete.
  *
- * This function blocks to wait for a [GET PENDING](@ref jobs_function_getpending),
+ * This function blocks to wait for a [GET PENDING](@ref jobs_function_getpendingasync),
  * [START NEXT](@ref jobs_function_startnext), [DESCRIBE](@ref jobs_function_describe),
  * or [UPDATE](@ref jobs_function_update) operation to complete. These operations are
  * by default asynchronous; the function calls queue an operation for processing,
@@ -818,7 +818,7 @@ AwsIotJobsError_t AwsIotJobs_SetNotifyNextCallback( IotMqttConnection_t mqttConn
 /**
  * @brief Remove persistent Jobs operation topic subscriptions.
  *
- * Passing the flag @ref AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS to @ref jobs_function_getpending,
+ * Passing the flag @ref AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS to @ref jobs_function_getpendingasync,
  * @ref jobs_function_startnext, @ref jobs_function_describe, @ref jobs_function_update,
  * or their blocking versions causes the Jobs operation topic subscriptions to be
  * maintained for future calls to the same function. If a persistent subscription for a

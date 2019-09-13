@@ -115,10 +115,10 @@ static void _jobsMallocFail( _jobsOperationType_t type )
         switch( type )
         {
             case JOBS_GET_PENDING:
-                status = AwsIotJobs_GetPending( &requestInfo,
-                                                AWS_IOT_JOBS_FLAG_WAITABLE,
-                                                NULL,
-                                                &operation );
+                status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                                     AWS_IOT_JOBS_FLAG_WAITABLE,
+                                                     NULL,
+                                                     &operation );
                 break;
 
             case JOBS_START_NEXT:
@@ -341,18 +341,18 @@ TEST( Jobs_Unit_API, OperationInvalidRequestInfo )
     AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
 
     /* Uninitialized MQTT connection. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    0,
-                                    NULL,
-                                    NULL );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         0,
+                                         NULL,
+                                         NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     requestInfo.mqttConnection = _pMqttConnection;
 
     /* Invalid Thing Name. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    0,
-                                    NULL,
-                                    NULL );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         0,
+                                         NULL,
+                                         NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     requestInfo.pThingName = TEST_THING_NAME;
     requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
@@ -366,43 +366,43 @@ TEST( Jobs_Unit_API, OperationInvalidRequestInfo )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Malloc function not set. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    AWS_IOT_JOBS_FLAG_WAITABLE,
-                                    NULL,
-                                    &operation );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         AWS_IOT_JOBS_FLAG_WAITABLE,
+                                         NULL,
+                                         &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     requestInfo.mallocResponse = IotTest_Malloc;
 
     /* Both callback and waitable flag set. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    AWS_IOT_JOBS_FLAG_WAITABLE,
-                                    &callbackInfo,
-                                    &operation );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         AWS_IOT_JOBS_FLAG_WAITABLE,
+                                         &callbackInfo,
+                                         &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Callback function not set. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    0,
-                                    &callbackInfo,
-                                    NULL );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         0,
+                                         &callbackInfo,
+                                         NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Client token length not set. */
     requestInfo.pClientToken = "test";
     requestInfo.clientTokenLength = 0;
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    AWS_IOT_JOBS_FLAG_WAITABLE,
-                                    0,
-                                    &operation );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         AWS_IOT_JOBS_FLAG_WAITABLE,
+                                         0,
+                                         &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Client token too long. */
     requestInfo.clientTokenLength = AWS_IOT_CLIENT_TOKEN_MAX_LENGTH + 1;
 
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    0,
-                                    NULL,
-                                    NULL );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         0,
+                                         NULL,
+                                         NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     requestInfo.pClientToken = AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE;
 
@@ -547,7 +547,7 @@ TEST( Jobs_Unit_API, WaitInvalidParameters )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref jobs_function_getpending when memory
+ * @brief Tests the behavior of @ref jobs_function_getpendingasync when memory
  * allocation fails at various points.
  */
 TEST( Jobs_Unit_API, GetPendingMallocFail )
