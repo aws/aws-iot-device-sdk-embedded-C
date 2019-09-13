@@ -40,7 +40,7 @@
  * - @functionname{jobs_function_init}
  * - @functionname{jobs_function_cleanup}
  * - @functionname{jobs_function_getpendingasync}
- * - @functionname{jobs_function_timedgetpending}
+ * - @functionname{jobs_function_getpendingsync}
  * - @functionname{jobs_function_startnext}
  * - @functionname{jobs_function_timedstartnext}
  * - @functionname{jobs_function_describe}
@@ -59,7 +59,7 @@
  * @functionpage{AwsIotJobs_Init,jobs,init}
  * @functionpage{AwsIotJobs_Cleanup,jobs,cleanup}
  * @functionpage{AwsIotJobs_GetPendingAsync,jobs,getpendingasync}
- * @functionpage{AwsIotJobs_TimedGetPending,jobs,timedgetpending}
+ * @functionpage{AwsIotJobs_GetPendingSync,jobs,getpendingsync}
  * @functionpage{AwsIotJobs_StartNext,jobs,startnext}
  * @functionpage{AwsIotJobs_TimedStartNext,jobs,timedstartnext}
  * @functionpage{AwsIotJobs_Describe,jobs,describe}
@@ -147,7 +147,7 @@ void AwsIotJobs_Cleanup( void );
  * - #AWS_IOT_JOBS_BAD_RESPONSE
  * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  *
- * @see @ref jobs_function_timedgetpending for a blocking variant of this function.
+ * @see @ref jobs_function_getpendingsync for a blocking variant of this function.
  *
  * <b>Example</b>
  * @code{c}
@@ -211,12 +211,12 @@ AwsIotJobsError_t AwsIotJobs_GetPendingAsync( const AwsIotJobsRequestInfo_t * pR
  * - #AWS_IOT_JOBS_TIMEOUT
  * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  */
-/* @[declare_jobs_timedgetpending] */
-AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                              uint32_t flags,
-                                              uint32_t timeoutMs,
-                                              AwsIotJobsResponse_t * const pJobsResponse );
-/* @[declare_jobs_timedgetpending] */
+/* @[declare_jobs_getpendingsync] */
+AwsIotJobsError_t AwsIotJobs_GetPendingSync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                             uint32_t flags,
+                                             uint32_t timeoutMs,
+                                             AwsIotJobsResponse_t * const pJobsResponse );
+/* @[declare_jobs_getpendingsync] */
 
 /**
  * @brief Start the next pending job execution for a Thing and receive an asynchronous

@@ -826,10 +826,10 @@ AwsIotJobsError_t AwsIotJobs_GetPendingAsync( const AwsIotJobsRequestInfo_t * pR
 
 /*-----------------------------------------------------------*/
 
-AwsIotJobsError_t AwsIotJobs_TimedGetPending( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                              uint32_t flags,
-                                              uint32_t timeoutMs,
-                                              AwsIotJobsResponse_t * const pJobsResponse )
+AwsIotJobsError_t AwsIotJobs_GetPendingSync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                             uint32_t flags,
+                                             uint32_t timeoutMs,
+                                             AwsIotJobsResponse_t * const pJobsResponse )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
     AwsIotJobsOperation_t getPendingOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;

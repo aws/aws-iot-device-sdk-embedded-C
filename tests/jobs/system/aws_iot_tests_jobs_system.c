@@ -391,10 +391,10 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
     switch( type )
     {
         case JOBS_GET_PENDING:
-            status = AwsIotJobs_TimedGetPending( &requestInfo,
-                                                 0,
-                                                 AWS_IOT_TEST_JOBS_TIMEOUT,
-                                                 &jobsResponse );
+            status = AwsIotJobs_GetPendingSync( &requestInfo,
+                                                0,
+                                                AWS_IOT_TEST_JOBS_TIMEOUT,
+                                                &jobsResponse );
             break;
 
         case JOBS_START_NEXT:
@@ -630,7 +630,7 @@ TEST_GROUP_RUNNER( Jobs_System )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Retrieves a list of Jobs using @ref jobs_function_timedgetpending.
+ * @brief Retrieves a list of Jobs using @ref jobs_function_getpendingasync.
  */
 TEST( Jobs_System, GetPendingAsync )
 {
@@ -640,7 +640,7 @@ TEST( Jobs_System, GetPendingAsync )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Retrieves a list of Jobs using @ref jobs_function_timedgetpending.
+ * @brief Retrieves a list of Jobs using @ref jobs_function_getpendingsync.
  */
 TEST( Jobs_System, GetPendingBlocking )
 {
@@ -727,10 +727,10 @@ TEST( Jobs_System, PersistentSubscriptions )
 
     /* Time a Jobs function that sets persistent subscriptions. */
     startTime = IotClock_GetTimeMs();
-    status = AwsIotJobs_TimedGetPending( &requestInfo,
-                                         AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS,
-                                         AWS_IOT_TEST_JOBS_TIMEOUT,
-                                         &response );
+    status = AwsIotJobs_GetPendingSync( &requestInfo,
+                                        AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS,
+                                        AWS_IOT_TEST_JOBS_TIMEOUT,
+                                        &response );
     elapsedTime1 = IotClock_GetTimeMs() - startTime;
 
     /* Check results. */
@@ -742,10 +742,10 @@ TEST( Jobs_System, PersistentSubscriptions )
 
     /* Time a Jobs functions that has persistent subscriptions set. */
     startTime = IotClock_GetTimeMs();
-    status = AwsIotJobs_TimedGetPending( &requestInfo,
-                                         0,
-                                         AWS_IOT_TEST_JOBS_TIMEOUT,
-                                         &response );
+    status = AwsIotJobs_GetPendingSync( &requestInfo,
+                                        0,
+                                        AWS_IOT_TEST_JOBS_TIMEOUT,
+                                        &response );
     elapsedTime2 = IotClock_GetTimeMs() - startTime;
 
     /* Check results */

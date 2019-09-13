@@ -88,7 +88,7 @@ typedef enum AwsIotJobsError
      * Functions that may return this value:
      * - @ref jobs_function_init
      * - @ref jobs_function_wait
-     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_timedstartnext
      * - @ref jobs_function_timeddescribe
      * - @ref jobs_function_timedupdate
@@ -125,7 +125,7 @@ typedef enum AwsIotJobsError
      * @brief At least one parameter is invalid.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_getpendingasync and @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingasync and @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnext and @ref jobs_function_timedstartnext
      * - @ref jobs_function_describe and @ref jobs_function_timeddescribe
      * - @ref jobs_function_update and @ref jobs_function_timedupdate
@@ -140,7 +140,7 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed because of memory allocation failure.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_getpendingasync and @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingasync and @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnext and @ref jobs_function_timedstartnext
      * - @ref jobs_function_describe and @ref jobs_function_timeddescribe
      * - @ref jobs_function_update and @ref jobs_function_timedupdate
@@ -153,7 +153,7 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed because of failure in MQTT library.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_getpendingasync and @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingasync and @ref jobs_function_getpendingsync
      * - @ref jobs_function_startnext and @ref jobs_function_timedstartnext
      * - @ref jobs_function_describe and @ref jobs_function_timeddescribe
      * - @ref jobs_function_update and @ref jobs_function_timedupdate
@@ -167,7 +167,7 @@ typedef enum AwsIotJobsError
      * @brief Response received from Jobs service not understood.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_timedstartnext
      * - @ref jobs_function_timeddescribe
      * - @ref jobs_function_timedupdate
@@ -182,7 +182,7 @@ typedef enum AwsIotJobsError
      * @brief A blocking Jobs operation timed out.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_timedstartnext
      * - @ref jobs_function_timeddescribe
      * - @ref jobs_function_timedupdate
@@ -196,7 +196,7 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: A request was sent to an unknown topic.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_timedstartnext
      * - @ref jobs_function_timeddescribe
      * - @ref jobs_function_timedupdate
@@ -213,7 +213,7 @@ typedef enum AwsIotJobsError
      * Jobs requests must be UTF-8 encoded JSON documents.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_timedstartnext
      * - @ref jobs_function_timeddescribe
      * - @ref jobs_function_timedupdate
@@ -228,7 +228,7 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: The contents of the request were invalid.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_timedstartnext
      * - @ref jobs_function_timeddescribe
      * - @ref jobs_function_timedupdate
@@ -286,7 +286,7 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: The Jobs service encountered an internal error.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_timedstartnext
      * - @ref jobs_function_timeddescribe
      * - @ref jobs_function_timedupdate
@@ -301,7 +301,7 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: The request was throttled.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
+     * - @ref jobs_function_getpendingsync
      * - @ref jobs_function_timedstartnext
      * - @ref jobs_function_timeddescribe
      * - @ref jobs_function_timedupdate
@@ -497,7 +497,7 @@ typedef struct AwsIotJobsCallbackInfo
  * @ingroup jobs_datatypes_paramstructs
  * @brief Common information provided to Jobs requests.
  *
- * @paramfor @ref jobs_function_getpendingasync, @ref jobs_function_timedgetpending,
+ * @paramfor @ref jobs_function_getpendingasync, @ref jobs_function_getpendingsync,
  * @ref jobs_function_startnext, @ref jobs_function_timedstartnext
  * @ref jobs_function_describe, @ref jobs_function_timeddescribe,
  * @ref jobs_function_update, @ref jobs_function_timedupdate
@@ -536,7 +536,7 @@ typedef struct AwsIotJobsRequestInfo
      * should be set to #AWS_IOT_JOBS_NEXT_JOB_LENGTH.
      *
      * This parameter is ignored for calls to @ref jobs_function_getpendingasync,
-     * @ref jobs_function_timedgetpending, @ref jobs_function_startnext,
+     * @ref jobs_function_getpendingsync, @ref jobs_function_startnext,
      * and @ref jobs_function_timedstartnext.
      */
     const char * pJobId;
@@ -545,7 +545,7 @@ typedef struct AwsIotJobsRequestInfo
      * @brief Length of #AwsIotJobsRequestInfo_t.pJobId.
      *
      * This parameter is ignored for calls to @ref jobs_function_getpendingasync,
-     * @ref jobs_function_timedgetpending, @ref jobs_function_startnext,
+     * @ref jobs_function_getpendingsync, @ref jobs_function_startnext,
      * and @ref jobs_function_timedstartnext.
      */
     size_t jobIdLength;
@@ -568,7 +568,7 @@ typedef struct AwsIotJobsRequestInfo
  * @ingroup jobs_datatypes_paramstructs
  * @brief Output parameter of blocking Jobs API functions.
  *
- * @paramfor @ref jobs_function_timedgetpending, @ref jobs_function_timedstartnext,
+ * @paramfor @ref jobs_function_getpendingsync, @ref jobs_function_timedstartnext,
  * @ref jobs_function_timeddescribe, @ref jobs_function_timedupdate,
  * @ref jobs_function_wait
  *
@@ -896,7 +896,7 @@ typedef struct AwsIotJobsUpdateInfo
  *
  * This flag may be passed to @ref jobs_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref jobs_function_getpendingasync or @ref jobs_function_timedgetpending.
+ * call to @ref jobs_function_getpendingasync or @ref jobs_function_getpendingsync.
  *
  * @warning Do not call @ref jobs_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Jobs get pending operations.
