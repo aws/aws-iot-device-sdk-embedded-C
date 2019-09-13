@@ -319,11 +319,11 @@ static void _updateGetDeleteAsync( IotMqttQos_t qos )
         callbackParam.expectedType = AWS_IOT_SHADOW_GET_COMPLETE;
 
         /* Retrieve the Shadow document. */
-        status = AwsIotShadow_Get( _mqttConnection,
-                                   &documentInfo,
-                                   0,
-                                   &callbackInfo,
-                                   &( callbackParam.operation ) );
+        status = AwsIotShadow_GetAsync( _mqttConnection,
+                                        &documentInfo,
+                                        0,
+                                        &callbackInfo,
+                                        &( callbackParam.operation ) );
         TEST_ASSERT_EQUAL_INT( AWS_IOT_SHADOW_STATUS_PENDING, status );
 
         if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),

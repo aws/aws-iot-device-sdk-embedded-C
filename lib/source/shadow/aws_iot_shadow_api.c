@@ -801,11 +801,11 @@ AwsIotShadowError_t AwsIotShadow_DeleteSync( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_Get( IotMqttConnection_t mqttConnection,
-                                      const AwsIotShadowDocumentInfo_t * pGetInfo,
-                                      uint32_t flags,
-                                      const AwsIotShadowCallbackInfo_t * pCallbackInfo,
-                                      AwsIotShadowOperation_t * const pGetOperation )
+AwsIotShadowError_t AwsIotShadow_GetAsync( IotMqttConnection_t mqttConnection,
+                                           const AwsIotShadowDocumentInfo_t * pGetInfo,
+                                           uint32_t flags,
+                                           const AwsIotShadowCallbackInfo_t * pCallbackInfo,
+                                           AwsIotShadowOperation_t * const pGetOperation )
 {
     IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
     _shadowOperation_t * pOperation = NULL;
@@ -896,11 +896,11 @@ AwsIotShadowError_t AwsIotShadow_TimedGet( IotMqttConnection_t mqttConnection,
     flags |= AWS_IOT_SHADOW_FLAG_WAITABLE;
 
     /* Call the asynchronous Shadow get function. */
-    status = AwsIotShadow_Get( mqttConnection,
-                               pGetInfo,
-                               flags,
-                               NULL,
-                               &getOperation );
+    status = AwsIotShadow_GetAsync( mqttConnection,
+                                    pGetInfo,
+                                    flags,
+                                    NULL,
+                                    &getOperation );
 
     /* Wait for the Shadow get operation to complete. */
     if( status == AWS_IOT_SHADOW_STATUS_PENDING )
