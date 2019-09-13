@@ -42,12 +42,12 @@
  * - @functionname{mqtt_function_receivecallback}
  * - @functionname{mqtt_function_connect}
  * - @functionname{mqtt_function_disconnect}
- * - @functionname{mqtt_function_subscribe}
- * - @functionname{mqtt_function_timedsubscribe}
- * - @functionname{mqtt_function_unsubscribe}
- * - @functionname{mqtt_function_timedunsubscribe}
- * - @functionname{mqtt_function_publish}
- * - @functionname{mqtt_function_timedpublish}
+ * - @functionname{mqtt_function_subscribeasync}
+ * - @functionname{mqtt_function_subscribesync}
+ * - @functionname{mqtt_function_unsubscribeasync}
+ * - @functionname{mqtt_function_unsubscribesync}
+ * - @functionname{mqtt_function_publishasync}
+ * - @functionname{mqtt_function_publishsync}
  * - @functionname{mqtt_function_wait}
  * - @functionname{mqtt_function_strerror}
  * - @functionname{mqtt_function_operationtype}
@@ -60,12 +60,12 @@
  * @functionpage{IotMqtt_ReceiveCallback,mqtt,receivecallback}
  * @functionpage{IotMqtt_Connect,mqtt,connect}
  * @functionpage{IotMqtt_Disconnect,mqtt,disconnect}
- * @functionpage{IotMqtt_Subscribe,mqtt,subscribe}
- * @functionpage{IotMqtt_TimedSubscribe,mqtt,timedsubscribe}
- * @functionpage{IotMqtt_Unsubscribe,mqtt,unsubscribe}
- * @functionpage{IotMqtt_TimedUnsubscribe,mqtt,timedunsubscribe}
- * @functionpage{IotMqtt_Publish,mqtt,publish}
- * @functionpage{IotMqtt_TimedPublish,mqtt,timedpublish}
+ * @functionpage{IotMqtt_SubscribeAsync,mqtt,subscribeasync}
+ * @functionpage{IotMqtt_SubscribeSync,mqtt,subscribesync}
+ * @functionpage{IotMqtt_UnsubscribeAsync,mqtt,unsubscribeasync}
+ * @functionpage{IotMqtt_UnsubscribeSync,mqtt,unsubscribesync}
+ * @functionpage{IotMqtt_PublishAsync,mqtt,publishasync}
+ * @functionpage{IotMqtt_PublishSync,mqtt,publishsync}
  * @functionpage{IotMqtt_Wait,mqtt,wait}
  * @functionpage{IotMqtt_strerror,mqtt,strerror}
  * @functionpage{IotMqtt_OperationType,mqtt,operationtype}
@@ -167,8 +167,8 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
  * (@ref IotMqttPublishInfo_t.retryLimit) members of #IotMqttPublishInfo_t
  * are ignored for LWT messages. The LWT message is optional; `pWillInfo` may be NULL.
  *
- * Unlike @ref mqtt_function_publish, @ref mqtt_function_subscribe, and
- * @ref mqtt_function_unsubscribe, this function is always blocking. Additionally,
+ * Unlike @ref mqtt_function_publishasync, @ref mqtt_function_subscribeasync, and
+ * @ref mqtt_function_unsubscribeasync, this function is always blocking. Additionally,
  * because the MQTT connection acknowledgement packet (CONNACK packet) does not
  * contain any information on <i>which</i> CONNECT packet it acknowledges, only one
  * CONNECT operation may be in progress at any time. This means that parallel
@@ -341,8 +341,8 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  *
- * @see @ref mqtt_function_timedsubscribe for a blocking variant of this function.
- * @see @ref mqtt_function_unsubscribe for the function that removes subscriptions.
+ * @see @ref mqtt_function_subscribesync for a blocking variant of this function.
+ * @see @ref mqtt_function_unsubscribeasync for the function that removes subscriptions.
  *
  * <b>Example</b>
  * @code{c}
@@ -367,12 +367,12 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  *     pSubscriptions[ i ].callback.function = subscriptionCallback;
  * }
  *
- * IotMqttError_t result = IotMqtt_Subscribe( mqttConnection,
- *                                            pSubscriptions,
- *                                            NUMBER_OF_SUBSCRIPTIONS,
- *                                            IOT_MQTT_FLAG_WAITABLE,
- *                                            NULL,
- *                                            &lastOperation );
+ * IotMqttError_t result = IotMqtt_SubscribeAsync( mqttConnection,
+ *                                                 pSubscriptions,
+ *                                                 NUMBER_OF_SUBSCRIPTIONS,
+ *                                                 IOT_MQTT_FLAG_WAITABLE,
+ *                                                 NULL,
+ *                                                 &lastOperation );
  *
  * // Subscribe returns IOT_MQTT_STATUS_PENDING when successful. Wait up to
  * // 5 seconds for the operation to complete.
@@ -387,12 +387,12 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  *     // Wait for messages on the subscription topic filters...
  *
  *     // Unsubscribe once the subscriptions are no longer needed.
- *     result = IotMqtt_Unsubscribe( mqttConnection,
- *                                   pSubscriptions,
- *                                   NUMBER_OF_SUBSCRIPTIONS,
- *                                   IOT_MQTT_FLAG_WAITABLE,
- *                                   NULL,
- *                                   &lastOperation );
+ *     result = IotMqtt_UnsubscribeAsync( mqttConnection,
+ *                                        pSubscriptions,
+ *                                        NUMBER_OF_SUBSCRIPTIONS,
+ *                                        IOT_MQTT_FLAG_WAITABLE,
+ *                                        NULL,
+ *                                        &lastOperation );
  *
  *     // UNSUBSCRIBE returns IOT_MQTT_STATUS_PENDING when successful.
  *     // Wait up to 5 seconds for the operation to complete.
@@ -417,22 +417,22 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  * }
  * @endcode
  */
-/* @[declare_mqtt_subscribe] */
-IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
-                                  const IotMqttSubscription_t * pSubscriptionList,
-                                  size_t subscriptionCount,
-                                  uint32_t flags,
-                                  const IotMqttCallbackInfo_t * pCallbackInfo,
-                                  IotMqttOperation_t * const pSubscribeOperation );
-/* @[declare_mqtt_subscribe] */
+/* @[declare_mqtt_subscribeasync] */
+IotMqttError_t IotMqtt_SubscribeAsync( IotMqttConnection_t mqttConnection,
+                                       const IotMqttSubscription_t * pSubscriptionList,
+                                       size_t subscriptionCount,
+                                       uint32_t flags,
+                                       const IotMqttCallbackInfo_t * pCallbackInfo,
+                                       IotMqttOperation_t * const pSubscribeOperation );
+/* @[declare_mqtt_subscribeasync] */
 
 /**
  * @brief Subscribes to the given array of topic filters with a timeout.
  *
  * This function transmits an MQTT SUBSCRIBE packet to the server, then waits for
  * a server response to the packet. Internally, this function is a call to @ref
- * mqtt_function_subscribe followed by @ref mqtt_function_wait. See @ref
- * mqtt_function_subscribe for more information about the MQTT SUBSCRIBE operation.
+ * mqtt_function_subscribeasync followed by @ref mqtt_function_wait. See @ref
+ * mqtt_function_subscribeasync for more information about the MQTT SUBSCRIBE operation.
  *
  * @attention QoS 2 subscriptions are currently unsupported. Only 0 or 1 are valid
  * for subscription QoS.
@@ -457,13 +457,13 @@ IotMqttError_t IotMqtt_Subscribe( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_TIMEOUT
  * - #IOT_MQTT_SERVER_REFUSED
  */
-/* @[declare_mqtt_timedsubscribe] */
-IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
-                                       const IotMqttSubscription_t * pSubscriptionList,
-                                       size_t subscriptionCount,
-                                       uint32_t flags,
-                                       uint32_t timeoutMs );
-/* @[declare_mqtt_timedsubscribe] */
+/* @[declare_mqtt_subscribesync] */
+IotMqttError_t IotMqtt_SubscribeSync( IotMqttConnection_t mqttConnection,
+                                      const IotMqttSubscription_t * pSubscriptionList,
+                                      size_t subscriptionCount,
+                                      uint32_t flags,
+                                      uint32_t timeoutMs );
+/* @[declare_mqtt_subscribesync] */
 
 /**
  * @brief Unsubscribes from the given array of topic filters and receive an asynchronous
@@ -499,25 +499,25 @@ IotMqttError_t IotMqtt_TimedSubscribe( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  *
- * @see @ref mqtt_function_timedsubscribe for a blocking variant of this function.
- * @see @ref mqtt_function_subscribe for the function that adds subscriptions.
+ * @see @ref mqtt_function_unsubscribesync for a blocking variant of this function.
+ * @see @ref mqtt_function_subscribeasync for the function that adds subscriptions.
  */
-/* @[declare_mqtt_unsubscribe] */
-IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
-                                    const IotMqttSubscription_t * pSubscriptionList,
-                                    size_t subscriptionCount,
-                                    uint32_t flags,
-                                    const IotMqttCallbackInfo_t * pCallbackInfo,
-                                    IotMqttOperation_t * const pUnsubscribeOperation );
-/* @[declare_mqtt_unsubscribe] */
+/* @[declare_mqtt_unsubscribeasync] */
+IotMqttError_t IotMqtt_UnsubscribeAsync( IotMqttConnection_t mqttConnection,
+                                         const IotMqttSubscription_t * pSubscriptionList,
+                                         size_t subscriptionCount,
+                                         uint32_t flags,
+                                         const IotMqttCallbackInfo_t * pCallbackInfo,
+                                         IotMqttOperation_t * const pUnsubscribeOperation );
+/* @[declare_mqtt_unsubscribeasync] */
 
 /**
  * @brief Unsubscribes from a given array of topic filters with a timeout.
  *
  * This function transmits an MQTT UNSUBSCRIBE packet to the server, then waits
  * for a server response to the packet. Internally, this function is a call to
- * @ref mqtt_function_unsubscribe followed by @ref mqtt_function_wait. See @ref
- * mqtt_function_unsubscribe for more information about the MQTT UNSUBSCRIBE
+ * @ref mqtt_function_unsubscribeasync followed by @ref mqtt_function_wait. See @ref
+ * mqtt_function_unsubscribeasync for more information about the MQTT UNSUBSCRIBE
  * operation.
  *
  * @param[in] mqttConnection The MQTT connection used for the subscription.
@@ -538,13 +538,13 @@ IotMqttError_t IotMqtt_Unsubscribe( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_SCHEDULING_ERROR
  * - #IOT_MQTT_BAD_RESPONSE
  */
-/* @[declare_mqtt_timedunsubscribe] */
-IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
-                                         const IotMqttSubscription_t * pSubscriptionList,
-                                         size_t subscriptionCount,
-                                         uint32_t flags,
-                                         uint32_t timeoutMs );
-/* @[declare_mqtt_timedunsubscribe] */
+/* @[declare_mqtt_unsubscribesync] */
+IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
+                                        const IotMqttSubscription_t * pSubscriptionList,
+                                        size_t subscriptionCount,
+                                        uint32_t flags,
+                                        uint32_t timeoutMs );
+/* @[declare_mqtt_unsubscribesync] */
 
 /**
  * @brief Publishes a message to the given topic name and receive an asynchronous
@@ -589,7 +589,7 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  * @note The parameters `pCallbackInfo` and `pPublishOperation` should only be used for QoS
  * 1 publishes. For QoS 0, they should both be `NULL`.
  *
- * @see @ref mqtt_function_timedpublish for a blocking variant of this function.
+ * @see @ref mqtt_function_publishsync for a blocking variant of this function.
  *
  * <b>Example</b>
  * @code{c}
@@ -607,11 +607,11 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  * publishInfo.payloadLength = 8;
  *
  * // QoS 0 publish should return IOT_MQTT_SUCCESS upon success.
- * IotMqttError_t qos0Result = IotMqtt_Publish( mqttConnection,
- *                                              &publishInfo,
- *                                              0,
- *                                              NULL,
- *                                              NULL );
+ * IotMqttError_t qos0Result = IotMqtt_PublishAsync( mqttConnection,
+ *                                                   &publishInfo,
+ *                                                   0,
+ *                                                   NULL,
+ *                                                   NULL );
  *
  * // QoS 1 with retry example (using same topic name and payload as QoS 0 example):
  * IotMqttOperation_t qos1Operation = IOT_MQTT_OPERATION_INITIALIZER;
@@ -620,11 +620,11 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  * publishInfo.retryLimit = 5; // Retry up to 5 times.
  *
  * // QoS 1 publish should return IOT_MQTT_STATUS_PENDING upon success.
- * IotMqttError_t qos1Result = IotMqtt_Publish( mqttConnection,
- *                                              &publishInfo,
- *                                              IOT_MQTT_FLAG_WAITABLE,
- *                                              NULL,
- *                                              &qos1Operation );
+ * IotMqttError_t qos1Result = IotMqtt_PublishAsync( mqttConnection,
+ *                                                   &publishInfo,
+ *                                                   IOT_MQTT_FLAG_WAITABLE,
+ *                                                   NULL,
+ *                                                   &qos1Operation );
  *
  * // Wait up to 5 seconds for the publish to complete.
  * if( qos1Result == IOT_MQTT_STATUS_PENDING )
@@ -633,21 +633,21 @@ IotMqttError_t IotMqtt_TimedUnsubscribe( IotMqttConnection_t mqttConnection,
  * }
  * @endcode
  */
-/* @[declare_mqtt_publish] */
-IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
-                                const IotMqttPublishInfo_t * pPublishInfo,
-                                uint32_t flags,
-                                const IotMqttCallbackInfo_t * pCallbackInfo,
-                                IotMqttOperation_t * const pPublishOperation );
-/* @[declare_mqtt_publish] */
+/* @[declare_mqtt_publishasync] */
+IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
+                                     const IotMqttPublishInfo_t * pPublishInfo,
+                                     uint32_t flags,
+                                     const IotMqttCallbackInfo_t * pCallbackInfo,
+                                     IotMqttOperation_t * const pPublishOperation );
+/* @[declare_mqtt_publishasync] */
 
 /**
  * @brief Publish a message to the given topic name with a timeout.
  *
  * This function transmits an MQTT PUBLISH packet to the server, then waits for
  * a server response to the packet. Internally, this function is a call to @ref
- * mqtt_function_publish followed by @ref mqtt_function_wait. See @ref
- * mqtt_function_publish for more information about the MQTT PUBLISH operation.
+ * mqtt_function_publishasync followed by @ref mqtt_function_wait. See @ref
+ * mqtt_function_publishasync for more information about the MQTT PUBLISH operation.
  *
  * @attention QoS 2 messages are currently unsupported. Only 0 or 1 are valid
  * for message QoS.
@@ -671,19 +671,19 @@ IotMqttError_t IotMqtt_Publish( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_RETRY_NO_RESPONSE (if [pPublishInfo->retryMs](@ref IotMqttPublishInfo_t.retryMs)
  * and [pPublishInfo->retryLimit](@ref IotMqttPublishInfo_t.retryLimit) were set).
  */
-/* @[declare_mqtt_timedpublish] */
-IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
-                                     const IotMqttPublishInfo_t * pPublishInfo,
-                                     uint32_t flags,
-                                     uint32_t timeoutMs );
-/* @[declare_mqtt_timedpublish] */
+/* @[declare_mqtt_publishsync] */
+IotMqttError_t IotMqtt_PublishSync( IotMqttConnection_t mqttConnection,
+                                    const IotMqttPublishInfo_t * pPublishInfo,
+                                    uint32_t flags,
+                                    uint32_t timeoutMs );
+/* @[declare_mqtt_publishsync] */
 
 /**
  * @brief Waits for an operation to complete.
  *
- * This function blocks to wait for a [subscribe](@ref mqtt_function_subscribe),
- * [unsubscribe](@ref mqtt_function_unsubscribe), or [publish]
- * (@ref mqtt_function_publish) to complete. These operations are by default
+ * This function blocks to wait for a [subscribe](@ref mqtt_function_subscribeasync),
+ * [unsubscribe](@ref mqtt_function_unsubscribeasync), or [publish]
+ * (@ref mqtt_function_publishasync) to complete. These operations are by default
  * asynchronous; the function calls queue an operation for processing, and a
  * callback is invoked once the operation is complete.
  *
@@ -709,11 +709,11 @@ IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
  * uint32_t timeoutMs = 5000; // 5 seconds
  *
  * // MQTT operation to wait for.
- * IotMqttError_t result = IotMqtt_Publish( mqttConnection,
- *                                          &publishInfo,
- *                                          IOT_MQTT_FLAG_WAITABLE,
- *                                          NULL,
- *                                          &publishOperation );
+ * IotMqttError_t result = IotMqtt_PublishAsync( mqttConnection,
+ *                                               &publishInfo,
+ *                                               IOT_MQTT_FLAG_WAITABLE,
+ *                                               NULL,
+ *                                               &publishOperation );
  *
  * // Publish should have returned IOT_MQTT_STATUS_PENDING. The call to wait
  * // returns once the result of the publish is available or the timeout expires.
@@ -794,7 +794,7 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation );
  * or UNSUBSCRIBE operations.
  *
  * One suitable use of this function is to check <i>which</i> subscriptions were rejected
- * if @ref mqtt_function_subscribe returns #IOT_MQTT_SERVER_REFUSED; that return
+ * if @ref mqtt_function_subscribeasync returns #IOT_MQTT_SERVER_REFUSED; that return
  * code only means that <i>at least one</i> subscription was rejected.
  *
  * @param[in] mqttConnection The MQTT connection to check.
@@ -815,5 +815,19 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
                            uint16_t topicFilterLength,
                            IotMqttSubscription_t * const pCurrentSubscription );
 /* @[declare_mqtt_issubscribed] */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Backwards compatibility macros for previous function names.
+ */
+#define IotMqtt_Subscribe           IotMqtt_SubscribeAsync
+#define IotMqtt_TimedSubscribe      IotMqtt_SubscribeSync
+#define IotMqtt_Unsubscribe         IotMqtt_UnsubscribeAsync
+#define IotMqtt_TimedUnsubscribe    IotMqtt_UnsubscribeSync
+#define IotMqtt_Publish             IotMqtt_PublishAsync
+#define IotMqtt_TimedPublish        IotMqtt_PublishSync
+/** @endcond */
 
 #endif /* ifndef IOT_MQTT_H_ */

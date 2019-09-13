@@ -69,13 +69,13 @@ typedef struct _mqttConnection   * IotMqttConnection_t;
  * @ingroup mqtt_datatypes_handles
  * @brief Opaque handle that references an in-progress MQTT operation.
  *
- * Set as an output parameter of @ref mqtt_function_publish, @ref mqtt_function_subscribe,
- * and @ref mqtt_function_unsubscribe. These functions queue an MQTT operation; the result
+ * Set as an output parameter of @ref mqtt_function_publishasync, @ref mqtt_function_subscribeasync,
+ * and @ref mqtt_function_unsubscribeasync. These functions queue an MQTT operation; the result
  * of the operation is unknown until a response from the MQTT server is received. Therefore,
  * this handle serves as a reference to MQTT operations awaiting MQTT server response.
  *
- * This reference will be valid from the successful return of @ref mqtt_function_publish,
- * @ref mqtt_function_subscribe, or @ref mqtt_function_unsubscribe. The reference becomes
+ * This reference will be valid from the successful return of @ref mqtt_function_publishasync,
+ * @ref mqtt_function_subscribeasync, or @ref mqtt_function_unsubscribeasync. The reference becomes
  * invalid once the [completion callback](@ref IotMqttCallbackInfo_t) is invoked, or
  * @ref mqtt_function_wait returns.
  *
@@ -107,11 +107,11 @@ typedef enum IotMqttError
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
-     * - @ref mqtt_function_publish with QoS 0 parameter
+     * - @ref mqtt_function_publishasync with QoS 0 parameter
      * - @ref mqtt_function_wait
-     * - @ref mqtt_function_timedsubscribe
-     * - @ref mqtt_function_timedunsubscribe
-     * - @ref mqtt_function_timedpublish
+     * - @ref mqtt_function_subscribesync
+     * - @ref mqtt_function_unsubscribesync
+     * - @ref mqtt_function_publishsync
      *
      * Will also be the value of an operation completion callback's
      * #IotMqttCallbackParam_t.result when successful.
@@ -122,9 +122,9 @@ typedef enum IotMqttError
      * @brief MQTT operation queued, awaiting result.
      *
      * Functions that may return this value:
-     * - @ref mqtt_function_subscribe
-     * - @ref mqtt_function_unsubscribe
-     * - @ref mqtt_function_publish with QoS 1 parameter
+     * - @ref mqtt_function_subscribeasync
+     * - @ref mqtt_function_unsubscribeasync
+     * - @ref mqtt_function_publishasync with QoS 1 parameter
      */
     IOT_MQTT_STATUS_PENDING,
 
@@ -141,9 +141,9 @@ typedef enum IotMqttError
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
-     * - @ref mqtt_function_subscribe and @ref mqtt_function_timedsubscribe
-     * - @ref mqtt_function_unsubscribe and @ref mqtt_function_timedunsubscribe
-     * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
+     * - @ref mqtt_function_subscribeasync and @ref mqtt_function_subscribesync
+     * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_unsubscribesync
+     * - @ref mqtt_function_publishasync and @ref mqtt_function_publishsync
      * - @ref mqtt_function_wait
      */
     IOT_MQTT_BAD_PARAMETER,
@@ -153,9 +153,9 @@ typedef enum IotMqttError
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
-     * - @ref mqtt_function_subscribe and @ref mqtt_function_timedsubscribe
-     * - @ref mqtt_function_unsubscribe and @ref mqtt_function_timedunsubscribe
-     * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
+     * - @ref mqtt_function_subscribeasync and @ref mqtt_function_subscribesync
+     * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_unsubscribesync
+     * - @ref mqtt_function_publishasync and @ref mqtt_function_publishsync
      */
     IOT_MQTT_NO_MEMORY,
 
@@ -167,9 +167,9 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait
-     * - @ref mqtt_function_timedsubscribe
-     * - @ref mqtt_function_timedunsubscribe
-     * - @ref mqtt_function_timedpublish
+     * - @ref mqtt_function_subscribesync
+     * - @ref mqtt_function_unsubscribesync
+     * - @ref mqtt_function_publishsync
      *
      * May also be the value of an operation completion callback's
      * #IotMqttCallbackParam_t.result.
@@ -181,9 +181,9 @@ typedef enum IotMqttError
      *
      * Functions that may return this value:
      * - @ref mqtt_function_connect
-     * - @ref mqtt_function_subscribe and @ref mqtt_function_timedsubscribe
-     * - @ref mqtt_function_unsubscribe and @ref mqtt_function_timedunsubscribe
-     * - @ref mqtt_function_publish and @ref mqtt_function_timedpublish
+     * - @ref mqtt_function_subscribeasync and @ref mqtt_function_subscribesync
+     * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_unsubscribesync
+     * - @ref mqtt_function_publishasync and @ref mqtt_function_publishsync
      */
     IOT_MQTT_SCHEDULING_ERROR,
 
@@ -193,9 +193,9 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait
-     * - @ref mqtt_function_timedsubscribe
-     * - @ref mqtt_function_timedunsubscribe
-     * - @ref mqtt_function_timedpublish
+     * - @ref mqtt_function_subscribesync
+     * - @ref mqtt_function_unsubscribesync
+     * - @ref mqtt_function_publishsync
      *
      * May also be the value of an operation completion callback's
      * #IotMqttCallbackParam_t.result.
@@ -210,9 +210,9 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait
-     * - @ref mqtt_function_timedsubscribe
-     * - @ref mqtt_function_timedunsubscribe
-     * - @ref mqtt_function_timedpublish
+     * - @ref mqtt_function_subscribesync
+     * - @ref mqtt_function_unsubscribesync
+     * - @ref mqtt_function_publishsync
      */
     IOT_MQTT_TIMEOUT,
 
@@ -223,13 +223,13 @@ typedef enum IotMqttError
      * - @ref mqtt_function_connect
      * - @ref mqtt_function_wait, but only when its #IotMqttOperation_t parameter
      * is associated with a SUBSCRIBE operation.
-     * - @ref mqtt_function_timedsubscribe
+     * - @ref mqtt_function_subscribesync
      *
      * May also be the value of an operation completion callback's
      * #IotMqttCallbackParam_t.result for a SUBSCRIBE.
      *
      * @note If this value is returned and multiple subscriptions were passed to
-     * @ref mqtt_function_subscribe (or @ref mqtt_function_timedsubscribe), it's
+     * @ref mqtt_function_subscribeasync (or @ref mqtt_function_subscribesync), it's
      * still possible that some of the subscriptions succeeded. This value only
      * signifies that AT LEAST ONE subscription was rejected. The function @ref
      * mqtt_function_issubscribed can be used to determine which subscriptions
@@ -244,7 +244,7 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_wait, but only when its #IotMqttOperation_t parameter
      * is associated with a QoS 1 PUBLISH operation
-     * - @ref mqtt_function_timedpublish
+     * - @ref mqtt_function_publishsync
      *
      * May also be the value of an operation completion callback's
      * #IotMqttCallbackParam_t.result for a QoS 1 PUBLISH.
@@ -319,9 +319,9 @@ typedef enum IotMqttDisconnectReason
  * @ingroup mqtt_datatypes_paramstructs
  * @brief Information on a PUBLISH message.
  *
- * @paramfor @ref mqtt_function_connect, @ref mqtt_function_publish
+ * @paramfor @ref mqtt_function_connect, @ref mqtt_function_publishasync
  *
- * Passed to @ref mqtt_function_publish as the message to publish and @ref
+ * Passed to @ref mqtt_function_publishasync as the message to publish and @ref
  * mqtt_function_connect as the Last Will and Testament (LWT) message.
  *
  * @initializer{IotMqttPublishInfo_t,IOT_MQTT_PUBLISH_INFO_INITIALIZER}
@@ -466,8 +466,8 @@ typedef struct IotMqttCallbackParam
  * @ingroup mqtt_datatypes_paramstructs
  * @brief Information on a user-provided MQTT callback function.
  *
- * @paramfor @ref mqtt_function_subscribe, @ref mqtt_function_unsubscribe,
- * and @ref mqtt_function_publish. Cannot be used with #IOT_MQTT_FLAG_WAITABLE.
+ * @paramfor @ref mqtt_function_subscribeasync, @ref mqtt_function_unsubscribeasync,
+ * and @ref mqtt_function_publishasync. Cannot be used with #IOT_MQTT_FLAG_WAITABLE.
  *
  * Provides a function to be invoked when an operation completes or when a
  * server-to-client PUBLISH is received.
@@ -475,7 +475,7 @@ typedef struct IotMqttCallbackParam
  * @initializer{IotMqttCallbackInfo_t,IOT_MQTT_CALLBACK_INFO_INITIALIZER}
  *
  * Below is an example for receiving an asynchronous notification on operation
- * completion. See @ref mqtt_function_subscribe for an example of using this struct
+ * completion. See @ref mqtt_function_subscribeasync for an example of using this struct
  * with for incoming PUBLISH messages.
  *
  * @code{c}
@@ -487,11 +487,11 @@ typedef struct IotMqttCallbackParam
  * callbackInfo.function = operationComplete;
  *
  * // Operation to wait for.
- * IotMqttError_t result = IotMqtt_Publish( &mqttConnection,
- *                                          &publishInfo,
- *                                          0,
- *                                          &callbackInfo,
- *                                          &reference );
+ * IotMqttError_t result = IotMqtt_PublishAsync( &mqttConnection,
+ *                                               &publishInfo,
+ *                                               0,
+ *                                               &callbackInfo,
+ *                                               &reference );
  *
  * // Publish should have returned IOT_MQTT_STATUS_PENDING. Once a response
  * // is received, operationComplete is executed with the actual status passed
@@ -519,11 +519,12 @@ typedef struct IotMqttCallbackInfo
  * @ingroup mqtt_datatypes_paramstructs
  * @brief Information on an MQTT subscription.
  *
- * @paramfor @ref mqtt_function_subscribe, @ref mqtt_function_unsubscribe
+ * @paramfor @ref mqtt_function_subscribeasync, @ref mqtt_function_unsubscribeasync,
+ * @ref mqtt_function_subscribesync, @ref mqtt_function_unsubscribesync
  *
- * An array of these is passed to @ref mqtt_function_subscribe and @ref
- * mqtt_function_unsubscribe. However, #IotMqttSubscription_t.callback and
- * and #IotMqttSubscription_t.qos are ignored by @ref mqtt_function_unsubscribe.
+ * An array of these is passed to @ref mqtt_function_subscribeasync and @ref
+ * mqtt_function_unsubscribeasync. However, #IotMqttSubscription_t.callback and
+ * and #IotMqttSubscription_t.qos are ignored by @ref mqtt_function_unsubscribeasync.
  *
  * @initializer{IotMqttSubscription_t,IOT_MQTT_SUBSCRIPTION_INITIALIZER}
  *
@@ -536,7 +537,7 @@ typedef struct IotMqttSubscription
     /**
      * @brief QoS of messages delivered on subscription.
      *
-     * Must be `0` or `1`. Ignored by @ref mqtt_function_unsubscribe.
+     * Must be `0` or `1`. Ignored by @ref mqtt_function_unsubscribeasync.
      */
     IotMqttQos_t qos;
 
@@ -546,7 +547,7 @@ typedef struct IotMqttSubscription
     /**
      * @brief Callback to invoke when a message is received.
      *
-     * See #IotMqttCallbackInfo_t. Ignored by @ref mqtt_function_unsubscribe.
+     * See #IotMqttCallbackInfo_t. Ignored by @ref mqtt_function_unsubscribeasync.
      */
     IotMqttCallbackInfo_t callback;
 } IotMqttSubscription_t;
@@ -1028,8 +1029,8 @@ typedef struct IotMqttNetworkInfo
  *   @copybrief IOT_MQTT_FLAG_CLEANUP_ONLY
  *
  * Flags should be bitwise-ORed with each other to change the behavior of
- * @ref mqtt_function_subscribe, @ref mqtt_function_unsubscribe,
- * @ref mqtt_function_publish, or @ref mqtt_function_disconnect.
+ * @ref mqtt_function_subscribeasync, @ref mqtt_function_unsubscribeasync,
+ * @ref mqtt_function_publishasync, their blocking versions; or @ref mqtt_function_disconnect.
  *
  * @note The values of the flags may change at any time in future versions, but
  * their names will remain the same. Additionally, flags that may be used together
@@ -1058,8 +1059,8 @@ typedef struct IotMqttNetworkInfo
 /**
  * @brief Allows the use of @ref mqtt_function_wait for blocking until completion.
  *
- * This flag is always valid for @ref mqtt_function_subscribe and
- * @ref mqtt_function_unsubscribe. If passed to @ref mqtt_function_publish,
+ * This flag is always valid for @ref mqtt_function_subscribeasync and
+ * @ref mqtt_function_unsubscribeasync. If passed to @ref mqtt_function_publishasync,
  * the parameter [pPublishInfo->qos](@ref IotMqttPublishInfo_t.qos) must not be `0`.
  *
  * An #IotMqttOperation_t <b>MUST</b> be provided if this flag is set. Additionally, an

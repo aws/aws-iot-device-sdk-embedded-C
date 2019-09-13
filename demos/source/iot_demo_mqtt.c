@@ -311,19 +311,19 @@ static void _mqttSubscriptionCallback( void * param1,
              * the MQTT library will still guarantee at-least-once delivery (subject
              * to the retransmission strategy) because the acknowledgement message is
              * sent at QoS 1. */
-            if( IotMqtt_Publish( pPublish->mqttConnection,
-                                 &acknowledgementInfo,
-                                 0,
-                                 NULL,
-                                 NULL ) == IOT_MQTT_STATUS_PENDING )
+            if( IotMqtt_PublishAsync( pPublish->mqttConnection,
+                                      &acknowledgementInfo,
+                                      0,
+                                      NULL,
+                                      NULL ) == IOT_MQTT_STATUS_PENDING )
             {
-                IotLogInfo( "Acknowledgment message for PUBLISH %.*s will be sent.",
+                IotLogInfo( "Acknowledgement message for PUBLISH %.*s will be sent.",
                             ( int ) messageNumberLength,
                             pPayload + messageNumberIndex );
             }
             else
             {
-                IotLogWarn( "Acknowledgment message for PUBLISH %.*s will NOT be sent.",
+                IotLogWarn( "Acknowledgement message for PUBLISH %.*s will NOT be sent.",
                             ( int ) messageNumberLength,
                             pPayload + messageNumberIndex );
             }
@@ -520,11 +520,11 @@ static int _modifySubscriptions( IotMqttConnection_t mqttConnection,
     /* Modify subscriptions by either subscribing or unsubscribing. */
     if( operation == IOT_MQTT_SUBSCRIBE )
     {
-        subscriptionStatus = IotMqtt_TimedSubscribe( mqttConnection,
-                                                     pSubscriptions,
-                                                     TOPIC_FILTER_COUNT,
-                                                     0,
-                                                     MQTT_TIMEOUT_MS );
+        subscriptionStatus = IotMqtt_SubscribeSync( mqttConnection,
+                                                    pSubscriptions,
+                                                    TOPIC_FILTER_COUNT,
+                                                    0,
+                                                    MQTT_TIMEOUT_MS );
 
         /* Check the status of SUBSCRIBE. */
         switch( subscriptionStatus )
@@ -566,11 +566,11 @@ static int _modifySubscriptions( IotMqttConnection_t mqttConnection,
     }
     else if( operation == IOT_MQTT_UNSUBSCRIBE )
     {
-        subscriptionStatus = IotMqtt_TimedUnsubscribe( mqttConnection,
-                                                       pSubscriptions,
-                                                       TOPIC_FILTER_COUNT,
-                                                       0,
-                                                       MQTT_TIMEOUT_MS );
+        subscriptionStatus = IotMqtt_UnsubscribeSync( mqttConnection,
+                                                      pSubscriptions,
+                                                      TOPIC_FILTER_COUNT,
+                                                      0,
+                                                      MQTT_TIMEOUT_MS );
 
         /* Check the status of UNSUBSCRIBE. */
         if( subscriptionStatus != IOT_MQTT_SUCCESS )
@@ -668,11 +668,11 @@ static int _publishAllMessages( IotMqttConnection_t mqttConnection,
 
         /* PUBLISH a message. This is an asynchronous function that notifies of
          * completion through a callback. */
-        publishStatus = IotMqtt_Publish( mqttConnection,
-                                         &publishInfo,
-                                         0,
-                                         &publishComplete,
-                                         NULL );
+        publishStatus = IotMqtt_PublishAsync( mqttConnection,
+                                              &publishInfo,
+                                              0,
+                                              &publishComplete,
+                                              NULL );
 
         if( publishStatus != IOT_MQTT_STATUS_PENDING )
         {
