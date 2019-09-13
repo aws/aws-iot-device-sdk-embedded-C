@@ -925,11 +925,11 @@ AwsIotJobsError_t AwsIotJobs_StartNextAsync( const AwsIotJobsRequestInfo_t * pRe
 
 /*-----------------------------------------------------------*/
 
-AwsIotJobsError_t AwsIotJobs_TimedStartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                             const AwsIotJobsUpdateInfo_t * pUpdateInfo,
-                                             uint32_t flags,
-                                             uint32_t timeoutMs,
-                                             AwsIotJobsResponse_t * const pJobsResponse )
+AwsIotJobsError_t AwsIotJobs_StartNextSync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                            const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                            uint32_t flags,
+                                            uint32_t timeoutMs,
+                                            AwsIotJobsResponse_t * const pJobsResponse )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
     AwsIotJobsOperation_t startNextOperation = AWS_IOT_JOBS_OPERATION_INITIALIZER;

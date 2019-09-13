@@ -398,11 +398,11 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
             break;
 
         case JOBS_START_NEXT:
-            status = AwsIotJobs_TimedStartNext( &requestInfo,
-                                                &updateInfo,
-                                                0,
-                                                AWS_IOT_TEST_JOBS_TIMEOUT,
-                                                &jobsResponse );
+            status = AwsIotJobs_StartNextSync( &requestInfo,
+                                               &updateInfo,
+                                               0,
+                                               AWS_IOT_TEST_JOBS_TIMEOUT,
+                                               &jobsResponse );
             break;
 
         case JOBS_DESCRIBE:
@@ -660,7 +660,7 @@ TEST( Jobs_System, StartNextAsync )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Starts the next Job using @ref jobs_function_timedstartnext.
+ * @brief Starts the next Job using @ref jobs_function_startnextsync.
  */
 TEST( Jobs_System, StartNextBlocking )
 {

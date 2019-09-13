@@ -42,7 +42,7 @@
  * - @functionname{jobs_function_getpendingasync}
  * - @functionname{jobs_function_getpendingsync}
  * - @functionname{jobs_function_startnextasync}
- * - @functionname{jobs_function_timedstartnext}
+ * - @functionname{jobs_function_startnextsync}
  * - @functionname{jobs_function_describe}
  * - @functionname{jobs_function_timeddescribe}
  * - @functionname{jobs_function_update}
@@ -61,7 +61,7 @@
  * @functionpage{AwsIotJobs_GetPendingAsync,jobs,getpendingasync}
  * @functionpage{AwsIotJobs_GetPendingSync,jobs,getpendingsync}
  * @functionpage{AwsIotJobs_StartNextAsync,jobs,startnextasync}
- * @functionpage{AwsIotJobs_TimedStartNext,jobs,timedstartnext}
+ * @functionpage{AwsIotJobs_StartNextSync,jobs,startnextsync}
  * @functionpage{AwsIotJobs_Describe,jobs,describe}
  * @functionpage{AwsIotJobs_TimedDescribe,jobs,timeddescribe}
  * @functionpage{AwsIotJobs_Update,jobs,update}
@@ -249,7 +249,7 @@ AwsIotJobsError_t AwsIotJobs_GetPendingSync( const AwsIotJobsRequestInfo_t * pRe
  * - #AWS_IOT_JOBS_BAD_RESPONSE
  * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  *
- * @see @ref jobs_function_timedstartnext for a blocking variant of this function.
+ * @see @ref jobs_function_startnextsync for a blocking variant of this function.
  *
  * <b>Example</b>
  * @code{c}
@@ -318,13 +318,13 @@ AwsIotJobsError_t AwsIotJobs_StartNextAsync( const AwsIotJobsRequestInfo_t * pRe
  * - #AWS_IOT_JOBS_TIMEOUT
  * - A Jobs failure reason between #AWS_IOT_JOBS_INVALID_TOPIC and #AWS_IOT_JOBS_TERMINAL_STATE.
  */
-/* @[declare_jobs_timedstartnext] */
-AwsIotJobsError_t AwsIotJobs_TimedStartNext( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                             const AwsIotJobsUpdateInfo_t * pUpdateInfo,
-                                             uint32_t flags,
-                                             uint32_t timeoutMs,
-                                             AwsIotJobsResponse_t * const pJobsResponse );
-/* @[declare_jobs_timedstartnext] */
+/* @[declare_jobs_startnextsync] */
+AwsIotJobsError_t AwsIotJobs_StartNextSync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                            const AwsIotJobsUpdateInfo_t * pUpdateInfo,
+                                            uint32_t flags,
+                                            uint32_t timeoutMs,
+                                            AwsIotJobsResponse_t * const pJobsResponse );
+/* @[declare_jobs_startnextsync] */
 
 /**
  * @brief Get detailed information about a job execution and receive an asynchronous
