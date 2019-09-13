@@ -43,14 +43,14 @@
  * @ingroup jobs_datatypes_handles
  * @brief Opaque handle that references an in-progress Jobs operation.
  *
- * Set as an output parameter of @ref jobs_function_getpending, @ref jobs_function_startnext,
- * @ref jobs_function_describe, and @ref jobs_function_update. These functions send a
+ * Set as an output parameter of @ref jobs_function_getpendingasync, @ref jobs_function_startnextasync,
+ * @ref jobs_function_describeasync, and @ref jobs_function_updateasync. These functions send a
  * message to the Jobs service requesting a Jobs operation; the result of this operation
  * is unknown until the Jobs service sends a response. Therefore, this handle serves as a
  * reference to Jobs operations awaiting a response from the Jobs service.
  *
- * This reference will be valid from the successful return of @ref jobs_function_getpending,
- * @ref jobs_function_startnext, @ref jobs_function_describe, and @ref jobs_function_update.
+ * This reference will be valid from the successful return of @ref jobs_function_getpendingasync,
+ * @ref jobs_function_startnextasync, @ref jobs_function_describeasync, and @ref jobs_function_updateasync.
  * The reference becomes invalid once the [completion callback](@ref AwsIotJobsCallbackInfo_t)
  * is invoked, or @ref jobs_function_wait returns.
  *
@@ -88,10 +88,10 @@ typedef enum AwsIotJobsError
      * Functions that may return this value:
      * - @ref jobs_function_init
      * - @ref jobs_function_wait
-     * - @ref jobs_function_timedgetpending
-     * - @ref jobs_function_timedstartnext
-     * - @ref jobs_function_timeddescribe
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextsync
+     * - @ref jobs_function_describesync
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
      * - @ref jobs_function_removepersistentsubscriptions
@@ -106,10 +106,10 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation queued, awaiting result.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_getpending
-     * - @ref jobs_function_startnext
-     * - @ref jobs_function_describe
-     * - @ref jobs_function_update
+     * - @ref jobs_function_getpendingasync
+     * - @ref jobs_function_startnextasync
+     * - @ref jobs_function_describeasync
+     * - @ref jobs_function_updateasync
      */
     AWS_IOT_JOBS_STATUS_PENDING,
 
@@ -125,10 +125,10 @@ typedef enum AwsIotJobsError
      * @brief At least one parameter is invalid.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_getpending and @ref jobs_function_timedgetpending
-     * - @ref jobs_function_startnext and @ref jobs_function_timedstartnext
-     * - @ref jobs_function_describe and @ref jobs_function_timeddescribe
-     * - @ref jobs_function_update and @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingasync and @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextasync and @ref jobs_function_startnextsync
+     * - @ref jobs_function_describeasync and @ref jobs_function_describesync
+     * - @ref jobs_function_updateasync and @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
@@ -140,10 +140,10 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed because of memory allocation failure.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_getpending and @ref jobs_function_timedgetpending
-     * - @ref jobs_function_startnext and @ref jobs_function_timedstartnext
-     * - @ref jobs_function_describe and @ref jobs_function_timeddescribe
-     * - @ref jobs_function_update and @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingasync and @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextasync and @ref jobs_function_startnextsync
+     * - @ref jobs_function_describeasync and @ref jobs_function_describesync
+     * - @ref jobs_function_updateasync and @ref jobs_function_updatesync
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
      */
@@ -153,10 +153,10 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed because of failure in MQTT library.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_getpending and @ref jobs_function_timedgetpending
-     * - @ref jobs_function_startnext and @ref jobs_function_timedstartnext
-     * - @ref jobs_function_describe and @ref jobs_function_timeddescribe
-     * - @ref jobs_function_update and @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingasync and @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextasync and @ref jobs_function_startnextsync
+     * - @ref jobs_function_describeasync and @ref jobs_function_describesync
+     * - @ref jobs_function_updateasync and @ref jobs_function_updatesync
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
      * - @ref jobs_function_removepersistentsubscriptions
@@ -167,10 +167,10 @@ typedef enum AwsIotJobsError
      * @brief Response received from Jobs service not understood.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
-     * - @ref jobs_function_timedstartnext
-     * - @ref jobs_function_timeddescribe
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextsync
+     * - @ref jobs_function_describesync
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -182,10 +182,10 @@ typedef enum AwsIotJobsError
      * @brief A blocking Jobs operation timed out.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
-     * - @ref jobs_function_timedstartnext
-     * - @ref jobs_function_timeddescribe
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextsync
+     * - @ref jobs_function_describesync
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
@@ -196,10 +196,10 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: A request was sent to an unknown topic.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
-     * - @ref jobs_function_timedstartnext
-     * - @ref jobs_function_timeddescribe
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextsync
+     * - @ref jobs_function_describesync
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -213,10 +213,10 @@ typedef enum AwsIotJobsError
      * Jobs requests must be UTF-8 encoded JSON documents.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
-     * - @ref jobs_function_timedstartnext
-     * - @ref jobs_function_timeddescribe
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextsync
+     * - @ref jobs_function_describesync
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -228,10 +228,10 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: The contents of the request were invalid.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
-     * - @ref jobs_function_timedstartnext
-     * - @ref jobs_function_timeddescribe
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextsync
+     * - @ref jobs_function_describesync
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -244,13 +244,13 @@ typedef enum AwsIotJobsError
      * to an invalid state.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedstartnext
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_startnextsync
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
-     * following a call to @ref jobs_function_startnext or @ref jobs_function_update.
+     * following a call to @ref jobs_function_startnextasync or @ref jobs_function_updateasync.
      */
     AWS_IOT_JOBS_INVALID_STATE,
 
@@ -258,13 +258,13 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: The specified job execution does not exist.
      *
      * * Functions that may return this value:
-     * - @ref jobs_function_timeddescribe
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_describesync
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
-     * following a call to @ref jobs_function_describe or @ref jobs_function_update.
+     * following a call to @ref jobs_function_describeasync or @ref jobs_function_updateasync.
      */
     AWS_IOT_JOBS_NOT_FOUND,
 
@@ -273,12 +273,12 @@ typedef enum AwsIotJobsError
      * not match what was in the request.
      *
      * * Functions that may return this value:
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
-     * following a call to @ref jobs_function_update.
+     * following a call to @ref jobs_function_updateasync.
      */
     AWS_IOT_JOBS_VERSION_MISMATCH,
 
@@ -286,10 +286,10 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: The Jobs service encountered an internal error.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
-     * - @ref jobs_function_timedstartnext
-     * - @ref jobs_function_timeddescribe
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextsync
+     * - @ref jobs_function_describesync
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -301,10 +301,10 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: The request was throttled.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timedgetpending
-     * - @ref jobs_function_timedstartnext
-     * - @ref jobs_function_timeddescribe
-     * - @ref jobs_function_timedupdate
+     * - @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextsync
+     * - @ref jobs_function_describesync
+     * - @ref jobs_function_updatesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
@@ -316,12 +316,12 @@ typedef enum AwsIotJobsError
      * @brief Jobs operation failed: Attempt to describe a Job in a terminal state.
      *
      * Functions that may return this value:
-     * - @ref jobs_function_timeddescribe
+     * - @ref jobs_function_describesync
      * - @ref jobs_function_wait
      *
      * May also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
-     * following a call to @ref jobs_function_describe.
+     * following a call to @ref jobs_function_describeasync.
      */
     AWS_IOT_JOBS_TERMINAL_STATE
 } AwsIotJobsError_t;
@@ -369,7 +369,7 @@ typedef enum AwsIotJobsState
      *
      * Jobs are considered timed out if they remain [IN_PROGRESS]
      * (@ref AWS_IOT_JOB_STATE_IN_PROGRESS) for more than their
-     * `inProgressTimeoutInMinutes` property or a [Job update](@ref jobs_function_update)
+     * `inProgressTimeoutInMinutes` property or a [Job update](@ref jobs_function_updateasync)
      * was not sent within [stepTimeoutInMinutes](@ref AwsIotJobsUpdateInfo_t.stepTimeoutInMinutes).
      */
     AWS_IOT_JOB_STATE_TIMED_OUT,
@@ -394,10 +394,10 @@ typedef enum AwsIotJobsState
  */
 typedef enum AwsIotJobsCallbackType
 {
-    AWS_IOT_JOBS_GET_PENDING_COMPLETE = 0,    /**< Callback invoked because a [Jobs get pending](@ref jobs_function_getpending) completed. */
-    AWS_IOT_JOBS_START_NEXT_COMPLETE = 1,     /**< Callback invoked because a [Jobs start next](@ref jobs_function_startnext) completed. */
-    AWS_IOT_JOBS_DESCRIBE_COMPLETE = 2,       /**< Callback invoked because a [Jobs describe](@ref jobs_function_describe) completed. */
-    AWS_IOT_JOBS_UPDATE_COMPLETE = 3,         /**< Callback invoked because a [Jobs update](@ref jobs_function_update) completed. */
+    AWS_IOT_JOBS_GET_PENDING_COMPLETE = 0,    /**< Callback invoked because a [Jobs get pending](@ref jobs_function_getpendingasync) completed. */
+    AWS_IOT_JOBS_START_NEXT_COMPLETE = 1,     /**< Callback invoked because a [Jobs start next](@ref jobs_function_startnextasync) completed. */
+    AWS_IOT_JOBS_DESCRIBE_COMPLETE = 2,       /**< Callback invoked because a [Jobs describe](@ref jobs_function_describeasync) completed. */
+    AWS_IOT_JOBS_UPDATE_COMPLETE = 3,         /**< Callback invoked because a [Jobs update](@ref jobs_function_updateasync) completed. */
     AWS_IOT_JOBS_NOTIFY_PENDING_CALLBACK = 4, /**< Callback invoked for an incoming message on a [Jobs notify-pending](@ref jobs_function_setnotifypendingcallback) topic. */
     AWS_IOT_JOBS_NOTIFY_NEXT_CALLBACK = 5     /**< Callback invoked for an incoming message on a [Jobs notify-next](@ref jobs_function_setnotifynextcallback) topic. */
 } AwsIotJobsCallbackType_t;
@@ -467,8 +467,8 @@ typedef struct AwsIotJobsCallbackParam
  * @ingroup jobs_datatypes_paramstructs
  * @brief Information on a user-provided Jobs callback function.
  *
- * @paramfor @ref jobs_function_getpending, @ref jobs_function_startnext,
- * @ref jobs_function_describe, @ref jobs_function_update,
+ * @paramfor @ref jobs_function_getpendingasync, @ref jobs_function_startnextasync,
+ * @ref jobs_function_describeasync, @ref jobs_function_updateasync,
  * @ref jobs_function_setnotifypendingcallback, @ref jobs_function_setnotifynextcallback
  *
  * Provides a function to be invoked when a Jobs operation completes or when a
@@ -497,10 +497,10 @@ typedef struct AwsIotJobsCallbackInfo
  * @ingroup jobs_datatypes_paramstructs
  * @brief Common information provided to Jobs requests.
  *
- * @paramfor @ref jobs_function_getpending, @ref jobs_function_timedgetpending,
- * @ref jobs_function_startnext, @ref jobs_function_timedstartnext
- * @ref jobs_function_describe, @ref jobs_function_timeddescribe,
- * @ref jobs_function_update, @ref jobs_function_timedupdate
+ * @paramfor @ref jobs_function_getpendingasync, @ref jobs_function_getpendingsync,
+ * @ref jobs_function_startnextasync, @ref jobs_function_startnextsync
+ * @ref jobs_function_describeasync, @ref jobs_function_describesync,
+ * @ref jobs_function_updateasync, @ref jobs_function_updatesync
  *
  * @initializer{AwsIotJobsRequestInfo_t,AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER}
  */
@@ -535,18 +535,18 @@ typedef struct AwsIotJobsRequestInfo
      * When using #AWS_IOT_JOBS_NEXT_JOB, #AwsIotJobsRequestInfo_t.jobIdLength
      * should be set to #AWS_IOT_JOBS_NEXT_JOB_LENGTH.
      *
-     * This parameter is ignored for calls to @ref jobs_function_getpending,
-     * @ref jobs_function_timedgetpending, @ref jobs_function_startnext,
-     * and @ref jobs_function_timedstartnext.
+     * This parameter is ignored for calls to @ref jobs_function_getpendingasync,
+     * @ref jobs_function_getpendingsync, @ref jobs_function_startnextasync,
+     * and @ref jobs_function_startnextsync.
      */
     const char * pJobId;
 
     /**
      * @brief Length of #AwsIotJobsRequestInfo_t.pJobId.
      *
-     * This parameter is ignored for calls to @ref jobs_function_getpending,
-     * @ref jobs_function_timedgetpending, @ref jobs_function_startnext,
-     * and @ref jobs_function_timedstartnext.
+     * This parameter is ignored for calls to @ref jobs_function_getpendingasync,
+     * @ref jobs_function_getpendingsync, @ref jobs_function_startnextasync,
+     * and @ref jobs_function_startnextsync.
      */
     size_t jobIdLength;
 
@@ -568,8 +568,8 @@ typedef struct AwsIotJobsRequestInfo
  * @ingroup jobs_datatypes_paramstructs
  * @brief Output parameter of blocking Jobs API functions.
  *
- * @paramfor @ref jobs_function_timedgetpending, @ref jobs_function_timedstartnext,
- * @ref jobs_function_timeddescribe, @ref jobs_function_timedupdate,
+ * @paramfor @ref jobs_function_getpendingsync, @ref jobs_function_startnextsync,
+ * @ref jobs_function_describesync, @ref jobs_function_updatesync,
  * @ref jobs_function_wait
  *
  * Provides the response received from the Jobs service. The buffer for the
@@ -585,11 +585,11 @@ typedef struct AwsIotJobsResponse
 
 /**
  * @ingroup jobs_datatypes_paramstructs
- * @brief Information on a Job update for @ref jobs_function_startnext and
- * @ref jobs_function_update. These functions modify a Job's state.
+ * @brief Information on a Job update for @ref jobs_function_startnextasync and
+ * @ref jobs_function_updateasync. These functions modify a Job's state.
  *
- * @paramfor @ref jobs_function_startnext, @ref jobs_function_timedstartnext,
- * @ref jobs_function_update, and @ref jobs_function_timedupdate.
+ * @paramfor @ref jobs_function_startnextasync, @ref jobs_function_startnextsync,
+ * @ref jobs_function_updateasync, and @ref jobs_function_updatesync.
  *
  * @initializer{AwsIotJobsUpdateInfo_t,AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER}
  */
@@ -604,8 +604,8 @@ typedef struct AwsIotJobsUpdateInfo
      * - #AWS_IOT_JOB_STATE_SUCCEEDED
      * - #AWS_IOT_JOB_STATE_REJECTED
      *
-     * This parameter is ignored for calls to @ref jobs_function_startnext and
-     * @ref jobs_function_timedstartnext. These functions always set the state
+     * This parameter is ignored for calls to @ref jobs_function_startnextasync and
+     * @ref jobs_function_startnextsync. These functions always set the state
      * to #AWS_IOT_JOB_STATE_IN_PROGRESS.
      */
     AwsIotJobState_t newStatus;
@@ -622,8 +622,8 @@ typedef struct AwsIotJobsUpdateInfo
      * Jobs service does not overwrite a later update with a previous one. If not
      * needed, it can be set to #AWS_IOT_JOBS_NO_VERSION.
      *
-     * This parameter is ignored for calls to @ref jobs_function_startnext and
-     * @ref jobs_function_timedstartnext.
+     * This parameter is ignored for calls to @ref jobs_function_startnextasync and
+     * @ref jobs_function_startnextsync.
      */
     uint32_t expectedVersion;
 
@@ -638,8 +638,8 @@ typedef struct AwsIotJobsUpdateInfo
      * This value is optional. It may be set to #AWS_IOT_JOBS_NO_EXECUTION_NUMBER
      * if not needed.
      *
-     * This parameter is ignored for calls to @ref jobs_function_startnext and
-     * @ref jobs_function_timedstartnext.
+     * This parameter is ignored for calls to @ref jobs_function_startnextasync and
+     * @ref jobs_function_startnextsync.
      */
     int32_t executionNumber;
 
@@ -661,8 +661,8 @@ typedef struct AwsIotJobsUpdateInfo
      *
      * The default value is `false`.
      *
-     * This parameter is ignored for calls to @ref jobs_function_startnext and
-     * @ref jobs_function_timedstartnext.
+     * This parameter is ignored for calls to @ref jobs_function_startnextasync and
+     * @ref jobs_function_startnextsync.
      */
     bool includeJobExecutionState;
 
@@ -671,8 +671,8 @@ typedef struct AwsIotJobsUpdateInfo
      *
      * The default value is `false`.
      *
-     * This parameter is ignored for calls to @ref jobs_function_startnext and
-     * @ref jobs_function_timedstartnext.
+     * This parameter is ignored for calls to @ref jobs_function_startnextasync and
+     * @ref jobs_function_startnextsync.
      */
     bool includeJobDocument;
 
@@ -733,7 +733,7 @@ typedef struct AwsIotJobsUpdateInfo
 
 /**
  * @brief Set #AwsIotJobsUpdateInfo_t.executionNumber to this value or pass it to
- * @ref jobs_function_describe to omit the execution number in the Jobs request.
+ * @ref jobs_function_describeasync to omit the execution number in the Jobs request.
  *
  * @note The value of this constant may change at any time in future versions, but
  * its name will remain the same.
@@ -802,8 +802,8 @@ typedef struct AwsIotJobsUpdateInfo
  * Jobs library functions.
  *
  * The following flags are valid for the Jobs operation functions:
- * @ref jobs_function_getpending, @ref jobs_function_startnext,
- * @ref jobs_function_describe, @ref jobs_function_update,
+ * @ref jobs_function_getpendingasync, @ref jobs_function_startnextasync,
+ * @ref jobs_function_describeasync, @ref jobs_function_updateasync,
  * and their blocking versions.
  * - #AWS_IOT_JOBS_FLAG_WAITABLE <br>
  *   @copybrief AWS_IOT_JOBS_FLAG_WAITABLE
@@ -847,8 +847,8 @@ typedef struct AwsIotJobsUpdateInfo
 /**
  * @brief Allows the use of @ref jobs_function_wait for blocking until completion.
  *
- * This flag is only valid if passed to the functions @ref jobs_function_getpending,
- * @ref jobs_function_startnext, @ref jobs_function_describe, or @ref jobs_function_update.
+ * This flag is only valid if passed to the functions @ref jobs_function_getpendingasync,
+ * @ref jobs_function_startnextasync, @ref jobs_function_describeasync, or @ref jobs_function_updateasync.
  *
  * An #AwsIotJobsOperation_t <b>MUST</b> be provided if this flag is set.
  * Additionally, an #AwsIotJobsCallbackInfo_t <b>MUST NOT</b> be provided.
@@ -865,8 +865,8 @@ typedef struct AwsIotJobsUpdateInfo
  * @brief Maintain the subscriptions for the Jobs operation topics, even after
  * this function returns.
  *
- * This flag is only valid if passed to the functions @ref jobs_function_getpending,
- * @ref jobs_function_startnext, @ref jobs_function_describe, or @ref jobs_function_update,
+ * This flag is only valid if passed to the functions @ref jobs_function_getpendingasync,
+ * @ref jobs_function_startnextasync, @ref jobs_function_describeasync, or @ref jobs_function_updateasync,
  * and their blocking versions.
  *
  * The Jobs service reports results of Jobs operations by publishing
@@ -896,7 +896,7 @@ typedef struct AwsIotJobsUpdateInfo
  *
  * This flag may be passed to @ref jobs_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref jobs_function_getpending or @ref jobs_function_timedgetpending.
+ * call to @ref jobs_function_getpendingasync or @ref jobs_function_getpendingsync.
  *
  * @warning Do not call @ref jobs_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Jobs get pending operations.
@@ -911,7 +911,7 @@ typedef struct AwsIotJobsUpdateInfo
  *
  * This flag may be passed to @ref jobs_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref jobs_function_startnext or @ref jobs_function_timedstartnext.
+ * call to @ref jobs_function_startnextasync or @ref jobs_function_startnextsync.
  *
  * @warning Do not call @ref jobs_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Jobs start next operations.
@@ -926,7 +926,7 @@ typedef struct AwsIotJobsUpdateInfo
  *
  * This flag may be passed to @ref jobs_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref jobs_function_describe or @ref jobs_function_timeddescribe.
+ * call to @ref jobs_function_describeasync or @ref jobs_function_describesync.
  *
  * @warning Do not call @ref jobs_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Jobs describe operations.
@@ -941,7 +941,7 @@ typedef struct AwsIotJobsUpdateInfo
  *
  * This flag may be passed to @ref jobs_function_removepersistentsubscriptions
  * to remove any subscriptions for a specific Thing Name maintained by a previous
- * call to @ref jobs_function_update or @ref jobs_function_timedupdate.
+ * call to @ref jobs_function_updateasync or @ref jobs_function_updatesync.
  *
  * @warning Do not call @ref jobs_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Jobs update operations.

@@ -115,38 +115,38 @@ static void _jobsMallocFail( _jobsOperationType_t type )
         switch( type )
         {
             case JOBS_GET_PENDING:
-                status = AwsIotJobs_GetPending( &requestInfo,
-                                                AWS_IOT_JOBS_FLAG_WAITABLE,
-                                                NULL,
-                                                &operation );
+                status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                                     AWS_IOT_JOBS_FLAG_WAITABLE,
+                                                     NULL,
+                                                     &operation );
                 break;
 
             case JOBS_START_NEXT:
-                status = AwsIotJobs_StartNext( &requestInfo,
-                                               &updateInfo,
-                                               AWS_IOT_JOBS_FLAG_WAITABLE,
-                                               NULL,
-                                               &operation );
+                status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                                    &updateInfo,
+                                                    AWS_IOT_JOBS_FLAG_WAITABLE,
+                                                    NULL,
+                                                    &operation );
                 break;
 
             case JOBS_DESCRIBE:
-                status = AwsIotJobs_Describe( &requestInfo,
-                                              AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
-                                              false,
-                                              AWS_IOT_JOBS_FLAG_WAITABLE,
-                                              NULL,
-                                              &operation );
+                status = AwsIotJobs_DescribeAsync( &requestInfo,
+                                                   AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                                   false,
+                                                   AWS_IOT_JOBS_FLAG_WAITABLE,
+                                                   NULL,
+                                                   &operation );
                 break;
 
             default:
                 /* The only remaining valid type is update. */
                 TEST_ASSERT_EQUAL( JOBS_UPDATE, type );
 
-                status = AwsIotJobs_Update( &requestInfo,
-                                            &updateInfo,
-                                            AWS_IOT_JOBS_FLAG_WAITABLE,
-                                            NULL,
-                                            &operation );
+                status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                                 &updateInfo,
+                                                 AWS_IOT_JOBS_FLAG_WAITABLE,
+                                                 NULL,
+                                                 &operation );
                 break;
         }
 
@@ -341,100 +341,100 @@ TEST( Jobs_Unit_API, OperationInvalidRequestInfo )
     AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
 
     /* Uninitialized MQTT connection. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    0,
-                                    NULL,
-                                    NULL );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         0,
+                                         NULL,
+                                         NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     requestInfo.mqttConnection = _pMqttConnection;
 
     /* Invalid Thing Name. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    0,
-                                    NULL,
-                                    NULL );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         0,
+                                         NULL,
+                                         NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     requestInfo.pThingName = TEST_THING_NAME;
     requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
 
     /* No reference with waitable operation. */
-    status = AwsIotJobs_StartNext( &requestInfo,
-                                   &updateInfo,
-                                   AWS_IOT_JOBS_FLAG_WAITABLE,
-                                   NULL,
-                                   NULL );
+    status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                        &updateInfo,
+                                        AWS_IOT_JOBS_FLAG_WAITABLE,
+                                        NULL,
+                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Malloc function not set. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    AWS_IOT_JOBS_FLAG_WAITABLE,
-                                    NULL,
-                                    &operation );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         AWS_IOT_JOBS_FLAG_WAITABLE,
+                                         NULL,
+                                         &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     requestInfo.mallocResponse = IotTest_Malloc;
 
     /* Both callback and waitable flag set. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    AWS_IOT_JOBS_FLAG_WAITABLE,
-                                    &callbackInfo,
-                                    &operation );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         AWS_IOT_JOBS_FLAG_WAITABLE,
+                                         &callbackInfo,
+                                         &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Callback function not set. */
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    0,
-                                    &callbackInfo,
-                                    NULL );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         0,
+                                         &callbackInfo,
+                                         NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Client token length not set. */
     requestInfo.pClientToken = "test";
     requestInfo.clientTokenLength = 0;
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    AWS_IOT_JOBS_FLAG_WAITABLE,
-                                    0,
-                                    &operation );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         AWS_IOT_JOBS_FLAG_WAITABLE,
+                                         0,
+                                         &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Client token too long. */
     requestInfo.clientTokenLength = AWS_IOT_CLIENT_TOKEN_MAX_LENGTH + 1;
 
-    status = AwsIotJobs_GetPending( &requestInfo,
-                                    0,
-                                    NULL,
-                                    NULL );
+    status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                         0,
+                                         NULL,
+                                         NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     requestInfo.pClientToken = AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE;
 
     /* Job ID not set. */
-    status = AwsIotJobs_Describe( &requestInfo,
-                                  AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
-                                  false,
-                                  0,
-                                  NULL,
-                                  NULL );
+    status = AwsIotJobs_DescribeAsync( &requestInfo,
+                                       AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                       false,
+                                       0,
+                                       NULL,
+                                       NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Job ID too long. */
     requestInfo.pJobId = "jobid";
     requestInfo.jobIdLength = JOBS_MAX_ID_LENGTH + 1;
 
-    status = AwsIotJobs_Update( &requestInfo,
-                                &updateInfo,
-                                0,
-                                NULL,
-                                NULL );
+    status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                     &updateInfo,
+                                     0,
+                                     NULL,
+                                     NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Using $next with UPDATE is invalid. */
     requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
     requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
 
-    status = AwsIotJobs_Update( &requestInfo,
-                                &updateInfo,
-                                0,
-                                NULL,
-                                NULL );
+    status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                     &updateInfo,
+                                     0,
+                                     NULL,
+                                     NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 }
 
@@ -458,40 +458,40 @@ TEST( Jobs_Unit_API, OperationInvalidUpdateInfo )
 
     /* Negative, invalid step timeout. */
     updateInfo.stepTimeoutInMinutes = -5;
-    status = AwsIotJobs_StartNext( &requestInfo,
-                                   &updateInfo,
-                                   0,
-                                   NULL,
-                                   NULL );
+    status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                        &updateInfo,
+                                        0,
+                                        NULL,
+                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Step timeout too large. */
     updateInfo.stepTimeoutInMinutes = JOBS_MAX_TIMEOUT + 1;
-    status = AwsIotJobs_StartNext( &requestInfo,
-                                   &updateInfo,
-                                   0,
-                                   NULL,
-                                   NULL );
+    status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                        &updateInfo,
+                                        0,
+                                        NULL,
+                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     updateInfo.stepTimeoutInMinutes = AWS_IOT_JOBS_NO_TIMEOUT;
 
     /* Status details length not set. */
     updateInfo.pStatusDetails = "test";
-    status = AwsIotJobs_StartNext( &requestInfo,
-                                   &updateInfo,
-                                   0,
-                                   NULL,
-                                   NULL );
+    status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                        &updateInfo,
+                                        0,
+                                        NULL,
+                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Status details too large. */
     updateInfo.statusDetailsLength = JOBS_MAX_STATUS_DETAILS_LENGTH + 1;
 
-    status = AwsIotJobs_StartNext( &requestInfo,
-                                   &updateInfo,
-                                   0,
-                                   NULL,
-                                   NULL );
+    status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                        &updateInfo,
+                                        0,
+                                        NULL,
+                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     updateInfo.pStatusDetails = AWS_IOT_JOBS_NO_STATUS_DETAILS;
 
@@ -500,11 +500,11 @@ TEST( Jobs_Unit_API, OperationInvalidUpdateInfo )
     requestInfo.pJobId = "jobid";
     requestInfo.jobIdLength = 5;
 
-    status = AwsIotJobs_Update( &requestInfo,
-                                &updateInfo,
-                                0,
-                                NULL,
-                                NULL );
+    status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                     &updateInfo,
+                                     0,
+                                     NULL,
+                                     NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
     updateInfo.newStatus = AWS_IOT_JOB_STATE_IN_PROGRESS;
 
@@ -512,11 +512,11 @@ TEST( Jobs_Unit_API, OperationInvalidUpdateInfo )
     requestInfo.pJobId = AWS_IOT_JOBS_NEXT_JOB;
     requestInfo.jobIdLength = AWS_IOT_JOBS_NEXT_JOB_LENGTH;
 
-    status = AwsIotJobs_Update( &requestInfo,
-                                &updateInfo,
-                                0,
-                                NULL,
-                                NULL );
+    status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                     &updateInfo,
+                                     0,
+                                     NULL,
+                                     NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 }
 
@@ -547,7 +547,7 @@ TEST( Jobs_Unit_API, WaitInvalidParameters )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref jobs_function_getpending when memory
+ * @brief Tests the behavior of @ref jobs_function_getpendingasync when memory
  * allocation fails at various points.
  */
 TEST( Jobs_Unit_API, GetPendingMallocFail )
@@ -558,7 +558,7 @@ TEST( Jobs_Unit_API, GetPendingMallocFail )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref jobs_function_startnext when memory
+ * @brief Tests the behavior of @ref jobs_function_startnextasync when memory
  * allocation fails at various points.
  */
 TEST( Jobs_Unit_API, StartNextMallocFail )
@@ -569,7 +569,7 @@ TEST( Jobs_Unit_API, StartNextMallocFail )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref jobs_function_describe when memory
+ * @brief Tests the behavior of @ref jobs_function_describeasync when memory
  * allocation fails at various points.
  */
 TEST( Jobs_Unit_API, DescribeMallocFail )
@@ -580,7 +580,7 @@ TEST( Jobs_Unit_API, DescribeMallocFail )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref jobs_function_update when memory
+ * @brief Tests the behavior of @ref jobs_function_updateasync when memory
  * allocation fails at various points.
  */
 TEST( Jobs_Unit_API, UpdateMallocFail )
