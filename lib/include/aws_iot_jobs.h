@@ -43,7 +43,7 @@
  * - @functionname{jobs_function_getpendingsync}
  * - @functionname{jobs_function_startnextasync}
  * - @functionname{jobs_function_startnextsync}
- * - @functionname{jobs_function_describe}
+ * - @functionname{jobs_function_describeasync}
  * - @functionname{jobs_function_timeddescribe}
  * - @functionname{jobs_function_update}
  * - @functionname{jobs_function_timedupdate}
@@ -62,7 +62,7 @@
  * @functionpage{AwsIotJobs_GetPendingSync,jobs,getpendingsync}
  * @functionpage{AwsIotJobs_StartNextAsync,jobs,startnextasync}
  * @functionpage{AwsIotJobs_StartNextSync,jobs,startnextsync}
- * @functionpage{AwsIotJobs_Describe,jobs,describe}
+ * @functionpage{AwsIotJobs_DescribeAsync,jobs,describeasync}
  * @functionpage{AwsIotJobs_TimedDescribe,jobs,timeddescribe}
  * @functionpage{AwsIotJobs_Update,jobs,update}
  * @functionpage{AwsIotJobs_TimedUpdate,jobs,timedupdate}
@@ -388,33 +388,33 @@ AwsIotJobsError_t AwsIotJobs_StartNextSync( const AwsIotJobsRequestInfo_t * pReq
  * callbackInfo.function = _jobsCallback;
  *
  * // Queue Jobs DESCRIBE.
- * AwsIotJobsError_t describeResult = AwsIotJobs_Describe( &requestInfo,
- *                                                         AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
- *                                                         false,
- *                                                         0,
- *                                                         &callbackInfo,
- *                                                         &describeOperation );
+ * AwsIotJobsError_t describeResult = AwsIotJobs_DescribeAsync( &requestInfo,
+ *                                                              AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+ *                                                              false,
+ *                                                              0,
+ *                                                              &callbackInfo,
+ *                                                              &describeOperation );
  *
  * // DESCRIBE should have returned AWS_IOT_JOBS_STATUS_PENDING. The function
  * // _jobsCallback will be invoked once the Jobs response is received.
  * @endcode
  */
-/* @[declare_jobs_describe] */
-AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                       int32_t executionNumber,
-                                       bool includeJobDocument,
-                                       uint32_t flags,
-                                       const AwsIotJobsCallbackInfo_t * pCallbackInfo,
-                                       AwsIotJobsOperation_t * const pDescribeOperation );
-/* @[declare_jobs_describe] */
+/* @[declare_jobs_describeasync] */
+AwsIotJobsError_t AwsIotJobs_DescribeAsync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                            int32_t executionNumber,
+                                            bool includeJobDocument,
+                                            uint32_t flags,
+                                            const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                            AwsIotJobsOperation_t * const pDescribeOperation );
+/* @[declare_jobs_describeasync] */
 
 /**
  * @brief Get detailed information about a job execution with a timeout for receiving
  * the response.
  *
  * This function queues a Jobs DESCRIBE, then waits for the result. Internally,
- * this function is a call to @ref jobs_function_describe followed by
- * @ref jobs_function_wait. See @ref jobs_function_describe for more information
+ * this function is a call to @ref jobs_function_describeasync followed by
+ * @ref jobs_function_wait. See @ref jobs_function_describeasync for more information
  * on the Jobs DESCRIBE command.
  *
  * @param[in] pRequestInfo Jobs request parameters.
@@ -563,7 +563,7 @@ AwsIotJobsError_t AwsIotJobs_TimedUpdate( const AwsIotJobsRequestInfo_t * pReque
  * @brief Wait for a Jobs operation to complete.
  *
  * This function blocks to wait for a [GET PENDING](@ref jobs_function_getpendingasync),
- * [START NEXT](@ref jobs_function_startnextasync), [DESCRIBE](@ref jobs_function_describe),
+ * [START NEXT](@ref jobs_function_startnextasync), [DESCRIBE](@ref jobs_function_describeasync),
  * or [UPDATE](@ref jobs_function_update) operation to complete. These operations are
  * by default asynchronous; the function calls queue an operation for processing,
  * and a callback is invoked once the operation is complete.
@@ -819,7 +819,7 @@ AwsIotJobsError_t AwsIotJobs_SetNotifyNextCallback( IotMqttConnection_t mqttConn
  * @brief Remove persistent Jobs operation topic subscriptions.
  *
  * Passing the flag @ref AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS to @ref jobs_function_getpendingasync,
- * @ref jobs_function_startnextasync, @ref jobs_function_describe, @ref jobs_function_update,
+ * @ref jobs_function_startnextasync, @ref jobs_function_describeasync, @ref jobs_function_update,
  * or their blocking versions causes the Jobs operation topic subscriptions to be
  * maintained for future calls to the same function. If a persistent subscription for a
  * Jobs topic are no longer needed, this function may be used to remove it.

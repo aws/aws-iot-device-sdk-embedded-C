@@ -285,7 +285,7 @@ typedef enum _jobsOperationType
     /* Jobs operations. */
     JOBS_GET_PENDING = 0, /**< @ref jobs_function_getpendingasync */
     JOBS_START_NEXT = 1,  /**< @ref jobs_function_startnextasync */
-    JOBS_DESCRIBE = 2,    /**< @ref jobs_function_describe */
+    JOBS_DESCRIBE = 2,    /**< @ref jobs_function_describeasync */
     JOBS_UPDATE = 3,      /**< @ref jobs_function_update */
 
     /* Jobs callbacks. */

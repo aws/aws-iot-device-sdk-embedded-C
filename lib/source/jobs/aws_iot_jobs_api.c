@@ -957,12 +957,12 @@ AwsIotJobsError_t AwsIotJobs_StartNextSync( const AwsIotJobsRequestInfo_t * pReq
 
 /*-----------------------------------------------------------*/
 
-AwsIotJobsError_t AwsIotJobs_Describe( const AwsIotJobsRequestInfo_t * pRequestInfo,
-                                       int32_t executionNumber,
-                                       bool includeJobDocument,
-                                       uint32_t flags,
-                                       const AwsIotJobsCallbackInfo_t * pCallbackInfo,
-                                       AwsIotJobsOperation_t * const pDescribeOperation )
+AwsIotJobsError_t AwsIotJobs_DescribeAsync( const AwsIotJobsRequestInfo_t * pRequestInfo,
+                                            int32_t executionNumber,
+                                            bool includeJobDocument,
+                                            uint32_t flags,
+                                            const AwsIotJobsCallbackInfo_t * pCallbackInfo,
+                                            AwsIotJobsOperation_t * const pDescribeOperation )
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
     _jobsOperation_t * pOperation = NULL;
@@ -1033,12 +1033,12 @@ AwsIotJobsError_t AwsIotJobs_TimedDescribe( const AwsIotJobsRequestInfo_t * pReq
     flags |= AWS_IOT_JOBS_FLAG_WAITABLE;
 
     /* Call the asynchronous Jobs Describe function. */
-    status = AwsIotJobs_Describe( pRequestInfo,
-                                  executionNumber,
-                                  includeJobDocument,
-                                  flags,
-                                  NULL,
-                                  &describeOperation );
+    status = AwsIotJobs_DescribeAsync( pRequestInfo,
+                                       executionNumber,
+                                       includeJobDocument,
+                                       flags,
+                                       NULL,
+                                       &describeOperation );
 
     /* Wait for the Jobs Describe operation to complete. */
     if( status == AWS_IOT_JOBS_STATUS_PENDING )

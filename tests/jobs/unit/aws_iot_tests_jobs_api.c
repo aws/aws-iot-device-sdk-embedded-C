@@ -130,12 +130,12 @@ static void _jobsMallocFail( _jobsOperationType_t type )
                 break;
 
             case JOBS_DESCRIBE:
-                status = AwsIotJobs_Describe( &requestInfo,
-                                              AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
-                                              false,
-                                              AWS_IOT_JOBS_FLAG_WAITABLE,
-                                              NULL,
-                                              &operation );
+                status = AwsIotJobs_DescribeAsync( &requestInfo,
+                                                   AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                                   false,
+                                                   AWS_IOT_JOBS_FLAG_WAITABLE,
+                                                   NULL,
+                                                   &operation );
                 break;
 
             default:
@@ -407,12 +407,12 @@ TEST( Jobs_Unit_API, OperationInvalidRequestInfo )
     requestInfo.pClientToken = AWS_IOT_JOBS_CLIENT_TOKEN_AUTOGENERATE;
 
     /* Job ID not set. */
-    status = AwsIotJobs_Describe( &requestInfo,
-                                  AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
-                                  false,
-                                  0,
-                                  NULL,
-                                  NULL );
+    status = AwsIotJobs_DescribeAsync( &requestInfo,
+                                       AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                       false,
+                                       0,
+                                       NULL,
+                                       NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Job ID too long. */
@@ -569,7 +569,7 @@ TEST( Jobs_Unit_API, StartNextMallocFail )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref jobs_function_describe when memory
+ * @brief Tests the behavior of @ref jobs_function_describeasync when memory
  * allocation fails at various points.
  */
 TEST( Jobs_Unit_API, DescribeMallocFail )

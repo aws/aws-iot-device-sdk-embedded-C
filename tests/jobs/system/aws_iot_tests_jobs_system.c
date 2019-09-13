@@ -329,12 +329,12 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
                 break;
 
             case JOBS_DESCRIBE:
-                status = AwsIotJobs_Describe( &requestInfo,
-                                              AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
-                                              true,
-                                              0,
-                                              &callbackInfo,
-                                              &( callbackParam.operation ) );
+                status = AwsIotJobs_DescribeAsync( &requestInfo,
+                                                   AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                                   true,
+                                                   0,
+                                                   &callbackInfo,
+                                                   &( callbackParam.operation ) );
                 break;
 
             default:
@@ -670,7 +670,7 @@ TEST( Jobs_System, StartNextBlocking )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Describe a Job using @ref jobs_function_describe.
+ * @brief Describe a Job using @ref jobs_function_describeasync.
  */
 TEST( Jobs_System, DescribeAsync )
 {
