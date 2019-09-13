@@ -51,7 +51,7 @@ In addition to the components above, the Shadow library also depends on C standa
 @page shadow_demo Demo
 @brief The Shadow demo demonstrates usage of the Shadow library.
 
-The demo program uses [Shadow updates](@ref shadow_function_update) and [delta callbacks](@ref shadow_function_setdeltacallback) to simulate toggling a remote device's state. It sends a Shadow update with a new <i>desired</i> state and waits for the device to change its <i>reported</i> state in response to the new <i>desired</i> state. In addition, a [Shadow updated callback](@ref shadow_function_setupdatedcallback) is used to print the changing Shadow states.
+The demo program uses [Shadow updates](@ref shadow_function_updateasync) and [delta callbacks](@ref shadow_function_setdeltacallback) to simulate toggling a remote device's state. It sends a Shadow update with a new <i>desired</i> state and waits for the device to change its <i>reported</i> state in response to the new <i>desired</i> state. In addition, a [Shadow updated callback](@ref shadow_function_setupdatedcallback) is used to print the changing Shadow states.
 
 See @subpage shadow_demo_config for configuration settings that change the behavior of the demo.
 
