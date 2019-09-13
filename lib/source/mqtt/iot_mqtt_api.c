@@ -1760,10 +1760,10 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
-                                     const IotMqttPublishInfo_t * pPublishInfo,
-                                     uint32_t flags,
-                                     uint32_t timeoutMs )
+IotMqttError_t IotMqtt_PublishSync( IotMqttConnection_t mqttConnection,
+                                    const IotMqttPublishInfo_t * pPublishInfo,
+                                    uint32_t flags,
+                                    uint32_t timeoutMs )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER,

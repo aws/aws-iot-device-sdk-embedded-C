@@ -404,10 +404,10 @@ static void _reentrantCallback( void * pArgument,
     publishInfo.retryLimit = 3;
     publishInfo.retryMs = 5000;
 
-    mqttStatus = IotMqtt_TimedPublish( pOperation->mqttConnection,
-                                       &publishInfo,
-                                       0,
-                                       IOT_TEST_MQTT_TIMEOUT_MS );
+    mqttStatus = IotMqtt_PublishSync( pOperation->mqttConnection,
+                                      &publishInfo,
+                                      0,
+                                      IOT_TEST_MQTT_TIMEOUT_MS );
 
     if( mqttStatus == IOT_MQTT_SUCCESS )
     {
@@ -539,10 +539,10 @@ static void _subscribePublishWait( IotMqttQos_t qos )
             publishInfo.payloadLength = _samplePayloadLength;
 
             /* Publish the message. */
-            status = IotMqtt_TimedPublish( _mqttConnection,
-                                           &publishInfo,
-                                           0,
-                                           IOT_TEST_MQTT_TIMEOUT_MS );
+            status = IotMqtt_PublishSync( _mqttConnection,
+                                          &publishInfo,
+                                          0,
+                                          IOT_TEST_MQTT_TIMEOUT_MS );
 
             /* Wait for the message to be received. */
             if( IotSemaphore_TimedWait( &waitSem,
@@ -1009,10 +1009,10 @@ TEST( MQTT_System, RestorePreviousSession )
         publishInfo.pPayload = _pSamplePayload;
         publishInfo.payloadLength = _samplePayloadLength;
 
-        status = IotMqtt_TimedPublish( _mqttConnection,
-                                       &publishInfo,
-                                       0,
-                                       IOT_TEST_MQTT_TIMEOUT_MS );
+        status = IotMqtt_PublishSync( _mqttConnection,
+                                      &publishInfo,
+                                      0,
+                                      IOT_TEST_MQTT_TIMEOUT_MS );
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         /* Wait for the message to be received. */
@@ -1268,10 +1268,10 @@ TEST( MQTT_System, IncomingPublishReentrancy )
                 publishInfo.retryLimit = 3;
                 publishInfo.retryMs = 5000;
 
-                status = IotMqtt_TimedPublish( _mqttConnection,
-                                               &publishInfo,
-                                               0,
-                                               IOT_TEST_MQTT_TIMEOUT_MS );
+                status = IotMqtt_PublishSync( _mqttConnection,
+                                              &publishInfo,
+                                              0,
+                                              IOT_TEST_MQTT_TIMEOUT_MS );
                 TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
                 /* Wait for the reentrant callback to complete. */

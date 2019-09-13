@@ -811,10 +811,10 @@ AwsIotJobsError_t _AwsIotJobs_ProcessOperation( const AwsIotJobsRequestInfo_t * 
     IotMutex_Unlock( &( _AwsIotJobsPendingOperationsMutex ) );
 
     /* Publish to the Jobs topic name. */
-    publishStatus = IotMqtt_TimedPublish( pOperation->mqttConnection,
-                                          &publishInfo,
-                                          0,
-                                          _AwsIotJobsMqttTimeoutMs );
+    publishStatus = IotMqtt_PublishSync( pOperation->mqttConnection,
+                                         &publishInfo,
+                                         0,
+                                         _AwsIotJobsMqttTimeoutMs );
 
     if( publishStatus != IOT_MQTT_SUCCESS )
     {

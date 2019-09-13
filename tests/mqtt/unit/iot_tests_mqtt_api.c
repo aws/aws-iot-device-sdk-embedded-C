@@ -1397,7 +1397,7 @@ TEST( MQTT_Unit_API, SingleThreaded )
         TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
         /* Transmit a message with no retry. */
-        status = IotMqtt_TimedPublish( mqttConnection, &publishInfo, 0, DUP_CHECK_TIMEOUT );
+        status = IotMqtt_PublishSync( mqttConnection, &publishInfo, 0, DUP_CHECK_TIMEOUT );
         TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
         /* Remove the subscription. */
@@ -1411,7 +1411,7 @@ TEST( MQTT_Unit_API, SingleThreaded )
         /* Transmit a message with a retry. */
         publishInfo.retryLimit = DUP_CHECK_RETRY_LIMIT;
         publishInfo.retryMs = DUP_CHECK_RETRY_MS;
-        status = IotMqtt_TimedPublish( mqttConnection, &publishInfo, 0, DUP_CHECK_TIMEOUT );
+        status = IotMqtt_PublishSync( mqttConnection, &publishInfo, 0, DUP_CHECK_TIMEOUT );
         TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
         IotTest_MqttMockCleanup();

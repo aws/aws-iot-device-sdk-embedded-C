@@ -47,7 +47,7 @@
  * - @functionname{mqtt_function_unsubscribeasync}
  * - @functionname{mqtt_function_unsubscribesync}
  * - @functionname{mqtt_function_publishasync}
- * - @functionname{mqtt_function_timedpublish}
+ * - @functionname{mqtt_function_publishsync}
  * - @functionname{mqtt_function_wait}
  * - @functionname{mqtt_function_strerror}
  * - @functionname{mqtt_function_operationtype}
@@ -65,7 +65,7 @@
  * @functionpage{IotMqtt_UnsubscribeAsync,mqtt,unsubscribeasync}
  * @functionpage{IotMqtt_UnsubscribeSync,mqtt,unsubscribesync}
  * @functionpage{IotMqtt_PublishAsync,mqtt,publishasync}
- * @functionpage{IotMqtt_TimedPublish,mqtt,timedpublish}
+ * @functionpage{IotMqtt_PublishSync,mqtt,publishsync}
  * @functionpage{IotMqtt_Wait,mqtt,wait}
  * @functionpage{IotMqtt_strerror,mqtt,strerror}
  * @functionpage{IotMqtt_OperationType,mqtt,operationtype}
@@ -589,7 +589,7 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
  * @note The parameters `pCallbackInfo` and `pPublishOperation` should only be used for QoS
  * 1 publishes. For QoS 0, they should both be `NULL`.
  *
- * @see @ref mqtt_function_timedpublish for a blocking variant of this function.
+ * @see @ref mqtt_function_publishsync for a blocking variant of this function.
  *
  * <b>Example</b>
  * @code{c}
@@ -671,12 +671,12 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_RETRY_NO_RESPONSE (if [pPublishInfo->retryMs](@ref IotMqttPublishInfo_t.retryMs)
  * and [pPublishInfo->retryLimit](@ref IotMqttPublishInfo_t.retryLimit) were set).
  */
-/* @[declare_mqtt_timedpublish] */
-IotMqttError_t IotMqtt_TimedPublish( IotMqttConnection_t mqttConnection,
-                                     const IotMqttPublishInfo_t * pPublishInfo,
-                                     uint32_t flags,
-                                     uint32_t timeoutMs );
-/* @[declare_mqtt_timedpublish] */
+/* @[declare_mqtt_publishsync] */
+IotMqttError_t IotMqtt_PublishSync( IotMqttConnection_t mqttConnection,
+                                    const IotMqttPublishInfo_t * pPublishInfo,
+                                    uint32_t flags,
+                                    uint32_t timeoutMs );
+/* @[declare_mqtt_publishsync] */
 
 /**
  * @brief Waits for an operation to complete.

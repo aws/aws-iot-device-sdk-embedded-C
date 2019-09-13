@@ -154,10 +154,10 @@ IotMqttError_t AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
     publishInfo.pPayload = pData;
     publishInfo.payloadLength = dataLength;
 
-    return IotMqtt_TimedPublish( _mqttConnection,
-                                 &publishInfo,
-                                 0,
-                                 _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_PUBLISH_TIMEOUT_SECONDS ) );
+    return IotMqtt_PublishSync( _mqttConnection,
+                                &publishInfo,
+                                0,
+                                _defenderToMilliseconds( AWS_IOT_DEFENDER_MQTT_PUBLISH_TIMEOUT_SECONDS ) );
 }
 
 /*-----------------------------------------------------------*/

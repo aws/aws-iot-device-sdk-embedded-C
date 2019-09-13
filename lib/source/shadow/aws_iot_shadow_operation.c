@@ -858,10 +858,10 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
     IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
 
     /* Publish to the Shadow topic name. */
-    publishStatus = IotMqtt_TimedPublish( pOperation->mqttConnection,
-                                          &publishInfo,
-                                          0,
-                                          _AwsIotShadowMqttTimeoutMs );
+    publishStatus = IotMqtt_PublishSync( pOperation->mqttConnection,
+                                         &publishInfo,
+                                         0,
+                                         _AwsIotShadowMqttTimeoutMs );
 
     /* Check for errors from the MQTT publish. */
     if( publishStatus != IOT_MQTT_SUCCESS )
