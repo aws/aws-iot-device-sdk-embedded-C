@@ -314,27 +314,27 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
         switch( type )
         {
             case JOBS_GET_PENDING:
-                status = AwsIotJobs_GetPending( &requestInfo,
-                                                0,
-                                                &callbackInfo,
-                                                &( callbackParam.operation ) );
+                status = AwsIotJobs_GetPendingAsync( &requestInfo,
+                                                     0,
+                                                     &callbackInfo,
+                                                     &( callbackParam.operation ) );
                 break;
 
             case JOBS_START_NEXT:
-                status = AwsIotJobs_StartNext( &requestInfo,
-                                               &updateInfo,
-                                               0,
-                                               &callbackInfo,
-                                               &( callbackParam.operation ) );
+                status = AwsIotJobs_StartNextAsync( &requestInfo,
+                                                    &updateInfo,
+                                                    0,
+                                                    &callbackInfo,
+                                                    &( callbackParam.operation ) );
                 break;
 
             case JOBS_DESCRIBE:
-                status = AwsIotJobs_Describe( &requestInfo,
-                                              AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
-                                              true,
-                                              0,
-                                              &callbackInfo,
-                                              &( callbackParam.operation ) );
+                status = AwsIotJobs_DescribeAsync( &requestInfo,
+                                                   AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                                   true,
+                                                   0,
+                                                   &callbackInfo,
+                                                   &( callbackParam.operation ) );
                 break;
 
             default:
@@ -345,11 +345,11 @@ static void _jobsAsyncTest( _jobsOperationType_t type,
                 requestInfo.pJobId = _pJobIds[ 0 ];
                 requestInfo.jobIdLength = _pJobIdLengths[ 0 ];
 
-                status = AwsIotJobs_Update( &requestInfo,
-                                            &updateInfo,
-                                            0,
-                                            &callbackInfo,
-                                            &( callbackParam.operation ) );
+                status = AwsIotJobs_UpdateAsync( &requestInfo,
+                                                 &updateInfo,
+                                                 0,
+                                                 &callbackInfo,
+                                                 &( callbackParam.operation ) );
                 break;
         }
 
@@ -391,27 +391,27 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
     switch( type )
     {
         case JOBS_GET_PENDING:
-            status = AwsIotJobs_TimedGetPending( &requestInfo,
-                                                 0,
-                                                 AWS_IOT_TEST_JOBS_TIMEOUT,
-                                                 &jobsResponse );
-            break;
-
-        case JOBS_START_NEXT:
-            status = AwsIotJobs_TimedStartNext( &requestInfo,
-                                                &updateInfo,
+            status = AwsIotJobs_GetPendingSync( &requestInfo,
                                                 0,
                                                 AWS_IOT_TEST_JOBS_TIMEOUT,
                                                 &jobsResponse );
             break;
 
-        case JOBS_DESCRIBE:
-            status = AwsIotJobs_TimedDescribe( &requestInfo,
-                                               AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
-                                               true,
+        case JOBS_START_NEXT:
+            status = AwsIotJobs_StartNextSync( &requestInfo,
+                                               &updateInfo,
                                                0,
                                                AWS_IOT_TEST_JOBS_TIMEOUT,
                                                &jobsResponse );
+            break;
+
+        case JOBS_DESCRIBE:
+            status = AwsIotJobs_DescribeSync( &requestInfo,
+                                              AWS_IOT_JOBS_NO_EXECUTION_NUMBER,
+                                              true,
+                                              0,
+                                              AWS_IOT_TEST_JOBS_TIMEOUT,
+                                              &jobsResponse );
             break;
 
         default:
@@ -421,11 +421,11 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
             requestInfo.pJobId = _pJobIds[ _inProgressJob ];
             requestInfo.jobIdLength = _pJobIdLengths[ _inProgressJob ];
 
-            status = AwsIotJobs_TimedUpdate( &requestInfo,
-                                             &updateInfo,
-                                             0,
-                                             AWS_IOT_TEST_JOBS_TIMEOUT,
-                                             &jobsResponse );
+            status = AwsIotJobs_UpdateSync( &requestInfo,
+                                            &updateInfo,
+                                            0,
+                                            AWS_IOT_TEST_JOBS_TIMEOUT,
+                                            &jobsResponse );
             break;
     }
 
@@ -630,7 +630,7 @@ TEST_GROUP_RUNNER( Jobs_System )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Retrieves a list of Jobs using @ref jobs_function_timedgetpending.
+ * @brief Retrieves a list of Jobs using @ref jobs_function_getpendingasync.
  */
 TEST( Jobs_System, GetPendingAsync )
 {
@@ -640,7 +640,7 @@ TEST( Jobs_System, GetPendingAsync )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Retrieves a list of Jobs using @ref jobs_function_timedgetpending.
+ * @brief Retrieves a list of Jobs using @ref jobs_function_getpendingsync.
  */
 TEST( Jobs_System, GetPendingBlocking )
 {
@@ -650,7 +650,7 @@ TEST( Jobs_System, GetPendingBlocking )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Starts the next Job using @ref jobs_function_startnext.
+ * @brief Starts the next Job using @ref jobs_function_startnextasync.
  */
 TEST( Jobs_System, StartNextAsync )
 {
@@ -660,7 +660,7 @@ TEST( Jobs_System, StartNextAsync )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Starts the next Job using @ref jobs_function_timedstartnext.
+ * @brief Starts the next Job using @ref jobs_function_startnextsync.
  */
 TEST( Jobs_System, StartNextBlocking )
 {
@@ -670,7 +670,7 @@ TEST( Jobs_System, StartNextBlocking )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Describe a Job using @ref jobs_function_describe.
+ * @brief Describe a Job using @ref jobs_function_describeasync.
  */
 TEST( Jobs_System, DescribeAsync )
 {
@@ -680,7 +680,7 @@ TEST( Jobs_System, DescribeAsync )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Describe a Job using @ref jobs_function_timeddescribe.
+ * @brief Describe a Job using @ref jobs_function_describesync.
  */
 TEST( Jobs_System, DescribeBlocking )
 {
@@ -690,7 +690,7 @@ TEST( Jobs_System, DescribeBlocking )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Update a Job status using @ref jobs_function_update.
+ * @brief Update a Job status using @ref jobs_function_updateasync.
  */
 TEST( Jobs_System, UpdateAsync )
 {
@@ -700,7 +700,7 @@ TEST( Jobs_System, UpdateAsync )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Update a Job status using @ref jobs_function_timedupdate.
+ * @brief Update a Job status using @ref jobs_function_updatesync.
  */
 TEST( Jobs_System, UpdateBlocking )
 {
@@ -727,10 +727,10 @@ TEST( Jobs_System, PersistentSubscriptions )
 
     /* Time a Jobs function that sets persistent subscriptions. */
     startTime = IotClock_GetTimeMs();
-    status = AwsIotJobs_TimedGetPending( &requestInfo,
-                                         AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS,
-                                         AWS_IOT_TEST_JOBS_TIMEOUT,
-                                         &response );
+    status = AwsIotJobs_GetPendingSync( &requestInfo,
+                                        AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS,
+                                        AWS_IOT_TEST_JOBS_TIMEOUT,
+                                        &response );
     elapsedTime1 = IotClock_GetTimeMs() - startTime;
 
     /* Check results. */
@@ -742,10 +742,10 @@ TEST( Jobs_System, PersistentSubscriptions )
 
     /* Time a Jobs functions that has persistent subscriptions set. */
     startTime = IotClock_GetTimeMs();
-    status = AwsIotJobs_TimedGetPending( &requestInfo,
-                                         0,
-                                         AWS_IOT_TEST_JOBS_TIMEOUT,
-                                         &response );
+    status = AwsIotJobs_GetPendingSync( &requestInfo,
+                                        0,
+                                        AWS_IOT_TEST_JOBS_TIMEOUT,
+                                        &response );
     elapsedTime2 = IotClock_GetTimeMs() - startTime;
 
     /* Check results */
@@ -812,11 +812,11 @@ TEST( Jobs_System, JobsCallbacks )
 
     updateInfo.newStatus = AWS_IOT_JOB_STATE_SUCCEEDED;
 
-    status = AwsIotJobs_TimedUpdate( &requestInfo,
-                                     &updateInfo,
-                                     0,
-                                     AWS_IOT_TEST_JOBS_TIMEOUT,
-                                     &response );
+    status = AwsIotJobs_UpdateSync( &requestInfo,
+                                    &updateInfo,
+                                    0,
+                                    AWS_IOT_TEST_JOBS_TIMEOUT,
+                                    &response );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
     IotTest_Free( ( void * ) response.pJobsResponse );
 
