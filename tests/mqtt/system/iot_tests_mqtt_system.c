@@ -425,12 +425,12 @@ static void _reentrantCallback( void * pArgument,
         subscription.pTopicFilter = pTopic;
         subscription.topicFilterLength = topicLength;
 
-        mqttStatus = IotMqtt_Unsubscribe( pOperation->mqttConnection,
-                                          &subscription,
-                                          1,
-                                          IOT_MQTT_FLAG_WAITABLE,
-                                          NULL,
-                                          &unsubscribeOperation );
+        mqttStatus = IotMqtt_UnsubscribeAsync( pOperation->mqttConnection,
+                                               &subscription,
+                                               1,
+                                               IOT_MQTT_FLAG_WAITABLE,
+                                               NULL,
+                                               &unsubscribeOperation );
 
         if( mqttStatus == IOT_MQTT_STATUS_PENDING )
         {
@@ -809,12 +809,12 @@ TEST( MQTT_System, SubscribePublishAsync )
 
                 /* Unsubscribe from the test topic filter. */
                 callbackParam.expectedOperation = IOT_MQTT_UNSUBSCRIBE;
-                status = IotMqtt_Unsubscribe( _mqttConnection,
-                                              &subscription,
-                                              1,
-                                              0,
-                                              &callbackInfo,
-                                              &( callbackParam.operation ) );
+                status = IotMqtt_UnsubscribeAsync( _mqttConnection,
+                                                   &subscription,
+                                                   1,
+                                                   0,
+                                                   &callbackInfo,
+                                                   &( callbackParam.operation ) );
 
                 if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
                                             IOT_TEST_MQTT_TIMEOUT_MS ) == false )
