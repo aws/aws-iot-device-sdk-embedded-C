@@ -198,11 +198,11 @@ TEST( Shadow_Unit_API, OperationInvalidParameters )
                                        NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
-    status = AwsIotShadow_Update( _pMqttConnection,
-                                  &documentInfo,
-                                  0,
-                                  0,
-                                  NULL );
+    status = AwsIotShadow_UpdateAsync( _pMqttConnection,
+                                       &documentInfo,
+                                       0,
+                                       0,
+                                       NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Thing Name too long. */
@@ -303,32 +303,32 @@ TEST( Shadow_Unit_API, DocumentInvalidParameters )
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Update with no document. */
-    status = AwsIotShadow_Update( _pMqttConnection,
-                                  &documentInfo,
-                                  0,
-                                  0,
-                                  NULL );
+    status = AwsIotShadow_UpdateAsync( _pMqttConnection,
+                                       &documentInfo,
+                                       0,
+                                       0,
+                                       NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Update with no client token. */
     documentInfo.u.update.pUpdateDocument = "{\"state\":{\"reported\":{null}}}";
     documentInfo.u.update.updateDocumentLength = 29;
-    status = AwsIotShadow_Update( _pMqttConnection,
-                                  &documentInfo,
-                                  0,
-                                  0,
-                                  NULL );
+    status = AwsIotShadow_UpdateAsync( _pMqttConnection,
+                                       &documentInfo,
+                                       0,
+                                       0,
+                                       NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 
     /* Client token too long. */
     documentInfo.u.update.pUpdateDocument = "{\"state\":{\"reported\":{null}}},\"clientToken\": "
                                             "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"";
     documentInfo.u.update.updateDocumentLength = 146;
-    status = AwsIotShadow_Update( _pMqttConnection,
-                                  &documentInfo,
-                                  0,
-                                  0,
-                                  NULL );
+    status = AwsIotShadow_UpdateAsync( _pMqttConnection,
+                                       &documentInfo,
+                                       0,
+                                       0,
+                                       NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_BAD_PARAMETER, status );
 }
 
@@ -481,7 +481,7 @@ TEST( Shadow_Unit_API, GetMallocFail )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref shadow_function_update when memory
+ * @brief Tests the behavior of @ref shadow_function_updateasync when memory
  * allocation fails at various points.
  */
 TEST( Shadow_Unit_API, UpdateMallocFail )
@@ -507,11 +507,11 @@ TEST( Shadow_Unit_API, UpdateMallocFail )
 
         /* Call Shadow UPDATE. Memory allocation will fail at various times
          * during this call. */
-        status = AwsIotShadow_Update( _pMqttConnection,
-                                      &documentInfo,
-                                      AWS_IOT_SHADOW_FLAG_WAITABLE,
-                                      NULL,
-                                      &updateOperation );
+        status = AwsIotShadow_UpdateAsync( _pMqttConnection,
+                                           &documentInfo,
+                                           AWS_IOT_SHADOW_FLAG_WAITABLE,
+                                           NULL,
+                                           &updateOperation );
 
         /* Once the Shadow UPDATE call succeeds, wait for it to complete. */
         if( status == AWS_IOT_SHADOW_STATUS_PENDING )

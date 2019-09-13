@@ -919,11 +919,11 @@ AwsIotShadowError_t AwsIotShadow_GetSync( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
-                                         const AwsIotShadowDocumentInfo_t * pUpdateInfo,
-                                         uint32_t flags,
-                                         const AwsIotShadowCallbackInfo_t * pCallbackInfo,
-                                         AwsIotShadowOperation_t * const pUpdateOperation )
+AwsIotShadowError_t AwsIotShadow_UpdateAsync( IotMqttConnection_t mqttConnection,
+                                              const AwsIotShadowDocumentInfo_t * pUpdateInfo,
+                                              uint32_t flags,
+                                              const AwsIotShadowCallbackInfo_t * pCallbackInfo,
+                                              AwsIotShadowOperation_t * const pUpdateOperation )
 {
     IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
     _shadowOperation_t * pOperation = NULL;
@@ -1028,10 +1028,10 @@ AwsIotShadowError_t AwsIotShadow_Update( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection,
-                                              const AwsIotShadowDocumentInfo_t * pUpdateInfo,
-                                              uint32_t flags,
-                                              uint32_t timeoutMs )
+AwsIotShadowError_t AwsIotShadow_UpdateSync( IotMqttConnection_t mqttConnection,
+                                             const AwsIotShadowDocumentInfo_t * pUpdateInfo,
+                                             uint32_t flags,
+                                             uint32_t timeoutMs )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowOperation_t updateOperation = AWS_IOT_SHADOW_OPERATION_INITIALIZER;
@@ -1040,11 +1040,11 @@ AwsIotShadowError_t AwsIotShadow_TimedUpdate( IotMqttConnection_t mqttConnection
     flags |= AWS_IOT_SHADOW_FLAG_WAITABLE;
 
     /* Call the asynchronous Shadow update function. */
-    status = AwsIotShadow_Update( mqttConnection,
-                                  pUpdateInfo,
-                                  flags,
-                                  NULL,
-                                  &updateOperation );
+    status = AwsIotShadow_UpdateAsync( mqttConnection,
+                                       pUpdateInfo,
+                                       flags,
+                                       NULL,
+                                       &updateOperation );
 
     /* Wait for the Shadow update operation to complete. */
     if( status == AWS_IOT_SHADOW_STATUS_PENDING )

@@ -303,11 +303,11 @@ static void _updateGetDeleteAsync( IotMqttQos_t qos )
         documentInfo.u.update.updateDocumentLength = TEST_SHADOW_DOCUMENT_LENGTH;
 
         /* Create a new Shadow document. */
-        status = AwsIotShadow_Update( _mqttConnection,
-                                      &documentInfo,
-                                      0,
-                                      &callbackInfo,
-                                      &( callbackParam.operation ) );
+        status = AwsIotShadow_UpdateAsync( _mqttConnection,
+                                           &documentInfo,
+                                           0,
+                                           &callbackInfo,
+                                           &( callbackParam.operation ) );
 
         if( IotSemaphore_TimedWait( &( callbackParam.waitSem ),
                                     AWS_IOT_TEST_SHADOW_TIMEOUT ) == false )
@@ -375,10 +375,10 @@ static void _updateGetDeleteBlocking( IotMqttQos_t qos )
     documentInfo.u.update.updateDocumentLength = TEST_SHADOW_DOCUMENT_LENGTH;
 
     /* Create a new Shadow document. */
-    status = AwsIotShadow_TimedUpdate( _mqttConnection,
-                                       &documentInfo,
-                                       0,
-                                       AWS_IOT_TEST_SHADOW_TIMEOUT );
+    status = AwsIotShadow_UpdateSync( _mqttConnection,
+                                      &documentInfo,
+                                      0,
+                                      AWS_IOT_TEST_SHADOW_TIMEOUT );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
     /* Set the members of the Shadow document info for GET. */
@@ -635,10 +635,10 @@ TEST( Shadow_System, DeltaCallback )
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Create a Shadow document with a desired state. */
-        status = AwsIotShadow_TimedUpdate( _mqttConnection,
-                                           &updateDocument,
-                                           AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
-                                           AWS_IOT_TEST_SHADOW_TIMEOUT );
+        status = AwsIotShadow_UpdateSync( _mqttConnection,
+                                          &updateDocument,
+                                          AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
+                                          AWS_IOT_TEST_SHADOW_TIMEOUT );
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Set a different reported state in the Update document. */
@@ -646,10 +646,10 @@ TEST( Shadow_System, DeltaCallback )
         updateDocument.u.update.updateDocumentLength = 67;
 
         /* Create a Shadow document with a reported state. */
-        status = AwsIotShadow_TimedUpdate( _mqttConnection,
-                                           &updateDocument,
-                                           0,
-                                           AWS_IOT_TEST_SHADOW_TIMEOUT );
+        status = AwsIotShadow_UpdateSync( _mqttConnection,
+                                          &updateDocument,
+                                          0,
+                                          AWS_IOT_TEST_SHADOW_TIMEOUT );
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Block on the wait semaphore until the delta callback is invoked. */
@@ -713,10 +713,10 @@ TEST( Shadow_System, UpdatedCallback )
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Create a Shadow document. */
-        status = AwsIotShadow_TimedUpdate( _mqttConnection,
-                                           &updateDocument,
-                                           0,
-                                           AWS_IOT_TEST_SHADOW_TIMEOUT );
+        status = AwsIotShadow_UpdateSync( _mqttConnection,
+                                          &updateDocument,
+                                          0,
+                                          AWS_IOT_TEST_SHADOW_TIMEOUT );
         TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, status );
 
         /* Block on the wait semaphore until the updated callback is invoked. */
