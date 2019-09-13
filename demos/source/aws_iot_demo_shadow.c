@@ -338,11 +338,11 @@ static void _shadowDeltaCallback( void * pCallbackContext,
                  * callback will report if the Shadow was successfully updated. Because the
                  * Shadow is constantly updated in this demo, the "Keep Subscriptions" flag
                  * is passed to this function. */
-                updateStatus = AwsIotShadow_Update( pCallbackParam->mqttConnection,
-                                                    &updateDocument,
-                                                    AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
-                                                    NULL,
-                                                    NULL );
+                updateStatus = AwsIotShadow_UpdateAsync( pCallbackParam->mqttConnection,
+                                                         &updateDocument,
+                                                         AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
+                                                         NULL,
+                                                         NULL );
 
                 if( updateStatus != AWS_IOT_SHADOW_STATUS_PENDING )
                 {
@@ -646,11 +646,11 @@ static void _clearShadowDocument( IotMqttConnection_t mqttConnection,
 
     /* Delete any existing Shadow document so that this demo starts with an empty
      * Shadow. */
-    deleteStatus = AwsIotShadow_TimedDelete( mqttConnection,
-                                             pThingName,
-                                             thingNameLength,
-                                             0,
-                                             TIMEOUT_MS );
+    deleteStatus = AwsIotShadow_DeleteSync( mqttConnection,
+                                            pThingName,
+                                            thingNameLength,
+                                            0,
+                                            TIMEOUT_MS );
 
     /* Check for return values of "SUCCESS" and "NOT FOUND". Both of these values
      * mean that the Shadow document is now empty. */
@@ -741,10 +741,10 @@ static int _sendShadowUpdates( IotSemaphore_t * pDeltaSemaphore,
          * Note that this flag only needs to be passed on the first call, but
          * passing it for subsequent calls is fine.
          */
-        updateStatus = AwsIotShadow_TimedUpdate( mqttConnection,
-                                                 &updateDocument,
-                                                 AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
-                                                 TIMEOUT_MS );
+        updateStatus = AwsIotShadow_UpdateSync( mqttConnection,
+                                                &updateDocument,
+                                                AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS,
+                                                TIMEOUT_MS );
 
         /* Check the status of the Shadow update. */
         if( updateStatus != AWS_IOT_SHADOW_SUCCESS )

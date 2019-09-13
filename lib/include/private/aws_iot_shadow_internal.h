@@ -240,9 +240,9 @@
 typedef enum _shadowOperationType
 {
     /* Shadow operations. */
-    SHADOW_DELETE = 0, /**< @ref shadow_function_delete */
-    SHADOW_GET = 1,    /**< @ref shadow_function_get */
-    SHADOW_UPDATE = 2, /**< @ref shadow_function_update */
+    SHADOW_DELETE = 0, /**< @ref shadow_function_deleteasync */
+    SHADOW_GET = 1,    /**< @ref shadow_function_getasync */
+    SHADOW_UPDATE = 2, /**< @ref shadow_function_updateasync */
 
     /* Shadow callbacks. */
     SET_DELTA_CALLBACK = 3,  /**< @ref shadow_function_setdeltacallback */
