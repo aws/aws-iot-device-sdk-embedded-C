@@ -115,8 +115,17 @@ typedef enum AwsIotShadowError
     /**
      * @brief Initialization failed.
      *
+     * This value is returned by @ref shadow_function_init when initialization fails, or
+     * by other API functions if they are called before @ref shadow_function_init.
+     *
      * Functions that may return this value:
      * - @ref shadow_function_init
+     * - @ref shadow_function_deleteasync and @ref shadow_function_deletesync
+     * - @ref shadow_function_getasync and @ref shadow_function_getsync
+     * - @ref shadow_function_updateasync and @ref shadow_function_updatesync
+     * - @ref shadow_function_wait
+     * - @ref shadow_function_setdeltacallback
+     * - @ref shadow_function_setupdatedcallback
      */
     AWS_IOT_SHADOW_INIT_FAILED,
 

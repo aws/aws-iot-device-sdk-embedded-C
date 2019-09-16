@@ -42,6 +42,9 @@
 /* MQTT include. */
 #include "iot_mqtt.h"
 
+/* Atomics include. */
+#include "iot_atomic.h"
+
 /* Validate Shadow configuration settings. */
 #if AWS_IOT_SHADOW_ENABLE_ASSERTS != 0 && AWS_IOT_SHADOW_ENABLE_ASSERTS != 1
     #error "AWS_IOT_SHADOW_ENABLE_ASSERTS must be 0 or 1."
@@ -51,6 +54,13 @@
 #endif
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief Check if the library is initialized.
+ *
+ * @return `true` if AwsIotShadow_Init was called; `false` otherwise.
+ */
+static bool _checkInit( void );
 
 /**
  * @brief Checks Thing Name and flags parameters passed to Shadow API functions.
@@ -151,6 +161,13 @@ static void _updatedCallbackWrapper( void * pArgument,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Tracks whether @ref shadow_function_init has been called.
+ *
+ * API functions will fail if @ref shadow_function_init was not called.
+ */
+static uint32_t _initCalled = 0;
+
+/**
  * @brief Timeout used for MQTT operations.
  */
 uint32_t _AwsIotShadowMqttTimeoutMs = AWS_IOT_SHADOW_DEFAULT_MQTT_TIMEOUT_MS;
@@ -166,6 +183,22 @@ uint32_t _AwsIotShadowMqttTimeoutMs = AWS_IOT_SHADOW_DEFAULT_MQTT_TIMEOUT_MS;
         "UPDATED"
     };
 #endif
+
+/*-----------------------------------------------------------*/
+
+static bool _checkInit( void )
+{
+    bool status = true;
+
+    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
+    {
+        IotLogError( "IotMqtt_Init was not called." );
+
+        status = false;
+    }
+
+    return status;
+}
 
 /*-----------------------------------------------------------*/
 
@@ -310,6 +343,12 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
     IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_SUCCESS );
     bool subscriptionMutexLocked = false;
     _shadowSubscription_t * pSubscription = NULL;
+
+    /* Check that AwsIotShadow_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
+    }
 
     /* Check parameters. */
     status = _validateThingNameFlags( ( _shadowOperationType_t ) ( type + SHADOW_OPERATION_COUNT ),
@@ -642,28 +681,39 @@ static void _updatedCallbackWrapper( void * pArgument,
 AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeoutMs )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
+    bool listInitStatus = false;
 
-    /* Initialize Shadow lists and mutexes. */
-    bool listInitStatus = AwsIot_InitLists( &_AwsIotShadowPendingOperations,
-                                            &_AwsIotShadowSubscriptions,
-                                            &_AwsIotShadowPendingOperationsMutex,
-                                            &_AwsIotShadowSubscriptionsMutex );
-
-    if( listInitStatus == false )
+    if( _checkInit() == false )
     {
-        IotLogInfo( "Failed to create Shadow lists." );
+        /* Initialize Shadow lists and mutexes. */
+        listInitStatus = AwsIot_InitLists( &_AwsIotShadowPendingOperations,
+                                           &_AwsIotShadowSubscriptions,
+                                           &_AwsIotShadowPendingOperationsMutex,
+                                           &_AwsIotShadowSubscriptionsMutex );
 
-        status = AWS_IOT_SHADOW_INIT_FAILED;
+        if( listInitStatus == false )
+        {
+            IotLogInfo( "Failed to create Shadow lists." );
+
+            status = AWS_IOT_SHADOW_INIT_FAILED;
+        }
+        else
+        {
+            /* Save the MQTT timeout option. */
+            if( mqttTimeoutMs != 0 )
+            {
+                _AwsIotShadowMqttTimeoutMs = mqttTimeoutMs;
+            }
+
+            /* Set the flag that specifies initialization is complete. */
+            ( void ) Atomic_CompareAndSwap_u32( &( _initCalled ), 1, 0 );
+
+            IotLogInfo( "Shadow library successfully initialized." );
+        }
     }
     else
     {
-        /* Save the MQTT timeout option. */
-        if( mqttTimeoutMs != 0 )
-        {
-            _AwsIotShadowMqttTimeoutMs = mqttTimeoutMs;
-        }
-
-        IotLogInfo( "Shadow library successfully initialized." );
+        IotLogWarn( "AwsIotShadow_Init called with library already initialized." );
     }
 
     return status;
@@ -673,28 +723,37 @@ AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeoutMs )
 
 void AwsIotShadow_Cleanup( void )
 {
-    /* Remove and free all items in the Shadow pending operation list. */
-    IotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
-    IotListDouble_RemoveAll( &( _AwsIotShadowPendingOperations ),
-                             _AwsIotShadow_DestroyOperation,
-                             offsetof( _shadowOperation_t, link ) );
-    IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
+    uint32_t initCleared = Atomic_CompareAndSwap_u32( &( _initCalled ), 0, 1 );
 
-    /* Remove and free all items in the Shadow subscription list. */
-    IotMutex_Lock( &( _AwsIotShadowSubscriptionsMutex ) );
-    IotListDouble_RemoveAll( &( _AwsIotShadowSubscriptions ),
-                             _AwsIotShadow_DestroySubscription,
-                             offsetof( _shadowSubscription_t, link ) );
-    IotMutex_Unlock( &( _AwsIotShadowSubscriptionsMutex ) );
+    if( initCleared == 1 )
+    {
+        /* Remove and free all items in the Shadow pending operation list. */
+        IotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
+        IotListDouble_RemoveAll( &( _AwsIotShadowPendingOperations ),
+                                 _AwsIotShadow_DestroyOperation,
+                                 offsetof( _shadowOperation_t, link ) );
+        IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
 
-    /* Destroy Shadow library mutexes. */
-    IotMutex_Destroy( &( _AwsIotShadowPendingOperationsMutex ) );
-    IotMutex_Destroy( &( _AwsIotShadowSubscriptionsMutex ) );
+        /* Remove and free all items in the Shadow subscription list. */
+        IotMutex_Lock( &( _AwsIotShadowSubscriptionsMutex ) );
+        IotListDouble_RemoveAll( &( _AwsIotShadowSubscriptions ),
+                                 _AwsIotShadow_DestroySubscription,
+                                 offsetof( _shadowSubscription_t, link ) );
+        IotMutex_Unlock( &( _AwsIotShadowSubscriptionsMutex ) );
 
-    /* Restore the default MQTT timeout. */
-    _AwsIotShadowMqttTimeoutMs = AWS_IOT_SHADOW_DEFAULT_MQTT_TIMEOUT_MS;
+        /* Destroy Shadow library mutexes. */
+        IotMutex_Destroy( &( _AwsIotShadowPendingOperationsMutex ) );
+        IotMutex_Destroy( &( _AwsIotShadowSubscriptionsMutex ) );
 
-    IotLogInfo( "Shadow library cleanup done." );
+        /* Restore the default MQTT timeout. */
+        _AwsIotShadowMqttTimeoutMs = AWS_IOT_SHADOW_DEFAULT_MQTT_TIMEOUT_MS;
+
+        IotLogInfo( "Shadow library cleanup done." );
+    }
+    else
+    {
+        IotLogWarn( "AwsIotShadow_Init was not called before AwsIotShadow_Cleanup." );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -708,6 +767,12 @@ AwsIotShadowError_t AwsIotShadow_DeleteAsync( IotMqttConnection_t mqttConnection
 {
     IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
     _shadowOperation_t * pOperation = NULL;
+
+    /* Check that AwsIotShadow_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
+    }
 
     /* Validate the Thing Name and flags for Shadow DELETE. */
     status = _validateThingNameFlags( SHADOW_DELETE,
@@ -809,6 +874,12 @@ AwsIotShadowError_t AwsIotShadow_GetAsync( IotMqttConnection_t mqttConnection,
 {
     IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
     _shadowOperation_t * pOperation = NULL;
+
+    /* Check that AwsIotShadow_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
+    }
 
     /* Validate the Thing Name and flags for Shadow GET. */
     status = _validateThingNameFlags( SHADOW_GET,
@@ -929,6 +1000,12 @@ AwsIotShadowError_t AwsIotShadow_UpdateAsync( IotMqttConnection_t mqttConnection
     _shadowOperation_t * pOperation = NULL;
     const char * pClientToken = NULL;
     size_t clientTokenLength = 0;
+
+    /* Check that AwsIotShadow_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
+    }
 
     /* Validate the Thing Name and flags for Shadow UPDATE. */
     status = _validateThingNameFlags( SHADOW_UPDATE,
@@ -1066,6 +1143,12 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
                                        size_t * const pShadowDocumentLength )
 {
     IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
+
+    /* Check that AwsIotShadow_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
+    }
 
     /* Check that reference is set. */
     if( operation == NULL )

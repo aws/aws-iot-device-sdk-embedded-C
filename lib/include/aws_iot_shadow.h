@@ -132,6 +132,7 @@ void AwsIotShadow_Cleanup( void );
  * @return This function will return #AWS_IOT_SHADOW_STATUS_PENDING upon successfully
  * queuing a Shadow delete.
  * @return If this function fails before queuing a Shadow delete, it will return one of:
+ * - #AWS_IOT_SHADOW_INIT_FAILED
  * - #AWS_IOT_SHADOW_BAD_PARAMETER
  * - #AWS_IOT_SHADOW_NO_MEMORY
  * @return Upon successful completion of the Shadow delete (either through an #AwsIotShadowCallbackInfo_t
@@ -196,6 +197,7 @@ AwsIotShadowError_t AwsIotShadow_DeleteAsync( IotMqttConnection_t mqttConnection
  *
  * @return One of the following:
  * - #AWS_IOT_SHADOW_SUCCESS
+ * - #AWS_IOT_SHADOW_INIT_FAILED
  * - #AWS_IOT_SHADOW_BAD_PARAMETER
  * - #AWS_IOT_SHADOW_NO_MEMORY
  * - #AWS_IOT_SHADOW_MQTT_ERROR
@@ -249,6 +251,7 @@ AwsIotShadowError_t AwsIotShadow_DeleteSync( IotMqttConnection_t mqttConnection,
  * @return This function will return #AWS_IOT_SHADOW_STATUS_PENDING upon successfully
  * queuing a Shadow get.
  * @return If this function fails before queuing a Shadow get, it will return one of:
+ * - #AWS_IOT_SHADOW_INIT_FAILED
  * - #AWS_IOT_SHADOW_BAD_PARAMETER
  * - #AWS_IOT_SHADOW_NO_MEMORY
  * @return Upon successful completion of the Shadow get (either through an #AwsIotShadowCallbackInfo_t
@@ -323,6 +326,7 @@ AwsIotShadowError_t AwsIotShadow_GetAsync( IotMqttConnection_t mqttConnection,
  *
  * @return One of the following:
  * - #AWS_IOT_SHADOW_SUCCESS
+ * - #AWS_IOT_SHADOW_INIT_FAILED
  * - #AWS_IOT_SHADOW_BAD_PARAMETER
  * - #AWS_IOT_SHADOW_NO_MEMORY
  * - #AWS_IOT_SHADOW_MQTT_ERROR
@@ -383,6 +387,7 @@ AwsIotShadowError_t AwsIotShadow_GetSync( IotMqttConnection_t mqttConnection,
  * @return This function will return #AWS_IOT_SHADOW_STATUS_PENDING upon successfully
  * queuing a Shadow update.
  * @return If this function fails before queuing a Shadow update, it will return one of:
+ * - #AWS_IOT_SHADOW_INIT_FAILED
  * - #AWS_IOT_SHADOW_BAD_PARAMETER
  * - #AWS_IOT_SHADOW_NO_MEMORY
  * @return Upon successful completion of the Shadow update (either through an #AwsIotShadowCallbackInfo_t
@@ -451,6 +456,7 @@ AwsIotShadowError_t AwsIotShadow_UpdateAsync( IotMqttConnection_t mqttConnection
  *
  * @return One of the following:
  * - #AWS_IOT_SHADOW_SUCCESS
+ * - #AWS_IOT_SHADOW_INIT_FAILED
  * - #AWS_IOT_SHADOW_BAD_PARAMETER
  * - #AWS_IOT_SHADOW_NO_MEMORY
  * - #AWS_IOT_SHADOW_MQTT_ERROR
@@ -500,6 +506,7 @@ AwsIotShadowError_t AwsIotShadow_UpdateSync( IotMqttConnection_t mqttConnection,
  *
  * @return One of the following:
  * - #AWS_IOT_SHADOW_SUCCESS
+ * - #AWS_IOT_SHADOW_INIT_FAILED
  * - #AWS_IOT_SHADOW_BAD_PARAMETER
  * - #AWS_IOT_SHADOW_BAD_RESPONSE
  * - #AWS_IOT_SHADOW_TIMEOUT
@@ -629,6 +636,7 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
  *
  * @return One of the following:
  * - #AWS_IOT_SHADOW_SUCCESS
+ * - #AWS_IOT_SHADOW_INIT_FAILED
  * - #AWS_IOT_SHADOW_BAD_PARAMETER
  * - #AWS_IOT_SHADOW_NO_MEMORY
  * - #AWS_IOT_SHADOW_MQTT_ERROR
@@ -742,6 +750,7 @@ AwsIotShadowError_t AwsIotShadow_SetDeltaCallback( IotMqttConnection_t mqttConne
  *
  * @return One of the following:
  * - #AWS_IOT_SHADOW_SUCCESS
+ * - #AWS_IOT_SHADOW_INIT_FAILED
  * - #AWS_IOT_SHADOW_BAD_PARAMETER
  * - #AWS_IOT_SHADOW_NO_MEMORY
  * - #AWS_IOT_SHADOW_MQTT_ERROR

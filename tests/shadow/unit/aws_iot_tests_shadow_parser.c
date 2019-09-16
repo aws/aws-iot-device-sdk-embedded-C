@@ -41,6 +41,9 @@
 /* Test framework includes. */
 #include "unity_fixture.h"
 
+/* SDK initialization include. */
+#include "iot_init.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -150,6 +153,9 @@ TEST_GROUP( Shadow_Unit_Parser );
  */
 TEST_SETUP( Shadow_Unit_Parser )
 {
+    /* Initialize SDK. */
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
+
     /* Initialize the Shadow library. */
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, AwsIotShadow_Init( 0 ) );
 }
@@ -163,6 +169,9 @@ TEST_TEAR_DOWN( Shadow_Unit_Parser )
 {
     /* Clean up the Shadow library. */
     AwsIotShadow_Cleanup();
+
+    /* Clean up SDK. */
+    IotSdk_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
