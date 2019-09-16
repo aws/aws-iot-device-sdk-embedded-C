@@ -170,6 +170,10 @@ static bool _checkInit( void )
 
         status = false;
     }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
     return status;
 }
@@ -589,6 +593,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     {
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
     }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
     /* Check that all elements in the subscription list are valid. */
     if( _IotMqtt_ValidateSubscriptionList( operation,
@@ -987,6 +995,10 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     {
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
     }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
     /* Network info must not be NULL. */
     if( pNetworkInfo == NULL )
@@ -1326,6 +1338,10 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
     {
         IOT_GOTO_CLEANUP();
     }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
     /* Only send a DISCONNECT packet if the connection is active and the "cleanup only"
      * flag is not set. */
@@ -1597,6 +1613,10 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     if( _checkInit() == false )
     {
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
     }
 
     /* Check that the PUBLISH information is valid. */
@@ -1905,6 +1925,10 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
     if( _checkInit() == false )
     {
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
     }
 
     /* Validate the given operation reference. */
