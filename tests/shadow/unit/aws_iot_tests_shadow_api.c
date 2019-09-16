@@ -133,6 +133,7 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
 TEST_GROUP_RUNNER( Shadow_Unit_API )
 {
     RUN_TEST_CASE( Shadow_Unit_API, Init );
+    RUN_TEST_CASE( Shadow_Unit_API, StringCoverage );
     RUN_TEST_CASE( Shadow_Unit_API, OperationInvalidParameters );
     RUN_TEST_CASE( Shadow_Unit_API, DocumentInvalidParameters );
     RUN_TEST_CASE( Shadow_Unit_API, WaitInvalidParameters );
@@ -166,6 +167,51 @@ TEST( Shadow_Unit_API, Init )
 
     /* Initialize the Shadow library for test clean up. */
     AwsIotShadow_Init( 0 );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Provides code coverage of the Shadow enum-to-string function,
+ * @ref shadow_function_strerror.
+ */
+TEST( Shadow_Unit_API, StringCoverage )
+{
+    int32_t i = 0;
+    const char * pMessage = NULL;
+
+    const char * pInvalidStatus = "INVALID STATUS";
+    size_t invalidStatusLength = strlen( pInvalidStatus );
+
+    /* For each Shadow Error, check the returned string. */
+    while( true )
+    {
+        pMessage = AwsIotShadow_strerror( ( AwsIotShadowError_t ) i );
+        TEST_ASSERT_NOT_NULL( pMessage );
+
+        if( strncmp( pInvalidStatus, pMessage, invalidStatusLength ) == 0 )
+        {
+            break;
+        }
+
+        i++;
+    }
+
+    /* For each rejection reason (from the Shadow service) check the returned string. */
+    const AwsIotShadowError_t rejectionReasons[] =
+    {
+        AWS_IOT_SHADOW_BAD_REQUEST, AWS_IOT_SHADOW_UNAUTHORIZED,      AWS_IOT_SHADOW_FORBIDDEN,
+        AWS_IOT_SHADOW_NOT_FOUND,   AWS_IOT_SHADOW_CONFLICT,          AWS_IOT_SHADOW_TOO_LARGE,
+        AWS_IOT_SHADOW_UNSUPPORTED, AWS_IOT_SHADOW_TOO_MANY_REQUESTS, AWS_IOT_SHADOW_SERVER_ERROR
+    };
+
+    for( i = 0; i < ( sizeof( rejectionReasons ) / sizeof( rejectionReasons[ 0 ] ) ); i++ )
+    {
+        pMessage = AwsIotShadow_strerror( rejectionReasons[ i ] );
+        TEST_ASSERT_NOT_NULL( pMessage );
+
+        TEST_ASSERT_NOT_EQUAL( 0, strncmp( pInvalidStatus, pMessage, invalidStatusLength ) );
+    }
 }
 
 /*-----------------------------------------------------------*/
