@@ -204,7 +204,7 @@ TEST( Shadow_Unit_API, StringCoverage )
 
     for( i = 0; i < ( sizeof( rejectionReasons ) / sizeof( rejectionReasons[ 0 ] ) ); i++ )
     {
-        pMessage = AwsIotShadow_strerror( ( AwsIotShadowError_t ) i );
+        pMessage = AwsIotShadow_strerror( rejectionReasons[ i ] );
         TEST_ASSERT_NOT_NULL( pMessage );
     }
 }
