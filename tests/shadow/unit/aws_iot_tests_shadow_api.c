@@ -180,13 +180,16 @@ TEST( Shadow_Unit_API, StringCoverage )
     int32_t i = 0;
     const char * pMessage = NULL;
 
+    const char * pInvalidStatus = "INVALID STATUS";
+    size_t invalidStatusLength = strlen( pInvalidStatus );
+
     /* For each Shadow Error, check the returned string. */
     while( true )
     {
         pMessage = AwsIotShadow_strerror( ( AwsIotShadowError_t ) i );
         TEST_ASSERT_NOT_NULL( pMessage );
 
-        if( strncmp( "INVALID STATUS", pMessage, 14 ) == 0 )
+        if( strncmp( pInvalidStatus, pMessage, invalidStatusLength ) == 0 )
         {
             break;
         }
@@ -207,7 +210,7 @@ TEST( Shadow_Unit_API, StringCoverage )
         pMessage = AwsIotShadow_strerror( rejectionReasons[ i ] );
         TEST_ASSERT_NOT_NULL( pMessage );
 
-        TEST_ASSERT_NOT_EQUAL( 0, strncmp( "INVALID STATUS", pMessage, 14 ) );
+        TEST_ASSERT_NOT_EQUAL( 0, strncmp( pInvalidStatus, pMessage, invalidStatusLength ) );
     }
 }
 

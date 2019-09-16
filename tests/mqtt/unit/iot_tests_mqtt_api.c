@@ -644,12 +644,15 @@ TEST( MQTT_Unit_API, StringCoverage )
     const char * pMessage = NULL;
 
     /* For each MQTT Error, check the returned string. */
+    const char * pExitString = "INVALID STATUS";
+    size_t exitStringLength = strlen( pExitString );
+
     while( true )
     {
         pMessage = IotMqtt_strerror( ( IotMqttError_t ) i );
         TEST_ASSERT_NOT_NULL( pMessage );
 
-        if( strncmp( "INVALID STATUS", pMessage, 14 ) == 0 )
+        if( strncmp( pExitString, pMessage, exitStringLength ) == 0 )
         {
             break;
         }
@@ -659,13 +662,15 @@ TEST( MQTT_Unit_API, StringCoverage )
 
     /* For each MQTT Operation Type, check the returned string. */
     i = 0;
+    pExitString = "INVALID OPERATION";
+    exitStringLength = strlen( pExitString );
 
     while( true )
     {
         pMessage = IotMqtt_OperationType( ( IotMqttError_t ) i );
         TEST_ASSERT_NOT_NULL( pMessage );
 
-        if( strncmp( "INVALID OPERATION", pMessage, 17 ) == 0 )
+        if( strncmp( pExitString, pMessage, exitStringLength ) == 0 )
         {
             break;
         }
