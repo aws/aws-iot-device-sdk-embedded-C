@@ -668,7 +668,7 @@ TEST( MQTT_Unit_API, StringCoverage )
 
     while( true )
     {
-        pMessage = IotMqtt_OperationType( ( IotMqttError_t ) i );
+        pMessage = IotMqtt_OperationType( ( IotMqttOperationType_t ) i );
         TEST_ASSERT_NOT_NULL( pMessage );
 
         if( strncmp( pExitString, pMessage, exitStringLength ) == 0 )
