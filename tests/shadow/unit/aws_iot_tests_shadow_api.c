@@ -174,24 +174,24 @@ TEST( Shadow_Unit_API, Init )
 
     /* Calling API functions without calling AwsIotShadow_Init should fail. */
     status = AwsIotShadow_DeleteAsync( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, NULL, NULL );
-    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_INIT_FAILED, status );
+    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NOT_INITIALIZED, status );
 
     documentInfo.pThingName = TEST_THING_NAME;
     documentInfo.thingNameLength = TEST_THING_NAME_LENGTH;
     status = AwsIotShadow_GetAsync( _pMqttConnection, &documentInfo, 0, NULL, NULL );
-    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_INIT_FAILED, status );
+    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NOT_INITIALIZED, status );
 
     status = AwsIotShadow_UpdateAsync( _pMqttConnection, &documentInfo, 0, NULL, NULL );
-    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_INIT_FAILED, status );
+    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NOT_INITIALIZED, status );
 
     status = AwsIotShadow_Wait( operation, 500, NULL, NULL );
-    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_INIT_FAILED, status );
+    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NOT_INITIALIZED, status );
 
     status = AwsIotShadow_SetDeltaCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, NULL );
-    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_INIT_FAILED, status );
+    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NOT_INITIALIZED, status );
 
     status = AwsIotShadow_SetUpdatedCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, NULL );
-    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_INIT_FAILED, status );
+    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NOT_INITIALIZED, status );
 
     /* Initialize the Shadow library for test clean up. Calling init twice should not crash. */
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, AwsIotShadow_Init( 0 ) );

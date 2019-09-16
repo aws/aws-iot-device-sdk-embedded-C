@@ -347,7 +347,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
     /* Check that AwsIotShadow_Init was called. */
     if( _checkInit() == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NOT_INITIALIZED );
     }
 
     /* Check parameters. */
@@ -771,7 +771,7 @@ AwsIotShadowError_t AwsIotShadow_DeleteAsync( IotMqttConnection_t mqttConnection
     /* Check that AwsIotShadow_Init was called. */
     if( _checkInit() == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NOT_INITIALIZED );
     }
 
     /* Validate the Thing Name and flags for Shadow DELETE. */
@@ -878,7 +878,7 @@ AwsIotShadowError_t AwsIotShadow_GetAsync( IotMqttConnection_t mqttConnection,
     /* Check that AwsIotShadow_Init was called. */
     if( _checkInit() == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NOT_INITIALIZED );
     }
 
     /* Validate the Thing Name and flags for Shadow GET. */
@@ -1004,7 +1004,7 @@ AwsIotShadowError_t AwsIotShadow_UpdateAsync( IotMqttConnection_t mqttConnection
     /* Check that AwsIotShadow_Init was called. */
     if( _checkInit() == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NOT_INITIALIZED );
     }
 
     /* Validate the Thing Name and flags for Shadow UPDATE. */
@@ -1147,7 +1147,7 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
     /* Check that AwsIotShadow_Init was called. */
     if( _checkInit() == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_INIT_FAILED );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NOT_INITIALIZED );
     }
 
     /* Check that reference is set. */
@@ -1289,6 +1289,10 @@ const char * AwsIotShadow_strerror( AwsIotShadowError_t status )
 
         case AWS_IOT_SHADOW_TIMEOUT:
             pMessage = "TIMEOUT";
+            break;
+
+        case AWS_IOT_SHADOW_NOT_INITIALIZED:
+            pMessage = "NOT INITIALIZED";
             break;
 
         case AWS_IOT_SHADOW_BAD_REQUEST:
