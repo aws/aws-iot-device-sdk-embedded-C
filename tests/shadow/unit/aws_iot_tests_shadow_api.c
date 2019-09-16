@@ -133,6 +133,7 @@ TEST_TEAR_DOWN( Shadow_Unit_API )
 TEST_GROUP_RUNNER( Shadow_Unit_API )
 {
     RUN_TEST_CASE( Shadow_Unit_API, Init );
+    RUN_TEST_CASE( Shadow_Unit_API, StringCoverage );
     RUN_TEST_CASE( Shadow_Unit_API, OperationInvalidParameters );
     RUN_TEST_CASE( Shadow_Unit_API, DocumentInvalidParameters );
     RUN_TEST_CASE( Shadow_Unit_API, WaitInvalidParameters );
@@ -166,6 +167,32 @@ TEST( Shadow_Unit_API, Init )
 
     /* Initialize the Shadow library for test clean up. */
     AwsIotShadow_Init( 0 );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Provides code coverage of the Shadow enum-to-string function,
+ * @ref shadow_function_strerror.
+ */
+TEST( Shadow_Unit_API, StringCoverage )
+{
+    int32_t i = 0;
+    const char * pMessage = NULL;
+
+    /* For each Shadow Error, check the returned string. */
+    while( true )
+    {
+        pMessage = AwsIotShadow_strerror( ( AwsIotShadowError_t ) i );
+        TEST_ASSERT_NOT_NULL( pMessage );
+
+        if( strncmp( "INVALID STATUS", pMessage, 14 ) == 0 )
+        {
+            break;
+        }
+
+        i++;
+    }
 }
 
 /*-----------------------------------------------------------*/
