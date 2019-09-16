@@ -67,3 +67,21 @@ source_group( include FILES ${DEMO_COMMON_HEADERS} )
 source_group( "" FILES ${DEMO_COMMON_SOURCES}
               ${PROJECT_SOURCE_DIR}/demos/source/aws_iot_demo_shadow.c
               ${CONFIG_HEADER} )
+
+# Defender demo source files.
+add_executable( aws_iot_demo_defender
+                ${PROJECT_SOURCE_DIR}/demos/source/aws_iot_demo_defender.c
+                ${DEMO_COMMON_SOURCES}
+                ${DEMO_COMMON_HEADERS}
+                ${CONFIG_HEADER} )
+
+target_compile_definitions( aws_iot_demo_defender
+                            PRIVATE RunDemo=RunDefenderDemo )
+
+target_link_libraries( aws_iot_demo_defender PRIVATE awsiotdefender )
+
+set_property( TARGET aws_iot_demo_defender PROPERTY FOLDER "demos" )
+source_group( include FILES ${DEMO_COMMON_HEADERS} )
+source_group( "" FILES ${DEMO_COMMON_SOURCES}
+              ${PROJECT_SOURCE_DIR}/demos/source/aws_iot_demo_defender.c
+              ${CONFIG_HEADER} )
