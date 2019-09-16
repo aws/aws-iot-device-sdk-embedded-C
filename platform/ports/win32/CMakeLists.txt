@@ -19,5 +19,8 @@ target_sources( iotplatform INTERFACE
 # This platform layer uses mbed TLS.
 target_link_libraries( iotplatform INTERFACE mbedtls )
 
+# Link the Winsock2 library.
+target_link_libraries( iotplatform INTERFACE ws2_32 )
+
 # Set platform sources in the parent scope for directory organization.
 set( PLATFORM_SOURCES ${PLATFORM_SOURCES} PARENT_SCOPE )
