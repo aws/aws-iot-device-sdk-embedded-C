@@ -54,7 +54,12 @@ if( NOT DEFINED IOT_PLATFORM_NAME )
         set( IOT_PLATFORM_NAME "win32" CACHE STRING "Port to use for building the SDK." )
 
         # Export all symbols when building Windows DLLs.
-        set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE )
+        if( ${BUILD_SHARED_LIBS} )
+            set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS
+                 TRUE CACHE BOOL
+                 "Export all symbols for Windows DLLs. This option must by enabled."
+                 FORCE )
+        endif()
     endif()
 endif()
 
