@@ -193,6 +193,20 @@ TEST( Shadow_Unit_API, StringCoverage )
 
         i++;
     }
+
+    /* For each rejection reason (from the Shadow service) check the returned string. */
+    const AwsIotShadowError_t rejectionReasons[] =
+    {
+        AWS_IOT_SHADOW_BAD_REQUEST, AWS_IOT_SHADOW_UNAUTHORIZED,      AWS_IOT_SHADOW_FORBIDDEN,
+        AWS_IOT_SHADOW_NOT_FOUND,   AWS_IOT_SHADOW_CONFLICT,          AWS_IOT_SHADOW_TOO_LARGE,
+        AWS_IOT_SHADOW_UNSUPPORTED, AWS_IOT_SHADOW_TOO_MANY_REQUESTS, AWS_IOT_SHADOW_SERVER_ERROR
+    };
+
+    for( i = 0; i < ( sizeof( rejectionReasons ) / sizeof( rejectionReasons[ 0 ] ) ); i++ )
+    {
+        pMessage = AwsIotShadow_strerror( ( AwsIotShadowError_t ) i );
+        TEST_ASSERT_NOT_NULL( pMessage );
+    }
 }
 
 /*-----------------------------------------------------------*/
