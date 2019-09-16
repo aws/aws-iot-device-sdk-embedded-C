@@ -1216,7 +1216,7 @@ void IotNetworkMbedtls_GetServerInfo( void * pConnection,
         /* Get peer info. */
         status = getpeername( pNetworkConnection->networkContext.fd,
                               ( struct sockaddr * ) &server,
-                              ( int * ) &length );
+                              &length );
     }
     else
     {
