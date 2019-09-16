@@ -899,41 +899,40 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
 IotMqttError_t IotMqtt_Init( void )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
-    uint32_t initSet = 0;
 
-    /* Call any additional serializer initialization function if serializer
-     * overrides are enabled. */
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        #ifdef _IotMqtt_InitSerializeAdditional
-            if( _IotMqtt_InitSerializeAdditional() == false )
-            {
-                status = IOT_MQTT_INIT_FAILED;
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-        #endif
-    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
-    /* Log initialization status. */
-    if( status != IOT_MQTT_SUCCESS )
+    if( _checkInit() == false )
     {
-        IotLogError( "Failed to initialize MQTT library serializer. " );
-    }
-    else
-    {
-        /* Set the flag that specifies initialization is complete. */
-        initSet = Atomic_CompareAndSwap_u32( &( _initCalled ), 1, 0 );
+        /* Call any additional serializer initialization function if serializer
+         * overrides are enabled. */
+        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            #ifdef _IotMqtt_InitSerializeAdditional
+                if( _IotMqtt_InitSerializeAdditional() == false )
+                {
+                    status = IOT_MQTT_INIT_FAILED;
+                }
+                else
+                {
+                    EMPTY_ELSE_MARKER;
+                }
+            #endif
+        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
-        if( initSet == 0 )
+        /* Log initialization status. */
+        if( status != IOT_MQTT_SUCCESS )
         {
-            IotLogWarn( "IotMqtt_Init called with library already initialized." );
+            IotLogError( "Failed to initialize MQTT library serializer. " );
         }
         else
         {
+            /* Set the flag that specifies initialization is complete. */
+            ( void ) Atomic_CompareAndSwap_u32( &( _initCalled ), 1, 0 );
+
             IotLogInfo( "MQTT library successfully initialized." );
         }
+    }
+    else
+    {
+        IotLogWarn( "IotMqtt_Init called with library already initialized." );
     }
 
     return status;
