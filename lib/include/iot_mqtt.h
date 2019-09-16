@@ -185,6 +185,7 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
  *
  * @return One of the following:
  * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_INIT_FAILED
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  * - #IOT_MQTT_NETWORK_ERROR
@@ -338,6 +339,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_SERVER_REFUSED
  * @return If this function fails before queuing a subscribe operation, it will return
  * one of:
+ * - #IOT_MQTT_INIT_FAILED
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  *
@@ -449,6 +451,7 @@ IotMqttError_t IotMqtt_SubscribeAsync( IotMqttConnection_t mqttConnection,
  *
  * @return One of the following:
  * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_INIT_FAILED
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  * - #IOT_MQTT_NETWORK_ERROR
@@ -496,6 +499,7 @@ IotMqttError_t IotMqtt_SubscribeSync( IotMqttConnection_t mqttConnection,
  * - #IOT_MQTT_BAD_RESPONSE
  * @return If this function fails before queuing an unsubscribe operation, it will return
  * one of:
+ * - #IOT_MQTT_INIT_FAILED
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  *
@@ -532,6 +536,7 @@ IotMqttError_t IotMqtt_UnsubscribeAsync( IotMqttConnection_t mqttConnection,
  *
  * @return One of the following:
  * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_INIT_FAILED
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  * - #IOT_MQTT_NETWORK_ERROR
@@ -583,6 +588,7 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
  * and [pPublishInfo->retryLimit](@ref IotMqttPublishInfo_t.retryLimit) were set).
  * @return If this function fails before queuing an publish operation (regardless
  * of QoS), it will return one of:
+ * - #IOT_MQTT_INIT_FAILED
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  *
@@ -663,6 +669,7 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
  *
  * @return One of the following:
  * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_INIT_FAILED
  * - #IOT_MQTT_BAD_PARAMETER
  * - #IOT_MQTT_NO_MEMORY
  * - #IOT_MQTT_NETWORK_ERROR

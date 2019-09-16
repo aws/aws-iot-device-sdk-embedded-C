@@ -131,8 +131,19 @@ typedef enum IotMqttError
     /**
      * @brief Initialization failed.
      *
+     * This value is returned by @ref mqtt_function_init when initialization fails, or
+     * by other API functions if they are called before @ref mqtt_function_init.
+     *
      * Functions that may return this value:
      * - @ref mqtt_function_init
+     * - @ref mqtt_function_connect
+     * - @ref mqtt_function_subscribeasync
+     * - @ref mqtt_function_subscribesync
+     * - @ref mqtt_function_unsubscribeasync
+     * - @ref mqtt_function_unsubscribesync
+     * - @ref mqtt_function_publishasync
+     * - @ref mqtt_function_publishsync
+     * - @ref mqtt_function_wait
      */
     IOT_MQTT_INIT_FAILED,
 

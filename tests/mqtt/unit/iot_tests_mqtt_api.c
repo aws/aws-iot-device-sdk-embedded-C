@@ -560,6 +560,8 @@ TEST_TEAR_DOWN( MQTT_Unit_API )
  */
 TEST_GROUP_RUNNER( MQTT_Unit_API )
 {
+    RUN_TEST_CASE( MQTT_Unit_API, Init );
+    RUN_TEST_CASE( MQTT_Unit_API, StringCoverage );
     RUN_TEST_CASE( MQTT_Unit_API, OperationCreateDestroy );
     RUN_TEST_CASE( MQTT_Unit_API, OperationWaitTimeout );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectParameters );
@@ -576,6 +578,100 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, SingleThreaded );
     RUN_TEST_CASE( MQTT_Unit_API, KeepAlivePeriodic );
     RUN_TEST_CASE( MQTT_Unit_API, KeepAliveJobCleanup );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the function @ref mqtt_function_init.
+ */
+TEST( MQTT_Unit_API, Init )
+{
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotMqttOperation_t operation = IOT_MQTT_OPERATION_INITIALIZER;
+
+    /* Initialization was done in test set up. Clean up here before running this test. */
+    IotMqtt_Cleanup();
+
+    /* Calling cleanup twice should not crash. */
+    IotMqtt_Cleanup();
+
+    /* Calling API functions without calling IotMqtt_Init should fail. */
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+
+    status = IotMqtt_Connect( &_networkInfo,
+                              &connectInfo,
+                              TIMEOUT_MS,
+                              &_pMqttConnection );
+    TEST_ASSERT_EQUAL( IOT_MQTT_INIT_FAILED, status );
+
+    subscription.pTopicFilter = TEST_TOPIC_NAME;
+    subscription.topicFilterLength = TEST_TOPIC_NAME_LENGTH;
+    subscription.callback.function = SUBSCRIPTION_CALLBACK;
+    status = IotMqtt_SubscribeAsync( _pMqttConnection, &subscription, 1, 0, NULL, NULL );
+    TEST_ASSERT_EQUAL( IOT_MQTT_INIT_FAILED, status );
+
+    status = IotMqtt_UnsubscribeAsync( _pMqttConnection, &subscription, 1, 0, NULL, NULL );
+    TEST_ASSERT_EQUAL( IOT_MQTT_INIT_FAILED, status );
+
+    publishInfo.pTopicName = TEST_TOPIC_NAME;
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+    status = IotMqtt_PublishAsync( _pMqttConnection, &publishInfo, 0, NULL, NULL );
+    TEST_ASSERT_EQUAL( IOT_MQTT_INIT_FAILED, status );
+
+    status = IotMqtt_Wait( operation, TIMEOUT_MS );
+
+    IotMqtt_Disconnect( _pMqttConnection, 0 );
+
+    /* Reinitialize for test cleanup. Calling init twice should not crash. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Provides code coverage of the MQTT enum-to-string functions,
+ * @ref mqtt_function_strerror and @ref mqtt_function_operationtype.
+ */
+TEST( MQTT_Unit_API, StringCoverage )
+{
+    int32_t i = 0;
+    const char * pMessage = NULL;
+
+    /* For each MQTT Error, check the returned string. */
+    while( true )
+    {
+        pMessage = IotMqtt_strerror( ( IotMqttError_t ) i );
+        TEST_ASSERT_NOT_NULL( pMessage );
+
+        if( strncmp( "INVALID STATUS", pMessage, 14 ) == 0 )
+        {
+            break;
+        }
+
+        i++;
+    }
+
+    /* For each MQTT Operation Type, check the returned string. */
+    i = 0;
+
+    while( true )
+    {
+        pMessage = IotMqtt_OperationType( ( IotMqttError_t ) i );
+        TEST_ASSERT_NOT_NULL( pMessage );
+
+        if( strncmp( "INVALID OPERATION", pMessage, 17 ) == 0 )
+        {
+            break;
+        }
+
+        i++;
+    }
 }
 
 /*-----------------------------------------------------------*/
