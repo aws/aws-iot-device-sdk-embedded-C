@@ -206,6 +206,8 @@ TEST( Shadow_Unit_API, StringCoverage )
     {
         pMessage = AwsIotShadow_strerror( rejectionReasons[ i ] );
         TEST_ASSERT_NOT_NULL( pMessage );
+
+        TEST_ASSERT_NOT_EQUAL( 0, strncmp( "INVALID STATUS", pMessage, 14 ) );
     }
 }
 
