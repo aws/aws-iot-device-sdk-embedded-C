@@ -40,6 +40,9 @@
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
+/* Atomics include. */
+#include "iot_atomic.h"
+
 /* Validate MQTT configuration settings. */
 #if IOT_MQTT_ENABLE_ASSERTS != 0 && IOT_MQTT_ENABLE_ASSERTS != 1
     #error "IOT_MQTT_ENABLE_ASSERTS must be 0 or 1."
@@ -58,6 +61,13 @@
 #endif
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief Check if the library is initialized.
+ *
+ * @return `true` if IotMqtt_Init was called; `false` otherwise.
+ */
+static bool _checkInit( void );
 
 /**
  * @brief Set the unsubscribed flag of an MQTT subscription.
@@ -138,6 +148,35 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            uint32_t flags,
                                            const IotMqttCallbackInfo_t * pCallbackInfo,
                                            IotMqttOperation_t * const pOperationReference );
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tracks whether @ref mqtt_function_init has been called.
+ *
+ * API functions will fail if @ref mqtt_function_init was not called.
+ */
+static uint32_t _initCalled = 0;
+
+/*-----------------------------------------------------------*/
+
+static bool _checkInit( void )
+{
+    bool status = true;
+
+    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
+    {
+        IotLogError( "IotMqtt_Init was not called." );
+
+        status = false;
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+
+    return status;
+}
 
 /*-----------------------------------------------------------*/
 
@@ -549,6 +588,16 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     IotMqtt_Assert( ( operation == IOT_MQTT_SUBSCRIBE ) ||
                     ( operation == IOT_MQTT_UNSUBSCRIBE ) );
 
+    /* Check that IotMqtt_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+
     /* Check that all elements in the subscription list are valid. */
     if( _IotMqtt_ValidateSubscriptionList( operation,
                                            mqttConnection->awsIotMqttMode,
@@ -859,29 +908,39 @@ IotMqttError_t IotMqtt_Init( void )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
-    /* Call any additional serializer initialization function if serializer
-     * overrides are enabled. */
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        #ifdef _IotMqtt_InitSerializeAdditional
-            if( _IotMqtt_InitSerializeAdditional() == false )
-            {
-                status = IOT_MQTT_INIT_FAILED;
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-        #endif
-    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
-    /* Log initialization status. */
-    if( status != IOT_MQTT_SUCCESS )
+    if( _checkInit() == false )
     {
-        IotLogError( "Failed to initialize MQTT library serializer. " );
+        /* Call any additional serializer initialization function if serializer
+         * overrides are enabled. */
+        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            #ifdef _IotMqtt_InitSerializeAdditional
+                if( _IotMqtt_InitSerializeAdditional() == false )
+                {
+                    status = IOT_MQTT_INIT_FAILED;
+                }
+                else
+                {
+                    EMPTY_ELSE_MARKER;
+                }
+            #endif
+        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+
+        /* Log initialization status. */
+        if( status != IOT_MQTT_SUCCESS )
+        {
+            IotLogError( "Failed to initialize MQTT library serializer. " );
+        }
+        else
+        {
+            /* Set the flag that specifies initialization is complete. */
+            ( void ) Atomic_CompareAndSwap_u32( &( _initCalled ), 1, 0 );
+
+            IotLogInfo( "MQTT library successfully initialized." );
+        }
     }
     else
     {
-        IotLogInfo( "MQTT library successfully initialized." );
+        IotLogWarn( "IotMqtt_Init called with library already initialized." );
     }
 
     return status;
@@ -891,15 +950,24 @@ IotMqttError_t IotMqtt_Init( void )
 
 void IotMqtt_Cleanup( void )
 {
-    /* Call any additional serializer cleanup initialization function if serializer
-     * overrides are enabled. */
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        #ifdef _IotMqtt_CleanupSerializeAdditional
-            _IotMqtt_CleanupSerializeAdditional();
-        #endif
-    #endif
+    uint32_t initCleared = Atomic_CompareAndSwap_u32( &( _initCalled ), 0, 1 );
 
-    IotLogInfo( "MQTT library cleanup done." );
+    if( initCleared == 1 )
+    {
+        /* Call any additional serializer cleanup initialization function if serializer
+         * overrides are enabled. */
+        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            #ifdef _IotMqtt_CleanupSerializeAdditional
+                _IotMqtt_CleanupSerializeAdditional();
+            #endif
+        #endif
+
+        IotLogInfo( "MQTT library cleanup done." );
+    }
+    else
+    {
+        IotLogWarn( "IotMqtt_Init was not called before IotMqtt_Cleanup." );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -921,6 +989,16 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     IotMqttError_t ( * serializeConnect )( const IotMqttConnectInfo_t *,
                                            uint8_t **,
                                            size_t * ) = _IotMqtt_SerializeConnect;
+
+    /* Check that IotMqtt_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
     /* Network info must not be NULL. */
     if( pNetworkInfo == NULL )
@@ -1249,110 +1327,118 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
 void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                          uint32_t flags )
 {
-    bool disconnected = false;
+    bool disconnected = false, initCalled = false;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t * pOperation = NULL;
 
-    IotLogInfo( "(MQTT connection %p) Disconnecting connection.", mqttConnection );
+    /* Check that IotMqtt_Init was called. */
+    initCalled = _checkInit();
+
+    if( initCalled == false )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+
+    /* Only send a DISCONNECT packet if the connection is active and the "cleanup only"
+     * flag is not set. */
+    if( ( flags & IOT_MQTT_FLAG_CLEANUP_ONLY ) == IOT_MQTT_FLAG_CLEANUP_ONLY )
+    {
+        IOT_GOTO_CLEANUP();
+    }
 
     /* Read the connection status. */
     IotMutex_Lock( &( mqttConnection->referencesMutex ) );
     disconnected = mqttConnection->disconnected;
     IotMutex_Unlock( &( mqttConnection->referencesMutex ) );
 
-    /* Only send a DISCONNECT packet if the connection is active and the "cleanup only"
-     * flag is not set. */
-    if( disconnected == false )
+    if( disconnected == true )
     {
-        if( ( flags & IOT_MQTT_FLAG_CLEANUP_ONLY ) == 0 )
-        {
-            /* Create a DISCONNECT operation. This function blocks until the DISCONNECT
-             * packet is sent, so it sets IOT_MQTT_FLAG_WAITABLE. */
-            status = _IotMqtt_CreateOperation( mqttConnection,
-                                               IOT_MQTT_FLAG_WAITABLE,
-                                               NULL,
-                                               &pOperation );
+        IOT_GOTO_CLEANUP();
+    }
 
-            if( status == IOT_MQTT_SUCCESS )
+    IotLogInfo( "(MQTT connection %p) Disconnecting connection.", mqttConnection );
+
+    /* Create a DISCONNECT operation. This function blocks until the DISCONNECT
+     * packet is sent, so it sets IOT_MQTT_FLAG_WAITABLE. */
+    status = _IotMqtt_CreateOperation( mqttConnection,
+                                       IOT_MQTT_FLAG_WAITABLE,
+                                       NULL,
+                                       &pOperation );
+
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        /* Ensure that the members set by operation creation and serialization
+         * are appropriate for a blocking DISCONNECT. */
+        IotMqtt_Assert( pOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
+        IotMqtt_Assert( ( pOperation->u.operation.flags & IOT_MQTT_FLAG_WAITABLE )
+                        == IOT_MQTT_FLAG_WAITABLE );
+        IotMqtt_Assert( pOperation->u.operation.periodic.retry.limit == 0 );
+
+        /* Set the operation type. */
+        pOperation->u.operation.type = IOT_MQTT_DISCONNECT;
+
+        /* Choose a disconnect serializer. */
+        IotMqttError_t ( * serializeDisconnect )( uint8_t **,
+                                                  size_t * ) = _IotMqtt_SerializeDisconnect;
+
+        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            if( mqttConnection->pSerializer != NULL )
             {
-                /* Ensure that the members set by operation creation and serialization
-                 * are appropriate for a blocking DISCONNECT. */
-                IotMqtt_Assert( pOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
-                IotMqtt_Assert( ( pOperation->u.operation.flags & IOT_MQTT_FLAG_WAITABLE )
-                                == IOT_MQTT_FLAG_WAITABLE );
-                IotMqtt_Assert( pOperation->u.operation.periodic.retry.limit == 0 );
-
-                /* Set the operation type. */
-                pOperation->u.operation.type = IOT_MQTT_DISCONNECT;
-
-                /* Choose a disconnect serializer. */
-                IotMqttError_t ( * serializeDisconnect )( uint8_t **,
-                                                          size_t * ) = _IotMqtt_SerializeDisconnect;
-
-                #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-                    if( mqttConnection->pSerializer != NULL )
-                    {
-                        if( mqttConnection->pSerializer->serialize.disconnect != NULL )
-                        {
-                            serializeDisconnect = mqttConnection->pSerializer->serialize.disconnect;
-                        }
-                        else
-                        {
-                            EMPTY_ELSE_MARKER;
-                        }
-                    }
-                    else
-                    {
-                        EMPTY_ELSE_MARKER;
-                    }
-                #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
-                /* Generate a DISCONNECT packet. */
-                status = serializeDisconnect( &( pOperation->u.operation.pMqttPacket ),
-                                              &( pOperation->u.operation.packetSize ) );
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-
-            if( status == IOT_MQTT_SUCCESS )
-            {
-                /* Check the serialized MQTT packet. */
-                IotMqtt_Assert( pOperation->u.operation.pMqttPacket != NULL );
-                IotMqtt_Assert( pOperation->u.operation.packetSize > 0 );
-
-                /* Send the DISCONNECT packet. */
-                _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
-
-                /* Wait a short time for the DISCONNECT packet to be transmitted. */
-                status = IotMqtt_Wait( pOperation,
-                                       IOT_MQTT_RESPONSE_WAIT_MS );
-
-                /* A wait on DISCONNECT should only ever return SUCCESS, TIMEOUT,
-                 * or NETWORK ERROR. */
-                if( status == IOT_MQTT_SUCCESS )
+                if( mqttConnection->pSerializer->serialize.disconnect != NULL )
                 {
-                    IotLogInfo( "(MQTT connection %p) Connection disconnected.", mqttConnection );
+                    serializeDisconnect = mqttConnection->pSerializer->serialize.disconnect;
                 }
                 else
                 {
-                    IotMqtt_Assert( ( status == IOT_MQTT_TIMEOUT ) ||
-                                    ( status == IOT_MQTT_NETWORK_ERROR ) );
-
-                    IotLogWarn( "(MQTT connection %p) DISCONNECT not sent, error %s.",
-                                mqttConnection,
-                                IotMqtt_strerror( status ) );
+                    EMPTY_ELSE_MARKER;
                 }
             }
             else
             {
                 EMPTY_ELSE_MARKER;
             }
+        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+
+        /* Generate a DISCONNECT packet. */
+        status = serializeDisconnect( &( pOperation->u.operation.pMqttPacket ),
+                                      &( pOperation->u.operation.packetSize ) );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        /* Check the serialized MQTT packet. */
+        IotMqtt_Assert( pOperation->u.operation.pMqttPacket != NULL );
+        IotMqtt_Assert( pOperation->u.operation.packetSize > 0 );
+
+        /* Send the DISCONNECT packet. */
+        _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+
+        /* Wait a short time for the DISCONNECT packet to be transmitted. */
+        status = IotMqtt_Wait( pOperation,
+                               IOT_MQTT_RESPONSE_WAIT_MS );
+
+        /* A wait on DISCONNECT should only ever return SUCCESS, TIMEOUT,
+         * or NETWORK ERROR. */
+        if( status == IOT_MQTT_SUCCESS )
+        {
+            IotLogInfo( "(MQTT connection %p) Connection disconnected.", mqttConnection );
         }
         else
         {
-            EMPTY_ELSE_MARKER;
+            IotMqtt_Assert( ( status == IOT_MQTT_TIMEOUT ) ||
+                            ( status == IOT_MQTT_NETWORK_ERROR ) );
+
+            IotLogWarn( "(MQTT connection %p) DISCONNECT not sent, error %s.",
+                        mqttConnection,
+                        IotMqtt_strerror( status ) );
         }
     }
     else
@@ -1360,29 +1446,36 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
         EMPTY_ELSE_MARKER;
     }
 
-    /* Close the underlying network connection. This also cleans up keep-alive. */
-    _IotMqtt_CloseNetworkConnection( IOT_MQTT_DISCONNECT_CALLED,
-                                     mqttConnection );
+    /* This function has no return value and no cleanup, but uses the cleanup
+     * label to exit on error. */
+    IOT_FUNCTION_CLEANUP_BEGIN();
 
-    /* Check if the connection may be destroyed. */
-    IotMutex_Lock( &( mqttConnection->referencesMutex ) );
+    if( initCalled == true )
+    {
+        /* Close the underlying network connection. This also cleans up keep-alive. */
+        _IotMqtt_CloseNetworkConnection( IOT_MQTT_DISCONNECT_CALLED,
+                                         mqttConnection );
 
-    /* At this point, the connection should be marked disconnected. */
-    IotMqtt_Assert( mqttConnection->disconnected == true );
+        /* Check if the connection may be destroyed. */
+        IotMutex_Lock( &( mqttConnection->referencesMutex ) );
 
-    /* Attempt cancel and destroy each operation in the connection's lists. */
-    IotListDouble_RemoveAll( &( mqttConnection->pendingProcessing ),
-                             _mqttOperation_tryDestroy,
-                             offsetof( _mqttOperation_t, link ) );
+        /* At this point, the connection should be marked disconnected. */
+        IotMqtt_Assert( mqttConnection->disconnected == true );
 
-    IotListDouble_RemoveAll( &( mqttConnection->pendingResponse ),
-                             _mqttOperation_tryDestroy,
-                             offsetof( _mqttOperation_t, link ) );
+        /* Attempt cancel and destroy each operation in the connection's lists. */
+        IotListDouble_RemoveAll( &( mqttConnection->pendingProcessing ),
+                                 _mqttOperation_tryDestroy,
+                                 offsetof( _mqttOperation_t, link ) );
 
-    IotMutex_Unlock( &( mqttConnection->referencesMutex ) );
+        IotListDouble_RemoveAll( &( mqttConnection->pendingResponse ),
+                                 _mqttOperation_tryDestroy,
+                                 offsetof( _mqttOperation_t, link ) );
 
-    /* Decrement the connection reference count and destroy it if possible. */
-    _IotMqtt_DecrementConnectionReferences( mqttConnection );
+        IotMutex_Unlock( &( mqttConnection->referencesMutex ) );
+
+        /* Decrement the connection reference count and destroy it if possible. */
+        _IotMqtt_DecrementConnectionReferences( mqttConnection );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -1515,6 +1608,16 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
                                            size_t *,
                                            uint16_t *,
                                            uint8_t ** ) = _IotMqtt_SerializePublish;
+
+    /* Check that IotMqtt_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
     /* Check that the PUBLISH information is valid. */
     if( _IotMqtt_ValidatePublish( mqttConnection->awsIotMqttMode,
@@ -1816,7 +1919,17 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
                              uint32_t timeoutMs )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
-    _mqttConnection_t * pMqttConnection = operation->pMqttConnection;
+    _mqttConnection_t * pMqttConnection = NULL;
+
+    /* Check that IotMqtt_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
     /* Validate the given operation reference. */
     if( _IotMqtt_ValidateOperation( operation ) == false )
@@ -1829,6 +1942,8 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
     }
 
     /* Check the MQTT connection status. */
+    pMqttConnection = operation->pMqttConnection;
+
     if( status == IOT_MQTT_SUCCESS )
     {
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
@@ -1913,7 +2028,7 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
         EMPTY_ELSE_MARKER;
     }
 
-    return status;
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
