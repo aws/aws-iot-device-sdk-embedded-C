@@ -19,6 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <stdio.h>
 #include <string.h>
 
 /* Defender internal include. */
@@ -52,11 +53,12 @@ AwsIotDefenderError_t AwsIotDefenderInternal_BuildTopicsNames( void )
 
     const char * pThingName = _startInfo.mqttConnectionInfo.pClientIdentifier;
     uint16_t thingNameLength = _startInfo.mqttConnectionInfo.clientIdentifierLength;
+    size_t topicPrefixLength = strlen( TOPIC_PREFIX );
 
     /* Calculate topics lengths. Plus one for string terminator. */
-    size_t publishTopicLength = strlen( TOPIC_PREFIX ) + thingNameLength + strlen( TOPIC_SUFFIX_PUBLISH ) + 1;
-    size_t acceptTopicLength = strlen( TOPIC_PREFIX ) + thingNameLength + strlen( TOPIC_SUFFIX_ACCEPTED ) + 1;
-    size_t rejectTopicLength = strlen( TOPIC_PREFIX ) + thingNameLength + strlen( TOPIC_SUFFIX_REJECTED ) + 1;
+    size_t publishTopicLength = topicPrefixLength + thingNameLength + strlen( TOPIC_SUFFIX_PUBLISH ) + 1;
+    size_t acceptTopicLength = topicPrefixLength + thingNameLength + strlen( TOPIC_SUFFIX_ACCEPTED ) + 1;
+    size_t rejectTopicLength = topicPrefixLength + thingNameLength + strlen( TOPIC_SUFFIX_REJECTED ) + 1;
 
     /* Allocate memory for each of them. */
     char * pPublishTopic = AwsIotDefender_MallocTopic( publishTopicLength * sizeof( char ) );
@@ -78,17 +80,20 @@ AwsIotDefenderError_t AwsIotDefenderInternal_BuildTopicsNames( void )
         _pAcceptTopic = pAcceptTopic;
         _pRejectTopic = pRejectTopic;
 
-        strcpy( _pPublishTopic, TOPIC_PREFIX );
-        strncat( _pPublishTopic, pThingName, thingNameLength );
-        strcat( _pPublishTopic, TOPIC_SUFFIX_PUBLISH );
+        snprintf( _pPublishTopic, publishTopicLength, "%s%s%s",
+                  TOPIC_PREFIX,
+                  pThingName,
+                  TOPIC_SUFFIX_PUBLISH );
 
-        strcpy( _pAcceptTopic, TOPIC_PREFIX );
-        strncat( _pAcceptTopic, pThingName, thingNameLength );
-        strcat( _pAcceptTopic, TOPIC_SUFFIX_ACCEPTED );
+        snprintf( _pAcceptTopic, acceptTopicLength, "%s%s%s",
+                  TOPIC_PREFIX,
+                  pThingName,
+                  TOPIC_SUFFIX_ACCEPTED );
 
-        strcpy( _pRejectTopic, TOPIC_PREFIX );
-        strncat( _pRejectTopic, pThingName, thingNameLength );
-        strcat( _pRejectTopic, TOPIC_SUFFIX_REJECTED );
+        snprintf( _pRejectTopic, rejectTopicLength, "%s%s%s",
+                  TOPIC_PREFIX,
+                  pThingName,
+                  TOPIC_SUFFIX_REJECTED );
     }
 
     return returnedError;
