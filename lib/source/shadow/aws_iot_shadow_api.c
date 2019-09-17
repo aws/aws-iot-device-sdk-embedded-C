@@ -192,7 +192,7 @@ static bool _checkInit( void )
 
     if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
     {
-        IotLogError( "IotMqtt_Init was not called." );
+        IotLogError( "AwsIotShadow_Init was not called." );
 
         status = false;
     }

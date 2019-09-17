@@ -110,7 +110,7 @@ typedef enum AwsIotShadowError
      * - @ref shadow_function_getasync
      * - @ref shadow_function_updateasync
      */
-    AWS_IOT_SHADOW_STATUS_PENDING,
+    AWS_IOT_SHADOW_STATUS_PENDING = 1,
 
     /**
      * @brief Initialization failed.
@@ -118,7 +118,7 @@ typedef enum AwsIotShadowError
      * Functions that may return this value:
      * - @ref shadow_function_init
      */
-    AWS_IOT_SHADOW_INIT_FAILED,
+    AWS_IOT_SHADOW_INIT_FAILED = 2,
 
     /**
      * @brief At least one parameter is invalid.
@@ -131,7 +131,7 @@ typedef enum AwsIotShadowError
      * - @ref shadow_function_setdeltacallback
      * - @ref shadow_function_setupdatedcallback
      */
-    AWS_IOT_SHADOW_BAD_PARAMETER,
+    AWS_IOT_SHADOW_BAD_PARAMETER = 3,
 
     /**
      * @brief Shadow operation failed because of memory allocation failure.
@@ -143,7 +143,7 @@ typedef enum AwsIotShadowError
      * - @ref shadow_function_setdeltacallback
      * - @ref shadow_function_setupdatedcallback
      */
-    AWS_IOT_SHADOW_NO_MEMORY,
+    AWS_IOT_SHADOW_NO_MEMORY = 4,
 
     /**
      * @brief Shadow operation failed because of failure in MQTT library.
@@ -159,7 +159,7 @@ typedef enum AwsIotShadowError
      * - @ref shadow_function_setupdatedcallback
      * - @ref shadow_function_removepersistentsubscriptions
      */
-    AWS_IOT_SHADOW_MQTT_ERROR,
+    AWS_IOT_SHADOW_MQTT_ERROR = 5,
 
     /**
      * @brief Reponse received from Shadow service not understood.
@@ -173,7 +173,7 @@ typedef enum AwsIotShadowError
      * May also be the value of a Shadow operation completion callback's<br>
      * [AwsIotShadowCallbackParam_t.operation.result](@ref AwsIotShadowCallbackParam_t.result)
      */
-    AWS_IOT_SHADOW_BAD_RESPONSE,
+    AWS_IOT_SHADOW_BAD_RESPONSE = 7,
 
     /**
      * @brief A blocking Shadow operation timed out.
@@ -186,7 +186,7 @@ typedef enum AwsIotShadowError
      * - @ref shadow_function_setdeltacallback
      * - @ref shadow_function_setupdatedcallback
      */
-    AWS_IOT_SHADOW_TIMEOUT,
+    AWS_IOT_SHADOW_TIMEOUT = 8,
 
     /**
      * @brief An API function was called before @ref shadow_function_init.
@@ -199,7 +199,7 @@ typedef enum AwsIotShadowError
      * - @ref shadow_function_setdeltacallback
      * - @ref shadow_function_setupdatedcallback
      */
-    AWS_IOT_SHADOW_NOT_INITIALIZED,
+    AWS_IOT_SHADOW_NOT_INITIALIZED = 11,
 
     /**
      * @brief Shadow operation rejected: Bad request.

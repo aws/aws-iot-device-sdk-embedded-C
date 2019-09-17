@@ -111,7 +111,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_describeasync
      * - @ref jobs_function_updateasync
      */
-    AWS_IOT_JOBS_STATUS_PENDING,
+    AWS_IOT_JOBS_STATUS_PENDING = 1,
 
     /**
      * @brief Initialization failed.
@@ -119,7 +119,7 @@ typedef enum AwsIotJobsError
      * Functions that may return this value:
      * - @ref jobs_function_init
      */
-    AWS_IOT_JOBS_INIT_FAILED,
+    AWS_IOT_JOBS_INIT_FAILED = 2,
 
     /**
      * @brief At least one parameter is invalid.
@@ -134,7 +134,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_setnotifynextcallback
      * - @ref jobs_function_removepersistentsubscriptions
      */
-    AWS_IOT_JOBS_BAD_PARAMETER,
+    AWS_IOT_JOBS_BAD_PARAMETER = 3,
 
     /**
      * @brief Jobs operation failed because of memory allocation failure.
@@ -147,7 +147,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
      */
-    AWS_IOT_JOBS_NO_MEMORY,
+    AWS_IOT_JOBS_NO_MEMORY = 4,
 
     /**
      * @brief Jobs operation failed because of failure in MQTT library.
@@ -161,7 +161,7 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_setnotifynextcallback
      * - @ref jobs_function_removepersistentsubscriptions
      */
-    AWS_IOT_JOBS_MQTT_ERROR,
+    AWS_IOT_JOBS_MQTT_ERROR = 5,
 
     /**
      * @brief Response received from Jobs service not understood.
@@ -176,7 +176,7 @@ typedef enum AwsIotJobsError
      * May also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
-    AWS_IOT_JOBS_BAD_RESPONSE,
+    AWS_IOT_JOBS_BAD_RESPONSE = 7,
 
     /**
      * @brief A blocking Jobs operation timed out.
@@ -190,7 +190,21 @@ typedef enum AwsIotJobsError
      * - @ref jobs_function_setnotifypendingcallback
      * - @ref jobs_function_setnotifynextcallback
      */
-    AWS_IOT_JOBS_TIMEOUT,
+    AWS_IOT_JOBS_TIMEOUT = 8,
+
+    /**
+     * @brief An API function was called before @ref jobs_function_init.
+     *
+     * Functions that may return this value:
+     * - @ref jobs_function_getpendingasync and @ref jobs_function_getpendingsync
+     * - @ref jobs_function_startnextasync and @ref jobs_function_startnextsync
+     * - @ref jobs_function_describeasync and @ref jobs_function_describesync
+     * - @ref jobs_function_updateasync and @ref jobs_function_updatesync
+     * - @ref jobs_function_wait
+     * - @ref jobs_function_setnotifypendingcallback
+     * - @ref jobs_function_setnotifynextcallback
+     */
+    AWS_IOT_JOBS_NOT_INITIALIZED = 11,
 
     /**
      * @brief Jobs operation failed: A request was sent to an unknown topic.
@@ -205,7 +219,7 @@ typedef enum AwsIotJobsError
      * May also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
-    AWS_IOT_JOBS_INVALID_TOPIC,
+    AWS_IOT_JOBS_INVALID_TOPIC = 12,
 
     /**
      * @brief Jobs operation failed: The contents of the request were not understood.
@@ -222,7 +236,7 @@ typedef enum AwsIotJobsError
      * May also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
-    AWS_IOT_JOBS_INVALID_JSON,
+    AWS_IOT_JOBS_INVALID_JSON = 13,
 
     /**
      * @brief Jobs operation failed: The contents of the request were invalid.
@@ -237,7 +251,7 @@ typedef enum AwsIotJobsError
      * May also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
-    AWS_IOT_JOBS_INVALID_REQUEST,
+    AWS_IOT_JOBS_INVALID_REQUEST = 14,
 
     /**
      * @brief Jobs operation failed: An update attempted to change the job execution
@@ -252,7 +266,7 @@ typedef enum AwsIotJobsError
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
      * following a call to @ref jobs_function_startnextasync or @ref jobs_function_updateasync.
      */
-    AWS_IOT_JOBS_INVALID_STATE,
+    AWS_IOT_JOBS_INVALID_STATE = 15,
 
     /**
      * @brief Jobs operation failed: The specified job execution does not exist.
@@ -266,7 +280,7 @@ typedef enum AwsIotJobsError
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
      * following a call to @ref jobs_function_describeasync or @ref jobs_function_updateasync.
      */
-    AWS_IOT_JOBS_NOT_FOUND,
+    AWS_IOT_JOBS_NOT_FOUND = 16,
 
     /**
      * @brief Jobs operation failed: The Jobs service expected a version that did
@@ -280,7 +294,7 @@ typedef enum AwsIotJobsError
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
      * following a call to @ref jobs_function_updateasync.
      */
-    AWS_IOT_JOBS_VERSION_MISMATCH,
+    AWS_IOT_JOBS_VERSION_MISMATCH = 17,
 
     /**
      * @brief Jobs operation failed: The Jobs service encountered an internal error.
@@ -295,7 +309,7 @@ typedef enum AwsIotJobsError
      * May also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
-    AWS_IOT_JOBS_INTERNAL_ERROR,
+    AWS_IOT_JOBS_INTERNAL_ERROR = 18,
 
     /**
      * @brief Jobs operation failed: The request was throttled.
@@ -310,7 +324,7 @@ typedef enum AwsIotJobsError
      * May also be the value of a Jobs operation completion callback's<br>
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result).
      */
-    AWS_IOT_JOBS_THROTTLED,
+    AWS_IOT_JOBS_THROTTLED = 19,
 
     /**
      * @brief Jobs operation failed: Attempt to describe a Job in a terminal state.
@@ -323,7 +337,7 @@ typedef enum AwsIotJobsError
      * [AwsIotJobsCallbackParam_t.operation.result](@ref AwsIotJobsCallbackParam_t.result)
      * following a call to @ref jobs_function_describeasync.
      */
-    AWS_IOT_JOBS_TERMINAL_STATE
+    AWS_IOT_JOBS_TERMINAL_STATE = 20
 } AwsIotJobsError_t;
 
 /**
