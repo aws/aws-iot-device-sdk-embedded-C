@@ -262,7 +262,6 @@ TEST( Shadow_Unit_API, StringCoverage )
 
     /* Check an invalid status. */
     pMessage = AwsIotShadow_strerror( ( AwsIotShadowError_t ) -1 );
-    TEST_ASSERT_NOT_NULL( pMessage );
     TEST_ASSERT_EQUAL_STRING( pInvalidStatus, pMessage );
 }
 
