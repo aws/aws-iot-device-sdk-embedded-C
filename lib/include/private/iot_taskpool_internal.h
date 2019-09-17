@@ -110,12 +110,15 @@
  */
 #if IOT_TASKPOOL_ENABLE_ASSERTS == 1
     #ifndef IotTaskPool_Assert
-        #include <assert.h>
-        #define IotTaskPool_Assert( expression )    assert( expression )
+        #ifdef Iot_DefaultAssert
+            #define IotTaskPool_Assert( expression )    Iot_DefaultAssert( expression )
+        #else
+            #error "Asserts are enabled for Task Pool, but IotTaskPool_Assert is not defined"
+        #endif
     #endif
-#else
+#else /* if IOT_TASKPOOL_ENABLE_ASSERTS == 1 */
     #define IotTaskPool_Assert( expression )
-#endif
+#endif /* if IOT_TASKPOOL_ENABLE_ASSERTS == 1 */
 
 /* Configure logs for TASKPOOL functions. */
 #ifdef IOT_LOG_LEVEL_TASKPOOL
@@ -179,29 +182,52 @@
     #include <stdlib.h>
 
     #ifndef IotTaskPool_MallocTaskPool
-        #define IotTaskPool_MallocTaskPool    malloc
+        #ifdef Iot_DefaultMalloc
+            #define IotTaskPool_MallocTaskPool    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotTaskPool_MallocTaskPool"
+        #endif
     #endif
 
     #ifndef IotTaskPool_FreeTaskPool
-        #define IotTaskPool_FreeTaskPool    free
+        #ifdef Iot_DefaultFree
+            #define IotTaskPool_FreeTaskPool    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotTaskPool_FreeTaskPool"
+        #endif
     #endif
 
     #ifndef IotTaskPool_MallocJob
-        #define IotTaskPool_MallocJob    malloc
+        #ifdef Iot_DefaultMalloc
+            #define IotTaskPool_MallocJob    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotTaskPool_MallocJob"
+        #endif
     #endif
 
     #ifndef IotTaskPool_FreeJob
-        #define IotTaskPool_FreeJob    free
+        #ifdef Iot_DefaultFree
+            #define IotTaskPool_FreeJob    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotTaskPool_FreeJob"
+        #endif
     #endif
 
     #ifndef IotTaskPool_MallocTimerEvent
-        #define IotTaskPool_MallocTimerEvent    malloc
-    #endif
-    
-    #ifndef IotTaskPool_FreeTimerEvent
-        #define IotTaskPool_FreeTimerEvent      free
+        #ifdef Iot_DefaultMalloc
+            #define IotTaskPool_MallocTimerEvent    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotTaskPool_MallocTimerEvent"
+        #endif
     #endif
 
+    #ifndef IotTaskPool_FreeTimerEvent
+        #ifdef Iot_DefaultFree
+            #define IotTaskPool_FreeTimerEvent    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotTaskPool_FreeTimerEvent"
+        #endif
+    #endif
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -225,6 +251,7 @@
 typedef struct _taskPoolCache
 {
     IotListDouble_t freeList; /**< @brief A list ot hold cached jobs. */
+
     uint32_t freeCount;       /**< @brief A counter to track the number of jobs in the cache. */
 } _taskPoolCache_t;
 
@@ -272,7 +299,7 @@ typedef struct _taskPoolJob
 /**
  * @brief Represents an operation that is subject to a timer.
  *
- * These events are queued per MQTT connection. They are sorted by their
+ * These events are queued per task pool. They are sorted by their
  * expiration time.
  */
 typedef struct _taskPoolTimerEvent

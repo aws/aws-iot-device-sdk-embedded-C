@@ -42,12 +42,15 @@
 
 #if IOT_SERIALIZER_ENABLE_ASSERTS == 1
     #ifndef IotSerializer_Assert
-        #include <assert.h>
-        #define IotSerializer_Assert( expression )    assert( expression )
+        #ifdef Iot_DefaultAssert
+            #define IotSerializer_Assert( expression )    Iot_DefaultAssert( expression )
+        #else
+            #error "Asserts are enabled for serializer, but IotSerializer_Assert is not defined"
+        #endif
     #endif
-#else
+#else /* if IOT_SERIALIZER_ENABLE_ASSERTS == 1 */
     #define IotSerializer_Assert( expression )
-#endif
+#endif /* if IOT_SERIALIZER_ENABLE_ASSERTS == 1 */
 
 /*
  * Provide default values for undefined memory allocation functions based on
@@ -112,31 +115,68 @@
  */
     void IotSerializer_FreeDecoderObject( void * ptr );
 #else /* if IOT_STATIC_MEMORY_ONLY */
-    #include <stdlib.h>
-
     #ifndef IotSerializer_MallocCborEncoder
-        #define IotSerializer_MallocCborEncoder      malloc
+        #ifdef Iot_DefaultMalloc
+            #define IotSerializer_MallocCborEncoder    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotSerializer_MallocCborEncoder"
+        #endif
     #endif
+
     #ifndef IotSerializer_FreeCborEncoder
-        #define IotSerializer_FreeCborEncoder        free
+        #ifdef Iot_DefaultFree
+            #define IotSerializer_FreeCborEncoder    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotSerializer_FreeCborEncoder"
+        #endif
     #endif
+
     #ifndef IotSerializer_MallocCborParser
-        #define IotSerializer_MallocCborParser       malloc
+        #ifdef Iot_DefaultMalloc
+            #define IotSerializer_MallocCborParser    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotSerializer_MallocCborParser"
+        #endif
     #endif
+
     #ifndef IotSerializer_FreeCborParser
-        #define IotSerializer_FreeCborParser         free
+        #ifdef Iot_DefaultFree
+            #define IotSerializer_FreeCborParser    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotSerializer_FreeCborParser"
+        #endif
     #endif
+
     #ifndef IotSerializer_MallocCborValue
-        #define IotSerializer_MallocCborValue        malloc
+        #ifdef Iot_DefaultMalloc
+            #define IotSerializer_MallocCborValue    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotSerializer_MallocCborValue"
+        #endif
     #endif
+
     #ifndef IotSerializer_FreeCborValue
-        #define IotSerializer_FreeCborValue          free
+        #ifdef Iot_DefaultFree
+            #define IotSerializer_FreeCborValue    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotSerializer_FreeCborValue"
+        #endif
     #endif
+
     #ifndef IotSerializer_MallocDecoderObject
-        #define IotSerializer_MallocDecoderObject    malloc
+        #ifdef Iot_DefaultMalloc
+            #define IotSerializer_MallocDecoderObject    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotSerializer_MallocDecoderObject"
+        #endif
     #endif
+
     #ifndef IotSerializer_FreeDecoderObject
-        #define IotSerializer_FreeDecoderObject      free
+        #ifdef Iot_DefaultFree
+            #define IotSerializer_FreeDecoderObject    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotSerializer_FreeDecoderObject"
+        #endif
     #endif
 #endif /* if IOT_STATIC_MEMORY_ONLY */
 
