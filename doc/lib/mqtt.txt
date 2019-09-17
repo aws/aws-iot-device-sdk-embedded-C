@@ -224,7 +224,7 @@ QoS 1 PUBLISH retransmissions follow a truncated exponential backoff strategy. T
 @brief Assertion function used when @ref IOT_MQTT_ENABLE_ASSERTS is `1`.
 
 @configpossible Any function with the same signature as the standard library's [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function.<br>
-@configdefault Standard library [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function if @ref IOT_MQTT_ENABLE_ASSERTS is `1`; otherwise, nothing.
+@configdefault @ref Iot_DefaultAssert if @ref IOT_MQTT_ENABLE_ASSERTS is `1`; otherwise, nothing. If @ref Iot_DefaultAssert is not defined when asserts are enabled, the MQTT library will fail to build.
 
 @section mqtt_config_memory Memory allocation
 @brief The following functions may be re-implemented for the MQTT library.
@@ -244,6 +244,8 @@ QoS 1 PUBLISH retransmissions follow a truncated exponential backoff strategy. T
   @copybrief IotMqtt_MallocSubscription
 - #IotMqtt_FreeSubscription <br>
   @copybrief IotMqtt_FreeSubscription
+
+If a custom implementation is not set for an MQTT memory allocation function, @ref Iot_DefaultMalloc will be used. If @ref Iot_DefaultMalloc are not set, the MQTT library will fail to build.
 
 When @ref IOT_STATIC_MEMORY_ONLY is `1`, the following settings configure the number of statically-allocated buffers for MQTT.
 - @anchor IOT_MQTT_CONNECTIONS IOT_MQTT_CONNECTIONS <br>

@@ -51,8 +51,11 @@
  */
 #if IOT_MQTT_ENABLE_ASSERTS == 1
     #ifndef IotMqtt_Assert
-        #include <assert.h>
-        #define IotMqtt_Assert( expression )    assert( expression )
+        #ifdef Iot_DefaultAssert
+            #define IotMqtt_Assert( expression )    Iot_DefaultAssert( expression )
+        #else
+            #error "Asserts are enabled for MQTT, but IotMqtt_Assert is not defined"
+        #endif
     #endif
 #else
     #define IotMqtt_Assert( expression )
@@ -135,38 +138,68 @@
  */
     void IotMqtt_FreeSubscription( void * ptr );
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
-    #include <stdlib.h>
-
     #ifndef IotMqtt_MallocConnection
-        #define IotMqtt_MallocConnection    malloc
+        #ifdef Iot_DefaultMalloc
+            #define IotMqtt_MallocConnection    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotMqtt_MallocConnection"
+        #endif
     #endif
 
     #ifndef IotMqtt_FreeConnection
-        #define IotMqtt_FreeConnection    free
+        #ifdef Iot_DefaultFree
+            #define IotMqtt_FreeConnection    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotMqtt_FreeConnection"
+        #endif
     #endif
 
     #ifndef IotMqtt_MallocMessage
-        #define IotMqtt_MallocMessage    malloc
+        #ifdef Iot_DefaultMalloc
+            #define IotMqtt_MallocMessage    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotMqtt_MallocMessage"
+        #endif
     #endif
 
     #ifndef IotMqtt_FreeMessage
-        #define IotMqtt_FreeMessage    free
+        #ifdef Iot_DefaultFree
+            #define IotMqtt_FreeMessage    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotMqtt_FreeMessage"
+        #endif
     #endif
 
     #ifndef IotMqtt_MallocOperation
-        #define IotMqtt_MallocOperation    malloc
+        #ifdef Iot_DefaultMalloc
+            #define IotMqtt_MallocOperation    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotMqtt_MallocOperation"
+        #endif
     #endif
 
     #ifndef IotMqtt_FreeOperation
-        #define IotMqtt_FreeOperation    free
+        #ifdef Iot_DefaultFree
+            #define IotMqtt_FreeOperation    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotMqtt_FreeOperation"
+        #endif
     #endif
 
     #ifndef IotMqtt_MallocSubscription
-        #define IotMqtt_MallocSubscription    malloc
+        #ifdef Iot_DefaultMalloc
+            #define IotMqtt_MallocSubscription    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for IotMqtt_MallocSubscription"
+        #endif
     #endif
 
     #ifndef IotMqtt_FreeSubscription
-        #define IotMqtt_FreeSubscription    free
+        #ifdef Iot_DefaultFree
+            #define IotMqtt_FreeSubscription    Iot_DefaultFree
+        #else
+            #error "No free function defined for IotMqtt_FreeSubscription"
+        #endif
     #endif
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 

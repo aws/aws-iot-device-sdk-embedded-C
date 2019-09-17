@@ -46,6 +46,24 @@ When dynamic memory allocation is disabled, all of the memory allocation functio
 @configdefault `0`
 
 @attention This settings has no effect on system calls or third-party libraries; it may also have no effect on [platform layer] (@ref platform) implementations.
+
+@section Iot_DefaultMalloc IotDefault_Malloc and Iot_DefaultFree
+@brief Set these to the names of the default memory allocation functions to use across all libraries.
+
+<b>No default value is provided for this setting.</b> If these functions are not set, libraries will fail to build.
+
+All libraries allow each memory allocation function to be overridden with a custom implementation. If a function does not have a custom implementation set, then these functions will be used.
+
+@configpossible Functions that match the signatures of [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html) and [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+
+@section Iot_DefaultAssert
+@brief Set this to the name of the default assert function to use across all libraries.
+
+<b>No default value is provided for this setting.</b> If this function is not set, libraries will fail to build when asserts are enabled.
+
+All libraries allow the assert function to be overridden with a custom implementation. If a custom implementation assert function is not set, then this functions will be used.
+
+@configpossible A function that matches the signature of [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html).
 */
 
 /**

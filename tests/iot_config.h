@@ -127,6 +127,10 @@
     #define IOT_TASKPOOLS                          ( 4 )
 #endif
 
+/* Default assert function. */
+#include <assert.h>
+#define Iot_DefaultAssert    assert
+
 /* Memory allocation function configuration. Note that these functions will not
  * be affected by IOT_STATIC_MEMORY_ONLY. */
 #define IotThreads_Malloc    unity_malloc_mt
@@ -142,21 +146,15 @@
 /* Memory allocation function configuration for libraries affected by
  * IOT_STATIC_MEMORY_ONLY. */
 #if IOT_STATIC_MEMORY_ONLY == 0
+    #define Iot_DefaultMalloc    unity_malloc_mt
+    #define Iot_DefaultFree      unity_malloc_mt
+
     #define IotTaskPool_MallocTaskPool           unity_malloc_mt
     #define IotTaskPool_FreeTaskPool             unity_free_mt
     #define IotTaskPool_MallocJob                unity_malloc_mt
     #define IotTaskPool_FreeJob                  unity_free_mt
     #define IotTaskPool_MallocTimerEvent         unity_malloc_mt
     #define IotTaskPool_FreeTimerEvent           unity_free_mt
-
-    #define IotMqtt_MallocMessage                unity_malloc_mt
-    #define IotMqtt_FreeMessage                  unity_free_mt
-    #define IotMqtt_MallocConnection             unity_malloc_mt
-    #define IotMqtt_FreeConnection               unity_free_mt
-    #define IotMqtt_MallocOperation              unity_malloc_mt
-    #define IotMqtt_FreeOperation                unity_free_mt
-    #define IotMqtt_MallocSubscription           unity_malloc_mt
-    #define IotMqtt_FreeSubscription             unity_free_mt
 
     #define IotSerializer_MallocCborEncoder      unity_malloc_mt
     #define IotSerializer_FreeCborEncoder        unity_free_mt
