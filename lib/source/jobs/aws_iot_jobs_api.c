@@ -42,6 +42,9 @@
 /* MQTT include. */
 #include "iot_mqtt.h"
 
+/* Atomics include. */
+#include "iot_atomic.h"
+
 /* Validate Jobs configuration settings. */
 #if AWS_IOT_JOBS_ENABLE_ASSERTS != 0 && AWS_IOT_JOBS_ENABLE_ASSERTS != 1
     #error "AWS_IOT_JOBS_ENABLE_ASSERTS must be 0 or 1."
@@ -51,6 +54,13 @@
 #endif
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief Check if the library is initialized.
+ *
+ * @return `true` if AwsIotJobs_Init was called; `false` otherwise.
+ */
+static bool _checkInit( void );
 
 /**
  * @brief Validate the #AwsIotJobsRequestInfo_t passed to a Jobs API function.
@@ -147,6 +157,13 @@ static void _callbackWrapperCommon( _jobsCallbackType_t type,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Tracks whether @ref jobs_function_init has been called.
+ *
+ * API functions will fail if @ref jobs_function_init was not called.
+ */
+static uint32_t _initCalled = 0;
+
+/**
  * @brief Timeout used for MQTT operations.
  */
 uint32_t _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
@@ -162,6 +179,22 @@ uint32_t _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
         "NOTIFY NEXT"
     };
 #endif
+
+/*-----------------------------------------------------------*/
+
+static bool _checkInit( void )
+{
+    bool status = true;
+
+    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
+    {
+        IotLogError( "AwsIotJobs_Init was not called." );
+
+        status = false;
+    }
+
+    return status;
+}
 
 /*-----------------------------------------------------------*/
 
@@ -376,6 +409,12 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_SUCCESS );
     bool subscriptionMutexLocked = false;
     _jobsSubscription_t * pSubscription = NULL;
+
+    /* Check that AwsIotJobs_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NOT_INITIALIZED );
+    }
 
     /* Validate Thing Name. */
     if( AwsIot_ValidateThingName( pThingName, thingNameLength ) == false )
@@ -714,27 +753,38 @@ static void _callbackWrapperCommon( _jobsCallbackType_t type,
 AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs )
 {
     AwsIotJobsError_t status = AWS_IOT_JOBS_SUCCESS;
+    bool listInitStatus = false;
 
-    bool listInitStatus = AwsIot_InitLists( &_AwsIotJobsPendingOperations,
-                                            &_AwsIotJobsSubscriptions,
-                                            &_AwsIotJobsPendingOperationsMutex,
-                                            &_AwsIotJobsSubscriptionsMutex );
-
-    if( listInitStatus == false )
+    if( _checkInit() == false )
     {
-        IotLogInfo( "Failed to create Jobs lists." );
+        listInitStatus = AwsIot_InitLists( &_AwsIotJobsPendingOperations,
+                                           &_AwsIotJobsSubscriptions,
+                                           &_AwsIotJobsPendingOperationsMutex,
+                                           &_AwsIotJobsSubscriptionsMutex );
 
-        status = AWS_IOT_JOBS_INIT_FAILED;
+        if( listInitStatus == false )
+        {
+            IotLogInfo( "Failed to create Jobs lists." );
+
+            status = AWS_IOT_JOBS_INIT_FAILED;
+        }
+        else
+        {
+            /* Save the MQTT timeout option. */
+            if( mqttTimeoutMs != 0 )
+            {
+                _AwsIotJobsMqttTimeoutMs = mqttTimeoutMs;
+            }
+
+            /* Set the flag that specifies initialization is complete. */
+            ( void ) Atomic_CompareAndSwap_u32( &( _initCalled ), 1, 0 );
+
+            IotLogInfo( "Jobs library successfully initialized." );
+        }
     }
     else
     {
-        /* Save the MQTT timeout option. */
-        if( mqttTimeoutMs != 0 )
-        {
-            _AwsIotJobsMqttTimeoutMs = mqttTimeoutMs;
-        }
-
-        IotLogInfo( "Jobs library successfully initialized." );
+        IotLogWarn( "AwsIotJobs_Init called with library already initialized." );
     }
 
     return status;
@@ -744,28 +794,37 @@ AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs )
 
 void AwsIotJobs_Cleanup( void )
 {
-    /* Remove and free all items in the Jobs pending operation list. */
-    IotMutex_Lock( &_AwsIotJobsPendingOperationsMutex );
-    IotListDouble_RemoveAll( &_AwsIotJobsPendingOperations,
-                             _AwsIotJobs_DestroyOperation,
-                             offsetof( _jobsOperation_t, link ) );
-    IotMutex_Unlock( &_AwsIotJobsPendingOperationsMutex );
+    uint32_t initCleared = Atomic_CompareAndSwap_u32( &( _initCalled ), 0, 1 );
 
-    /* Remove and free all items in the Jobs subscription list. */
-    IotMutex_Lock( &_AwsIotJobsSubscriptionsMutex );
-    IotListDouble_RemoveAll( &_AwsIotJobsSubscriptions,
-                             _AwsIotJobs_DestroySubscription,
-                             offsetof( _jobsSubscription_t, link ) );
-    IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
+    if( initCleared == 1 )
+    {
+        /* Remove and free all items in the Jobs pending operation list. */
+        IotMutex_Lock( &_AwsIotJobsPendingOperationsMutex );
+        IotListDouble_RemoveAll( &_AwsIotJobsPendingOperations,
+                                 _AwsIotJobs_DestroyOperation,
+                                 offsetof( _jobsOperation_t, link ) );
+        IotMutex_Unlock( &_AwsIotJobsPendingOperationsMutex );
 
-    /* Restore the default MQTT timeout. */
-    _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
+        /* Remove and free all items in the Jobs subscription list. */
+        IotMutex_Lock( &_AwsIotJobsSubscriptionsMutex );
+        IotListDouble_RemoveAll( &_AwsIotJobsSubscriptions,
+                                 _AwsIotJobs_DestroySubscription,
+                                 offsetof( _jobsSubscription_t, link ) );
+        IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
 
-    /* Destroy Jobs library mutexes. */
-    IotMutex_Destroy( &_AwsIotJobsPendingOperationsMutex );
-    IotMutex_Destroy( &_AwsIotJobsSubscriptionsMutex );
+        /* Restore the default MQTT timeout. */
+        _AwsIotJobsMqttTimeoutMs = AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS;
 
-    IotLogInfo( "Jobs library cleanup done." );
+        /* Destroy Jobs library mutexes. */
+        IotMutex_Destroy( &_AwsIotJobsPendingOperationsMutex );
+        IotMutex_Destroy( &_AwsIotJobsSubscriptionsMutex );
+
+        IotLogInfo( "Jobs library cleanup done." );
+    }
+    else
+    {
+        IotLogWarn( "AwsIotJobs_Init was not called before AwsIotShadow_Cleanup." );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -777,6 +836,12 @@ AwsIotJobsError_t AwsIotJobs_GetPendingAsync( const AwsIotJobsRequestInfo_t * pR
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
     _jobsOperation_t * pOperation = NULL;
+
+    /* Check that AwsIotJobs_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NOT_INITIALIZED );
+    }
 
     /* Check request info. */
     status = _validateRequestInfo( JOBS_GET_PENDING,
@@ -865,6 +930,12 @@ AwsIotJobsError_t AwsIotJobs_StartNextAsync( const AwsIotJobsRequestInfo_t * pRe
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
     _jobsOperation_t * pOperation = NULL;
     _jsonRequestContents_t requestContents = { 0 };
+
+    /* Check that AwsIotJobs_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NOT_INITIALIZED );
+    }
 
     /* Check request info. */
     status = _validateRequestInfo( JOBS_START_NEXT,
@@ -968,6 +1039,12 @@ AwsIotJobsError_t AwsIotJobs_DescribeAsync( const AwsIotJobsRequestInfo_t * pReq
     _jobsOperation_t * pOperation = NULL;
     _jsonRequestContents_t requestContents = { 0 };
 
+    /* Check that AwsIotJobs_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NOT_INITIALIZED );
+    }
+
     /* Check request info. */
     status = _validateRequestInfo( JOBS_DESCRIBE,
                                    pRequestInfo,
@@ -1062,6 +1139,12 @@ AwsIotJobsError_t AwsIotJobs_UpdateAsync( const AwsIotJobsRequestInfo_t * pReque
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
     _jobsOperation_t * pOperation = NULL;
     _jsonRequestContents_t requestContents = { 0 };
+
+    /* Check that AwsIotJobs_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NOT_INITIALIZED );
+    }
 
     /* Check request info. */
     status = _validateRequestInfo( JOBS_UPDATE,
@@ -1159,6 +1242,12 @@ AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
                                    AwsIotJobsResponse_t * const pJobsResponse )
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_STATUS_PENDING );
+
+    /* Check that AwsIotJobs_Init was called. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NOT_INITIALIZED );
+    }
 
     /* Check that reference is set. */
     if( operation == NULL )
@@ -1300,6 +1389,10 @@ const char * AwsIotJobs_strerror( AwsIotJobsError_t status )
 
         case AWS_IOT_JOBS_TIMEOUT:
             pMessage = "TIMEOUT";
+            break;
+
+        case AWS_IOT_JOBS_NOT_INITIALIZED:
+            pMessage = "NOT INITIALIZED";
             break;
 
         case AWS_IOT_JOBS_INVALID_TOPIC:
