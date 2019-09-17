@@ -137,6 +137,7 @@ void AwsIotJobs_Cleanup( void );
  * @return This function will return #AWS_IOT_JOBS_STATUS_PENDING upon successfully
  * queuing the Jobs operation.
  * @return If this function fails before queuing the Jobs operation, it will return one of:
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * @return Upon successful completion of the Jobs operation (either through an #AwsIotJobsCallbackInfo_t
@@ -204,6 +205,7 @@ AwsIotJobsError_t AwsIotJobs_GetPendingAsync( const AwsIotJobsRequestInfo_t * pR
  *
  * @return One of the following:
  * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * - #AWS_IOT_JOBS_MQTT_ERROR
@@ -239,6 +241,7 @@ AwsIotJobsError_t AwsIotJobs_GetPendingSync( const AwsIotJobsRequestInfo_t * pRe
  * @return This function will return #AWS_IOT_JOBS_STATUS_PENDING upon successfully
  * queuing the Jobs operation.
  * @return If this function fails before queuing the Jobs operation, it will return one of:
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * @return Upon successful completion of the Jobs operation (either through an #AwsIotJobsCallbackInfo_t
@@ -311,6 +314,7 @@ AwsIotJobsError_t AwsIotJobs_StartNextAsync( const AwsIotJobsRequestInfo_t * pRe
  *
  * @return One of the following:
  * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * - #AWS_IOT_JOBS_MQTT_ERROR
@@ -351,6 +355,7 @@ AwsIotJobsError_t AwsIotJobs_StartNextSync( const AwsIotJobsRequestInfo_t * pReq
  * @return This function will return #AWS_IOT_JOBS_STATUS_PENDING upon successfully
  * queuing the Jobs operation.
  * @return If this function fails before queuing the Jobs operation, it will return one of:
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * @return Upon successful completion of the Jobs operation (either through an #AwsIotJobsCallbackInfo_t
@@ -430,6 +435,7 @@ AwsIotJobsError_t AwsIotJobs_DescribeAsync( const AwsIotJobsRequestInfo_t * pReq
  *
  * @return One of the following:
  * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * - #AWS_IOT_JOBS_MQTT_ERROR
@@ -466,6 +472,7 @@ AwsIotJobsError_t AwsIotJobs_DescribeSync( const AwsIotJobsRequestInfo_t * pRequ
  * @return This function will return #AWS_IOT_JOBS_STATUS_PENDING upon successfully
  * queuing the Jobs operation.
  * @return If this function fails before queuing the Jobs operation, it will return one of:
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * @return Upon successful completion of the Jobs operation (either through an #AwsIotJobsCallbackInfo_t
@@ -544,6 +551,7 @@ AwsIotJobsError_t AwsIotJobs_UpdateAsync( const AwsIotJobsRequestInfo_t * pReque
  *
  * @return One of the following:
  * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * - #AWS_IOT_JOBS_MQTT_ERROR
@@ -584,6 +592,7 @@ AwsIotJobsError_t AwsIotJobs_UpdateSync( const AwsIotJobsRequestInfo_t * pReques
  *
  * @return One of the following:
  * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_BAD_RESPONSE
  * - #AWS_IOT_JOBS_TIMEOUT
@@ -678,6 +687,7 @@ AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
  *
  * @return One of the following:
  * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * - #AWS_IOT_JOBS_MQTT_ERROR
@@ -762,6 +772,7 @@ AwsIotJobsError_t AwsIotJobs_SetNotifyPendingCallback( IotMqttConnection_t mqttC
  *
  * @return One of the following:
  * - #AWS_IOT_JOBS_SUCCESS
+ * - #AWS_IOT_JOBS_NOT_INITIALIZED
  * - #AWS_IOT_JOBS_BAD_PARAMETER
  * - #AWS_IOT_JOBS_NO_MEMORY
  * - #AWS_IOT_JOBS_MQTT_ERROR

@@ -150,6 +150,7 @@ TEST_GROUP_RUNNER( Shadow_Unit_API )
  */
 TEST( Shadow_Unit_API, Init )
 {
+    int32_t i = 0;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowDocumentInfo_t documentInfo = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
     AwsIotShadowOperation_t operation = AWS_IOT_SHADOW_OPERATION_INITIALIZER;
@@ -193,8 +194,23 @@ TEST( Shadow_Unit_API, Init )
     status = AwsIotShadow_SetUpdatedCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, NULL );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_NOT_INITIALIZED, status );
 
+    /* Test Shadow initialization with mutex creation failures. */
+    for( i = 0; ; i++ )
+    {
+        UnityMalloc_MakeMallocFailAfterCount( i );
+
+        status = AwsIotShadow_Init( 0 );
+
+        /* Check that the status is either success or "INIT FAILED". */
+        if( status == AWS_IOT_SHADOW_SUCCESS )
+        {
+            break;
+        }
+
+        TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_INIT_FAILED, status );
+    }
+
     /* Initialize the Shadow library for test clean up. Calling init twice should not crash. */
-    TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, AwsIotShadow_Init( 0 ) );
     TEST_ASSERT_EQUAL( AWS_IOT_SHADOW_SUCCESS, AwsIotShadow_Init( 0 ) );
 }
 
@@ -213,34 +229,41 @@ TEST( Shadow_Unit_API, StringCoverage )
     size_t invalidStatusLength = strlen( pInvalidStatus );
 
     /* For each Shadow Error, check the returned string. */
-    while( true )
+    const AwsIotShadowError_t pApiErrors[] =
     {
-        pMessage = AwsIotShadow_strerror( ( AwsIotShadowError_t ) i );
+        AWS_IOT_SHADOW_SUCCESS,       AWS_IOT_SHADOW_STATUS_PENDING, AWS_IOT_SHADOW_INIT_FAILED,
+        AWS_IOT_SHADOW_BAD_PARAMETER, AWS_IOT_SHADOW_NO_MEMORY,      AWS_IOT_SHADOW_MQTT_ERROR,
+        AWS_IOT_SHADOW_BAD_RESPONSE,  AWS_IOT_SHADOW_TIMEOUT,        AWS_IOT_SHADOW_NOT_INITIALIZED
+    };
+
+    for( i = 0; i < ( sizeof( pApiErrors ) / sizeof( pApiErrors[ 0 ] ) ); i++ )
+    {
+        pMessage = AwsIotShadow_strerror( pApiErrors[ i ] );
         TEST_ASSERT_NOT_NULL( pMessage );
 
-        if( strncmp( pInvalidStatus, pMessage, invalidStatusLength ) == 0 )
-        {
-            break;
-        }
-
-        i++;
+        TEST_ASSERT_NOT_EQUAL( 0, strncmp( pInvalidStatus, pMessage, invalidStatusLength ) );
     }
 
     /* For each rejection reason (from the Shadow service) check the returned string. */
-    const AwsIotShadowError_t rejectionReasons[] =
+    const AwsIotShadowError_t pRejectionReasons[] =
     {
         AWS_IOT_SHADOW_BAD_REQUEST, AWS_IOT_SHADOW_UNAUTHORIZED,      AWS_IOT_SHADOW_FORBIDDEN,
         AWS_IOT_SHADOW_NOT_FOUND,   AWS_IOT_SHADOW_CONFLICT,          AWS_IOT_SHADOW_TOO_LARGE,
         AWS_IOT_SHADOW_UNSUPPORTED, AWS_IOT_SHADOW_TOO_MANY_REQUESTS, AWS_IOT_SHADOW_SERVER_ERROR
     };
 
-    for( i = 0; i < ( sizeof( rejectionReasons ) / sizeof( rejectionReasons[ 0 ] ) ); i++ )
+    for( i = 0; i < ( sizeof( pRejectionReasons ) / sizeof( pRejectionReasons[ 0 ] ) ); i++ )
     {
-        pMessage = AwsIotShadow_strerror( rejectionReasons[ i ] );
+        pMessage = AwsIotShadow_strerror( pRejectionReasons[ i ] );
         TEST_ASSERT_NOT_NULL( pMessage );
 
         TEST_ASSERT_NOT_EQUAL( 0, strncmp( pInvalidStatus, pMessage, invalidStatusLength ) );
     }
+
+    /* Check an invalid status. */
+    pMessage = AwsIotShadow_strerror( ( AwsIotShadowError_t ) -1 );
+    TEST_ASSERT_NOT_NULL( pMessage );
+    TEST_ASSERT_EQUAL_STRING( pInvalidStatus, pMessage );
 }
 
 /*-----------------------------------------------------------*/

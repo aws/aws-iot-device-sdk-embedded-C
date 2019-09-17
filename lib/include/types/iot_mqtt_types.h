@@ -126,7 +126,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_unsubscribeasync
      * - @ref mqtt_function_publishasync with QoS 1 parameter
      */
-    IOT_MQTT_STATUS_PENDING,
+    IOT_MQTT_STATUS_PENDING = 1,
 
     /**
      * @brief Initialization failed.
@@ -134,7 +134,7 @@ typedef enum IotMqttError
      * Functions that may return this value:
      * - @ref mqtt_function_init
      */
-    IOT_MQTT_INIT_FAILED,
+    IOT_MQTT_INIT_FAILED = 2,
 
     /**
      * @brief At least one parameter is invalid.
@@ -146,7 +146,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_publishasync and @ref mqtt_function_publishsync
      * - @ref mqtt_function_wait
      */
-    IOT_MQTT_BAD_PARAMETER,
+    IOT_MQTT_BAD_PARAMETER = 3,
 
     /**
      * @brief MQTT operation failed because of memory allocation failure.
@@ -157,7 +157,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_unsubscribesync
      * - @ref mqtt_function_publishasync and @ref mqtt_function_publishsync
      */
-    IOT_MQTT_NO_MEMORY,
+    IOT_MQTT_NO_MEMORY = 4,
 
     /**
      * @brief MQTT operation failed because the network was unusable.
@@ -174,7 +174,7 @@ typedef enum IotMqttError
      * May also be the value of an operation completion callback's
      * #IotMqttCallbackParam_t.result.
      */
-    IOT_MQTT_NETWORK_ERROR,
+    IOT_MQTT_NETWORK_ERROR = 5,
 
     /**
      * @brief MQTT operation could not be scheduled, i.e. enqueued for sending.
@@ -185,7 +185,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_unsubscribeasync and @ref mqtt_function_unsubscribesync
      * - @ref mqtt_function_publishasync and @ref mqtt_function_publishsync
      */
-    IOT_MQTT_SCHEDULING_ERROR,
+    IOT_MQTT_SCHEDULING_ERROR = 6,
 
     /**
      * @brief MQTT response packet received from the network is malformed.
@@ -202,7 +202,7 @@ typedef enum IotMqttError
      *
      * @note If this value is received, the network connection has been closed.
      */
-    IOT_MQTT_BAD_RESPONSE,
+    IOT_MQTT_BAD_RESPONSE = 7,
 
     /**
      * @brief A blocking MQTT operation timed out.
@@ -214,7 +214,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_unsubscribesync
      * - @ref mqtt_function_publishsync
      */
-    IOT_MQTT_TIMEOUT,
+    IOT_MQTT_TIMEOUT = 8,
 
     /**
      * @brief A CONNECT or at least one subscription was refused by the server.
@@ -235,7 +235,7 @@ typedef enum IotMqttError
      * mqtt_function_issubscribed can be used to determine which subscriptions
      * were accepted or rejected.
      */
-    IOT_MQTT_SERVER_REFUSED,
+    IOT_MQTT_SERVER_REFUSED = 9,
 
     /**
      * @brief A QoS 1 PUBLISH received no response and [the retry limit]
@@ -249,7 +249,7 @@ typedef enum IotMqttError
      * May also be the value of an operation completion callback's
      * #IotMqttCallbackParam_t.result for a QoS 1 PUBLISH.
      */
-    IOT_MQTT_RETRY_NO_RESPONSE,
+    IOT_MQTT_RETRY_NO_RESPONSE = 10,
 
     /**
      * @brief An API function was called before @ref mqtt_function_init.
@@ -264,7 +264,7 @@ typedef enum IotMqttError
      * - @ref mqtt_function_publishsync
      * - @ref mqtt_function_wait
      */
-    IOT_MQTT_NOT_INITIALIZED
+    IOT_MQTT_NOT_INITIALIZED = 11
 } IotMqttError_t;
 
 /**
