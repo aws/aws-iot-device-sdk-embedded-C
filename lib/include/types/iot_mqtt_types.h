@@ -131,19 +131,8 @@ typedef enum IotMqttError
     /**
      * @brief Initialization failed.
      *
-     * This value is returned by @ref mqtt_function_init when initialization fails, or
-     * by other API functions if they are called before @ref mqtt_function_init.
-     *
      * Functions that may return this value:
      * - @ref mqtt_function_init
-     * - @ref mqtt_function_connect
-     * - @ref mqtt_function_subscribeasync
-     * - @ref mqtt_function_subscribesync
-     * - @ref mqtt_function_unsubscribeasync
-     * - @ref mqtt_function_unsubscribesync
-     * - @ref mqtt_function_publishasync
-     * - @ref mqtt_function_publishsync
-     * - @ref mqtt_function_wait
      */
     IOT_MQTT_INIT_FAILED,
 
@@ -260,7 +249,22 @@ typedef enum IotMqttError
      * May also be the value of an operation completion callback's
      * #IotMqttCallbackParam_t.result for a QoS 1 PUBLISH.
      */
-    IOT_MQTT_RETRY_NO_RESPONSE
+    IOT_MQTT_RETRY_NO_RESPONSE,
+
+    /**
+     * @brief An API function was called before @ref mqtt_function_init.
+     *
+     * Functions that may return this value:
+     * - @ref mqtt_function_connect
+     * - @ref mqtt_function_subscribeasync
+     * - @ref mqtt_function_subscribesync
+     * - @ref mqtt_function_unsubscribeasync
+     * - @ref mqtt_function_unsubscribesync
+     * - @ref mqtt_function_publishasync
+     * - @ref mqtt_function_publishsync
+     * - @ref mqtt_function_wait
+     */
+    IOT_MQTT_NOT_INITIALIZED
 } IotMqttError_t;
 
 /**
@@ -470,7 +474,7 @@ typedef struct IotMqttCallbackParam
 
         /* Valid when a connection is disconnected. */
         IotMqttDisconnectReason_t disconnectReason; /**< @brief Why the MQTT connection was disconnected. */
-    } u; /**< @brief Valid member depends on callback type. */
+    } u;                                            /**< @brief Valid member depends on callback type. */
 } IotMqttCallbackParam_t;
 
 /**
