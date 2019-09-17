@@ -72,6 +72,14 @@
 #define AWS_IOT_LOG_LEVEL_DEFENDER              IOT_LOG_INFO
 #define AWS_IOT_LOG_LEVEL_JOBS                  IOT_LOG_INFO
 
+/* Default assert and memory allocation functions. */
+#include <assert.h>
+#include <stdlib.h>
+
+#define Iot_DefaultAssert    assert
+#define Iot_DefaultMalloc    malloc
+#define Iot_DefaultFree      free
+
 /* The build system will choose the appropriate system types file for the platform
  * layer based on the host operating system. */
 #include IOT_SYSTEM_TYPES_FILE

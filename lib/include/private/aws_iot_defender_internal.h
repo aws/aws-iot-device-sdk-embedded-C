@@ -53,12 +53,15 @@
  */
 #if AWS_IOT_DEFENDER_ENABLE_ASSERTS == 1
     #ifndef AwsIotDefender_Assert
-        #include <assert.h>
-        #define AwsIotDefender_Assert( expression )    assert( expression )
+        #ifdef Iot_DefaultAssert
+            #define AwsIotDefender_Assert( expression )    Iot_DefaultAssert( expression )
+        #else
+            #error "Asserts are enabled for Defender, but AwsIotDefender_Assert is not defined"
+        #endif
     #endif
-#else
+#else /* if AWS_IOT_DEFENDER_ENABLE_ASSERTS == 1 */
     #define AwsIotDefender_Assert( expression )
-#endif
+#endif /* if AWS_IOT_DEFENDER_ENABLE_ASSERTS == 1 */
 
 /* Configure logs for Defender functions. */
 #ifdef AWS_IOT_LOG_LEVEL_DEFENDER
@@ -109,24 +112,37 @@
  */
     #define AwsIotDefender_FreeTopic       Iot_FreeMessageBuffer
 #else /* if IOT_STATIC_MEMORY_ONLY */
-    #include <stdlib.h>
-
     #ifndef AwsIotDefender_MallocReport
-        #define AwsIotDefender_MallocReport    malloc
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotDefender_MallocReport    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for AwsIotDefender_MallocReport"
+        #endif
     #endif
 
     #ifndef AwsIotDefender_FreeReport
-        #define AwsIotDefender_FreeReport    free
+        #ifdef Iot_DefaultFree
+            #define AwsIotDefender_FreeReport    Iot_DefaultFree
+        #else
+            #error "No free function defined for AwsIotDefender_FreeReport"
+        #endif
     #endif
 
     #ifndef AwsIotDefender_MallocTopic
-        #define AwsIotDefender_MallocTopic    malloc
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotDefender_MallocTopic    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for AwsIotDefender_MallocTopic"
+        #endif
     #endif
 
     #ifndef AwsIotDefender_FreeTopic
-        #define AwsIotDefender_FreeTopic    free
+        #ifdef Iot_DefaultFree
+            #define AwsIotDefender_FreeTopic    Iot_DefaultFree
+        #else
+            #error "No free function defined for AwsIotDefender_FreeTopic"
+        #endif
     #endif
-
 #endif /* if IOT_STATIC_MEMORY_ONLY */
 
 /**
@@ -232,9 +248,9 @@
  * Define encoder/decoder based on configuration AWS_IOT_DEFENDER_FORMAT.
  */
 #if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR
-    #define DEFENDER_FORMAT     "cbor"
+    #define DEFENDER_FORMAT    "cbor"
 #elif AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_JSON
-    #define DEFENDER_FORMAT     "json"
+    #define DEFENDER_FORMAT    "json"
 #else /* if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR */
     #error "AWS_IOT_DEFENDER_FORMAT must be either AWS_IOT_DEFENDER_FORMAT_CBOR or AWS_IOT_DEFENDER_FORMAT_JSON."
 #endif /* if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR */
