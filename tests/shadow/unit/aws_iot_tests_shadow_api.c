@@ -27,6 +27,9 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* Standard includes. */
+#include <string.h>
+
 /* SDK initialization include. */
 #include "iot_init.h"
 
