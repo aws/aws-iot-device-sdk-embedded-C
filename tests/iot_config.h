@@ -147,7 +147,7 @@
  * IOT_STATIC_MEMORY_ONLY. */
 #if IOT_STATIC_MEMORY_ONLY == 0
     #define Iot_DefaultMalloc    unity_malloc_mt
-    #define Iot_DefaultFree      unity_malloc_mt
+    #define Iot_DefaultFree      unity_free_mt
 
     #define IotTaskPool_MallocTaskPool           unity_malloc_mt
     #define IotTaskPool_FreeTaskPool             unity_free_mt
