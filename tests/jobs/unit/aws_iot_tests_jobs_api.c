@@ -251,12 +251,19 @@ TEST( Jobs_Unit_API, Init )
 {
     int32_t i = 0;
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+    AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
+    AwsIotJobsOperation_t operation = AWS_IOT_JOBS_OPERATION_INITIALIZER;
+    AwsIotJobsResponse_t response = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
 
     /* Check that test set up set the default value. */
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS, _AwsIotJobsMqttTimeoutMs );
 
     /* The Jobs library was already initialized by test set up. Clean it up
      * before running this test. */
+    AwsIotJobs_Cleanup();
+
+    /* Calling cleanup twice should not crash. */
     AwsIotJobs_Cleanup();
 
     /* Set a MQTT timeout. */
@@ -267,7 +274,32 @@ TEST( Jobs_Unit_API, Init )
     AwsIotJobs_Cleanup();
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS, _AwsIotJobsMqttTimeoutMs );
 
-    /* Test jobs initialization with mutex creation failures. */
+    /* Calling API functions without calling AwsIotJobs_Init should fail. */
+    requestInfo.mqttConnection = _pMqttConnection;
+    requestInfo.pThingName = TEST_THING_NAME;
+    requestInfo.thingNameLength = TEST_THING_NAME_LENGTH;
+    status = AwsIotJobs_GetPendingAsync( &requestInfo, 0, NULL, NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NOT_INITIALIZED, status );
+
+    status = AwsIotJobs_StartNextAsync( &requestInfo, &updateInfo, 0, NULL, NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NOT_INITIALIZED, status );
+
+    status = AwsIotJobs_DescribeAsync( &requestInfo, AWS_IOT_JOBS_NO_EXECUTION_NUMBER, false, 0, NULL, NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NOT_INITIALIZED, status );
+
+    status = AwsIotJobs_UpdateAsync( &requestInfo, &updateInfo, 0, NULL, NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NOT_INITIALIZED, status );
+
+    status = AwsIotJobs_Wait( operation, 500, &response );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NOT_INITIALIZED, status );
+
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NOT_INITIALIZED, status );
+
+    status = AwsIotJobs_SetNotifyPendingCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NOT_INITIALIZED, status );
+
+    /* Test Jobs initialization with mutex creation failures. */
     for( i = 0; ; i++ )
     {
         UnityMalloc_MakeMallocFailAfterCount( i );
@@ -282,6 +314,9 @@ TEST( Jobs_Unit_API, Init )
 
         TEST_ASSERT_EQUAL( AWS_IOT_JOBS_INIT_FAILED, status );
     }
+
+    /* Initialize the Jobs library for test clean up. Calling init twice should not crash. */
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, AwsIotJobs_Init( 0 ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -295,29 +330,43 @@ TEST( Jobs_Unit_API, StringCoverage )
     int32_t i = 0;
     const char * pMessage = NULL;
 
+    const char * pInvalidStatus = "INVALID STATUS";
+    size_t invalidStatusLength = strlen( pInvalidStatus );
+
     /* For each Jobs Error, check the returned string. */
-    while( true )
+    const AwsIotJobsError_t pApiErrors[] =
     {
-        pMessage = AwsIotJobs_strerror( ( AwsIotJobsError_t ) i );
+        AWS_IOT_JOBS_SUCCESS,        AWS_IOT_JOBS_STATUS_PENDING, AWS_IOT_JOBS_INIT_FAILED,
+        AWS_IOT_JOBS_BAD_PARAMETER,  AWS_IOT_JOBS_NO_MEMORY,      AWS_IOT_JOBS_MQTT_ERROR,
+        AWS_IOT_JOBS_BAD_RESPONSE,   AWS_IOT_JOBS_TIMEOUT,        AWS_IOT_JOBS_NOT_INITIALIZED,
+        AWS_IOT_JOBS_INVALID_TOPIC,  AWS_IOT_JOBS_INVALID_JSON,   AWS_IOT_JOBS_INVALID_REQUEST,
+        AWS_IOT_JOBS_INVALID_STATE,  AWS_IOT_JOBS_NOT_FOUND,      AWS_IOT_JOBS_VERSION_MISMATCH,
+        AWS_IOT_JOBS_INTERNAL_ERROR, AWS_IOT_JOBS_THROTTLED,      AWS_IOT_JOBS_TERMINAL_STATE
+    };
+
+    for( i = 0; i < ( sizeof( pApiErrors ) / sizeof( pApiErrors[ 0 ] ) ); i++ )
+    {
+        pMessage = AwsIotJobs_strerror( pApiErrors[ i ] );
         TEST_ASSERT_NOT_NULL( pMessage );
 
-        if( strncmp( "INVALID STATUS", pMessage, 14 ) == 0 )
-        {
-            break;
-        }
-
-        i++;
+        TEST_ASSERT_NOT_EQUAL( 0, strncmp( pInvalidStatus, pMessage, invalidStatusLength ) );
     }
+
+    /* Check an invalid status. */
+    pMessage = AwsIotJobs_strerror( ( AwsIotJobsError_t ) -1 );
+    TEST_ASSERT_EQUAL_STRING( pInvalidStatus, pMessage );
 
     /* For each Jobs State, check the returned string. */
     i = 0;
+    const char * pInvalidState = "INVALID STATE";
+    size_t invalidStateLength = strlen( pInvalidState );
 
     while( true )
     {
         pMessage = AwsIotJobs_StateName( ( AwsIotJobState_t ) i );
         TEST_ASSERT_NOT_NULL( pMessage );
 
-        if( strncmp( "INVALID STATE", pMessage, 13 ) == 0 )
+        if( strncmp( pInvalidState, pMessage, invalidStateLength ) == 0 )
         {
             break;
         }
