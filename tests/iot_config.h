@@ -149,22 +149,6 @@
     #define Iot_DefaultMalloc    unity_malloc_mt
     #define Iot_DefaultFree      unity_free_mt
 
-    #define IotTaskPool_MallocTaskPool           unity_malloc_mt
-    #define IotTaskPool_FreeTaskPool             unity_free_mt
-    #define IotTaskPool_MallocJob                unity_malloc_mt
-    #define IotTaskPool_FreeJob                  unity_free_mt
-    #define IotTaskPool_MallocTimerEvent         unity_malloc_mt
-    #define IotTaskPool_FreeTimerEvent           unity_free_mt
-
-    #define IotSerializer_MallocCborEncoder      unity_malloc_mt
-    #define IotSerializer_FreeCborEncoder        unity_free_mt
-    #define IotSerializer_MallocCborParser       unity_malloc_mt
-    #define IotSerializer_FreeCborParser         unity_free_mt
-    #define IotSerializer_MallocCborValue        unity_malloc_mt
-    #define IotSerializer_FreeCborValue          unity_free_mt
-    #define IotSerializer_MallocDecoderObject    unity_malloc_mt
-    #define IotSerializer_FreeDecoderObject      unity_free_mt
-
     #define AwsIotShadow_MallocOperation         unity_malloc_mt
     #define AwsIotShadow_FreeOperation           unity_free_mt
     #define AwsIotShadow_MallocString            unity_malloc_mt
