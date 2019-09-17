@@ -58,7 +58,7 @@
 /**
  * @brief Check if the library is initialized.
  *
- * @return `true` if AwsIotShadow_Init was called; `false` otherwise.
+ * @return `true` if AwsIotJobs_Init was called; `false` otherwise.
  */
 static bool _checkInit( void );
 
@@ -157,9 +157,9 @@ static void _callbackWrapperCommon( _jobsCallbackType_t type,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tracks whether @ref shadow_function_init has been called.
+ * @brief Tracks whether @ref jobs_function_init has been called.
  *
- * API functions will fail if @ref shadow_function_init was not called.
+ * API functions will fail if @ref jobs_function_init was not called.
  */
 static uint32_t _initCalled = 0;
 
