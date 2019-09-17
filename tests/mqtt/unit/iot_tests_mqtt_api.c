@@ -607,23 +607,24 @@ TEST( MQTT_Unit_API, Init )
                               &connectInfo,
                               TIMEOUT_MS,
                               &_pMqttConnection );
-    TEST_ASSERT_EQUAL( IOT_MQTT_INIT_FAILED, status );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NOT_INITIALIZED, status );
 
     subscription.pTopicFilter = TEST_TOPIC_NAME;
     subscription.topicFilterLength = TEST_TOPIC_NAME_LENGTH;
     subscription.callback.function = SUBSCRIPTION_CALLBACK;
     status = IotMqtt_SubscribeAsync( _pMqttConnection, &subscription, 1, 0, NULL, NULL );
-    TEST_ASSERT_EQUAL( IOT_MQTT_INIT_FAILED, status );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NOT_INITIALIZED, status );
 
     status = IotMqtt_UnsubscribeAsync( _pMqttConnection, &subscription, 1, 0, NULL, NULL );
-    TEST_ASSERT_EQUAL( IOT_MQTT_INIT_FAILED, status );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NOT_INITIALIZED, status );
 
     publishInfo.pTopicName = TEST_TOPIC_NAME;
     publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
     status = IotMqtt_PublishAsync( _pMqttConnection, &publishInfo, 0, NULL, NULL );
-    TEST_ASSERT_EQUAL( IOT_MQTT_INIT_FAILED, status );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NOT_INITIALIZED, status );
 
     status = IotMqtt_Wait( operation, TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NOT_INITIALIZED, status );
 
     IotMqtt_Disconnect( _pMqttConnection, 0 );
 
@@ -667,7 +668,7 @@ TEST( MQTT_Unit_API, StringCoverage )
 
     while( true )
     {
-        pMessage = IotMqtt_OperationType( ( IotMqttError_t ) i );
+        pMessage = IotMqtt_OperationType( ( IotMqttOperationType_t ) i );
         TEST_ASSERT_NOT_NULL( pMessage );
 
         if( strncmp( pExitString, pMessage, exitStringLength ) == 0 )

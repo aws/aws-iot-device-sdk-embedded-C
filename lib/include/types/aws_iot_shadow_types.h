@@ -189,6 +189,19 @@ typedef enum AwsIotShadowError
     AWS_IOT_SHADOW_TIMEOUT,
 
     /**
+     * @brief An API function was called before @ref shadow_function_init.
+     *
+     * Functions that may return this value:
+     * - @ref shadow_function_deleteasync and @ref shadow_function_deletesync
+     * - @ref shadow_function_getasync and @ref shadow_function_getsync
+     * - @ref shadow_function_updateasync and @ref shadow_function_updatesync
+     * - @ref shadow_function_wait
+     * - @ref shadow_function_setdeltacallback
+     * - @ref shadow_function_setupdatedcallback
+     */
+    AWS_IOT_SHADOW_NOT_INITIALIZED,
+
+    /**
      * @brief Shadow operation rejected: Bad request.
      *
      * Functions that may return this value:
@@ -396,7 +409,7 @@ typedef struct AwsIotShadowCallbackParam
             const char * pDocument; /**< @brief Shadow delta or updated document. */
             size_t documentLength;  /**< @brief Length of Shadow delta or updated document. */
         } callback;                 /**< @brief Shadow document from an incoming delta or updated topic. */
-    } u; /**< @brief Valid member depends on callback type. */
+    } u;                            /**< @brief Valid member depends on callback type. */
 } AwsIotShadowCallbackParam_t;
 
 /**
@@ -473,7 +486,7 @@ typedef struct AwsIotShadowDocumentInfo
             const char * pUpdateDocument; /**< @brief The Shadow document to send in the update. */
             size_t updateDocumentLength;  /**< @brief Length of Shadow update document. */
         } update;                         /**< @brief Valid members for @ref shadow_function_updateasync. */
-    } u; /**< @brief Valid member depends on operation type. */
+    } u;                                  /**< @brief Valid member depends on operation type. */
 } AwsIotShadowDocumentInfo_t;
 
 /*------------------------ Shadow defined constants -------------------------*/
@@ -530,9 +543,9 @@ typedef struct AwsIotShadowDocumentInfo
  */
 
 /* @[define_shadow_initializers] */
-#define AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER           { 0 } /**< @brief Initializer for #AwsIotShadowCallbackInfo_t. */
-#define AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER           { 0 } /**< @brief Initializer for #AwsIotShadowDocumentInfo_t. */
-#define AWS_IOT_SHADOW_OPERATION_INITIALIZER               NULL  /**< @brief Initializer for #AwsIotShadowOperation_t. */
+#define AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER    { 0 }        /**< @brief Initializer for #AwsIotShadowCallbackInfo_t. */
+#define AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER    { 0 }        /**< @brief Initializer for #AwsIotShadowDocumentInfo_t. */
+#define AWS_IOT_SHADOW_OPERATION_INITIALIZER        NULL         /**< @brief Initializer for #AwsIotShadowOperation_t. */
 /* @[define_shadow_initializers] */
 
 /**

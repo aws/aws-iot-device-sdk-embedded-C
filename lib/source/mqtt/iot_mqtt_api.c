@@ -591,7 +591,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     /* Check that IotMqtt_Init was called. */
     if( _checkInit() == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NOT_INITIALIZED );
     }
     else
     {
@@ -993,7 +993,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     /* Check that IotMqtt_Init was called. */
     if( _checkInit() == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NOT_INITIALIZED );
     }
     else
     {
@@ -1612,7 +1612,7 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     /* Check that IotMqtt_Init was called. */
     if( _checkInit() == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NOT_INITIALIZED );
     }
     else
     {
@@ -1924,7 +1924,7 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
     /* Check that IotMqtt_Init was called. */
     if( _checkInit() == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_INIT_FAILED );
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NOT_INITIALIZED );
     }
     else
     {
@@ -2081,6 +2081,10 @@ const char * IotMqtt_strerror( IotMqttError_t status )
 
         case IOT_MQTT_RETRY_NO_RESPONSE:
             pMessage = "NO RESPONSE";
+            break;
+
+        case IOT_MQTT_NOT_INITIALIZED:
+            pMessage = "NOT INITIALIZED";
             break;
 
         default:
