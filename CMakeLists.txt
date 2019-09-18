@@ -60,6 +60,8 @@ if( NOT DEFINED IOT_PLATFORM_NAME )
                  "Export all symbols for Windows DLLs. This option must by enabled."
                  FORCE )
         endif()
+    elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" )
+        set( IOT_PLATFORM_NAME "macos" CACHE STRING "Port to use for building the SDK." )
     endif()
 endif()
 
