@@ -95,19 +95,23 @@ int RunDefenderDemo( bool awsIotMqttMode,
     /* Unused parameters */
     ( void ) awsIotMqttMode;
 
+    /* Initialize Metrics */
     IotMetrics_Init();
 
     /* Initialize the MQTT library. */
     mqttInitStatus = IotMqtt_Init();
 
-    if( pIdentifier != NULL )
+    if( pIdentifier == NULL || pIdentifier[ 0 ] == '\0' )
     {
+        IotLogError( "Empty Identifier Use." );
     }
-
-    if( mqttInitStatus == IOT_MQTT_SUCCESS )
+    else if( mqttInitStatus == IOT_MQTT_SUCCESS )
     {
         /* If the MQTT initialization was successful, run the demo. */
-        defenderResult = _defenderDemo( pIdentifier, pNetworkServerInfo, pNetworkCredentialInfo, pNetworkInterface );
+        defenderResult = _defenderDemo( pIdentifier,
+					pNetworkServerInfo,
+					pNetworkCredentialInfo,
+					pNetworkInterface );
 
         if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
         {
