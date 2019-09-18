@@ -149,13 +149,6 @@
 #if IOT_STATIC_MEMORY_ONLY == 0
     #define Iot_DefaultMalloc    unity_malloc_mt
     #define Iot_DefaultFree      unity_free_mt
-
-    #define AwsIotJobs_MallocOperation           unity_malloc_mt
-    #define AwsIotJobs_FreeOperation             unity_free_mt
-    #define AwsIotJobs_MallocString              unity_malloc_mt
-    #define AwsIotJobs_FreeString                unity_free_mt
-    #define AwsIotJobs_MallocSubscription        unity_malloc_mt
-    #define AwsIotJobs_FreeSubscription          unity_free_mt
 #endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
 
 /* Network types to use in the tests. These are forward declarations. */
