@@ -378,9 +378,10 @@ bool IotSemaphore_Create( IotSemaphore_t * pNewSemaphore,
 
 void IotSemaphore_Destroy( IotSemaphore_t * pSemaphore )
 {
-    /* Implement this function as specified here:
-     * https://docs.aws.amazon.com/freertos/latest/lib-ref/html3/platform/platform_threads_function_semaphoredestroy.html
-     */
+    /* dispatch_release only needs to be called if ARC is not being used. */
+    #if( OS_OBJECT_HAVE_OBJC_SUPPORT == 0 )
+        dispatch_release( pSemaphore->semaphore );
+    #endif
 }
 
 /*-----------------------------------------------------------*/
