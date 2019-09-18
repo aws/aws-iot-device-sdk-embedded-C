@@ -223,10 +223,7 @@ bool IotClock_TimerArm( IotTimer_t * pTimer,
 
     /* Cancel any timer work that may already be scheduled (in case this call
      * is a reschedule of an existing timer). */
-    if( pTimer->dispatchBlock != NULL )
-    {
-        dispatch_block_cancel( pTimer->dispatchBlock );
-    }
+    IotClock_TimerDestroy( pTimer );
 
     /* Create a dispatch block to execute work on behalf of the timer. */
     pTimer->dispatchBlock = dispatch_block_create( 0, ^ {
