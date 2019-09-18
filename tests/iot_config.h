@@ -107,6 +107,7 @@
 #define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )
 #define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
 #define IOT_TASKPOOL_ENABLE_ASSERTS             ( 1 )
+#define IOT_SERIALIZER_ENABLE_ASSERTS           ( 1 )
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 #define AWS_IOT_DEFENDER_ENABLE_ASSERTS         ( 1 )
 #define AWS_IOT_JOBS_ENABLE_ASSERTS             ( 1 )

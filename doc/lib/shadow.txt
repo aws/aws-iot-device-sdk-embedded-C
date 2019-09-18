@@ -146,7 +146,7 @@ Log messages from the Shadow library at or below this setting will be printed.
 @brief Assertion function used when @ref AWS_IOT_SHADOW_ENABLE_ASSERTS is `1`.
 
 @configpossible Any function with the same signature as the standard library's [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function.<br>
-@configdefault Standard library [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function if @ref AWS_IOT_SHADOW_ENABLE_ASSERTS is `1`; otherwise, nothing.
+@configdefault @ref Iot_DefaultAssert if @ref AWS_IOT_SHADOW_ENABLE_ASSERTS is `1`; otherwise, nothing. If @ref Iot_DefaultAssert is not defined when asserts are enabled, the Shadow library will fail to build.
 
 @section shadow_config_memory Memory allocation
 @brief The following functions may be re-implemented for the Shadow library.
