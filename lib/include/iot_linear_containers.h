@@ -99,12 +99,15 @@ typedef IotLink_t   IotDeQueue_t;
  */
 #if IOT_CONTAINERS_ENABLE_ASSERTS == 1
     #ifndef IotContainers_Assert
-        #include <assert.h>
-        #define IotContainers_Assert( expression )    assert( expression )
+        #ifdef Iot_DefaultAssert
+            #define IotContainers_Assert( expression )    Iot_DefaultAssert( expression )
+        #else
+            #error "Asserts are enabled for containers, but IotContainers_Assert is not defined"
+        #endif
     #endif
-#else
+#else  /* if IOT_CONTAINERS_ENABLE_ASSERTS == 1 */
     #define IotContainers_Assert( expression )
-#endif
+#endif /* if IOT_CONTAINERS_ENABLE_ASSERTS == 1 */
 
 /**
  * @brief Calculates the starting address of a containing struct.
@@ -124,9 +127,9 @@ typedef IotLink_t   IotDeQueue_t;
  * @param[in] pStart The first element to iterate from.
  * @param[out] pLink Pointer to a container element.
  */
-#define IotContainers_ForEach( pStart, pLink )  \
-    for( ( pLink ) = ( pStart )->pNext;         \
-         ( pLink ) != ( pStart );               \
+#define IotContainers_ForEach( pStart, pLink ) \
+    for( ( pLink ) = ( pStart )->pNext;        \
+         ( pLink ) != ( pStart );              \
          ( pLink ) = ( pLink )->pNext )
 
 /**
@@ -838,7 +841,7 @@ static inline IotLink_t * IotDeQueue_PeekTail( const IotDeQueue_t * const pQueue
  */
 /* @[declare_linear_containers_queue_enqueuehead] */
 static inline void IotDeQueue_EnqueueHead( IotDeQueue_t * const pQueue,
-                                     IotLink_t * const pLink )
+                                           IotLink_t * const pLink )
 /* @[declare_linear_containers_queue_enqueuehead] */
 {
     IotListDouble_InsertHead( pQueue, pLink );
@@ -868,7 +871,7 @@ static inline IotLink_t * IotDeQueue_DequeueHead( IotDeQueue_t * const pQueue )
  */
 /* @[declare_linear_containers_queue_enqueuetail] */
 static inline void IotDeQueue_EnqueueTail( IotDeQueue_t * const pQueue,
-                                     IotLink_t * const pLink )
+                                           IotLink_t * const pLink )
 /* @[declare_linear_containers_queue_enqueuetail] */
 {
     IotListDouble_InsertTail( pQueue, pLink );
@@ -915,8 +918,8 @@ static inline void IotDeQueue_Remove( IotLink_t * const pLink )
  */
 /* @[declare_linear_containers_queue_removeall] */
 static inline void IotDeQueue_RemoveAll( IotDeQueue_t * const pQueue,
-                                       void ( * freeElement )( void * ),
-                                       size_t linkOffset )
+                                         void ( * freeElement )( void * ),
+                                         size_t linkOffset )
 /* @[declare_linear_containers_queue_removeall] */
 {
     IotListDouble_RemoveAll( pQueue, freeElement, linkOffset );
@@ -940,10 +943,10 @@ static inline void IotDeQueue_RemoveAll( IotDeQueue_t * const pQueue,
  */
 /* @[declare_linear_containers_queue_removeallmatches] */
 static inline void IotDeQueue_RemoveAllMatches( IotDeQueue_t * const pQueue,
-                                              bool ( * isMatch )( const IotLink_t *, void * ),
-                                              void * pMatch,
-                                              void ( * freeElement )( void * ),
-                                              size_t linkOffset )
+                                                bool ( * isMatch )( const IotLink_t *, void * ),
+                                                void * pMatch,
+                                                void ( * freeElement )( void * ),
+                                                size_t linkOffset )
 /* @[declare_linear_containers_queue_removeallmatches] */
 {
     IotListDouble_RemoveAllMatches( pQueue, isMatch, pMatch, freeElement, linkOffset );

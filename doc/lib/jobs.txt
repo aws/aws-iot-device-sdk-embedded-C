@@ -130,7 +130,7 @@ MQTT PINGREQ packets will be sent at this interval.
 @section AWS_IOT_JOBS_ENABLE_ASSERTS
 @brief Set this to `1` to perform sanity checks when using the Jobs library.
 
-Asserts are useful for debugging, but should be disabled in production code. If this is set to `1`, @ref AwsIotJobs_Assert can be defined to set the assertion function; otherwise, the standard library's [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function will be used.
+Asserts are useful for debugging, but should be disabled in production code. If this is set to `1`, @ref AwsIotJobs_Assert can be defined to set the assertion function; otherwise, the @ref Iot_DefaultAssert will be used.
 
 @configpossible `0` (asserts disabled) or `1` (asserts enabled)<br>
 @configrecommended `1` when debugging; `0` in production code.<br>
@@ -157,7 +157,7 @@ Log messages from the Jobs library at or below this setting will be printed.
 @brief Assertion function used when @ref AWS_IOT_JOBS_ENABLE_ASSERTS is `1`.
 
 @configpossible Any function with the same signature as the standard library's [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function.<br>
-@configdefault Standard library [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function if @ref AWS_IOT_JOBS_ENABLE_ASSERTS is `1`; otherwise, nothing.
+@configdefault @ref Iot_DefaultAssert if @ref AWS_IOT_JOBS_ENABLE_ASSERTS is `1`; otherwise, nothing. If @ref Iot_DefaultAssert is not defined when asserts are enabled, the Jobs library will fail to build.
 
 @section jobs_config_memory Memory allocation
 @brief The following functions may be re-implemented for the Jobs library.
@@ -173,6 +173,8 @@ Log messages from the Jobs library at or below this setting will be printed.
   @copybrief AwsIotJobs_MallocSubscription
 - #AwsIotJobs_FreeSubscription <br>
   @copybrief AwsIotJobs_FreeSubscription
+
+If a custom implementation is not set for a Jobs memory allocation function, @ref Iot_DefaultMalloc will be used. If @ref Iot_DefaultMalloc are not set, the Jobs library will fail to build.
 
 When @ref IOT_STATIC_MEMORY_ONLY is `1`, the following settings configure the number of statically-allocated buffers for Jobs.
 - @anchor AWS_IOT_JOBS_MAX_IN_PROGRESS_OPERATIONS AWS_IOT_JOBS_MAX_IN_PROGRESS_OPERATIONS <br>

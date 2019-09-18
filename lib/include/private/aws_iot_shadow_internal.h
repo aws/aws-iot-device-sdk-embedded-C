@@ -54,12 +54,15 @@
  */
 #if AWS_IOT_SHADOW_ENABLE_ASSERTS == 1
     #ifndef AwsIotShadow_Assert
-        #include <assert.h>
-        #define AwsIotShadow_Assert( expression )    assert( expression )
+        #ifdef Iot_DefaultAssert
+            #define AwsIotShadow_Assert( expression )    Iot_DefaultAssert( expression )
+        #else
+            #error "Asserts are enabled for Shadow, but AwsIotShadow_Assert is not defined"
+        #endif
     #endif
-#else
+#else /* if AWS_IOT_SHADOW_ENABLE_ASSERTS == 1 */
     #define AwsIotShadow_Assert( expression )
-#endif
+#endif /* if AWS_IOT_SHADOW_ENABLE_ASSERTS == 1 */
 
 /* Configure logs for Shadow functions. */
 #ifdef AWS_IOT_LOG_LEVEL_SHADOW
@@ -124,30 +127,52 @@
  */
     void AwsIotShadow_FreeSubscription( void * ptr );
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
-    #include <stdlib.h>
-
     #ifndef AwsIotShadow_MallocOperation
-        #define AwsIotShadow_MallocOperation    malloc
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotShadow_MallocOperation    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for AwsIotShadow_MallocOperation"
+        #endif
     #endif
 
     #ifndef AwsIotShadow_FreeOperation
-        #define AwsIotShadow_FreeOperation    free
+        #ifdef Iot_DefaultFree
+            #define AwsIotShadow_FreeOperation    Iot_DefaultFree
+        #else
+            #error "No free function defined for AwsIotShadow_FreeOperation"
+        #endif
     #endif
 
     #ifndef AwsIotShadow_MallocString
-        #define AwsIotShadow_MallocString    malloc
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotShadow_MallocString    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for AwsIotShadow_MallocString"
+        #endif
     #endif
 
     #ifndef AwsIotShadow_FreeString
-        #define AwsIotShadow_FreeString    free
+        #ifdef Iot_DefaultFree
+            #define AwsIotShadow_FreeString    Iot_DefaultFree
+        #else
+            #error "No free function defined for AwsIotShadow_FreeString"
+        #endif
     #endif
 
     #ifndef AwsIotShadow_MallocSubscription
-        #define AwsIotShadow_MallocSubscription    malloc
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotShadow_MallocSubscription    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for AwsIotShadow_MallocSubscription"
+        #endif
     #endif
 
     #ifndef AwsIotShadow_FreeSubscription
-        #define AwsIotShadow_FreeSubscription    free
+        #ifdef Iot_DefaultFree
+            #define AwsIotShadow_FreeSubscription    Iot_DefaultFree
+        #else
+            #error "No free function defined for AwsIotShadow_FreeSubscription"
+        #endif
     #endif
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 

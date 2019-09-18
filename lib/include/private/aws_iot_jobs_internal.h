@@ -51,8 +51,11 @@
  */
 #if AWS_IOT_JOBS_ENABLE_ASSERTS == 1
     #ifndef AwsIotJobs_Assert
-        #include <assert.h>
-        #define AwsIotJobs_Assert( expression )    assert( expression )
+        #ifdef Iot_DefaultAssert
+            #define AwsIotJobs_Assert( expression )    Iot_DefaultAssert( expression )
+        #else
+            #error "Asserts are enabled for Jobs, but AwsIotJobs_Assert is not defined"
+        #endif
     #endif
 #else
     #define AwsIotJobs_Assert( expression )
@@ -121,30 +124,52 @@
  */
     void AwsIotJobs_FreeSubscription( void * ptr );
 #else /* if IOT_STATIC_MEMORY_ONLY == 1 */
-    #include <stdlib.h>
-
     #ifndef AwsIotJobs_MallocOperation
-        #define AwsIotJobs_MallocOperation    malloc
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotJobs_MallocOperation    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for AwsIotJobs_MallocOperation"
+        #endif
     #endif
 
     #ifndef AwsIotJobs_FreeOperation
-        #define AwsIotJobs_FreeOperation    free
+        #ifdef Iot_DefaultFree
+            #define AwsIotJobs_FreeOperation    Iot_DefaultFree
+        #else
+            #error "No free function defined for AwsIotJobs_FreeOperation"
+        #endif
     #endif
 
     #ifndef AwsIotJobs_MallocString
-        #define AwsIotJobs_MallocString    malloc
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotJobs_MallocString    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for AwsIotJobs_MallocString"
+        #endif
     #endif
 
     #ifndef AwsIotJobs_FreeString
-        #define AwsIotJobs_FreeString    free
+        #ifdef Iot_DefaultFree
+            #define AwsIotJobs_FreeString    Iot_DefaultFree
+        #else
+            #error "No free function defined for AwsIotJobs_FreeString"
+        #endif
     #endif
 
     #ifndef AwsIotJobs_MallocSubscription
-        #define AwsIotJobs_MallocSubscription    malloc
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotJobs_MallocSubscription    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for AwsIotJobs_MallocSubscription"
+        #endif
     #endif
 
     #ifndef AwsIotJobs_FreeSubscription
-        #define AwsIotJobs_FreeSubscription    free
+        #ifdef Iot_DefaultFree
+            #define AwsIotJobs_FreeSubscription    Iot_DefaultFree
+        #else
+            #error "No free function defined for AwsIotJobs_FreeSubscription"
+        #endif
     #endif
 #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
 
