@@ -32,8 +32,6 @@
 /* Demo logging include. */
 #include "iot_demo_logging.h"
 
-/* Secure Socket includes. */
-
 /* Platform includes for demo. */
 #include "platform/iot_clock.h"
 #include "platform/iot_network.h"
@@ -43,15 +41,6 @@
 
 /* Includes for initialization. */
 #include "iot_mqtt.h"
-
-/* Set to 1 to enable this demo to connect to echo server.
- * Then in the demo output, it is expected to see one more established TCP connection.
- */
-#define _DEMO_WITH_SOCKET_CONNECTED_TO_ECHO_SERVER 0
-
-#if _DEMO_WITH_SOCKET_CONNECTED_TO_ECHO_SERVER == 1
-static Socket_t _createSocketToEchoServer();
-#endif
 
 /**
  * @brief Runs the defender demo.
@@ -157,17 +146,9 @@ static AwsIotDefenderError_t _defenderDemo( const char *pIdentifier,
                                             void *pNetworkCredentialInfo,
                                             const IotNetworkInterface_t *pNetworkInterface )
 {
-    /* Expected remote IP of AWS IoT endpoint in defender metrics report. */
-    uint32_t expectedIp = 0;
-    char expectedIpBuffer[ 16 ] = "";
     AwsIotDefenderError_t defenderResult;
 
     IotLogInfo( "----Device Defender Demo Start----.\r\n" );
-
-#if _DEMO_WITH_SOCKET_CONNECTED_TO_ECHO_SERVER == 1
-    /* Create a socket connected to echo server. */
-    Socket_t socket = _createSocketToEchoServer();
-#endif
 
     /* Specify all metrics in "tcp connections" group */
     defenderResult =
@@ -186,27 +167,14 @@ static AwsIotDefenderError_t _defenderDemo( const char *pIdentifier,
 
         if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
         {
-            /* Query DNS for the IP. */
-            //            expectedIp = SOCKETS_GetHostByName( clientcredentialMQTT_BROKER_ENDPOINT );
-
-            /* Convert to string. */
-            //            SOCKETS_inet_ntoa( expectedIp, expectedIpBuffer );
-            //            IotLogInfo( "expected ip: %s", expectedIpBuffer );
 
             /* Let it run for 3 seconds */
-            IotLogInfo( "----Device Defender Demo BEFORE ----.\r\n" );
             IotClock_SleepMs( 3000 );
 
             /* Stop the defender agent. */
             AwsIotDefender_Stop();
         }
     }
-
-#if _DEMO_WITH_SOCKET_CONNECTED_TO_ECHO_SERVER == 1
-    /* Clean up the socket. */
-    SOCKETS_Shutdown( socket, SOCKETS_SHUT_RDWR );
-    SOCKETS_Close( socket );
-#endif
 
     IotLogInfo( "----Device Defender Demo End. Status: %d----.\r\n", defenderResult );
 
@@ -254,42 +222,5 @@ static AwsIotDefenderError_t _startDefender( const char *pIdentifier,
 
     return defenderResult;
 }
-
-/*-----------------------------------------------------------*/
-
-#if _DEMO_WITH_SOCKET_CONNECTED_TO_ECHO_SERVER == 1
-
-static Socket_t _createSocketToEchoServer()
-{
-    Socket_t socket;
-    SocketsSockaddr_t echoServerAddress;
-    int32_t error = 0;
-
-    /* Rx and Tx time outs are used to ensure the sockets do not wait too long for
-     * missing data. */
-    const TickType_t xReceiveTimeOut = pdMS_TO_TICKS( 2000 );
-    const TickType_t xSendTimeOut = pdMS_TO_TICKS( 2000 );
-
-    /* Echo requests are sent to the echo server.  The address of the echo
-     * server is configured by the constants configECHO_SERVER_ADDR0 to
-     * configECHO_SERVER_ADDR3 in FreeRTOSConfig.h. */
-    echoServerAddress.usPort = SOCKETS_htons( configTCP_ECHO_CLIENT_PORT );
-    echoServerAddress.ulAddress = SOCKETS_inet_addr_quick(
-        configECHO_SERVER_ADDR0, configECHO_SERVER_ADDR1, configECHO_SERVER_ADDR2, configECHO_SERVER_ADDR3 );
-
-    socket = SOCKETS_Socket( SOCKETS_AF_INET, SOCKETS_SOCK_STREAM, SOCKETS_IPPROTO_TCP );
-    configASSERT( socket != SOCKETS_INVALID_SOCKET );
-
-    /* Set a time out so a missing reply does not cause the task to block indefinitely. */
-    SOCKETS_SetSockOpt( socket, 0, SOCKETS_SO_RCVTIMEO, &xReceiveTimeOut, sizeof( xReceiveTimeOut ) );
-    SOCKETS_SetSockOpt( socket, 0, SOCKETS_SO_SNDTIMEO, &xSendTimeOut, sizeof( xSendTimeOut ) );
-
-    error = SOCKETS_Connect( socket, &echoServerAddress, sizeof( echoServerAddress ) );
-    configASSERT( error == 0 );
-
-    return socket;
-}
-
-#endif /* if _DEMO_WITH_SOCKET_CONNECTED_TO_ECHO_SERVER == 1 */
 
 /*-----------------------------------------------------------*/
