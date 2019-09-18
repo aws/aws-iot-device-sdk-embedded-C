@@ -119,7 +119,7 @@ MQTT PINGREQ packets will be sent at this interval.
 @section AWS_IOT_SHADOW_ENABLE_ASSERTS
 @brief Set this to `1` to perform sanity checks when using the Shadow library.
 
-Asserts are useful for debugging, but should be disabled in production code. If this is set to `1`, @ref AwsIotShadow_Assert can be defined to set the assertion function; otherwise, the standard library's [assert](http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html) function will be used.
+Asserts are useful for debugging, but should be disabled in production code. If this is set to `1`, @ref AwsIotShadow_Assert can be defined to set the assertion function; otherwise, the @ref Iot_DefaultAssert will be used.
 
 @configpossible `0` (asserts disabled) or `1` (asserts enabled)<br>
 @configrecommended `1` when debugging; `0` in production code.<br>
@@ -162,6 +162,8 @@ Log messages from the Shadow library at or below this setting will be printed.
   @copybrief AwsIotShadow_MallocSubscription
 - #AwsIotShadow_FreeSubscription <br>
   @copybrief AwsIotShadow_FreeSubscription
+
+If a custom implementation is not set for a Shadow memory allocation function, @ref Iot_DefaultMalloc will be used. If @ref Iot_DefaultMalloc are not set, the Shadow library will fail to build.
 
 When @ref IOT_STATIC_MEMORY_ONLY is `1`, the following settings configure the number of statically-allocated buffers for Shadow.
 - @anchor AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS AWS_IOT_SHADOW_MAX_IN_PROGRESS_OPERATIONS <br>

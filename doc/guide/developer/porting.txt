@@ -2,9 +2,10 @@
 @page guide_developer_porting Porting Guide
 @brief Guide for porting this SDK to a new platform.
 
-This SDK has two components that must be ported to a new system:
+This SDK has three components that must be ported to a new system:
 1. [The build system](@ref guide_developer_porting_build)
-2. [The platform layer](@ref guide_developer_porting_platform)
+2. [The config header](@ref guide_developer_config)
+3. [The platform layer](@ref guide_developer_porting_platform)
 
 @section guide_developer_porting_build Porting the build system
 @brief Guide for porting the SDK's build system.
@@ -97,6 +98,18 @@ Additional include paths required to build the tests:
 - `tests/mqtt/mock` (when building tests that use the MQTT mocks, such as Shadow or Jobs)
 
 In addition to the tests include paths, @ref IOT_BUILD_TESTS should be set to `1` globally when building tests.
+
+@section guide_developer_config Config header
+@brief Settings that must be set in the config header, iot_config.h
+
+@see [Global configuration](@ref global_config)<br>
+In addition, each library has its own configuration settings.
+
+At the very least, the config header must contain the following defines:
+ - Memory allocation functions must be set in the config header. See @ref Iot_DefaultMalloc for more details.
+ - Assert functions must be set if asserts are enabled for a library. See @ref Iot_DefaultAssert for more details.
+
+The platform types must also be set. See @ref guide_developer_porting_platform for more details.
 
 @section guide_developer_porting_platform Porting the platform layer
 @brief Guide for porting the SDK's [platform layer](@ref platform).

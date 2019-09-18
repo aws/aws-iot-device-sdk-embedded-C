@@ -149,13 +149,6 @@
     #define Iot_DefaultMalloc    unity_malloc_mt
     #define Iot_DefaultFree      unity_free_mt
 
-    #define AwsIotShadow_MallocOperation         unity_malloc_mt
-    #define AwsIotShadow_FreeOperation           unity_free_mt
-    #define AwsIotShadow_MallocString            unity_malloc_mt
-    #define AwsIotShadow_FreeString              unity_free_mt
-    #define AwsIotShadow_MallocSubscription      unity_malloc_mt
-    #define AwsIotShadow_FreeSubscription        unity_free_mt
-
     #define AwsIotJobs_MallocOperation           unity_malloc_mt
     #define AwsIotJobs_FreeOperation             unity_free_mt
     #define AwsIotJobs_MallocString              unity_malloc_mt
