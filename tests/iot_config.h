@@ -19,8 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/* This file contains configuration settings for the tests. Currently, the tests
- * must run on POSIX systems. */
+/* This file contains configuration settings for the tests. */
 
 #ifndef IOT_CONFIG_H_
 #define IOT_CONFIG_H_
@@ -107,6 +106,7 @@
 #define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )
 #define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
 #define IOT_TASKPOOL_ENABLE_ASSERTS             ( 1 )
+#define IOT_SERIALIZER_ENABLE_ASSERTS           ( 1 )
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 #define AWS_IOT_DEFENDER_ENABLE_ASSERTS         ( 1 )
 #define AWS_IOT_JOBS_ENABLE_ASSERTS             ( 1 )
@@ -148,20 +148,6 @@
 #if IOT_STATIC_MEMORY_ONLY == 0
     #define Iot_DefaultMalloc    unity_malloc_mt
     #define Iot_DefaultFree      unity_free_mt
-
-    #define AwsIotShadow_MallocOperation         unity_malloc_mt
-    #define AwsIotShadow_FreeOperation           unity_free_mt
-    #define AwsIotShadow_MallocString            unity_malloc_mt
-    #define AwsIotShadow_FreeString              unity_free_mt
-    #define AwsIotShadow_MallocSubscription      unity_malloc_mt
-    #define AwsIotShadow_FreeSubscription        unity_free_mt
-
-    #define AwsIotJobs_MallocOperation           unity_malloc_mt
-    #define AwsIotJobs_FreeOperation             unity_free_mt
-    #define AwsIotJobs_MallocString              unity_malloc_mt
-    #define AwsIotJobs_FreeString                unity_free_mt
-    #define AwsIotJobs_MallocSubscription        unity_malloc_mt
-    #define AwsIotJobs_FreeSubscription          unity_free_mt
 #endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
 
 /* Network types to use in the tests. These are forward declarations. */
