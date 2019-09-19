@@ -29,9 +29,6 @@
 /* Demo logging include. */
 #include "iot_demo_logging.h"
 
-/* Error handling include. */
-#include "private/iot_error.h"
-
 /* Platform includes for demo. */
 #include "platform/iot_clock.h"
 #include "platform/iot_network.h"
@@ -49,10 +46,10 @@
  * @return AWS_IOT_DEFENDER_SUCCESS on success, otherwise an error code indicating
  *         the cause of error.
  */
-static AwsIotDefenderError_t _defenderDemo( const char *pIdentifier,
-                                            void *pNetworkServerInfo,
-                                            void *pNetworkCredentialInfo,
-                                            const IotNetworkInterface_t *pNetworkInterface );
+static AwsIotDefenderError_t _defenderDemo( const char * pIdentifier,
+                                            void * pNetworkServerInfo,
+                                            void * pNetworkCredentialInfo,
+                                            const IotNetworkInterface_t * pNetworkInterface );
 
 /**
  * @brief Starts the defender agent.
@@ -60,60 +57,60 @@ static AwsIotDefenderError_t _defenderDemo( const char *pIdentifier,
  * @return AWS_IOT_DEFENDER_SUCCESS on success, otherwise an error code indicating
  *         the cause of error.
  */
-static AwsIotDefenderError_t _startDefender( const char *pIdentifier,
-                                             void *pNetworkServerInfo,
-                                             void *pNetworkCredentialInfo,
-                                             const IotNetworkInterface_t *pNetworkInterface );
+static AwsIotDefenderError_t _startDefender( const char * pIdentifier,
+                                             void * pNetworkServerInfo,
+                                             void * pNetworkCredentialInfo,
+                                             const IotNetworkInterface_t * pNetworkInterface );
 
 /**
  * @brief Callback used to get notification of defender's events.
  */
-static void _defenderCallback( void *param1, AwsIotDefenderCallbackInfo_t *const pCallbackInfo );
+static void _defenderCallback( void * param1,
+                               AwsIotDefenderCallbackInfo_t * const pCallbackInfo );
 
 /*-----------------------------------------------------------*/
 
 int RunDefenderDemo( bool awsIotMqttMode,
-                     const char *pIdentifier,
-                     void *pNetworkServerInfo,
-                     void *pNetworkCredentialInfo,
-                     const IotNetworkInterface_t *pNetworkInterface )
+                     const char * pIdentifier,
+                     void * pNetworkServerInfo,
+                     void * pNetworkCredentialInfo,
+                     const IotNetworkInterface_t * pNetworkInterface )
 {
-    IOT_FUNCTION_ENTRY( int, EXIT_FAILURE );
-
+    int status = EXIT_FAILURE;
     bool initStatus = false;
     IotMqttError_t mqttInitStatus;
     AwsIotDefenderError_t defenderResult;
 
-    /* Unused parameters */
+    /* Unused parameters. */
     ( void ) awsIotMqttMode;
 
-    /* Initialize Metrics */
-    initStatus = IotMetrics_Init();
-    if( !initStatus )
+    /* Check parameter(s). */
+    if( ( pIdentifier == NULL ) || ( pIdentifier[ 0 ] == '\0' ) )
     {
-        IotLogError( "IOT Metrics Initialization Failed." );
-        IOT_GOTO_CLEANUP();
+        IotLogError( "Empty Identifier Use." );
+        goto end;
     }
 
     /* Initialize the MQTT library. */
     mqttInitStatus = IotMqtt_Init();
+
     if( mqttInitStatus != IOT_MQTT_SUCCESS )
     {
         IotLogError( "MQTT Initialization Failed." );
-        IOT_GOTO_CLEANUP();
+        goto end;
     }
 
-    if( pIdentifier == NULL || pIdentifier[ 0 ] == '\0' )
+    /* Initialize Metrics. */
+    initStatus = IotMetrics_Init();
+
+    if( !initStatus )
     {
-        IotLogError( "Empty Identifier Use." );
-        IOT_GOTO_CLEANUP();
+        IotLogError( "IOT Metrics Initialization Failed." );
+        goto mqttCleanup;
     }
 
     /* Run the demo. */
-    defenderResult = _defenderDemo( pIdentifier,
-				    pNetworkServerInfo,
-				    pNetworkCredentialInfo,
-				    pNetworkInterface );
+    defenderResult = _defenderDemo( pIdentifier, pNetworkServerInfo, pNetworkCredentialInfo, pNetworkInterface );
 
     if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
     {
@@ -121,18 +118,17 @@ int RunDefenderDemo( bool awsIotMqttMode,
     }
 
     /* Cleanup. */
-
-    IOT_FUNCTION_CLEANUP_BEGIN();
-
-    IotMqtt_Cleanup();
     IotMetrics_Cleanup();
-
-    IOT_FUNCTION_CLEANUP_END();
+mqttCleanup:
+    IotMqtt_Cleanup();
+end:
+    return status;
 }
 
 /*-----------------------------------------------------------*/
 
-void _defenderCallback( void *param1, AwsIotDefenderCallbackInfo_t *const pCallbackInfo )
+void _defenderCallback( void * param1,
+                        AwsIotDefenderCallbackInfo_t * const pCallbackInfo )
 {
     ( void ) param1;
 
@@ -141,7 +137,7 @@ void _defenderCallback( void *param1, AwsIotDefenderCallbackInfo_t *const pCallb
     /* Print out the sent metrics report if there is. */
     if( pCallbackInfo->pMetricsReport != NULL )
     {
-        IotLogInfo( "\nPublished metrics report." );
+        IotLogInfo( "Published metrics report." );
     }
     else
     {
@@ -150,7 +146,7 @@ void _defenderCallback( void *param1, AwsIotDefenderCallbackInfo_t *const pCallb
 
     if( pCallbackInfo->pPayload != NULL )
     {
-        IotLogInfo( "\nReceived MQTT message." );
+        IotLogInfo( "Received MQTT message." );
     }
     else
     {
@@ -160,14 +156,14 @@ void _defenderCallback( void *param1, AwsIotDefenderCallbackInfo_t *const pCallb
 
 /*-----------------------------------------------------------*/
 
-static AwsIotDefenderError_t _defenderDemo( const char *pIdentifier,
-                                            void *pNetworkServerInfo,
-                                            void *pNetworkCredentialInfo,
-                                            const IotNetworkInterface_t *pNetworkInterface )
+static AwsIotDefenderError_t _defenderDemo( const char * pIdentifier,
+                                            void * pNetworkServerInfo,
+                                            void * pNetworkCredentialInfo,
+                                            const IotNetworkInterface_t * pNetworkInterface )
 {
     AwsIotDefenderError_t defenderResult;
 
-    IotLogInfo( "----Device Defender Demo Start----.\r\n" );
+    IotLogInfo( "----Device Defender Demo Start----" );
 
     /* Specify all metrics in "tcp connections" group */
     defenderResult =
@@ -186,7 +182,6 @@ static AwsIotDefenderError_t _defenderDemo( const char *pIdentifier,
 
         if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
         {
-
             /* Let it run for 3 seconds */
             IotClock_SleepMs( 3000 );
 
@@ -195,19 +190,19 @@ static AwsIotDefenderError_t _defenderDemo( const char *pIdentifier,
         }
     }
 
-    IotLogInfo( "----Device Defender Demo End. Status: %d----.\r\n", defenderResult );
+    IotLogInfo( "----Device Defender Demo End. Status: %d----.", defenderResult );
 
     return defenderResult;
 }
 
 /*-----------------------------------------------------------*/
 
-static AwsIotDefenderError_t _startDefender( const char *pIdentifier,
-                                             void *pNetworkServerInfo,
-                                             void *pNetworkCredentialInfo,
-                                             const IotNetworkInterface_t *pNetworkInterface )
+static AwsIotDefenderError_t _startDefender( const char * pIdentifier,
+                                             void * pNetworkServerInfo,
+                                             void * pNetworkCredentialInfo,
+                                             const IotNetworkInterface_t * pNetworkInterface )
 {
-    const AwsIotDefenderCallback_t callback = {.function = _defenderCallback, .param1 = NULL};
+    const AwsIotDefenderCallback_t callback = { .function = _defenderCallback, .param1 = NULL };
     AwsIotDefenderError_t defenderResult;
 
     AwsIotDefenderStartInfo_t startInfo = AWS_IOT_DEFENDER_START_INFO_INITIALIZER;
@@ -217,13 +212,6 @@ static AwsIotDefenderError_t _startDefender( const char *pIdentifier,
     startInfo.mqttNetworkInfo.createNetworkConnection = true;
     startInfo.mqttNetworkInfo.u.setup.pNetworkServerInfo = pNetworkServerInfo;
     startInfo.mqttNetworkInfo.u.setup.pNetworkCredentialInfo = pNetworkCredentialInfo;
-
-    /* Only set ALPN protocol if the connected port is 443. */
-    if( ( ( IotNetworkServerInfo_t * ) ( startInfo.mqttNetworkInfo.u.setup.pNetworkServerInfo ) )->port != 443 )
-    {
-        ( ( IotNetworkCredentials_t * ) ( startInfo.mqttNetworkInfo.u.setup.pNetworkCredentialInfo ) )->pAlpnProtos =
-            NULL;
-    }
 
     /* Set network interface. */
     startInfo.mqttNetworkInfo.pNetworkInterface = pNetworkInterface;
