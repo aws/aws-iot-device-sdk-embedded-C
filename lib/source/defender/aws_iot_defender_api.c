@@ -28,7 +28,8 @@
 /* Clock include. */
 #include "platform/iot_clock.h"
 
-#define WAIT_METRICS_JOB_MAX_SECONDS    ( 5 )
+#define WAIT_METRICS_JOB_MAX_SECONDS            ( 5 )
+#define MAX_DEFENDER_OUTSTANDING_PUBLISH_REQ    ( ( uint32_t ) 1 )
 
 #if WAIT_METRICS_JOB_MAX_SECONDS < AWS_IOT_DEFENDER_WAIT_SERVER_MAX_SECONDS
     #error "_WAIT_METRICS_JOB_MAX_SECONDS must be greater than AWS_IOT_DEFENDER_WAIT_SERVER_MAX_SECONDS."
@@ -95,7 +96,7 @@ AwsIotDefenderStartInfo_t _startInfo = AWS_IOT_DEFENDER_START_INFO_INITIALIZER;
 AwsIotDefenderError_t AwsIotDefender_SetMetrics( AwsIotDefenderMetricsGroup_t metricsGroup,
                                                  uint32_t metrics )
 {
-    if( metricsGroup >= DEFENDER_METRICS_GROUP_COUNT )
+    if( metricsGroup >= ( AwsIotDefenderMetricsGroup_t ) DEFENDER_METRICS_GROUP_COUNT )
     {
         IotLogError( "Input metrics group is invalid. Please use AwsIotDefenderMetricsGroup_t data type." );
 
@@ -168,7 +169,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
         if( buildTopicsNamesSuccess )
         {
             /* Create a binary semaphore with initial value 1. */
-            doneSemaphoreCreateSuccess = IotSemaphore_Create( &_doneSem, 1, 1 );
+            doneSemaphoreCreateSuccess = IotSemaphore_Create( &_doneSem, MAX_DEFENDER_OUTSTANDING_PUBLISH_REQ, 1 );
         }
 
         if( doneSemaphoreCreateSuccess )
@@ -239,8 +240,11 @@ void AwsIotDefender_Stop( void )
         return;
     }
 
-    /* First thing to do: wait for all the metrics processing to be done. */
-    IotSemaphore_Wait( &_doneSem );
+    /* Wait for all the metrics processing to be done, if there are outstanding requests */
+    if( IotSemaphore_GetCount( &_doneSem ) > MAX_DEFENDER_OUTSTANDING_PUBLISH_REQ )
+    {
+        IotSemaphore_Wait( &_doneSem );
+    }
 
     IotTaskPoolJobStatus_t status;
     IotTaskPoolError_t taskPoolError = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL, _metricsPublishJob, &status );
