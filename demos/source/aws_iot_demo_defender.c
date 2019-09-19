@@ -76,9 +76,9 @@ int RunDefenderDemo( bool awsIotMqttMode,
                      void * pNetworkCredentialInfo,
                      const IotNetworkInterface_t * pNetworkInterface )
 {
-    int status = EXIT_FAILURE;
-    bool initStatus = false;
-    IotMqttError_t mqttInitStatus;
+    int status = EXIT_SUCCESS;
+    bool metricsInitStatus = false;
+    IotMqttError_t mqttInitStatus = IOT_MQTT_INIT_FAILED;
     AwsIotDefenderError_t defenderResult;
 
     /* Unused parameters. */
@@ -87,41 +87,56 @@ int RunDefenderDemo( bool awsIotMqttMode,
     /* Check parameter(s). */
     if( ( pIdentifier == NULL ) || ( pIdentifier[ 0 ] == '\0' ) )
     {
-        IotLogError( "Empty Identifier Use." );
-        goto end;
+        IotLogError( "The length of the Thing Name (identifier) must be nonzero." );
+        status = EXIT_FAILURE;
     }
 
-    /* Initialize the MQTT library. */
-    mqttInitStatus = IotMqtt_Init();
-
-    if( mqttInitStatus != IOT_MQTT_SUCCESS )
+    if( status == EXIT_SUCCESS )
     {
-        IotLogError( "MQTT Initialization Failed." );
-        goto end;
+        /* Initialize the MQTT library. */
+        mqttInitStatus = IotMqtt_Init();
+
+        if( mqttInitStatus != IOT_MQTT_SUCCESS )
+        {
+            IotLogError( "MQTT Initialization Failed." );
+            status = EXIT_FAILURE;
+        }
     }
 
-    /* Initialize Metrics. */
-    initStatus = IotMetrics_Init();
-
-    if( !initStatus )
+    if( status == EXIT_SUCCESS )
     {
-        IotLogError( "IOT Metrics Initialization Failed." );
-        goto mqttCleanup;
+        /* Initialize Metrics. */
+        metricsInitStatus = IotMetrics_Init();
+
+        if( !metricsInitStatus )
+        {
+            IotLogError( "IOT Metrics Initialization Failed." );
+            status = EXIT_FAILURE;
+        }
     }
 
-    /* Run the demo. */
-    defenderResult = _defenderDemo( pIdentifier, pNetworkServerInfo, pNetworkCredentialInfo, pNetworkInterface );
-
-    if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
+    if( status == EXIT_SUCCESS )
     {
-        status = EXIT_SUCCESS;
+        /* Run the demo. */
+        defenderResult = _defenderDemo( pIdentifier, pNetworkServerInfo, pNetworkCredentialInfo, pNetworkInterface );
+
+        if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
+        {
+            status = EXIT_SUCCESS;
+        }
     }
 
     /* Cleanup. */
-    IotMetrics_Cleanup();
-mqttCleanup:
-    IotMqtt_Cleanup();
-end:
+    if( metricsInitStatus )
+    {
+        IotMetrics_Cleanup();
+    }
+
+    if( mqttInitStatus == IOT_MQTT_SUCCESS )
+    {
+        IotMqtt_Cleanup();
+    }
+
     return status;
 }
 
