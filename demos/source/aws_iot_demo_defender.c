@@ -29,6 +29,9 @@
 /* Demo logging include. */
 #include "iot_demo_logging.h"
 
+/* Error handling include. */
+#include "private/iot_error.h"
+
 /* Platform includes for demo. */
 #include "platform/iot_clock.h"
 #include "platform/iot_network.h"
@@ -38,6 +41,7 @@
 
 /* Includes for initialization. */
 #include "iot_mqtt.h"
+
 
 /**
  * @brief Runs the defender demo.
