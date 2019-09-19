@@ -371,14 +371,20 @@ static void _destroyConnection( _networkConnection_t * pNetworkConnection )
 static void _receiveThread( void * pArgument )
 {
     int pollStatus = 0;
+    mbedtls_net_context context;
 
     /* Cast function parameter to correct type. */
     _networkConnection_t * const pNetworkConnection = pArgument;
 
+    /* Record the context to poll. */
+    IotMutex_Lock( &( pNetworkConnection->contextMutex ) );
+    context = pNetworkConnection->networkContext;
+    IotMutex_Unlock( &( pNetworkConnection->contextMutex ) );
+
     /* Continuously poll the network connection for events. */
     while( true )
     {
-        pollStatus = mbedtls_net_poll( &( pNetworkConnection->networkContext ),
+        pollStatus = mbedtls_net_poll( &context,
                                        MBEDTLS_NET_POLL_READ,
                                        IOT_NETWORK_MBEDTLS_POLL_TIMEOUT_MS );
 
