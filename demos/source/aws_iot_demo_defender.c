@@ -1,6 +1,5 @@
 /*
- * Amazon FreeRTOS V201908.00
- * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -18,16 +17,14 @@
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * http://aws.amazon.com/freertos
- * http://www.FreeRTOS.org
  */
+
+/* Demo configuration includes. */
+#include "iot_config.h"
 
 /* Standard includes. */
 #include <stdio.h>
 #include <string.h>
-
-/* Demo configuration includes. */
 
 /* Demo logging include. */
 #include "iot_demo_logging.h"
@@ -77,7 +74,9 @@ int RunDefenderDemo( bool awsIotMqttMode,
                      void *pNetworkCredentialInfo,
                      const IotNetworkInterface_t *pNetworkInterface )
 {
-    int status = EXIT_FAILURE;
+    IOT_FUNCTION_ENTRY( int, EXIT_FAILURE );
+
+    bool initStatus = false;
     IotMqttError_t mqttInitStatus;
     AwsIotDefenderError_t defenderResult;
 
@@ -85,30 +84,46 @@ int RunDefenderDemo( bool awsIotMqttMode,
     ( void ) awsIotMqttMode;
 
     /* Initialize Metrics */
-    IotMetrics_Init();
+    initStatus = IotMetrics_Init();
+    if( !initStatus )
+    {
+        IotLogError( "IOT Metrics Initialization Failed." );
+        IOT_GOTO_CLEANUP();
+    }
 
     /* Initialize the MQTT library. */
     mqttInitStatus = IotMqtt_Init();
+    if( mqttInitStatus != IOT_MQTT_SUCCESS )
+    {
+        IotLogError( "MQTT Initialization Failed." );
+        IOT_GOTO_CLEANUP();
+    }
 
     if( pIdentifier == NULL || pIdentifier[ 0 ] == '\0' )
     {
         IotLogError( "Empty Identifier Use." );
+        IOT_GOTO_CLEANUP();
     }
-    else if( mqttInitStatus == IOT_MQTT_SUCCESS )
+
+    /* Run the demo. */
+    defenderResult = _defenderDemo( pIdentifier,
+				    pNetworkServerInfo,
+				    pNetworkCredentialInfo,
+				    pNetworkInterface );
+
+    if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
     {
-        /* If the MQTT initialization was successful, run the demo. */
-        defenderResult = _defenderDemo( pIdentifier,
-					pNetworkServerInfo,
-					pNetworkCredentialInfo,
-					pNetworkInterface );
-
-        if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
-        {
-            status = EXIT_SUCCESS;
-        }
+        status = EXIT_SUCCESS;
     }
 
-    return status;
+    /* Cleanup. */
+
+    IOT_FUNCTION_CLEANUP_BEGIN();
+
+    IotMqtt_Cleanup();
+    IotMetrics_Cleanup();
+
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/
