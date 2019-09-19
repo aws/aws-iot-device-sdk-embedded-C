@@ -908,7 +908,7 @@ IotMqttError_t IotMqtt_Init( void )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
-    if( _checkInit() == false )
+    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
     {
         /* Call any additional serializer initialization function if serializer
          * overrides are enabled. */

@@ -755,7 +755,7 @@ AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs )
     AwsIotJobsError_t status = AWS_IOT_JOBS_SUCCESS;
     bool listInitStatus = false;
 
-    if( _checkInit() == false )
+    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
     {
         listInitStatus = AwsIot_InitLists( &_AwsIotJobsPendingOperations,
                                            &_AwsIotJobsSubscriptions,
