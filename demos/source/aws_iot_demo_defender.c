@@ -41,7 +41,7 @@
 
 /* Includes for initialization. */
 #include "iot_mqtt.h"
-
+#include "iot_network_metrics.h"
 
 /**
  * @brief Runs the defender demo.
