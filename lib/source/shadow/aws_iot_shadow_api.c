@@ -683,7 +683,7 @@ AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeoutMs )
     AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
     bool listInitStatus = false;
 
-    if( _checkInit() == false )
+    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
     {
         /* Initialize Shadow lists and mutexes. */
         listInitStatus = AwsIot_InitLists( &_AwsIotShadowPendingOperations,

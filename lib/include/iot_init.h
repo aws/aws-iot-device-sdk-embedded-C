@@ -21,7 +21,7 @@
 
 /**
  * @file iot_init.h
- * @brief Provides function signatures for common intialization and cleanup of
+ * @brief Provides function signatures for common initialization and cleanup of
  * this SDK.
  */
 
