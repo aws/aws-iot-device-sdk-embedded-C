@@ -887,7 +887,7 @@ IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
             IotMutex_Destroy( &( pNewNetworkConnection->contextMutex ) );
         }
 
-        if( callbackMutexCreated )
+        if( callbackMutexCreated == true )
         {
             IotMutex_Destroy( &( pNewNetworkConnection->callbackMutex ) );
         }
