@@ -37,6 +37,9 @@
 /* Grand Central Dispatch include. */
 #include <dispatch/dispatch.h>
 
+/* Dispatch blocks API include. */
+#include <Block.h>
+
 /**
  * @brief The native mutex type on macOS systems.
  *
