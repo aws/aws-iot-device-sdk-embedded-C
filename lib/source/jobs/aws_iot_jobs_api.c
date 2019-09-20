@@ -49,6 +49,9 @@
 #if AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS <= 0
     #error "AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS cannot be 0 or negative."
 #endif
+#if AWS_IOT_JOBS_NOTIFY_CALLBACKS <= 0
+    #error "AWS_IOT_JOBS_NOTIFY_CALLBACKS cannot be 0 or negative."
+#endif
 
 /*-----------------------------------------------------------*/
 

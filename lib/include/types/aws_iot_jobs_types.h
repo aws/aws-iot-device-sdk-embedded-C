@@ -505,6 +505,38 @@ typedef struct AwsIotJobsCallbackInfo
      */
     void ( * function )( void *,
                          AwsIotJobsCallbackParam_t * );
+
+    /**
+     * @brief Callback function to replace when passed to @ref jobs_function_setnotifynextcallback
+     * or @ref jobs_function_setnotifypendingcallback.
+     *
+     * This member is ignored by Jobs operation functions and when @ref AWS_IOT_JOBS_NOTIFY_CALLBACKS
+     * is `1`.
+     *
+     * The number of callbacks of each type that may be registered for each Thing
+     * is limited by @ref AWS_IOT_JOBS_NOTIFY_CALLBACKS. If @ref AWS_IOT_JOBS_NOTIFY_CALLBACKS
+     * is `2`, that means that a maximum of `2` NOTIFY PENDING and `2` NOTIFY NEXT callbacks
+     * (`4` total callbacks) may be set. This member is used to replace an existing callback
+     * with a new one.
+     *
+     * For example, if the function `_oldCallback()` is currently registered:
+     * - To replace `_oldCallback()` with a new callback function `_newCallback()`:
+     * @code{c}
+     * AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+     *
+     * callbackInfo.function = _newCallback;
+     * callbackInfo.oldFunction = _oldCallback;
+     * @endcode
+     * - To remove `_oldCallback()`:
+     * @code{c}
+     * AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+     *
+     * callbackInfo.function = NULL;
+     * callbackInfo.oldFunction = _oldCallback;
+     * @endcode
+     */
+    void ( * oldFunction )( void *,
+                            AwsIotJobsCallbackParam_t * );
 } AwsIotJobsCallbackInfo_t;
 
 /**

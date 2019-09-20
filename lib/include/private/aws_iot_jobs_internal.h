@@ -182,6 +182,9 @@
 #ifndef AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS
     #define AWS_IOT_JOBS_DEFAULT_MQTT_TIMEOUT_MS    ( 5000 )
 #endif
+#ifndef AWS_IOT_JOBS_NOTIFY_CALLBACKS
+    #define AWS_IOT_JOBS_NOTIFY_CALLBACKS           ( 1 )
+#endif
 /** @endcond */
 
 /**

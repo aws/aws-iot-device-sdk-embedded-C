@@ -145,6 +145,16 @@ If the `mqttTimeout` argument of @ref jobs_function_init is `0`, the Jobs librar
 @configrecommended This setting must be at least the network round-trip time, as an MQTT packet must be sent to the AWS IoT server and a response must be received. The recommended minimum value is `500`.<br>
 @configdefault `5000`
 
+@section AWS_IOT_JOBS_NOTIFY_CALLBACKS
+@brief Set the maximum number of Jobs Notify callbacks of each type for each Thing.
+
+This setting affects the behavior of @ref jobs_function_setnotifynextcallback and @ref jobs_function_setnotifypendingcallback. There is only one Job notification topic of each type for each Thing. This setting allows multiple callbacks to be registered for the single notification topic, allowing multiple applications to respond to the notifications received.
+
+All registered callbacks will be invoked when a notification arrives. The order in which the callbacks are invoked may vary. Therefore, it is the responsibility of each callback to ignore Job notifications that are not intended for it.
+
+@configpossible Any positive integer.<br>
+@configdefault `1`
+
 @section AWS_IOT_LOG_LEVEL_JOBS
 @brief Set the log level of the Jobs library.
 
