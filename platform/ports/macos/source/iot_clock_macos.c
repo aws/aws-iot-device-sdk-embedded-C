@@ -194,6 +194,11 @@ void IotClock_TimerDestroy( IotTimer_t * pTimer )
     if( pTimer->dispatchBlock != NULL )
     {
         dispatch_block_cancel( pTimer->dispatchBlock );
+
+        /* Block_release only needs to be called if ARC is not being used. */
+        #if( OS_OBJECT_HAVE_OBJC_SUPPORT == 0 )
+            Block_release( pTimer->dispatchBlock );
+        #endif
     }
 }
 
