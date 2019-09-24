@@ -510,8 +510,7 @@ typedef struct AwsIotJobsCallbackInfo
      * @brief Callback function to replace when passed to @ref jobs_function_setnotifynextcallback
      * or @ref jobs_function_setnotifypendingcallback.
      *
-     * This member is ignored by Jobs operation functions and when @ref AWS_IOT_JOBS_NOTIFY_CALLBACKS
-     * is `1`.
+     * This member is ignored by Jobs operation functions.
      *
      * The number of callbacks of each type that may be registered for each Thing
      * is limited by @ref AWS_IOT_JOBS_NOTIFY_CALLBACKS. If @ref AWS_IOT_JOBS_NOTIFY_CALLBACKS
