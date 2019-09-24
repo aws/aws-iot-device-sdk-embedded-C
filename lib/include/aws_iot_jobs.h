@@ -726,12 +726,15 @@ AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
  *     // executions changes.
  *
  *     // Once the callback is no longer needed, it may be removed by passing
- *     // NULL as pNotifyPendingCallback.
+ *     // NULL as the callback function and specifying the function to remove.
+ *     notifyPendingCallback.function = NULL;
+ *     notifyPendingCallback.oldFunction = _jobsCallback;
+ *
  *     status = AwsIotJobs_SetNotifyPendingCallback( mqttConnection,
  *                                                   THING_NAME,
  *                                                   THING_NAME_LENGTH,
  *                                                   0,
- *                                                   NULL );
+ *                                                   &notifyPendingCallback );
  *
  *     // The return value from removing a callback should always be success.
  *     assert( status == AWS_IOT_JOBS_SUCCESS );
@@ -816,12 +819,15 @@ AwsIotJobsError_t AwsIotJobs_SetNotifyPendingCallback( IotMqttConnection_t mqttC
  *     // execution changes.
  *
  *     // Once the callback is no longer needed, it may be removed by passing
- *     // NULL as pNotifyNextCallback.
+ *     // NULL as the callback function and specifying the function to remove.
+ *     notifyNextCallback.function = NULL;
+ *     notifyNextCallback.oldFunction = _jobsCallback;
+ *
  *     status = AwsIotJobs_SetNotifyNextCallback( mqttConnection,
  *                                                THING_NAME,
  *                                                THING_NAME_LENGTH,
  *                                                0,
- *                                                NULL );
+ *                                                &notifyNextCallback );
  *
  *     // The return value from removing a callback should always be success.
  *     assert( status == AWS_IOT_JOBS_SUCCESS );

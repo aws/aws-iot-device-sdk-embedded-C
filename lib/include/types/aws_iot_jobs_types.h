@@ -519,6 +519,14 @@ typedef struct AwsIotJobsCallbackInfo
      * (`4` total callbacks) may be set. This member is used to replace an existing callback
      * with a new one.
      *
+     * To add a new callback:
+     * @code{c}
+     * AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+     *
+     * callbackInfo.function = _newCallback;
+     * callbackInfo.oldFunction = NULL;
+     * @endcode
+     *
      * For example, if the function `_oldCallback()` is currently registered:
      * - To replace `_oldCallback()` with a new callback function `_newCallback()`:
      * @code{c}
