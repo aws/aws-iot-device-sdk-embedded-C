@@ -181,7 +181,7 @@ void _AwsIotJobs_RemoveSubscription( _jobsSubscription_t * pSubscription,
         {
             IotLogDebug( "Reference count %ld for %.*s subscription object. "
                          "Subscription cannot be removed yet.",
-                         ( long int ) pSubscription->references[ i ],
+                         ( long int ) pSubscription->operationReferences[ i ],
                          pSubscription->thingNameLength,
                          pSubscription->pThingName );
 
@@ -337,7 +337,7 @@ AwsIotJobsError_t _AwsIotJobs_IncrementReferences( _jobsOperation_t * pOperation
                      _pAwsIotJobsOperationNames[ type ],
                      pSubscription->thingNameLength,
                      pSubscription->pThingName,
-                     pSubscription->references[ type ] );
+                     pSubscription->operationReferences[ type ] );
     }
     /* Otherwise, set the persistent subscriptions flag. */
     else
