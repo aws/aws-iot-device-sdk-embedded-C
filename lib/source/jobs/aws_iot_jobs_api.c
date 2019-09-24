@@ -53,6 +53,17 @@
     #error "AWS_IOT_JOBS_NOTIFY_CALLBACKS cannot be 0 or negative."
 #endif
 
+/**
+ * @brief Returned by @ref _getCallbackIndex when there's no space in the callback array.
+ */
+#define NO_SPACE_FOR_CALLBACK     ( -1 )
+
+/**
+ * @brief Returned by @ref _getCallbackIndex when a searching for an oldCallback that
+ * does not exist.
+ */
+#define OLD_CALLBACK_NOT_FOUND    ( -2 )
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -89,6 +100,23 @@ static AwsIotJobsError_t _validateRequestInfo( _jobsOperationType_t type,
  */
 static AwsIotJobsError_t _validateUpdateInfo( _jobsOperationType_t type,
                                               const AwsIotJobsUpdateInfo_t * pUpdateInfo );
+
+/**
+ * @brief Gets an element of the callback array to modify.
+ *
+ * @param[in] type The type of callback to modify.
+ * @param[in] pSubscription Subscription object that holds the callback array.
+ * @param[in] pCallbackInfo User provided callback info.
+ *
+ * @return The index of the callback array to modify; on error:
+ * - #NO_SPACE_FOR_CALLBACK if no free spaces are available
+ * - #OLD_CALLBACK_NOT_FOUND if an old callback to remove was specified, but that function does not exist.
+ *
+ * @note This function should be called with the subscription list mutex locked.
+ */
+static int32_t _getCallbackIndex( _jobsCallbackType_t type,
+                                  _jobsSubscription_t * pSubscription,
+                                  const AwsIotJobsCallbackInfo_t * pCallbackInfo );
 
 /**
  * @brief Common function for setting Jobs callbacks.
@@ -400,6 +428,44 @@ static AwsIotJobsError_t _validateUpdateInfo( _jobsOperationType_t type,
 
 /*-----------------------------------------------------------*/
 
+static int32_t _getCallbackIndex( _jobsCallbackType_t type,
+                                  _jobsSubscription_t * pSubscription,
+                                  const AwsIotJobsCallbackInfo_t * pCallbackInfo )
+{
+    int32_t callbackIndex = 0;
+
+    /* Find the matching oldFunction. */
+    if( pCallbackInfo->oldFunction != NULL )
+    {
+        if( pSubscription->callbacks[ type ].function == pCallbackInfo->oldFunction )
+        {
+            callbackIndex = 0;
+        }
+        else
+        {
+            /* oldFunction not found. */
+            callbackIndex = OLD_CALLBACK_NOT_FOUND;
+        }
+    }
+    /* Find space for a new callback. */
+    else
+    {
+        if( pSubscription->callbacks[ type ].function == NULL )
+        {
+            callbackIndex = 0;
+        }
+        else
+        {
+            /* No memory for new callback. */
+            callbackIndex = NO_SPACE_FOR_CALLBACK;
+        }
+    }
+
+    return callbackIndex;
+}
+
+/*-----------------------------------------------------------*/
+
 static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
                                              _jobsCallbackType_t type,
                                              const char * pThingName,
@@ -409,6 +475,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_SUCCESS );
     bool subscriptionMutexLocked = false;
     _jobsSubscription_t * pSubscription = NULL;
+    int32_t callbackIndex = 0;
 
     /* Check that AwsIotJobs_Init was called. */
     if( _checkInit() == false )
@@ -425,12 +492,21 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
     }
 
-    /* Check that a callback function is provided. */
-    if( pCallbackInfo != NULL )
+    /* Check that a callback parameter is provided. */
+    if( pCallbackInfo == NULL )
     {
-        if( pCallbackInfo->function == NULL )
+        IotLogError( "Callback parameter must be provided for Jobs %s callback.",
+                     _pAwsIotJobsCallbackNames[ type ] );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
+    }
+
+    /* The oldFunction member must be set when removing or replacing a callback. */
+    if( pCallbackInfo->function == NULL )
+    {
+        if( pCallbackInfo->oldFunction == NULL )
         {
-            IotLogError( "Callback function must be provided for Jobs %s callback.",
+            IotLogError( "A function to replace must be provided for new Jobs %s callback.",
                          _pAwsIotJobsCallbackNames[ type ] );
 
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
@@ -458,11 +534,37 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
     }
 
+    /* Get the index of the callback element to modify. */
+    callbackIndex = _getCallbackIndex( type, pSubscription, pCallbackInfo );
+
+    switch( callbackIndex )
+    {
+        case NO_SPACE_FOR_CALLBACK:
+            IotLogError( "No memory for a new Jobs %s callback.",
+                         _pAwsIotJobsCallbackNames[ type ] );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_NO_MEMORY );
+
+        case OLD_CALLBACK_NOT_FOUND:
+            IotLogWarn( "Requested replacement function for Jobs %s callback not found.",
+                        _pAwsIotJobsCallbackNames[ type ] );
+
+            /* A subscription may have been allocated, but the callback operation can't
+             * proceed. Check if the subscription should be removed. */
+            _AwsIotJobs_RemoveSubscription( pSubscription, NULL );
+
+            /* Just exit with success, no changes were made. */
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_SUCCESS );
+
+        default:
+            break;
+    }
+
     /* Check for an existing callback. */
     if( pSubscription->callbacks[ type ].function != NULL )
     {
         /* Replace existing callback. */
-        if( pCallbackInfo != NULL )
+        if( pCallbackInfo->function != NULL )
         {
             IotLogInfo( "(%.*s) Found existing %s callback. Replacing callback.",
                         thingNameLength,
@@ -517,11 +619,6 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
                 /* On failure, check if this subscription can be removed. */
                 _AwsIotJobs_RemoveSubscription( pSubscription, NULL );
             }
-        }
-        /* Do nothing; set return value to success. */
-        else
-        {
-            status = AWS_IOT_JOBS_SUCCESS;
         }
     }
 

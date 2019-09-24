@@ -67,12 +67,24 @@
 /**
  * @brief The Thing Name shared among all the tests.
  */
-#define TEST_THING_NAME           "TestThingName"
+#define TEST_THING_NAME             "TestThingName"
 
 /**
  * @brief The length of #TEST_THING_NAME.
  */
-#define TEST_THING_NAME_LENGTH    ( sizeof( TEST_THING_NAME ) - 1 )
+#define TEST_THING_NAME_LENGTH      ( sizeof( TEST_THING_NAME ) - 1 )
+
+/**
+ * @brief A non-NULL callback function that can be tested by Jobs, but is not
+ * expected to be invoked.
+ */
+#define JOBS_CALLBACK_FUNCTION      ( ( void ( * )( void *, AwsIotJobsCallbackParam_t * ) ) 0x01 )
+
+/**
+ * @brief Another non-NULL callback function that can be tested by Jobs, but is not
+ * expected to be invoked.
+ */
+#define JOBS_CALLBACK_FUNCTION_2    ( ( void ( * )( void *, AwsIotJobsCallbackParam_t * ) ) 0x02 )
 
 /*-----------------------------------------------------------*/
 
@@ -239,6 +251,7 @@ TEST_GROUP_RUNNER( Jobs_Unit_API )
     RUN_TEST_CASE( Jobs_Unit_API, DescribeMallocFail );
     RUN_TEST_CASE( Jobs_Unit_API, UpdateMallocFail );
     RUN_TEST_CASE( Jobs_Unit_API, RemovePersistentSubscriptions );
+    RUN_TEST_CASE( Jobs_Unit_API, SetCallback );
     RUN_TEST_CASE( Jobs_Unit_API, SetCallbackMallocFail );
 }
 
@@ -683,6 +696,68 @@ TEST( Jobs_Unit_API, RemovePersistentSubscriptions )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Tests the behavior of the Jobs callback functions.
+ */
+TEST( Jobs_Unit_API, SetCallback )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+    _jobsSubscription_t * pSubscription = NULL;
+
+    /* Callback info must be provided. */
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
+    /* Thing Name must be valid. */
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, NULL, 0, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
+    /* Request to remove an unspecified callback. */
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
+
+    /* Request to remove a callback that doesn't exist. */
+    callbackInfo.function = NULL;
+    callbackInfo.oldFunction = JOBS_CALLBACK_FUNCTION;
+
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    /* Set new callback. */
+    callbackInfo.function = JOBS_CALLBACK_FUNCTION;
+    callbackInfo.oldFunction = NULL;
+
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    /* Check that new callback was set. */
+    pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
+    TEST_ASSERT_NOT_NULL( pSubscription );
+    TEST_ASSERT_EQUAL_PTR( pSubscription->callbacks[ NOTIFY_NEXT_CALLBACK ].function, JOBS_CALLBACK_FUNCTION );
+
+    /* Replace existing function. */
+    callbackInfo.function = JOBS_CALLBACK_FUNCTION_2;
+    callbackInfo.oldFunction = JOBS_CALLBACK_FUNCTION;
+
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    /* Check that callback was replaced. */
+    pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
+    TEST_ASSERT_NOT_NULL( pSubscription );
+    TEST_ASSERT_EQUAL_PTR( pSubscription->callbacks[ NOTIFY_NEXT_CALLBACK ].function, JOBS_CALLBACK_FUNCTION_2 );
+
+    /* Remove callback function. */
+    callbackInfo.function = NULL;
+    callbackInfo.oldFunction = JOBS_CALLBACK_FUNCTION_2;
+
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Tests the behavior of the Jobs set callback functions when memory
  * allocation fails at various points.
  */
@@ -696,7 +771,7 @@ TEST( Jobs_Unit_API, SetCallbackMallocFail )
     _AwsIotJobsMqttTimeoutMs = 75;
 
     /* A non-NULL callback function. */
-    callbackInfo.function = ( void ( * )( void *, AwsIotJobsCallbackParam_t * ) ) 0x01;
+    callbackInfo.function = JOBS_CALLBACK_FUNCTION;
 
     for( i = 0; ; i++ )
     {

@@ -832,18 +832,21 @@ TEST( Jobs_System, JobsCallbacks )
     }
 
     /* Remove Jobs callbacks. */
+    callbackInfo.function = NULL;
+    callbackInfo.oldFunction = _jobsCallback;
+
     status = AwsIotJobs_SetNotifyNextCallback( _mqttConnection,
                                                AWS_IOT_TEST_JOBS_THING_NAME,
                                                sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1,
                                                0,
-                                               NULL );
+                                               &callbackInfo );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     status = AwsIotJobs_SetNotifyPendingCallback( _mqttConnection,
                                                   AWS_IOT_TEST_JOBS_THING_NAME,
                                                   sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1,
                                                   0,
-                                                  NULL );
+                                                  &callbackInfo );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Destroy the wait semaphore. */
