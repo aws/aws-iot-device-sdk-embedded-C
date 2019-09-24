@@ -353,7 +353,7 @@ typedef struct _jobsSubscription
 {
     IotLink_t link;                                            /**< @brief List link member. */
 
-    int32_t references[ JOBS_OPERATION_COUNT ];                /**< @brief Reference counter for Jobs operation topics. */
+    int32_t operationReferences[ JOBS_OPERATION_COUNT ];       /**< @brief Reference counters for Jobs operation topics. */
     AwsIotJobsCallbackInfo_t callbacks[ JOBS_CALLBACK_COUNT ]; /**< @brief Jobs callbacks for this Thing. */
 
     /**
