@@ -42,9 +42,6 @@
 /* MQTT include. */
 #include "iot_mqtt.h"
 
-/* Atomics include. */
-#include "iot_atomic.h"
-
 /* Validate Jobs configuration settings. */
 #if AWS_IOT_JOBS_ENABLE_ASSERTS != 0 && AWS_IOT_JOBS_ENABLE_ASSERTS != 1
     #error "AWS_IOT_JOBS_ENABLE_ASSERTS must be 0 or 1."
@@ -186,7 +183,7 @@ static bool _checkInit( void )
 {
     bool status = true;
 
-    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
+    if( _initCalled == 0 )
     {
         IotLogError( "AwsIotJobs_Init was not called." );
 
@@ -755,7 +752,7 @@ AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs )
     AwsIotJobsError_t status = AWS_IOT_JOBS_SUCCESS;
     bool listInitStatus = false;
 
-    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
+    if( _initCalled == 0 )
     {
         listInitStatus = AwsIot_InitLists( &_AwsIotJobsPendingOperations,
                                            &_AwsIotJobsSubscriptions,
@@ -777,7 +774,7 @@ AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs )
             }
 
             /* Set the flag that specifies initialization is complete. */
-            ( void ) Atomic_CompareAndSwap_u32( &( _initCalled ), 1, 0 );
+            _initCalled = 1;
 
             IotLogInfo( "Jobs library successfully initialized." );
         }
@@ -794,10 +791,10 @@ AwsIotJobsError_t AwsIotJobs_Init( uint32_t mqttTimeoutMs )
 
 void AwsIotJobs_Cleanup( void )
 {
-    uint32_t initCleared = Atomic_CompareAndSwap_u32( &( _initCalled ), 0, 1 );
-
-    if( initCleared == 1 )
+    if( _initCalled == 1 )
     {
+        _initCalled = 0;
+
         /* Remove and free all items in the Jobs pending operation list. */
         IotMutex_Lock( &_AwsIotJobsPendingOperationsMutex );
         IotListDouble_RemoveAll( &_AwsIotJobsPendingOperations,
