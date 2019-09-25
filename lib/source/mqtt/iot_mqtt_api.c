@@ -40,9 +40,6 @@
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
-/* Atomics include. */
-#include "iot_atomic.h"
-
 /* Validate MQTT configuration settings. */
 #if IOT_MQTT_ENABLE_ASSERTS != 0 && IOT_MQTT_ENABLE_ASSERTS != 1
     #error "IOT_MQTT_ENABLE_ASSERTS must be 0 or 1."
@@ -164,7 +161,7 @@ static bool _checkInit( void )
 {
     bool status = true;
 
-    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
+    if( _initCalled == 0 )
     {
         IotLogError( "IotMqtt_Init was not called." );
 
@@ -908,7 +905,7 @@ IotMqttError_t IotMqtt_Init( void )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
-    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
+    if( _initCalled == 0 )
     {
         /* Call any additional serializer initialization function if serializer
          * overrides are enabled. */
@@ -933,7 +930,7 @@ IotMqttError_t IotMqtt_Init( void )
         else
         {
             /* Set the flag that specifies initialization is complete. */
-            ( void ) Atomic_CompareAndSwap_u32( &( _initCalled ), 1, 0 );
+            _initCalled = 1;
 
             IotLogInfo( "MQTT library successfully initialized." );
         }
@@ -950,10 +947,10 @@ IotMqttError_t IotMqtt_Init( void )
 
 void IotMqtt_Cleanup( void )
 {
-    uint32_t initCleared = Atomic_CompareAndSwap_u32( &( _initCalled ), 0, 1 );
-
-    if( initCleared == 1 )
+    if( _initCalled == 1 )
     {
+        _initCalled = 0;
+
         /* Call any additional serializer cleanup initialization function if serializer
          * overrides are enabled. */
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
