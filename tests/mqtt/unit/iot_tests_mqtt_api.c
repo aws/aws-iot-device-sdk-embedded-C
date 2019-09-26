@@ -1537,7 +1537,7 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
 
     /* An estimate for the amount of time this test requires. */
     const uint32_t sleepTimeMs = ( KEEP_ALIVE_COUNT * SHORT_KEEP_ALIVE_MS ) +
-                                 ( IOT_MQTT_RESPONSE_WAIT_MS * KEEP_ALIVE_COUNT ) + 1500;
+                                 ( IOT_MQTT_RESPONSE_WAIT_MS * KEEP_ALIVE_COUNT ) + 2500;
 
     /* Print a newline so this test may log its status. */
     UNITY_PRINT_EOL();
