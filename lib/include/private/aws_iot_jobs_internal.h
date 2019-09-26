@@ -351,10 +351,13 @@ typedef union _jsonRequestContents
  */
 typedef struct _jobsSubscription
 {
-    IotLink_t link;                                            /**< @brief List link member. */
+    IotLink_t link;                                      /**< @brief List link member. */
 
-    int32_t operationReferences[ JOBS_OPERATION_COUNT ];       /**< @brief Reference counters for Jobs operation topics. */
-    AwsIotJobsCallbackInfo_t callbacks[ JOBS_CALLBACK_COUNT ]; /**< @brief Jobs callbacks for this Thing. */
+    int32_t operationReferences[ JOBS_OPERATION_COUNT ]; /**< @brief Reference counters for Jobs operation topics. */
+    int32_t callbackReferences;                          /**< @brief Reference counter for Jobs callbacks. */
+
+    /** @brief Jobs callbacks for this Thing. */
+    AwsIotJobsCallbackInfo_t callbacks[ JOBS_CALLBACK_COUNT ][ AWS_IOT_JOBS_NOTIFY_CALLBACKS ];
 
     /**
      * @brief Buffer allocated for removing Jobs topics.
