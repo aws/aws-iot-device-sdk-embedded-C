@@ -92,3 +92,28 @@ source_group( include FILES ${DEMO_COMMON_HEADERS} )
 source_group( "" FILES ${DEMO_COMMON_SOURCES}
               ${PROJECT_SOURCE_DIR}/demos/source/aws_iot_demo_defender.c
               ${CONFIG_HEADER} )
+
+# Jobs demo source files.
+add_executable( aws_iot_demo_jobs
+                ${PROJECT_SOURCE_DIR}/demos/source/aws_iot_demo_jobs.c
+                ${DEMO_COMMON_SOURCES}
+                ${DEMO_COMMON_HEADERS}
+                ${CONFIG_HEADER} )
+
+# Select the demo function for the Jobs demo.
+target_compile_definitions( aws_iot_demo_jobs
+                            PRIVATE RunDemo=RunJobsDemo )
+
+# Jobs demo library dependencies.
+target_link_libraries( aws_iot_demo_jobs PRIVATE awsiotjobs )
+
+if( ${IOT_BUILD_TESTS} )
+    target_link_libraries( aws_iot_demo_jobs PRIVATE unity )
+endif()
+
+# Organization of the Jobs demo in folders.
+set_property( TARGET aws_iot_demo_jobs PROPERTY FOLDER "demos" )
+source_group( include FILES ${DEMO_COMMON_HEADERS} )
+source_group( "" FILES ${DEMO_COMMON_SOURCES}
+              ${PROJECT_SOURCE_DIR}/demos/source/aws_iot_demo_jobs.c
+              ${CONFIG_HEADER} )
