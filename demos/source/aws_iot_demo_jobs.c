@@ -243,7 +243,7 @@ static int32_t _executeDemo( IotMqttConnection_t const mqttConnection,
                              const char * pThingName,
                              size_t thingNameLength )
 {
-    bool success = true;
+    bool success = false;
     AwsIotJobsError_t err = AWS_IOT_JOBS_SUCCESS;
     AwsIotJobState_t result = AWS_IOT_JOB_STATE_FAILED;
     AwsIotJobsResponse_t resp = AWS_IOT_JOBS_RESPONSE_INITIALIZER;
@@ -270,11 +270,16 @@ static int32_t _executeDemo( IotMqttConnection_t const mqttConnection,
         err = AwsIotJobs_UpdateSync(
             &req, &updateInfo, 0, AWS_IOT_DEMO_JOBS_MQTT_TIMEOUT, &resp );
 
+
         if( err != AWS_IOT_JOBS_SUCCESS )
         {
             IotLogError( "Update Failed: %s", AwsIotJobs_strerror( err ) );
             success = false;
         }
+	else
+	{
+	    success = true;
+	}
     }
 
     /* Parse out the action. */
