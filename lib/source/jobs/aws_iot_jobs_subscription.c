@@ -166,8 +166,8 @@ _jobsSubscription_t * _AwsIotJobs_FindSubscription( const char * pThingName,
 void _AwsIotJobs_RemoveSubscription( _jobsSubscription_t * pSubscription,
                                      _jobsSubscription_t ** pRemovedSubscription )
 {
-    int32_t i = 0;
-    bool removeSubscription = true;
+    IOT_FUNCTION_ENTRY( bool, true );
+    int32_t i = 0, callbackIndex = 0;
 
     IotLogDebug( "Checking if subscription object for %.*s can be removed.",
                  pSubscription->thingNameLength,
@@ -185,7 +185,7 @@ void _AwsIotJobs_RemoveSubscription( _jobsSubscription_t * pSubscription,
                          pSubscription->thingNameLength,
                          pSubscription->pThingName );
 
-            removeSubscription = false;
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
         else if( pSubscription->operationReferences[ i ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
         {
@@ -194,22 +194,27 @@ void _AwsIotJobs_RemoveSubscription( _jobsSubscription_t * pSubscription,
                          pSubscription->thingNameLength,
                          pSubscription->pThingName );
 
-            removeSubscription = false;
-        }
-
-        if( removeSubscription == false )
-        {
-            break;
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
     }
 
     /* Check for active subscriptions. If any Jobs callbacks are active, then the
      * subscription cannot be removed. */
-    if( removeSubscription == true )
+    if( pSubscription->callbackReferences > 0 )
     {
-        for( i = 0; i < JOBS_CALLBACK_COUNT; i++ )
+        IotLogDebug( "Notify callbacks are using %.*s subscription object. "
+                     "Subscription cannot be removed yet.",
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    for( i = 0; i < JOBS_CALLBACK_COUNT; i++ )
+    {
+        for( callbackIndex = 0; callbackIndex < AWS_IOT_JOBS_NOTIFY_CALLBACKS; callbackIndex++ )
         {
-            if( pSubscription->callbacks[ i ].function != NULL )
+            if( pSubscription->callbacks[ i ][ callbackIndex ].function != NULL )
             {
                 IotLogDebug( "Found active Jobs %s callback for %.*s subscription object. "
                              "Subscription cannot be removed yet.",
@@ -217,14 +222,15 @@ void _AwsIotJobs_RemoveSubscription( _jobsSubscription_t * pSubscription,
                              pSubscription->thingNameLength,
                              pSubscription->pThingName );
 
-                removeSubscription = false;
-                break;
+                IOT_SET_AND_GOTO_CLEANUP( false );
             }
         }
     }
 
     /* Remove the subscription if unused. */
-    if( removeSubscription == true )
+    IOT_FUNCTION_CLEANUP_BEGIN();
+
+    if( status == true )
     {
         /* No Jobs operation subscription references or active Jobs callbacks.
          * Remove the subscription object. */

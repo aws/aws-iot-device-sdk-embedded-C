@@ -437,11 +437,16 @@ static int32_t _getCallbackIndex( _jobsCallbackType_t type,
     /* Find the matching oldFunction. */
     if( pCallbackInfo->oldFunction != NULL )
     {
-        if( pSubscription->callbacks[ type ].function == pCallbackInfo->oldFunction )
+        for( callbackIndex = 0; callbackIndex < AWS_IOT_JOBS_NOTIFY_CALLBACKS; callbackIndex++ )
         {
-            callbackIndex = 0;
+            if( pSubscription->callbacks[ type ][ callbackIndex ].function == pCallbackInfo->oldFunction )
+            {
+                /* oldFunction found. */
+                break;
+            }
         }
-        else
+
+        if( callbackIndex == AWS_IOT_JOBS_NOTIFY_CALLBACKS )
         {
             /* oldFunction not found. */
             callbackIndex = OLD_CALLBACK_NOT_FOUND;
@@ -450,11 +455,15 @@ static int32_t _getCallbackIndex( _jobsCallbackType_t type,
     /* Find space for a new callback. */
     else
     {
-        if( pSubscription->callbacks[ type ].function == NULL )
+        for( callbackIndex = 0; callbackIndex < AWS_IOT_JOBS_NOTIFY_CALLBACKS; callbackIndex++ )
         {
-            callbackIndex = 0;
+            if( pSubscription->callbacks[ type ][ callbackIndex ].function == NULL )
+            {
+                break;
+            }
         }
-        else
+
+        if( callbackIndex == AWS_IOT_JOBS_NOTIFY_CALLBACKS )
         {
             /* No memory for new callback. */
             callbackIndex = NO_SPACE_FOR_CALLBACK;
@@ -560,7 +569,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
     }
 
     /* Check for an existing callback. */
-    if( pSubscription->callbacks[ type ].function != NULL )
+    if( pSubscription->callbacks[ type ][ callbackIndex ].function != NULL )
     {
         /* Replace existing callback. */
         if( pCallbackInfo->function != NULL )
@@ -570,7 +579,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
                         pThingName,
                         _pAwsIotJobsCallbackNames[ type ] );
 
-            pSubscription->callbacks[ type ] = *pCallbackInfo;
+            pSubscription->callbacks[ type ][ callbackIndex ] = *pCallbackInfo;
         }
         /* Remove existing callback. */
         else
@@ -585,7 +594,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
                                                    type,
                                                    pSubscription,
                                                    IotMqtt_UnsubscribeSync );
-            ( void ) memset( &( pSubscription->callbacks[ type ] ),
+            ( void ) memset( &( pSubscription->callbacks[ type ][ callbackIndex ] ),
                              0x00,
                              sizeof( AwsIotJobsCallbackInfo_t ) );
 
@@ -609,7 +618,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
 
         if( status == AWS_IOT_JOBS_SUCCESS )
         {
-            pSubscription->callbacks[ type ] = *pCallbackInfo;
+            pSubscription->callbacks[ type ][ callbackIndex ] = *pCallbackInfo;
         }
         else
         {
@@ -785,6 +794,7 @@ static void _notifyNextCallbackWrapper( void * pArgument,
 static void _callbackWrapperCommon( _jobsCallbackType_t type,
                                     IotMqttCallbackParam_t * pMessage )
 {
+    int32_t callbackIndex = 0;
     AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
     AwsIotJobsCallbackParam_t callbackParam = { .callbackType = ( AwsIotJobsCallbackType_t ) 0 };
     _jobsSubscription_t * pSubscription = NULL;
@@ -807,35 +817,54 @@ static void _callbackWrapperCommon( _jobsCallbackType_t type,
                                                   thingNameLength,
                                                   false );
 
-    if( pSubscription == NULL )
+    if( pSubscription != NULL )
     {
-        /* No subscription found. */
-        IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
-        IOT_GOTO_CLEANUP();
+        /* Increment callback reference count to prevent the subscription object from being
+         * freed while callbacks are running. */
+        pSubscription->callbackReferences++;
     }
-
-    /* Ensure that a callback function is set. */
-    AwsIotJobs_Assert( pSubscription->callbacks[ type ].function != NULL );
-
-    /* Copy the subscription callback info, as the subscription may be modified
-     * when the subscriptions mutex is released. */
-    callbackInfo = pSubscription->callbacks[ type ];
 
     IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
 
-    /* Set the callback type. Jobs callbacks are enumerated after the operations. */
-    callbackParam.callbackType = ( AwsIotJobsCallbackType_t ) ( type + JOBS_OPERATION_COUNT );
+    if( pSubscription != NULL )
+    {
+        /* Invoke all callbacks for this Thing. */
+        for( callbackIndex = 0; callbackIndex < AWS_IOT_JOBS_NOTIFY_CALLBACKS; callbackIndex++ )
+        {
+            /* Copy the callback function and parameter, as it may be modified at any time. */
+            IotMutex_Lock( &_AwsIotJobsSubscriptionsMutex );
+            callbackInfo = pSubscription->callbacks[ type ][ callbackIndex ];
+            IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
 
-    /* Set the remaining members of the callback param. */
-    callbackParam.mqttConnection = pMessage->mqttConnection;
-    callbackParam.pThingName = pThingName;
-    callbackParam.thingNameLength = thingNameLength;
-    callbackParam.u.callback.pDocument = pMessage->u.message.info.pPayload;
-    callbackParam.u.callback.documentLength = pMessage->u.message.info.payloadLength;
+            if( callbackInfo.function != NULL )
+            {
+                /* Set the callback type. Jobs callbacks are enumerated after the operations. */
+                callbackParam.callbackType = ( AwsIotJobsCallbackType_t ) ( type + JOBS_OPERATION_COUNT );
 
-    /* Invoke the callback function. */
-    callbackInfo.function( callbackInfo.pCallbackContext,
-                           &callbackParam );
+                /* Set the remaining members of the callback param. */
+                callbackParam.mqttConnection = pMessage->mqttConnection;
+                callbackParam.pThingName = pThingName;
+                callbackParam.thingNameLength = thingNameLength;
+                callbackParam.u.callback.pDocument = pMessage->u.message.info.pPayload;
+                callbackParam.u.callback.documentLength = pMessage->u.message.info.payloadLength;
+
+                /* Invoke the callback function. */
+                callbackInfo.function( callbackInfo.pCallbackContext,
+                                       &callbackParam );
+            }
+        }
+
+        /* Callbacks are finished. Decrement reference count and check if subscription
+         * object should be destroyed. */
+        IotMutex_Lock( &_AwsIotJobsSubscriptionsMutex );
+
+        pSubscription->callbackReferences--;
+        AwsIotJobs_Assert( pSubscription->callbackReferences >= 0 );
+
+        _AwsIotJobs_RemoveSubscription( pSubscription, NULL );
+
+        IotMutex_Unlock( &_AwsIotJobsSubscriptionsMutex );
+    }
 
     /* This function uses cleanup sections to exit on error. */
     IOT_FUNCTION_CLEANUP_BEGIN();
