@@ -42,9 +42,6 @@
 /* MQTT include. */
 #include "iot_mqtt.h"
 
-/* Atomics include. */
-#include "iot_atomic.h"
-
 /* Validate Shadow configuration settings. */
 #if AWS_IOT_SHADOW_ENABLE_ASSERTS != 0 && AWS_IOT_SHADOW_ENABLE_ASSERTS != 1
     #error "AWS_IOT_SHADOW_ENABLE_ASSERTS must be 0 or 1."
@@ -190,7 +187,7 @@ static bool _checkInit( void )
 {
     bool status = true;
 
-    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
+    if( _initCalled == 0 )
     {
         IotLogError( "AwsIotShadow_Init was not called." );
 
@@ -683,7 +680,7 @@ AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeoutMs )
     AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
     bool listInitStatus = false;
 
-    if( Atomic_Add_u32( &( _initCalled ), 0 ) == 0 )
+    if( _initCalled == 0 )
     {
         /* Initialize Shadow lists and mutexes. */
         listInitStatus = AwsIot_InitLists( &_AwsIotShadowPendingOperations,
@@ -706,7 +703,7 @@ AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeoutMs )
             }
 
             /* Set the flag that specifies initialization is complete. */
-            ( void ) Atomic_CompareAndSwap_u32( &( _initCalled ), 1, 0 );
+            _initCalled = 1;
 
             IotLogInfo( "Shadow library successfully initialized." );
         }
@@ -723,10 +720,10 @@ AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeoutMs )
 
 void AwsIotShadow_Cleanup( void )
 {
-    uint32_t initCleared = Atomic_CompareAndSwap_u32( &( _initCalled ), 0, 1 );
-
-    if( initCleared == 1 )
+    if( _initCalled == 1 )
     {
+        _initCalled = 0;
+
         /* Remove and free all items in the Shadow pending operation list. */
         IotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
         IotListDouble_RemoveAll( &( _AwsIotShadowPendingOperations ),
