@@ -202,6 +202,11 @@ void _AwsIotJobs_RemoveSubscription( _jobsSubscription_t * pSubscription,
      * subscription cannot be removed. */
     if( pSubscription->callbackReferences > 0 )
     {
+        IotLogDebug( "Notify callbacks are using %.*s subscription object. "
+                     "Subscription cannot be removed yet.",
+                     pSubscription->thingNameLength,
+                     pSubscription->pThingName );
+
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
