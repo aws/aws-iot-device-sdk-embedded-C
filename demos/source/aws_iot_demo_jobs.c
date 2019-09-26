@@ -52,34 +52,33 @@
 /**
  * @brief The Library Timeout.
  */
-#define TIMEOUT_MS                ( 5000u )
+#define TIMEOUT_MS                      ( 5000u )
 
 /**
  * @brief The MQTT Library keepalive time.
  */
-#define KEEP_ALIVE_SECONDS        ( 60 )
+#define KEEP_ALIVE_SECONDS              ( 60 )
 
 /**
  * @brief The key of the Job ID.
  */
-#define JOB_ID_KEY                "jobId"
-#define JOB_ID_KEY_LENGTH         ( sizeof( JOB_ID_KEY ) - 1 )
+#define JOB_ID_KEY                      "jobId"
+#define JOB_ID_KEY_LENGTH               ( sizeof( JOB_ID_KEY ) - 1 )
 
 /**
  * @brief Keys for the Job JSON response.
  */
-#define JOB_DOC_KEY               "jobDocument"
-#define JOB_DOC_KEY_LENGTH        ( sizeof( JOB_DOC_KEY ) - 1 )
+#define JOB_DOC_KEY                     "jobDocument"
+#define JOB_DOC_KEY_LENGTH              ( sizeof( JOB_DOC_KEY ) - 1 )
 
-#define JOB_ACTION_KEY            "action"
-#define JOB_ACTION_KEY_LENGTH     ( sizeof( JOB_ACTION_KEY ) - 1 )
+#define JOB_ACTION_KEY                  "action"
+#define JOB_ACTION_KEY_LENGTH           ( sizeof( JOB_ACTION_KEY ) - 1 )
 
-#define JOB_MESSAGE_KEY           "message"
-#define JOB_MESSAGE_KEY_LENGTH    ( sizeof( JOB_MESSAGE_KEY ) - 1 )
+#define JOB_MESSAGE_KEY                 "message"
+#define JOB_MESSAGE_KEY_LENGTH          ( sizeof( JOB_MESSAGE_KEY ) - 1 )
 
-#define JOB_TOPIC_KEY             "topic"
-#define JOB_TOPIC_KEY_LENGTH      ( sizeof( JOB_TOPIC_KEY ) - 1 )
-
+#define JOB_TOPIC_KEY                   "topic"
+#define JOB_TOPIC_KEY_LENGTH            ( sizeof( JOB_TOPIC_KEY ) - 1 )
 
 /**
  * @brief Max Lengths for JSON values.
@@ -266,6 +265,20 @@ static bool _executeCommand( const char * command,
     const char * pMessage = NULL;
     size_t messageLength = 0;
 
+    /*
+     * The "publish" command will publish a string to a specified topic.
+     *
+     * An example JSON doc:
+     * ```
+     * {"action":"publish","message":"Hello world!","topic":"jobsdemo/1"}
+     * ```
+     *
+     * This will publish "Hello world!" to the topic "jobsdemo/1". A user with
+     * access to the AWS IoT console can view this message in the "test" section.
+     *
+     * If message or topic are missing from the JSON Job document, the execution
+     * will fail.
+     */
     if( COMPARE_COMMAND( "publish" ) )
     {
         const char * pTopic = NULL;
@@ -296,6 +309,19 @@ static bool _executeCommand( const char * command,
             IotLogInfo( "Failed to execute publish." );
         }
     }
+
+    /*
+     * The "print" command prints the message to console (with quotes if it's a JSON string).
+     *
+     * An example JSON doc:
+     * ```
+     * {"action":"print","message":"Hello world!"}
+     * ```
+     *
+     * This will print "Hello world!" in the device log.
+     *
+     * If message is missing from the JSON job document, the execution will fail.
+     */
     else if( COMPARE_COMMAND( "print" ) )
     {
         if( _getMessage( &pMessage, &messageLength ) )
@@ -411,11 +437,6 @@ static void _cleanupDemo( void )
 
 /**
  * @brief Establish a new connection to the MQTT server for the Jobs demo.
- *
- * Copied from the shadow demo.
- *
- * @TODO: See if this should be moved up a level and shared or if it's important
- * that it be in one file for the demo.
  *
  * @param[in] pIdentifier NULL-terminated MQTT client identifier. The Jobs
  * demo will use the Thing Name as the client identifier.
