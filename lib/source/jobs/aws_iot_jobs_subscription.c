@@ -177,17 +177,17 @@ void _AwsIotJobs_RemoveSubscription( _jobsSubscription_t * pSubscription,
      * reference count is not 0, then the subscription cannot be removed. */
     for( i = 0; i < JOBS_OPERATION_COUNT; i++ )
     {
-        if( pSubscription->references[ i ] > 0 )
+        if( pSubscription->operationReferences[ i ] > 0 )
         {
             IotLogDebug( "Reference count %ld for %.*s subscription object. "
                          "Subscription cannot be removed yet.",
-                         ( long int ) pSubscription->references[ i ],
+                         ( long int ) pSubscription->operationReferences[ i ],
                          pSubscription->thingNameLength,
                          pSubscription->pThingName );
 
             removeSubscription = false;
         }
-        else if( pSubscription->references[ i ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
+        else if( pSubscription->operationReferences[ i ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
         {
             IotLogDebug( "Subscription object for %.*s has persistent subscriptions. "
                          "Subscription will not be removed.",
@@ -277,7 +277,7 @@ AwsIotJobsError_t _AwsIotJobs_IncrementReferences( _jobsOperation_t * pOperation
     AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
 
     /* Do nothing if this operation has persistent subscriptions. */
-    if( pSubscription->references[ type ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
+    if( pSubscription->operationReferences[ type ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
     {
         IotLogDebug( "Jobs %s for %.*s has persistent subscriptions. Reference "
                      "count will not be incremented.",
@@ -290,10 +290,10 @@ AwsIotJobsError_t _AwsIotJobs_IncrementReferences( _jobsOperation_t * pOperation
 
     /* When persistent subscriptions are not present, the reference count must
      * not be negative. */
-    AwsIotJobs_Assert( pSubscription->references[ type ] >= 0 );
+    AwsIotJobs_Assert( pSubscription->operationReferences[ type ] >= 0 );
 
     /* Check if there are any existing references for this operation. */
-    if( pSubscription->references[ type ] == 0 )
+    if( pSubscription->operationReferences[ type ] == 0 )
     {
         /* Set the parameters needed to add subscriptions. */
         subscriptionInfo.mqttConnection = pOperation->mqttConnection;
@@ -331,18 +331,18 @@ AwsIotJobsError_t _AwsIotJobs_IncrementReferences( _jobsOperation_t * pOperation
      * the keep subscriptions flag is not set. */
     if( ( pOperation->flags & AWS_IOT_JOBS_FLAG_KEEP_SUBSCRIPTIONS ) == 0 )
     {
-        ( pSubscription->references[ type ] )++;
+        ( pSubscription->operationReferences[ type ] )++;
 
         IotLogDebug( "Jobs %s subscriptions for %.*s now has count %d.",
                      _pAwsIotJobsOperationNames[ type ],
                      pSubscription->thingNameLength,
                      pSubscription->pThingName,
-                     pSubscription->references[ type ] );
+                     pSubscription->operationReferences[ type ] );
     }
     /* Otherwise, set the persistent subscriptions flag. */
     else
     {
-        pSubscription->references[ type ] = AWS_IOT_PERSISTENT_SUBSCRIPTION;
+        pSubscription->operationReferences[ type ] = AWS_IOT_PERSISTENT_SUBSCRIPTION;
 
         IotLogDebug( "Set persistent subscriptions flag for Jobs %s of %.*s.",
                      _pAwsIotJobsOperationNames[ type ],
@@ -366,15 +366,15 @@ void _AwsIotJobs_DecrementReferences( _jobsOperation_t * pOperation,
     AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
 
     /* Do nothing if this Jobs operation has persistent subscriptions. */
-    if( pSubscription->references[ type ] != AWS_IOT_PERSISTENT_SUBSCRIPTION )
+    if( pSubscription->operationReferences[ type ] != AWS_IOT_PERSISTENT_SUBSCRIPTION )
     {
         /* Decrement the number of subscription references for this operation.
          * Ensure that it's positive. */
-        ( pSubscription->references[ type ] )--;
-        AwsIotJobs_Assert( pSubscription->references[ type ] >= 0 );
+        ( pSubscription->operationReferences[ type ] )--;
+        AwsIotJobs_Assert( pSubscription->operationReferences[ type ] >= 0 );
 
         /* Check if the number of references has reached 0. */
-        if( pSubscription->references[ type ] == 0 )
+        if( pSubscription->operationReferences[ type ] == 0 )
         {
             IotLogDebug( "Reference count for %.*s %s is 0. Unsubscribing.",
                          pSubscription->thingNameLength,
@@ -507,7 +507,7 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
                 /* Subscription must have a topic buffer. */
                 AwsIotJobs_Assert( pSubscription->pTopicBuffer != NULL );
 
-                if( pSubscription->references[ i ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
+                if( pSubscription->operationReferences[ i ] == AWS_IOT_PERSISTENT_SUBSCRIPTION )
                 {
                     /* Generate the prefix of the Jobs topic. This function will not
                      * fail when given a buffer. */
@@ -547,7 +547,7 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
                     }
 
                     /* Clear the persistent subscriptions flag. */
-                    pSubscription->references[ i ] = 0;
+                    pSubscription->operationReferences[ i ] = 0;
                 }
                 else
                 {

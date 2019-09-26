@@ -225,7 +225,7 @@ TEST( Shadow_Unit_API, Init )
  */
 TEST( Shadow_Unit_API, StringCoverage )
 {
-    int32_t i = 0;
+    size_t i = 0;
     const char * pMessage = NULL;
 
     const char * pInvalidStatus = "INVALID STATUS";
