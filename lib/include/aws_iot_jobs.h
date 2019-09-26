@@ -666,16 +666,21 @@ AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
  * useful for monitoring the list of pending Job executions.
  *
  * A <i>NOTIFY PENDING</i> callback may be invoked whenever a message is published
- * to `jobs/notify`. Each Thing may have a single NOTIFY PENDING callback set. This
- * function modifies the NOTIFY PENDING callback for a specific Thing depending on
- * the `pNotifyPendingCallback` parameter and the presence of any existing NOTIFY
- * PENDING callback.
+ * to `jobs/notify`. Each Thing may have up to @ref AWS_IOT_JOBS_NOTIFY_CALLBACKS
+ * NOTIFY PENDING callbacks set. This function modifies the NOTIFY PENDING callback
+ * for a specific Thing depending on the `pNotifyPendingCallback` parameter and the
+ * presence of any existing NOTIFY PENDING callback.
  * - When no existing NOTIFY PENDING callback exists for a specific Thing, a new
  * callback is added.
  * - If there is an existing NOTIFY PENDING callback and `pNotifyPendingCallback` is not `NULL`,
  * then the existing callback function and parameter are replaced with `pNotifyPendingCallback`.
  * - If there is an existing NOTIFY PENDING callback and `pNotifyPendingCallback` is `NULL`,
  * then the callback is removed.
+ *
+ * The member @ref AwsIotJobsCallbackInfo_t.oldFunction must be used to select an
+ * already-registered callback function for replacement or removal when @ref
+ * AWS_IOT_JOBS_NOTIFY_CALLBACKS is greater than `1`. When multiple callbacks are
+ * set, all of them will be invoked when a message is received.
  *
  * @param[in] mqttConnection The MQTT connection to use for the subscription to `jobs/notify`.
  * @param[in] pThingName The subscription to `jobs/notify` will be added for
@@ -721,12 +726,15 @@ AwsIotJobsError_t AwsIotJobs_Wait( AwsIotJobsOperation_t operation,
  *     // executions changes.
  *
  *     // Once the callback is no longer needed, it may be removed by passing
- *     // NULL as pNotifyPendingCallback.
+ *     // NULL as the callback function and specifying the function to remove.
+ *     notifyPendingCallback.function = NULL;
+ *     notifyPendingCallback.oldFunction = _jobsCallback;
+ *
  *     status = AwsIotJobs_SetNotifyPendingCallback( mqttConnection,
  *                                                   THING_NAME,
  *                                                   THING_NAME_LENGTH,
  *                                                   0,
- *                                                   NULL );
+ *                                                   &notifyPendingCallback );
  *
  *     // The return value from removing a callback should always be success.
  *     assert( status == AWS_IOT_JOBS_SUCCESS );
@@ -751,16 +759,21 @@ AwsIotJobsError_t AwsIotJobs_SetNotifyPendingCallback( IotMqttConnection_t mqttC
  * useful for being notified of changes to the next Job.
  *
  * A <i>NOTIFY NEXT</i> callback may be invoked whenever a message is published
- * to `jobs/notify-next`. Each Thing may have a single NOTIFY NEXT callback set. This
- * function modifies the NOTIFY NEXT callback for a specific Thing depending on
- * the `pNotifyNextCallback` parameter and the presence of any existing NOTIFY
- * NEXT callback.
+ * to `jobs/notify-next`. Each Thing may have up to @ref AWS_IOT_JOBS_NOTIFY_CALLBACKS
+ * NOTIFY NEXT callbacks set.  This function modifies the NOTIFY NEXT callback for
+ * a specific Thing depending on the `pNotifyNextCallback` parameter and the presence
+ * of any existing NOTIFY NEXT callback.
  * - When no existing NOTIFY NEXT callback exists for a specific Thing, a new
  * callback is added.
  * - If there is an existing NOTIFY NEXT callback and `pNotifyNextCallback` is not `NULL`,
  * then the existing callback function and parameter are replaced with `pNotifyNextCallback`.
  * - If there is an existing NOTIFY NEXT callback and `pNotifyNextCallback` is `NULL`,
  * then the callback is removed.
+ *
+ * The member @ref AwsIotJobsCallbackInfo_t.oldFunction must be used to select an
+ * already-registered callback function for replacement or removal when @ref
+ * AWS_IOT_JOBS_NOTIFY_CALLBACKS is greater than `1`. When multiple callbacks are
+ * set, all of them will be invoked when a message is received.
  *
  * @param[in] mqttConnection The MQTT connection to use for the subscription to `jobs/notify-next`.
  * @param[in] pThingName The subscription to `jobs/notify-next` will be added for
@@ -806,12 +819,15 @@ AwsIotJobsError_t AwsIotJobs_SetNotifyPendingCallback( IotMqttConnection_t mqttC
  *     // execution changes.
  *
  *     // Once the callback is no longer needed, it may be removed by passing
- *     // NULL as pNotifyNextCallback.
+ *     // NULL as the callback function and specifying the function to remove.
+ *     notifyNextCallback.function = NULL;
+ *     notifyNextCallback.oldFunction = _jobsCallback;
+ *
  *     status = AwsIotJobs_SetNotifyNextCallback( mqttConnection,
  *                                                THING_NAME,
  *                                                THING_NAME_LENGTH,
  *                                                0,
- *                                                NULL );
+ *                                                &notifyNextCallback );
  *
  *     // The return value from removing a callback should always be success.
  *     assert( status == AWS_IOT_JOBS_SUCCESS );
