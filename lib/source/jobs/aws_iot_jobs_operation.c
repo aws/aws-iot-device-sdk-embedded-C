@@ -787,9 +787,10 @@ AwsIotJobsError_t _AwsIotJobs_ProcessOperation( const AwsIotJobsRequestInfo_t * 
         IOT_GOTO_CLEANUP();
     }
 
-    /* Jobs already has an acknowledgement mechanism, so sending the message at
-     * QoS 1 provides no benefit. */
-    publishInfo.qos = IOT_MQTT_QOS_0;
+    /* Set the members for PUBLISH retry. */
+    publishInfo.qos = pRequestInfo->qos;
+    publishInfo.retryLimit = pRequestInfo->retryLimit;
+    publishInfo.retryMs = pRequestInfo->retryMs;
 
     /* Set the payload as the Jobs request. */
     publishInfo.pPayload = pOperation->pJobsRequest;

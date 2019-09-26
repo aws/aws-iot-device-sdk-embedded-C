@@ -564,6 +564,12 @@ typedef struct AwsIotJobsRequestInfo
      */
     IotMqttConnection_t mqttConnection;
 
+    /* These members allow Jobs commands to be retried. Be careful that duplicate
+     * commands do no cause unexpected application behavior. Use of QoS 0 is recommended. */
+    IotMqttQos_t qos;        /**< @brief QoS when sending the Jobs command. See #IotMqttPublishInfo_t.qos. */
+    uint32_t retryLimit;     /**< @brief Maximum number of retries for the Jobs command. See #IotMqttPublishInfo_t.retryLimit. */
+    uint32_t retryMs;        /**< @brief First retry time for the Jobs command. See IotMqttPublishInfo_t.retryMs. */
+
     /**
      * @brief Function to allocate memory for an incoming response.
      *
