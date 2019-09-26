@@ -721,7 +721,7 @@ TEST( Jobs_Unit_API, SetCallback )
     callbackInfo.oldFunction = JOBS_CALLBACK_FUNCTION;
 
     status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
-    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_BAD_PARAMETER, status );
 
     /* Set new callback. */
     callbackInfo.function = JOBS_CALLBACK_FUNCTION;
@@ -753,6 +753,10 @@ TEST( Jobs_Unit_API, SetCallback )
 
     status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    /* Check that the subscription object was deleted. */
+    pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
+    TEST_ASSERT_NULL( pSubscription );
 }
 
 /*-----------------------------------------------------------*/

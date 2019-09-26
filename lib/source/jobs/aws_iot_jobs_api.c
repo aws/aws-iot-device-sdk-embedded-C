@@ -506,7 +506,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
     {
         if( pCallbackInfo->oldFunction == NULL )
         {
-            IotLogError( "A function to replace must be provided for new Jobs %s callback.",
+            IotLogError( "Both oldFunction and function pointers cannot be NULL for Jobs %s callback.",
                          _pAwsIotJobsCallbackNames[ type ] );
 
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
@@ -553,8 +553,7 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
              * proceed. Check if the subscription should be removed. */
             _AwsIotJobs_RemoveSubscription( pSubscription, NULL );
 
-            /* Just exit with success, no changes were made. */
-            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_SUCCESS );
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_PARAMETER );
 
         default:
             break;
@@ -598,27 +597,24 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
     else
     {
         /* Add new callback. */
-        if( pCallbackInfo != NULL )
+        IotLogInfo( "(%.*s) Adding new %s callback.",
+                    thingNameLength,
+                    pThingName,
+                    _pAwsIotJobsCallbackNames[ type ] );
+
+        status = _modifyCallbackSubscriptions( mqttConnection,
+                                               type,
+                                               pSubscription,
+                                               IotMqtt_SubscribeSync );
+
+        if( status == AWS_IOT_JOBS_SUCCESS )
         {
-            IotLogInfo( "(%.*s) Adding new %s callback.",
-                        thingNameLength,
-                        pThingName,
-                        _pAwsIotJobsCallbackNames[ type ] );
-
-            status = _modifyCallbackSubscriptions( mqttConnection,
-                                                   type,
-                                                   pSubscription,
-                                                   IotMqtt_SubscribeSync );
-
-            if( status == AWS_IOT_JOBS_SUCCESS )
-            {
-                pSubscription->callbacks[ type ] = *pCallbackInfo;
-            }
-            else
-            {
-                /* On failure, check if this subscription can be removed. */
-                _AwsIotJobs_RemoveSubscription( pSubscription, NULL );
-            }
+            pSubscription->callbacks[ type ] = *pCallbackInfo;
+        }
+        else
+        {
+            /* On failure, check if this subscription can be removed. */
+            _AwsIotJobs_RemoveSubscription( pSubscription, NULL );
         }
     }
 
