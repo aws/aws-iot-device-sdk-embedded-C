@@ -22,14 +22,12 @@
 /**
  * @file aws_iot_demo_jobs.c
  * @brief Demonstrates use of the AWS Jobs library.
- *
- *
- * # Setup
  */
 
 /* Config include. Should always come first per the style guide. */
 #include "iot_config.h"
 
+/* System Includes */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -75,17 +73,20 @@
 #define JOB_ID_KEY_LENGTH ( sizeof( JOB_ID_KEY ) - 1 )
 
 /**
- * @brief The key of the Job Document.
+ * @brief Keys for the Job JSON response.
  */
-#define JOB_DOC_KEY        "jobDocument"
-#define JOB_DOC_KEY_LENGTH ( sizeof( JOB_DOC_KEY ) - 1 )
+#define JOB_DOC_KEY                  "jobDocument"
+#define JOB_DOC_KEY_LENGTH           ( sizeof( JOB_DOC_KEY ) - 1 )
 
-#define JOB_ACTION_KEY        "action"
-#define JOB_ACTION_KEY_LENGTH ( sizeof( JOB_ACTION_KEY ) - 1 )
+#define JOB_ACTION_KEY               "action"
+#define JOB_ACTION_KEY_LENGTH        ( sizeof( JOB_ACTION_KEY ) - 1 )
 
-#define JOB_MESSAGE_KEY        "message"
-#define JOB_MESSAGE_KEY_LENGTH ( sizeof( JOB_MESSAGE_KEY ) - 1 )
+#define JOB_MESSAGE_KEY              "message"
+#define JOB_MESSAGE_KEY_LENGTH       ( sizeof( JOB_MESSAGE_KEY ) - 1 )
 
+/**
+ * @brief Max Lengths for JSON values.
+ */
 #define JOBS_DEMO_MAX_ID_LENGTH      64
 #define JOBS_DEMO_MAX_JOB_DOC_LENGTH 64
 /**
@@ -221,6 +222,9 @@ bool _getMessage( const char ** msg, size_t * msgLength )
 
 /**
  *@brief A helper to extract "action" from the job document.
+ * @param[out] Action The location of the action buffer.
+ * @param[out] actionLength the length of the action buffer.
+ * @returns a bool. true if successful
  */
 bool _getAction( const char ** action, size_t * actionLength )
 {
@@ -302,9 +306,9 @@ static int32_t _executeDemo( IotMqttConnection_t const mqttConnection,
                 result = AWS_IOT_JOB_STATE_FAILED;
             }
             break;
-	case 'w':
-		result = AWS_IOT_JOB_STATE_SUCCEEDED;
-		IotClock_SleepMs( 10000 );
+        case 'w':
+            result = AWS_IOT_JOB_STATE_SUCCEEDED;
+            IotClock_SleepMs( 10000 );
             /*
 	    if ( _getMessage( &pMessage, &messageLength ) )
 	    {
@@ -317,7 +321,7 @@ static int32_t _executeDemo( IotMqttConnection_t const mqttConnection,
                 result = AWS_IOT_JOB_STATE_FAILED;
             }
 	    */
-	    break;
+            break;
         default:
             IotLogInfo( "Got unknown command %.*s", actionLength, pAction );
             result = AWS_IOT_JOB_STATE_FAILED;
@@ -497,7 +501,7 @@ int32_t RunJobsDemo( bool awsIotMqttMode,
 
     if( status == EXIT_SUCCESS )
     {
-        IotLogInfo( "--- Add Job using AWS CLI --- \r\n" ); /* Add an extra line for emphasis. */
+        IotLogInfo("--- Add Job using AWS CLI --- \r\n" ); /* Add an extra line for emphasis. */
         IotSemaphore_Wait( &waitSem );
         status = _executeDemo( mqttConnection, pIdentifier, thingNameLength );
     }
