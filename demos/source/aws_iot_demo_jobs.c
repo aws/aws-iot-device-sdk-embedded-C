@@ -110,6 +110,42 @@ int RunJobsDemo( bool awsIotMqttMode,
                  const IotNetworkInterface_t * pNetworkInterface );
 
 /**
+ * @brief A helper to extract "message" from the job document.
+ * @param[out] msg The location of the message buffer.
+ * @param[out] msgLength the length of the message buffer.
+ * @returns a bool. true if successful
+ */
+bool _getMessage( const char ** str,
+                  size_t * strLen )
+{
+    return IotJsonUtils_FindJsonValue( _jobDoc, _jobDocLength, JOB_MESSAGE_KEY, JOB_MESSAGE_KEY_LENGTH, str, strLen );
+}
+
+/**
+ *@brief A helper to extract "action" from the job document.
+ * @param[out] Action The location of the action buffer.
+ * @param[out] actionLength the length of the action buffer.
+ * @returns a bool. true if successful
+ */
+bool _getAction( const char ** str,
+                 size_t * strLen )
+{
+    return IotJsonUtils_FindJsonValue( _jobDoc, _jobDocLength, JOB_ACTION_KEY, JOB_ACTION_KEY_LENGTH, str, strLen );
+}
+
+/**
+ * @brief A helper to extract "topic" from the job document.
+ * @param[out] msg The location of the topic buffer.
+ * @param[out] msgLength the length of the topic buffer.
+ * @returns a bool. true if successful
+ */
+bool _getTopic( const char ** str,
+                size_t * strLen )
+{
+    return IotJsonUtils_FindJsonValue( _jobDoc, _jobDocLength, JOB_TOPIC_KEY, JOB_TOPIC_KEY_LENGTH, str, strLen );
+}
+
+/**
  * @brief Initialize The Jobs Demo.
  *
  * Initialize MQTT module then the Jobs module. If the Jobs module fails
@@ -157,11 +193,11 @@ static void _jobsCallback( void * param1,
 
     /* Get the Job ID */
     keyFound = IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument,
-                                          pCallbackInfo->u.callback.documentLength,
-                                          JOB_ID_KEY,
-                                          JOB_ID_KEY_LENGTH,
-                                          &pJsonValue,
-                                          &jsonValueLength );
+                                           pCallbackInfo->u.callback.documentLength,
+                                           JOB_ID_KEY,
+                                           JOB_ID_KEY_LENGTH,
+                                           &pJsonValue,
+                                           &jsonValueLength );
 
     if( keyFound )
     {
@@ -187,11 +223,11 @@ static void _jobsCallback( void * param1,
     if( keyFound )
     {
         keyFound = IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument,
-                                              pCallbackInfo->u.callback.documentLength,
-                                              JOB_DOC_KEY,
-                                              JOB_DOC_KEY_LENGTH,
-                                              &pJsonValue,
-                                              &jsonValueLength );
+                                               pCallbackInfo->u.callback.documentLength,
+                                               JOB_DOC_KEY,
+                                               JOB_DOC_KEY_LENGTH,
+                                               &pJsonValue,
+                                               &jsonValueLength );
     }
 
     if( keyFound )
@@ -218,47 +254,11 @@ static void _jobsCallback( void * param1,
     IotSemaphore_Post( pWaitSem );
 }
 
-/**
- * @brief A helper to extract "message" from the job document.
- * @param[out] msg The location of the message buffer.
- * @param[out] msgLength the length of the message buffer.
- * @returns a bool. true if successful
- */
-bool _getMessage( const char ** str,
-                  size_t * strLen )
-{
-    return IotJsonUtils_FindJsonValue( _jobDoc, _jobDocLength, JOB_MESSAGE_KEY, JOB_MESSAGE_KEY_LENGTH, str, strLen );
-}
-
-/**
- *@brief A helper to extract "action" from the job document.
- * @param[out] Action The location of the action buffer.
- * @param[out] actionLength the length of the action buffer.
- * @returns a bool. true if successful
- */
-bool _getAction( const char ** str,
-                 size_t * strLen )
-{
-    return IotJsonUtils_FindJsonValue( _jobDoc, _jobDocLength, JOB_ACTION_KEY, JOB_ACTION_KEY_LENGTH, str, strLen );
-}
-
-/**
- * @brief A helper to extract "topic" from the job document.
- * @param[out] msg The location of the topic buffer.
- * @param[out] msgLength the length of the topic buffer.
- * @returns a bool. true if successful
- */
-bool _getTopic( const char ** str,
-                size_t * strLen )
-{
-    return IotJsonUtils_FindJsonValue( _jobDoc, _jobDocLength, JOB_TOPIC_KEY, JOB_TOPIC_KEY_LENGTH, str, strLen );
-}
-
 static bool _executeAction( const char * command,
-                             size_t commandLength,
-                             IotMqttConnection_t const mqttConnection )
+                            size_t commandLength,
+                            IotMqttConnection_t const mqttConnection )
 {
-#define COMPARE_COMMAND( s )    ( strncmp( command, s, commandLength) == 0 )
+#define COMPARE_COMMAND( s )    ( strncmp( command, s, commandLength ) == 0 )
 
     bool status = false;
     const char * pMessage = NULL;
