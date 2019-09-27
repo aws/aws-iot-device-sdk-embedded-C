@@ -86,6 +86,12 @@
  */
 #define JOBS_CALLBACK_FUNCTION_2    ( ( void ( * )( void *, AwsIotJobsCallbackParam_t * ) ) 0x02 )
 
+/**
+ * @brief A third non-NULL callback function that can be tested by Jobs, but is not
+ * expected to be invoked.
+ */
+#define JOBS_CALLBACK_FUNCTION_3    ( ( void ( * )( void *, AwsIotJobsCallbackParam_t * ) ) 0x03 )
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -196,10 +202,9 @@ static void _jobsMallocFail( _jobsOperationType_t type )
 /**
  * @brief Searches a Job subscription object for a callback function.
  */
-static void _checkForCallback( const _jobsSubscription_t * pSubscription,
+static bool _checkForCallback( const _jobsSubscription_t * pSubscription,
                                _jobsCallbackType_t type,
-                               void ( *callbackFunction )( void *, AwsIotJobsCallbackParam_t * ),
-                               bool expectedResult )
+                               void ( *callbackFunction )( void *, AwsIotJobsCallbackParam_t * ) )
 {
     int32_t i = 0;
     bool callbackFound = false;
@@ -213,7 +218,7 @@ static void _checkForCallback( const _jobsSubscription_t * pSubscription,
         }
     }
 
-    TEST_ASSERT_EQUAL( expectedResult, callbackFound );
+    return callbackFound;
 }
 
 /*-----------------------------------------------------------*/
@@ -759,7 +764,9 @@ TEST( Jobs_Unit_API, SetCallback )
     /* Check that new callback was set. */
     pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
     TEST_ASSERT_NOT_NULL( pSubscription );
-    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION, true );
+    TEST_ASSERT_EQUAL_INT( true, _checkForCallback( pSubscription,
+                                                    NOTIFY_NEXT_CALLBACK,
+                                                    JOBS_CALLBACK_FUNCTION ) );
 
     /* Replace existing function. */
     callbackInfo.function = JOBS_CALLBACK_FUNCTION_2;
@@ -771,8 +778,12 @@ TEST( Jobs_Unit_API, SetCallback )
     /* Check that callback was replaced. */
     pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
     TEST_ASSERT_NOT_NULL( pSubscription );
-    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION, false );
-    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION_2, true );
+    TEST_ASSERT_EQUAL_INT( false, _checkForCallback( pSubscription,
+                                                     NOTIFY_NEXT_CALLBACK,
+                                                     JOBS_CALLBACK_FUNCTION ) );
+    TEST_ASSERT_EQUAL_INT( true, _checkForCallback( pSubscription,
+                                                    NOTIFY_NEXT_CALLBACK,
+                                                    JOBS_CALLBACK_FUNCTION_2 ) );
 
     /* Remove callback function. */
     callbackInfo.function = NULL;
@@ -815,8 +826,12 @@ TEST( Jobs_Unit_API, SetCallbackMultiple )
     /* Ensure that both callbacks were set. */
     pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
     TEST_ASSERT_NOT_NULL( pSubscription );
-    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION, true );
-    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION_2, true );
+    TEST_ASSERT_EQUAL_INT( true, _checkForCallback( pSubscription,
+                                                    NOTIFY_NEXT_CALLBACK,
+                                                    JOBS_CALLBACK_FUNCTION ) );
+    TEST_ASSERT_EQUAL_INT( true, _checkForCallback( pSubscription,
+                                                    NOTIFY_NEXT_CALLBACK,
+                                                    JOBS_CALLBACK_FUNCTION_2 ) );
 
     /* Try to set more callbacks than allowed. */
     for( i = 2; i < AWS_IOT_JOBS_NOTIFY_CALLBACKS; i++ )
@@ -824,11 +839,32 @@ TEST( Jobs_Unit_API, SetCallbackMultiple )
         status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
         TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
-        _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION, true );
+        TEST_ASSERT_EQUAL_INT( true, _checkForCallback( pSubscription,
+                                                        NOTIFY_NEXT_CALLBACK,
+                                                        JOBS_CALLBACK_FUNCTION ) );
     }
 
     status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, status );
+
+    /* Replace a callback. */
+    callbackInfo.function = JOBS_CALLBACK_FUNCTION_3;
+    callbackInfo.oldFunction = JOBS_CALLBACK_FUNCTION;
+
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
+    TEST_ASSERT_NOT_NULL( pSubscription );
+    TEST_ASSERT_EQUAL_INT( true, _checkForCallback( pSubscription,
+                                                    NOTIFY_NEXT_CALLBACK,
+                                                    JOBS_CALLBACK_FUNCTION_3 ) );
+    TEST_ASSERT_EQUAL_INT( true, _checkForCallback( pSubscription,
+                                                    NOTIFY_NEXT_CALLBACK,
+                                                    JOBS_CALLBACK_FUNCTION_2 ) );
+    TEST_ASSERT_EQUAL_INT( false, _checkForCallback( pSubscription,
+                                                     NOTIFY_NEXT_CALLBACK,
+                                                     JOBS_CALLBACK_FUNCTION ) );
 
     /* Remove a callback. */
     callbackInfo.function = NULL;
@@ -839,13 +875,17 @@ TEST( Jobs_Unit_API, SetCallbackMultiple )
 
     pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
     TEST_ASSERT_NOT_NULL( pSubscription );
-    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION, true );
-    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION_2, false );
+    TEST_ASSERT_EQUAL_INT( true, _checkForCallback( pSubscription,
+                                                    NOTIFY_NEXT_CALLBACK,
+                                                    JOBS_CALLBACK_FUNCTION_3 ) );
+    TEST_ASSERT_EQUAL_INT( false, _checkForCallback( pSubscription,
+                                                     NOTIFY_NEXT_CALLBACK,
+                                                     JOBS_CALLBACK_FUNCTION_2 ) );
 
     /* The MQTT connection should still have a subscription for the Jobs topic, since one
      * callback is still using it. */
     const char * const pNotifyTopic = AWS_IOT_TOPIC_PREFIX TEST_THING_NAME JOBS_NOTIFY_NEXT_CALLBACK_STRING;
-    size_t notifyTopicLength = strlen( pNotifyTopic );
+    const uint16_t notifyTopicLength = ( uint16_t ) strlen( pNotifyTopic );
 
     TEST_ASSERT_EQUAL_INT( true, IotMqtt_IsSubscribed( _pMqttConnection,
                                                        pNotifyTopic,
@@ -854,7 +894,7 @@ TEST( Jobs_Unit_API, SetCallbackMultiple )
 
     /* Remove the second callback. */
     callbackInfo.function = NULL;
-    callbackInfo.oldFunction = JOBS_CALLBACK_FUNCTION;
+    callbackInfo.oldFunction = JOBS_CALLBACK_FUNCTION_3;
 
     status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
     TEST_ASSERT_EQUAL_INT( AWS_IOT_JOBS_SUCCESS, status );
