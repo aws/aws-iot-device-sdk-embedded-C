@@ -277,6 +277,7 @@ TEST_GROUP_RUNNER( Jobs_Unit_API )
     RUN_TEST_CASE( Jobs_Unit_API, UpdateMallocFail );
     RUN_TEST_CASE( Jobs_Unit_API, RemovePersistentSubscriptions );
     RUN_TEST_CASE( Jobs_Unit_API, SetCallback );
+    RUN_TEST_CASE( Jobs_Unit_API, SetCallbackMultiple );
     RUN_TEST_CASE( Jobs_Unit_API, SetCallbackMallocFail );
 }
 
@@ -783,6 +784,90 @@ TEST( Jobs_Unit_API, SetCallback )
     /* Check that the subscription object was deleted. */
     pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
     TEST_ASSERT_NULL( pSubscription );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of the Jobs multiple callback functions.
+ */
+TEST( Jobs_Unit_API, SetCallbackMultiple )
+{
+    int32_t i = 0;
+    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+    _jobsSubscription_t * pSubscription = NULL;
+
+    /* This test requires AWS_IOT_JOBS_NOTIFY_CALLBACKS > 1 to allow multiple callbacks. */
+    #if AWS_IOT_JOBS_NOTIFY_CALLBACKS < 2
+    #error "Jobs SetCallbackMultiple test requires AWS_IOT_JOBS_NOTIFY_CALLBACKS to be at least 2."
+    #endif
+
+    /* Set two Jobs callbacks. */
+    callbackInfo.function = JOBS_CALLBACK_FUNCTION;
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    callbackInfo.function = JOBS_CALLBACK_FUNCTION_2;
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    /* Ensure that both callbacks were set. */
+    pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
+    TEST_ASSERT_NOT_NULL( pSubscription );
+    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION, true );
+    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION_2, true );
+
+    /* Try to set more callbacks than allowed. */
+    for( i = 2; i < AWS_IOT_JOBS_NOTIFY_CALLBACKS; i++ )
+    {
+        status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+        TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+        _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION, true );
+    }
+
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, status );
+
+    /* Remove a callback. */
+    callbackInfo.function = NULL;
+    callbackInfo.oldFunction = JOBS_CALLBACK_FUNCTION_2;
+
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+    pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
+    TEST_ASSERT_NOT_NULL( pSubscription );
+    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION, true );
+    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION_2, false );
+
+    /* The MQTT connection should still have a subscription for the Jobs topic, since one
+     * callback is still using it. */
+    const char * const pNotifyTopic = AWS_IOT_TOPIC_PREFIX TEST_THING_NAME JOBS_NOTIFY_NEXT_CALLBACK_STRING;
+    size_t notifyTopicLength = strlen( pNotifyTopic );
+
+    TEST_ASSERT_EQUAL_INT( true, IotMqtt_IsSubscribed( _pMqttConnection,
+                                                       pNotifyTopic,
+                                                       notifyTopicLength,
+                                                       NULL ) );
+
+    /* Remove the second callback. */
+    callbackInfo.function = NULL;
+    callbackInfo.oldFunction = JOBS_CALLBACK_FUNCTION;
+
+    status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+    TEST_ASSERT_EQUAL_INT( AWS_IOT_JOBS_SUCCESS, status );
+
+    /* The subscription object should now be destroyed, and the MQTT subscription should
+     * be gone. */
+    pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
+    TEST_ASSERT_NULL( pSubscription );
+
+    TEST_ASSERT_EQUAL_INT( false, IotMqtt_IsSubscribed( _pMqttConnection,
+                                                        pNotifyTopic,
+                                                        notifyTopicLength,
+                                                        NULL ) );
 }
 
 /*-----------------------------------------------------------*/
