@@ -194,6 +194,31 @@ static void _jobsMallocFail( _jobsOperationType_t type )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Searches a Job subscription object for a callback function.
+ */
+static void _checkForCallback( const _jobsSubscription_t * pSubscription,
+                               _jobsCallbackType_t type,
+                               void ( *callbackFunction )( void *, AwsIotJobsCallbackParam_t * ),
+                               bool expectedResult )
+{
+    int32_t i = 0;
+    bool callbackFound = false;
+
+    for( i = 0; i < AWS_IOT_JOBS_NOTIFY_CALLBACKS; i++ )
+    {
+        if( pSubscription->callbacks[ type ][ i ].function == callbackFunction )
+        {
+            callbackFound = true;
+            break;
+        }
+    }
+
+    TEST_ASSERT_EQUAL( expectedResult, callbackFound );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group for Jobs API tests.
  */
 TEST_GROUP( Jobs_Unit_API );
@@ -700,8 +725,6 @@ TEST( Jobs_Unit_API, RemovePersistentSubscriptions )
  */
 TEST( Jobs_Unit_API, SetCallback )
 {
-    int32_t i = 0;
-    bool callbackFound = false;
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
     AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
     _jobsSubscription_t * pSubscription = NULL;
@@ -735,17 +758,7 @@ TEST( Jobs_Unit_API, SetCallback )
     /* Check that new callback was set. */
     pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
     TEST_ASSERT_NOT_NULL( pSubscription );
-
-    for( i = 0; i < AWS_IOT_JOBS_NOTIFY_CALLBACKS; i++ )
-    {
-        if( pSubscription->callbacks[ NOTIFY_NEXT_CALLBACK ][ i ].function == JOBS_CALLBACK_FUNCTION )
-        {
-            callbackFound = true;
-            break;
-        }
-    }
-
-    TEST_ASSERT_EQUAL_INT( true, callbackFound );
+    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION, true );
 
     /* Replace existing function. */
     callbackInfo.function = JOBS_CALLBACK_FUNCTION_2;
@@ -757,28 +770,8 @@ TEST( Jobs_Unit_API, SetCallback )
     /* Check that callback was replaced. */
     pSubscription = _AwsIotJobs_FindSubscription( TEST_THING_NAME, TEST_THING_NAME_LENGTH, false );
     TEST_ASSERT_NOT_NULL( pSubscription );
-
-    callbackFound = false;
-    for( i = 0; i < AWS_IOT_JOBS_NOTIFY_CALLBACKS; i++ )
-    {
-        if( pSubscription->callbacks[ NOTIFY_NEXT_CALLBACK ][ i ].function == JOBS_CALLBACK_FUNCTION )
-        {
-            break;
-        }
-    }
-
-    TEST_ASSERT_EQUAL_INT( false, callbackFound );
-
-    for( i = 0; i < AWS_IOT_JOBS_NOTIFY_CALLBACKS; i++ )
-    {
-        if( pSubscription->callbacks[ NOTIFY_NEXT_CALLBACK ][ i ].function == JOBS_CALLBACK_FUNCTION_2 )
-        {
-            callbackFound = true;
-            break;
-        }
-    }
-
-    TEST_ASSERT_EQUAL_INT( true, callbackFound );
+    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION, false );
+    _checkForCallback( pSubscription, NOTIFY_NEXT_CALLBACK, JOBS_CALLBACK_FUNCTION_2, true );
 
     /* Remove callback function. */
     callbackInfo.function = NULL;
