@@ -117,6 +117,9 @@
 /* Defender library configuration. */
 #define AWS_IOT_DEFENDER_USE_LONG_TAG           ( 1 )
 
+/* Allow the use of multiple Jobs callbacks. */
+#define AWS_IOT_JOBS_NOTIFY_CALLBACKS           ( 4 )
+
 /* Static memory resource settings for the tests. These values must be large
  * enough to support the stress tests. */
 #if IOT_STATIC_MEMORY_ONLY == 1

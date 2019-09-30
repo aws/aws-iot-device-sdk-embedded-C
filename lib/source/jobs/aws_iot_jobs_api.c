@@ -589,14 +589,14 @@ static AwsIotJobsError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
                         pThingName,
                         _pAwsIotJobsCallbackNames[ type ] );
 
-            /* Unsubscribe, then clear the callback information. */
+            /* Clear the callback information and unsubscribe. */
+            ( void ) memset( &( pSubscription->callbacks[ type ][ callbackIndex ] ),
+                             0x00,
+                             sizeof( AwsIotJobsCallbackInfo_t ) );
             ( void ) _modifyCallbackSubscriptions( mqttConnection,
                                                    type,
                                                    pSubscription,
                                                    IotMqtt_UnsubscribeSync );
-            ( void ) memset( &( pSubscription->callbacks[ type ][ callbackIndex ] ),
-                             0x00,
-                             sizeof( AwsIotJobsCallbackInfo_t ) );
 
             /* Check if this subscription object can be removed. */
             _AwsIotJobs_RemoveSubscription( pSubscription, NULL );
@@ -651,6 +651,7 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
                                                        AwsIotMqttFunction_t mqttOperation )
 {
     IOT_FUNCTION_ENTRY( AwsIotJobsError_t, AWS_IOT_JOBS_SUCCESS );
+    int32_t i = 0;
     IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     AwsIotTopicInfo_t topicInfo = { 0 };
@@ -681,6 +682,16 @@ static AwsIotJobsError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttC
     /* MQTT operation may only be subscribe or unsubscribe. */
     AwsIotJobs_Assert( ( mqttOperation == IotMqtt_SubscribeSync ) ||
                        ( mqttOperation == IotMqtt_UnsubscribeSync ) );
+
+    /* Check if any subscriptions are currently registered for this type. */
+    for( i = 0; i < AWS_IOT_JOBS_NOTIFY_CALLBACKS; i++ )
+    {
+        if( pSubscription->callbacks[ type ][ i ].function != NULL )
+        {
+            /* No action is needed when another callback exists. */
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_SUCCESS );
+        }
+    }
 
     /* Use the subscription's topic buffer if available. */
     if( pSubscription->pTopicBuffer != NULL )
