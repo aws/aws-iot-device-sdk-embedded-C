@@ -833,19 +833,45 @@ TEST( Jobs_Unit_API, SetCallbackMultiple )
                                                     NOTIFY_NEXT_CALLBACK,
                                                     JOBS_CALLBACK_FUNCTION_2 ) );
 
-    /* Try to set more callbacks than allowed. */
+    /* Fill all of the subscription object's callbacks. */
     for( i = 2; i < AWS_IOT_JOBS_NOTIFY_CALLBACKS; i++ )
     {
+        /* A non-NULL function that is not expected to be invoked. */
+        void ( * callbackFunction )( void *,
+                                     AwsIotJobsCallbackParam_t * ) = ( void ( * )( void *, AwsIotJobsCallbackParam_t * ) )( i + 2 );
+
+        callbackInfo.function = callbackFunction;
         status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
         TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
         TEST_ASSERT_EQUAL_INT( true, _checkForCallback( pSubscription,
                                                         NOTIFY_NEXT_CALLBACK,
-                                                        JOBS_CALLBACK_FUNCTION ) );
+                                                        callbackFunction ) );
     }
+
+    /* Try to set more callbacks than allowed. */
+    callbackInfo.function = JOBS_CALLBACK_FUNCTION_3;
+    callbackInfo.oldFunction = NULL;
 
     status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, status );
+
+    /* Clear the subscription object (except for 2 callbacks). */
+    for( i = 2; i < AWS_IOT_JOBS_NOTIFY_CALLBACKS; i++ )
+    {
+        void ( * callbackFunction )( void *,
+                                     AwsIotJobsCallbackParam_t * ) = ( void ( * )( void *, AwsIotJobsCallbackParam_t * ) )( i + 2 );
+
+        callbackInfo.function = NULL;
+        callbackInfo.oldFunction = callbackFunction;
+
+        status = AwsIotJobs_SetNotifyNextCallback( _pMqttConnection, TEST_THING_NAME, TEST_THING_NAME_LENGTH, 0, &callbackInfo );
+        TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
+
+        TEST_ASSERT_EQUAL_INT( false, _checkForCallback( pSubscription,
+                                                         NOTIFY_NEXT_CALLBACK,
+                                                         callbackFunction ) );
+    }
 
     /* Replace a callback. */
     callbackInfo.function = JOBS_CALLBACK_FUNCTION_3;
