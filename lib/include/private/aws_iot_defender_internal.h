@@ -322,21 +322,21 @@ AwsIotDefenderError_t AwsIotDefenderInternal_BuildTopicsNames( void );
 void AwsIotDefenderInternal_DeleteTopicsNames( void );
 
 /**
- * Connect to AWS with MQTT.
- */
-IotMqttError_t AwsIotDefenderInternal_MqttConnect( void );
-
-/**
  * Subscribe accept/reject defender topics.
  */
-IotMqttError_t AwsIotDefenderInternal_MqttSubscribe( IotMqttCallbackInfo_t acceptCallback,
-                                                     IotMqttCallbackInfo_t rejectCallback );
+
+IotMqttError_t AwsIotDefenderInternal_MqttSubscribe( void );
 
 /**
  * Publish metrics data to defender topic.
  */
 IotMqttError_t AwsIotDefenderInternal_MqttPublish( uint8_t * pData,
                                                    size_t dataLength );
+
+/**
+ * Unsubscribe accept/reject defender topics.
+ */
+IotMqttError_t AwsIotDefenderInternal_MqttUnSubscribe( void );
 
 /**
  * Disconnect with AWS MQTT.

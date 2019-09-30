@@ -74,6 +74,11 @@
     #define AWS_IOT_TEST_JOBS_THING_NAME      ""
 #endif
 
+/* Defender tests configuration. */
+#ifndef AWS_IOT_TEST_DEFENDER_THING_NAME
+    #define AWS_IOT_TEST_DEFENDER_THING_NAME    ""
+#endif
+
 /* Log level for testing the demos. */
 #define IOT_LOG_LEVEL_DEMO    IOT_LOG_INFO
 

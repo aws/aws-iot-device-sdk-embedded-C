@@ -32,6 +32,7 @@
 
 /* Defender internal includes. */
 #include "private/aws_iot_defender_internal.h"
+#include "iot_tests_mqtt_mock.h"
 
 #include "iot_network_metrics.h"
 
@@ -67,10 +68,11 @@
 #define NO_EVENT                             10000
 
 /* Empty callback structure passed to startInfo. */
-static const AwsIotDefenderCallback_t _EMPTY_CALLBACK = { .function = NULL, .param1 = NULL };
+static const AwsIotDefenderCallback_t _emptyCallback = { .function = NULL, .pCallbackContext = NULL };
 
 static IotNetworkServerInfo_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 static IotNetworkCredentials_t _credential = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
+static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /*------------------ global variables -----------------------------*/
 
@@ -92,6 +94,8 @@ static AwsIotDefenderCallbackInfo_t _callbackInfo;
 static IotSerializerDecoderObject_t _decoderObject;
 static IotSerializerDecoderObject_t _metricsObject;
 
+static bool _mqttConnectionStarted = false;
+static bool _mockedMqttConnection = false;
 /*------------------ Functions -----------------------------*/
 
 /* Copy data from MQTT callback to local buffer. */
@@ -112,10 +116,10 @@ static void _verifyMetricsCommon( void );
 /* Verify tcp connections in metrics report. */
 static void _verifyTcpConnections( int total );
 
-/* Indicate this test doesn't actually publish report. */
-static void _publishMetricsNotNeeded( void );
-
 static void _resetCalbackInfo( void );
+
+static IotMqttError_t _startMqttConnection( void );
+static void _stopMqttConnection( void );
 
 TEST_GROUP( Defender_System );
 
@@ -149,12 +153,14 @@ TEST_SETUP( Defender_System )
 
     _resetCalbackInfo();
 
+    _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+
     _decoderObject = ( IotSerializerDecoderObject_t ) IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     _metricsObject = ( IotSerializerDecoderObject_t ) IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
     /* Reset test callback. */
     _testCallback = ( AwsIotDefenderCallback_t ) {
-        .function = _copyDataCallbackFunction, .param1 = NULL
+        .function = _copyDataCallbackFunction, .pCallbackContext = NULL
     };
 
     /* By default IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER enables ALPN. ALPN
@@ -168,18 +174,9 @@ TEST_SETUP( Defender_System )
     _serverInfo = ( IotNetworkServerInfo_t ) IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 
     /* Set fields of start info. */
-    _startInfo.mqttNetworkInfo = ( IotMqttNetworkInfo_t ) IOT_MQTT_NETWORK_INFO_INITIALIZER;
-    _startInfo.mqttNetworkInfo.createNetworkConnection = true;
-    _startInfo.mqttNetworkInfo.u.setup.pNetworkServerInfo = &_serverInfo;
-    _startInfo.mqttNetworkInfo.u.setup.pNetworkCredentialInfo = &_credential;
-
-    _startInfo.mqttNetworkInfo.pNetworkInterface = IotNetworkMetrics_GetInterface();
-
-    _startInfo.mqttConnectionInfo = ( IotMqttConnectInfo_t ) IOT_MQTT_CONNECT_INFO_INITIALIZER;
-    _startInfo.mqttConnectionInfo.pClientIdentifier = AWS_IOT_TEST_SHADOW_THING_NAME;
-    _startInfo.mqttConnectionInfo.clientIdentifierLength = ( uint16_t ) strlen( AWS_IOT_TEST_SHADOW_THING_NAME );
-
-    _startInfo.callback = _EMPTY_CALLBACK;
+    _startInfo.pClientIdentifier = AWS_IOT_TEST_DEFENDER_THING_NAME;
+    _startInfo.clientIdentifierLength = ( uint16_t ) strlen( AWS_IOT_TEST_DEFENDER_THING_NAME );
+    _startInfo.callback = _emptyCallback;
 }
 
 TEST_TEAR_DOWN( Defender_System )
@@ -194,7 +191,7 @@ TEST_TEAR_DOWN( Defender_System )
     }
 
     IotSemaphore_Destroy( &_callbackInfoSem );
-
+    _stopMqttConnection();
     IotMetrics_Cleanup();
     IotMqtt_Cleanup();
     IotTestNetwork_Cleanup();
@@ -205,10 +202,10 @@ TEST_GROUP_RUNNER( Defender_System )
 {
     /*
      * Setup: none
-     * Action: call Start API with invliad IoT endpoint
-     * Expectation: Start API returns network connection failure
+     * Action: call Start API with invalid MQTT connection
+     * Expectation: Start API returns failure
      */
-    RUN_TEST_CASE( Defender_System, Start_with_wrong_network_information );
+    RUN_TEST_CASE( Defender_System, Start_with_invalid_mqtt_connection );
 
     /*
      * Setup: defender not started yet
@@ -243,7 +240,7 @@ TEST_GROUP_RUNNER( Defender_System )
      * Expectation:
      * - SetPeriod API return "period too short" error
      */
-    /*RUN_TEST_CASE( Defender_System, SetPeriod_too_short ); */
+    RUN_TEST_CASE( Defender_System, SetPeriod_too_short );
 
     /*
      * Setup: defender not started yet
@@ -350,7 +347,10 @@ TEST( Defender_System, SetMetrics_with_TCP_connections_all )
 
 TEST( Defender_System, SetMetrics_after_defender_started )
 {
-    _publishMetricsNotNeeded();
+    /* Set up a mocked MQTT connection. */
+    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &_mqttConnection ) );
+    _mockedMqttConnection = true;
+    _startInfo.mqttConnection = _mqttConnection;
 
     AwsIotDefenderError_t error = AwsIotDefender_Start( &_startInfo );
 
@@ -365,23 +365,22 @@ TEST( Defender_System, SetMetrics_after_defender_started )
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_METRICS_ALL, _AwsIotDefenderMetrics.metricsFlag[ AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS ] );
 }
 
-TEST( Defender_System, Start_with_wrong_network_information )
+TEST( Defender_System, Start_with_invalid_mqtt_connection )
 {
-    _publishMetricsNotNeeded();
-
-    /* Set test callback to verify report. */
-    _startInfo.callback = _testCallback;
+    /* Set uninitialized MQTT connection */
+    _startInfo.mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
     AwsIotDefenderError_t error = AwsIotDefender_Start( &_startInfo );
 
-    TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, error );
-
-    _assertEvent( AWS_IOT_DEFENDER_FAILURE_MQTT, WAIT_STATE_TOTAL_SECONDS );
+    TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_INVALID_INPUT, error );
 }
 
 TEST( Defender_System, Start_should_return_success )
 {
-    _publishMetricsNotNeeded();
+    /* Set up a mocked MQTT connection. */
+    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &_mqttConnection ) );
+    _mockedMqttConnection = true;
+    _startInfo.mqttConnection = _mqttConnection;
 
     AwsIotDefenderError_t error = AwsIotDefender_Start( &_startInfo );
 
@@ -390,7 +389,10 @@ TEST( Defender_System, Start_should_return_success )
 
 TEST( Defender_System, Start_should_return_err_if_already_started )
 {
-    _publishMetricsNotNeeded();
+    /* Set up a mocked MQTT connection. */
+    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &_mqttConnection ) );
+    _mockedMqttConnection = true;
+    _startInfo.mqttConnection = _mqttConnection;
 
     AwsIotDefenderError_t error = AwsIotDefender_Start( &_startInfo );
 
@@ -404,10 +406,16 @@ TEST( Defender_System, Start_should_return_err_if_already_started )
 
 TEST( Defender_System, Metrics_empty_are_published )
 {
-    AwsIotDefenderError_t error;
+    AwsIotDefenderError_t error = AWS_IOT_DEFENDER_SUCCESS;
+    IotMqttError_t mqttError = IOT_MQTT_SUCCESS;
 
     /* Set test callback to verify report. */
     _startInfo.callback = _testCallback;
+
+    /* start actual MQTT connection */
+    mqttError = _startMqttConnection();
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, mqttError );
+    _startInfo.mqttConnection = _mqttConnection;
 
     /* Start defender. */
     error = AwsIotDefender_Start( &_startInfo );
@@ -422,7 +430,13 @@ TEST( Defender_System, Metrics_empty_are_published )
 
 TEST( Defender_System, Metrics_TCP_connections_all_are_published )
 {
-    AwsIotDefenderError_t error;
+    AwsIotDefenderError_t error = AWS_IOT_DEFENDER_SUCCESS;
+    IotMqttError_t mqttError = IOT_MQTT_SUCCESS;
+
+    /* start actual MQTT connection */
+    mqttError = _startMqttConnection();
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, mqttError );
+    _startInfo.mqttConnection = _mqttConnection;
 
     /* Set "all metrics" for TCP connections metrics group. */
     error = AwsIotDefender_SetMetrics( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS,
@@ -447,13 +461,19 @@ TEST( Defender_System, Metrics_TCP_connections_all_are_published )
 
 TEST( Defender_System, Metrics_TCP_connections_total_are_published )
 {
-    AwsIotDefenderError_t error;
+    AwsIotDefenderError_t error = AWS_IOT_DEFENDER_SUCCESS;
+    IotMqttError_t mqttError = IOT_MQTT_SUCCESS;
 
     /* Set "total count" for TCP connections metrics group. */
     error = AwsIotDefender_SetMetrics( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS,
                                        AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL );
 
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, error );
+
+    /* start actual MQTT connection */
+    mqttError = _startMqttConnection();
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, mqttError );
+    _startInfo.mqttConnection = _mqttConnection;
 
     /* Set test callback to verify report. */
     _startInfo.callback = _testCallback;
@@ -472,13 +492,19 @@ TEST( Defender_System, Metrics_TCP_connections_total_are_published )
 
 TEST( Defender_System, Metrics_TCP_connections_remote_addr_are_published )
 {
-    AwsIotDefenderError_t error;
+    AwsIotDefenderError_t error = AWS_IOT_DEFENDER_SUCCESS;
+    IotMqttError_t mqttError = IOT_MQTT_SUCCESS;
 
     /* Set "remote address" for TCP connections metrics group. */
     error = AwsIotDefender_SetMetrics( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS,
                                        AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_REMOTE_ADDR );
 
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS, error );
+
+    /* start actual MQTT connection */
+    mqttError = _startMqttConnection();
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, mqttError );
+    _startInfo.mqttConnection = _mqttConnection;
 
     /* Set test callback to verify report. */
     _startInfo.callback = _testCallback;
@@ -498,10 +524,16 @@ TEST( Defender_System, Metrics_TCP_connections_remote_addr_are_published )
 TEST( Defender_System, Restart_and_updated_metrics_are_published )
 {
     char * pIotAddress = NULL;
+    IotMqttError_t mqttError = IOT_MQTT_SUCCESS;
 
     /* Set "total count" for TCP connections metrics group. */
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS,
                        AwsIotDefender_SetMetrics( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS, AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL ) );
+
+    /* start actual MQTT connection */
+    mqttError = _startMqttConnection();
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, mqttError );
+    _startInfo.mqttConnection = _mqttConnection;
 
     /* Set test callback to verify report. */
     _startInfo.callback = _testCallback;
@@ -549,7 +581,10 @@ TEST( Defender_System, SetPeriod_with_proper_value )
 
 TEST( Defender_System, SetPeriod_after_started )
 {
-    _publishMetricsNotNeeded();
+    /* Set up a mocked MQTT connection. */
+    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &_mqttConnection ) );
+    _mockedMqttConnection = true;
+    _startInfo.mqttConnection = _mqttConnection;
 
     TEST_ASSERT_EQUAL( AWS_IOT_DEFENDER_SUCCESS,
                        AwsIotDefender_Start( &_startInfo ) );
@@ -599,10 +634,57 @@ static void _copyDataCallbackFunction( void * param1,
 
 /*-----------------------------------------------------------*/
 
-static void _publishMetricsNotNeeded( void )
+static IotMqttError_t _startMqttConnection( void )
 {
-    /* Given a dummy IoT endpoint to fail network connection. */
-    _serverInfo.pHostName = "dummy endpoint";
+    IotMqttError_t mqttError = IOT_MQTT_SUCCESS;
+    IotMqttNetworkInfo_t mqttNetworkInfo = ( IotMqttNetworkInfo_t ) IOT_MQTT_NETWORK_INFO_INITIALIZER;
+    IotMqttConnectInfo_t mqttConnectionInfo = ( IotMqttConnectInfo_t ) IOT_MQTT_CONNECT_INFO_INITIALIZER;
+
+    if( !_mqttConnectionStarted )
+    {
+        mqttNetworkInfo = ( IotMqttNetworkInfo_t ) IOT_MQTT_NETWORK_INFO_INITIALIZER;
+        mqttNetworkInfo.createNetworkConnection = true;
+        mqttNetworkInfo.u.setup.pNetworkServerInfo = &_serverInfo;
+        mqttNetworkInfo.u.setup.pNetworkCredentialInfo = &_credential;
+
+        mqttNetworkInfo.pNetworkInterface = IotNetworkMetrics_GetInterface();
+
+        mqttConnectionInfo = ( IotMqttConnectInfo_t ) IOT_MQTT_CONNECT_INFO_INITIALIZER;
+
+        /* Set MQTT connection information. */
+        mqttConnectionInfo.pClientIdentifier = AWS_IOT_TEST_DEFENDER_THING_NAME;
+        mqttConnectionInfo.clientIdentifierLength = ( uint16_t ) strlen( AWS_IOT_TEST_DEFENDER_THING_NAME );
+
+        mqttError = IotMqtt_Connect( &mqttNetworkInfo,
+                                     &mqttConnectionInfo,
+                                     1000,
+                                     &_mqttConnection );
+
+        if( mqttError == IOT_MQTT_SUCCESS )
+        {
+            _mqttConnectionStarted = true;
+        }
+    }
+
+    return mqttError;
+}
+
+/*-----------------------------------------------------------*/
+
+static void _stopMqttConnection( void )
+{
+    if( _mqttConnectionStarted )
+    {
+        IotMqtt_Disconnect( _mqttConnection, false );
+        _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+        _mqttConnectionStarted = false;
+    }
+    if (_mockedMqttConnection)
+    { 
+        IotTest_MqttMockCleanup();
+        _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+        _mockedMqttConnection = false;
+    }
 }
 
 /*-----------------------------------------------------------*/
