@@ -1,4 +1,4 @@
-# AWS IoT Device SDK C v4.0.0 Beta
+# AWS IoT Device SDK C v4.0.0
 
 **[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/index.html)**
 
@@ -7,37 +7,37 @@
 
 The AWS IoT Device SDK for C is a collection of C99 source files that allow applications to securely connect to the AWS IoT platform. It includes an MQTT 3.1.1 client, as well as libraries specific to AWS IoT, such as Thing Shadows. It is distributed in source form and may be built into firmware along with application code.
 
-This library, currently a Beta release, will supersede both the AWS IoT Device SDK Embedded C and the libraries provided with Amazon FreeRTOS.
+This library supersedes both the AWS IoT Device SDK Embedded C and the libraries provided with Amazon FreeRTOS.
 
-## Beta Features
+## Features
 
-This Beta library is a new design that inherits from both the AWS IoT Device SDK Embedded C and the libraries provided with Amazon FreeRTOS. In addition, it provides the following new features:
+This library is a new design that inherits from both the AWS IoT Device SDK Embedded C and the libraries provided with Amazon FreeRTOS. In addition, it provides the following new features:
 - Asynchronous API for both MQTT and Thing Shadow.
 - Multithreaded API by default (removed the `yield` function).
 - More efficient platform layer (especially timers).
 - Complete separation of MQTT and network stack, allowing MQTT to run over any network stack.
 - Configurable memory allocation (static-only or dynamic). Memory allocation functions may also be set by the user.
-- Network stack based on OpenSSL.
+- Network stack based on OpenSSL when building for Linux.
 - MQTT persistent session support.
+- Device Defender library.
 
-Compared to the AWS IoT Device SDK Embedded C v3.0.1, the following features are missing:
+Compared to the AWS IoT Device SDK Embedded C v3.0.1, the following features were removed:
 - Auto-reconnect for MQTT connections.
 - Shadow JSON document generator.
-- Jobs API.
-- Build support for Apple macOS.
 
 ## Building and Running Demos
 
 **Main documentation page:** [Building the SDK](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/building.html)
 
-This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. **As of now, this Beta release only builds on Linux.**
+This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. This repo contains ready-to-use ports for Windows, macOS, and Linux.
 
 ### Prerequisites
-- Linux system with support for POSIX threads and timers.
-- CMake 3.5.0 or later.
-
-If using the OpenSSL network implementation:
-- OpenSSL development libraries and header files, version 1.0.2g or later. This is usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+- CMake 3.5.0 or later and a C99 compiler.
+- A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems. For reference, the version used by this repo's Travis CI builds are listed in parentheses.
+    - Linux system with POSIX thread and timer APIs. (CI tests on Ubuntu 16.04).<br>
+    On Linux systems, the OpenSSL network implementation may be used instead of the default network implementation based on mbed TLS. This requires the installation of OpenSSL development libraries and header files, version 1.0.2g or later. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+    - macOS system with POSIX thread APIs and Grand Central Dispatch. (CI tests on macOS 10.13).
+    - Windows system with the Windows 10 SDK and MSVC toolchain. (CI tests on Windows Server 1803 with Visual Studio 2017).
 
 ### Build Steps
 1. Clone the source code and submodules. This SDK uses third-party libraries as submodules in the `third_party` directory.
@@ -63,11 +63,15 @@ If using the OpenSSL network implementation:
     mkdir build
     cd build
     ```
-5. Run CMake, then `make`. This builds the demo executables and places them in `build/bin`.
+5. Run CMake from the build directory.
     ```sh
     cmake ..
-    make
     ```
+    CMake will generate a project based on the detected operating system. On Linux and macOS, the default project is a Makefile. To build the SDK with this Makefile, run `make`.
+
+    On Windows, CMake will create a Visual Studio solution. Open this solution in Visual Studio to build it.
+
+    You may also use CMake GUI. Specify the SDK's root directory as the source directory and the build directory created in step 4 as the build directory in CMake GUI.
 
 See the documentation page [Building the SDK](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/building.html) for a list of options that can be used to configure the build system.
 
