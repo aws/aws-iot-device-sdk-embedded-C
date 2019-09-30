@@ -5,16 +5,14 @@
 This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 
 @pre
-- CMake version 3.5.0 or later and a supported C99 compiler.
+- CMake version 3.5.0 or later and a C99 compiler.
 
 @pre
-If using the OpenSSL network implementation.
-  - OpenSSL development libraries and header files, version 1.0.2g or later.
-
-@pre
-Additional requirements for POSIX systems:
-- POSIX threads, mutexes, and semaphores.
-- POSIX timers.
+- A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems. For reference, the version used by this repo's Travis CI builds are listed in parentheses.
+    - Linux system with POSIX thread and timer APIs. (CI tests on Ubuntu 16.04).<br>
+    On Linux systems, the OpenSSL network implementation may be used instead of the default network implementation based on mbed TLS. This requires the installation of OpenSSL development libraries and header files, version 1.0.2g or later. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
+    - macOS system with POSIX thread APIs and Grand Central Dispatch. (CI tests on macOS 10.13).
+    - Windows system with the Windows 10 SDK and MSVC toolchain. (CI tests on Windows Server 1803 with Visual Studio 2017).
 
 This SDK uses third-party libraries as Git submodules in the `third_party` directory. If the source code was downloaded via `git clone`, nothing further needs to be done. The CMake build system can automatically clone submodules in this case. However, for any other download, the submodules must be downloaded and placed in their respective `third_party` directory.
 - [mbed TLS](https://github.com/ARMmbed/mbedtls/tree/mbedtls-2.17) → `third_party/mbedtls/mbedtls`
@@ -38,15 +36,19 @@ The following options may be passed to the CMake build system to modify the buil
 - <b>`IOT_BUILD_TESTS`</b> <br>
   <i>Default:</i> `OFF` <br>
   Set this to `ON` to build both demo and test executables. When `OFF`, only demo executables are built.
+- <b>`IOT_NETWORK_USE_OPENSSL` [Linux only]</b> <br>
+  <i>Default:</i> `OFF` <br>
+  Set this to `ON` to use a network implementation based on OpenSSL instead of the default mbed TLS network implementation. If this is set to `ON`, OpenSSL development libraries and headers must be installed.
 
 @section building_demo Building the demo applications
 @brief How to build the demo applications.
 
 Before building the demos, all desired configuration settings should be defined. Configuration settings include global [library](@ref global_library_config) and [demo](@ref global_demos_config) settings, as well as settings for specific libraries and demos. Settings for demo applications should be placed in `demos/iot_config.h`. Any undefined settings will use a default value when possible.
 
-The demo applications build with CMake.
+@subsection building_demo_commmandline Command-line build
+@brief How to build the demo applications on the command-line.
 
-In-source CMake builds are not allowed. A build directory should be created under the SDK root directory. Since CMake is cross-platform, build steps will vary depending on host OS. On Linux, the demo applications are built as follows:
+In-source CMake builds are not allowed. A build directory should be created under the SDK root directory. Since CMake is cross-platform, build steps will vary depending on host OS. On Linux and macOS, the demo applications are built as follows:
 @code{sh}
 # Create build directory and change to build directory.
 mkdir build
@@ -73,6 +75,15 @@ cmake .. -DCMAKE_BUILD_TYPE=Debug
 @endcode
 
 Delete the build directory to remove all demo application executables and build files.
+
+@subsection building_demo_gui CMake GUI build
+@brief How to build the demo applications with CMake GUI.
+
+Alternatively, CMake GUI may be used instead of the command line. Specify the SDK's root directory in <b>Where is the source code</b> and a build directory in <b>Where to build the binaries</b>. Click <b>Configure</b>, then <b>Generate</b>. You may modify @ref building_configuration in the CMake GUI window.
+
+The screenshot below is from CMake GUI on Windows. Similar options appear when using other systems.
+
+@image html cmake_build.png
 
 @section demo_commandlineoptions Demo command line options
 @brief Command line options of the demo applications.
@@ -139,6 +150,8 @@ cmake .. -DIOT_BUILD_TESTS=1
 # Build both the demos and tests.
 make
 @endcode
+
+The `IOT_BUILD_TESTS` option can also be set by a checkbox in CMake GUI.
 
 Test executables will be placed in a `bin` directory of the CMake build directory (i.e. `build/bin`) alongside the demo applications. They will be named `aws_iot_tests_library` or `iot_tests_library`, depending on whether the tests are specific to AWS IoT. For example, the MQTT tests application, which may be used with any MQTT server, will be named `iot_tests_mqtt`. The Thing Shadow tests, which are specific to AWS IoT, will be named `aws_iot_tests_shadow`.
 
