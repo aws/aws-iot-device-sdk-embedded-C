@@ -16,6 +16,9 @@ INPUT = doc/ \
         doc/guide \
         doc/guide/developer
 
+# Path of CMake GUI image.
+IMAGE_PATH += doc/guide
+
 # Library file names.
 FILE_PATTERNS = *.txt
 
