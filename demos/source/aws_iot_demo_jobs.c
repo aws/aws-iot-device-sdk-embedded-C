@@ -27,18 +27,11 @@
 /* Config include. Should always come first per the style guide. */
 #include "iot_config.h"
 
-/* System Includes */
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-
 /* Demo logging. */
 #include "iot_demo_logging.h"
 
 /* Platform Includes. */
 #include "platform/iot_clock.h"
-#include "platform/iot_network.h"
-#include "platform/iot_threads.h"
 
 /* MQTT Include. The underlying protocol for this demo. */
 #include "iot_atomic.h"
@@ -115,7 +108,7 @@ int RunJobsDemo( bool awsIotMqttMode,
  */
 static int _initDemo( void )
 {
-    int32_t status = EXIT_SUCCESS;
+    int status = EXIT_SUCCESS;
     IotMqttError_t mqttInitStatus = IOT_MQTT_SUCCESS;
     AwsIotJobsError_t jobsInitStatus = AWS_IOT_JOBS_SUCCESS;
 
@@ -145,12 +138,9 @@ static bool _executeAction( const char * command,
                             size_t commandLength,
                             IotMqttConnection_t const mqttConnection,
                             const char * jobDoc,
-                            size_t jobDocLength )
+                            size_t jobDocLength,
+                            bool * exitFlag )
 {
-#define COMPARE_COMMAND( s )          ( strncmp( command, s, commandLength ) == 0 )
-#define GET_MESSAGE( ppStr, pLen )    IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_MESSAGE_KEY, JOB_MESSAGE_KEY_LENGTH, ppStr, pLen )
-#define GET_TOPIC( ppStr, pLen )      IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_TOPIC_KEY, JOB_TOPIC_KEY_LENGTH, ppStr, pLen )
-
     bool status = false;
     const char * pMessage = NULL;
     size_t messageLength = 0;
@@ -169,12 +159,13 @@ static bool _executeAction( const char * command,
      * If message or topic are missing from the JSON Job document, the execution
      * will fail.
      */
-    if( COMPARE_COMMAND( "publish" ) )
+    if( strncmp( command, "publish", commandLength ) == 0 )
     {
         const char * pTopic = NULL;
         size_t topicLength = 0;
 
-        if( GET_MESSAGE( &pMessage, &messageLength ) && GET_TOPIC( &pTopic, &topicLength ) )
+        if( IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_MESSAGE_KEY, JOB_MESSAGE_KEY_LENGTH, &pMessage, &messageLength ) &&
+            IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_TOPIC_KEY, JOB_TOPIC_KEY_LENGTH, &pTopic, &topicLength ) )
         {
             IotMqttError_t err = IOT_MQTT_SUCCESS;
             IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
@@ -182,7 +173,7 @@ static bool _executeAction( const char * command,
             IotLogInfo( "Executing Publish of %.*s", messageLength, pMessage );
             IotLogInfo( "Topic: %.*s", topicLength, pTopic );
 
-            publishInfo.qos = IOT_MQTT_QOS_1;
+            publishInfo.qos = IOT_MQTT_QOS_0;
             publishInfo.topicNameLength = ( uint16_t ) topicLength - 2U;
             publishInfo.pTopicName = pTopic + 1;
             publishInfo.payloadLength = messageLength - 2;
@@ -190,13 +181,13 @@ static bool _executeAction( const char * command,
             publishInfo.retryMs = 5000;
             publishInfo.retryLimit = 10;
 
-            err = IotMqtt_PublishSync( mqttConnection, &publishInfo, 0, 55000 );
+            err = IotMqtt_PublishAsync( mqttConnection, &publishInfo, 0, NULL, NULL );
 
             status = err == IOT_MQTT_SUCCESS;
         }
         else
         {
-            IotLogInfo( "Failed to execute publish." );
+            IotLogInfo( "Failed to execute publish. Could not find the \"topic\" or \"message\" key" );
         }
     }
 
@@ -212,11 +203,11 @@ static bool _executeAction( const char * command,
      *
      * If message is missing from the JSON job document, the execution will fail.
      */
-    else if( COMPARE_COMMAND( "print" ) )
+    else if( strncmp( command, "print", commandLength ) == 0 )
     {
-        if( GET_MESSAGE( &pMessage, &messageLength ) )
+        if( IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_MESSAGE_KEY, JOB_MESSAGE_KEY_LENGTH, &pMessage, &messageLength ) )
         {
-            IotLogInfo( "Executing Print: %.*s", messageLength, pMessage );
+            IotLogInfo( "%.*s", messageLength, pMessage );
             status = true;
         }
         else
@@ -226,16 +217,16 @@ static bool _executeAction( const char * command,
     }
 
     /*
-     * The "end" command signals main to stop looping.
+     * The "exit" command signals main to stop looping.
      *
      * An example JSON doc:
      * ```
-     * {"action":"end"}
+     * {"action":"exit"}
      *
      */
-    else if( COMPARE_COMMAND( "end" ) )
+    else if( strncmp( command, "exit", commandLength ) == 0 )
     {
-        Atomic_CompareAndSwap_u32( &finishFlag, JOBS_DEMO_FINISHED, JOBS_DEMO_RUNNING );
+        *exitFlag = true;
         status = true;
     }
     else
@@ -244,8 +235,6 @@ static bool _executeAction( const char * command,
     }
 
     return status;
-
-#undef COMPARE_COMMAND
 }
 
 /**
@@ -255,11 +244,15 @@ static void _updateResultCallback( void * param1,
                                    AwsIotJobsCallbackParam_t * cbParam )
 {
     AwsIotJobsError_t result = cbParam->u.operation.result;
+    bool isExit = ( bool ) param1;
 
-    if( result != AWS_IOT_JOBS_SUCCESS )
+    if( isExit )
     {
-        IotLogError( "Updating Result of job failed: %s", AwsIotJobs_strerror( result ) );
+        IotLogInfo( "Got Exit Flag" );
+        Atomic_CompareAndSwap_u32( &finishFlag, JOBS_DEMO_FINISHED, JOBS_DEMO_RUNNING );
     }
+
+    IotLogInfo( "Job Update complete with result %s", AwsIotJobs_strerror( result ) );
 }
 
 /**
@@ -268,25 +261,21 @@ static void _updateResultCallback( void * param1,
 static void _startNextCallback( void * param1,
                                 AwsIotJobsCallbackParam_t * cbParam )
 {
-    /* Param helpers. */
     AwsIotJobsError_t result = cbParam->u.operation.result;
 
-    if( result != AWS_IOT_JOBS_SUCCESS )
-    {
-        IotLogError( "Start Next Call Failed: %s", AwsIotJobs_strerror( result ) );
-    }
+    IotLogError( "Start Next complete with result %s", AwsIotJobs_strerror( result ) );
 }
 
 /**
  * @brief Get and update the job.
  */
-static int32_t _executeDemo( IotMqttConnection_t const mqttConnection,
-                             const char * pThingName,
-                             size_t thingNameLength,
-                             const char * pJobId,
-                             size_t jobIdLength,
-                             const char * jobDoc,
-                             size_t jobDocLength )
+static bool _executeDemo( IotMqttConnection_t const mqttConnection,
+                          const char * pThingName,
+                          size_t thingNameLength,
+                          const char * pJobId,
+                          size_t jobIdLength,
+                          const char * jobDoc,
+                          size_t jobDocLength )
 {
 #define GET_ACTION( ppStr, pLen )    IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_ACTION_KEY, JOB_ACTION_KEY_LENGTH, ppStr, pLen )
 
@@ -299,6 +288,7 @@ static int32_t _executeDemo( IotMqttConnection_t const mqttConnection,
     AwsIotJobsCallbackInfo_t updateResultCBInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
     const char * pAction = NULL;
     size_t actionLength = 0;
+    bool exitFlag = false;
 
     req.mqttConnection = mqttConnection;
     req.pThingName = pThingName;
@@ -339,7 +329,7 @@ static int32_t _executeDemo( IotMqttConnection_t const mqttConnection,
         }
 
         /* Execute on the action without quotes. */
-        if( _executeAction( pAction + 1, actionLength - 2, mqttConnection, jobDoc, jobDocLength ) )
+        if( _executeAction( pAction + 1, actionLength - 2, mqttConnection, jobDoc, jobDocLength, &exitFlag ) )
         {
             result = AWS_IOT_JOB_STATE_SUCCEEDED;
         }
@@ -350,6 +340,7 @@ static int32_t _executeDemo( IotMqttConnection_t const mqttConnection,
 
         updateInfo.newStatus = result;
         updateResultCBInfo.function = _updateResultCallback;
+        updateResultCBInfo.pCallbackContext = ( void * ) exitFlag;
 
         err = AwsIotJobs_UpdateAsync( &req, &updateInfo, 0, &updateResultCBInfo, NULL );
 
@@ -365,50 +356,36 @@ static int32_t _executeDemo( IotMqttConnection_t const mqttConnection,
     }
 
     return success;
-
-#undef GET_ACTION
 }
 
 /**
- * @brief The callback when a new job is posted. It signals main via a semaphore.
+ * @brief The Notify Next Callback
  */
 static void _jobsCallback( void * param1,
                            AwsIotJobsCallbackParam_t * pCallbackInfo )
 {
-#define GET_KEY( ppStr, pLen )    IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument, pCallbackInfo->u.callback.documentLength, JOB_ID_KEY, JOB_ID_KEY_LENGTH, ppStr, pLen )
-#define GET_DOC( ppStr, pLen )    IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument, pCallbackInfo->u.callback.documentLength, JOB_DOC_KEY, JOB_DOC_KEY_LENGTH, ppStr, pLen )
-
-    bool keyFound = false;
+    bool idKeyFound = false;
     bool docKeyFound = false;
-    int32_t status = EXIT_FAILURE;
 
-    const char * pJsonValue = NULL;
-    size_t jsonValueLength = 0;
-
-    char jobId[ JOBS_DEMO_MAX_ID_LENGTH + 1 ] = { 0 };
+    const char * jobId = NULL;
     size_t jobIdLength = 0;
 
-    char jobDoc[ JOBS_DEMO_MAX_JOB_DOC_LENGTH + 1 ] = { 0 };
+    const char * jobDoc = NULL;
     size_t jobDocLength = 0;
 
     /* Get the Job ID */
-    keyFound = GET_KEY( &pJsonValue, &jsonValueLength );
+    idKeyFound = IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument, pCallbackInfo->u.callback.documentLength, JOB_ID_KEY, JOB_ID_KEY_LENGTH, &jobId, &jobIdLength );
 
     IotLogInfo( "Got Notify Next Call." );
 
-    if( keyFound )
+    if( idKeyFound )
     {
-        IotLogInfo( "New Job: %.*s", jsonValueLength, pJsonValue );
+        IotLogInfo( "New Job: %.*s", jobIdLength, jobId );
 
-        if( jsonValueLength > JOBS_DEMO_MAX_ID_LENGTH )
+        if( jobIdLength > JOBS_DEMO_MAX_ID_LENGTH )
         {
-            keyFound = false;
+            idKeyFound = false;
             IotLogError( "Job ID is too long." );
-        }
-        else
-        {
-            memcpy( jobId, pJsonValue, jsonValueLength );
-            jobIdLength = jsonValueLength;
         }
     }
     else
@@ -418,43 +395,38 @@ static void _jobsCallback( void * param1,
     }
 
     /* Get the Job Document */
-    if( keyFound )
+    if( idKeyFound )
     {
-        docKeyFound = GET_DOC( &pJsonValue, &jsonValueLength );
+        docKeyFound = IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument, pCallbackInfo->u.callback.documentLength, JOB_DOC_KEY, JOB_DOC_KEY_LENGTH, &jobDoc, &jobDocLength );
     }
 
     if( docKeyFound )
     {
-        if( jsonValueLength > JOBS_DEMO_MAX_JOB_DOC_LENGTH )
+        if( jobDocLength > JOBS_DEMO_MAX_JOB_DOC_LENGTH )
         {
-            keyFound = false;
+            docKeyFound = false;
             IotLogError( "Job document is too long." );
-        }
-        else
-        {
-            memcpy( jobDoc, pJsonValue, jsonValueLength );
-            jobDocLength = jsonValueLength;
         }
 
         /* Execute the demo */
-        status = _executeDemo( pCallbackInfo->mqttConnection,
-                               pCallbackInfo->pThingName,
-                               pCallbackInfo->thingNameLength,
-                               jobId,
-                               jobIdLength,
-                               jobDoc,
-                               jobDocLength );
-    }
-    else
-    {
-        if( keyFound && !docKeyFound )
-        {
-            IotLogError( "Failed to parse Job Document from Notify Next." );
-        }
+        _executeDemo( pCallbackInfo->mqttConnection,
+                      pCallbackInfo->pThingName,
+                      pCallbackInfo->thingNameLength,
+                      jobId,
+                      jobIdLength,
+                      jobDoc,
+                      jobDocLength );
     }
 
-#undef GET_KEY
-#undef GET_DOC
+    if( !idKeyFound )
+    {
+        IotLogError( "Failed to parse Job ID in Notify Next callback." );
+    }
+
+    if( !docKeyFound )
+    {
+        IotLogError( "Failed to parse Job Document in Notify Next callback." );
+    }
 }
 
 /**
@@ -483,13 +455,13 @@ static void _cleanupDemo( void )
  * @return `EXIT_SUCCESS` if the connection is successfully established; `EXIT_FAILURE`
  * otherwise.
  */
-static int32_t _establishMqttConnection( const char * pIdentifier,
-                                         void * pNetworkServerInfo,
-                                         void * pNetworkCredentialInfo,
-                                         const IotNetworkInterface_t * pNetworkInterface,
-                                         IotMqttConnection_t * const pMqttConnection )
+static int _establishMqttConnection( const char * pIdentifier,
+                                     void * pNetworkServerInfo,
+                                     void * pNetworkCredentialInfo,
+                                     const IotNetworkInterface_t * pNetworkInterface,
+                                     IotMqttConnection_t * const pMqttConnection )
 {
-    int32_t status = EXIT_SUCCESS;
+    int status = EXIT_SUCCESS;
     IotMqttError_t connectStatus = IOT_MQTT_STATUS_PENDING;
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
@@ -537,7 +509,7 @@ int RunJobsDemo( bool awsIotMqttMode,
                  void * pNetworkCredentialInfo,
                  const IotNetworkInterface_t * pNetworkInterface )
 {
-    int32_t status = EXIT_SUCCESS;
+    int status = EXIT_SUCCESS;
     IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
     AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
     AwsIotJobsError_t err = AWS_IOT_JOBS_SUCCESS;
@@ -591,15 +563,18 @@ int RunJobsDemo( bool awsIotMqttMode,
                 break;
             }
 
-            IotClock_SleepMs( 100 );
+            IotClock_SleepMs( 1000 );
         }
     }
 
+    /* Give the demo a moment to finish up after an "exit" command. */
     IotClock_SleepMs( 1000 );
 
     if( status == EXIT_SUCCESS )
     {
-        err = AwsIotJobs_SetNotifyNextCallback( mqttConnection, pIdentifier, thingNameLength, 0, NULL );
+        callbackInfo.oldFunction = _jobsCallback;
+        callbackInfo.function = NULL;
+        err = AwsIotJobs_SetNotifyNextCallback( mqttConnection, pIdentifier, thingNameLength, 0, &callbackInfo );
 
         status = err == AWS_IOT_JOBS_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
     }
