@@ -1,4 +1,5 @@
 /*
+ * IOT Serializer V1.1.0
  * Amazon FreeRTOS Serializer Test
  * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
