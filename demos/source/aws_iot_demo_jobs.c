@@ -567,9 +567,6 @@ int RunJobsDemo( bool awsIotMqttMode,
         }
     }
 
-    /* Give the demo a moment to finish up after an "exit" command. */
-    IotClock_SleepMs( 1000 );
-
     if( status == EXIT_SUCCESS )
     {
         callbackInfo.oldFunction = _jobsCallback;
