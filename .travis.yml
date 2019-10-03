@@ -25,9 +25,18 @@ jobs:
       env: RUN_TEST=coverage
     - if: type = pull_request
       env: RUN_TEST=doc
-    # On macOS, only run mbedtls MQTT test.
     - os: osx
       env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
+
+# Cache Homebrew metadata for macOS builds.
+cache:
+  directories:
+    - $HOME/Library/Caches/Homebrew
+    - /usr/local/Homebrew
+
+# Clean up before caching.
+before_cache:
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew cleanup; fi
 
 # Install dependencies.
 install:
