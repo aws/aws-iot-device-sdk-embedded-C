@@ -466,38 +466,35 @@ static int _establishMqttConnection( const char * pIdentifier,
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
 
-    if( status == EXIT_SUCCESS )
+    /* Set the members of the network info not set by the initializer. This
+     * struct provided information on the transport layer to the MQTT connection. */
+    networkInfo.createNetworkConnection = true;
+    networkInfo.u.setup.pNetworkServerInfo = pNetworkServerInfo;
+    networkInfo.u.setup.pNetworkCredentialInfo = pNetworkCredentialInfo;
+    networkInfo.pNetworkInterface = pNetworkInterface;
+
+    /* Set the members of the connection info not set by the initializer. */
+    connectInfo.awsIotMqttMode = true;
+    connectInfo.cleanSession = true;
+    connectInfo.keepAliveSeconds = KEEP_ALIVE_SECONDS;
+
+    /* AWS IoT recommends the use of the Thing Name as the MQTT client ID. */
+    connectInfo.pClientIdentifier = pIdentifier;
+    connectInfo.clientIdentifierLength = ( uint16_t ) strlen( pIdentifier );
+
+    IotLogInfo( "Thing Name is %.*s (length %hu).",
+                connectInfo.clientIdentifierLength,
+                connectInfo.pClientIdentifier,
+                connectInfo.clientIdentifierLength );
+
+    /* Establish the MQTT connection. */
+    connectStatus = IotMqtt_Connect( &networkInfo, &connectInfo, TIMEOUT_MS, pMqttConnection );
+
+    if( connectStatus != IOT_MQTT_SUCCESS )
     {
-        /* Set the members of the network info not set by the initializer. This
-         * struct provided information on the transport layer to the MQTT connection. */
-        networkInfo.createNetworkConnection = true;
-        networkInfo.u.setup.pNetworkServerInfo = pNetworkServerInfo;
-        networkInfo.u.setup.pNetworkCredentialInfo = pNetworkCredentialInfo;
-        networkInfo.pNetworkInterface = pNetworkInterface;
+        IotLogError( "MQTT CONNECT returned error %s.", IotMqtt_strerror( connectStatus ) );
 
-        /* Set the members of the connection info not set by the initializer. */
-        connectInfo.awsIotMqttMode = true;
-        connectInfo.cleanSession = true;
-        connectInfo.keepAliveSeconds = KEEP_ALIVE_SECONDS;
-
-        /* AWS IoT recommends the use of the Thing Name as the MQTT client ID. */
-        connectInfo.pClientIdentifier = pIdentifier;
-        connectInfo.clientIdentifierLength = ( uint16_t ) strlen( pIdentifier );
-
-        IotLogInfo( "Thing Name is %.*s (length %hu).",
-                    connectInfo.clientIdentifierLength,
-                    connectInfo.pClientIdentifier,
-                    connectInfo.clientIdentifierLength );
-
-        /* Establish the MQTT connection. */
-        connectStatus = IotMqtt_Connect( &networkInfo, &connectInfo, TIMEOUT_MS, pMqttConnection );
-
-        if( connectStatus != IOT_MQTT_SUCCESS )
-        {
-            IotLogError( "MQTT CONNECT returned error %s.", IotMqtt_strerror( connectStatus ) );
-
-            status = EXIT_FAILURE;
-        }
+        status = EXIT_FAILURE;
     }
 
     return status;
