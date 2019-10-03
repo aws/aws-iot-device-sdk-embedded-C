@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# Travis CI uses this script to set up the test environment on Linux.
+
+# Update repositories.
+sudo apt-get update
+
+# Install OpenSSL if needed.
+if [ "$NETWORK_STACK" = "openssl" ]; then
+    sudo apt-get install -y libssl-dev;
+fi
+
+# Set up for pull request builds.
+if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+    # Install Mosquitto for MQTT pull request builds.
+    if [ "$RUN_TEST" = "mqtt" ]; then
+        sudo apt-get install -y mosquitto;
+    fi
+
+    # Install graphviz for documentation builds.
+    if [ "$RUN_TEST" = "doc" ]; then
+        sudo apt-get install -y graphviz;
+    fi
+# Set up for coverage builds.
+else
+    # Install dependencies for Jobs tests.
+    # Coverage needs these too since it runs the Jobs tests.
+    if [ "$RUN_TEST" = "jobs" ] || [ "$RUN_TEST" = "coverage" ]; then
+        sudo apt-get install -y python3-setuptools python3-pip athena-jot;
+        pip3 install --user wheel;
+        pip3 install --user awscli;
+    fi
+
+    # Install dependencies for coverage builds.
+    if [ "$RUN_TEST" = "coverage" ]; then
+        sudo apt-get install -y lcov;
+        pip3 install --user cpp-coveralls;
+    fi
+fi
+
+# Set default compiler options for Linux. Individual test scripts may override this.
+export COMPILER_OPTIONS="-Wall -Wextra -fsanitize=thread"

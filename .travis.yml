@@ -26,35 +26,16 @@ jobs:
     - if: type = pull_request
       env: RUN_TEST=doc
 
-# Update repositories.
-before_install:
-  - sudo apt-get update
-
 # Install dependencies.
 install:
-  # Install OpenSSL if needed.
-  - if [ "$NETWORK_STACK" = "openssl" ]; then sudo apt-get install -y libssl-dev; fi
-  # Install Mosquitto for MQTT pull request builds.
-  - if [ "$RUN_TEST" = "mqtt" ] && [ "$TRAVIS_PULL_REQUEST" != "false" ]; then sudo apt-get install -y mosquitto; fi
-  # Install dependencies for Jobs tests.
-  - if [ "$RUN_TEST" = "jobs" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then sudo apt-get install -y python3-setuptools python3-pip athena-jot; fi
-  - if [ "$RUN_TEST" = "jobs" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then pip3 install --user wheel; fi
-  - if [ "$RUN_TEST" = "jobs" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then pip3 install --user awscli; fi
-  # Install graphviz only for documentation builds.
-  - if [ "$RUN_TEST" = "doc" ]; then sudo apt-get install -y graphviz; fi
-  # Install dependencies for coverage builds.
-  - if [ "$RUN_TEST" = "coverage" ]; then sudo apt-get install -y python3-setuptools python3-pip lcov athena-jot; fi
-  - if [ "$RUN_TEST" = "coverage" ]; then pip3 install --user wheel; fi
-  - if [ "$RUN_TEST" = "coverage" ]; then pip3 install --user cpp-coveralls; fi
-  - if [ "$RUN_TEST" = "coverage" ]; then pip3 install --user awscli; fi
+  # Run the OS-specific CI setup script.
+  - bash ./scripts/setup/ci_setup_$TRAVIS_OS_NAME.sh
 
 # Run the test script based on matrix environment variable.
 script:
   # Set identifier (client identifier OR Thing Name).
   - export IOT_IDENTIFIER="$IOT_IDENTIFIER_PREFIX$RUN_TEST"
   - if [ "$NETWORK_STACK" = "openssl" ]; then export IOT_IDENTIFIER="${IOT_IDENTIFIER}ossl"; fi
-  # Set default compiler options. Individual test scripts may override this.
-  - export COMPILER_OPTIONS="-Wall -Wextra -fsanitize=thread"
   # Choose the network abstraction.
   - if [ "$NETWORK_STACK" = "openssl" ]; then export IOT_NETWORK_USE_OPENSSL=1; else export IOT_NETWORK_USE_OPENSSL=0; fi
   # Get AWS credentials when not a pull request build.
