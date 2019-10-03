@@ -355,6 +355,9 @@ bool IotSemaphore_Create( IotSemaphore_t * pNewSemaphore,
                           uint32_t initialValue,
                           uint32_t maxValue )
 {
+    /* Unused parameter. */
+    ( void ) maxValue;
+    
     bool status = true;
 
     /* Create a GCD semaphore. */
