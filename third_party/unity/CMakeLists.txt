@@ -18,8 +18,8 @@ add_library( unity
 
 # Unity test framework include paths.
 target_include_directories( unity SYSTEM
-                            PUBLIC ${PROJECT_SOURCE_DIR}/third_party/unity/unity
-                            PUBLIC ${PROJECT_SOURCE_DIR}/third_party/unity/unity/fixture )
+                            PUBLIC unity
+                            PUBLIC unity/fixture )
 
 # Disable all warnings for this third-party library.
 target_compile_options( unity

@@ -36,7 +36,7 @@ add_library( tinycbor
 
 # TinyCBOR include path.
 target_include_directories( tinycbor SYSTEM
-                            PUBLIC ${PROJECT_SOURCE_DIR}/third_party/tinycbor/tinycbor/src )
+                            PUBLIC tinycbor/src )
 
 # Link math library. This is not needed on Windows.
 if( NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
