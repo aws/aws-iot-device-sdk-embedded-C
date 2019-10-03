@@ -1,5 +1,5 @@
 /*
- * AWS IOT Defender V2.0.1
+ * AWS IoT Defender V2.0.1
  * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of

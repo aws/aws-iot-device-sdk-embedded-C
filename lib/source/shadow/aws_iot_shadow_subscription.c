@@ -1,5 +1,5 @@
 /*
- * AWS IOT Shadow V2.1.0
+ * AWS IoT Shadow V2.1.0
  * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
