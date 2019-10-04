@@ -6,6 +6,7 @@
 set -e
 
 CMAKE_FLAGS="-DIOT_DEMO_MQTT_TOPIC_PREFIX=\"\\\"$IOT_IDENTIFIER\\\"\" "
+TEST_OPTIONS=""
 
 # For pull request builds, run against test.mosquitto.org. Otherwise, run against AWS IoT.
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
@@ -13,7 +14,7 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
     DEMO_OPTIONS="-i $IOT_IDENTIFIER"
 elif [ "$TRAVIS_OS_NAME" = "windows" ]; then
     CMAKE_FLAGS+=$COMPILER_OPTIONS
-    DEMO_OPTIONS="-n -i $IOT_IDENTIFIER"
+    TEST_OPTIONS+="-n"
 else
     CMAKE_FLAGS+="-DIOT_TEST_MQTT_MOSQUITTO=1 -DIOT_TEST_SERVER=\\\"localhost\\\" $COMPILER_OPTIONS"
     DEMO_OPTIONS="-n -i $IOT_IDENTIFIER -u -h localhost -p 1883"
@@ -30,8 +31,10 @@ else
 fi
 
 # Run tests and demos.
-./bin/iot_tests_mqtt
-./bin/iot_demo_mqtt $DEMO_OPTIONS
+./bin/iot_tests_mqtt $TEST_OPTIONS
+if [ "$TRAVIS_OS_NAME" != "windows" ] || [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+    ./bin/iot_demo_mqtt $DEMO_OPTIONS
+fi
 
 # Rebuild in static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="$CMAKE_FLAGS -DIOT_STATIC_MEMORY_ONLY=1"
@@ -43,4 +46,4 @@ else
 fi
 
 # Run tests in static memory mode.
-./bin/iot_tests_mqtt
+./bin/iot_tests_mqtt $TEST_OPTIONS
