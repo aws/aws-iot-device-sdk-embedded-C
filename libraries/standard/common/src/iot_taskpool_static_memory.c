@@ -36,7 +36,7 @@
 #include <string.h>
 
 /* Static memory include. */
-#include "private/iot_static_memory.h"
+#include "iot_static_memory.h"
 
 /* Task pool internal include. */
 #include "private/iot_taskpool_internal.h"

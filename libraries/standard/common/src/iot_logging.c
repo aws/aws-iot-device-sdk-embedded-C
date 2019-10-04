@@ -77,7 +77,7 @@
  */
 #if IOT_STATIC_MEMORY_ONLY == 1
     /* Static memory allocation header. */
-    #include "private/iot_static_memory.h"
+    #include "iot_static_memory.h"
 
 /**
  * @brief Allocate a new logging buffer. This function must have the same

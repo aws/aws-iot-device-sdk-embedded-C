@@ -41,7 +41,7 @@
 #include "platform/iot_threads.h"
 
 /* Static memory include. */
-#include "private/iot_static_memory.h"
+#include "iot_static_memory.h"
 
 /* Atomic include. */
 #include "iot_atomic.h"
