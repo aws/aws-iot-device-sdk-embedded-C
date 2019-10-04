@@ -37,7 +37,7 @@
 #include "platform/iot_clock.h"
 
 /* Logging includes. */
-#include "private/iot_logging.h"
+#include "iot_logging.h"
 
 /*-----------------------------------------------------------*/
 

@@ -33,7 +33,7 @@
 
 /* Logging include. Because it's included here, iot_logging.h never needs
  * to be included in source. */
-#include "private/iot_logging.h"
+#include "iot_logging.h"
 
 /**
  * @functionpage{IotLog,logging,log}

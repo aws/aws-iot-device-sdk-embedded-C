@@ -68,10 +68,9 @@ add_library( mbedtls
 
 # mbed TLS config header and include directories.
 target_include_directories( mbedtls SYSTEM
-                            PRIVATE .
-                            PUBLIC mbedtls/include )
+                            PUBLIC mbedtls/include . )
 target_compile_definitions( mbedtls
-                            PRIVATE -DMBEDTLS_CONFIG_FILE="iot_config_mbedtls.h" )
+                            PUBLIC -DMBEDTLS_CONFIG_FILE="iot_config_mbedtls.h" )
 
 # The system types header is needed for the mbed TLS threading port.
 target_include_directories( mbedtls

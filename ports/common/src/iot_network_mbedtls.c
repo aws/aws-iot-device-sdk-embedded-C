@@ -52,7 +52,7 @@
 #include <mbedtls/x509_crt.h>
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /* Platform clock include. */
 #include "platform/iot_clock.h"

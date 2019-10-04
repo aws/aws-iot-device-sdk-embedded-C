@@ -33,7 +33,7 @@
 #include "iot_config.h"
 
 /* Task pool include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 #include "iot_taskpool.h"
 
 /* Establish a few convenience macros to handle errors in a standard way. */

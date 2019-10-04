@@ -1,60 +1,123 @@
 # Common libraries source files.
 set( COMMON_SOURCES
-     ${PROJECT_SOURCE_DIR}/lib/source/common/iot_init.c
-     ${PROJECT_SOURCE_DIR}/lib/source/common/iot_logging.c
-     ${PROJECT_SOURCE_DIR}/lib/source/common/iot_static_memory_common.c
-     ${PROJECT_SOURCE_DIR}/lib/source/common/iot_taskpool.c
-     ${PROJECT_SOURCE_DIR}/lib/source/common/iot_taskpool_static_memory.c )
+     src/iot_init.c
+     src/iot_logging.c
+     src/iot_static_memory_common.c
+     src/iot_taskpool.c
+     src/iot_taskpool_static_memory.c )
 
-# Lists of common header files. These are only used for directory organization
-# (not for build).
+# Lists of common header files. These are only used for directory organization.
 set( COMMON_PUBLIC_HEADERS
-     ${PROJECT_SOURCE_DIR}/lib/include/iot_init.h
-     ${PROJECT_SOURCE_DIR}/lib/include/iot_linear_containers.h
-     ${PROJECT_SOURCE_DIR}/lib/include/iot_logging_setup.h
-     ${PROJECT_SOURCE_DIR}/lib/include/iot_taskpool.h
-     PARENT_SCOPE )
+     include/iot_error.h
+     include/iot_init.h
+     include/iot_linear_containers.h
+     include/iot_logging.h
+     include/iot_logging_setup.h
+     include/iot_static_memory.h
+     include/iot_taskpool.h )
 set( COMMON_PRIVATE_HEADERS
-     ${PROJECT_SOURCE_DIR}/lib/include/private/iot_error.h
-     ${PROJECT_SOURCE_DIR}/lib/include/private/iot_logging.h
-     ${PROJECT_SOURCE_DIR}/lib/include/private/iot_static_memory.h
-     ${PROJECT_SOURCE_DIR}/lib/include/private/iot_taskpool_internal.h
-     PARENT_SCOPE )
+     src/private/iot_taskpool_internal.h )
 set( COMMON_TYPES_HEADERS
-     ${PROJECT_SOURCE_DIR}/lib/include/types/iot_taskpool_types.h
-     PARENT_SCOPE )
+     include/types/iot_taskpool_types.h )
 
-# Add common as an interface library. It will be built into iotbase.
-add_library( iotcommon INTERFACE )
+# List of the platform public headers.
+set( PLATFORM_INTERFACE_DIRECTORY ${PROJECT_SOURCE_DIR}/libraries/platform )
+set( PORTS_DIRECTORY ${PROJECT_SOURCE_DIR}/ports )
 
-target_sources( iotcommon INTERFACE
-                ${COMMON_SOURCES} )
+set( PLATFORM_INTERFACE_HEADERS
+     ${PLATFORM_INTERFACE_DIRECTORY}/iot_clock.h
+     ${PLATFORM_INTERFACE_DIRECTORY}/iot_metrics.h
+     ${PLATFORM_INTERFACE_DIRECTORY}/iot_network.h
+     ${PLATFORM_INTERFACE_DIRECTORY}/iot_threads.h )
+set( PLATFORM_TYPES_HEADER
+     ${PLATFORM_INTERFACE_DIRECTORY}/types/iot_platform_types.h )
+set( PLATFORM_COMMON_HEADERS
+     ${PORTS_DIRECTORY}/common/include/iot_atomic.h
+     ${PORTS_DIRECTORY}/common/include/iot_network_metrics.h )
 
-# Set common sources in the parent scope for directory organization.
-set( COMMON_SOURCES ${COMMON_SOURCES} PARENT_SCOPE )
-set( AWS_IOT_COMMON_SOURCES ${AWS_IOT_COMMON_SOURCES} PARENT_SCOPE )
+# Include the CMake file for this port.
+include( ${PROJECT_SOURCE_DIR}/ports/${IOT_PLATFORM_NAME}/${IOT_PLATFORM_NAME}.cmake )
 
-# AWS IoT common sources.
-set( AWS_IOT_COMMON_SOURCES
-     ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_operation.c
-     ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_parser.c
-     ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_subscription.c
-     ${PROJECT_SOURCE_DIR}/lib/source/common/aws_iot/aws_iot_validate.c )
-
-# AWS IoT common library target.
-add_library( awsiotcommon
-             ${AWS_IOT_COMMON_SOURCES}
-             ${PROJECT_SOURCE_DIR}/lib/include/private/aws_iot.h )
-
-# Link required libraries.
-target_link_libraries( awsiotcommon
-                       PUBLIC iotmqtt iotserializer )
-
-if( ${IOT_BUILD_TESTS} )
-    target_link_libraries( awsiotcommon PRIVATE unity )
+# The port CMake file must specify the types header and the platform sources.
+if( NOT DEFINED PORT_TYPES_HEADER )
+    message( FATAL_ERROR "Port CMake file did not set PORT_TYPES_HEADER." )
 endif()
 
-# Organization of AWS IoT common sources in folders.
-set_property( TARGET awsiotcommon PROPERTY FOLDER "lib" )
-source_group( include\\private ${PROJECT_SOURCE_DIR}/lib/include/private/aws_iot.h )
-source_group( source FILES ${AWS_IOT_COMMON_SOURCES} )
+if( NOT DEFINED PLATFORM_SOURCES )
+    message( FATAL_ERROR "Port CMake file did not set PLATFORM_SOURCES." )
+endif()
+
+# iotbase library target. This is a combination of the platform port and the
+# common libraries.
+add_library( iotbase
+             ${CONFIG_HEADER_PATH}/iot_config.h
+             ${COMMON_SOURCES}
+             ${COMMON_PUBLIC_HEADERS}
+             ${COMMON_PRIVATE_HEADERS}
+             ${COMMON_TYPES_HEADERS}
+             ${PLATFORM_INTERFACE_HEADERS}
+             ${PLATFORM_TYPES_HEADER}
+             ${PLATFORM_COMMON_HEADERS}
+             ${PLATFORM_SOURCES}
+             ${PORT_TYPES_HEADER} )
+
+# Set the types header for the port.
+target_compile_definitions( iotbase PUBLIC -DIOT_SYSTEM_TYPES_FILE="${PORT_TYPES_HEADER}" )
+
+# Set the include directories for the common and platform libraries.
+target_include_directories( iotbase
+                            PUBLIC
+                            ${CONFIG_HEADER_PATH}
+                            ${PLATFORM_INTERFACE_DIRECTORY}/..
+                            ${PLATFORM_INTERFACE_DIRECTORY}
+                            ${PORTS_DIRECTORY}/common/include
+                            include/ )
+
+# Link any dependencies required by this port.
+target_link_libraries( iotbase PRIVATE ${PLATFORM_DEPENDENCIES} )
+
+if( ${IOT_BUILD_TESTS} )
+    target_link_libraries( iotbase PRIVATE unity )
+endif()
+
+# Organization of iotbase in folders.
+set_property( TARGET iotbase PROPERTY FOLDER libraries/standard )
+source_group( "" FILES ${CONFIG_HEADER_PATH}/iot_config.h )
+source_group( common\\include FILES ${COMMON_PUBLIC_HEADERS} )
+source_group( common\\include\\types FILES ${COMMON_TYPES_HEADERS} )
+source_group( common\\src FILES ${COMMON_SOURCES} )
+source_group( common\\src\\private FILES ${COMMON_PRIVATE_HEADERS} )
+source_group( platform\\include FILES ${PLATFORM_INTERFACE_HEADERS} ${PLATFORM_COMMON_HEADERS} )
+source_group( platform\\include\\types FILES ${PLATFORM_TYPES_HEADER} ${PORT_TYPES_HEADER} )
+source_group( platform\\src FILES ${PLATFORM_SOURCES} )
+
+# Build the test executable if needed.
+if( ${IOT_BUILD_TESTS} )
+    # Common unit test sources.
+    set( COMMON_UNIT_TEST_SOURCES
+         test/unit/iot_tests_linear_containers.c
+         test/unit/iot_tests_taskpool.c
+         test/unit/iot_tests_atomic.c )
+
+    # Common tests executable.
+    add_executable( iot_tests_common
+                    ${COMMON_UNIT_TEST_SOURCES}
+                    test/iot_tests_common.c
+                    ${IOT_TEST_APP_SOURCE}
+                    ${CONFIG_HEADER_PATH}/iot_config.h )
+
+    # Define the test to run.
+    target_compile_definitions( iot_tests_common PRIVATE
+                                -DRunTests=RunCommonTests )
+
+    # The tests use internal headers. Add the include path for internal headers.
+    target_include_directories( iot_tests_common PRIVATE src )
+
+    # Common tests library dependencies.
+    target_link_libraries( iot_tests_common PRIVATE iotbase unity )
+
+    # Organization of common tests in folders.
+    set_property( TARGET iot_tests_common PROPERTY FOLDER tests )
+    source_group( unit FILES ${COMMON_UNIT_TEST_SOURCES} )
+    source_group( "" FILES ${IOT_TEST_APP_SOURCE} test/iot_tests_common.c )
+endif()

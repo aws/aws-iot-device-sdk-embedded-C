@@ -31,7 +31,7 @@
 #include <string.h>
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /* Platform threads include. */
 #include "platform/iot_threads.h"

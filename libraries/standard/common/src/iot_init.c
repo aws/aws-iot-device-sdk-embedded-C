@@ -38,10 +38,10 @@
 #include "iot_atomic.h"
 
 /* Static memory include (if dynamic memory allocation is disabled). */
-#include "private/iot_static_memory.h"
+#include "iot_static_memory.h"
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /* Configure logs for the functions in this file. */
 #ifdef IOT_LOG_LEVEL_GLOBAL
