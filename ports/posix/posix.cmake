@@ -61,38 +61,31 @@ if( ${IOT_NETWORK_USE_OPENSSL} )
         endif()
 
         # Choose OpenSSL network source file.
-        set( NETWORK_HEADER ${CMAKE_SOURCE_DIR}/platform/include/iot_network_openssl.h )
-        set( NETWORK_SOURCE_FILE ${CMAKE_SOURCE_DIR}/platform/ports/posix/source/iot_network_openssl.c )
+        set( NETWORK_HEADER ${PORTS_DIRECTORY}/common/include/iot_network_openssl.h )
+        set( NETWORK_SOURCE_FILE ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/src/iot_network_openssl.c )
 
         # Link OpenSSL.
-        set( TLS_LIBRARY_LINKER_FLAG OpenSSL::SSL OpenSSL::Crypto )
+        set( PLATFORM_DEPENDENCIES OpenSSL::SSL OpenSSL::Crypto )
     endif()
 else()
-    set( NETWORK_HEADER ${CMAKE_SOURCE_DIR}/platform/include/iot_network_mbedtls.h )
-    set( NETWORK_SOURCE_FILE ${CMAKE_SOURCE_DIR}/platform/network/iot_network_mbedtls.c )
-    set( TLS_LIBRARY_LINKER_FLAG mbedtls )
+    set( NETWORK_HEADER ${PORTS_DIRECTORY}/common/include/iot_network_openssl.h )
+    set( NETWORK_SOURCE_FILE ${PORTS_DIRECTORY}/common/src/iot_network_mbedtls.c )
+    set( PLATFORM_DEPENDENCIES mbedtls )
 endif()
 
 # Add the network header for this platform.
 set( PLATFORM_COMMON_HEADERS ${PLATFORM_COMMON_HEADERS}
-     ${NETWORK_HEADER}
-     PARENT_SCOPE )
+     ${NETWORK_HEADER} )
 
 # Platform libraries source files.
 set( PLATFORM_SOURCES
-     ${CMAKE_SOURCE_DIR}/platform/ports/posix/source/iot_clock_posix.c
-     ${CMAKE_SOURCE_DIR}/platform/ports/posix/source/iot_threads_posix.c
-     ${CMAKE_SOURCE_DIR}/platform/network/iot_network_metrics.c
+     ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/src/iot_clock_${IOT_PLATFORM_NAME}.c
+     ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/src/iot_threads_${IOT_PLATFORM_NAME}.c
+     ${PORTS_DIRECTORY}/common/src/iot_network_metrics.c
      ${NETWORK_SOURCE_FILE} )
 
-# Add platform as an interface library. It will be built into iotbase.
-add_library( iotplatform INTERFACE )
+# Set the types header for this port.
+set( PORT_TYPES_HEADER ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/include/iot_platform_types_${IOT_PLATFORM_NAME}.h )
 
-target_sources( iotplatform INTERFACE
-                ${PLATFORM_SOURCES} )
-
-# Set the dependencies of this platform layer.
-target_link_libraries( iotplatform INTERFACE Threads::Threads rt ${TLS_LIBRARY_LINKER_FLAG} )
-
-# Set platform sources in the parent scope for directory organization.
-set( PLATFORM_SOURCES ${PLATFORM_SOURCES} PARENT_SCOPE )
+# Link POSIX threads and real-time library.
+set( PLATFORM_DEPENDENCIES ${PLATFORM_DEPENDENCIES} Threads::Threads rt )

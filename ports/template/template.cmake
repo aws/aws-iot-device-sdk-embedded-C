@@ -7,7 +7,7 @@ message( WARNING "This is a template port that contains only stubs. Libraries bu
 # Add the mbed TLS header in the template. The mbed TLS network port is supposed
 # to be platform-independent, so it is built in the template.
 set( PLATFORM_COMMON_HEADERS ${PLATFORM_COMMON_HEADERS}
-     ${CMAKE_SOURCE_DIR}/ports/common/include/iot_network_mbedtls.h )
+     ${PORTS_DIRECTORY}/common/include/iot_network_mbedtls.h )
 
 # Template platform sources. Except for the network sources, these files contain
 # only stubs.
