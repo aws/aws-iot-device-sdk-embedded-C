@@ -31,7 +31,7 @@
 #include "platform/iot_threads.h"
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /* Atomic include. */
 #include "iot_atomic.h"
@@ -357,7 +357,7 @@ bool IotSemaphore_Create( IotSemaphore_t * pNewSemaphore,
 {
     /* Unused parameter. */
     ( void ) maxValue;
-    
+
     bool status = true;
 
     /* Create a GCD semaphore. */

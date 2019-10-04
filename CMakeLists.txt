@@ -94,6 +94,9 @@ endif()
 # Common libraries and platform port. This creates the iotbase library target.
 add_subdirectory( libraries/standard/common )
 
+# Serializer library.
+add_subdirectory( libraries/standard/serializer )
+
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
 
