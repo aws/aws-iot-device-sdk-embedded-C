@@ -27,16 +27,11 @@ jobs:
       env: RUN_TEST=doc
     - os: osx
       env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
-
-# Cache Homebrew metadata for macOS builds.
-cache:
-  directories:
-    - $HOME/Library/Caches/Homebrew
-    - /usr/local/Homebrew
-
-# Clean up before caching.
-before_cache:
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew cleanup; fi
+      # Cache Homebrew for faster macOS builds.
+      cache:
+        directories:
+          - $HOME/Library/Caches/Homebrew
+          - /usr/local/Homebrew
 
 # Install dependencies.
 install:
