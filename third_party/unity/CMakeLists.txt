@@ -30,6 +30,6 @@ target_compile_options( unity
                         /W0 /D_CRT_SECURE_NO_WARNINGS> )
 
 # Organization of Unity in folders.
-set_property( TARGET unity PROPERTY FOLDER "third_party" )
+set_property( TARGET unity PROPERTY FOLDER third_party )
 source_group( include FILES ${UNITY_HEADERS} )
 source_group( source FILES ${UNITY_SOURCES} )

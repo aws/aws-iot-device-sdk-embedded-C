@@ -52,6 +52,6 @@ target_compile_options( tinycbor
                         /W0 /D_CRT_SECURE_NO_WARNINGS> )
 
 # Organization of TinyCBOR in folders.
-set_property( TARGET tinycbor PROPERTY FOLDER "third_party" )
+set_property( TARGET tinycbor PROPERTY FOLDER third_party )
 source_group( include FILES ${TINYCBOR_HEADERS} )
 source_group( source FILES ${TINYCBOR_SOURCES} )

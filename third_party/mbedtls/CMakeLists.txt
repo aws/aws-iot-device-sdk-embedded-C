@@ -92,7 +92,7 @@ target_compile_options( mbedtls
                         /W0 /D_CRT_SECURE_NO_WARNINGS> )
 
 # Organization of mbed TLS in folders.
-set_property( TARGET mbedtls PROPERTY FOLDER "third_party" )
+set_property( TARGET mbedtls PROPERTY FOLDER third_party )
 source_group( include\\mbedtls FILES ${MBEDTLS_HEADERS} )
 source_group( source FILES ${MBEDTLS_SOURCES} )
 source_group( "" FILES iot_config_mbedtls.h threading_alt.h iot_mbedtls_threading.c )
