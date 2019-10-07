@@ -112,6 +112,9 @@ add_subdirectory( libraries/aws/shadow )
 # AWS IoT Jobs library.
 add_subdirectory( libraries/aws/jobs )
 
+# AWS IoT Device Defender library.
+add_subdirectory( libraries/aws/defender )
+
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
 
