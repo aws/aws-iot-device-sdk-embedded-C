@@ -26,49 +26,49 @@ As relative paths from the SDK's root directory:
       Contains demo applications for various systems, most importantly the `main()` functions.
     - `include/` <br>
       Headers only needed to build the demos. These do not need to be ported.
-    - `source/` <br>
+    - `src/` <br>
       Platform-independent demo sources. These do not need to be ported.
     - `iot_config.h` <br>
       The config header for the demo applications. Useful as an example.
 - `libraries/` <br>
   Platform-independent SDK files. This directory (and all its subdirectories) should be copied and not modified.
     - `aws/` <br>
-      AWS IoT libraries and common code. Individual library headers, source and tests are contained in directories matching the library name. All source files in the same directory and common code, if used by the library, should be built into a shared or static library.
+      Libraries for AWS IoT specific functionlaities. Individual library headers, source files, and tests are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
         - `defender/` <br>
           Defender library headers, source files and tests.
             - `include` <br>
               Defender library header files.
             - `src` <br>
               Defender library source files.
-            - `test`
+            - `test` <br>
               Defender library tests.
         - `common, jobs, shadow, ...` <br>
-          Note that common is not an individual library, but common code shared between libraries. The directory structure of all the libraries are same as the defender library described above.
+          The directory structure of all the libraries are same as the Defender library described above.
     - <b>`platform/` <br>
       Interface of the platform layer, to be implemented in the `ports/` directory. </b>
         - `types/` <br>
           Platform types header.
     - `standard` <br>
-      IoT standard libraries. Headers, source and tests are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
+      Standard libraries which are not AWS specific. Headers, source files, and tests are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
         - `common, mqtt, serializer, ...` <br>
           The directory structure of all the libraries are same as the defender library described above.
 - <b style="color:#ff0000">`ports/` <br>
-  Platform-dependent SDK files that must be ported. The existing ports in this directory may be useful examples. </b>
+  This directory contains the desktop OS ports. Each port implements the functions of the platform layer interface for a specific desktop OS. </b>
     - `common` <br>
-      Common platform layer headers and implementation of network layer that are not specific to a port.
+      Port files that are not specific to a single port. These headers are used across all of the desktop OS ports.
         - `include/` <br>
-          Platform layer headers that are not specific to a specific port, such as the atomic and network headers.
+          Port headers that are not specific to a single port, such as the atomic and network headers.
             - <b style="color:#ff0000">`atomic/` <br>
-              Existing ports of atomic operations. See @ref platform_atomic for how to create a new port. New atomic ports should be placed here. </b>
+              Implementations of atomic operations. See @ref platform_atomic for how to create a new port. New atomic ports should be placed here. </b>
         - `src/` <br>
-          Implementations of the platform network layer that are not specific to a port.
-    - <b style="color:#ff0000">`macos, posix, win32, ...` <br>
-      Existing ports that can be used as a reference. Port source and headers are placed in a directory matching the port name. New ports should also be placed here.</b>
+          Port sources that are not specific to a single port, such as the network implementations.
     - <b style="color:#ff0000">`template` <br>
-      Empty port with stubbed out functions. This should be the starting point of a new port.</b>
+      Empty port sources containing stubbed-out functions. The files in this directory may be used as a starting point for a new port.</b>
+    - <b style="color:#ff0000">`macos, posix, win32, ...` <br>
+      Port sources and headers for a single implementation. The directory is named after the target OS.</b>
 - `tests/` <br>
   SDK tests config file and test runner source. Individual library tests are within each library directory. When building tests, @ref IOT_BUILD_TESTS should be set to `1` globally.
-- `3rdparty/` <br>
+- `third_party/` <br>
   Third-party library code. This directory (and all its subdirectories) should be copied and not modified.
     - `mbedtls/` <br>
       [mbed TLS](https://github.com/ARMmbed/mbedtls/tree/mbedtls-2.17), consumed as a Git submodule.
@@ -87,21 +87,21 @@ SDK include paths that are always required:
 - The path of the port types file. For example, `ports/posix/include` when using the POSIX port.
 - `libraries/platform/`
 
-Library include paths depends on the libraries used. For example, for using mqtt library:
+Depending on the libraries needed, include path for each of those libraries are required. For example, when using mqtt library, include path required is:
 - `libraries/standard/mqtt/include/`
 
 Third-party submodule include paths:
-- TinyCBOR: `3rdparty/tinycbor/tinycbor/src` <br>
+- TinyCBOR: `third_party/tinycbor/tinycbor/src` <br>
   Required when building the serializer library and for the Defender tests.
-- mbed TLS: `3rdparty/mbedtls` and `3rdparty/mbedtls/mbedtls/include` <br>
+- mbed TLS: `third_party/mbedtls` and `third_party/mbedtls/mbedtls/include` <br>
   Required when building @ref platform_network with the mbed TLS implementation.
 
 Additional include paths required to build the demos:
 - `demos/include`
 
 Additional include paths required to build the tests:
-- `3rdparty/unity/unity`
-- `3rdparty/unity/unity/fixture`
+- `third_party/unity/unity`
+- `third_party/unity/unity/fixture`
 - `libraries/standard/mqtt/test/access` (when building the MQTT or Shadow tests)
 - `libraries/standard/mqtt/test/mock` (when building tests that use the MQTT mocks, such as Shadow or Jobs)
 
