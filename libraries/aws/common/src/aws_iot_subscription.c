@@ -32,10 +32,10 @@
 #include <string.h>
 
 /* AWS IoT include. */
-#include "private/aws_iot.h"
+#include "aws_iot.h"
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /* MQTT include. */
 #include "iot_mqtt.h"

@@ -103,6 +103,9 @@ add_subdirectory( libraries/standard/mqtt )
 # Serializer library.
 add_subdirectory( libraries/standard/serializer )
 
+# AWS IoT common libraries.
+add_subdirectory( libraries/aws/common )
+
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
 
