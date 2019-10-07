@@ -32,11 +32,14 @@ jobs:
         directories:
           - $HOME/Library/Caches/Homebrew
           - /usr/local/Homebrew
+    - os: windows
+      env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
+      compiler: msvc
 
 # Install dependencies.
 install:
   # Run the OS-specific CI setup script.
-  - bash ./scripts/setup/ci_setup_$TRAVIS_OS_NAME.sh
+  - source ./scripts/setup/ci_setup_$TRAVIS_OS_NAME.sh
 
 # Run the test script based on matrix environment variable.
 script:
