@@ -45,7 +45,7 @@
 #include "platform/iot_threads.h"
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /*-----------------------------------------------------------*/
 

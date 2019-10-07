@@ -29,7 +29,7 @@
 #include "iot_config.h"
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"

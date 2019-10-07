@@ -32,7 +32,7 @@
 #include <string.h>
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /* MQTT internal includes. */
 #include "private/iot_mqtt_internal.h"

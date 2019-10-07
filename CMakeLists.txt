@@ -91,8 +91,14 @@ if( ${IOT_BUILD_TESTS} )
     add_subdirectory( third_party/unity )
 endif()
 
+# Build the demos.
+add_subdirectory( demos )
+
 # Common libraries and platform port. This creates the iotbase library target.
 add_subdirectory( libraries/standard/common )
+
+# MQTT library.
+add_subdirectory( libraries/standard/mqtt )
 
 # Serializer library.
 add_subdirectory( libraries/standard/serializer )
@@ -102,3 +108,10 @@ add_subdirectory( third_party/tinycbor )
 
 # mbed TLS library (third-party).
 add_subdirectory( third_party/mbedtls )
+
+# Set startup projects in Visual Studio.
+if( ${IOT_BUILD_TESTS} )
+    set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT iot_tests_mqtt )
+else()
+    set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT iot_demo_mqtt )
+endif()
