@@ -1,19 +1,19 @@
-# Platform layer
+# Platform ports
 
-**Main documentation page:** [Platform layer](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/index.html)
+This directory contains the desktop OS ports. Each port implements the functions of the platform layer interface for a specific desktop OS. See [Platform layer](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/platform/index.html) for details on the platform layer interface.
 
-This directory contains the headers and sources of the platform layer, implemented for various ports. Its subdirectories are organized as follows:
-- `include` <br>
-  Platform layer headers that are not specific to a specific port, such as the atomic and network headers.
-  - `atomic` <br>
-    Implementations of atomic operations.
-- `network` <br>
-  Implementations of the platform network layer that are not specific to a port.
-- `ports` <br>
-    Source files of a specific port.
-  - `posix`, `win32`, `...` <br>
-    Port sources are in a directory named after their target.
-  - `template` <br>
-    Empty port sources containing stubbed-out functions.
+Its subdirectories are organized as follows:
+- `common` <br>
+  Port files that are not specific to a single port. These headers are used across all of the desktop OS ports.
+  - `include` <br>
+    Port headers that are not specific to a single port, such as the atomic and network headers.
+    - `atomic` <br>
+      Implementations of atomic operations.
+  - `src` <br>
+    Port sources that are not specific to a single port, such as the network implementations.
+- `template` <br>
+  Empty port sources containing stubbed-out functions. The files in this directory may be used as a starting point for a new port.
+- `posix`, `macos`, `win32` <br>
+  Port sources and headers for a single implementation. They directory is named after the target OS.
 
-When porting this SDK to a new platform, only files in this directory should be modified. See [Porting guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/guide_developer_porting.html) for instructions.
+See [Porting guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/guide_developer_porting.html) for instructions on how to create a new port.
