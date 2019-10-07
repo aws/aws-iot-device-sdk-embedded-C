@@ -43,15 +43,15 @@ As relative paths from the SDK's root directory:
             - `test` <br>
               Defender library tests.
         - `common, jobs, shadow, ...` <br>
-          The directory structure of all the libraries are same as the Defender library described above.
+          Other libraries have the same directory structure as the Defender library described above.
     - <b>`platform/` <br>
       Interface of the platform layer, to be implemented in the `ports/` directory. </b>
         - `types/` <br>
           Platform types header.
     - `standard` <br>
-      Standard libraries which are not related to AWS IoT services. Headers, source files, and tests are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
+      Libraries which are not specific to AWS IoT services. Headers, source files, and tests are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
         - `common, mqtt, serializer, ...` <br>
-          The directory structure of all the libraries are same as the Defender library described above.
+          These libraries have the same directory structure as the Defender library described above.
 - <b style="color:#ff0000">`ports/` <br>
   This directory contains the desktop OS ports. Each port implements the functions of the platform layer interface for a specific desktop OS. </b>
     - `common` <br>
@@ -87,8 +87,7 @@ SDK include paths that are always required:
 - The path of the port types file. For example, `ports/posix/include` when using the POSIX port.
 - `libraries/platform/`
 
-Depending on the libraries needed, include path for each of those libraries are required. For example, when using MQTT library, add include path:
-- `libraries/standard/mqtt/include/`
+Each library has its headers in a different `include` directory. Library include directories are in `libraries/aws` for AWS IoT client libraries, and `libraries/standard` for other libraries. For example, the MQTT library's include directory is `libraries/standard/mqtt/include/` and the AWS IoT Shadow library's include directory is `libraries/aws/shadow/include/`. Each library's include directory must be added to the include path if that library is being used.
 
 Third-party submodule include paths:
 - TinyCBOR: `third_party/tinycbor/tinycbor/src` <br>
