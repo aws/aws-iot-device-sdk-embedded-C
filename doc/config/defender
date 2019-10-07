@@ -14,9 +14,11 @@ GENERATE_TAGFILE = doc/tag/defender.tag
 
 # Directories containing library source code.
 INPUT = doc/lib/ \
-        lib/include \
-        lib/include/private \
-        lib/source/defender
+        libraries/aws/defender/include \
+        libraries/aws/defender/src \
+        libraries/aws/defender/src/private \
+        libraries/aws/defender/test \
+        libraries/aws/defender/test/system
 
 # Library file names.
 FILE_PATTERNS = *defender*.h *defender*.txt

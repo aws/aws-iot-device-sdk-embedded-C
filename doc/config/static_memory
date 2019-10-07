@@ -14,8 +14,8 @@ GENERATE_TAGFILE = doc/tag/static_memory.tag
 
 # Directories containing library source code.
 INPUT = doc/lib \
-        lib/include/private \
-        lib/source/common
+        libraries/standard/common/include \
+        libraries/standard/common/src
 
 # Library file names.
 FILE_PATTERNS = *static_memory*.h *static_memory_common*.c *static_memory*.txt

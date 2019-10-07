@@ -68,10 +68,15 @@ add_library( mbedtls
 
 # mbed TLS config header and include directories.
 target_include_directories( mbedtls SYSTEM
-                            PUBLIC ${PROJECT_SOURCE_DIR}/third_party/mbedtls
-                            PUBLIC ${PROJECT_SOURCE_DIR}/third_party/mbedtls/mbedtls/include )
+                            PUBLIC mbedtls/include . )
 target_compile_definitions( mbedtls
                             PUBLIC -DMBEDTLS_CONFIG_FILE="iot_config_mbedtls.h" )
+
+# The system types header is needed for the mbed TLS threading port.
+target_include_directories( mbedtls
+                            PRIVATE ${PROJECT_SOURCE_DIR}/ports/${IOT_PLATFORM_NAME}/include )
+target_compile_definitions( mbedtls
+                            PRIVATE -DIOT_SYSTEM_TYPES_FILE="iot_platform_types_${IOT_PLATFORM_NAME}.h" )
 
 # Link the Unity test framework when testing.
 if( ${IOT_BUILD_TESTS} )
@@ -87,7 +92,7 @@ target_compile_options( mbedtls
                         /W0 /D_CRT_SECURE_NO_WARNINGS> )
 
 # Organization of mbed TLS in folders.
-set_property( TARGET mbedtls PROPERTY FOLDER "third_party" )
+set_property( TARGET mbedtls PROPERTY FOLDER third_party )
 source_group( include\\mbedtls FILES ${MBEDTLS_HEADERS} )
 source_group( source FILES ${MBEDTLS_SOURCES} )
 source_group( "" FILES iot_config_mbedtls.h threading_alt.h iot_mbedtls_threading.c )
