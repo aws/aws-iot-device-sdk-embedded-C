@@ -41,115 +41,36 @@
 #include "iot_network_metrics.h"
 
 /**
- * @brief Runs the defender demo.
+ * @brief The keep-alive interval used for this demo.
  *
- * @return AWS_IOT_DEFENDER_SUCCESS on success, otherwise an error code indicating
- *         the cause of error.
+ * An MQTT ping request will be sent periodically at this interval.
  */
-static AwsIotDefenderError_t _defenderDemo( const char * pIdentifier,
-                                            void * pNetworkServerInfo,
-                                            void * pNetworkCredentialInfo,
-                                            const IotNetworkInterface_t * pNetworkInterface );
+#define KEEP_ALIVE_SECONDS    ( 60 )
 
 /**
- * @brief Starts the defender agent.
- *
- * @return AWS_IOT_DEFENDER_SUCCESS on success, otherwise an error code indicating
- *         the cause of error.
+ * @brief The timeout for Defender and MQTT operations in this demo.
  */
-static AwsIotDefenderError_t _startDefender( const char * pIdentifier,
-                                             void * pNetworkServerInfo,
-                                             void * pNetworkCredentialInfo,
-                                             const IotNetworkInterface_t * pNetworkInterface );
+#define TIMEOUT_MS            ( 5000 )
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Callback used to get notification of defender's events.
+ * 
+ * @param[in] pCallbackContext context pointer passed by the application
+ * when callback is regiested in AwsIotDefender_Start()
+ * 
+ * @param[im] pointer to AwsIotDefenderCallbackInfo_t containing status of
+ * publish
  */
-static void _defenderCallback( void * param1,
-                               AwsIotDefenderCallbackInfo_t * const pCallbackInfo );
-
-/*-----------------------------------------------------------*/
-
-int RunDefenderDemo( bool awsIotMqttMode,
-                     const char * pIdentifier,
-                     void * pNetworkServerInfo,
-                     void * pNetworkCredentialInfo,
-                     const IotNetworkInterface_t * pNetworkInterface )
-{
-    int status = EXIT_SUCCESS;
-    bool metricsInitStatus = false;
-    IotMqttError_t mqttInitStatus = IOT_MQTT_INIT_FAILED;
-    AwsIotDefenderError_t defenderResult;
-
-    /* Unused parameters. */
-    ( void ) awsIotMqttMode;
-
-    /* Check parameter(s). */
-    if( ( pIdentifier == NULL ) || ( pIdentifier[ 0 ] == '\0' ) )
-    {
-        IotLogError( "The length of the Thing Name (identifier) must be nonzero." );
-        status = EXIT_FAILURE;
-    }
-
-    if( status == EXIT_SUCCESS )
-    {
-        /* Initialize the MQTT library. */
-        mqttInitStatus = IotMqtt_Init();
-
-        if( mqttInitStatus != IOT_MQTT_SUCCESS )
-        {
-            IotLogError( "MQTT Initialization Failed." );
-            status = EXIT_FAILURE;
-        }
-    }
-
-    if( status == EXIT_SUCCESS )
-    {
-        /* Initialize Metrics. */
-        metricsInitStatus = IotMetrics_Init();
-
-        if( !metricsInitStatus )
-        {
-            IotLogError( "IOT Metrics Initialization Failed." );
-            status = EXIT_FAILURE;
-        }
-    }
-
-    if( status == EXIT_SUCCESS )
-    {
-        /* Run the demo. */
-        defenderResult = _defenderDemo( pIdentifier, pNetworkServerInfo, pNetworkCredentialInfo, pNetworkInterface );
-
-        if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
-        {
-            status = EXIT_SUCCESS;
-        }
-    }
-
-    /* Cleanup. */
-    if( metricsInitStatus )
-    {
-        IotMetrics_Cleanup();
-    }
-
-    if( mqttInitStatus == IOT_MQTT_SUCCESS )
-    {
-        IotMqtt_Cleanup();
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
-void _defenderCallback( void * param1,
+void _defenderCallback( void * pCallbackContext,
                         AwsIotDefenderCallbackInfo_t * const pCallbackInfo )
 {
-    ( void ) param1;
+    ( void ) pCallbackContext;
 
-    IotLogInfo( "User's callback is invoked on event %d.", pCallbackInfo->eventType );
+    IotLogInfo( "User's callback is invoked on event: %s.", AwsIotDefender_EventType( pCallbackInfo->eventType ) );
 
-    /* Print out the sent metrics report if there is. */
+    /*  Callback info processing example . */
     if( pCallbackInfo->pMetricsReport != NULL )
     {
         IotLogInfo( "Published metrics report." );
@@ -171,78 +92,216 @@ void _defenderCallback( void * param1,
 
 /*-----------------------------------------------------------*/
 
-static AwsIotDefenderError_t _defenderDemo( const char * pIdentifier,
-                                            void * pNetworkServerInfo,
-                                            void * pNetworkCredentialInfo,
-                                            const IotNetworkInterface_t * pNetworkInterface )
+/**
+ * @brief Establish a new connection to the MQTT server for the Defender demo.
+ *
+ * @param[in] pIdentifier NULL-terminated MQTT client identifier. The Defender
+ * demo will use the Thing Name as the client identifier.
+ * @param[in] pNetworkServerInfo Passed to the MQTT connect function when
+ * establishing the MQTT connection.
+ * @param[in] pNetworkCredentialInfo Passed to the MQTT connect function when
+ * establishing the MQTT connection.
+ * @param[in] pNetworkInterface The network interface to use for this demo.
+ * @param[out] pMqttConnection Set to the handle to the new MQTT connection.
+ *
+ * @return `EXIT_SUCCESS` if the connection is successfully established; `EXIT_FAILURE`
+ * otherwise.
+ */
+static int _establishMqttConnection( const char * pIdentifier,
+                                     void * pNetworkServerInfo,
+                                     void * pNetworkCredentialInfo,
+                                     const IotNetworkInterface_t * pNetworkInterface,
+                                     IotMqttConnection_t * pMqttConnection )
 {
-    AwsIotDefenderError_t defenderResult;
+    int status = EXIT_SUCCESS;
+    IotMqttError_t connectStatus = IOT_MQTT_STATUS_PENDING;
+    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+
+    if( pIdentifier == NULL )
+    {
+        IotLogError( "Defender Thing Name must be provided." );
+
+        status = EXIT_FAILURE;
+    }
+
+    if( status == EXIT_SUCCESS )
+    {
+        /* Set the members of the network info not set by the initializer. This
+         * struct provided information on the transport layer to the MQTT connection. */
+        networkInfo.createNetworkConnection = true;
+        networkInfo.u.setup.pNetworkServerInfo = pNetworkServerInfo;
+        networkInfo.u.setup.pNetworkCredentialInfo = pNetworkCredentialInfo;
+        networkInfo.pNetworkInterface = pNetworkInterface;
+
+        /* Set the members of the connection info not set by the initializer. */
+        connectInfo.awsIotMqttMode = true;
+        connectInfo.cleanSession = true;
+        connectInfo.keepAliveSeconds = KEEP_ALIVE_SECONDS;
+
+        /* AWS IoT recommends the use of the Thing Name as the MQTT client ID. */
+        connectInfo.pClientIdentifier = pIdentifier;
+        connectInfo.clientIdentifierLength = ( uint16_t ) strlen( pIdentifier );
+
+        IotLogInfo( "Defender Thing Name is %.*s (length %hu).",
+                    connectInfo.clientIdentifierLength,
+                    connectInfo.pClientIdentifier,
+                    connectInfo.clientIdentifierLength );
+
+        /* Establish the MQTT connection. */
+        connectStatus = IotMqtt_Connect( &networkInfo,
+                                         &connectInfo,
+                                         TIMEOUT_MS,
+                                         pMqttConnection );
+
+        if( connectStatus != IOT_MQTT_SUCCESS )
+        {
+            IotLogError( "MQTT CONNECT returned error %s.",
+                         IotMqtt_strerror( connectStatus ) );
+
+            status = EXIT_FAILURE;
+        }
+    }
+
+    return status;
+}
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief The function that runs the Defender demo, called by the demo runner.
+ *
+ * @param[in] awsIotMqttMode Ignored for the Defender demo.
+ * @param[in] pIdentifier NULL-terminated Defender Thing Name.
+ * @param[in] pNetworkServerInfo Passed to the MQTT connect function when
+ * establishing the MQTT connection for Defender.
+ * @param[in] pNetworkCredentialInfo Passed to the MQTT connect function when
+ * establishing the MQTT connection for Defender.
+ * @param[in] pNetworkInterface The network interface to use for this demo.
+ *
+ * @return `EXIT_SUCCESS` if the demo completes successfully; `EXIT_FAILURE` otherwise.
+ */
+int RunDefenderDemo( bool awsIotMqttMode,
+                     const char * pIdentifier,
+                     void * pNetworkServerInfo,
+                     void * pNetworkCredentialInfo,
+                     const IotNetworkInterface_t * pNetworkInterface )
+{
+    int status = EXIT_SUCCESS;
+    bool metricsInitStatus = false;
+    IotMqttError_t mqttStatus = IOT_MQTT_INIT_FAILED;
+    AwsIotDefenderError_t defenderResult = AWS_IOT_DEFENDER_INTERNAL_FAILURE;
+    AwsIotDefenderStartInfo_t startInfo = AWS_IOT_DEFENDER_START_INFO_INITIALIZER;
+    const AwsIotDefenderCallback_t callback = { .function = _defenderCallback, .pCallbackContext = NULL };
+    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+
+    /* Unused parameters. */
+    ( void ) awsIotMqttMode;
 
     IotLogInfo( "----Device Defender Demo Start----" );
 
-    /* Specify all metrics in "tcp connections" group */
-    defenderResult =
-        AwsIotDefender_SetMetrics( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS, AWS_IOT_DEFENDER_METRICS_ALL );
+    /* Check parameter(s). */
+    if( ( pIdentifier == NULL ) || ( pIdentifier[ 0 ] == '\0' ) )
+    {
+        IotLogError( "The length of the Thing Name (identifier) must be nonzero." );
+        status = EXIT_FAILURE;
+    }
 
-    if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
+    if( status == EXIT_SUCCESS )
+    {
+        /* Initialize the MQTT library. */
+        mqttStatus = IotMqtt_Init();
+
+        if( mqttStatus != IOT_MQTT_SUCCESS )
+        {
+            IotLogError( "MQTT Initialization Failed." );
+            status = EXIT_FAILURE;
+        }
+    }
+
+    if( status == EXIT_SUCCESS )
+    {
+        /* Initialize Metrics. */
+        metricsInitStatus = IotMetrics_Init();
+
+        if( !metricsInitStatus )
+        {
+            IotLogError( "IOT Metrics Initialization Failed." );
+            status = EXIT_FAILURE;
+        }
+    }
+
+    if( status == EXIT_SUCCESS )
+    {
+        /* Specify all metrics in "tcp connections" group */
+        defenderResult =
+            AwsIotDefender_SetMetrics( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS, AWS_IOT_DEFENDER_METRICS_ALL );
+
+        if( defenderResult != AWS_IOT_DEFENDER_SUCCESS )
+        {
+            status = EXIT_FAILURE;
+        }
+    }
+
+    if( status == EXIT_SUCCESS )
     {
         /* Set metrics report period to 5 minutes(300 seconds) */
         defenderResult = AwsIotDefender_SetPeriod( 300 );
+
+        if( defenderResult != AWS_IOT_DEFENDER_SUCCESS )
+        {
+            status = EXIT_FAILURE;
+        }
     }
 
-    if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
+    if( status == EXIT_SUCCESS )
     {
-        /* Start the defender agent. */
-        defenderResult = _startDefender( pIdentifier, pNetworkServerInfo, pNetworkCredentialInfo, pNetworkInterface );
+        /* Create MQTT Connection */
+        mqttStatus = _establishMqttConnection( pIdentifier,
+                                               pNetworkServerInfo,
+                                               pNetworkCredentialInfo,
+                                               pNetworkInterface,
+                                               &mqttConnection );
+
+        if( mqttStatus != IOT_MQTT_SUCCESS )
+        {
+            IotLogError( "Failed to Create MQTT Connection:%d", IotMqtt_strerror( mqttStatus ) );
+            IotMqtt_Cleanup();
+            defenderResult = AWS_IOT_DEFENDER_INTERNAL_FAILURE;
+        }
+        else
+        {
+            /* Initialize start info and call defender Start API */
+            startInfo.pClientIdentifier = pIdentifier;
+            startInfo.clientIdentifierLength = ( uint16_t ) strlen( pIdentifier );
+            startInfo.callback = callback;
+            startInfo.mqttConnection = mqttConnection;
+            defenderResult = AwsIotDefender_Start( &startInfo );
+        }
 
         if( defenderResult == AWS_IOT_DEFENDER_SUCCESS )
         {
             /* Let it run for 3 seconds */
             IotClock_SleepMs( 3000 );
-
             /* Stop the defender agent. */
             AwsIotDefender_Stop();
+            /* Disconnect MQTT */
+            IotMqtt_Disconnect( mqttConnection, false );
         }
     }
 
-    IotLogInfo( "----Device Defender Demo End. Status: %d----.", defenderResult );
+    /* Cleanup. */
+    if( metricsInitStatus )
+    {
+        IotMetrics_Cleanup();
+    }
 
-    return defenderResult;
-}
+    if( mqttStatus == IOT_MQTT_SUCCESS )
+    {
+        IotMqtt_Cleanup();
+    }
 
-/*-----------------------------------------------------------*/
-
-static AwsIotDefenderError_t _startDefender( const char * pIdentifier,
-                                             void * pNetworkServerInfo,
-                                             void * pNetworkCredentialInfo,
-                                             const IotNetworkInterface_t * pNetworkInterface )
-{
-    const AwsIotDefenderCallback_t callback = { .function = _defenderCallback, .param1 = NULL };
-    AwsIotDefenderError_t defenderResult;
-
-    AwsIotDefenderStartInfo_t startInfo = AWS_IOT_DEFENDER_START_INFO_INITIALIZER;
-
-    /* Set network information. */
-    startInfo.mqttNetworkInfo = ( IotMqttNetworkInfo_t ) IOT_MQTT_NETWORK_INFO_INITIALIZER;
-    startInfo.mqttNetworkInfo.createNetworkConnection = true;
-    startInfo.mqttNetworkInfo.u.setup.pNetworkServerInfo = pNetworkServerInfo;
-    startInfo.mqttNetworkInfo.u.setup.pNetworkCredentialInfo = pNetworkCredentialInfo;
-
-    /* Set network interface. */
-    startInfo.mqttNetworkInfo.pNetworkInterface = pNetworkInterface;
-
-    /* Set MQTT connection information. */
-    startInfo.mqttConnectionInfo = ( IotMqttConnectInfo_t ) IOT_MQTT_CONNECT_INFO_INITIALIZER;
-    startInfo.mqttConnectionInfo.pClientIdentifier = pIdentifier;
-    startInfo.mqttConnectionInfo.clientIdentifierLength = ( uint16_t ) strlen( pIdentifier );
-
-    /* Set Defender callback. */
-    startInfo.callback = callback;
-
-    /* Invoke defender start API. */
-    defenderResult = AwsIotDefender_Start( &startInfo );
-
-    return defenderResult;
+    IotLogInfo( "----Device Defender Demo End. Status: %s----.", AwsIotDefender_strerror( defenderResult ) );
+    return status;
 }
 
 /*-----------------------------------------------------------*/

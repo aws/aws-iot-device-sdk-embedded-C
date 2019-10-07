@@ -805,7 +805,7 @@ TEST( Jobs_Unit_API, SetCallback )
  */
 TEST( Jobs_Unit_API, SetCallbackMultiple )
 {
-    int32_t i = 0;
+    intptr_t i = 0;
     AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
     AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
     _jobsSubscription_t * pSubscription = NULL;
