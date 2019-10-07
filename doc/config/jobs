@@ -14,12 +14,12 @@ GENERATE_TAGFILE = doc/tag/jobs.tag
 
 # Directories containing library source code.
 INPUT = doc/lib/ \
-        lib/include \
-        lib/include/private \
-        lib/include/types \
-        lib/source/jobs \
-        demos \
-        tests/jobs/unit
+        libraries/aws/jobs/include \
+        libraries/aws/jobs/include/types \
+        libraries/aws/jobs/src \
+        libraries/aws/jobs/src/private \
+        libraries/aws/jobs/test \
+        demos/src
 
 # Library file names.
 FILE_PATTERNS = *jobs*.h *jobs*.c *jobs*.txt
