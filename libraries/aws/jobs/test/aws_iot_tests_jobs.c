@@ -33,6 +33,12 @@
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Runs the Jobs test groups.
+ *
+ * @param[in] disableNetworkTests Whether tests that require the network should run.
+ * @param[in] disableLongTests Whether tests that take a long time should run.
+ */
 void RunJobsTests( bool disableNetworkTests,
                    bool disableLongTests )
 {
