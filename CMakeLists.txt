@@ -109,6 +109,9 @@ add_subdirectory( libraries/aws/common )
 # AWS IoT Shadow library.
 add_subdirectory( libraries/aws/shadow )
 
+# AWS IoT Jobs library.
+add_subdirectory( libraries/aws/jobs )
+
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
 

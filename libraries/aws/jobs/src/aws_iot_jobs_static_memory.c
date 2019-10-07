@@ -37,7 +37,7 @@
 #include <string.h>
 
 /* Static memory include. */
-#include "private/iot_static_memory.h"
+#include "iot_static_memory.h"
 
 /* Jobs internal include. */
 #include "private/aws_iot_jobs_internal.h"

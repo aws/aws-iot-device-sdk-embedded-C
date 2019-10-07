@@ -36,7 +36,7 @@
 #include "private/aws_iot_jobs_internal.h"
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
