@@ -64,6 +64,11 @@ add_library( iotbase
 # Set the types header for the port.
 target_compile_definitions( iotbase PUBLIC -DIOT_SYSTEM_TYPES_FILE="${PORT_TYPES_HEADER}" )
 
+# Specify if OpenSSL is being used in a compiler define.
+if( ${IOT_NETWORK_USE_OPENSSL} )
+    target_compile_definitions( iotbase PUBLIC -DIOT_NETWORK_USE_OPENSSL=1 )
+endif()
+
 # Set the include directories for the common and platform libraries.
 target_include_directories( iotbase
                             PUBLIC

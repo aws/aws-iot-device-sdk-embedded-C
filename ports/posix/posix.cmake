@@ -66,9 +66,6 @@ if( ${IOT_NETWORK_USE_OPENSSL} )
 
         # Link OpenSSL.
         set( PLATFORM_DEPENDENCIES OpenSSL::SSL OpenSSL::Crypto )
-
-        # Specify that OpenSSL is being used in a compiler define.
-        target_compile_definitions( iotbase PUBLIC -DIOT_NETWORK_USE_OPENSSL=1 )
     endif()
 else()
     set( NETWORK_HEADER ${PORTS_DIRECTORY}/common/include/iot_network_openssl.h )
