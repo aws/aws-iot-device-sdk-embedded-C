@@ -14,6 +14,6 @@ Its subdirectories are organized as follows:
 - `template` <br>
   Empty port sources containing stubbed-out functions. The files in this directory may be used as a starting point for a new port.
 - `posix`, `macos`, `win32` <br>
-  Port sources and headers for a single implementation. They directory is named after the target OS.
+  Port sources and headers for a single implementation. The directory is named after the target OS.
 
 See [Porting guide](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/guide_developer_porting.html) for instructions on how to create a new port.
