@@ -26,7 +26,7 @@ if [ "$TRAVIS_OS_NAME" != "windows" ]; then
     make -j2 iot_tests_mqtt iot_demo_mqtt
 else
     MSBuild.exe libraries/standard/mqtt/iot_tests_mqtt.vcxproj -m -clp:summary -verbosity:minimal
-    MSBuild.exe demos/app/iot_demo_mqtt.vcxproj -m -clp:summary -verbosity:minimal
+    MSBuild.exe demos/iot_demo_mqtt.vcxproj -m -clp:summary -verbosity:minimal
     mv ./bin/Debug/* ./bin/
 fi
 
