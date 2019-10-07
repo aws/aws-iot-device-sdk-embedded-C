@@ -84,7 +84,7 @@
  * the usage of dynamic memory allocation.
  */
 #if IOT_STATIC_MEMORY_ONLY == 1
-    #include "private/iot_static_memory.h"
+    #include "iot_static_memory.h"
 
 /**
  * @brief Allocate a #_shadowOperation_t. This function should have the same
