@@ -74,7 +74,7 @@ else()
 endif()
 
 # Add the network header for this platform.
-set( PLATFORM_COMMON_HEADERS ${PLATFORM_COMMON_HEADERS}
+list( APPEND PLATFORM_COMMON_HEADERS
      ${NETWORK_HEADER} )
 
 # Platform libraries source files.

@@ -1,5 +1,5 @@
 # Add the network header for this platform.
-set( PLATFORM_COMMON_HEADERS ${PLATFORM_COMMON_HEADERS}
+list( APPEND PLATFORM_COMMON_HEADERS
      ${PORTS_DIRECTORY}/common/include/iot_network_mbedtls.h )
 
 # Platform library source files.
