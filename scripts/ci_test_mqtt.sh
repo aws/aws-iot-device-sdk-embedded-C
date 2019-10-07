@@ -25,7 +25,7 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=
 if [ "$TRAVIS_OS_NAME" != "windows" ]; then
     make -j2 iot_tests_mqtt iot_demo_mqtt
 else
-    MSBuild.exe tests/mqtt/iot_tests_mqtt.vcxproj -m -clp:summary -verbosity:minimal
+    MSBuild.exe libraries/standard/mqtt/iot_tests_mqtt.vcxproj -m -clp:summary -verbosity:minimal
     MSBuild.exe demos/app/iot_demo_mqtt.vcxproj -m -clp:summary -verbosity:minimal
     mv ./bin/Debug/* ./bin/
 fi
