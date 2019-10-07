@@ -33,7 +33,7 @@ As relative paths from the SDK's root directory:
 - `libraries/` <br>
   Platform-independent SDK files. This directory (and all its subdirectories) should be copied and not modified.
     - `aws/` <br>
-      Libraries for AWS IoT specific functionlaities. Individual library headers, source files, and tests are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
+      Client libraries for AWS IoT services. Individual library headers, source files, and tests are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
         - `defender/` <br>
           Defender library headers, source files and tests.
             - `include` <br>
@@ -49,9 +49,9 @@ As relative paths from the SDK's root directory:
         - `types/` <br>
           Platform types header.
     - `standard` <br>
-      Standard libraries which are not AWS specific. Headers, source files, and tests are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
+      Standard libraries which are not related to AWS IoT services. Headers, source files, and tests are contained in directories matching the library name. All source files in the same directory should be built into a shared or static library.
         - `common, mqtt, serializer, ...` <br>
-          The directory structure of all the libraries are same as the defender library described above.
+          The directory structure of all the libraries are same as the Defender library described above.
 - <b style="color:#ff0000">`ports/` <br>
   This directory contains the desktop OS ports. Each port implements the functions of the platform layer interface for a specific desktop OS. </b>
     - `common` <br>
@@ -67,7 +67,7 @@ As relative paths from the SDK's root directory:
     - <b style="color:#ff0000">`macos, posix, win32, ...` <br>
       Port sources and headers for a single implementation. The directory is named after the target OS.</b>
 - `tests/` <br>
-  SDK tests config file and test runner source. Individual library tests are within each library directory. When building tests, @ref IOT_BUILD_TESTS should be set to `1` globally.
+  SDK test config file and test runner source. Individual library tests are in each library directory. When building tests, @ref IOT_BUILD_TESTS should be set to `1` globally.
 - `third_party/` <br>
   Third-party library code. This directory (and all its subdirectories) should be copied and not modified.
     - `mbedtls/` <br>
@@ -87,7 +87,7 @@ SDK include paths that are always required:
 - The path of the port types file. For example, `ports/posix/include` when using the POSIX port.
 - `libraries/platform/`
 
-Depending on the libraries needed, include path for each of those libraries are required. For example, when using mqtt library, include path required is:
+Depending on the libraries needed, include path for each of those libraries are required. For example, when using MQTT library, add include path:
 - `libraries/standard/mqtt/include/`
 
 Third-party submodule include paths:
