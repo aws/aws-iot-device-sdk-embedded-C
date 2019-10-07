@@ -106,6 +106,9 @@ add_subdirectory( libraries/standard/serializer )
 # AWS IoT common libraries.
 add_subdirectory( libraries/aws/common )
 
+# AWS IoT Shadow library.
+add_subdirectory( libraries/aws/shadow )
+
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
 

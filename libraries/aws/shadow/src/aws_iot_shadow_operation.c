@@ -41,7 +41,7 @@
 #include "iot_mqtt.h"
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /*-----------------------------------------------------------*/
 

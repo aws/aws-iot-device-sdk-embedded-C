@@ -26,12 +26,18 @@ set( DEMO_COMMON_HEADERS
 # For example, if the MQTT demo function is at DEMO_MAIN_FUNCTIONS[0], then
 # the MQTT demo source must be at DEMO_SOURCES[0] and the MQTT library must
 # be at DEMO_LIBRARY_DEPENDENCY[0].
+#
+# If a demo has multiple dependencies, place a semicolon-separated list in
+# DEMO_LIBRARY_DEPENDENCY. The semicolon itself must be escaped as \\\;
 set( DEMO_MAIN_FUNCTIONS
-     RunMqttDemo )
+     RunMqttDemo
+     RunShadowDemo )
 set( DEMO_SOURCES
-     src/iot_demo_mqtt.c )
+     src/iot_demo_mqtt.c
+     src/aws_iot_demo_shadow.c )
 set( DEMO_LIBRARY_DEPENDENCY
-     iotmqtt )
+     iotmqtt
+     "awsiotshadow\\\;iotserializer" )
 
 # Get the list length to iterate over it. Since CMake indexes from 0, subtract
 # 1 for the iteration range.
