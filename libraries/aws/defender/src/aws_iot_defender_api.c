@@ -23,7 +23,7 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /* Defender internal include. */
 #include "private/aws_iot_defender_internal.h"
