@@ -46,6 +46,41 @@ In addition to the components above, the Jobs library also depends on C standard
 */
 
 /**
+@page jobs_demo Demo
+@brief Demonstrate the usage of the Jobs library.
+
+The Jobs demo provides a simple example for using the jobs library and working with jobs via AWS.
+
+# Demo Overview
+The demo resides in `demos/sources/aws_iot_demo_jobs.c`. It begins by
+establishing an MQTT connection and registering a callback to be notified of
+the next job event. The demo then parses out the job document and executes
+various commands based on the document content.
+
+# Demo Setup
+1. Follow the setup for the [Jobs Tests](jobs_tests.html#jobs_system_tests_setup) <br>
+3. Configure the RootCA, Client Cert, Private Key, APN, and Device Name in `iot_config.h` <br>
+4. Compile and run the demo. <br>
+5. When prompted, create a job using the AWS CLI. <br>
+    Example: A `publish` command.
+@code{.sh}
+aws iot create-job \
+        --job-id UniqueId \
+        --targets ThingARN \
+        --document '{"action":"publish","message":"Hello world!","topic":"/jobsdemo/1"}'
+@endcode
+    This will publish the message "Hello world!" on the topic "/jobsdemo/1". This topic can be subscribed to on the AWS IOT Core dashboard.
+
+# Demo Structure
+The Jobs Demo uses the _asynchronous_ API of the Jobs library to execute the demo. The majority of the demo is run out of the Notify Next callback.
+
+@image html jobs_demo.png "Jobs Demo Execution Sequence" width=80%
+
+@note Since MQTT messages of QOS 0 and 1 can be received _0 or more times_ or _1 or more times_ respectively, it is important to handle receiving the same message multiple times.
+
+*/
+
+/**
 @page jobs_tests Tests
 @brief Tests written for the Jobs library.
 
