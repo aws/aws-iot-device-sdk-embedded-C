@@ -181,27 +181,41 @@
     #endif
 #endif /* if IOT_STATIC_MEMORY_ONLY */
 
-#define IOT_SERIALIZER_INDEFINITE_LENGTH                       0xffffffff
+#define IOT_SERIALIZER_INDEFINITE_LENGTH    0xffffffff
 
-#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM    { .pHandle = NULL, .type = IOT_SERIALIZER_CONTAINER_STREAM }
+#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM \
+    { .pHandle = NULL, .type =                              \
+          IOT_SERIALIZER_CONTAINER_STREAM }
 
-#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP       { .pHandle = NULL, .type = IOT_SERIALIZER_CONTAINER_MAP }
+#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP \
+    { .pHandle = NULL, .type =                           \
+          IOT_SERIALIZER_CONTAINER_MAP }
 
-#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_ARRAY     { .pHandle = NULL, .type = IOT_SERIALIZER_CONTAINER_ARRAY }
+#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_ARRAY \
+    { .pHandle = NULL, .type =                             \
+          IOT_SERIALIZER_CONTAINER_ARRAY }
 
-#define IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER              { .type = IOT_SERIALIZER_UNDEFINED }
+#define IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER      { .type = IOT_SERIALIZER_UNDEFINED }
 
-#define IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER            NULL
+#define IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER    NULL
 
 /* helper macro to create scalar data */
-#define IotSerializer_ScalarSignedInt( signedIntValue )                                                                        \
-    ( IotSerializerScalarData_t ) { .value = { .u.signedInt = ( signedIntValue ) }, .type = IOT_SERIALIZER_SCALAR_SIGNED_INT } \
+#define IotSerializer_ScalarSignedInt( signedIntValue )                                     \
+    ( IotSerializerScalarData_t ) { .value = { .u.signedInt = ( signedIntValue ) }, .type = \
+                                        IOT_SERIALIZER_SCALAR_SIGNED_INT }                  \
 
-#define IotSerializer_ScalarTextString( pTextStringValue )                                                                                                                                          \
-    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( ( uint8_t * ) pTextStringValue ), .u.string.length = strlen( pTextStringValue ) }, .type = IOT_SERIALIZER_SCALAR_TEXT_STRING } \
+#define IotSerializer_ScalarTextString( pTextStringValue )                             \
+    ( IotSerializerScalarData_t ) { .value = { .u.string.pString =                     \
+                                                   ( ( uint8_t * ) pTextStringValue ), \
+                                               .u.string.length                        \
+                                                   = strlen( pTextStringValue ) },     \
+                                    .type = IOT_SERIALIZER_SCALAR_TEXT_STRING }        \
 
-#define IotSerializer_ScalarByteString( pByteStringValue, pByteStringLength )                                                                                                    \
-    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( pByteStringValue ), .u.string.length = ( pByteStringLength ) }, .type = IOT_SERIALIZER_SCALAR_BYTE_STRING } \
+#define IotSerializer_ScalarByteString( pByteStringValue, pByteStringLength )            \
+    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( pByteStringValue ), \
+                                               .u.string.length                          \
+                                                   = ( pByteStringLength ) }, .type =    \
+                                        IOT_SERIALIZER_SCALAR_BYTE_STRING }              \
 
 /* Determine if an object is a container. */
 #define IotSerializer_IsContainer( object )                      \
@@ -256,6 +270,12 @@ typedef struct IotSerializerScalarValue
     } u;
 } IotSerializerScalarValue_t;
 
+/* / * Represents a container type value * / */
+/* typedef struct IotSerializerContainerValue */
+/* { */
+/*     void * pHandle; */
+/* } IotSerializerContainerValue_t; */
+
 /* scalar data handle used in encoder */
 typedef struct IotSerializerScalarData
 {
@@ -275,12 +295,13 @@ typedef struct IotSerializerEncoderObject
 typedef struct IotSerializerDecoderObject
 {
     IotSerializerDataType_t type;
+    const uint8_t * bufferPtr;
     union
     {
-        /* useful when this is a container */
+        /* Useful if the type is a container. */
         void * pHandle;
         /* if the type is a container, the scalarValue is unuseful */
-        IotSerializerScalarValue_t value;
+        IotSerializerScalarValue_t scalarValue;
     } u;
 } IotSerializerDecoderObject_t;
 
@@ -311,7 +332,8 @@ typedef struct IotSerializerEncodeInterface
     /**
      * @brief Initialize the object's handle with specified buffer and max size.
      *
-     * @param[in] pEncoderObject Pointer of Encoder Object. After init, its type will be set to IOT_SERIALIZER_CONTAINER_STREAM.
+     * @param[in] pEncoderObject Pointer of Encoder Object. After init, its type will be set to
+     * IOT_SERIALIZER_CONTAINER_STREAM.
      * @param[in] pDataBuffer Pointer to allocated buffer by user;
      *            NULL pDataBuffer is valid, used to calculate needed size by calling getExtraBufferSizeNeeded.
      * @param[in] maxSize Allocated buffer size
@@ -354,7 +376,8 @@ typedef struct IotSerializerEncodeInterface
      */
     IotSerializerError_t ( * openContainerWithKey )( IotSerializerEncoderObject_t * pEncoderObject,
                                                      const char * pKey,
-                                                     IotSerializerEncoderObject_t * pNewEncoderObject,
+                                                     IotSerializerEncoderObject_t *
+                                                     pNewEncoderObject,
                                                      size_t length );
 
     /**
@@ -470,7 +493,23 @@ typedef struct IotSerializerDecodeInterface
      */
     bool ( * isEndOfContainer )( IotSerializerDecoderIterator_t iterator );
 
+    /**
+     * @brief Function to obtain the underlying buffer address of the object (scalar or container type) represented
+     * by the passed decoder object.
+     * @param[in] pDecoderObject Pointer to the decoder whose underlying buffer location
+     * is to returned.
+     * @return The underlying location of the decoder object in the data buffer.
+     */
+    const uint8_t * ( *getBufferLocationOfDecoderObject )( IotSerializerDecoderObject_t *
+                                                           pValueObject );
 
+    /**
+     * @brief Function to obtain the underlying buffer address of the object (scalar or container type) pointed to
+     * by the passed iterator object.
+     * @param[in] iterator The iterator whose pointed to buffer location address is to be returned.
+     * @return The underlying location pointed to by the iterator in the data buffer.
+     */
+    const uint8_t * ( *getBufferLocationOfIterator )( IotSerializerDecoderIterator_t iterator );
 
     /**
      * @brief Steps out of the container by updating the decoder object to next byte position
