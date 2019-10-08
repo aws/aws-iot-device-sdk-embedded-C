@@ -5,8 +5,8 @@
 # Exit on any nonzero return code.
 set -e
 
-# Build demos. Enable all logging.
-cmake .. -DCMAKE_C_FLAGS="$COMPILER_OPTIONS -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG"
+# Build demos.
+cmake .. -DCMAKE_C_FLAGS="$COMPILER_OPTIONS"
 
 if [ "$TRAVIS_OS_NAME" = "windows" ]; then
     MSBuild.exe ALL_BUILD.vcxproj -m -clp:summary -verbosity:minimal
