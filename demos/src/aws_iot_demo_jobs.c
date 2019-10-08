@@ -57,34 +57,86 @@
  * @brief The key of the Job ID.
  */
 #define JOB_ID_KEY                      "jobId"
+
+/**
+ * @brief the length of the Job ID Key.
+ */
 #define JOB_ID_KEY_LENGTH               ( sizeof( JOB_ID_KEY ) - 1 )
 
 /**
- * @brief Keys for the Job JSON response.
+ * @brief The Job Document Key.
  */
 #define JOB_DOC_KEY                     "jobDocument"
+
+/**
+ * @brief the length of the Job Document Key.
+ *
+ * This key is sent by the Jobs Service.
+ */
 #define JOB_DOC_KEY_LENGTH              ( sizeof( JOB_DOC_KEY ) - 1 )
 
+/**
+ * @brief The Job Action Key for the Job Document.
+ *
+ * This key is sent from the service user via the Job Document.
+ */
 #define JOB_ACTION_KEY                  "action"
+
+/**
+ * @brief the length of the Action Key.
+ */
 #define JOB_ACTION_KEY_LENGTH           ( sizeof( JOB_ACTION_KEY ) - 1 )
 
+/**
+ * @brief The Message Key for the Job Document.
+ *
+ * This key is sent from the service user via the Job Document.
+ */
 #define JOB_MESSAGE_KEY                 "message"
+
+/**
+ * @brief the length of the Message Key.
+ *
+ * This key is sent from the service user via the Job Document.
+ */
 #define JOB_MESSAGE_KEY_LENGTH          ( sizeof( JOB_MESSAGE_KEY ) - 1 )
 
+/**
+ * @brief The Topic Key for the Job Document.
+ *
+ * This key is sent from the service user via the Job Document. It is used for
+ * the MQTT topic for the publish command.
+ */
 #define JOB_TOPIC_KEY                   "topic"
+
+/**
+ * @brief the length of the Topic Key.
+ */
 #define JOB_TOPIC_KEY_LENGTH            ( sizeof( JOB_TOPIC_KEY ) - 1 )
 
 /**
- * @brief Max Lengths for JSON values.
+ * @brief Max Length for the ID.
  */
 #define JOBS_DEMO_MAX_ID_LENGTH         64
+
+/**
+ * @brief Max Length for Job Document.
+ */
 #define JOBS_DEMO_MAX_JOB_DOC_LENGTH    128
 
 /**
- * @brief A flag for signalling the end of the demo.
+ * @brief A flag for signaling the end of the demo.
  */
 uint32_t finishFlag = 0;
+
+/**
+ * @brief Flag value for signaling that the demo is finished.
+ */
 #define JOBS_DEMO_FINISHED    1
+
+/**
+ * @brief Flag value for signaling that the demo is still running.
+ */
 #define JOBS_DEMO_RUNNING     0
 
 /**
@@ -133,7 +185,49 @@ static int _initDemo( void )
     return status;
 }
 
-/* Execute actions sent through the jobs service. */
+/**
+ * @brief Execute actions sent through the jobs service.
+ *
+ * @param[in] command String containing command to execute.
+ * @param[in] commandLength Length of the command string.
+ * @param[in] mqttConnection MQTT Connection used by _publish_.
+ * @param[in] jobDoc JSON String passed by the jobs library.
+ * @param[in] jobDocLength Length of the jobDoc string.
+ * @param[in] exitFlag Flag used by the _exit_ command to signal the demo completion.
+ *
+ * Executes various commands:
+ * 1. The "publish" command will publish a string to a specified topic.
+ *
+ *   An example JSON doc:
+ * ```
+ * {"action":"publish","message":"Hello world!","topic":"jobsdemo/1"}
+ * ```
+ *
+ *  This will publish "Hello world!" to the topic "jobsdemo/1". A user with
+ *  access to the AWS IoT console can view this message in the "test" section.
+ *
+ *  If message or topic are missing from the JSON Job document, the execution
+ *  will fail.
+ *
+ * 2. The "print" command prints the message to console (with quotes if it's a JSON string).
+ *
+ *   An example JSON doc:
+ * ```
+ * {"action":"print","message":"Hello world!"}
+ * ```
+ *
+ *   This will print "Hello world!" in the device log.
+ *
+ *   If message is missing from the JSON job document, the execution will fail.
+ *
+ * 3. The "exit" command signals main to stop looping.
+ *
+ *   An example JSON doc:
+ * ```
+ * {"action":"exit"}
+ * ```
+ *
+ **/
 static bool _executeAction( const char * command,
                             size_t commandLength,
                             IotMqttConnection_t const mqttConnection,
@@ -145,20 +239,6 @@ static bool _executeAction( const char * command,
     const char * pMessage = NULL;
     size_t messageLength = 0;
 
-    /*
-     * The "publish" command will publish a string to a specified topic.
-     *
-     * An example JSON doc:
-     * ```
-     * {"action":"publish","message":"Hello world!","topic":"jobsdemo/1"}
-     * ```
-     *
-     * This will publish "Hello world!" to the topic "jobsdemo/1". A user with
-     * access to the AWS IoT console can view this message in the "test" section.
-     *
-     * If message or topic are missing from the JSON Job document, the execution
-     * will fail.
-     */
     if( strncmp( command, "publish", commandLength ) == 0 )
     {
         const char * pTopic = NULL;
@@ -191,18 +271,6 @@ static bool _executeAction( const char * command,
         }
     }
 
-    /*
-     * The "print" command prints the message to console (with quotes if it's a JSON string).
-     *
-     * An example JSON doc:
-     * ```
-     * {"action":"print","message":"Hello world!"}
-     * ```
-     *
-     * This will print "Hello world!" in the device log.
-     *
-     * If message is missing from the JSON job document, the execution will fail.
-     */
     else if( strncmp( command, "print", commandLength ) == 0 )
     {
         if( IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_MESSAGE_KEY, JOB_MESSAGE_KEY_LENGTH, &pMessage, &messageLength ) )
@@ -217,12 +285,6 @@ static bool _executeAction( const char * command,
     }
 
     /*
-     * The "exit" command signals main to stop looping.
-     *
-     * An example JSON doc:
-     * ```
-     * {"action":"exit"}
-     *
      */
     else if( strncmp( command, "exit", commandLength ) == 0 )
     {
@@ -277,8 +339,6 @@ static bool _executeDemo( IotMqttConnection_t const mqttConnection,
                           const char * jobDoc,
                           size_t jobDocLength )
 {
-#define GET_ACTION( ppStr, pLen )    IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_ACTION_KEY, JOB_ACTION_KEY_LENGTH, ppStr, pLen )
-
     bool success = false;
     AwsIotJobsError_t err = AWS_IOT_JOBS_SUCCESS;
     AwsIotJobState_t result = AWS_IOT_JOB_STATE_FAILED;
@@ -320,7 +380,7 @@ static bool _executeDemo( IotMqttConnection_t const mqttConnection,
         /* Parse out the action. */
         if( success )
         {
-            success = GET_ACTION( &pAction, &actionLength );
+            success = IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_ACTION_KEY, JOB_ACTION_KEY_LENGTH, &pAction, &actionLength );
 
             if( !success )
             {
