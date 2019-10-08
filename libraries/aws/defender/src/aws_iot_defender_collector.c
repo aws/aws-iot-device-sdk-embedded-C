@@ -204,6 +204,7 @@ void AwsIotDefenderInternal_DeleteReport( void )
  */
 static void _serialize( void )
 {
+    IotSerializerScalarData_t scalarData = { 0 };
     IotSerializerError_t serializerError = IOT_SERIALIZER_SUCCESS;
 
     IotSerializerEncoderObject_t * pEncoderObject = &( _report.object );
@@ -234,15 +235,22 @@ static void _serialize( void )
     assertNoError( serializerError );
 
     /* Append key-value pair of "report_Id" which uses clock time. */
+    scalarData.type = IOT_SERIALIZER_SCALAR_SIGNED_INT;
+    scalarData.value.u.signedInt = ( int64_t ) _AwsIotDefenderReportId;
+
     serializerError = _pAwsIotDefenderEncoder->appendKeyValue( &headerMap,
                                                                REPORTID_TAG,
-                                                               IotSerializer_ScalarSignedInt( ( int64_t ) _AwsIotDefenderReportId ) );
+                                                               scalarData );
     assertNoError( serializerError );
 
     /* Append key-value pair of "version". */
+    scalarData.type = IOT_SERIALIZER_SCALAR_TEXT_STRING;
+    scalarData.value.u.string.pString = ( uint8_t * ) VERSION_1_0;
+    scalarData.value.u.string.length = sizeof( VERSION_1_0 ) - 1;
+
     serializerError = _pAwsIotDefenderEncoder->appendKeyValue( &headerMap,
                                                                VERSION_TAG,
-                                                               IotSerializer_ScalarTextString( VERSION_1_0 ) );
+                                                               scalarData );
     assertNoError( serializerError );
 
     /* Close the "header" map. */
@@ -307,6 +315,7 @@ static void _copyMetricsFlag( void )
 static void _serializeTcpConnections( void * param1,
                                       const IotListDouble_t * pTcpConnectionsMetricsList )
 {
+    IotSerializerScalarData_t scalarData = { 0 };
     IotSerializerEncoderObject_t * pMetricsObject = ( IotSerializerEncoderObject_t * ) param1;
 
     AwsIotDefender_Assert( pMetricsObject != NULL );
@@ -376,8 +385,12 @@ static void _serializeTcpConnections( void * param1,
                 {
                     pMetricsTcpConnection = IotLink_Container( IotMetricsTcpConnection_t, pListIterator, link );
 
+                    scalarData.type = IOT_SERIALIZER_SCALAR_TEXT_STRING;
+                    scalarData.value.u.string.pString = ( uint8_t * ) pMetricsTcpConnection->pRemoteAddress;
+                    scalarData.value.u.string.length = pMetricsTcpConnection->addressLength;
+
                     serializerError = _pAwsIotDefenderEncoder->appendKeyValue( &connectionMap, REMOTE_ADDR_TAG,
-                                                                               IotSerializer_ScalarTextString( pMetricsTcpConnection->pRemoteAddress ) );
+                                                                               scalarData );
                     assertNoError( serializerError );
                 }
 
@@ -391,9 +404,12 @@ static void _serializeTcpConnections( void * param1,
 
         if( hasTotal )
         {
+            scalarData.type = IOT_SERIALIZER_SCALAR_SIGNED_INT;
+            scalarData.value.u.signedInt = ( int64_t ) total;
+
             serializerError = _pAwsIotDefenderEncoder->appendKeyValue( &establishedMap,
                                                                        TOTAL_TAG,
-                                                                       IotSerializer_ScalarSignedInt( total ) );
+                                                                       scalarData );
             assertNoError( serializerError );
         }
 
