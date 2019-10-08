@@ -195,13 +195,10 @@
 
 /* helper macro to create scalar data */
 #define IotSerializer_ScalarSignedInt( signedIntValue )                                                                        \
-    ( IotSerializerScalarData_t ) { .value = { .u.signedInt = ( signedIntValue ) }, .type = IOT_SERIALIZER_SCALAR_SIGNED_INT } \
-
-#define IotSerializer_ScalarTextString( pTextStringValue )                                                                                                                                          \
-    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( ( uint8_t * ) pTextStringValue ), .u.string.length = strlen( pTextStringValue ) }, .type = IOT_SERIALIZER_SCALAR_TEXT_STRING } \
+    ( IotSerializerScalarData_t ) { .value = { .u.signedInt = ( signedIntValue ) }, .type = IOT_SERIALIZER_SCALAR_SIGNED_INT }
 
 #define IotSerializer_ScalarByteString( pByteStringValue, pByteStringLength )                                                                                                    \
-    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( pByteStringValue ), .u.string.length = ( pByteStringLength ) }, .type = IOT_SERIALIZER_SCALAR_BYTE_STRING } \
+    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( pByteStringValue ), .u.string.length = ( pByteStringLength ) }, .type = IOT_SERIALIZER_SCALAR_BYTE_STRING }
 
 /* Determine if an object is a container. */
 #define IotSerializer_IsContainer( object )                      \
