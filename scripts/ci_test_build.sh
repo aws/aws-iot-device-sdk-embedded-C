@@ -8,7 +8,7 @@ set -e
 if [ "$TRAVIS_COMPILER" = "clang" ]; then
     COMPILER_OPTIONS+=" -Werror"
 elif [ "$TRAVIS_COMPILER" = "msvc" ]; then
-    COMPILER_OPTIONS+=" /W4"
+    COMPILER_OPTIONS+=" /W4 /Wd4200 /WX"
 fi
 
 # Build demos.
