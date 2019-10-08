@@ -153,6 +153,9 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
     HANDLE newThread = NULL;
     _threadInfo_t * pThreadInfo = NULL;
 
+    /* Priority is not used on Windows. */
+    ( void ) priority;
+
     /* Determine the stack size of the thread to create. */
     SIZE_T threadStackSize = 0;
 
