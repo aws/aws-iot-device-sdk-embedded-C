@@ -21,6 +21,12 @@ else
     make -j2
 fi
 
+# Unity places function declarations within other functions.
+# Disable the MSVC warning about this.
+if [ "$TRAVIS_COMPILER" = "msvc" ]; then
+    COMPILER_OPTIONS+=" /wd4210"
+fi
+
 # Build tests. Enable all logging.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_C_FLAGS="$COMPILER_OPTIONS -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG"
 
