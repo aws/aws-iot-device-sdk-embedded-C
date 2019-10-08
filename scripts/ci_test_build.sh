@@ -5,6 +5,12 @@
 # Exit on any nonzero return code.
 set -e
 
+if [ "$TRAVIS_COMPILER" = "clang" ]; then
+    COMPILER_OPTIONS += " -Werror"
+elif [ "$TRAVIS_COMPILER" = "msvc" ]; then
+    COMPILER_OPTIONS += " /W4"
+fi
+
 # Build demos.
 cmake .. -DCMAKE_C_FLAGS="$COMPILER_OPTIONS"
 
