@@ -5,6 +5,7 @@
 # Exit on any nonzero return code.
 set -e
 
+# Treat warnings as errors.
 if [ "$TRAVIS_COMPILER" = "clang" ]; then
     COMPILER_OPTIONS+=" -Werror"
 elif [ "$TRAVIS_COMPILER" = "msvc" ]; then
