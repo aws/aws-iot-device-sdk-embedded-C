@@ -32,15 +32,18 @@ set( DEMO_COMMON_HEADERS
 set( DEMO_MAIN_FUNCTIONS
      RunMqttDemo
      RunShadowDemo
-     RunDefenderDemo )
+     RunDefenderDemo
+     RunJobsDemo )
 set( DEMO_SOURCES
      src/iot_demo_mqtt.c
      src/aws_iot_demo_shadow.c
-     src/aws_iot_demo_defender.c )
+     src/aws_iot_demo_defender.c
+     src/aws_iot_demo_jobs.c )
 set( DEMO_LIBRARY_DEPENDENCY
      iotmqtt
      "awsiotshadow\\\;iotserializer"
-     awsiotdefender )
+     awsiotdefender 
+     "awsiotjobs\\\;iotserializer" )
 
 # Get the list length to iterate over it. Since CMake indexes from 0, subtract
 # 1 for the iteration range.
