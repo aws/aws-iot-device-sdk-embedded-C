@@ -15,6 +15,8 @@ compiler:
 # Matrix of tests to run.
 jobs:
   include:
+    - if: type= pull_request
+      env: RUN_TEST=build
     - env: RUN_TEST=common
     - env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
     - env: RUN_TEST=mqtt NETWORK_STACK=openssl
