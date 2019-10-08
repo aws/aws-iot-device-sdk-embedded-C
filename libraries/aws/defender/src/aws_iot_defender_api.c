@@ -1,5 +1,5 @@
 /*
- * AWS IoT Defender V2.0.1
+ * AWS IoT Defender V3.0.0
  * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -156,7 +156,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
 
     /* Assert system task pool is pre-created! */
     AwsIotDefender_Assert( IOT_SYSTEM_TASKPOOL != NULL );
-    
+
     /* Silence warnigns when asserts are disabled. */
     ( void ) taskPoolError;
 
@@ -172,8 +172,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
             _pAwsIotDefenderDecoder = IotSerializer_GetCborDecoder();
             _pAwsIotDefenderEncoder = IotSerializer_GetCborEncoder();
         #else
-            _pAwsIotDefenderDecoder = IotSerializer_GetJsonDecoder();
-            _pAwsIotDefenderEncoder = IotSerializer_GetJsonEncoder();
+        #error "AWS IOT Defender library supports only CBOR encoder."
         #endif
 
         /* copy input start info into global variable _startInfo */
@@ -286,9 +285,9 @@ void AwsIotDefender_Stop( void )
             IotLogWarn( "Failed to cancel metrics publish job with return code %d and status %d.", taskPoolError, status );
             IotClock_SleepMs( WAIT_METRICS_JOB_MAX_SECONDS * 1000 );
         }
-        
+
         _unsubscribeMqtt();
-       
+
         /* Destroy metrics' mutex. */
         IotMutex_Destroy( &_AwsIotDefenderMetrics.mutex );
 

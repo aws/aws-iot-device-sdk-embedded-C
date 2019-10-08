@@ -1,5 +1,5 @@
 /*
- * AWS IoT Defender V2.0.1
+ * AWS IoT Defender V3.0.0
  * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -250,10 +250,8 @@
  */
 #if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR
     #define DEFENDER_FORMAT    "cbor"
-#elif AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_JSON
-    #define DEFENDER_FORMAT    "json"
 #else /* if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR */
-    #error "AWS_IOT_DEFENDER_FORMAT must be either AWS_IOT_DEFENDER_FORMAT_CBOR or AWS_IOT_DEFENDER_FORMAT_JSON."
+    #error "AWS_IOT_DEFENDER_FORMAT must be AWS_IOT_DEFENDER_FORMAT_CBOR."
 #endif /* if AWS_IOT_DEFENDER_FORMAT == AWS_IOT_DEFENDER_FORMAT_CBOR */
 
 /**
