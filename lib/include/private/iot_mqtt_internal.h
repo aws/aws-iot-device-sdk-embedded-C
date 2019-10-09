@@ -372,9 +372,7 @@ typedef struct _mqttConnection
     const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
     IotMqttCallbackInfo_t disconnectCallback;        /**< @brief A function to invoke when this connection is disconnected. */
 
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
-    #endif
+    const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
 
     bool disconnected;                 /**< @brief Tracks if this connection has been disconnected. */
     IotMutex_t referencesMutex;        /**< @brief Recursive mutex. Grants access to connection state and operation lists. */

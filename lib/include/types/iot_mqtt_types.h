@@ -907,6 +907,33 @@ typedef struct IotMqttConnectInfo
             IotMqttError_t ( * pingresp )( struct _mqttPacket * /* pPingresp */ );
         } deserialize; /**< @brief Overrides the packet deserialization functions for a single connection. */
     } IotMqttSerializer_t;
+
+/**
+ * @brief Utility macro for creating serializer override selector functions
+ */
+#define IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR( _funcType_t, _funcName, _defaultFunc, _serializerMember ) \
+static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer ); \
+static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer ) \
+{ \
+    _funcType_t _returnValue = _defaultFunc; \
+    if( pSerializer != NULL ) \
+    { \
+        if( pSerializer->_serializerMember != NULL ) \
+        { \
+            _returnValue = pSerializer->_serializerMember; \
+        } \
+        else \
+        { \
+            EMPTY_ELSE_MARKER; \
+        } \
+    } \
+    else \
+    { \
+        EMPTY_ELSE_MARKER; \
+    } \
+    return _returnValue; \
+}
+
 #else /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
 /* When MQTT packet serializer overrides are disabled, this struct is an
