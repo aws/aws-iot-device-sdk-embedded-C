@@ -270,12 +270,6 @@ typedef struct IotSerializerScalarValue
     } u;
 } IotSerializerScalarValue_t;
 
-/* / * Represents a container type value * / */
-/* typedef struct IotSerializerContainerValue */
-/* { */
-/*     void * pHandle; */
-/* } IotSerializerContainerValue_t; */
-
 /* scalar data handle used in encoder */
 typedef struct IotSerializerScalarData
 {
@@ -296,6 +290,7 @@ typedef struct IotSerializerDecoderObject
 {
     IotSerializerDataType_t type;
     const uint8_t * bufferPtr;
+    size_t dataLengthInBuffer;
     union
     {
         /* Useful if the type is a container. */
@@ -510,6 +505,10 @@ typedef struct IotSerializerDecodeInterface
      * @return The underlying location pointed to by the iterator in the data buffer.
      */
     const uint8_t * ( *getBufferLocationOfIterator )( IotSerializerDecoderIterator_t iterator );
+
+
+    size_t ( * getSizeOfEncodedDataForIterator )( IotSerializerDecoderIterator_t iterator );
+
 
     /**
      * @brief Steps out of the container by updating the decoder object to next byte position
