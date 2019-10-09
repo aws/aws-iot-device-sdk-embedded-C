@@ -14,9 +14,9 @@ GENERATE_TAGFILE = doc/tag/platform.tag
 
 # Directories containing library source code.
 INPUT = doc/lib \
-        lib/include/platform \
-        lib/include/types \
-        platform/include/atomic
+        libraries/platform \
+        libraries/platform/types \
+        ports/common/include/atomic
 
 # Library file names.
 FILE_PATTERNS = platform.txt \

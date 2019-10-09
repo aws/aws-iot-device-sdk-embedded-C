@@ -36,7 +36,7 @@
 #include "iot_init.h"
 
 /* Error handling include. */
-#include "private/iot_error.h"
+#include "iot_error.h"
 
 /* Common demo includes. */
 #include "iot_demo_arguments.h"

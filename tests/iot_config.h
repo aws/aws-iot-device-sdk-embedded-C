@@ -74,6 +74,11 @@
     #define AWS_IOT_TEST_JOBS_THING_NAME      ""
 #endif
 
+/* Defender tests configuration. */
+#ifndef AWS_IOT_TEST_DEFENDER_THING_NAME
+    #define AWS_IOT_TEST_DEFENDER_THING_NAME    ""
+#endif
+
 /* Log level for testing the demos. */
 #define IOT_LOG_LEVEL_DEMO    IOT_LOG_INFO
 
@@ -116,6 +121,9 @@
 
 /* Defender library configuration. */
 #define AWS_IOT_DEFENDER_USE_LONG_TAG           ( 1 )
+
+/* Allow the use of multiple Jobs callbacks. */
+#define AWS_IOT_JOBS_NOTIFY_CALLBACKS           ( 4 )
 
 /* Static memory resource settings for the tests. These values must be large
  * enough to support the stress tests. */
