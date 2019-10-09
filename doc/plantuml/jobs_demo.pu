@@ -8,18 +8,22 @@ participant "Notify Next Callback" as cb
 participant "Update Callback" as ucb
 participant "Jobs Library" as lib
 
-box "Thing" #LightBlue
+box "User Code" #LightBlue
     participant main
     participant ucb
     participant cb
+end box
+box "Library" #LightGreen
     participant lib
 end box
 
-participant "Server" as server
+box "Service" #LightPink
+    participant "Server" as server
+end box
 
 main -> lib: Register Notify Next Callback
 
-loop Until Exit Command Succeeds
+loop #transparent Until Exit Command Succeeds
     server -> lib: New Job is Created
     lib -> cb: Callback Invoked
     cb -// lib: StartNextAsync
@@ -27,7 +31,7 @@ loop Until Exit Command Succeeds
     cb -// lib: UpdateAsync with Command Result Result
     lib -> ucb: Result of Update Call
 
-    group Exit Command Successfully Updated
+    group #transparent Exit Command Successfully Updated
         ucb -> main: Signal end of demo (via flag)
     end
 end
