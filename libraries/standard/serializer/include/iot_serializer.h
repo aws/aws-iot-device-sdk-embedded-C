@@ -506,9 +506,14 @@ typedef struct IotSerializerDecodeInterface
      */
     const uint8_t * ( *getBufferLocationOfIterator )( IotSerializerDecoderIterator_t iterator );
 
-
+    /**
+     * @brief Function to get size of the underlying encoded data (of scalar ot container type object) pointed
+     * to by the passed iterator object.
+     * @param[in] iterator The length of object pointed to by this iterator in the encoded buffer needs to be
+     * calculated.
+     * @return The length of the underlying data in the buffer represented by the iterator.
+     */
     size_t ( * getSizeOfEncodedDataForIterator )( IotSerializerDecoderIterator_t iterator );
-
 
     /**
      * @brief Steps out of the container by updating the decoder object to next byte position
