@@ -37,16 +37,16 @@
     #define IOT_TEST_SECURED_CONNECTION    ( 0 )
 
     #ifndef IOT_TEST_SERVER
-        #define IOT_TEST_SERVER                "test.mosquitto.org"
+        #define IOT_TEST_SERVER            "test.mosquitto.org"
     #endif
     #ifndef IOT_TEST_PORT
-        #define IOT_TEST_PORT                  ( 1883 )
+        #define IOT_TEST_PORT              ( 1883 )
     #endif
 #else
     /* AWS IoT MQTT server. */
     #define IOT_TEST_SECURED_CONNECTION    ( 1 )
 
-    /* AWS IoT endpoint and credentials. */
+/* AWS IoT endpoint and credentials. */
     #ifndef IOT_TEST_SERVER
         #define IOT_TEST_SERVER         ""
     #endif
@@ -71,7 +71,7 @@
 
 /* Jobs tests configuration. */
 #ifndef AWS_IOT_TEST_JOBS_THING_NAME
-    #define AWS_IOT_TEST_JOBS_THING_NAME      ""
+    #define AWS_IOT_TEST_JOBS_THING_NAME    ""
 #endif
 
 /* Defender tests configuration. */
@@ -87,24 +87,24 @@
     #define IOT_DEMO_SECURED_CONNECTION    IOT_TEST_SECURED_CONNECTION
 #endif
 #ifdef IOT_TEST_SERVER
-    #define IOT_DEMO_SERVER         IOT_TEST_SERVER
+    #define IOT_DEMO_SERVER                IOT_TEST_SERVER
 #endif
 #ifdef IOT_TEST_PORT
-    #define IOT_DEMO_PORT           IOT_TEST_PORT
+    #define IOT_DEMO_PORT                  IOT_TEST_PORT
 #endif
 #ifdef IOT_TEST_ROOT_CA
-    #define IOT_DEMO_ROOT_CA        IOT_TEST_ROOT_CA
+    #define IOT_DEMO_ROOT_CA               IOT_TEST_ROOT_CA
 #endif
 #ifdef IOT_TEST_CLIENT_CERT
-    #define IOT_DEMO_CLIENT_CERT    IOT_TEST_CLIENT_CERT
+    #define IOT_DEMO_CLIENT_CERT           IOT_TEST_CLIENT_CERT
 #endif
 #ifdef IOT_TEST_PRIVATE_KEY
-    #define IOT_DEMO_PRIVATE_KEY    IOT_TEST_PRIVATE_KEY
+    #define IOT_DEMO_PRIVATE_KEY           IOT_TEST_PRIVATE_KEY
 #endif
 #if defined( IOT_TEST_MQTT_CLIENT_IDENTIFIER )
-    #define IOT_DEMO_IDENTIFIER     IOT_TEST_MQTT_CLIENT_IDENTIFIER
+    #define IOT_DEMO_IDENTIFIER            IOT_TEST_MQTT_CLIENT_IDENTIFIER
 #elif defined( AWS_IOT_TEST_SHADOW_THING_NAME )
-    #define IOT_DEMO_IDENTIFIER     AWS_IOT_TEST_SHADOW_THING_NAME
+    #define IOT_DEMO_IDENTIFIER            AWS_IOT_TEST_SHADOW_THING_NAME
 #endif
 
 /* Enable asserts in the libraries. */
@@ -115,6 +115,7 @@
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 #define AWS_IOT_DEFENDER_ENABLE_ASSERTS         ( 1 )
 #define AWS_IOT_JOBS_ENABLE_ASSERTS             ( 1 )
+#define AWS_IOT_ONBOARDING_ENABLE_ASSERTS       ( 1 )
 
 /* MQTT library configuration. */
 #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 1 )
@@ -159,9 +160,9 @@
 #endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
 
 /* Network types to use in the tests. These are forward declarations. */
-typedef struct _networkConnection       IotTestNetworkConnection_t;
-typedef struct IotNetworkServerInfo     IotTestNetworkServerInfo_t;
-typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
+typedef struct _networkConnection      IotTestNetworkConnection_t;
+typedef struct IotNetworkServerInfo    IotTestNetworkServerInfo_t;
+typedef struct IotNetworkCredentials   IotTestNetworkCredentials_t;
 
 /* Choose the appropriate network abstraction implementation. */
 #if IOT_NETWORK_USE_OPENSSL == 1
@@ -182,7 +183,7 @@ typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
 
     #define IotTestNetwork_Init           IotNetworkMbedtls_Init
     #define IotTestNetwork_Cleanup        IotNetworkMbedtls_Cleanup
-#endif
+#endif /* if IOT_NETWORK_USE_OPENSSL == 1 */
 
 /* Initializers for the tests' network types. */
 #define IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER \
@@ -209,21 +210,21 @@ typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
         #error "Unsupported compiler. Only gcc and clang are supported for coverage."
     #endif
 
-    /* Define the empty else marker if test coverage is enabled. */
+/* Define the empty else marker if test coverage is enabled. */
     #define EMPTY_ELSE_MARKER    __asm__ __volatile__ ( "nop" )
 
-    /* Define a custom logging puts function. This function allows coverage
-     * testing of logging functions, but prevents excessive logs from being
-     * printed. */
-    #define IotLogging_Puts       _coveragePuts
+/* Define a custom logging puts function. This function allows coverage
+ * testing of logging functions, but prevents excessive logs from being
+ * printed. */
+    #define IotLogging_Puts      _coveragePuts
 
-    /* Includes for coverage logging puts. */
+/* Includes for coverage logging puts. */
     #include <stdbool.h>
     #include <stdio.h>
     #include <string.h>
 
-    /* Logging output function that only prints messages from demo executables.
-     * May be unused, hence the gcc unused attribute (not portable!) */
+/* Logging output function that only prints messages from demo executables.
+ * May be unused, hence the gcc unused attribute (not portable!) */
     static int __attribute__( ( unused ) ) _coveragePuts( const char * pMessage )
     {
         bool printMessage = false;

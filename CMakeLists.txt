@@ -29,11 +29,11 @@ option( IOT_BUILD_CLONE_SUBMODULES
 
 # Unity test framework does not export the correct symbols for DLLs.
 # Do not allow allow shared libraries to be built when building tests on Windows.
-if( ${IOT_BUILD_TESTS} AND ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
+# if( ${IOT_BUILD_TESTS} AND ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
     set( ALLOW_SHARED_LIBRARIES OFF )
-else()
-    set( ALLOW_SHARED_LIBRARIES ON )
-endif()
+# else()
+    # set( ALLOW_SHARED_LIBRARIES ON )
+# endif()
 
 include( CMakeDependentOption )
 CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
@@ -114,6 +114,9 @@ add_subdirectory( libraries/aws/jobs )
 
 # AWS IoT Device Defender library.
 add_subdirectory( libraries/aws/defender )
+
+# Onboarding library.
+add_subdirectory( libraries/aws/onboarding )
 
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
