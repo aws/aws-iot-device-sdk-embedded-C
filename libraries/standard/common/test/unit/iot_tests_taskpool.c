@@ -451,7 +451,6 @@ TEST( Common_Unit_Task_Pool, CreateDestroyMaxThreads )
 
     /* Create a task pool a tweak max threads up & down. */
     {
-        uint32_t count;
         IotTaskPoolJobStorage_t jobsStorage[ 2 * TEST_TASKPOOL_MAX_THREADS ];
         IotTaskPoolJob_t jobs[ 2 * TEST_TASKPOOL_MAX_THREADS ];
         IotTaskPoolInfo_t tpInfo = { .minThreads = 2, .maxThreads = 6, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY };
