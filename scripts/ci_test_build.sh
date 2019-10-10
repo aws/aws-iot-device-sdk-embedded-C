@@ -28,6 +28,7 @@ if [ "$TRAVIS_COMPILER" = "msvc" ]; then
 fi
 
 # Build tests. Enable all logging.
+rm -rf *
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_C_FLAGS="$COMPILER_OPTIONS -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG"
 
 if [ "$TRAVIS_OS_NAME" = "windows" ]; then
