@@ -177,7 +177,7 @@ static uint32_t _exitFlag = 0;
  * Initialize the MQTT and Jobs libraries. If the Jobs library fails
  * to initialize, the MQTT library is cleaned up.
  *
- * @return EXIT_SUCCESS if all initialization succeeds; EXIT_FAILURE otherwise.
+ * @return `EXIT_SUCCESS` if all initialization succeeds; `EXIT_FAILURE` otherwise.
  */
 static int _initializeDemo( void )
 {
@@ -203,6 +203,19 @@ static int _initializeDemo( void )
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Clean up the libraries initialized by #_initializeDemo.
+ *
+ * @note Must not be called if #_initializeDemo was not successfully called.
+ */
+static void _cleanupDemo( void )
+{
+    AwsIotJobs_Cleanup();
+    IotMqtt_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
@@ -525,17 +538,6 @@ static void _jobsCallback( void * param1,
 }
 
 /**
- * @brief Clean up the Jobs demo.
- *
- * @note Must not be called if `_initializeDemo` is not called or does not succeed.
- */
-static void _cleanupDemo( void )
-{
-    AwsIotJobs_Cleanup();
-    IotMqtt_Cleanup();
-}
-
-/**
  * @brief Establish a new connection to the MQTT server for the Jobs demo.
  *
  * @param[in] pIdentifier NULL-terminated MQTT client identifier. The Jobs
@@ -595,10 +597,20 @@ static int _establishMqttConnection( const char * pIdentifier,
     return status;
 }
 
+/*-----------------------------------------------------------*/
+
 /**
- * @brief Execute the Jobs Demo.
+ * @brief The function that runs the Jobs demo, called by the demo runner.
  *
- * This is the top level function called by the IOT Demo harness.
+ * @param[in] awsIotMqttMode Ignored for the Jobs demo.
+ * @param[in] pIdentifier NULL-terminated Jobs Thing Name.
+ * @param[in] pNetworkServerInfo Passed to the MQTT connect function when
+ * establishing the MQTT connection for Jobs.
+ * @param[in] pNetworkCredentialInfo Passed to the MQTT connect function when
+ * establishing the MQTT connection for Jobs.
+ * @param[in] pNetworkInterface The network interface to use for this demo.
+ *
+ * @return `EXIT_SUCCESS` if the demo completes successfully; `EXIT_FAILURE` otherwise.
  */
 int RunJobsDemo( bool awsIotMqttMode,
                  const char * pIdentifier,
@@ -606,83 +618,129 @@ int RunJobsDemo( bool awsIotMqttMode,
                  void * pNetworkCredentialInfo,
                  const IotNetworkInterface_t * pNetworkInterface )
 {
+    /* Return value of this function and the exit status of this program. */
     int status = EXIT_SUCCESS;
+
+    /* Handle of the MQTT connection used in this demo. */
     IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
-    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
-    AwsIotJobsError_t err = AWS_IOT_JOBS_SUCCESS;
+
+    /* Length of Jobs Thing Name. */
     size_t thingNameLength = 0;
 
-    bool initialized = false;
-    bool connected = false;
+    /* The function that will be set as the Jobs Notify Next callback. */
+    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
 
+    /* Status returned by the functions to set the Notify Next callback. */
+    AwsIotJobsError_t callbackStatus = AWS_IOT_JOBS_SUCCESS;
+
+    /* Flags for tracking which cleanup functions must be called. */
+    bool initialized = false, connected = false;
+
+    /* The first parameter of this demo function is not used. Jobs are specific
+     * to AWS IoT, so this value is hardcoded to true whenever needed. */
     ( void ) awsIotMqttMode;
 
-    callbackInfo.function = _jobsCallback;
+    /* Determine the length of the Thing Name. */
+    thingNameLength = strlen( pIdentifier );
 
+    if( thingNameLength == 0 )
+    {
+        IotLogError( "The length of the Thing Name (identifier) must be nonzero." );
+        status = EXIT_FAILURE;
+    }
+
+    /* Initialize the libraries required for this demo. */
     if( status == EXIT_SUCCESS )
     {
-        thingNameLength = strlen( pIdentifier );
+        status = _initializeDemo();
 
-        if( thingNameLength == 0 )
+        if( status == EXIT_SUCCESS )
         {
-            IotLogError( "The length of the Thing Name (identifier) must be nonzero." );
+            initialized = true;
+        }
+    }
+
+    /* Establish the MQTT connection used in this demo. */
+    if( status == EXIT_SUCCESS )
+    {
+        status = _establishMqttConnection( pIdentifier,
+                                           pNetworkServerInfo,
+                                           pNetworkCredentialInfo,
+                                           pNetworkInterface,
+                                           &mqttConnection );
+
+        if( status == EXIT_SUCCESS )
+        {
+            connected = true;
+        }
+    }
+
+    /* Set the Jobs Notify Next callback. This callback waits for the next available Job. */
+    if( status == EXIT_SUCCESS )
+    {
+        callbackInfo.function = _jobsCallback;
+
+        callbackStatus = AwsIotJobs_SetNotifyNextCallback( mqttConnection,
+                                                           pIdentifier,
+                                                           thingNameLength,
+                                                           0,
+                                                           &callbackInfo );
+
+        IotLogInfo( "Jobs NotifyNext callback for %.*s set with result %s.",
+                    thingNameLength,
+                    pIdentifier,
+                    AwsIotJobs_strerror( callbackStatus ) );
+
+        if( callbackStatus != AWS_IOT_JOBS_SUCCESS )
+        {
             status = EXIT_FAILURE;
         }
     }
 
-    if( status == EXIT_SUCCESS )
-    {
-        status = _initializeDemo();
-        initialized = status == EXIT_SUCCESS;
-    }
-
-    if( status == EXIT_SUCCESS )
-    {
-        status = _establishMqttConnection(
-            pIdentifier, pNetworkServerInfo, pNetworkCredentialInfo, pNetworkInterface, &mqttConnection );
-        connected = status == EXIT_SUCCESS;
-    }
-
-    if( status == EXIT_SUCCESS )
-    {
-        err = AwsIotJobs_SetNotifyNextCallback( mqttConnection, pIdentifier, thingNameLength, 0, &callbackInfo );
-
-        status = err == AWS_IOT_JOBS_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
-    }
-
+    /* Wait for incoming Jobs. */
     if( status == EXIT_SUCCESS )
     {
         IotLogInfo( "--- Add Job using AWS CLI --- \r\n" ); /* Add an extra line for emphasis. */
 
-        for( ; ; )
+        /* Wait until a Job with { "action": "exit" } is received. */
+        while( Atomic_CompareAndSwap_u32( &_exitFlag, 0, JOBS_DEMO_FINISHED ) == 0 )
         {
-            if( Atomic_CompareAndSwap_u32( &_exitFlag, 0, JOBS_DEMO_FINISHED ) == 1 )
-            {
-                break;
-            }
-
             IotClock_SleepMs( 1000 );
         }
     }
 
+    /* Remove the Jobs Notify Next callback. */
     if( status == EXIT_SUCCESS )
     {
-        callbackInfo.oldFunction = _jobsCallback;
+        /* Specify that the _jobsCallback function should be replaced with NULL,
+         * i.e. removed. */
         callbackInfo.function = NULL;
-        err = AwsIotJobs_SetNotifyNextCallback( mqttConnection, pIdentifier, thingNameLength, 0, &callbackInfo );
+        callbackInfo.oldFunction = _jobsCallback;
 
-        status = err == AWS_IOT_JOBS_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
+        callbackStatus = AwsIotJobs_SetNotifyNextCallback( mqttConnection,
+                                                           pIdentifier,
+                                                           thingNameLength,
+                                                           0,
+                                                           &callbackInfo );
+
+        IotLogInfo( "Jobs NotifyNext callback for %.*s removed with result %s.",
+                    thingNameLength,
+                    pIdentifier,
+                    AwsIotJobs_strerror( callbackStatus ) );
     }
 
-    if( connected )
+    /* Disconnect the MQTT connection and clean up the demo. */
+    if( connected == true )
     {
         IotMqtt_Disconnect( mqttConnection, 0 );
     }
 
-    if( initialized )
+    if( initialized == true )
     {
         _cleanupDemo();
     }
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
