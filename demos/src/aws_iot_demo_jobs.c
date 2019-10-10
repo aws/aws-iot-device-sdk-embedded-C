@@ -339,7 +339,7 @@ static void _startNextCallback( void * pCallbackContext,
 
     if( cbParam != NULL )
     {
-        cbParam->u.operation.result;
+        result = cbParam->u.operation.result;
         IotLogError( "Start Next complete with result %s", AwsIotJobs_strerror( result ) );
     }
     else
