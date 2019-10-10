@@ -714,6 +714,8 @@ int RunJobsDemo( bool awsIotMqttMode,
 
         IotLog( IOT_LOG_INFO, &logConfig,
                 "\r\n"
+                "/*-----------------------------------------------------------*/\r\n"
+                "\r\n"
                 "The Jobs demo is now ready to accept Jobs.\r\n"
                 "Jobs may be created using the AWS IoT console or AWS CLI.\r\n"
                 "See the following link for more information.\r\n"
@@ -731,7 +733,9 @@ int RunJobsDemo( bool awsIotMqttMode,
                 "   For example: { \"action\": \"publish\", \"topic\": \"demo/jobs\", \"message\": \"Hello world!\"} will cause\r\n"
                 "   \"Hello world!\" to be published to the topic \"demo/jobs\".\r\n"
                 " - exit\r\n"
-                "   Exits the demo program. This program will run until { \"action\": \"exit\" } is received." );
+                "   Exits the demo program. This program will run until { \"action\": \"exit\" } is received.\r\n"
+                "\r\n"
+                "/*-----------------------------------------------------------*/\r\n" );
 
         /* Wait until a Job with { "action": "exit" } is received. */
         while( Atomic_CompareAndSwap_u32( &_exitFlag, 0, JOBS_DEMO_FINISHED ) == 0 )
