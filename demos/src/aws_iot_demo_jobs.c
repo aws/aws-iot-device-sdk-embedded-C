@@ -235,7 +235,7 @@ static bool _executeAction( const char * command,
                             IotMqttConnection_t const mqttConnection,
                             const char * jobDoc,
                             size_t jobDocLength,
-                            bool * exitFlag )
+                            uintptr_t * exitFlag )
 {
     bool status = false;
     const char * pMessage = NULL;
@@ -290,7 +290,7 @@ static bool _executeAction( const char * command,
      */
     else if( strncmp( command, "exit", commandLength ) == 0 )
     {
-        *exitFlag = true;
+        *exitFlag = ( uintptr_t ) true;
         status = true;
     }
     else
@@ -327,7 +327,7 @@ static void _startNextCallback( void * param1,
 {
     AwsIotJobsError_t result = cbParam->u.operation.result;
 
-    ( void * ) param1;
+    ( void ) param1;
 
     IotLogError( "Start Next complete with result %s", AwsIotJobs_strerror( result ) );
 }
@@ -352,7 +352,7 @@ static bool _executeDemo( IotMqttConnection_t const mqttConnection,
     AwsIotJobsCallbackInfo_t updateResultCBInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
     const char * pAction = NULL;
     size_t actionLength = 0;
-    bool exitFlag = false;
+    uintptr_t exitFlag = ( uintptr_t ) false;
 
     req.mqttConnection = mqttConnection;
     req.pThingName = pThingName;
@@ -437,7 +437,7 @@ static void _jobsCallback( void * param1,
     const char * jobDoc = NULL;
     size_t jobDocLength = 0;
 
-    ( void * ) param1;
+    ( void ) param1;
 
     /* Get the Job ID */
     idKeyFound = IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument, pCallbackInfo->u.callback.documentLength, JOB_ID_KEY, JOB_ID_KEY_LENGTH, &jobId, &jobIdLength );
