@@ -6,10 +6,7 @@ set( DEMO_APP_SOURCES
 # When testing the demos, add the test sources and redefine the demo main function.
 if( ${IOT_BUILD_TESTS} )
     list( APPEND DEMO_APP_SOURCES ${PROJECT_SOURCE_DIR}/tests/iot_tests.c )
-
     set_property( SOURCE app/iot_demo.c PROPERTY COMPILE_DEFINITIONS main=DemoMain )
-    set_property( SOURCE ${PROJECT_SOURCE_DIR}/tests/iot_tests.c PROPERTY COMPILE_DEFINITIONS IOT_TEST_DEMO=1 )
-
     set( CONFIG_HEADER ${PROJECT_SOURCE_DIR}/tests/iot_config.h )
 else()
     set( CONFIG_HEADER iot_config.h )
@@ -68,6 +65,12 @@ foreach( i RANGE ${DEMO_COUNT} )
     # Set the demo function to run.
     target_compile_definitions( ${DEMO_EXE_NAME}
                                 PRIVATE RunDemo=${CURRENT_DEMO_FUNCTION} )
+
+    # Set additional defines when testing the demos.
+    if( ${IOT_BUILD_TESTS} )
+        target_compile_definitions( ${DEMO_EXE_NAME} PRIVATE
+                                    IOT_TEST_DEMO=1 )
+    endif()
 
     # Add the include path for the demo application.
     target_include_directories( ${DEMO_EXE_NAME} PRIVATE include )

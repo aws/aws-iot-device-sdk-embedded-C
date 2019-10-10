@@ -223,7 +223,11 @@ static IotSerializerError_t _openContainerWithKey( IotSerializerEncoderObject_t 
                                                    IotSerializerEncoderObject_t * pNewEncoderObject,
                                                    size_t length )
 {
-    IotSerializerScalarData_t keyScalarData = IotSerializer_ScalarTextString( pKey );
+    IotSerializerScalarData_t keyScalarData = { 0 };
+
+    keyScalarData.type = IOT_SERIALIZER_SCALAR_TEXT_STRING;
+    keyScalarData.value.u.string.pString = ( uint8_t * ) pKey;
+    keyScalarData.value.u.string.length = strlen( pKey );
 
     IotSerializerError_t returnedError = _append( pEncoderObject, keyScalarData );
 
@@ -304,7 +308,12 @@ static IotSerializerError_t _appendKeyValue( IotSerializerEncoderObject_t * pEnc
                                              const char * pKey,
                                              IotSerializerScalarData_t scalarData )
 {
-    IotSerializerScalarData_t keyScalarData = IotSerializer_ScalarTextString( pKey );
+    IotSerializerScalarData_t keyScalarData = { 0 };
+
+    keyScalarData.type = IOT_SERIALIZER_SCALAR_TEXT_STRING;
+    keyScalarData.value.u.string.pString = ( uint8_t * ) pKey;
+    keyScalarData.value.u.string.length = strlen( pKey );
+
     IotSerializerError_t returnedError = _append( pEncoderObject, keyScalarData );
 
     /* Buffer too small is a special error case that serialization should continue. */

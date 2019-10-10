@@ -79,27 +79,29 @@
 
 /* Logging macro for mbed TLS errors. */
 #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
-    #define _logMbedtlsError( error, pConnection, pMessage )       \
-    {                                                              \
-        char pErrorMessage[ 80 ] = { 0 };                          \
-        mbedtls_strerror( error, pErrorMessage, 80 );              \
-                                                                   \
-        if( pConnection != NULL )                                  \
-        {                                                          \
-            IotLogError( "(Network connection %p) %s error: %s. ", \
-                         pConnection,                              \
-                         pMessage,                                 \
-                         pErrorMessage );                          \
-        }                                                          \
-        else                                                       \
-        {                                                          \
-            IotLogError( "%s error: %s. ",                         \
-                         pMessage,                                 \
-                         pErrorMessage );                          \
-        }                                                          \
+    #define _logLibraryError( error, pMessage )       \
+    {                                                 \
+        char pErrorMessage[ 80 ] = { 0 };             \
+        mbedtls_strerror( error, pErrorMessage, 80 ); \
+                                                      \
+        IotLogError( "%s error: %s. ",                \
+                     pMessage,                        \
+                     pErrorMessage );                 \
+    }
+
+    #define _logConnectionError( error, pConnection, pMessage ) \
+    {                                                           \
+        char pErrorMessage[ 80 ] = { 0 };                       \
+        mbedtls_strerror( error, pErrorMessage, 80 );           \
+                                                                \
+        IotLogError( "(Network connection %p) %s error: %s. ",  \
+                     pConnection,                               \
+                     pMessage,                                  \
+                     pErrorMessage );                           \
     }
 #else /* if LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
-    #define _logMbedtlsError( error, pConnection, pMessage )
+    #define _logLibraryError( error, pMessage )
+    #define _logConnectionError( error, pConnection, pMessage )
 #endif /* if LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
 
 /*
@@ -391,7 +393,7 @@ static void _receiveThread( void * pArgument )
         if( pollStatus < 0 )
         {
             /* Error during poll. */
-            _logMbedtlsError( pollStatus, pNetworkConnection, "Error polling network connection." );
+            _logConnectionError( pollStatus, pNetworkConnection, "Error polling network connection." );
             break;
         }
         else
@@ -451,7 +453,7 @@ static bool _readCredentials( _networkConnection_t * pNetworkConnection,
 
     if( mbedtlsError < 0 )
     {
-        _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to read root CA certificate file." );
+        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to read root CA certificate file." );
 
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
@@ -468,7 +470,7 @@ static bool _readCredentials( _networkConnection_t * pNetworkConnection,
 
     if( mbedtlsError < 0 )
     {
-        _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to read client certificate file." );
+        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to read client certificate file." );
 
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
@@ -486,7 +488,7 @@ static bool _readCredentials( _networkConnection_t * pNetworkConnection,
 
     if( mbedtlsError != 0 )
     {
-        _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to read client certificate private key file." );
+        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to read client certificate private key file." );
 
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
@@ -502,7 +504,7 @@ static bool _readCredentials( _networkConnection_t * pNetworkConnection,
 
     if( mbedtlsError != 0 )
     {
-        _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to configure credentials." );
+        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to configure credentials." );
 
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
@@ -545,7 +547,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
 
     if( mbedtlsError != 0 )
     {
-        _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to set default SSL configuration." );
+        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to set default SSL configuration." );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
@@ -579,7 +581,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
 
         if( mbedtlsError != 0 )
         {
-            _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to set ALPN protocols." );
+            _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to set ALPN protocols." );
 
             IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
         }
@@ -623,7 +625,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
 
             if( mbedtlsError != 0 )
             {
-                _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to set TLS MFLN." );
+                _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to set TLS MFLN." );
 
                 IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
             }
@@ -636,7 +638,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
 
     if( mbedtlsError != 0 )
     {
-        _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to set up mbed TLS SSL context." );
+        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to set up mbed TLS SSL context." );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
@@ -656,7 +658,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
 
         if( mbedtlsError != 0 )
         {
-            _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to set server name." );
+            _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to set server name." );
 
             IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
         }
@@ -671,7 +673,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
 
     if( mbedtlsError != 0 )
     {
-        _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to perform SSL handshake." );
+        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to perform SSL handshake." );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
@@ -745,7 +747,7 @@ IotNetworkError_t IotNetworkMbedtls_Init( void )
 
     if( mbedtlsError != 0 )
     {
-        _logMbedtlsError( mbedtlsError, NULL, "Failed to seed PRNG in initialization." );
+        _logLibraryError( mbedtlsError, "Failed to seed PRNG in initialization." );
         status = IOT_NETWORK_FAILURE;
     }
     else
@@ -854,7 +856,7 @@ IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
 
     if( mbedtlsError != 0 )
     {
-        _logMbedtlsError( mbedtlsError, NULL, "Failed to establish connection." );
+        _logLibraryError( mbedtlsError, "Failed to establish connection." );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
@@ -864,7 +866,7 @@ IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
 
     if( mbedtlsError != 0 )
     {
-        _logMbedtlsError( mbedtlsError, pNewNetworkConnection, "Failed to set blocking mode." );
+        _logConnectionError( mbedtlsError, pNewNetworkConnection, "Failed to set blocking mode." );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
@@ -1056,13 +1058,13 @@ size_t IotNetworkMbedtls_Send( void * pConnection,
         /* Log errors. */
         if( mbedtlsError < 0 )
         {
-            _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to send." );
+            _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to send." );
             bytesSent = 0;
         }
     }
     else
     {
-        _logMbedtlsError( mbedtlsError, pNetworkConnection, "Cannot send right now." );
+        _logConnectionError( mbedtlsError, pNetworkConnection, "Cannot send right now." );
     }
 
     IotMutex_Unlock( &( pNetworkConnection->contextMutex ) );
@@ -1113,7 +1115,7 @@ size_t IotNetworkMbedtls_Receive( void * pConnection,
         else if( mbedtlsError < 0 )
         {
             /* Error receiving, exit. */
-            _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to receive." );
+            _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to receive." );
             break;
         }
         else
@@ -1147,7 +1149,7 @@ IotNetworkError_t IotNetworkMbedtls_Close( void * pConnection )
 
         if( mbedtlsError != 0 )
         {
-            _logMbedtlsError( mbedtlsError, pNetworkConnection, "Failed to notify peer of SSL connection close." );
+            _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to notify peer of SSL connection close." );
         }
         else
         {

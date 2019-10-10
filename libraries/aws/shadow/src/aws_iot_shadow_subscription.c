@@ -105,11 +105,10 @@ _shadowSubscription_t * _AwsIotShadow_FindSubscription( const char * pThingName,
 {
     _shadowSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
-    AwsIotThingName_t thingName =
-    {
-        .pThingName      = pThingName,
-        .thingNameLength = thingNameLength
-    };
+    AwsIotThingName_t thingName = { 0 };
+
+    thingName.pThingName = pThingName;
+    thingName.thingNameLength = thingNameLength;
 
     /* Search the list for an existing subscription for Thing Name. */
     pSubscriptionLink = IotListDouble_FindFirstMatch( &( _AwsIotShadowSubscriptions ),
@@ -430,11 +429,10 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
     AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
     _shadowSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
-    AwsIotThingName_t thingName =
-    {
-        .pThingName      = pThingName,
-        .thingNameLength = thingNameLength
-    };
+    AwsIotThingName_t thingName = { 0 };
+
+    thingName.pThingName = pThingName;
+    thingName.thingNameLength = thingNameLength;
 
     IotLogInfo( "Removing persistent subscriptions for %.*s.",
                 thingNameLength,

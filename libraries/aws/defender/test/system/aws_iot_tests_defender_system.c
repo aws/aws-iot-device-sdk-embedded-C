@@ -104,9 +104,6 @@ static void _copyDataCallbackFunction( void * param1,
 
 static bool _waitForAnyEvent( uint32_t timeoutSec );
 
-static void _assertEvent( AwsIotDefenderEventType_t event,
-                          uint32_t timeoutSec );
-
 /* Wait for metrics to be accepted by defender service, for maxinum timeout. */
 static void _waitForMetricsAccepted( uint32_t timeoutSec );
 
@@ -523,7 +520,6 @@ TEST( Defender_System, Metrics_TCP_connections_remote_addr_are_published )
 
 TEST( Defender_System, Restart_and_updated_metrics_are_published )
 {
-    char * pIotAddress = NULL;
     IotMqttError_t mqttError = IOT_MQTT_SUCCESS;
 
     /* Set "total count" for TCP connections metrics group. */
@@ -680,7 +676,7 @@ static void _stopMqttConnection( void )
         _mqttConnectionStarted = false;
     }
     if (_mockedMqttConnection)
-    { 
+    {
         IotTest_MqttMockCleanup();
         _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
         _mockedMqttConnection = false;
@@ -711,16 +707,6 @@ static void _resetCalbackInfo( void )
 static bool _waitForAnyEvent( uint32_t timeoutSec )
 {
     return IotSemaphore_TimedWait( &_callbackInfoSem, timeoutSec * 1000 );
-}
-
-/*-----------------------------------------------------------*/
-
-static void _assertEvent( AwsIotDefenderEventType_t event,
-                          uint32_t timeoutSec )
-{
-    _waitForAnyEvent( timeoutSec );
-
-    TEST_ASSERT_EQUAL( event, _callbackInfo.eventType );
 }
 
 /*-----------------------------------------------------------*/

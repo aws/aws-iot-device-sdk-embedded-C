@@ -248,7 +248,7 @@ TEST( Shadow_Unit_Parser, JsonValid )
 {
     /* Parse JSON document with string, int, bool, and null. */
     {
-        const char pJsonDocument[ 81 ] = "{\"name\" \n\r:\n \"John Smith\", \"age\"    :\n\r 30, \n \"isAlive\"  : true, \r \"spouse\":null}";
+        const char pJsonDocument[ 82 ] = "{\"name\" \n\r:\n \"John Smith\", \"age\"    :\n\r 30, \n \"isAlive\"  : true, \r \"spouse\":null}";
         size_t jsonDocumentLength = 81;
 
         _parseJson( true, pJsonDocument, jsonDocumentLength, "name", "\"John Smith\"", 12 );
@@ -262,7 +262,7 @@ TEST( Shadow_Unit_Parser, JsonValid )
 
     /* Parse JSON document with objects and arrays. */
     {
-        const char pJsonDocument[ 90 ] = "{\"object\" : { \"nestedObject\": { \"string\":\"\\\"test\\\"\", \"array\":[[1,2,3],[1,2,3],[1,2,3]]}}}";
+        const char pJsonDocument[ 91 ] = "{\"object\" : { \"nestedObject\": { \"string\":\"\\\"test\\\"\", \"array\":[[1,2,3],[1,2,3],[1,2,3]]}}}";
         size_t jsonDocumentLength = 90;
 
         _parseJson( true, pJsonDocument, jsonDocumentLength, "object", "{ \"nestedObject\": { \"string\":\"\\\"test\\\"\", \"array\":[[1,2,3],[1,2,3],[1,2,3]]}}", 76 );
@@ -305,7 +305,7 @@ TEST( Shadow_Unit_Parser, JsonInvalid )
 {
     /* JSON key not followed by a : */
     {
-        const char pJsonDocument[ 15 ] = "{\"string\"      ";
+        const char pJsonDocument[ 16 ] = "{\"string\"      ";
         size_t jsonDocumentLength = 15;
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "string", NULL, 0 );
@@ -313,7 +313,7 @@ TEST( Shadow_Unit_Parser, JsonInvalid )
 
     /* JSON value not followed by a , */
     {
-        const char pJsonDocument[ 29 ] = "{\"int\": 10 \"string\": \"hello\"}";
+        const char pJsonDocument[ 30 ] = "{\"int\": 10 \"string\": \"hello\"}";
         size_t jsonDocumentLength = 29;
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "int", NULL, 0 );
@@ -321,7 +321,7 @@ TEST( Shadow_Unit_Parser, JsonInvalid )
 
     /* JSON key with no value. */
     {
-        const char pJsonDocument[ 17 ] = "{\"string\":       ";
+        const char pJsonDocument[ 18 ] = "{\"string\":       ";
         size_t jsonDocumentLength = 17;
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "string", NULL, 0 );
@@ -329,7 +329,7 @@ TEST( Shadow_Unit_Parser, JsonInvalid )
 
     /* Unterminated JSON primitive. */
     {
-        const char pJsonDocument[ 11 ] = "{\"int\":1000";
+        const char pJsonDocument[ 12 ] = "{\"int\":1000";
         size_t jsonDocumentLength = 11;
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "int", NULL, 0 );
@@ -337,7 +337,7 @@ TEST( Shadow_Unit_Parser, JsonInvalid )
 
     /* Unterminated JSON string (ending is an escaped quote). */
     {
-        const char pJsonDocument[ 14 ] = "{\"string\": \"\\\"";
+        const char pJsonDocument[ 15 ] = "{\"string\": \"\\\"";
         size_t jsonDocumentLength = 14;
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "string", NULL, 0 );
@@ -345,7 +345,7 @@ TEST( Shadow_Unit_Parser, JsonInvalid )
 
     /* Unterminated JSON string (ending is not a quote). */
     {
-        const char pJsonDocument[ 14 ] = "{\"string\": \" \\";
+        const char pJsonDocument[ 15 ] = "{\"string\": \" \\";
         size_t jsonDocumentLength = 14;
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "string", NULL, 0 );
@@ -353,7 +353,7 @@ TEST( Shadow_Unit_Parser, JsonInvalid )
 
     /* Unterminated JSON object. */
     {
-        const char pJsonDocument[ 41 ] = "{\"object\": {\"key\": { \"nestedKey\":\"value\"}";
+        const char pJsonDocument[ 42 ] = "{\"object\": {\"key\": { \"nestedKey\":\"value\"}";
         size_t jsonDocumentLength = 41;
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "object", NULL, 0 );
@@ -361,7 +361,7 @@ TEST( Shadow_Unit_Parser, JsonInvalid )
 
     /* Unterminated JSON array. */
     {
-        const char pJsonDocument[ 26 ] = "{\"array\": [[1,2,3],[1,2,3]";
+        const char pJsonDocument[ 27 ] = "{\"array\": [[1,2,3],[1,2,3]";
         size_t jsonDocumentLength = 26;
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "array", NULL, 0 );

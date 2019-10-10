@@ -117,7 +117,7 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
  */
 #define INITIALIZE_OPERATION( name )                                                             \
     {                                                                                            \
-        .link = { 0 }, .incomingPublish = false, .pMqttConnection = _pMqttConnection,            \
+        .link = { 0 }, .incomingPublish = false, .pMqttConnection = NULL,                        \
         .jobStorage = IOT_TASKPOOL_JOB_STORAGE_INITIALIZER, .job = IOT_TASKPOOL_JOB_INITIALIZER, \
         .u.operation =                                                                           \
         {                                                                                        \
@@ -832,6 +832,8 @@ TEST( MQTT_Unit_Receive, ConnackValid )
     uint8_t i = 0;
     _mqttOperation_t connect = INITIALIZE_OPERATION( IOT_MQTT_CONNECT );
 
+    connect.pMqttConnection = _pMqttConnection;
+
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( connect.u.operation.notify.waitSemaphore ),
@@ -901,6 +903,8 @@ TEST( MQTT_Unit_Receive, ConnackValid )
 TEST( MQTT_Unit_Receive, ConnackInvalid )
 {
     _mqttOperation_t connect = INITIALIZE_OPERATION( IOT_MQTT_CONNECT );
+
+    connect.pMqttConnection = _pMqttConnection;
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1217,6 +1221,8 @@ TEST( MQTT_Unit_Receive, PubackValid )
 {
     _mqttOperation_t publish = INITIALIZE_OPERATION( IOT_MQTT_PUBLISH_TO_SERVER );
 
+    publish.pMqttConnection = _pMqttConnection;
+
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( publish.u.operation.notify.waitSemaphore ),
@@ -1259,6 +1265,8 @@ TEST( MQTT_Unit_Receive, PubackValid )
 TEST( MQTT_Unit_Receive, PubackInvalid )
 {
     _mqttOperation_t publish = INITIALIZE_OPERATION( IOT_MQTT_PUBLISH_TO_SERVER );
+
+    publish.pMqttConnection = _pMqttConnection;
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1354,6 +1362,8 @@ TEST( MQTT_Unit_Receive, SubackValid )
     _mqttSubscription_t * pNewSubscription = NULL;
     _mqttOperation_t subscribe = INITIALIZE_OPERATION( IOT_MQTT_SUBSCRIBE );
     IotMqttSubscription_t pSubscriptions[ 2 ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
+
+    subscribe.pMqttConnection = _pMqttConnection;
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1463,6 +1473,8 @@ TEST( MQTT_Unit_Receive, SubackValid )
 TEST( MQTT_Unit_Receive, SubackInvalid )
 {
     _mqttOperation_t subscribe = INITIALIZE_OPERATION( IOT_MQTT_SUBSCRIBE );
+
+    subscribe.pMqttConnection = _pMqttConnection;
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
@@ -1585,6 +1597,8 @@ TEST( MQTT_Unit_Receive, UnsubackValid )
 {
     _mqttOperation_t unsubscribe = INITIALIZE_OPERATION( IOT_MQTT_UNSUBSCRIBE );
 
+    unsubscribe.pMqttConnection = _pMqttConnection;
+
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
     TEST_ASSERT_EQUAL_INT( true, IotSemaphore_Create( &( unsubscribe.u.operation.notify.waitSemaphore ),
@@ -1627,6 +1641,8 @@ TEST( MQTT_Unit_Receive, UnsubackValid )
 TEST( MQTT_Unit_Receive, UnsubackInvalid )
 {
     _mqttOperation_t unsubscribe = INITIALIZE_OPERATION( IOT_MQTT_UNSUBSCRIBE );
+
+    unsubscribe.pMqttConnection = _pMqttConnection;
 
     /* Create the wait semaphore so notifications don't crash. The value of
      * this semaphore will not be checked, so the maxValue argument is arbitrary. */
