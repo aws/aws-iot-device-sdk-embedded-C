@@ -67,9 +67,17 @@ static const uint8_t * _getBufferLocationOfDecoderObject(
 
 static const uint8_t * _getBufferLocationOfIterator( IotSerializerDecoderIterator_t iterator );
 
-static size_t calculateSizeOfCborObject( CborValue * pValue );
-
 static size_t _getSizeOfEncodedDataForIterator( IotSerializerDecoderIterator_t iterator );
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Utility to calculates the length of the raw encoded data represented by the
+ * passed `pValue` object.
+ */
+static size_t calculateSizeOfCborObject( CborValue * const pValue );
+
+/*-----------------------------------------------------------*/
 
 static const IotSerializerDecodeInterface_t _cborDecoder =
 {

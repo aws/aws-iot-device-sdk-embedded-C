@@ -489,7 +489,8 @@ typedef struct IotSerializerDecodeInterface
     bool ( * isEndOfContainer )( IotSerializerDecoderIterator_t iterator );
 
     /**
-     * @brief Function to obtain the underlying buffer address of the object (scalar or container type) represented
+     * @brief Function to obtain the starting buffer address of the raw encoded data (scalar or container type)
+     * represented
      * by the passed decoder object.
      * @param[in] pDecoderObject Pointer to the decoder whose underlying buffer location
      * is to returned.
@@ -499,17 +500,17 @@ typedef struct IotSerializerDecodeInterface
                                                            pValueObject );
 
     /**
-     * @brief Function to obtain the underlying buffer address of the object (scalar or container type) pointed to
-     * by the passed iterator object.
+     * @brief Function to obtain the starting buffer address of the raw encoded object (scalar or container type)
+     * pointed to by the passed iterator object.
      * @param[in] iterator The iterator whose pointed to buffer location address is to be returned.
      * @return The underlying location pointed to by the iterator in the data buffer.
      */
     const uint8_t * ( *getBufferLocationOfIterator )( IotSerializerDecoderIterator_t iterator );
 
     /**
-     * @brief Function to get size of the underlying encoded data (of scalar ot container type object) pointed
-     * to by the passed iterator object.
-     * @param[in] iterator The length of object pointed to by this iterator in the encoded buffer needs to be
+     * @brief Function to get the size of the raw encoded data in the buffer (of scalar ot container type object)
+     * that is pointed to by the passed iterator object.
+     * @param[in] iterator This is the iterator whose pointed to raw data, in the encoded buffer, needs to be
      * calculated.
      * @return The length of the underlying data in the buffer represented by the iterator.
      */
