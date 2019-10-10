@@ -641,11 +641,21 @@ int RunJobsDemo( bool awsIotMqttMode,
     ( void ) awsIotMqttMode;
 
     /* Determine the length of the Thing Name. */
-    thingNameLength = strlen( pIdentifier );
-
-    if( thingNameLength == 0 )
+    if( pIdentifier != NULL )
     {
-        IotLogError( "The length of the Thing Name (identifier) must be nonzero." );
+        thingNameLength = strlen( pIdentifier );
+
+        if( thingNameLength == 0 )
+        {
+            IotLogError( "The length of the Thing Name (identifier) must be nonzero." );
+
+            status = EXIT_FAILURE;
+        }
+    }
+    else
+    {
+        IotLogError( "A Thing Name (identifier) must be provided for the Jobs demo." );
+
         status = EXIT_FAILURE;
     }
 
@@ -700,7 +710,28 @@ int RunJobsDemo( bool awsIotMqttMode,
     /* Wait for incoming Jobs. */
     if( status == EXIT_SUCCESS )
     {
-        IotLogInfo( "--- Add Job using AWS CLI --- \r\n" ); /* Add an extra line for emphasis. */
+        IotLogConfig_t logConfig = { .hideLogLevel = true, .hideLibraryName = true, .hideTimestring = true };
+
+        IotLog( IOT_LOG_INFO, &logConfig,
+                "\r\n"
+                "The Jobs demo is now ready to accept Jobs.\r\n"
+                "Jobs may be created using the AWS IoT console or AWS CLI.\r\n"
+                "See the following link for more information.\r\n"
+                "\r\n"
+                "https://docs.aws.amazon.com/cli/latest/reference/iot/create-job.html\r\n"
+                "\r\n"
+                "This demo expects Job documents to have an \"action\" JSON key.\r\n"
+                "The following actions are currently supported:\r\n"
+                " - print\r\n"
+                "   Logs a message to the local console. The Job document must also contain a \"message\".\r\n"
+                "   For example: { \"action\": \"print\", \"message\": \"Hello world!\"} will cause\r\n"
+                "   \"Hello world!\" to be printed on the console.\r\n"
+                " - publish\r\n"
+                "   Publishes a message to an MQTT topic. The Job document must also contain a \"message\" and \"topic\".\r\n"
+                "   For example: { \"action\": \"publish\", \"topic\": \"demo/jobs\", \"message\": \"Hello world!\"} will cause\r\n"
+                "   \"Hello world!\" to be published to the topic \"demo/jobs\".\r\n"
+                " - exit\r\n"
+                "   Exits the demo program. This program will run until { \"action\": \"exit\" } is received." );
 
         /* Wait until a Job with { "action": "exit" } is received. */
         while( Atomic_CompareAndSwap_u32( &_exitFlag, 0, JOBS_DEMO_FINISHED ) == 0 )
