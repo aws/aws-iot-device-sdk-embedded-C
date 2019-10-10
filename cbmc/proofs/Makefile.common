@@ -19,14 +19,17 @@ VIEWER ?= cbmc-viewer
 # Build goto binaries with options taken from top-level cmake
 
 INC = \
-	-I$(MQTT)/platform/ports/posix/types \
-	-I$(MQTT)/lib/include \
-	-I$(MQTT)/platform/include \
-	-I$(MQTT)/demos/include \
+	-I$(MQTT)/libraries/standard/mqtt/include \
 	-I$(MQTT)/demos \
+	-I$(MQTT)/libraries/platform/.. \
+	-I$(MQTT)/libraries/platform \
+	-I$(MQTT)/ports/common/include \
+	-I$(MQTT)/libraries/standard/common/include \
+	\
+	-I$(MQTT)/libraries/standard/mqtt/src \
 
 DEF += \
-	-DIOT_SYSTEM_TYPES_FILE=\"iot_platform_types_posix.h\" \
+	-DIOT_SYSTEM_TYPES_FILE=\"$(MQTT)/ports/posix/include/iot_platform_types_posix.h\" \
 	-Diotmqtt_EXPORTS \
 
 CFLAGS += $(CFLAGS2) $(INC) $(DEF) -std=gnu99
