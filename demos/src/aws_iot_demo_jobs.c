@@ -22,144 +22,164 @@
 /**
  * @file aws_iot_demo_jobs.c
  * @brief Demonstrates use of the AWS IoT Jobs library.
+ *
+ * This program sets a Jobs Notify-Next callback and waits for Job documents to arrive.
+ * It will then take action based on the Job document.
  */
 
-/* Config include. Should always come first per the style guide. */
+/* The config header is always included first. */
 #include "iot_config.h"
 
+/* Standard includes. */
 #include <string.h>
 
-/* Demo logging. */
+/* Set up logging for this demo. */
 #include "iot_demo_logging.h"
 
-/* Platform Includes. */
+/* Platform layer includes. */
 #include "platform/iot_clock.h"
 
-/* MQTT Include. The underlying protocol for this demo. */
-#include "iot_atomic.h"
+/* MQTT include. */
 #include "iot_mqtt.h"
 
-/* JSON Utilies for pulling out values. */
-#include "iot_json_utils.h"
-
-/* Jobs Library. */
+/* Jobs include. */
 #include "aws_iot_jobs.h"
 
+/* JSON utilities include. */
+#include "iot_json_utils.h"
+
+/* Atomics include. */
+#include "iot_atomic.h"
+
+/*-----------------------------------------------------------*/
+
 /**
- * @brief The Library Timeout.
+ * @brief The timeout for Jobs and MQTT operations in this demo.
  */
 #define TIMEOUT_MS                      ( ( uint32_t ) 5000u )
 
 /**
- * @brief The MQTT Library keepalive time.
+ * @brief The keep-alive interval used for this demo.
+ *
+ * An MQTT ping request will be sent periodically at this interval.
  */
 #define KEEP_ALIVE_SECONDS              ( ( uint16_t ) 60u )
 
 /**
- * @brief  The retry time for the publish action.
- */
-#define PUBLISH_RETRY_MS                ( ( uint32_t ) 5000 )
-
-/**
- * @brief The retry limit for the publish action.
- */
-#define PUBLISH_RETRY_LIMIT             ( ( uint32_t ) 10 )
-
-/**
- * @brief The key of the Job ID.
+ * @brief The JSON key of the Job ID.
+ *
+ * Job documents are JSON documents received from the AWS IoT Jobs service.
+ * All Job documents will contain this key, whose value represents the unique
+ * identifier of a Job.
  */
 #define JOB_ID_KEY                      "jobId"
 
 /**
- * @brief the length of the Job ID Key.
+ * @brief The length of #JOB_ID_KEY.
  */
 #define JOB_ID_KEY_LENGTH               ( sizeof( JOB_ID_KEY ) - 1 )
 
 /**
- * @brief The Job Document Key.
+ * @brief The JSON key of the Job document.
+ *
+ * Job documents are JSON documents received from the AWS IoT Jobs service.
+ * All Job documents will contain this key, whose value is an application-specific
+ * JSON document.
  */
 #define JOB_DOC_KEY                     "jobDocument"
 
 /**
- * @brief the length of the Job Document Key.
- *
- * This key is sent by the Jobs Service.
+ * @brief The length of #JOB_DOC_KEY.
  */
 #define JOB_DOC_KEY_LENGTH              ( sizeof( JOB_DOC_KEY ) - 1 )
 
 /**
- * @brief The Job Action Key for the Job Document.
+ * @brief The JSON key whose value represents the action this demo should take.
  *
- * This key is sent from the service user via the Job Document.
+ * This demo program expects this key to be in the Job document. It is a key
+ * specific to this demo.
  */
 #define JOB_ACTION_KEY                  "action"
 
 /**
- * @brief the length of the Action Key.
+ * @brief The length of #JOB_ACTION_KEY.
  */
 #define JOB_ACTION_KEY_LENGTH           ( sizeof( JOB_ACTION_KEY ) - 1 )
 
 /**
- * @brief The Message Key for the Job Document.
+ * @brief A message associated with the Job action.
  *
- * This key is sent from the service user via the Job Document.
+ * This demo program expects this key to be in the Job document if the "action"
+ * is either "publish" or "print". It represents the message that should be
+ * published or printed, respectively.
  */
 #define JOB_MESSAGE_KEY                 "message"
 
 /**
- * @brief the length of the Message Key.
- *
- * This key is sent from the service user via the Job Document.
+ * @brief The length of #JOB_MESSAGE_KEY.
  */
 #define JOB_MESSAGE_KEY_LENGTH          ( sizeof( JOB_MESSAGE_KEY ) - 1 )
 
 /**
- * @brief The Topic Key for the Job Document.
+ * @brief An MQTT topic associated with the Job "publish" action.
  *
- * This key is sent from the service user via the Job Document. It is used for
- * the MQTT topic for the publish command.
+ * This demo program expects this key to be in the Job document if the "action"
+ * is "publish". It represents the MQTT topic on which the message should be
+ * published.
  */
 #define JOB_TOPIC_KEY                   "topic"
 
 /**
- * @brief the length of the Topic Key.
+ * @brief The length of #JOB_TOPIC_KEY.
  */
 #define JOB_TOPIC_KEY_LENGTH            ( sizeof( JOB_TOPIC_KEY ) - 1 )
 
 /**
- * @brief Max Length for the ID.
+ * @brief The maximum length of a Job ID.
+ *
+ * This limit is defined by AWS service limits. See the following page for more
+ * information.
+ *
+ * https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#job-limits
  */
-#define JOBS_DEMO_MAX_ID_LENGTH         ( ( size_t ) 64 )
-
-/**
- * @brief Max Length for Job Document.
- */
-#define JOBS_DEMO_MAX_JOB_DOC_LENGTH    ( ( size_t ) 128 )
-
-/**
- * @brief A flag for signaling the end of the demo.
- */
-uint32_t finishFlag = 0;
-
-/**
- * @brief Flag value for signaling that the demo is finished.
- */
-#define JOBS_DEMO_FINISHED    ( ( uint32_t ) 1 )
+#define JOB_ID_MAX_LENGTH               ( ( size_t ) 64 )
 
 /**
  * @brief Flag value for signaling that the demo is still running.
+ *
+ * The initial value of #_exitFlag.
  */
 #define JOBS_DEMO_RUNNING     ( ( uint32_t ) 0 )
 
 /**
- * @brief Initialize The Jobs Demo.
+ * @brief Flag value for signaling that the demo is finished.
  *
- * Initialize MQTT module then the Jobs module. If the Jobs module fails
- * to initialize, MQTT cleanup is invoked.
- *
- * @return EXIT_SUCCESS if initialization succeeds. Otherwise EXIT_FAILURE.
+ * #_exitFlag will be set to this when a Job document with { "action": "exit" }
+ * is received.
  */
-static int _initDemo( void )
+#define JOBS_DEMO_FINISHED    ( ( uint32_t ) 1 )
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief A flag that signals the end of the demo.
+ *
+ * When a Job document is received with { "action": "exit" }, the demo will set
+ * this flag and exit.
+ */
+static uint32_t _exitFlag = 0;
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Initialize the libraries required for this demo.
+ *
+ * Initialize the MQTT and Jobs libraries. If the Jobs library fails
+ * to initialize, the MQTT library is cleaned up.
+ *
+ * @return EXIT_SUCCESS if all initialization succeeds; EXIT_FAILURE otherwise.
+ */
+static int _initializeDemo( void )
 {
     int status = EXIT_SUCCESS;
     IotMqttError_t mqttInitStatus = IOT_MQTT_SUCCESS;
@@ -171,8 +191,7 @@ static int _initDemo( void )
     {
         status = EXIT_FAILURE;
     }
-
-    if( status == EXIT_SUCCESS )
+    else
     {
         jobsInitStatus = AwsIotJobs_Init( 0 );
 
@@ -185,6 +204,8 @@ static int _initDemo( void )
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Execute actions sent through the jobs service.
@@ -259,8 +280,6 @@ static bool _executeAction( const char * command,
             publishInfo.pTopicName = pTopic + 1;
             publishInfo.payloadLength = messageLength - 2;
             publishInfo.pPayload = pMessage + 1;
-            publishInfo.retryMs = PUBLISH_RETRY_MS;
-            publishInfo.retryLimit = PUBLISH_RETRY_LIMIT;
 
             err = IotMqtt_PublishAsync( mqttConnection, &publishInfo, 0, NULL, NULL );
 
@@ -321,7 +340,7 @@ static void _updateResultCallback( void * pCallbackContext,
     if( isExit == ( ( uintptr_t ) true ) )
     {
         IotLogInfo( "Got Exit Flag" );
-        Atomic_CompareAndSwap_u32( &finishFlag, JOBS_DEMO_FINISHED, JOBS_DEMO_RUNNING );
+        Atomic_CompareAndSwap_u32( &_exitFlag, JOBS_DEMO_FINISHED, JOBS_DEMO_RUNNING );
     }
 
     IotLogInfo( "Job Update complete with result %s", AwsIotJobs_strerror( result ) );
@@ -464,7 +483,7 @@ static void _jobsCallback( void * param1,
     {
         IotLogInfo( "New Job: %.*s", jobIdLength, jobId );
 
-        if( jobIdLength > JOBS_DEMO_MAX_ID_LENGTH )
+        if( jobIdLength > JOB_ID_MAX_LENGTH )
         {
             idKeyFound = false;
             IotLogError( "Job ID is too long." );
@@ -484,12 +503,6 @@ static void _jobsCallback( void * param1,
 
     if( docKeyFound )
     {
-        if( jobDocLength > JOBS_DEMO_MAX_JOB_DOC_LENGTH )
-        {
-            docKeyFound = false;
-            IotLogError( "Job document is too long." );
-        }
-
         /* Execute the demo */
         _executeDemo( pCallbackInfo->mqttConnection,
                       pCallbackInfo->pThingName,
@@ -514,7 +527,7 @@ static void _jobsCallback( void * param1,
 /**
  * @brief Clean up the Jobs demo.
  *
- * @note Must not be called if `_initDemo` is not called or does not succeed.
+ * @note Must not be called if `_initializeDemo` is not called or does not succeed.
  */
 static void _cleanupDemo( void )
 {
@@ -619,7 +632,7 @@ int RunJobsDemo( bool awsIotMqttMode,
 
     if( status == EXIT_SUCCESS )
     {
-        status = _initDemo();
+        status = _initializeDemo();
         initialized = status == EXIT_SUCCESS;
     }
 
@@ -643,7 +656,7 @@ int RunJobsDemo( bool awsIotMqttMode,
 
         for( ; ; )
         {
-            if( Atomic_CompareAndSwap_u32( &finishFlag, 0, JOBS_DEMO_FINISHED ) == 1 )
+            if( Atomic_CompareAndSwap_u32( &_exitFlag, 0, JOBS_DEMO_FINISHED ) == 1 )
             {
                 break;
             }
