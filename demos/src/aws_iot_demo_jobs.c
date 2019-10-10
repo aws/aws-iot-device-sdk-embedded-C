@@ -135,6 +135,14 @@
 #define JOB_TOPIC_KEY_LENGTH            ( sizeof( JOB_TOPIC_KEY ) - 1 )
 
 /**
+ * @brief The minimum length of a string in a JSON Job document.
+ *
+ * At the very least the Job ID must have the quotes that identify it as a JSON
+ * string and 1 character for the string itself (the string must not be empty).
+ */
+#define JSON_STRING_MIN_LENGTH          ( ( size_t ) 3 )
+
+/**
  * @brief The maximum length of a Job ID.
  *
  * This limit is defined by AWS service limits. See the following page for more
@@ -143,6 +151,12 @@
  * https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#job-limits
  */
 #define JOB_ID_MAX_LENGTH               ( ( size_t ) 64 )
+
+/**
+ * @brief A value passed as context to #_operationCompleteCallback to specify that
+ * it should set the #JOBS_DEMO_FINISHED flag.
+ */
+#define JOBS_DEMO_SHOULD_EXIT           ( ( void * ) ( ( intptr_t ) 1 ) )
 
 /**
  * @brief Flag value for signaling that the demo is still running.
@@ -160,6 +174,24 @@
 #define JOBS_DEMO_FINISHED    ( ( uint32_t ) 1 )
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief Currently supported actions that a Job document can specify.
+ */
+typedef enum _jobAction
+{
+    JOB_ACTION_PRINT,   /**< Print a message. */
+    JOB_ACTION_PUBLISH, /**< Publish a message to an MQTT topic. */
+    JOB_ACTION_EXIT,    /**< Exit the demo. */
+    JOB_ACTION_UNKNOWN  /**< Unknown action. */
+} _jobAction_t;
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Used to print log messages that do not contain any metadata.
+ */
+static IotLogConfig_t _logHideAll = { .hideLogLevel = true, .hideLibraryName = true, .hideTimestring = true };
 
 /**
  * @brief A flag that signals the end of the demo.
@@ -221,323 +253,6 @@ static void _cleanupDemo( void )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Execute actions sent through the jobs service.
- *
- * @param[in] command String containing command to execute.
- * @param[in] commandLength Length of the command string.
- * @param[in] mqttConnection MQTT Connection used by _publish_.
- * @param[in] jobDoc JSON String passed by the jobs library.
- * @param[in] jobDocLength Length of the jobDoc string.
- * @param[out] exitFlag Flag used by the _exit_ command to signal the demo completion.
- *
- * Executes various commands:
- * 1. The "publish" command will publish a string to a specified topic.
- *
- *   An example JSON doc:
- * ```
- * {"action":"publish","message":"Hello world!","topic":"jobsdemo/1"}
- * ```
- *
- *  This will publish "Hello world!" to the topic "jobsdemo/1". A user with
- *  access to the AWS IoT console can view this message in the "test" section.
- *
- *  If message or topic are missing from the JSON Job document, the execution
- *  will fail.
- *
- * 2. The "print" command prints the message to console (with quotes if it's a JSON string).
- *
- *   An example JSON doc:
- * ```
- * {"action":"print","message":"Hello world!"}
- * ```
- *
- *   This will print "Hello world!" in the device log.
- *
- *   If message is missing from the JSON job document, the execution will fail.
- *
- * 3. The "exit" command signals main to stop looping.
- *
- *   An example JSON doc:
- * ```
- * {"action":"exit"}
- * ```
- *
- **/
-static bool _executeAction( const char * command,
-                            size_t commandLength,
-                            IotMqttConnection_t const mqttConnection,
-                            const char * jobDoc,
-                            size_t jobDocLength,
-                            uintptr_t * exitFlag )
-{
-    bool status = false;
-    const char * pMessage = NULL;
-    size_t messageLength = 0;
-
-    if( strncmp( command, "publish", commandLength ) == 0 )
-    {
-        const char * pTopic = NULL;
-        size_t topicLength = 0;
-
-        if( IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_MESSAGE_KEY, JOB_MESSAGE_KEY_LENGTH, &pMessage, &messageLength ) &&
-            IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_TOPIC_KEY, JOB_TOPIC_KEY_LENGTH, &pTopic, &topicLength ) )
-        {
-            IotMqttError_t err = IOT_MQTT_SUCCESS;
-            IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-
-            IotLogInfo( "Executing Publish of %.*s", messageLength, pMessage );
-            IotLogInfo( "Topic: %.*s", topicLength, pTopic );
-
-            publishInfo.qos = IOT_MQTT_QOS_0;
-            publishInfo.topicNameLength = ( uint16_t ) topicLength - 2U;
-            publishInfo.pTopicName = pTopic + 1;
-            publishInfo.payloadLength = messageLength - 2;
-            publishInfo.pPayload = pMessage + 1;
-
-            err = IotMqtt_PublishAsync( mqttConnection, &publishInfo, 0, NULL, NULL );
-
-            status = err == IOT_MQTT_SUCCESS;
-        }
-        else
-        {
-            IotLogInfo( "Failed to execute publish. Could not find the \"topic\" or \"message\" key" );
-        }
-    }
-
-    else if( strncmp( command, "print", commandLength ) == 0 )
-    {
-        if( IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_MESSAGE_KEY, JOB_MESSAGE_KEY_LENGTH, &pMessage, &messageLength ) )
-        {
-            IotLogInfo( "%.*s", messageLength, pMessage );
-            status = true;
-        }
-        else
-        {
-            IotLogInfo( "Failed to execute print." );
-        }
-    }
-
-    /*
-     */
-    else if( strncmp( command, "exit", commandLength ) == 0 )
-    {
-        *exitFlag = ( uintptr_t ) true;
-        status = true;
-    }
-    else
-    {
-        IotLogError( "Unrecognized command: %.*s", commandLength, command );
-    }
-
-    return status;
-}
-
-/**
- *  @brief A callback for the Update Async Call to log any errors.
- */
-static void _updateResultCallback( void * pCallbackContext,
-                                   AwsIotJobsCallbackParam_t * cbParam )
-{
-    AwsIotJobsError_t result = AWS_IOT_JOBS_SUCCESS;
-    uintptr_t isExit = ( uintptr_t ) pCallbackContext;
-
-    if( cbParam != NULL )
-    {
-        result = cbParam->u.operation.result;
-    }
-    else
-    {
-        IotLogError( "Update Callback received NULL Callback Param." );
-    }
-
-    if( isExit == ( ( uintptr_t ) true ) )
-    {
-        IotLogInfo( "Got Exit Flag" );
-        Atomic_CompareAndSwap_u32( &_exitFlag, JOBS_DEMO_FINISHED, JOBS_DEMO_RUNNING );
-    }
-
-    IotLogInfo( "Job Update complete with result %s", AwsIotJobs_strerror( result ) );
-}
-
-/**
- * @brief A callback for the StartNext Async call to report any errors.
- */
-static void _startNextCallback( void * pCallbackContext,
-                                AwsIotJobsCallbackParam_t * cbParam )
-{
-    AwsIotJobsError_t result = AWS_IOT_JOBS_SUCCESS;
-
-    ( void ) pCallbackContext;
-
-    if( cbParam != NULL )
-    {
-        result = cbParam->u.operation.result;
-        IotLogError( "Start Next complete with result %s", AwsIotJobs_strerror( result ) );
-    }
-    else
-    {
-        IotLogError( "Start Next Callback Received Null Callback Param" );
-    }
-}
-
-/**
- * @brief Get and update the job.
- */
-static bool _executeDemo( IotMqttConnection_t const mqttConnection,
-                          const char * pThingName,
-                          size_t thingNameLength,
-                          const char * pJobId,
-                          size_t jobIdLength,
-                          const char * jobDoc,
-                          size_t jobDocLength )
-{
-    bool success = false;
-    AwsIotJobsError_t err = AWS_IOT_JOBS_SUCCESS;
-    AwsIotJobState_t result = AWS_IOT_JOB_STATE_FAILED;
-    AwsIotJobsRequestInfo_t req = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
-    AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
-    AwsIotJobsCallbackInfo_t startNextCBInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
-    AwsIotJobsCallbackInfo_t updateResultCBInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
-    const char * pAction = NULL;
-    size_t actionLength = 0;
-    uintptr_t exitFlag = ( uintptr_t ) false;
-
-    req.mqttConnection = mqttConnection;
-    req.pThingName = pThingName;
-    req.thingNameLength = thingNameLength;
-    req.pJobId = pJobId + 1;
-    req.jobIdLength = jobIdLength - 2;
-    req.mallocResponse = malloc;
-
-    IotLogError( "Job Doc in Execute Demo: %.*s", jobDocLength, jobDoc );
-
-    /* Check that a job notification came in. */
-    if( pJobId[ 0 ] != '\0' )
-    {
-        /* Update Job to IN_PROGRESS. */
-        startNextCBInfo.function = _startNextCallback;
-
-        err = AwsIotJobs_StartNextAsync( &req, &updateInfo, 0, &startNextCBInfo, NULL );
-
-        if( err != AWS_IOT_JOBS_STATUS_PENDING )
-        {
-            IotLogError( "Start Next Failed: %s", AwsIotJobs_strerror( err ) );
-            success = false;
-        }
-        else
-        {
-            success = true;
-        }
-
-        /* Parse out the action. */
-        if( success )
-        {
-            success = IotJsonUtils_FindJsonValue( jobDoc, jobDocLength, JOB_ACTION_KEY, JOB_ACTION_KEY_LENGTH, &pAction, &actionLength );
-
-            if( !success )
-            {
-                IotLogError( "Failed to find %s Key.", JOB_ACTION_KEY );
-            }
-        }
-
-        /* Execute on the action without quotes. */
-        if( _executeAction( pAction + 1, actionLength - 2, mqttConnection, jobDoc, jobDocLength, &exitFlag ) )
-        {
-            result = AWS_IOT_JOB_STATE_SUCCEEDED;
-        }
-        else
-        {
-            result = AWS_IOT_JOB_STATE_FAILED;
-        }
-
-        updateInfo.newStatus = result;
-        updateResultCBInfo.function = _updateResultCallback;
-        updateResultCBInfo.pCallbackContext = ( void * ) exitFlag;
-
-        err = AwsIotJobs_UpdateAsync( &req, &updateInfo, 0, &updateResultCBInfo, NULL );
-
-        if( err != AWS_IOT_JOBS_STATUS_PENDING )
-        {
-            IotLogError( "Update Result Failed: %s", AwsIotJobs_strerror( err ) );
-            success = false;
-        }
-        else
-        {
-            success = true;
-        }
-    }
-
-    return success;
-}
-
-/**
- * @brief The Notify Next Callback
- */
-static void _jobsCallback( void * param1,
-                           AwsIotJobsCallbackParam_t * pCallbackInfo )
-{
-    bool idKeyFound = false;
-    bool docKeyFound = false;
-
-    const char * jobId = NULL;
-    size_t jobIdLength = 0;
-
-    const char * jobDoc = NULL;
-    size_t jobDocLength = 0;
-
-    ( void ) param1;
-
-    /* Get the Job ID */
-    idKeyFound = IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument, pCallbackInfo->u.callback.documentLength, JOB_ID_KEY, JOB_ID_KEY_LENGTH, &jobId, &jobIdLength );
-
-    IotLogInfo( "Got Notify Next Call." );
-
-    if( idKeyFound )
-    {
-        IotLogInfo( "New Job: %.*s", jobIdLength, jobId );
-
-        if( jobIdLength > JOB_ID_MAX_LENGTH )
-        {
-            idKeyFound = false;
-            IotLogError( "Job ID is too long." );
-        }
-    }
-    else
-    {
-        IotLogError( "Failed to parse JobID from Notify Next." );
-        IotLogError( "document: %.*s", pCallbackInfo->u.callback.documentLength, pCallbackInfo->u.callback.pDocument );
-    }
-
-    /* Get the Job Document */
-    if( idKeyFound )
-    {
-        docKeyFound = IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument, pCallbackInfo->u.callback.documentLength, JOB_DOC_KEY, JOB_DOC_KEY_LENGTH, &jobDoc, &jobDocLength );
-    }
-
-    if( docKeyFound )
-    {
-        /* Execute the demo */
-        _executeDemo( pCallbackInfo->mqttConnection,
-                      pCallbackInfo->pThingName,
-                      pCallbackInfo->thingNameLength,
-                      jobId,
-                      jobIdLength,
-                      jobDoc,
-                      jobDocLength );
-    }
-
-    if( !idKeyFound )
-    {
-        IotLogError( "Failed to parse Job ID in Notify Next callback." );
-    }
-
-    if( !docKeyFound )
-    {
-        IotLogError( "Failed to parse Job Document in Notify Next callback." );
-    }
-}
-
-/**
  * @brief Establish a new connection to the MQTT server for the Jobs demo.
  *
  * @param[in] pIdentifier NULL-terminated MQTT client identifier. The Jobs
@@ -595,6 +310,389 @@ static int _establishMqttConnection( const char * pIdentifier,
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Converts a string in a Job document to a #_jobAction_t.
+ *
+ * @param[in] pAction The Job action as a string.
+ * @param[in] actionLength The length of `pAction`.
+ *
+ * @return A #_jobAction_t equivalent to the given string.
+ */
+static _jobAction_t _getAction( const char * pAction,
+                                size_t actionLength )
+{
+    _jobAction_t action = JOB_ACTION_UNKNOWN;
+
+    if( strncmp( pAction, "print", actionLength ) == 0 )
+    {
+        action = JOB_ACTION_PRINT;
+    }
+    else if( strncmp( pAction, "publish", actionLength ) == 0 )
+    {
+        action = JOB_ACTION_PUBLISH;
+    }
+    else if( strncmp( pAction, "exit", actionLength ) == 0 )
+    {
+        action = JOB_ACTION_EXIT;
+    }
+
+    return action;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Extracts a JSON string from the Job document.
+ *
+ * @param[in] pJsonDoc The JSON document to search.
+ * @param[in] jsonDocLength Length of `pJsonDoc`.
+ * @param[in] pKey The JSON key to search for.
+ * @param[in] keyLength Length of `pKey`.
+ * @param[out] pValue The extracted JSON value.
+ * @param[out] valueLength Length of pValue.
+ *
+ * @return `true` if the key was found and the value is valid; `false` otherwise.
+ */
+static bool _getJsonString( const char * pJsonDoc,
+                            size_t jsonDocLength,
+                            const char * pKey,
+                            size_t keyLength,
+                            const char ** pValue,
+                            size_t * valueLength )
+{
+    bool keyFound = IotJsonUtils_FindJsonValue( pJsonDoc,
+                                                jsonDocLength,
+                                                pKey,
+                                                keyLength,
+                                                pValue,
+                                                valueLength );
+
+    if( keyFound == true )
+    {
+        /* Exclude empty strings. */
+        if( *valueLength < JSON_STRING_MIN_LENGTH )
+        {
+            keyFound = false;
+        }
+        else
+        {
+            /* Adjust the value to remove the quotes. */
+            ( *pValue )++;
+            ( *valueLength ) -= 2;
+        }
+    }
+
+    return keyFound;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Job operation completion callback. This function is invoked when an
+ * asynchronous Job operation finishes.
+ *
+ * @param[in] pCallbackContext Set to a non-NULL value to exit the demo.
+ * @param[in] pCallbackParam Information on the Job operation that completed.
+ */
+static void _operationCompleteCallback( void * pCallbackContext,
+                                        AwsIotJobsCallbackParam_t * pCallbackParam )
+{
+    /* This function is invoked when either a StartNext or Update completes. */
+    if( pCallbackParam->callbackType == AWS_IOT_JOBS_START_NEXT_COMPLETE )
+    {
+        IotLogInfo( "Job StartNext complete with result %s.",
+                    AwsIotJobs_strerror( pCallbackParam->u.operation.result ) );
+    }
+    else
+    {
+        IotLogInfo( "Job Update complete with result %s.",
+                    AwsIotJobs_strerror( pCallbackParam->u.operation.result ) );
+    }
+
+    /* If a non-NULL context is given, set the flag to exit the demo. */
+    if( pCallbackContext != NULL )
+    {
+        ( void ) Atomic_CompareAndSwap_u32( &_exitFlag, JOBS_DEMO_FINISHED, JOBS_DEMO_RUNNING );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Process an action with a message, such as "print" or "publish".
+ *
+ * @param[in] mqttConnection The MQTT connection to use if the action is "publish".
+ * @param[in] action Either #JOB_ACTION_PRINT or #JOB_ACTION_PUBLISH.
+ * @param[in] pJobDoc A pointer to the Job document.
+ * @param[in] jobDocLength The length of the Job document.
+ *
+ * @return #AWS_IOT_JOB_STATE_SUCCEEDED on success; #AWS_IOT_JOB_STATE_FAILED otherwise.
+ */
+static AwsIotJobState_t _processMessage( IotMqttConnection_t mqttConnection,
+                                         _jobAction_t action,
+                                         const char * pJobDoc,
+                                         size_t jobDocLength )
+{
+    AwsIotJobState_t status = AWS_IOT_JOB_STATE_SUCCEEDED;
+    IotMqttError_t mqttStatus = IOT_MQTT_STATUS_PENDING;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    const char * pMessage = NULL, * pTopic = NULL;
+    size_t messageLength = 0, topicLength = 0;
+
+    /* Both "print" and "publish" require a "message" key. Search the Job
+     * document for this key. */
+    if( _getJsonString( pJobDoc,
+                        jobDocLength,
+                        JOB_MESSAGE_KEY,
+                        JOB_MESSAGE_KEY_LENGTH,
+                        &pMessage,
+                        &messageLength ) == false )
+    {
+        IotLogError( "Job document for \"print\" or \"publish\" does not contain a %s key.",
+                     JOB_MESSAGE_KEY );
+
+        status = AWS_IOT_JOB_STATE_FAILED;
+    }
+
+    if( status == AWS_IOT_JOB_STATE_SUCCEEDED )
+    {
+        if( action == JOB_ACTION_PRINT )
+        {
+            /* Print the given message if the action is "print". */
+            IotLog( IOT_LOG_INFO, &_logHideAll,
+                    "\r\n"
+                    "/*-----------------------------------------------------------*/\r\n"
+                    "\r\n"
+                    "%.*s\r\n"
+                    "\r\n"
+                    "/*-----------------------------------------------------------*/\r\n"
+                    "\r\n", messageLength, pMessage );
+        }
+        else
+        {
+            /* Extract the topic if the action is "publish". */
+            if( _getJsonString( pJobDoc,
+                                jobDocLength,
+                                JOB_TOPIC_KEY,
+                                JOB_TOPIC_KEY_LENGTH,
+                                &pTopic,
+                                &topicLength ) == false )
+            {
+                IotLogError( "Job document for action \"publish\" does not contain a %s key.",
+                             JOB_TOPIC_KEY );
+
+                status = AWS_IOT_JOB_STATE_FAILED;
+            }
+
+            if( status == AWS_IOT_JOB_STATE_SUCCEEDED )
+            {
+                publishInfo.qos = IOT_MQTT_QOS_0;
+                publishInfo.pTopicName = pTopic;
+                publishInfo.topicNameLength = topicLength;
+                publishInfo.pPayload = pMessage;
+                publishInfo.payloadLength = messageLength;
+
+                mqttStatus = IotMqtt_PublishAsync( mqttConnection, &publishInfo, 0, NULL, NULL );
+
+                if( mqttStatus != IOT_MQTT_STATUS_PENDING )
+                {
+                    status = AWS_IOT_JOB_STATE_FAILED;
+                }
+            }
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Process a Job received from the Notify Next callback.
+ *
+ * @param[in] pJobInfo The parameter to the Notify Next callback that contains
+ * information about the received Job.
+ * @param[in] pJobId A pointer to the Job ID.
+ * @param[in] jobIdLength The length of the Job ID.
+ * @param[in] pJobDoc A pointer to the Job document.
+ * @param[in] jobDocLength The length of the Job document.
+ */
+static void _processJob( const AwsIotJobsCallbackParam_t * pJobInfo,
+                         const char * pJobId,
+                         size_t jobIdLength,
+                         const char * pJobDoc,
+                         size_t jobDocLength )
+{
+    AwsIotJobsError_t status = AWS_IOT_JOBS_SUCCESS;
+    AwsIotJobsUpdateInfo_t updateInfo = AWS_IOT_JOBS_UPDATE_INFO_INITIALIZER;
+    AwsIotJobsCallbackInfo_t callbackInfo = AWS_IOT_JOBS_CALLBACK_INFO_INITIALIZER;
+    const char * pAction = NULL;
+    size_t actionLength = 0;
+    _jobAction_t action = JOB_ACTION_UNKNOWN;
+
+    IotLogInfo( "Job document received: %.*s", jobDocLength, pJobDoc );
+
+    /* Initialize the common parameter of Jobs requests. */
+    AwsIotJobsRequestInfo_t requestInfo = AWS_IOT_JOBS_REQUEST_INFO_INITIALIZER;
+
+    requestInfo.mqttConnection = pJobInfo->mqttConnection;
+    requestInfo.pThingName = pJobInfo->pThingName;
+    requestInfo.thingNameLength = pJobInfo->thingNameLength;
+    requestInfo.pJobId = pJobId;
+    requestInfo.jobIdLength = jobIdLength;
+
+    /* Tell the Jobs service that the device has started working on the Job.
+     * Use the StartNext API to set the Job's status to IN_PROGRESS. */
+    callbackInfo.function = _operationCompleteCallback;
+
+    status = AwsIotJobs_StartNextAsync( &requestInfo, &updateInfo, 0, &callbackInfo, NULL );
+
+    IotLogInfo( "Jobs StartNext queued with result %s.", AwsIotJobs_strerror( status ) );
+
+    /* Get the action for this device. */
+    if( _getJsonString( pJobDoc,
+                        jobDocLength,
+                        JOB_ACTION_KEY,
+                        JOB_ACTION_KEY_LENGTH,
+                        &pAction,
+                        &actionLength ) == true )
+    {
+        action = _getAction( pAction, actionLength );
+
+        switch( action )
+        {
+            case JOB_ACTION_EXIT:
+                callbackInfo.pCallbackContext = JOBS_DEMO_SHOULD_EXIT;
+                updateInfo.newStatus = AWS_IOT_JOB_STATE_SUCCEEDED;
+                break;
+
+            case JOB_ACTION_PRINT:
+            case JOB_ACTION_PUBLISH:
+                updateInfo.newStatus = _processMessage( pJobInfo->mqttConnection,
+                                                        action,
+                                                        pJobDoc,
+                                                        jobDocLength );
+                break;
+
+            default:
+                IotLogError( "Received Job document with unknown action %.*s.",
+                             actionLength,
+                             pAction );
+
+                updateInfo.newStatus = AWS_IOT_JOB_STATE_REJECTED;
+                break;
+        }
+    }
+    else
+    {
+        IotLogError( "Received Job document does not contain an %s key.",
+                     JOB_ACTION_KEY );
+
+        /* The given Job document is not valid for this demo. */
+        updateInfo.newStatus = AWS_IOT_JOB_STATE_REJECTED;
+    }
+
+    /* Tell the Jobs service that the device has finished the Job. */
+    status = AwsIotJobs_UpdateAsync( &requestInfo, &updateInfo, 0, &callbackInfo, NULL );
+
+    IotLogInfo( "Jobs Update queued with result %s.", AwsIotJobs_strerror( status ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Jobs Notify Next callback. This function is invoked when a new Job is
+ * received from the Jobs service.
+ *
+ * @param[in] pCallbackContext Ignored.
+ * @param[in] pCallbackInfo Contains the received Job.
+ */
+static void _jobsCallback( void * pCallbackContext,
+                           AwsIotJobsCallbackParam_t * pCallbackInfo )
+{
+    /* Flags to track the contents of the received Job document. */
+    bool idKeyFound = false, docKeyFound = false;
+
+    /* The Job ID and length */
+    const char * pJobId = NULL;
+    size_t jobIdLength = 0;
+
+    /* The Job document (which contains the action) and length. */
+    const char * pJobDoc = NULL;
+    size_t jobDocLength = 0;
+
+    /* Silence warnings about unused parameters. */
+    ( void ) pCallbackContext;
+
+    /* Get the Job ID. */
+    idKeyFound = _getJsonString( pCallbackInfo->u.callback.pDocument,
+                                 pCallbackInfo->u.callback.documentLength,
+                                 JOB_ID_KEY,
+                                 JOB_ID_KEY_LENGTH,
+                                 &pJobId,
+                                 &jobIdLength );
+
+    if( idKeyFound == true )
+    {
+        if( jobIdLength > JOB_ID_MAX_LENGTH )
+        {
+            IotLogError( "Received Job ID %.*s longer than %lu, which is the "
+                         "maximum allowed by AWS IoT. Ignoring Job.",
+                         jobIdLength,
+                         pJobId,
+                         ( unsigned long ) JOB_ID_MAX_LENGTH );
+
+            idKeyFound = false;
+        }
+        else
+        {
+            IotLogInfo( "Job %.*s received.", jobIdLength, pJobId );
+        }
+    }
+
+    /* Get the Job document. */
+    docKeyFound = IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument,
+                                              pCallbackInfo->u.callback.documentLength,
+                                              JOB_DOC_KEY,
+                                              JOB_DOC_KEY_LENGTH,
+                                              &pJobDoc,
+                                              &jobDocLength );
+
+    /* When both the Job ID and Job document are available, process the Job. */
+    if( ( idKeyFound == true ) && ( docKeyFound == true ) )
+    {
+        /* Process the Job document. */
+        _processJob( pCallbackInfo,
+                     pJobId,
+                     jobIdLength,
+                     pJobDoc,
+                     jobDocLength );
+    }
+    else
+    {
+        /* The Jobs service sends an empty Job document when all Jobs are complete. */
+        if( ( idKeyFound == false ) && ( docKeyFound == false ) )
+        {
+            IotLog( IOT_LOG_INFO, &_logHideAll,
+                    "\r\n"
+                    "/*-----------------------------------------------------------*/\r\n"
+                    "\r\n"
+                    "All available Jobs complete.\r\n"
+                    "\r\n"
+                    "/*-----------------------------------------------------------*/\r\n"
+                    "\r\n" );
+        }
+        else
+        {
+            IotLogWarn( "Received an invalid Job document: %.*s",
+                        pCallbackInfo->u.callback.documentLength,
+                        pCallbackInfo->u.callback.pDocument );
+        }
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -710,9 +808,7 @@ int RunJobsDemo( bool awsIotMqttMode,
     /* Wait for incoming Jobs. */
     if( status == EXIT_SUCCESS )
     {
-        IotLogConfig_t logConfig = { .hideLogLevel = true, .hideLibraryName = true, .hideTimestring = true };
-
-        IotLog( IOT_LOG_INFO, &logConfig,
+        IotLog( IOT_LOG_INFO, &_logHideAll,
                 "\r\n"
                 "/*-----------------------------------------------------------*/\r\n"
                 "\r\n"
