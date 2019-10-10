@@ -48,12 +48,12 @@
 /**
  * @brief The Library Timeout.
  */
-#define TIMEOUT_MS                      ( 5000u )
+#define TIMEOUT_MS                      ( ( uint32_t ) 5000u )
 
 /**
  * @brief The MQTT Library keepalive time.
  */
-#define KEEP_ALIVE_SECONDS              ( 60 )
+#define KEEP_ALIVE_SECONDS              ( ( uint16_t ) 60u )
 
 /**
  * @brief The key of the Job ID.
@@ -119,12 +119,12 @@
 /**
  * @brief Max Length for the ID.
  */
-#define JOBS_DEMO_MAX_ID_LENGTH         64
+#define JOBS_DEMO_MAX_ID_LENGTH         ( ( size_t ) 64 )
 
 /**
  * @brief Max Length for Job Document.
  */
-#define JOBS_DEMO_MAX_JOB_DOC_LENGTH    128
+#define JOBS_DEMO_MAX_JOB_DOC_LENGTH    ( ( size_t ) 128 )
 
 /**
  * @brief A flag for signaling the end of the demo.
@@ -134,23 +134,12 @@ uint32_t finishFlag = 0;
 /**
  * @brief Flag value for signaling that the demo is finished.
  */
-#define JOBS_DEMO_FINISHED    1
+#define JOBS_DEMO_FINISHED    ( ( uint32_t ) 1 )
 
 /**
  * @brief Flag value for signaling that the demo is still running.
  */
-#define JOBS_DEMO_RUNNING     0
-
-/**
- * @brief Execute the Jobs Demo.
- *
- * This is the top level function called by the IOT Demo harness.
- */
-int RunJobsDemo( bool awsIotMqttMode,
-                 const char * pIdentifier,
-                 void * pNetworKServerInfo,
-                 void * pNetworkCredentialInfo,
-                 const IotNetworkInterface_t * pNetworkInterface );
+#define JOBS_DEMO_RUNNING     ( ( uint32_t ) 0 )
 
 /**
  * @brief Initialize The Jobs Demo.
@@ -195,7 +184,7 @@ static int _initDemo( void )
  * @param[in] mqttConnection MQTT Connection used by _publish_.
  * @param[in] jobDoc JSON String passed by the jobs library.
  * @param[in] jobDocLength Length of the jobDoc string.
- * @param[in] exitFlag Flag used by the _exit_ command to signal the demo completion.
+ * @param[out] exitFlag Flag used by the _exit_ command to signal the demo completion.
  *
  * Executes various commands:
  * 1. The "publish" command will publish a string to a specified topic.
@@ -304,13 +293,22 @@ static bool _executeAction( const char * command,
 /**
  *  @brief A callback for the Update Async Call to log any errors.
  */
-static void _updateResultCallback( void * param1,
+static void _updateResultCallback( void * pCallbackContext,
                                    AwsIotJobsCallbackParam_t * cbParam )
 {
-    AwsIotJobsError_t result = cbParam->u.operation.result;
-    bool isExit = ( bool ) param1;
+    AwsIotJobsError_t result = AWS_IOT_JOBS_SUCCESS;
+    uintptr_t isExit = ( uintptr_t ) pCallbackContext;
 
-    if( isExit )
+    if( cbParam != NULL )
+    {
+        result = cbParam->u.operation.result;
+    }
+    else
+    {
+        IotLogError( "Update Callback received NULL Callback Param." );
+    }
+
+    if( isExit == ( ( uintptr_t ) true ) )
     {
         IotLogInfo( "Got Exit Flag" );
         Atomic_CompareAndSwap_u32( &finishFlag, JOBS_DEMO_FINISHED, JOBS_DEMO_RUNNING );
@@ -322,14 +320,22 @@ static void _updateResultCallback( void * param1,
 /**
  * @brief A callback for the StartNext Async call to report any errors.
  */
-static void _startNextCallback( void * param1,
+static void _startNextCallback( void * pCallbackContext,
                                 AwsIotJobsCallbackParam_t * cbParam )
 {
-    AwsIotJobsError_t result = cbParam->u.operation.result;
+    AwsIotJobsError_t result = AWS_IOT_JOBS_SUCCESS;
 
-    ( void ) param1;
+    ( void ) pCallbackContext;
 
-    IotLogError( "Start Next complete with result %s", AwsIotJobs_strerror( result ) );
+    if( cbParam != NULL )
+    {
+        cbParam->u.operation.result;
+        IotLogError( "Start Next complete with result %s", AwsIotJobs_strerror( result ) );
+    }
+    else
+    {
+        IotLogError( "Start Next Callback Received Null Callback Param" );
+    }
 }
 
 /**
@@ -566,6 +572,11 @@ static int _establishMqttConnection( const char * pIdentifier,
     return status;
 }
 
+/**
+ * @brief Execute the Jobs Demo.
+ *
+ * This is the top level function called by the IOT Demo harness.
+ */
 int RunJobsDemo( bool awsIotMqttMode,
                  const char * pIdentifier,
                  void * pNetworkServerInfo,
