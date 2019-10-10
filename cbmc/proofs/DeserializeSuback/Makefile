@@ -11,8 +11,8 @@ UNWINDING = \
 
 OBJS = \
 	$(ENTRY)_harness.goto \
-	$(MQTT)/lib/source/mqtt/iot_mqtt_subscription.goto \
-	$(MQTT)/lib/source/mqtt/iot_mqtt_serialize.goto \
+	$(MQTT)/libraries/standard/mqtt/src/iot_mqtt_subscription.goto \
+	$(MQTT)/libraries/standard/mqtt/src/iot_mqtt_serialize.goto \
 
 DEF = -DBUFFER_SIZE=$(BUFFER_SIZE)
 
