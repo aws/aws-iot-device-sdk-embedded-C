@@ -492,7 +492,7 @@ static AwsIotJobState_t _processMessage( IotMqttConnection_t mqttConnection,
             {
                 publishInfo.qos = IOT_MQTT_QOS_0;
                 publishInfo.pTopicName = pTopic;
-                publishInfo.topicNameLength = topicLength;
+                publishInfo.topicNameLength = ( uint16_t ) topicLength;
                 publishInfo.pPayload = pMessage;
                 publishInfo.payloadLength = messageLength;
 
