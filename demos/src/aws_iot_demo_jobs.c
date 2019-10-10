@@ -56,6 +56,16 @@
 #define KEEP_ALIVE_SECONDS              ( ( uint16_t ) 60u )
 
 /**
+ * @brief  The retry time for the publish action.
+ */
+#define PUBLISH_RETRY_MS                ( ( uint32_t ) 5000 )
+
+/**
+ * @brief The retry limit for the publish action.
+ */
+#define PUBLISH_RETRY_LIMIT             ( ( uint32_t ) 10 )
+
+/**
  * @brief The key of the Job ID.
  */
 #define JOB_ID_KEY                      "jobId"
@@ -249,8 +259,8 @@ static bool _executeAction( const char * command,
             publishInfo.pTopicName = pTopic + 1;
             publishInfo.payloadLength = messageLength - 2;
             publishInfo.pPayload = pMessage + 1;
-            publishInfo.retryMs = 5000;
-            publishInfo.retryLimit = 10;
+            publishInfo.retryMs = PUBLISH_RETRY_MS;
+            publishInfo.retryLimit = PUBLISH_RETRY_LIMIT;
 
             err = IotMqtt_PublishAsync( mqttConnection, &publishInfo, 0, NULL, NULL );
 
