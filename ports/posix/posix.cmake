@@ -1,12 +1,11 @@
-include( CheckCCompilerFlag )
 include( CheckTypeSize )
 include( CheckFunctionExists )
 
-# Check that the -lrt flag works.
-check_c_compiler_flag( -lrt HAS_C_FLAG_lrt )
+# Check that the POSIX realtime library is available.
+find_library( LIB_REALTIME rt )
 
-if( NOT HAS_C_FLAG_lrt )
-    message( FATAL_ERROR "Compiler flag -lrt must be supported." )
+if( ${LIB_REALTIME} STREQUAL "LIB_REALTIME-NOTFOUND" )
+    message( FATAL_ERROR "POSIX realtime library (librt) is not available." )
 endif()
 
 # Check for POSIX threads.
