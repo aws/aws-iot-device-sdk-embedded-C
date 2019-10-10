@@ -47,7 +47,6 @@
 #if IOT_TEST_DEMO == 1
     extern int DemoMain( int argc,
                          char ** argv );
-
 #else
     extern void RunTests( bool disableNetworkTests,
                           bool disableLongTests );
