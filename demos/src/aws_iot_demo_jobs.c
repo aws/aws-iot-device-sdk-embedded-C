@@ -27,6 +27,8 @@
 /* Config include. Should always come first per the style guide. */
 #include "iot_config.h"
 
+#include <string.h>
+
 /* Demo logging. */
 #include "iot_demo_logging.h"
 
@@ -325,6 +327,8 @@ static void _startNextCallback( void * param1,
 {
     AwsIotJobsError_t result = cbParam->u.operation.result;
 
+    ( void * ) param1;
+
     IotLogError( "Start Next complete with result %s", AwsIotJobs_strerror( result ) );
 }
 
@@ -432,6 +436,8 @@ static void _jobsCallback( void * param1,
 
     const char * jobDoc = NULL;
     size_t jobDocLength = 0;
+
+    ( void * ) param1;
 
     /* Get the Job ID */
     idKeyFound = IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument, pCallbackInfo->u.callback.documentLength, JOB_ID_KEY, JOB_ID_KEY_LENGTH, &jobId, &jobIdLength );
@@ -575,8 +581,9 @@ int RunJobsDemo( bool awsIotMqttMode,
     bool initialized = false;
     bool connected = false;
 
+    ( void ) awsIotMqttMode;
+
     callbackInfo.function = _jobsCallback;
-    callbackInfo.pCallbackContext;
 
     if( status == EXIT_SUCCESS )
     {
