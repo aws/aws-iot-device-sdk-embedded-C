@@ -105,73 +105,63 @@ static void _flushPacket( void * pNetworkConnection,
                           const _mqttConnection_t * pMqttConnection,
                           size_t length );
 
-/* Utility types for MQTT serializer override functions */
-typedef uint8_t ( * _getPacketTypeFunc_t )( void *,
-                                 const IotNetworkInterface_t * );
-typedef size_t ( * _getRemainingLengthFunc_t )( void *,
-                                 const IotNetworkInterface_t * );
-typedef IotMqttError_t ( * _deserializer_t )( _mqttPacket_t * );
-typedef IotMqttError_t ( * _pubackSerializer_t )( uint16_t,
-                                 uint8_t **,
-                                 size_t * );
-typedef void ( * _freePacketFunc_t )( uint8_t * );
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _getPacketTypeFunc_t,
+    IotMqttGetPacketTypeFunc_t,
     _getPacketTypeFunc,
     _IotMqtt_GetPacketType,
     getPacketType
 )
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _getRemainingLengthFunc_t,
+    IotMqttGetRemainingLengthFunc_t,
     _getRemainingLengthFunc,
     _IotMqtt_GetRemainingLength,
     getRemainingLength
 )
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _deserializer_t,
+    IotMqttDeserializer_t,
     _getConnackDeserializer,
     _IotMqtt_DeserializeConnack,
     deserialize.connack
 )
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _deserializer_t,
+    IotMqttDeserializer_t,
     _getPublishDeserializer,
     _IotMqtt_DeserializePublish,
     deserialize.publish
 )
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _deserializer_t,
+    IotMqttDeserializer_t,
     _getPubackDeserializer,
     _IotMqtt_DeserializePuback,
     deserialize.puback
 )
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _deserializer_t,
+    IotMqttDeserializer_t,
     _getSubackDeserializer,
     _IotMqtt_DeserializeSuback,
     deserialize.suback
 )
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _deserializer_t,
+    IotMqttDeserializer_t,
     _getUnsubackDeserializer,
     _IotMqtt_DeserializeUnsuback,
     deserialize.unsuback
 )
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _deserializer_t,
+    IotMqttDeserializer_t,
     _getPingrespDeserializer,
     _IotMqtt_DeserializePingresp,
     deserialize.pingresp
 )
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _pubackSerializer_t,
+    IotMqttPubackSerializer_t,
     _getMqttPubackSerializer,
     _IotMqtt_SerializePuback,
     serialize.puback
 )
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _freePacketFunc_t,
+    IotMqttFreePacketFunc_t,
     _getMqttFreePacketFunc,
     _IotMqtt_FreePacket,
     freePacket
@@ -225,17 +215,14 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     size_t dataBytesRead = 0;
 
-    /* Get appropriate functions for retrieving packet type and length. */
-    _getPacketTypeFunc_t getPacketType = _getPacketTypeFunc( pMqttConnection->pSerializer );
-    _getRemainingLengthFunc_t getRemainingLength = _getRemainingLengthFunc( pMqttConnection->pSerializer );
-
     /* No buffer for remaining data should be allocated. */
     IotMqtt_Assert( pIncomingPacket->pRemainingData == NULL );
     IotMqtt_Assert( pIncomingPacket->remainingLength == 0 );
 
     /* Read the packet type, which is the first byte available. */
-    pIncomingPacket->type = getPacketType( pNetworkConnection,
-                                           pMqttConnection->pNetworkInterface );
+    pIncomingPacket->type = (*_getPacketTypeFunc( pMqttConnection->pSerializer ))(
+                    pNetworkConnection,
+                    pMqttConnection->pNetworkInterface );
 
     /* Check that the incoming packet type is valid. */
     if( _incomingPacketValid( pIncomingPacket->type ) == false )
@@ -252,8 +239,9 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
     }
 
     /* Read the remaining length. */
-    pIncomingPacket->remainingLength = getRemainingLength( pNetworkConnection,
-                                                           pMqttConnection->pNetworkInterface );
+    pIncomingPacket->remainingLength = (*_getRemainingLengthFunc( pMqttConnection->pSerializer ))(
+                    pNetworkConnection,
+                    pMqttConnection->pNetworkInterface );
 
     if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
     {
@@ -333,9 +321,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t * pOperation = NULL;
-
-    /* Deserializer function. */
-    _deserializer_t deserialize = NULL;
 
     /* A buffer for remaining data must be allocated if remaining length is not 0. */
     IotMqtt_Assert( ( pIncomingPacket->remainingLength > 0 ) ==

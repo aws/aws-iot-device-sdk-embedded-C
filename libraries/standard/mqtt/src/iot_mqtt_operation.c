@@ -44,20 +44,15 @@
 /* Atomics include. */
 #include "iot_atomic.h"
 
-/* Utility types for MQTT serializer override functions */
-typedef void ( * _publishSetDupFunc_t )( uint8_t *,
-                                 uint8_t *,
-                                 uint16_t * );
-typedef void ( * _freePacketFunc_t )( uint8_t * );
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _publishSetDupFunc_t,
+    IotMqttPublishSetDupFunc_t,
     _getMqttPublishSetDupFunc,
     _IotMqtt_PublishSetDup,
     serialize.publishSetDup
 )
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    _freePacketFunc_t,
+    IotMqttFreePacketFunc_t,
     _getMqttFreePacketFunc,
     _IotMqtt_FreePacket,
     freePacket
