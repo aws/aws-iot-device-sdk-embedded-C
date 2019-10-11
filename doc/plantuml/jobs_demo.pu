@@ -4,35 +4,35 @@ skinparam classFontName Helvetica
 autonumber
 
 participant "Main Thread" as main
-participant "Notify Next Callback" as cb
-participant "Update Callback" as ucb
+participant "Completed Operation Callback" as operation
+participant "NotifyNext Callback" as notify
 participant "Jobs Library" as lib
 
-box "User Code" #LightBlue
+box "Demo Code" #LightBlue
     participant main
-    participant ucb
-    participant cb
+    participant operation
+    participant notify
 end box
 box "Library" #LightGreen
     participant lib
 end box
 
-box "Service" #LightPink
+box "Jobs Service" #LightPink
     participant "Server" as server
 end box
 
-main -> lib: Register Notify Next Callback
+main -> lib: Register NotifyNext callback
 
-loop #transparent Until Exit Command Succeeds
-    server -> lib: New Job is Created
-    lib -> cb: Callback Invoked
-    cb -// lib: StartNextAsync
-    cb -> cb: Execute Command from Job Document
-    cb -// lib: UpdateAsync with Command Result Result
-    lib -> ucb: Result of Update Call
+loop #transparent Until "exit" action succeeds
+    server -> lib: New Job is created
+    lib -> notify: Callback invoked
+    notify -// lib: StartNextAsync
+    notify -> notify: Execute action from Job document
+    notify -// lib: UpdateAsync with result of action
+    lib -> operation: Result of Update
 
-    group #transparent Exit Command Successfully Updated
-        ucb -> main: Signal end of demo (via flag)
+    group #transparent "exit" command successfully updated
+        operation -> main: Signal end of demo
     end
 end
 
