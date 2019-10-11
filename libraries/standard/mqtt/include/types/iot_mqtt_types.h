@@ -717,7 +717,7 @@ typedef uint8_t ( * IotMqttGetPacketTypeFunc_t )(
  * <b>Default implementation:</b> #_IotMqtt_GetRemainingLength
  */
 typedef size_t ( * IotMqttGetRemainingLengthFunc_t )(
-		     void * pNetworkConnection,
+                     void * pNetworkConnection,
                      const IotNetworkInterface_t * pNetworkInterface );
 
 /**
@@ -816,7 +816,7 @@ typedef IotMqttError_t ( * IotMqttDeserializer_t )(
  * <b>Default implementation:</b> #_IotMqtt_SerializePuback
  */
 typedef IotMqttError_t ( * IotMqttPubackSerializer_t )(
-		     uint16_t packetIdentifier,
+                     uint16_t packetIdentifier,
                      uint8_t ** pPubackPacket,
                      size_t * pPacketSize );
 /**
