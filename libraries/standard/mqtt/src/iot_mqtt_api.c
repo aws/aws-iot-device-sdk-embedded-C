@@ -172,7 +172,13 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            uint32_t flags,
                                            const IotMqttCallbackInfo_t * pCallbackInfo,
                                            IotMqttOperation_t * const pOperationReference );
-/*-----------------------------------------------------------*/
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Declaration of local MQTT serializer override selectors
+ */
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
     IotMqttPingReqSerializer_t,
@@ -225,6 +231,7 @@ IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
 #define _getMqttConnectSerializer( pSerializer )      _IotMqtt_SerializeConnect
 #define _getMqttDisconnectSerializer( pSerializer )   _IotMqtt_SerializeDisconnect
 #endif
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 

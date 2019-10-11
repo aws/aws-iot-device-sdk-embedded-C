@@ -44,6 +44,12 @@
 /* Atomics include. */
 #include "iot_atomic.h"
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Declaration of local MQTT serializer override selectors
+ */
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
     IotMqttPublishSetDupFunc_t,
@@ -61,6 +67,8 @@ IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
 #define _getMqttFreePacketFunc( pSerializer )      _IotMqtt_FreePacket
 #define _getMqttPublishSetDupFunc( pSerializer )   _IotMqtt_PublishSetDup
 #endif
+/** @endcond */
+
 /*-----------------------------------------------------------*/
 
 /**

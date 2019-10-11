@@ -105,6 +105,12 @@ static void _flushPacket( void * pNetworkConnection,
                           const _mqttConnection_t * pMqttConnection,
                           size_t length );
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Declaration of local MQTT serializer override selectors
+ */
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
 IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
     IotMqttGetPacketTypeFunc_t,
@@ -178,6 +184,7 @@ IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
 #define _getMqttPubackSerializer( pSerializer )    _IotMqtt_SerializePuback
 #define _getMqttFreePacketFunc( pSerializer )      _IotMqtt_FreePacket
 #endif
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 
