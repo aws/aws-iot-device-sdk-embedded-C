@@ -596,6 +596,11 @@ static void _processJob( const AwsIotJobsCallbackParam_t * pJobInfo,
         updateInfo.newStatus = AWS_IOT_JOB_STATE_FAILED;
     }
 
+    IotLogInfo( "Setting state of %.*s to %s.",
+                jobIdLength,
+                pJobId,
+                AwsIotJobs_StateName( updateInfo.newStatus ) );
+
     /* Tell the Jobs service that the device has finished the Job. */
     status = AwsIotJobs_UpdateAsync( &requestInfo, &updateInfo, 0, &callbackInfo, NULL );
 
