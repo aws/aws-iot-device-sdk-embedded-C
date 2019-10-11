@@ -137,11 +137,11 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection );
  * description of the parameters and return values.
  */
 static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation,
-                                          IotMqttConnection_t mqttConnection,
-                                          const IotMqttSubscription_t * pSubscriptionList,
-                                          size_t subscriptionCount,
-                                          uint32_t flags,
-                                          IotMqttOperation_t * const pOperationReference );
+                                                IotMqttConnection_t mqttConnection,
+                                                const IotMqttSubscription_t * pSubscriptionList,
+                                                size_t subscriptionCount,
+                                                uint32_t flags,
+                                                IotMqttOperation_t * const pOperationReference );
 /**
  * @brief Utility function for creating & serializing subscribe/unsubscribe requests
  *
@@ -149,13 +149,13 @@ static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation
  * description of the parameters and return values.
  */
 static IotMqttError_t _subscriptionCreateAndSerialize( IotMqttOperationType_t operation,
-                                           IotMqttConnection_t mqttConnection,
-                                           IotMqttSubscribeSerializer_t serializeSubscription,
-                                           const IotMqttSubscription_t * pSubscriptionList,
-                                           size_t subscriptionCount,
-                                           uint32_t flags,
-                                           const IotMqttCallbackInfo_t * pCallbackInfo,
-                                           _mqttOperation_t ** ppSubscriptionOperation );
+                                                       IotMqttConnection_t mqttConnection,
+                                                       IotMqttSubscribeSerializer_t serializeSubscription,
+                                                       const IotMqttSubscription_t * pSubscriptionList,
+                                                       size_t subscriptionCount,
+                                                       uint32_t flags,
+                                                       const IotMqttCallbackInfo_t * pCallbackInfo,
+                                                       _mqttOperation_t ** ppSubscriptionOperation );
 
 /**
  * @brief The common component of both @ref mqtt_function_subscribeasync and @ref
@@ -614,11 +614,11 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 
 /*-----------------------------------------------------------*/
 static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation,
-                                          IotMqttConnection_t mqttConnection,
-                                          const IotMqttSubscription_t * pSubscriptionList,
-                                          size_t subscriptionCount,
-                                          uint32_t flags,
-                                          IotMqttOperation_t * const pOperationReference )
+                                                IotMqttConnection_t mqttConnection,
+                                                const IotMqttSubscription_t * pSubscriptionList,
+                                                size_t subscriptionCount,
+                                                uint32_t flags,
+                                                IotMqttOperation_t * const pOperationReference )
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
 
@@ -675,13 +675,13 @@ static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation
 /*-----------------------------------------------------------*/
 
 static IotMqttError_t _subscriptionCreateAndSerialize( IotMqttOperationType_t operation,
-                                           IotMqttConnection_t mqttConnection,
-                                           IotMqttSubscribeSerializer_t serializeSubscription,
-                                           const IotMqttSubscription_t * pSubscriptionList,
-                                           size_t subscriptionCount,
-                                           uint32_t flags,
-                                           const IotMqttCallbackInfo_t * pCallbackInfo,
-                                           _mqttOperation_t ** ppSubscriptionOperation )
+                                                       IotMqttConnection_t mqttConnection,
+                                                       IotMqttSubscribeSerializer_t serializeSubscription,
+                                                       const IotMqttSubscription_t * pSubscriptionList,
+                                                       size_t subscriptionCount,
+                                                       uint32_t flags,
+                                                       const IotMqttCallbackInfo_t * pCallbackInfo,
+                                                       _mqttOperation_t ** ppSubscriptionOperation )
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     _mqttOperation_t * pSubscriptionOperation = NULL;

@@ -907,42 +907,42 @@ typedef void ( * IotMqttPublishSetDupFunc_t )(
             /**
              * @brief MQTT CONNACK packet deserializer function.
              * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
-			 *
+             *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeConnack
              */
             IotMqttDeserializer_t connack;
             /**
              * @brief MQTT PUBLISH packet deserializer function.
              * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
-			 *
+             *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePublish
              */
             IotMqttDeserializer_t publish;
             /**
              * @brief MQTT PUBACK packet deserializer function.
              * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
-			 *
+             *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePuback
              */
             IotMqttDeserializer_t puback;
             /**
              * @brief MQTT SUBACK packet deserializer function.
              * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
-			 *
+             *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeSuback
              */
             IotMqttDeserializer_t suback;
             /**
              * @brief MQTT UNSUBACK packet deserializer function.
              * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
-			 *
+             *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeUnsuback
              */
             IotMqttDeserializer_t unsuback;
             /**
              * @brief MQTT PINGRESP packet deserializer function.
              * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
-			 *
+             *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePingresp
              */
             IotMqttDeserializer_t pingresp;
