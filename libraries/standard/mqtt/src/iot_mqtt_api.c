@@ -614,7 +614,6 @@ static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation
                                           IotMqttOperation_t * const pOperationReference )
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
-    _mqttOperation_t * pSubscriptionOperation = NULL;
 
     /* This function should only be called for subscribe or unsubscribe. */
     IotMqtt_Assert( ( operation == IOT_MQTT_SUBSCRIBE ) ||
