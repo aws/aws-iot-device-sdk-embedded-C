@@ -583,7 +583,7 @@ static void _processJob( const AwsIotJobsCallbackParam_t * pJobInfo,
                              actionLength,
                              pAction );
 
-                updateInfo.newStatus = AWS_IOT_JOB_STATE_REJECTED;
+                updateInfo.newStatus = AWS_IOT_JOB_STATE_FAILED;
                 break;
         }
     }
@@ -593,7 +593,7 @@ static void _processJob( const AwsIotJobsCallbackParam_t * pJobInfo,
                      JOB_ACTION_KEY );
 
         /* The given Job document is not valid for this demo. */
-        updateInfo.newStatus = AWS_IOT_JOB_STATE_REJECTED;
+        updateInfo.newStatus = AWS_IOT_JOB_STATE_FAILED;
     }
 
     /* Tell the Jobs service that the device has finished the Job. */
