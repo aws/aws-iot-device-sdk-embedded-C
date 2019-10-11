@@ -960,4 +960,32 @@ bool _IotMqtt_GetNextByte( void * pNetworkConnection,
 void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason,
                                       _mqttConnection_t * pMqttConnection );
 
+#if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+/**
+ * @brief Utility macro for creating serializer override selector functions
+ */
+#define _IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR( _funcType_t, _funcName, _defaultFunc, _serializerMember ) \
+static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer ); \
+static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer ) \
+{ \
+    _funcType_t _returnValue = _defaultFunc; \
+    if( pSerializer != NULL ) \
+    { \
+        if( pSerializer->_serializerMember != NULL ) \
+        { \
+            _returnValue = pSerializer->_serializerMember; \
+        } \
+        else \
+        { \
+            EMPTY_ELSE_MARKER; \
+        } \
+    } \
+    else \
+    { \
+        EMPTY_ELSE_MARKER; \
+    } \
+    return _returnValue; \
+}
+#endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+
 #endif /* ifndef IOT_MQTT_INTERNAL_H_ */

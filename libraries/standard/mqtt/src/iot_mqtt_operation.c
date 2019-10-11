@@ -51,14 +51,14 @@
  * Declaration of local MQTT serializer override selectors
  */
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    IotMqttPublishSetDupFunc_t,
+_IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
+    IotMqttPublishSetDup_t,
     _getMqttPublishSetDupFunc,
     _IotMqtt_PublishSetDup,
     serialize.publishSetDup
 )
-IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
-    IotMqttFreePacketFunc_t,
+_IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
+    IotMqttFreePacket_t,
     _getMqttFreePacketFunc,
     _IotMqtt_FreePacket,
     freePacket
@@ -211,7 +211,7 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
             }
 
             /* Set the DUP flag */
-            (*_getMqttPublishSetDupFunc( pMqttConnection->pSerializer ))(
+            _getMqttPublishSetDupFunc( pMqttConnection->pSerializer )(
                            pOperation->u.operation.pMqttPacket,
                            pOperation->u.operation.pPacketIdentifierHigh,
                            &( pOperation->u.operation.packetIdentifier ) );
@@ -607,7 +607,7 @@ void _IotMqtt_DestroyOperation( _mqttOperation_t * pOperation )
     /* Free any allocated MQTT packet. */
     if( pOperation->u.operation.pMqttPacket != NULL )
     {
-        (*_getMqttFreePacketFunc( pMqttConnection->pSerializer ))(
+        _getMqttFreePacketFunc( pMqttConnection->pSerializer )(
                         pOperation->u.operation.pMqttPacket );
 
         IotLogDebug( "(MQTT connection %p, %s operation %p) MQTT packet freed.",
