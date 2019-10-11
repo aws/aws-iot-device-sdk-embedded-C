@@ -498,7 +498,7 @@ static AwsIotJobState_t _processMessage( IotMqttConnection_t mqttConnection,
 
                 mqttStatus = IotMqtt_PublishAsync( mqttConnection, &publishInfo, 0, NULL, NULL );
 
-                if( mqttStatus != IOT_MQTT_STATUS_PENDING )
+                if( mqttStatus != IOT_MQTT_SUCCESS )
                 {
                     status = AWS_IOT_JOB_STATE_FAILED;
                 }
