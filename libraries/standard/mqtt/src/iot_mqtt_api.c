@@ -133,6 +133,33 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
 static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection );
 
 /**
+ * @brief Common setup function for subscribe and unsubscribe operations.
+ *
+ * See @ref mqtt_function_subscribeasync or @ref mqtt_function_unsubscribeasync for a
+ * description of the parameters and return values.
+ */
+static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation,
+                                                IotMqttConnection_t mqttConnection,
+                                                const IotMqttSubscription_t * pSubscriptionList,
+                                                size_t subscriptionCount,
+                                                uint32_t flags,
+                                                IotMqttOperation_t * const pOperationReference );
+/**
+ * @brief Utility function for creating and serializing subscription requests
+ *
+ * See @ref mqtt_function_subscribeasync or @ref mqtt_function_unsubscribeasync for a
+ * description of the parameters and return values.
+ */
+static IotMqttError_t _subscriptionCreateAndSerialize( IotMqttOperationType_t operation,
+                                                       IotMqttConnection_t mqttConnection,
+                                                       IotMqttSerializeSubscribe_t serializeSubscription,
+                                                       const IotMqttSubscription_t * pSubscriptionList,
+                                                       size_t subscriptionCount,
+                                                       uint32_t flags,
+                                                       const IotMqttCallbackInfo_t * pCallbackInfo,
+                                                       _mqttOperation_t ** ppSubscriptionOperation );
+
+/**
  * @brief The common component of both @ref mqtt_function_subscribeasync and @ref
  * mqtt_function_unsubscribeasync.
  *
@@ -141,11 +168,72 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection );
  */
 static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            IotMqttConnection_t mqttConnection,
+                                           IotMqttSerializeSubscribe_t serializeSubscription,
                                            const IotMqttSubscription_t * pSubscriptionList,
                                            size_t subscriptionCount,
                                            uint32_t flags,
                                            const IotMqttCallbackInfo_t * pCallbackInfo,
                                            IotMqttOperation_t * const pOperationReference );
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Declaration of local MQTT serializer override selectors
+ */
+#if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+_IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
+    IotMqttSerializePingreq_t,
+    _getMqttPingreqSerializer,
+    _IotMqtt_SerializePingreq,
+    serialize.pingreq
+)
+_IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
+    IotMqtt_SerializePublish_t,
+    _getMqttPublishSerializer,
+    _IotMqtt_SerializePublish,
+    serialize.publish
+)
+_IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
+    IotMqttFreePacket_t,
+    _getMqttFreePacketFunc,
+    _IotMqtt_FreePacket,
+    freePacket
+)
+_IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
+    IotMqttSerializeSubscribe_t,
+    _getMqttSubscribeSerializer,
+    _IotMqtt_SerializeSubscribe,
+    serialize.subscribe
+)
+_IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
+    IotMqttSerializeSubscribe_t,
+    _getMqttUnsubscribeSerializer,
+    _IotMqtt_SerializeUnsubscribe,
+    serialize.unsubscribe
+)
+_IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
+    IotMqttSerializeConnect_t,
+    _getMqttConnectSerializer,
+    _IotMqtt_SerializeConnect,
+    serialize.connect
+)
+_IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR(
+    IotMqttDisconnectSerializer_t,
+    _getMqttDisconnectSerializer,
+    _IotMqtt_SerializeDisconnect,
+    serialize.disconnect
+)
+#else
+#define _getMqttPingreqSerializer( pSerializer )      _IotMqtt_SerializePingreq
+#define _getMqttPublishSerializer( pSerializer )      _IotMqtt_SerializePublish
+#define _getMqttFreePacketFunc( pSerializer )         _IotMqtt_FreePacket
+#define _getMqttSubscribeSerializer( pSerializer )    _IotMqtt_SerializeSubscribe
+#define _getMqttUnsubscribeSerializer( pSerializer )  _IotMqtt_SerializeUnsubscribe
+#define _getMqttConnectSerializer( pSerializer )      _IotMqtt_SerializeConnect
+#define _getMqttDisconnectSerializer( pSerializer )   _IotMqtt_SerializeDisconnect
+#endif
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 
@@ -282,10 +370,6 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
     /* Network information is not used when MQTT packet serializers are disabled. */
     ( void ) pNetworkInfo;
 
-    /* Default PINGREQ serializer function. */
-    IotMqttError_t ( * serializePingreq )( uint8_t **,
-                                           size_t * ) = _IotMqtt_SerializePingreq;
-
     /* Set PINGREQ operation members. */
     pMqttConnection->pingreq.u.operation.type = IOT_MQTT_PINGREQ;
 
@@ -293,28 +377,10 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
     pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = keepAliveSeconds * 1000;
     pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs = keepAliveSeconds * 1000;
 
-    /* Choose a PINGREQ serializer function. */
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pNetworkInfo->pMqttSerializer != NULL )
-        {
-            if( pNetworkInfo->pMqttSerializer->serialize.pingreq != NULL )
-            {
-                serializePingreq = pNetworkInfo->pMqttSerializer->serialize.pingreq;
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
     /* Generate a PINGREQ packet. */
-    serializeStatus = serializePingreq( &( pMqttConnection->pingreq.u.operation.pMqttPacket ),
-                                        &( pMqttConnection->pingreq.u.operation.packetSize ) );
+    serializeStatus = _getMqttPingreqSerializer( pMqttConnection->pSerializer )(
+                    &( pMqttConnection->pingreq.u.operation.pMqttPacket ),
+                    &( pMqttConnection->pingreq.u.operation.packetSize ) );
 
     if( serializeStatus != IOT_MQTT_SUCCESS )
     {
@@ -481,26 +547,12 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 {
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
 
-    /* Default free packet function. */
-    void (* freePacket)( uint8_t * ) = _IotMqtt_FreePacket;
-
     /* Clean up keep-alive if still allocated. */
     if( pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0 )
     {
         IotLogDebug( "(MQTT connection %p) Cleaning up keep-alive.", pMqttConnection );
-
-        /* Choose a function to free the packet. */
-        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( pMqttConnection->pSerializer != NULL )
-            {
-                if( pMqttConnection->pSerializer->freePacket != NULL )
-                {
-                    freePacket = pMqttConnection->pSerializer->freePacket;
-                }
-            }
-        #endif
-
-        freePacket( pMqttConnection->pingreq.u.operation.pMqttPacket );
+        _getMqttFreePacketFunc( pMqttConnection->pSerializer )(
+                        pMqttConnection->pingreq.u.operation.pMqttPacket );
 
         /* Clear data about the keep-alive. */
         pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = 0;
@@ -563,24 +615,14 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 }
 
 /*-----------------------------------------------------------*/
-
-static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
-                                           IotMqttConnection_t mqttConnection,
-                                           const IotMqttSubscription_t * pSubscriptionList,
-                                           size_t subscriptionCount,
-                                           uint32_t flags,
-                                           const IotMqttCallbackInfo_t * pCallbackInfo,
-                                           IotMqttOperation_t * const pOperationReference )
+static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation,
+                                                IotMqttConnection_t mqttConnection,
+                                                const IotMqttSubscription_t * pSubscriptionList,
+                                                size_t subscriptionCount,
+                                                uint32_t flags,
+                                                IotMqttOperation_t * const pOperationReference )
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
-    _mqttOperation_t * pSubscriptionOperation = NULL;
-
-    /* Subscription serializer function. */
-    IotMqttError_t ( * serializeSubscription )( const IotMqttSubscription_t *,
-                                                size_t,
-                                                uint8_t **,
-                                                size_t *,
-                                                uint16_t * ) = NULL;
 
     /* This function should only be called for subscribe or unsubscribe. */
     IotMqtt_Assert( ( operation == IOT_MQTT_SUBSCRIBE ) ||
@@ -628,70 +670,28 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     {
         EMPTY_ELSE_MARKER;
     }
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
 
-    /* Choose a subscription serialize function. */
-    if( operation == IOT_MQTT_SUBSCRIBE )
-    {
-        serializeSubscription = _IotMqtt_SerializeSubscribe;
+/*-----------------------------------------------------------*/
 
-        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( mqttConnection->pSerializer != NULL )
-            {
-                if( mqttConnection->pSerializer->serialize.subscribe != NULL )
-                {
-                    serializeSubscription = mqttConnection->pSerializer->serialize.subscribe;
-                }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-    }
-    else
-    {
-        serializeSubscription = _IotMqtt_SerializeUnsubscribe;
-
-        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( mqttConnection->pSerializer != NULL )
-            {
-                if( mqttConnection->pSerializer->serialize.unsubscribe != NULL )
-                {
-                    serializeSubscription = mqttConnection->pSerializer->serialize.unsubscribe;
-                }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-    }
-
-    /* Remove the MQTT subscription list for an UNSUBSCRIBE. */
-    if( operation == IOT_MQTT_UNSUBSCRIBE )
-    {
-        _IotMqtt_RemoveSubscriptionByTopicFilter( mqttConnection,
-                                                  pSubscriptionList,
-                                                  subscriptionCount );
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
+static IotMqttError_t _subscriptionCreateAndSerialize( IotMqttOperationType_t operation,
+                                                       IotMqttConnection_t mqttConnection,
+                                                       IotMqttSerializeSubscribe_t serializeSubscription,
+                                                       const IotMqttSubscription_t * pSubscriptionList,
+                                                       size_t subscriptionCount,
+                                                       uint32_t flags,
+                                                       const IotMqttCallbackInfo_t * pCallbackInfo,
+                                                       _mqttOperation_t ** ppSubscriptionOperation )
+{
+    IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    _mqttOperation_t * pSubscriptionOperation = NULL;
 
     /* Create a subscription operation. */
     status = _IotMqtt_CreateOperation( mqttConnection,
                                        flags,
                                        pCallbackInfo,
-                                       &pSubscriptionOperation );
+                                       ppSubscriptionOperation );
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -699,7 +699,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     }
     else
     {
-        EMPTY_ELSE_MARKER;
+        pSubscriptionOperation = ( * ppSubscriptionOperation );
     }
 
     /* Check the subscription operation data and set the operation type. */
@@ -709,10 +709,10 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
     /* Generate a subscription packet from the subscription list. */
     status = serializeSubscription( pSubscriptionList,
-                                    subscriptionCount,
-                                    &( pSubscriptionOperation->u.operation.pMqttPacket ),
-                                    &( pSubscriptionOperation->u.operation.packetSize ),
-                                    &( pSubscriptionOperation->u.operation.packetIdentifier ) );
+                         subscriptionCount,
+                         &( pSubscriptionOperation->u.operation.pMqttPacket ),
+                         &( pSubscriptionOperation->u.operation.packetSize ),
+                         &( pSubscriptionOperation->u.operation.packetIdentifier ) );
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -726,6 +726,42 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     /* Check the serialized MQTT packet. */
     IotMqtt_Assert( pSubscriptionOperation->u.operation.pMqttPacket != NULL );
     IotMqtt_Assert( pSubscriptionOperation->u.operation.packetSize > 0 );
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
+static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
+                                           IotMqttConnection_t mqttConnection,
+                                           IotMqttSerializeSubscribe_t serializeSubscription,
+                                           const IotMqttSubscription_t * pSubscriptionList,
+                                           size_t subscriptionCount,
+                                           uint32_t flags,
+                                           const IotMqttCallbackInfo_t * pCallbackInfo,
+                                           IotMqttOperation_t * const pOperationReference )
+{
+    IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    _mqttOperation_t * pSubscriptionOperation = NULL;
+
+    /* Create and serialize the subscription operation. */
+    status = _subscriptionCreateAndSerialize( operation,
+                                       mqttConnection,
+                                       serializeSubscription,
+                                       pSubscriptionList,
+                                       subscriptionCount,
+                                       flags,
+                                       pCallbackInfo,
+                                       &pSubscriptionOperation );
+
+    if( status != IOT_MQTT_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
     /* Add the subscription list for a SUBSCRIBE. */
     if( operation == IOT_MQTT_SUBSCRIBE )
@@ -983,11 +1019,6 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     _mqttOperation_t * pOperation = NULL;
     _mqttConnection_t * pNewMqttConnection = NULL;
 
-    /* Default CONNECT serializer function. */
-    IotMqttError_t ( * serializeConnect )( const IotMqttConnectInfo_t *,
-                                           uint8_t **,
-                                           size_t * ) = _IotMqtt_SerializeConnect;
-
     /* Check that IotMqtt_Init was called. */
     if( _checkInit() == false )
     {
@@ -1118,6 +1149,8 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         /* Set the MQTT packet serializer overrides. */
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
             pNewMqttConnection->pSerializer = pNetworkInfo->pMqttSerializer;
+        #else
+            pNewMqttConnection->pSerializer = NULL;
         #endif
     }
 
@@ -1187,27 +1220,9 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         EMPTY_ELSE_MARKER;
     }
 
-    /* Choose a CONNECT serializer function. */
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( pNewMqttConnection->pSerializer != NULL )
-        {
-            if( pNewMqttConnection->pSerializer->serialize.connect != NULL )
-            {
-                serializeConnect = pNewMqttConnection->pSerializer->serialize.connect;
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
     /* Convert the connect info and will info objects to an MQTT CONNECT packet. */
-    status = serializeConnect( pConnectInfo,
+    status = _getMqttConnectSerializer( pNetworkInfo->pMqttSerializer )(
+                               pConnectInfo,
                                &( pOperation->u.operation.pMqttPacket ),
                                &( pOperation->u.operation.packetSize ) );
 
@@ -1379,31 +1394,10 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
         /* Set the operation type. */
         pOperation->u.operation.type = IOT_MQTT_DISCONNECT;
 
-        /* Choose a disconnect serializer. */
-        IotMqttError_t ( * serializeDisconnect )( uint8_t **,
-                                                  size_t * ) = _IotMqtt_SerializeDisconnect;
-
-        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            if( mqttConnection->pSerializer != NULL )
-            {
-                if( mqttConnection->pSerializer->serialize.disconnect != NULL )
-                {
-                    serializeDisconnect = mqttConnection->pSerializer->serialize.disconnect;
-                }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-        #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
         /* Generate a DISCONNECT packet. */
-        status = serializeDisconnect( &( pOperation->u.operation.pMqttPacket ),
-                                      &( pOperation->u.operation.packetSize ) );
+        status = _getMqttDisconnectSerializer( mqttConnection->pSerializer )(
+                    &( pOperation->u.operation.pMqttPacket ),
+                    &( pOperation->u.operation.packetSize ) );
     }
     else
     {
@@ -1485,13 +1479,28 @@ IotMqttError_t IotMqtt_SubscribeAsync( IotMqttConnection_t mqttConnection,
                                        const IotMqttCallbackInfo_t * pCallbackInfo,
                                        IotMqttOperation_t * const pSubscribeOperation )
 {
-    return _subscriptionCommon( IOT_MQTT_SUBSCRIBE,
+    IotMqttError_t status = _subscriptionCommonSetup( IOT_MQTT_SUBSCRIBE,
                                 mqttConnection,
+                                pSubscriptionList,
+                                subscriptionCount,
+                                flags,
+                                pSubscribeOperation );
+    if ( IOT_MQTT_SUCCESS == status )
+    {
+        status = _subscriptionCommon( IOT_MQTT_SUBSCRIBE,
+                                mqttConnection,
+                                _getMqttSubscribeSerializer( mqttConnection->pSerializer ),
                                 pSubscriptionList,
                                 subscriptionCount,
                                 flags,
                                 pCallbackInfo,
                                 pSubscribeOperation );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1541,13 +1550,33 @@ IotMqttError_t IotMqtt_UnsubscribeAsync( IotMqttConnection_t mqttConnection,
                                          const IotMqttCallbackInfo_t * pCallbackInfo,
                                          IotMqttOperation_t * const pUnsubscribeOperation )
 {
-    return _subscriptionCommon( IOT_MQTT_UNSUBSCRIBE,
+    IotMqttError_t status = _subscriptionCommonSetup( IOT_MQTT_UNSUBSCRIBE,
                                 mqttConnection,
+                                pSubscriptionList,
+                                subscriptionCount,
+                                flags,
+                                pUnsubscribeOperation );
+    if ( IOT_MQTT_SUCCESS == status )
+    {
+        /* Remove the MQTT subscription list for an UNSUBSCRIBE. */
+        _IotMqtt_RemoveSubscriptionByTopicFilter( mqttConnection,
+                                                  pSubscriptionList,
+                                                  subscriptionCount );
+
+        status = _subscriptionCommon( IOT_MQTT_UNSUBSCRIBE,
+                                mqttConnection,
+                                _getMqttUnsubscribeSerializer( mqttConnection->pSerializer ),
                                 pSubscriptionList,
                                 subscriptionCount,
                                 flags,
                                 pCallbackInfo,
                                 pUnsubscribeOperation );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1599,13 +1628,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     _mqttOperation_t * pOperation = NULL;
     uint8_t ** pPacketIdentifierHigh = NULL;
-
-    /* Default PUBLISH serializer function. */
-    IotMqttError_t ( * serializePublish )( const IotMqttPublishInfo_t *,
-                                           uint8_t **,
-                                           size_t *,
-                                           uint16_t *,
-                                           uint8_t ** ) = _IotMqtt_SerializePublish;
 
     /* Check that IotMqtt_Init was called. */
     if( _checkInit() == false )
@@ -1700,25 +1722,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     IotMqtt_Assert( pOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
     pOperation->u.operation.type = IOT_MQTT_PUBLISH_TO_SERVER;
 
-    /* Choose a PUBLISH serializer function. */
-    #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-        if( mqttConnection->pSerializer != NULL )
-        {
-            if( mqttConnection->pSerializer->serialize.publish != NULL )
-            {
-                serializePublish = mqttConnection->pSerializer->serialize.publish;
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
     /* In AWS IoT MQTT mode, a pointer to the packet identifier must be saved. */
     if( mqttConnection->awsIotMqttMode == true )
     {
@@ -1730,7 +1733,8 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     }
 
     /* Generate a PUBLISH packet from pPublishInfo. */
-    status = serializePublish( pPublishInfo,
+    status = _getMqttPublishSerializer( mqttConnection->pSerializer )(
+                               pPublishInfo,
                                &( pOperation->u.operation.pMqttPacket ),
                                &( pOperation->u.operation.packetSize ),
                                &( pOperation->u.operation.packetIdentifier ),
