@@ -289,10 +289,6 @@ typedef struct IotSerializerEncoderObject
 typedef struct IotSerializerDecoderObject
 {
     IotSerializerDataType_t type;
-
-    /* The starting address of the underlying raw data in buffer represented
-     * by the decoder object. */
-    const uint8_t * pBufferStartAddr;
     union
     {
         /* Useful if the type is a container. */
@@ -492,36 +488,20 @@ typedef struct IotSerializerDecodeInterface
 
     /**
      * @brief Function to obtain the starting buffer address of the raw encoded data (scalar or container type)
-     * represented
-     * by the passed decoder object.
-     * @param[in] pDecoderObject Pointer to the decoder whose underlying buffer location
-     * is to returned.
-     * @return The underlying location of the decoder object in the data buffer.
-     */
-    const uint8_t * ( *getBufferLocationOfDecoderObject )( IotSerializerDecoderObject_t *
-                                                           pDecoderObject );
-
-    /**
-     * @brief Function to obtain the starting buffer address of the raw encoded object (scalar or container type)
-     * pointed to by the passed iterator object.
-     * @param[in] iterator The iterator whose pointed to buffer location address is to be returned.
-     * @return The underlying location pointed to by the iterator in the data buffer.
-     */
-    const uint8_t * ( *getBufferLocationOfIterator )( IotSerializerDecoderIterator_t iterator );
-
-    /**
-     * @brief Function to get the size of the raw encoded data in the buffer (ONLY of container type object)
-     * that is pointed to by the passed iterator object.
+     * represented by the passed decoder object.
      * Container SHOULD be of type array or map.
-     * @param[in] iterator This is the iterator whose pointed to raw data, in the encoded buffer, needs to be
-     * calculated.
-     * @param[out] The length of the underlying data in the buffer represented by the iterator.
+     * @param[in] pDecoderObject The decoder object whose underlying data's starting location in the buffer
+     * is to be returned.
+     * @param[out] pEncodedDataStartAddr This will be populated with the starting location of the encoded object
+     * in the data buffer.
      * @return #IOT_SERIALIZER_SUCCESS if successful; otherwise #IOT_SERIALIZER_NOT_SUPPORTED
      * for a non-container type iterator.
      */
-    IotSerializerError_t ( * getSizeOfEncodedDataForIterator )( IotSerializerDecoderIterator_t
-                                                                iterator,
-                                                                size_t * pEncodedDataLength );
+    IotSerializerError_t ( * getBufferAddress )( IotSerializerDecoderObject_t *
+                                                 pDecoderObject,
+                                                 const uint8_t **
+                                                 pEncodedDataStartAddr );
+
 
     /**
      * @brief Function to get the size of the raw encoded data in the buffer (ONLY of container type object)
@@ -533,9 +513,8 @@ typedef struct IotSerializerDecodeInterface
      * @return #IOT_SERIALIZER_SUCCESS if successful; otherwise #IOT_SERIALIZER_NOT_SUPPORTED
      * for a non-container type iterator.
      */
-    IotSerializerError_t ( * getSizeOfEncodedDataForDecoderObject )(
-        IotSerializerDecoderObject_t * pDecoderObject,
-        size_t * pEncodedDataLength );
+    IotSerializerError_t ( * getSizeOfEncodedData )( IotSerializerDecoderObject_t * pDecoderObject,
+                                                     size_t * pEncodedDataLength );
 
 
     /**
