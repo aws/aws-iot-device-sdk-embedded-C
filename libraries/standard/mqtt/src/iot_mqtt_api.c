@@ -1485,8 +1485,8 @@ IotMqttError_t IotMqtt_SubscribeAsync( IotMqttConnection_t mqttConnection,
                                 subscriptionCount,
                                 flags,
                                 pSubscribeOperation );
-	if ( IOT_MQTT_SUCCESS == status )
-	{
+    if ( IOT_MQTT_SUCCESS == status )
+    {
         status = _subscriptionCommon( IOT_MQTT_SUBSCRIBE,
                                 mqttConnection,
                                 _getMqttSubscribeSerializer( mqttConnection->pSerializer ),
@@ -1495,12 +1495,12 @@ IotMqttError_t IotMqtt_SubscribeAsync( IotMqttConnection_t mqttConnection,
                                 flags,
                                 pCallbackInfo,
                                 pSubscribeOperation );
-	}
-	else
-	{
-		EMPTY_ELSE_MARKER;
-	}
-	return status;
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1556,8 +1556,8 @@ IotMqttError_t IotMqtt_UnsubscribeAsync( IotMqttConnection_t mqttConnection,
                                 subscriptionCount,
                                 flags,
                                 pUnsubscribeOperation );
-	if ( IOT_MQTT_SUCCESS == status )
-	{
+    if ( IOT_MQTT_SUCCESS == status )
+    {
         /* Remove the MQTT subscription list for an UNSUBSCRIBE. */
         _IotMqtt_RemoveSubscriptionByTopicFilter( mqttConnection,
                                                   pSubscriptionList,
@@ -1571,12 +1571,12 @@ IotMqttError_t IotMqtt_UnsubscribeAsync( IotMqttConnection_t mqttConnection,
                                 flags,
                                 pCallbackInfo,
                                 pUnsubscribeOperation );
-	}
-	else
-	{
-		EMPTY_ELSE_MARKER;
-	}
-	return status;
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+    return status;
 }
 
 /*-----------------------------------------------------------*/
