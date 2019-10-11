@@ -289,14 +289,16 @@ typedef struct IotSerializerEncoderObject
 typedef struct IotSerializerDecoderObject
 {
     IotSerializerDataType_t type;
-    const uint8_t * bufferPtr;
-    size_t dataLengthInBuffer;
+
+    /* The starting address of the underlying raw data in buffer represented
+     * by the decoder object. */
+    const uint8_t * pBufferStartAddr;
     union
     {
         /* Useful if the type is a container. */
         void * pHandle;
         /* if the type is a container, the scalarValue is unuseful */
-        IotSerializerScalarValue_t scalarValue;
+        IotSerializerScalarValue_t value;
     } u;
 } IotSerializerDecoderObject_t;
 
@@ -497,7 +499,7 @@ typedef struct IotSerializerDecodeInterface
      * @return The underlying location of the decoder object in the data buffer.
      */
     const uint8_t * ( *getBufferLocationOfDecoderObject )( IotSerializerDecoderObject_t *
-                                                           pValueObject );
+                                                           pDecoderObject );
 
     /**
      * @brief Function to obtain the starting buffer address of the raw encoded object (scalar or container type)
@@ -508,13 +510,33 @@ typedef struct IotSerializerDecodeInterface
     const uint8_t * ( *getBufferLocationOfIterator )( IotSerializerDecoderIterator_t iterator );
 
     /**
-     * @brief Function to get the size of the raw encoded data in the buffer (of scalar ot container type object)
+     * @brief Function to get the size of the raw encoded data in the buffer (ONLY of container type object)
      * that is pointed to by the passed iterator object.
+     * Container SHOULD be of type array or map.
      * @param[in] iterator This is the iterator whose pointed to raw data, in the encoded buffer, needs to be
      * calculated.
-     * @return The length of the underlying data in the buffer represented by the iterator.
+     * @param[out] The length of the underlying data in the buffer represented by the iterator.
+     * @return #IOT_SERIALIZER_SUCCESS if successful; otherwise #IOT_SERIALIZER_NOT_SUPPORTED
+     * for a non-container type iterator.
      */
-    size_t ( * getSizeOfEncodedDataForIterator )( IotSerializerDecoderIterator_t iterator );
+    IotSerializerError_t ( * getSizeOfEncodedDataForIterator )( IotSerializerDecoderIterator_t
+                                                                iterator,
+                                                                size_t * pEncodedDataLength );
+
+    /**
+     * @brief Function to get the size of the raw encoded data in the buffer (ONLY of container type object)
+     * that is represented by the passed decoder object.
+     * Container SHOULD be of type array or map.
+     * @param[in] pDecoderObject The decoder objects whose underlying buffer data's length needs to be
+     * calculated.
+     * @param[out] The length of the underlying data in the buffer represented by the decoder object.
+     * @return #IOT_SERIALIZER_SUCCESS if successful; otherwise #IOT_SERIALIZER_NOT_SUPPORTED
+     * for a non-container type iterator.
+     */
+    IotSerializerError_t ( * getSizeOfEncodedDataForDecoderObject )(
+        IotSerializerDecoderObject_t * pDecoderObject,
+        size_t * pEncodedDataLength );
+
 
     /**
      * @brief Steps out of the container by updating the decoder object to next byte position

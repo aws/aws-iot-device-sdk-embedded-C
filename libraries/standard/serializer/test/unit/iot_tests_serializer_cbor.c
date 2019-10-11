@@ -415,7 +415,7 @@ static const uint8_t _testEncodedNestedMap[] =
     0x0A, /* # unsigned(10) */
     0x61, /*    # text(1) */
     0x33, /* # "3" */
-    0x02, /*    # unsigned(2) */
+    0xF4, /*    # false */
 };
 
 TEST_GROUP( Serializer_Decoder_Unit_CBOR );
@@ -440,52 +440,77 @@ TEST_GROUP_RUNNER( Serializer_Decoder_Unit_CBOR )
 
 TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
 {
-    IotSerializerDecoderObject_t outerDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t outermostDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t outermostDecoderDataLength = 0;
     IotSerializerDecoderObject_t outerMapDecoder1 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t outerMapDecoder1DataLength = 0;
     IotSerializerDecoderObject_t innerMapDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t outerMapDecoder2 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t unsupportedTypeDecoderObjectLength = 0;
 
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &outerDecoder,
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &outermostDecoder,
                                                                     _testEncodedNestedMap,
                                                                     sizeof( _testEncodedNestedMap ) ) );
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, outerDecoder.type );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, outermostDecoder.type );
 
-    /* Make sure that the function returns the first location of the buffer for the outermost decoder object.*/
+    /* Make sure that the getBufferLocationOfDecoderObject() API returns the first location of the buffer for the
+     * outermost decoder object.*/
     TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 0 ],
-                           _pCborDecoder->getBufferLocationOfDecoderObject( &outerDecoder ) );
-    TEST_ASSERT_EQUAL( sizeof( _testEncodedNestedMap ), outerDecoder.dataLengthInBuffer );
+                           _pCborDecoder->getBufferLocationOfDecoderObject( &outermostDecoder ) );
 
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outerDecoder, "1",
+    /* Verify that the getSizeOfEncodedDataForDecoderObject() correctly calculates the length of the outermost decoder
+     * data. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOfEncodedDataForDecoderObject(
+                           &outermostDecoder, &outermostDecoderDataLength ) );
+    TEST_ASSERT_EQUAL( sizeof( _testEncodedNestedMap ), outermostDecoderDataLength );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outermostDecoder, "1",
                                                                     &outerMapDecoder1 ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, outerMapDecoder1.type );
 
-    /* Make sure that the function returns the first location in the buffer to the value for the entry keyed by "1".*/
+    /* Make sure that the getBufferLocationOfDecoderObject() API returns the first location in the buffer to the value
+     * for the entry keyed by "1".*/
     TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 3 ],
                            _pCborDecoder->getBufferLocationOfDecoderObject( &outerMapDecoder1 ) );
-    TEST_ASSERT_EQUAL( 4u, outerMapDecoder1.dataLengthInBuffer );
+
+    /* Verify that the getSizeOfEncodedDataForDecoderObject() correctly calculates the length of the container type
+     * value of the entry keyed by "1" */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOfEncodedDataForDecoderObject(
+                           &outerMapDecoder1, &outerMapDecoder1DataLength ) );
+    TEST_ASSERT_EQUAL( 4u, outerMapDecoder1DataLength );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outerMapDecoder1, "A",
                                                                     &innerMapDecoder ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_SIGNED_INT, innerMapDecoder.type );
 
-    /* Make sure that the function returns the first location in the buffer to the value for the nested entry keyed by
+    /* Make sure that the getBufferLocationOfDecoderObject() API returns the first location in the buffer to the value
+     * for the nested entry keyed by
      * "A".*/
     TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 6 ],
                            _pCborDecoder->getBufferLocationOfDecoderObject( &innerMapDecoder ) );
-    TEST_ASSERT_EQUAL( 1u, innerMapDecoder.dataLengthInBuffer );
 
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outerDecoder, "3",
+    /* Verify that the getSizeOfEncodedDataForDecoderObject() does not support calculation of non-container type data.*/
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED,
+                       _pCborDecoder->getSizeOfEncodedDataForDecoderObject(
+                           &innerMapDecoder, &unsupportedTypeDecoderObjectLength ) );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outermostDecoder, "3",
                                                                     &outerMapDecoder2 ) );
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_SIGNED_INT, outerMapDecoder2.type );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_BOOL, outerMapDecoder2.type );
 
-    /* Make sure that the function returns the first location in the buffer to the value for the entry keyed by "3".*/
+    /* Make sure that the getBufferLocationOfDecoderObject() API returns the first location in the buffer to the value
+     * for the entry keyed by "3".*/
     TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 9 ],
                            _pCborDecoder->getBufferLocationOfDecoderObject( &outerMapDecoder2 ) );
-    TEST_ASSERT_EQUAL( 1u, outerMapDecoder2.dataLengthInBuffer );
+
+    /* Verify that the getSizeOfEncodedDataForDecoderObject() does not support calculation of non-container type data.*/
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED,
+                       _pCborDecoder->getSizeOfEncodedDataForDecoderObject(
+                           &outerMapDecoder2, &unsupportedTypeDecoderObjectLength ) );
 
     _pCborDecoder->destroy( &outerMapDecoder1 );
     _pCborDecoder->destroy( &outerMapDecoder2 );
-    _pCborDecoder->destroy( &outerDecoder );
+    _pCborDecoder->destroy( &outermostDecoder );
 }
 
 
@@ -496,6 +521,8 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
     IotSerializerDecoderObject_t outerDecoder2 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t nestedMapDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderIterator_t nestedMapIter = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
+    size_t unsupportedTypeLength = 0;
+    size_t supportedTypeLength = 0;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &outerDecoder1,
                                                                     _testEncodedNestedMap,
@@ -508,7 +535,9 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
     /* Make sure that the API returns the starting address of the key data of the first entry in the map. */
     TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 1 ],
                            _pCborDecoder->getBufferLocationOfIterator( outerIter ) );
-    TEST_ASSERT_EQUAL( 2u, _pCborDecoder->getSizeOfEncodedDataForIterator( outerIter ) );
+    /* Make sure that the getSizeOfEncodedDataForIterator() API does not support non-container types. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED, _pCborDecoder->getSizeOfEncodedDataForIterator(
+                           outerIter, &unsupportedTypeLength ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( outerIter ) );
 
@@ -516,7 +545,12 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
      * in the map. */
     TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 3 ],
                            _pCborDecoder->getBufferLocationOfIterator( outerIter ) );
-    TEST_ASSERT_EQUAL( 4u, _pCborDecoder->getSizeOfEncodedDataForIterator( outerIter ) );
+
+    /* Make sure that the getSizeOfEncodedDataForIterator() API correctly calculates length of map container type value
+     * data keyed by "1". */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOfEncodedDataForIterator(
+                           outerIter, &supportedTypeLength ) );
+    TEST_ASSERT_EQUAL( 4u, supportedTypeLength );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( outerIter ) );
 
@@ -524,7 +558,9 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
      * in the map. */
     TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 7 ],
                            _pCborDecoder->getBufferLocationOfIterator( outerIter ) );
-    TEST_ASSERT_EQUAL( 2u, _pCborDecoder->getSizeOfEncodedDataForIterator( outerIter ) );
+    /* Make sure that the getSizeOfEncodedDataForIterator() API does not support non-container types. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED, _pCborDecoder->getSizeOfEncodedDataForIterator(
+                           outerIter, &unsupportedTypeLength ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( outerIter ) );
 
@@ -532,7 +568,9 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
      * in the map. */
     TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 9 ],
                            _pCborDecoder->getBufferLocationOfIterator( outerIter ) );
-    TEST_ASSERT_EQUAL( 1u, _pCborDecoder->getSizeOfEncodedDataForIterator( outerIter ) );
+    /* Make sure that the getSizeOfEncodedDataForIterator() API does not support non-container types. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED, _pCborDecoder->getSizeOfEncodedDataForIterator(
+                           outerIter, &unsupportedTypeLength ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( outerIter ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( outerIter,
@@ -553,7 +591,9 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
     /* Obtain an iterator to the contents of the nested map. */
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &nestedMapDecoder,
                                                                       &nestedMapIter ) );
-    TEST_ASSERT_EQUAL( 2u, _pCborDecoder->getSizeOfEncodedDataForIterator( nestedMapIter ) );
+    /* Make sure that the getSizeOfEncodedDataForIterator() API does not support non-container types. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED, _pCborDecoder->getSizeOfEncodedDataForIterator(
+                           outerIter, &unsupportedTypeLength ) );
 
     /* Make sure that the API returns the starting address of the key data of the map entry. */
     TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 4 ],
@@ -564,7 +604,9 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
     /* Make sure that the API returns the starting address of the value data of the map entry. */
     TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 6 ],
                            _pCborDecoder->getBufferLocationOfIterator( nestedMapIter ) );
-    TEST_ASSERT_EQUAL( 1u, _pCborDecoder->getSizeOfEncodedDataForIterator( nestedMapIter ) );
+    /* Make sure that the getSizeOfEncodedDataForIterator() API does not support non-container types. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED, _pCborDecoder->getSizeOfEncodedDataForIterator(
+                           outerIter, &unsupportedTypeLength ) );
 
     /* Iterate to the end of the nested map container. */
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( nestedMapIter ) );

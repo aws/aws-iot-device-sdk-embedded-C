@@ -67,7 +67,13 @@ static const uint8_t * _getBufferLocationOfDecoderObject(
 
 static const uint8_t * _getBufferLocationOfIterator( IotSerializerDecoderIterator_t iterator );
 
-static size_t _getSizeOfEncodedDataForIterator( IotSerializerDecoderIterator_t iterator );
+static IotSerializerError_t _getSizeOfEncodedDataForDecoderObject( IotSerializerDecoderObject_t *
+                                                                   pDecoderObject,
+                                                                   size_t * pEncodedDataLength );
+
+static IotSerializerError_t _getSizeOfEncodedDataForIterator( IotSerializerDecoderIterator_t
+                                                              iterator,
+                                                              size_t * pEncodedDataLength );
 
 /*-----------------------------------------------------------*/
 
@@ -75,23 +81,24 @@ static size_t _getSizeOfEncodedDataForIterator( IotSerializerDecoderIterator_t i
  * @brief Utility to calculates the length of the raw encoded data represented by the
  * passed `pValue` object.
  */
-static size_t calculateSizeOfCborObject( CborValue * const pValue );
+static size_t calculateSizeOfCborObject( CborValue * pValue );
 
 /*-----------------------------------------------------------*/
 
 static const IotSerializerDecodeInterface_t _cborDecoder =
 {
-    .init                             = _init,
-    .get                              = _get,
-    .find                             = _find,
-    .stepIn                           = _stepIn,
-    .stepOut                          = _stepOut,
-    .next                             = _next,
-    .isEndOfContainer                 = _isEndOfContainer,
-    .getBufferLocationOfDecoderObject = _getBufferLocationOfDecoderObject,
-    .getBufferLocationOfIterator      = _getBufferLocationOfIterator,
-    .getSizeOfEncodedDataForIterator  = _getSizeOfEncodedDataForIterator,
-    .destroy                          = _destroy
+    .init                                 = _init,
+    .get                                  = _get,
+    .find                                 = _find,
+    .stepIn                               = _stepIn,
+    .stepOut                              = _stepOut,
+    .next                                 = _next,
+    .isEndOfContainer                     = _isEndOfContainer,
+    .getBufferLocationOfDecoderObject     = _getBufferLocationOfDecoderObject,
+    .getBufferLocationOfIterator          = _getBufferLocationOfIterator,
+    .getSizeOfEncodedDataForDecoderObject = _getSizeOfEncodedDataForDecoderObject,
+    .getSizeOfEncodedDataForIterator      = _getSizeOfEncodedDataForIterator,
+    .destroy                              = _destroy
 };
 
 /* Wrapper CborValue with additional fields. */
@@ -107,11 +114,18 @@ static size_t calculateSizeOfCborObject( CborValue * pValue )
 {
     IotSerializer_Assert( pValue != NULL );
     CborValue nextValue;
+    CborError status = CborNoError;
 
     /* Copy the contents of the current CBOR object so that we can advance to the next object. */
-    memcpy( &nextValue, pValue, sizeof( CborValue ) );
+    /* memcpy( &nextValue, &pValue->cborValue, sizeof( CborValue ) ); */
+    nextValue = *pValue;
 
-    IotSerializer_Assert( cbor_value_advance( &nextValue ) == IOT_SERIALIZER_SUCCESS );
+    /* Advance to the next element in the container. */
+    status = cbor_value_advance( &nextValue );
+    IotSerializer_Assert( status == CborNoError );
+
+    /* Suppress compiler warning of "unused" variable. */
+    ( void ) status;
 
     return( ( size_t ) ( nextValue.ptr - pValue->ptr ) );
 }
@@ -205,10 +219,7 @@ static IotSerializerError_t _createDecoderObject( _cborValueWrapper_t * pCborVal
     }
 
     /* Store the starting address of the CborValue object in the decoder object. */
-    pDecoderObject->bufferPtr = pCborValue->ptr;
-
-    /* Calculate the length of the encoded data for the object in the buffer. */
-    pDecoderObject->dataLengthInBuffer = calculateSizeOfCborObject( pCborValue );
+    pDecoderObject->pBufferStartAddr = pCborValue->ptr;
 
     /* If this is a map or array. */
     if( _isArrayOrMap( dataType ) )
@@ -236,7 +247,7 @@ static IotSerializerError_t _createDecoderObject( _cborValueWrapper_t * pCborVal
 
                    if( cborError == CborNoError )
                    {
-                       pDecoderObject->u.scalarValue.u.booleanValue = value;
+                       pDecoderObject->u.value.u.booleanValue = value;
                    }
                    else
                    {
@@ -253,7 +264,7 @@ static IotSerializerError_t _createDecoderObject( _cborValueWrapper_t * pCborVal
 
                    if( cborError == CborNoError )
                    {
-                       pDecoderObject->u.scalarValue.u.signedInt = i;
+                       pDecoderObject->u.value.u.signedInt = i;
                    }
                    else
                    {
@@ -270,23 +281,23 @@ static IotSerializerError_t _createDecoderObject( _cborValueWrapper_t * pCborVal
                 {
                     cborError = cbor_value_copy_byte_string(
                         pCborValue,
-                        pDecoderObject->u.scalarValue.u.string.pString,
-                        &( pDecoderObject->u.scalarValue.u.string.length ),
+                        pDecoderObject->u.value.u.string.pString,
+                        &( pDecoderObject->u.value.u.string.length ),
                         &next );
                 }
                 else
                 {
                     cborError = cbor_value_copy_text_string(
                         pCborValue,
-                        ( char * ) pDecoderObject->u.scalarValue.u.string.pString,
-                        &( pDecoderObject->u.scalarValue.u.string.length ),
+                        ( char * ) pDecoderObject->u.value.u.string.pString,
+                        &( pDecoderObject->u.value.u.string.length ),
                         &next );
                 }
 
                 if( cborError != CborNoError )
                 {
                     if( ( cborError == CborErrorOutOfMemory ) &&
-                        ( pDecoderObject->u.scalarValue.u.string.pString == NULL ) &&
+                        ( pDecoderObject->u.value.u.string.pString == NULL ) &&
                         ( cbor_value_is_length_known( pCborValue ) ) )
 
                     {
@@ -294,9 +305,9 @@ static IotSerializerError_t _createDecoderObject( _cborValueWrapper_t * pCborVal
                          * If its a finite length text/byte string, and user have passed a null length buffer,
                          * we avoid copying the string by storing pointer to the start of the string.
                          */
-                        pDecoderObject->u.scalarValue.u.string.pString =
+                        pDecoderObject->u.value.u.string.pString =
                             ( uint8_t * ) ( cbor_value_get_next_byte( &next ) -
-                                            ( pDecoderObject->u.scalarValue.u.string.length ) );
+                                            ( pDecoderObject->u.value.u.string.length ) );
                     }
                     else
                     {
@@ -468,12 +479,8 @@ static IotSerializerError_t _stepIn( IotSerializerDecoderObject_t * pDecoderObje
         IotSerializerDecoderObject_t * pNewObject = IotSerializer_MallocDecoderObject(
             sizeof( IotSerializerDecoderObject_t ) );
 
-        pNewObject->type = pDecoderObject->type;
-        pNewObject->bufferPtr = pNewCborValueWrapper->cborValue.ptr;
-
-        /* Calculate the encoded size of the object pointed to by the iterator; */
-        pNewObject->dataLengthInBuffer = calculateSizeOfCborObject(
-            &pNewCborValueWrapper->cborValue );
+        pNewObject->type = _toSerializerType( pNewCborValueWrapper->cborValue.type );
+        pNewObject->pBufferStartAddr = pNewCborValueWrapper->cborValue.ptr;
 
         pNewCborValueWrapper->isOutermost = false;
         pNewObject->u.pHandle = ( void * ) pNewCborValueWrapper;
@@ -527,11 +534,10 @@ static IotSerializerError_t _next( IotSerializerDecoderIterator_t iterator )
 
     if( cbor_value_at_end( &pCborValueWrapper->cborValue ) == false )
     {
-        /* Update the iterator to store the encoded data pointer and length for the new element being pointed to. */
+        /* Update the iterator to store the type and the buffer start address of the the new element being pointed to.*/
         IotSerializerDecoderObject_t * pDecoderObject = ( IotSerializerDecoderObject_t * ) iterator;
-        pDecoderObject->bufferPtr = pCborValueWrapper->cborValue.ptr;
-        pDecoderObject->dataLengthInBuffer = calculateSizeOfCborObject(
-            &pCborValueWrapper->cborValue );
+        pDecoderObject->type = _toSerializerType( pCborValueWrapper->cborValue.type );
+        pDecoderObject->pBufferStartAddr = pCborValueWrapper->cborValue.ptr;
     }
 
     _translateErrorCode( cborError, &returnedError );
@@ -553,7 +559,7 @@ const uint8_t * _getBufferLocationOfDecoderObject( IotSerializerDecoderObject_t 
 {
     IotSerializer_Assert( pDecoderObject != NULL );
 
-    return pDecoderObject->bufferPtr;
+    return pDecoderObject->pBufferStartAddr;
 }
 
 /*-----------------------------------------------------------*/
@@ -565,15 +571,51 @@ const uint8_t * _getBufferLocationOfIterator( IotSerializerDecoderIterator_t ite
     return ( ( _cborValueWrapper_t * ) ( _castDecoderIteratorToCborValue(
                                              iterator ) ) )->cborValue.ptr;
 }
+
 /*-----------------------------------------------------------*/
 
-size_t _getSizeOfEncodedDataForIterator( IotSerializerDecoderIterator_t iterator )
+IotSerializerError_t _getSizeOfEncodedDataForDecoderObject(
+    IotSerializerDecoderObject_t * pDecoderObject,
+    size_t * pEncodedDataLength )
+{
+    IotSerializer_Assert( pDecoderObject != NULL );
+    IotSerializerError_t status = IOT_SERIALIZER_SUCCESS;
+
+    if( IotSerializer_IsContainer( pDecoderObject ) )
+    {
+        *pEncodedDataLength = calculateSizeOfCborObject(
+            &( ( ( _cborValueWrapper_t * ) pDecoderObject->u.pHandle )->cborValue ) );
+    }
+    else
+    {
+        status = IOT_SERIALIZER_NOT_SUPPORTED;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+IotSerializerError_t _getSizeOfEncodedDataForIterator( IotSerializerDecoderIterator_t iterator,
+                                                       size_t * pEncodedDataLength )
 {
     IotSerializerDecoderObject_t * pObject = ( IotSerializerDecoderObject_t * ) iterator;
 
     IotSerializer_Assert( pObject != NULL );
 
-    return pObject->dataLengthInBuffer;
+    IotSerializerError_t status = IOT_SERIALIZER_SUCCESS;
+
+    if( IotSerializer_IsContainer( pObject ) )
+    {
+        *pEncodedDataLength = calculateSizeOfCborObject(
+            &( ( _cborValueWrapper_t * ) pObject->u.pHandle )->cborValue );
+    }
+    else
+    {
+        status = IOT_SERIALIZER_NOT_SUPPORTED;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
