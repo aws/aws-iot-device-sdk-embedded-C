@@ -114,7 +114,7 @@ This setting can be increased for a longer demo. The MQTT demo publishes a total
 @page mqtt_tests Tests
 @brief Tests written for the MQTT library.
 
-The MQTT tests reside in the `tests/mqtt` directory. They are divided into the following subdirectories:
+The MQTT tests reside in the `mqtt/test` directory. They are divided into the following subdirectories:
 - `access`: Helper files that allow access to internal variables and functions of the MQTT library.
 - `mock`: Simulates network responses to MQTT packets; used for testing other libraries that depend on MQTT.
 - `system`: MQTT system and stress tests. These tests require a network connection. Stress tests may run for a long time, so they are not run unless the command line option `-l` is given to the test executable.
