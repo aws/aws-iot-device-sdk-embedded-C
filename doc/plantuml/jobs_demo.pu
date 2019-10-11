@@ -1,0 +1,39 @@
+@startuml "jobs_demo"
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+participant "Main Thread" as main
+participant "Completed Operation Callback" as operation
+participant "NotifyNext Callback" as notify
+participant "Jobs Library" as lib
+
+box "Demo Code" #LightBlue
+    participant main
+    participant operation
+    participant notify
+end box
+box "Library" #LightGreen
+    participant lib
+end box
+
+box "Jobs Service" #LightPink
+    participant "Server" as server
+end box
+
+main -> lib: Register NotifyNext callback
+
+loop #transparent Until "exit" action succeeds
+    server -> lib: New Job is created
+    lib -> notify: Callback invoked
+    notify -// lib: StartNextAsync
+    notify -> notify: Execute action from Job document
+    notify -// lib: UpdateAsync with result of action
+    lib -> operation: Result of Update
+
+    group #transparent "exit" command successfully updated
+        operation -> main: Signal end of demo
+    end
+end
+
+@enduml

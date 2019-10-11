@@ -352,7 +352,7 @@ typedef enum AwsIotJobsError
  * (https://docs.aws.amazon.com/iot/latest/apireference/API_iot-jobs-data_JobExecutionState.html)
  * for more information on Job states.
  */
-typedef enum AwsIotJobsState
+typedef enum AwsIotJobState
 {
     /**
      * @brief A Job is queued and awaiting execution.

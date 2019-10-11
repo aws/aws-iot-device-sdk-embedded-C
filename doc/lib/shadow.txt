@@ -84,7 +84,7 @@ This value may be `0`, which causes a new Shadow update to be sent as soon as th
 @page shadow_tests Tests
 @brief Tests written for the Shadow library.
 
-The Shadow tests reside in the `tests/shadow` directory. They are divided into the following subdirectories:
+The Shadow tests reside in the `shadow/test` directory. They are divided into the following subdirectories:
 - `system`: Shadow system tests. These tests require a network connection and AWS IoT credentials. The command line option `-n` may be passed to the test executable to disable these tests.
 - `unit`: Shadow unit tests. These tests do not require a network connection or credentials. These tests use the [MQTT mocks.](@ref mqtt_tests)
 
