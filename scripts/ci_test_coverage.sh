@@ -51,10 +51,10 @@ trap "delete_jobs" EXIT
 delete_jobs
 trap - EXIT
 
-# Generate code coverage results, but only for files in lib/.
+# Generate code coverage results, but only for files in libraries/.
 lcov --directory . --capture --output-file coverage.info
 lcov --remove coverage.info '*demo*' --output-file coverage.info
-lcov --remove coverage.info '*platform*' --output-file coverage.info
+lcov --remove coverage.info '*ports*' --output-file coverage.info
 lcov --remove coverage.info '*tests*' --output-file coverage.info
 lcov --remove coverage.info '*third_party*' --output-file coverage.info
 

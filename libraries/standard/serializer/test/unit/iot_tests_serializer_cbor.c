@@ -123,10 +123,13 @@ TEST( Serializer_Unit_CBOR, Encoder_init_with_null_buffer )
 TEST( Serializer_Unit_CBOR, Encoder_append_integer )
 {
     int64_t value = 6;
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_SIGNED_INT;
+    scalarData.value.u.signedInt = value;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->append( &_encoderObject, IotSerializer_ScalarSignedInt(
-                                                  value ) ) );
+                       _pCborEncoder->append( &_encoderObject, scalarData ) );
 
     /* --- Verification --- */
 
@@ -150,10 +153,14 @@ TEST( Serializer_Unit_CBOR, Encoder_append_integer )
 TEST( Serializer_Unit_CBOR, Encoder_append_text_string )
 {
     char * str = "hello world";
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_TEXT_STRING;
+    scalarData.value.u.string.pString = ( uint8_t * ) str;
+    scalarData.value.u.string.length = strlen( str );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->append( &_encoderObject, IotSerializer_ScalarTextString(
-                                                  str ) ) );
+                       _pCborEncoder->append( &_encoderObject, scalarData ) );
 
     /* --- Verification --- */
 
@@ -176,10 +183,14 @@ TEST( Serializer_Unit_CBOR, Encoder_append_byte_string )
 {
     uint8_t inputBytes[] = "hello world";
     size_t inputLength = strlen( ( const char * ) inputBytes );
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_BYTE_STRING;
+    scalarData.value.u.string.pString = ( uint8_t * ) inputBytes;
+    scalarData.value.u.string.length = inputLength;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->append( &_encoderObject, IotSerializer_ScalarByteString(
-                                                  inputBytes, inputLength ) ) );
+                       _pCborEncoder->append( &_encoderObject, scalarData ) );
 
     /* --- Verification --- */
 
@@ -217,13 +228,17 @@ TEST( Serializer_Unit_CBOR, Encoder_open_a_scalar )
 TEST( Serializer_Unit_CBOR, Encoder_open_map )
 {
     IotSerializerEncoderObject_t mapObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_TEXT_STRING;
+    scalarData.value.u.string.pString = ( uint8_t * ) "value";
+    scalarData.value.u.string.length = 5;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _pCborEncoder->openContainer( &_encoderObject, &mapObject, 1 ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->appendKeyValue( &mapObject, "key",
-                                                      IotSerializer_ScalarTextString( "value" ) ) );
+                       _pCborEncoder->appendKeyValue( &mapObject, "key", scalarData ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _pCborEncoder->closeContainer( &_encoderObject, &mapObject ) );
@@ -256,15 +271,19 @@ TEST( Serializer_Unit_CBOR, Encoder_open_array )
     IotSerializerEncoderObject_t arrayObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_ARRAY;
 
     int64_t numberArray[] = { 3, 2, 1 };
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_SIGNED_INT;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _pCborEncoder->openContainer( &_encoderObject, &arrayObject, 3 ) );
 
     for( i = 0; i < 3; i++ )
     {
+        scalarData.value.u.signedInt = numberArray[ i ];
+
         TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                           _pCborEncoder->append( &arrayObject, IotSerializer_ScalarSignedInt(
-                                                      numberArray[ i ] ) ) );
+                           _pCborEncoder->append( &arrayObject, scalarData ) );
     }
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
@@ -300,6 +319,11 @@ TEST( Serializer_Unit_CBOR, Encoder_map_nest_map )
 {
     IotSerializerEncoderObject_t mapObject_1 = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
     IotSerializerEncoderObject_t mapObject_2 = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_TEXT_STRING;
+    scalarData.value.u.string.pString = ( uint8_t * ) "value";
+    scalarData.value.u.string.length = 5;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _pCborEncoder->openContainer( &_encoderObject, &mapObject_1, 1 ) );
@@ -309,8 +333,7 @@ TEST( Serializer_Unit_CBOR, Encoder_map_nest_map )
                                                             1 ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->appendKeyValue( &mapObject_2, "key",
-                                                      IotSerializer_ScalarTextString( "value" ) ) );
+                       _pCborEncoder->appendKeyValue( &mapObject_2, "key", scalarData ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _pCborEncoder->closeContainer( &mapObject_1, &mapObject_2 ) );
@@ -350,6 +373,9 @@ TEST( Serializer_Unit_CBOR, Encoder_map_nest_array )
     uint8_t i = 0;
     IotSerializerEncoderObject_t mapObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
     IotSerializerEncoderObject_t arrayObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_ARRAY;
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_SIGNED_INT;
 
     int64_t numberArray[] = { 3, 2, 1 };
 
@@ -362,9 +388,10 @@ TEST( Serializer_Unit_CBOR, Encoder_map_nest_array )
 
     for( i = 0; i < 3; i++ )
     {
+        scalarData.value.u.signedInt = numberArray[ i ];
+
         TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                           _pCborEncoder->append( &arrayObject, IotSerializer_ScalarSignedInt(
-                                                      numberArray[ i ] ) ) );
+                           _pCborEncoder->append( &arrayObject, scalarData ) );
     }
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
