@@ -514,7 +514,7 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
                                                                     &innerMapDecoder ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_SIGNED_INT, innerMapDecoder.type );
 
-    /* Make sure that the getBufferAddress() API does not support getting buffeer address of value in the
+    /* Make sure that the getBufferAddress() API does not support getting buffer address of value in the
      * the nested entry keyed by "A".*/
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED,
                        _pCborDecoder->getBufferAddress( &innerMapDecoder,
