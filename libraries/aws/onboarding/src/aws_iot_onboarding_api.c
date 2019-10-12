@@ -38,6 +38,7 @@
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
+#include "iot_atomic.h"
 
 /* MQTT API include */
 #include "iot_mqtt.h"
@@ -114,8 +115,8 @@ static AwsIotOnboardingError_t _parseDeviceCredentialsResponse( const
  * @param[in] pPublishData The incoming PUBLISH message information from the server.
  * @param[in] responseParser The functor to invoke for parsing a successful server response payload.
  */
-static void _commonCallback( IotMqttCallbackParam_t * const pPublishData,
-                             _onboardingServerResponseParser responseParser );
+static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
+                                          _onboardingServerResponseParser responseParser );
 
 
 /**
@@ -126,6 +127,7 @@ static void _deviceCredentialsResponseReceivedCallback( void * param1,
 
 /**
  * @brief Resets the active operation object.
+ * @note This function should be called ONLY if the operation object mutex is not destroyed.
  */
 static void _resetActiveOperationData();
 
@@ -257,74 +259,86 @@ AwsIotOnboardingError_t _parseDeviceCredentialsResponse( const void * pDeviceCre
 
 /*-----------------------------------------------------------*/
 
-void _commonCallback( IotMqttCallbackParam_t * const pPublishData,
-                      _onboardingServerResponseParser responseParser )
+void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
+                                   _onboardingServerResponseParser responseParser )
 {
     const char * pResponsePayload = pPublishData->u.message.info.pPayload;
     AwsIotStatus_t operationStatus = AWS_IOT_UNKNOWN;
 
-    /* We will use a non-blocking mutex acquiring call to account for scenario
-     * when server response is received after the mutex is destroyed
-     * and thus, no longer valid. */
-    if( IotMutex_TryLock( &_activeOperation.lock ) == true )
+    /* Determine whether the mutex is still valid (i.e. not destroyed) based on the reference count. If the mutex is
+     * valid, indicate that we will be accessing the mutex by incrementing the reference count.
+     * This tackles the RACE CONDITION with the possible cleanup of the mutex in the thread executing an Onboarding
+     * Library API.*/
+    if( Atomic_Increment_u32( &_activeOperation.mutexReferenceCount ) > 0 )
     {
-        /* Is a user thread waiting for the result? */
-        if( _activeOperation.info.userCallback.function == NULL )
+        /* We will use a non-blocking mutex acquiring call to account for scenario
+         * when server response is received after the mutex is destroyed
+         * and thus, no longer valid. */
+        if( IotMutex_TryLock( &_activeOperation.lock ) == true )
         {
-            IotLogDebug( "Received unexpected server response on topic %s.",
-                         pPublishData->u.message.pTopicFilter,
-                         pPublishData->u.message.topicFilterLength );
-        }
-        else
-        {
-            /* Determine whether the response from the server is "accepted" or "rejected". */
-            operationStatus = AwsIot_ParseStatus( pPublishData->u.message.pTopicFilter,
-                                                  pPublishData->u.message.topicFilterLength );
-
-            switch( operationStatus )
+            /* Is a user thread waiting for the result? */
+            if( _activeOperation.info.userCallback.function == NULL )
             {
-                case AWS_IOT_ACCEPTED:
-                    /* Parse the server response and execute the user callback. */
-                    _activeOperation.info.status = responseParser(
-                        pPublishData->u.message.info.pPayload,
-                        pPublishData->u.message.info.
-                           payloadLength,
-                        &_activeOperation.info.
-                           userCallback );
+                IotLogDebug( "Received unexpected server response on topic %s.",
+                             pPublishData->u.message.pTopicFilter,
+                             pPublishData->u.message.topicFilterLength );
+            }
+            else
+            {
+                /* Determine whether the response from the server is "accepted" or "rejected". */
+                operationStatus = AwsIot_ParseStatus( pPublishData->u.message.pTopicFilter,
+                                                      pPublishData->u.message.topicFilterLength );
 
-                    break;
+                switch( operationStatus )
+                {
+                    case AWS_IOT_ACCEPTED:
+                        /* Parse the server response and execute the user callback. */
+                        _activeOperation.info.status = responseParser(
+                            pPublishData->u.message.info.pPayload,
+                            pPublishData->u.message.info.payloadLength,
+                            &_activeOperation.info.userCallback );
 
-                case AWS_IOT_REJECTED:
-                    _activeOperation.info.status = AWS_IOT_ONBOARDING_SERVER_REFUSED;
-                    break;
+                        break;
 
-                default:
-                    IotLogWarn( "Unknown parsing status on topic %s. Ignoring message.",
-                                pPublishData->u.message.pTopicFilter,
-                                pPublishData->u.message.topicFilterLength );
-                    _activeOperation.info.status = AWS_IOT_ONBOARDING_INTERNAL_FAILURE;
-                    break;
+                    case AWS_IOT_REJECTED:
+                        _activeOperation.info.status = AWS_IOT_ONBOARDING_SERVER_REFUSED;
+                        break;
+
+                    default:
+                        IotLogWarn( "Unknown parsing status on topic %s. Ignoring message.",
+                                    pPublishData->u.message.pTopicFilter,
+                                    pPublishData->u.message.topicFilterLength );
+                        _activeOperation.info.status = AWS_IOT_ONBOARDING_INTERNAL_FAILURE;
+                        break;
+                }
+
+                /* Notify the waiting thread about arrival of response from server */
+                /* Increment the number of PUBLISH messages received. */
+                IotSemaphore_Post( &_activeOperation.responseReceivedSem );
+
+                /* Invalidate the user-callback information to prevent re-processing the response
+                 * if we receive the same response multiple times (which is possible for a QoS 1 publish
+                 * from the server). This is done to post on the semaphore ONLY ONCE on receiving the
+                 * response from the server.
+                 */
+                _activeOperation.info.userCallback.userParam == NULL;
+                _activeOperation.info.userCallback.function == NULL;
             }
 
-            /* Notify the waiting thread about arrival of response from server */
-            /* Increment the number of PUBLISH messages received. */
-            IotSemaphore_Post( &_activeOperation.responseReceivedSem );
+            IotMutex_Unlock( &_activeOperation.lock );
 
-            /* Invalidate the user-callback information to prevent re-processing the response
-             * if we receive the same response multiple times (which is possible for a QoS 1 publish
-             * from the server). This is done to post on the semaphore ONLY ONCE on receiving the
-             * response from the server.
-             */
-            _activeOperation.info.userCallback.userParam == NULL;
-            _activeOperation.info.userCallback.function == NULL;
+            /* If no other thread/context is alive needing the mutex, then we will destroy it. */
+            if( Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount ) == 1 )
+            {
+                IotMutex_Destroy( &_activeOperation.lock );
+            }
         }
-
-        IotMutex_Unlock( &_activeOperation.lock );
     }
-
-    /* This function has no return value and no cleanup, but uses the cleanup
-     * label to exit on error. */
-    IOT_FUNCTION_CLEANUP_BEGIN();
+    else
+    {
+        /* Reverse the previous increment operation as mutex is not valid. */
+        Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+    }
 }
 
 
@@ -336,21 +350,29 @@ void _deviceCredentialsResponseReceivedCallback( void * param1,
     /* Silence warnings about unused variables.*/
     ( void ) param1;
 
-    _commonCallback( pPublish, _parseDeviceCredentialsResponse );
+    _commonServerResponseHandler( pPublish, _parseDeviceCredentialsResponse );
 }
 
 /*-----------------------------------------------------------*/
 
 void _resetActiveOperationData()
 {
-    IotMutex_Lock( &( _activeOperation.lock ) );
+    /* Determine whether the mutex is still valid (i.e. not destroyed) based on the reference count. If the mutex is
+     * valid, indicate that we will be accessing the mutex by incrementing the reference count.*/
+    if( Atomic_Increment_u32( &_activeOperation.mutexReferenceCount ) > 0 )
     {
-        _activeOperation.info.userCallback.userParam = NULL;
-        _activeOperation.info.userCallback.function = NULL;
-    }
-    IotMutex_Unlock( &( _activeOperation.lock ) );
+        IotMutex_Lock( &( _activeOperation.lock ) );
+        {
+            _activeOperation.info.userCallback.userParam = NULL;
+            _activeOperation.info.userCallback.function = NULL;
+        }
+        IotMutex_Unlock( &( _activeOperation.lock ) );
 
-    IotSemaphore_TryWait( &_activeOperation.responseReceivedSem );
+        IotSemaphore_TryWait( &_activeOperation.responseReceivedSem );
+    }
+
+    /* Reverse the previous increment operation as we don't need the mutex anymore. */
+    ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
 }
 
 /*-----------------------------------------------------------*/
@@ -378,6 +400,17 @@ AwsIotOnboardingError_t AwsIotOnboarding_Init( uint32_t mqttTimeoutMs )
     else
     {
         mutexCreated = true;
+
+        /* Initialize the reference count to one as the mutex to represent that there is a single thread/context
+         * alive that needs the mutex.
+         * If the reference count is already greather than 0, it represents that there is already a thread accessing
+         * the mutex, which is NOT expected at initialization. */
+        if( Atomic_CompareAndSwap_u32( &_activeOperation.mutexReferenceCount, 1u, 0u ) == 0 )
+        {
+            IotLogError(
+                "Failed to init Onboarding library as mutex reference counter is in an invalid state." );
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INIT_FAILED );
+        }
     }
 
     /* Save the MQTT timeout option. */
@@ -402,9 +435,14 @@ AwsIotOnboardingError_t AwsIotOnboarding_Init( uint32_t mqttTimeoutMs )
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
-    if( ( status != AWS_IOT_ONBOARDING_SUCCESS ) && mutexCreated )
+    if( status != AWS_IOT_ONBOARDING_SUCCESS )
     {
-        IotMutex_Destroy( &_activeOperation.lock );
+        if( mutexCreated )
+        {
+            IotMutex_Destroy( &_activeOperation.lock );
+        }
+
+        ( void ) Atomic_AND_u32( &_activeOperation.mutexReferenceCount, 0u );
     }
 
     IOT_FUNCTION_CLEANUP_END();
@@ -419,6 +457,7 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
                                                                const AwsIotOnboardingCallbackInfo_t
                                                                * deviceCredentialsResponseCallback )
 {
+    bool mutexNotAvailableError = false;
     char responseTopicsBuffer[ ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_MAX_TOPIC_LENGTH ] =
     { 0 };
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
@@ -436,6 +475,15 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
     IOT_FUNCTION_ENTRY( AwsIotOnboardingError_t, AWS_IOT_ONBOARDING_SUCCESS );
+
+    /* Increment the reference counter to indicate that mutex is required. */
+    if( Atomic_Increment_u32( &_activeOperation.mutexReferenceCount ) == 0u )
+    {
+        IotLogError( "Mutex is unavailable for API operation." );
+        mutexNotAvailableError = true;
+        ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
+    }
 
     /* Copy the response topics in a local buffer for appropriate suffixes to be added. */
     ( void ) memcpy( responseTopicsBuffer, ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER,
@@ -473,6 +521,9 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
         subscribedToResponseTopics = true;
     }
 
+    /* Increment the reference count as we will be acquiring the mutex. */
+    ( void ) Atomic_Increment_u32( &_activeOperation.mutexReferenceCount );
+
     /* Update shared active operation object to indicate that an operation is in
      * progress. */
     IotMutex_Lock( &( _activeOperation.lock ) );
@@ -482,10 +533,14 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
         _activeOperation.info.status = AWS_IOT_ONBOARDING_MQTT_ERROR;
 
         /* Store the user supplied callback. */
-        _activeOperation.info.userCallback.function = deviceCredentialsResponseCallback->function;
-        _activeOperation.info.userCallback.userParam = deviceCredentialsResponseCallback->userParam;
+        _activeOperation.info.userCallback.function =
+            deviceCredentialsResponseCallback->function;
+        _activeOperation.info.userCallback.userParam =
+            deviceCredentialsResponseCallback->userParam;
     }
     IotMutex_Unlock( &( _activeOperation.lock ) );
+    /* Decrement the reference count as we have released the mutex. */
+    ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
 
     /* Onboarding already has an acknowledgement mechanism, so sending the message at
      * QoS 1 provides no benefit. */
@@ -548,8 +603,14 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
                                     &responseSubscription );
     }
 
-    /* Reset the active operation */
-    _resetActiveOperationData();
+    if( !mutexNotAvailableError )
+    {
+        /* Reset the active operation */
+        _resetActiveOperationData();
+
+        /* Indicate that the mutex is no longer required by the API as its execution lifetime is ending. */
+        ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+    }
 
     IOT_FUNCTION_CLEANUP_END();
 }
@@ -575,7 +636,13 @@ void AwsIotOnboarding_Cleanup( void )
 
     _resetActiveOperationData();
 
-    IotMutex_Destroy( &( _activeOperation.lock ) );
+    /* We will destroy the mutex only if there is no other thread/context alive that needs the mutex.
+     * This tackles the race condition with the execution of an MQTT callback (that was registered by the operation
+     * APIs) accessing the mutex.*/
+    if( Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount ) == 1 )
+    {
+        IotMutex_Destroy( &( _activeOperation.lock ) );
+    }
 
     IotSemaphore_Destroy( &( _activeOperation.responseReceivedSem ) );
 

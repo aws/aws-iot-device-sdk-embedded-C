@@ -386,6 +386,8 @@ TEST( Onboarding_Unit_API, Init )
         }
 
         TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_INIT_FAILED, status );
+
+        AwsIotOnboarding_Cleanup();
     }
 }
 

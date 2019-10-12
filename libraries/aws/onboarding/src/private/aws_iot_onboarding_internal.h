@@ -193,6 +193,8 @@ typedef struct _onboardingOperationInfo
 typedef struct _onboardingOperation
 {
     IotMutex_t lock;                    /**< @brief Must be acquired before modifying this operation object. */
+    uint32_t mutexReferenceCount;       /**< @brief An atomic reference counter for safeguarding mutex access across
+                                         * thread contexts. */
     _onboardingOperationInfo_t info;    /**< @brief The Onboarding operation object that is protected by the above
                                          * mutex. */
     IotSemaphore_t responseReceivedSem; /**< @brief Semaphore to be used used by the synchronous API functions @ref

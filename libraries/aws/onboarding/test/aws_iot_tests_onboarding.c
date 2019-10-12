@@ -42,7 +42,7 @@ void RunOnboardingTests( bool disableNetworkTests,
 
     if( disableNetworkTests == false )
     {
-        /* RUN_TEST_GROUP( Onboarding_System ); */
+        RUN_TEST_GROUP( Onboarding_System );
     }
 }
 
