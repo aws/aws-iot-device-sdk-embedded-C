@@ -564,16 +564,16 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
     /* Obtain an iterator to the contents of the map. */
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &outerDecoder1,
                                                                       &outerIter ) );
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, ( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get(
-                                                     outerIter, &iterToDecoderObject ) ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( outerIter,
+                                                                   &iterToDecoderObject ) );
     /* Validate that we can obtain the key data of the first entry in the outer map. */
     TEST_ASSERT_EQUAL_STRING_LEN( "1", iterToDecoderObject.u.value.u.string.pString,
                                   iterToDecoderObject.u.value.u.string.length );
 
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( outerIter ) );
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, ( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get(
-                                                     outerIter, &iterToDecoderObject ) ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( outerIter,
+                                                                   &iterToDecoderObject ) );
     /* Validate that we can obtain the value data (i.e. nested map) of the first entry in the parent/outer map. */
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getBufferAddress(
                            &iterToDecoderObject, &pDecoderObjectStartAddr ) );
@@ -582,8 +582,8 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
 
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( outerIter ) );
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, ( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get(
-                                                     outerIter, &iterToDecoderObject2 ) ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( outerIter,
+                                                                   &iterToDecoderObject2 ) );
     /* Validate that we can obtain the key data of the second entry in the outer map. */
     TEST_ASSERT_EQUAL_STRING_LEN( "3", iterToDecoderObject2.u.value.u.string.pString,
                                   iterToDecoderObject2.u.value.u.string.length );
