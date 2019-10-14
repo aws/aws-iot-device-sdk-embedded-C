@@ -1,5 +1,5 @@
 /*
- * AWS IoT Defender V2.0.1
+ * AWS IoT Defender V3.0.0
  * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -36,6 +36,7 @@
 
 #define WAIT_METRICS_JOB_MAX_SECONDS            ( 5 )
 #define MAX_DEFENDER_OUTSTANDING_PUBLISH_REQ    ( ( uint32_t ) 1 )
+#define MAX_CLIENT_IDENTIFIER_LENGTH            ( ( uint16_t ) 128 )
 
 #if WAIT_METRICS_JOB_MAX_SECONDS < AWS_IOT_DEFENDER_WAIT_SERVER_MAX_SECONDS
     #error "_WAIT_METRICS_JOB_MAX_SECONDS must be greater than AWS_IOT_DEFENDER_WAIT_SERVER_MAX_SECONDS."
@@ -148,7 +149,10 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
 
     IOT_FUNCTION_ENTRY( AwsIotDefenderError_t, AWS_IOT_DEFENDER_SUCCESS );
 
-    if( ( pStartInfo == NULL ) || ( pStartInfo->mqttConnection == IOT_MQTT_CONNECTION_INITIALIZER ) )
+    if( ( pStartInfo == NULL ) ||
+        ( pStartInfo->mqttConnection == IOT_MQTT_CONNECTION_INITIALIZER ) ||
+        ( pStartInfo->pClientIdentifier == NULL ) ||
+        ( pStartInfo->clientIdentifierLength > MAX_CLIENT_IDENTIFIER_LENGTH ) )
     {
         IotLogError( "Input startInfo is invalid." );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_DEFENDER_INVALID_INPUT );
@@ -156,7 +160,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
 
     /* Assert system task pool is pre-created! */
     AwsIotDefender_Assert( IOT_SYSTEM_TASKPOOL != NULL );
-    
+
     /* Silence warnigns when asserts are disabled. */
     ( void ) taskPoolError;
 
@@ -172,8 +176,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
             _pAwsIotDefenderDecoder = IotSerializer_GetCborDecoder();
             _pAwsIotDefenderEncoder = IotSerializer_GetCborEncoder();
         #else
-            _pAwsIotDefenderDecoder = IotSerializer_GetJsonDecoder();
-            _pAwsIotDefenderEncoder = IotSerializer_GetJsonEncoder();
+        #error "AWS IOT Defender library supports only CBOR encoder."
         #endif
 
         /* copy input start info into global variable _startInfo */
@@ -286,9 +289,9 @@ void AwsIotDefender_Stop( void )
             IotLogWarn( "Failed to cancel metrics publish job with return code %d and status %d.", taskPoolError, status );
             IotClock_SleepMs( WAIT_METRICS_JOB_MAX_SECONDS * 1000 );
         }
-        
+
         _unsubscribeMqtt();
-       
+
         /* Destroy metrics' mutex. */
         IotMutex_Destroy( &_AwsIotDefenderMetrics.mutex );
 

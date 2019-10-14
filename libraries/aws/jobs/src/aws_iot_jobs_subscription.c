@@ -105,11 +105,10 @@ _jobsSubscription_t * _AwsIotJobs_FindSubscription( const char * pThingName,
 {
     _jobsSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
-    AwsIotThingName_t thingName =
-    {
-        .pThingName      = pThingName,
-        .thingNameLength = thingNameLength
-    };
+    AwsIotThingName_t thingName = { 0 };
+
+    thingName.pThingName = pThingName;
+    thingName.thingNameLength = thingNameLength;
 
     /* Search the list for an existing subscription for Thing Name. */
     pSubscriptionLink = IotListDouble_FindFirstMatch( &( _AwsIotJobsSubscriptions ),
@@ -440,11 +439,10 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
     AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
     _jobsSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink = NULL;
-    AwsIotThingName_t thingName =
-    {
-        .pThingName      = pRequestInfo->pThingName,
-        .thingNameLength = pRequestInfo->thingNameLength
-    };
+    AwsIotThingName_t thingName = { 0 };
+
+    thingName.pThingName = pRequestInfo->pThingName;
+    thingName.thingNameLength = pRequestInfo->thingNameLength;
 
     IotLogInfo( "Removing persistent subscriptions for %.*s.",
                 pRequestInfo->thingNameLength,

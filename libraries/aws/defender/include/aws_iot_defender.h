@@ -1,4 +1,5 @@
 /*
+ * AWS IoT Defender V3.0.0
  * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -89,8 +90,9 @@
 /**
  * Established connections metrics including connections metrics and total count.
  */
-#define AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED                                                                          \
-    ( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_CONNECTIONS | AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL ) \
+#define AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED             \
+    ( AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_CONNECTIONS | \
+      AWS_IOT_DEFENDER_METRICS_TCP_CONNECTIONS_ESTABLISHED_TOTAL )       \
 
 /**@} end of DefenderMetricsFlags */
 
@@ -105,13 +107,13 @@
     {                                         \
         .pCallbackContext = NULL,             \
         .function = NULL                      \
-    }
+    } /**< Initializer of #AwsIotDefenderCallback_t. */
 #define AWS_IOT_DEFENDER_START_INFO_INITIALIZER          \
     { .pClientIdentifier = NULL,                         \
       .clientIdentifierLength = 0,                       \
       .mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER, \
       .callback = AWS_IOT_DEFENDER_CALLBACK_INITIALIZER  \
-    } /**< Initializer of #AwsIotDefenderCallbackInfo_t. */
+    } /**< Initializer of #AwsIotDefenderStartInfo_t. */
 /**@} */
 
 /**
@@ -192,7 +194,8 @@ typedef struct AwsIotDefenderCallbackInfo
  */
 typedef struct AwsIotDefenderCallback
 {
-    void * pCallbackContext;                                     /**< The callback context for caller's use (optional). */
+    void * pCallbackContext;                                     /**< The callback context for caller's use (optional).
+                                                                  * */
     void ( * function )( void *,
                          AwsIotDefenderCallbackInfo_t * const ); /**< Callback function signature(optional). */
 } AwsIotDefenderCallback_t;
@@ -203,9 +206,9 @@ typedef struct AwsIotDefenderCallback
  */
 typedef struct AwsIotDefenderStartInfo
 {
-    const char * pClientIdentifier;     /**< @brief MQTT client identifier. */
-    uint16_t clientIdentifierLength;    /**< @brief Length of #IotMqttConnectInfo_t.pClientIdentifier. */
-    IotMqttConnection_t mqttConnection; /**< MQTT connection used by defender (required). */
+    const char * pClientIdentifier;     /**< @brief MQTT client identifier (required). */
+    uint16_t clientIdentifierLength;    /**< @brief Length of #IotMqttConnectInfo_t.pClientIdentifier (required). */
+    IotMqttConnection_t mqttConnection; /**< @brief MQTT connection used by defender (required). */
     AwsIotDefenderCallback_t callback;  /**< Callback function parameter (optional). */
 } AwsIotDefenderStartInfo_t;
 
@@ -309,7 +312,7 @@ AwsIotDefenderError_t AwsIotDefender_SetMetrics( AwsIotDefenderMetricsGroup_t me
  *     const AwsIotDefenderCallback_t callback = { .function = logDefenderCallback, .pCallbackContext = NULL };
  *
  *     // define parameters of AwsIotDefender_Start function
- *     // Note: This example assumes, connection is already established and metrics library is initialized.
+ *     // Note: This example assumes MQTT connection is already established and metrics library is initialized.
  *     const AwsIotDefenderStartInfo_t startInfo =
  *     {
  *         .pClientIdentifier = pClientIdentifier,
