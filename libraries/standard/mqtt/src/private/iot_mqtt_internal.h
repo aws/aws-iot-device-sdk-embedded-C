@@ -373,18 +373,18 @@ typedef struct _mqttConnection
     const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
     IotMqttCallbackInfo_t disconnectCallback;        /**< @brief A function to invoke when this connection is disconnected. */
 
-    const IotMqttSerializer_t * pSerializer; /**< @brief MQTT packet serializer overrides. */
+    const IotMqttSerializer_t * pSerializer;         /**< @brief MQTT packet serializer overrides. */
 
-    bool disconnected;                 /**< @brief Tracks if this connection has been disconnected. */
-    IotMutex_t referencesMutex;        /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
-    int32_t references;                /**< @brief Counts callbacks and operations using this connection. */
-    IotListDouble_t pendingProcessing; /**< @brief List of operations waiting to be processed by a task pool routine. */
-    IotListDouble_t pendingResponse;   /**< @brief List of processed operations awaiting a server response. */
+    bool disconnected;                               /**< @brief Tracks if this connection has been disconnected. */
+    IotMutex_t referencesMutex;                      /**< @brief Recursive mutex. Grants access to connection state and operation lists. */
+    int32_t references;                              /**< @brief Counts callbacks and operations using this connection. */
+    IotListDouble_t pendingProcessing;               /**< @brief List of operations waiting to be processed by a task pool routine. */
+    IotListDouble_t pendingResponse;                 /**< @brief List of processed operations awaiting a server response. */
 
-    IotListDouble_t subscriptionList;  /**< @brief Holds subscriptions associated with this connection. */
-    IotMutex_t subscriptionMutex;      /**< @brief Grants exclusive access to the subscription list. */
+    IotListDouble_t subscriptionList;                /**< @brief Holds subscriptions associated with this connection. */
+    IotMutex_t subscriptionMutex;                    /**< @brief Grants exclusive access to the subscription list. */
 
-    _mqttOperation_t pingreq;          /**< @brief Operation used for MQTT keep-alive. */
+    _mqttOperation_t pingreq;                        /**< @brief Operation used for MQTT keep-alive. */
 } _mqttConnection_t;
 
 /**
@@ -961,31 +961,32 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
                                       _mqttConnection_t * pMqttConnection );
 
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+
 /**
  * @brief Utility macro for creating serializer override selector functions
  */
-#define _IOT_MQTT_SERIALIZER_OVERRIDE_SELECTOR( _funcType_t, _funcName, _defaultFunc, _serializerMember ) \
-static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer ); \
-static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer ) \
-{ \
-    _funcType_t _returnValue = _defaultFunc; \
-    if( pSerializer != NULL ) \
-    { \
-        if( pSerializer->_serializerMember != NULL ) \
-        { \
-            _returnValue = pSerializer->_serializerMember; \
-        } \
-        else \
-        { \
-            EMPTY_ELSE_MARKER; \
-        } \
-    } \
-    else \
-    { \
-        EMPTY_ELSE_MARKER; \
-    } \
-    return _returnValue; \
-}
+    #define _SERIALIZER_OVERRIDE_SELECTOR( _funcType_t, _funcName, _defaultFunc, _serializerMember ) \
+    static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer );                         \
+    static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer )                          \
+    {                                                                                                \
+        _funcType_t _returnValue = _defaultFunc;                                                     \
+        if( pSerializer != NULL )                                                                    \
+        {                                                                                            \
+            if( pSerializer->_serializerMember != NULL )                                             \
+            {                                                                                        \
+                _returnValue = pSerializer->_serializerMember;                                       \
+            }                                                                                        \
+            else                                                                                     \
+            {                                                                                        \
+                EMPTY_ELSE_MARKER;                                                                   \
+            }                                                                                        \
+        }                                                                                            \
+        else                                                                                         \
+        {                                                                                            \
+            EMPTY_ELSE_MARKER;                                                                       \
+        }                                                                                            \
+        return _returnValue;                                                                         \
+    }
 #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
 #endif /* ifndef IOT_MQTT_INTERNAL_H_ */
