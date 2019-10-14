@@ -181,27 +181,41 @@
     #endif
 #endif /* if IOT_STATIC_MEMORY_ONLY */
 
-#define IOT_SERIALIZER_INDEFINITE_LENGTH                       0xffffffff
+#define IOT_SERIALIZER_INDEFINITE_LENGTH    0xffffffff
 
-#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM    { .pHandle = NULL, .type = IOT_SERIALIZER_CONTAINER_STREAM }
+#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM \
+    { .pHandle = NULL, .type =                              \
+          IOT_SERIALIZER_CONTAINER_STREAM }
 
-#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP       { .pHandle = NULL, .type = IOT_SERIALIZER_CONTAINER_MAP }
+#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP \
+    { .pHandle = NULL, .type =                           \
+          IOT_SERIALIZER_CONTAINER_MAP }
 
-#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_ARRAY     { .pHandle = NULL, .type = IOT_SERIALIZER_CONTAINER_ARRAY }
+#define IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_ARRAY \
+    { .pHandle = NULL, .type =                             \
+          IOT_SERIALIZER_CONTAINER_ARRAY }
 
-#define IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER              { .type = IOT_SERIALIZER_UNDEFINED }
+#define IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER      { .type = IOT_SERIALIZER_UNDEFINED }
 
-#define IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER            NULL
+#define IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER    NULL
 
 /* helper macro to create scalar data */
-#define IotSerializer_ScalarSignedInt( signedIntValue )                                                                        \
-    ( IotSerializerScalarData_t ) { .value = { .u.signedInt = ( signedIntValue ) }, .type = IOT_SERIALIZER_SCALAR_SIGNED_INT } \
+#define IotSerializer_ScalarSignedInt( signedIntValue )                                     \
+    ( IotSerializerScalarData_t ) { .value = { .u.signedInt = ( signedIntValue ) }, .type = \
+                                        IOT_SERIALIZER_SCALAR_SIGNED_INT }                  \
 
-#define IotSerializer_ScalarTextString( pTextStringValue )                                                                                                                                          \
-    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( ( uint8_t * ) pTextStringValue ), .u.string.length = strlen( pTextStringValue ) }, .type = IOT_SERIALIZER_SCALAR_TEXT_STRING } \
+#define IotSerializer_ScalarTextString( pTextStringValue )                             \
+    ( IotSerializerScalarData_t ) { .value = { .u.string.pString =                     \
+                                                   ( ( uint8_t * ) pTextStringValue ), \
+                                               .u.string.length                        \
+                                                   = strlen( pTextStringValue ) },     \
+                                    .type = IOT_SERIALIZER_SCALAR_TEXT_STRING }        \
 
-#define IotSerializer_ScalarByteString( pByteStringValue, pByteStringLength )                                                                                                    \
-    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( pByteStringValue ), .u.string.length = ( pByteStringLength ) }, .type = IOT_SERIALIZER_SCALAR_BYTE_STRING } \
+#define IotSerializer_ScalarByteString( pByteStringValue, pByteStringLength )            \
+    ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( pByteStringValue ), \
+                                               .u.string.length                          \
+                                                   = ( pByteStringLength ) }, .type =    \
+                                        IOT_SERIALIZER_SCALAR_BYTE_STRING }              \
 
 /* Determine if an object is a container. */
 #define IotSerializer_IsContainer( object )                      \
@@ -277,7 +291,7 @@ typedef struct IotSerializerDecoderObject
     IotSerializerDataType_t type;
     union
     {
-        /* useful when this is a container */
+        /* Useful if the type is a container. */
         void * pHandle;
         /* if the type is a container, the scalarValue is unuseful */
         IotSerializerScalarValue_t value;
@@ -311,7 +325,8 @@ typedef struct IotSerializerEncodeInterface
     /**
      * @brief Initialize the object's handle with specified buffer and max size.
      *
-     * @param[in] pEncoderObject Pointer of Encoder Object. After init, its type will be set to IOT_SERIALIZER_CONTAINER_STREAM.
+     * @param[in] pEncoderObject Pointer of Encoder Object. After init, its type will be set to
+     * IOT_SERIALIZER_CONTAINER_STREAM.
      * @param[in] pDataBuffer Pointer to allocated buffer by user;
      *            NULL pDataBuffer is valid, used to calculate needed size by calling getExtraBufferSizeNeeded.
      * @param[in] maxSize Allocated buffer size
@@ -354,7 +369,8 @@ typedef struct IotSerializerEncodeInterface
      */
     IotSerializerError_t ( * openContainerWithKey )( IotSerializerEncoderObject_t * pEncoderObject,
                                                      const char * pKey,
-                                                     IotSerializerEncoderObject_t * pNewEncoderObject,
+                                                     IotSerializerEncoderObject_t *
+                                                     pNewEncoderObject,
                                                      size_t length );
 
     /**
@@ -470,6 +486,35 @@ typedef struct IotSerializerDecodeInterface
      */
     bool ( * isEndOfContainer )( IotSerializerDecoderIterator_t iterator );
 
+    /**
+     * @brief Function to obtain the starting buffer address of the raw encoded data (scalar or container type)
+     * represented by the passed decoder object.
+     * Container SHOULD be of type array or map.
+     * @param[in] pDecoderObject The decoder object whose underlying data's starting location in the buffer
+     * is to be returned.
+     * @param[out] pEncodedDataStartAddr This will be populated with the starting location of the encoded object
+     * in the data buffer.
+     * @return #IOT_SERIALIZER_SUCCESS if successful; otherwise #IOT_SERIALIZER_NOT_SUPPORTED
+     * for a non-container type iterator.
+     */
+    IotSerializerError_t ( * getBufferAddress )( IotSerializerDecoderObject_t *
+                                                 pDecoderObject,
+                                                 const uint8_t **
+                                                 pEncodedDataStartAddr );
+
+
+    /**
+     * @brief Function to get the size of the raw encoded data in the buffer (ONLY of container type object)
+     * that is represented by the passed decoder object.
+     * Container SHOULD be of type array or map.
+     * @param[in] pDecoderObject The decoder objects whose underlying buffer data's length needs to be
+     * calculated.
+     * @param[out] The length of the underlying data in the buffer represented by the decoder object.
+     * @return #IOT_SERIALIZER_SUCCESS if successful; otherwise #IOT_SERIALIZER_NOT_SUPPORTED
+     * for a non-container type iterator.
+     */
+    IotSerializerError_t ( * getSizeOfEncodedData )( IotSerializerDecoderObject_t * pDecoderObject,
+                                                     size_t * pEncodedDataLength );
 
 
     /**

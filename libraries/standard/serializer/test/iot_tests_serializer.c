@@ -39,13 +39,15 @@
  * @param[in] disableNetworkTests Whether tests that require the network should run.
  * @param[in] disableLongTests Whether tests that take a long time should run.
  */
-void RunSerializerTests( bool disableNetworkTests, bool disableLongTests )
+void RunSerializerTests( bool disableNetworkTests,
+                         bool disableLongTests )
 {
     /* Silence warnings about unused parameters. */
     ( void ) disableNetworkTests;
     ( void ) disableLongTests;
 
     RUN_TEST_GROUP( Serializer_Unit_CBOR );
+    RUN_TEST_GROUP( Serializer_Decoder_Unit_CBOR );
 }
 
 /*-----------------------------------------------------------*/
