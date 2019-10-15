@@ -781,8 +781,8 @@ void IotNetworkMbedtls_Cleanup( void )
 
 /*-----------------------------------------------------------*/
 
-IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
-                                            void * pCredentialInfo,
+IotNetworkError_t IotNetworkMbedtls_Create( IotNetworkServerInfo_t * pConnectionInfo,
+                                            IotNetworkCredentials_t * pCredentialInfo,
                                             void ** pConnection )
 {
     IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
