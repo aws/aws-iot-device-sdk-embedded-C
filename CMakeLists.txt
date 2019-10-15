@@ -119,7 +119,9 @@ add_subdirectory( libraries/aws/defender )
 add_subdirectory( third_party/tinycbor )
 
 # mbed TLS library (third-party).
-add_subdirectory( third_party/mbedtls )
+if( NOT IOT_NETWORK_USE_OPENSSL )
+    add_subdirectory( third_party/mbedtls )
+endif()
 
 # Set startup projects in Visual Studio.
 if( ${IOT_BUILD_TESTS} )
