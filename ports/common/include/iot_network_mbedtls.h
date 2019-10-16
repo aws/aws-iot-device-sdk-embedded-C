@@ -112,8 +112,8 @@ void IotNetworkMbedtls_Cleanup( void );
 /**
  * @brief An implementation of #IotNetworkInterface_t::create for mbed TLS.
  */
-IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
-                                            void * pCredentialInfo,
+IotNetworkError_t IotNetworkMbedtls_Create( IotNetworkServerInfo_t * pConnectionInfo,
+                                            IotNetworkCredentials_t * pCredentialInfo,
                                             void ** pConnection );
 
 /**

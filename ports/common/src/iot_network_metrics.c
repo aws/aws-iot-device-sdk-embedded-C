@@ -64,8 +64,8 @@
 /**
  * @brief Wraps the network connection creation function with metrics.
  */
-static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
-                                                void * pCredentialInfo,
+static IotNetworkError_t _metricsNetworkCreate( IotNetworkServerInfo_t * pConnectionInfo,
+                                                IotNetworkCredentials_t * pCredentialInfo,
                                                 void ** pConnection );
 
 /**
@@ -140,7 +140,7 @@ static IotMutex_t _connectionListMutex;
     /**
      * @brief Pointer to the metrics-wrapped network creation function.
      */
-    static IotNetworkError_t ( * _networkCreate )( void *, void *, void ** ) = IotNetworkMbedtls_Create;
+    static IotNetworkError_t ( * _networkCreate )( IotNetworkServerInfo_t *, IotNetworkCredentials_t *, void ** ) = IotNetworkMbedtls_Create;
 
     /**
      * @brief Pointer to the metrics-wrapped network close function.
@@ -184,8 +184,8 @@ static bool _connectionMatch( const IotLink_t * pConnectionLink,
 
 /*-----------------------------------------------------------*/
 
-static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
-                                                void * pCredentialInfo,
+static IotNetworkError_t _metricsNetworkCreate( IotNetworkServerInfo_t * pConnectionInfo,
+                                                IotNetworkCredentials_t * pCredentialInfo,
                                                 void ** pConnection )
 {
     IotMetricsTcpConnection_t * pTcpConnection = NULL;
