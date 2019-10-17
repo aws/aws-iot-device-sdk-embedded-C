@@ -112,66 +112,46 @@ static void _flushPacket( void * pNetworkConnection,
  * Declaration of local MQTT serializer override selectors
  */
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-    _SERIALIZER_OVERRIDE_SELECTOR(
-        IotMqttGetPacketType_t,
-        _getPacketTypeFunc,
-        _IotMqtt_GetPacketType,
-        getPacketType
-        )
-    _SERIALIZER_OVERRIDE_SELECTOR(
-        IotMqttGetRemainingLength_t,
-        _getRemainingLengthFunc,
-        _IotMqtt_GetRemainingLength,
-        getRemainingLength
-        )
-    _SERIALIZER_OVERRIDE_SELECTOR(
-        IotMqttDeserialize_t,
-        _getConnackDeserializer,
-        _IotMqtt_DeserializeConnack,
-        deserialize.connack
-        )
-    _SERIALIZER_OVERRIDE_SELECTOR(
-        IotMqttDeserialize_t,
-        _getPublishDeserializer,
-        _IotMqtt_DeserializePublish,
-        deserialize.publish
-        )
-    _SERIALIZER_OVERRIDE_SELECTOR(
-        IotMqttDeserialize_t,
-        _getPubackDeserializer,
-        _IotMqtt_DeserializePuback,
-        deserialize.puback
-        )
-    _SERIALIZER_OVERRIDE_SELECTOR(
-        IotMqttDeserialize_t,
-        _getSubackDeserializer,
-        _IotMqtt_DeserializeSuback,
-        deserialize.suback
-        )
-    _SERIALIZER_OVERRIDE_SELECTOR(
-        IotMqttDeserialize_t,
-        _getUnsubackDeserializer,
-        _IotMqtt_DeserializeUnsuback,
-        deserialize.unsuback
-        )
-    _SERIALIZER_OVERRIDE_SELECTOR(
-        IotMqttDeserialize_t,
-        _getPingrespDeserializer,
-        _IotMqtt_DeserializePingresp,
-        deserialize.pingresp
-        )
-    _SERIALIZER_OVERRIDE_SELECTOR(
-        IotMqttSerializePuback_t,
-        _getMqttPubackSerializer,
-        _IotMqtt_SerializePuback,
-        serialize.puback
-        )
-    _SERIALIZER_OVERRIDE_SELECTOR(
-        IotMqttFreePacket_t,
-        _getMqttFreePacketFunc,
-        _IotMqtt_FreePacket,
-        freePacket
-        )
+    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttGetPacketType_t,
+                                   _getPacketTypeFunc,
+                                   _IotMqtt_GetPacketType,
+                                   getPacketType )
+    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttGetRemainingLength_t,
+                                   _getRemainingLengthFunc,
+                                   _IotMqtt_GetRemainingLength,
+                                   getRemainingLength )
+    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttDeserialize_t,
+                                   _getConnackDeserializer,
+                                   _IotMqtt_DeserializeConnack,
+                                   deserialize.connack )
+    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttDeserialize_t,
+                                   _getPublishDeserializer,
+                                   _IotMqtt_DeserializePublish,
+                                   deserialize.publish )
+    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttDeserialize_t,
+                                   _getPubackDeserializer,
+                                   _IotMqtt_DeserializePuback,
+                                   deserialize.puback )
+    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttDeserialize_t,
+                                   _getSubackDeserializer,
+                                   _IotMqtt_DeserializeSuback,
+                                   deserialize.suback )
+    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttDeserialize_t,
+                                   _getUnsubackDeserializer,
+                                   _IotMqtt_DeserializeUnsuback,
+                                   deserialize.unsuback )
+    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttDeserialize_t,
+                                   _getPingrespDeserializer,
+                                   _IotMqtt_DeserializePingresp,
+                                   deserialize.pingresp )
+    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializePuback_t,
+                                   _getMqttPubackSerializer,
+                                   _IotMqtt_SerializePuback,
+                                   serialize.puback )
+    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttFreePacket_t,
+                                   _getMqttFreePacketFunc,
+                                   _IotMqtt_FreePacket,
+                                   freePacket )
 #else  /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
     #define _getPacketTypeFunc( pSerializer )          _IotMqtt_GetPacketType
     #define _getRemainingLengthFunc( pSerializer )     _IotMqtt_GetRemainingLength
@@ -227,9 +207,8 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
     IotMqtt_Assert( pIncomingPacket->remainingLength == 0 );
 
     /* Read the packet type, which is the first byte available. */
-    pIncomingPacket->type = _getPacketTypeFunc( pMqttConnection->pSerializer )(
-        pNetworkConnection,
-        pMqttConnection->pNetworkInterface );
+    pIncomingPacket->type = _getPacketTypeFunc( pMqttConnection->pSerializer )( pNetworkConnection,
+                                                                                pMqttConnection->pNetworkInterface );
 
     /* Check that the incoming packet type is valid. */
     if( _incomingPacketValid( pIncomingPacket->type ) == false )
@@ -246,9 +225,8 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
     }
 
     /* Read the remaining length. */
-    pIncomingPacket->remainingLength = _getRemainingLengthFunc( pMqttConnection->pSerializer )(
-        pNetworkConnection,
-        pMqttConnection->pNetworkInterface );
+    pIncomingPacket->remainingLength = _getRemainingLengthFunc( pMqttConnection->pSerializer )( pNetworkConnection,
+                                                                                                pMqttConnection->pNetworkInterface );
 
     if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
     {
@@ -341,9 +319,10 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
     {
         case MQTT_PACKET_TYPE_CONNACK:
             IotLogDebug( "(MQTT connection %p) CONNACK in data stream.", pMqttConnection );
+
             /* Deserialize CONNACK and notify of result. */
-            status = _getConnackDeserializer( pMqttConnection->pSerializer )(
-                pIncomingPacket );
+            status = _getConnackDeserializer( pMqttConnection->pSerializer )( pIncomingPacket );
+
             pOperation = _IotMqtt_FindOperation( pMqttConnection,
                                                  IOT_MQTT_CONNECT,
                                                  NULL );
@@ -383,8 +362,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
             }
 
             /* Deserialize incoming PUBLISH. */
-            status = _getPublishDeserializer( pMqttConnection->pSerializer )(
-                pIncomingPacket );
+            status = _getPublishDeserializer( pMqttConnection->pSerializer )( pIncomingPacket );
 
             if( status == IOT_MQTT_SUCCESS )
             {
@@ -468,8 +446,8 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
             IotLogDebug( "(MQTT connection %p) PUBACK in data stream.", pMqttConnection );
 
             /* Deserialize PUBACK and notify of result. */
-            status = _getPubackDeserializer( pMqttConnection->pSerializer )(
-                pIncomingPacket );
+            status = _getPubackDeserializer( pMqttConnection->pSerializer )( pIncomingPacket );
+
             pOperation = _IotMqtt_FindOperation( pMqttConnection,
                                                  IOT_MQTT_PUBLISH_TO_SERVER,
                                                  &( pIncomingPacket->packetIdentifier ) );
@@ -492,8 +470,8 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
             /* Deserialize SUBACK and notify of result. */
             pIncomingPacket->u.pMqttConnection = pMqttConnection;
 
-            status = _getSubackDeserializer( pMqttConnection->pSerializer )(
-                pIncomingPacket );
+            status = _getSubackDeserializer( pMqttConnection->pSerializer )( pIncomingPacket );
+
             pOperation = _IotMqtt_FindOperation( pMqttConnection,
                                                  IOT_MQTT_SUBSCRIBE,
                                                  &( pIncomingPacket->packetIdentifier ) );
@@ -512,9 +490,9 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
         case MQTT_PACKET_TYPE_UNSUBACK:
             IotLogDebug( "(MQTT connection %p) UNSUBACK in data stream.", pMqttConnection );
+
             /* Deserialize UNSUBACK and notify of result. */
-            status = _getUnsubackDeserializer( pMqttConnection->pSerializer )(
-                pIncomingPacket );
+            status = _getUnsubackDeserializer( pMqttConnection->pSerializer )( pIncomingPacket );
 
             pOperation = _IotMqtt_FindOperation( pMqttConnection,
                                                  IOT_MQTT_UNSUBSCRIBE,
@@ -535,11 +513,11 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
         default:
             /* The only remaining valid type is PINGRESP. */
             IotMqtt_Assert( ( pIncomingPacket->type & 0xf0 ) == MQTT_PACKET_TYPE_PINGRESP );
+
             IotLogDebug( "(MQTT connection %p) PINGRESP in data stream.", pMqttConnection );
 
             /* Deserialize PINGRESP. */
-            status = _getPingrespDeserializer( pMqttConnection->pSerializer )(
-                pIncomingPacket );
+            status = _getPingrespDeserializer( pMqttConnection->pSerializer )( pIncomingPacket );
 
             if( status == IOT_MQTT_SUCCESS )
             {
@@ -605,10 +583,9 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
     pPubackOperation->u.operation.type = IOT_MQTT_PUBACK;
 
     /* Generate a PUBACK packet from the packet identifier. */
-    status = _getMqttPubackSerializer( pMqttConnection->pSerializer )(
-        packetIdentifier,
-        &( pPubackOperation->u.operation.pMqttPacket ),
-        &( pPubackOperation->u.operation.packetSize ) );
+    status = _getMqttPubackSerializer( pMqttConnection->pSerializer )( packetIdentifier,
+                                                                       &( pPubackOperation->u.operation.pMqttPacket ),
+                                                                       &( pPubackOperation->u.operation.packetSize ) );
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -740,8 +717,7 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
             /* Free the packet */
-            _getMqttFreePacketFunc( pMqttConnection->pSerializer )(
-                pMqttConnection->pingreq.u.operation.pMqttPacket );
+            _getMqttFreePacketFunc( pMqttConnection->pSerializer )( pMqttConnection->pingreq.u.operation.pMqttPacket );
 
             /* Clear data about the keep-alive. */
             pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = 0;
