@@ -38,6 +38,8 @@ add_library( tinycbor
 target_include_directories( tinycbor SYSTEM
                             PUBLIC tinycbor/src )
 
+target_link_libraries( tinycbor PRIVATE m )
+
 # Disable all warnings for this third-party library.
 target_compile_options( tinycbor
                         PRIVATE
