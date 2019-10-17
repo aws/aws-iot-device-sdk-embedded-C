@@ -998,7 +998,7 @@ typedef struct IotMqttNetworkInfo
              * interface when creating a new network connection. It is only valid when
              * #IotMqttNetworkInfo_t::createNetworkConnection is `true`.
              */
-            IotNetworkServerInfo_t * pNetworkServerInfo;
+            void * pNetworkServerInfo;
 
             /**
              * @brief Credentials for the MQTT server, passed as `pCredentialInfo` to
@@ -1008,7 +1008,7 @@ typedef struct IotMqttNetworkInfo
              * interface when creating a new network connection. It is only valid when
              * #IotMqttNetworkInfo_t::createNetworkConnection is `true`.
              */
-            IotNetworkCredentials_t * pNetworkCredentialInfo;
+            void * pNetworkCredentialInfo;
         } setup;
 
         /**

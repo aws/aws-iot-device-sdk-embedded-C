@@ -224,7 +224,7 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
  * // Set the members of the will info (retain and retry not used).
  * willInfo.qos = IOT_MQTT_QOS_1;
  * willInfo.pTopicName = "will/topic/name";
- * willInfo.topicNameLength = ( uint16_t )strlen( willInfo.pTopicName );
+ * willInfo.topicNameLength = ( uint16_t ) strlen( willInfo.pTopicName );
  * willInfo.pPayload = "MQTT client unexpectedly disconnected.";
  * willInfo.payloadLength = strlen( willInfo.pPayload );
  *
@@ -606,7 +606,7 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
  * // Set the publish information. QoS 0 example (retain not used):
  * publishInfo.qos = IOT_MQTT_QOS_0;
  * publishInfo.pTopicName = "some/topic/name";
- * publishInfo.topicNameLength = ( uint16_t )strlen( publishInfo.pTopicName );
+ * publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
  * publishInfo.pPayload = "payload";
  * publishInfo.payloadLength = strlen( publishInfo.pPayload );
  *
@@ -807,8 +807,7 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation );
  * @param[in] pTopicFilter The topic filter to check.
  * @param[in] topicFilterLength Length of `pTopicFilter`.
  * @param[out] pCurrentSubscription If a subscription is found, its details are
- * copied here. This output parameter is only valid if this function returns `true`.
- * Pass `NULL` to ignore.
+ * copied here. This output parameter is only valid if this function returns `true` (NULL to disable)
  *
  * @return `true` if a subscription was found; `false` otherwise.
  *
