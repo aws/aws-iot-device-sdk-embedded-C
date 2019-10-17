@@ -50,6 +50,7 @@ if( NOT DEFINED IOT_PLATFORM_NAME )
         option( IOT_NETWORK_USE_OPENSSL
                 "Set this to ON to use a network abstraction implemented on OpenSSL. When OFF, the mbed TLS network abstraction is used."
                 OFF )
+    endif()
 endif()
 
 # Validate the platform name.
