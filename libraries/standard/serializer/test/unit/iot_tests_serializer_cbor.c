@@ -108,7 +108,9 @@ TEST( Serializer_Unit_CBOR, Encoder_init_with_null_buffer )
     TEST_ASSERT_NOT_NULL( encoderObject.pHandle );
 
     /* Append an integer. */
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_BUFFER_TOO_SMALL, _pCborEncoder->append( &encoderObject, IotSerializer_ScalarSignedInt( 1 ) ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_BUFFER_TOO_SMALL, _pCborEncoder->append( &encoderObject,
+                                                                               IotSerializer_ScalarSignedInt(
+                                                                                   1 ) ) );
 
     /* Needed buffer size is 1 to encode integer "1". */
     TEST_ASSERT_EQUAL( 1, _pCborEncoder->getExtraBufferSizeNeeded( &encoderObject ) );
@@ -121,9 +123,13 @@ TEST( Serializer_Unit_CBOR, Encoder_init_with_null_buffer )
 TEST( Serializer_Unit_CBOR, Encoder_append_integer )
 {
     int64_t value = 6;
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_SIGNED_INT;
+    scalarData.value.u.signedInt = value;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->append( &_encoderObject, IotSerializer_ScalarSignedInt( value ) ) );
+                       _pCborEncoder->append( &_encoderObject, scalarData ) );
 
     /* --- Verification --- */
 
@@ -147,9 +153,14 @@ TEST( Serializer_Unit_CBOR, Encoder_append_integer )
 TEST( Serializer_Unit_CBOR, Encoder_append_text_string )
 {
     char * str = "hello world";
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_TEXT_STRING;
+    scalarData.value.u.string.pString = ( uint8_t * ) str;
+    scalarData.value.u.string.length = strlen( str );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->append( &_encoderObject, IotSerializer_ScalarTextString( str ) ) );
+                       _pCborEncoder->append( &_encoderObject, scalarData ) );
 
     /* --- Verification --- */
 
@@ -172,9 +183,14 @@ TEST( Serializer_Unit_CBOR, Encoder_append_byte_string )
 {
     uint8_t inputBytes[] = "hello world";
     size_t inputLength = strlen( ( const char * ) inputBytes );
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_BYTE_STRING;
+    scalarData.value.u.string.pString = ( uint8_t * ) inputBytes;
+    scalarData.value.u.string.length = inputLength;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->append( &_encoderObject, IotSerializer_ScalarByteString( inputBytes, inputLength ) ) );
+                       _pCborEncoder->append( &_encoderObject, scalarData ) );
 
     /* --- Verification --- */
 
@@ -190,7 +206,8 @@ TEST( Serializer_Unit_CBOR, Encoder_append_byte_string )
     size_t outputLength = 20;
 
     TEST_ASSERT_EQUAL( CborNoError,
-                       cbor_value_copy_byte_string( &outermostValue, outputBytes, &outputLength, NULL ) );
+                       cbor_value_copy_byte_string( &outermostValue, outputBytes, &outputLength,
+                                                    NULL ) );
 
     TEST_ASSERT_EQUAL( inputLength, outputLength );
 
@@ -199,7 +216,10 @@ TEST( Serializer_Unit_CBOR, Encoder_append_byte_string )
 
 TEST( Serializer_Unit_CBOR, Encoder_open_a_scalar )
 {
-    IotSerializerEncoderObject_t integerObject = { .pHandle = NULL, .type = IOT_SERIALIZER_SCALAR_SIGNED_INT };
+    IotSerializerEncoderObject_t integerObject =
+    {
+        .pHandle = NULL, .type = IOT_SERIALIZER_SCALAR_SIGNED_INT
+    };
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_INVALID_INPUT,
                        _pCborEncoder->openContainer( &_encoderObject, &integerObject, 1 ) );
@@ -208,12 +228,17 @@ TEST( Serializer_Unit_CBOR, Encoder_open_a_scalar )
 TEST( Serializer_Unit_CBOR, Encoder_open_map )
 {
     IotSerializerEncoderObject_t mapObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_TEXT_STRING;
+    scalarData.value.u.string.pString = ( uint8_t * ) "value";
+    scalarData.value.u.string.length = 5;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _pCborEncoder->openContainer( &_encoderObject, &mapObject, 1 ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->appendKeyValue( &mapObject, "key", IotSerializer_ScalarTextString( "value" ) ) );
+                       _pCborEncoder->appendKeyValue( &mapObject, "key", scalarData ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _pCborEncoder->closeContainer( &_encoderObject, &mapObject ) );
@@ -246,14 +271,19 @@ TEST( Serializer_Unit_CBOR, Encoder_open_array )
     IotSerializerEncoderObject_t arrayObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_ARRAY;
 
     int64_t numberArray[] = { 3, 2, 1 };
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_SIGNED_INT;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _pCborEncoder->openContainer( &_encoderObject, &arrayObject, 3 ) );
 
     for( i = 0; i < 3; i++ )
     {
+        scalarData.value.u.signedInt = numberArray[ i ];
+
         TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                           _pCborEncoder->append( &arrayObject, IotSerializer_ScalarSignedInt( numberArray[ i ] ) ) );
+                           _pCborEncoder->append( &arrayObject, scalarData ) );
     }
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
@@ -289,15 +319,21 @@ TEST( Serializer_Unit_CBOR, Encoder_map_nest_map )
 {
     IotSerializerEncoderObject_t mapObject_1 = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
     IotSerializerEncoderObject_t mapObject_2 = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_TEXT_STRING;
+    scalarData.value.u.string.pString = ( uint8_t * ) "value";
+    scalarData.value.u.string.length = 5;
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _pCborEncoder->openContainer( &_encoderObject, &mapObject_1, 1 ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->openContainerWithKey( &mapObject_1, "map1", &mapObject_2, 1 ) );
+                       _pCborEncoder->openContainerWithKey( &mapObject_1, "map1", &mapObject_2,
+                                                            1 ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->appendKeyValue( &mapObject_2, "key", IotSerializer_ScalarTextString( "value" ) ) );
+                       _pCborEncoder->appendKeyValue( &mapObject_2, "key", scalarData ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
                        _pCborEncoder->closeContainer( &mapObject_1, &mapObject_2 ) );
@@ -337,6 +373,9 @@ TEST( Serializer_Unit_CBOR, Encoder_map_nest_array )
     uint8_t i = 0;
     IotSerializerEncoderObject_t mapObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
     IotSerializerEncoderObject_t arrayObject = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_ARRAY;
+    IotSerializerScalarData_t scalarData = { 0 };
+
+    scalarData.type = IOT_SERIALIZER_SCALAR_SIGNED_INT;
 
     int64_t numberArray[] = { 3, 2, 1 };
 
@@ -344,12 +383,15 @@ TEST( Serializer_Unit_CBOR, Encoder_map_nest_array )
                        _pCborEncoder->openContainer( &_encoderObject, &mapObject, 1 ) );
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                       _pCborEncoder->openContainerWithKey( &mapObject, "array", &arrayObject, 3 ) );
+                       _pCborEncoder->openContainerWithKey( &mapObject, "array", &arrayObject,
+                                                            3 ) );
 
     for( i = 0; i < 3; i++ )
     {
+        scalarData.value.u.signedInt = numberArray[ i ];
+
         TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
-                           _pCborEncoder->append( &arrayObject, IotSerializer_ScalarSignedInt( numberArray[ i ] ) ) );
+                           _pCborEncoder->append( &arrayObject, scalarData ) );
     }
 
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
@@ -387,4 +429,211 @@ TEST( Serializer_Unit_CBOR, Encoder_map_nest_array )
     }
 
     TEST_ASSERT_TRUE( cbor_value_at_end( &arrayElement ) );
+}
+
+static const uint8_t _testEncodedNestedMap[] =
+{
+    0xA2, /*       # map(2) */
+    0x61, /*    # text(1) */
+    0x31, /* # "1" */
+    0xA1, /*    # map(1) */
+    0x61, /* # text(1) */
+    0x41, /* # "A" */
+    0x0A, /* # unsigned(10) */
+    0x61, /*    # text(1) */
+    0x33, /* # "3" */
+    0xF4, /*    # false */
+};
+
+TEST_GROUP( Serializer_Decoder_Unit_CBOR );
+
+TEST_SETUP( Serializer_Decoder_Unit_CBOR )
+{
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
+
+    _pCborDecoder = IotSerializer_GetCborDecoder();
+}
+
+TEST_TEAR_DOWN( Serializer_Decoder_Unit_CBOR )
+{
+    IotSdk_Cleanup();
+}
+
+TEST_GROUP_RUNNER( Serializer_Decoder_Unit_CBOR )
+{
+    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap );
+    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap );
+}
+
+TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
+{
+    IotSerializerDecoderObject_t outermostDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    const uint8_t * pDecoderObjectStartAddr = NULL;
+    size_t decoderDataLength = 0;
+    IotSerializerDecoderObject_t outerMapDecoder1 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t innerMapDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t outerMapDecoder2 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t unsupportedTypeDecoderObjectLength = 0;
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &outermostDecoder,
+                                                                    _testEncodedNestedMap,
+                                                                    sizeof( _testEncodedNestedMap ) ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, outermostDecoder.type );
+
+    /* Make sure that the getBufferAddress() API returns the first location of the buffer for the
+     * outermost decoder object.*/
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
+                       _pCborDecoder->getBufferAddress( &outermostDecoder,
+                                                        &pDecoderObjectStartAddr ) );
+    TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 0 ], pDecoderObjectStartAddr );
+
+    /* Verify that the getSizeOfEncodedData() correctly calculates the length of the outermost decoder
+     * data. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOfEncodedData(
+                           &outermostDecoder, &decoderDataLength ) );
+    TEST_ASSERT_EQUAL( sizeof( _testEncodedNestedMap ), decoderDataLength );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outermostDecoder, "1",
+                                                                    &outerMapDecoder1 ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, outerMapDecoder1.type );
+
+    /* Make sure that the getBufferAddress() API returns the first location in the buffer to the value
+     * for the entry keyed by "1".*/
+    TEST_ASSERT_EQUAL_PTR( IOT_SERIALIZER_SUCCESS,
+                           _pCborDecoder->getBufferAddress( &outerMapDecoder1,
+                                                            &pDecoderObjectStartAddr ) );
+    TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 3 ], pDecoderObjectStartAddr );
+
+    /* Verify that the getSizeOfEncodedData() correctly calculates the length of the container type
+     * value of the entry keyed by "1" */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOfEncodedData(
+                           &outerMapDecoder1, &decoderDataLength ) );
+    TEST_ASSERT_EQUAL( 4u, decoderDataLength );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outerMapDecoder1, "A",
+                                                                    &innerMapDecoder ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_SIGNED_INT, innerMapDecoder.type );
+
+    /* Make sure that the getBufferAddress() API does not support getting buffer address of value in the
+     * the nested entry keyed by "A".*/
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED,
+                       _pCborDecoder->getBufferAddress( &innerMapDecoder,
+                                                        &pDecoderObjectStartAddr ) );
+
+    /* Verify that the getSizeOfEncodedData() does not support calculation of non-container type data.*/
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED,
+                       _pCborDecoder->getSizeOfEncodedData(
+                           &innerMapDecoder, &unsupportedTypeDecoderObjectLength ) );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outermostDecoder, "3",
+                                                                    &outerMapDecoder2 ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SCALAR_BOOL, outerMapDecoder2.type );
+
+    /* Make sure that the getBufferAddress() API does not give the buffer address of the value data
+     * in the entry keyed by "3".*/
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED,
+                       _pCborDecoder->getBufferAddress( &outerMapDecoder2,
+                                                        &pDecoderObjectStartAddr ) );
+
+    /* Verify that the getSizeOfEncodedData() does not support calculation of non-container type data.*/
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_NOT_SUPPORTED,
+                       _pCborDecoder->getSizeOfEncodedData(
+                           &outerMapDecoder2, &unsupportedTypeDecoderObjectLength ) );
+
+    _pCborDecoder->destroy( &outerMapDecoder1 );
+    _pCborDecoder->destroy( &outerMapDecoder2 );
+    _pCborDecoder->destroy( &outermostDecoder );
+}
+
+TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
+{
+    IotSerializerDecoderObject_t outerDecoder1 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderIterator_t outerIter = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
+    const uint8_t * pDecoderObjectStartAddr = NULL;
+    IotSerializerDecoderObject_t iterToDecoderObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t iterToDecoderObject2 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t iterToDecoderObject3 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t outerDecoder2 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t nestedMapDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderIterator_t nestedMapIter = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &outerDecoder1,
+                                                                    _testEncodedNestedMap,
+                                                                    sizeof( _testEncodedNestedMap ) ) );
+
+    /* Obtain an iterator to the contents of the map. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &outerDecoder1,
+                                                                      &outerIter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( outerIter,
+                                                                   &iterToDecoderObject ) );
+    /* Validate that we can obtain the key data of the first entry in the outer map. */
+    TEST_ASSERT_EQUAL_STRING_LEN( "1", iterToDecoderObject.u.value.u.string.pString,
+                                  iterToDecoderObject.u.value.u.string.length );
+
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( outerIter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( outerIter,
+                                                                   &iterToDecoderObject ) );
+    /* Validate that we can obtain the value data (i.e. nested map) of the first entry in the parent/outer map. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getBufferAddress(
+                           &iterToDecoderObject, &pDecoderObjectStartAddr ) );
+    TEST_ASSERT_EQUAL_PTR( &_testEncodedNestedMap[ 3 ], pDecoderObjectStartAddr );
+    _pCborDecoder->destroy( &iterToDecoderObject );
+
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( outerIter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( outerIter,
+                                                                   &iterToDecoderObject2 ) );
+    /* Validate that we can obtain the key data of the second entry in the outer map. */
+    TEST_ASSERT_EQUAL_STRING_LEN( "3", iterToDecoderObject2.u.value.u.string.pString,
+                                  iterToDecoderObject2.u.value.u.string.length );
+    _pCborDecoder->destroy( &iterToDecoderObject2 );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( outerIter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( outerIter,
+                                                                   &iterToDecoderObject2 ) );
+    /* Validate that we can obtain the boolean value data of the second entry in the outer map. */
+    TEST_ASSERT_EQUAL( false, iterToDecoderObject2.u.value.u.booleanValue );
+    _pCborDecoder->destroy( &iterToDecoderObject2 );
+
+    /* Iterate to the end of the outer map container. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( outerIter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( outerIter,
+                                                                       &outerDecoder1 ) );
+    _pCborDecoder->destroy( &outerDecoder1 );
+
+
+    /* Test with iterating in the nested map in the entry keyed by "1" */
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &outerDecoder2,
+                                                                    _testEncodedNestedMap,
+                                                                    sizeof( _testEncodedNestedMap ) ) );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outerDecoder2, "1",
+                                                                    &nestedMapDecoder ) );
+
+    /* Obtain an iterator to the contents of the nested map. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &nestedMapDecoder,
+                                                                      &nestedMapIter ) );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( nestedMapIter,
+                                                                   &iterToDecoderObject3 ) );
+    /* Validate that we can obtain the key data of the only entry in the nested map. */
+    TEST_ASSERT_EQUAL_STRING_LEN( "A", iterToDecoderObject3.u.value.u.string.pString,
+                                  iterToDecoderObject3.u.value.u.string.length );
+
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( nestedMapIter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( nestedMapIter,
+                                                                   &iterToDecoderObject3 ) );
+    /* Validate that we can obtain the integer value of the only entry in the nested map. */
+    TEST_ASSERT_EQUAL_INT( 10, iterToDecoderObject3.u.value.u.signedInt );
+
+    /* Iterate to the end of the nested map container. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( nestedMapIter ) );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( nestedMapIter,
+                                                                       &nestedMapDecoder ) );
+    _pCborDecoder->destroy( &nestedMapDecoder );
+    _pCborDecoder->destroy( &outerDecoder2 );
 }

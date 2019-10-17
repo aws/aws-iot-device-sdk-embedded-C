@@ -124,8 +124,8 @@ void IotNetworkOpenssl_Cleanup( void );
  * @brief An implementation of #IotNetworkInterface_t::create for POSIX systems
  * with OpenSSL.
  */
-IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
-                                            void * pCredentialInfo,
+IotNetworkError_t IotNetworkOpenssl_Create( IotNetworkServerInfo_t * pConnectionInfo,
+                                            IotNetworkCredentials_t * pCredentialInfo,
                                             void ** pConnection );
 
 /**
