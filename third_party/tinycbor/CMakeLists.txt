@@ -38,11 +38,6 @@ add_library( tinycbor
 target_include_directories( tinycbor SYSTEM
                             PUBLIC tinycbor/src )
 
-# Link math library. This is not needed on Windows.
-if( NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-    target_link_libraries( tinycbor PRIVATE m )
-endif()
-
 # Disable all warnings for this third-party library.
 target_compile_options( tinycbor
                         PRIVATE

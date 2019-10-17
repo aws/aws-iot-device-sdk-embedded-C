@@ -28,12 +28,7 @@ option( IOT_BUILD_CLONE_SUBMODULES
         ON )
 
 # Unity test framework does not export the correct symbols for DLLs.
-# Do not allow allow shared libraries to be built when building tests on Windows.
-if( ${IOT_BUILD_TESTS} AND ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-    set( ALLOW_SHARED_LIBRARIES OFF )
-else()
-    set( ALLOW_SHARED_LIBRARIES ON )
-endif()
+set( ALLOW_SHARED_LIBRARIES ON )
 
 include( CMakeDependentOption )
 CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
