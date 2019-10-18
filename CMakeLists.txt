@@ -45,6 +45,8 @@ if( NOT DEFINED IOT_PLATFORM_NAME )
         option( IOT_NETWORK_USE_OPENSSL
                 "Set this to ON to use a network abstraction implemented on OpenSSL. When OFF, the mbed TLS network abstraction is used."
                 OFF )
+    else()
+        message( FATAL_ERROR "${CMAKE_SYSTEM_NAME} is not a supported platform." )
     endif()
 endif()
 
