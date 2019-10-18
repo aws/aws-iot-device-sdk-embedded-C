@@ -28,12 +28,7 @@ option( IOT_BUILD_CLONE_SUBMODULES
         ON )
 
 # Unity test framework does not export the correct symbols for DLLs.
-# Do not allow allow shared libraries to be built when building tests on Windows.
-if( ${IOT_BUILD_TESTS} AND ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-    set( ALLOW_SHARED_LIBRARIES OFF )
-else()
-    set( ALLOW_SHARED_LIBRARIES ON )
-endif()
+set( ALLOW_SHARED_LIBRARIES ON )
 
 include( CMakeDependentOption )
 CMAKE_DEPENDENT_OPTION( BUILD_SHARED_LIBS
@@ -50,18 +45,8 @@ if( NOT DEFINED IOT_PLATFORM_NAME )
         option( IOT_NETWORK_USE_OPENSSL
                 "Set this to ON to use a network abstraction implemented on OpenSSL. When OFF, the mbed TLS network abstraction is used."
                 OFF )
-    elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-        set( IOT_PLATFORM_NAME "win32" CACHE STRING "Port to use for building the SDK." )
-
-        # Export all symbols when building Windows DLLs.
-        if( ${BUILD_SHARED_LIBS} )
-            set( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS
-                 TRUE CACHE BOOL
-                 "Export all symbols for Windows DLLs. This option must by enabled."
-                 FORCE )
-        endif()
-    elseif( ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" )
-        set( IOT_PLATFORM_NAME "macos" CACHE STRING "Port to use for building the SDK." )
+    else()
+        message( FATAL_ERROR "${CMAKE_SYSTEM_NAME} is not a supported platform." )
     endif()
 endif()
 
