@@ -661,8 +661,8 @@ void IotNetworkOpenssl_Cleanup( void )
 
 /*-----------------------------------------------------------*/
 
-IotNetworkError_t IotNetworkOpenssl_Create( IotNetworkServerInfo_t * pConnectionInfo,
-                                            IotNetworkCredentials_t * pCredentialInfo,
+IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
+                                            void * pCredentialInfo,
                                             void ** pConnection )
 {
     IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );

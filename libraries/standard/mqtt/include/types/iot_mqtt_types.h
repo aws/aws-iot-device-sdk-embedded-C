@@ -946,17 +946,6 @@ typedef void ( * IotMqttPublishSetDup_t )( uint8_t * pPublishPacket,
 #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
 /**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- *
- * Forward declarations of platform network server info and credentials
- * types.
- */
-struct IotNetworkServerInfo_t;
-struct IotNetworkCredentials_t;
-/** @endcond */
-
-/**
  * @ingroup mqtt_datatypes_paramstructs
  * @brief MQTT network connection details.
  *
@@ -998,7 +987,7 @@ typedef struct IotMqttNetworkInfo
              * interface when creating a new network connection. It is only valid when
              * #IotMqttNetworkInfo_t::createNetworkConnection is `true`.
              */
-            IotNetworkServerInfo_t * pNetworkServerInfo;
+            void * pNetworkServerInfo;
 
             /**
              * @brief Credentials for the MQTT server, passed as `pCredentialInfo` to
@@ -1008,7 +997,7 @@ typedef struct IotMqttNetworkInfo
              * interface when creating a new network connection. It is only valid when
              * #IotMqttNetworkInfo_t::createNetworkConnection is `true`.
              */
-            IotNetworkCredentials_t * pNetworkCredentialInfo;
+            void * pNetworkCredentialInfo;
         } setup;
 
         /**
