@@ -285,6 +285,15 @@
  */
 #define MQTT_INTERNAL_FLAG_BLOCK_ON_SEND                       ( 0x80000000 )
 
+/**
+ * @brief When calling _IotMqtt_RemoveSubscriptionByPacket(), use this value
+ * for `order` to delete all subscriptions for the packet.
+ *
+ * This flag is used along with @ref mqtt_constants_flags, but is intended for internal
+ * use only.
+ *
+ * @ref mqtt_constants_flags.
+ */
 #define MQTT_REMOVE_ALL_SUBSCRIPTIONS                          ( -1 )
 
 /*---------------------- MQTT internal data structures ----------------------*/
