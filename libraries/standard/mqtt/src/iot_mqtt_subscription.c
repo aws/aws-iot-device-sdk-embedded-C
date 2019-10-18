@@ -59,7 +59,7 @@ typedef struct _topicMatchParams
 typedef struct _packetMatchParams
 {
     uint16_t packetIdentifier; /**< Packet identifier to match. */
-    int32_t order;             /**< Order to match. Set to `MQTT_REMOVE_ALL_SUBSCRIPTIONS` to ignore. */
+    int32_t order;             /**< Order to match. Set to #MQTT_REMOVE_ALL_SUBSCRIPTIONS to ignore. */
 } _packetMatchParams_t;
 
 /*-----------------------------------------------------------*/
@@ -266,7 +266,7 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
     if( pParam->packetIdentifier == pSubscription->packetInfo.identifier )
     {
         /* Compare orders if order is not MQTT_REMOVE_ALL_SUBSCRIPTIONS. */
-        if( pParam->order == MQTT_REMOVE_ALL_SUBSCRIPTIONS)
+        if( pParam->order == MQTT_REMOVE_ALL_SUBSCRIPTIONS )
         {
             match = true;
         }
