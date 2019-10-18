@@ -29,15 +29,13 @@ Compared to the AWS IoT Device SDK Embedded C v3.0.1, the following features wer
 
 **Main documentation page:** [Building the SDK](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/building.html)
 
-This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. This repo contains ready-to-use ports for Windows, macOS, and Linux.
+This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. This repo contains a ready-to-use port for Linux.
 
 ### Prerequisites
 - CMake 3.5.0 or later and a C99 compiler.
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems. For reference, the version used by this repo's Travis CI builds are listed in parentheses.
     - Linux system with POSIX thread and timer APIs. (CI tests on Ubuntu 16.04).<br>
     On Linux systems, the OpenSSL network implementation may be used instead of the default network implementation based on mbed TLS. This requires the installation of OpenSSL development libraries and header files, version 1.0.2g or later. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
-    - macOS system with POSIX thread APIs and Grand Central Dispatch. (CI tests on macOS 10.13).
-    - Windows system with the Windows 10 SDK and MSVC toolchain. (CI tests on Windows Server 1803 with Visual Studio 2017).
 
 ### Build Steps
 1. Clone the source code and submodules. This SDK uses third-party libraries as submodules in the `third_party` directory.
@@ -67,9 +65,7 @@ This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. T
     ```sh
     cmake ..
     ```
-    CMake will generate a project based on the detected operating system. On Linux and macOS, the default project is a Makefile. To build the SDK with this Makefile, run `make`.
-
-    On Windows, CMake will create a Visual Studio solution. Open this solution in Visual Studio to build it.
+    CMake will generate a project based on the detected operating system. On Linux, the default project is a Makefile. To build the SDK with this Makefile, run `make`.
 
     You may also use CMake GUI. Specify the SDK's root directory as the source directory and the build directory created in step 4 as the build directory in CMake GUI.
 
