@@ -4,6 +4,3 @@ doc/tag/*
 
 # Ignore CMake build directory.
 build/
-
-# Ignore macOS metadata files.
-.DS_Store

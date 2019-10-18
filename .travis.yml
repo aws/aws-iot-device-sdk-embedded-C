@@ -18,13 +18,6 @@ jobs:
     # Build checks for pull requests.
     - if: type = pull_request
       env: RUN_TEST=build
-    - if: type = pull_request
-      env: RUN_TEST=build
-      os: osx
-    - if: type = pull_request
-      env: RUN_TEST=build
-      os: windows
-      compiler: msvc
     # Documentation check for pull requests.
     - if: type = pull_request
       env: RUN_TEST=doc
@@ -37,11 +30,6 @@ jobs:
     - if: type = push
       compiler: gcc
       env: RUN_TEST=coverage
-    - os: osx
-      env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
-    - os: windows
-      env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
-      compiler: msvc
 
 # Install dependencies.
 install:
