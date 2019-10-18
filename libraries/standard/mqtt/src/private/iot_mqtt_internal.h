@@ -285,6 +285,8 @@
  */
 #define MQTT_INTERNAL_FLAG_BLOCK_ON_SEND                       ( 0x80000000 )
 
+#define MQTT_REMOVE_ALL_SUBSCRIPTIONS                          ( -1 )
+
 /*---------------------- MQTT internal data structures ----------------------*/
 
 /**
@@ -894,7 +896,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
  * @param[in] packetIdentifier The packet identifier associated with the subscription's
  * SUBSCRIBE packet.
  * @param[in] order The order of the subscription in the SUBSCRIBE packet.
- * Pass `-1` to ignore order and remove all subscriptions for `packetIdentifier`.
+ * Pass `MQTT_REMOVE_ALL_SUBSCRIPTIONS` to ignore order and remove all subscriptions for `packetIdentifier`.
  */
 void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * pMqttConnection,
                                           uint16_t packetIdentifier,
