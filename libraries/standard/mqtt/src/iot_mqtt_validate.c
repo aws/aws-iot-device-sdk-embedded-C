@@ -39,7 +39,7 @@
 bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 {
     IOT_FUNCTION_ENTRY( bool, true );
-    uint16_t maxClientIdLength = ( uint16_t ) IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH;
+    uint16_t maxClientIdLength = IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH;
     bool enforceMaxClientIdLength = false;
 
     /* Check for NULL. */

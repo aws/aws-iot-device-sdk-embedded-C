@@ -235,7 +235,7 @@
     #define EMPTY_ELSE_MARKER
 #endif
 
-#define IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                    ( 23 ) /**< @brief Optional maximum length of client identifier specified by MQTT 3.1.1. */
+#define IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                    ( (uint16_t) 23 ) /**< @brief Optional maximum length of client identifier specified by MQTT 3.1.1. */
 
 /*
  * Constants related to limits defined in AWS Service Limits.
@@ -245,7 +245,7 @@
  *
  * Used to validate parameters if when connecting to an AWS IoT MQTT server.
  */
-#define AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                ( 128 )  /**< @brief Maximum length of client identifier accepted by AWS IoT. */
+#define AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                ( (uint16_t) 128 )  /**< @brief Maximum length of client identifier accepted by AWS IoT. */
 #define AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH                   ( 256 )  /**< @brief Maximum length of topic names or filters accepted by AWS IoT. */
 #define AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE    ( 8 )    /**< @brief Maximum number of topic filters in a single SUBSCRIBE packet. */
 
@@ -286,7 +286,7 @@
 #define MQTT_INTERNAL_FLAG_BLOCK_ON_SEND                       ( 0x80000000 )
 
 /**
- * @brief When calling _IotMqtt_RemoveSubscriptionByPacket(), use this value
+ * @brief When calling #_IotMqtt_RemoveSubscriptionByPacket, use this value
  * for `order` to delete all subscriptions for the packet.
  *
  * This flag is used along with @ref mqtt_constants_flags, but is intended for internal
@@ -905,7 +905,7 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
  * @param[in] packetIdentifier The packet identifier associated with the subscription's
  * SUBSCRIBE packet.
  * @param[in] order The order of the subscription in the SUBSCRIBE packet.
- * Pass `MQTT_REMOVE_ALL_SUBSCRIPTIONS` to ignore order and remove all subscriptions for `packetIdentifier`.
+ * Pass #MQTT_REMOVE_ALL_SUBSCRIPTIONS to ignore order and remove all subscriptions for `packetIdentifier`.
  */
 void _IotMqtt_RemoveSubscriptionByPacket( _mqttConnection_t * pMqttConnection,
                                           uint16_t packetIdentifier,

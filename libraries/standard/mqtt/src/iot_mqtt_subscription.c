@@ -59,7 +59,7 @@ typedef struct _topicMatchParams
 typedef struct _packetMatchParams
 {
     uint16_t packetIdentifier; /**< Packet identifier to match. */
-    int32_t order;             /**< Order to match. Set to `MQTT_REMOVE_ALL_SUBSCRIPTIONS` to ignore. */
+    int32_t order;             /**< Order to match. Set to #MQTT_REMOVE_ALL_SUBSCRIPTIONS to ignore. */
 } _packetMatchParams_t;
 
 /*-----------------------------------------------------------*/
