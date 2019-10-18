@@ -664,7 +664,6 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     _mqttOperation_t * pPingreqOperation = &( pMqttConnection->pingreq );
 
     /* Check parameters. */
-    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pKeepAliveJob == pPingreqOperation->job );
 
     /* Check that keep-alive interval is valid. The MQTT spec states its maximum
@@ -1032,7 +1031,6 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pOperationJob;
-    IotMqtt_Assert( pTaskPool == IOT_SYSTEM_TASKPOOL );
     IotMqtt_Assert( pOperationJob == pOperation->job );
 
     /* The operation's callback function and status must be set. */
