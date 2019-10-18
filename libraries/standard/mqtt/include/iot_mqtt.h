@@ -224,7 +224,7 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
  * // Set the members of the will info (retain and retry not used).
  * willInfo.qos = IOT_MQTT_QOS_1;
  * willInfo.pTopicName = "will/topic/name";
- * willInfo.topicNameLength = ( uint16_t )strlen( willInfo.pTopicName );
+ * willInfo.topicNameLength = ( uint16_t ) strlen( willInfo.pTopicName );
  * willInfo.pPayload = "MQTT client unexpectedly disconnected.";
  * willInfo.payloadLength = strlen( willInfo.pPayload );
  *
@@ -323,7 +323,7 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
  * subscriptions.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
  * @param[in] flags Flags which modify the behavior of this function. See @ref mqtt_constants_flags.
- * @param[in] pCallbackInfo Asynchronous notification of this function's completion (NULL to disable).
+ * @param[in] pCallbackInfo Asynchronous notification of this function's completion (`NULL` to disable).
  * @param[out] pSubscribeOperation Set to a handle by which this operation may be
  * referenced after this function returns. This reference is invalidated once
  * the subscription operation completes.
@@ -484,7 +484,7 @@ IotMqttError_t IotMqtt_SubscribeSync( IotMqttConnection_t mqttConnection,
  * subscriptions.
  * @param[in] subscriptionCount The number of elements in pSubscriptionList.
  * @param[in] flags Flags which modify the behavior of this function. See @ref mqtt_constants_flags.
- * @param[in] pCallbackInfo Asynchronous notification of this function's completion (NULL to disable)
+ * @param[in] pCallbackInfo Asynchronous notification of this function's completion (`NULL` to disable).
  * @param[out] pUnsubscribeOperation Set to a handle by which this operation may be
  * referenced after this function returns. This reference is invalidated once
  * the unsubscribe operation completes.
@@ -568,7 +568,7 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
  * @param[in] mqttConnection The MQTT connection to use for the publish.
  * @param[in] pPublishInfo MQTT publish parameters.
  * @param[in] flags Flags which modify the behavior of this function. See @ref mqtt_constants_flags.
- * @param[in] pCallbackInfo Asynchronous notification of this function's completion (NULL to disable).
+ * @param[in] pCallbackInfo Asynchronous notification of this function's completion (`NULL` to disable).
  * @param[out] pPublishOperation Set to a handle by which this operation may be
  * referenced after this function returns. This reference is invalidated once
  * the publish operation completes.
@@ -606,7 +606,7 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
  * // Set the publish information. QoS 0 example (retain not used):
  * publishInfo.qos = IOT_MQTT_QOS_0;
  * publishInfo.pTopicName = "some/topic/name";
- * publishInfo.topicNameLength = ( uint16_t )strlen( publishInfo.pTopicName );
+ * publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
  * publishInfo.pPayload = "payload";
  * publishInfo.payloadLength = strlen( publishInfo.pPayload );
  *
@@ -807,8 +807,7 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation );
  * @param[in] pTopicFilter The topic filter to check.
  * @param[in] topicFilterLength Length of `pTopicFilter`.
  * @param[out] pCurrentSubscription If a subscription is found, its details are
- * copied here. This output parameter is only valid if this function returns `true`.
- * Pass `NULL` to ignore.
+ * copied here. This output parameter is only valid if this function returns `true` (`NULL` to disable).
  *
  * @return `true` if a subscription was found; `false` otherwise.
  *
