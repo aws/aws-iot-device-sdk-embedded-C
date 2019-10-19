@@ -39,6 +39,8 @@
 bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 {
     IOT_FUNCTION_ENTRY( bool, true );
+    uint16_t maxClientIdLength = IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH;
+    bool enforceMaxClientIdLength = false;
 
     /* Check for NULL. */
     if( pConnectInfo == NULL )
@@ -112,33 +114,29 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
         EMPTY_ELSE_MARKER;
     }
 
-    /* In MQTT 3.1.1, servers are not obligated to accept client identifiers longer
-     * than 23 characters. */
-    if( pConnectInfo->clientIdentifierLength > 23 )
-    {
-        IotLogWarn( "A client identifier length of %hu is longer than 23, which is "
-                    "the longest client identifier a server must accept.",
-                    pConnectInfo->clientIdentifierLength );
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
-
-    /* Check for compatibility with the AWS IoT MQTT service limits. */
+    /* The AWS IoT MQTT service enforces a client ID length limit. */
     if( pConnectInfo->awsIotMqttMode == true )
     {
-        /* Check that client identifier is within the service limit. */
-        if( pConnectInfo->clientIdentifierLength > AWS_IOT_MQTT_SERVER_MAX_CLIENTID )
-        {
-            IotLogError( "AWS IoT does not support client identifiers longer than %d bytes.",
-                         AWS_IOT_MQTT_SERVER_MAX_CLIENTID );
+        maxClientIdLength = AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH;
+        enforceMaxClientIdLength = true;
+    }
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+    if( pConnectInfo->clientIdentifierLength > maxClientIdLength )
+    {
+        if( enforceMaxClientIdLength == false )
+        {
+            IotLogWarn( "A client identifier length of %hu is longer than %hu, "
+                        "which is "
+                        "the longest client identifier a server must accept.",
+                        pConnectInfo->clientIdentifierLength,
+                        maxClientIdLength );
         }
         else
         {
-            EMPTY_ELSE_MARKER;
+            IotLogError( "A client identifier length of %hu exceeds the "
+                         "the maximum supported length of %hu.",
+                         pConnectInfo->clientIdentifierLength,
+                         maxClientIdLength );
         }
     }
     else
