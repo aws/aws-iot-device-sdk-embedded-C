@@ -491,7 +491,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionRemoveByPacket )
     _populateList();
     _IotMqtt_RemoveSubscriptionByPacket( _pMqttConnection,
                                          1,
-                                         -1 );
+                                         MQTT_REMOVE_ALL_SUBSCRIPTIONS );
     TEST_ASSERT_EQUAL_INT( true, IotListDouble_IsEmpty( &( _pMqttConnection->subscriptionList ) ) );
 }
 

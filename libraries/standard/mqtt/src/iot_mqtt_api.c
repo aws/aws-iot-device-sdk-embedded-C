@@ -799,7 +799,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
             {
                 _IotMqtt_RemoveSubscriptionByPacket( mqttConnection,
                                                      pSubscriptionOperation->u.operation.packetIdentifier,
-                                                     -1 );
+                                                     MQTT_REMOVE_ALL_SUBSCRIPTIONS );
             }
             else
             {
@@ -1979,7 +1979,7 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
 
                     _IotMqtt_RemoveSubscriptionByPacket( pMqttConnection,
                                                          operation->u.operation.packetIdentifier,
-                                                         -1 );
+                                                         MQTT_REMOVE_ALL_SUBSCRIPTIONS );
                 }
                 else
                 {
