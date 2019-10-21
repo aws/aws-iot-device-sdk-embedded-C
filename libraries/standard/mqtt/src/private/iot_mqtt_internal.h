@@ -235,7 +235,9 @@
     #define EMPTY_ELSE_MARKER
 #endif
 
-#define IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                    ( ( uint16_t ) 23 ) /**< @brief Optional maximum length of client identifier specified by MQTT 3.1.1. */
+#define IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                    ( ( uint16_t ) 23 )          /**< @brief Optional maximum length of client identifier specified by MQTT 3.1.1. */
+#define IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH             ( ( uint32_t ) ( 1 << 28 ) ) /**< @brief Maximum publish payload length supported by MQTT 3.1.1. */
+#define IOT_MQTT_SERVER_MAX_LWT_PAYLOAD_LENGTH                 ( ( uint32_t ) UINT16_MAX )  /**< @brief Maximum LWT payload length supported by MQTT 3.1.1. */
 
 /*
  * Constants related to limits defined in AWS Service Limits.
@@ -245,9 +247,10 @@
  *
  * Used to validate parameters if when connecting to an AWS IoT MQTT server.
  */
-#define AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                ( ( uint16_t ) 128 ) /**< @brief Maximum length of client identifier accepted by AWS IoT. */
-#define AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH                   ( 256 )              /**< @brief Maximum length of topic names or filters accepted by AWS IoT. */
-#define AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE    ( 8 )                /**< @brief Maximum number of topic filters in a single SUBSCRIBE packet. */
+#define AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                ( ( uint16_t ) 128 )         /**< @brief Maximum length of client identifier accepted by AWS IoT. */
+#define AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH                   ( 256 )                      /**< @brief Maximum length of topic names or filters accepted by AWS IoT. */
+#define AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE    ( 8 )                        /**< @brief Maximum number of topic filters in a single SUBSCRIBE packet. */
+#define AWS_IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH         ( ( uint32_t ) ( 1 << 17 ) ) /**< @brief Maximum publish payload length accepted by AWS IoT */
 
 /*
  * MQTT control packet type and flags. Always the first byte of an MQTT
@@ -482,6 +485,18 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo );
  */
 bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
                                const IotMqttPublishInfo_t * pPublishInfo );
+
+/**
+ * @brief Check that an #IotMqttPublishInfo_t is valid for an LWT publish
+ *
+ * @param[in] awsIotMqttMode Specifies if this PUBLISH packet is being sent to
+ * an AWS IoT MQTT server.
+ * @param[in] pLwtPublishInfo The #IotMqttPublishInfo_t to validate.
+ *
+ * @return `true` if `pLwtPublishInfo` is valid; `false` otherwise.
+ */
+bool _IotMqtt_ValidateLwtPublish( bool awsIotMqttMode,
+                                  const IotMqttPublishInfo_t * pLwtPublishInfo );
 
 /**
  * @brief Check that an #IotMqttOperation_t is valid and waitable.
