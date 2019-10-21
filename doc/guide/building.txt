@@ -11,8 +11,6 @@ This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool.
 - A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems. For reference, the version used by this repo's Travis CI builds are listed in parentheses.
     - Linux system with POSIX thread and timer APIs. (CI tests on Ubuntu 16.04).<br>
     On Linux systems, the OpenSSL network implementation may be used instead of the default network implementation based on mbed TLS. This requires the installation of OpenSSL development libraries and header files, version 1.0.2g or later. The OpenSSL development libraries are usually called something like `libssl-dev` or `openssl-devel` when installed through a package manager.
-    - macOS system with POSIX thread APIs and Grand Central Dispatch. (CI tests on macOS 10.13).
-    - Windows system with the Windows 10 SDK and MSVC toolchain. (CI tests on Windows Server 1803 with Visual Studio 2017).
 
 This SDK uses third-party libraries as Git submodules in the `third_party` directory. If the source code was downloaded via `git clone`, nothing further needs to be done. The CMake build system can automatically clone submodules in this case. However, for any other download, the submodules must be downloaded and placed in their respective `third_party` directory.
 - [mbed TLS](https://github.com/ARMmbed/mbedtls/tree/mbedtls-2.17) → `third_party/mbedtls/mbedtls`
@@ -48,7 +46,7 @@ Before building the demos, all desired configuration settings should be defined.
 @subsection building_demo_commmandline Command-line build
 @brief How to build the demo applications on the command-line.
 
-In-source CMake builds are not allowed. A build directory should be created under the SDK root directory. Since CMake is cross-platform, build steps will vary depending on host OS. On Linux and macOS, the demo applications are built as follows:
+In-source CMake builds are not allowed. A build directory should be created under the SDK root directory. Since CMake is cross-platform, build steps will vary depending on host OS. On Linux, the demo applications are built as follows:
 @code{sh}
 # Create build directory and change to build directory.
 mkdir build
@@ -80,10 +78,6 @@ Delete the build directory to remove all demo application executables and build 
 @brief How to build the demo applications with CMake GUI.
 
 Alternatively, CMake GUI may be used instead of the command line. Specify the SDK's root directory in <b>Where is the source code</b> and a build directory in <b>Where to build the binaries</b>. Click <b>Configure</b>, then <b>Generate</b>. You may modify @ref building_configuration in the CMake GUI window.
-
-The screenshot below is from CMake GUI on Windows. Similar options appear when using other systems.
-
-@image html cmake_build.png
 
 @section demo_commandlineoptions Demo command line options
 @brief Command line options of the demo applications.

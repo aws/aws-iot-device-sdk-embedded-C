@@ -22,7 +22,7 @@
 
 /**
  * @file iot_mqtt_types.h
- * @brief Types of the MQTT library.
+ * @brief MQTT library types.
  */
 
 #ifndef IOT_MQTT_TYPES_H_
@@ -53,10 +53,9 @@
  * @ingroup mqtt_datatypes_handles
  * @brief Opaque handle of an MQTT connection.
  *
- * This type identifies an MQTT connection, which is valid after a successful call
- * to @ref mqtt_function_connect. A variable of this type is passed as the first
- * argument to [MQTT library functions](@ref mqtt_functions) to identify which
- * connection that function acts on.
+ * MQTT connection handle type.  MQTT connection handles are created by
+ * successful calls to @ref mqtt_function_connect and are used to refer to
+ * the connection when calling MQTT library functions.
  *
  * A call to @ref mqtt_function_disconnect makes a connection handle invalid. Once
  * @ref mqtt_function_disconnect returns, the connection handle should no longer
@@ -363,18 +362,9 @@ typedef enum IotMqttDisconnectReason
  * @note The lengths of the strings in this struct should not include the NULL
  * terminator. Strings in this struct do not need to be NULL-terminated.
  *
- * @note The AWS IoT MQTT server does not support the DUP bit. When
- * [using this library with the AWS IoT MQTT server](@ref IotMqttConnectInfo_t.awsIotMqttMode),
- * retransmissions will instead be sent with a new packet identifier in the PUBLISH
- * packet. This is a nonstandard workaround. Note that this workaround has some
- * flaws, including the following:
- * - The previous packet identifier is forgotten, so if a PUBACK arrives for that
- * packet identifier, it will be ignored. On an exceptionally busy network, this
- * may cause excessive retransmissions when too many PUBACKS arrive after the
- * PUBLISH packet identifier is changed. However, the exponential backoff
- * retransmission strategy should mitigate this problem.
- * - Log messages will be printed using the new packet identifier; the old packet
- * identifier is not saved.
+ * @note The AWS IoT MQTT broker does not support the DUP bit.  More
+ * information about connecting to AWS IoT via MQTT is available
+ * [here](https://docs.aws.amazon.com/iot/latest/developerguide/mqtt.html).
  *
  * <b>Example</b>
  *
@@ -416,7 +406,7 @@ typedef struct IotMqttPublishInfo
  *
  * @paramfor MQTT callback functions
  *
- * The MQTT library passes this struct to registered callback whenever an
+ * The MQTT library passes this struct to a registered callback whenever an
  * operation completes, a message is received on a topic filter, or an MQTT
  * connection is disconnected.
  *
@@ -480,13 +470,13 @@ typedef struct IotMqttCallbackParam
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
- * @brief Information on a user-provided MQTT callback function.
+ * @brief MQTT callback function and context.
  *
  * @paramfor @ref mqtt_function_subscribeasync, @ref mqtt_function_unsubscribeasync,
  * and @ref mqtt_function_publishasync. Cannot be used with #IOT_MQTT_FLAG_WAITABLE.
  *
- * Provides a function to be invoked when an operation completes or when a
- * server-to-client PUBLISH is received.
+ * Specifies a function to be invoked with optional context when an operation
+ * completes or when a server-to-client PUBLISH is received.
  *
  * @initializer{IotMqttCallbackInfo_t,IOT_MQTT_CALLBACK_INFO_INITIALIZER}
  *
@@ -533,7 +523,7 @@ typedef struct IotMqttCallbackInfo
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
- * @brief Information on an MQTT subscription.
+ * @brief MQTT subscription.
  *
  * @paramfor @ref mqtt_function_subscribeasync, @ref mqtt_function_unsubscribeasync,
  * @ref mqtt_function_subscribesync, @ref mqtt_function_unsubscribesync
@@ -570,7 +560,7 @@ typedef struct IotMqttSubscription
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
- * @brief Information on a new MQTT connection.
+ * @brief MQTT connection details.
  *
  * @paramfor @ref mqtt_function_connect
  *
@@ -588,11 +578,10 @@ typedef struct IotMqttConnectInfo
     /**
      * @brief Specifies if this MQTT connection is to an AWS IoT MQTT server.
      *
-     * The AWS IoT MQTT broker [differs somewhat from the MQTT specification.]
+     * Set this member to `true` when connecting to the AWS IoT MQTT broker or
+     * `false` otherwise.  Additional details about connecting to AWS IoT
+     * via MQTT are available [here]
      * (https://docs.aws.amazon.com/iot/latest/developerguide/mqtt.html)
-     * When this member is `true`, the MQTT library will accommodate these
-     * differences. This setting should be `false` when communicating with a
-     * fully-compliant MQTT broker.
      *
      * @attention This setting <b>MUST</b> be `true` when using the AWS IoT MQTT
      * server; it <b>MUST</b> be `false` otherwise.
@@ -701,9 +690,8 @@ struct _mqttPacket;
  * @param[in] pNetworkInterface Function pointers used to interact with the
  * network.
  */
-typedef uint8_t ( * IotMqttGetPacketType_t )(
-                     void * pNetworkConnection,
-                     const IotNetworkInterface_t * pNetworkInterface );
+typedef uint8_t ( * IotMqttGetPacketType_t )( void * pNetworkConnection,
+                                              const IotNetworkInterface_t * pNetworkInterface );
 
 /**
  * @brief Get the remaining length from a stream of bytes off the network.
@@ -712,9 +700,8 @@ typedef uint8_t ( * IotMqttGetPacketType_t )(
  * @param[in] pNetworkInterface Function pointers used to interact with the
  * network.
  */
-typedef size_t ( * IotMqttGetRemainingLength_t )(
-                     void * pNetworkConnection,
-                     const IotNetworkInterface_t * pNetworkInterface );
+typedef size_t ( * IotMqttGetRemainingLength_t )( void * pNetworkConnection,
+                                                  const IotNetworkInterface_t * pNetworkInterface );
 
 /**
  * @brief Free a packet generated by the serializer.
@@ -730,19 +717,17 @@ typedef void ( * IotMqttFreePacket_t )( uint8_t * pPacket );
  * @param[out] uint8_t** Where the CONNECT packet is written.
  * @param[out] size_t* Size of the CONNECT packet.
  */
-typedef IotMqttError_t ( * IotMqttSerializeConnect_t )(
-                     const IotMqttConnectInfo_t * pConnectInfo,
-                     uint8_t ** pConnectPacket,
-                     size_t * pPacketSize );
+typedef IotMqttError_t ( * IotMqttSerializeConnect_t )( const IotMqttConnectInfo_t * pConnectInfo,
+                                                        uint8_t ** pConnectPacket,
+                                                        size_t * pPacketSize );
 
 /**
  * @brief PINGREQ packet serializer function.
  * @param[out] uint8_t** Where the PINGREQ packet is written.
  * @param[out] size_t* Size of the PINGREQ packet.
  */
-typedef IotMqttError_t ( * IotMqttSerializePingreq_t )(
-                     uint8_t ** pDisconnectPacket,
-                     size_t * pPacketSize );
+typedef IotMqttError_t ( * IotMqttSerializePingreq_t )( uint8_t ** pDisconnectPacket,
+                                                        size_t * pPacketSize );
 
 /**
  * @brief PUBLISH packet serializer function.
@@ -753,12 +738,11 @@ typedef IotMqttError_t ( * IotMqttSerializePingreq_t )(
  * @param[out] uint8_t** Where the high byte of the packet identifier
  * is written.
  */
-typedef IotMqttError_t ( * IotMqtt_SerializePublish_t )(
-                     const IotMqttPublishInfo_t * pPublishInfo,
-                     uint8_t ** pPublishPacket,
-                     size_t * pPacketSize,
-                     uint16_t * pPacketIdentifier,
-                     uint8_t ** pPacketIdentifierHigh );
+typedef IotMqttError_t ( * IotMqtt_SerializePublish_t )( const IotMqttPublishInfo_t * pPublishInfo,
+                                                         uint8_t ** pPublishPacket,
+                                                         size_t * pPacketSize,
+                                                         uint16_t * pPacketIdentifier,
+                                                         uint8_t ** pPacketIdentifierHigh );
 
 /**
  * @brief SUBSCRIBE/UNSUBSCRIBE packet serializer function.
@@ -768,28 +752,25 @@ typedef IotMqttError_t ( * IotMqtt_SerializePublish_t )(
  * @param[out] size_t* Size of the SUBSCRIBE packet.
  * @param[out] uint16_t* The packet identifier generated for this SUBSCRIBE.
  */
-typedef IotMqttError_t ( * IotMqttSerializeSubscribe_t )(
-                     const IotMqttSubscription_t * pSubscriptionList,
-                     size_t subscriptionCount,
-                     uint8_t ** pSubscribePacket,
-                     size_t * pPacketSize,
-                     uint16_t * pPacketIdentifier );
+typedef IotMqttError_t ( * IotMqttSerializeSubscribe_t )( const IotMqttSubscription_t * pSubscriptionList,
+                                                          size_t subscriptionCount,
+                                                          uint8_t ** pSubscribePacket,
+                                                          size_t * pPacketSize,
+                                                          uint16_t * pPacketIdentifier );
 
 /**
  * @brief DISCONNECT packet serializer function.
  * @param[out] uint8_t** Where the DISCONNECT packet is written.
  * @param[out] size_t* Size of the DISCONNECT packet.
  */
-typedef IotMqttError_t ( * IotMqttDisconnectSerializer_t )(
-                     uint8_t ** ppDisconnectPacket,
-                     size_t * pPacketSize );
+typedef IotMqttError_t ( * IotMqttSerializeDisconnect_t )( uint8_t ** ppDisconnectPacket,
+                                                           size_t * pPacketSize );
 
 /**
  * @brief MQTT packet deserializer function.
  * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
  */
-typedef IotMqttError_t ( * IotMqttDeserializer_t )(
-                     struct _mqttPacket * pMqttPacket );
+typedef IotMqttError_t ( * IotMqttDeserialize_t )( struct _mqttPacket * pMqttPacket );
 
 /**
  * @brief PUBACK packet serializer function.
@@ -797,20 +778,19 @@ typedef IotMqttError_t ( * IotMqttDeserializer_t )(
  * @param[out] uint8_t** Where the PUBACK packet is written.
  * @param[out] size_t* Size of the PUBACK packet.
  */
-typedef IotMqttError_t ( * IotMqttSerializePuback_t )(
-                     uint16_t packetIdentifier,
-                     uint8_t ** pPubackPacket,
-                     size_t * pPacketSize );
+typedef IotMqttError_t ( * IotMqttSerializePuback_t )( uint16_t packetIdentifier,
+                                                       uint8_t ** pPubackPacket,
+                                                       size_t * pPacketSize );
+
 /**
  * @brief Set the `DUP` bit in a QoS `1` PUBLISH packet.
  * @param[in] uint8_t* Pointer to the PUBLISH packet to modify.
  * @param[in] uint8_t* The high byte of any packet identifier to modify.
  * @param[out] uint16_t* New packet identifier (AWS IoT MQTT mode only).
  */
-typedef void ( * IotMqttPublishSetDup_t )(
-                     uint8_t * pPublishPacket,
-                     uint8_t * pPacketIdentifierHigh,
-                     uint16_t * pNewPacketIdentifier );
+typedef void ( * IotMqttPublishSetDup_t )( uint8_t * pPublishPacket,
+                                           uint8_t * pPacketIdentifierHigh,
+                                           uint16_t * pNewPacketIdentifier );
 
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
 
@@ -838,11 +818,13 @@ typedef void ( * IotMqttPublishSetDup_t )(
          * <b>Default implementation:</b> #_IotMqtt_GetPacketType
          */
         IotMqttGetPacketType_t getPacketType;
+
         /**
          * @brief Get the remaining length from a stream of bytes off the network.
          * <b>Default implementation:</b> #_IotMqtt_GetRemainingLength
          */
         IotMqttGetRemainingLength_t getRemainingLength;
+
         /**
          * @brief Free a packet generated by the serializer.
          *
@@ -857,95 +839,101 @@ typedef void ( * IotMqttPublishSetDup_t )(
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializeConnect
              */
-            IotMqttSerializeConnect_t    connect;
+            IotMqttSerializeConnect_t connect;
+
             /**
              * @brief PUBLISH packet serializer function.
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializePublish
              */
-            IotMqtt_SerializePublish_t    publish;
+            IotMqtt_SerializePublish_t publish;
+
             /**
              * @brief Set the `DUP` bit in a QoS `1` PUBLISH packet.
              *
              * <b>Default implementation:</b> #_IotMqtt_PublishSetDup
              */
-            IotMqttPublishSetDup_t    publishSetDup;
+            IotMqttPublishSetDup_t publishSetDup;
+
             /**
              * @brief PUBACK packet serializer function.
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializePuback
              */
-            IotMqttSerializePuback_t     puback;
+            IotMqttSerializePuback_t puback;
+
             /**
              * @brief SUBSCRIBE packet serializer function.
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializeSubscribe
              */
-            IotMqttSerializeSubscribe_t  subscribe;
+            IotMqttSerializeSubscribe_t subscribe;
+
             /**
              * @brief UNSUBSCRIBE packet serializer function.
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializeUnsubscribe
              */
-            IotMqttSerializeSubscribe_t  unsubscribe;
+            IotMqttSerializeSubscribe_t unsubscribe;
+
             /**
              * @brief PINGREQ packet serializer function.
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializePingreq
              */
-            IotMqttSerializePingreq_t    pingreq;
+            IotMqttSerializePingreq_t pingreq;
+
             /**
              * @brief DISCONNECT packet serializer function.
              *
              * <b>Default implementation:</b> #_IotMqtt_SerializeDisconnect
              */
-            IotMqttDisconnectSerializer_t disconnect;
+            IotMqttSerializeDisconnect_t disconnect;
         } serialize; /**< @brief Overrides the packet serialization functions for a single connection. */
 
         struct
         {
             /**
              * @brief CONNACK packet deserializer function.
-             * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeConnack
              */
-            IotMqttDeserializer_t connack;
+            IotMqttDeserialize_t connack;
+
             /**
              * @brief PUBLISH packet deserializer function.
-             * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePublish
              */
-            IotMqttDeserializer_t publish;
+            IotMqttDeserialize_t publish;
+
             /**
              * @brief PUBACK packet deserializer function.
-             * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePuback
              */
-            IotMqttDeserializer_t puback;
+            IotMqttDeserialize_t puback;
+
             /**
              * @brief SUBACK packet deserializer function.
-             * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeSuback
              */
-            IotMqttDeserializer_t suback;
+            IotMqttDeserialize_t suback;
+
             /**
              * @brief UNSUBACK packet deserializer function.
-             * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializeUnsuback
              */
-            IotMqttDeserializer_t unsuback;
+            IotMqttDeserialize_t unsuback;
+
             /**
              * @brief PINGRESP packet deserializer function.
-             * @param[in,out] _mqttPacket* Pointer to an MQTT packet structure
              *
              * <b>Default implementation:</b> #_IotMqtt_DeserializePingresp
              */
-            IotMqttDeserializer_t pingresp;
+            IotMqttDeserialize_t pingresp;
         } deserialize; /**< @brief Overrides the packet deserialization functions for a single connection. */
     } IotMqttSerializer_t;
 
@@ -959,8 +947,7 @@ typedef void ( * IotMqttPublishSetDup_t )(
 
 /**
  * @ingroup mqtt_datatypes_paramstructs
- * @brief Infomation on the transport-layer network connection for the new MQTT
- * connection.
+ * @brief MQTT network connection details.
  *
  * @paramfor @ref mqtt_function_connect
  *
