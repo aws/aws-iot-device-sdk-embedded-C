@@ -34,6 +34,21 @@
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
+/**
+ * @brief Check that an #IotMqttPublishInfo_t is valid
+ *
+ * @param[in] awsIotMqttMode Specifies if this PUBLISH packet is being sent to
+ * an AWS IoT MQTT server.
+ * @param[in] pPublishTypeDescription String describing the publish type.
+ * @param[in] pPublishInfo The #IotMqttPublishInfo_t to validate.
+ *
+ * @return `true` if `pPublishInfo` is valid; `false` otherwise.
+ */
+static bool _mqtt_ValidatePublish( bool awsIotMqttMode,
+                                   size_t maximumPayloadLength,
+                                   const char * pPublishTypeDescription,
+                                   const IotMqttPublishInfo_t * pPublishInfo );
+
 /*-----------------------------------------------------------*/
 
 bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
@@ -93,16 +108,35 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
     {
         if( pConnectInfo->pPreviousSubscriptions != NULL )
         {
-            if( pConnectInfo->previousSubscriptionCount == 0 )
+            if( _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
+                                                   pConnectInfo->awsIotMqttMode,
+                                                   pConnectInfo->pPreviousSubscriptions,
+                                                   pConnectInfo->previousSubscriptionCount ) == false )
             {
-                IotLogError( "Previous subscription count cannot be 0." );
-
                 IOT_SET_AND_GOTO_CLEANUP( false );
             }
             else
             {
                 EMPTY_ELSE_MARKER;
             }
+        }
+        else
+        {
+            EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+
+    /* If will info is provided, check that it is valid. */
+    if( pConnectInfo->pWillInfo != NULL )
+    {
+        if( _IotMqtt_ValidateLwtPublish( pConnectInfo->awsIotMqttMode,
+                                         pConnectInfo->pWillInfo ) == false )
+        {
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
         else
         {
@@ -137,6 +171,7 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
                          "the maximum supported length of %hu.",
                          pConnectInfo->clientIdentifierLength,
                          maxClientIdLength );
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
     }
     else
@@ -148,9 +183,10 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 }
 
 /*-----------------------------------------------------------*/
-
-bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
-                               const IotMqttPublishInfo_t * pPublishInfo )
+static bool _mqtt_ValidatePublish( bool awsIotMqttMode,
+                                   size_t maximumPayloadLength,
+                                   const char * pPublishTypeDescription,
+                                   const IotMqttPublishInfo_t * pPublishInfo )
 {
     IOT_FUNCTION_ENTRY( bool, true );
 
@@ -187,18 +223,29 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
         EMPTY_ELSE_MARKER;
     }
 
-    /* Only allow NULL payloads with zero length. */
-    if( pPublishInfo->pPayload == NULL )
+    if( pPublishInfo->payloadLength != 0 )
     {
-        if( pPublishInfo->payloadLength != 0 )
+        if( pPublishInfo->payloadLength > maximumPayloadLength )
         {
-            IotLogError( "Nonzero payload length cannot have a NULL payload." );
+            IotLogError( "%s payload size of %zu exceeds maximum length of %zu.",
+                         pPublishTypeDescription,
+                         pPublishInfo->payloadLength,
+                         maximumPayloadLength );
 
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
         else
         {
-            EMPTY_ELSE_MARKER;
+            if( pPublishInfo->pPayload == NULL )
+            {
+                IotLogError( "Nonzero payload length cannot have a NULL payload." );
+
+                IOT_SET_AND_GOTO_CLEANUP( false );
+            }
+            else
+            {
+                EMPTY_ELSE_MARKER;
+            }
         }
     }
     else
@@ -278,6 +325,35 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
+bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
+                               const IotMqttPublishInfo_t * pPublishInfo )
+{
+    size_t maximumPayloadLength = IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
+
+    if( awsIotMqttMode == true )
+    {
+        maximumPayloadLength = AWS_IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
+    }
+
+    return _mqtt_ValidatePublish( awsIotMqttMode,
+                                  maximumPayloadLength,
+                                  "Publish",
+                                  pPublishInfo );
+}
+
+/*-----------------------------------------------------------*/
+
+bool _IotMqtt_ValidateLwtPublish( bool awsIotMqttMode,
+                                  const IotMqttPublishInfo_t * pLwtPublishInfo )
+{
+    return _mqtt_ValidatePublish( awsIotMqttMode,
+                                  IOT_MQTT_SERVER_MAX_LWT_PAYLOAD_LENGTH,
+                                  "LWT",
+                                  pLwtPublishInfo );
 }
 
 /*-----------------------------------------------------------*/
