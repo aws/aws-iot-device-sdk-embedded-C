@@ -147,7 +147,6 @@ AwsIotOnboardingError_t _parseDeviceCredentialsResponse( const void * pDeviceCre
     IotSerializerDecoderObject_t certificatePemDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t certificateIdDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t privateKeyDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
-    IotSerializerError_t decoderStatus = IOT_SERIALIZER_UNDEFINED;
 
     if( _pAwsIotOnboardingDecoder->init( &payloadDecoder,
                                          pDeviceCredentialsResponse,
@@ -231,16 +230,16 @@ AwsIotOnboardingError_t _parseDeviceCredentialsResponse( const void * pDeviceCre
 
     /* Populate the data to be passed to the user callback.*/
     userCallbackParam.callbackType = AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_COMPLETE;
-    userCallbackParam.u.deviceCredentialsInfo.pDeviceCertificate =
-        certificatePemDecoder.u.value.u.string.pString;
+    userCallbackParam.u.deviceCredentialsInfo.pDeviceCertificate = ( const char * )
+                                                                   certificatePemDecoder.u.value.u.string.pString;
     userCallbackParam.u.deviceCredentialsInfo.deviceCertificateLength =
         certificatePemDecoder.u.value.u.string.length;
-    userCallbackParam.u.deviceCredentialsInfo.pCertificateId =
-        certificateIdDecoder.u.value.u.string.pString;
+    userCallbackParam.u.deviceCredentialsInfo.pCertificateId = ( const char * )
+                                                               certificateIdDecoder.u.value.u.string.pString;
     userCallbackParam.u.deviceCredentialsInfo.certificateIdLength =
         certificateIdDecoder.u.value.u.string.length;
-    userCallbackParam.u.deviceCredentialsInfo.pPrivateKey =
-        privateKeyDecoder.u.value.u.string.pString;
+    userCallbackParam.u.deviceCredentialsInfo.pPrivateKey = ( const char * )
+                                                            privateKeyDecoder.u.value.u.string.pString;
     userCallbackParam.u.deviceCredentialsInfo.privateKeyLength =
         privateKeyDecoder.u.value.u.string.length;
 
@@ -262,7 +261,6 @@ AwsIotOnboardingError_t _parseDeviceCredentialsResponse( const void * pDeviceCre
 void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
                                    _onboardingServerResponseParser responseParser )
 {
-    const char * pResponsePayload = pPublishData->u.message.info.pPayload;
     AwsIotStatus_t operationStatus = AWS_IOT_UNKNOWN;
 
     /* Determine whether the mutex is still valid (i.e. not destroyed) based on the reference count. If the mutex is
@@ -319,10 +317,9 @@ void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
                 /* Invalidate the user-callback information to prevent re-processing the response
                  * if we receive the same response multiple times (which is possible for a QoS 1 publish
                  * from the server). This is done to post on the semaphore ONLY ONCE on receiving the
-                 * response from the server.
-                 */
-                _activeOperation.info.userCallback.userParam == NULL;
-                _activeOperation.info.userCallback.function == NULL;
+                 * response from the server.*/
+                _activeOperation.info.userCallback.userParam = NULL;
+                _activeOperation.info.userCallback.function = NULL;
             }
 
             IotMutex_Unlock( &_activeOperation.lock );
@@ -454,14 +451,12 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
                                                                onboardingConnection,
                                                                uint32_t flags,
                                                                uint32_t timeoutMs,
-                                                               const AwsIotOnboardingCallbackInfo_t
-                                                               * deviceCredentialsResponseCallback )
+                                                               const AwsIotOnboardingCallbackInfo_t * deviceCredentialsResponseCallback )
 {
     bool mutexNotAvailableError = false;
     char responseTopicsBuffer[ ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_MAX_TOPIC_LENGTH ] =
     { 0 };
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
-    _onboardingOperationType_t operationType = ONBOARDING_GET_DEVICE_CREDENTIALS;
     /* Configuration for subscribing and unsubsubscribing to/from response topics. */
     AwsIotSubscriptionInfo_t responseSubscription =
     {
@@ -474,6 +469,8 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
     bool subscribedToResponseTopics = false;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
+    /* Suppress unused variable warning. */
+    ( void ) flags;
     IOT_FUNCTION_ENTRY( AwsIotOnboardingError_t, AWS_IOT_ONBOARDING_SUCCESS );
 
     /* Increment the reference counter to indicate that mutex is required. */
@@ -619,12 +616,15 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
 
 
 AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onboardingConnection,
-                                                        const AwsIotOnboardingOnboardDeviceInfo_t *
-                                                        pOnboardingDataInfo,
+                                                        const AwsIotOnboardingOnboardDeviceInfo_t * pOnboardingDataInfo,
                                                         uint32_t timeoutMs,
-                                                        const AwsIotOnboardingCallbackInfo_t *
-                                                        responseCallback )
+                                                        const AwsIotOnboardingCallbackInfo_t * responseCallback )
 {
+    ( void ) onboardingConnection;
+    ( void ) pOnboardingDataInfo;
+    ( void ) timeoutMs;
+    ( void ) responseCallback;
+
     return AWS_IOT_ONBOARDING_SUCCESS;
 }
 

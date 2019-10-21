@@ -201,7 +201,7 @@ typedef struct AwsIotOnboardingCallbackParam
             const char * pCertificateId;     /**< The certificate ID associated with the new certificate,
                                               * @p pDeviceCertificate.*/
             size_t certificateIdLength;      /**< The length of the certificate ID.*/
-            const uint8_t * pPrivateKey;     /**< The private key associated with the new certificate,
+            const char * pPrivateKey;        /**< The private key associated with the new certificate,
                                               * @p pDeviceCertificate.*/
             size_t privateKeyLength;         /**< The size of the private key.*/
         } deviceCredentialsInfo;
