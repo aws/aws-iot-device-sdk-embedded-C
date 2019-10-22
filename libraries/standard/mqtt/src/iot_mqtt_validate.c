@@ -35,27 +35,27 @@
 #include "private/iot_mqtt_internal.h"
 
 /**
- * @brief Check that an #IotMqttPublishInfo_t is valid
+ * @brief Check that an #IotMqttPublishInfo_t is valid.
  *
  * @param[in] awsIotMqttMode Specifies if this PUBLISH packet is being sent to
  * an AWS IoT MQTT server.
- * @param[in] maximumPayloadLength Maximum payload length
+ * @param[in] maximumPayloadLength Maximum payload length.
  * @param[in] pPublishTypeDescription String describing the publish type.
  * @param[in] pPublishInfo The #IotMqttPublishInfo_t to validate.
  *
  * @return `true` if `pPublishInfo` is valid; `false` otherwise.
  */
-static bool _mqtt_ValidatePublish( bool awsIotMqttMode,
-                                   size_t maximumPayloadLength,
-                                   const char * pPublishTypeDescription,
-                                   const IotMqttPublishInfo_t * pPublishInfo );
+static bool _validatePublish( bool awsIotMqttMode,
+                              size_t maximumPayloadLength,
+                              const char * pPublishTypeDescription,
+                              const IotMqttPublishInfo_t * pPublishInfo );
 
 /*-----------------------------------------------------------*/
 
 bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 {
     IOT_FUNCTION_ENTRY( bool, true );
-    uint16_t maxClientIdLength = IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH;
+    uint16_t maxClientIdLength = MQTT_SERVER_MAX_CLIENTID_LENGTH;
     bool enforceMaxClientIdLength = false;
 
     /* Check for NULL. */
@@ -172,6 +172,7 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
                          "the maximum supported length of %hu.",
                          pConnectInfo->clientIdentifierLength,
                          maxClientIdLength );
+
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
     }
@@ -184,10 +185,10 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 }
 
 /*-----------------------------------------------------------*/
-static bool _mqtt_ValidatePublish( bool awsIotMqttMode,
-                                   size_t maximumPayloadLength,
-                                   const char * pPublishTypeDescription,
-                                   const IotMqttPublishInfo_t * pPublishInfo )
+static bool _validatePublish( bool awsIotMqttMode,
+                              size_t maximumPayloadLength,
+                              const char * pPublishTypeDescription,
+                              const IotMqttPublishInfo_t * pPublishInfo )
 {
     IOT_FUNCTION_ENTRY( bool, true );
 
@@ -333,7 +334,7 @@ static bool _mqtt_ValidatePublish( bool awsIotMqttMode,
 bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
                                const IotMqttPublishInfo_t * pPublishInfo )
 {
-    size_t maximumPayloadLength = IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
+    size_t maximumPayloadLength = MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
 
     if( awsIotMqttMode == true )
     {
@@ -344,10 +345,10 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
         EMPTY_ELSE_MARKER;
     }
 
-    return _mqtt_ValidatePublish( awsIotMqttMode,
-                                  maximumPayloadLength,
-                                  "Publish",
-                                  pPublishInfo );
+    return _validatePublish( awsIotMqttMode,
+                             maximumPayloadLength,
+                             "Publish",
+                             pPublishInfo );
 }
 
 /*-----------------------------------------------------------*/
@@ -355,10 +356,10 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
 bool _IotMqtt_ValidateLwtPublish( bool awsIotMqttMode,
                                   const IotMqttPublishInfo_t * pLwtPublishInfo )
 {
-    return _mqtt_ValidatePublish( awsIotMqttMode,
-                                  IOT_MQTT_SERVER_MAX_LWT_PAYLOAD_LENGTH,
-                                  "LWT",
-                                  pLwtPublishInfo );
+    return _validatePublish( awsIotMqttMode,
+                             MQTT_SERVER_MAX_LWT_PAYLOAD_LENGTH,
+                             "LWT",
+                             pLwtPublishInfo );
 }
 
 /*-----------------------------------------------------------*/

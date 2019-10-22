@@ -112,7 +112,7 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
                                        _mqttConnection_t * pMqttConnection );
 
 /**
- * @brief Initialize a network connection, creating it if necessary
+ * @brief Initialize a network connection, creating it if necessary.
  *
  * @param[in] pNetworkInfo User-provided network information for the connection
  * connection.
@@ -121,9 +121,9 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
  *
  * @return Any #IotNetworkError_t, as defined by the network stack.
  */
-static IotNetworkError_t _initializeNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                       void ** pNetworkConnection,
-                                                       bool * pCreatedNetworkConnection );
+static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
+                                                   void ** pNetworkConnection,
+                                                   bool * pCreatedNetworkConnection );
 
 /**
  * @brief Creates a new MQTT connection and initializes its members.
@@ -418,17 +418,18 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
 
 /*-----------------------------------------------------------*/
 
-static IotNetworkError_t _initializeNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                       void ** pNetworkConnection,
-                                                       bool * pCreatedNetworkConnection )
+static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
+                                                   void ** pNetworkConnection,
+                                                   bool * pCreatedNetworkConnection )
 {
     IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
-    IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
 
     /* Network info must not be NULL. */
     if( pNetworkInfo == NULL )
     {
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        IotLogError( "Network information cannot be NULL." );
+
+        IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_BAD_PARAMETER );
     }
     else
     {
@@ -439,11 +440,11 @@ static IotNetworkError_t _initializeNetworkConnection( const IotMqttNetworkInfo_
      * network connection. */
     if( pNetworkInfo->createNetworkConnection == true )
     {
-        networkStatus = pNetworkInfo->pNetworkInterface->create( pNetworkInfo->u.setup.pNetworkServerInfo,
-                                                                 pNetworkInfo->u.setup.pNetworkCredentialInfo,
-                                                                 pNetworkConnection );
+        status = pNetworkInfo->pNetworkInterface->create( pNetworkInfo->u.setup.pNetworkServerInfo,
+                                                          pNetworkInfo->u.setup.pNetworkCredentialInfo,
+                                                          pNetworkConnection );
 
-        if( networkStatus == IOT_NETWORK_SUCCESS )
+        if( status == IOT_NETWORK_SUCCESS )
         {
             /* This MQTT connection owns the network connection it created and
              * should destroy it on cleanup. */
@@ -451,7 +452,9 @@ static IotNetworkError_t _initializeNetworkConnection( const IotMqttNetworkInfo_
         }
         else
         {
-            IOT_SET_AND_GOTO_CLEANUP( networkStatus );
+            IotLogError( "Failed to create network connection: %d", status );
+
+            IOT_SET_AND_GOTO_CLEANUP( status );
         }
     }
     else
@@ -1089,9 +1092,9 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         EMPTY_ELSE_MARKER;
     }
 
-    networkStatus = _initializeNetworkConnection( pNetworkInfo,
-                                                  &pNetworkConnection,
-                                                  &ownNetworkConnection );
+    networkStatus = _createNetworkConnection( pNetworkInfo,
+                                              &pNetworkConnection,
+                                              &ownNetworkConnection );
 
     if( networkStatus != IOT_NETWORK_SUCCESS )
     {
