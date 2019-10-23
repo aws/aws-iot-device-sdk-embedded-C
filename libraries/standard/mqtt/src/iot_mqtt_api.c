@@ -117,13 +117,13 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
  * @param[in] pNetworkInfo User-provided network information for the connection
  * connection.
  * @param[out] pNetworkConnection On success, the created and/or initialized network connection.
- * @param[out] pCreatedNetworkConnection On success, true if a new network connection was created; false if an existing one will be used
+ * @param[out] pCreatedNewNetworkConnection On success, `true` if a new network connection was created; `false` if an existing one will be used.
  *
  * @return Any #IotNetworkError_t, as defined by the network stack.
  */
 static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
                                                    void ** pNetworkConnection,
-                                                   bool * pCreatedNetworkConnection );
+                                                   bool * pCreatedNewNetworkConnection );
 
 /**
  * @brief Creates a new MQTT connection and initializes its members.
@@ -420,7 +420,7 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
 
 static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
                                                    void ** pNetworkConnection,
-                                                   bool * pCreatedNetworkConnection )
+                                                   bool * pCreatedNewNetworkConnection )
 {
     IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
 
@@ -448,13 +448,13 @@ static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * 
         {
             /* This MQTT connection owns the network connection it created and
              * should destroy it on cleanup. */
-            *pCreatedNetworkConnection = true;
+            *pCreatedNewNetworkConnection = true;
         }
         else
         {
             IotLogError( "Failed to create network connection: %d", status );
 
-            IOT_SET_AND_GOTO_CLEANUP( status );
+            IOT_GOTO_CLEANUP();
         }
     }
     else
@@ -462,7 +462,7 @@ static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * 
         /* A connection already exists; the caller should not destroy
          * it on cleanup. */
         *pNetworkConnection = pNetworkInfo->u.pNetworkConnection;
-        *pCreatedNetworkConnection = false;
+        *pCreatedNewNetworkConnection = false;
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
