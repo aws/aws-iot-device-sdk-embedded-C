@@ -117,18 +117,20 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
  * @param[in] pNetworkInfo User-provided network information for the connection
  * connection.
  * @param[out] pNetworkConnection On success, the created and/or initialized network connection.
+ * @param[out] pCreatedNetworkConnection On success, true if a new network connection was created; false if an existing one will be used
  *
  * @return Any #IotNetworkError_t, as defined by the network stack.
  */
 static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                   void ** pNetworkConnection );
+                                                   void ** pNetworkConnection,
+                                                   bool * pCreatedNetworkConnection );
 
 /**
  * @brief Creates a new MQTT connection and initializes its members.
  *
  * @param[in] awsIotMqttMode Specifies if this connection is to an AWS IoT MQTT server.
- * @param[in] pNetworkInfo User-provided network information for the new connection
- * MQTT connection.
+ * @param[in] pNetworkInfo User-provided network information for the new
+ * connection.
  * @param[in] keepAliveSeconds User-provided keep-alive interval for the new connection.
  *
  * @return Pointer to a newly-created MQTT connection; `NULL` on failure.
@@ -417,7 +419,8 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
 /*-----------------------------------------------------------*/
 
 static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                   void ** pNetworkConnection )
+                                                   void ** pNetworkConnection,
+                                                   bool * pCreatedNetworkConnection )
 {
     IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
 
@@ -441,11 +444,17 @@ static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * 
                                                           pNetworkInfo->u.setup.pNetworkCredentialInfo,
                                                           pNetworkConnection );
 
-        if( status != IOT_NETWORK_SUCCESS )
+        if( status == IOT_NETWORK_SUCCESS )
+        {
+            /* This MQTT connection owns the network connection it created and
+             * should destroy it on cleanup. */
+            *pCreatedNetworkConnection = true;
+        }
+        else
         {
             IotLogError( "Failed to create network connection: %d", status );
 
-            IOT_GOTO_CLEANUP();
+            IOT_SET_AND_GOTO_CLEANUP( status );
         }
     }
     else
@@ -453,6 +462,7 @@ static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * 
         /* A connection already exists; the caller should not destroy
          * it on cleanup. */
         *pNetworkConnection = pNetworkInfo->u.pNetworkConnection;
+        *pCreatedNetworkConnection = false;
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
@@ -1055,6 +1065,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
                                 IotMqttConnection_t * const pMqttConnection )
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    bool ownNetworkConnection = false;
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     void * pNetworkConnection = NULL;
@@ -1082,7 +1093,8 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     }
 
     networkStatus = _createNetworkConnection( pNetworkInfo,
-                                              &pNetworkConnection );
+                                              &pNetworkConnection,
+                                              &ownNetworkConnection );
 
     if( networkStatus != IOT_NETWORK_SUCCESS )
     {
@@ -1108,7 +1120,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     {
         /* Set the network connection associated with the MQTT connection. */
         pNewMqttConnection->pNetworkConnection = pNetworkConnection;
-        pNewMqttConnection->ownNetworkConnection = pNetworkInfo->createNetworkConnection;
+        pNewMqttConnection->ownNetworkConnection = ownNetworkConnection;
 
         /* Set the MQTT packet serializer overrides. */
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
@@ -1250,25 +1262,18 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         IotLogError( "Failed to establish new MQTT connection, error %s.",
                      IotMqtt_strerror( status ) );
 
-        if( status != IOT_MQTT_NETWORK_ERROR )
+        /* The network connection must be closed if it was created. */
+        if( ownNetworkConnection == true )
         {
-            /* The network connection must be closed if it was created. */
-            if( pNetworkInfo->createNetworkConnection == true )
-            {
-                networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
+            networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
 
-                if( networkStatus != IOT_NETWORK_SUCCESS )
-                {
-                    IotLogWarn( "Failed to close network connection." );
-                }
-                else
-                {
-                    IotLogInfo( "Network connection closed on error." );
-                }
+            if( networkStatus != IOT_NETWORK_SUCCESS )
+            {
+                IotLogWarn( "Failed to close network connection." );
             }
             else
             {
-                EMPTY_ELSE_MARKER;
+                IotLogInfo( "Network connection closed on error." );
             }
         }
         else

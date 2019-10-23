@@ -169,7 +169,7 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
         else
         {
             IotLogError( "A client identifier length of %hu exceeds the "
-                         "the maximum supported length of %hu.",
+                         "maximum supported length of %hu.",
                          pConnectInfo->clientIdentifierLength,
                          maxClientIdLength );
 
