@@ -485,14 +485,6 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
         pMqttConnection->awsIotMqttMode = awsIotMqttMode;
         pMqttConnection->pNetworkInterface = pNetworkInfo->pNetworkInterface;
         pMqttConnection->disconnectCallback = pNetworkInfo->disconnectCallback;
-        /* Set the network connection ownership. */
-        pMqttConnection->ownNetworkConnection = pNetworkInfo->createNetworkConnection;
-        /* Set the MQTT packet serializer overrides. */
-        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-            pMqttConnection->pSerializer = pNetworkInfo->pMqttSerializer;
-        #else
-            pMqttConnection->pSerializer = NULL;
-        #endif
 
         /* Start a new MQTT connection with a reference count of 1. */
         pMqttConnection->references = 1;
@@ -1116,6 +1108,14 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     {
         /* Set the network connection associated with the MQTT connection. */
         pNewMqttConnection->pNetworkConnection = pNetworkConnection;
+        pNewMqttConnection->ownNetworkConnection = pNetworkInfo->createNetworkConnection;
+
+        /* Set the MQTT packet serializer overrides. */
+        #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
+            pNewMqttConnection->pSerializer = pNetworkInfo->pMqttSerializer;
+        #else
+            pNewMqttConnection->pSerializer = NULL;
+        #endif
     }
 
     /* Set the MQTT receive callback. */
@@ -1250,18 +1250,25 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         IotLogError( "Failed to establish new MQTT connection, error %s.",
                      IotMqtt_strerror( status ) );
 
-        /* The network connection must be closed if it was created. */
-        if( pNetworkInfo->createNetworkConnection == true )
+        if( status != IOT_MQTT_NETWORK_ERROR )
         {
-            networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
-
-            if( networkStatus != IOT_NETWORK_SUCCESS )
+            /* The network connection must be closed if it was created. */
+            if( pNetworkInfo->createNetworkConnection == true )
             {
-                IotLogWarn( "Failed to close network connection." );
+                networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
+
+                if( networkStatus != IOT_NETWORK_SUCCESS )
+                {
+                    IotLogWarn( "Failed to close network connection." );
+                }
+                else
+                {
+                    IotLogInfo( "Network connection closed on error." );
+                }
             }
             else
             {
-                IotLogInfo( "Network connection closed on error." );
+                EMPTY_ELSE_MARKER;
             }
         }
         else
