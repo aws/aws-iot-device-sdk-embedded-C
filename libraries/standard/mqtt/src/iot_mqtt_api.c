@@ -41,6 +41,9 @@
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
+/* Atomics include. */
+#include "iot_atomic.h"
+
 /* Validate MQTT configuration settings. */
 #if IOT_MQTT_ENABLE_ASSERTS != 0 && IOT_MQTT_ENABLE_ASSERTS != 1
     #error "IOT_MQTT_ENABLE_ASSERTS must be 0 or 1."
@@ -238,12 +241,18 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
 /*-----------------------------------------------------------*/
 
+/* @brief Uninitialized value for @ref _initCalled. */
+#define MQTT_LIBRARY_UNINITIALIZED    ( ( uint32_t ) 0 )
+
+/* @brief Initialized value for @ref _initCalled. */
+#define MQTT_LIBRARY_INITIALIZED      ( ( uint32_t ) 1 )
+
 /**
  * @brief Tracks whether @ref mqtt_function_init has been called.
  *
  * API functions will fail if @ref mqtt_function_init was not called.
  */
-static uint32_t _initCalled = 0;
+static volatile uint32_t _initCalled = MQTT_LIBRARY_UNINITIALIZED;
 
 /*-----------------------------------------------------------*/
 
@@ -251,7 +260,7 @@ static bool _checkInit( void )
 {
     bool status = true;
 
-    if( _initCalled == 0 )
+    if( _initCalled == MQTT_LIBRARY_UNINITIALIZED )
     {
         IotLogError( "IotMqtt_Init was not called." );
 
@@ -994,8 +1003,11 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
 IotMqttError_t IotMqtt_Init( void )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
+    uint32_t initializationStatus = Atomic_CompareAndSwap_u32( &_initCalled,
+                                                               MQTT_LIBRARY_INITIALIZED,
+                                                               MQTT_LIBRARY_UNINITIALIZED );
 
-    if( _initCalled == 0 )
+    if( initializationStatus != 0 )
     {
         /* Call any additional serializer initialization function if serializer
          * overrides are enabled. */
@@ -1003,27 +1015,17 @@ IotMqttError_t IotMqtt_Init( void )
             #ifdef _IotMqtt_InitSerializeAdditional
                 if( _IotMqtt_InitSerializeAdditional() == false )
                 {
+                    /* Log initialization status. */
+                    IotLogError( "Failed to initialize MQTT library serializer. " );
+
                     status = IOT_MQTT_INIT_FAILED;
                 }
                 else
                 {
                     EMPTY_ELSE_MARKER;
                 }
-            #endif
+            #endif /* ifdef _IotMqtt_InitSerializeAdditional */
         #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
-        /* Log initialization status. */
-        if( status != IOT_MQTT_SUCCESS )
-        {
-            IotLogError( "Failed to initialize MQTT library serializer. " );
-        }
-        else
-        {
-            /* Set the flag that specifies initialization is complete. */
-            _initCalled = 1;
-
-            IotLogInfo( "MQTT library successfully initialized." );
-        }
     }
     else
     {
@@ -1037,10 +1039,12 @@ IotMqttError_t IotMqtt_Init( void )
 
 void IotMqtt_Cleanup( void )
 {
-    if( _initCalled == 1 )
-    {
-        _initCalled = 0;
+    uint32_t initializationStatus = Atomic_CompareAndSwap_u32( &_initCalled,
+                                                               MQTT_LIBRARY_UNINITIALIZED,
+                                                               MQTT_LIBRARY_INITIALIZED );
 
+    if( initializationStatus == MQTT_LIBRARY_UNINITIALIZED )
+    {
         /* Call any additional serializer cleanup initialization function if serializer
          * overrides are enabled. */
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
@@ -1066,8 +1070,10 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     bool ownNetworkConnection = false;
-    IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
-    IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
+    /* Initialize to failure status */
+    IotNetworkError_t networkStatus = IOT_NETWORK_FAILURE;
+    /* Initialize to failure status */
+    IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_BAD_PARAMETER;
     void * pNetworkConnection = NULL;
     _mqttOperation_t * pOperation = NULL;
     _mqttConnection_t * pNewMqttConnection = NULL;
