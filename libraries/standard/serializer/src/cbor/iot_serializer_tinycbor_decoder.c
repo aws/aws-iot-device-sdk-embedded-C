@@ -70,6 +70,8 @@ static IotSerializerError_t _getBufferAddress( IotSerializerDecoderObject_t * pD
 static IotSerializerError_t _getSizeOfEncodedData( IotSerializerDecoderObject_t * pDecoderObject,
                                                    size_t * pEncodedDataLength );
 
+static IotSerializerError_t _getSizeOf( IotSerializerDecoderObject_t * pDecoderObject,
+                                        size_t * pLength );
 
 /*-----------------------------------------------------------*/
 
@@ -92,6 +94,7 @@ static const IotSerializerDecodeInterface_t _cborDecoder =
     .isEndOfContainer     = _isEndOfContainer,
     .getBufferAddress     = _getBufferAddress,
     .getSizeOfEncodedData = _getSizeOfEncodedData,
+    .getSizeOf            = _getSizeOf,
     .destroy              = _destroy
 };
 
@@ -569,6 +572,44 @@ IotSerializerError_t _getSizeOfEncodedData( IotSerializerDecoderObject_t * pDeco
     {
         *pEncodedDataLength = calculateSizeOfCborObject(
             &( ( ( _cborValueWrapper_t * ) pDecoderObject->u.pHandle )->cborValue ) );
+    }
+    else
+    {
+        status = IOT_SERIALIZER_NOT_SUPPORTED;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+IotSerializerError_t _getSizeOf( IotSerializerDecoderObject_t * pDecoderObject,
+                                 size_t * pLength )
+{
+    IotSerializer_Assert( pDecoderObject != NULL );
+    IotSerializer_Assert( pLength != NULL );
+
+    IotSerializerError_t status = IOT_SERIALIZER_SUCCESS;
+
+    if( IotSerializer_IsContainer( pDecoderObject ) )
+    {
+        switch( pDecoderObject->type )
+        {
+            case IOT_SERIALIZER_CONTAINER_MAP:
+                cbor_value_get_map_length(
+                    &( ( _cborValueWrapper_t * ) ( pDecoderObject->u.pHandle ) )->cborValue,
+                    pLength );
+                break;
+
+            case IOT_SERIALIZER_CONTAINER_ARRAY:
+                cbor_value_get_array_length(
+                    &( ( _cborValueWrapper_t * ) ( pDecoderObject->u.pHandle ) )->cborValue,
+                    pLength );
+                break;
+
+            default:
+                status = IOT_SERIALIZER_NOT_SUPPORTED;
+        }
     }
     else
     {

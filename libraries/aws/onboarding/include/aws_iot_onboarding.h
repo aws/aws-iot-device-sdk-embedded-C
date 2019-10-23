@@ -116,8 +116,7 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
                                                                onboardingConnection,
                                                                uint32_t flags,
                                                                uint32_t timeoutMs,
-                                                               const AwsIotOnboardingCallbackInfo_t
-                                                               * deviceCredentialsResponseCallback );
+                                                               const AwsIotOnboardingCallbackInfo_t * deviceCredentialsResponseCallback );
 /* @[declare_onboarding_getdevicecredentials] */
 
 /**
@@ -147,11 +146,10 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
 /* @[declare_onboarding_onboarddevice] */
 
 AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onboardingConnection,
-                                                        const AwsIotOnboardingOnboardDeviceInfo_t *
+                                                        const AwsIotOnboardingOnboardDeviceRequestInfo_t *
                                                         pOnboardingDataInfo,
                                                         uint32_t timeoutMs,
-                                                        const AwsIotOnboardingCallbackInfo_t *
-                                                        responseCallback );
+                                                        const AwsIotOnboardingCallbackInfo_t * responseCallback );
 /* @[declare_onboarding_onboarddevice] */
 
 

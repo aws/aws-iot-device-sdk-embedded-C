@@ -211,6 +211,14 @@
                                                    = strlen( pTextStringValue ) },     \
                                     .type = IOT_SERIALIZER_SCALAR_TEXT_STRING }        \
 
+
+#define IotSerializer_ScalarTextStringWithLength( pTextStringValue, textStringLength ) \
+    ( IotSerializerScalarData_t ) { .value = { .u.string.pString =                     \
+                                                   ( ( uint8_t * ) pTextStringValue ), \
+                                               .u.string.length                        \
+                                                   = textStringLength },               \
+                                    .type = IOT_SERIALIZER_SCALAR_TEXT_STRING }        \
+
 #define IotSerializer_ScalarByteString( pByteStringValue, pByteStringLength )            \
     ( IotSerializerScalarData_t ) { .value = { .u.string.pString = ( pByteStringValue ), \
                                                .u.string.length                          \
@@ -515,6 +523,10 @@ typedef struct IotSerializerDecodeInterface
      */
     IotSerializerError_t ( * getSizeOfEncodedData )( IotSerializerDecoderObject_t * pDecoderObject,
                                                      size_t * pEncodedDataLength );
+
+
+    IotSerializerError_t ( * getSizeOf )( IotSerializerDecoderObject_t * pDecoderObject,
+                                          size_t * pLength );
 
 
     /**

@@ -39,6 +39,7 @@ void RunOnboardingTests( bool disableNetworkTests,
     ( void ) disableLongTests;
 
     RUN_TEST_GROUP( Onboarding_Unit_API );
+    RUN_TEST_GROUP( Onboarding_Unit_Serializer );
 
     if( disableNetworkTests == false )
     {

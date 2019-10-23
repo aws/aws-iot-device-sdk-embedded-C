@@ -20,7 +20,7 @@
  */
 
 /**
- * @file iot_mqtt_api.c
+ * @file aws_iot_onboarding_api.c
  * @brief Implements most user-facing functions of the Onboarding library.
  */
 
@@ -63,13 +63,13 @@
  * @brief Pointer to the encoder utility that will be used for serialization
  * of payload data in the library.
  */
-static const IotSerializerEncodeInterface_t * _pAwsIotOnboardingEncoder = NULL;
+const IotSerializerEncodeInterface_t * _pAwsIotOnboardingEncoder = NULL;
 
 /**
  * @brief Pointer to the decoder utility that will be used for de-serialization
  * of payload data in the library.
  */
-static const IotSerializerDecodeInterface_t * _pAwsIotOnboardingDecoder = NULL;
+const IotSerializerDecodeInterface_t * _pAwsIotOnboardingDecoder = NULL;
 
 /**
  * @brief The active Onboarding operation object.
@@ -81,31 +81,21 @@ static _onboardingOperation_t _activeOperation;
  */
 uint32_t _AwsIotOnboardingMqttTimeoutMs = AWS_IOT_ONBOARDING_DEFAULT_MQTT_TIMEOUT_MS;
 
-#if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
-
 /**
- * @brief Printable names for each of the Onboarding operations.
+ * @brief Tracks whether @ref onboarding_function_init has been called.
+ *
+ * API functions will fail if @ref onboarding_function_init was not called.
  */
-    static const char * _pGetDeviceCredentialsOperationName = "GET DEVICE CREDENTIALS";
-    static const char * _pGetOnboardDeviceOperationName = "ONBOARD DEVICE";
-#endif /* if LIBRARY_LOG_LEVEL > IOT_LOG_NONE */
+static bool _initCalled = false;
 
 /*------------------------------------------------------------------*/
 
 /**
- * @brief Parses the response from the server for device credentials, and invokes the provided user-callback with parsed
- * credentials, if successful.
+ * @brief Check if the library is initialized.
  *
- * @param[in] pDeviceCredentialsResponse The response payload from the server to parse.
- * @param[in] deviceCredentialsResponseLength The length of the response payload.
- * @param[in] userCallback The user-provided callback to invoke on successful parsing of response.
+ * @return `true` if AwsIotOnboarding_Init was called; `false` otherwise.
  */
-static AwsIotOnboardingError_t _parseDeviceCredentialsResponse( const
-                                                                void * pDeviceCredentialsResponse,
-                                                                size_t
-                                                                deviceCredentialsResponseLength,
-                                                                const AwsIotOnboardingCallbackInfo_t
-                                                                * userCallbackInfo );
+static bool _checkInit( void );
 
 /**
  * @brief A utility common for processing server responses of all Onboarding operation APIs.
@@ -120,10 +110,24 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
 
 
 /**
- * @brief The MQTT subscription callback for the request to GetDeviceCredentials Onboarding service API.
+ * @brief The MQTT subscription callback for the response from GetDeviceCredentials service API.
  */
 static void _deviceCredentialsResponseReceivedCallback( void * param1,
-                                                        IotMqttCallbackParam_t * const pPublish );
+                                                        IotMqttCallbackParam_t * const
+                                                        pPublish );
+
+/**
+ * @brief The MQTT subscription callback for the response from OnboardDevice service API.
+ */
+static void _onboardDeviceResponseReceivedCallback( void * param1,
+                                                    IotMqttCallbackParam_t * const pPublish );
+
+/**
+ * @brief Sets the active operation object, #_activeOperation, to represent an active operation in progress.
+ * @param[in] pUserCallback The user-provided callback information that will be copied
+ * to the active operation object.
+ */
+static void _setActiveOperation( const AwsIotOnboardingCallbackInfo_t * pUserCallback );
 
 /**
  * @brief Resets the active operation object.
@@ -132,134 +136,25 @@ static void _deviceCredentialsResponseReceivedCallback( void * param1,
 static void _resetActiveOperationData();
 
 /*------------------------------------------------------------------*/
-AwsIotOnboardingError_t _parseDeviceCredentialsResponse( const void * pDeviceCredentialsResponse,
-                                                         size_t deviceCredentialsResponseLength,
-                                                         const AwsIotOnboardingCallbackInfo_t *
-                                                         userCallbackInfo )
+
+static bool _checkInit( void )
 {
-    IOT_FUNCTION_ENTRY( AwsIotOnboardingError_t, AWS_IOT_ONBOARDING_SUCCESS );
-    AwsIotOnboardingCallbackParam_t userCallbackParam =
-    {
-        .callbackType = ( AwsIotOnboardingCallbackType_t ) 0
-    };
-    /** TODO - Move parsing logic into separate file for separate dependency and ease of testability **/
-    IotSerializerDecoderObject_t payloadDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
-    IotSerializerDecoderObject_t certificatePemDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
-    IotSerializerDecoderObject_t certificateIdDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
-    IotSerializerDecoderObject_t privateKeyDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    bool status = true;
 
-    if( _pAwsIotOnboardingDecoder->init( &payloadDecoder,
-                                         pDeviceCredentialsResponse,
-                                         deviceCredentialsResponseLength ) !=
-        IOT_SERIALIZER_SUCCESS )
+    if( _initCalled == false )
     {
-        /* Decoder object initialization failed */
-        IotLogError(
-            "Could not initialize decoder for parsing response from server of %s operation.",
-            _pGetDeviceCredentialsOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
+        IotLogError( "AwsIotOnboarding_Init was not called." );
+
+        status = false;
     }
 
-    if( payloadDecoder.type != IOT_SERIALIZER_CONTAINER_MAP )
-    {
-        IotLogError(
-            "Invalid container type of response received from server of %s operation. Payload should be of map type.",
-            _pGetDeviceCredentialsOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
-    }
-
-    if( _pAwsIotOnboardingDecoder->find( &payloadDecoder,
-                                         ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-                                         &certificatePemDecoder ) != IOT_SERIALIZER_SUCCESS )
-    {
-        /* Cannot find "certificatePem" */
-        IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                     ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-                     _pGetDeviceCredentialsOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
-    }
-
-    if( certificatePemDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
-    {
-        IotLogError(
-            "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is text string.",
-            ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-            _pGetDeviceCredentialsOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
-    }
-
-    if( _pAwsIotOnboardingDecoder->find( &payloadDecoder,
-                                         ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                                         &certificateIdDecoder ) != IOT_SERIALIZER_SUCCESS )
-    {
-        /* Cannot find "certificateId" */
-        IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                     ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                     _pGetDeviceCredentialsOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
-    }
-
-    if( certificateIdDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
-    {
-        IotLogError(
-            "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is text string.",
-            ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-            _pGetDeviceCredentialsOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
-    }
-
-    if( _pAwsIotOnboardingDecoder->find( &payloadDecoder,
-                                         ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
-                                         &privateKeyDecoder ) != IOT_SERIALIZER_SUCCESS )
-    {
-        /* Cannot find "private key" */
-        IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                     ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
-                     _pGetDeviceCredentialsOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
-    }
-
-    if( privateKeyDecoder.type != IOT_SERIALIZER_SCALAR_BYTE_STRING )
-    {
-        IotLogError(
-            "Invalid value type of \"%s\" data in server response of %s operation. Expected type is byte string.",
-            ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
-            _pGetDeviceCredentialsOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
-    }
-
-    /* Populate the data to be passed to the user callback.*/
-    userCallbackParam.callbackType = AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_COMPLETE;
-    userCallbackParam.u.deviceCredentialsInfo.pDeviceCertificate = ( const char * )
-                                                                   certificatePemDecoder.u.value.u.string.pString;
-    userCallbackParam.u.deviceCredentialsInfo.deviceCertificateLength =
-        certificatePemDecoder.u.value.u.string.length;
-    userCallbackParam.u.deviceCredentialsInfo.pCertificateId = ( const char * )
-                                                               certificateIdDecoder.u.value.u.string.pString;
-    userCallbackParam.u.deviceCredentialsInfo.certificateIdLength =
-        certificateIdDecoder.u.value.u.string.length;
-    userCallbackParam.u.deviceCredentialsInfo.pPrivateKey = ( const char * )
-                                                            privateKeyDecoder.u.value.u.string.pString;
-    userCallbackParam.u.deviceCredentialsInfo.privateKeyLength =
-        privateKeyDecoder.u.value.u.string.length;
-
-    /* Invoke the user-provided callback with the parsed credentials data . */
-    userCallbackInfo->function( userCallbackInfo->userParam, &userCallbackParam );
-
-    IOT_FUNCTION_CLEANUP_BEGIN();
-
-    if( status != AWS_IOT_ONBOARDING_INTERNAL_FAILURE )
-    {
-        _pAwsIotOnboardingDecoder->destroy( &payloadDecoder );
-    }
-
-    IOT_FUNCTION_CLEANUP_END();
+    return status;
 }
 
 /*-----------------------------------------------------------*/
 
-void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
-                                   _onboardingServerResponseParser responseParser )
+static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
+                                          _onboardingServerResponseParser responseParser )
 {
     AwsIotStatus_t operationStatus = AWS_IOT_UNKNOWN;
 
@@ -341,18 +236,29 @@ void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
 
 /*-----------------------------------------------------------*/
 
-void _deviceCredentialsResponseReceivedCallback( void * param1,
-                                                 IotMqttCallbackParam_t * const pPublish )
+static void _deviceCredentialsResponseReceivedCallback( void * param1,
+                                                        IotMqttCallbackParam_t * const pPublish )
 {
     /* Silence warnings about unused variables.*/
     ( void ) param1;
 
-    _commonServerResponseHandler( pPublish, _parseDeviceCredentialsResponse );
+    _commonServerResponseHandler( pPublish, _AwsIotOnboarding_ParseDeviceCredentialsResponse );
 }
 
 /*-----------------------------------------------------------*/
 
-void _resetActiveOperationData()
+static void _onboardDeviceResponseReceivedCallback( void * param1,
+                                                    IotMqttCallbackParam_t * const pPublish )
+{
+    /* Silence warnings about unused variables.*/
+    ( void ) param1;
+
+    _commonServerResponseHandler( pPublish, _AwsIotOnboarding_ParseOnboardDeviceResponse );
+}
+
+/*-----------------------------------------------------------*/
+
+static void _resetActiveOperationData()
 {
     /* Determine whether the mutex is still valid (i.e. not destroyed) based on the reference count. If the mutex is
      * valid, indicate that we will be accessing the mutex by incrementing the reference count.*/
@@ -374,72 +280,106 @@ void _resetActiveOperationData()
 
 /*-----------------------------------------------------------*/
 
+static void _setActiveOperation( const AwsIotOnboardingCallbackInfo_t * pUserCallback )
+{
+    /* Increment the reference count as we will be acquiring the mutex. */
+    if( Atomic_Increment_u32( &_activeOperation.mutexReferenceCount ) != 0 )
+    {
+        /* Update shared active operation object to indicate that an operation is in
+         * progress. */
+        IotMutex_Lock( &( _activeOperation.lock ) );
+        {
+            /* If a successful response is not received, it should be treated as
+             * MQTT error. */
+            _activeOperation.info.status = AWS_IOT_ONBOARDING_MQTT_ERROR;
+
+            /* Store the user supplied callback. */
+            _activeOperation.info.userCallback.function = pUserCallback->function;
+            _activeOperation.info.userCallback.userParam = pUserCallback->userParam;
+        }
+        IotMutex_Unlock( &( _activeOperation.lock ) );
+    }
+
+    /* Decrement the reference count as we have released the mutex. */
+    ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+}
+
+/*-----------------------------------------------------------*/
+
 AwsIotOnboardingError_t AwsIotOnboarding_Init( uint32_t mqttTimeoutMs )
 {
     bool mutexCreated = false;
 
     IOT_FUNCTION_ENTRY( AwsIotOnboardingError_t, AWS_IOT_ONBOARDING_SUCCESS );
 
-    /* Get the pointers to the encoder function tables. */
-    #if AWS_IOT_ONBOARDING_FORMAT == AWS_IOT_ONBOARDING_FORMAT_CBOR
-        _pAwsIotOnboardingDecoder = IotSerializer_GetCborDecoder();
-        _pAwsIotOnboardingEncoder = IotSerializer_GetCborEncoder();
-    #else
-    #error "AWS_IOT_ONBOARDING_FORMAT needs to be set."
-    #endif
-
-    /* Create the mutex guarding the operation object. */
-    if( IotMutex_Create( &( _activeOperation.lock ), false ) == false )
+    if( _initCalled == false )
     {
-        IotLogError( "Failed to initialize Onboarding library due to mutex creation failure." );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INIT_FAILED );
+        _initCalled = true;
+
+        /* Get the pointers to the encoder function tables. */
+        #if AWS_IOT_ONBOARDING_FORMAT == AWS_IOT_ONBOARDING_FORMAT_CBOR
+            _pAwsIotOnboardingDecoder = IotSerializer_GetCborDecoder();
+            _pAwsIotOnboardingEncoder = IotSerializer_GetCborEncoder();
+        #endif
+
+        /* Create the mutex guarding the operation object. */
+        if( IotMutex_Create( &( _activeOperation.lock ), false ) == false )
+        {
+            IotLogError( "Failed to initialize Onboarding library due to mutex creation failure." );
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INIT_FAILED );
+        }
+        else
+        {
+            mutexCreated = true;
+
+            /* Initialize the reference count to one as the mutex to represent that there is a single thread/context
+             * alive that needs the mutex.
+             * If the reference count is already greather than 0, it represents that there is already a thread accessing
+             * the mutex, which is NOT expected at initialization. */
+            if( Atomic_CompareAndSwap_u32( &_activeOperation.mutexReferenceCount, 1u, 0u ) == 0 )
+            {
+                IotLogError(
+                    "Failed to initialize Onboarding library as mutex reference counter is in an invalid state." );
+                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INIT_FAILED );
+            }
+        }
+
+        /* Save the MQTT timeout option. */
+        if( mqttTimeoutMs != 0 )
+        {
+            _AwsIotOnboardingMqttTimeoutMs = mqttTimeoutMs;
+        }
+
+        _resetActiveOperationData();
+
+        /* Create a binary semaphore needed for signaling arrival of server responses. */
+        if( IotSemaphore_Create( &( _activeOperation.responseReceivedSem ),
+                                 0 /* initialValue */,
+                                 1 /* maxValue */ ) == false )
+        {
+            IotLogError(
+                "Failed to initialize Onboarding library due to semaphore creation failure." );
+
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INIT_FAILED );
+        }
+
+        IotLogInfo( "Onboarding library successfully initialized." );
+
+        IOT_FUNCTION_CLEANUP_BEGIN();
+
+        if( status != AWS_IOT_ONBOARDING_SUCCESS )
+        {
+            if( mutexCreated )
+            {
+                IotMutex_Destroy( &_activeOperation.lock );
+            }
+
+            ( void ) Atomic_AND_u32( &_activeOperation.mutexReferenceCount, 0u );
+        }
     }
     else
     {
-        mutexCreated = true;
-
-        /* Initialize the reference count to one as the mutex to represent that there is a single thread/context
-         * alive that needs the mutex.
-         * If the reference count is already greather than 0, it represents that there is already a thread accessing
-         * the mutex, which is NOT expected at initialization. */
-        if( Atomic_CompareAndSwap_u32( &_activeOperation.mutexReferenceCount, 1u, 0u ) == 0 )
-        {
-            IotLogError(
-                "Failed to init Onboarding library as mutex reference counter is in an invalid state." );
-            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INIT_FAILED );
-        }
-    }
-
-    /* Save the MQTT timeout option. */
-    if( mqttTimeoutMs != 0 )
-    {
-        _AwsIotOnboardingMqttTimeoutMs = mqttTimeoutMs;
-    }
-
-    _resetActiveOperationData();
-
-    /* Create a binary semaphore needed for signaling arrival of server responses. */
-    if( IotSemaphore_Create( &( _activeOperation.responseReceivedSem ),
-                             0 /* initialValue */,
-                             1 /* maxValue */ ) == false )
-    {
-        IotLogError( "Failed to initialize Onboarding library due to semaphore creation failure." );
-
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INIT_FAILED );
-    }
-
-    IotLogInfo( "Onboarding library successfully initialized." );
-
-    IOT_FUNCTION_CLEANUP_BEGIN();
-
-    if( status != AWS_IOT_ONBOARDING_SUCCESS )
-    {
-        if( mutexCreated )
-        {
-            IotMutex_Destroy( &_activeOperation.lock );
-        }
-
-        ( void ) Atomic_AND_u32( &_activeOperation.mutexReferenceCount, 0u );
+        IotLogWarn( "AwsIotOnboarding_Init called with library already initialized." );
     }
 
     IOT_FUNCTION_CLEANUP_END();
@@ -453,7 +393,8 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
                                                                uint32_t timeoutMs,
                                                                const AwsIotOnboardingCallbackInfo_t * deviceCredentialsResponseCallback )
 {
-    bool mutexNotAvailableError = false;
+    uint32_t startingMutexRefCount = 0;
+    bool mutexRefCountIncremented = false;
     char responseTopicsBuffer[ ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_MAX_TOPIC_LENGTH ] =
     { 0 };
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
@@ -467,24 +408,21 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
         .topicFilterBaseLength = ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER_LENGTH
     };
     bool subscribedToResponseTopics = false;
+    IotSerializerEncoderObject_t payloadEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
+    size_t payloadSize = 0;
+    uint8_t * pPayloadBuffer = NULL;
+    bool payloadBufferAllocated = false;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
     /* Suppress unused variable warning. */
     ( void ) flags;
     IOT_FUNCTION_ENTRY( AwsIotOnboardingError_t, AWS_IOT_ONBOARDING_SUCCESS );
 
-    /* Increment the reference counter to indicate that mutex is required. */
-    if( Atomic_Increment_u32( &_activeOperation.mutexReferenceCount ) == 0u )
+    /* Check that library has been initialized. */
+    if( _checkInit() == false )
     {
-        IotLogError( "Mutex is unavailable for API operation." );
-        mutexNotAvailableError = true;
-        ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_NOT_INITIALIZED );
     }
-
-    /* Copy the response topics in a local buffer for appropriate suffixes to be added. */
-    ( void ) memcpy( responseTopicsBuffer, ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER,
-                     ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER_LENGTH );
 
     if( onboardingConnection == IOT_MQTT_CONNECTION_INITIALIZER )
     {
@@ -499,10 +437,24 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
     {
         IotLogError(
             "Invalid callback provided. Both the callback object and functor within should be provided to the %s operation",
-            _pGetDeviceCredentialsOperationName );
+            GET_DEVICE_CREDENTIALS_OPERATION_LOG );
 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
     }
+
+    /* Increment the reference counter to indicate that mutex is required. */
+    startingMutexRefCount = Atomic_Increment_u32( &_activeOperation.mutexReferenceCount );
+    mutexRefCountIncremented = true;
+
+    if( startingMutexRefCount == 0u )
+    {
+        IotLogError( "Mutex is unavailable for API operation." );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
+    }
+
+    /* Copy the response topics in a local buffer for appropriate suffixes to be added. */
+    ( void ) memcpy( responseTopicsBuffer, ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER,
+                     ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER_LENGTH );
 
     /* Subscribe to the MQTT response topics. */
     mqttOpResult = AwsIot_ModifySubscriptions( IotMqtt_SubscribeSync, &responseSubscription );
@@ -510,7 +462,7 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
     if( mqttOpResult != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Unable to subscribe to response topics for %s operation",
-                     _pGetDeviceCredentialsOperationName );
+                     GET_DEVICE_CREDENTIALS_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_MQTT_ERROR );
     }
     else
@@ -518,41 +470,55 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
         subscribedToResponseTopics = true;
     }
 
-    /* Increment the reference count as we will be acquiring the mutex. */
-    ( void ) Atomic_Increment_u32( &_activeOperation.mutexReferenceCount );
-
-    /* Update shared active operation object to indicate that an operation is in
-     * progress. */
-    IotMutex_Lock( &( _activeOperation.lock ) );
-    {
-        /* If a successful response is not received, it should be treated as
-         * MQTT error. */
-        _activeOperation.info.status = AWS_IOT_ONBOARDING_MQTT_ERROR;
-
-        /* Store the user supplied callback. */
-        _activeOperation.info.userCallback.function =
-            deviceCredentialsResponseCallback->function;
-        _activeOperation.info.userCallback.userParam =
-            deviceCredentialsResponseCallback->userParam;
-    }
-    IotMutex_Unlock( &( _activeOperation.lock ) );
-    /* Decrement the reference count as we have released the mutex. */
-    ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+    /* Update the operation object to represent an active "get device credentials" operation. */
+    _setActiveOperation( deviceCredentialsResponseCallback );
 
     /* Onboarding already has an acknowledgement mechanism, so sending the message at
      * QoS 1 provides no benefit. */
     publishInfo.qos = IOT_MQTT_QOS_0;
 
-    /* Set the payload as the Onboarding request. */
-    publishInfo.pPayload = NULL;
-    publishInfo.payloadLength = 0u;
+    /* Generate the serialized payload for requesting onboarding of the device.*/
+
+    /* Dry-run serialization to calculate the required size. */
+    status = _AwsIotOnboarding_SerializeGetDeviceCredentialsRequestPayload( &payloadEncoder,
+                                                                            NULL, 0 );
+
+    if( status != AWS_IOT_ONBOARDING_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Get the calculated required size. */
+    payloadSize = _pAwsIotOnboardingEncoder->getExtraBufferSizeNeeded(
+        &payloadEncoder );
+    AwsIotOnboarding_Assert( payloadSize != 0 );
+
+    /* Clean the encoder object handle. */
+    _pAwsIotOnboardingEncoder->destroy( &payloadEncoder );
+
+    /* Allocate memory for the request payload based on the size required from the dry-run of serialization */
+    pPayloadBuffer = AwsIotOnboarding_MallocPayload( payloadSize * sizeof( uint8_t ) );
+
+    if( pPayloadBuffer == NULL )
+    {
+        IotLogError( "Unable to allocate memory for request payload in %s API operation",
+                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_NO_MEMORY );
+    }
+    else
+    {
+        payloadBufferAllocated = true;
+    }
+
+    publishInfo.pPayload = pPayloadBuffer;
+    publishInfo.payloadLength = payloadSize;
 
     /* Set the operation topic name. */
     publishInfo.pTopicName = ONBOARDING_GET_DEVICE_CREDENTIALS_REQUEST_TOPIC;
     publishInfo.topicNameLength = ONBOARDING_GET_DEVICE_CREDENTIALS_REQUEST_TOPIC_LENGTH;
 
     IotLogDebug( "Onboarding %s message will be published to topic %.*s",
-                 _pGetDeviceCredentialsOperationName,
+                 GET_DEVICE_CREDENTIALS_OPERATION_LOG,
                  publishInfo.topicNameLength,
                  publishInfo.pTopicName );
 
@@ -565,7 +531,7 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
     if( mqttOpResult != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Unable to subscribe to response topics for %s operation",
-                     _pGetDeviceCredentialsOperationName );
+                     GET_DEVICE_CREDENTIALS_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_MQTT_ERROR );
     }
 
@@ -600,12 +566,17 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
                                     &responseSubscription );
     }
 
-    if( !mutexNotAvailableError )
+    if( payloadBufferAllocated )
     {
-        /* Reset the active operation */
-        _resetActiveOperationData();
+        AwsIotOnboarding_FreePayload( pPayloadBuffer );
+    }
 
-        /* Indicate that the mutex is no longer required by the API as its execution lifetime is ending. */
+    /* Reset the active operation */
+    _resetActiveOperationData();
+
+    /* Indicate that the mutex is no longer required by the API as its execution lifetime is ending. */
+    if( mutexRefCountIncremented )
+    {
         ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
     }
 
@@ -614,39 +585,292 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
 
 /*-----------------------------------------------------------*/
 
-
 AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onboardingConnection,
-                                                        const AwsIotOnboardingOnboardDeviceInfo_t * pOnboardingDataInfo,
+                                                        const AwsIotOnboardingOnboardDeviceRequestInfo_t * pRequestData,
                                                         uint32_t timeoutMs,
                                                         const AwsIotOnboardingCallbackInfo_t * responseCallback )
 {
-    ( void ) onboardingConnection;
-    ( void ) pOnboardingDataInfo;
-    ( void ) timeoutMs;
-    ( void ) responseCallback;
+    IOT_FUNCTION_ENTRY( AwsIotOnboardingError_t, AWS_IOT_ONBOARDING_SUCCESS );
+    IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
+    uint32_t startingMutexRefCount = 0;
+    bool mutexRefCountIncremented = false;
 
-    return AWS_IOT_ONBOARDING_SUCCESS;
+    /* Use the same buffer for storing the request and response MQTT topic strings (for space efficiency) as both kinds
+     * of topics share the same filter. */
+    char requestResponseTopicsBuffer[ ONBOARDING_ONBOARD_DEVICE_RESPONSE_MAX_TOPIC_LENGTH ] = { 0 };
+    AwsIotOnboarding_Assert( ONBOARDING_ONBOARD_DEVICE_RESPONSE_MAX_TOPIC_LENGTH >
+                             ONBOARDING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH );
+
+    bool subscribedToResponseTopics = false;
+    /* Configuration for subscribing and unsubsubscribing to/from response topics. */
+    AwsIotSubscriptionInfo_t responseSubscription =
+    {
+        .mqttConnection        = onboardingConnection,
+        .callbackFunction      = _onboardDeviceResponseReceivedCallback,
+        .timeout               = _AwsIotOnboardingMqttTimeoutMs,
+        .pTopicFilterBase      = requestResponseTopicsBuffer,
+        .topicFilterBaseLength = ONBOARDING_ONBOARD_DEVICE_RESPONSE_TOPIC_FILTER_LENGTH
+    };
+    IotSerializerEncoderObject_t payloadEncoder =
+        IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
+    size_t payloadSize = 0;
+    uint8_t * pPayloadBuffer = NULL;
+    bool payloadBufferAllocated = false;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+
+    /* Check that library has been initialized. */
+    if( _checkInit() == false )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_NOT_INITIALIZED );
+    }
+
+    if( onboardingConnection == IOT_MQTT_CONNECTION_INITIALIZER )
+    {
+        IotLogError( "MQTT connection is not initialized." );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
+    }
+
+    if( pRequestData == NULL )
+    {
+        IotLogError( "Invalid request data passed for onboarding device." );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
+    }
+
+    if( ( pRequestData->pDeviceCertificateId == NULL ) ||
+        ( pRequestData->deviceCertificateIdLength == 0 ) )
+    {
+        IotLogError( "Invalid certificate ID data passed for device onboarding request." );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
+    }
+
+    /* Check that the provided template ID has the length of the text representation of UUID */
+    if( ( pRequestData->pTemplateIdentifier == NULL ) || ( pRequestData->templateIdentifierLength ==
+                                                           0 ) )
+    {
+        IotLogError( "Invalid template ID information passed for device onboarding request." );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
+    }
+
+    /* Check that a callback function object along with a valid callback functor is provided. */
+    if( ( responseCallback == NULL ) || ( responseCallback->function == NULL ) )
+    {
+        IotLogError(
+            "Invalid callback provided. A valid callback object and functor should be provided to the %s operation",
+            GET_ONBOARD_DEVICE_OPERATION_LOG );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
+    }
+
+    /* Increment the reference counter to indicate that mutex is required. */
+    startingMutexRefCount = Atomic_Increment_u32( &_activeOperation.mutexReferenceCount );
+    mutexRefCountIncremented = true;
+
+    if( startingMutexRefCount == 0u )
+    {
+        IotLogError( "Mutex is unavailable for API operation." );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
+    }
+
+    /* Generate the response topic filter using the template ID. */
+    responseSubscription.topicFilterBaseLength = _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter(
+        pRequestData->pTemplateIdentifier,
+        pRequestData->templateIdentifierLength,
+        requestResponseTopicsBuffer );
+
+    if( responseSubscription.topicFilterBaseLength == 0 )
+    {
+        /* TODO - Rethink about handling insufficient buffer size error (that is a bit contrived) */
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
+    }
+
+    /* Subscibe to the MQTT response topics. */
+    mqttOpResult = AwsIot_ModifySubscriptions( IotMqtt_TimedSubscribe, &responseSubscription );
+
+    if( mqttOpResult != IOT_MQTT_SUCCESS )
+    {
+        IotLogError( "Unable to subscribe to response topics for %s operation",
+                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_MQTT_ERROR );
+    }
+    else
+    {
+        subscribedToResponseTopics = true;
+    }
+
+    /* Update the operation object to represent an active "onboard device" operation. */
+    _setActiveOperation( responseCallback );
+
+    /* Onboarding already has an acknowledgement mechanism, so sending the message at
+     * QoS 1 provides no benefit. */
+    publishInfo.qos = IOT_MQTT_QOS_0;
+
+    /* Generate the serialized payload for requesting onboarding of the device.*/
+
+    /* Dry-run serialization to calculate the required size. */
+    status = _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( pRequestData, &payloadEncoder,
+                                                                     NULL, 0 );
+
+    if( status != AWS_IOT_ONBOARDING_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Get the calculated required size. */
+    payloadSize = _pAwsIotOnboardingEncoder->getExtraBufferSizeNeeded(
+        &payloadEncoder );
+    AwsIotOnboarding_Assert( payloadSize != 0 );
+
+    /* Clean the encoder object handle. */
+    _pAwsIotOnboardingEncoder->destroy( &payloadEncoder );
+
+    /* Allocate memory for the request payload based on the size required from the dry-run of serialization */
+    pPayloadBuffer = AwsIotOnboarding_MallocPayload( payloadSize * sizeof( uint8_t ) );
+
+    if( pPayloadBuffer == NULL )
+    {
+        IotLogError( "Unable to allocate memory for request payload in %s API operation",
+                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_NO_MEMORY );
+    }
+    else
+    {
+        payloadBufferAllocated = true;
+    }
+
+    /* Actual serialization. */
+    status = _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( pRequestData,
+                                                                     &payloadEncoder,
+                                                                     pPayloadBuffer,
+                                                                     payloadSize );
+
+    if( status != AWS_IOT_ONBOARDING_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Re-clean the encoder object handle after the actual serialization exercise. */
+    _pAwsIotOnboardingEncoder->destroy( &payloadEncoder );
+
+    /* Set the payload for the device onboarding request. */
+    publishInfo.pPayload = pPayloadBuffer;
+    publishInfo.payloadLength = payloadSize;
+
+    /* Set the request topic to PUBLISH to.
+     * Note: For memory and performance efficiency, we are using the same buffer as the response topics. We specify the
+     * length of the buffer that is applicable to the request topic. */
+    publishInfo.pTopicName = requestResponseTopicsBuffer;
+    publishInfo.topicNameLength = ONBOARDING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH;
+
+    IotLogDebug( "Onboarding %s message will be published to topic %.*s",
+                 GET_ONBOARD_DEVICE_OPERATION_LOG,
+                 publishInfo.topicNameLength,
+                 publishInfo.pTopicName );
+
+    /* Publish to the Onboarding topic name. */
+    mqttOpResult = IotMqtt_TimedPublish( onboardingConnection,
+                                         &publishInfo,
+                                         0,
+                                         _AwsIotOnboardingMqttTimeoutMs );
+
+    if( mqttOpResult != IOT_MQTT_SUCCESS )
+    {
+        IotLogError( "Unable to subscribe to response topics for %s operation",
+                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_MQTT_ERROR );
+    }
+
+    /* Wait for response from the server. */
+    if( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem,
+                                timeoutMs ) == false )
+    {
+        status = AWS_IOT_ONBOARDING_TIMEOUT;
+    }
+
+    /* There can be an edge case of receiving the server response right after the timeout has occured.
+     * If such an edge case has occured and is causing the subscription callback is to currently execute,
+     * we will void the "timeout" resolution and instead use the outcome of the callback execution.
+     * Rationale - This API is not intended to have an "exact" implementation of server timeout, as completing
+     * the operation is more valuable for the customer. */
+    IotMutex_Lock( &_activeOperation.lock );
+
+    /* Check if we hit the edge case of a race condition between receiving the server response and the timer firing . */
+    if( _activeOperation.info.status != AWS_IOT_ONBOARDING_MQTT_ERROR )
+    {
+        status = _activeOperation.info.status;
+    }
+
+    IotMutex_Unlock( &_activeOperation.lock );
+
+    IOT_FUNCTION_CLEANUP_BEGIN();
+
+    /* Unsubscibe from the MQTT response topics only if subscription to those topics was successful. */
+    if( subscribedToResponseTopics )
+    {
+        AwsIot_ModifySubscriptions( IotMqtt_TimedUnsubscribe,
+                                    &responseSubscription );
+    }
+
+    if( payloadBufferAllocated )
+    {
+        AwsIotOnboarding_FreePayload( pPayloadBuffer );
+    }
+
+    /* Reset the active operation */
+    _resetActiveOperationData();
+
+    /* Indicate that the mutex is no longer required by the API as its execution lifetime is ending. */
+    if( mutexRefCountIncremented )
+    {
+        ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+    }
+
+    IOT_FUNCTION_CLEANUP_END();
 }
+
 
 /*-----------------------------------------------------------*/
 
 void AwsIotOnboarding_Cleanup( void )
 {
-    _AwsIotOnboardingMqttTimeoutMs = AWS_IOT_ONBOARDING_DEFAULT_MQTT_TIMEOUT_MS;
-
-    _resetActiveOperationData();
-
-    /* We will destroy the mutex only if there is no other thread/context alive that needs the mutex.
-     * This tackles the race condition with the execution of an MQTT callback (that was registered by the operation
-     * APIs) accessing the mutex.*/
-    if( Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount ) == 1 )
+    if( _initCalled == true )
     {
-        IotMutex_Destroy( &( _activeOperation.lock ) );
+        /* Reset the flag to indicate that library will have to be re-initialized to use it again. */
+        _initCalled = false;
+
+        _AwsIotOnboardingMqttTimeoutMs = AWS_IOT_ONBOARDING_DEFAULT_MQTT_TIMEOUT_MS;
+
+        /* Determine whether the mutex is still valid (i.e. not destroyed) based on the reference count. If the mutex is
+         * valid, indicate that we will be accessing the mutex by incrementing the reference count.
+         * This tackles the RACE CONDITION with the possible cleanup of the mutex in the thread executing an Onboarding
+         * Library API.*/
+        if( Atomic_Increment_u32( &_activeOperation.mutexReferenceCount ) > 0 )
+        {
+            _resetActiveOperationData();
+        }
+
+        /* Reverse the previous increment operation as we don't need the mutex anymore. */
+        ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+
+        /* We will destroy the mutex only if there is no other thread/context alive that needs the mutex.
+         * This tackles the race condition with the execution of an MQTT callback (that was registered by the operation
+         * APIs) accessing the mutex.*/
+        if( Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount ) == 1 )
+        {
+            IotMutex_Destroy( &( _activeOperation.lock ) );
+        }
+
+        IotSemaphore_Destroy( &( _activeOperation.responseReceivedSem ) );
+
+        IotLogInfo( "Onboarding library cleanup done." );
     }
-
-    IotSemaphore_Destroy( &( _activeOperation.responseReceivedSem ) );
-
-    IotLogInfo( "Onboarding library cleanup done." );
+    else
+    {
+        IotLogWarn( "AwsIotOnboarding_Init was not called before AwsIotonboarding_Cleanup." );
+    }
 }
 
 /*-----------------------------------------------------------*/

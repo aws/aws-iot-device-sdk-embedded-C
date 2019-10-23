@@ -51,7 +51,7 @@
         #ifdef Iot_DefaultAssert
             #define AwsIotOnboarding_Assert( expression )    Iot_DefaultAssert( expression )
         #else
-            #error "Asserts are enabled for MQTT, but IotMqtt_Assert is not defined"
+            #error "Asserts are enabled for MQTT, but AwsIotOnboarding_Assert is not defined"
         #endif
     #endif
 #else
@@ -72,6 +72,13 @@
 #define LIBRARY_LOG_NAME    ( "Onboarding" )
 #include "iot_logging_setup.h"
 
+/**
+ * @brief Printable names for each of the Onboarding operations.
+ */
+#define GET_DEVICE_CREDENTIALS_OPERATION_LOG    "GET DEVICE CREDENTIALS"
+#define GET_ONBOARD_DEVICE_OPERATION_LOG        "ONBOARD DEVICE"
+
+
 #ifndef AWS_IOT_ONBOARDING_FORMAT
     #define AWS_IOT_ONBOARDING_FORMAT    AWS_IOT_ONBOARDING_FORMAT_CBOR
 #endif
@@ -90,6 +97,110 @@
     #error "AWS_IOT_ONBOARDING_FORMAT must be AWS_IOT_ONBOARDING_FORMAT_CBOR."
 #endif /* if AWS_IOT_ONBOARDING_FORMAT == AWS_IOT_ONBOARDING_FORMAT_CBOR */
 
+/*
+ * Provide default values for undefined memory allocation functions based on
+ * the usage of dynamic memory allocation.
+ */
+#if IOT_STATIC_MEMORY_ONLY == 1
+    #include "iot_static_memory.h"
+
+/**
+ * @brief Allocate an . This function should have the same
+ * signature as [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
+ */
+    #define AwsIotOnboarding_MallocPayload    Iot_MallocMessageBuffer
+
+/**
+ * @brief Free an . This function should have the same
+ * signature as [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
+    #define AwsIotOnboarding_FreePayload      Iot_FreeMessageBuffer
+
+/**
+ * @brief Allocate an . This function should have the same
+ * signature as [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
+ */
+    #define AwsIotOnboarding_MallocString     Iot_MallocMessageBuffer
+
+/**
+ * @brief Free an . This function should have the same
+ * signature as [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
+    #define AwsIotOnboarding_FreeString       Iot_FreeMessageBuffer
+
+
+/**
+ * @brief Allocate an . This function should have the same
+ * signature as [malloc]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
+ */
+    #define AwsIotOnboarding_MallocDeviceConfigurationList    Iot_MallocMessageBuffer
+
+/**
+ * @brief Free an . This function should have the same
+ * signature as [free]
+ * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ */
+    #define AwsIotOnboarding_FreeDeviceConfigurationList      Iot_FreeMessageBuffer
+
+
+#else /* if IOT_STATIC_MEMORY_ONLY == 1 */
+    #ifndef AwsIotOnboarding_MallocPayload
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotOnboarding_MallocPayload    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for AwsIotOnboarding_MallocPayload"
+        #endif
+    #endif
+
+    #ifndef AwsIotOnboarding_FreePayload
+        #ifdef Iot_DefaultFree
+            #define AwsIotOnboarding_FreePayload    Iot_DefaultFree
+        #else
+            #error "No Free function defined for AwsIotOnboarding_FreePayload"
+        #endif
+    #endif
+
+    #ifndef AwsIotOnboarding_MallocString
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotOnboarding_MallocString    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for AwsIotOnboarding_MallocString"
+        #endif
+    #endif
+
+    #ifndef AwsIotOnboarding_FreeString
+        #ifdef Iot_DefaultFree
+            #define AwsIotOnboarding_FreeString    Iot_DefaultFree
+        #else
+            #error "No Free function defined for AwsIotOnboarding_FreeString"
+        #endif
+    #endif
+
+    #ifndef AwsIotOnboarding_MallocDeviceConfigurationList
+        #ifdef Iot_DefaultMalloc
+            #define AwsIotOnboarding_MallocDeviceConfigurationList    Iot_DefaultMalloc
+        #else
+            #error "No malloc function defined for "
+            "AwsIotOnboarding_MallocDeviceConfigurationList"
+        #endif
+    #endif
+
+    #ifndef AwsIotOnboarding_FreeDeviceConfigurationList
+        #ifdef Iot_DefaultFree
+            #define AwsIotOnboarding_FreeDeviceConfigurationList    Iot_DefaultFree
+        #else
+            #error "No Free function defined for "
+            "AwsIotOnboarding_FreeDeviceConfigurationList"
+        #endif
+    #endif
+
+#endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
+
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
@@ -105,9 +216,10 @@
  * @brief The MQTT response topic filter for the GetDeviceCredentials service API.
  *
  * @note The complete response topics are suffixed with #AWS_IOT_ACCEPTED_SUFFIX or #AWS_IOT_REJECTED_SUFFIX strings.
+ * It should be utilized in the @ref onboarding_function_getdevicecredentials API function.
  */
 #define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER \
-    "certificates/create/"ONBOARDING_FORMAT
+    "aws/certificates/create/"ONBOARDING_FORMAT
 
 /**
  * @brief Length of the MQTT response topic filtert for the GetDeviceCredentials service API.
@@ -126,9 +238,11 @@
 
 /**
  * @brief The MQTT request topic for the GetDeviceCredentials service API.
+ *
+ * @note It should be utilized in the @ref onboarding_function_getdevicecredentials API function.
  */
 #define ONBOARDING_GET_DEVICE_CREDENTIALS_REQUEST_TOPIC \
-    "certificates/create/"ONBOARDING_FORMAT
+    "$aws/certificates/create/"ONBOARDING_FORMAT
 
 /**
  * @brief The length of the MQTT request topic for the GetDeviceCredentials service API.
@@ -152,6 +266,91 @@
  */
 #define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING       "privateKey"
 
+/**
+ * @brief The common path in the request and response MQTT topics of the OnboardDevice service API.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX \
+    "onboarding-templates/"
+
+/**
+ * @brief The length of the common path in the request and response MQTT topics of the OnboardDevice service API.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH \
+    ( ( uint16_t ) ( sizeof( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX ) - 1 ) )
+
+/**
+ * @brief The length of the Template ID text in the MQTT topics of the OnboardDevice service API.
+ *
+ * @note The Template ID follows the UUID (Universally Unique Identifier) format.
+ */
+#define ONBOARDING_TEMPLATE_ID_LENGTH                     ( 36 )
+
+/**
+ * @brief The common suffix in the request and response MQTT topics of the OnboardDevice service API.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX    "/onboard/"ONBOARDING_FORMAT
+
+/**
+ * @brief The length of the common suffix in the MQTT topics of the OnboardDevice service API.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH \
+    ( ( uint16_t ) ( sizeof( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX ) - 1 ) )
+
+
+/**
+ * @brief The length of the complete MQTT request topic of the OnboardDevice service API.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH                                        \
+    ( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + ONBOARDING_TEMPLATE_ID_LENGTH + \
+      ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH )
+
+/**
+ * @brief The key for the certificate ID's entry to be inserted in the request payload for the OnboardDevice service
+ * API.
+ *
+ * @note This should be used in serializing the request payload for sending to the server.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING    "certificateId"
+
+/**
+ * @brief The key for the device context data's entry to be inserted in the request payload for the OnboardDevice
+ * service API.
+ *
+ * @note This should be used in serializing the request payload for sending to the server, only if the calling
+ * application provides valid device context data.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING        "parameters"
+
+/**
+ * @brief The length of the MQTT request topic filter of the OnboardDevice service API.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_TOPIC_FILTER_LENGTH                                \
+    ( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + ONBOARDING_TEMPLATE_ID_LENGTH + \
+      ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH )
+
+/**
+ * @brief The length of the longest MQTT response topic of the OnboardDevice service API.
+ * Out of the two response topics, the "rejected" has the longest length.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_MAX_TOPIC_LENGTH \
+    ( ONBOARDING_ONBOARD_DEVICE_RESPONSE_TOPIC_FILTER_LENGTH + sizeof( AWS_IOT_REJECTED_SUFFIX ) )
+
+/**
+ * @brief The key for the device configuration data's entry in the response payload of the OnboardDevice service API.
+ *
+ * @note This should be utilized in parsing the response payload received from the server.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING \
+    "deviceConfiguration"
+
+/**
+ * @brief The key for the Thing resource name's entry in the response payload of the OnboardDevice service API.
+ *
+ * @note This should be utilized in parsing the response payload received from the server.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_THING_NAME_STRING    "thingName"
+
+
 /*---------------------- Onboarding internal data structures ----------------------*/
 
 /**
@@ -165,17 +364,16 @@ typedef enum _onboardingOperationType
 
 /**
  * @brief Functor for parsing response payload received from Onboarding service.
- * Parser that will de-serialize the server response and invoke the user callback passed to it.
+ * Parser that will de-serialize the server response, allocate memory for representing parsed data (if required),
+ * and invoke the user callback passed to it.
  *
  * @param[in] responsePayload The response payload to parse.
- * @param[in] rsponsePayloadLength The length of the response payload.
+ * @param[in] responsePayloadLength The length of the response payload.
  * @param[in] usercallback The user-provided callback to invoke on successful parsing of device credentials.
  */
 typedef AwsIotOnboardingError_t ( * _onboardingServerResponseParser)( const void * responsePayload,
                                                                       size_t responsePayloadLength,
-                                                                      const
-                                                                      AwsIotOnboardingCallbackInfo_t
-                                                                      * userCallback );
+                                                                      const AwsIotOnboardingCallbackInfo_t * userCallback );
 
 /**
  * @brief Internal structure representing the data of an Onboarding operation.
@@ -203,5 +401,85 @@ typedef struct _onboardingOperation
 } _onboardingOperation_t;
 
 extern uint32_t _AwsIotOnboardingMqttTimeoutMs;
+
+/**
+ * @brief Pointer to the encoder utility that will be used for serialization
+ * of payload data in the library.
+ */
+extern const IotSerializerEncodeInterface_t * _pAwsIotOnboardingEncoder;
+
+/**
+ * @brief Pointer to the decoder utility that will be used for de-serialization
+ * of payload data in the library.
+ */
+extern const IotSerializerDecodeInterface_t * _pAwsIotOnboardingDecoder;
+
+/*---------------------- Onboarding internal functions ----------------------*/
+
+/**
+ * @brief Utility for generating the request/response MQTT topic filter string for the OnboardingDevice service API.
+ *
+ * @param[in] pTemplateIdentifier The template ID string for inserting in the topic filter string.
+ * @param[in] templateIdentifierLength The length of the template ID string.
+ * @param[out] pTopicFilterBuffer The pre-allocated buffer for storing the generated topic filter.
+ * The buffer should have the required minimum size for storing the MQTT topic filter for the OnboardDevice API.
+ *
+ * @return Returns the size of the generated topic filter.
+ */
+size_t _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter( const char * pTemplateIdentifier,
+                                                           size_t templateIdentifierLength,
+                                                           char * pTopicFilterBuffer );
+
+/**
+ * @brief Parses the response received from the server for device credentials, and invokes the provided user-callback
+ * with parsed credentials, if parsing was successful.
+ *
+ * @param[in] pDeviceCredentialsResponse The response payload from the server to parse.
+ * @param[in] deviceCredentialsResponseLength The length of the response payload.
+ * @param[in] userCallback The user-provided callback to invoke on successful parsing of response.
+ */
+AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( const void * pDeviceCredentialsResponse,
+                                                                          size_t deviceCredentialsResponseLength,
+                                                                          const AwsIotOnboardingCallbackInfo_t * userCallbackInfo );
+
+/**
+ * @brief Parses the response payload received from the server for device onboarding, and invokes the provided
+ * user-callback with parsed data, if parsing was successful.
+ *
+ * @param[in] pResponsePayload The response payload from the server to parse.
+ * @param[in] responsePayloadLength The length of the response payload.
+ * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
+ */
+AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( const void * pResponsePayload,
+                                                                      size_t responsePayloadLength,
+                                                                      const AwsIotOnboardingCallbackInfo_t * userCallbackInfo );
+
+/**
+ * @brief Serializes for payload of MQTT request to the GetDeviceCredentials service API.
+ *
+ * @param[in] pOutermostEncoder The encoder object to use for serializing payload.
+ * @param[in/out] pSerializationBuffer The pre-allocated buffer for storing the serialized data.
+ * @param[in] bufferSize The size of the serialization buffer.
+ * @return #AWS_IOT_SERIALIZER_SUCCESS if serialization is successful; otherwise #AWS_IOT_SERIALIZER_BAD_PARAMETER
+ * if the device context data cannot be appended to the payload.
+ */
+AwsIotOnboardingError_t _AwsIotOnboarding_SerializeGetDeviceCredentialsRequestPayload( IotSerializerEncoderObject_t * pOutermostEncoder,
+                                                                                       uint8_t * pSerializationBuffer,
+                                                                                       size_t bufferSize );
+
+/**
+ * @brief Serializes for payload of MQTT request to the OnboardDevice service API.
+ *
+ * @param[in] pRequestData The data that will be serialized for sending with the request.
+ * @param[in] pOutermostEncoder The encoder object to use for serializing payload.
+ * @param[in/out] pSerializationBuffer The pre-allocated buffer for storing the serialized data.
+ * @param[in] bufferSize The size of the serialization buffer.
+ * @return #AWS_IOT_SERIALIZER_SUCCESS if serialization is successful; otherwise #AWS_IOT_SERIALIZER_BAD_PARAMETER
+ * if the device context data cannot be appended to the payload.
+ */
+AwsIotOnboardingError_t _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( const AwsIotOnboardingOnboardDeviceRequestInfo_t * pRequestData,
+                                                                                IotSerializerEncoderObject_t * pOutermostEncoder,
+                                                                                uint8_t * pSerializationBuffer,
+                                                                                size_t bufferSize );
 
 #endif /* ifndef AWS_IOT_ONBOARDING_INTERNAL_H_ */

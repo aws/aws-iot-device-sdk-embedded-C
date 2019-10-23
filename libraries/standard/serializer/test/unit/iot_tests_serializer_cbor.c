@@ -468,10 +468,12 @@ TEST_GROUP_RUNNER( Serializer_Decoder_Unit_CBOR )
 TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
 {
     IotSerializerDecoderObject_t outermostDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t numOfEntriesInOuterMap;
     const uint8_t * pDecoderObjectStartAddr = NULL;
     size_t decoderDataLength = 0;
     IotSerializerDecoderObject_t outerMapDecoder1 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t innerMapDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t numOfEntriesInInnerMap;
     IotSerializerDecoderObject_t outerMapDecoder2 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     size_t unsupportedTypeDecoderObjectLength = 0;
 
@@ -479,6 +481,11 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
                                                                     _testEncodedNestedMap,
                                                                     sizeof( _testEncodedNestedMap ) ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, outermostDecoder.type );
+
+
+    /* Verify the functionality of getSizeOf() API on the outer map. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &outermostDecoder, &numOfEntriesInOuterMap ) );
+    TEST_ASSERT_EQUAL( 2, numOfEntriesInOuterMap );
 
     /* Make sure that the getBufferAddress() API returns the first location of the buffer for the
      * outermost decoder object.*/
@@ -496,6 +503,10 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outermostDecoder, "1",
                                                                     &outerMapDecoder1 ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, outerMapDecoder1.type );
+
+    /* Verify the functionality of getSizeOf() API on the inner map. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &outerMapDecoder1, &numOfEntriesInInnerMap ) );
+    TEST_ASSERT_EQUAL( 1, numOfEntriesInInnerMap );
 
     /* Make sure that the getBufferAddress() API returns the first location in the buffer to the value
      * for the entry keyed by "1".*/

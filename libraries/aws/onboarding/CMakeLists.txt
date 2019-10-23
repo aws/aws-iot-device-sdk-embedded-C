@@ -1,11 +1,16 @@
 # ONBOARDING library source files.
 set( ONBOARDING_SOURCES
-     src/aws_iot_onboarding_api.c )
+     src/aws_iot_onboarding_api.c
+     src/aws_iot_onboarding_parser.c
+     src/aws_iot_onboarding_serializer.c )
 
 # ONBOARDING library target.
 add_library( awsiotonboarding
              ${CONFIG_HEADER_PATH}/iot_config.h
-             ${ONBOARDING_SOURCES} )
+             ${ONBOARDING_SOURCES}
+             include/aws_iot_onboarding.h
+             include/types/aws_iot_onboarding_types.h
+             src/private/aws_iot_onboarding_internal.h )
 
 # Onboarding public include path.
 target_include_directories( awsiotonboarding PUBLIC include )
@@ -34,7 +39,8 @@ if( ${IOT_BUILD_TESTS} )
     
     # Onboarding unit test sources.
     set( ONBOARDING_UNIT_TEST_SOURCES
-         test/unit/aws_iot_tests_onboarding_api.c )
+         test/unit/aws_iot_tests_onboarding_api.c
+         test/unit/aws_iot_tests_onboarding_serializer.c )
     
     # Onboarding unit test sources.
     set( ONBOARDING_SYSTEM_TEST_SOURCES

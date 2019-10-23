@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_tests_ponboarding_api.c
+ * @file aws_iot_tests_onboarding_api.c
  * @brief Tests for the user-facing API functions (declared in aws_iot_onboarding.h).
  */
 
@@ -46,24 +46,6 @@
 /* Test framework includes. */
 #include "unity_fixture.h"
 
-/**
- * @brief Whether to check the number of MQTT library errors in the malloc
- * failure tests.
- *
- * Should only be checked if malloc overrides are available and not testing for
- * code coverage. In static memory mode, there should be no MQTT library errors.
- */
-
-#if ( IOT_TEST_COVERAGE == 1 ) || ( IOT_TEST_NO_MALLOC_OVERRIDES == 1 )
-    #define CHECK_MQTT_ERROR_COUNT( expected, actual )
-#else
-    #if ( IOT_STATIC_MEMORY_ONLY == 1 )
-        #define CHECK_MQTT_ERROR_COUNT( expected, actual )    TEST_ASSERT_EQUAL( 0, actual )
-    #else
-        #define CHECK_MQTT_ERROR_COUNT( expected, actual )    TEST_ASSERT_EQUAL( expected, actual )
-    #endif
-#endif
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -88,21 +70,38 @@ typedef struct _serverResponseThreadContext
 } _serverResponseThreadContext_t;
 
 /**
- * @brief Parameter 1 of #_testOnboardingUserCallback.
+ * @brief Test user-callback to pass in #AwsIotOnboardingCallbackInfo_t.
+ * It validates the API provided callback parameters with the context parameter data provided by the test.
  */
-typedef struct _expectedUserCallbackParams
-{
-    AwsIotOnboardingCallbackType_t type;      /**< @brief Expected callback type. */
-    const uint8_t * certificateDataStartIter; /**< @brief Start address/iterator to the expected certificate
-                                               * data in the buffer. */
-    size_t certificateDataLength;             /**< @brief Length of the expected certificate data. */
-    const uint8_t * certificateIdStartIter;   /**< @brief Start address/iterator to the expected certificate
-                                               * Id data in the buffer buffer. */
-    size_t certificateIdLength;               /**< @brief Length of the expected certificate Id. */
-    const uint8_t * privateKeyDataStartIter;  /**< @brief Start address/iterator to the expected private key
-                                               * data in the buffer. */
-    size_t privateKeyDataLength;              /**< @brief Length of the expected private key data. */
-} _expectedUserCallbackParams_t;
+static void _testOnboardingUserCallback( void * contextParam,
+                                         const AwsIotOnboardingCallbackParam_t * responseInfo );
+
+/**
+ * @brief Invokes the MQTT receive callback to simulate a response received from
+ * the network.
+ */
+static void _simulateServerResponse( void * pArgument );
+
+/**
+ * @brief Dummy user-callback to pass in #AwsIotOnboardingCallbackInfo_t.
+ */
+static void _dummyAwsIotOnboardingCallback( void * contextParam,
+                                            const AwsIotOnboardingCallbackParam_t * responseInfo );
+
+/**
+ * @brief Common test logic for simulating server response and calling the Onboarding libarary API under test.
+ *
+ * @param[in] pServerResponseInfo The server response to inject into the MQTT stack for the test case.
+ * @param[in] serverResponseTimerPeriodMs The server response delay (in milliseconds) to simulate.
+ * @param[in] operationType This is used to determine the Onboarding library API to call.
+ * @param[in] pTestCallback The callback object to pass to the API under test.
+ * @param[in] expectedStatus This will be compared against the returned status from the API call.
+ */
+static void _testAPIWithServerResponse( _serverResponseThreadContext_t * pServerResponseInfo,
+                                        uint32_t serverResponseTimerPeriodMs,
+                                        _onboardingOperationType_t operationType,
+                                        const AwsIotOnboardingCallbackInfo_t * pTestCallback,
+                                        AwsIotOnboardingError_t expectedStatus );
 
 /*-----------------------------------------------------------*/
 
@@ -124,7 +123,7 @@ static const uint32_t _testOnboardingApiTimeoutMs = 100;
 /**
  * @brief The timer period after which the "server response simulating" thread should be run.
  */
-static const uint32_t _testOnboardingServerResponseThreadTimeout_ms = 90;
+static const uint32_t _testOnboardingServerResponseThreadTimeoutMs = 90;
 
 /**
  * @brief The accepted response topic for the GetDeviceCredentials service API.
@@ -133,7 +132,7 @@ static const char * _getDeviceCredentialsRejectedResponseTopic =
     ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER "/rejected";
 
 /**
- * @brief The rejected response topic for the GetDeviceCredentials service API.
+ * @brief The rejected response topic for the OnboardingDevice service API.
  */
 static const char * _getDeviceCredentialsAcceptedResponseTopic =
     ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER "/accepted";
@@ -163,62 +162,207 @@ static const uint8_t _sampleGetDeviceCredentialsServerResponsePayload[] =
 /**
  * @brief Expected parameters to the user-callback by the Onboarding library APIs.
  */
-static _expectedUserCallbackParams_t _getDeviceCredentialsExpectedCallbackParams =
+static AwsIotOnboardingCallbackParam_t _expectedGetDeviceCredentialsCallbackParams =
 {
-    .type                     = AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_COMPLETE,
-    .certificateDataStartIter = &_sampleGetDeviceCredentialsServerResponsePayload[ 17 ],
-    .certificateDataLength    = 7,
-    .certificateIdStartIter   = &_sampleGetDeviceCredentialsServerResponsePayload[ 39 ],
-    .certificateIdLength      = 6,
-    .privateKeyDataStartIter  = &_sampleGetDeviceCredentialsServerResponsePayload[ 57 ],
-    .privateKeyDataLength     = 10
+    .callbackType                                    =
+        AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_COMPLETE,
+    .u.deviceCredentialsInfo.pDeviceCertificate      = ( const char * )
+                                                       &_sampleGetDeviceCredentialsServerResponsePayload[ 17 ],
+    .u.deviceCredentialsInfo.deviceCertificateLength = 7,
+    .u.deviceCredentialsInfo.pCertificateId          = ( const char * )
+                                                       &_sampleGetDeviceCredentialsServerResponsePayload[ 39 ],
+    .u.deviceCredentialsInfo.certificateIdLength     = 6,
+    .u.deviceCredentialsInfo.pPrivateKey             = ( const char * )
+                                                       &_sampleGetDeviceCredentialsServerResponsePayload[ 57 ],
+    .u.deviceCredentialsInfo.privateKeyLength        = 10
+};
+
+/**
+ * @brief Callback object with #_expectedGetDeviceCredentialsCallbackParams as context parameter to test
+ * #AwsIotOnboarding_GetDeviceCredentials API.
+ */
+static const AwsIotOnboardingCallbackInfo_t _acceptedResponseCallbackForGetDeviceCredentialsAPI =
+{
+    .userParam = &_expectedGetDeviceCredentialsCallbackParams,
+    .function  = _testOnboardingUserCallback
+};
+
+/**
+ * @brief Certificate ID for OnboardDevice API tests.
+ */
+static const char * _testCertificateId = "TestCertificateID";
+
+/**
+ * @brief Template ID for OnboardDevice API tests.
+ */
+#define _testTemplateId    "123456789123456789123456789123456789"
+
+/**
+ * @brief The rejected response topic for the OnboardDevice service API.
+ */
+static const char * _onboardDeviceAcceptedResponseTopic = "onboarding-templates/"_testTemplateId
+                                                          "/onboard/cbor/accepted";
+
+/**
+ * @brief The accepted response topic for the OnboardDevice service API.
+ */
+static const char * _onboardDeviceRejectedResponseTopic = "onboarding-templates/"_testTemplateId
+                                                          "/onboard/cbor/rejected";
+
+/**
+ * @brief Sample CBOR encoded response of OnboardDevice service API containing device configuration and Iot Thing name
+ * data.
+ */
+static const uint8_t _sampleOnboardDeviceResponsePayload[] =
+{
+    0xA2,                                                 /* # map(2) */
+    0x73,                                                 /* # text(19) */
+    0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74,
+    0x69, 0x6F, 0x6E,                                     /* # "deviceConfiguration" */
+    0xA2,                                                 /* # map(2), */
+    0x61,                                                 /* # text(1), */
+    0x31,                                                 /* # "1", */
+    0x63,                                                 /* # text(2), */
+    0x32, 0x33, 0x34,                                     /* # "23", */
+    0x61,                                                 /* # text(1), */
+    0x34,                                                 /* # "4", */
+    0x62,                                                 /* # text(3), */
+    0x35, 0x36,                                           /* # "567", */
+    0x69,                                                 /* # text(9) */
+    0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65, /* # "thingName" */
+    0x69,                                                 /* # text(9) */
+    0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67  /* # "TestThing" */
+};
+
+static const AwsIotOnboardingResponseDeviceConfigurationEntry_t _expectedDeviceConfigList[] =
+{
+    {
+        ( const char * ) &_sampleOnboardDeviceResponsePayload[ 23 ],
+        1,
+        ( const char * ) &_sampleOnboardDeviceResponsePayload[ 25 ],
+        3
+    },
+    {
+        ( const char * ) &_sampleOnboardDeviceResponsePayload[ 29 ],
+        1,
+        ( const char * ) &_sampleOnboardDeviceResponsePayload[ 31 ],
+        2
+    }
+};
+
+/**
+ * @brief Expected parameters that should be passed to the user-callback provided to the #AwsIotOnboarding_OnboardDevice
+ * API.
+ */
+static AwsIotOnboardingCallbackParam_t _expectedOnboardDeviceCallbackParams =
+{
+    .callbackType                                      = AWS_IOT_ONBOARDING_ONBOARD_DEVICE_COMPLETE,
+    .u.onboardDeviceResponse.pThingName                = ( const char * ) &_sampleOnboardDeviceResponsePayload[ 44 ],
+    .u.onboardDeviceResponse.thingNameLength           = 9,
+    .u.onboardDeviceResponse.pDeviceConfigList         = _expectedDeviceConfigList,
+    .u.onboardDeviceResponse.numOfConfigurationEntries = sizeof( _expectedDeviceConfigList ) /
+                                                         sizeof( AwsIotOnboardingResponseDeviceConfigurationEntry_t )
+};
+
+/**
+ * @brief Callback object with #_expectedOnboardDeviceCallbackParams as context parameter to test
+ * #AwsIotOnboarding_OnboardDevice API.
+ */
+static const AwsIotOnboardingCallbackInfo_t _acceptedResponseCallbackForOnboardDeviceAPI =
+{
+    .userParam = &_expectedOnboardDeviceCallbackParams,
+    .function  = _testOnboardingUserCallback
 };
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Dummy user-callback to pass in #AwsIotOnboardingCallbackInfo_t.
- */
-void _dummyAwsIotOnboardingCallback( void * contextParam,
-                                     const AwsIotOnboardingCallbackParam_t * responseInfo )
+static void _dummyAwsIotOnboardingCallback( void * contextParam,
+                                            const AwsIotOnboardingCallbackParam_t * responseInfo )
 {
     ( void ) contextParam;
     ( void ) responseInfo;
 }
 
-/**
- * @brief Test user-callback to pass in #AwsIotOnboardingCallbackInfo_t.
- * It validates the API provided callback parameters with the context parameter data provided by the test.
- */
-void _testOnboardingUserCallback( void * contextParam,
-                                  const AwsIotOnboardingCallbackParam_t * responseInfo )
-{
-    _expectedUserCallbackParams_t * expectedParameters = contextParam;
+/*-----------------------------------------------------------*/
 
-    AwsIotOnboarding_Assert( expectedParameters->type == responseInfo->callbackType );
-    AwsIotOnboarding_Assert( expectedParameters->certificateDataLength ==
-                             responseInfo->u.deviceCredentialsInfo.deviceCertificateLength );
-    AwsIotOnboarding_Assert( 0 == memcmp( expectedParameters->certificateDataStartIter,
-                                          responseInfo->u.deviceCredentialsInfo.pDeviceCertificate,
-                                          expectedParameters->certificateDataLength ) );
-    AwsIotOnboarding_Assert( expectedParameters->certificateIdLength ==
-                             responseInfo->u.deviceCredentialsInfo.certificateIdLength );
-    AwsIotOnboarding_Assert( 0 == memcmp( expectedParameters->certificateIdStartIter,
-                                          responseInfo->u.deviceCredentialsInfo.pCertificateId,
-                                          expectedParameters->certificateIdLength ) );
-    AwsIotOnboarding_Assert( expectedParameters->privateKeyDataLength ==
-                             responseInfo->u.deviceCredentialsInfo.privateKeyLength );
-    AwsIotOnboarding_Assert( 0 == memcmp( expectedParameters->privateKeyDataStartIter,
-                                          responseInfo->u.deviceCredentialsInfo.pPrivateKey,
-                                          expectedParameters->privateKeyDataLength ) );
+static void _testOnboardingUserCallback( void * contextParam,
+                                         const AwsIotOnboardingCallbackParam_t * responseInfo )
+{
+    AwsIotOnboardingCallbackParam_t * expectedParameters = contextParam;
+
+    AwsIotOnboarding_Assert( expectedParameters->callbackType == responseInfo->callbackType );
+
+    switch( expectedParameters->callbackType )
+    {
+        case AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_COMPLETE:
+            AwsIotOnboarding_Assert(
+                expectedParameters->u.deviceCredentialsInfo.deviceCertificateLength ==
+                responseInfo->u.deviceCredentialsInfo.deviceCertificateLength );
+            AwsIotOnboarding_Assert( 0 == memcmp(
+                                         expectedParameters->u.deviceCredentialsInfo.
+                                            pDeviceCertificate,
+                                         responseInfo->u.deviceCredentialsInfo.pDeviceCertificate,
+                                         expectedParameters->u.deviceCredentialsInfo.
+                                            deviceCertificateLength ) );
+            AwsIotOnboarding_Assert(
+                expectedParameters->u.deviceCredentialsInfo.certificateIdLength ==
+                responseInfo->u.deviceCredentialsInfo.certificateIdLength );
+            AwsIotOnboarding_Assert( 0 == memcmp(
+                                         expectedParameters->u.deviceCredentialsInfo.pCertificateId,
+                                         responseInfo->u.deviceCredentialsInfo.pCertificateId,
+                                         expectedParameters->u.deviceCredentialsInfo.
+                                            certificateIdLength ) );
+            AwsIotOnboarding_Assert( expectedParameters->u.deviceCredentialsInfo.privateKeyLength ==
+                                     responseInfo->u.deviceCredentialsInfo.privateKeyLength );
+            AwsIotOnboarding_Assert( 0 == memcmp(
+                                         expectedParameters->u.deviceCredentialsInfo.pPrivateKey,
+                                         responseInfo->u.deviceCredentialsInfo.pPrivateKey,
+                                         expectedParameters->u.deviceCredentialsInfo.
+                                            privateKeyLength ) );
+            break;
+
+        case AWS_IOT_ONBOARDING_ONBOARD_DEVICE_COMPLETE:
+            AwsIotOnboarding_Assert(
+                expectedParameters->u.onboardDeviceResponse.thingNameLength ==
+                responseInfo->u.onboardDeviceResponse.thingNameLength );
+            AwsIotOnboarding_Assert( 0 == memcmp(
+                                         expectedParameters->u.onboardDeviceResponse.
+                                            pThingName,
+                                         responseInfo->u.onboardDeviceResponse.pThingName,
+                                         expectedParameters->u.onboardDeviceResponse.
+                                            thingNameLength ) );
+            AwsIotOnboarding_Assert(
+                expectedParameters->u.onboardDeviceResponse.numOfConfigurationEntries ==
+                responseInfo->u.onboardDeviceResponse.numOfConfigurationEntries );
+
+            for( size_t index = 0; index < expectedParameters->u.onboardDeviceResponse.numOfConfigurationEntries;
+                 index++ )
+            {
+                AwsIotOnboarding_Assert( expectedParameters->u.onboardDeviceResponse.pDeviceConfigList[ index ].keyLength ==
+                                         responseInfo->u.onboardDeviceResponse.pDeviceConfigList[ index ].keyLength );
+                AwsIotOnboarding_Assert( 0 == memcmp(
+                                             expectedParameters->u.onboardDeviceResponse.pDeviceConfigList[ index ].pKey,
+                                             responseInfo->u.onboardDeviceResponse.pDeviceConfigList[ index ].pKey,
+                                             expectedParameters->u.onboardDeviceResponse.
+                                                pDeviceConfigList[ index ].keyLength ) );
+                AwsIotOnboarding_Assert( expectedParameters->u.onboardDeviceResponse.pDeviceConfigList[ index ].valueLength ==
+                                         responseInfo->u.onboardDeviceResponse.pDeviceConfigList[ index ].valueLength );
+                AwsIotOnboarding_Assert( 0 == memcmp(
+                                             expectedParameters->u.onboardDeviceResponse.pDeviceConfigList[ index ].pValue,
+                                             responseInfo->u.onboardDeviceResponse.pDeviceConfigList[ index ].pValue,
+                                             expectedParameters->u.onboardDeviceResponse.
+                                                pDeviceConfigList[ index ].valueLength ) );
+            }
+
+            break;
+
+        default:
+            AwsIotOnboarding_Assert( false );
+    }
 }
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Invokes the MQTT receive callback to simulate a response received from
- * the network.
- */
 static void _simulateServerResponse( void * pArgument )
 {
     _serverResponseThreadContext_t * context = pArgument;
@@ -250,22 +394,21 @@ static void _simulateServerResponse( void * pArgument )
     IotMqtt_ReceiveCallback( &receiveContext,
                              _pMqttConnection );
 
-    free( pSerializedPublishData );
+    /* Release the data buffer with the MQTT's free() function as it was the MQTT internal function that allocated the
+     * buffer memory. */
+    IotMqtt_FreeMessage( pSerializedPublishData );
 }
 
-/**
- * @brief Common logic for test cases on the AwsIotOnboarding_GetDeviceCredentials API that simulate server response.
- *
- * @param[in] serverResponseIndo
- */
-static void _testGetDeviceCredentialsWithServerResponse(
-    _serverResponseThreadContext_t * pServerResponseInfo,
-    const AwsIotOnboardingCallbackInfo_t *
-    pTestCallback,
-    uint32_t serverResponseTimerPeriodMs,
-    AwsIotOnboardingError_t expectedStatus )
+/*-----------------------------------------------------------*/
+
+static void _testAPIWithServerResponse( _serverResponseThreadContext_t * pServerResponseInfo,
+                                        uint32_t serverResponseTimerPeriodMs,
+                                        _onboardingOperationType_t operationType,
+                                        const AwsIotOnboardingCallbackInfo_t * pTestCallback,
+                                        AwsIotOnboardingError_t expectedStatus )
 {
     AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
+    AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo;
 
     TEST_ASSERT_EQUAL_INT( true, IotClock_TimerCreate( &_serverResponseTimer,
                                                        _simulateServerResponse,
@@ -274,11 +417,36 @@ static void _testGetDeviceCredentialsWithServerResponse(
                                 serverResponseTimerPeriodMs,
                                 0 );
 
-    /* Call the API under test. */
-    status = AwsIotOnboarding_GetDeviceCredentials( _pMqttConnection,
-                                                    0,
-                                                    _testOnboardingApiTimeoutMs,
-                                                    pTestCallback );
+    switch( operationType )
+    {
+        case ONBOARDING_GET_DEVICE_CREDENTIALS:
+            /* Call the API under test. */
+            status = AwsIotOnboarding_GetDeviceCredentials( _pMqttConnection,
+                                                            0,
+                                                            _testOnboardingApiTimeoutMs,
+                                                            pTestCallback );
+            break;
+
+        case ONBOARDING_ONBOARD_DEVICE:
+
+            requestInfo.pDeviceCertificateId = _testCertificateId;
+            requestInfo.deviceCertificateIdLength = sizeof( _testCertificateId );
+            requestInfo.pTemplateIdentifier = _testTemplateId;
+            requestInfo.templateIdentifierLength = strlen( _testTemplateId );
+            requestInfo.pParametersStart = NULL;
+            requestInfo.numOfParameters = 0;
+
+            /* Call the API under test. */
+            status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
+                                                     &requestInfo,
+                                                     _testOnboardingApiTimeoutMs,
+                                                     pTestCallback );
+            break;
+
+        default:
+            TEST_FAIL_MESSAGE(
+                "Incorrect operation type passed to internal _testAPIWithServerResponse function." );
+    }
 
     TEST_ASSERT_EQUAL( expectedStatus, status );
 
@@ -338,12 +506,24 @@ TEST_GROUP_RUNNER( Onboarding_Unit_API )
     RUN_TEST_CASE( Onboarding_Unit_API, Init );
     RUN_TEST_CASE( Onboarding_Unit_API, StringCoverage );
     RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsAPIInvalidParameters );
-    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsNoServerResponse );
-    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsRejectedResponse );
-    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsCorruptDataInResponse );
-    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsNominalSuccess );
-    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsServerResponseAfterTimeout );
-    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsServerResponseAndTimeoutRaceCondition );
+    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsAPICalledWithoutInit );
+    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsAPINoServerResponse );
+    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsAPIRejectedResponse );
+    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsAPICorruptDataInResponse );
+    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsAPINominalSuccess );
+    RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsAPIServerResponseAfterTimeout )
+    RUN_TEST_CASE( Onboarding_Unit_API,
+                   GetDeviceCredentialsAPIServerResponseAndTimeoutRaceCondition );
+    RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPIInvalidParameters );
+    RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPICalledWithoutInit );
+    RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPINoServerResponse );
+    RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPIRejectedResponse );
+    RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPICorruptDataInResponse );
+    RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPINominalSuccess );
+    RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutDeviceConfiguration );
+    RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutThingName );
+    RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPIServerResponseAfterTimeout );
+    RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPIServerResponseAndTimeoutRaceCondition );
 }
 
 /*-----------------------------------------------------------*/
@@ -459,10 +639,33 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsAPIInvalidParameters )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Verifies that the API returns the expected error code when it is called without initializing the library.
+ */
+TEST( Onboarding_Unit_API, GetDeviceCredentialsAPICalledWithoutInit )
+{
+    AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+
+    callbackInfo.function = _dummyAwsIotOnboardingCallback;
+
+    /* Reset the library to simulate the test case when the library is not initialized. */
+    AwsIotOnboarding_Cleanup();
+
+    /* Call the API under test. */
+    status = AwsIotOnboarding_GetDeviceCredentials( _pMqttConnection,
+                                                    0,
+                                                    _testOnboardingApiTimeoutMs,
+                                                    &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_NOT_INITIALIZED, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Tests the behavior of @ref onboarding_function_getpdevicecredentials in case of
  * receiving no response from the server.
  */
-TEST( Onboarding_Unit_API, GetDeviceCredentialsNoServerResponse )
+TEST( Onboarding_Unit_API, GetDeviceCredentialsAPINoServerResponse )
 {
     AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
     AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
@@ -479,12 +682,13 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsNoServerResponse )
     TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_TIMEOUT, status );
 }
 
+/*-----------------------------------------------------------*/
+
 /**
  * @brief Tests the behavior of @ref onboarding_function_getpdevicecredentials when Onboarding server rejects the
- * request
- * by publishing on the "/rejected" topic.
+ * request by publishing on the "/rejected" topic.
  */
-TEST( Onboarding_Unit_API, GetDeviceCredentialsRejectedResponse )
+TEST( Onboarding_Unit_API, GetDeviceCredentialsAPIRejectedResponse )
 {
     AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
 
@@ -498,17 +702,20 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsRejectedResponse )
         .publishDataLength  = 0
     };
 
-    _testGetDeviceCredentialsWithServerResponse( &rejectedResponse,
-                                                 &callbackInfo,
-                                                 _testOnboardingServerResponseThreadTimeout_ms,
-                                                 AWS_IOT_ONBOARDING_SERVER_REFUSED );
+    _testAPIWithServerResponse( &rejectedResponse,
+                                _testOnboardingServerResponseThreadTimeoutMs,
+                                ONBOARDING_GET_DEVICE_CREDENTIALS,
+                                &callbackInfo,
+                                AWS_IOT_ONBOARDING_SERVER_REFUSED );
 }
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Tests the behavior of @ref onboarding_function_getpdevicecredentials when the "accepted" response sent by the
  * Onboarding service contains a corrupt payload.
  */
-TEST( Onboarding_Unit_API, GetDeviceCredentialsCorruptDataInResponse )
+TEST( Onboarding_Unit_API, GetDeviceCredentialsAPICorruptDataInResponse )
 {
     AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
 
@@ -533,10 +740,11 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsCorruptDataInResponse )
         .publishDataLength  = sizeof( serverResponseWithoutCertificate )
     };
 
-    _testGetDeviceCredentialsWithServerResponse( &responseWithoutCertificate,
-                                                 &callbackInfo,
-                                                 _testOnboardingServerResponseThreadTimeout_ms,
-                                                 AWS_IOT_ONBOARDING_BAD_RESPONSE );
+    _testAPIWithServerResponse( &responseWithoutCertificate,
+                                _testOnboardingServerResponseThreadTimeoutMs,
+                                ONBOARDING_GET_DEVICE_CREDENTIALS,
+                                &callbackInfo,
+                                AWS_IOT_ONBOARDING_BAD_RESPONSE );
 
     /*************** Response payload without private key entry********************/
     const uint8_t serverResponseWithCorruptPrivateKeyEntry[] =
@@ -565,17 +773,20 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsCorruptDataInResponse )
         .publishDataLength  = sizeof( serverResponseWithCorruptPrivateKeyEntry )
     };
 
-    _testGetDeviceCredentialsWithServerResponse( &responseWithoutPrivateKey,
-                                                 &callbackInfo,
-                                                 _testOnboardingServerResponseThreadTimeout_ms,
-                                                 AWS_IOT_ONBOARDING_BAD_RESPONSE );
+    _testAPIWithServerResponse( &responseWithoutPrivateKey,
+                                _testOnboardingServerResponseThreadTimeoutMs,
+                                ONBOARDING_GET_DEVICE_CREDENTIALS,
+                                &callbackInfo,
+                                AWS_IOT_ONBOARDING_BAD_RESPONSE );
 }
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Tests the behavior of @ref onboarding_function_getpdevicecredentials in the nominal case when
  * the server responds correctly on the "accepted" topic.
  */
-TEST( Onboarding_Unit_API, GetDeviceCredentialsNominalSuccess )
+TEST( Onboarding_Unit_API, GetDeviceCredentialsAPINominalSuccess )
 {
     _serverResponseThreadContext_t serverResponse =
     {
@@ -585,23 +796,20 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsNominalSuccess )
         .publishDataLength  = sizeof( _sampleGetDeviceCredentialsServerResponsePayload )
     };
 
-    AwsIotOnboardingCallbackInfo_t callbackInfo =
-    {
-        .userParam = &_getDeviceCredentialsExpectedCallbackParams,
-        .function  = _testOnboardingUserCallback
-    };
-
-    _testGetDeviceCredentialsWithServerResponse( &serverResponse,
-                                                 &callbackInfo,
-                                                 _testOnboardingServerResponseThreadTimeout_ms,
-                                                 AWS_IOT_ONBOARDING_SUCCESS );
+    _testAPIWithServerResponse( &serverResponse,
+                                _testOnboardingServerResponseThreadTimeoutMs,
+                                ONBOARDING_GET_DEVICE_CREDENTIALS,
+                                &_acceptedResponseCallbackForGetDeviceCredentialsAPI,
+                                AWS_IOT_ONBOARDING_SUCCESS );
 }
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief Tests the behavior of @ref onboarding_function_getpdevicecredentials when server responds much after the
  * timeout period.
  */
-TEST( Onboarding_Unit_API, GetDeviceCredentialsServerResponseAfterTimeout )
+TEST( Onboarding_Unit_API, GetDeviceCredentialsAPIServerResponseAfterTimeout )
 {
     _serverResponseThreadContext_t serverResponse =
     {
@@ -610,6 +818,153 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsServerResponseAfterTimeout )
         .pPublishData       = _sampleGetDeviceCredentialsServerResponsePayload,
         .publishDataLength  = sizeof( _sampleGetDeviceCredentialsServerResponsePayload )
     };
+
+    _testAPIWithServerResponse( &serverResponse,
+                                _testOnboardingServerResponseThreadTimeoutMs * 2,
+                                ONBOARDING_GET_DEVICE_CREDENTIALS,
+                                &_acceptedResponseCallbackForGetDeviceCredentialsAPI,
+                                AWS_IOT_ONBOARDING_TIMEOUT );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref onboarding_function_getpdevicecredentials when there is a race condition between
+ * the library receiving the server response and the response timeout firing. Even in such a case, the API is expected
+ * to process the response and invoke the user callback with the device credentials instead of treating the case as a
+ * timeout!*/
+TEST( Onboarding_Unit_API, GetDeviceCredentialsAPIServerResponseAndTimeoutRaceCondition )
+{
+    _serverResponseThreadContext_t serverResponse =
+    {
+        .pPublishTopic      = _getDeviceCredentialsAcceptedResponseTopic,
+        .publishTopicLength = strlen( _getDeviceCredentialsAcceptedResponseTopic ),
+        .pPublishData       = _sampleGetDeviceCredentialsServerResponsePayload,
+        .publishDataLength  = sizeof( _sampleGetDeviceCredentialsServerResponsePayload )
+    };
+
+    _testAPIWithServerResponse( &serverResponse,
+                                _testOnboardingApiTimeoutMs,
+                                ONBOARDING_GET_DEVICE_CREDENTIALS,
+                                &_acceptedResponseCallbackForGetDeviceCredentialsAPI,
+                                AWS_IOT_ONBOARDING_SUCCESS );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests that the API detects invalid parameters passed to it, and returns the
+ * equivalent error code.
+ */
+TEST( Onboarding_Unit_API, OnboardDeviceAPIInvalidParameters )
+{
+    AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+
+    callbackInfo.function = _dummyAwsIotOnboardingCallback;
+
+    AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo =
+    {
+        .pDeviceCertificateId      = _testCertificateId,
+        .deviceCertificateIdLength = strlen( _testCertificateId ),
+        .pTemplateIdentifier       = _testTemplateId,
+        .templateIdentifierLength  = strlen( _testTemplateId ),
+        .pParametersStart          = NULL,
+        .numOfParameters           = 0,
+    };
+
+    /* Uninitialized MQTT connection. */
+    status = AwsIotOnboarding_OnboardDevice( NULL,
+                                             &requestInfo,
+                                             0,
+                                             &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_PARAMETER, status );
+
+    /* Callback object is not set. */
+    status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
+                                             &requestInfo,
+                                             0,
+                                             NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_PARAMETER, status );
+
+    /* Callback function not set. */
+    callbackInfo.function = NULL;
+    status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
+                                             &requestInfo,
+                                             0,
+                                             &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_PARAMETER, status );
+
+    /* Invalid request data. */
+    status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
+                                             NULL,
+                                             0,
+                                             &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_PARAMETER, status );
+
+    /* Invalid certificate data in request data. */
+    requestInfo.pDeviceCertificateId = NULL;
+    requestInfo.deviceCertificateIdLength = 0;
+    status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
+                                             &requestInfo,
+                                             0,
+                                             &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_PARAMETER, status );
+
+    /* Invalid template ID in request data. Re-assign certificate data in object. */
+    requestInfo.pDeviceCertificateId = _testCertificateId;
+    requestInfo.deviceCertificateIdLength = sizeof( _testCertificateId );
+    requestInfo.pTemplateIdentifier = NULL;
+    requestInfo.templateIdentifierLength = 0;
+    status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
+                                             &requestInfo,
+                                             0,
+                                             &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_PARAMETER, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Verifies that the API returns the expected error code when it is called without initializing the library.
+ */
+TEST( Onboarding_Unit_API, OnboardDeviceAPICalledWithoutInit )
+{
+    AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+
+    callbackInfo.function = _dummyAwsIotOnboardingCallback;
+
+    const AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo =
+    {
+        .pDeviceCertificateId      = _testCertificateId,
+        .deviceCertificateIdLength = sizeof( _testCertificateId ),
+        .pTemplateIdentifier       = _testTemplateId,
+        .templateIdentifierLength  = strlen( _testTemplateId ),
+        .pParametersStart          = NULL,
+        .numOfParameters           = 0,
+    };
+
+    /* Reset the library to simulate the test case when the library is not initialized. */
+    AwsIotOnboarding_Cleanup();
+
+    /* Call the API under test. */
+    status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
+                                             &requestInfo,
+                                             _testOnboardingApiTimeoutMs,
+                                             &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_NOT_INITIALIZED, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref onboarding_function_getpdevicecredentials in case of
+ * receiving no response from the server.
+ */
+TEST( Onboarding_Unit_API, OnboardDeviceAPINoServerResponse )
+{
+    AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
 
     AwsIotOnboardingCallbackInfo_t callbackInfo =
     {
@@ -617,35 +972,294 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsServerResponseAfterTimeout )
         .function  = _dummyAwsIotOnboardingCallback
     };
 
-    _testGetDeviceCredentialsWithServerResponse( &serverResponse,
-                                                 &callbackInfo,
-                                                 _testOnboardingServerResponseThreadTimeout_ms * 2,
-                                                 AWS_IOT_ONBOARDING_TIMEOUT );
+    const AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo =
+    {
+        .pDeviceCertificateId      = _testCertificateId,
+        .deviceCertificateIdLength = sizeof( _testCertificateId ),
+        .pTemplateIdentifier       = _testTemplateId,
+        .templateIdentifierLength  = strlen( _testTemplateId ),
+        .pParametersStart          = NULL,
+        .numOfParameters           = 0,
+    };
+
+
+    /* We will not simulate any server response for the timeout to occur! */
+
+    /* Call the API under test. */
+    status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
+                                             &requestInfo,
+                                             _testOnboardingApiTimeoutMs,
+                                             &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_TIMEOUT, status );
 }
 
+/*-----------------------------------------------------------*/
+
 /**
- * @brief Tests the behavior of @ref onboarding_function_getpdevicecredentials when there is a race condition between
- * the library receiving the server response and the timeout firing. Even in such a case, the API is expected to process
- * the response and invoke the user callback with the device credentials instead of treating the case as a timeout!
+ * @brief Tests the behavior of @ref onboarding_function_onboarddevice when Onboarding server rejects the request
+ * by publishing on the "/rejected" topic.
  */
-TEST( Onboarding_Unit_API, GetDeviceCredentialsServerResponseAndTimeoutRaceCondition )
+TEST( Onboarding_Unit_API, OnboardDeviceAPIRejectedResponse )
+{
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+
+    callbackInfo.function = _dummyAwsIotOnboardingCallback;
+
+    _serverResponseThreadContext_t rejectedResponse =
+    {
+        .pPublishTopic      = _onboardDeviceRejectedResponseTopic,
+        .publishTopicLength = strlen( _onboardDeviceRejectedResponseTopic ),
+        .pPublishData       = NULL,
+        .publishDataLength  = 0
+    };
+
+    _testAPIWithServerResponse( &rejectedResponse,
+                                _testOnboardingServerResponseThreadTimeoutMs,
+                                ONBOARDING_ONBOARD_DEVICE,
+                                &callbackInfo,
+                                AWS_IOT_ONBOARDING_SERVER_REFUSED );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref onboarding_function_onboarddevice API when the "accepted" response sent by the
+ * Onboarding service contains a corrupt payload.
+ */
+TEST( Onboarding_Unit_API, OnboardDeviceAPICorruptDataInResponse )
+{
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+
+    callbackInfo.function = _dummyAwsIotOnboardingCallback;
+
+    /*************** Response Payload containing invalid device configuration entry ********************/
+    const uint8_t serverResponseWithInvalidDeviceConfigEntry[] =
+    {
+        0xA2,                                                 /* # map(2) */
+        0x73,                                                 /* # text(19) */
+        0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61,
+        0x74, 0x69, 0x6F, 0x6E,                               /* # "deviceConfiguration" */
+        0x82,                                                 /* # array(2) */
+        0x01,                                                 /* # unsigned(1) */
+        0x02,                                                 /* # unsigned(2) */
+        0x69,                                                 /* # text(9) */
+        0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65, /* # "thingName" */
+        0x69,                                                 /* # text(9) */
+        0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67  /* # "TestThing" */
+    };
+
+    _serverResponseThreadContext_t corruptResponseContext =
+    {
+        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
+        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishData       = serverResponseWithInvalidDeviceConfigEntry,
+        .publishDataLength  = sizeof( serverResponseWithInvalidDeviceConfigEntry )
+    };
+
+    _testAPIWithServerResponse( &corruptResponseContext,
+                                _testOnboardingServerResponseThreadTimeoutMs,
+                                ONBOARDING_ONBOARD_DEVICE,
+                                &callbackInfo,
+                                AWS_IOT_ONBOARDING_BAD_RESPONSE );
+
+    /***************  Response Payload with invalid Thing Name entry ********************/
+    const uint8_t serverResponseWithInvalidThingNameEntry[] =
+    {
+        0xA2,                                                 /* # map(2) */
+        0x73,                                                 /* # text(19) */
+        0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61,
+        0x74, 0x69, 0x6F, 0x6E,                               /* # "deviceConfiguration" */
+        0xA1,                                                 /* # map(1), */
+        0x61,                                                 /* # text(1), */
+        0x31,                                                 /* # "1", */
+        0x02,                                                 /* # unsigned(2), */
+        0x69,                                                 /* # text(9) */
+        0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65, /* # "thingName" */
+        0x04                                                  /* # unisgned(4) */
+    };
+
+    corruptResponseContext.pPublishData = serverResponseWithInvalidThingNameEntry;
+    corruptResponseContext.publishDataLength = sizeof( serverResponseWithInvalidThingNameEntry );
+
+    _testAPIWithServerResponse( &corruptResponseContext,
+                                _testOnboardingServerResponseThreadTimeoutMs,
+                                ONBOARDING_ONBOARD_DEVICE,
+                                &callbackInfo,
+                                AWS_IOT_ONBOARDING_BAD_RESPONSE );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref onboarding_function_onboarddevice in the nominal case when
+ * the server responds correctly on the "accepted" topic.
+ */
+TEST( Onboarding_Unit_API, OnboardDeviceAPINominalSuccess )
 {
     _serverResponseThreadContext_t serverResponse =
     {
-        .pPublishTopic      = _getDeviceCredentialsAcceptedResponseTopic,
-        .publishTopicLength = strlen( _getDeviceCredentialsAcceptedResponseTopic ),
-        .pPublishData       = _sampleGetDeviceCredentialsServerResponsePayload,
-        .publishDataLength  = sizeof( _sampleGetDeviceCredentialsServerResponsePayload )
+        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
+        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishData       = _sampleOnboardDeviceResponsePayload,
+        .publishDataLength  = sizeof( _sampleOnboardDeviceResponsePayload )
     };
 
-    AwsIotOnboardingCallbackInfo_t callbackInfo =
+    _testAPIWithServerResponse( &serverResponse,
+                                _testOnboardingServerResponseThreadTimeoutMs,
+                                ONBOARDING_ONBOARD_DEVICE,
+                                &_acceptedResponseCallbackForOnboardDeviceAPI,
+                                AWS_IOT_ONBOARDING_SUCCESS );
+}
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref onboarding_function_onboarddevice in the case when
+ * the server responds on the "accepted" topic but without any device configuration data in the payload.
+ */
+TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutDeviceConfiguration )
+{
+    const uint8_t pResponseWithoutDeviceConfigData[] =
     {
-        .userParam = &_getDeviceCredentialsExpectedCallbackParams,
+        0xA1,                                                 /* # map(1) */
+        0x69,                                                 /* # text(9) */
+        0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65, /* # "thingName" */
+        0x69,                                                 /* # text(9) */
+        0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67  /* # "TestThing" */
+    };
+
+    _serverResponseThreadContext_t serverResponse =
+    {
+        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
+        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishData       = pResponseWithoutDeviceConfigData,
+        .publishDataLength  = sizeof( pResponseWithoutDeviceConfigData )
+    };
+
+    AwsIotOnboardingCallbackParam_t expectedCallbackParams =
+    {
+        .callbackType                                      = AWS_IOT_ONBOARDING_ONBOARD_DEVICE_COMPLETE,
+        .u.onboardDeviceResponse.pThingName                = ( const char * ) &pResponseWithoutDeviceConfigData[ 12 ],
+        .u.onboardDeviceResponse.thingNameLength           = 9,
+        .u.onboardDeviceResponse.pDeviceConfigList         = NULL,
+        .u.onboardDeviceResponse.numOfConfigurationEntries = 0
+    };
+
+    const AwsIotOnboardingCallbackInfo_t callbackInfo =
+    {
+        .userParam = &expectedCallbackParams,
         .function  = _testOnboardingUserCallback
     };
 
-    _testGetDeviceCredentialsWithServerResponse( &serverResponse,
-                                                 &callbackInfo,
-                                                 _testOnboardingApiTimeoutMs,
-                                                 AWS_IOT_ONBOARDING_SUCCESS );
+
+    _testAPIWithServerResponse( &serverResponse,
+                                _testOnboardingServerResponseThreadTimeoutMs,
+                                ONBOARDING_ONBOARD_DEVICE,
+                                &callbackInfo,
+                                AWS_IOT_ONBOARDING_SUCCESS );
+}
+
+/**
+ * @brief Tests the behavior of @ref onboarding_function_onboarddevice in the case when
+ * the server responds on the "accepted" topic but without thing name entry in the payload.
+ */
+TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutThingName )
+{
+    const uint8_t pServerResponseWithoutThingName[] =
+    {
+        0xA1,                   /* # map(1) */
+        0x73,                   /* # text(19) */
+        0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61,
+        0x74, 0x69, 0x6F, 0x6E, /* # "deviceConfiguration" */
+        0xA1,                   /* # map(1), */
+        0x61,                   /* # text(1), */
+        0x31,                   /* # "1", */
+        0x61,                   /* # text(1), */
+        0x32                    /* # "2" */
+    };
+
+    _serverResponseThreadContext_t serverResponse =
+    {
+        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
+        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishData       = pServerResponseWithoutThingName,
+        .publishDataLength  = sizeof( pServerResponseWithoutThingName )
+    };
+
+    const AwsIotOnboardingResponseDeviceConfigurationEntry_t pExpectedDeviceConfigList[] =
+    {
+        {
+            ( const char * ) &_sampleOnboardDeviceResponsePayload[ 23 ],
+            1,
+            ( const char * ) &_sampleOnboardDeviceResponsePayload[ 25 ],
+            1
+        }
+    };
+
+    AwsIotOnboardingCallbackParam_t expectedCallbackParams =
+    {
+        .callbackType                                      = AWS_IOT_ONBOARDING_ONBOARD_DEVICE_COMPLETE,
+        .u.onboardDeviceResponse.pThingName                = NULL,
+        .u.onboardDeviceResponse.thingNameLength           = 0,
+        .u.onboardDeviceResponse.pDeviceConfigList         = pExpectedDeviceConfigList,
+        .u.onboardDeviceResponse.numOfConfigurationEntries = 1
+    };
+
+    const AwsIotOnboardingCallbackInfo_t callbackInfo =
+    {
+        .userParam = &expectedCallbackParams,
+        .function  = _testOnboardingUserCallback
+    };
+
+    _testAPIWithServerResponse( &serverResponse,
+                                _testOnboardingServerResponseThreadTimeoutMs,
+                                ONBOARDING_ONBOARD_DEVICE,
+                                &callbackInfo,
+                                AWS_IOT_ONBOARDING_SUCCESS );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref onboarding_function_onboarddevice when server responds much after the timeout
+ * period.
+ */
+TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseAfterTimeout )
+{
+    _serverResponseThreadContext_t serverResponse =
+    {
+        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
+        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishData       = _sampleOnboardDeviceResponsePayload,
+        .publishDataLength  = sizeof( _sampleOnboardDeviceResponsePayload )
+    };
+
+    _testAPIWithServerResponse( &serverResponse,
+                                _testOnboardingServerResponseThreadTimeoutMs * 2,
+                                ONBOARDING_ONBOARD_DEVICE,
+                                &_acceptedResponseCallbackForOnboardDeviceAPI,
+                                AWS_IOT_ONBOARDING_TIMEOUT );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref onboarding_function_onboarddevice when there is a race condition between
+ * the library receiving the server response and the response timeout firing. Even in such a case, the API is expected
+ * to process the response and invoke the user callback with the device credentials instead of treating the case as a
+ * timeout!*/
+TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseAndTimeoutRaceCondition )
+{
+    _serverResponseThreadContext_t serverResponse =
+    {
+        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
+        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishData       = _sampleOnboardDeviceResponsePayload,
+        .publishDataLength  = sizeof( _sampleOnboardDeviceResponsePayload )
+    };
+
+    _testAPIWithServerResponse( &serverResponse,
+                                _testOnboardingApiTimeoutMs,
+                                ONBOARDING_ONBOARD_DEVICE,
+                                &_acceptedResponseCallbackForOnboardDeviceAPI,
+                                AWS_IOT_ONBOARDING_SUCCESS );
 }

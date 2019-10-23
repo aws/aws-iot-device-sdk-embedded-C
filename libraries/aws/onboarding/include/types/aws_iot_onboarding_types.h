@@ -68,6 +68,15 @@ typedef enum AwsIotOnboardingError
     AWS_IOT_ONBOARDING_INIT_FAILED,
 
     /**
+     * @brief An API function was called before @ref onboarding_function_init.
+     *
+     * Functions that may return this value:
+     * - @ref onboarding_function_getdevicecredentials
+     * - @ref onboarding_function_onboarddevice
+     */
+    AWS_IOT_ONBOARDING_NOT_INITIALIZED,
+
+    /**
      * @brief At least one parameter is invalid.
      *
      * Functions that may return this value:
@@ -155,20 +164,69 @@ typedef enum AwsIotOnboardingCallbackType
 
 /**
  * @ingroup onboarding_datatypes_paramstructs
- * @brief Aggregates information required for onboarding a device to its
- * customer AWS IoT account with the Onboarding service.
+ * @brief A key-value string pair representation of an entry in the list of parameters that will be
+ * sent as part of the request payload to the server for onboarding the device.
+ *
+ * @paramfor @ref onboarding_function_onboarddevice
  */
-typedef struct AwsIotOnboardingOnboardDeviceInfo
+typedef struct AwsIotOnboardingRequestParameterEntry
 {
-    const uint8_t * pDeviceCertificate; /**< @brief The certificate to onboard the device with. */
-    size_t deviceCertificateLength;     /**< @brief The length of the certificate. */
-    const char * ptemplateIdentifier;   /**< @brief The identifier of the template on the AWS IoT account used for
-                                         * onboarding the device. */
-    size_t templateIdentifierLength;    /**< @brief The length of the template identifier. */
-    const void * pContextParameters;    /**< @brief The pre-encoded data to pass as device context to the server for
-                                         * onboarding the device. */
-    size_t contextParametersLength;     /**< @brief The length of the device context data. */
-} AwsIotOnboardingOnboardDeviceInfo_t;
+    const char * pParameterKey;   /**< The key string of the parameter entry. */
+    size_t parameterKeyLength;    /**< The length of the key string. */
+    const char * pParameterValue; /**< The value string of the parameter entry. */
+    size_t parameterValueLength;  /**< The length of the value string. */
+} AwsIotOnboardingRequestParameterEntry_t;
+
+/**
+ * @ingroup onboarding_datatypes_paramstructs
+ * @brief A key-value string pair representation of an entry in the list of device configuration data
+ * that is received in the response payload from the server when onboarding the device.
+ */
+typedef struct AwsIotOnboardingResponseDeviceConfigurationEntry
+{
+    const char * pKey;   /**< The key string of the device configuration entry. */
+    size_t keyLength;    /**< The length of the key string. */
+    const char * pValue; /**< The value string of the device configuration entry. */
+    size_t valueLength;  /**< The length of the value string. */
+} AwsIotOnboardingResponseDeviceConfigurationEntry_t;
+
+/**
+ * @ingroup onboarding_datatypes_paramstructs
+ * @brief Aggregates information required for sending a request to the Onboarding service for
+ * onboarding a device to its customer AWS IoT account.
+ */
+typedef struct AwsIotOnboardingOnboardDeviceRequestInfo
+{
+    /**
+     * @brief The identifier of the template on the AWS IoT account used for onboarding the device.
+     */
+    const char * pTemplateIdentifier;
+
+    /**
+     * @brief The length of the template identifier.
+     */
+    size_t templateIdentifierLength;
+
+    /**
+     *  @brief The certificate ID string (of the certificate issued by AWS IoT) to onboard the device with.
+     */
+    const char * pDeviceCertificateId;
+
+    /**
+     * @brief The length of the certificate ID. (Should be 64 characters long)
+     */
+    size_t deviceCertificateIdLength;
+
+    /**
+     * @brief The list of parameter entries to send to the server for onboarding the device.
+     */
+    const AwsIotOnboardingRequestParameterEntry_t * pParametersStart;
+
+    /**
+     * @brief The number of entries in the parameter list.
+     */
+    size_t numOfParameters;
+} AwsIotOnboardingOnboardDeviceRequestInfo_t;
 
 
 /**
@@ -209,13 +267,19 @@ typedef struct AwsIotOnboardingCallbackParam
         /* Represents the server response to the request of onboarding device*/
         struct
         {
-            const char * pClientId;     /**< The client ID received from the server. */
-            size_t clientIdLength;      /**< The size of the client ID string. */
-            const void * pDeviceConfig; /**< The device configuration data received from the server. NOTE: The encoded
-                                         * device config information will be copied in the buffer. */
-            size_t deviceConfigLength;  /**< The size of the encoded device configuration data. */
+            /**< The name of the Thing resource that was created to onboard the device.*/
+            const char * pThingName;
+
+            /**< The length of the Thing resource name. */
+            size_t thingNameLength;
+
+            /**< A list of device configuration data that is received from the server. */
+            const AwsIotOnboardingResponseDeviceConfigurationEntry_t * pDeviceConfigList;
+
+            /**< The number of configuration entries in the device configuration list. */
+            size_t numOfConfigurationEntries;
         } onboardDeviceResponse;
-    } u;                                /**< @brief Valid member depends on callback type. */
+    } u; /**< @brief Valid member depends on callback type. */
 } AwsIotOnboardingCallbackParam_t;
 
 /**
