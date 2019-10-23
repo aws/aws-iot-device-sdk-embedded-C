@@ -241,10 +241,14 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 
 /*-----------------------------------------------------------*/
 
-/* @brief Uninitialized value for @ref _initCalled. */
+/**
+ * @brief Uninitialized value for @ref _initCalled.
+ */
 #define MQTT_LIBRARY_UNINITIALIZED    ( ( uint32_t ) 0 )
 
-/* @brief Initialized value for @ref _initCalled. */
+/**
+ * @brief Initialized value for @ref _initCalled.
+ */
 #define MQTT_LIBRARY_INITIALIZED      ( ( uint32_t ) 1 )
 
 /**
