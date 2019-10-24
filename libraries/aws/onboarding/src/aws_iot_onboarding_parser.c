@@ -100,17 +100,18 @@ static AwsIotOnboardingError_t _parseRejectedResponse( IotSerializerDecoderObjec
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
     }
 
-    if( errorCodeDecoder.type != IOT_SERIALIZER_SCALAR_SIGNED_INT )
+    if( errorCodeDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
     {
         IotLogError(
-            "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is integer.",
+            "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is text string.",
             ONBOARDING_REJECTED_RESPONSE_ERROR_CODE_STRING,
             pOperationName );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
     }
 
     /* Copy the status code value to the output parameter. */
-    pResponseData->errorCode = ( AwsIotOnboardingServerErrorCode_t ) errorCodeDecoder.u.value.u.signedInt;
+    pResponseData->pErrorCode = ( const char * ) errorCodeDecoder.u.value.u.string.pString;
+    pResponseData->errorCodeLength = errorCodeDecoder.u.value.u.string.length;
 
     /* Parse the "error code" information. */
     if( _pAwsIotOnboardingDecoder->find( pPayloadDecoder,
@@ -133,7 +134,7 @@ static AwsIotOnboardingError_t _parseRejectedResponse( IotSerializerDecoderObjec
     }
 
     pResponseData->pErrorMessage = ( const char * ) errorMessageDecoder.u.value.u.string.pString;
-    pResponseData->messageLength = errorMessageDecoder.u.value.u.string.length;
+    pResponseData->errorMessageLength = errorMessageDecoder.u.value.u.string.length;
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
 }

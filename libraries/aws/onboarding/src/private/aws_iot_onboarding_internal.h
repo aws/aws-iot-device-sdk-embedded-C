@@ -31,7 +31,7 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
-/* AWS IoT common header. */
+/* AWS IoT common header include. */
 #include "aws_iot.h"
 
 /* Onboarding include. */
@@ -385,14 +385,20 @@ typedef enum _onboardingOperationType
     ONBOARDING_ONBOARD_DEVICE = 1,         /**< @ref onboarding_function_onboarddevice */
 } _onboardingOperationType_t;
 
-
 /**
  *  @brief Union representing either of the 2 Onboarding operation APIs' callbacks.
+ *
+ * @note If an ongoing operation was started by the @ref onboarding_function_getdevicecredentials API,
+ * then #_onboardingCallbackInfo.getDeviceCredentialsCallback will be valid, whereas if the active
+ * operation relates to the @ref AwsIotOnboarding_OnboardDevice API, then
+ *#_onboardingCallbackInfo.getDeviceCredentialsCallback will be valid.
  */
 typedef union _onboardingCallbackInfo
 {
+    /* The callback provided by the user to the @ref onboarding_function_getdevicecredentials API. */
     AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t getDeviceCredentialsCallback;
 
+    /* The callback provided by the user to the @ref onboarding_function_onboarddevice API. */
     AwsIotOnboardingOnboardDeviceCallbackInfo_t onboardDeviceCallback;
 } _onboardingCallbackInfo_t;
 

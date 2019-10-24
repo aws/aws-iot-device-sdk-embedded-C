@@ -146,32 +146,12 @@ typedef enum AwsIotOnboardingError
 
 /**
  * @ingroup onboarding_datatypes_enums
- * @brief Types of Onboarding library callbacks.
+ * @brief Status code sent by the server in "rejected" response during an Onboarding operations.
  *
- * One of these values will be placed in #AwsIotOnboardingCallbackParam_t.callbackType
- * to identify the reason for invoking a callback function.
+ * These status codes will be sent as parameters to #AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t
+ * and #AwsIotOnboardingOnboardDeviceCallbackInfo_t callback functions when the server send a
+ * "rejected" response for an operation.
  */
-typedef enum AwsIotOnboardingCallbackType
-{
-    AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_COMPLETE, /**< Callback invoked because a [Onboarding get device
-                                                         * credentials](@ref onboarding_function_delete) completed. */
-    AWS_IOT_ONBOARDING_ONBOARD_DEVICE_COMPLETE          /**< Callback invoked because a [Onboarding onboard device](@ref
-                                                         * onboarding_function_get) completed. */
-} AwsIotOnboardingCallbackType_t;
-
-typedef enum AwsIotOnboardingServerErrorCode
-{
-    INVALID_TEMPLATE,
-    INVALID_PAYLOADFORMAT,
-    INVALID_TOPIC,
-    INVALID_PAYLOAD,
-    INVALID_CERTIFICATEID,
-    INTERNAL_ERROR,
-    THROTTLED,
-    ACCESS_DENIED,
-    PROVISIONING_FAILED
-} AwsIotOnboardingServerErrorCode_t;
-
 typedef enum AwsIotOnboardingServerStatusCode
 {
     /**
@@ -294,10 +274,11 @@ typedef struct AwsIotOnboardingOnboardDeviceAcceptedResponse
 typedef struct AwsIotOnboardingRejectedResponse
 {
     AwsIotOnboardingServerStatusCode_t statusCode; /**< The highest level HTTP based status code sent by the server. */
-    AwsIotOnboardingServerErrorCode_t errorCode;   /**< The more granular level error code sent by the server. */
+    const char * pErrorCode;                       /**< The more granular level error code string sent by the server. */
+    size_t errorCodeLength;                        /**< The length of the error code string.*/
     const char * pErrorMessage;                    /**< The most granular level error information is provided in the
                                                     * message by the server. */
-    size_t messageLength;                          /**< The length of the error messsage sent by the server. */
+    size_t errorMessageLength;                     /**< The length of the error messsage sent by the server. */
 } AwsIotOnboardingRejectedResponse_t;
 
 /**
