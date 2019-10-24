@@ -1043,8 +1043,6 @@ IotMqttError_t IotMqtt_Init( void )
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
-
-    return status;
 }
 
 /*-----------------------------------------------------------*/
