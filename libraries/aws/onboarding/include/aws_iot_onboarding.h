@@ -112,11 +112,10 @@ AwsIotOnboardingError_t AwsIotOnboarding_Init( uint32_t mqttTimeout );
  *   #AWS_IOT_ONBOARDING_INTERNAL_FAILURE, if any there are operation errors internal to the library.
  * @see @ref onboard_function_getdevicecredentials
  */
-AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection_t
-                                                               onboardingConnection,
+AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection_t onboardingConnection,
                                                                uint32_t flags,
                                                                uint32_t timeoutMs,
-                                                               const AwsIotOnboardingCallbackInfo_t * deviceCredentialsResponseCallback );
+                                                               const AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t * pResponseCallback );
 /* @[declare_onboarding_getdevicecredentials] */
 
 /**
@@ -149,7 +148,7 @@ AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onbo
                                                         const AwsIotOnboardingOnboardDeviceRequestInfo_t *
                                                         pOnboardingDataInfo,
                                                         uint32_t timeoutMs,
-                                                        const AwsIotOnboardingCallbackInfo_t * responseCallback );
+                                                        const AwsIotOnboardingOnboardDeviceCallbackInfo_t * pResponseCallback );
 /* @[declare_onboarding_onboarddevice] */
 
 

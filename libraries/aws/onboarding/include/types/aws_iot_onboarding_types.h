@@ -30,6 +30,9 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* AWS IoT common header. */
+#include "aws_iot.h"
+
 /* Standard includes. */
 #include <stdint.h>
 #include <stddef.h>
@@ -156,6 +159,42 @@ typedef enum AwsIotOnboardingCallbackType
                                                          * onboarding_function_get) completed. */
 } AwsIotOnboardingCallbackType_t;
 
+typedef enum AwsIotOnboardingServerErrorCode
+{
+    INVALID_TEMPLATE,
+    INVALID_PAYLOADFORMAT,
+    INVALID_TOPIC,
+    INVALID_PAYLOAD,
+    INVALID_CERTIFICATEID,
+    INTERNAL_ERROR,
+    THROTTLED,
+    ACCESS_DENIED,
+    PROVISIONING_FAILED
+} AwsIotOnboardingServerErrorCode_t;
+
+typedef enum AwsIotOnboardingServerStatusCode
+{
+    /**
+     * @brief Onboarding operation rejected: Forbidden.
+     */
+    AWS_IOT_ONBOARDING_FORBIDDEN = 403,
+
+    /**
+     * @brief Onboarding operation rejected: Template ID not found.
+     */
+    AWS_IOT_ONBOARDING_NOT_FOUND = 404,
+
+    /**
+     * @brief Onboarding operation rejected: Server has too many requests from clients.
+     */
+    AWS_IOT_ONBOARDING_TOO_MANY_REQUESTS = 429,
+
+    /**
+     * @brief Onboarding operation rejected due to server internal error.
+     */
+    AWS_IOT_ONBOARDING_INTERNAL_SERVER_ERROR = 500,
+} AwsIotOnboardingServerStatusCode_t;
+
 /*------------------------- Onboarding parameter structs --------------------------*/
 
 /**
@@ -228,30 +267,57 @@ typedef struct AwsIotOnboardingOnboardDeviceRequestInfo
     size_t numOfParameters;
 } AwsIotOnboardingOnboardDeviceRequestInfo_t;
 
+typedef struct AwsIotOnboardingOnboardDeviceAcceptedResponse
+{
+    /**< The name of the Thing resource that was created to onboard the device.*/
+    const char * pThingName;
+
+    /**< The length of the Thing resource name. */
+    size_t thingNameLength;
+
+    /**< A list of device configuration data that is received from the server. */
+    const AwsIotOnboardingResponseDeviceConfigurationEntry_t * pDeviceConfigList;
+
+    /**< The number of configuration entries in the device configuration list. */
+    size_t numOfConfigurationEntries;
+} AwsIotOnboardingOnboardDeviceAcceptedResponse_t;
 
 /**
  * @ingroup onboarding_datatypes_paramstructs
  * @brief Parameter to a Onboarding callback function.
  *
- * @paramfor Onboarding callback functions
+ * @paramfor Onboarding server rejected response callback functions
  *
  * The Onboarding library passes this struct to a callback function whenever an
- * Onboarding operation completes successfully (i.e. a successful response is received from the server).
- *
- * The valid members of this struct are different based on
- * #AwsIotOnboardingCallbackParam_t.callbackType. If the callback type is
- * #AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_COMPLETE, then #AwsIotOnboardingCallbackParam_t.deviceCredentialsInfo
- * is valid. Otherwise, if the callback type is #AWS_IOT_ONBOARDING_ONBOARD_DEVICE_COMPLETE, then
- * #AwsIotOnboardingCallbackParam_t.onboardDeviceResponse is valid.
- *
+ * Onboarding operation completes with a rejected response from the server.
  */
-typedef struct AwsIotOnboardingCallbackParam
+typedef struct AwsIotOnboardingRejectedResponse
 {
-    AwsIotOnboardingCallbackType_t callbackType;
+    AwsIotOnboardingServerStatusCode_t statusCode; /**< The highest level HTTP based status code sent by the server. */
+    AwsIotOnboardingServerErrorCode_t errorCode;   /**< The more granular level error code sent by the server. */
+    const char * pErrorMessage;                    /**< The most granular level error information is provided in the
+                                                    * message by the server. */
+    size_t messageLength;                          /**< The length of the error messsage sent by the server. */
+} AwsIotOnboardingRejectedResponse_t;
+
+/**
+ * @ingroup onboarding_datatypes_paramstructs
+ * @brief Parameter that encapsulates the server response to the callback function for the
+ * #AwsIotOnboarding_GetDeviceCredentials API.
+ *
+ * @paramfor Onboarding server accepted response callback functions
+ *
+ * The #AwsIotOnboarding_GetDeviceCredentials library API passes this object to a user-provided callback function
+ * whenever the operation completes with a response from the server.
+ */
+typedef struct AwsIotOnboardingGetDeviceCredentialsResponse
+{
+    /* Represents the status of the operation based on the server response. */
+    AwsIotStatus_t operationStatus;
 
     union
     {
-        /* Represents the new device credentials sent by the server. */
+        /* Represents the successful/accepted response of device credentials received from the server. */
         struct
         {
             const char * pDeviceCertificate; /**< The new certificate for the device.*/
@@ -262,9 +328,63 @@ typedef struct AwsIotOnboardingCallbackParam
             const char * pPrivateKey;        /**< The private key associated with the new certificate,
                                               * @p pDeviceCertificate.*/
             size_t privateKeyLength;         /**< The size of the private key.*/
-        } deviceCredentialsInfo;
+        } acceptedResponse;
 
-        /* Represents the server response to the request of onboarding device*/
+        /* Represents the rejected response information received from the server. */
+        AwsIotOnboardingRejectedResponse_t rejectedResponse;
+    } u; /**< @brief Valid member depends on operation status. */
+} AwsIotOnboardingGetDeviceCredentialsResponse_t;
+
+/**
+ * @ingroup onboarding_datatypes_paramstructs
+ * @brief User-specific callback information for handling server response for the GetDeviceCredentials service API.
+ *
+ * @paramfor @ref onboarding_function_getdevicecredentials
+ *
+ * Provides a function to be invoked on successful completion of an #AwsIotOnboarding_GetDeviceCredentials API
+ * operation.
+ *
+ * @initializer{AwsIotOnboardingCallbackInfo_t,AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER}
+ */
+typedef struct AwsIotOnboardingGetDeviceCredentialsCallbackInfo
+{
+    void * userParam; /**< The user-provided parameter to be passed (as the first parameter) to the callback
+                       * function (optional). */
+
+    /**
+     * @brief User-provided callback function signature.
+     *
+     * @param[in] void* #AwsIotOnboardingGetDeviceCredentialsCallbackInfo.userParam
+     * @param[in] AwsIotOnboardingCallbackParam_t* Parsed server response of either device credentials
+     * or onboarded device information.
+     *
+     * @see #AwsIotOnboardingCallbackParam_t for more information on the second parameter.
+     */
+    void ( * function )( void *,
+                         const AwsIotOnboardingGetDeviceCredentialsResponse_t * ); /*<** The user-provided callback to
+                                                                                    * invoke; with the
+                                                                                    *#AwsIotOnboardingGetDeviceCredentialsCallbackInfo.userParam
+                                                                                    * data as the #first parameter. */
+} AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t;
+
+/**
+ * @ingroup onboarding_datatypes_paramstructs
+ * @brief Parameter that encapsulates the server response to the callback function for the
+ * #AwsIotOnboarding_OnboardDevice API.
+ *
+ * @paramfor Onboarding server accepted response callback functions
+ *
+ * The #AwsIotOnboarding_OnboardDevice library API passes this object to a user-provided callback function whenever
+ * the operation completes with a response from the server.
+ */
+typedef struct AwsIotOnboardingOnboardDeviceResponse
+{
+    /* Represents the status of the operation from the server response. */
+    AwsIotStatus_t operationStatus;
+
+    union
+    {
+        /* Represents the successful/accepted response from the server for the request to onboard device. */
         struct
         {
             /**< The name of the Thing resource that was created to onboard the device.*/
@@ -278,48 +398,56 @@ typedef struct AwsIotOnboardingCallbackParam
 
             /**< The number of configuration entries in the device configuration list. */
             size_t numOfConfigurationEntries;
-        } onboardDeviceResponse;
-    } u; /**< @brief Valid member depends on callback type. */
-} AwsIotOnboardingCallbackParam_t;
+        } acceptedResponse;
+
+        /* Represents the rejected response information received from the server. */
+        AwsIotOnboardingRejectedResponse_t rejectedResponse;
+    } u; /**< @brief Valid member depends on operation status. */
+} AwsIotOnboardingOnboardDeviceResponse_t;
 
 /**
  * @ingroup onboarding_datatypes_paramstructs
- * @brief User-specified parameter and callback function.
+ * @brief User-specific callback information for handling server response for the OnboardDevice service API.
  *
- * @paramfor @ref onboarding_function_getdevicecredentials, @ref onboarding_function_onboarddevice
+ * @paramfor @ref onboarding_function_onboarddevice
  *
- * Provides a function to be invoked on successful completion of an Onboarding operation.
+ * Provides a function to be invoked on successful completion of an #AwsIotOnboarding_OnboardDevice API
+ * operation.
  *
- * @initializer{AwsIotOnboardingCallbackInfo_t,AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER}
+ * @initializer{AwsIotOnboardingOnboardDeviceCallbackInfo_t,AWS_IOT_ONBOARDING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER}
  */
-typedef struct AwsIotOnboardingCallbackInfo
+typedef struct AwsIotOnboardingOnboardDeviceCallbackInfo
 {
     void * userParam; /**< The user-provided parameter to be passed (as the first parameter) to the callback
-                       * function(optional). */
+                       * function (optional). */
 
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void* #AwsIotOnboardingCallbackInfo.userParam
+     * @param[in] void* #AwsIotOnboardingOnboardDeviceCallbackInfo.userParam
      * @param[in] AwsIotOnboardingCallbackParam_t* Parsed server response of either device credentials
      * or onboarded device information.
      *
      * @see #AwsIotOnboardingCallbackParam_t for more information on the second parameter.
      */
     void ( * function )( void *,
-                         const AwsIotOnboardingCallbackParam_t * ); /*<** The user-provided callback to invoke with the
-                                                                     #AwsIotOnboardingCallbackInfo.userParam data as the
-                                                                     #first parameter. */
-} AwsIotOnboardingCallbackInfo_t;
-
+                         const AwsIotOnboardingOnboardDeviceResponse_t * ); /*<** The user-provided callback to
+                                                                             * invoke; with the
+                                                                             *#AwsIotOnboardingOnboardDeviceCallbackInfo.userParam
+                                                                             * data as the #first parameter. */
+} AwsIotOnboardingOnboardDeviceCallbackInfo_t;
 
 /*------------------------ Onboarding defined constants -------------------------*/
 
 /* @[define_onboarding_initializers] */
-#define AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER          { 0 } /**< @brief Initializer for
-                                                                     * #AwsIotOnboardingCallbackInfo_t. */
+#define AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER    { 0 } /**< @brief Initializer for
+                                                                                      * #AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t.
+                                                                                      **/
+#define AWS_IOT_ONBOARDING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER            { 0 } /**< @brief Initializer for
+                                                                                      * #AwsIotOnboardingOnboardDeviceCallbackInfo_t.
+                                                                                      **/
 /** @brief Initializer for #AwsIotOnboardingOnboardDeviceInfo_t. */
-#define AWS_IOT_ONBOARDING_ONBOARD_DEVICE_INFO_INITIALIZER    { 0 }
+#define AWS_IOT_ONBOARDING_ONBOARD_DEVICE_INFO_INITIALIZER                     { 0 }
 /* @[define_onboarding_initializers] */
 
 /**

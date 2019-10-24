@@ -605,7 +605,7 @@ TEST( Onboarding_Unit_API, StringCoverage )
 TEST( Onboarding_Unit_API, GetDeviceCredentialsAPIInvalidParameters )
 {
     AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
-    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER;
 
     /* Uninitialized MQTT connection. */
     status = AwsIotOnboarding_GetDeviceCredentials( NULL,
@@ -644,7 +644,7 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsAPIInvalidParameters )
 TEST( Onboarding_Unit_API, GetDeviceCredentialsAPICalledWithoutInit )
 {
     AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
-    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyAwsIotOnboardingCallback;
 
@@ -668,7 +668,7 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsAPICalledWithoutInit )
 TEST( Onboarding_Unit_API, GetDeviceCredentialsAPINoServerResponse )
 {
     AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
-    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyAwsIotOnboardingCallback;
 
@@ -690,7 +690,7 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsAPINoServerResponse )
  */
 TEST( Onboarding_Unit_API, GetDeviceCredentialsAPIRejectedResponse )
 {
-    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyAwsIotOnboardingCallback;
 
@@ -717,7 +717,7 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsAPIRejectedResponse )
  */
 TEST( Onboarding_Unit_API, GetDeviceCredentialsAPICorruptDataInResponse )
 {
-    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyAwsIotOnboardingCallback;
 
@@ -859,7 +859,7 @@ TEST( Onboarding_Unit_API, GetDeviceCredentialsAPIServerResponseAndTimeoutRaceCo
 TEST( Onboarding_Unit_API, OnboardDeviceAPIInvalidParameters )
 {
     AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
-    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyAwsIotOnboardingCallback;
 
@@ -931,7 +931,7 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIInvalidParameters )
 TEST( Onboarding_Unit_API, OnboardDeviceAPICalledWithoutInit )
 {
     AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
-    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyAwsIotOnboardingCallback;
 
@@ -1001,7 +1001,7 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPINoServerResponse )
  */
 TEST( Onboarding_Unit_API, OnboardDeviceAPIRejectedResponse )
 {
-    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyAwsIotOnboardingCallback;
 
@@ -1028,7 +1028,7 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIRejectedResponse )
  */
 TEST( Onboarding_Unit_API, OnboardDeviceAPICorruptDataInResponse )
 {
-    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_CALLBACK_INFO_INITIALIZER;
+    AwsIotOnboardingCallbackInfo_t callbackInfo = AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyAwsIotOnboardingCallback;
 

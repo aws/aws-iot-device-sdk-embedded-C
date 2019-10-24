@@ -31,6 +31,9 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* AWS IoT common header. */
+#include "aws_iot.h"
+
 /* Onboarding include. */
 #include "aws_iot_onboarding.h"
 
@@ -253,18 +256,17 @@
 /**
  * @brief The key for the device certificate entry in the response payload of the GetDeviceCredentials service API.
  */
-#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING \
-    "certificatePem"
+#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING    "certificatePem"
 
 /**
  * @brief The key for the certificate Id entry in the response payload of the GetDeviceCredentials service API.
  */
-#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING    "certificateId"
+#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING     "certificateId"
 
 /**
  * @brief The key for the private key entry in the response payload of the GetDeviceCredentials service API.
  */
-#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING       "privateKey"
+#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING        "privateKey"
 
 /**
  * @brief The common path in the request and response MQTT topics of the OnboardDevice service API.
@@ -340,15 +342,36 @@
  *
  * @note This should be utilized in parsing the response payload received from the server.
  */
-#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING \
-    "deviceConfiguration"
+#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING    "deviceConfiguration"
 
 /**
  * @brief The key for the Thing resource name's entry in the response payload of the OnboardDevice service API.
  *
  * @note This should be utilized in parsing the response payload received from the server.
  */
-#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_THING_NAME_STRING    "thingName"
+#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_THING_NAME_STRING              "thingName"
+
+/**
+ * @brief The key for the status code entry in the "rejected" response payload from the server.
+ *
+ * @note This should be utilized in parsing the response payload received from the server.
+ */
+#define ONBOARDING_REJECTED_RESPONSE_STATUS_CODE_STRING                           "StatusCode"
+
+/**
+ * @brief The key for the error code entry in the "rejected" response payload from the server.
+ *
+ * @note This should be utilized in parsing the response payload received from the server.
+ */
+#define ONBOARDING_REJECTED_RESPONSE_ERROR_CODE_STRING                            "ErrorCode"
+
+/**
+ * @brief The key for the status message entry in the "rejected" response payload from the server.
+ *
+ * @note This should be utilized in parsing the response payload received from the server.
+ */
+#define ONBOARDING_REJECTED_RESPONSE_ERROR_MESSAGE_STRING                         "ErrorMessage"
+
 
 
 /*---------------------- Onboarding internal data structures ----------------------*/
@@ -362,27 +385,39 @@ typedef enum _onboardingOperationType
     ONBOARDING_ONBOARD_DEVICE = 1,         /**< @ref onboarding_function_onboarddevice */
 } _onboardingOperationType_t;
 
+
+/**
+ *  @brief Union representing either of the 2 Onboarding operation APIs' callbacks.
+ */
+typedef union _onboardingCallbackInfo
+{
+    AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t getDeviceCredentialsCallback;
+
+    AwsIotOnboardingOnboardDeviceCallbackInfo_t onboardDeviceCallback;
+} _onboardingCallbackInfo_t;
+
 /**
  * @brief Functor for parsing response payload received from Onboarding service.
  * Parser that will de-serialize the server response, allocate memory for representing parsed data (if required),
  * and invoke the user callback passed to it.
- *
+ * @param[in] responseType The type of response, "accepted" or "rejected" received from the server for the operation.
  * @param[in] responsePayload The response payload to parse.
  * @param[in] responsePayloadLength The length of the response payload.
  * @param[in] usercallback The user-provided callback to invoke on successful parsing of device credentials.
  */
-typedef AwsIotOnboardingError_t ( * _onboardingServerResponseParser)( const void * responsePayload,
+typedef AwsIotOnboardingError_t ( * _onboardingServerResponseParser)( AwsIotStatus_t responseType,
+                                                                      const void * responsePayload,
                                                                       size_t responsePayloadLength,
-                                                                      const AwsIotOnboardingCallbackInfo_t * userCallback );
+                                                                      const _onboardingCallbackInfo_t * userCallback );
 
 /**
  * @brief Internal structure representing the data of an Onboarding operation.
  */
 typedef struct _onboardingOperationInfo
 {
-    AwsIotOnboardingError_t status;              /**< @brief Status of operation. */
-    AwsIotOnboardingCallbackInfo_t userCallback; /**< @brief User-provided callback to be called on receiving a
-                                                  * successful response from the server.*/
+    AwsIotOnboardingError_t status;         /**< @brief Status of operation. */
+    _onboardingCallbackInfo_t userCallback; /**< @brief User-provided callback to be called on
+                                             * receiving a response from the server.*/
 } _onboardingOperationInfo_t;
 
 /**
@@ -400,6 +435,7 @@ typedef struct _onboardingOperation
                                          * onboarding_function_onboarddevice. */
 } _onboardingOperation_t;
 
+/* TODO - Add documentation! */
 extern uint32_t _AwsIotOnboardingMqttTimeoutMs;
 
 /**
@@ -434,25 +470,29 @@ size_t _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter( const char * pTemplat
  * @brief Parses the response received from the server for device credentials, and invokes the provided user-callback
  * with parsed credentials, if parsing was successful.
  *
+ * @param[in] responseType The type of response, "accepted" or "rejected" received from the server for the operation.
  * @param[in] pDeviceCredentialsResponse The response payload from the server to parse.
  * @param[in] deviceCredentialsResponseLength The length of the response payload.
  * @param[in] userCallback The user-provided callback to invoke on successful parsing of response.
  */
-AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( const void * pDeviceCredentialsResponse,
+AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIotStatus_t responseType,
+                                                                          const void * pDeviceCredentialsResponse,
                                                                           size_t deviceCredentialsResponseLength,
-                                                                          const AwsIotOnboardingCallbackInfo_t * userCallbackInfo );
+                                                                          const _onboardingCallbackInfo_t * userCallbackInfo );
 
 /**
  * @brief Parses the response payload received from the server for device onboarding, and invokes the provided
  * user-callback with parsed data, if parsing was successful.
  *
+ * @param[in] responseType The type of response, "accepted" or "rejected" received from the server for the operation.
  * @param[in] pResponsePayload The response payload from the server to parse.
  * @param[in] responsePayloadLength The length of the response payload.
  * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
  */
-AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( const void * pResponsePayload,
+AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStatus_t responseType,
+                                                                      const void * pResponsePayload,
                                                                       size_t responsePayloadLength,
-                                                                      const AwsIotOnboardingCallbackInfo_t * userCallbackInfo );
+                                                                      const _onboardingCallbackInfo_t * userCallbackInfo );
 
 /**
  * @brief Serializes for payload of MQTT request to the GetDeviceCredentials service API.

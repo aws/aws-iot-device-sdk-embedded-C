@@ -127,7 +127,7 @@ static void _onboardDeviceResponseReceivedCallback( void * param1,
  * @param[in] pUserCallback The user-provided callback information that will be copied
  * to the active operation object.
  */
-static void _setActiveOperation( const AwsIotOnboardingCallbackInfo_t * pUserCallback );
+static void _setActiveOperation( const _onboardingCallbackInfo_t * pUserCallback );
 
 /**
  * @brief Resets the active operation object.
@@ -170,7 +170,8 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
         if( IotMutex_TryLock( &_activeOperation.lock ) == true )
         {
             /* Is a user thread waiting for the result? */
-            if( _activeOperation.info.userCallback.function == NULL )
+            if( ( _activeOperation.info.userCallback.getDeviceCredentialsCallback.function == NULL ) ||
+                ( _activeOperation.info.userCallback.onboardDeviceCallback.function == NULL ) )
             {
                 IotLogDebug( "Received unexpected server response on topic %s.",
                              pPublishData->u.message.pTopicFilter,
@@ -187,6 +188,7 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
                     case AWS_IOT_ACCEPTED:
                         /* Parse the server response and execute the user callback. */
                         _activeOperation.info.status = responseParser(
+                            AWS_IOT_ACCEPTED,
                             pPublishData->u.message.info.pPayload,
                             pPublishData->u.message.info.payloadLength,
                             &_activeOperation.info.userCallback );
@@ -195,6 +197,12 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
 
                     case AWS_IOT_REJECTED:
                         _activeOperation.info.status = AWS_IOT_ONBOARDING_SERVER_REFUSED;
+                        /* Parse the server response and execute the user callback. */
+                        _activeOperation.info.status = responseParser(
+                            AWS_IOT_REJECTED,
+                            pPublishData->u.message.info.pPayload,
+                            pPublishData->u.message.info.payloadLength,
+                            &_activeOperation.info.userCallback );
                         break;
 
                     default:
@@ -213,8 +221,7 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
                  * if we receive the same response multiple times (which is possible for a QoS 1 publish
                  * from the server). This is done to post on the semaphore ONLY ONCE on receiving the
                  * response from the server.*/
-                _activeOperation.info.userCallback.userParam = NULL;
-                _activeOperation.info.userCallback.function = NULL;
+                memset( &_activeOperation.info.userCallback, 0, sizeof( _activeOperation.info.userCallback ) );
             }
 
             IotMutex_Unlock( &_activeOperation.lock );
@@ -266,8 +273,7 @@ static void _resetActiveOperationData()
     {
         IotMutex_Lock( &( _activeOperation.lock ) );
         {
-            _activeOperation.info.userCallback.userParam = NULL;
-            _activeOperation.info.userCallback.function = NULL;
+            memset( &_activeOperation.info.userCallback, 0, sizeof( _activeOperation.info.userCallback ) );
         }
         IotMutex_Unlock( &( _activeOperation.lock ) );
 
@@ -280,7 +286,7 @@ static void _resetActiveOperationData()
 
 /*-----------------------------------------------------------*/
 
-static void _setActiveOperation( const AwsIotOnboardingCallbackInfo_t * pUserCallback )
+static void _setActiveOperation( const _onboardingCallbackInfo_t * pUserCallback )
 {
     /* Increment the reference count as we will be acquiring the mutex. */
     if( Atomic_Increment_u32( &_activeOperation.mutexReferenceCount ) != 0 )
@@ -294,8 +300,7 @@ static void _setActiveOperation( const AwsIotOnboardingCallbackInfo_t * pUserCal
             _activeOperation.info.status = AWS_IOT_ONBOARDING_MQTT_ERROR;
 
             /* Store the user supplied callback. */
-            _activeOperation.info.userCallback.function = pUserCallback->function;
-            _activeOperation.info.userCallback.userParam = pUserCallback->userParam;
+            _activeOperation.info.userCallback = *pUserCallback;
         }
         IotMutex_Unlock( &( _activeOperation.lock ) );
     }
@@ -391,7 +396,7 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
                                                                onboardingConnection,
                                                                uint32_t flags,
                                                                uint32_t timeoutMs,
-                                                               const AwsIotOnboardingCallbackInfo_t * deviceCredentialsResponseCallback )
+                                                               const AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t * deviceCredentialsResponseCallback )
 {
     uint32_t startingMutexRefCount = 0;
     bool mutexRefCountIncremented = false;
@@ -471,7 +476,9 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
     }
 
     /* Update the operation object to represent an active "get device credentials" operation. */
-    _setActiveOperation( deviceCredentialsResponseCallback );
+    _onboardingCallbackInfo_t callbackInfo;
+    callbackInfo.getDeviceCredentialsCallback = *deviceCredentialsResponseCallback;
+    _setActiveOperation( &callbackInfo );
 
     /* Onboarding already has an acknowledgement mechanism, so sending the message at
      * QoS 1 provides no benefit. */
@@ -588,7 +595,7 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
 AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onboardingConnection,
                                                         const AwsIotOnboardingOnboardDeviceRequestInfo_t * pRequestData,
                                                         uint32_t timeoutMs,
-                                                        const AwsIotOnboardingCallbackInfo_t * responseCallback )
+                                                        const AwsIotOnboardingOnboardDeviceCallbackInfo_t * pResponseCallback )
 {
     IOT_FUNCTION_ENTRY( AwsIotOnboardingError_t, AWS_IOT_ONBOARDING_SUCCESS );
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
@@ -656,7 +663,7 @@ AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onbo
     }
 
     /* Check that a callback function object along with a valid callback functor is provided. */
-    if( ( responseCallback == NULL ) || ( responseCallback->function == NULL ) )
+    if( ( pResponseCallback == NULL ) || ( pResponseCallback->function == NULL ) )
     {
         IotLogError(
             "Invalid callback provided. A valid callback object and functor should be provided to the %s operation",
@@ -702,7 +709,9 @@ AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onbo
     }
 
     /* Update the operation object to represent an active "onboard device" operation. */
-    _setActiveOperation( responseCallback );
+    _onboardingCallbackInfo_t callbackInfo;
+    callbackInfo.onboardDeviceCallback = *pResponseCallback;
+    _setActiveOperation( &callbackInfo );
 
     /* Onboarding already has an acknowledgement mechanism, so sending the message at
      * QoS 1 provides no benefit. */
