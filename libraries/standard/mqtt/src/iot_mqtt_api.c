@@ -1030,6 +1030,7 @@ IotMqttError_t IotMqtt_Init( void )
                 }
             #endif /* ifdef _IotMqtt_InitSerializeAdditional */
         #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+        IotLogInfo( "MQTT library successfully initialized." );
     }
     else
     {
@@ -1047,7 +1048,7 @@ void IotMqtt_Cleanup( void )
                                                                MQTT_LIBRARY_UNINITIALIZED,
                                                                MQTT_LIBRARY_INITIALIZED );
 
-    if( initializationStatus == MQTT_LIBRARY_UNINITIALIZED )
+    if( initializationStatus != 0 )
     {
         /* Call any additional serializer cleanup initialization function if serializer
          * overrides are enabled. */
