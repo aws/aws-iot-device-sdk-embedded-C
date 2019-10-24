@@ -1030,6 +1030,7 @@ IotMqttError_t IotMqtt_Init( void )
                 }
             #endif /* ifdef _IotMqtt_InitSerializeAdditional */
         #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+
         IotLogInfo( "MQTT library successfully initialized." );
     }
     else
@@ -1076,9 +1077,9 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     bool ownNetworkConnection = false;
     /* Initialize to failure status */
-    IotNetworkError_t networkStatus = IOT_NETWORK_FAILURE;
+    IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
     /* Initialize to failure status */
-    IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_BAD_PARAMETER;
+    IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     void * pNetworkConnection = NULL;
     _mqttOperation_t * pOperation = NULL;
     _mqttConnection_t * pNewMqttConnection = NULL;
