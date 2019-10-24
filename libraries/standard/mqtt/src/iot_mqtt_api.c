@@ -64,6 +64,18 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Uninitialized value for @ref _initCalled.
+ */
+#define MQTT_LIBRARY_UNINITIALIZED    ( ( uint32_t ) 0 )
+
+/**
+ * @brief Initialized value for @ref _initCalled.
+ */
+#define MQTT_LIBRARY_INITIALIZED      ( ( uint32_t ) 1 )
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Check if the library is initialized.
  *
  * @return `true` if IotMqtt_Init was called; `false` otherwise.
@@ -240,16 +252,6 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
 /** @endcond */
 
 /*-----------------------------------------------------------*/
-
-/**
- * @brief Uninitialized value for @ref _initCalled.
- */
-#define MQTT_LIBRARY_UNINITIALIZED    ( ( uint32_t ) 0 )
-
-/**
- * @brief Initialized value for @ref _initCalled.
- */
-#define MQTT_LIBRARY_INITIALIZED      ( ( uint32_t ) 1 )
 
 /**
  * @brief Tracks whether @ref mqtt_function_init has been called.
@@ -1007,11 +1009,11 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
 IotMqttError_t IotMqtt_Init( void )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
-    uint32_t initializationStatus = Atomic_CompareAndSwap_u32( &_initCalled,
-                                                               MQTT_LIBRARY_INITIALIZED,
-                                                               MQTT_LIBRARY_UNINITIALIZED );
+    uint32_t allowInitialization = Atomic_CompareAndSwap_u32( &_initCalled,
+                                                              MQTT_LIBRARY_INITIALIZED,
+                                                              MQTT_LIBRARY_UNINITIALIZED );
 
-    if( initializationStatus != 0 )
+    if( allowInitialization == 1 )
     {
         /* Call any additional serializer initialization function if serializer
          * overrides are enabled. */
@@ -1045,11 +1047,11 @@ IotMqttError_t IotMqtt_Init( void )
 
 void IotMqtt_Cleanup( void )
 {
-    uint32_t initializationStatus = Atomic_CompareAndSwap_u32( &_initCalled,
-                                                               MQTT_LIBRARY_UNINITIALIZED,
-                                                               MQTT_LIBRARY_INITIALIZED );
+    uint32_t allowCleanup = Atomic_CompareAndSwap_u32( &_initCalled,
+                                                       MQTT_LIBRARY_UNINITIALIZED,
+                                                       MQTT_LIBRARY_INITIALIZED );
 
-    if( initializationStatus != 0 )
+    if( allowCleanup == 1 )
     {
         /* Call any additional serializer cleanup initialization function if serializer
          * overrides are enabled. */
@@ -1076,9 +1078,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
     bool ownNetworkConnection = false;
-    /* Initialize to failure status */
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
-    /* Initialize to failure status */
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     void * pNetworkConnection = NULL;
     _mqttOperation_t * pOperation = NULL;
