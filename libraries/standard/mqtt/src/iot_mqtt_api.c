@@ -1025,6 +1025,8 @@ IotMqttError_t IotMqtt_Init( void )
                     IotLogError( "Failed to initialize MQTT library serializer. " );
 
                     status = IOT_MQTT_INIT_FAILED;
+
+                    IOT_GOTO_CLEANUP();
                 }
                 else
                 {
@@ -1039,6 +1041,8 @@ IotMqttError_t IotMqtt_Init( void )
     {
         IotLogWarn( "IotMqtt_Init called with library already initialized." );
     }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 
     return status;
 }
