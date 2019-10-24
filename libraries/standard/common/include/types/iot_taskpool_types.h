@@ -70,7 +70,7 @@ typedef enum IotTaskPoolError
     IOT_TASKPOOL_SUCCESS = 0,
 
     /**
-     * @brief Task pool operation failed because at laest one parameter is invalid.
+     * @brief Task pool operation failed because at least one parameter is invalid.
      *
      * Functions that may return this value:
      * - @ref taskpool_function_createsystemtaskpool
@@ -252,7 +252,7 @@ typedef struct _taskPoolJob * IotTaskPoolJob_t;
  * @brief Callback type for a user callback.
  *
  * This type identifies the user callback signature to execute a task pool job. This callback will be invoked
- * by the task pool threads with the `pUserContext` parameter, as speficied by the user when
+ * by the task pool threads with the `pUserContext` parameter, as specified by the user when
  * calling @ref IotTaskPool_Schedule.
  *
  */
@@ -332,11 +332,11 @@ typedef struct IotTaskPoolInfo
 /** @brief Initializer for a typical #IotTaskPoolInfo_t. */
 #define IOT_TASKPOOL_INFO_INITIALIZER           IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM
 /** @brief Initializer for a #IotTaskPool_t. */
-#define IOT_TASKPOOL_INITIALIZER                NULL           
+#define IOT_TASKPOOL_INITIALIZER                NULL
 /** @brief Initializer for a #IotTaskPoolJobStorage_t. */
-#define IOT_TASKPOOL_JOB_STORAGE_INITIALIZER    { { NULL, NULL }, NULL, NULL, 0, IOT_TASKPOOL_STATUS_UNDEFINED }              
+#define IOT_TASKPOOL_JOB_STORAGE_INITIALIZER    { { NULL, NULL }, NULL, NULL, 0, IOT_TASKPOOL_STATUS_UNDEFINED }
 /** @brief Initializer for a #IotTaskPoolJob_t. */
-#define IOT_TASKPOOL_JOB_INITIALIZER            NULL                                                                                                                    
+#define IOT_TASKPOOL_JOB_INITIALIZER            NULL
 /* @[define_taskpool_initializers] */
 
 /**
@@ -351,7 +351,7 @@ typedef struct IotTaskPoolInfo
 /**
  * @brief Allows the use of the handle to the system task pool.
  *
- * @warning The task pool handle is not valid unless @ref IotTaskPool_CreateSystemTaskPool is
+ * @warning The system task pool handle is not valid unless @ref IotTaskPool_CreateSystemTaskPool is
  * called before the handle is used.
  */
 #define IOT_SYSTEM_TASKPOOL               ( IotTaskPool_GetSystemTaskPool() )
