@@ -64,7 +64,9 @@ static AwsIotOnboardingError_t _parseRejectedResponse( IotSerializerDecoderObjec
 
     /* Suppress warning when parameter is unused in non-Debug mode. */
     ( void ) pOperationName;
-    IOT_FUNCTION_ENTRY( AwsIotOnboardingError_t, AWS_IOT_ONBOARDING_SUCCESS );
+
+    /* Initialize the status as "server refused" as we are parsing the "rejected" response. */
+    IOT_FUNCTION_ENTRY( AwsIotOnboardingError_t, AWS_IOT_ONBOARDING_SERVER_REFUSED );
 
     /* Parse the "status code" information. */
     if( _pAwsIotOnboardingDecoder->find( pPayloadDecoder,
@@ -149,7 +151,6 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
     AwsIotOnboarding_Assert( pDeviceCredentialsResponse != NULL );
     AwsIotOnboarding_Assert( userCallbackInfo != NULL );
 
-    ( void ) responseType;
     IOT_FUNCTION_ENTRY( AwsIotOnboardingError_t, AWS_IOT_ONBOARDING_SUCCESS );
     AwsIotOnboardingGetDeviceCredentialsResponse_t userCallbackParam =
         AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER;

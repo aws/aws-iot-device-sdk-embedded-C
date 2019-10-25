@@ -196,7 +196,6 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
                         break;
 
                     case AWS_IOT_REJECTED:
-                        _activeOperation.info.status = AWS_IOT_ONBOARDING_SERVER_REFUSED;
                         /* Parse the server response and execute the user callback. */
                         _activeOperation.info.status = responseParser(
                             AWS_IOT_REJECTED,

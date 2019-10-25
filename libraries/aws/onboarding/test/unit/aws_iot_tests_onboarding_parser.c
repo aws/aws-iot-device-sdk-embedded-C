@@ -60,6 +60,9 @@ static const uint8_t _sampleRejectedServerResponsePayload[] =
     0x4F, 0x6F, 0x70, 0x73, 0x21,                                                       /*# "Oops!" */
 };
 
+/**
+ * @brief The expected parsed "rejected" response data from the #_sampleRejectedServerResponsePayload sample payload.
+ */
 static AwsIotOnboardingRejectedResponse_t _expectedParsedParams =
 {
     .statusCode         = AWS_IOT_ONBOARDING_INTERNAL_SERVER_ERROR, /* Status Code 500 */
@@ -68,7 +71,6 @@ static AwsIotOnboardingRejectedResponse_t _expectedParsedParams =
     .pErrorMessage      = ( const char * ) &_sampleRejectedServerResponsePayload[ 54 ],
     .errorMessageLength = 5
 };
-
 
 /*-----------------------------------------------------------*/
 
@@ -174,10 +176,10 @@ TEST( Onboarding_Unit_Parser, TestParseDeviceCredentialsRejectedResponse )
     wrapperCallback.getDeviceCredentialsCallback.userParam = &_expectedParsedParams;
     wrapperCallback.getDeviceCredentialsCallback.function = _testGetDeviceCredentialsCallback;
 
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _AwsIotOnboarding_ParseDeviceCredentialsResponse( AWS_IOT_REJECTED,
-                                                                                                 _sampleRejectedServerResponsePayload,
-                                                                                                 sizeof( _sampleRejectedServerResponsePayload ),
-                                                                                                 &wrapperCallback ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SERVER_REFUSED, _AwsIotOnboarding_ParseDeviceCredentialsResponse( AWS_IOT_REJECTED,
+                                                                                                            _sampleRejectedServerResponsePayload,
+                                                                                                            sizeof( _sampleRejectedServerResponsePayload ),
+                                                                                                            &wrapperCallback ) );
 }
 
 /**
@@ -191,8 +193,8 @@ TEST( Onboarding_Unit_Parser, TestParseOnboardDeviceRejectedResponse )
     wrapperCallback.onboardDeviceCallback.userParam = &_expectedParsedParams;
     wrapperCallback.onboardDeviceCallback.function = _testOnboardDeviceCallback;
 
-    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _AwsIotOnboarding_ParseOnboardDeviceResponse( AWS_IOT_REJECTED,
-                                                                                             _sampleRejectedServerResponsePayload,
-                                                                                             sizeof( _sampleRejectedServerResponsePayload ),
-                                                                                             &wrapperCallback ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SERVER_REFUSED, _AwsIotOnboarding_ParseOnboardDeviceResponse( AWS_IOT_REJECTED,
+                                                                                                        _sampleRejectedServerResponsePayload,
+                                                                                                        sizeof( _sampleRejectedServerResponsePayload ),
+                                                                                                        &wrapperCallback ) );
 }
