@@ -225,14 +225,14 @@ static const char * _testCertificateId = "TestCertificateID";
 /**
  * @brief The rejected response topic for the OnboardDevice service API.
  */
-static const char * _onboardDeviceAcceptedResponseTopic = "onboarding-templates/"_testTemplateId
-                                                          "/onboard/cbor/accepted";
+static const char * _onboardDeviceAcceptedResponseTopic = "aws/provisioning-templates/"_testTemplateId
+                                                          "/register/cbor/accepted";
 
 /**
  * @brief The accepted response topic for the OnboardDevice service API.
  */
-static const char * _onboardDeviceRejectedResponseTopic = "onboarding-templates/"_testTemplateId
-                                                          "/onboard/cbor/rejected";
+static const char * _onboardDeviceRejectedResponseTopic = "aws/provisioning-templates/"_testTemplateId
+                                                          "/register/cbor/rejected";
 
 /**
  * @brief Sample CBOR encoded response of OnboardDevice service API containing device configuration and Iot Thing name
