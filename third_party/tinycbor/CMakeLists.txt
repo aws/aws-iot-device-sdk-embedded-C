@@ -39,7 +39,7 @@ target_include_directories( tinycbor SYSTEM
                             PUBLIC tinycbor/src )
 
 
-# Link libm (required for math functions on some systems) is available.
+# Link libm (required for math functions on some systems) if available.
 find_library( LIB_MATH m )
 
 if( NOT ${LIB_MATH} STREQUAL "LIB_MATH-NOTFOUND" )
