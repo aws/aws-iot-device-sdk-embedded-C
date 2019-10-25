@@ -103,8 +103,8 @@ add_subdirectory( libraries/aws/defender )
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
 
-# mbed TLS library (third-party).
-if( NOT IOT_NETWORK_USE_OPENSSL )
+# mbed TLS library (third-party). This is only needed on ports using mbed TLS.
+if( ${MBEDTLS_REQUIRED} )
     add_subdirectory( third_party/mbedtls )
 endif()
 

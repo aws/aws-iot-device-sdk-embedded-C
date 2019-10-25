@@ -38,7 +38,15 @@ add_library( tinycbor
 target_include_directories( tinycbor SYSTEM
                             PUBLIC tinycbor/src )
 
-target_link_libraries( tinycbor PRIVATE m )
+
+# Link libm (required for math functions on some systems) if available.
+find_library( LIB_MATH m )
+
+if( NOT ${LIB_MATH} STREQUAL "LIB_MATH-NOTFOUND" )
+    target_link_libraries( tinycbor PRIVATE m )
+endif()
+
+unset( LIB_MATH CACHE )
 
 # Disable all warnings for this third-party library.
 target_compile_options( tinycbor
