@@ -8,6 +8,8 @@ if( ${LIB_REALTIME} STREQUAL "LIB_REALTIME-NOTFOUND" )
     message( FATAL_ERROR "POSIX realtime library (librt) is not available." )
 endif()
 
+unset( LIB_REALTIME CACHE )
+
 # Check for POSIX threads.
 find_package( Threads REQUIRED )
 
