@@ -422,10 +422,10 @@ typedef struct AwsIotOnboardingOnboardDeviceCallbackInfo
 
 /* @[define_onboarding_initializers] */
 #define AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER    { 0 } /**< @brief Initializer for
-                                                                                      * #AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t.
+                                                                                      * #AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t
                                                                                       **/
 #define AWS_IOT_ONBOARDING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER            { 0 } /**< @brief Initializer for
-                                                                                      * #AwsIotOnboardingOnboardDeviceCallbackInfo_t.
+                                                                                      * #AwsIotOnboardingOnboardDeviceCallbackInfo_t
                                                                                       **/
 /** @brief Initializer for #AwsIotOnboardingOnboardDeviceInfo_t. */
 #define AWS_IOT_ONBOARDING_ONBOARD_DEVICE_INFO_INITIALIZER                     { 0 }

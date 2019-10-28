@@ -56,8 +56,11 @@ static const uint8_t _sampleRejectedServerResponsePayload[] =
     0x49, 0x6E, 0x76, 0x61, 0x6C, 0x69, 0x64, 0x50, 0x61, 0x79, 0x6C, 0x6F, 0x61, 0x64, /*# "InvalidPayload" */
     0x6C,                                                                               /*# text(12) */
     0x45, 0x72, 0x72, 0x6F, 0x72, 0x4D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,             /*# "ErrorMessage" */
-    0x65,                                                                               /*# text(5) */
-    0x4F, 0x6F, 0x70, 0x73, 0x21,                                                       /*# "Oops!" */
+    0x78, 0x2D,                                                                         /*# text(45) */
+    0x4F, 0x6F, 0x70, 0x73, 0x21, 0x20, 0x57, 0x65, 0x20, 0x68, 0x61, 0x76, 0x65,
+    0x20, 0x61, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x65, 0x72, 0x72, 0x6F, 0x72,
+    0x20, 0x6D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E,
+    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E /*# "Oops! We have a long error message..........." */
 };
 
 /**
@@ -68,8 +71,45 @@ static AwsIotOnboardingRejectedResponse_t _expectedParsedParams =
     .statusCode         = AWS_IOT_ONBOARDING_INTERNAL_SERVER_ERROR, /* Status Code 500 */
     .pErrorCode         = ( const char * ) &_sampleRejectedServerResponsePayload[ 26 ],
     .errorCodeLength    = 14,
-    .pErrorMessage      = ( const char * ) &_sampleRejectedServerResponsePayload[ 54 ],
-    .errorMessageLength = 5
+    .pErrorMessage      = ( const char * ) &_sampleRejectedServerResponsePayload[ 55 ],
+    .errorMessageLength = 45
+};
+
+/**
+ * @brief Sample CBOR encoded response payload of device credentials from the server.
+ */
+const uint8_t _sampleDeviceCredentialsResponse[] =
+{
+    0xA3,                                                                               /* # map( 2 ) */
+    0x6E,                                                                               /* # text( 14 ) */
+    0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
+    0x67,                                                                               /* # text(7) */
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,                                           /* # "abcdefg" */
+    0x6D,                                                                               /* # text(13) */
+    0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,       /* # "certificateId" */
+    0x66,                                                                               /* # text(6) */
+    0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                                 /* # "hijklm" */
+    0x6A,                                                                               /* # text( 10 ) */
+    0x70, 0x72, 0x69, 0x76, 0x61, 0x74, 0x65, 0x4B, 0x65, 0x79,                         /* # "privateKey" */
+    0x67,                                                                               /* # text(7) */
+    0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x21                                            /*# "Secret!" */
+};
+
+/**
+ * @brief Parameters that represent the expected parsing of device credentials to be done by the parser in the test.
+ * This will be provided as a context parameter in the callback object supplied to the parser in the test.
+ */
+AwsIotOnboardingGetDeviceCredentialsResponse_t _expectedDeviceCredentialsParsedParams =
+{
+    .u.acceptedResponse.pDeviceCertificate      = ( const char * )
+                                                  &_sampleDeviceCredentialsResponse[ 17 ],
+    .u.acceptedResponse.deviceCertificateLength = 7,
+    .u.acceptedResponse.pCertificateId          = ( const char * )
+                                                  &_sampleDeviceCredentialsResponse[ 39 ],
+    .u.acceptedResponse.certificateIdLength     = 6,
+    .u.acceptedResponse.pPrivateKey             = ( const char * )
+                                                  &_sampleDeviceCredentialsResponse[ 57 ],
+    .u.acceptedResponse.privateKeyLength        = 7
 };
 
 /*-----------------------------------------------------------*/
@@ -78,8 +118,15 @@ static AwsIotOnboardingRejectedResponse_t _expectedParsedParams =
  * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
  * response. It will be passed as context parameter in callback parameter passed in tests.
  */
-static void _testGetDeviceCredentialsCallback( void * contextParam,
-                                               const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo );
+static void _testGetDeviceCredentialsRejectedCallback( void * contextParam,
+                                                       const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo );
+
+/**
+ * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
+ * response. It will be passed as context parameter in callback parameter passed in tests.
+ */
+static void _testGetDeviceCredentialsAcceptedCallback( void * contextParam,
+                                                       const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo );
 
 /**
  * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
@@ -91,11 +138,12 @@ static void _testOnboardDeviceCallback( void * contextParam,
 
 /*-----------------------------------------------------------*/
 
-static void _testGetDeviceCredentialsCallback( void * contextParam,
-                                               const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
+static void _testGetDeviceCredentialsRejectedCallback( void * contextParam,
+                                                       const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
 {
     AwsIotOnboardingRejectedResponse_t * pExpectedParams = ( AwsIotOnboardingRejectedResponse_t * ) contextParam;
 
+    /* Verify that the rejected response was parsed as expected. */
     AwsIotOnboarding_Assert( pResponseInfo->operationStatus == AWS_IOT_REJECTED );
     AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.statusCode == pExpectedParams->statusCode );
     AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.pErrorCode == pExpectedParams->pErrorCode );
@@ -106,11 +154,40 @@ static void _testGetDeviceCredentialsCallback( void * contextParam,
 
 /*-----------------------------------------------------------*/
 
+static void _testGetDeviceCredentialsAcceptedCallback( void * contextParam,
+                                                       const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
+{
+    AwsIotOnboardingGetDeviceCredentialsResponse_t * pExpectedParams =
+        ( AwsIotOnboardingGetDeviceCredentialsResponse_t * ) contextParam;
+
+    /* Verify that the rejected response was parsed as expected. */
+    AwsIotOnboarding_Assert( pResponseInfo->operationStatus == AWS_IOT_REJECTED );
+
+    AwsIotOnboarding_Assert(
+        pExpectedParams->u.acceptedResponse.deviceCertificateLength ==
+        pResponseInfo->u.acceptedResponse.deviceCertificateLength );
+    AwsIotOnboarding_Assert( pExpectedParams->u.acceptedResponse.pDeviceCertificate ==
+                             pResponseInfo->u.acceptedResponse.pDeviceCertificate );
+    AwsIotOnboarding_Assert(
+        pExpectedParams->u.acceptedResponse.certificateIdLength ==
+        pResponseInfo->u.acceptedResponse.certificateIdLength );
+    AwsIotOnboarding_Assert( pExpectedParams->u.acceptedResponse.pCertificateId ==
+                             pResponseInfo->u.acceptedResponse.pCertificateId );
+    AwsIotOnboarding_Assert( pExpectedParams->u.acceptedResponse.privateKeyLength ==
+                             pResponseInfo->u.acceptedResponse.privateKeyLength );
+    AwsIotOnboarding_Assert( pExpectedParams->u.acceptedResponse.pPrivateKey ==
+                             pResponseInfo->u.acceptedResponse.pPrivateKey );
+}
+
+
+/*-----------------------------------------------------------*/
+
 static void _testOnboardDeviceCallback( void * contextParam,
                                         const AwsIotOnboardingOnboardDeviceResponse_t * pResponseInfo )
 {
     AwsIotOnboardingRejectedResponse_t * pExpectedParams = ( AwsIotOnboardingRejectedResponse_t * ) contextParam;
 
+    /* Verify that the rejected response was parsed as expected. */
     AwsIotOnboarding_Assert( pResponseInfo->operationStatus == AWS_IOT_REJECTED );
     AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.statusCode == pExpectedParams->statusCode );
     AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.pErrorCode == pExpectedParams->pErrorCode );
@@ -160,6 +237,7 @@ TEST_TEAR_DOWN( Onboarding_Unit_Parser )
 TEST_GROUP_RUNNER( Onboarding_Unit_Parser )
 {
     RUN_TEST_CASE( Onboarding_Unit_Parser, TestParseDeviceCredentialsRejectedResponse );
+    RUN_TEST_CASE( Onboarding_Unit_Parser, TestParseDeviceCredentialsAcceptedResponse );
     RUN_TEST_CASE( Onboarding_Unit_Parser, TestParseOnboardDeviceRejectedResponse );
 }
 
@@ -174,7 +252,24 @@ TEST( Onboarding_Unit_Parser, TestParseDeviceCredentialsRejectedResponse )
     _onboardingCallbackInfo_t wrapperCallback;
 
     wrapperCallback.getDeviceCredentialsCallback.userParam = &_expectedParsedParams;
-    wrapperCallback.getDeviceCredentialsCallback.function = _testGetDeviceCredentialsCallback;
+    wrapperCallback.getDeviceCredentialsCallback.function = _testGetDeviceCredentialsRejectedCallback;
+
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SERVER_REFUSED, _AwsIotOnboarding_ParseDeviceCredentialsResponse( AWS_IOT_REJECTED,
+                                                                                                            _sampleRejectedServerResponsePayload,
+                                                                                                            sizeof( _sampleRejectedServerResponsePayload ),
+                                                                                                            &wrapperCallback ) );
+}
+
+/**
+ * @brief Verifies the parser function (_AwsIotOnboarding_ParseDeviceCredentialsResponse) can parse the device
+ * credentials response sent by the server.
+ */
+TEST( Onboarding_Unit_Parser, TestParseDeviceCredentialsAcceptedResponse )
+{
+    _onboardingCallbackInfo_t wrapperCallback;
+
+    wrapperCallback.getDeviceCredentialsCallback.userParam = &_expectedDeviceCredentialsParsedParams;
+    wrapperCallback.getDeviceCredentialsCallback.function = _testGetDeviceCredentialsAcceptedCallback;
 
     TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SERVER_REFUSED, _AwsIotOnboarding_ParseDeviceCredentialsResponse( AWS_IOT_REJECTED,
                                                                                                             _sampleRejectedServerResponsePayload,

@@ -236,10 +236,10 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
             }
 
-            if( privateKeyDecoder.type != IOT_SERIALIZER_SCALAR_BYTE_STRING )
+            if( privateKeyDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
             {
                 IotLogError(
-                    "Invalid value type of \"%s\" data in server response of %s operation. Expected type is byte string.",
+                    "Invalid value type of \"%s\" data in server response of %s operation. Expected type is text string.",
                     ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
                     GET_DEVICE_CREDENTIALS_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
