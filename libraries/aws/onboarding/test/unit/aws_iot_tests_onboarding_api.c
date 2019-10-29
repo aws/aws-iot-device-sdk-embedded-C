@@ -181,9 +181,8 @@ static const uint8_t _sampleGetDeviceCredentialsServerResponsePayload[] =
     0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                                 /* # "hijklm" */
     0x6A,                                                                               /* # text( 10 ) */
     0x70, 0x72, 0x69, 0x76, 0x61, 0x74, 0x65, 0x4B, 0x65, 0x79,                         /* # "privateKey" */
-    0x4A,                                                                               /* # bytes( 10 ) */
-    0x78, 0x9A, 0x78, 0x9A, 0x78, 0x9A, 0x78, 0x9A, 0x78, 0x9A,                         /* #
-                                                                                         * "x\x9Ax\x9Ax\x9Ax\x9Ax\x9A"*/
+    0x67,                                                                               /* # text(7) */
+    0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x21                                            /*# "Secret!" */
 };
 
 /**
@@ -199,7 +198,7 @@ static AwsIotOnboardingGetDeviceCredentialsResponse_t _expectedGetDeviceCredenti
     .u.acceptedResponse.certificateIdLength     = 6,
     .u.acceptedResponse.pPrivateKey             = ( const char * )
                                                   &_sampleGetDeviceCredentialsServerResponsePayload[ 57 ],
-    .u.acceptedResponse.privateKeyLength        = 10
+    .u.acceptedResponse.privateKeyLength        = 7
 };
 
 /**
@@ -569,7 +568,6 @@ TEST_TEAR_DOWN( Onboarding_Unit_API )
  */
 TEST_GROUP_RUNNER( Onboarding_Unit_API )
 {
-    /* *INDENT-OFF* */
     RUN_TEST_CASE( Onboarding_Unit_API, Init );
     RUN_TEST_CASE( Onboarding_Unit_API, StringCoverage );
     RUN_TEST_CASE( Onboarding_Unit_API, GetDeviceCredentialsAPIInvalidParameters );
@@ -591,7 +589,6 @@ TEST_GROUP_RUNNER( Onboarding_Unit_API )
     RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutThingName );
     RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPIServerResponseAfterTimeout );
     RUN_TEST_CASE( Onboarding_Unit_API, OnboardDeviceAPIServerResponseAndTimeoutRaceCondition );
-    /* *INDENT-ON* */
 }
 
 /*-----------------------------------------------------------*/
