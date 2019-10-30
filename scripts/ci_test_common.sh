@@ -13,11 +13,11 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FL
 make -j2 iot_tests_common
 
 # Run common tests.
-./bin/iot_tests_common
+./output/bin/iot_tests_common
 
 # Rebuild in static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FLAGS -DIOT_STATIC_MEMORY_ONLY=1"
 make -j2 iot_tests_common
 
 # Run common tests in static memory mode.
-./bin/iot_tests_common
+./output/bin/iot_tests_common

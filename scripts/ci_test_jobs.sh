@@ -18,10 +18,10 @@ run_tests() {
     # For commit builds, run the full Jobs tests. For pull request builds,
     # run only the unit tests (credentials are not available for pull request builds).
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-        ./bin/aws_iot_tests_jobs
+        ./output/bin/aws_iot_tests_jobs
     else
         # Run only Jobs unit tests.
-        ./bin/aws_iot_tests_jobs -n
+        ./output/bin/aws_iot_tests_jobs -n
     fi
 }
 

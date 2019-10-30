@@ -29,10 +29,10 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=
 
 make -j2 iot_tests_mqtt iot_demo_mqtt
 
-./bin/iot_tests_mqtt $TEST_OPTIONS
+./output/bin/iot_tests_mqtt $TEST_OPTIONS
 
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    ./bin/iot_demo_mqtt $DEMO_OPTIONS
+    ./output/bin/iot_demo_mqtt $DEMO_OPTIONS
 fi
 
 # Rebuild and run tests in static memory mode.
@@ -40,4 +40,4 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=
 
 make -j2 iot_tests_mqtt iot_demo_mqtt
 
-./bin/iot_tests_mqtt $TEST_OPTIONS
+./output/bin/iot_tests_mqtt $TEST_OPTIONS
