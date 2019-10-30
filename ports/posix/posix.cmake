@@ -63,7 +63,7 @@ if( ${IOT_NETWORK_USE_OPENSSL} )
 
         # Choose OpenSSL network source file.
         set( NETWORK_HEADER ${PORTS_DIRECTORY}/common/include/iot_network_openssl.h )
-        set( NETWORK_SOURCE_FILE ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/src/iot_network_openssl.c )
+        set( NETWORK_SOURCE_FILE ${PORTS_DIRECTORY}/common/src/iot_network_openssl.c )
 
         # Link OpenSSL.
         set( PLATFORM_DEPENDENCIES OpenSSL::SSL OpenSSL::Crypto )
