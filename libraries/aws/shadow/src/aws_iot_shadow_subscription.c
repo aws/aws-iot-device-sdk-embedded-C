@@ -508,8 +508,10 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
                         break;
                     }
 
-                    /* Clear the persistent subscriptions flag. */
+                    /* Clear the persistent subscriptions flag and check if the
+                     * subscription can be removed. */
                     pSubscription->references[ i ] = 0;
+                    _AwsIotShadow_RemoveSubscription( pSubscription, NULL );
                 }
                 else
                 {
