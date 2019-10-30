@@ -509,11 +509,11 @@ static void _setupJobsTests()
     networkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
 
     #if IOT_TEST_SECURED_CONNECTION == 1
-    networkInfo.u.setup.pNetworkCredentialInfo = ( void * ) &_credentials;
+        networkInfo.u.setup.pNetworkCredentialInfo = ( void * ) &_credentials;
     #endif
 
     #ifdef IOT_TEST_MQTT_SERIALIZER
-    networkInfo.pMqttSerializer = IOT_TEST_MQTT_SERIALIZER;
+        networkInfo.pMqttSerializer = IOT_TEST_MQTT_SERIALIZER;
     #endif
 
     /* Set the members of the connect info. Use the Jobs Thing Name as the MQTT
