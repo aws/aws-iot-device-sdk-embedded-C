@@ -149,9 +149,9 @@ IotNetworkError_t IotNetworkMbedtls_Close( void * pConnection );
 IotNetworkError_t IotNetworkMbedtls_Destroy( void * pConnection );
 
 /**
- * @brief Used by metrics to retrieve remote server and port of a connection.
+ * @brief Used by metrics to retrieve the socket (file descriptor) associated with
+ * a connection.
  */
-void IotNetworkMbedtls_GetServerInfo( void * pConnection,
-                                      IotMetricsTcpConnection_t * pServerInfo );
+int IotNetworkMbedtls_GetSocket( void * pConnection );
 
 #endif /* ifndef IOT_NETWORK_MBEDTLS_H_ */

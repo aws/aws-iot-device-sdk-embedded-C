@@ -30,7 +30,6 @@
 
 /* Standard includes. */
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -1047,93 +1046,12 @@ IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection )
 
 /*-----------------------------------------------------------*/
 
-void IotNetworkOpenssl_GetServerInfo( void * pConnection,
-                                      IotMetricsTcpConnection_t * pServerInfo )
+int IotNetworkOpenssl_GetSocket( void * pConnection )
 {
-    int status = 0, portLength = 0;
-    struct sockaddr_storage server = { 0 };
-    socklen_t length = sizeof( struct sockaddr_storage );
-    const void * pServerAddress = NULL;
-    char * pAddressStart = NULL;
-    const char * pPortFormat = NULL;
-    uint16_t remotePort = 0;
-    size_t addressLength = 0;
-
     /* Cast function parameter to correct type. */
     _networkConnection_t * const pNetworkConnection = pConnection;
 
-    /* Get peer info. */
-    status = getpeername( pNetworkConnection->socket,
-                          ( struct sockaddr * ) &server,
-                          &length );
-
-    if( status == 0 )
-    {
-        /* Calculate the pointer to the IP address and get the remote port based
-         * on protocol version. */
-        if( server.ss_family == AF_INET )
-        {
-            /* IPv4. */
-            pServerAddress = &( ( ( struct sockaddr_in * ) &server )->sin_addr );
-            remotePort = ntohs( ( ( struct sockaddr_in * ) &server )->sin_port );
-
-            /* Print the IPv4 address at the start of the address buffer. */
-            pAddressStart = pServerInfo->pRemoteAddress;
-            addressLength = IOT_METRICS_IP_ADDRESS_LENGTH;
-            pPortFormat = ":%hu";
-        }
-        else
-        {
-            /* IPv6. */
-            pServerAddress = &( ( ( struct sockaddr_in6 * ) &server )->sin6_addr );
-            remotePort = ntohs( ( ( struct sockaddr_in6 * ) &server )->sin6_port );
-
-            /* Enclose the IPv6 address with []. */
-            pServerInfo->pRemoteAddress[ 0 ] = '[';
-            pAddressStart = pServerInfo->pRemoteAddress + 1;
-            addressLength = IOT_METRICS_IP_ADDRESS_LENGTH - 1;
-            pPortFormat = "]:%hu";
-        }
-
-        /* Convert IP address to text. */
-        if( inet_ntop( server.ss_family,
-                       pServerAddress,
-                       pAddressStart,
-                       addressLength ) != NULL )
-        {
-            /* Add the port to the end of the address. */
-            addressLength = strlen( pServerInfo->pRemoteAddress );
-
-            portLength = snprintf( &( pServerInfo->pRemoteAddress[ addressLength ] ),
-                                   7,
-                                   pPortFormat,
-                                   remotePort );
-
-            if( portLength > 0 )
-            {
-                pServerInfo->addressLength = addressLength + ( size_t ) portLength;
-
-                IotLogInfo( "(Socket %d) Collecting network metrics for %s.",
-                            pNetworkConnection->socket,
-                            pServerInfo->pRemoteAddress );
-            }
-            else
-            {
-                IotLogError( "(Socket %d) Failed to add port to IP address buffer." );
-            }
-        }
-        else
-        {
-            IotLogError( "(Socket %d) Failed to convert IP address to text format.",
-                         pNetworkConnection->socket );
-        }
-    }
-    else
-    {
-        IotLogError( "(Socket %d) Failed to query peer name. errno=%d.",
-                     pNetworkConnection->socket,
-                     errno );
-    }
+    return pNetworkConnection->socket;
 }
 
 /*-----------------------------------------------------------*/
