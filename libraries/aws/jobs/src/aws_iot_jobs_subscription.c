@@ -551,8 +551,10 @@ AwsIotJobsError_t AwsIotJobs_RemovePersistentSubscriptions( const AwsIotJobsRequ
                         break;
                     }
 
-                    /* Clear the persistent subscriptions flag. */
+                    /* Clear the persistent subscriptions flag and check if the
+                     * subscription can be removed. */
                     pSubscription->operationReferences[ i ] = 0;
+                    _AwsIotJobs_RemoveSubscription( pSubscription, NULL );
                 }
                 else
                 {
