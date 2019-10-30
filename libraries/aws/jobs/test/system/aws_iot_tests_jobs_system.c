@@ -595,6 +595,8 @@ TEST_SETUP( Jobs_System )
  */
 TEST_TEAR_DOWN( Jobs_System )
 {
+    /* Cool down time to avoid making too many requests. */
+    IotClock_SleepMs( 100 );
 }
 
 /*-----------------------------------------------------------*/

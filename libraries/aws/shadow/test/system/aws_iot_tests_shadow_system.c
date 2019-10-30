@@ -538,6 +538,8 @@ TEST_SETUP( Shadow_System )
  */
 TEST_TEAR_DOWN( Shadow_System )
 {
+    /* Cool down time to avoid making too many requests. */
+    IotClock_SleepMs( 100 );
 }
 
 /*-----------------------------------------------------------*/
