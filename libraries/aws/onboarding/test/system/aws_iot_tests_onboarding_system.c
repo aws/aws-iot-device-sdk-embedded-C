@@ -78,16 +78,6 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Parameter 1 of #_responseReceivedCallback.
- */
-typedef struct _expectedUserCallbackParams
-{
-    AwsIotOnboardingCallbackType_t expectedType; /**< @brief Expected callback type. */
-} _expectedUserCallbackParams_t;
-
-/*-----------------------------------------------------------*/
-
-/**
  * @brief Network server info to share among the tests.
  */
 static const IotTestNetworkServerInfo_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
@@ -122,20 +112,32 @@ static const char * _pTestMqttClientId = "onnboarding-system-test";
  * @brief Onboarding user callback function for successful completion of operation. Checks parameters provided by the
  * API.
  */
-static void _testUserCallback( void * pArgument,
-                               const AwsIotOnboardingCallbackParam_t * pOperation )
+static void _testGetDeviceCredentialsCallback( void * contextParam,
+                                               const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
 {
-    _expectedUserCallbackParams_t * pParams = ( _expectedUserCallbackParams_t * ) pArgument;
+    ( void ) contextParam;
+    AwsIotOnboarding_Assert( pResponseInfo != NULL );
 
-    /* Check parameters against expected values. */
-    TEST_ASSERT_EQUAL( pParams->expectedType, pOperation->callbackType );
-
-    if( pParams->expectedType == AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_COMPLETE )
+    switch( pResponseInfo->operationStatus )
     {
-        TEST_ASSERT_NOT_NULL( pOperation->u.deviceCredentialsInfo.pDeviceCertificate );
-        TEST_ASSERT_GREATER_THAN( 0, pOperation->u.deviceCredentialsInfo.deviceCertificateLength );
-        TEST_ASSERT_NOT_NULL( pOperation->u.deviceCredentialsInfo.pPrivateKey );
-        TEST_ASSERT_GREATER_THAN( 0, pOperation->u.deviceCredentialsInfo.privateKeyLength );
+        case AWS_IOT_REJECTED:
+            AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.pErrorCode != NULL );
+            AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.errorCodeLength != 0 );
+            AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.pErrorMessage != NULL );
+            AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.errorMessageLength != 0 );
+
+            break;
+
+        case AWS_IOT_ACCEPTED:
+            /* Check parameters against expected values. */
+            TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pDeviceCertificate );
+            TEST_ASSERT_GREATER_THAN( 0, pResponseInfo->u.acceptedResponse.deviceCertificateLength );
+            TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pPrivateKey );
+            TEST_ASSERT_GREATER_THAN( 0, pResponseInfo->u.acceptedResponse.privateKeyLength );
+            break;
+
+        default:
+            AwsIotOnboarding_Assert( false );
     }
 }
 
@@ -273,14 +275,10 @@ TEST_GROUP_RUNNER( Onboarding_System )
 TEST( Onboarding_System, GetDeviceCredentialsNominalCase )
 {
     AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
-    _expectedUserCallbackParams_t expectedParams =
+    AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t callbackInfo =
     {
-        .expectedType = AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_COMPLETE
-    };
-    AwsIotOnboardingCallbackInfo_t callbackInfo =
-    {
-        .userParam = &expectedParams,
-        .function  = _testUserCallback
+        .userParam = NULL,
+        .function  = _testGetDeviceCredentialsCallback
     };
 
     status = AwsIotOnboarding_GetDeviceCredentials( _mqttConnection,

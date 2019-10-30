@@ -40,6 +40,7 @@ void RunOnboardingTests( bool disableNetworkTests,
 
     RUN_TEST_GROUP( Onboarding_Unit_API );
     RUN_TEST_GROUP( Onboarding_Unit_Serializer );
+    RUN_TEST_GROUP( Onboarding_Unit_Parser );
 
     if( disableNetworkTests == false )
     {

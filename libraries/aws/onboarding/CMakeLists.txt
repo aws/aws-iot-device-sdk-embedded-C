@@ -40,7 +40,8 @@ if( ${IOT_BUILD_TESTS} )
     # Onboarding unit test sources.
     set( ONBOARDING_UNIT_TEST_SOURCES
          test/unit/aws_iot_tests_onboarding_api.c
-         test/unit/aws_iot_tests_onboarding_serializer.c )
+         test/unit/aws_iot_tests_onboarding_serializer.c
+         test/unit/aws_iot_tests_onboarding_parser.c )
     
     # Onboarding unit test sources.
     set( ONBOARDING_SYSTEM_TEST_SOURCES
@@ -66,7 +67,9 @@ if( ${IOT_BUILD_TESTS} )
     # Onboarding tests library dependencies.
     target_link_libraries( aws_iot_tests_onboarding PRIVATE 
                            awsiotonboarding 
-                           unity iot_mqtt_mock 
+                           awsiotcommon
+                           unity 
+                           iot_mqtt_mock 
                            iotbase
                            iotserializer)
 

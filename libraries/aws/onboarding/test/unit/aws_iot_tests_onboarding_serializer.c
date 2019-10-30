@@ -20,8 +20,8 @@
  */
 
 /**
- * @file aws_iot_tests_onboarding_internal.c
- * @brief Tests for the functions internal to the Onboarding library.
+ * @file aws_iot_tests_onboarding_serializer.c
+ * @brief Tests for the serializer functions internal to the Onboarding library.
  */
 
 /* The config header is always included first. */
@@ -38,9 +38,6 @@
 
 /* Test framework includes. */
 #include "unity_fixture.h"
-
-/*-----------------------------------------------------------*/
-
 
 /*-----------------------------------------------------------*/
 
