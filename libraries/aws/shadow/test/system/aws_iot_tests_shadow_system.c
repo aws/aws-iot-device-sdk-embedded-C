@@ -124,11 +124,6 @@ static const IotTestNetworkServerInfo_t _serverInfo = IOT_TEST_NETWORK_SERVER_IN
 #endif
 
 /**
- * @brief An MQTT network setup parameter to share among the tests.
- */
-static IotMqttNetworkInfo_t _networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
-
-/**
  * @brief An MQTT connection to share among the tests.
  */
 static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
@@ -421,58 +416,32 @@ static void _updateGetDeleteBlocking( IotMqttQos_t qos )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test group for Shadow system tests.
+ * @brief Initializes libraries and establishes an MQTT connection for the Shadow tests.
  */
-TEST_GROUP( Shadow_System );
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Test setup for Shadow system tests.
- */
-TEST_SETUP( Shadow_System )
+static void _setupShadowTests()
 {
-    static uint64_t lastConnectTime = 0;
-    uint64_t elapsedTime = 0;
+    int32_t i = 0;
+    IotMqttError_t connectStatus = IOT_MQTT_STATUS_PENDING;
+    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
-    AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
 
-    /* Initialize SDK. */
-    if( IotSdk_Init() == false )
-    {
-        TEST_FAIL_MESSAGE( "Failed to initialize SDK." );
-    }
-
-    /* Set up the network stack. */
-    if( IotTestNetwork_Init() != IOT_NETWORK_SUCCESS )
-    {
-        TEST_FAIL_MESSAGE( "Failed to set up network stack." );
-    }
-
-    /* Initialize the MQTT library. */
-    if( IotMqtt_Init() != IOT_MQTT_SUCCESS )
-    {
-        TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
-    }
-
-    /* Initialize the Shadow library. */
-    if( AwsIotShadow_Init( 0 ) != AWS_IOT_SHADOW_SUCCESS )
-    {
-        TEST_FAIL_MESSAGE( "Failed to initialize Shadow library." );
-    }
+    /* Initialize SDK and libraries. */
+    AwsIotShadow_Assert( IotSdk_Init() == true );
+    AwsIotShadow_Assert( IotTestNetwork_Init() == IOT_NETWORK_SUCCESS );
+    AwsIotShadow_Assert( IotMqtt_Init() == IOT_MQTT_SUCCESS );
+    AwsIotShadow_Assert( AwsIotShadow_Init( 0 ) == AWS_IOT_SHADOW_SUCCESS );
 
     /* Set the MQTT network setup parameters. */
-    ( void ) memset( &_networkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
-    _networkInfo.createNetworkConnection = true;
-    _networkInfo.u.setup.pNetworkServerInfo = ( void * ) &_serverInfo;
-    _networkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
+    networkInfo.createNetworkConnection = true;
+    networkInfo.u.setup.pNetworkServerInfo = ( void * ) &_serverInfo;
+    networkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
 
     #if IOT_TEST_SECURED_CONNECTION == 1
-        _networkInfo.u.setup.pNetworkCredentialInfo = ( void * ) &_credentials;
+        networkInfo.u.setup.pNetworkCredentialInfo = ( void * ) &_credentials;
     #endif
 
     #ifdef IOT_TEST_MQTT_SERIALIZER
-        _networkInfo.pMqttSerializer = IOT_TEST_MQTT_SERIALIZER;
+        networkInfo.pMqttSerializer = IOT_TEST_MQTT_SERIALIZER;
     #endif
 
     /* Set the members of the connect info. Use the Shadow Thing Name as the MQTT
@@ -482,48 +451,34 @@ TEST_SETUP( Shadow_System )
     connectInfo.clientIdentifierLength = ( uint16_t ) ( sizeof( AWS_IOT_TEST_SHADOW_THING_NAME ) - 1 );
     connectInfo.keepAliveSeconds = IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
-    /* AWS IoT Service limits only allow 1 connection per MQTT client ID per second.
-     * Wait until 1100 ms have elapsed since the last connection. */
-    elapsedTime = IotClock_GetTimeMs() - lastConnectTime;
-
-    if( elapsedTime < 1100ULL )
+    /* Establish an MQTT connection. Allow up to 3 attempts with a 5 second wait
+     * if the connection fails. */
+    for( i = 0; i < 3; i++ )
     {
-        IotClock_SleepMs( 1100UL - ( uint32_t ) elapsedTime );
+        connectStatus = IotMqtt_Connect( &networkInfo,
+                                         &connectInfo,
+                                         AWS_IOT_TEST_SHADOW_TIMEOUT,
+                                         &_mqttConnection );
+
+        if( ( connectStatus == IOT_MQTT_TIMEOUT ) || ( connectStatus == IOT_MQTT_NETWORK_ERROR ) )
+        {
+            IotClock_SleepMs( 5000 );
+        }
+        else
+        {
+            break;
+        }
     }
 
-    /* Establish an MQTT connection. */
-    if( IotMqtt_Connect( &_networkInfo,
-                         &connectInfo,
-                         AWS_IOT_TEST_SHADOW_TIMEOUT,
-                         &_mqttConnection ) != IOT_MQTT_SUCCESS )
-    {
-        TEST_FAIL_MESSAGE( "Failed to establish MQTT connection for Shadow tests." );
-    }
-
-    /* Update the time of the last MQTT connect. */
-    lastConnectTime = IotClock_GetTimeMs();
-
-    /* Delete any existing Shadow so all tests start with no Shadow. */
-    status = AwsIotShadow_DeleteSync( _mqttConnection,
-                                      AWS_IOT_TEST_SHADOW_THING_NAME,
-                                      THING_NAME_LENGTH,
-                                      0,
-                                      AWS_IOT_TEST_SHADOW_TIMEOUT );
-
-    /* Acceptable statuses are SUCCESS and NOT FOUND. Both of these statuses allow
-     * the tests to start with no Shadow. */
-    if( ( status != AWS_IOT_SHADOW_SUCCESS ) && ( status != AWS_IOT_SHADOW_NOT_FOUND ) )
-    {
-        TEST_FAIL_MESSAGE( "Failed to delete shadow in test set up." );
-    }
+    AwsIotShadow_Assert( connectStatus == IOT_MQTT_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test tear down for Shadow system tests.
+ * @brief Cleans up libraries and closes the MQTT connection for the Shadow tests.
  */
-TEST_TEAR_DOWN( Shadow_System )
+static void _cleanupShadowTests()
 {
     /* Disconnect the MQTT connection if it was created. */
     if( _mqttConnection != IOT_MQTT_CONNECTION_INITIALIZER )
@@ -548,16 +503,60 @@ TEST_TEAR_DOWN( Shadow_System )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Test group for Shadow system tests.
+ */
+TEST_GROUP( Shadow_System );
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test setup for Shadow system tests.
+ */
+TEST_SETUP( Shadow_System )
+{
+    AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
+
+    /* Delete any existing Shadow so all tests start with no Shadow. */
+    status = AwsIotShadow_DeleteSync( _mqttConnection,
+                                      AWS_IOT_TEST_SHADOW_THING_NAME,
+                                      THING_NAME_LENGTH,
+                                      0,
+                                      AWS_IOT_TEST_SHADOW_TIMEOUT );
+
+    /* Acceptable statuses are SUCCESS and NOT FOUND. Both of these statuses allow
+     * the tests to start with no Shadow. */
+    if( ( status != AWS_IOT_SHADOW_SUCCESS ) && ( status != AWS_IOT_SHADOW_NOT_FOUND ) )
+    {
+        TEST_FAIL_MESSAGE( "Failed to delete shadow in test set up." );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test tear down for Shadow system tests.
+ */
+TEST_TEAR_DOWN( Shadow_System )
+{
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group runner for Shadow system tests.
  */
 TEST_GROUP_RUNNER( Shadow_System )
 {
+    _setupShadowTests();
+
     RUN_TEST_CASE( Shadow_System, UpdateGetDeleteAsyncQoS0 );
     RUN_TEST_CASE( Shadow_System, UpdateGetDeleteAsyncQoS1 );
     RUN_TEST_CASE( Shadow_System, UpdateGetDeleteBlockingQoS0 );
     RUN_TEST_CASE( Shadow_System, UpdateGetDeleteBlockingQoS1 );
     RUN_TEST_CASE( Shadow_System, DeltaCallback );
     RUN_TEST_CASE( Shadow_System, UpdatedCallback );
+
+    _cleanupShadowTests();
 }
 
 /*-----------------------------------------------------------*/
