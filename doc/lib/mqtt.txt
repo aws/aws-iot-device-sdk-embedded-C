@@ -158,7 +158,11 @@ This value will be passed as `timeoutMs` to all calls to @ref mqtt_function_wait
 @section IOT_TEST_MQTT_CONNECT_RETRY_COUNT
 @brief The number of connection attempts for the MQTT system tests.
 
-@configpossible Any integer greater than or equal to 1. <br>
+The MQTT system tests require a network connection to an MQTT server. If the network is unreliable, this setting may be used to enable retries when connecting to the MQTT server.
+
+This value represents a limit on the number of retries. When set to 1, the tests will perform one connection attempt. When set to a value greater than 1, the tests will attempt to reconnect with an exponential back-off strategy, up to the limit specified by this setting.
+
+@configpossible Any integer of at least 1. <br>
 @configdefault `1`
 */
 
