@@ -30,12 +30,34 @@
 
 /* Standard includes. */
 #include <string.h>
+#include <stdio.h>
 
 /* Platform threads include. */
 #include "platform/iot_threads.h"
 
 /* Metrics networking include. */
 #include "iot_network_metrics.h"
+
+/* System headers for retrieving socket info. */
+#if !defined( _WIN32 ) && !defined( _WIN64 )
+    #include <arpa/inet.h>
+    #include <netdb.h>
+    #include <sys/socket.h>
+#endif
+
+/* Configure logs for the functions in this file. */
+#ifdef IOT_LOG_LEVEL_NETWORK
+    #define LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_NETWORK
+#else
+    #ifdef IOT_LOG_LEVEL_GLOBAL
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
+    #else
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
+    #endif
+#endif
+
+#define LIBRARY_LOG_NAME    ( "NET" )
+#include "iot_logging_setup.h"
 
 /*
  * Provide default values for undefined memory allocation functions.
@@ -115,10 +137,9 @@ static IotMutex_t _connectionListMutex;
     static IotNetworkError_t ( * _networkClose )( void * ) = IotNetworkOpenssl_Close;
 
     /**
-     * @brief Pointer to the function that retrieves the server info for a connection.
+     * @brief Pointer to the function that retrieves the socket for a connection.
      */
-    static void ( * _networkServerInfo )( void *,
-                                        IotMetricsTcpConnection_t * ) = IotNetworkOpenssl_GetServerInfo;
+    static int ( * _getSocket )( void * ) = IotNetworkOpenssl_GetSocket;
 
     /**
      * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
@@ -148,10 +169,9 @@ static IotMutex_t _connectionListMutex;
     static IotNetworkError_t ( * _networkClose )( void * ) = IotNetworkMbedtls_Close;
 
     /**
-     * @brief Pointer to the function that retrieves the server info for a connection.
+     * @brief Pointer to the function that retrieves the socket for a connection.
      */
-    static void ( * _networkServerInfo )( void *,
-                                        IotMetricsTcpConnection_t * ) = IotNetworkMbedtls_GetServerInfo;
+    static int ( * _getSocket )( void * ) = IotNetworkMbedtls_GetSocket;
 
     /**
      * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
@@ -184,10 +204,98 @@ static bool _connectionMatch( const IotLink_t * pConnectionLink,
 
 /*-----------------------------------------------------------*/
 
+static void _getServerInfo( int socket,
+                            IotMetricsTcpConnection_t * pServerInfo )
+{
+    int status = 0, portLength = 0;
+    struct sockaddr_storage server = { 0 };
+    socklen_t length = sizeof( struct sockaddr_storage );
+    const void * pServerAddress = NULL;
+    char * pAddressStart = NULL;
+    const char * pPortFormat = NULL;
+    uint16_t remotePort = 0;
+    size_t addressLength = 0;
+
+    /* Get peer info. */
+    status = getpeername( socket,
+                          ( struct sockaddr * ) &server,
+                          &length );
+
+    if( status == 0 )
+    {
+        /* Calculate the pointer to the IP address and get the remote port based
+         * on protocol version. */
+        if( server.ss_family == AF_INET )
+        {
+            /* IPv4. */
+            pServerAddress = &( ( ( struct sockaddr_in * ) &server )->sin_addr );
+            remotePort = ntohs( ( ( struct sockaddr_in * ) &server )->sin_port );
+
+            /* Print the IPv4 address at the start of the address buffer. */
+            pAddressStart = pServerInfo->pRemoteAddress;
+            addressLength = IOT_METRICS_IP_ADDRESS_LENGTH;
+            pPortFormat = ":%hu";
+        }
+        else
+        {
+            /* IPv6. */
+            pServerAddress = &( ( ( struct sockaddr_in6 * ) &server )->sin6_addr );
+            remotePort = ntohs( ( ( struct sockaddr_in6 * ) &server )->sin6_port );
+
+            /* Enclose the IPv6 address with []. */
+            pServerInfo->pRemoteAddress[ 0 ] = '[';
+            pAddressStart = pServerInfo->pRemoteAddress + 1;
+            addressLength = IOT_METRICS_IP_ADDRESS_LENGTH - 1;
+            pPortFormat = "]:%hu";
+        }
+
+        /* Convert IP address to text. */
+        if( inet_ntop( server.ss_family,
+                       pServerAddress,
+                       pAddressStart,
+                       addressLength ) != NULL )
+        {
+            /* Add the port to the end of the address. */
+            addressLength = strlen( pServerInfo->pRemoteAddress );
+
+            portLength = snprintf( &( pServerInfo->pRemoteAddress[ addressLength ] ),
+                                   7,
+                                   pPortFormat,
+                                   remotePort );
+
+            if( portLength > 0 )
+            {
+                pServerInfo->addressLength = addressLength + ( size_t ) portLength;
+
+                IotLogInfo( "(Socket %d) Collecting network metrics for %s.",
+                            socket,
+                            pServerInfo->pRemoteAddress );
+            }
+            else
+            {
+                IotLogError( "(Socket %d) Failed to add port to IP address buffer." );
+            }
+        }
+        else
+        {
+            IotLogError( "(Socket %d) Failed to convert IP address to text format.",
+                         socket );
+        }
+    }
+    else
+    {
+        IotLogError( "(Socket %d) Failed to query peer name.",
+                     socket );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
 static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
                                                 void * pCredentialInfo,
                                                 void ** pConnection )
 {
+    int socket = 0;
     IotMetricsTcpConnection_t * pTcpConnection = NULL;
     IotNetworkError_t status = IOT_NETWORK_SUCCESS;
 
@@ -206,11 +314,11 @@ static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
         /* Add the new metrics connection to the list of connections. */
         if( status == IOT_NETWORK_SUCCESS )
         {
-            /* Get the connection's IPv4 address and port. */
             pTcpConnection->pNetworkContext = *pConnection;
 
-            _networkServerInfo( pTcpConnection->pNetworkContext,
-                                pTcpConnection );
+            /* Get the connection's address and port. */
+            socket = _getSocket( pTcpConnection->pNetworkContext );
+            _getServerInfo( socket, pTcpConnection );
 
             /* Add the new connection to the list of connections. */
             IotMutex_Lock( &_connectionListMutex );
