@@ -137,9 +137,11 @@ static void _printRejectedResponse( const AwsIotOnboardingRejectedResponse_t * p
 {
     AwsIotOnboarding_Assert( pResponseInfo != NULL );
 
-    IotLogError( "\n Request REJECTED!!\nStatusCode={%d}\n ErrorCode={%s}\n ErrorMessage={%s}\n",
-                 pResponseInfo->pErrorCode, pResponseInfo->errorCodeLength,
-                 pResponseInfo->pErrorMessage, pResponseInfo->errorMessageLength );
+    IotLogError( "\n Request REJECTED!!\n ErrorCode={%s}\n ErrorMessage={%s}\n",
+                 pResponseInfo->pErrorCode,
+                 pResponseInfo->errorCodeLength,
+                 pResponseInfo->pErrorMessage,
+                 pResponseInfo->errorMessageLength );
 }
 
 /*-----------------------------------------------------------*/
@@ -163,7 +165,7 @@ static void _printDeviceCredentialsCallback( void * contextParam,
         TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pPrivateKey );
         TEST_ASSERT_GREATER_THAN( 0, pResponseInfo->u.acceptedResponse.privateKeyLength );
 
-        IotLogInfo( "\n Certificate PEM = %s \n Certificate ID = %s \n DREADED PRIVATE KEY = %s \n",
+        IotLogInfo( "\n Certificate PEM = %s\n Certificate ID = %s\n DREADED PRIVATE KEY = %s\n",
                     pResponseInfo->u.acceptedResponse.pDeviceCertificate,
                     pResponseInfo->u.acceptedResponse.deviceCertificateLength,
                     pResponseInfo->u.acceptedResponse.pCertificateId,
