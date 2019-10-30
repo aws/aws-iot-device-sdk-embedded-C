@@ -30,12 +30,12 @@
 /* SDK initialization include. */
 #include "iot_init.h"
 
-/* Onboarding internal include. */
-#include "private/aws_iot_onboarding_internal.h"
-
 /* MQTT include. */
 #include "iot_mqtt.h"
 #include "private/iot_mqtt_internal.h"
+
+/* Onboarding internal include. */
+#include "private/aws_iot_onboarding_internal.h"
 
 /* MQTT mock include. */
 #include "iot_tests_mqtt_mock.h"
@@ -190,7 +190,7 @@ static const uint8_t _sampleGetDeviceCredentialsServerResponsePayload[] =
  */
 static AwsIotOnboardingGetDeviceCredentialsResponse_t _expectedGetDeviceCredentialsCallbackParams =
 {
-    .statusCode                                 = AWS_IOT_ONBOARDING_ACCEPTED,
+    .statusCode                                 = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
     .u.acceptedResponse.pDeviceCertificate      = ( const char * )
                                                   &_sampleGetDeviceCredentialsServerResponsePayload[ 17 ],
     .u.acceptedResponse.deviceCertificateLength = 7,
@@ -284,7 +284,7 @@ static const AwsIotOnboardingResponseDeviceConfigurationEntry_t _expectedDeviceC
  */
 static AwsIotOnboardingOnboardDeviceResponse_t _expectedOnboardDeviceCallbackParams =
 {
-    .statusCode                                   = AWS_IOT_ONBOARDING_ACCEPTED,
+    .statusCode                                   = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
     .u.acceptedResponse.pThingName                = ( const char * ) &_sampleOnboardDeviceResponsePayload[ 112 ],
     .u.acceptedResponse.thingNameLength           = 9,
     .u.acceptedResponse.pDeviceConfigList         = _expectedDeviceConfigList,
@@ -351,7 +351,7 @@ static void _testGetDeviceCredentialsCallback( void * contextParam,
 
     switch( pResponseInfo->statusCode )
     {
-        case AWS_IOT_ONBOARDING_ACCEPTED:
+        case AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED:
             AwsIotOnboarding_Assert(
                 pExpectedParams->u.acceptedResponse.deviceCertificateLength ==
                 pResponseInfo->u.acceptedResponse.deviceCertificateLength );
@@ -389,7 +389,7 @@ static void _testOnboardDeviceCallback( void * contextParam,
 
     switch( pResponseInfo->statusCode )
     {
-        case AWS_IOT_ONBOARDING_ACCEPTED:
+        case AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED:
 
             AwsIotOnboarding_Assert(
                 pExpectedParams->u.acceptedResponse.thingNameLength ==
@@ -1202,7 +1202,7 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutDeviceConfigurat
 
     AwsIotOnboardingOnboardDeviceResponse_t expectedCallbackParams =
     {
-        .statusCode                                   = AWS_IOT_ONBOARDING_ACCEPTED,
+        .statusCode                                   = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
         .u.acceptedResponse.pThingName                = ( const char * ) &pResponseWithoutDeviceConfigData[ 12 ],
         .u.acceptedResponse.thingNameLength           = 9,
         .u.acceptedResponse.pDeviceConfigList         = NULL,
@@ -1261,7 +1261,7 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutThingName )
 
     AwsIotOnboardingOnboardDeviceResponse_t expectedCallbackParams =
     {
-        .statusCode                                   = AWS_IOT_ONBOARDING_ACCEPTED,
+        .statusCode                                   = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
         .u.acceptedResponse.pThingName                = NULL,
         .u.acceptedResponse.thingNameLength           = 0,
         .u.acceptedResponse.pDeviceConfigList         = pExpectedDeviceConfigList,

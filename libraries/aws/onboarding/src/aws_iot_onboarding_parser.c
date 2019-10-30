@@ -249,7 +249,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
             }
 
             /* Populate the status code information to represent success response from the server. */
-            userCallbackParam.statusCode = AWS_IOT_ONBOARDING_ACCEPTED;
+            userCallbackParam.statusCode = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED;
 
             /* Populate the data to be passed to the user callback.*/
             userCallbackParam.u.acceptedResponse.pDeviceCertificate = ( const char * )
@@ -483,7 +483,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
             }
 
             /* Populate the status code information to represent success response from the server. */
-            userCallbackParam.statusCode = AWS_IOT_ONBOARDING_ACCEPTED;
+            userCallbackParam.statusCode = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED;
 
             /* Populate information for the "Device Configuration" data. */
             userCallbackParam.u.acceptedResponse.pDeviceConfigList = pDeviceConfigurationList;

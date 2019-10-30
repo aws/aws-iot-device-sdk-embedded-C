@@ -151,27 +151,27 @@ typedef enum AwsIotOnboardingError
  */
 typedef enum AwsIotOnboardingServerStatusCode
 {
-    AWS_IOT_ONBOARDING_ACCEPTED = 202,
+    AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED = 202,
 
     /**
      * @brief Onboarding operation rejected: Forbidden.
      */
-    AWS_IOT_ONBOARDING_FORBIDDEN = 403,
+    AWS_IOT_ONBOARDING_SERVER_STATUS_FORBIDDEN = 403,
 
     /**
      * @brief Onboarding operation rejected: Template ID not found.
      */
-    AWS_IOT_ONBOARDING_NOT_FOUND = 404,
+    AWS_IOT_ONBOARDING_SERVER_STATUS_NOT_FOUND = 404,
 
     /**
      * @brief Onboarding operation rejected: Server has too many requests from clients.
      */
-    AWS_IOT_ONBOARDING_TOO_MANY_REQUESTS = 429,
+    AWS_IOT_ONBOARDING_SERVER_STATUS_TOO_MANY_REQUESTS = 429,
 
     /**
      * @brief Onboarding operation rejected due to server internal error.
      */
-    AWS_IOT_ONBOARDING_INTERNAL_SERVER_ERROR = 500,
+    AWS_IOT_ONBOARDING_SERVER_STATUS_INTERNAL_SERVER_ERROR = 500,
 } AwsIotOnboardingServerStatusCode_t;
 
 /*------------------------- Onboarding parameter structs --------------------------*/
@@ -323,7 +323,7 @@ typedef struct AwsIotOnboardingGetDeviceCredentialsResponse
  * Provides a function to be invoked on successful completion of an #AwsIotOnboarding_GetDeviceCredentials API
  * operation.
  *
- * @initializer{AwsIotOnboardingCallbackInfo_t,AWS_IOT_ONBOARDING_ACCEPTED_CALLBACK_INFO_INITIALIZER}
+ * @initializer{AwsIotOnboardingCallbackInfo_t,AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED_CALLBACK_INFO_INITIALIZER}
  */
 typedef struct AwsIotOnboardingGetDeviceCredentialsCallbackInfo
 {
