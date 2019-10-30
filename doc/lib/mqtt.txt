@@ -154,6 +154,12 @@ This value will be passed as `timeoutMs` to all calls to @ref mqtt_function_wait
 @configpossible Any non-negative integer. <br>
 @configrecommended This setting should be at least `1000`. <br>
 @configdefault `5000`
+
+@section IOT_TEST_MQTT_CONNECT_RETRY_COUNT
+@brief The number of connection attempts for the MQTT system tests.
+
+@configpossible Any integer greater than or equal to 1. <br>
+@configdefault `1`
 */
 
 /**
