@@ -190,6 +190,7 @@ static const uint8_t _sampleGetDeviceCredentialsServerResponsePayload[] =
  */
 static AwsIotOnboardingGetDeviceCredentialsResponse_t _expectedGetDeviceCredentialsCallbackParams =
 {
+    .statusCode                                 = AWS_IOT_ONBOARDING_ACCEPTED,
     .u.acceptedResponse.pDeviceCertificate      = ( const char * )
                                                   &_sampleGetDeviceCredentialsServerResponsePayload[ 17 ],
     .u.acceptedResponse.deviceCertificateLength = 7,
@@ -239,38 +240,41 @@ static const char * _onboardDeviceRejectedResponseTopic = "aws/provisioning-temp
  */
 static const uint8_t _sampleOnboardDeviceResponsePayload[] =
 {
-    0xA2,                                                 /* # map(2) */
-    0x73,                                                 /* # text(19) */
+    0xA2,                                                             /* # map(2) */
+    0x73,                                                             /* # text(19) */
     0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74,
-    0x69, 0x6F, 0x6E,                                     /* # "deviceConfiguration" */
-    0xA2,                                                 /* # map(2), */
-    0x61,                                                 /* # text(1), */
-    0x31,                                                 /* # "1", */
-    0x63,                                                 /* # text(2), */
-    0x32, 0x33, 0x34,                                     /* # "23", */
-    0x61,                                                 /* # text(1), */
-    0x34,                                                 /* # "4", */
-    0x62,                                                 /* # text(3), */
-    0x35, 0x36,                                           /* # "567", */
-    0x69,                                                 /* # text(9) */
-    0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65, /* # "thingName" */
-    0x69,                                                 /* # text(9) */
-    0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67  /* # "TestThing" */
+    0x69, 0x6F, 0x6E,                                                 /* # "deviceConfiguration" */
+    0xA2,                                                             /* # map(2) */
+    0x6B,                                                             /* # text(11) */
+    0x46, 0x61, 0x6C, 0x6C, 0x62, 0x61, 0x63, 0x6B, 0x55, 0x72, 0x6C, /* # "FallbackUrl" */
+    0x78, 0x21,                                                       /* # text(33) */
+    0x68, 0x74, 0x74, 0x70, 0x73, 0x3A, 0x2F, 0x2F, 0x77, 0x77, 0x77,
+    0x2E, 0x65, 0x78, 0x61, 0x6D, 0x70, 0x6C, 0x65, 0x2E, 0x63, 0x6F,
+    0x6D, 0x2F, 0x74, 0x65, 0x73, 0x74, 0x2D, 0x73, 0x69, 0x74, 0x65, /* # "https://www.example.com/test-site" */
+    0x6B,                                                             /* # text(11) */
+    0x4C, 0x6F, 0x63, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x55, 0x72, 0x6C, /* # "LocationUrl" */
+    0x73,                                                             /* # text(19) */
+    0x68, 0x74, 0x74, 0x70, 0x73, 0x3A, 0x2F, 0x2F, 0x65, 0x78, 0x61,
+    0x6D, 0x70, 0x6C, 0x65, 0x2E, 0x61, 0x77, 0x73,                   /* # "https://example.aws" */
+    0x69,                                                             /* # text(9) */
+    0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65,             /* # "thingName" */
+    0x69,                                                             /* # text(9) */
+    0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67              /* # "TestThing" */
 };
 
 static const AwsIotOnboardingResponseDeviceConfigurationEntry_t _expectedDeviceConfigList[] =
 {
     {
         ( const char * ) &_sampleOnboardDeviceResponsePayload[ 23 ],
-        1,
-        ( const char * ) &_sampleOnboardDeviceResponsePayload[ 25 ],
-        3
+        11,
+        ( const char * ) &_sampleOnboardDeviceResponsePayload[ 36 ],
+        33
     },
     {
-        ( const char * ) &_sampleOnboardDeviceResponsePayload[ 29 ],
-        1,
-        ( const char * ) &_sampleOnboardDeviceResponsePayload[ 31 ],
-        2
+        ( const char * ) &_sampleOnboardDeviceResponsePayload[ 70 ],
+        11,
+        ( const char * ) &_sampleOnboardDeviceResponsePayload[ 82 ],
+        19
     }
 };
 
@@ -280,7 +284,8 @@ static const AwsIotOnboardingResponseDeviceConfigurationEntry_t _expectedDeviceC
  */
 static AwsIotOnboardingOnboardDeviceResponse_t _expectedOnboardDeviceCallbackParams =
 {
-    .u.acceptedResponse.pThingName                = ( const char * ) &_sampleOnboardDeviceResponsePayload[ 44 ],
+    .statusCode                                   = AWS_IOT_ONBOARDING_ACCEPTED,
+    .u.acceptedResponse.pThingName                = ( const char * ) &_sampleOnboardDeviceResponsePayload[ 112 ],
     .u.acceptedResponse.thingNameLength           = 9,
     .u.acceptedResponse.pDeviceConfigList         = _expectedDeviceConfigList,
     .u.acceptedResponse.numOfConfigurationEntries = sizeof( _expectedDeviceConfigList ) /
@@ -342,11 +347,11 @@ static void _testGetDeviceCredentialsCallback( void * contextParam,
     AwsIotOnboardingGetDeviceCredentialsResponse_t * pExpectedParams =
         ( AwsIotOnboardingGetDeviceCredentialsResponse_t * ) contextParam;
 
-    AwsIotOnboarding_Assert( pExpectedParams->operationStatus == pResponseInfo->operationStatus );
+    AwsIotOnboarding_Assert( pExpectedParams->statusCode == pResponseInfo->statusCode );
 
-    switch( pResponseInfo->operationStatus )
+    switch( pResponseInfo->statusCode )
     {
-        case AWS_IOT_ACCEPTED:
+        case AWS_IOT_ONBOARDING_ACCEPTED:
             AwsIotOnboarding_Assert(
                 pExpectedParams->u.acceptedResponse.deviceCertificateLength ==
                 pResponseInfo->u.acceptedResponse.deviceCertificateLength );
@@ -369,9 +374,6 @@ static void _testGetDeviceCredentialsCallback( void * contextParam,
                                          pExpectedParams->u.acceptedResponse.privateKeyLength ) );
             break;
 
-        case AWS_IOT_REJECTED:
-            break;
-
         default:
             AwsIotOnboarding_Assert( false );
     }
@@ -383,19 +385,24 @@ static void _testOnboardDeviceCallback( void * contextParam,
     AwsIotOnboardingOnboardDeviceResponse_t * pExpectedParams =
         ( AwsIotOnboardingOnboardDeviceResponse_t * ) contextParam;
 
-    AwsIotOnboarding_Assert( pExpectedParams->operationStatus == pResponseInfo->operationStatus );
+    AwsIotOnboarding_Assert( pExpectedParams->statusCode == pResponseInfo->statusCode );
 
-    switch( pResponseInfo->operationStatus )
+    switch( pResponseInfo->statusCode )
     {
-        case AWS_IOT_ACCEPTED:
+        case AWS_IOT_ONBOARDING_ACCEPTED:
 
             AwsIotOnboarding_Assert(
                 pExpectedParams->u.acceptedResponse.thingNameLength ==
                 pResponseInfo->u.acceptedResponse.thingNameLength );
-            AwsIotOnboarding_Assert( 0 == memcmp(
-                                         pExpectedParams->u.acceptedResponse.pThingName,
-                                         pResponseInfo->u.acceptedResponse.pThingName,
-                                         pExpectedParams->u.acceptedResponse.thingNameLength ) );
+
+            if( pExpectedParams->u.acceptedResponse.thingNameLength > 0 )
+            {
+                AwsIotOnboarding_Assert( 0 == memcmp(
+                                             pExpectedParams->u.acceptedResponse.pThingName,
+                                             pResponseInfo->u.acceptedResponse.pThingName,
+                                             pExpectedParams->u.acceptedResponse.thingNameLength ) );
+            }
+
             AwsIotOnboarding_Assert(
                 pExpectedParams->u.acceptedResponse.numOfConfigurationEntries ==
                 pResponseInfo->u.acceptedResponse.numOfConfigurationEntries );
@@ -417,9 +424,6 @@ static void _testOnboardDeviceCallback( void * contextParam,
                                              pExpectedParams->u.acceptedResponse.pDeviceConfigList[ index ].valueLength ) );
             }
 
-            break;
-
-        case AWS_IOT_REJECTED:
             break;
 
         default:
@@ -1198,6 +1202,7 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutDeviceConfigurat
 
     AwsIotOnboardingOnboardDeviceResponse_t expectedCallbackParams =
     {
+        .statusCode                                   = AWS_IOT_ONBOARDING_ACCEPTED,
         .u.acceptedResponse.pThingName                = ( const char * ) &pResponseWithoutDeviceConfigData[ 12 ],
         .u.acceptedResponse.thingNameLength           = 9,
         .u.acceptedResponse.pDeviceConfigList         = NULL,
@@ -1247,15 +1252,16 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutThingName )
     const AwsIotOnboardingResponseDeviceConfigurationEntry_t pExpectedDeviceConfigList[] =
     {
         {
-            ( const char * ) &_sampleOnboardDeviceResponsePayload[ 23 ],
+            ( const char * ) &pServerResponseWithoutThingName[ 23 ],
             1,
-            ( const char * ) &_sampleOnboardDeviceResponsePayload[ 25 ],
+            ( const char * ) &pServerResponseWithoutThingName[ 25 ],
             1
         }
     };
 
     AwsIotOnboardingOnboardDeviceResponse_t expectedCallbackParams =
     {
+        .statusCode                                   = AWS_IOT_ONBOARDING_ACCEPTED,
         .u.acceptedResponse.pThingName                = NULL,
         .u.acceptedResponse.thingNameLength           = 0,
         .u.acceptedResponse.pDeviceConfigList         = pExpectedDeviceConfigList,

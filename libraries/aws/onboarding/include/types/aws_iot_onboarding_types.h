@@ -30,9 +30,6 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
-/* AWS IoT common header. */
-#include "aws_iot.h"
-
 /* Standard includes. */
 #include <stdint.h>
 #include <stddef.h>
@@ -146,14 +143,16 @@ typedef enum AwsIotOnboardingError
 
 /**
  * @ingroup onboarding_datatypes_enums
- * @brief Status code sent by the server in "rejected" response during an Onboarding operations.
+ * @brief Status code sent by the server in its response during an Onboarding operations.
  *
  * These status codes will be sent as parameters to #AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t
- * and #AwsIotOnboardingOnboardDeviceCallbackInfo_t callback functions when the server send a
- * "rejected" response for an operation.
+ * and #AwsIotOnboardingOnboardDeviceCallbackInfo_t callback functions on receiving a response from
+ * the server.
  */
 typedef enum AwsIotOnboardingServerStatusCode
 {
+    AWS_IOT_ONBOARDING_ACCEPTED = 202,
+
     /**
      * @brief Onboarding operation rejected: Forbidden.
      */
@@ -273,12 +272,11 @@ typedef struct AwsIotOnboardingOnboardDeviceAcceptedResponse
  */
 typedef struct AwsIotOnboardingRejectedResponse
 {
-    AwsIotOnboardingServerStatusCode_t statusCode; /**< The highest level HTTP based status code sent by the server. */
-    const char * pErrorCode;                       /**< The more granular level error code string sent by the server. */
-    size_t errorCodeLength;                        /**< The length of the error code string.*/
-    const char * pErrorMessage;                    /**< The most granular level error information is provided in the
-                                                    * message by the server. */
-    size_t errorMessageLength;                     /**< The length of the error messsage sent by the server. */
+    const char * pErrorCode;    /**< The more granular level error code string sent by the server. */
+    size_t errorCodeLength;     /**< The length of the error code string.*/
+    const char * pErrorMessage; /**< The most granular level error information is provided in the
+                                 * message by the server. */
+    size_t errorMessageLength;  /**< The length of the error messsage sent by the server. */
 } AwsIotOnboardingRejectedResponse_t;
 
 /**
@@ -293,8 +291,8 @@ typedef struct AwsIotOnboardingRejectedResponse
  */
 typedef struct AwsIotOnboardingGetDeviceCredentialsResponse
 {
-    /* Represents the status of the operation based on the server response. */
-    AwsIotStatus_t operationStatus;
+    /* The highest level HTTP based status code sent by the server. */
+    AwsIotOnboardingServerStatusCode_t statusCode;
 
     union
     {
@@ -360,8 +358,8 @@ typedef struct AwsIotOnboardingGetDeviceCredentialsCallbackInfo
  */
 typedef struct AwsIotOnboardingOnboardDeviceResponse
 {
-    /* Represents the status of the operation from the server response. */
-    AwsIotStatus_t operationStatus;
+    /* The highest level HTTP based status code sent by the server. */
+    AwsIotOnboardingServerStatusCode_t statusCode;
 
     union
     {
