@@ -283,11 +283,11 @@ struct IotNetworkCredentials
     bool disableSni;
 
     const char * pRootCa;     /**< @brief String representing a trusted server root certificate. */
-    size_t rootCaSize;        /**< @brief Size associated with #IotNetworkCredentials_t.pRootCa. */
+    size_t rootCaSize;        /**< @brief Size associated with #IotNetworkCredentials.pRootCa. */
     const char * pClientCert; /**< @brief String representing the client certificate. */
-    size_t clientCertSize;    /**< @brief Size associated with #IotNetworkCredentials_t.pClientCert. */
+    size_t clientCertSize;    /**< @brief Size associated with #IotNetworkCredentials.pClientCert. */
     const char * pPrivateKey; /**< @brief String representing the client certificate's private key. */
-    size_t privateKeySize;    /**< @brief Size associated with #IotNetworkCredentials_t.pPrivateKey. */
+    size_t privateKeySize;    /**< @brief Size associated with #IotNetworkCredentials.pPrivateKey. */
 };
 
 #endif /* ifndef IOT_NETWORK_H_ */
