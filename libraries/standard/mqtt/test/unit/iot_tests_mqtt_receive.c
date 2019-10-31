@@ -801,12 +801,12 @@ TEST( MQTT_Unit_Receive, ReceiveMallocFail )
 
         /* Set malloc to fail and process the first SUBACK. */
         UnityMalloc_MakeMallocFailAfterCount( 0 );
-        IotMqtt_ReceiveCallback( &receiveContext,
+        IotMqtt_ReceiveCallback( ( IotNetworkConnection_t ) &receiveContext,
                                  _pMqttConnection );
 
         /* Allow the use of malloc and process the second SUBACK. */
         UnityMalloc_MakeMallocFailAfterCount( -1 );
-        IotMqtt_ReceiveCallback( &receiveContext,
+        IotMqtt_ReceiveCallback( ( IotNetworkConnection_t ) &receiveContext,
                                  _pMqttConnection );
 
         /* Network close function should not have been invoked. */

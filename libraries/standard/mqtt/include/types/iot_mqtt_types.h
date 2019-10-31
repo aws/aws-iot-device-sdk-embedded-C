@@ -980,14 +980,14 @@ typedef struct IotMqttNetworkInfo
         struct
         {
             /**
-             * @brief Information on the MQTT server, passed as `pConnectionInfo` to
+             * @brief Information on the MQTT server, passed as `pServerInfo` to
              * #IotNetworkInterface_t::create.
              *
              * This member is opaque to the MQTT library. It is passed to the network
              * interface when creating a new network connection. It is only valid when
              * #IotMqttNetworkInfo_t::createNetworkConnection is `true`.
              */
-            void * pNetworkServerInfo;
+            IotNetworkServerInfo_t pNetworkServerInfo;
 
             /**
              * @brief Credentials for the MQTT server, passed as `pCredentialInfo` to
@@ -997,7 +997,7 @@ typedef struct IotMqttNetworkInfo
              * interface when creating a new network connection. It is only valid when
              * #IotMqttNetworkInfo_t::createNetworkConnection is `true`.
              */
-            void * pNetworkCredentialInfo;
+            IotNetworkCredentials_t pNetworkCredentialInfo;
         } setup;
 
         /**
@@ -1007,7 +1007,7 @@ typedef struct IotMqttNetworkInfo
          * interface to reference an established network connection. It is only
          * valid when #IotMqttNetworkInfo_t::createNetworkConnection is `false`.
          */
-        void * pNetworkConnection;
+        IotNetworkConnection_t pNetworkConnection;
     } u /**< @brief Valid member depends of IotMqttNetworkInfo_t.createNetworkConnection. */;
 
     /**
