@@ -102,13 +102,13 @@ typedef struct _operationCompleteParams
 /**
  * @brief Network server info to share among the tests.
  */
-static const IotTestNetworkServerInfo_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
+static const struct IotNetworkServerInfo _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 
 /**
  * @brief Network credential info to share among the tests.
  */
 #if IOT_TEST_SECURED_CONNECTION == 1
-    static const IotTestNetworkCredentials_t _credentials = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
+    static const struct IotNetworkCredentials _credentials = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
 #endif
 
 /**
