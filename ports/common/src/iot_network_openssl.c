@@ -660,7 +660,7 @@ void IotNetworkOpenssl_Cleanup( void )
 
 /*-----------------------------------------------------------*/
 
-IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
+IotNetworkError_t IotNetworkOpenssl_Create( void * pServerInfo,
                                             void * pCredentialInfo,
                                             void ** pConnection )
 {
