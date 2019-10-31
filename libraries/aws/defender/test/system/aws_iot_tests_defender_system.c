@@ -70,8 +70,8 @@
 /* Empty callback structure passed to startInfo. */
 static const AwsIotDefenderCallback_t _emptyCallback = { .function = NULL, .pCallbackContext = NULL };
 
-static IotNetworkServerInfo_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
-static IotNetworkCredentials_t _credential = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
+static struct IotNetworkServerInfo _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
+static struct IotNetworkCredentials _credential = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
 static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /*------------------ global variables -----------------------------*/
@@ -168,7 +168,7 @@ TEST_SETUP( Defender_System )
     }
 
     /* Reset server info. */
-    _serverInfo = ( IotNetworkServerInfo_t ) IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
+    _serverInfo = ( struct IotNetworkServerInfo ) IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 
     /* Set fields of start info. */
     _startInfo.pClientIdentifier = AWS_IOT_TEST_DEFENDER_THING_NAME;

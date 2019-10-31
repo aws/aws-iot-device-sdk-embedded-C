@@ -22,7 +22,7 @@
 /**
  * @file iot_network_openssl.h
  * @brief Declares the network stack functions specified in iot_network.h for
- * POSIX systems with OpenSSL.
+ * systems with OpenSSL.
  */
 
 #ifndef IOT_NETWORK_OPENSSL_H_
@@ -41,20 +41,12 @@
 #include "platform/iot_network.h"
 
 /**
- * @brief Represents a network connection that uses OpenSSL.
+ * @brief Provides a default value for an #IotNetworkServerInfo.
  *
- * This is an incomplete type. In application code, only pointers to this type
- * should be used.
- */
-typedef struct _networkConnection IotNetworkConnectionOpenssl_t;
-
-/**
- * @brief Provides a default value for an #IotNetworkServerInfo_t.
- *
- * All instances of #IotNetworkServerInfo_t should be initialized with
+ * All instances of #IotNetworkServerInfo should be initialized with
  * this constant when using this OpenSSL network stack.
  *
- * @warning Failing to initialize an #IotNetworkServerInfo_t may result in
+ * @warning Failing to initialize an #IotNetworkServerInfo may result in
  * a crash!
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
@@ -62,7 +54,7 @@ typedef struct _networkConnection IotNetworkConnectionOpenssl_t;
 #define IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER    { 0 }
 
 /**
- * @brief Initialize an #IotNetworkCredentials_t for AWS IoT with ALPN enabled
+ * @brief Initialize an #IotNetworkCredentials for AWS IoT with ALPN enabled
  * when using this OpenSSL network stack.
  *
  * @note This initializer may change at any time in future versions, but its
@@ -74,7 +66,7 @@ typedef struct _networkConnection IotNetworkConnectionOpenssl_t;
     }
 
 /**
- * @brief Generic initializer for an #IotNetworkCredentials_t when using this
+ * @brief Generic initializer for an #IotNetworkCredentials when using this
  * OpenSSL network stack.
  *
  * @note This initializer may change at any time in future versions, but its
@@ -121,53 +113,53 @@ IotNetworkError_t IotNetworkOpenssl_Init( void );
 void IotNetworkOpenssl_Cleanup( void );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::create for POSIX systems
+ * @brief An implementation of #IotNetworkInterface_t::create for systems
  * with OpenSSL.
  */
-IotNetworkError_t IotNetworkOpenssl_Create( void * pConnectionInfo,
-                                            void * pCredentialInfo,
-                                            void ** pConnection );
+IotNetworkError_t IotNetworkOpenssl_Create( IotNetworkServerInfo_t pServerInfo,
+                                            IotNetworkCredentials_t pCredentialInfo,
+                                            IotNetworkConnection_t * pConnection );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::setReceiveCallback for
- * POSIX systems with OpenSSL.
+ * systems with OpenSSL.
  */
-IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
+IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( IotNetworkConnection_t pConnection,
                                                         IotNetworkReceiveCallback_t receiveCallback,
                                                         void * pContext );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::send for POSIX systems
+ * @brief An implementation of #IotNetworkInterface_t::send for systems
  * with OpenSSL.
  */
-size_t IotNetworkOpenssl_Send( void * pConnection,
+size_t IotNetworkOpenssl_Send( IotNetworkConnection_t pConnection,
                                const uint8_t * pMessage,
                                size_t messageLength );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::receive for POSIX systems
+ * @brief An implementation of #IotNetworkInterface_t::receive for systems
  * with OpenSSL.
  */
-size_t IotNetworkOpenssl_Receive( void * pConnection,
+size_t IotNetworkOpenssl_Receive( IotNetworkConnection_t pConnection,
                                   uint8_t * pBuffer,
                                   size_t bytesRequested );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::close for POSIX systems
+ * @brief An implementation of #IotNetworkInterface_t::close for systems
  * with OpenSSL.
  */
-IotNetworkError_t IotNetworkOpenssl_Close( void * pConnection );
+IotNetworkError_t IotNetworkOpenssl_Close( IotNetworkConnection_t pConnection );
 
 /**
- * @brief An implementation of #IotNetworkInterface_t::destroy for POSIX systems
+ * @brief An implementation of #IotNetworkInterface_t::destroy for systems
  * with OpenSSL.
  */
-IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection );
+IotNetworkError_t IotNetworkOpenssl_Destroy( IotNetworkConnection_t pConnection );
 
 /**
  * @brief Used by metrics to retrieve the socket (file descriptor) associated with
  * a connection.
  */
-int IotNetworkOpenssl_GetSocket( void * pConnection );
+int IotNetworkOpenssl_GetSocket( IotNetworkConnection_t pConnection );
 
 #endif /* ifndef IOT_NETWORK_OPENSSL_H_ */

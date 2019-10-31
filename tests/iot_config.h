@@ -158,11 +158,6 @@
     #define Iot_DefaultFree      unity_free_mt
 #endif /* if IOT_STATIC_MEMORY_ONLY == 0 */
 
-/* Network types to use in the tests. These are forward declarations. */
-typedef struct _networkConnection       IotTestNetworkConnection_t;
-typedef struct IotNetworkServerInfo     IotTestNetworkServerInfo_t;
-typedef struct IotNetworkCredentials    IotTestNetworkCredentials_t;
-
 /* Choose the appropriate network abstraction implementation. */
 #if IOT_NETWORK_USE_OPENSSL == 1
     /* OpenSSL network include. */

@@ -137,7 +137,7 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
  * @return Any #IotNetworkError_t, as defined by the network stack.
  */
 static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                   void ** pNetworkConnection,
+                                                   IotNetworkConnection_t * pNetworkConnection,
                                                    bool * pCreatedNewNetworkConnection );
 
 /**
@@ -434,7 +434,7 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
 /*-----------------------------------------------------------*/
 
 static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                   void ** pNetworkConnection,
+                                                   IotNetworkConnection_t * pNetworkConnection,
                                                    bool * pCreatedNewNetworkConnection )
 {
     IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
@@ -1087,7 +1087,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     bool ownNetworkConnection = false;
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
-    void * pNetworkConnection = NULL;
+    IotNetworkConnection_t pNetworkConnection = { 0 };
     _mqttOperation_t * pOperation = NULL;
     _mqttConnection_t * pNewMqttConnection = NULL;
 

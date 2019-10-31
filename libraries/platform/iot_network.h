@@ -28,6 +28,9 @@
 #ifndef IOT_NETWORK_H_
 #define IOT_NETWORK_H_
 
+/* The config header is always included first. */
+#include "iot_config.h"
+
 /* Standard includes. */
 #include <stdint.h>
 #include <stdlib.h>
@@ -87,7 +90,7 @@ typedef enum IotNetworkError
  * @param[in] pContext The third argument passed to @ref platform_network_function_setreceivecallback.
  */
 /* @[declare_platform_network_receivecallback] */
-typedef void ( * IotNetworkReceiveCallback_t )( void * pConnection,
+typedef void ( * IotNetworkReceiveCallback_t )( IotNetworkConnection_t pConnection,
                                                 void * pContext );
 /* @[declare_platform_network_receivecallback] */
 
@@ -104,7 +107,7 @@ typedef struct IotNetworkInterface
      * @brief Create a new network connection.
      *
      * This function allocates resources and establishes a new network connection.
-     * @param[in] pConnectionInfo Represents information needed to set up the
+     * @param[in] pServerInfo Represents information needed to set up the
      * new connection, defined by the network stack.
      * @param[in] pCredentialInfo Represents information needed to secure the
      * new connection, defined by the network stack.
@@ -114,9 +117,9 @@ typedef struct IotNetworkInterface
      * @return Any #IotNetworkError_t, as defined by the network stack.
      */
     /* @[declare_platform_network_create] */
-    IotNetworkError_t ( * create )( void * pConnectionInfo,
-                                    void * pCredentialInfo,
-                                    void ** pConnection );
+    IotNetworkError_t ( * create )( IotNetworkServerInfo_t pServerInfo,
+                                    IotNetworkCredentials_t pCredentialInfo,
+                                    IotNetworkConnection_t * pConnection );
     /* @[declare_platform_network_create] */
 
     /**
@@ -140,7 +143,7 @@ typedef struct IotNetworkInterface
      * @see platform_network_function_receivecallback
      */
     /* @[declare_platform_network_setreceivecallback] */
-    IotNetworkError_t ( * setReceiveCallback )( void * pConnection,
+    IotNetworkError_t ( * setReceiveCallback )( IotNetworkConnection_t pConnection,
                                                 IotNetworkReceiveCallback_t receiveCallback,
                                                 void * pContext );
     /* @[declare_platform_network_setreceivecallback] */
@@ -160,7 +163,7 @@ typedef struct IotNetworkInterface
      * @return The number of bytes successfully sent, `0` on failure.
      */
     /* @[declare_platform_network_send] */
-    size_t ( * send )( void * pConnection,
+    size_t ( * send )( IotNetworkConnection_t pConnection,
                        const uint8_t * pMessage,
                        size_t messageLength );
     /* @[declare_platform_network_send] */
@@ -182,7 +185,7 @@ typedef struct IotNetworkInterface
      * `bytesRequested` when successful. Any other value may indicate an error.
      */
     /* @[declare_platform_network_receive] */
-    size_t ( * receive )( void * pConnection,
+    size_t ( * receive )( IotNetworkConnection_t pConnection,
                           uint8_t * pBuffer,
                           size_t bytesRequested );
     /* @[declare_platform_network_receive] */
@@ -207,7 +210,7 @@ typedef struct IotNetworkInterface
      * @note It must be safe to call this function on an already-closed connection.
      */
     /* @[declare_platform_network_close] */
-    IotNetworkError_t ( * close )( void * pConnection );
+    IotNetworkError_t ( * close )( IotNetworkConnection_t pConnection );
     /* @[declare_platform_network_close] */
 
     /**
@@ -226,7 +229,7 @@ typedef struct IotNetworkInterface
      * [receive callback](@ref platform_network_function_receivecallback).
      */
     /* @[declare_platform_network_destroy] */
-    IotNetworkError_t ( * destroy )( void * pConnection );
+    IotNetworkError_t ( * destroy )( IotNetworkConnection_t pConnection );
     /* @[declare_platform_network_destroy] */
 } IotNetworkInterface_t;
 
@@ -238,11 +241,11 @@ typedef struct IotNetworkInterface
  * structure contains commonly-used parameters, but may be replaced with an
  * alternative.
  */
-typedef struct IotNetworkServerInfo
+struct IotNetworkServerInfo
 {
     const char * pHostName; /**< @brief Server host name. Must be NULL-terminated. */
     uint16_t port;          /**< @brief Server port in host-order. */
-} IotNetworkServerInfo_t;
+};
 
 /**
  * @ingroup platform_datatypes_paramstructs
@@ -252,7 +255,7 @@ typedef struct IotNetworkServerInfo
  * structure contains commonly-used parameters, but may be replaced with an
  * alternative.
  */
-typedef struct IotNetworkCredentials
+struct IotNetworkCredentials
 {
     /**
      * @brief Set this to a non-NULL value to use ALPN.
@@ -280,11 +283,11 @@ typedef struct IotNetworkCredentials
     bool disableSni;
 
     const char * pRootCa;     /**< @brief String representing a trusted server root certificate. */
-    size_t rootCaSize;        /**< @brief Size associated with #IotNetworkCredentials_t.pRootCa. */
+    size_t rootCaSize;        /**< @brief Size associated with #IotNetworkCredentials.pRootCa. */
     const char * pClientCert; /**< @brief String representing the client certificate. */
-    size_t clientCertSize;    /**< @brief Size associated with #IotNetworkCredentials_t.pClientCert. */
+    size_t clientCertSize;    /**< @brief Size associated with #IotNetworkCredentials.pClientCert. */
     const char * pPrivateKey; /**< @brief String representing the client certificate's private key. */
-    size_t privateKeySize;    /**< @brief Size associated with #IotNetworkCredentials_t.pPrivateKey. */
-} IotNetworkCredentials_t;
+    size_t privateKeySize;    /**< @brief Size associated with #IotNetworkCredentials.pPrivateKey. */
+};
 
 #endif /* ifndef IOT_NETWORK_H_ */

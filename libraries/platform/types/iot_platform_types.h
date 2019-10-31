@@ -51,10 +51,8 @@
  * @brief The type used to represent mutexes, configured with the type
  * `_IotSystemMutex_t`.
  *
- * <span style="color:red;font-weight:bold">
- * `_IotSystemMutex_t` will be automatically configured during build and generally
- * does not need to be defined.
- * </span>
+ * For the provided ports, `_IotSystemMutex_t` will be automatically configured.
+ * For other ports, `_IotSystemMutex_t` should be set in `iot_config.h`.
  *
  * Mutexes should only be released by the threads that take them.
  *
@@ -72,10 +70,8 @@ typedef _IotSystemMutex_t       IotMutex_t;
  * @brief The type used to represent semaphores, configured with the type
  * `_IotSystemSemaphore_t`.
  *
- * <span style="color:red;font-weight:bold">
- * `_IotSystemSemaphore_t` will be automatically configured during build and
- * generally does not need to be defined.
- * </span>
+ * For the provided ports, `_IotSystemSemaphore_t` will be automatically configured.
+ * For other ports, `_IotSystemSemaphore_t` should be set in `iot_config.h`.
  *
  * Semaphores must be counting, and any thread may take (wait on) or release
  * (post to) a semaphore.
@@ -104,10 +100,8 @@ typedef void ( * IotThreadRoutine_t )( void * );
  * @brief The type used to represent timers, configured with the type
  * `_IotSystemTimer_t`.
  *
- * <span style="color:red;font-weight:bold">
- * `_IotSystemTimer_t` will be automatically configured during build and generally
- * does not need to be defined.
- * </span>
+ * For the provided ports, `_IotSystemTimer_t` will be automatically configured.
+ * For other ports, `_IotSystemTimer_t` should be set in `iot_config.h`.
  *
  * <b>Example</b> <br>
  * To change the type of #IotTimer_t to `long`:
@@ -117,6 +111,47 @@ typedef void ( * IotThreadRoutine_t )( void * );
  * @endcode
  */
 typedef _IotSystemTimer_t IotTimer_t;
+
+/*--------------------------- Network stack types ---------------------------*/
+
+/**
+ * @ingroup platform_datatypes_handles
+ * @brief The type used to represent network server info, configured with the
+ * type `_IotNetworkServerInfo_t`.
+ *
+ * For the provided ports, `_IotNetworkServerInfo_t` will be automatically configured.
+ * For other ports, `_IotNetworkServerInfo_t` should be set in `iot_config.h`.
+ *
+ * All of the provided ports configure this to #IotNetworkServerInfo, which provides
+ * the necessary information to connect to a TCP peer. For other network protocols,
+ * this type should be set to an alternate structure as needed by the other protocol.
+ */
+typedef _IotNetworkServerInfo_t IotNetworkServerInfo_t;
+
+/**
+ * @ingroup platform_datatypes_handles
+ * @brief The type used to represent network credentials, configured with the
+ * type `_IotNetworkCredentials_t`.
+ *
+ * For the provided ports, `_IotNetworkCredentials_t` will be automatically configured.
+ * For other ports, `_IotNetworkCredentials_t` should be set in `iot_config.h`.
+ *
+ * All of the provided ports configure this to #IotNetworkCredentials, which provides
+ * the necessary information to connect to a TLS server over TCP. For other network
+ * protocols, this type should be set to an alternate structure as needed by the other
+ * protocol.
+ */
+typedef _IotNetworkCredentials_t IotNetworkCredentials_t;
+
+/**
+ * @ingroup platform_datatypes_handles
+ * @brief The type used to represent network connections, configured with the
+ * type `_IotNetworkConnection_t`.
+ *
+ * For the provided ports, `_IotNetworkConnection_t` will be automatically configured.
+ * For other ports, `_IotNetworkConnection_t` should be set in `iot_config.h`.
+ */
+typedef _IotNetworkConnection_t IotNetworkConnection_t;
 
 /*------------------------------ Metrics types ------------------------------*/
 
