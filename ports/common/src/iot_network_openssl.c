@@ -22,7 +22,7 @@
 /**
  * @file iot_network_openssl.c
  * @brief Implementation of the network interface functions in iot_network.h
- * for POSIX systems with OpenSSL.
+ * for systems with OpenSSL.
  */
 
 /* The config header is always included first. */
@@ -50,7 +50,7 @@
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
 
-/* POSIX+OpenSSL network include. */
+/* OpenSSL network include. */
 #include "iot_network_openssl.h"
 
 /* Platform threads include. */
@@ -148,10 +148,10 @@ static void * _networkReceiveThread( void * pArgument )
     };
 
     /* Cast function parameter to correct type. */
-    _networkConnection_t * const pNetworkConnection = pArgument;
+    _networkConnection_t * pConnection = pArgument;
 
     /* Set the file descriptor for poll. */
-    fileDescriptor.fd = pNetworkConnection->socket;
+    fileDescriptor.fd = pConnection->socket;
 
     /* Continuously poll the network socket for events. */
     while( true )
@@ -161,7 +161,7 @@ static void * _networkReceiveThread( void * pArgument )
         if( pollStatus == -1 )
         {
             IotLogError( "Failed to poll socket %d. errno=%d.",
-                         pNetworkConnection->socket,
+                         pConnection->socket,
                          errno );
             break;
         }
@@ -172,17 +172,17 @@ static void * _networkReceiveThread( void * pArgument )
             ( fileDescriptor.revents & POLLNVAL ) )
         {
             IotLogError( "Detected error on socket %d, receive thread exiting.",
-                         pNetworkConnection->socket );
+                         pConnection->socket );
             break;
         }
 
         /* Invoke the callback function. */
-        pNetworkConnection->receiveCallback( pNetworkConnection,
-                                             pNetworkConnection->pReceiveContext );
+        pConnection->receiveCallback( pConnection,
+                                      pConnection->pReceiveContext );
     }
 
     IotLogDebug( "Network receive thread for socket %d terminating.",
-                 pNetworkConnection->socket );
+                 pConnection->socket );
 
     return NULL;
 }
@@ -196,7 +196,7 @@ static void * _networkReceiveThread( void * pArgument )
  *
  * @return A connected TCP socket number; `-1` if the DNS lookup failed.
  */
-static int _dnsLookup( const IotNetworkServerInfo_t * pServerInfo )
+static int _dnsLookup( IotNetworkServerInfo_t pServerInfo )
 {
     IOT_FUNCTION_ENTRY( int, 0 );
     int tcpSocket = -1;
@@ -402,15 +402,15 @@ static bool _readCredentials( SSL_CTX * pSslContext,
 /**
  * @brief Set up TLS on a TCP connection.
  *
- * @param[in] pNetworkConnection An established TCP connection.
+ * @param[in] pConnection An established TCP connection.
  * @param[in] pServerName Remote host name, used for server name indication.
  * @param[in] pOpensslCredentials TLS setup parameters.
  *
  * @return #IOT_NETWORK_SUCCESS, #IOT_NETWORK_FAILURE, or #IOT_NETWORK_SYSTEM_ERROR.
  */
-static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
+static IotNetworkError_t _tlsSetup( _networkConnection_t * pConnection,
                                     const char * pServerName,
-                                    const IotNetworkCredentials_t * pOpensslCredentials )
+                                    const IotNetworkCredentials_t pOpensslCredentials )
 {
     IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
     SSL_CTX * pSslContext = NULL;
@@ -444,9 +444,9 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     }
 
     /* Create a new SSL connection context */
-    pNetworkConnection->pSslContext = SSL_new( pSslContext );
+    pConnection->pSslContext = SSL_new( pSslContext );
 
-    if( pNetworkConnection->pSslContext == NULL )
+    if( pConnection->pSslContext == NULL )
     {
         IotLogError( "Failed to create new SSL connection context." );
 
@@ -455,13 +455,13 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
 
     /* Enable SSL peer verification. */
     IotLogDebug( "Setting SSL_VERIFY_PEER." );
-    SSL_set_verify( pNetworkConnection->pSslContext, SSL_VERIFY_PEER, NULL );
+    SSL_set_verify( pConnection->pSslContext, SSL_VERIFY_PEER, NULL );
 
     /* Set the socket for the SSL connection. */
-    if( SSL_set_fd( pNetworkConnection->pSslContext,
-                    pNetworkConnection->socket ) != 1 )
+    if( SSL_set_fd( pConnection->pSslContext,
+                    pConnection->socket ) != 1 )
     {
-        IotLogError( "Failed to set SSL socket %d.", pNetworkConnection->socket );
+        IotLogError( "Failed to set SSL socket %d.", pConnection->socket );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_SYSTEM_ERROR );
     }
@@ -471,7 +471,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     {
         IotLogDebug( "Setting ALPN protos." );
 
-        if( ( SSL_set_alpn_protos( pNetworkConnection->pSslContext,
+        if( ( SSL_set_alpn_protos( pConnection->pSslContext,
                                    ( const unsigned char * ) pOpensslCredentials->pAlpnProtos,
                                    ( unsigned int ) strlen( pOpensslCredentials->pAlpnProtos ) ) != 0 ) )
         {
@@ -488,7 +488,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
                      ( unsigned long ) pOpensslCredentials->maxFragmentLength );
 
         /* Set the maximum send fragment length. */
-        if( SSL_set_max_send_fragment( pNetworkConnection->pSslContext,
+        if( SSL_set_max_send_fragment( pConnection->pSslContext,
                                        ( long ) pOpensslCredentials->maxFragmentLength ) != 1 )
         {
             IotLogError( "Failed to set max send fragment length %lu.",
@@ -502,7 +502,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
          * Note that OpenSSL ignores this setting if it's smaller than the default.
          */
         #if OPENSSL_VERSION_NUMBER > 0x10100000L
-            SSL_set_default_read_buffer_len( pNetworkConnection->pSslContext,
+            SSL_set_default_read_buffer_len( pConnection->pSslContext,
                                              pOpensslCredentials->maxFragmentLength +
                                              SSL3_RT_MAX_ENCRYPTED_OVERHEAD );
         #endif
@@ -513,7 +513,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     {
         IotLogDebug( "Setting server name %s for SNI.", pServerName );
 
-        if( SSL_set_tlsext_host_name( pNetworkConnection->pSslContext,
+        if( SSL_set_tlsext_host_name( pConnection->pSslContext,
                                       pServerName ) != 1 )
         {
             IotLogError( "Failed to set server name %s for SNI.", pServerName );
@@ -523,7 +523,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     }
 
     /* Perform the TLS handshake. */
-    if( SSL_connect( pNetworkConnection->pSslContext ) != 1 )
+    if( SSL_connect( pConnection->pSslContext ) != 1 )
     {
         IotLogError( "TLS handshake failed." );
 
@@ -533,7 +533,7 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     IotLogInfo( "TLS handshake succeeded." );
 
     /* Verify the peer certificate. */
-    if( SSL_get_verify_result( pNetworkConnection->pSslContext ) != X509_V_OK )
+    if( SSL_get_verify_result( pConnection->pSslContext ) != X509_V_OK )
     {
         IotLogError( "Peer certificate verification failed." );
 
@@ -553,10 +553,10 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     /* Clean up on error. */
     if( status != IOT_NETWORK_SUCCESS )
     {
-        if( pNetworkConnection->pSslContext != NULL )
+        if( pConnection->pSslContext != NULL )
         {
-            SSL_free( pNetworkConnection->pSslContext );
-            pNetworkConnection->pSslContext = NULL;
+            SSL_free( pConnection->pSslContext );
+            pConnection->pSslContext = NULL;
         }
     }
 
@@ -568,25 +568,25 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
 /**
  * @brief Close a TLS connection.
  *
- * @param[in] pNetworkConnection The TLS connection to close.
+ * @param[in] pConnection The TLS connection to close.
  */
-static void _tlsClose( _networkConnection_t * pNetworkConnection )
+static void _tlsClose( _networkConnection_t * pConnection )
 {
     /* Shut down the TLS connection. */
     IotLogInfo( "Shutting down TLS connection." );
 
     /* Lock the SSL context mutex. */
-    IotMutex_Lock( &( pNetworkConnection->sslMutex ) );
+    IotMutex_Lock( &( pConnection->sslMutex ) );
 
     /* SSL shutdown should be called twice: once to send "close notify" and once
      * more to receive the peer's "close notify". */
-    if( SSL_shutdown( pNetworkConnection->pSslContext ) == 0 )
+    if( SSL_shutdown( pConnection->pSslContext ) == 0 )
     {
         IotLogDebug( "\"Close notify\" sent. Awaiting peer response." );
 
         /* The previous call to SSL_shutdown marks the SSL connection as closed.
          * SSL_shutdown must be called again to read the peer response. */
-        if( SSL_shutdown( pNetworkConnection->pSslContext ) != 1 )
+        if( SSL_shutdown( pConnection->pSslContext ) != 1 )
         {
             IotLogWarn( "No response from peer." );
         }
@@ -597,7 +597,7 @@ static void _tlsClose( _networkConnection_t * pNetworkConnection )
     }
 
     /* Unlock the SSL context mutex. */
-    IotMutex_Unlock( &( pNetworkConnection->sslMutex ) );
+    IotMutex_Unlock( &( pConnection->sslMutex ) );
 
     IotLogInfo( "TLS connection closed." );
 }
@@ -660,19 +660,14 @@ void IotNetworkOpenssl_Cleanup( void )
 
 /*-----------------------------------------------------------*/
 
-IotNetworkError_t IotNetworkOpenssl_Create( void * pServerInfo,
-                                            void * pCredentialInfo,
-                                            void ** pConnection )
+IotNetworkError_t IotNetworkOpenssl_Create( IotNetworkServerInfo_t pServerInfo,
+                                            IotNetworkCredentials_t pCredentialInfo,
+                                            IotNetworkConnection_t * pConnection )
 {
     IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
     int tcpSocket = -1;
     bool sslMutexCreated = false;
     _networkConnection_t * pNewNetworkConnection = NULL;
-
-    /* Cast function parameters to correct types. */
-    const IotNetworkServerInfo_t * const pServerInfo = pConnectionInfo;
-    const IotNetworkCredentials_t * const pOpensslCredentials = pCredentialInfo;
-    _networkConnection_t ** const pNetworkConnection = ( _networkConnection_t ** const ) pConnection;
 
     /* Allocate memory for a new connection. */
     pNewNetworkConnection = IotNetwork_Malloc( sizeof( _networkConnection_t ) );
@@ -703,7 +698,7 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pServerInfo,
     pNewNetworkConnection->socket = tcpSocket;
 
     /* Set up TLS if credentials are provided. */
-    if( pOpensslCredentials != NULL )
+    if( pCredentialInfo != NULL )
     {
         IotLogInfo( "Setting up TLS." );
 
@@ -719,7 +714,7 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pServerInfo,
 
         status = _tlsSetup( pNewNetworkConnection,
                             pServerInfo->pHostName,
-                            pOpensslCredentials );
+                            pCredentialInfo );
     }
 
     /* Clean up on error. */
@@ -745,7 +740,7 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pServerInfo,
     else
     {
         /* Set the output parameter. */
-        *pNetworkConnection = pNewNetworkConnection;
+        *pConnection = pNewNetworkConnection;
     }
 
     IOT_FUNCTION_CLEANUP_END();
@@ -753,35 +748,32 @@ IotNetworkError_t IotNetworkOpenssl_Create( void * pServerInfo,
 
 /*-----------------------------------------------------------*/
 
-IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
+IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( IotNetworkConnection_t pConnection,
                                                         IotNetworkReceiveCallback_t receiveCallback,
                                                         void * pContext )
 {
     int posixError = 0;
     IotNetworkError_t status = IOT_NETWORK_SUCCESS;
 
-    /* Cast function parameter to correct type. */
-    _networkConnection_t * const pNetworkConnection = pConnection;
-
     /* Set the callback and parameter. */
-    pNetworkConnection->receiveCallback = receiveCallback;
-    pNetworkConnection->pReceiveContext = pContext;
+    pConnection->receiveCallback = receiveCallback;
+    pConnection->pReceiveContext = pContext;
 
-    posixError = pthread_create( &pNetworkConnection->receiveThread,
-                                    NULL,
-                                    _networkReceiveThread,
-                                    pNetworkConnection );
+    posixError = pthread_create( &pConnection->receiveThread,
+                                 NULL,
+                                 _networkReceiveThread,
+                                 pConnection );
 
     if( posixError != 0 )
     {
         IotLogError( "Failed to create socket %d network receive thread. errno=%d.",
-                        pNetworkConnection->socket,
-                        posixError );
+                     pConnection->socket,
+                     posixError );
         status = IOT_NETWORK_SYSTEM_ERROR;
     }
     else
     {
-        pNetworkConnection->receiveThreadCreated = true;
+        pConnection->receiveThreadCreated = true;
     }
 
     return status;
@@ -789,7 +781,7 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( void * pConnection,
 
 /*-----------------------------------------------------------*/
 
-size_t IotNetworkOpenssl_Send( void * pConnection,
+size_t IotNetworkOpenssl_Send( IotNetworkConnection_t pConnection,
                                const uint8_t * pMessage,
                                size_t messageLength )
 {
@@ -800,21 +792,18 @@ size_t IotNetworkOpenssl_Send( void * pConnection,
         .revents = 0
     };
 
-    /* Cast function parameter to correct type. */
-    _networkConnection_t * const pNetworkConnection = pConnection;
-
     IotLogDebug( "Sending %lu bytes over socket %d.",
                  ( unsigned long ) messageLength,
-                 pNetworkConnection->socket );
+                 pConnection->socket );
 
     /* Set the file descriptor for poll. */
-    fileDescriptor.fd = pNetworkConnection->socket;
+    fileDescriptor.fd = pConnection->socket;
 
     /* The SSL mutex must be locked to protect an SSL context from concurrent
      * access. */
-    if( pNetworkConnection->pSslContext != NULL )
+    if( pConnection->pSslContext != NULL )
     {
-        IotMutex_Lock( &( pNetworkConnection->sslMutex ) );
+        IotMutex_Lock( &( pConnection->sslMutex ) );
     }
 
     /* Check that it's possible to send data right now. */
@@ -822,15 +811,15 @@ size_t IotNetworkOpenssl_Send( void * pConnection,
     {
         /* Use OpenSSL's SSL_write() function or the POSIX send() function based on
          * whether the SSL connection context is set up. */
-        if( pNetworkConnection->pSslContext != NULL )
+        if( pConnection->pSslContext != NULL )
         {
-            bytesSent = SSL_write( pNetworkConnection->pSslContext,
+            bytesSent = SSL_write( pConnection->pSslContext,
                                    pMessage,
                                    ( int ) messageLength );
         }
         else
         {
-            bytesSent = ( int ) send( pNetworkConnection->socket,
+            bytesSent = ( int ) send( pConnection->socket,
                                       pMessage,
                                       messageLength,
                                       0 );
@@ -838,13 +827,13 @@ size_t IotNetworkOpenssl_Send( void * pConnection,
     }
     else
     {
-        IotLogError( "Not possible to send on socket %d.", pNetworkConnection->socket );
+        IotLogError( "Not possible to send on socket %d.", pConnection->socket );
     }
 
     /* Unlock the SSL context mutex. */
-    if( pNetworkConnection->pSslContext != NULL )
+    if( pConnection->pSslContext != NULL )
     {
-        IotMutex_Unlock( &( pNetworkConnection->sslMutex ) );
+        IotMutex_Unlock( &( pConnection->sslMutex ) );
     }
 
     /* Log the number of bytes sent. */
@@ -871,25 +860,22 @@ size_t IotNetworkOpenssl_Send( void * pConnection,
 
 /*-----------------------------------------------------------*/
 
-size_t IotNetworkOpenssl_Receive( void * pConnection,
+size_t IotNetworkOpenssl_Receive( IotNetworkConnection_t pConnection,
                                   uint8_t * pBuffer,
                                   size_t bytesRequested )
 {
     int receiveStatus = 0;
     size_t bytesRead = 0, bytesRemaining = bytesRequested;
 
-    /* Cast function parameter to correct type. */
-    _networkConnection_t * const pNetworkConnection = pConnection;
-
     IotLogDebug( "Blocking to wait for %lu bytes on socket %d.",
                  ( unsigned long ) bytesRequested,
-                 pNetworkConnection->socket );
+                 pConnection->socket );
 
     /* The SSL mutex must be locked to protect an SSL context from concurrent
      * access. */
-    if( pNetworkConnection->pSslContext != NULL )
+    if( pConnection->pSslContext != NULL )
     {
-        IotMutex_Lock( &( pNetworkConnection->sslMutex ) );
+        IotMutex_Lock( &( pConnection->sslMutex ) );
     }
 
     /* Loop until all bytes are received. */
@@ -897,15 +883,15 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
     {
         /* Use OpenSSL's SSL_read() function or the POSIX recv() function based on
          * whether the SSL connection context is set up. */
-        if( pNetworkConnection->pSslContext != NULL )
+        if( pConnection->pSslContext != NULL )
         {
-            receiveStatus = SSL_read( pNetworkConnection->pSslContext,
+            receiveStatus = SSL_read( pConnection->pSslContext,
                                       pBuffer + bytesRead,
                                       ( int ) bytesRemaining );
         }
         else
         {
-            receiveStatus = ( int ) recv( pNetworkConnection->socket,
+            receiveStatus = ( int ) recv( pConnection->socket,
                                           pBuffer + bytesRead,
                                           bytesRemaining,
                                           0 );
@@ -915,7 +901,7 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
         if( receiveStatus <= 0 )
         {
             IotLogError( "Error receiving from socket %d.",
-                         pNetworkConnection->socket );
+                         pConnection->socket );
 
             break;
         }
@@ -927,9 +913,9 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
     }
 
     /* Unlock the SSL context mutex. */
-    if( pNetworkConnection->pSslContext != NULL )
+    if( pConnection->pSslContext != NULL )
     {
-        IotMutex_Unlock( &( pNetworkConnection->sslMutex ) );
+        IotMutex_Unlock( &( pConnection->sslMutex ) );
     }
 
     /* Check how many bytes were read. */
@@ -950,28 +936,25 @@ size_t IotNetworkOpenssl_Receive( void * pConnection,
 
 /*-----------------------------------------------------------*/
 
-IotNetworkError_t IotNetworkOpenssl_Close( void * pConnection )
+IotNetworkError_t IotNetworkOpenssl_Close( IotNetworkConnection_t pConnection )
 {
-    /* Cast function parameter to correct type. */
-    _networkConnection_t * const pNetworkConnection = pConnection;
-
     /* If TLS was set up for this connection, clean it up. */
-    if( pNetworkConnection->pSslContext != NULL )
+    if( pConnection->pSslContext != NULL )
     {
-        _tlsClose( pNetworkConnection );
+        _tlsClose( pConnection );
     }
 
     /* Shut down the connection. */
-    if( shutdown( pNetworkConnection->socket, SHUT_RDWR ) != 0 )
+    if( shutdown( pConnection->socket, SHUT_RDWR ) != 0 )
     {
         IotLogWarn( "Could not shut down socket %d. errno=%d.",
-                    pNetworkConnection->socket,
+                    pConnection->socket,
                     errno );
     }
     else
     {
         IotLogInfo( "Connection (socket %d) shut down.",
-                    pNetworkConnection->socket );
+                    pConnection->socket );
     }
 
     return IOT_NETWORK_SUCCESS;
@@ -979,79 +962,73 @@ IotNetworkError_t IotNetworkOpenssl_Close( void * pConnection )
 
 /*-----------------------------------------------------------*/
 
-IotNetworkError_t IotNetworkOpenssl_Destroy( void * pConnection )
+IotNetworkError_t IotNetworkOpenssl_Destroy( IotNetworkConnection_t pConnection )
 {
     int posixError = 0;
 
-    /* Cast function parameter to correct type. */
-    _networkConnection_t * const pNetworkConnection = pConnection;
-
     /* Check if a receive thread needs to be cleaned up. */
-    if( pNetworkConnection->receiveThreadCreated == true )
+    if( pConnection->receiveThreadCreated == true )
     {
-        if( pthread_self() == pNetworkConnection->receiveThread )
+        if( pthread_self() == pConnection->receiveThread )
         {
             /* If this function is being called from the receive thread, detach
              * it so no other thread needs to clean it up. */
-            posixError = pthread_detach( pNetworkConnection->receiveThread );
+            posixError = pthread_detach( pConnection->receiveThread );
 
             if( posixError != 0 )
             {
                 IotLogWarn( "Failed to detach receive thread for socket %d. errno=%d.",
-                            pNetworkConnection->socket,
+                            pConnection->socket,
                             posixError );
             }
         }
         else
         {
             /* Wait for the receive thread to exit. */
-            posixError = pthread_join( pNetworkConnection->receiveThread, NULL );
+            posixError = pthread_join( pConnection->receiveThread, NULL );
 
             if( posixError != 0 )
             {
                 IotLogWarn( "Failed to join receive thread for socket %d. errno=%d.",
-                            pNetworkConnection->socket,
+                            pConnection->socket,
                             posixError );
             }
         }
     }
 
     /* Free the memory used by the TLS connection, if any. */
-    if( pNetworkConnection->pSslContext != NULL )
+    if( pConnection->pSslContext != NULL )
     {
-        SSL_free( pNetworkConnection->pSslContext );
+        SSL_free( pConnection->pSslContext );
 
         /* Destroy the SSL context mutex. */
-        IotMutex_Destroy( &( pNetworkConnection->sslMutex ) );
+        IotMutex_Destroy( &( pConnection->sslMutex ) );
     }
 
     /* Close the socket file descriptor. */
-    if( close( pNetworkConnection->socket ) != 0 )
+    if( close( pConnection->socket ) != 0 )
     {
         IotLogWarn( "Could not close socket %d. errno=%d.",
-                    pNetworkConnection->socket,
+                    pConnection->socket,
                     errno );
     }
     else
     {
         IotLogInfo( "(Socket %d) Socket closed.",
-                    pNetworkConnection->socket );
+                    pConnection->socket );
     }
 
     /* Free the connection. */
-    IotNetwork_Free( pNetworkConnection );
+    IotNetwork_Free( pConnection );
 
     return IOT_NETWORK_SUCCESS;
 }
 
 /*-----------------------------------------------------------*/
 
-int IotNetworkOpenssl_GetSocket( void * pConnection )
+int IotNetworkOpenssl_GetSocket( IotNetworkConnection_t pConnection )
 {
-    /* Cast function parameter to correct type. */
-    _networkConnection_t * const pNetworkConnection = pConnection;
-
-    return pNetworkConnection->socket;
+    return pConnection->socket;
 }
 
 /*-----------------------------------------------------------*/
