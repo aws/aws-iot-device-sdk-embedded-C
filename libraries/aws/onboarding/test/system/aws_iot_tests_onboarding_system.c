@@ -137,11 +137,9 @@ static void _printRejectedResponse( const AwsIotOnboardingRejectedResponse_t * p
 {
     AwsIotOnboarding_Assert( pResponseInfo != NULL );
 
-    IotLogError( "\n Request REJECTED!!\n ErrorCode={%s}\n ErrorMessage={%s}\n",
-                 pResponseInfo->pErrorCode,
-                 pResponseInfo->errorCodeLength,
-                 pResponseInfo->pErrorMessage,
-                 pResponseInfo->errorMessageLength );
+    IotLogError( "\n Request REJECTED!!\n ErrorCode={%.*s}\n ErrorMessage={%.*s}\n",
+                 pResponseInfo->errorCodeLength, pResponseInfo->pErrorCode,
+                 pResponseInfo->errorMessageLength, pResponseInfo->pErrorMessage );
 }
 
 /*-----------------------------------------------------------*/
@@ -165,13 +163,13 @@ static void _printDeviceCredentialsCallback( void * contextParam,
         TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pPrivateKey );
         TEST_ASSERT_GREATER_THAN( 0, pResponseInfo->u.acceptedResponse.privateKeyLength );
 
-        IotLogInfo( "\n Certificate PEM = %s\n Certificate ID = %s\n DREADED PRIVATE KEY = %s\n",
-                    pResponseInfo->u.acceptedResponse.pDeviceCertificate,
+        IotLogInfo( "\n Certificate PEM = %.*s\n Certificate ID = %.*s\n DREADED PRIVATE KEY = %.*s\n",
                     pResponseInfo->u.acceptedResponse.deviceCertificateLength,
-                    pResponseInfo->u.acceptedResponse.pCertificateId,
+                    pResponseInfo->u.acceptedResponse.pDeviceCertificate,
                     pResponseInfo->u.acceptedResponse.certificateIdLength,
-                    pResponseInfo->u.acceptedResponse.pPrivateKey,
-                    pResponseInfo->u.acceptedResponse.privateKeyLength );
+                    pResponseInfo->u.acceptedResponse.pCertificateId,
+                    pResponseInfo->u.acceptedResponse.privateKeyLength,
+                    pResponseInfo->u.acceptedResponse.pPrivateKey );
     }
     else
     {
@@ -198,8 +196,9 @@ static void _printOnboardDeviceResponseCallback( void * contextParam,
         {
             if( pResponseInfo->u.acceptedResponse.pThingName != NULL )
             {
-                IotLogInfo( "ThingName = %s", pResponseInfo->u.acceptedResponse.pThingName,
-                            pResponseInfo->u.acceptedResponse.thingNameLength );
+                IotLogInfo( "ThingName = %.*s",
+                            pResponseInfo->u.acceptedResponse.thingNameLength,
+                            pResponseInfo->u.acceptedResponse.pThingName );
             }
         }
 
@@ -212,12 +211,12 @@ static void _printOnboardDeviceResponseCallback( void * contextParam,
                  configIndex < pResponseInfo->u.acceptedResponse.numOfConfigurationEntries;
                  configIndex++ )
             {
-                IotLogInfo( "Device Configuration no. %d:ConfigName = %s, ConfigData = %s ",
+                IotLogInfo( "Device Configuration no. %d:ConfigName = %.*s, ConfigData = %.*s ",
                             configIndex,
-                            pConfigurationList[ configIndex ].pKey,
                             pConfigurationList[ configIndex ].keyLength,
-                            pConfigurationList[ configIndex ].pValue,
-                            pConfigurationList[ configIndex ].valueLength );
+                            pConfigurationList[ configIndex ].pKey,
+                            pConfigurationList[ configIndex ].valueLength,
+                            pConfigurationList[ configIndex ].pValue );
             }
         }
     }
