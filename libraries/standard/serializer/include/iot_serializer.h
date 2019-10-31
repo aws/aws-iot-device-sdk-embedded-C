@@ -503,12 +503,10 @@ typedef struct IotSerializerDecodeInterface
      * @param[out] pEncodedDataStartAddr This will be populated with the starting location of the encoded object
      * in the data buffer.
      * @return #IOT_SERIALIZER_SUCCESS if successful; otherwise #IOT_SERIALIZER_NOT_SUPPORTED
-     * for a non-container type iterator.
+     * for a non-container type decoder object.
      */
-    IotSerializerError_t ( * getBufferAddress )( IotSerializerDecoderObject_t *
-                                                 pDecoderObject,
-                                                 const uint8_t **
-                                                 pEncodedDataStartAddr );
+    IotSerializerError_t ( * getBufferAddress )( IotSerializerDecoderObject_t * pDecoderObject,
+                                                 const uint8_t ** pEncodedDataStartAddr );
 
 
     /**
@@ -524,7 +522,15 @@ typedef struct IotSerializerDecodeInterface
     IotSerializerError_t ( * getSizeOfEncodedData )( IotSerializerDecoderObject_t * pDecoderObject,
                                                      size_t * pEncodedDataLength );
 
-
+    /**
+     * @brief Function to calculate the size of a container.
+     * It returns in constant time, O(1), for fixed-length containers, and incurs O(N) time for indefinite-length
+     * containers
+     * @param[in] pDecoderObject The decoder object representing a container whose size will be calculated.
+     * @param[out] pLength The calculated length of the container will be stored here, if successful.
+     * @return #IOT_SERIALIZER_SUCCESS if successful, #IOT_SERIALIZER_NOT_SUPPORTED for a non-container type object
+     * or the appropriate error code.
+     */
     IotSerializerError_t ( * getSizeOf )( IotSerializerDecoderObject_t * pDecoderObject,
                                           size_t * pLength );
 

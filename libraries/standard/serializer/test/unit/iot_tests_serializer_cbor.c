@@ -463,6 +463,8 @@ TEST_GROUP_RUNNER( Serializer_Decoder_Unit_CBOR )
 {
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap );
+    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthMap );
+    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthArray );
 }
 
 TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
@@ -647,4 +649,58 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
                                                                        &nestedMapDecoder ) );
     _pCborDecoder->destroy( &nestedMapDecoder );
     _pCborDecoder->destroy( &outerDecoder2 );
+}
+
+TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthMap )
+{
+    const uint8_t pSampleIndefiniteLengthMap[] =
+    {
+        0xBF,                   /*# map(*)  <---------------   Indefinite map length */
+        0x64,                   /*# text(4) */
+        0x4B, 0x65, 0x79, 0x31, /*# "Key1" */
+        0x01,                   /*# unsigned(1) */
+        0x64,                   /*# text(4) */
+        0x4B, 0x65, 0x79, 0x32, /*# "Key2" */
+        0x02,                   /*# unsigned(2) */
+        0xFF,                   /*# primitive(*) <------------------ "break" */
+    };
+
+    IotSerializerDecoderObject_t mapDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t mapSize = 0;
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &mapDecoder,
+                                                                    pSampleIndefiniteLengthMap,
+                                                                    sizeof( pSampleIndefiniteLengthMap ) ) );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &mapDecoder, &mapSize ) );
+    TEST_ASSERT_EQUAL( 2, mapSize );
+
+    _pCborDecoder->destroy( &mapDecoder );
+}
+
+TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthArray )
+{
+    const uint8_t pSampleIndefiniteLengthMap[] =
+    {
+        0x9F,                   /*# array(*)  <---------------   Indefinite array length */
+        0x64,                   /*# text(4) */
+        0x4B, 0x65, 0x79, 0x31, /*# "Key1" */
+        0x01,                   /*# unsigned(1) */
+        0x64,                   /*# text(4) */
+        0x4B, 0x65, 0x79, 0x32, /*# "Key2" */
+        0x02,                   /*# unsigned(2) */
+        0xFF,                   /*# primitive(*) <------------------ "break" */
+    };
+
+    IotSerializerDecoderObject_t arrayDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t arraySize = 0;
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &arrayDecoder,
+                                                                    pSampleIndefiniteLengthMap,
+                                                                    sizeof( pSampleIndefiniteLengthMap ) ) );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &arrayDecoder, &arraySize ) );
+    TEST_ASSERT_EQUAL( 4, arraySize );
+
+    _pCborDecoder->destroy( &arrayDecoder );
 }

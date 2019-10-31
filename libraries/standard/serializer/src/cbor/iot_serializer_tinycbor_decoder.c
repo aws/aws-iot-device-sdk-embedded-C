@@ -79,7 +79,23 @@ static IotSerializerError_t _getSizeOf( IotSerializerDecoderObject_t * pDecoderO
  * @brief Utility to calculates the length of the raw encoded data represented by the
  * passed `pValue` object.
  */
-static size_t calculateSizeOfCborObject( CborValue * pValue );
+static size_t _calculateSizeOfCborObject( CborValue * pValue );
+
+/**
+ * @brief Calculates the number of elements in an indefinite-length container
+ * in O(N) time by iterating through the container.
+ * @note For array type containers, it returns the number of elements in the array.
+ * For map type containers, it returns the 2 * number of entry pairs in the map.
+ * This is meant ONLY for indefinite-length containers (though it supports fixed-length containers).
+ * Fixed-length containers should use tinycbor provided APIs, `cbor_value_get_map_length`,
+ * and `cbor_value_get_array_length()`
+ *
+ * @param pCborValue[in]  The `CborValue` representing the indefinite-length container.
+ * @param pContainerSize[in/out] This will be populated with the calculated size of the container.
+ * @return `CborNoError` if successful, otherwise returns the appropriate `CborError` error.
+ */
+static CborError _calculateSizeOfIndefiniteLengthContainer( CborValue * pCborValue,
+                                                            size_t * pContainerSize )
 
 /*-----------------------------------------------------------*/
 
@@ -96,7 +112,7 @@ static const IotSerializerDecodeInterface_t _cborDecoder =
     .getSizeOfEncodedData = _getSizeOfEncodedData,
     .getSizeOf            = _getSizeOf,
     .destroy              = _destroy
-};
+}
 
 /* Wrapper CborValue with additional fields. */
 typedef struct _cborValueWrapper
@@ -107,7 +123,7 @@ typedef struct _cborValueWrapper
 
 /*-----------------------------------------------------------*/
 
-static size_t calculateSizeOfCborObject( CborValue * pValue )
+static size_t _calculateSizeOfCborObject( CborValue * pValue )
 {
     IotSerializer_Assert( pValue != NULL );
     CborValue nextValue;
@@ -597,7 +613,7 @@ IotSerializerError_t _getSizeOfEncodedData( IotSerializerDecoderObject_t * pDeco
 
     if( IotSerializer_IsContainer( pDecoderObject ) )
     {
-        *pEncodedDataLength = calculateSizeOfCborObject(
+        *pEncodedDataLength = _calculateSizeOfCborObject(
             &( ( ( _cborValueWrapper_t * ) pDecoderObject->u.pHandle )->cborValue ) );
     }
     else
@@ -610,8 +626,8 @@ IotSerializerError_t _getSizeOfEncodedData( IotSerializerDecoderObject_t * pDeco
 
 /*-----------------------------------------------------------*/
 
-static CborError _calculateSizeOfContainer( CborValue * pCborValue,
-                                            size_t * pContainerSize )
+static CborError _calculateSizeOfIndefiniteLengthContainer( CborValue * pCborValue,
+                                                            size_t * pContainerSize )
 {
     IotSerializer_Assert( pCborValue != NULL );
     IotSerializer_Assert( cbor_value_is_container( pCborValue ) );
@@ -657,7 +673,7 @@ IotSerializerError_t _getSizeOf( IotSerializerDecoderObject_t * pDecoderObject,
                         &( ( _cborValueWrapper_t * ) ( pDecoderObject->u.pHandle ) )->cborValue,
                         pLength ) == CborErrorUnknownLength )
                 {
-                    _translateErrorCode( _calculateSizeOfContainer(
+                    _translateErrorCode( _calculateSizeOfIndefiniteLengthContainer(
                                              &pCborValueWrapper->cborValue, pLength ), &status );
                 }
 
@@ -669,7 +685,7 @@ IotSerializerError_t _getSizeOf( IotSerializerDecoderObject_t * pDecoderObject,
                         &( ( _cborValueWrapper_t * ) ( pDecoderObject->u.pHandle ) )->cborValue,
                         pLength ) == CborErrorUnknownLength )
                 {
-                    _translateErrorCode( _calculateSizeOfContainer(
+                    _translateErrorCode( _calculateSizeOfIndefiniteLengthContainer(
                                              &pCborValueWrapper->cborValue, pLength ), &status );
                 }
 
