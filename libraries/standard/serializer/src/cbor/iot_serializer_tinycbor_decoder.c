@@ -95,7 +95,7 @@ static size_t _calculateSizeOfCborObject( CborValue * pValue );
  * @return `CborNoError` if successful, otherwise returns the appropriate `CborError` error.
  */
 static CborError _calculateSizeOfIndefiniteLengthContainer( CborValue * pCborValue,
-                                                            size_t * pContainerSize )
+                                                            size_t * pContainerSize );
 
 /*-----------------------------------------------------------*/
 
@@ -112,7 +112,7 @@ static const IotSerializerDecodeInterface_t _cborDecoder =
     .getSizeOfEncodedData = _getSizeOfEncodedData,
     .getSizeOf            = _getSizeOf,
     .destroy              = _destroy
-}
+};
 
 /* Wrapper CborValue with additional fields. */
 typedef struct _cborValueWrapper
@@ -646,8 +646,6 @@ static CborError _calculateSizeOfIndefiniteLengthContainer( CborValue * pCborVal
         status = cbor_value_advance( &iterator );
     }
 
-    *pContainerSize = *pContainerSize / 2;
-
     return status;
 }
 
@@ -675,6 +673,9 @@ IotSerializerError_t _getSizeOf( IotSerializerDecoderObject_t * pDecoderObject,
                 {
                     _translateErrorCode( _calculateSizeOfIndefiniteLengthContainer(
                                              &pCborValueWrapper->cborValue, pLength ), &status );
+
+                    /* Mofidy the calculate size of elements for the map to represent number of "entry pairs". */
+                    *pLength = *pLength / 2;
                 }
 
                 break;
