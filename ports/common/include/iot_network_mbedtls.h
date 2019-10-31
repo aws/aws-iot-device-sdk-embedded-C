@@ -38,12 +38,12 @@
 #include "platform/iot_network.h"
 
 /**
- * @brief Provides a default value for an #IotNetworkServerInfo_t.
+ * @brief Provides a default value for an #IotNetworkServerInfo.
  *
- * All instances of #IotNetworkServerInfo_t should be initialized with
+ * All instances of #IotNetworkServerInfo should be initialized with
  * this constant when using this mbed TLS network stack.
  *
- * @warning Failing to initialize an #IotNetworkServerInfo_t may result in
+ * @warning Failing to initialize an #IotNetworkServerInfo may result in
  * a crash!
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
@@ -51,7 +51,7 @@
 #define IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER    { 0 }
 
 /**
- * @brief Initialize an #IotNetworkCredentials_t for AWS IoT with ALPN enabled
+ * @brief Initialize an #IotNetworkCredentials for AWS IoT with ALPN enabled
  * when using this mbed TLS network stack.
  *
  * @note This initializer may change at any time in future versions, but its
@@ -63,7 +63,7 @@
     }
 
 /**
- * @brief Generic initializer for an #IotNetworkCredentials_t when using this
+ * @brief Generic initializer for an #IotNetworkCredentials when using this
  * mbed TLS network stack.
  *
  * @note This initializer may change at any time in future versions, but its
@@ -112,46 +112,46 @@ void IotNetworkMbedtls_Cleanup( void );
 /**
  * @brief An implementation of #IotNetworkInterface_t::create for mbed TLS.
  */
-IotNetworkError_t IotNetworkMbedtls_Create( void * pConnectionInfo,
-                                            void * pCredentialInfo,
-                                            void ** pConnection );
+IotNetworkError_t IotNetworkMbedtls_Create( IotNetworkServerInfo_t pServerInfo,
+                                            IotNetworkCredentials_t pCredentialInfo,
+                                            IotNetworkConnection_t * pConnection );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::setReceiveCallback for
  * mbed TLS.
  */
-IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( void * pConnection,
+IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( IotNetworkConnection_t pConnection,
                                                         IotNetworkReceiveCallback_t receiveCallback,
                                                         void * pContext );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::send for mbed TLS.
  */
-size_t IotNetworkMbedtls_Send( void * pConnection,
+size_t IotNetworkMbedtls_Send( IotNetworkConnection_t pConnection,
                                const uint8_t * pMessage,
                                size_t messageLength );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::receive for mbed TLS.
  */
-size_t IotNetworkMbedtls_Receive( void * pConnection,
+size_t IotNetworkMbedtls_Receive( IotNetworkConnection_t pConnection,
                                   uint8_t * pBuffer,
                                   size_t bytesRequested );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::close for mbed TLS.
  */
-IotNetworkError_t IotNetworkMbedtls_Close( void * pConnection );
+IotNetworkError_t IotNetworkMbedtls_Close( IotNetworkConnection_t pConnection );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::destroy for mbed TLS.
  */
-IotNetworkError_t IotNetworkMbedtls_Destroy( void * pConnection );
+IotNetworkError_t IotNetworkMbedtls_Destroy( IotNetworkConnection_t pConnection );
 
 /**
  * @brief Used by metrics to retrieve the socket (file descriptor) associated with
  * a connection.
  */
-int IotNetworkMbedtls_GetSocket( void * pConnection );
+int IotNetworkMbedtls_GetSocket( IotNetworkConnection_t pConnection );
 
 #endif /* ifndef IOT_NETWORK_MBEDTLS_H_ */

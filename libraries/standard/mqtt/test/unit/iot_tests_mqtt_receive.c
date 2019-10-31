@@ -325,7 +325,7 @@ static bool _processBuffer( const _mqttOperation_t * pOperation,
     receiveContext.dataLength = bufferSize;
 
     /* Call the receive callback on pBuffer. */
-    IotMqtt_ReceiveCallback( &receiveContext,
+    IotMqtt_ReceiveCallback( ( IotNetworkConnection_t ) &receiveContext,
                              _pMqttConnection );
 
     /* Check expected result if operation is given. */
@@ -374,7 +374,7 @@ static bool _processPublish( const uint8_t * pPublish,
     receiveContext.dataLength = publishSize;
 
     /* Call the receive callback on pPublish. */
-    IotMqtt_ReceiveCallback( &receiveContext,
+    IotMqtt_ReceiveCallback( ( IotNetworkConnection_t ) &receiveContext,
                              _pMqttConnection );
 
     /* Check how many times the publish callback is invoked. */
@@ -431,12 +431,12 @@ static void _publishCallback( void * pCallbackContext,
 /**
  * @brief Simulates a network receive function.
  */
-static size_t _receive( void * pConnection,
+static size_t _receive( IotNetworkConnection_t pConnection,
                         uint8_t * pBuffer,
                         size_t bytesRequested )
 {
     size_t bytesReceived = 0;
-    _receiveContext_t * pReceiveContext = pConnection;
+    _receiveContext_t * pReceiveContext = ( _receiveContext_t * ) pConnection;
 
     if( pReceiveContext->dataIndex != pReceiveContext->dataLength )
     {
@@ -474,7 +474,7 @@ static size_t _receive( void * pConnection,
 /**
  * @brief A network send function that checks the message is a PUBACK.
  */
-static size_t _checkPuback( void * pConnection,
+static size_t _checkPuback( IotNetworkConnection_t pConnection,
                             const uint8_t * pMessage,
                             size_t messageLength )
 {
@@ -505,7 +505,7 @@ static size_t _checkPuback( void * pConnection,
 /**
  * @brief A network close function that reports if it was invoked.
  */
-static IotNetworkError_t _close( void * pConnection )
+static IotNetworkError_t _close( IotNetworkConnection_t pConnection )
 {
     /* Silence warnings about unused parameters. */
     ( void ) pConnection;
@@ -760,7 +760,7 @@ TEST( MQTT_Unit_Receive, InvalidPacket )
     receiveContext.dataLength = 1;
 
     /* Processing a control packet 0xf is a protocol violation. */
-    IotMqtt_ReceiveCallback( &receiveContext,
+    IotMqtt_ReceiveCallback( ( IotNetworkConnection_t ) &receiveContext,
                              _pMqttConnection );
 
     /* Processing an invalid packet should cause the network connection to be closed. */
@@ -801,12 +801,12 @@ TEST( MQTT_Unit_Receive, ReceiveMallocFail )
 
         /* Set malloc to fail and process the first SUBACK. */
         UnityMalloc_MakeMallocFailAfterCount( 0 );
-        IotMqtt_ReceiveCallback( &receiveContext,
+        IotMqtt_ReceiveCallback( ( IotNetworkConnection_t ) &receiveContext,
                                  _pMqttConnection );
 
         /* Allow the use of malloc and process the second SUBACK. */
         UnityMalloc_MakeMallocFailAfterCount( -1 );
-        IotMqtt_ReceiveCallback( &receiveContext,
+        IotMqtt_ReceiveCallback( ( IotNetworkConnection_t ) &receiveContext,
                                  _pMqttConnection );
 
         /* Network close function should not have been invoked. */

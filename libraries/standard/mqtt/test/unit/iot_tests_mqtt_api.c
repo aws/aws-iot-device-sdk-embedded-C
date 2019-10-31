@@ -240,7 +240,7 @@ static void _publishSetDup( uint8_t * pPublishPacket,
  * @brief A send function that always "succeeds". May report that it was invoked
  * through a semaphore.
  */
-static size_t _sendSuccess( void * pSendContext,
+static size_t _sendSuccess( IotNetworkConnection_t pSendContext,
                             const uint8_t * pMessage,
                             size_t messageLength )
 {
@@ -267,7 +267,7 @@ static size_t _sendSuccess( void * pSendContext,
 /**
  * @brief A send function for PINGREQ that responds with a PINGRESP.
  */
-static size_t _sendPingreq( void * pSendContext,
+static size_t _sendPingreq( IotNetworkConnection_t pSendContext,
                             const uint8_t * pMessage,
                             size_t messageLength )
 {
@@ -294,7 +294,7 @@ static size_t _sendPingreq( void * pSendContext,
 /**
  * @brief A send function that delays.
  */
-static size_t _sendDelay( void * pSendContext,
+static size_t _sendDelay( IotNetworkConnection_t pSendContext,
                           const uint8_t * pMessage,
                           size_t messageLength )
 {
@@ -319,7 +319,7 @@ static size_t _sendDelay( void * pSendContext,
  * @brief This send function checks that a duplicate outgoing message differs from
  * the original.
  */
-static size_t _dupChecker( void * pSendContext,
+static size_t _dupChecker( IotNetworkConnection_t pSendContext,
                            const uint8_t * pMessage,
                            size_t messageLength )
 {
@@ -412,7 +412,7 @@ static size_t _dupChecker( void * pSendContext,
 /**
  * @brief A network receive function that simulates receiving a PINGRESP.
  */
-static size_t _receivePingresp( void * pReceiveContext,
+static size_t _receivePingresp( IotNetworkConnection_t pReceiveContext,
                                 uint8_t * pBuffer,
                                 size_t bytesRequested )
 {
@@ -442,7 +442,7 @@ static size_t _receivePingresp( void * pReceiveContext,
 /**
  * @brief A function for setting the receive callback that just returns success.
  */
-static IotNetworkError_t _setReceiveCallback( void * pConnection,
+static IotNetworkError_t _setReceiveCallback( IotNetworkConnection_t pConnection,
                                               IotNetworkReceiveCallback_t receiveCallback,
                                               void * pReceiveContext )
 {
@@ -459,7 +459,7 @@ static IotNetworkError_t _setReceiveCallback( void * pConnection,
 /**
  * @brief A network close function that counts how many times it was invoked.
  */
-static IotNetworkError_t _close( void * pCloseContext )
+static IotNetworkError_t _close( IotNetworkConnection_t pCloseContext )
 {
     /* Silence warnings about unused parameters. */
     ( void ) pCloseContext;

@@ -99,8 +99,8 @@ int main( int argc,
     IotDemoArguments_t demoArguments = IOT_DEMO_ARGUMENTS_INITIALIZER;
 
     /* Network server info and credentials. */
-    IotNetworkServerInfo_t serverInfo = IOT_DEMO_SERVER_INFO_INITIALIZER;
-    IotNetworkCredentials_t credentials = IOT_DEMO_CREDENTIALS_INITIALIZER,
+    struct IotNetworkServerInfo serverInfo = IOT_DEMO_SERVER_INFO_INITIALIZER;
+    struct IotNetworkCredentials credentials = IOT_DEMO_CREDENTIALS_INITIALIZER,
                             * pCredentials = NULL;
 
     /* Parse and validate any command line arguments. */

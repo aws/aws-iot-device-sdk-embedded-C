@@ -86,14 +86,14 @@
 /**
  * @brief Wraps the network connection creation function with metrics.
  */
-static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
-                                                void * pCredentialInfo,
-                                                void ** pConnection );
+static IotNetworkError_t _metricsNetworkCreate( IotNetworkServerInfo_t pServerInfo,
+                                                IotNetworkCredentials_t pCredentialInfo,
+                                                IotNetworkConnection_t * pConnection );
 
 /**
  * @brief Wraps the network connection close function with metrics.
  */
-static IotNetworkError_t _metricsNetworkClose( void * pConnection );
+static IotNetworkError_t _metricsNetworkClose( IotNetworkConnection_t pConnection );
 
 /**
  * @brief Used to match metrics connection records by network connection.
@@ -129,17 +129,19 @@ static IotMutex_t _connectionListMutex;
     /**
      * @brief Pointer to the metrics-wrapped network creation function.
      */
-    static IotNetworkError_t ( * _networkCreate )( void *, void *, void ** ) = IotNetworkOpenssl_Create;
+    static IotNetworkError_t ( * _networkCreate )( IotNetworkServerInfo_t,
+                                                   IotNetworkCredentials_t,
+                                                   IotNetworkConnection_t * ) = IotNetworkOpenssl_Create;
 
     /**
      * @brief Pointer to the metrics-wrapped network close function.
      */
-    static IotNetworkError_t ( * _networkClose )( void * ) = IotNetworkOpenssl_Close;
+    static IotNetworkError_t ( * _networkClose )( IotNetworkConnection_t ) = IotNetworkOpenssl_Close;
 
     /**
      * @brief Pointer to the function that retrieves the socket for a connection.
      */
-    static int ( * _getSocket )( void * ) = IotNetworkOpenssl_GetSocket;
+    static int ( * _getSocket )( IotNetworkConnection_t ) = IotNetworkOpenssl_GetSocket;
 
     /**
      * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
@@ -161,17 +163,19 @@ static IotMutex_t _connectionListMutex;
     /**
      * @brief Pointer to the metrics-wrapped network creation function.
      */
-    static IotNetworkError_t ( * _networkCreate )( void *, void *, void ** ) = IotNetworkMbedtls_Create;
+    static IotNetworkError_t ( * _networkCreate )( IotNetworkServerInfo_t,
+                                                   IotNetworkCredentials_t,
+                                                   IotNetworkConnection_t * ) = IotNetworkMbedtls_Create;
 
     /**
      * @brief Pointer to the metrics-wrapped network close function.
      */
-    static IotNetworkError_t ( * _networkClose )( void * ) = IotNetworkMbedtls_Close;
+    static IotNetworkError_t ( * _networkClose )( IotNetworkConnection_t ) = IotNetworkMbedtls_Close;
 
     /**
      * @brief Pointer to the function that retrieves the socket for a connection.
      */
-    static int ( * _getSocket )( void * ) = IotNetworkMbedtls_GetSocket;
+    static int ( * _getSocket )( IotNetworkConnection_t ) = IotNetworkMbedtls_GetSocket;
 
     /**
      * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
@@ -291,9 +295,9 @@ static void _getServerInfo( int socket,
 
 /*-----------------------------------------------------------*/
 
-static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
-                                                void * pCredentialInfo,
-                                                void ** pConnection )
+static IotNetworkError_t _metricsNetworkCreate( IotNetworkServerInfo_t pServerInfo,
+                                                IotNetworkCredentials_t pCredentialInfo,
+                                                IotNetworkConnection_t * pConnection )
 {
     int socket = 0;
     IotMetricsTcpConnection_t * pTcpConnection = NULL;
@@ -307,7 +311,7 @@ static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
         ( void ) memset( pTcpConnection, 0x00, sizeof( IotMetricsTcpConnection_t ) );
 
         /* Call the wrapped network create function. */
-        status = _networkCreate( pConnectionInfo,
+        status = _networkCreate( pServerInfo,
                                  pCredentialInfo,
                                  pConnection );
 
@@ -341,7 +345,7 @@ static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
 
 /*-----------------------------------------------------------*/
 
-static IotNetworkError_t _metricsNetworkClose( void * pConnection )
+static IotNetworkError_t _metricsNetworkClose( IotNetworkConnection_t pConnection )
 {
     IotLink_t * pConnectionLink = NULL;
     IotMetricsTcpConnection_t * pTcpConnection = NULL;
