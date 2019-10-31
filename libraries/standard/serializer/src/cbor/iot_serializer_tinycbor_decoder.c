@@ -425,14 +425,7 @@ static void _destroy( IotSerializerDecoderObject_t * pDecoderObject )
         IotSerializer_FreeCborParser( ( void * ) ( pCborValueWrapper->cborValue.parser ) );
     }
 
-    if( IotSerializer_IsContainer( pDecoderObject ) )
-    {
-        IotSerializer_FreeCborValue( pCborValueWrapper );
-    }
-    else
-    {
-        /* IotSerializer_FreeString( pDecoderObject->u.value.u.string.pString ); */
-    }
+    IotSerializer_FreeCborValue( pCborValueWrapper );
 
     /* Reset decoder object's handle to NULL. */
     pDecoderObject->u.pHandle = NULL;
