@@ -628,16 +628,22 @@ static CborError _calculateSizeOfIndefiniteLengthContainer( CborValue * pCborVal
 
     CborError status = CborNoError;
     CborValue iterator;
+    CborValue cborCopy;
+
+    /* Clone the provide CborValue object to keep its state/data unaffected. */
+    memcpy( &cborCopy, pCborValue, sizeof( CborValue ) );
 
     /* Reset the value to count the number of elements in the container. */
     *pContainerSize = 0;
-    status = cbor_value_enter_container( pCborValue, &iterator );
+    status = cbor_value_enter_container( &cborCopy, &iterator );
 
     while( ( status == CborNoError ) && ( cbor_value_at_end( &iterator ) == false ) )
     {
         *pContainerSize = ( *pContainerSize + 1 );
         status = cbor_value_advance( &iterator );
     }
+
+    status = cbor_value_leave_container( &cborCopy, &iterator );
 
     return status;
 }
