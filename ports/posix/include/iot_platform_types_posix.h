@@ -73,16 +73,16 @@ struct _networkConnection;
 /**
  * @brief The format for remote server host and port on this system.
  */
-typedef struct IotNetworkServerInfo * IotNetworkServerInfo_t;
+typedef struct IotNetworkServerInfo * _IotNetworkServerInfo_t;
 
 /**
  * @brief The format for network credentials on this system.
  */
-typedef struct IotNetworkCredentials * IotNetworkCredentials_t;
+typedef struct IotNetworkCredentials * _IotNetworkCredentials_t;
 
 /**
  * @brief The handle of a network connection on this system.
  */
-typedef struct _networkConnection * IotNetworkConnection_t;
+typedef struct _networkConnection * _IotNetworkConnection_t;
 
 #endif /* ifndef IOT_PLATFORM_TYPES_POSIX_H_ */
