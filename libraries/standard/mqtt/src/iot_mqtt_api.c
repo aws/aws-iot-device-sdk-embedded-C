@@ -137,7 +137,7 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
  * @return Any #IotNetworkError_t, as defined by the network stack.
  */
 static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                   void ** pNetworkConnection,
+                                                   IotNetworkConnection_t * pNetworkConnection,
                                                    bool * pCreatedNewNetworkConnection );
 
 /**

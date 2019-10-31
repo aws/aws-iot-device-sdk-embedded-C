@@ -122,7 +122,7 @@ void IotMqtt_Cleanup( void );
  * the packet was received.
  */
 /* @[declare_mqtt_receivecallback] */
-void IotMqtt_ReceiveCallback( void * pNetworkConnection,
+void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
                               void * pReceiveContext );
 /* @[declare_mqtt_receivecallback] */
 

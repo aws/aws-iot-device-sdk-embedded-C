@@ -299,15 +299,15 @@ static int _mbedtlsMutexUnlock( mbedtls_threading_mutex_t * pMutex )
 /**
  * @brief Initialize the mbed TLS structures in a network connection.
  *
- * @param[in] pNetworkConnection The network connection to initialize.
+ * @param[in] pConnection The network connection to initialize.
  */
-static void _sslContextInit( _networkConnection_t * pNetworkConnection )
+static void _sslContextInit( _networkConnection_t * pConnection )
 {
-    mbedtls_ssl_config_init( &( pNetworkConnection->ssl.config ) );
-    mbedtls_x509_crt_init( &( pNetworkConnection->ssl.credentials.rootCa ) );
-    mbedtls_x509_crt_init( &( pNetworkConnection->ssl.credentials.clientCert ) );
-    mbedtls_pk_init( &( pNetworkConnection->ssl.credentials.privateKey ) );
-    mbedtls_ssl_init( &( pNetworkConnection->ssl.context ) );
+    mbedtls_ssl_config_init( &( pConnection->ssl.config ) );
+    mbedtls_x509_crt_init( &( pConnection->ssl.credentials.rootCa ) );
+    mbedtls_x509_crt_init( &( pConnection->ssl.credentials.clientCert ) );
+    mbedtls_pk_init( &( pConnection->ssl.credentials.privateKey ) );
+    mbedtls_ssl_init( &( pConnection->ssl.context ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -315,15 +315,15 @@ static void _sslContextInit( _networkConnection_t * pNetworkConnection )
 /**
  * @brief Free the mbed TLS structures in a network connection.
  *
- * @param[in] pNetworkConnection The network connection with the contexts to free.
+ * @param[in] pConnection The network connection with the contexts to free.
  */
-static void _sslContextFree( _networkConnection_t * pNetworkConnection )
+static void _sslContextFree( _networkConnection_t * pConnection )
 {
-    mbedtls_ssl_free( &( pNetworkConnection->ssl.context ) );
-    mbedtls_pk_free( &( pNetworkConnection->ssl.credentials.privateKey ) );
-    mbedtls_x509_crt_free( &( pNetworkConnection->ssl.credentials.clientCert ) );
-    mbedtls_x509_crt_free( &( pNetworkConnection->ssl.credentials.rootCa ) );
-    mbedtls_ssl_config_free( &( pNetworkConnection->ssl.config ) );
+    mbedtls_ssl_free( &( pConnection->ssl.context ) );
+    mbedtls_pk_free( &( pConnection->ssl.credentials.privateKey ) );
+    mbedtls_x509_crt_free( &( pConnection->ssl.credentials.clientCert ) );
+    mbedtls_x509_crt_free( &( pConnection->ssl.credentials.rootCa ) );
+    mbedtls_ssl_config_free( &( pConnection->ssl.config ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -331,27 +331,27 @@ static void _sslContextFree( _networkConnection_t * pNetworkConnection )
 /**
  * @brief Destroy a network connection.
  *
- * @param[in] pNetworkConnection The network connection to destroy.
+ * @param[in] pConnection The network connection to destroy.
  */
-static void _destroyConnection( _networkConnection_t * pNetworkConnection )
+static void _destroyConnection( _networkConnection_t * pConnection )
 {
     /* Clean up the SSL context of secured connections. */
-    if( ( pNetworkConnection->flags & FLAG_SECURED ) == FLAG_SECURED )
+    if( ( pConnection->flags & FLAG_SECURED ) == FLAG_SECURED )
     {
-        _sslContextFree( pNetworkConnection );
+        _sslContextFree( pConnection );
     }
 
     /* Destroy synchronization objects. */
-    IotMutex_Destroy( &( pNetworkConnection->contextMutex ) );
-    IotMutex_Destroy( &( pNetworkConnection->callbackMutex ) );
+    IotMutex_Destroy( &( pConnection->contextMutex ) );
+    IotMutex_Destroy( &( pConnection->callbackMutex ) );
 
-    if( ( pNetworkConnection->flags & FLAG_HAS_RECEIVE_CALLBACK ) == FLAG_HAS_RECEIVE_CALLBACK )
+    if( ( pConnection->flags & FLAG_HAS_RECEIVE_CALLBACK ) == FLAG_HAS_RECEIVE_CALLBACK )
     {
-        IotSemaphore_Destroy( &( pNetworkConnection->destroyNotification ) );
+        IotSemaphore_Destroy( &( pConnection->destroyNotification ) );
     }
 
     /* Free memory. */
-    IotNetwork_Free( pNetworkConnection );
+    IotNetwork_Free( pConnection );
 }
 
 /*-----------------------------------------------------------*/
@@ -370,12 +370,12 @@ static void _receiveThread( void * pArgument )
     mbedtls_net_context context;
 
     /* Cast function parameter to correct type. */
-    _networkConnection_t * pNetworkConnection = pArgument;
+    _networkConnection_t * pConnection = pArgument;
 
     /* Record the context to poll. */
-    IotMutex_Lock( &( pNetworkConnection->contextMutex ) );
-    context = pNetworkConnection->networkContext;
-    IotMutex_Unlock( &( pNetworkConnection->contextMutex ) );
+    IotMutex_Lock( &( pConnection->contextMutex ) );
+    context = pConnection->networkContext;
+    IotMutex_Unlock( &( pConnection->contextMutex ) );
 
     /* Continuously poll the network connection for events. */
     while( true )
@@ -387,7 +387,7 @@ static void _receiveThread( void * pArgument )
         if( pollStatus < 0 )
         {
             /* Error during poll. */
-            _logConnectionError( pollStatus, pNetworkConnection, "Error polling network connection." );
+            _logConnectionError( pollStatus, pConnection, "Error polling network connection." );
             break;
         }
         else
@@ -395,26 +395,26 @@ static void _receiveThread( void * pArgument )
             /* Invoke receive callback if data is available. */
             if( pollStatus == MBEDTLS_NET_POLL_READ )
             {
-                IotMutex_Lock( &( pNetworkConnection->callbackMutex ) );
+                IotMutex_Lock( &( pConnection->callbackMutex ) );
 
                 /* Only run the receive callback if the connection has not been
                  * destroyed. */
-                if( ( pNetworkConnection->flags & FLAG_CONNECTION_DESTROYED ) == 0 )
+                if( ( pConnection->flags & FLAG_CONNECTION_DESTROYED ) == 0 )
                 {
-                    pNetworkConnection->receiveCallback( pNetworkConnection,
-                                                         pNetworkConnection->pReceiveContext );
+                    pConnection->receiveCallback( pConnection,
+                                                  pConnection->pReceiveContext );
                 }
 
-                IotMutex_Unlock( &( pNetworkConnection->callbackMutex ) );
+                IotMutex_Unlock( &( pConnection->callbackMutex ) );
             }
         }
     }
 
     /* Wait for the call to network destroy, then destroy the connection. */
-    IotSemaphore_Wait( &( pNetworkConnection->destroyNotification ) );
-    _destroyConnection( pNetworkConnection );
+    IotSemaphore_Wait( &( pConnection->destroyNotification ) );
+    _destroyConnection( pConnection );
 
-    IotLogDebug( "(Network connection %p) Receive thread terminating.", pNetworkConnection );
+    IotLogDebug( "(Network connection %p) Receive thread terminating.", pConnection );
 
     ( void ) Atomic_Decrement_u32( &_receiveThreadCount );
 }
@@ -426,14 +426,14 @@ static void _receiveThread( void * pArgument )
  *
  * Uses mbed TLS to import the root CA certificate, client certificate, and
  * client certificate private key.
- * @param[in] pNetworkConnection Network connection for the imported credentials.
+ * @param[in] pConnection Network connection for the imported credentials.
  * @param[in] pRootCaPath Path to the root CA certificate.
  * @param[in] pClientCertPath Path to the client certificate.
  * @param[in] pCertPrivateKeyPath Path to the client certificate private key.
  *
  * @return `true` if all credentials were successfully read; `false` otherwise.
  */
-static bool _readCredentials( _networkConnection_t * pNetworkConnection,
+static bool _readCredentials( _networkConnection_t * pConnection,
                               const char * pRootCaPath,
                               const char * pClientCertPath,
                               const char * pCertPrivateKeyPath )
@@ -442,12 +442,12 @@ static bool _readCredentials( _networkConnection_t * pNetworkConnection,
     int mbedtlsError = 0;
 
     /* Read the root CA certificate. */
-    mbedtlsError = mbedtls_x509_crt_parse_file( &( pNetworkConnection->ssl.credentials.rootCa ),
+    mbedtlsError = mbedtls_x509_crt_parse_file( &( pConnection->ssl.credentials.rootCa ),
                                                 pRootCaPath );
 
     if( mbedtlsError < 0 )
     {
-        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to read root CA certificate file." );
+        _logConnectionError( mbedtlsError, pConnection, "Failed to read root CA certificate file." );
 
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
@@ -459,12 +459,12 @@ static bool _readCredentials( _networkConnection_t * pNetworkConnection,
     }
 
     /* Read the client certificate. */
-    mbedtlsError = mbedtls_x509_crt_parse_file( &( pNetworkConnection->ssl.credentials.clientCert ),
+    mbedtlsError = mbedtls_x509_crt_parse_file( &( pConnection->ssl.credentials.clientCert ),
                                                 pClientCertPath );
 
     if( mbedtlsError < 0 )
     {
-        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to read client certificate file." );
+        _logConnectionError( mbedtlsError, pConnection, "Failed to read client certificate file." );
 
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
@@ -476,29 +476,29 @@ static bool _readCredentials( _networkConnection_t * pNetworkConnection,
     }
 
     /* Read the client certificate private key. */
-    mbedtlsError = mbedtls_pk_parse_keyfile( &( pNetworkConnection->ssl.credentials.privateKey ),
+    mbedtlsError = mbedtls_pk_parse_keyfile( &( pConnection->ssl.credentials.privateKey ),
                                              pCertPrivateKeyPath,
                                              NULL );
 
     if( mbedtlsError != 0 )
     {
-        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to read client certificate private key file." );
+        _logConnectionError( mbedtlsError, pConnection, "Failed to read client certificate private key file." );
 
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
     /* Set the credentials in the SSL configuration. */
-    mbedtls_ssl_conf_ca_chain( &( pNetworkConnection->ssl.config ),
-                               &( pNetworkConnection->ssl.credentials.rootCa ),
+    mbedtls_ssl_conf_ca_chain( &( pConnection->ssl.config ),
+                               &( pConnection->ssl.credentials.rootCa ),
                                NULL );
 
-    mbedtlsError = mbedtls_ssl_conf_own_cert( &( pNetworkConnection->ssl.config ),
-                                              &( pNetworkConnection->ssl.credentials.clientCert ),
-                                              &( pNetworkConnection->ssl.credentials.privateKey ) );
+    mbedtlsError = mbedtls_ssl_conf_own_cert( &( pConnection->ssl.config ),
+                                              &( pConnection->ssl.credentials.clientCert ),
+                                              &( pConnection->ssl.credentials.privateKey ) );
 
     if( mbedtlsError != 0 )
     {
-        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to configure credentials." );
+        _logConnectionError( mbedtlsError, pConnection, "Failed to configure credentials." );
 
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
@@ -511,13 +511,13 @@ static bool _readCredentials( _networkConnection_t * pNetworkConnection,
 /**
  * @brief Set up TLS on a TCP connection.
  *
- * @param[in] pNetworkConnection An established TCP connection.
+ * @param[in] pConnection An established TCP connection.
  * @param[in] pServerName Remote host name, used for server name indication.
  * @param[in] pMbedtlsCredentials TLS setup parameters.
  *
  * @return #IOT_NETWORK_SUCCESS, #IOT_NETWORK_FAILURE, or #IOT_NETWORK_SYSTEM_ERROR.
  */
-static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
+static IotNetworkError_t _tlsSetup( _networkConnection_t * pConnection,
                                     const char * pServerName,
                                     const IotNetworkCredentials_t pMbedtlsCredentials )
 {
@@ -531,32 +531,32 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     bool sslContextInitialized = false;
 
     /* Initialize SSL configuration. */
-    _sslContextInit( pNetworkConnection );
+    _sslContextInit( pConnection );
     sslContextInitialized = true;
 
-    mbedtlsError = mbedtls_ssl_config_defaults( &( pNetworkConnection->ssl.config ),
+    mbedtlsError = mbedtls_ssl_config_defaults( &( pConnection->ssl.config ),
                                                 MBEDTLS_SSL_IS_CLIENT,
                                                 MBEDTLS_SSL_TRANSPORT_STREAM,
                                                 MBEDTLS_SSL_PRESET_DEFAULT );
 
     if( mbedtlsError != 0 )
     {
-        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to set default SSL configuration." );
+        _logConnectionError( mbedtlsError, pConnection, "Failed to set default SSL configuration." );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
 
     /* Set SSL authmode and the RNG context. */
-    mbedtls_ssl_conf_authmode( &( pNetworkConnection->ssl.config ), MBEDTLS_SSL_VERIFY_REQUIRED );
-    mbedtls_ssl_conf_rng( &( pNetworkConnection->ssl.config ), mbedtls_ctr_drbg_random, &_ctrDrbgContext );
+    mbedtls_ssl_conf_authmode( &( pConnection->ssl.config ), MBEDTLS_SSL_VERIFY_REQUIRED );
+    mbedtls_ssl_conf_rng( &( pConnection->ssl.config ), mbedtls_ctr_drbg_random, &_ctrDrbgContext );
 
-    if( _readCredentials( pNetworkConnection,
+    if( _readCredentials( pConnection,
                           pMbedtlsCredentials->pRootCa,
                           pMbedtlsCredentials->pClientCert,
                           pMbedtlsCredentials->pPrivateKey ) == false )
     {
         IotLogError( "(Network connection %p) Failed to read credentials.",
-                     pNetworkConnection );
+                     pConnection );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
@@ -567,15 +567,15 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
         /* mbed TLS expects a NULL-terminated array of protocols. These pointers
          * must remain in-scope for the lifetime of the connection, so they are
          * stored as part of the connection context. */
-        pNetworkConnection->ssl.pAlpnProtos[ 0 ] = pMbedtlsCredentials->pAlpnProtos;
-        pNetworkConnection->ssl.pAlpnProtos[ 1 ] = NULL;
+        pConnection->ssl.pAlpnProtos[ 0 ] = pMbedtlsCredentials->pAlpnProtos;
+        pConnection->ssl.pAlpnProtos[ 1 ] = NULL;
 
-        mbedtlsError = mbedtls_ssl_conf_alpn_protocols( &( pNetworkConnection->ssl.config ),
-                                                        pNetworkConnection->ssl.pAlpnProtos );
+        mbedtlsError = mbedtls_ssl_conf_alpn_protocols( &( pConnection->ssl.config ),
+                                                        pConnection->ssl.pAlpnProtos );
 
         if( mbedtlsError != 0 )
         {
-            _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to set ALPN protocols." );
+            _logConnectionError( mbedtlsError, pConnection, "Failed to set ALPN protocols." );
 
             IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
         }
@@ -614,12 +614,12 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
         /* Set MFLN if a valid fragment length is given. */
         if( fragmentLengthValid == true )
         {
-            mbedtlsError = mbedtls_ssl_conf_max_frag_len( &( pNetworkConnection->ssl.config ),
+            mbedtlsError = mbedtls_ssl_conf_max_frag_len( &( pConnection->ssl.config ),
                                                           mflCode );
 
             if( mbedtlsError != 0 )
             {
-                _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to set TLS MFLN." );
+                _logConnectionError( mbedtlsError, pConnection, "Failed to set TLS MFLN." );
 
                 IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
             }
@@ -627,19 +627,19 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     }
 
     /* Initialize the mbed TLS secured connection context. */
-    mbedtlsError = mbedtls_ssl_setup( &( pNetworkConnection->ssl.context ),
-                                      &( pNetworkConnection->ssl.config ) );
+    mbedtlsError = mbedtls_ssl_setup( &( pConnection->ssl.context ),
+                                      &( pConnection->ssl.config ) );
 
     if( mbedtlsError != 0 )
     {
-        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to set up mbed TLS SSL context." );
+        _logConnectionError( mbedtlsError, pConnection, "Failed to set up mbed TLS SSL context." );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
 
     /* Set the underlying IO for the TLS connection. */
-    mbedtls_ssl_set_bio( &( pNetworkConnection->ssl.context ),
-                         &( pNetworkConnection->networkContext ),
+    mbedtls_ssl_set_bio( &( pConnection->ssl.context ),
+                         &( pConnection->networkContext ),
                          mbedtls_net_send,
                          NULL,
                          mbedtls_net_recv_timeout );
@@ -647,12 +647,12 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     /* Enable SNI if requested. */
     if( pMbedtlsCredentials->disableSni == false )
     {
-        mbedtlsError = mbedtls_ssl_set_hostname( &( pNetworkConnection->ssl.context ),
+        mbedtlsError = mbedtls_ssl_set_hostname( &( pConnection->ssl.context ),
                                                  pServerName );
 
         if( mbedtlsError != 0 )
         {
-            _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to set server name." );
+            _logConnectionError( mbedtlsError, pConnection, "Failed to set server name." );
 
             IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
         }
@@ -661,19 +661,19 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     /* Perform the TLS handshake. */
     do
     {
-        mbedtlsError = mbedtls_ssl_handshake( &( pNetworkConnection->ssl.context ) );
+        mbedtlsError = mbedtls_ssl_handshake( &( pConnection->ssl.context ) );
     } while( ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_READ ) ||
              ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_WRITE ) );
 
     if( mbedtlsError != 0 )
     {
-        _logConnectionError( mbedtlsError, pNetworkConnection, "Failed to perform SSL handshake." );
+        _logConnectionError( mbedtlsError, pConnection, "Failed to perform SSL handshake." );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
 
     /* Check result of certificate verification. */
-    verifyResult = mbedtls_ssl_get_verify_result( &( pNetworkConnection->ssl.context ) );
+    verifyResult = mbedtls_ssl_get_verify_result( &( pConnection->ssl.context ) );
 
     if( verifyResult != 0 )
     {
@@ -690,16 +690,16 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pNetworkConnection,
     {
         if( sslContextInitialized == true )
         {
-            _sslContextFree( pNetworkConnection );
+            _sslContextFree( pConnection );
         }
     }
     else
     {
         /* TLS setup succeeded; set the secured flag. */
-        pNetworkConnection->flags |= FLAG_SECURED;
+        pConnection->flags |= FLAG_SECURED;
 
         IotLogInfo( "(Network connection %p) TLS handshake successful.",
-                    pNetworkConnection );
+                    pConnection );
     }
 
     IOT_FUNCTION_CLEANUP_END();
@@ -986,7 +986,7 @@ size_t IotNetworkMbedtls_Send( IotNetworkConnection_t pConnection,
     size_t bytesSent = 0;
 
     IotLogDebug( "(Network connection %p) Sending %lu bytes.",
-                 pNetworkConnection,
+                 pConnection,
                  ( unsigned long ) messageLength );
 
     IotMutex_Lock( &( pConnection->contextMutex ) );
