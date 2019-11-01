@@ -49,14 +49,18 @@
  * @param[in]pPayloadDecoder The outermost decoder object representing the response payload.
  * @param[in] pOperationName The Onboarding library operation (or API) that the response is associated with.
  * @param[out] pResponseData This will be populated with the data parsed from the response payload, if successful.
+ * @param[out] pStatusCode This will be populated with the error status code parsed from the response payload,
+ * if successful.
  * @return #AWS_IOT_ONBOARDING_SUCCESS, if parsing is successful; otherwise appropriate error message.
  */
 static AwsIotOnboardingError_t _parseRejectedResponse( IotSerializerDecoderObject_t * pPayloadDecoder,
                                                        const char * pOperationName,
-                                                       AwsIotOnboardingRejectedResponse_t * pResponseData )
+                                                       AwsIotOnboardingRejectedResponse_t * pResponseData,
+                                                       AwsIotOnboardingServerStatusCode_t * pStatusCode )
 {
     AwsIotOnboarding_Assert( pPayloadDecoder != NULL );
     AwsIotOnboarding_Assert( pResponseData != NULL );
+    AwsIotOnboarding_Assert( pStatusCode != NULL );
 
     IotSerializerDecoderObject_t statusCodeDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t errorCodeDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
@@ -89,7 +93,7 @@ static AwsIotOnboardingError_t _parseRejectedResponse( IotSerializerDecoderObjec
     }
 
     /* Copy the status code value to the output parameter. */
-    pResponseData->statusCode = ( AwsIotOnboardingServerStatusCode_t ) statusCodeDecoder.u.value.u.signedInt;
+    *pStatusCode = ( AwsIotOnboardingServerStatusCode_t ) statusCodeDecoder.u.value.u.signedInt;
 
     /* Parse the "error code" information. */
     if( _pAwsIotOnboardingDecoder->find( pPayloadDecoder,
@@ -111,11 +115,11 @@ static AwsIotOnboardingError_t _parseRejectedResponse( IotSerializerDecoderObjec
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
     }
 
-    /* Copy the status code value to the output parameter. */
+    /* Store the error code information in the output parameter. */
     pResponseData->pErrorCode = ( const char * ) errorCodeDecoder.u.value.u.string.pString;
     pResponseData->errorCodeLength = errorCodeDecoder.u.value.u.string.length;
 
-    /* Parse the "error code" information. */
+    /* Parse the "error message" information. */
     if( _pAwsIotOnboardingDecoder->find( pPayloadDecoder,
                                          ONBOARDING_REJECTED_RESPONSE_ERROR_MESSAGE_STRING,
                                          &errorMessageDecoder ) != IOT_SERIALIZER_SUCCESS )
@@ -135,6 +139,7 @@ static AwsIotOnboardingError_t _parseRejectedResponse( IotSerializerDecoderObjec
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
     }
 
+    /* Store the error message information in the output parameter. */
     pResponseData->pErrorMessage = ( const char * ) errorMessageDecoder.u.value.u.string.pString;
     pResponseData->errorMessageLength = errorMessageDecoder.u.value.u.string.length;
 
@@ -159,8 +164,6 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
     IotSerializerDecoderObject_t certificatePemDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t certificateIdDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t privateKeyDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
-
-    AwsIotOnboardingRejectedResponse_t rejectedResponse = { 0 };
 
     if( _pAwsIotOnboardingDecoder->init( &payloadDecoder,
                                          pDeviceCredentialsResponse,
@@ -245,6 +248,9 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
             }
 
+            /* Populate the status code information to represent success response from the server. */
+            userCallbackParam.statusCode = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED;
+
             /* Populate the data to be passed to the user callback.*/
             userCallbackParam.u.acceptedResponse.pDeviceCertificate = ( const char * )
                                                                       certificatePemDecoder.u.value.u.string.pString;
@@ -266,14 +272,19 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
             break;
 
         case AWS_IOT_REJECTED:
-            status = _parseRejectedResponse( &payloadDecoder, GET_ONBOARD_DEVICE_OPERATION_LOG, &rejectedResponse );
+            status = _parseRejectedResponse( &payloadDecoder,
+                                             GET_ONBOARD_DEVICE_OPERATION_LOG,
+                                             &userCallbackParam.u.rejectedResponse,
+                                             &userCallbackParam.statusCode );
+            /* Invoke the user-provided callback with the parsed rejected data . */
+            userCallbackInfo->getDeviceCredentialsCallback.function( userCallbackInfo->getDeviceCredentialsCallback.userParam,
+                                                                     &userCallbackParam );
 
-            userCallbackParam.operationStatus = AWS_IOT_REJECTED;
-            userCallbackParam.u.rejectedResponse = rejectedResponse;
             break;
 
         default:
             IotLogError( "Unknown response type from the server for %s operation", GET_ONBOARD_DEVICE_OPERATION_LOG );
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
             AwsIotOnboarding_Assert( false );
     }
 
@@ -308,7 +319,6 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
     AwsIotOnboardingResponseDeviceConfigurationEntry_t * pDeviceConfigurationList = NULL;
     bool configurationListAllocated = false;
     IotSerializerDecoderObject_t thingNameDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
-    AwsIotOnboardingRejectedResponse_t rejectedResponse = { 0 };
 
     if( _pAwsIotOnboardingDecoder->init( &payloadDecoder,
                                          pResponsePayload,
@@ -361,8 +371,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
                 }
 
                 /* Obtain the number of device configuration entries in the response, and allocate memory for the list
-                 * of device
-                 * configuration data. */
+                 * of device configuration data. */
                 if( _pAwsIotOnboardingDecoder->getSizeOf( &deviceConfigurationDecoder, &numOfDeviceConfigurationEntries )
                     != IOT_SERIALIZER_SUCCESS )
                 {
@@ -473,7 +482,8 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
                 }
             }
 
-            userCallbackParam.operationStatus = AWS_IOT_ACCEPTED;
+            /* Populate the status code information to represent success response from the server. */
+            userCallbackParam.statusCode = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED;
 
             /* Populate information for the "Device Configuration" data. */
             userCallbackParam.u.acceptedResponse.pDeviceConfigList = pDeviceConfigurationList;
@@ -484,23 +494,28 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
                                                               thingNameDecoder.u.value.u.string.pString;
             userCallbackParam.u.acceptedResponse.thingNameLength = thingNameDecoder.u.value.u.string.length;
 
+            /* Invoke the user-provided callback with the parsed credentials data . */
+            userCallbackInfo->onboardDeviceCallback.function( userCallbackInfo->onboardDeviceCallback.userParam,
+                                                              &userCallbackParam );
+
             break;
 
         case AWS_IOT_REJECTED:
-            status = _parseRejectedResponse( &payloadDecoder, GET_ONBOARD_DEVICE_OPERATION_LOG, &rejectedResponse );
+            status = _parseRejectedResponse( &payloadDecoder,
+                                             GET_ONBOARD_DEVICE_OPERATION_LOG,
+                                             &userCallbackParam.u.rejectedResponse,
+                                             &userCallbackParam.statusCode );
+            /* Invoke the user-provided callback with the parsed rejected data . */
+            userCallbackInfo->onboardDeviceCallback.function( userCallbackInfo->onboardDeviceCallback.userParam,
+                                                              &userCallbackParam );
 
-            userCallbackParam.operationStatus = AWS_IOT_REJECTED;
-            userCallbackParam.u.rejectedResponse = rejectedResponse;
             break;
 
         default:
             IotLogError( "Unknown response type from the server for %s operation", GET_ONBOARD_DEVICE_OPERATION_LOG );
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
             AwsIotOnboarding_Assert( false );
     }
-
-    /* Invoke the user-provided callback with the parsed credentials data . */
-    userCallbackInfo->onboardDeviceCallback.function( userCallbackInfo->onboardDeviceCallback.userParam,
-                                                      &userCallbackParam );
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 

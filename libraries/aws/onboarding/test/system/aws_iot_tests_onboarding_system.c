@@ -55,6 +55,9 @@
 /* JSON utilities include. */
 #include "iot_json_utils.h"
 
+/* Logging Include */
+#include "iot_logging_setup.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -63,8 +66,8 @@
  *
  * Provide default values of test configuration constants.
  */
-#ifndef AWS_IOT_TEST_ONBOARDING_MQTT_TIMEOUT
-    #define AWS_IOT_TEST_ONBOARDING_MQTT_TIMEOUT    ( 5000 )
+#ifndef AWS_IOT_TEST_ONBOARDING_TIMEOUT
+    #define AWS_IOT_TEST_ONBOARDING_TIMEOUT    ( 60000 )
 #endif
 /** @endcond */
 
@@ -105,39 +108,122 @@ static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
  */
 static const char * _pTestMqttClientId = "onnboarding-system-test";
 
+/**
+ * @brief Certificate ID for OnboardDevice API tests.
+ */
+static char * _testCertificateId = "1c163fd8fcac4a7dc1da34744b6e7c994664c1d399c356d0fce400027d6e45e4";
+
+/**
+ * @brief Template ID for OnboardDevice API tests.
+ */
+#define _testTemplateId    "myTemplate1"
+
+static const AwsIotOnboardingRequestParameterEntry_t _pTestParameters[] =
+{
+    {
+        .pParameterKey = "DeviceLocation",
+        .parameterKeyLength = sizeof( "deviceLocation" ) - 1,
+        .pParameterValue = "Seattle",
+        .parameterValueLength = sizeof( "Seattle" ) - 1
+    }
+};
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Onboarding user callback function for successful completion of operation. Checks parameters provided by the
- * API.
+ * @brief Verifies the validity of the parsed "rejected" response data and prints the data.
  */
-static void _testGetDeviceCredentialsCallback( void * contextParam,
-                                               const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
+static void _printRejectedResponse( const AwsIotOnboardingRejectedResponse_t * pResponseInfo )
+{
+    AwsIotOnboarding_Assert( pResponseInfo != NULL );
+
+    IotLogError( "\n Request REJECTED!!\n ErrorCode={%.*s}\n ErrorMessage={%.*s}\n",
+                 pResponseInfo->errorCodeLength, pResponseInfo->pErrorCode,
+                 pResponseInfo->errorMessageLength, pResponseInfo->pErrorMessage );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief User callback function for printing parsed response data sent by the GetDeviceCredentials service API.
+ */
+static void _printDeviceCredentialsCallback( void * contextParam,
+                                             const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
 {
     ( void ) contextParam;
     AwsIotOnboarding_Assert( pResponseInfo != NULL );
 
-    switch( pResponseInfo->operationStatus )
+    IotLogInfo( "\n Status Code = %d\n", pResponseInfo->statusCode );
+
+    if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
     {
-        case AWS_IOT_REJECTED:
-            AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.pErrorCode != NULL );
-            AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.errorCodeLength != 0 );
-            AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.pErrorMessage != NULL );
-            AwsIotOnboarding_Assert( pResponseInfo->u.rejectedResponse.errorMessageLength != 0 );
+        /* Check parameters against expected values. */
+        TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pDeviceCertificate );
+        TEST_ASSERT_GREATER_THAN( 0, pResponseInfo->u.acceptedResponse.deviceCertificateLength );
+        TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pPrivateKey );
+        TEST_ASSERT_GREATER_THAN( 0, pResponseInfo->u.acceptedResponse.privateKeyLength );
 
-            break;
+        IotLogInfo( "\n Certificate PEM = %.*s\n Certificate ID = %.*s\n DREADED PRIVATE KEY = %.*s\n",
+                    pResponseInfo->u.acceptedResponse.deviceCertificateLength,
+                    pResponseInfo->u.acceptedResponse.pDeviceCertificate,
+                    pResponseInfo->u.acceptedResponse.certificateIdLength,
+                    pResponseInfo->u.acceptedResponse.pCertificateId,
+                    pResponseInfo->u.acceptedResponse.privateKeyLength,
+                    pResponseInfo->u.acceptedResponse.pPrivateKey );
+    }
+    else
+    {
+        _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
+    }
+}
 
-        case AWS_IOT_ACCEPTED:
-            /* Check parameters against expected values. */
-            TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pDeviceCertificate );
-            TEST_ASSERT_GREATER_THAN( 0, pResponseInfo->u.acceptedResponse.deviceCertificateLength );
-            TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pPrivateKey );
-            TEST_ASSERT_GREATER_THAN( 0, pResponseInfo->u.acceptedResponse.privateKeyLength );
-            break;
+/*-----------------------------------------------------------*/
 
-        default:
-            AwsIotOnboarding_Assert( false );
+/**
+ * @brief User callback function for printing parsed response data sent by the OnboardDevice service API.
+ */
+static void _printOnboardDeviceResponseCallback( void * contextParam,
+                                                 const AwsIotOnboardingOnboardDeviceResponse_t * pResponseInfo )
+{
+    ( void ) contextParam;
+    AwsIotOnboarding_Assert( pResponseInfo != NULL );
+
+    IotLogInfo( "\n Status Code = %d\n", pResponseInfo->statusCode );
+
+    if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
+    {
+        if( pResponseInfo->u.acceptedResponse.pThingName != NULL )
+        {
+            if( pResponseInfo->u.acceptedResponse.pThingName != NULL )
+            {
+                IotLogInfo( "ThingName = %.*s",
+                            pResponseInfo->u.acceptedResponse.thingNameLength,
+                            pResponseInfo->u.acceptedResponse.pThingName );
+            }
+        }
+
+        if( pResponseInfo->u.acceptedResponse.numOfConfigurationEntries > 0 )
+        {
+            const AwsIotOnboardingResponseDeviceConfigurationEntry_t * pConfigurationList =
+                pResponseInfo->u.acceptedResponse.pDeviceConfigList;
+
+            for( size_t configIndex = 0;
+                 configIndex < pResponseInfo->u.acceptedResponse.numOfConfigurationEntries;
+                 configIndex++ )
+            {
+                IotLogInfo( "Device Configuration no. %d:ConfigName = %.*s, ConfigData = %.*s ",
+                            configIndex,
+                            pConfigurationList[ configIndex ].keyLength,
+                            pConfigurationList[ configIndex ].pKey,
+                            pConfigurationList[ configIndex ].valueLength,
+                            pConfigurationList[ configIndex ].pValue );
+            }
+        }
+    }
+
+    else
+    {
+        _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
     }
 }
 
@@ -201,8 +287,8 @@ TEST_SETUP( Onboarding_System )
      * client identifier. */
     connectInfo.awsIotMqttMode = true;
     connectInfo.pClientIdentifier = _pTestMqttClientId;
-    connectInfo.clientIdentifierLength = ( uint16_t ) ( sizeof( _pTestMqttClientId ) - 1 );
-    connectInfo.keepAliveSeconds = AWS_IOT_TEST_ONBOARDING_MQTT_TIMEOUT;
+    connectInfo.clientIdentifierLength = strlen( _pTestMqttClientId );
+    connectInfo.keepAliveSeconds = AWS_IOT_TEST_ONBOARDING_TIMEOUT;
 
     /* AWS IoT Service limits only allow 1 connection per MQTT client ID per second.
      * Wait until 1100 ms have elapsed since the last connection. */
@@ -217,7 +303,7 @@ TEST_SETUP( Onboarding_System )
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     status = IotMqtt_Connect( &_networkInfo,
                               &connectInfo,
-                              AWS_IOT_TEST_ONBOARDING_MQTT_TIMEOUT,
+                              AWS_IOT_TEST_ONBOARDING_TIMEOUT,
                               &_mqttConnection );
 
     if( status != IOT_MQTT_SUCCESS )
@@ -262,7 +348,8 @@ TEST_TEAR_DOWN( Onboarding_System )
  */
 TEST_GROUP_RUNNER( Onboarding_System )
 {
-    RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase );
+    /* RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase ); */
+    RUN_TEST_CASE( Onboarding_System, OnboardDeviceNominalCase );
 }
 
 /*-----------------------------------------------------------*/
@@ -278,13 +365,47 @@ TEST( Onboarding_System, GetDeviceCredentialsNominalCase )
     AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t callbackInfo =
     {
         .userParam = NULL,
-        .function  = _testGetDeviceCredentialsCallback
+        .function  = _printDeviceCredentialsCallback
     };
 
     status = AwsIotOnboarding_GetDeviceCredentials( _mqttConnection,
                                                     0,
-                                                    AWS_IOT_TEST_ONBOARDING_MQTT_TIMEOUT,
+                                                    AWS_IOT_TEST_ONBOARDING_TIMEOUT,
                                                     &callbackInfo );
+
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS, status );
+}
+
+/**
+ * @brief Tests the behavior of the OnboardDevice API in the nominal (or success) case where the server responds
+ * within the specified timeout period.
+ */
+TEST( Onboarding_System, OnboardDeviceNominalCase )
+{
+    AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
+
+    AwsIotOnboardingOnboardDeviceCallbackInfo_t callbackInfo =
+    {
+        .userParam = NULL,
+        .function  = _printOnboardDeviceResponseCallback
+    };
+
+    AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo;
+
+    requestInfo.pDeviceCertificateId = _testCertificateId;
+    requestInfo.deviceCertificateIdLength = strlen( _testCertificateId );
+    requestInfo.pTemplateIdentifier = _testTemplateId;
+    requestInfo.templateIdentifierLength = ( sizeof( _testTemplateId ) - 1 );
+    requestInfo.pParametersStart = _pTestParameters;
+    requestInfo.numOfParameters = sizeof( _pTestParameters ) /
+                                  sizeof( AwsIotOnboardingRequestParameterEntry_t );
+
+    /* Call the API under test. */
+    status = AwsIotOnboarding_OnboardDevice( _mqttConnection,
+                                             &requestInfo,
+                                             AWS_IOT_TEST_ONBOARDING_TIMEOUT,
+                                             &callbackInfo );
+
 
     TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS, status );
 }
