@@ -323,7 +323,7 @@ static IotSerializerError_t _createDecoderObject( _cborValueWrapper_t * pCborVal
                          * https://tools.ietf.org/html/rfc7049#section-2.2.2 )
                          * Thus, when calculating the starting string location for this special case,
                          * we have to account for the byte. */
-                        uint8_t * pPossibleBreakByte = ( uint8_t * ) cbor_value_get_next_byte( &next ) - 1;
+                        uint8_t * pPossibleBreakByte = ( uint8_t * ) ( next.ptr - 1 );
 
                         if( *pPossibleBreakByte == 0xFF )
                         {
@@ -335,8 +335,7 @@ static IotSerializerError_t _createDecoderObject( _cborValueWrapper_t * pCborVal
                         {
                             /* Calculate the starting location pointer of the string relative to the next element. */
                             pDecoderObject->u.value.u.string.pString =
-                                ( uint8_t * ) ( cbor_value_get_next_byte( &next ) -
-                                                ( pDecoderObject->u.value.u.string.length ) );
+                                ( uint8_t * ) ( next.ptr - ( pDecoderObject->u.value.u.string.length ) );
                         }
                     }
                     else
