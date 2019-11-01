@@ -516,6 +516,11 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
         payloadBufferAllocated = true;
     }
 
+    /* Actual serialization. */
+    status = _AwsIotOnboarding_SerializeGetDeviceCredentialsRequestPayload( &payloadEncoder,
+                                                                            pPayloadBuffer,
+                                                                            payloadSize );
+
     publishInfo.pPayload = pPayloadBuffer;
     publishInfo.payloadLength = payloadSize;
 
