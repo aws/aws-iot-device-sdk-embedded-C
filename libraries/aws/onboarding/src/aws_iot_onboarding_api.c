@@ -521,6 +521,9 @@ AwsIotOnboardingError_t AwsIotOnboarding_GetDeviceCredentials( IotMqttConnection
                                                                             pPayloadBuffer,
                                                                             payloadSize );
 
+    /* Clean the encoder object handle. */
+    _pAwsIotOnboardingEncoder->destroy( &payloadEncoder );
+
     publishInfo.pPayload = pPayloadBuffer;
     publishInfo.payloadLength = payloadSize;
 
