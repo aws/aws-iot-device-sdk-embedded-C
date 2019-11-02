@@ -39,12 +39,16 @@
 /**
  * @brief A value representing the system default for new thread priority.
  */
+#ifndef IOT_THREAD_DEFAULT_PRIORITY
 #define IOT_THREAD_DEFAULT_PRIORITY      0
+#endif
 
 /**
  * @brief A value representhing the system default for new thread stack size.
  */
+#ifndef IOT_THREAD_DEFAULT_STACK_SIZE
 #define IOT_THREAD_DEFAULT_STACK_SIZE    0
+#endif
 
 /**
  * @ingroup platform_datatypes_handles
