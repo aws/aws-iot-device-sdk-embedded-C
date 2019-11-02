@@ -4,12 +4,12 @@ set -exu
 
 curl -X POST \
   https://beta.us-east-1.iot.amazonaws.com/provisioning-templates/ \
-  -H 'Authorization: AWS4-HMAC-SHA256 Credential=AKIAXJ6FDD6N2RBM536F/20191102/us-east-1/execute-api/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=ead8cd6b68a209070db3193e8088c9ee0c6185b6e26fdff4c3813978c908582e' \
+  -H 'Authorization: AWS4-HMAC-SHA256 Credential=AKIA2MNYHO3QFGVA55BA/20191102/us-east-1/execute-api/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=53a2fb52c4b344e26556ebd2d62e462d698b8ab73a996986b62734708d86140a' \
   -H 'Content-Type: application/json' \
   -H 'Host: beta.us-east-1.iot.amazonaws.com' \
-  -H 'Postman-Token: 8cc79bd8-7906-4234-8667-f3f65a9eee40' \
+  -H 'Postman-Token: bcb8192f-b103-4708-8b72-c84322fbb5f3' \
   -H 'X-Amz-Content-Sha256: adb660c1d50a14fc5383727d2226a4f0281ac1086152f58ee656efcf907bc329' \
-  -H 'X-Amz-Date: 20191102T002341Z' \
+  -H 'X-Amz-Date: 20191102T013454Z' \
   -H 'cache-control: no-cache' \
   -d '{
 	"provisioningRoleArn": "arn:aws:iam::502387646363:role/Admin",
