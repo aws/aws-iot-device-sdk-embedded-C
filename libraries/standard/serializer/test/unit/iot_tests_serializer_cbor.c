@@ -433,16 +433,16 @@ TEST( Serializer_Unit_CBOR, Encoder_map_nest_array )
 
 static const uint8_t _testEncodedNestedMap[] =
 {
-    0xA2, /*       # map(2) */
-    0x61, /*    # text(1) */
+    0xA2, /* # map(2) */
+    0x61, /* # text(1) */
     0x31, /* # "1" */
-    0xA1, /*    # map(1) */
+    0xA1, /* # map(1) */
     0x61, /* # text(1) */
     0x41, /* # "A" */
     0x0A, /* # unsigned(10) */
-    0x61, /*    # text(1) */
+    0x61, /* # text(1) */
     0x33, /* # "3" */
-    0xF4, /*    # false */
+    0xF4, /* # false */
 };
 
 TEST_GROUP( Serializer_Decoder_Unit_CBOR );
@@ -463,6 +463,7 @@ TEST_GROUP_RUNNER( Serializer_Decoder_Unit_CBOR )
 {
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap );
+    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectReuseAfterIteration );
 }
 
 TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
@@ -636,4 +637,52 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
                                                                        &nestedMapDecoder ) );
     _pCborDecoder->destroy( &nestedMapDecoder );
     _pCborDecoder->destroy( &outerDecoder2 );
+}
+
+/* Verifies that a container decoder object remains valid for re-use after a complete round of iterating
+ * through its contents */
+TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectReuseAfterIteration )
+{
+    IotSerializerDecoderObject_t mapDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderIterator_t iterator1 = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
+    IotSerializerDecoderObject_t valueDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderIterator_t iterator2 = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &mapDecoder,
+                                                                    _testEncodedNestedMap,
+                                                                    sizeof( _testEncodedNestedMap ) ) );
+
+    /* Obtain an iterator to the contents of the map. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &mapDecoder,
+                                                                      &iterator1 ) );
+
+
+    /* Undergo one round of iteration through the map */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator1 ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator1 ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator1 ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator1 ) );
+
+    /* End the iteration by invalidating the iterator */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iterator1, &mapDecoder ) );
+
+    /* NOW check that the decoder object of the map is still valid! */
+    /* Sanity check with "find()" function". */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &mapDecoder, "3", &valueDecoder ) );
+    TEST_ASSERT_EQUAL( false, valueDecoder.u.value.u.booleanValue );
+
+    /* Sanity check with another round of iteration! */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &mapDecoder,
+                                                                      &iterator2 ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator2 ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator2 ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator2 ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iterator2 ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iterator2, &mapDecoder ) );
+
+    /* End the second round of iteration */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iterator1, &mapDecoder ) );
+
+    _pCborDecoder->destroy( &valueDecoder );
+    _pCborDecoder->destroy( &mapDecoder );
 }

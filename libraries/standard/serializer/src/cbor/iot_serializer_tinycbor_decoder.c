@@ -496,8 +496,19 @@ static IotSerializerError_t _stepOut( IotSerializerDecoderIterator_t iterator,
     _cborValueWrapper_t * pOuterCborValueWrapper = _castDecoderObjectToCborValue( pDecoderObject );
     _cborValueWrapper_t * pInnerCborValueWrapper = _castDecoderIteratorToCborValue( iterator );
 
+
+    CborValue outerCborValueCopy;
+
+    /* Clone the underlying CborValue object of the parent container, so that the original CborValue object's state/data
+     * is unaffected with this function's operation. This allows the container's decoder object re-usable for accessor
+     * and iteration operations.
+     *
+     * Note: By performing a cbor_value_leave_container() operation on the cloned copy, only the state/data of the copy
+     * is changed.*/
+    memcpy( &outerCborValueCopy, &pOuterCborValueWrapper->cborValue, sizeof( CborValue ) );
+
     cborError = cbor_value_leave_container(
-        &pOuterCborValueWrapper->cborValue,
+        &outerCborValueCopy,
         &pInnerCborValueWrapper->cborValue );
 
     if( cborError == CborNoError )
