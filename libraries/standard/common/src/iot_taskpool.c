@@ -1587,7 +1587,7 @@ static IotTaskPoolError_t _tryCancelInternal( _taskPool_t * const pTaskPool,
             break;
 
         default:
-            /* Log message for debug purposes purposes. */
+            /* Log message for debug purposes. */
             IotLogError( "Attempt to cancel a job with an undefined state." );
             break;
     }
