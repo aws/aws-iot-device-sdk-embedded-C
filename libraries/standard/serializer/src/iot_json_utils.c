@@ -83,8 +83,8 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
             /* Key found; this is a potential match. */
 
             /* Skip the characters in the JSON key and closing double quote. */
-	    /* While loop guarantees that i < jsonDocumentLength - 2 */
-            i += jsonKeyLength + 1;
+	    /* While loop guarantees that i < jsonDocumentLength - 1 */
+            i += jsonKeyLength + 2;
 
             /* Skip all whitespace characters between the closing " and the : */
             while( IS_WHITESPACE( pJsonDocument, i ) )
