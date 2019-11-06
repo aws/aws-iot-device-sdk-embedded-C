@@ -75,6 +75,12 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
             /* Skip the characters in the JSON key and closing double quote. */
             i += jsonKeyLength + 1;
 
+	    /* If the end of the document is reached, this isn't a match. */
+	    if( i >= jsonDocumentLength )
+	    {
+		return false;
+	    }
+
             /* Skip all whitespace characters between the closing " and the : */
             while( pJsonDocument[ i ] == ' ' ||
                    pJsonDocument[ i ] == '\n' ||
@@ -101,6 +107,12 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
                 /* Skip the : */
                 i++;
             }
+
+	    /* If the end of the document is reached, this isn't a match. */
+	    if( i >= jsonDocumentLength )
+	    {
+		return false;
+	    }
 
             /* Skip all whitespace characters between : and the first character in the value. */
             while( pJsonDocument[ i ] == ' ' ||
@@ -133,6 +145,12 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
 
                     /* Skip the opening double quote. */
                     i++;
+
+		    /* If the end of the document is reached, this isn't a match. */
+		    if( i >= jsonDocumentLength )
+		    {
+			return false;
+		    }
 
                     /* Add the length of all characters in the JSON string. */
                     while( pJsonDocument[ i ] != '\"' )
@@ -211,6 +229,12 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
 
                 /* Skip the opening character. */
                 i++;
+
+                /* If the end of the document is reached, this isn't a match. */
+                if( i >= jsonDocumentLength )
+                {
+                    return false;
+                }
 
                 /* Add the length of all characters in the JSON object or array. This
                  * includes the length of nested objects. */
