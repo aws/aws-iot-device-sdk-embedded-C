@@ -79,8 +79,19 @@
     #define AWS_IOT_TEST_DEFENDER_THING_NAME    ""
 #endif
 
+/* Onboarding tests configuration */
+#ifndef AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME
+    #define AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME          ""
+#endif
+#ifndef AWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS
+    #define AWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS    {}
+#endif
+
 /* Log level for testing the demos. */
-#define IOT_LOG_LEVEL_DEMO    IOT_LOG_INFO
+#define IOT_LOG_LEVEL_DEMO              IOT_LOG_INFO
+#define AWS_IOT_LOG_LEVEL_ONBOARDING    IOT_LOG_DEBUG
+/* #define IOT_LOG_LEVEL_MQTT          IOT_LOG_DEBUG */
+
 
 /* Set the equivalent demo defines. */
 #ifdef IOT_TEST_SECURED_CONNECTION

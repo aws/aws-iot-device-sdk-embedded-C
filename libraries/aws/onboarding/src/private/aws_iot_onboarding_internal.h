@@ -222,7 +222,7 @@
  * It should be utilized in the @ref onboarding_function_getdevicecredentials API function.
  */
 #define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER \
-    "aws/certificates/create/"ONBOARDING_FORMAT
+    "$aws/certificates/create/"ONBOARDING_FORMAT
 
 /**
  * @brief Length of the MQTT response topic filtert for the GetDeviceCredentials service API.
@@ -272,7 +272,7 @@
  * @brief The common path in the request and response MQTT topics of the OnboardDevice service API.
  */
 #define ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX \
-    "aws/provisioning-templates/"
+    "$aws/provisioning-templates/"
 
 /**
  * @brief The length of the common path in the request and response MQTT topics of the OnboardDevice service API.
@@ -321,7 +321,7 @@
  * @note This should be used in serializing the request payload for sending to the server, only if the calling
  * application provides valid device context data.
  */
-#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING        "parameters"
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING        "deviceContext"
 
 /**
  * @brief The length of the MQTT request topic filter of the OnboardDevice service API.

@@ -62,7 +62,7 @@
     #define AWS_IOT_DEMO_ONBOARDING_UPDATE_COUNT         ( 20 )
 #endif
 #ifndef AWS_IOT_DEMO_ONBOARDING_TIMEOUT_PERIOD_MS
-    #define AWS_IOT_DEMO_ONBOARDING_TIMEOUT_PERIOD_MS    ( 5000 )
+    #define AWS_IOT_DEMO_ONBOARDING_TIMEOUT_PERIOD_MS    ( 50000 )
 #endif
 /** @endcond */
 
@@ -71,12 +71,25 @@
  *
  * An MQTT ping request will be sent periodically at this interval.
  */
-#define KEEP_ALIVE_SECONDS    ( 60 )
+#define KEEP_ALIVE_SECONDS              ( 60 )
 
 /**
  * @brief The timeout for Onboarding and MQTT operations in this demo.
  */
-#define TIMEOUT_MS            ( 5000 )
+#define TIMEOUT_MS                      ( 5000 )
+
+/**
+ * @brief The name for the provisioning template that will be used for provisioning the demo app.
+ */
+#define PROVISIONING_TEMPLATE_NAME      "myTemplate"
+
+/**
+ * @brief The parameter that will be used for provisioning the demo application.
+ */
+#define PROVISIONING_PARAMETER_NAME     "DeviceLocation"
+#define PROVISIONING_PARAMETER_VALUE    "Seattle"
+#define NUM_OF_PROVISIONING_PARAMS      1u
+
 
 /*-----------------------------------------------------------*/
 
@@ -94,7 +107,7 @@ int RunOnboardingDemo( bool awsIotMqttMode,
  */
 static void _printRejectedResponse( const AwsIotOnboardingRejectedResponse_t * pResponseInfo )
 {
-    IotLogError( "StatusCode={%d}\n ErrorCode={%.*s}\n ErrorMessage={%.*s}\n",
+    IotLogError( "ErrorCode={%.*s}\n ErrorMessage={%.*s}\n",
                  pResponseInfo->errorCodeLength, pResponseInfo->pErrorCode,
                  pResponseInfo->errorMessageLength, pResponseInfo->pErrorMessage );
 }
@@ -126,7 +139,7 @@ static void _demoDeviceCredentialsCallback( void * contextParam,
         {
             memcpy( *certificateId, pResponseInfo->u.acceptedResponse.pCertificateId, pResponseInfo->u.acceptedResponse.certificateIdLength );
             /* Add a NULL terminator to the buffer (to treat the buffer as a string!) */
-            *certificateId[ pResponseInfo->u.acceptedResponse.certificateIdLength ] = '\0';
+            *( *certificateId + pResponseInfo->u.acceptedResponse.certificateIdLength ) = '\0';
         }
 
         /* Print the certificate Pem and private key data received. This is ONLY for the demo purpose, STORE THE
@@ -364,16 +377,19 @@ int RunOnboardingDemo( bool awsIotMqttMode,
      * to AWS IoT, so this value is hardcoded to true whenever needed. */
     ( void ) awsIotMqttMode;
 
-    size_t clientIdentifierLength = 0;
-
+    /* This will be used for tracking the return code from the Provisioning APIs. */
     AwsIotOnboardingError_t requestStatus = AWS_IOT_ONBOARDING_SUCCESS;
+
+    AwsIotOnboardingRequestParameterEntry_t provisioningParameters;
+    provisioningParameters.pParameterKey = PROVISIONING_PARAMETER_NAME;
+    provisioningParameters.parameterKeyLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_NAME ) - 1 );
+    provisioningParameters.pParameterValue = PROVISIONING_PARAMETER_VALUE;
+    provisioningParameters.parameterValueLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_VALUE ) - 1 );
 
     /* Determine the length of the client ID Name. */
     if( pIdentifier != NULL )
     {
-        clientIdentifierLength = strlen( pIdentifier );
-
-        if( clientIdentifierLength == 0 )
+        if( strlen( pIdentifier ) == 0 )
         {
             IotLogError( "The length of the MQTT client identifier must be nonzero." );
 
@@ -445,10 +461,10 @@ int RunOnboardingDemo( bool awsIotMqttMode,
         /* Set the parameters for requesting onboarding. */
         requestInfo.pDeviceCertificateId = pCertificateIdBuffer;
         requestInfo.deviceCertificateIdLength = ( sizeof( pCertificateIdBuffer ) - 1 );
-        requestInfo.pTemplateIdentifier = AWS_IOT_DEMO_ONBOARDING_TEMPLATE_NAME;
-        requestInfo.templateIdentifierLength = sizeof( AWS_IOT_DEMO_ONBOARDING_TEMPLATE_NAME ) - 1;
-        requestInfo.pParametersStart = NULL;
-        requestInfo.numOfParameters = 0;
+        requestInfo.pTemplateIdentifier = PROVISIONING_TEMPLATE_NAME;
+        requestInfo.templateIdentifierLength = sizeof( PROVISIONING_TEMPLATE_NAME ) - 1;
+        requestInfo.pParametersStart = &provisioningParameters;
+        requestInfo.numOfParameters = NUM_OF_PROVISIONING_PARAMS;
 
         /* Set the certificate ID pointer as context parameter to the credentials response processing callback. */
         onboardDeviceResponseCallback.userParam = &pCertificateIdBuffer;

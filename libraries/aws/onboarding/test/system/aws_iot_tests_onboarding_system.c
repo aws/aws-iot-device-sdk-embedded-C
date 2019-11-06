@@ -113,20 +113,8 @@ static const char * _pTestMqttClientId = "onnboarding-system-test";
  */
 static char * _testCertificateId = "1c163fd8fcac4a7dc1da34744b6e7c994664c1d399c356d0fce400027d6e45e4";
 
-/**
- * @brief Template ID for OnboardDevice API tests.
- */
-#define _testTemplateId    "myTemplate1"
-
 static const AwsIotOnboardingRequestParameterEntry_t _pTestParameters[] =
-{
-    {
-        .pParameterKey = "DeviceLocation",
-        .parameterKeyLength = sizeof( "deviceLocation" ) - 1,
-        .pParameterValue = "Seattle",
-        .parameterValueLength = sizeof( "Seattle" ) - 1
-    }
-};
+    AWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS;
 
 /*-----------------------------------------------------------*/
 
@@ -220,7 +208,6 @@ static void _printOnboardDeviceResponseCallback( void * contextParam,
             }
         }
     }
-
     else
     {
         _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
@@ -348,7 +335,7 @@ TEST_TEAR_DOWN( Onboarding_System )
  */
 TEST_GROUP_RUNNER( Onboarding_System )
 {
-    /* RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase ); */
+    /*RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase ); */
     RUN_TEST_CASE( Onboarding_System, OnboardDeviceNominalCase );
 }
 
@@ -394,8 +381,8 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
 
     requestInfo.pDeviceCertificateId = _testCertificateId;
     requestInfo.deviceCertificateIdLength = strlen( _testCertificateId );
-    requestInfo.pTemplateIdentifier = _testTemplateId;
-    requestInfo.templateIdentifierLength = ( sizeof( _testTemplateId ) - 1 );
+    requestInfo.pTemplateIdentifier = AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME;
+    requestInfo.templateIdentifierLength = ( sizeof( AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME ) - 1 );
     requestInfo.pParametersStart = _pTestParameters;
     requestInfo.numOfParameters = sizeof( _pTestParameters ) /
                                   sizeof( AwsIotOnboardingRequestParameterEntry_t );
