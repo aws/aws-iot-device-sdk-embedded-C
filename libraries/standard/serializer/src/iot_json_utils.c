@@ -34,10 +34,10 @@
 /* JSON utilities include. */
 #include "iot_json_utils.h"
 
-#define IS_QUOTE(str, idx) \
-  (str[idx] == '"' && (idx == 0 || str[idx-1] != '\\'))
-#define IS_WHITESPACE(str, idx) \
-  (str[ idx ] == ' ' || str[ idx ] == '\n' || str[ idx ] == '\r' || str[ idx ] == '\t' )
+#define IS_QUOTE( str, idx ) \
+    ( str[ idx ] == '"' && ( idx == 0 || str[ idx - 1 ] != '\\' ) )
+#define IS_WHITESPACE( str, idx ) \
+    ( str[ idx ] == ' ' || str[ idx ] == '\n' || str[ idx ] == '\r' || str[ idx ] == '\t' )
 
 /*-----------------------------------------------------------*/
 
@@ -53,15 +53,17 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
     char openCharacter = '\0', closeCharacter = '\0';
     int nestingLevel = 0;
 
-    /* Ensure the JSON document is long enough to contain the key/value pair. At
-     * the very least, a JSON key/value pair must contain the key and the 6
-     * characters {":""} */
-    if( jsonDocumentLength < jsonKeyLength + 6 )
+    /* Validate all the arguements.*/
+    if( ( pJsonDocument == NULL ) || ( pJsonKey == NULL ) ||
+        ( jsonDocumentLength == 0 ) || ( jsonKeyLength == 0 ) )
     {
         return false;
     }
 
-    if( jsonKeyLength == 0 )
+    /* Ensure the JSON document is long enough to contain the key/value pair. At
+     * the very least, a JSON key/value pair must contain the key and the 6
+     * characters {":""} */
+    if( jsonDocumentLength < jsonKeyLength + 6 )
     {
         return false;
     }
@@ -74,7 +76,7 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
         /* If the first character in the key is found and there's an unescaped double
          * quote after the key length, do a string compare for the key. */
         if( ( IS_QUOTE( pJsonDocument, i ) ) &&
-            ( IS_QUOTE( pJsonDocument, i + 1 +  jsonKeyLength ) ) &&
+            ( IS_QUOTE( pJsonDocument, i + 1 + jsonKeyLength ) ) &&
             ( pJsonDocument[ i + 1 ] == pJsonKey[ 0 ] ) &&
             ( strncmp( pJsonDocument + i + 1,
                        pJsonKey,
@@ -83,7 +85,7 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
             /* Key found; this is a potential match. */
 
             /* Skip the characters in the JSON key and closing double quote. */
-	    /* While loop guarantees that i < jsonDocumentLength - 1 */
+            /* While loop guarantees that i < jsonDocumentLength - 1 */
             i += jsonKeyLength + 2;
 
             /* Skip all whitespace characters between the closing " and the : */
@@ -110,11 +112,11 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
                 i++;
             }
 
-	    /* If the end of the document is reached, this isn't a match. */
-	    if( i >= jsonDocumentLength )
-	    {
-		return false;
-	    }
+            /* If the end of the document is reached, this isn't a match. */
+            if( i >= jsonDocumentLength )
+            {
+                return false;
+            }
 
             /* Skip all whitespace characters between : and the first character in the value. */
             while( IS_WHITESPACE( pJsonDocument, i ) )
@@ -145,11 +147,11 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
                     /* Skip the opening double quote. */
                     i++;
 
-		    /* If the end of the document is reached, this isn't a match. */
-		    if( i >= jsonDocumentLength )
-		    {
-			return false;
-		    }
+                    /* If the end of the document is reached, this isn't a match. */
+                    if( i >= jsonDocumentLength )
+                    {
+                        return false;
+                    }
 
                     /* Add the length of all characters in the JSON string. */
                     while( pJsonDocument[ i ] != '\"' )
@@ -199,7 +201,7 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
                            pJsonDocument[ i ] != '}' )
                     {
                         /* Any whitespace before a , or } means the JSON document is invalid. */
-  		        if( IS_WHITESPACE( pJsonDocument, i ) )
+                        if( IS_WHITESPACE( pJsonDocument, i ) )
                         {
                             return false;
                         }
