@@ -34,6 +34,11 @@
 /* JSON utilities include. */
 #include "iot_json_utils.h"
 
+#define IS_QUOTE(str, idx) \
+  (str[idx] == '"' && (idx == 0 || str[idx-1] != '\\'))
+#define IS_WHITESPACE(str, idx) \
+  (str[ idx ] == ' ' || str[ idx ] == '\n' || str[ idx ] == '\r' || str[ idx ] == '\t' )
+
 /*-----------------------------------------------------------*/
 
 bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
@@ -56,6 +61,11 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
         return false;
     }
 
+    if( jsonKeyLength == 0 )
+    {
+        return false;
+    }
+
     /* Search the characters in the JSON document for the key. The end of the JSON
      * document does not have to be searched once too few characters remain to hold a
      * value. */
@@ -63,29 +73,21 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
     {
         /* If the first character in the key is found and there's an unescaped double
          * quote after the key length, do a string compare for the key. */
-        if( ( pJsonDocument[ i ] == pJsonKey[ 0 ] ) &&
-            ( pJsonDocument[ i + jsonKeyLength ] == '\"' ) &&
-            ( pJsonDocument[ i + jsonKeyLength - 1 ] != '\\' ) &&
-            ( strncmp( pJsonDocument + i,
+        if( ( IS_QUOTE( pJsonDocument, i ) ) &&
+            ( IS_QUOTE( pJsonDocument, i + 1 +  jsonKeyLength ) ) &&
+            ( pJsonDocument[ i + 1 ] == pJsonKey[ 0 ] ) &&
+            ( strncmp( pJsonDocument + i + 1,
                        pJsonKey,
                        jsonKeyLength ) == 0 ) )
         {
             /* Key found; this is a potential match. */
 
             /* Skip the characters in the JSON key and closing double quote. */
+	    /* While loop guarantees that i < jsonDocumentLength - 2 */
             i += jsonKeyLength + 1;
 
-	    /* If the end of the document is reached, this isn't a match. */
-	    if( i >= jsonDocumentLength )
-	    {
-		return false;
-	    }
-
             /* Skip all whitespace characters between the closing " and the : */
-            while( pJsonDocument[ i ] == ' ' ||
-                   pJsonDocument[ i ] == '\n' ||
-                   pJsonDocument[ i ] == '\r' ||
-                   pJsonDocument[ i ] == '\t' )
+            while( IS_WHITESPACE( pJsonDocument, i ) )
             {
                 i++;
 
@@ -115,10 +117,7 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
 	    }
 
             /* Skip all whitespace characters between : and the first character in the value. */
-            while( pJsonDocument[ i ] == ' ' ||
-                   pJsonDocument[ i ] == '\n' ||
-                   pJsonDocument[ i ] == '\r' ||
-                   pJsonDocument[ i ] == '\t' )
+            while( IS_WHITESPACE( pJsonDocument, i ) )
             {
                 i++;
 
@@ -200,10 +199,7 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
                            pJsonDocument[ i ] != '}' )
                     {
                         /* Any whitespace before a , or } means the JSON document is invalid. */
-                        if( ( pJsonDocument[ i ] == ' ' ) ||
-                            ( pJsonDocument[ i ] == '\n' ) ||
-                            ( pJsonDocument[ i ] == '\r' ) ||
-                            ( pJsonDocument[ i ] == '\t' ) )
+  		        if( IS_WHITESPACE( pJsonDocument, i ) )
                         {
                             return false;
                         }
