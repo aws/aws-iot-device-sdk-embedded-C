@@ -922,6 +922,10 @@ const char * IotTaskPool_strerror( IotTaskPoolError_t status )
             pMessage = "CANCEL FAILED";
             break;
 
+        case IOT_TASKPOOL_GENERAL_FAILURE:
+            pMessage = "GENERAL FAILURE";
+            break;
+
         default:
             pMessage = "INVALID STATUS";
             break;

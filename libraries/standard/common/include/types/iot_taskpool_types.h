@@ -51,97 +51,38 @@ typedef enum IotTaskPoolError
 {
     /**
      * @brief Task pool operation completed successfully.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_createsystemtaskpool
-     * - @ref taskpool_function_create
-     * - @ref taskpool_function_destroy
-     * - @ref taskpool_function_setmaxthreads
-     * - @ref taskpool_function_createjob
-     * - @ref taskpool_function_createrecyclablejob
-     * - @ref taskpool_function_destroyrecyclablejob
-     * - @ref taskpool_function_recyclejob
-     * - @ref taskpool_function_schedule
-     * - @ref taskpool_function_scheduledeferred
-     * - @ref taskpool_function_getstatus
-     * - @ref taskpool_function_trycancel
-     *
      */
     IOT_TASKPOOL_SUCCESS = 0,
 
     /**
      * @brief Task pool operation failed because at least one parameter is invalid.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_createsystemtaskpool
-     * - @ref taskpool_function_create
-     * - @ref taskpool_function_destroy
-     * - @ref taskpool_function_setmaxthreads
-     * - @ref taskpool_function_createjob
-     * - @ref taskpool_function_createrecyclablejob
-     * - @ref taskpool_function_destroyrecyclablejob
-     * - @ref taskpool_function_recyclejob
-     * - @ref taskpool_function_schedule
-     * - @ref taskpool_function_scheduledeferred
-     * - @ref taskpool_function_getstatus
-     * - @ref taskpool_function_trycancel
-     *
      */
     IOT_TASKPOOL_BAD_PARAMETER,
 
     /**
      * @brief Task pool operation failed because it is illegal.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_createjob
-     * - @ref taskpool_function_createrecyclablejob
-     * - @ref taskpool_function_destroyrecyclablejob
-     * - @ref taskpool_function_recyclejob
-     * - @ref taskpool_function_schedule
-     * - @ref taskpool_function_scheduledeferred
-     * - @ref taskpool_function_trycancel
-     *
      */
     IOT_TASKPOOL_ILLEGAL_OPERATION,
 
     /**
      * @brief Task pool operation failed because allocating memory failed.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_createsystemtaskpool
-     * - @ref taskpool_function_create
-     * - @ref taskpool_function_setmaxthreads
-     * - @ref taskpool_function_createrecyclablejob
-     * - @ref taskpool_function_scheduledeferred
-     * - @ref taskpool_function_getstatus
-     *
      */
     IOT_TASKPOOL_NO_MEMORY,
 
     /**
      * @brief Task pool operation failed because of an invalid parameter.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_setmaxthreads
-     * - @ref taskpool_function_createrecyclablejob
-     * - @ref taskpool_function_destroyrecyclablejob
-     * - @ref taskpool_function_recyclejob
-     * - @ref taskpool_function_schedule
-     * - @ref taskpool_function_scheduledeferred
-     * - @ref taskpool_function_getstatus
-     * - @ref taskpool_function_trycancel
-     *
      */
     IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS,
 
     /**
      * @brief Task pool cancellation failed.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_trycancel
-     *
      */
     IOT_TASKPOOL_CANCEL_FAILED,
+
+    /**
+     * @brief Task pool operation general failure.
+     */
+    IOT_TASKPOOL_GENERAL_FAILURE,
 } IotTaskPoolError_t;
 
 /**
