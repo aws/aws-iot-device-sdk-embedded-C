@@ -7,6 +7,14 @@ set -exu
 
 TRAVIS_PULL_REQUEST=false
 
+AWS_ACCOUNT_ID=""
+
+# Query the AWS account ID.
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+    AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
+fi
+
+
 # Function for running the existing test executables.
 run_tests() {
     # For commit builds, run the full Onboarding tests. For pull request builds,
@@ -25,15 +33,15 @@ TEMPLATE_NAME="CI_TEST_TEMPLATE"
 create_provisioning_template() {
     # Delete all existing templates in the account to start afresh.
     aws iot delete-provisioning-template \
-        --endpoint https://beta.us-east-1.iot.amazonaws.com \
+        --endpoint https://gamma.us-east-1.iot.amazonaws.com \
         --template-name $TEMPLATE_NAME | echo true
     
     # Add a single provisioning template to test with.
     aws iot create-provisioning-template \
-        --endpoint https://beta.us-east-1.iot.amazonaws.com \
-        --template-name CI_TEST_NAME \
-        --provisioning-role-arn arn:aws:iam::502387646363:role/Admin \
-        --template-body "{  \"Parameters\" : {     \"DeviceLocation\": {       \"Type\": \"String\"     }  },  \"Mappings\": {    \"LocationTable\": {      \"Seattle\": {        \"LocationUrl\": \"https:\/\/example.aws\"      }    }  },  \"Resources\" : {    \"thing\" : {      \"Type\" : \"AWS::IoT::Thing\",      \"Properties\" : {        \"ThingName\" : \"ThingName\",        \"AttributePayload\" : { \"version\" : \"v1\", \"serialNumber\" : \"serialNumber\"},        \"ThingTypeName\" :  \"lightBulb-versionA\",        \"ThingGroups\" : [\"v1-lightbulbs\", \"WA\"],        \"BillingGroup\": \"BillingGroup\"      },      \"OverrideSettings\" : {        \"AttributePayload\" : \"MERGE\",        \"ThingTypeName\" : \"REPLACE\",        \"ThingGroups\" : \"DO_NOTHING\"      }    },    \"certificate\" : {      \"Type\" : \"AWS::IoT::Certificate\",      \"Properties\" : {        \"Status\" : \"Active\"      },      \"OverrideSettings\" : {        \"Status\" : \"DO_NOTHING\"      }    },    \"policy\" : {      \"Type\" : \"AWS::IoT::Policy\",      \"Properties\" : {        \"PolicyDocument\" : {          \"Version\": \"2012-10-17\",          \"Statement\": [{            \"Effect\": \"Allow\",            \"Action\":[\"iot:Publish\"],            \"Resource\": [\"arn:aws:iot:us-east-1:123456789012:topic\/foo\/bar\"]          }]        }      }    }  },  \"DeviceConfiguration\": {    \"FallbackUrl\": \"https:\/\/www.example.com\/test-site\",    \"LocationUrl\": {\"Fn::FindInMap\": [\"LocationTable\", {\"Ref\": \"DeviceLocation\"}, \"LocationUrl\"]}  }}" \
+        --endpoint https://gamma.us-east-1.iot.amazonaws.com \
+        --template-name $TEMPLATE_NAME \
+        --provisioning-role-arn arn:aws:iam::$AWS_ACCOUNT_ID:role/Admin \
+        --template-body  "{ \"Resources\": {}}" \
         --enabled 
 }
 
@@ -56,7 +64,24 @@ PROVISION_PARAMETERS="{ \
     } \
 }"
 
-COMMON_CMAKE_FLAGS="-DAWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\""
+
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
+then wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; 
+fi
+
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
+then echo -e $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
+fi
+
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
+then echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
+fi
+
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
+then export AWS_IOT_CREDENTIAL_DEFINES=-DIOT_TEST_SERVER=\\\"\\\\\\\"$AWS_IOT_ENDPOINT\\\\\\\"\\\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\\\"\\\\\\\"../credentials/AmazonRootCA1.pem\\\\\\\"\\\" -DIOT_TEST_CLIENT_CERT=\\\"\\\\\\\"../credentials/clientCert.pem\\\\\\\"\\\" -DIOT_TEST_PRIVATE_KEY=\\\"\\\\\\\"../credentials/privateKey.pem\\\\\\\"\\\"; 
+fi
+
+COMMON_CMAKE_FLAGS="\"$AWS_IOT_CREDENTIAL_DEFINE\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\""
 
 # CMake build configuration without static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_FLAGS"

@@ -335,7 +335,7 @@ TEST_TEAR_DOWN( Onboarding_System )
  */
 TEST_GROUP_RUNNER( Onboarding_System )
 {
-    /*RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase ); */
+    RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase );
     RUN_TEST_CASE( Onboarding_System, OnboardDeviceNominalCase );
 }
 

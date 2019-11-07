@@ -612,6 +612,7 @@ AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onbo
     /* Use the same buffer for storing the request and response MQTT topic strings (for space efficiency) as both kinds
      * of topics share the same filter. */
     char requestResponseTopicsBuffer[ ONBOARDING_ONBOARD_DEVICE_RESPONSE_MAX_TOPIC_LENGTH ] = { 0 };
+    size_t generatedTopicFilterSize = 0;
     AwsIotOnboarding_Assert( ONBOARDING_ONBOARD_DEVICE_RESPONSE_MAX_TOPIC_LENGTH >
                              ONBOARDING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH );
 
@@ -690,16 +691,22 @@ AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onbo
     }
 
     /* Generate the response topic filter using the template ID. */
-    responseSubscription.topicFilterBaseLength = _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter(
+    generatedTopicFilterSize = _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter(
         pRequestData->pTemplateIdentifier,
         pRequestData->templateIdentifierLength,
         requestResponseTopicsBuffer );
+
+    /* We should never hit the "insufficient buffer size" case for generating topic filter, but if we do, we need to
+     * gracefully exit. */
+    AwsIotOnboarding_Assert( generatedTopicFilterSize != 0 );
 
     if( responseSubscription.topicFilterBaseLength == 0 )
     {
         /* TODO - Rethink about handling insufficient buffer size error (that is a bit contrived) */
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
     }
+
+    responseSubscription.topicFilterBaseLength = generatedTopicFilterSize;
 
     /* Subscibe to the MQTT response topics. */
     mqttOpResult = AwsIot_ModifySubscriptions( IotMqtt_TimedSubscribe, &responseSubscription );
@@ -779,7 +786,7 @@ AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onbo
      * Note: For memory and performance efficiency, we are using the same buffer as the response topics. We specify the
      * length of the buffer that is applicable to the request topic. */
     publishInfo.pTopicName = requestResponseTopicsBuffer;
-    publishInfo.topicNameLength = ONBOARDING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH;
+    publishInfo.topicNameLength = generatedTopicFilterSize;
 
     IotLogDebug( "Onboarding %s message will be published to topic %.*s",
                  GET_ONBOARD_DEVICE_OPERATION_LOG,

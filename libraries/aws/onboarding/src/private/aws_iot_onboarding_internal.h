@@ -188,8 +188,7 @@
         #ifdef Iot_DefaultMalloc
             #define AwsIotOnboarding_MallocDeviceConfigurationList    Iot_DefaultMalloc
         #else
-            #error "No malloc function defined for "
-            "AwsIotOnboarding_MallocDeviceConfigurationList"
+            #error "No malloc function defined for AwsIotOnboarding_MallocDeviceConfigurationList"
         #endif
     #endif
 
@@ -197,8 +196,7 @@
         #ifdef Iot_DefaultFree
             #define AwsIotOnboarding_FreeDeviceConfigurationList    Iot_DefaultFree
         #else
-            #error "No Free function defined for "
-            "AwsIotOnboarding_FreeDeviceConfigurationList"
+            #error "No Free function defined for AwsIotOnboarding_FreeDeviceConfigurationList"
         #endif
     #endif
 
@@ -290,7 +288,7 @@
 /**
  * @brief The common suffix in the request and response MQTT topics of the OnboardDevice service API.
  */
-#define ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX    "/register/"ONBOARDING_FORMAT
+#define ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX    "/provision/"ONBOARDING_FORMAT
 
 /**
  * @brief The length of the common suffix in the MQTT topics of the OnboardDevice service API.
