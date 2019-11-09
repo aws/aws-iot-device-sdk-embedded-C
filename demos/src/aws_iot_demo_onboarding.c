@@ -81,7 +81,7 @@
 /**
  * @brief The name for the provisioning template that will be used for provisioning the demo app.
  */
-#define PROVISIONING_TEMPLATE_NAME      "myTemplate"
+#define PROVISIONING_TEMPLATE_NAME      "TestTemplate_from_Console"
 
 /**
  * @brief The parameter that will be used for provisioning the demo application.
@@ -90,6 +90,15 @@
 #define PROVISIONING_PARAMETER_VALUE    "Seattle"
 #define NUM_OF_PROVISIONING_PARAMS      1u
 
+/**
+ * @brief Type for the callback context for the #AwsIotOnboarding_GetDeviceCredentials API.
+ * It will be used for storing the received Certificate ID string that will be provided in the callback.
+ */
+typedef struct _demoProvisionDeviceCallbackContext
+{
+    char * pCertificateIdBuffer;
+    size_t certificateIdLength;
+} _demoProvisionDeviceCallbackContext_t;
 
 /*-----------------------------------------------------------*/
 
@@ -125,21 +134,26 @@ static void _printRejectedResponse( const AwsIotOnboardingRejectedResponse_t * p
 static void _demoDeviceCredentialsCallback( void * contextParam,
                                             const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
 {
-    char ** certificateId = ( char ** ) contextParam;
+    _demoProvisionDeviceCallbackContext_t * certificateIdContext = ( _demoProvisionDeviceCallbackContext_t * ) contextParam;
 
     IotLogInfo( "Received StatusCode={%d}", pResponseInfo->statusCode );
 
     if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
     {
         /* Allocate buffer space for storing the certificate ID obtained from the server. */
-        *certificateId = malloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
+        certificateIdContext->pCertificateIdBuffer = malloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
+
+        /* Copy the size of the Certificate ID string. */
+        certificateIdContext->certificateIdLength = pResponseInfo->u.acceptedResponse.deviceCertificateLength;
 
         /* Copy the certificate ID into the buffer. */
-        if( *certificateId != NULL )
+        if( certificateIdContext->pCertificateIdBuffer != NULL )
         {
-            memcpy( *certificateId, pResponseInfo->u.acceptedResponse.pCertificateId, pResponseInfo->u.acceptedResponse.certificateIdLength );
+            memcpy( certificateIdContext->pCertificateIdBuffer,
+                    pResponseInfo->u.acceptedResponse.pCertificateId,
+                    pResponseInfo->u.acceptedResponse.certificateIdLength );
             /* Add a NULL terminator to the buffer (to treat the buffer as a string!) */
-            *( *certificateId + pResponseInfo->u.acceptedResponse.certificateIdLength ) = '\0';
+            *( certificateIdContext->pCertificateIdBuffer + pResponseInfo->u.acceptedResponse.certificateIdLength ) = '\0';
         }
 
         /* Print the certificate Pem and private key data received. This is ONLY for the demo purpose, STORE THE
@@ -191,7 +205,7 @@ static void _demoOnboardDeviceCallback( void * contextParam,
             for( size_t configIndex = 0;
                  configIndex < pResponseInfo->u.acceptedResponse.numOfConfigurationEntries; configIndex++ )
             {
-                IotLogInfo( "Device Configuration no. %d:ConfigName = %.*s, ConfigData = %.*s ",
+                IotLogInfo( "Device Configuration no. %d\nConfigName = %.*s, ConfigData = %.*s ",
                             configIndex,
                             pConfigurationList[ configIndex ].keyLength,
                             pConfigurationList[ configIndex ].pKey,
@@ -365,7 +379,7 @@ int RunOnboardingDemo( bool awsIotMqttMode,
 
     /* Represents memory that will be allocated to store the Certificate ID that will be provided by the credential
      * requesting API through the callback. */
-    char * pCertificateIdBuffer = NULL;
+    _demoProvisionDeviceCallbackContext_t newCertificateIdDataContext;
 
     /* Request data for onboarding the demo application. */
     AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo;
@@ -428,7 +442,7 @@ int RunOnboardingDemo( bool awsIotMqttMode,
         connectionEstablished = true;
 
         /* Set the certificate ID pointer as context parameter to the credentials response processing callback. */
-        deviceCredentialsCallback.userParam = &pCertificateIdBuffer;
+        deviceCredentialsCallback.userParam = &newCertificateIdDataContext;
 
         /* Set the callback function for handling device credentials that the server will send. */
         deviceCredentialsCallback.function = _demoDeviceCredentialsCallback;
@@ -446,7 +460,7 @@ int RunOnboardingDemo( bool awsIotMqttMode,
             IotLogError( "Request to get new credentials failed, error %s ",
                          AwsIotOnboarding_strerror( requestStatus ) );
         }
-        else if( pCertificateIdBuffer == NULL )
+        else if( newCertificateIdDataContext.pCertificateIdBuffer == NULL )
         {
             IotLogInfo( "Don 't have the Certificate ID to proceed for onboarding. So exiting...!" );
         }
@@ -459,15 +473,12 @@ int RunOnboardingDemo( bool awsIotMqttMode,
     if( status == EXIT_SUCCESS )
     {
         /* Set the parameters for requesting onboarding. */
-        requestInfo.pDeviceCertificateId = pCertificateIdBuffer;
-        requestInfo.deviceCertificateIdLength = ( sizeof( pCertificateIdBuffer ) - 1 );
+        requestInfo.pDeviceCertificateId = newCertificateIdDataContext.pCertificateIdBuffer;
+        requestInfo.deviceCertificateIdLength = newCertificateIdDataContext.certificateIdLength;
         requestInfo.pTemplateIdentifier = PROVISIONING_TEMPLATE_NAME;
         requestInfo.templateIdentifierLength = sizeof( PROVISIONING_TEMPLATE_NAME ) - 1;
         requestInfo.pParametersStart = &provisioningParameters;
         requestInfo.numOfParameters = NUM_OF_PROVISIONING_PARAMS;
-
-        /* Set the certificate ID pointer as context parameter to the credentials response processing callback. */
-        onboardDeviceResponseCallback.userParam = &pCertificateIdBuffer;
 
         /* Set the callback function for handling device credentials that the server will send. */
         onboardDeviceResponseCallback.function = _demoOnboardDeviceCallback;
@@ -504,9 +515,9 @@ int RunOnboardingDemo( bool awsIotMqttMode,
     }
 
     /* Release the Certificate ID buffer, if memory was allocated for it. */
-    if( pCertificateIdBuffer != NULL )
+    if( newCertificateIdDataContext.pCertificateIdBuffer != NULL )
     {
-        free( pCertificateIdBuffer );
+        free( newCertificateIdDataContext.pCertificateIdBuffer );
     }
 
     return status;
