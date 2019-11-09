@@ -258,6 +258,18 @@
  */
 #define SHADOW_LONGEST_SUFFIX_LENGTH             SHADOW_UPDATED_SUFFIX_LENGTH
 
+/**
+ * @brief The macro to convert MQTT error codes to Shadow error codes.
+ * Below are the conversions happening.
+ * IOT_MQTT_SUCCESS to AWS_IOT_SHADOW_SUCCESS
+ * IOT_MQTT_NO_MEMORY to AWS_IOT_SHADOW_NO_MEMORY
+ * all other error codes to AWS_IOT_SHADOW_MQTT_ERROR
+ */
+#define SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( X ) \
+    ( X == IOT_MQTT_SUCCESS ) ? AWS_IOT_SHADOW_SUCCESS : \
+    ( X == IOT_MQTT_NO_MEMORY ) ? AWS_IOT_SHADOW_NO_MEMORY : \
+    AWS_IOT_SHADOW_MQTT_ERROR
+
 /*----------------------- Shadow internal data types ------------------------*/
 
 /**
