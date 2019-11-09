@@ -76,6 +76,8 @@ AWS_IOT_CREDENTIAL_DEFINES=""
 # Function that creates a compiler flags string for network and credentials configuration of the tests.
 configure_credentials() {
 
+    mkdir credentials
+
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
     then wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; 
     fi
