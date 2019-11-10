@@ -50,7 +50,7 @@
 #include "aws_iot_shadow.h"
 
 /* JSON utilities include. */
-#include "iot_json_utils.h"
+#include "aws_iot_doc_parser.h"
 
 /**
  * @cond DOXYGEN_IGNORE
@@ -169,23 +169,37 @@ static bool _getDelta( const char * pDeltaDocument,
     const char * pState = NULL;
     size_t stateLength = 0;
 
-    /* Find the "state" key in the delta document. */
-    stateFound = IotJsonUtils_FindJsonValue( pDeltaDocument,
-                                             deltaDocumentLength,
-                                             "state",
-                                             5,
-                                             &pState,
-                                             &stateLength );
+    /* Find the "state" key in the delta document.
+     *
+     * Note: This parser used is specific for parsing AWS IoT document received
+     * through a mutually aithenticated connection. This parser will not check
+     * for the correctness of the document as it is designed for low memory
+     * footprint rather than checking for correctness of the document. This
+     * parser is not meant to be used as a general purpose JSON parser.
+     */
+    stateFound = AwsIotDocParser_FindValue( pDeltaDocument,
+                                            deltaDocumentLength,
+                                            "state",
+                                            5,
+                                            &pState,
+                                            &stateLength );
 
     if( stateFound == true )
     {
-        /* Find the delta key within the "state" section. */
-        deltaFound = IotJsonUtils_FindJsonValue( pState,
-                                                 stateLength,
-                                                 pDeltaKey,
-                                                 deltaKeyLength,
-                                                 pDelta,
-                                                 pDeltaLength );
+        /* Find the delta key within the "state" section.
+         *
+         * Note: This parser used is specific for parsing AWS IoT document received
+         * through a mutually aithenticated connection. This parser will not check
+         * for the correctness of the document as it is designed for low memory
+         * footprint rather than checking for correctness of the document. This
+         * parser is not meant to be used as a general purpose JSON parser.
+         */
+        deltaFound = AwsIotDocParser_FindValue( pState,
+                                                stateLength,
+                                                pDeltaKey,
+                                                deltaKeyLength,
+                                                pDelta,
+                                                pDeltaLength );
     }
     else
     {
@@ -220,23 +234,37 @@ static bool _getUpdatedState( const char * pUpdatedDocument,
     const char * pSection = NULL;
     size_t sectionLength = 0;
 
-    /* Find the given section in the updated document. */
-    sectionFound = IotJsonUtils_FindJsonValue( pUpdatedDocument,
-                                               updatedDocumentLength,
-                                               pSectionKey,
-                                               sectionKeyLength,
-                                               &pSection,
-                                               &sectionLength );
+    /* Find the given section in the updated document.
+     *
+     * Note: This parser used is specific for parsing AWS IoT document received
+     * through a mutually aithenticated connection. This parser will not check
+     * for the correctness of the document as it is designed for low memory
+     * footprint rather than checking for correctness of the document. This
+     * parser is not meant to be used as a general purpose JSON parser.
+     */
+    sectionFound = AwsIotDocParser_FindValue( pUpdatedDocument,
+                                              updatedDocumentLength,
+                                              pSectionKey,
+                                              sectionKeyLength,
+                                              &pSection,
+                                              &sectionLength );
 
     if( sectionFound == true )
     {
-        /* Find the "state" key within the "previous" or "current" section. */
-        stateFound = IotJsonUtils_FindJsonValue( pSection,
-                                                 sectionLength,
-                                                 "state",
-                                                 5,
-                                                 pState,
-                                                 pStateLength );
+        /* Find the "state" key within the "previous" or "current" section.
+         *
+         * Note: This parser used is specific for parsing AWS IoT document received
+         * through a mutually aithenticated connection. This parser will not check
+         * for the correctness of the document as it is designed for low memory
+         * footprint rather than checking for correctness of the document. This
+         * parser is not meant to be used as a general purpose JSON parser.
+         */
+        stateFound = AwsIotDocParser_FindValue( pSection,
+                                                sectionLength,
+                                                "state",
+                                                5,
+                                                pState,
+                                                pStateLength );
     }
     else
     {

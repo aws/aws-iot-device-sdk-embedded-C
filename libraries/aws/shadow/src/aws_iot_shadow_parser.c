@@ -39,7 +39,7 @@
 #include "iot_error.h"
 
 /* JSON utilities include. */
-#include "iot_json_utils.h"
+#include "aws_iot_doc_parser.h"
 
 /*-----------------------------------------------------------*/
 
@@ -139,12 +139,12 @@ AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * pErrorDocumen
     uint32_t code = 0;
 
     /* Parse the code from the error document. */
-    if( IotJsonUtils_FindJsonValue( pErrorDocument,
-                                    errorDocumentLength,
-                                    ERROR_DOCUMENT_CODE_KEY,
-                                    ERROR_DOCUMENT_CODE_KEY_LENGTH,
-                                    &pCode,
-                                    &codeLength ) == false )
+    if( AwsIotDocParser_FindValue( pErrorDocument,
+                                   errorDocumentLength,
+                                   ERROR_DOCUMENT_CODE_KEY,
+                                   ERROR_DOCUMENT_CODE_KEY_LENGTH,
+                                   &pCode,
+                                   &codeLength ) == false )
     {
         /* Error parsing JSON document, or no "code" key was found. */
         IotLogWarn( "Failed to parse code from error document.\n%.*s",
@@ -163,12 +163,12 @@ AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * pErrorDocumen
 
     /* Parse the error message and print it. An error document must always contain
      * a message. */
-    if( IotJsonUtils_FindJsonValue( pErrorDocument,
-                                    errorDocumentLength,
-                                    ERROR_DOCUMENT_MESSAGE_KEY,
-                                    ERROR_DOCUMENT_MESSAGE_KEY_LENGTH,
-                                    &pMessage,
-                                    &messageLength ) == true )
+    if( AwsIotDocParser_FindValue( pErrorDocument,
+                                   errorDocumentLength,
+                                   ERROR_DOCUMENT_MESSAGE_KEY,
+                                   ERROR_DOCUMENT_MESSAGE_KEY_LENGTH,
+                                   &pMessage,
+                                   &messageLength ) == true )
     {
         IotLogWarn( "Code %lu: %.*s.",
                     code,

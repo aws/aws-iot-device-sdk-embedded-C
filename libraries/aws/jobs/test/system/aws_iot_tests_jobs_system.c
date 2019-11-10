@@ -54,7 +54,7 @@
 #include "unity_fixture.h"
 
 /* JSON utilities include. */
-#include "iot_json_utils.h"
+#include "aws_iot_doc_parser.h"
 
 /*-----------------------------------------------------------*/
 
@@ -192,12 +192,12 @@ static void _jobsCallback( void * pArgument,
     }
 
     /* Parse the next Job ID. */
-    AwsIotJobs_Assert( IotJsonUtils_FindJsonValue( pCallbackParam->u.callback.pDocument,
-                                                   pCallbackParam->u.callback.documentLength,
-                                                   "jobId",
-                                                   5,
-                                                   &pJobId,
-                                                   &jobIdLength ) == true );
+    AwsIotJobs_Assert( AwsIotDocParser_FindValue( pCallbackParam->u.callback.pDocument,
+                                                  pCallbackParam->u.callback.documentLength,
+                                                  "jobId",
+                                                  5,
+                                                  &pJobId,
+                                                  &jobIdLength ) == true );
 
     /* Verify that the previously queued Job is next. */
     AwsIotJobs_Assert( jobIdLength - 2 == _pJobIdLengths[ checkJobId ] );
@@ -223,23 +223,23 @@ static void _parseJobIds( const AwsIotJobsResponse_t * pJobsResponse )
 
     /* In-progress Jobs for this device will interfere with the tests; fail if
      * any in-progress Jobs are present. */
-    status = IotJsonUtils_FindJsonValue( pJobsResponse->pJobsResponse,
-                                         pJobsResponse->jobsResponseLength,
-                                         "inProgressJobs", 14,
-                                         &pInProgressJobs,
-                                         &inProgressJobsLength );
+    status = AwsIotDocParser_FindValue( pJobsResponse->pJobsResponse,
+                                        pJobsResponse->jobsResponseLength,
+                                        "inProgressJobs", 14,
+                                        &pInProgressJobs,
+                                        &inProgressJobsLength );
     TEST_ASSERT_EQUAL_INT( true, status );
     TEST_ASSERT_NOT_NULL( pInProgressJobs );
     TEST_ASSERT_EQUAL_MESSAGE( 2, inProgressJobsLength, "In-progress Jobs detected. Tests will not run." );
 
     /* Parse for the list of queued Jobs. This is where parsing for Job IDs will
      * start. */
-    status = IotJsonUtils_FindJsonValue( pJobsResponse->pJobsResponse,
-                                         pJobsResponse->jobsResponseLength,
-                                         "queuedJobs",
-                                         10,
-                                         &pParseStart,
-                                         &parseLength );
+    status = AwsIotDocParser_FindValue( pJobsResponse->pJobsResponse,
+                                        pJobsResponse->jobsResponseLength,
+                                        "queuedJobs",
+                                        10,
+                                        &pParseStart,
+                                        &parseLength );
     TEST_ASSERT_EQUAL_INT_MESSAGE( true, status, "Response did not contain any queued Jobs." );
     TEST_ASSERT_NOT_NULL( pParseStart );
     TEST_ASSERT_GREATER_THAN( 0, parseLength );
@@ -247,12 +247,12 @@ static void _parseJobIds( const AwsIotJobsResponse_t * pJobsResponse )
     /* Parse the Job IDs of the first two queued Jobs. */
     for( i = 0; i < 2; i++ )
     {
-        status = IotJsonUtils_FindJsonValue( pParseStart,
-                                             parseLength,
-                                             "jobId",
-                                             5,
-                                             &pJobId,
-                                             &jobIdLength );
+        status = AwsIotDocParser_FindValue( pParseStart,
+                                            parseLength,
+                                            "jobId",
+                                            5,
+                                            &pJobId,
+                                            &jobIdLength );
         TEST_ASSERT_EQUAL_INT_MESSAGE( true, status, "Response did not contain enough queued Jobs." );
         TEST_ASSERT_NOT_NULL( pJobId );
         TEST_ASSERT_GREATER_THAN( 0, jobIdLength );
@@ -450,12 +450,12 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
          * UPDATE; its response does not include the Job ID. */
         if( type != JOBS_UPDATE )
         {
-            TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( jobsResponse.pJobsResponse,
-                                                                     jobsResponse.jobsResponseLength,
-                                                                     "jobId",
-                                                                     5,
-                                                                     &pJobId,
-                                                                     &jobIdLength ) );
+            TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( jobsResponse.pJobsResponse,
+                                                                    jobsResponse.jobsResponseLength,
+                                                                    "jobId",
+                                                                    5,
+                                                                    &pJobId,
+                                                                    &jobIdLength ) );
 
             for( i = 0; i < 2; i++ )
             {

@@ -1,6 +1,6 @@
 /*
- * IoT Serializer V1.1.0
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * AWS IoT Common V1.0.0
+ * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,22 +21,31 @@
  */
 
 /**
- * @file iot_json_utils.h
- * @brief Declares JSON utility functions.
+ * @file aws_iot_tests_common.c
+ * @brief Test runner for AWS IoT Common tests.
  */
-
-#ifndef IOT_JSON_UTILS_H_
-#define IOT_JSON_UTILS_H_
 
 /* Standard includes. */
 #include <stdbool.h>
-#include <stddef.h>
 
-bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
-                                 size_t jsonDocumentLength,
-                                 const char * pJsonKey,
-                                 size_t jsonKeyLength,
-                                 const char ** pJsonValue,
-                                 size_t * pJsonValueLength );
+/* Test framework includes. */
+#include "unity_fixture.h"
 
-#endif /* ifndef IOT_JSON_UTILS_H_ */
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Runs the AWS IoT Common test groups.
+ *
+ * @param[in] disableNetworkTests Whether tests that require the network should run.
+ * @param[in] disableLongTests Whether tests that take a long time should run.
+ */
+void RunAwsIotCommonTests( bool disableNetworkTests,
+                           bool disableLongTests )
+{
+    /* Silence warnings about unused parameters. */
+    ( void ) disableLongTests;
+
+    RUN_TEST_GROUP( Aws_Iot_Doc_Unit_Parser );
+}
+
+/*-----------------------------------------------------------*/
