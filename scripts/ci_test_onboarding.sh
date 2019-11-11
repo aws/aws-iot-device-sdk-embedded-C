@@ -5,8 +5,6 @@
 # Exit on any nonzero return code.
 set -exu
 
-TRAVIS_PULL_REQUEST=false
-
 AWS_ACCOUNT_ID=""
 
 # Query the AWS account ID.
@@ -26,30 +24,9 @@ run_tests() {
     fi
 }
 
+# Hard-coded with template present in CI account.
+# TODO - Update with creating template (using Aws CLI) for system test setup. 
 TEMPLATE_NAME="CI_TEST_TEMPLATE"
-
-# Function to setup template for the integration tests.
-create_provisioning_template() {
-    # Delete all existing templates in the account to start afresh.
-    aws iot delete-provisioning-template \
-        --endpoint https://gamma.us-east-1.iot.amazonaws.com \
-        --template-name $TEMPLATE_NAME | echo true
-    
-    # Add a single provisioning template to test with.
-    aws iot create-provisioning-template \
-        --endpoint https://gamma.us-east-1.iot.amazonaws.com \
-        --template-name $TEMPLATE_NAME \
-        --provisioning-role-arn arn:aws:iam::$AWS_ACCOUNT_ID:role/Admin \
-        --template-body  " "{\"Parameters\":{\"DeviceLocation\":{\"Type\":\"String\"},\"AWS::IoT::Certificate::Id\":{\"Type\":\"String\"},\"AWS::IoT::Connection::ClientId\":{\"Type\":\"String\"}},\"Mappings\":{\"LocationTable\":{\"Seattle\":{\"LocationUrl\":\"https:\/\/example.aws\"}}},\"Resources\":{\"thing\":{\"Type\":\"AWS::IoT::Thing\",\"Properties\":{\"ThingName\":{\"Fn::Join\":[\"\",[\"ThingPrefix_\",{\"Ref\":\"AWS::IoT::Connection::ClientId\"}]]},\"AttributePayload\":{\"version\":\"v1\",\"serialNumber\":\"serialNumber\"},\"ThingTypeName\":\"lightBulb-versionA\",\"ThingGroups\":[\"v1-lightbulbs\",\"WA\"]},\"OverrideSettings\":{\"AttributePayload\":\"MERGE\",\"ThingTypeName\":\"REPLACE\",\"ThingGroups\":\"DO_NOTHING\"}},\"certificate\":{\"Type\":\"AWS::IoT::Certificate\",\"Properties\":{\"CertificateId\":{\"Ref\":\"AWS::IoT::Certificate::Id\"},\"Status\":\"Active\"},\"OverrideSettings\":{\"Status\":\"REPLACE\"}},\"policy\":{\"Type\":\"AWS::IoT::Policy\",\"Properties\":{\"PolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iot:Connect\",\"iot:Subscribe\",\"iot:Publish\",\"iot:Receive\"],\"Resource\":\"*\"}]}}}},\"DeviceConfiguration\":{\"FallbackUrl\":\"https:\/\/www.example.com\/test-site\",\"LocationUrl\":{\"Fn::FindInMap\":[\"LocationTable\",{\"Ref\":\"DeviceLocation\"},\"LocationUrl\"]}}}"" \
-        --enabled 
-}
-
-# Function to delete the template from the account
-delete_provisioning_template() {
-    aws iot delete-provisioning-template \
-        --endpoint https://beta.us-east-1.iot.amazonaws.com \
-        --template-name $TEMPLATE_NAME
-}
 
 # Function to create unique certificate on the account that can be used as the certificate to provision
 # the tests with. We will just save the certificate ID to use in the tests.
@@ -79,19 +56,23 @@ configure_credentials() {
     mkdir credentials
 
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; 
+    then
+        wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; 
     fi
 
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then echo -e $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
+    then
+        echo -e $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
     fi
 
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
+    then
+        echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
     fi
 
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then export AWS_IOT_CREDENTIAL_DEFINES=-DIOT_TEST_SERVER=\\\"\\\\\\\"$AWS_IOT_ENDPOINT\\\\\\\"\\\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\\\"\\\\\\\"/credentials/AmazonRootCA1.pem\\\\\\\"\\\" -DIOT_TEST_CLIENT_CERT=\\\"\\\\\\\"/credentials/clientCert.pem\\\\\\\"\\\" -DIOT_TEST_PRIVATE_KEY=\\\"\\\\\\\"/credentials/privateKey.pem\\\\\\\"\\\"; 
+    then 
+        AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"credentials/privateKey.pem\\\"\""; 
     fi
 }
 
@@ -100,7 +81,7 @@ configure_credentials
 COMMON_CMAKE_C_FLAGS="\"$AWS_IOT_CREDENTIAL_DEFINE\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\" -DAWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID=\"\\\"$CERTIFICATE_ID\\\"\""
 
 # CMake build configuration without static memory mode.
-cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS -Wall"
+cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
 #cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DAWS_IOT_ONBOARDING_TEMPLATE_NAME=$TEMPLATE_NAME"
 
 # Build tests.
