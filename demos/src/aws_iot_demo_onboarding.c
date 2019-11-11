@@ -81,7 +81,7 @@
 /**
  * @brief The name for the provisioning template that will be used for provisioning the demo app.
  */
-#define PROVISIONING_TEMPLATE_NAME      "TestTemplate_from_Console"
+#define PROVISIONING_TEMPLATE_NAME      "CI_TEST_TEMPLATE"
 
 /**
  * @brief The parameter that will be used for provisioning the demo application.
@@ -144,7 +144,7 @@ static void _demoDeviceCredentialsCallback( void * contextParam,
         certificateIdContext->pCertificateIdBuffer = malloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
 
         /* Copy the size of the Certificate ID string. */
-        certificateIdContext->certificateIdLength = pResponseInfo->u.acceptedResponse.deviceCertificateLength;
+        certificateIdContext->certificateIdLength = pResponseInfo->u.acceptedResponse.certificateIdLength;
 
         /* Copy the certificate ID into the buffer. */
         if( certificateIdContext->pCertificateIdBuffer != NULL )
