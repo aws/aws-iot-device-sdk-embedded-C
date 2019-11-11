@@ -37,7 +37,7 @@
 /* Error handling include. */
 #include "iot_error.h"
 
-/* JSON utils include. */
+/* AWS Parser include. */
 #include "aws_iot_doc_parser.h"
 
 /**

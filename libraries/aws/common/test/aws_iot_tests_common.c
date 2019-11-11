@@ -43,6 +43,7 @@ void RunAwsIotCommonTests( bool disableNetworkTests,
                            bool disableLongTests )
 {
     /* Silence warnings about unused parameters. */
+    ( void ) disableNetworkTests;
     ( void ) disableLongTests;
 
     RUN_TEST_GROUP( Aws_Iot_Doc_Unit_Parser );
