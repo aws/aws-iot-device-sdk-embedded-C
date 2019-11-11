@@ -266,8 +266,8 @@
  * all other error codes to AWS_IOT_SHADOW_MQTT_ERROR
  */
 #define SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( X ) \
-    ( X == IOT_MQTT_SUCCESS ) ? AWS_IOT_SHADOW_SUCCESS : \
-    ( X == IOT_MQTT_NO_MEMORY ) ? AWS_IOT_SHADOW_NO_MEMORY : \
+    ( ( X ) == IOT_MQTT_SUCCESS ) ? AWS_IOT_SHADOW_SUCCESS : \
+    ( ( X ) == IOT_MQTT_NO_MEMORY ) ? AWS_IOT_SHADOW_NO_MEMORY : \
     AWS_IOT_SHADOW_MQTT_ERROR
 
 /*----------------------- Shadow internal data types ------------------------*/
