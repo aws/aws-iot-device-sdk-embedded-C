@@ -148,11 +148,7 @@ AwsIotStatus_t AwsIot_ParseStatus( const char * pTopicName,
     /* Both 'accepted' and  'rejected' topics are of the same length
      * The below is a defensive check at run time to ensure that.
      */
-    if( AWS_IOT_ACCEPTED_SUFFIX_LENGTH != AWS_IOT_REJECTED_SUFFIX_LENGTH )
-    {
-        IotLogWarn( "accepted and rejected identifiers must be the same length!" );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_UNKNOWN );
-    }
+    Iot_DefaultAssert( AWS_IOT_ACCEPTED_SUFFIX_LENGTH == AWS_IOT_REJECTED_SUFFIX_LENGTH );
 
     /* Check that the status topic name is at least as long as the
      * "accepted" suffix. This length check will be good for rejected also
