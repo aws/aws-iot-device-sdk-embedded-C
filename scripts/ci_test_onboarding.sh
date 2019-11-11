@@ -87,9 +87,6 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_C
 # Build tests.
 make -j2 aws_iot_tests_onboarding
 
-# Setup test
-create_provisioning_template
-
 # Run tests in no static memory mode.
 run_tests
 
@@ -99,5 +96,3 @@ run_tests
 # Run tests in no static memory mode.
 #run_tests
 
-# Cleanup test.
-delete_provisioning_template
