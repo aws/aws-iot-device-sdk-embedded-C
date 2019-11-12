@@ -111,6 +111,8 @@ typedef struct _networkConnection
 
     IotNetworkReceiveCallback_t receiveCallback; /**< @brief Network receive callback, if any. */
     void * pReceiveContext;                      /**< @brief The context for the receive callback. */
+    IotNetworkCloseCallback_t closeCallback;     /**< @brief Network close callback, if any. */
+    void * pCloseContext;                        /**< @brief The context for the close callback. */
 } _networkConnection_t;
 
 /*-----------------------------------------------------------*/
@@ -122,6 +124,7 @@ static const IotNetworkInterface_t _networkOpenssl =
 {
     .create             = IotNetworkOpenssl_Create,
     .setReceiveCallback = IotNetworkOpenssl_SetReceiveCallback,
+    .setCloseCallback   = IotNetworkOpenssl_SetCloseCallback,
     .send               = IotNetworkOpenssl_Send,
     .receive            = IotNetworkOpenssl_Receive,
     .close              = IotNetworkOpenssl_Close,
@@ -179,6 +182,16 @@ static void * _networkReceiveThread( void * pArgument )
         /* Invoke the callback function. */
         pConnection->receiveCallback( pConnection,
                                       pConnection->pReceiveContext );
+    }
+    /**
+     * If a close callback has been defined, invoke it now; since we
+     * don't know what caused the close, use "unknown" as the reason.
+     */
+    if ( pConnection->closeCallback != NULL )
+    {
+        pConnection->closeCallback( pConnection,
+                                    IOT_NETWORK_UNKNOWN_CLOSED,
+                                    pConnection->pCloseContext );
     }
 
     IotLogDebug( "Network receive thread for socket %d terminating.",
@@ -777,6 +790,26 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( IotNetworkConnection_t p
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+IotNetworkError_t IotNetworkOpenssl_SetCloseCallback( IotNetworkConnection_t pConnection,
+                                                      IotNetworkCloseCallback_t closeCallback,
+                                                      void * pContext )
+{
+    IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_BAD_PARAMETER );
+
+    if( closeCallback != NULL )
+    {
+        /* Set the callback and parameter. */
+        pConnection->closeCallback = closeCallback;
+        pConnection->pCloseContext = pContext;
+
+        status = IOT_NETWORK_SUCCESS;
+    }
+
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*-----------------------------------------------------------*/

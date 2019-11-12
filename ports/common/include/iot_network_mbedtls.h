@@ -125,6 +125,14 @@ IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( IotNetworkConnection_t p
                                                         void * pContext );
 
 /**
+ * @brief An implementation of #IotNetworkInterface_t::setCloseCallback for
+ * mbed TLS.
+ */
+IotNetworkError_t IotNetworkMbedtls_SetCloseCallback( IotNetworkConnection_t pConnection,
+                                                      IotNetworkCloseCallback_t closeCallback,
+                                                      void * pContext );
+
+/**
  * @brief An implementation of #IotNetworkInterface_t::send for mbed TLS.
  */
 size_t IotNetworkMbedtls_Send( IotNetworkConnection_t pConnection,

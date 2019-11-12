@@ -151,6 +151,7 @@ static IotMutex_t _connectionListMutex;
     {
         .create             = _metricsNetworkCreate,
         .setReceiveCallback = IotNetworkOpenssl_SetReceiveCallback,
+        .setCloseCallback   = IotNetworkOpenssl_SetCloseCallback,
         .send               = IotNetworkOpenssl_Send,
         .receive            = IotNetworkOpenssl_Receive,
         .close              = _metricsNetworkClose,
@@ -185,6 +186,7 @@ static IotMutex_t _connectionListMutex;
     {
         .create             = _metricsNetworkCreate,
         .setReceiveCallback = IotNetworkMbedtls_SetReceiveCallback,
+        .setCloseCallback   = IotNetworkMbedtls_SetCloseCallback,
         .send               = IotNetworkMbedtls_Send,
         .receive            = IotNetworkMbedtls_Receive,
         .close              = _metricsNetworkClose,
