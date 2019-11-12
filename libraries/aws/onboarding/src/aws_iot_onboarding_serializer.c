@@ -275,11 +275,11 @@ AwsIotOnboardingError_t _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( 
 
 /*------------------------------------------------------------------*/
 
-size_t _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter( const char * pTemplateIdentifier,
-                                                           size_t templateIdentifierLength,
+size_t _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter( const char * pTemplateName,
+                                                           size_t templateNameLength,
                                                            char * pTopicFilterBuffer )
 {
-    AwsIotOnboarding_Assert( pTemplateIdentifier != NULL );
+    AwsIotOnboarding_Assert( pTemplateName != NULL );
     AwsIotOnboarding_Assert( pTopicFilterBuffer != NULL );
 
     size_t filledBufferSize = 0;
@@ -288,9 +288,9 @@ size_t _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter( const char * pTemplat
     ( void ) memcpy( pTopicFilterBuffer, ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX,
                      ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH );
     filledBufferSize += ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH;
-    ( void ) memcpy( pTopicFilterBuffer + filledBufferSize, pTemplateIdentifier,
-                     templateIdentifierLength );
-    filledBufferSize += templateIdentifierLength;
+    ( void ) memcpy( pTopicFilterBuffer + filledBufferSize, pTemplateName,
+                     templateNameLength );
+    filledBufferSize += templateNameLength;
     ( void ) memcpy( pTopicFilterBuffer + filledBufferSize,
                      ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX,
                      ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH );

@@ -385,8 +385,8 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
 
     requestInfo.pDeviceCertificateId = _testCertificateId;
     requestInfo.deviceCertificateIdLength = sizeof( _testCertificateId ) - 1;
-    requestInfo.pTemplateIdentifier = AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME;
-    requestInfo.templateIdentifierLength = ( sizeof( AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME ) - 1 );
+    requestInfo.pTemplateName = AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME;
+    requestInfo.templateNameLength = ( sizeof( AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME ) - 1 );
     requestInfo.pParametersStart = _pTestParameters;
     requestInfo.numOfParameters = sizeof( _pTestParameters ) /
                                   sizeof( AwsIotOnboardingRequestParameterEntry_t );

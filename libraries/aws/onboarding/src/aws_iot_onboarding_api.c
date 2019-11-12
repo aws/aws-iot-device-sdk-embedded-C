@@ -661,11 +661,12 @@ AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onbo
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
     }
 
-    /* Check that the provided template ID has the length of the text representation of UUID */
-    if( ( pRequestData->pTemplateIdentifier == NULL ) || ( pRequestData->templateIdentifierLength ==
-                                                           0 ) )
+    /* Check that the provided template name is valid. */
+    if( ( pRequestData->pTemplateName == NULL ) ||
+        ( pRequestData->templateNameLength == 0 ) ||
+        ( pRequestData->templateNameLength > ONBOARDING_MAX_TEMPLATE_NAME_LENGTH ) )
     {
-        IotLogError( "Invalid template ID information passed for device onboarding request." );
+        IotLogError( "Invalid template name information passed for device onboarding request." );
 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
     }
@@ -692,8 +693,8 @@ AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onbo
 
     /* Generate the response topic filter using the template ID. */
     generatedTopicFilterSize = _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter(
-        pRequestData->pTemplateIdentifier,
-        pRequestData->templateIdentifierLength,
+        pRequestData->pTemplateName,
+        pRequestData->templateNameLength,
         requestResponseTopicsBuffer );
 
     /* We should never hit the "insufficient buffer size" case for generating topic filter, but if we do, we need to

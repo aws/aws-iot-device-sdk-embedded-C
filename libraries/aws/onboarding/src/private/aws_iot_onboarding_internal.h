@@ -279,11 +279,10 @@
     ( ( uint16_t ) ( sizeof( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX ) - 1 ) )
 
 /**
- * @brief The length of the Template ID text in the MQTT topics of the OnboardDevice service API.
- *
- * @note The Template ID follows the UUID (Universally Unique Identifier) format.
+ * @brief The maximum length of the Template name that can be used for provisioning the device.
+ * @note The template name is part of the MQTT topics of the OnboardDevice service API.
  */
-#define ONBOARDING_TEMPLATE_ID_LENGTH                     ( 36 )
+#define ONBOARDING_MAX_TEMPLATE_NAME_LENGTH               ( 36 )
 
 /**
  * @brief The common suffix in the request and response MQTT topics of the OnboardDevice service API.
@@ -300,8 +299,8 @@
 /**
  * @brief The length of the complete MQTT request topic of the OnboardDevice service API.
  */
-#define ONBOARDING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH                                        \
-    ( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + ONBOARDING_TEMPLATE_ID_LENGTH + \
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH                                              \
+    ( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + ONBOARDING_MAX_TEMPLATE_NAME_LENGTH + \
       ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH )
 
 /**
@@ -324,8 +323,8 @@
 /**
  * @brief The length of the MQTT request topic filter of the OnboardDevice service API.
  */
-#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_TOPIC_FILTER_LENGTH                                \
-    ( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + ONBOARDING_TEMPLATE_ID_LENGTH + \
+#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_TOPIC_FILTER_LENGTH                                      \
+    ( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + ONBOARDING_MAX_TEMPLATE_NAME_LENGTH + \
       ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH )
 
 /**
@@ -459,15 +458,15 @@ extern const IotSerializerDecodeInterface_t * _pAwsIotOnboardingDecoder;
 /**
  * @brief Utility for generating the request/response MQTT topic filter string for the OnboardingDevice service API.
  *
- * @param[in] pTemplateIdentifier The template ID string for inserting in the topic filter string.
- * @param[in] templateIdentifierLength The length of the template ID string.
+ * @param[in] pTemplateName The template ID string for inserting in the topic filter string.
+ * @param[in] templateNameLength The length of the template ID string.
  * @param[out] pTopicFilterBuffer The pre-allocated buffer for storing the generated topic filter.
  * The buffer should have the required minimum size for storing the MQTT topic filter for the OnboardDevice API.
  *
  * @return Returns the size of the generated topic filter.
  */
-size_t _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter( const char * pTemplateIdentifier,
-                                                           size_t templateIdentifierLength,
+size_t _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter( const char * pTemplateName,
+                                                           size_t templateNameLength,
                                                            char * pTopicFilterBuffer );
 
 /**
