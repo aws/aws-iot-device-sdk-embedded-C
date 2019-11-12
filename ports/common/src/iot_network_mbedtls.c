@@ -156,6 +156,8 @@ typedef struct _networkConnection
 
     IotNetworkReceiveCallback_t receiveCallback; /**< @brief Network receive callback, if any. */
     void * pReceiveContext;                      /**< @brief The context for the receive callback. */
+    IotNetworkCloseCallback_t closeCallback;     /**< @brief Network close callback, if any. */
+    void * pCloseContext;                        /**< @brief The context for the close callback. */
     IotMutex_t callbackMutex;                    /**< @brief Synchronizes the receive callback with calls to destroy. */
     IotSemaphore_t destroyNotification;          /**< @brief Notifies the receive callback that the connection was destroyed. */
 
@@ -408,6 +410,17 @@ static void _receiveThread( void * pArgument )
                 IotMutex_Unlock( &( pConnection->callbackMutex ) );
             }
         }
+    }
+
+    /**
+     * If a close callback has been defined, invoke it now; since we
+     * don't know what caused the close, use "unknown" as the reason.
+     */
+    if( pConnection->closeCallback != NULL )
+    {
+        pConnection->closeCallback( pConnection,
+                                    IOT_NETWORK_UNKNOWN_CLOSED,
+                                    pConnection->pCloseContext );
     }
 
     /* Wait for the call to network destroy, then destroy the connection. */
@@ -930,7 +943,12 @@ IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( IotNetworkConnection_t p
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_SYSTEM_ERROR );
     }
 
-    /* Set the callback and parameter. */
+    /* Set the callback (must be non-NULL) and parameter. */
+    if( receiveCallback == NULL )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_BAD_PARAMETER );
+    }
+
     pConnection->receiveCallback = receiveCallback;
     pConnection->pReceiveContext = pContext;
 
@@ -974,6 +992,26 @@ IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( IotNetworkConnection_t p
     }
 
     IOT_FUNCTION_CLEANUP_END();
+}
+
+/*-----------------------------------------------------------*/
+
+IotNetworkError_t IotNetworkMbedtls_SetCloseCallback( IotNetworkConnection_t pConnection,
+                                                      IotNetworkCloseCallback_t closeCallback,
+                                                      void * pContext )
+{
+    IotNetworkError_t status = IOT_NETWORK_BAD_PARAMETER;
+
+    if( closeCallback != NULL )
+    {
+        /* Set the callback and parameter. */
+        pConnection->closeCallback = closeCallback;
+        pConnection->pCloseContext = pContext;
+
+        status = IOT_NETWORK_SUCCESS;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/

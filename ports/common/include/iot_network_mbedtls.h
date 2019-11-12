@@ -82,18 +82,18 @@
  */
 const IotNetworkInterface_t * IotNetworkMbedtls_GetInterface( void );
 
- /**
-  * @brief One-time initialization function for this network stack.
-  *
-  * This function performs internal setup of this network stack. <b>It must be
-  * called once (and only once) before calling any other function in this network
-  * stack</b>. Calling this function more than once without first calling
-  * #IotNetworkMbedtls_Cleanup may result in a crash.
-  *
-  * @return #IOT_NETWORK_SUCCESS or #IOT_NETWORK_FAILURE.
-  *
-  * @warning No thread-safety guarantees are provided for this function.
-  */
+/**
+ * @brief One-time initialization function for this network stack.
+ *
+ * This function performs internal setup of this network stack. <b>It must be
+ * called once (and only once) before calling any other function in this network
+ * stack</b>. Calling this function more than once without first calling
+ * #IotNetworkMbedtls_Cleanup may result in a crash.
+ *
+ * @return #IOT_NETWORK_SUCCESS or #IOT_NETWORK_FAILURE.
+ *
+ * @warning No thread-safety guarantees are provided for this function.
+ */
 IotNetworkError_t IotNetworkMbedtls_Init( void );
 
 /**
@@ -123,6 +123,14 @@ IotNetworkError_t IotNetworkMbedtls_Create( IotNetworkServerInfo_t pServerInfo,
 IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( IotNetworkConnection_t pConnection,
                                                         IotNetworkReceiveCallback_t receiveCallback,
                                                         void * pContext );
+
+/**
+ * @brief An implementation of #IotNetworkInterface_t::setCloseCallback for
+ * mbed TLS.
+ */
+IotNetworkError_t IotNetworkMbedtls_SetCloseCallback( IotNetworkConnection_t pConnection,
+                                                      IotNetworkCloseCallback_t closeCallback,
+                                                      void * pContext );
 
 /**
  * @brief An implementation of #IotNetworkInterface_t::send for mbed TLS.
