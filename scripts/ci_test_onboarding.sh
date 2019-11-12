@@ -100,6 +100,7 @@ run_tests
 # Cleanup created resources from the AWS IoT account used for CI.
 aws iot list-thing-principals \
     --endpoint https://gamma.us-east-1.iot.amazonaws.com \
+    --region us-east-1 \
     --thing-name "ThingPrefix_"$CLIENT_ID | \
         grep arn | tr -d \",' ' | 
             while read -r certificate_arn
