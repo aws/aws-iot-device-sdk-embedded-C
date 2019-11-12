@@ -766,7 +766,7 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( IotNetworkConnection_t p
                                                         IotNetworkReceiveCallback_t receiveCallback,
                                                         void * pContext )
 {
-    IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_BAD_PARAMETER );
+    IotNetworkError_t status = IOT_NETWORK_BAD_PARAMETER;
     int posixError = 0;
 
     /* The receive callback must be non-NULL) */
@@ -795,7 +795,7 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( IotNetworkConnection_t p
         }
     }
 
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+    return status;
 }
 
 /*-----------------------------------------------------------*/
