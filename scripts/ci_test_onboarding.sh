@@ -50,14 +50,13 @@ configure_credentials() {
 
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
     then
-        echo -e $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
+        echo $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
     fi
 
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
     then
-        echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
+        echo $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
     fi
-
 
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
     then 
@@ -71,6 +70,7 @@ configure_credentials
 # the system/integration tests with. We will just save the certificate ID to use in the tests.
 CERTIFICATE_ID=$(aws iot create-keys-and-certificate \
     --endpoint https://gamma.us-east-1.iot.amazonaws.com \
+    --region us-east-1 \
     --no-set-as-active | \
         grep certificateId | \
             cut -d ':' -f2 | \
