@@ -28,18 +28,6 @@ run_tests() {
 # TODO - Update with creating template (using Aws CLI) for system test setup. 
 TEMPLATE_NAME="CI_TEST_TEMPLATE"
 
-# Function to create unique certificate on the account that can be used as the certificate to provision
-# the tests with. We will just save the certificate ID to use in the tests.
-CERTIFICATE_ID=""
-create_certificate() {
-    CERTIFICATE_ID=$(aws iot create-keys-and-certificate \
-        --endpoint https://gamma.us-east-1.iot.amazonaws.com \
-        --no-set-as-active | \
-            grep certificateId | \
-                cut -d ':' -f2 | \
-                    tr -d ,)
-}
-
 PROVISION_PARAMETERS="{ \
     { \
         .pParameterKey = \"\\\"DeviceLocation\\\"\", \
@@ -70,6 +58,7 @@ configure_credentials() {
         echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
     fi
 
+
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
     then 
         AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"credentials/privateKey.pem\\\"\""; 
@@ -77,6 +66,15 @@ configure_credentials() {
 }
 
 configure_credentials
+
+# Create unique certificate on the AWS IoT account that can be used as the certificate to provision
+# the system/integration tests with. We will just save the certificate ID to use in the tests.
+CERTIFICATE_ID=$(aws iot create-keys-and-certificate \
+    --endpoint https://gamma.us-east-1.iot.amazonaws.com \
+    --no-set-as-active | \
+        grep certificateId | \
+            cut -d ':' -f2 | \
+                tr -d ,)
 
 COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\" -DAWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID=\"\\\"$CERTIFICATE_ID\\\"\""
 
