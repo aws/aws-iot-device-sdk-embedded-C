@@ -115,12 +115,12 @@ typedef void ( * IotNetworkReceiveCallback_t )( IotNetworkConnection_t pConnecti
  * @brief Provide an asynchronous notification of network closing
  *
  * A function with this signature may be set with @ref platform_network_function_setclosecallback
- * to be invoked when data is available on the network.
+ * to be invoked when the network connection is closed.
  *
  * @param[in] pConnection The connection on which data is available, defined by
  * the network stack.
  * @param[in] reason The reason the connection was closed
- * @param[in] pContext The third argument passed to @ref platform_network_function_setreceivecallback.
+ * @param[in] pContext The third argument passed to @ref platform_network_function_setclosecallback.
  */
 /* @[declare_platform_network_closecallback] */
 typedef void ( * IotNetworkCloseCallback_t )( IotNetworkConnection_t pConnection,
