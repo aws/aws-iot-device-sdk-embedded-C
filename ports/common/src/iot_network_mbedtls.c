@@ -411,11 +411,12 @@ static void _receiveThread( void * pArgument )
             }
         }
     }
+
     /**
      * If a close callback has been defined, invoke it now; since we
      * don't know what caused the close, use "unknown" as the reason.
      */
-    if ( pConnection->closeCallback != NULL )
+    if( pConnection->closeCallback != NULL )
     {
         pConnection->closeCallback( pConnection,
                                     IOT_NETWORK_UNKNOWN_CLOSED,
@@ -943,7 +944,7 @@ IotNetworkError_t IotNetworkMbedtls_SetReceiveCallback( IotNetworkConnection_t p
     }
 
     /* Set the callback (must be non-NULL) and parameter. */
-    if ( receiveCallback == NULL )
+    if( receiveCallback == NULL )
     {
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_BAD_PARAMETER );
     }
@@ -1010,7 +1011,7 @@ IotNetworkError_t IotNetworkMbedtls_SetCloseCallback( IotNetworkConnection_t pCo
         status = IOT_NETWORK_SUCCESS;
     }
 
-    IOT_FUNCTION_CLEANUP_END();
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/

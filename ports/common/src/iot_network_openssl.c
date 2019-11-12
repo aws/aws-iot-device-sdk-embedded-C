@@ -183,11 +183,12 @@ static void * _networkReceiveThread( void * pArgument )
         pConnection->receiveCallback( pConnection,
                                       pConnection->pReceiveContext );
     }
+
     /**
      * If a close callback has been defined, invoke it now; since we
      * don't know what caused the close, use "unknown" as the reason.
      */
-    if ( pConnection->closeCallback != NULL )
+    if( pConnection->closeCallback != NULL )
     {
         pConnection->closeCallback( pConnection,
                                     IOT_NETWORK_UNKNOWN_CLOSED,
@@ -765,31 +766,36 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( IotNetworkConnection_t p
                                                         IotNetworkReceiveCallback_t receiveCallback,
                                                         void * pContext )
 {
+    IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_BAD_PARAMETER );
     int posixError = 0;
-    IotNetworkError_t status = IOT_NETWORK_SUCCESS;
 
-    /* Set the callback and parameter. */
-    pConnection->receiveCallback = receiveCallback;
-    pConnection->pReceiveContext = pContext;
-
-    posixError = pthread_create( &pConnection->receiveThread,
-                                 NULL,
-                                 _networkReceiveThread,
-                                 pConnection );
-
-    if( posixError != 0 )
+    /* The receive callback must be non-NULL) */
+    if( receiveCallback != NULL )
     {
-        IotLogError( "Failed to create socket %d network receive thread. errno=%d.",
-                     pConnection->socket,
-                     posixError );
-        status = IOT_NETWORK_SYSTEM_ERROR;
-    }
-    else
-    {
-        pConnection->receiveThreadCreated = true;
+        /* Set the callback and parameter. */
+        pConnection->receiveCallback = receiveCallback;
+        pConnection->pReceiveContext = pContext;
+
+        posixError = pthread_create( &pConnection->receiveThread,
+                                     NULL,
+                                     _networkReceiveThread,
+                                     pConnection );
+
+        if( posixError != 0 )
+        {
+            IotLogError( "Failed to create socket %d network receive thread. errno=%d.",
+                         pConnection->socket,
+                         posixError );
+            status = IOT_NETWORK_SYSTEM_ERROR;
+        }
+        else
+        {
+            pConnection->receiveThreadCreated = true;
+            status = IOT_NETWORK_SUCCESS;
+        }
     }
 
-    return status;
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
@@ -809,7 +815,7 @@ IotNetworkError_t IotNetworkOpenssl_SetCloseCallback( IotNetworkConnection_t pCo
         status = IOT_NETWORK_SUCCESS;
     }
 
-    IOT_FUNCTION_CLEANUP_END();
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/

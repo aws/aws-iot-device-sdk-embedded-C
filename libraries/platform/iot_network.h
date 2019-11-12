@@ -54,11 +54,11 @@ typedef enum IotNetworkError
  */
 typedef enum IotNetworkCloseReason
 {
-    IOT_NETWORK_NOT_CLOSED = 0,     /**< Not closed, still open */
-    IOT_NETWORK_SERVER_CLOSED,      /**< Server closed connection. */
-    IOT_NETWORK_TRANSPORT_FAILURE,  /**< Transport failed. */
-    IOT_NETWORK_CLIENT_CLOSED,      /**< Client closed connection. */
-    IOT_NETWORK_UNKNOWN_CLOSED      /**< Unknown close reason. */
+    IOT_NETWORK_NOT_CLOSED = 0,    /**< Not closed, still open */
+    IOT_NETWORK_SERVER_CLOSED,     /**< Server closed connection. */
+    IOT_NETWORK_TRANSPORT_FAILURE, /**< Transport failed. */
+    IOT_NETWORK_CLIENT_CLOSED,     /**< Client closed connection. */
+    IOT_NETWORK_UNKNOWN_CLOSED     /**< Unknown close reason. */
 } IotNetworkCloseReason_t;
 
 /**
@@ -127,6 +127,7 @@ typedef void ( * IotNetworkCloseCallback_t )( IotNetworkConnection_t pConnection
                                               IotNetworkCloseReason_t reason,
                                               void * pContext );
 /* @[declare_platform_network_closecallback] */
+
 /**
  * @brief Create a new network connection.
  *
@@ -291,13 +292,13 @@ typedef IotNetworkError_t ( * IotNetworkDestroy_t )( IotNetworkConnection_t pCon
  */
 typedef struct IotNetworkInterface
 {
-    IotNetworkCreate_t create;                            /**< @brief create network connection. */
-    IotNetworkSetReceiveCallback_t setReceiveCallback;    /**< @brief set receive callback. */
-    IotNetworkSetCloseCallback_t setCloseCallback;        /**< @brief set close callback. */
-    IotNetworkSend_t send;                                /**< @brief send data. */
-    IotNetworkReceive_t receive;                          /**< @brief block and wait for receive data. */
-    IotNetworkClose_t close;                              /**< @brief close network connection. */
-    IotNetworkDestroy_t destroy;                          /**< @brief destroy network connection. */
+    IotNetworkCreate_t create;                         /**< @brief create network connection. */
+    IotNetworkSetReceiveCallback_t setReceiveCallback; /**< @brief set receive callback. */
+    IotNetworkSetCloseCallback_t setCloseCallback;     /**< @brief set close callback. */
+    IotNetworkSend_t send;                             /**< @brief send data. */
+    IotNetworkReceive_t receive;                       /**< @brief block and wait for receive data. */
+    IotNetworkClose_t close;                           /**< @brief close network connection. */
+    IotNetworkDestroy_t destroy;                       /**< @brief destroy network connection. */
 } IotNetworkInterface_t;
 
 /**

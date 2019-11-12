@@ -126,27 +126,27 @@ static IotMutex_t _connectionListMutex;
     /* OpenSSL networking include. */
     #include "iot_network_openssl.h"
 
-    /**
-     * @brief Pointer to the metrics-wrapped network creation function.
-     */
+/**
+ * @brief Pointer to the metrics-wrapped network creation function.
+ */
     static IotNetworkError_t ( * _networkCreate )( IotNetworkServerInfo_t,
                                                    IotNetworkCredentials_t,
                                                    IotNetworkConnection_t * ) = IotNetworkOpenssl_Create;
 
-    /**
-     * @brief Pointer to the metrics-wrapped network close function.
-     */
+/**
+ * @brief Pointer to the metrics-wrapped network close function.
+ */
     static IotNetworkError_t ( * _networkClose )( IotNetworkConnection_t ) = IotNetworkOpenssl_Close;
 
-    /**
-     * @brief Pointer to the function that retrieves the socket for a connection.
-     */
+/**
+ * @brief Pointer to the function that retrieves the socket for a connection.
+ */
     static int ( * _getSocket )( IotNetworkConnection_t ) = IotNetworkOpenssl_GetSocket;
 
-    /**
-     * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
-     * metrics.
-     */
+/**
+ * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
+ * metrics.
+ */
     static const IotNetworkInterface_t _networkMetrics =
     {
         .create             = _metricsNetworkCreate,
@@ -157,31 +157,31 @@ static IotMutex_t _connectionListMutex;
         .close              = _metricsNetworkClose,
         .destroy            = IotNetworkOpenssl_Destroy
     };
-#else
+#else  /* if IOT_NETWORK_USE_OPENSSL == 1 */
     /* mbed TLS networking include. */
     #include "iot_network_mbedtls.h"
 
-    /**
-     * @brief Pointer to the metrics-wrapped network creation function.
-     */
+/**
+ * @brief Pointer to the metrics-wrapped network creation function.
+ */
     static IotNetworkError_t ( * _networkCreate )( IotNetworkServerInfo_t,
                                                    IotNetworkCredentials_t,
                                                    IotNetworkConnection_t * ) = IotNetworkMbedtls_Create;
 
-    /**
-     * @brief Pointer to the metrics-wrapped network close function.
-     */
+/**
+ * @brief Pointer to the metrics-wrapped network close function.
+ */
     static IotNetworkError_t ( * _networkClose )( IotNetworkConnection_t ) = IotNetworkMbedtls_Close;
 
-    /**
-     * @brief Pointer to the function that retrieves the socket for a connection.
-     */
+/**
+ * @brief Pointer to the function that retrieves the socket for a connection.
+ */
     static int ( * _getSocket )( IotNetworkConnection_t ) = IotNetworkMbedtls_GetSocket;
 
-    /**
-     * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
-     * metrics.
-     */
+/**
+ * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
+ * metrics.
+ */
     static const IotNetworkInterface_t _networkMetrics =
     {
         .create             = _metricsNetworkCreate,
@@ -192,7 +192,7 @@ static IotMutex_t _connectionListMutex;
         .close              = _metricsNetworkClose,
         .destroy            = IotNetworkMbedtls_Destroy
     };
-#endif
+#endif /* if IOT_NETWORK_USE_OPENSSL == 1 */
 
 /*-----------------------------------------------------------*/
 
