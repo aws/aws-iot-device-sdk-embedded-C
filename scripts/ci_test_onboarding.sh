@@ -50,12 +50,12 @@ configure_credentials() {
 
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
     then
-        echo $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
+        echo -e $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
     fi
 
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
     then
-        echo $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
+        echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
     fi
 
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
