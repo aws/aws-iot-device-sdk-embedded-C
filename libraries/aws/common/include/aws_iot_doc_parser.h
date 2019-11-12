@@ -22,13 +22,14 @@
 
 /**
  * @file aws_iot_doc_parser.h
- * @brief Parser for AWS IoT Services Documents. This is a parser to parse for
- * a value from a given key in a JSON document from AWS IoT services only. This
- * parser is designed specifically for AWS IoT libraries such as Shadow and
- * Jobs which will connect to mutually authenticated AWS IoT services. The
- * design goal of this parser is to be light weight and to be of low memory
- * footprint. It will not check for the correctness of the JSON documents.
- * Hence this parser is not meant to be used for a general purpose JSON parsing.
+ * @brief Parser for AWS IoT Services Documents. This is a JSON parser
+ * specifically designed to process and retrieve a value from a AWS IoT JSON
+ * document, used in AWS IoT libraries such as Shadow and Jobs. Given a key and
+ * a JSON document, AwsIotDocParser_FindValue() will find the first occurrence
+ * of the key and return its respective value. The design goal of this parser
+ * is to be light weight and to be of low memory footprint. However, it does
+ * not check the correctness of the JSON documents. Hence, this parser is not
+ * meant to be used for general purpose JSON parsing.
  */
 
 #ifndef AWS_IOT_DOC_PARSER_H_

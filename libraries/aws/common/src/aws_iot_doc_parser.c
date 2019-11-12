@@ -35,9 +35,9 @@
 #include "aws_iot_doc_parser.h"
 
 #define IS_QUOTE( str, idx ) \
-    ( str[ idx ] == '"' && ( idx == 0 || str[ idx - 1 ] != '\\' ) )
+    ( ( str )[ ( idx ) ] == '"' && ( ( idx ) == 0 || ( str )[ ( idx ) - 1 ] != '\\' ) )
 #define IS_WHITESPACE( str, idx ) \
-    ( str[ idx ] == ' ' || str[ idx ] == '\n' || str[ idx ] == '\r' || str[ idx ] == '\t' )
+    ( ( str )[ ( idx ) ] == ' ' || ( str )[ ( idx ) ] == '\n' || ( str )[ ( idx ) ] == '\r' || ( str )[ ( idx ) ] == '\t' )
 
 /*-----------------------------------------------------------*/
 
@@ -52,8 +52,9 @@ bool AwsIotDocParser_FindValue( const char * pAwsIotJsonDocument,
     size_t jsonValueLength = 0;
     char openCharacter = '\0', closeCharacter = '\0';
     int nestingLevel = 0;
+    bool isWithinQuotes = false;
 
-    /* Validate all the arguements.*/
+    /* Validate all the arguments.*/
     if( ( pAwsIotJsonDocument == NULL ) || ( pAwsIotJsonKey == NULL ) ||
         ( awsIotJsonDocumentLength == 0 ) || ( awsIotJsonKeyLength == 0 ) )
     {
@@ -237,17 +238,31 @@ bool AwsIotDocParser_FindValue( const char * pAwsIotJsonDocument,
                 /* Add the length of all characters in the JSON object or array. This
                  * includes the length of nested objects. */
                 while( pAwsIotJsonDocument[ i ] != closeCharacter ||
-                       ( pAwsIotJsonDocument[ i ] == closeCharacter && nestingLevel != 0 ) )
+                       ( pAwsIotJsonDocument[ i ] == closeCharacter && ( nestingLevel != 0 || isWithinQuotes ) ) )
                 {
-                    /* An opening character starts a nested object. */
-                    if( pAwsIotJsonDocument[ i ] == openCharacter )
+                    /* Check if its a quote so as to avoid considering the
+                     * nested levels for opening and closing characters within
+                     * quotes.
+                     */
+                    if( IS_QUOTE( pAwsIotJsonDocument, i ) )
                     {
-                        nestingLevel++;
+                        /*Toggle the flag*/
+                        isWithinQuotes = !isWithinQuotes;
                     }
-                    /* A closing character ends a nested object. */
-                    else if( pAwsIotJsonDocument[ i ] == closeCharacter )
+
+                    /* Calculate the nesting levels only if not in quotes. */
+                    if( !isWithinQuotes )
                     {
-                        nestingLevel--;
+                        /* An opening character starts a nested object. */
+                        if( pAwsIotJsonDocument[ i ] == openCharacter )
+                        {
+                            nestingLevel++;
+                        }
+                        /* A closing character ends a nested object. */
+                        else if( pAwsIotJsonDocument[ i ] == closeCharacter )
+                        {
+                            nestingLevel--;
+                        }
                     }
 
                     i++;

@@ -366,7 +366,7 @@ static bool _getJsonString( const char * pJsonDoc,
 {
     /*
      * Note: This parser used is specific for parsing AWS IoT document received
-     * through a mutually aithenticated connection. This parser will not check
+     * through a mutually authenticated connection. This parser will not check
      * for the correctness of the document as it is designed for low memory
      * footprint rather than checking for correctness of the document. This
      * parser is not meant to be used as a general purpose JSON parser.
@@ -669,7 +669,7 @@ static void _jobsCallback( void * pCallbackContext,
     /* Get the Job document.
      *
      * Note: This parser used is specific for parsing AWS IoT document received
-     * through a mutually aithenticated connection. This parser will not check
+     * through a mutually authenticated connection. This parser will not check
      * for the correctness of the document as it is designed for low memory
      * footprint rather than checking for correctness of the document. This
      * parser is not meant to be used as a general purpose JSON parser.

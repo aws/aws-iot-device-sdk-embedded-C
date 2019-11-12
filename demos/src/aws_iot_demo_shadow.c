@@ -172,7 +172,7 @@ static bool _getDelta( const char * pDeltaDocument,
     /* Find the "state" key in the delta document.
      *
      * Note: This parser used is specific for parsing AWS IoT document received
-     * through a mutually aithenticated connection. This parser will not check
+     * through a mutually authenticated connection. This parser will not check
      * for the correctness of the document as it is designed for low memory
      * footprint rather than checking for correctness of the document. This
      * parser is not meant to be used as a general purpose JSON parser.
@@ -189,7 +189,7 @@ static bool _getDelta( const char * pDeltaDocument,
         /* Find the delta key within the "state" section.
          *
          * Note: This parser used is specific for parsing AWS IoT document received
-         * through a mutually aithenticated connection. This parser will not check
+         * through a mutually authenticated connection. This parser will not check
          * for the correctness of the document as it is designed for low memory
          * footprint rather than checking for correctness of the document. This
          * parser is not meant to be used as a general purpose JSON parser.
@@ -237,7 +237,7 @@ static bool _getUpdatedState( const char * pUpdatedDocument,
     /* Find the given section in the updated document.
      *
      * Note: This parser used is specific for parsing AWS IoT document received
-     * through a mutually aithenticated connection. This parser will not check
+     * through a mutually authenticated connection. This parser will not check
      * for the correctness of the document as it is designed for low memory
      * footprint rather than checking for correctness of the document. This
      * parser is not meant to be used as a general purpose JSON parser.
@@ -254,7 +254,7 @@ static bool _getUpdatedState( const char * pUpdatedDocument,
         /* Find the "state" key within the "previous" or "current" section.
          *
          * Note: This parser used is specific for parsing AWS IoT document received
-         * through a mutually aithenticated connection. This parser will not check
+         * through a mutually authenticated connection. This parser will not check
          * for the correctness of the document as it is designed for low memory
          * footprint rather than checking for correctness of the document. This
          * parser is not meant to be used as a general purpose JSON parser.

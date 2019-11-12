@@ -115,7 +115,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonValid )
     /* Parse JSON document with string, int, bool, and null. */
     {
         const char pJsonDocument[ 82 ] = "{\"name\" \n\r:\n \"John Smith\", \"age\"    :\n\r 30, \n \"isAlive\"  : true, \r \"spouse\":null}";
-        size_t jsonDocumentLength = 81;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( true, pJsonDocument, jsonDocumentLength, "name", "\"John Smith\"", 12 );
         _parseJson( true, pJsonDocument, jsonDocumentLength, "age", "30", 2 );
@@ -129,7 +129,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonValid )
     /* Parse JSON document with objects and arrays. */
     {
         const char pJsonDocument[ 91 ] = "{\"object\" : { \"nestedObject\": { \"string\":\"\\\"test\\\"\", \"array\":[[1,2,3],[1,2,3],[1,2,3]]}}}";
-        size_t jsonDocumentLength = 90;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( true, pJsonDocument, jsonDocumentLength, "object", "{ \"nestedObject\": { \"string\":\"\\\"test\\\"\", \"array\":[[1,2,3],[1,2,3],[1,2,3]]}}", 76 );
         _parseJson( true, pJsonDocument, jsonDocumentLength, "nestedObject", "{ \"string\":\"\\\"test\\\"\", \"array\":[[1,2,3],[1,2,3],[1,2,3]]}", 57 );
@@ -139,7 +139,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonValid )
     /* JSON document with escape sequences. */
     {
         const char pJsonDocument[ 40 ] = "{\"key\": \"value\", \"ke\\\"y2\": \"\\\"value\\\"\"}";
-        size_t jsonDocumentLength = 40;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         /* Attempt to find a JSON key that is actually a value. */
         _parseJson( false, pJsonDocument, jsonDocumentLength, "value", NULL, 0 );
@@ -154,10 +154,19 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonValid )
     /* Short JSON document. */
     {
         const char pJsonDocument[ 16 ] = "{\"key\":\"value\"}";
-        size_t jsonDocumentLength = 16;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         /* Attempt to find a key longer than the JSON document. */
         _parseJson( false, pJsonDocument, jsonDocumentLength, "longlonglonglongkey", NULL, 0 );
+    }
+
+    /* JSON with '{' '}' in value in nested level*/
+    {
+        const char pJsonDocument[ 42 ] = "{\"key\":{\"key2\":\"{{{{}}\", \"key3\":\"value\"}}";
+        size_t jsonDocumentLength = strlen( pJsonDocument );
+
+        /* Attempt to find a key longer than the JSON document. */
+        _parseJson( true, pJsonDocument, jsonDocumentLength, "key", "{\"key2\":\"{{{{}}\", \"key3\":\"value\"}", 33 );
     }
 }
 
@@ -172,7 +181,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* JSON key not followed by a : */
     {
         const char pJsonDocument[ 16 ] = "{\"string\"      ";
-        size_t jsonDocumentLength = 15;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "string", NULL, 0 );
     }
@@ -180,7 +189,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* JSON value not followed by a , */
     {
         const char pJsonDocument[ 30 ] = "{\"int\": 10 \"string\": \"hello\"}";
-        size_t jsonDocumentLength = 29;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "int", NULL, 0 );
     }
@@ -188,7 +197,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* JSON key with no value. */
     {
         const char pJsonDocument[ 18 ] = "{\"string\":       ";
-        size_t jsonDocumentLength = 17;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "string", NULL, 0 );
     }
@@ -196,7 +205,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* Unterminated JSON primitive. */
     {
         const char pJsonDocument[ 12 ] = "{\"int\":1000";
-        size_t jsonDocumentLength = 11;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "int", NULL, 0 );
     }
@@ -204,7 +213,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* Unterminated JSON string (ending is an escaped quote). */
     {
         const char pJsonDocument[ 15 ] = "{\"string\": \"\\\"";
-        size_t jsonDocumentLength = 14;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "string", NULL, 0 );
     }
@@ -212,7 +221,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* Unterminated JSON string (ending is not a quote). */
     {
         const char pJsonDocument[ 15 ] = "{\"string\": \" \\";
-        size_t jsonDocumentLength = 14;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "string", NULL, 0 );
     }
@@ -220,7 +229,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* Unterminated JSON object. */
     {
         const char pJsonDocument[ 42 ] = "{\"object\": {\"key\": { \"nestedKey\":\"value\"}";
-        size_t jsonDocumentLength = 41;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "object", NULL, 0 );
     }
@@ -228,7 +237,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* Unterminated JSON array. */
     {
         const char pJsonDocument[ 27 ] = "{\"array\": [[1,2,3],[1,2,3]";
-        size_t jsonDocumentLength = 26;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( false, pJsonDocument, jsonDocumentLength, "array", NULL, 0 );
     }
@@ -236,7 +245,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* Invalid JSON not validated for correctness. Incorrect value. */
     {
         const char pJsonDocument[ 30 ] = "{\"key\": \"value\", \"key2\": {]}}";
-        size_t jsonDocumentLength = 29;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( true, pJsonDocument, jsonDocumentLength, "key", "\"value\"", 7 );
     }
@@ -244,7 +253,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* Invalid JSON not validated for correctness. Incorrect paranthesis. */
     {
         const char pJsonDocument[ 30 ] = "{\"key\": \"value\", \"key2\": {}";
-        size_t jsonDocumentLength = 29;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( true, pJsonDocument, jsonDocumentLength, "key", "\"value\"", 7 );
     }
@@ -252,7 +261,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
     /* Invalid JSON not validated for correctness. Incorrect `,`s. */
     {
         const char pJsonDocument[ 52 ] = "{\"key\": \"value\", \"key2\": \"value1\" \"key3\": \"value3\"}";
-        size_t jsonDocumentLength = 51;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( true, pJsonDocument, jsonDocumentLength, "key", "\"value\"", 7 );
     }
@@ -262,7 +271,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
      */
     {
         const char pJsonDocument[ 43 ] = "{\"key\": \"value\", \"key2\":{\"key3\" \"value3\"}}";
-        size_t jsonDocumentLength = 42;
+        size_t jsonDocumentLength = strlen( pJsonDocument );
 
         _parseJson( true, pJsonDocument, jsonDocumentLength, "key", "\"value\"", 7 );
     }
