@@ -804,7 +804,7 @@ IotNetworkError_t IotNetworkOpenssl_SetCloseCallback( IotNetworkConnection_t pCo
                                                       IotNetworkCloseCallback_t closeCallback,
                                                       void * pContext )
 {
-    IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_BAD_PARAMETER );
+    IotNetworkError_t status = IOT_NETWORK_BAD_PARAMETER;
 
     if( closeCallback != NULL )
     {
@@ -815,7 +815,7 @@ IotNetworkError_t IotNetworkOpenssl_SetCloseCallback( IotNetworkConnection_t pCo
         status = IOT_NETWORK_SUCCESS;
     }
 
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+    return status;
 }
 
 /*-----------------------------------------------------------*/
