@@ -873,6 +873,10 @@ IotMqttError_t IotMqtt_GetIncomingMQTTPacketTypeAndLength( IotMqttPacketInfo_t *
             }
         }
     }
+    else
+    {
+        status = IOT_MQTT_NETWORK_ERROR;
+    }
 
     return status;
 }

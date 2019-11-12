@@ -425,6 +425,8 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo
  *    // Find out length of Publish packet size.
  *    xResult = IotMqtt_GetPublishPacketSize( &xMQTTPublishInfo, &xRemainingLength, &xPacketSize );
  *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
+ *    // Make sure the packet size is less than static buffer size
+ *	  configASSERT( xPacketSize < mqttexampleSHARED_BUFFER_SIZE );
  * 
  *    xResult = IotMqtt_SerializePublish( &xMQTTPublishInfo,
  *										xRemainingLength,
