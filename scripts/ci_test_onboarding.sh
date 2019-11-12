@@ -76,7 +76,8 @@ CERTIFICATE_ID=$(aws iot create-keys-and-certificate \
         grep certificateId | \
             cut -d ':' -f2 | \
                 tr -d , | \
-                    tr -d ' ')
+                    tr -d ' ' | \
+                        tr -d \")
 
 COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\" -DAWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID=\"\\\"$CERTIFICATE_ID\\\"\" -DAWS_IOT_TEST_PROVISIONING_CLIENT_ID=\"\\\"$CLIENT_ID\\\"\""
 
@@ -97,5 +98,5 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=
 run_tests
 
 # Cleanup created resources from the AWS IoT account used for CI.
-aws iot delete-certificate --endpoint https://gamma.us-east-1.iot.amazonaws.com $CERTIFICATE_ID
-aws iot delete-thing --endpoint https://gamma.us-east-1.iot.amazonaws.com "ThingPrefix_"$CLIENT_ID
+aws iot delete-certificate --endpoint https://gamma.us-east-1.iot.amazonaws.com --certificate-id $CERTIFICATE_ID
+aws iot delete-thing --endpoint https://gamma.us-east-1.iot.amazonaws.com --thing-name "ThingPrefix_"$CLIENT_ID
