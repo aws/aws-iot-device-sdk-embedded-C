@@ -98,11 +98,18 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=
 run_tests
 
 # Cleanup created resources from the AWS IoT account used for CI.
-aws iot detach-thing-principal \
+aws iot list-thing-principals \
     --endpoint https://gamma.us-east-1.iot.amazonaws.com \
-    --region us-east-1 \
-    --thing-name "ThingPrefix_"$CLIENT_ID \
-    --principal arn:aws:iot:us-east-1:$AWS_ACCOUNT_ID:cert/$CERTIFICATE_ID
+    --thing-name "ThingPrefix_"$CLIENT_ID | \
+        grep arn | tr -d \",' ' | 
+            while read -r certificate_arn
+            do
+                aws iot detach-thing-principal \
+                    --endpoint https://gamma.us-east-1.iot.amazonaws.com \
+                    --region us-east-1 \
+                    --thing-name "ThingPrefix_"$CLIENT_ID \
+                    --principal $certificate_arn
+            done
 aws iot delete-thing \
     --endpoint https://gamma.us-east-1.iot.amazonaws.com \
     --region us-east-1 \
