@@ -106,7 +106,7 @@ static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 /**
  * @brief Client ID for the MQTT connection to the Onboarding service.
  */
-static const char * _pTestMqttClientId = "onnboarding-system-test";
+static const char * _pTestMqttClientId = AWS_IOT_TEST_PROVISIONING_CLIENT_ID;
 
 /**
  * @brief Certificate ID for OnboardDevice API tests.

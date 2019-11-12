@@ -27,6 +27,7 @@ run_tests() {
 # Hard-coded with template present in CI account.
 # TODO - Update with creating template (using Aws CLI) for system test setup. 
 TEMPLATE_NAME="CI_TEST_TEMPLATE"
+CLIENT_ID="Onboarding_CI_Test"
 
 PROVISION_PARAMETERS="{ \
     { \
@@ -77,7 +78,7 @@ CERTIFICATE_ID=$(aws iot create-keys-and-certificate \
                 tr -d , | \
                     tr -d ' ')
 
-COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\" -DAWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID=\"\\\"$CERTIFICATE_ID\\\"\""
+COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\" -DAWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID=\"\\\"$CERTIFICATE_ID\\\"\" -DAWS_IOT_TEST_PROVISIONING_CLIENT_ID=\"\\\"$CLIENT_ID\\\"\""
 
 # CMake build configuration without static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
@@ -90,8 +91,11 @@ make -j2 aws_iot_tests_onboarding
 run_tests
 
 # Rebuild and run tests in static memory mode.
-#cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DIOT_STATIC_MEMORY_ONLY=1 $COMMON_CMAKE_C_FLAGS"
+cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DIOT_STATIC_MEMORY_ONLY=1 $COMMON_CMAKE_C_FLAGS"
 
 # Run tests in no static memory mode.
-#run_tests
+run_tests
 
+# Cleanup created resources from the AWS IoT account used for CI.
+aws iot delete-certificate --endpoint https://gamma.us-east-1.iot.amazonaws.com $CERTIFICATE_ID
+aws iot delete-thing --endpoint https://gamma.us-east-1.iot.amazonaws.com "ThingPrefix_"$CLIENT_ID

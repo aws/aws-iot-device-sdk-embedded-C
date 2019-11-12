@@ -90,11 +90,13 @@
 #ifndef AWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID
     #define AWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID    ""
 #endif
+#ifndef AWS_IOT_TEST_PROVISIONING_CLIENT_ID
+    #define AWS_IOT_TEST_PROVISIONING_CLIENT_ID         ""
+#endif
 
 /* Log level for testing the demos. */
 #define IOT_LOG_LEVEL_DEMO              IOT_LOG_INFO
 #define AWS_IOT_LOG_LEVEL_ONBOARDING    IOT_LOG_DEBUG
-/* #define IOT_LOG_LEVEL_MQTT          IOT_LOG_DEBUG */
 
 
 /* Set the equivalent demo defines. */
