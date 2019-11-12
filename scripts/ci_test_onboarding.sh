@@ -74,7 +74,8 @@ CERTIFICATE_ID=$(aws iot create-keys-and-certificate \
     --no-set-as-active | \
         grep certificateId | \
             cut -d ':' -f2 | \
-                tr -d ,)
+                tr -d , | \
+                    tr -d ' ')
 
 COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\" -DAWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID=\"\\\"$CERTIFICATE_ID\\\"\""
 
