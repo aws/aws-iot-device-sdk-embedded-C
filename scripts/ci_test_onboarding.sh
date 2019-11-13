@@ -71,7 +71,7 @@ configure_credentials
 # the system/integration tests with. We will just save the certificate ID to use in the tests.
 CERTIFICATE_ID=$(aws iot create-keys-and-certificate \
     --endpoint $AWS_CLI_CI_ENDPOINT \
-    --region $AWS_DEFAULT_REGION \
+    --region $AWS_PROVISIONING_REGION \
     --no-set-as-active | \
         grep certificateId | \
             cut -d ':' -f2 | \
@@ -100,28 +100,28 @@ run_tests
 # Cleanup created resources from the AWS IoT account used for CI.
 aws iot list-thing-principals \
     --endpoint $AWS_CLI_CI_ENDPOINT \
-    --region $AWS_DEFAULT_REGION \
+    --region $AWS_PROVISIONING_REGION \
     --thing-name "ThingPrefix_"$CLIENT_ID | \
         grep arn | tr -d \",' ' | 
             while read -r certificate_arn
             do
                 aws iot detach-thing-principal \
                     --endpoint $AWS_CLI_CI_ENDPOINT \
-                    --region $AWS_DEFAULT_REGION \
+                    --region $AWS_PROVISIONING_REGION \
                     --thing-name "ThingPrefix_"$CLIENT_ID \
                     --principal $certificate_arn
             done
 aws iot delete-thing \
     --endpoint $AWS_CLI_CI_ENDPOINT \
-    --region $AWS_DEFAULT_REGION \
+    --region $AWS_PROVISIONING_REGION \
     --thing-name "ThingPrefix_"$CLIENT_ID
 aws iot update-certificate \
     --endpoint $AWS_CLI_CI_ENDPOINT \
-    --region $AWS_DEFAULT_REGION \
+    --region $AWS_PROVISIONING_REGION \
     --certificate-id $CERTIFICATE_ID \
     --new-status INACTIVE
 aws iot delete-certificate \
     --endpoint $AWS_CLI_CI_ENDPOINT \
-    --region $AWS_DEFAULT_REGION \
+    --region $AWS_PROVISIONING_REGION \
     --certificate-id $CERTIFICATE_ID \
     --force-delete
