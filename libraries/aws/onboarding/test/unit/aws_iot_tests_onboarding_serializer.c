@@ -169,8 +169,8 @@ TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationNominalCase )
         0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,                         /*# "certificateId" */
         0x71,                                                                                                 /*# text( 17 ) */
         0x54, 0x65, 0x73, 0x74, 0x43, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64, /*# "TestCertificateId" */
-        0x6D,                                                                                                 /*# text( 13 ) */
-        0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x74, 0x65, 0x78, 0x74,                         /*# "deviceContext" */
+        0x6A,                                                                                                 /*# text( 10 ) */
+        0x70,0x61,0x72,0x61,0x6D,0x65,0x74,0x65,0x72,0x73,                                                    /*# "parameters" */
         0xA3,                                                                                                 /*# map(3) */
         0x66,                                                                                                 /*# text(6) */
         0x50, 0x61, 0x72, 0x61, 0x6D, 0x31,                                                                   /*# "Param1" */

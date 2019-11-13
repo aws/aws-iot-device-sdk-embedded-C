@@ -318,7 +318,7 @@
  * @note This should be used in serializing the request payload for sending to the server, only if the calling
  * application provides valid device context data.
  */
-#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING        "deviceContext"
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING        "parameters"
 
 /**
  * @brief The length of the MQTT request topic filter of the OnboardDevice service API.
@@ -353,21 +353,21 @@
  *
  * @note This should be utilized in parsing the response payload received from the server.
  */
-#define ONBOARDING_REJECTED_RESPONSE_STATUS_CODE_STRING                           "StatusCode"
+#define ONBOARDING_REJECTED_RESPONSE_STATUS_CODE_STRING                           "statusCode"
 
 /**
  * @brief The key for the error code entry in the "rejected" response payload from the server.
  *
  * @note This should be utilized in parsing the response payload received from the server.
  */
-#define ONBOARDING_REJECTED_RESPONSE_ERROR_CODE_STRING                            "ErrorCode"
+#define ONBOARDING_REJECTED_RESPONSE_ERROR_CODE_STRING                            "errorCode"
 
 /**
  * @brief The key for the status message entry in the "rejected" response payload from the server.
  *
  * @note This should be utilized in parsing the response payload received from the server.
  */
-#define ONBOARDING_REJECTED_RESPONSE_ERROR_MESSAGE_STRING                         "ErrorMessage"
+#define ONBOARDING_REJECTED_RESPONSE_ERROR_MESSAGE_STRING                         "errorMessage"
 
 
 
