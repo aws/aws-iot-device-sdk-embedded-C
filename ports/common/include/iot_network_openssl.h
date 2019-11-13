@@ -129,6 +129,14 @@ IotNetworkError_t IotNetworkOpenssl_SetReceiveCallback( IotNetworkConnection_t p
                                                         void * pContext );
 
 /**
+ * @brief An implementation of #IotNetworkInterface_t::setCloseCallback for
+ * systems with OpenSSL.
+ */
+IotNetworkError_t IotNetworkOpenssl_SetCloseCallback( IotNetworkConnection_t pConnection,
+                                                      IotNetworkCloseCallback_t closeCallback,
+                                                      void * pContext );
+
+/**
  * @brief An implementation of #IotNetworkInterface_t::send for systems
  * with OpenSSL.
  */
