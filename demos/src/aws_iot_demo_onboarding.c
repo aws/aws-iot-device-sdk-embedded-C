@@ -143,12 +143,12 @@ static void _demoDeviceCredentialsCallback( void * contextParam,
         /* Allocate buffer space for storing the certificate ID obtained from the server. */
         certificateIdContext->pCertificateIdBuffer = Iot_DefaultMalloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
 
-        /* Copy the size of the Certificate ID string. */
-        certificateIdContext->certificateIdLength = pResponseInfo->u.acceptedResponse.certificateIdLength;
-
         /* Copy the certificate ID into the buffer. */
         if( certificateIdContext->pCertificateIdBuffer != NULL )
         {
+            /* Copy the size of the Certificate ID string. */
+            certificateIdContext->certificateIdLength = pResponseInfo->u.acceptedResponse.certificateIdLength;
+
             memcpy( certificateIdContext->pCertificateIdBuffer,
                     pResponseInfo->u.acceptedResponse.pCertificateId,
                     pResponseInfo->u.acceptedResponse.certificateIdLength );
@@ -380,6 +380,9 @@ int RunOnboardingDemo( bool awsIotMqttMode,
     /* Represents memory that will be allocated to store the Certificate ID that will be provided by the credential
      * requesting API through the callback. */
     _demoProvisionDeviceCallbackContext_t newCertificateIdDataContext;
+
+    newCertificateIdDataContext.pCertificateIdBuffer = NULL;
+    newCertificateIdDataContext.certificateIdLength = 0;
 
     /* Request data for onboarding the demo application. */
     AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo;
