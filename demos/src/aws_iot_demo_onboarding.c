@@ -62,7 +62,7 @@
     #define AWS_IOT_DEMO_ONBOARDING_UPDATE_COUNT         ( 20 )
 #endif
 #ifndef AWS_IOT_DEMO_ONBOARDING_TIMEOUT_PERIOD_MS
-    #define AWS_IOT_DEMO_ONBOARDING_TIMEOUT_PERIOD_MS    ( 50000 )
+    #define AWS_IOT_DEMO_ONBOARDING_TIMEOUT_PERIOD_MS    ( 5000 )
 #endif
 /** @endcond */
 
@@ -141,7 +141,7 @@ static void _demoDeviceCredentialsCallback( void * contextParam,
     if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
     {
         /* Allocate buffer space for storing the certificate ID obtained from the server. */
-        certificateIdContext->pCertificateIdBuffer = malloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
+        certificateIdContext->pCertificateIdBuffer = Iot_DefaultMalloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
 
         /* Copy the size of the Certificate ID string. */
         certificateIdContext->certificateIdLength = pResponseInfo->u.acceptedResponse.certificateIdLength;
@@ -475,8 +475,8 @@ int RunOnboardingDemo( bool awsIotMqttMode,
         /* Set the parameters for requesting onboarding. */
         requestInfo.pDeviceCertificateId = newCertificateIdDataContext.pCertificateIdBuffer;
         requestInfo.deviceCertificateIdLength = newCertificateIdDataContext.certificateIdLength;
-        requestInfo.pTemplateIdentifier = PROVISIONING_TEMPLATE_NAME;
-        requestInfo.templateIdentifierLength = sizeof( PROVISIONING_TEMPLATE_NAME ) - 1;
+        requestInfo.pTemplateName = PROVISIONING_TEMPLATE_NAME;
+        requestInfo.templateNameLength = sizeof( PROVISIONING_TEMPLATE_NAME ) - 1;
         requestInfo.pParametersStart = &provisioningParameters;
         requestInfo.numOfParameters = NUM_OF_PROVISIONING_PARAMS;
 
@@ -517,7 +517,7 @@ int RunOnboardingDemo( bool awsIotMqttMode,
     /* Release the Certificate ID buffer, if memory was allocated for it. */
     if( newCertificateIdDataContext.pCertificateIdBuffer != NULL )
     {
-        free( newCertificateIdDataContext.pCertificateIdBuffer );
+        Iot_DefaultFree( newCertificateIdDataContext.pCertificateIdBuffer );
     }
 
     return status;

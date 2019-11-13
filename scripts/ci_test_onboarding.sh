@@ -70,8 +70,8 @@ configure_credentials
 # Create unique certificate on the AWS IoT account that can be used as the certificate to provision
 # the system/integration tests with. We will just save the certificate ID to use in the tests.
 CERTIFICATE_ID=$(aws iot create-keys-and-certificate \
-    --endpoint https://gamma.us-east-1.iot.amazonaws.com \
-    --region us-east-1 \
+    --endpoint $AWS_PROVISIONING_ENDPOINT \
+    --region $AWS_DEFAULT_REGION \
     --no-set-as-active | \
         grep certificateId | \
             cut -d ':' -f2 | \
@@ -99,29 +99,29 @@ run_tests
 
 # Cleanup created resources from the AWS IoT account used for CI.
 aws iot list-thing-principals \
-    --endpoint https://gamma.us-east-1.iot.amazonaws.com \
-    --region us-east-1 \
+    --endpoint $AWS_PROVISIONING_ENDPOINT \
+    --region $AWS_DEFAULT_REGION \
     --thing-name "ThingPrefix_"$CLIENT_ID | \
         grep arn | tr -d \",' ' | 
             while read -r certificate_arn
             do
                 aws iot detach-thing-principal \
-                    --endpoint https://gamma.us-east-1.iot.amazonaws.com \
-                    --region us-east-1 \
+                    --endpoint $AWS_PROVISIONING_ENDPOINT \
+                    --region $AWS_DEFAULT_REGION \
                     --thing-name "ThingPrefix_"$CLIENT_ID \
                     --principal $certificate_arn
             done
 aws iot delete-thing \
-    --endpoint https://gamma.us-east-1.iot.amazonaws.com \
-    --region us-east-1 \
+    --endpoint $AWS_PROVISIONING_ENDPOINT \
+    --region $AWS_DEFAULT_REGION \
     --thing-name "ThingPrefix_"$CLIENT_ID
 aws iot update-certificate \
-    --endpoint https://gamma.us-east-1.iot.amazonaws.com \
-    --region us-east-1 \
+    --endpoint $AWS_PROVISIONING_ENDPOINT \
+    --region $AWS_DEFAULT_REGION \
     --certificate-id $CERTIFICATE_ID \
     --new-status INACTIVE
 aws iot delete-certificate \
-    --endpoint https://gamma.us-east-1.iot.amazonaws.com \
-    --region us-east-1 \
+    --endpoint $AWS_PROVISIONING_ENDPOINT \
+    --region $AWS_DEFAULT_REGION \
     --certificate-id $CERTIFICATE_ID \
     --force-delete
