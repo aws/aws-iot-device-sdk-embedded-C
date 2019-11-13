@@ -78,7 +78,7 @@ static AwsIotOnboardingError_t _parseRejectedResponse( IotSerializerDecoderObjec
                                          &statusCodeDecoder ) != IOT_SERIALIZER_SUCCESS )
     {
         IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                     ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+                     ONBOARDING_REJECTED_RESPONSE_STATUS_CODE_STRING,
                      pOperationName );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
     }
@@ -164,6 +164,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
     IotSerializerDecoderObject_t certificatePemDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t certificateIdDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t privateKeyDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t ownershipTokenDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
     if( _pAwsIotOnboardingDecoder->init( &payloadDecoder,
                                          pDeviceCredentialsResponse,
@@ -188,6 +189,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
     {
         case AWS_IOT_ACCEPTED:
 
+            /* Look for the certificate PEM data. */
             if( _pAwsIotOnboardingDecoder->find( &payloadDecoder,
                                                  ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
                                                  &certificatePemDecoder ) != IOT_SERIALIZER_SUCCESS )
@@ -208,6 +210,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
             }
 
+            /* Look for the certificate ID data. */
             if( _pAwsIotOnboardingDecoder->find( &payloadDecoder,
                                                  ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
                                                  &certificateIdDecoder ) != IOT_SERIALIZER_SUCCESS )
@@ -228,6 +231,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
             }
 
+            /* Look for the private Key data. */
             if( _pAwsIotOnboardingDecoder->find( &payloadDecoder,
                                                  ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
                                                  &privateKeyDecoder ) != IOT_SERIALIZER_SUCCESS )
@@ -248,6 +252,27 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
             }
 
+            /* Look for the certificate ownership token data. */
+            if( _pAwsIotOnboardingDecoder->find( &payloadDecoder,
+                                                 ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                                                 &ownershipTokenDecoder ) != IOT_SERIALIZER_SUCCESS )
+            {
+                /* Cannot find "certificate ownership token" */
+                IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
+                             ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                             GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
+            }
+
+            if( ownershipTokenDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
+            {
+                IotLogError(
+                    "Invalid value type of \"%s\" data in server response of %s operation. Expected type is text string.",
+                    ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                    GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
+            }
+
             /* Populate the status code information to represent success response from the server. */
             userCallbackParam.statusCode = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED;
 
@@ -264,6 +289,11 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseDeviceCredentialsResponse( AwsIot
                                                                privateKeyDecoder.u.value.u.string.pString;
             userCallbackParam.u.acceptedResponse.privateKeyLength =
                 privateKeyDecoder.u.value.u.string.length;
+
+            userCallbackParam.u.acceptedResponse.pCertificateOwnershipToken = ( const char * )
+                                                                              ownershipTokenDecoder.u.value.u.string.pString;
+            userCallbackParam.u.acceptedResponse.ownershipTokenLength =
+                ownershipTokenDecoder.u.value.u.string.length;
 
             /* Invoke the user-provided callback with the parsed credentials data . */
             userCallbackInfo->getDeviceCredentialsCallback.function( userCallbackInfo->getDeviceCredentialsCallback.userParam,

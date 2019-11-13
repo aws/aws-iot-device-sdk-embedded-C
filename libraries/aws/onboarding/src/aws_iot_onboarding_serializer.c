@@ -138,6 +138,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( 
                                                                                 size_t bufferSize )
 {
     AwsIotOnboarding_Assert( ( pRequestData->pDeviceCertificateId != NULL ) && ( pRequestData->deviceCertificateIdLength > 0 ) );
+    AwsIotOnboarding_Assert( ( pRequestData->pCertificateOwnershipToken != NULL ) && ( pRequestData->ownershipTokenLength > 0 ) );
     AwsIotOnboarding_Assert( ( ( pRequestData->pParametersStart == NULL ) && ( pRequestData->pParametersStart == 0 ) ) ||
                              ( ( pRequestData->pParametersStart != NULL ) && ( pRequestData->numOfParameters > 0 ) ) );
 
@@ -146,12 +147,26 @@ AwsIotOnboardingError_t _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( 
     IotSerializerEncoderObject_t outerMapEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
     IotSerializerScalarData_t certificateIdData = IotSerializer_ScalarTextStringWithLength( pRequestData->pDeviceCertificateId,
                                                                                             pRequestData->deviceCertificateIdLength );
+    IotSerializerScalarData_t certificateTokenData = IotSerializer_ScalarTextStringWithLength( pRequestData->pCertificateOwnershipToken,
+                                                                                               pRequestData->ownershipTokenLength );
     IotSerializerEncoderObject_t parametersMapEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
-    size_t numOfPayloadEntries = 2;
+    size_t numOfPayloadEntries = 0;
     const AwsIotOnboardingRequestParameterEntry_t * pParametersList = pRequestData->pParametersStart;
     char * pParameterKeyCopy = NULL;
     IotSerializerScalarData_t parameterValueData;
     IotSerializerError_t serializerStatus = IOT_SERIALIZER_SUCCESS;
+
+    /* If no parameters have been provided, then the payload map container will contain only 2 entries, one for
+     * certificate ID and the other for for the certificate ownership token string.*/
+    if( pParametersList == NULL )
+    {
+        numOfPayloadEntries = 2;
+    }
+    /* Otherwise, account for the entry of parameters as well in the count. */
+    else
+    {
+        numOfPayloadEntries = 3;
+    }
 
     /* Determine the status checking expression logic for the serializer error code based on whether the serialization
      * buffer has been provided. This is done to accommodate #IOT_SERIALIZER_BUFFER_TOO_SMALL error when no
@@ -178,25 +193,29 @@ AwsIotOnboardingError_t _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
     }
 
-    /* If no parameters have been passed, then the payload map will contain only a single entry (i.e. for certificate).
-     * */
-    if( pParametersList == NULL )
-    {
-        numOfPayloadEntries = 1;
-    }
-
     /* Create the outermost map that will contain "certificate" and "parameters" (optional) entries .*/
     serializerStatus = _pAwsIotOnboardingEncoder->openContainer( pOutermostEncoder,
                                                                  &outerMapEncoder,
                                                                  numOfPayloadEntries );
 
-    /* Insert the entry for the "certificate". */
+    /* Insert the entry for the "certificate ID". */
     if( checkSerializerStatus( _pAwsIotOnboardingEncoder->appendKeyValue( &outerMapEncoder,
                                                                           ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING,
                                                                           certificateIdData ) ) == false )
     {
         IotLogError( "Failed to encode entry keyed by %s in request payload of %s operation",
                      ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING,
+                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
+    }
+
+    /* Insert the entry for the "certificate ownership token". */
+    if( checkSerializerStatus( _pAwsIotOnboardingEncoder->appendKeyValue( &outerMapEncoder,
+                                                                          ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_TOKEN_STRING,
+                                                                          certificateTokenData ) ) == false )
+    {
+        IotLogError( "Failed to encode entry keyed by %s in request payload of %s operation",
+                     ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_TOKEN_STRING,
                      GET_ONBOARD_DEVICE_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
     }
@@ -260,14 +279,14 @@ AwsIotOnboardingError_t _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( 
         /* Close the nested map container */
         if( checkSerializerStatus( _pAwsIotOnboardingEncoder->closeContainer( &outerMapEncoder, &parametersMapEncoder ) ) == false )
         {
-            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
+            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
         }
     }
 
     /* Close the map. */
     if( checkSerializerStatus( _pAwsIotOnboardingEncoder->closeContainer( pOutermostEncoder, &outerMapEncoder ) ) == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();

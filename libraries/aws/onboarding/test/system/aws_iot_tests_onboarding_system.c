@@ -154,11 +154,13 @@ static void _printDeviceCredentialsCallback( void * contextParam,
         TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pPrivateKey );
         TEST_ASSERT_GREATER_THAN( 0, pResponseInfo->u.acceptedResponse.privateKeyLength );
 
-        IotLogInfo( "\n Certificate PEM = %.*s\n Certificate ID = %.*s\n DREADED PRIVATE KEY = %.*s\n",
+        IotLogInfo( "\n Certificate PEM = %.*s\n Certificate ID = %.*s\n Ownership Token = %.*s\n DREADED PRIVATE KEY = %.*s\n",
                     pResponseInfo->u.acceptedResponse.deviceCertificateLength,
                     pResponseInfo->u.acceptedResponse.pDeviceCertificate,
                     pResponseInfo->u.acceptedResponse.certificateIdLength,
                     pResponseInfo->u.acceptedResponse.pCertificateId,
+                    pResponseInfo->u.acceptedResponse.ownershipTokenLength,
+                    pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken,
                     pResponseInfo->u.acceptedResponse.privateKeyLength,
                     pResponseInfo->u.acceptedResponse.pPrivateKey );
     }
@@ -183,14 +185,18 @@ static void _printOnboardDeviceResponseCallback( void * contextParam,
 
     if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
     {
+        if( pResponseInfo->u.acceptedResponse.pClientId != NULL )
+        {
+            IotLogInfo( "ClientID = %.*s",
+                        pResponseInfo->u.acceptedResponse.clientIdLength,
+                        pResponseInfo->u.acceptedResponse.pClientId );
+        }
+
         if( pResponseInfo->u.acceptedResponse.pThingName != NULL )
         {
-            if( pResponseInfo->u.acceptedResponse.pThingName != NULL )
-            {
-                IotLogInfo( "ThingName = %.*s",
-                            pResponseInfo->u.acceptedResponse.thingNameLength,
-                            pResponseInfo->u.acceptedResponse.pThingName );
-            }
+            IotLogInfo( "ThingName = %.*s",
+                        pResponseInfo->u.acceptedResponse.thingNameLength,
+                        pResponseInfo->u.acceptedResponse.pThingName );
         }
 
         if( pResponseInfo->u.acceptedResponse.numOfConfigurationEntries > 0 )

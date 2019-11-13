@@ -661,6 +661,14 @@ AwsIotOnboardingError_t AwsIotOnboarding_OnboardDevice( IotMqttConnection_t onbo
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
     }
 
+    if( ( pRequestData->pCertificateOwnershipToken == NULL ) ||
+        ( pRequestData->ownershipTokenLength == 0 ) )
+    {
+        IotLogError( "Invalid certificate ownership token data passed for device onboarding request." );
+
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_PARAMETER );
+    }
+
     /* Check that the provided template name is valid. */
     if( ( pRequestData->pTemplateName == NULL ) ||
         ( pRequestData->templateNameLength == 0 ) ||

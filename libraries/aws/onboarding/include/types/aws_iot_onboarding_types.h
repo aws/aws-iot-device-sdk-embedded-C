@@ -236,6 +236,17 @@ typedef struct AwsIotOnboardingOnboardDeviceRequestInfo
     size_t deviceCertificateIdLength;
 
     /**
+     * @brief The ownership token for the certificate being requested for provisioning the device with.
+     * This token should have been issued by AWS IoT for the same certificate ID being passed.
+     */
+    const char * pCertificateOwnershipToken;
+
+    /**
+     * @brief The length of the ownership token string.
+     */
+    size_t ownershipTokenLength;
+
+    /**
      * @brief The list of parameter entries to send to the server for onboarding the device.
      */
     const AwsIotOnboardingRequestParameterEntry_t * pParametersStart;
@@ -281,8 +292,8 @@ typedef struct AwsIotOnboardingRejectedResponse
 
 /**
  * @ingroup onboarding_datatypes_paramstructs
- * @brief Parameter that encapsulates the server response to the callback function for the
- * #AwsIotOnboarding_GetDeviceCredentials API.
+ * @brief Encapsulates the server response data sent for the request to generate new key-pair and
+ * certificate for the device.
  *
  * @paramfor Onboarding server accepted response callback functions
  *
@@ -299,14 +310,17 @@ typedef struct AwsIotOnboardingGetDeviceCredentialsResponse
         /* Represents the successful/accepted response of device credentials received from the server. */
         struct
         {
-            const char * pDeviceCertificate; /**< The new certificate for the device.*/
-            size_t deviceCertificateLength;  /**< The size of the device certificate.*/
-            const char * pCertificateId;     /**< The certificate ID associated with the new certificate,
-                                              * @p pDeviceCertificate.*/
-            size_t certificateIdLength;      /**< The length of the certificate ID.*/
-            const char * pPrivateKey;        /**< The private key associated with the new certificate,
-                                              * @p pDeviceCertificate.*/
-            size_t privateKeyLength;         /**< The size of the private key.*/
+            const char * pDeviceCertificate;         /**< The new certificate for the device.*/
+            size_t deviceCertificateLength;          /**< The size of the device certificate.*/
+            const char * pCertificateId;             /**< The certificate ID associated with the new certificate,
+                                                      * @p pDeviceCertificate.*/
+            size_t certificateIdLength;              /**< The length of the certificate ID.*/
+            const char * pPrivateKey;                /**< The private key associated with the new certificate,
+                                                      * @p pDeviceCertificate.*/
+            size_t privateKeyLength;                 /**< The size of the private key.*/
+            const char * pCertificateOwnershipToken; /**< The token that represents ownership of certificate and
+                                                      * associated private key that the device.*/
+            size_t ownershipTokenLength;             /**< The size of the ownership token.*/
         } acceptedResponse;
 
         /* Represents the rejected response information received from the server. */
@@ -348,13 +362,13 @@ typedef struct AwsIotOnboardingGetDeviceCredentialsCallbackInfo
 
 /**
  * @ingroup onboarding_datatypes_paramstructs
- * @brief Parameter that encapsulates the server response to the callback function for the
- * #AwsIotOnboarding_OnboardDevice API.
+ * @brief Encpasulates the server response data sent for the request to provision device with an AWS IoT issued
+ * certificate.
  *
  * @paramfor Onboarding server accepted response callback functions
  *
- * The #AwsIotOnboarding_OnboardDevice library API passes this object to a user-provided callback function whenever
- * the operation completes with a response from the server.
+ * The #AwsIotOnboarding_OnboardDevice library API passes this object as a parameter to a user-provided callback
+ * function whenever the operation completes with a response from the server.
  */
 typedef struct AwsIotOnboardingOnboardDeviceResponse
 {
@@ -371,6 +385,12 @@ typedef struct AwsIotOnboardingOnboardDeviceResponse
 
             /**< The length of the Thing resource name. */
             size_t thingNameLength;
+
+            /**< The client ID used in the connection to the AWS IoT server for provisioning the device.*/
+            const char * pClientId;
+
+            /**< The length of the client ID text. */
+            size_t clientIdLength;
 
             /**< A list of device configuration data that is received from the server. */
             const AwsIotOnboardingResponseDeviceConfigurationEntry_t * pDeviceConfigList;

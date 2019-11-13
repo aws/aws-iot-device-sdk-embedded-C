@@ -254,17 +254,22 @@
 /**
  * @brief The key for the device certificate entry in the response payload of the GetDeviceCredentials service API.
  */
-#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING    "certificatePem"
+#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING          "certificatePem"
 
 /**
  * @brief The key for the certificate Id entry in the response payload of the GetDeviceCredentials service API.
  */
-#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING     "certificateId"
+#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING           "certificateId"
 
 /**
  * @brief The key for the private key entry in the response payload of the GetDeviceCredentials service API.
  */
-#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING        "privateKey"
+#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING              "privateKey"
+
+/**
+ * @brief The key for the token key entry in the response payload of the GetDeviceCredentials service API.
+ */
+#define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING    "certificateOwnershipToken"
 
 /**
  * @brief The common path in the request and response MQTT topics of the OnboardDevice service API.
@@ -309,7 +314,15 @@
  *
  * @note This should be used in serializing the request payload for sending to the server.
  */
-#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING    "certificateId"
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING       "certificateId"
+
+/**
+ * @brief The key for the certificate ownership token's entry to be inserted in the request payload for the
+ * provisioning the device.
+ *
+ * @note This should be used in serializing the request payload for sending to the server.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_TOKEN_STRING    "certificateOwnershipToken"
 
 /**
  * @brief The key for the device context data's entry to be inserted in the request payload for the OnboardDevice
@@ -318,7 +331,7 @@
  * @note This should be used in serializing the request payload for sending to the server, only if the calling
  * application provides valid device context data.
  */
-#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING        "parameters"
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING           "parameters"
 
 /**
  * @brief The length of the MQTT request topic filter of the OnboardDevice service API.
@@ -337,16 +350,23 @@
 /**
  * @brief The key for the device configuration data's entry in the response payload of the OnboardDevice service API.
  *
- * @note This should be utilized in parsing the response payload received from the server.
+ * @note This should be utilized in parsing the success case response payload received from the server.
  */
 #define ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING    "deviceConfiguration"
 
 /**
  * @brief The key for the Thing resource name's entry in the response payload of the OnboardDevice service API.
  *
- * @note This should be utilized in parsing the response payload received from the server.
+ * @note This should be utilized in parsing the success case response payload received from the server.
  */
 #define ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_THING_NAME_STRING              "thingName"
+
+/**
+ * @brief The key for the connection client ID's entry in the response payload of the OnboardDevice service API.
+ *
+ * @note This should be utilized in parsing the success case response payload received from the server.
+ */
+#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_CLIENT_ID_STRING               "clientId"
 
 /**
  * @brief The key for the status code entry in the "rejected" response payload from the server.
