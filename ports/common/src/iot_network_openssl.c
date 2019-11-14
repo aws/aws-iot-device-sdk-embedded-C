@@ -448,13 +448,19 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pConnection,
     IotLogDebug( "New SSL context created. Setting SSL_MODE_AUTO_RETRY." );
     ( void ) SSL_CTX_set_mode( pSslContext, SSL_MODE_AUTO_RETRY );
 
-    /* Import all credentials. */
-    if( _readCredentials( pSslContext,
-                          pOpensslCredentials->pRootCa,
-                          pOpensslCredentials->pClientCert,
-                          pOpensslCredentials->pPrivateKey ) == false )
+    /* Setup TLS client certificate authentication, if requested. */
+    if( ( pOpensslCredentials->pClientCert != NULL ) &&
+        ( strlen( pOpensslCredentials->pClientCert ) != 0 ) &&
+        ( pOpensslCredentials->pPrivateKey != NULL ) &&
+        ( strlen( pOpensslCredentials->pPrivateKey ) ) )
     {
-        IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
+        if( _readCredentials( pSslContext,
+                            pOpensslCredentials->pRootCa,
+                            pOpensslCredentials->pClientCert,
+                            pOpensslCredentials->pPrivateKey ) == false )
+        {
+            IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
+        }
     }
 
     /* Create a new SSL connection context */
