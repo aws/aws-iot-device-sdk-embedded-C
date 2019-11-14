@@ -160,6 +160,15 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonValid )
         _parseJson( false, pJsonDocument, jsonDocumentLength, "longlonglonglongkey", NULL, 0 );
     }
 
+    /* JSON with '{' '}' in value*/
+    {
+        const char pJsonDocument[ 18 ] = "{\"key\":\"valu}{e\"}";
+        size_t jsonDocumentLength = strlen( pJsonDocument );
+
+        /* Attempt to find a value with '{' '}' */
+        _parseJson( true, pJsonDocument, jsonDocumentLength, "key", "\"valu}{e\"", 9 );
+    }
+
     /* JSON with '{' '}' in value in nested level*/
     {
         const char pJsonDocument[ 42 ] = "{\"key\":{\"key2\":\"{{{{}}\", \"key3\":\"value\"}}";
