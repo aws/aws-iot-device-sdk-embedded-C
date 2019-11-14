@@ -85,21 +85,29 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=
 # Run tests in no static memory mode.
 run_tests
 
-# Cleanup created resources from the AWS IoT account used for CI.
+# Cleanup the created resources created by the integration tests on the CI AWS IoT account.
+# (Resources include Thing resource, its attached certificates and their policies)
+# (First, we will install a json parser utility, jq)
+apt-get install -y jq
+
+# Iterate over all the principals/certificates attached to the Thing resource (created by the integration test)
+# and delete the certificates.
 aws iot list-thing-principals \
     --endpoint $AWS_CLI_CI_ENDPOINT \
     --region $AWS_PROVISIONING_REGION \
     --thing-name "ThingPrefix_"$CLIENT_ID | \
         grep arn | tr -d \",' ' | 
-            while read -r certificate_arn
+            while read -r CERTIFICATE_ARN
             do
+                # Detach the principal from the Thing resource.
                 aws iot detach-thing-principal \
                     --endpoint $AWS_CLI_CI_ENDPOINT \
                     --region $AWS_PROVISIONING_REGION \
                     --thing-name "ThingPrefix_"$CLIENT_ID \
-                    --principal $certificate_arn
+                    --principal $CERTIFICATE_ARN
 
-                CERTIFICATE_ID=$(echo $certificate_arn | cut -d '/' -f2)
+                CERTIFICATE_ID=$(echo $CERTIFICATE_ARN | cut -d '/' -f2)
+
                 aws iot update-certificate \
                     --endpoint $AWS_CLI_CI_ENDPOINT \
                     --region $AWS_PROVISIONING_REGION \
@@ -116,3 +124,17 @@ aws iot delete-thing \
     --endpoint $AWS_CLI_CI_ENDPOINT \
     --region $AWS_PROVISIONING_REGION \
     --thing-name "ThingPrefix_"$CLIENT_ID
+
+# Delete any inactive certificate that may have been created by the integration tests.
+aws iot list-certificates \
+    --endpoint https://gamma.us-east-1.iot.amazonaws.com | \
+        jq -c '.certificates[] | select(.status | contains("INACTIVE")) | .certificateArn' | \
+            tr -d \" | \
+                while read -r cert_arn 
+                do 
+                     CERTIFICATE_ID=$(echo $cert_arn | cut -d '/' -f2)
+                    aws iot delete-certificate \
+                        --endpoint https://gamma.us-east-1.iot.amazonaws.com \
+                        --certificate-id $CERTIFICATE_ID \
+                        --force-delete 
+                done
