@@ -349,6 +349,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
     AwsIotOnboardingResponseDeviceConfigurationEntry_t * pDeviceConfigurationList = NULL;
     bool configurationListAllocated = false;
     IotSerializerDecoderObject_t thingNameDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t clientIdDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
     if( _pAwsIotOnboardingDecoder->init( &payloadDecoder,
                                          pResponsePayload,
@@ -395,7 +396,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
                 if( deviceConfigurationDecoder.type != IOT_SERIALIZER_CONTAINER_MAP )
                 {
                     IotLogError(
-                        "Invalid device configuration data received server response for %s operation. Data is expected to be encoded as map container.",
+                        "Invalid device configuration data received in server response for %s operation. Data is expected to be encoded as map container.",
                         GET_ONBOARD_DEVICE_OPERATION_LOG );
                     IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
                 }
@@ -450,6 +451,35 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
                         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
                     }
 
+                    /* Validate that both the device configuration entry's key and value data are text strings. */
+                    if( ( deviceConfigInnerKeyDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING ) ||
+                        ( deviceConfigInnerValueDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING ) )
+                    {
+                        /** Opportunity for HYGENE! The serializer library allocates memory for the iterator. It can
+                         * only be released by iterating to the last element in the map containers and "stepping out" of
+                         * the container
+                         * Thus, we will iterate to the end of the device configuration container to invalidate the
+                         * iterator. */
+                        while( ++configurationListIndex < numOfDeviceConfigurationEntries )
+                        {
+                            _pAwsIotOnboardingDecoder->next( deviceConfigIter );
+                            _pAwsIotOnboardingDecoder->next( deviceConfigIter );
+                        }
+
+                        /* Advance to the "end" of the container. */
+                        _pAwsIotOnboardingDecoder->next( deviceConfigIter );
+                        _pAwsIotOnboardingDecoder->stepOut( deviceConfigIter, &deviceConfigurationDecoder );
+
+                        _pAwsIotOnboardingDecoder->destroy( &deviceConfigInnerKeyDecoder );
+                        _pAwsIotOnboardingDecoder->destroy( &deviceConfigInnerValueDecoder );
+
+                        IotLogError( "Invalid data type for device configuration entry received within server response for %s operation. Expected data"
+                                     "type is text string for both keys and values.",
+                                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+
+                        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
+                    }
+
                     pDeviceConfigurationList[ configurationListIndex ].pKey = ( const char * )
                                                                               deviceConfigInnerKeyDecoder.u.value.u.string.pString;
                     pDeviceConfigurationList[ configurationListIndex ].keyLength = deviceConfigInnerKeyDecoder.u.value.u.string.length;
@@ -483,6 +513,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
                 }
             }
 
+            /* Look for the Thing Name entry. */
             decoderStatus = _pAwsIotOnboardingDecoder->find( &payloadDecoder,
                                                              ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_THING_NAME_STRING,
                                                              &thingNameDecoder );
@@ -505,11 +536,52 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
                 if( thingNameDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
                 {
                     IotLogError(
-                        "Invalid \"%s\" data received server response for %s operation. Value is expected to be a text string.",
+                        "Invalid \"%s\" data received in server response for %s operation. Value is expected to be a text string.",
                         ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_THING_NAME_STRING,
                         GET_ONBOARD_DEVICE_OPERATION_LOG );
                     IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
                 }
+
+                /* Populate information for the "Thing Name" string. */
+                userCallbackParam.u.acceptedResponse.pThingName = ( const char * )
+                                                                  thingNameDecoder.u.value.u.string.pString;
+                userCallbackParam.u.acceptedResponse.thingNameLength = thingNameDecoder.u.value.u.string.length;
+            }
+
+            /* Look for the client ID entry. */
+            decoderStatus = _pAwsIotOnboardingDecoder->find( &payloadDecoder,
+                                                             ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
+                                                             &clientIdDecoder );
+
+            /* Client ID entry NOT found in payload. */
+            if( decoderStatus != IOT_SERIALIZER_SUCCESS )
+            {
+                IotLogError(
+                    "Client ID entry (searched with \"%s\" key) NOT present in server response for %s operation",
+                    ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
+                    GET_ONBOARD_DEVICE_OPERATION_LOG );
+                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
+            }
+            else if( decoderStatus != IOT_SERIALIZER_SUCCESS )
+            {
+                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_INTERNAL_FAILURE );
+            }
+            /* Client ID entry FOUND in payload. */
+            else
+            {
+                if( clientIdDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
+                {
+                    IotLogError(
+                        "Invalid \"%s\" data received in server response for %s operation. Value is expected to be a text string.",
+                        ONBOARDING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
+                        GET_ONBOARD_DEVICE_OPERATION_LOG );
+                    IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ONBOARDING_BAD_RESPONSE );
+                }
+
+                /* Populate information for the "Client ID" data. */
+                userCallbackParam.u.acceptedResponse.pClientId = ( const char * )
+                                                                 clientIdDecoder.u.value.u.string.pString;
+                userCallbackParam.u.acceptedResponse.clientIdLength = clientIdDecoder.u.value.u.string.length;
             }
 
             /* Populate the status code information to represent success response from the server. */
@@ -518,11 +590,6 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
             /* Populate information for the "Device Configuration" data. */
             userCallbackParam.u.acceptedResponse.pDeviceConfigList = pDeviceConfigurationList;
             userCallbackParam.u.acceptedResponse.numOfConfigurationEntries = numOfDeviceConfigurationEntries;
-
-            /* Populate information for the "Thing Name" string. */
-            userCallbackParam.u.acceptedResponse.pThingName = ( const char * )
-                                                              thingNameDecoder.u.value.u.string.pString;
-            userCallbackParam.u.acceptedResponse.thingNameLength = thingNameDecoder.u.value.u.string.length;
 
             /* Invoke the user-provided callback with the parsed credentials data . */
             userCallbackInfo->onboardDeviceCallback.function( userCallbackInfo->onboardDeviceCallback.userParam,
@@ -556,6 +623,7 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
 
     _pAwsIotOnboardingDecoder->destroy( &deviceConfigurationDecoder );
     _pAwsIotOnboardingDecoder->destroy( &thingNameDecoder );
+    _pAwsIotOnboardingDecoder->destroy( &clientIdDecoder );
     _pAwsIotOnboardingDecoder->destroy( &payloadDecoder );
 
     IOT_FUNCTION_CLEANUP_END();

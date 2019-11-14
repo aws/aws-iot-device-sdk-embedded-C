@@ -170,7 +170,7 @@ static const char * _getDeviceCredentialsAcceptedResponseTopic =
  */
 static const uint8_t _sampleGetDeviceCredentialsServerResponsePayload[] =
 {
-    0xA3,                                                                               /* # map( 2 ) */
+    0xA4,                                                                               /* # map( 4 ) */
     0x6E,                                                                               /* # text( 14 ) */
     0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
     0x67,                                                                               /* # text(7) */
@@ -182,7 +182,13 @@ static const uint8_t _sampleGetDeviceCredentialsServerResponsePayload[] =
     0x6A,                                                                               /* # text( 10 ) */
     0x70, 0x72, 0x69, 0x76, 0x61, 0x74, 0x65, 0x4B, 0x65, 0x79,                         /* # "privateKey" */
     0x67,                                                                               /* # text(7) */
-    0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x21                                            /*# "Secret!" */
+    0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x21,                                           /*# "Secret!" */
+    0x78, 0x19,                                                                         /*# text(25) */
+    0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+    0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
+                                                                                         * */
+    0x66,                                                                               /*# text(6) */
+    0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                                  /*# "Token!" */
 };
 
 /**
@@ -190,16 +196,19 @@ static const uint8_t _sampleGetDeviceCredentialsServerResponsePayload[] =
  */
 static AwsIotOnboardingGetDeviceCredentialsResponse_t _expectedGetDeviceCredentialsCallbackParams =
 {
-    .statusCode                                 = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
-    .u.acceptedResponse.pDeviceCertificate      = ( const char * )
-                                                  &_sampleGetDeviceCredentialsServerResponsePayload[ 17 ],
-    .u.acceptedResponse.deviceCertificateLength = 7,
-    .u.acceptedResponse.pCertificateId          = ( const char * )
-                                                  &_sampleGetDeviceCredentialsServerResponsePayload[ 39 ],
-    .u.acceptedResponse.certificateIdLength     = 6,
-    .u.acceptedResponse.pPrivateKey             = ( const char * )
-                                                  &_sampleGetDeviceCredentialsServerResponsePayload[ 57 ],
-    .u.acceptedResponse.privateKeyLength        = 7
+    .statusCode                                    = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
+    .u.acceptedResponse.pDeviceCertificate         = ( const char * )
+                                                     &_sampleGetDeviceCredentialsServerResponsePayload[ 17 ],
+    .u.acceptedResponse.deviceCertificateLength    = 7,
+    .u.acceptedResponse.pCertificateId             = ( const char * )
+                                                     &_sampleGetDeviceCredentialsServerResponsePayload[ 39 ],
+    .u.acceptedResponse.certificateIdLength        = 6,
+    .u.acceptedResponse.pPrivateKey                = ( const char * )
+                                                     &_sampleGetDeviceCredentialsServerResponsePayload[ 57 ],
+    .u.acceptedResponse.privateKeyLength           = 7,
+    .u.acceptedResponse.pCertificateOwnershipToken = ( const char * )
+                                                     &_sampleGetDeviceCredentialsServerResponsePayload[ 92 ],
+    .u.acceptedResponse.ownershipTokenLength       = 6,
 };
 
 /**
@@ -215,23 +224,28 @@ static const AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t _acceptedRespons
 /**
  * @brief Certificate ID for OnboardDevice API tests.
  */
-static const char * _testCertificateId = "TestCertificateID";
+static const char _testCertificateId[] = "TestCertificateID";
+
+/**
+ * @brief Token string for OnboardDevice API tests.
+ */
+static const char _testCertificateToken[] = "TestToken";
 
 /**
  * @brief Template ID for OnboardDevice API tests.
  */
-#define _testTemplateId    "123456789123456789123456789123456789"
+#define _testTemplateName    "TEST_TEMPLATE"
 
 /**
  * @brief The rejected response topic for the OnboardDevice service API.
  */
-static const char * _onboardDeviceAcceptedResponseTopic = "$aws/provisioning-templates/"_testTemplateId
+static const char * _onboardDeviceAcceptedResponseTopic = "$aws/provisioning-templates/"_testTemplateName
                                                           "/provision/cbor/accepted";
 
 /**
  * @brief The accepted response topic for the OnboardDevice service API.
  */
-static const char * _onboardDeviceRejectedResponseTopic = "$aws/provisioning-templates/"_testTemplateId
+static const char * _onboardDeviceRejectedResponseTopic = "$aws/provisioning-templates/"_testTemplateName
                                                           "/provision/cbor/rejected";
 
 /**
@@ -240,7 +254,7 @@ static const char * _onboardDeviceRejectedResponseTopic = "$aws/provisioning-tem
  */
 static const uint8_t _sampleOnboardDeviceResponsePayload[] =
 {
-    0xA2,                                                             /* # map(2) */
+    0xA3,                                                             /* # map(2) */
     0x73,                                                             /* # text(19) */
     0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74,
     0x69, 0x6F, 0x6E,                                                 /* # "deviceConfiguration" */
@@ -260,7 +274,11 @@ static const uint8_t _sampleOnboardDeviceResponsePayload[] =
     0x69,                                                             /* # text(9) */
     0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65,             /* # "thingName" */
     0x69,                                                             /* # text(9) */
-    0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67              /* # "TestThing" */
+    0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67,             /* # "TestThing" */
+    0x68,                                                             /*# text(8) */
+    0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x49, 0x64,                   /*# "clientId" */
+    0x65,                                                             /*# text(5) */
+    0x44, 0x75, 0x6D, 0x6D, 0x79                                      /*# "Dummy" */
 };
 
 static const AwsIotOnboardingResponseDeviceConfigurationEntry_t _expectedDeviceConfigList[] =
@@ -288,6 +306,8 @@ static AwsIotOnboardingOnboardDeviceResponse_t _expectedOnboardDeviceCallbackPar
     .statusCode                                   = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
     .u.acceptedResponse.pThingName                = ( const char * ) &_sampleOnboardDeviceResponsePayload[ 113 ],
     .u.acceptedResponse.thingNameLength           = 9,
+    .u.acceptedResponse.pClientId                 = ( const char * ) &_sampleOnboardDeviceResponsePayload[ 132 ],
+    .u.acceptedResponse.clientIdLength            = 5,
     .u.acceptedResponse.pDeviceConfigList         = _expectedDeviceConfigList,
     .u.acceptedResponse.numOfConfigurationEntries = sizeof( _expectedDeviceConfigList ) /
                                                     sizeof( AwsIotOnboardingResponseDeviceConfigurationEntry_t )
@@ -373,6 +393,12 @@ static void _testGetDeviceCredentialsCallback( void * contextParam,
                                          pExpectedParams->u.acceptedResponse.pPrivateKey,
                                          pResponseInfo->u.acceptedResponse.pPrivateKey,
                                          pExpectedParams->u.acceptedResponse.privateKeyLength ) );
+            AwsIotOnboarding_Assert( pExpectedParams->u.acceptedResponse.ownershipTokenLength ==
+                                     pResponseInfo->u.acceptedResponse.ownershipTokenLength );
+            AwsIotOnboarding_Assert( 0 == memcmp(
+                                         pExpectedParams->u.acceptedResponse.pCertificateOwnershipToken,
+                                         pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken,
+                                         pExpectedParams->u.acceptedResponse.ownershipTokenLength ) );
             break;
 
         default:
@@ -402,6 +428,18 @@ static void _testOnboardDeviceCallback( void * contextParam,
                                              pExpectedParams->u.acceptedResponse.pThingName,
                                              pResponseInfo->u.acceptedResponse.pThingName,
                                              pExpectedParams->u.acceptedResponse.thingNameLength ) );
+            }
+
+            AwsIotOnboarding_Assert(
+                pExpectedParams->u.acceptedResponse.clientIdLength ==
+                pResponseInfo->u.acceptedResponse.clientIdLength );
+
+            if( pExpectedParams->u.acceptedResponse.clientIdLength > 0 )
+            {
+                AwsIotOnboarding_Assert( 0 == memcmp(
+                                             pExpectedParams->u.acceptedResponse.pClientId,
+                                             pResponseInfo->u.acceptedResponse.pClientId,
+                                             pExpectedParams->u.acceptedResponse.clientIdLength ) );
             }
 
             AwsIotOnboarding_Assert(
@@ -507,9 +545,11 @@ static void _testOnboardDeviceAPIWithServerResponse( _serverResponseThreadContex
                                 0 );
 
     requestInfo.pDeviceCertificateId = _testCertificateId;
-    requestInfo.deviceCertificateIdLength = sizeof( _testCertificateId );
-    requestInfo.pTemplateName = _testTemplateId;
-    requestInfo.templateNameLength = strlen( _testTemplateId );
+    requestInfo.deviceCertificateIdLength = strlen( _testCertificateId );
+    requestInfo.pCertificateOwnershipToken = _testCertificateToken;
+    requestInfo.ownershipTokenLength = strlen( _testCertificateToken );
+    requestInfo.pTemplateName = _testTemplateName;
+    requestInfo.templateNameLength = strlen( _testTemplateName );
     requestInfo.pParametersStart = NULL;
     requestInfo.numOfParameters = 0;
 
@@ -935,12 +975,14 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIInvalidParameters )
 
     AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo =
     {
-        .pDeviceCertificateId      = _testCertificateId,
-        .deviceCertificateIdLength = strlen( _testCertificateId ),
-        .pTemplateName             = _testTemplateId,
-        .templateNameLength        = strlen( _testTemplateId ),
-        .pParametersStart          = NULL,
-        .numOfParameters           = 0,
+        .pDeviceCertificateId       = _testCertificateId,
+        .deviceCertificateIdLength  = strlen( _testCertificateId ),
+        .pCertificateOwnershipToken = _testCertificateToken,
+        .ownershipTokenLength       = strlen( _testCertificateToken ),
+        .pTemplateName              = _testTemplateName,
+        .templateNameLength         = strlen( _testTemplateName ),
+        .pParametersStart           = NULL,
+        .numOfParameters            = 0,
     };
 
     /* Uninitialized MQTT connection. */
@@ -981,9 +1023,22 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIInvalidParameters )
                                              &callbackInfo );
     TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_PARAMETER, status );
 
-    /* Invalid template ID in request data. Re-assign certificate data in object. */
     requestInfo.pDeviceCertificateId = _testCertificateId;
     requestInfo.deviceCertificateIdLength = sizeof( _testCertificateId );
+
+    /* Invalid certificate token string in request. */
+    requestInfo.pCertificateOwnershipToken = NULL;
+    requestInfo.ownershipTokenLength = 0;
+    status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
+                                             &requestInfo,
+                                             0,
+                                             &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_PARAMETER, status );
+
+    requestInfo.ownershipTokenLength = strlen( _testCertificateToken );
+    requestInfo.pTemplateName = _testTemplateName;
+
+    /* Invalid template ID in request data. Re-assign certificate data in object. */
     requestInfo.pTemplateName = NULL;
     requestInfo.templateNameLength = 0;
     status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
@@ -1007,12 +1062,14 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPICalledWithoutInit )
 
     const AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo =
     {
-        .pDeviceCertificateId      = _testCertificateId,
-        .deviceCertificateIdLength = sizeof( _testCertificateId ),
-        .pTemplateName             = _testTemplateId,
-        .templateNameLength        = strlen( _testTemplateId ),
-        .pParametersStart          = NULL,
-        .numOfParameters           = 0,
+        .pDeviceCertificateId       = _testCertificateId,
+        .deviceCertificateIdLength  = sizeof( _testCertificateId ),
+        .pCertificateOwnershipToken = _testCertificateToken,
+        .ownershipTokenLength       = strlen( _testCertificateToken ),
+        .pTemplateName              = _testTemplateName,
+        .templateNameLength         = strlen( _testTemplateName ),
+        .pParametersStart           = NULL,
+        .numOfParameters            = 0,
     };
 
     /* Reset the library to simulate the test case when the library is not initialized. */
@@ -1044,12 +1101,14 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPINoServerResponse )
 
     const AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo =
     {
-        .pDeviceCertificateId      = _testCertificateId,
-        .deviceCertificateIdLength = sizeof( _testCertificateId ),
-        .pTemplateName             = _testTemplateId,
-        .templateNameLength        = strlen( _testTemplateId ),
-        .pParametersStart          = NULL,
-        .numOfParameters           = 0,
+        .pDeviceCertificateId       = _testCertificateId,
+        .deviceCertificateIdLength  = sizeof( _testCertificateId ),
+        .pTemplateName              = _testTemplateName,
+        .templateNameLength         = strlen( _testTemplateName ),
+        .pCertificateOwnershipToken = _testCertificateToken,
+        .ownershipTokenLength       = strlen( _testCertificateToken ),
+        .pParametersStart           = NULL,
+        .numOfParameters            = 0,
     };
 
 
@@ -1186,11 +1245,15 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutDeviceConfigurat
 {
     const uint8_t pResponseWithoutDeviceConfigData[] =
     {
-        0xA1,                                                 /* # map(1) */
+        0xA2,                                                 /* # map(2) */
         0x69,                                                 /* # text(9) */
         0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65, /* # "thingName" */
         0x69,                                                 /* # text(9) */
-        0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67  /* # "TestThing" */
+        0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67, /* # "TestThing" */
+        0x68,                                                 /*# text(8) */
+        0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x49, 0x64,       /*# "clientId" */
+        0x65,                                                 /*# text(5) */
+        0x44, 0x75, 0x6D, 0x6D, 0x79                          /*# "Dummy" */
     };
 
     _serverResponseThreadContext_t serverResponse =
@@ -1206,6 +1269,8 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutDeviceConfigurat
         .statusCode                                   = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
         .u.acceptedResponse.pThingName                = ( const char * ) &pResponseWithoutDeviceConfigData[ 12 ],
         .u.acceptedResponse.thingNameLength           = 9,
+        .u.acceptedResponse.pClientId                 = ( const char * ) &pResponseWithoutDeviceConfigData[ 31 ],
+        .u.acceptedResponse.clientIdLength            = 5,
         .u.acceptedResponse.pDeviceConfigList         = NULL,
         .u.acceptedResponse.numOfConfigurationEntries = 0
     };
@@ -1231,15 +1296,19 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutThingName )
 {
     const uint8_t pServerResponseWithoutThingName[] =
     {
-        0xA1,                   /* # map(1) */
-        0x73,                   /* # text(19) */
+        0xA2,                                           /* # map(2) */
+        0x73,                                           /* # text(19) */
         0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61,
-        0x74, 0x69, 0x6F, 0x6E, /* # "deviceConfiguration" */
-        0xA1,                   /* # map(1), */
-        0x61,                   /* # text(1), */
-        0x31,                   /* # "1", */
-        0x61,                   /* # text(1), */
-        0x32                    /* # "2" */
+        0x74, 0x69, 0x6F, 0x6E,                         /* # "deviceConfiguration" */
+        0xA1,                                           /* # map(1), */
+        0x61,                                           /* # text(1), */
+        0x31,                                           /* # "1", */
+        0x61,                                           /* # text(1), */
+        0x32,                                           /* # "2" */
+        0x68,                                           /*# text(8) */
+        0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x49, 0x64, /*# "clientId" */
+        0x65,                                           /*# text(5) */
+        0x44, 0x75, 0x6D, 0x6D, 0x79                    /*# "Dummy" */
     };
 
     _serverResponseThreadContext_t serverResponse =
@@ -1265,6 +1334,8 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIServerResponseWithoutThingName )
         .statusCode                                   = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
         .u.acceptedResponse.pThingName                = NULL,
         .u.acceptedResponse.thingNameLength           = 0,
+        .u.acceptedResponse.pClientId                 = ( const char * ) &pServerResponseWithoutThingName[ 36 ],
+        .u.acceptedResponse.clientIdLength            = 5,
         .u.acceptedResponse.pDeviceConfigList         = pExpectedDeviceConfigList,
         .u.acceptedResponse.numOfConfigurationEntries = 1
     };

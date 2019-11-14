@@ -47,6 +47,11 @@
 static const char * _testCertificateId = "TestCertificateId";
 
 /**
+ * @brief The token string to use for OnboardDevice Request serialization tests.
+ */
+static const char * _testCertificateToken = "Token!";
+
+/**
  * @brief A sample list of parameters entries for testing serialization logic.
  */
 static const AwsIotOnboardingRequestParameterEntry_t _sampleParameters[] =
@@ -152,6 +157,8 @@ TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationNominalCase )
 
     testRequestInfo.pDeviceCertificateId = _testCertificateId;
     testRequestInfo.deviceCertificateIdLength = strlen( _testCertificateId );
+    testRequestInfo.pCertificateOwnershipToken = _testCertificateToken;
+    testRequestInfo.ownershipTokenLength = strlen( _testCertificateToken );
     testRequestInfo.pParametersStart = _sampleParameters;
     testRequestInfo.numOfParameters = _numOfSampleParameters;
 
@@ -164,11 +171,16 @@ TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationNominalCase )
     static const uint8_t pExpectedSerialization[] =
     {
         /* *INDENT-OFF* */
-        0xA2,                                                                                                 /*# map( 2 ) */
+        0xA3,                                                                                                 /*# map( 2 ) */
         0x6D,                                                                                                 /*# text( 13 ) */
         0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,                         /*# "certificateId" */
         0x71,                                                                                                 /*# text( 17 ) */
         0x54, 0x65, 0x73, 0x74, 0x43, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64, /*# "TestCertificateId" */
+        0x78, 0x19,                                                                                           /*# text(25) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                                     /*# "certificateOwnershipToken" */
+        0x66,                                                                                                 /*# text(6) */
+        0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21,                                                                   /*# "Token!" */
         0x6A,                                                                                                 /*# text( 10 ) */
         0x70,0x61,0x72,0x61,0x6D,0x65,0x74,0x65,0x72,0x73,                                                    /*# "parameters" */
         0xA3,                                                                                                 /*# map(3) */
@@ -222,6 +234,8 @@ TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationWithoutParameter
 
     testRequestInfo.pDeviceCertificateId = _testCertificateId;
     testRequestInfo.deviceCertificateIdLength = strlen( _testCertificateId );
+    testRequestInfo.pCertificateOwnershipToken = _testCertificateToken;
+    testRequestInfo.ownershipTokenLength = strlen( _testCertificateToken );
     testRequestInfo.pParametersStart = NULL;
     testRequestInfo.numOfParameters = 0;
 
@@ -234,11 +248,16 @@ TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationWithoutParameter
     static const uint8_t pExpectedSerializationWithoutParameters[] =
     {
         /* *INDENT-OFF* */
-        0xA1,                                                                                                 /*# map( 2 ) */
+        0xA2,                                                                                                 /*# map( 2 ) */
         0x6D,                                                                                                 /*# text( 13 ) */
         0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,                         /*# "certificateId" */
         0x71,                                                                                                 /*# text( 17 ) */
         0x54, 0x65, 0x73, 0x74, 0x43, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64, /*# "TestCertificateId" */
+        0x78, 0x19,                                                                                           /*# text(25) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                                     /*# "certificateOwnershipToken" */
+        0x66,                                                                                                 /*# text(6) */
+        0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21,                                                                   /*# "Token!" */
         /* *INDENT-ON* */
     };
 

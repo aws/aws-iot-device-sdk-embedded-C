@@ -79,9 +79,9 @@ static AwsIotOnboardingRejectedResponse_t _expectedParsedParams =
 /**
  * @brief Sample CBOR encoded response payload of device credentials from the server.
  */
-const uint8_t _sampleDeviceCredentialsResponse[] =
+const uint8_t _sampleAcceptedDeviceCredentialsResponse[] =
 {
-    0xA3,                                                                               /* # map( 3 ) */
+    0xA4,                                                                               /* # map( 4 ) */
     0x6E,                                                                               /* # text( 14 ) */
     0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
     0x67,                                                                               /* # text(7) */
@@ -93,7 +93,13 @@ const uint8_t _sampleDeviceCredentialsResponse[] =
     0x6A,                                                                               /* # text( 10 ) */
     0x70, 0x72, 0x69, 0x76, 0x61, 0x74, 0x65, 0x4B, 0x65, 0x79,                         /* # "privateKey" */
     0x67,                                                                               /* # text(7) */
-    0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x21                                            /*# "Secret!" */
+    0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x21,                                           /*# "Secret!" */
+    0x78, 0x19,                                                                         /*# text(25) */
+    0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+    0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
+                                                                                         * */
+    0x66,                                                                               /*# text(6) */
+    0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                                  /*# "Token!" */
 };
 
 /**
@@ -102,16 +108,19 @@ const uint8_t _sampleDeviceCredentialsResponse[] =
  */
 AwsIotOnboardingGetDeviceCredentialsResponse_t _expectedDeviceCredentialsParsedParams =
 {
-    .statusCode                                 = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
-    .u.acceptedResponse.pDeviceCertificate      = ( const char * )
-                                                  &_sampleDeviceCredentialsResponse[ 17 ],
-    .u.acceptedResponse.deviceCertificateLength = 7,
-    .u.acceptedResponse.pCertificateId          = ( const char * )
-                                                  &_sampleDeviceCredentialsResponse[ 39 ],
-    .u.acceptedResponse.certificateIdLength     = 6,
-    .u.acceptedResponse.pPrivateKey             = ( const char * )
-                                                  &_sampleDeviceCredentialsResponse[ 57 ],
-    .u.acceptedResponse.privateKeyLength        = 7
+    .statusCode                                    = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
+    .u.acceptedResponse.pDeviceCertificate         = ( const char * )
+                                                     &_sampleAcceptedDeviceCredentialsResponse[ 17 ],
+    .u.acceptedResponse.deviceCertificateLength    = 7,
+    .u.acceptedResponse.pCertificateId             = ( const char * )
+                                                     &_sampleAcceptedDeviceCredentialsResponse[ 39 ],
+    .u.acceptedResponse.certificateIdLength        = 6,
+    .u.acceptedResponse.pPrivateKey                = ( const char * )
+                                                     &_sampleAcceptedDeviceCredentialsResponse[ 57 ],
+    .u.acceptedResponse.privateKeyLength           = 7,
+    .u.acceptedResponse.pCertificateOwnershipToken = ( const char * )
+                                                     &_sampleAcceptedDeviceCredentialsResponse[ 92 ],
+    .u.acceptedResponse.ownershipTokenLength       = 6,
 };
 
 /*-----------------------------------------------------------*/
@@ -123,7 +132,6 @@ AwsIotOnboardingGetDeviceCredentialsResponse_t _expectedDeviceCredentialsParsedP
 static void _verifyParsedRejectedResponse( const AwsIotOnboardingRejectedResponse_t * pExpectedData,
                                            const AwsIotOnboardingRejectedResponse_t * pParsedData );
 
-
 /**
  * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
  * response. It will be passed as context parameter in callback parameter passed in tests.
@@ -132,11 +140,18 @@ static void _testGetDeviceCredentialsRejectedCallback( void * contextParam,
                                                        const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo );
 
 /**
- * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
- * response. It will be passed as context parameter in callback parameter passed in tests.
+ * @brief Test user-callback to set expectations on parsing of #_sampleAcceptedDeviceCredentialsResponse as rejected
+ * server response. It will be passed as context parameter in callback parameter passed in tests.
  */
 static void _testGetDeviceCredentialsAcceptedCallback( void * contextParam,
                                                        const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo );
+
+/**
+ * @brief Callback for the device credentials parser that fails on being invoked. This is meant to be used for tests
+ * that DO NOT expect the callback to be invoked!
+ */
+static void _deviceCredentialsCallbackThatFailsOnInvokation( void * contextParam,
+                                                             const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo );
 
 /**
  * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
@@ -200,8 +215,22 @@ static void _testGetDeviceCredentialsAcceptedCallback( void * contextParam,
                              pResponseInfo->u.acceptedResponse.privateKeyLength );
     AwsIotOnboarding_Assert( pExpectedParams->u.acceptedResponse.pPrivateKey ==
                              pResponseInfo->u.acceptedResponse.pPrivateKey );
+    AwsIotOnboarding_Assert( pExpectedParams->u.acceptedResponse.ownershipTokenLength ==
+                             pResponseInfo->u.acceptedResponse.ownershipTokenLength );
+    AwsIotOnboarding_Assert( pExpectedParams->u.acceptedResponse.pCertificateOwnershipToken ==
+                             pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken );
 }
 
+/*-----------------------------------------------------------*/
+
+static void _deviceCredentialsCallbackThatFailsOnInvokation( void * contextParam,
+                                                             const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
+{
+    ( void ) contextParam;
+    ( void ) pResponseInfo;
+
+    AwsIotOnboarding_Assert( false );
+}
 
 /*-----------------------------------------------------------*/
 
@@ -258,13 +287,14 @@ TEST_GROUP_RUNNER( Onboarding_Unit_Parser )
 {
     RUN_TEST_CASE( Onboarding_Unit_Parser, TestParseDeviceCredentialsRejectedResponse );
     RUN_TEST_CASE( Onboarding_Unit_Parser, TestParseDeviceCredentialsAcceptedResponse );
+    RUN_TEST_CASE( Onboarding_Unit_Parser, TestParseDeviceCredentialsResponseWithMissingEntries );
     RUN_TEST_CASE( Onboarding_Unit_Parser, TestParseOnboardDeviceRejectedResponse );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Verifies the parser function behavior (_AwsIotOnboarding_ParseDeviceCredentialsResponse) when the
+ * @brief Verifies the parser function behavior @ref _AwsIotOnboarding_ParseDeviceCredentialsResponse when the
  * GetDeviceCredentials service API responds with a rejected payload.
  */
 TEST( Onboarding_Unit_Parser, TestParseDeviceCredentialsRejectedResponse )
@@ -281,7 +311,7 @@ TEST( Onboarding_Unit_Parser, TestParseDeviceCredentialsRejectedResponse )
 }
 
 /**
- * @brief Verifies the parser function (_AwsIotOnboarding_ParseDeviceCredentialsResponse) can parse the device
+ * @brief Verifies the parser function @ref _AwsIotOnboarding_ParseDeviceCredentialsResponse can parse the device
  * credentials response sent by the server.
  */
 TEST( Onboarding_Unit_Parser, TestParseDeviceCredentialsAcceptedResponse )
@@ -292,10 +322,88 @@ TEST( Onboarding_Unit_Parser, TestParseDeviceCredentialsAcceptedResponse )
     wrapperCallback.getDeviceCredentialsCallback.function = _testGetDeviceCredentialsAcceptedCallback;
 
     TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS, _AwsIotOnboarding_ParseDeviceCredentialsResponse( AWS_IOT_ACCEPTED,
-                                                                                                     _sampleDeviceCredentialsResponse,
-                                                                                                     sizeof( _sampleDeviceCredentialsResponse ),
+                                                                                                     _sampleAcceptedDeviceCredentialsResponse,
+                                                                                                     sizeof( _sampleAcceptedDeviceCredentialsResponse ),
                                                                                                      &wrapperCallback ) );
 }
+
+/**
+ * @brief Verifies that the parser function @ref _AwsIotOnboarding_ParseDeviceCredentialsResponse does not call the
+ * user-callback when the response payload has missing entries from the expected set of response data.
+ */
+TEST( Onboarding_Unit_Parser, TestParseDeviceCredentialsResponseWithMissingEntries )
+{
+    _onboardingCallbackInfo_t wrapperCallback;
+
+    wrapperCallback.getDeviceCredentialsCallback.userParam = NULL;
+    wrapperCallback.getDeviceCredentialsCallback.function = _testGetDeviceCredentialsAcceptedCallback;
+
+    /*************** Response payload only with private key ********************/
+    const uint8_t payloadWithOnlyPrivateKey[] =
+    {
+        0xA2,                                                       /* # map( 1 ) */
+        0x6A,                                                       /* # text( 10 ) */
+        0x70, 0x72, 0x69, 0x76, 0x61, 0x74, 0x65, 0x4B, 0x65, 0x79, /* # "privateKey" */
+        0x4A,                                                       /* # bytes( 10 ) */
+        0x78, 0x9A, 0x78, 0x9A, 0x78, 0x9A, 0x78, 0x9A, 0x78, 0x9A, /* # "x\x9Ax\x9Ax\x9Ax\x9Ax\x9A" */
+    };
+
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_RESPONSE, _AwsIotOnboarding_ParseDeviceCredentialsResponse( AWS_IOT_ACCEPTED,
+                                                                                                          payloadWithOnlyPrivateKey,
+                                                                                                          sizeof( payloadWithOnlyPrivateKey ),
+                                                                                                          &wrapperCallback ) );
+
+    /*************** Response payload only with certificate Pem entry********************/
+    const uint8_t payloadWithOnlyCertificatePem[] =
+    {
+        0xA1,                                                                               /* # map( 1 ) */
+        0x6E,                                                                               /* # text( 14 ) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
+        0x67,                                                                               /* # text(7) */
+        0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,                                           /* # "abcdefg" */
+    };
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_RESPONSE, _AwsIotOnboarding_ParseDeviceCredentialsResponse( AWS_IOT_ACCEPTED,
+                                                                                                          payloadWithOnlyCertificatePem,
+                                                                                                          sizeof( payloadWithOnlyCertificatePem ),
+                                                                                                          &wrapperCallback ) );
+
+    /*************** Response payload only with certificate ID entry********************/
+    const uint8_t payloadWithOnlyCertificateId[] =
+    {
+        0xA1,                                                                         /* # map( 1 ) */
+        0x6D,                                                                         /* # text(13) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64, /* # "certificateId" */
+        0x66,                                                                         /* # text(6) */
+        0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                           /* # "hijklm" */
+    };
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_RESPONSE, _AwsIotOnboarding_ParseDeviceCredentialsResponse( AWS_IOT_ACCEPTED,
+                                                                                                          payloadWithOnlyCertificateId,
+                                                                                                          sizeof( payloadWithOnlyCertificateId ),
+                                                                                                          &wrapperCallback ) );
+
+    /*************** Response payload only with ownership token entry********************/
+    const uint8_t payloadWithOnlyToken[] =
+    {
+        0xA1,                                                             /* # map( 1 ) */
+        0x78, 0x19,                                                       /*# text(25) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E, /*# "certificateOwnershipToken"
+                                                                           * */
+        0x66,                                                             /*# text(6) */
+        0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                /*# "Token!" */
+    };
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_BAD_RESPONSE, _AwsIotOnboarding_ParseDeviceCredentialsResponse( AWS_IOT_ACCEPTED,
+                                                                                                          payloadWithOnlyToken,
+                                                                                                          sizeof( payloadWithOnlyToken ),
+                                                                                                          &wrapperCallback ) );
+}
+
 
 /**
  * @brief Verifies the parser function behavior (_AwsIotOnboarding_ParseOnboardDeviceResponse) when the
