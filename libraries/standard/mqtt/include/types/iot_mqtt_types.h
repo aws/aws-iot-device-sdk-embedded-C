@@ -321,7 +321,8 @@ typedef enum IotMqttDisconnectReason
 {
     IOT_MQTT_DISCONNECT_CALLED,   /**< @ref mqtt_function_disconnect was invoked. */
     IOT_MQTT_BAD_PACKET_RECEIVED, /**< An invalid packet was received from the network. */
-    IOT_MQTT_KEEP_ALIVE_TIMEOUT   /**< Keep-alive response was not received within @ref IOT_MQTT_RESPONSE_WAIT_MS. */
+    IOT_MQTT_KEEP_ALIVE_TIMEOUT,  /**< Keep-alive response was not received within @ref IOT_MQTT_RESPONSE_WAIT_MS. */
+    IOT_MQTT_NETWORK_DISCONNECT   /**< The network connection was closed by the server or failed. */
 } IotMqttDisconnectReason_t;
 
 /*------------------------- MQTT parameter structs --------------------------*/

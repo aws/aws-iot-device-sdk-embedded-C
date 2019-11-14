@@ -1165,6 +1165,22 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         EMPTY_ELSE_MARKER;
     }
 
+    /* Set the MQTT close callback. */
+    networkStatus = pNewMqttConnection->pNetworkInterface->setCloseCallback( pNetworkConnection,
+                                                                             IotMqtt_CloseCallback,
+                                                                             pNewMqttConnection );
+
+    if( networkStatus != IOT_NETWORK_SUCCESS )
+    {
+        IotLogError( "Failed to set MQTT network close callback." );
+
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NETWORK_ERROR );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+
     /* Create a CONNECT operation. */
     status = _IotMqtt_CreateOperation( pNewMqttConnection,
                                        IOT_MQTT_FLAG_WAITABLE,
