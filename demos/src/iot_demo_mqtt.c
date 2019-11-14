@@ -399,6 +399,7 @@ static int _establishMqttConnection( bool awsIotMqttMode,
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttPublishInfo_t willInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
     char pClientIdentifierBuffer[ CLIENT_IDENTIFIER_MAX_LENGTH ] = { 0 };
+    IotNetworkCredentials_t pCredentials = ( IotNetworkCredentials_t )pNetworkCredentialInfo;
 
     /* Set the members of the network info not set by the initializer. This
      * struct provided information on the transport layer to the MQTT connection. */
@@ -416,6 +417,10 @@ static int _establishMqttConnection( bool awsIotMqttMode,
     connectInfo.cleanSession = true;
     connectInfo.keepAliveSeconds = KEEP_ALIVE_SECONDS;
     connectInfo.pWillInfo = &willInfo;
+    connectInfo.pUserName = pCredentials->pUserName;
+    connectInfo.userNameLength = pCredentials->userNameSize;
+    connectInfo.pPassword = pCredentials->pPassword;
+    connectInfo.passwordLength = pCredentials->passwordSize;
 
     /* Set the members of the Last Will and Testament (LWT) message info. The
      * MQTT server will publish the LWT message if this client disconnects
