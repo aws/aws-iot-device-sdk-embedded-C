@@ -152,7 +152,7 @@ static void _flushPacket( void * pNetworkConnection,
                                    _getMqttFreePacketFunc,
                                    _IotMqtt_FreePacket,
                                    freePacket )
-#else  /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+#else /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
     #define _getPacketTypeFunc( pSerializer )          _IotMqtt_GetPacketType
     #define _getRemainingLengthFunc( pSerializer )     _IotMqtt_GetRemainingLength
     #define _getConnackDeserializer( pSerializer )     _IotMqtt_DeserializeConnack
@@ -840,6 +840,19 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
     {
         EMPTY_ELSE_MARKER;
     }
+}
+
+/*-----------------------------------------------------------*/
+
+void IotMqtt_CloseCallback( IotNetworkConnection_t pNetworkConnection,
+                            IotNetworkCloseReason_t reason,
+                            void * pCloseContext )
+{
+    /* Cast context to correct type. */
+    _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pCloseContext;
+
+    _IotMqtt_CloseNetworkConnection( IOT_MQTT_NETWORK_DISCONNECT,
+                                     pMqttConnection );
 }
 
 /*-----------------------------------------------------------*/
