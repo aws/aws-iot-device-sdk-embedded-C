@@ -127,7 +127,8 @@ aws iot delete-thing \
 
 # Delete any inactive certificate that may have been created by the integration tests.
 aws iot list-certificates \
-    --endpoint https://gamma.us-east-1.iot.amazonaws.com | \
+    --endpoint https://gamma.us-east-1.iot.amazonaws.com \
+    --region $AWS_PROVISIONING_REGION | \
         jq -c '.certificates[] | select(.status | contains("INACTIVE")) | .certificateArn' | \
             tr -d \" | \
                 while read -r cert_arn 
@@ -135,6 +136,7 @@ aws iot list-certificates \
                      CERTIFICATE_ID=$(echo $cert_arn | cut -d '/' -f2)
                     aws iot delete-certificate \
                         --endpoint https://gamma.us-east-1.iot.amazonaws.com \
+                        --region $AWS_PROVISIONING_REGION \
                         --certificate-id $CERTIFICATE_ID \
                         --force-delete 
                 done
