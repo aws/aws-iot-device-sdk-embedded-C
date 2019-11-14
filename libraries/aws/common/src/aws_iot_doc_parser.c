@@ -1,5 +1,5 @@
 /*
- * IoT Serializer V1.1.0
+ * AWS IoT Common V1.0.0
  * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -21,8 +21,8 @@
  */
 
 /**
- * @file iot_json_utils.c
- * @brief Implements the functions in iot_json_utils.h
+ * @file aws_iot_doc_parser.c
+ * @brief Implements the functions in aws_iot_doc_parser.h
  */
 
 /* The config header is always included first. */
@@ -32,30 +32,31 @@
 #include <string.h>
 
 /* JSON utilities include. */
-#include "iot_json_utils.h"
+#include "aws_iot_doc_parser.h"
 
 #define IS_QUOTE( str, idx ) \
-    ( str[ idx ] == '"' && ( idx == 0 || str[ idx - 1 ] != '\\' ) )
+    ( ( str )[ ( idx ) ] == '"' && ( ( idx ) == 0 || ( str )[ ( idx ) - 1 ] != '\\' ) )
 #define IS_WHITESPACE( str, idx ) \
-    ( str[ idx ] == ' ' || str[ idx ] == '\n' || str[ idx ] == '\r' || str[ idx ] == '\t' )
+    ( ( str )[ ( idx ) ] == ' ' || ( str )[ ( idx ) ] == '\n' || ( str )[ ( idx ) ] == '\r' || ( str )[ ( idx ) ] == '\t' )
 
 /*-----------------------------------------------------------*/
 
-bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
-                                 size_t jsonDocumentLength,
-                                 const char * pJsonKey,
-                                 size_t jsonKeyLength,
-                                 const char ** pJsonValue,
-                                 size_t * pJsonValueLength )
+bool AwsIotDocParser_FindValue( const char * pAwsIotJsonDocument,
+                                size_t awsIotJsonDocumentLength,
+                                const char * pAwsIotJsonKey,
+                                size_t awsIotJsonKeyLength,
+                                const char ** pAwsIotJsonValue,
+                                size_t * pAwsIotJsonValueLength )
 {
     size_t i = 0;
     size_t jsonValueLength = 0;
     char openCharacter = '\0', closeCharacter = '\0';
     int nestingLevel = 0;
+    bool isWithinQuotes = false;
 
-    /* Validate all the arguements.*/
-    if( ( pJsonDocument == NULL ) || ( pJsonKey == NULL ) ||
-        ( jsonDocumentLength == 0 ) || ( jsonKeyLength == 0 ) )
+    /* Validate all the arguments.*/
+    if( ( pAwsIotJsonDocument == NULL ) || ( pAwsIotJsonKey == NULL ) ||
+        ( awsIotJsonDocumentLength == 0 ) || ( awsIotJsonKeyLength == 0 ) )
     {
         return false;
     }
@@ -63,7 +64,7 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
     /* Ensure the JSON document is long enough to contain the key/value pair. At
      * the very least, a JSON key/value pair must contain the key and the 6
      * characters {":""} */
-    if( jsonDocumentLength < jsonKeyLength + 6 )
+    if( awsIotJsonDocumentLength < awsIotJsonKeyLength + 6 )
     {
         return false;
     }
@@ -71,30 +72,30 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
     /* Search the characters in the JSON document for the key. The end of the JSON
      * document does not have to be searched once too few characters remain to hold a
      * value. */
-    while( i < jsonDocumentLength - jsonKeyLength - 3 )
+    while( i < awsIotJsonDocumentLength - awsIotJsonKeyLength - 3 )
     {
         /* If the first character in the key is found and there's an unescaped double
          * quote after the key length, do a string compare for the key. */
-        if( ( IS_QUOTE( pJsonDocument, i ) ) &&
-            ( IS_QUOTE( pJsonDocument, i + 1 + jsonKeyLength ) ) &&
-            ( pJsonDocument[ i + 1 ] == pJsonKey[ 0 ] ) &&
-            ( strncmp( pJsonDocument + i + 1,
-                       pJsonKey,
-                       jsonKeyLength ) == 0 ) )
+        if( ( IS_QUOTE( pAwsIotJsonDocument, i ) ) &&
+            ( IS_QUOTE( pAwsIotJsonDocument, i + 1 + awsIotJsonKeyLength ) ) &&
+            ( pAwsIotJsonDocument[ i + 1 ] == pAwsIotJsonKey[ 0 ] ) &&
+            ( strncmp( pAwsIotJsonDocument + i + 1,
+                       pAwsIotJsonKey,
+                       awsIotJsonKeyLength ) == 0 ) )
         {
             /* Key found; this is a potential match. */
 
             /* Skip the characters in the JSON key and closing double quote. */
-            /* While loop guarantees that i < jsonDocumentLength - 1 */
-            i += jsonKeyLength + 2;
+            /* While loop guarantees that i < awsIotJsonDocumentLength - 1 */
+            i += awsIotJsonKeyLength + 2;
 
             /* Skip all whitespace characters between the closing " and the : */
-            while( IS_WHITESPACE( pJsonDocument, i ) )
+            while( IS_WHITESPACE( pAwsIotJsonDocument, i ) )
             {
                 i++;
 
                 /* If the end of the document is reached, this isn't a match. */
-                if( i >= jsonDocumentLength )
+                if( i >= awsIotJsonDocumentLength )
                 {
                     return false;
                 }
@@ -102,7 +103,7 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
 
             /* The character immediately following a key (and any whitespace) must be a :
              * If it's another character, then this string is a JSON value; skip it. */
-            if( pJsonDocument[ i ] != ':' )
+            if( pAwsIotJsonDocument[ i ] != ':' )
             {
                 continue;
             }
@@ -113,31 +114,31 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
             }
 
             /* If the end of the document is reached, this isn't a match. */
-            if( i >= jsonDocumentLength )
+            if( i >= awsIotJsonDocumentLength )
             {
                 return false;
             }
 
             /* Skip all whitespace characters between : and the first character in the value. */
-            while( IS_WHITESPACE( pJsonDocument, i ) )
+            while( IS_WHITESPACE( pAwsIotJsonDocument, i ) )
             {
                 i++;
 
                 /* If the end of the document is reached, this isn't a match. */
-                if( i >= jsonDocumentLength )
+                if( i >= awsIotJsonDocumentLength )
                 {
                     return false;
                 }
             }
 
             /* Value found. Set the output parameter. */
-            if( pJsonValue != NULL )
+            if( pAwsIotJsonValue != NULL )
             {
-                *pJsonValue = pJsonDocument + i;
+                *pAwsIotJsonValue = pAwsIotJsonDocument + i;
             }
 
             /* Calculate the value's length. */
-            switch( pJsonDocument[ i ] )
+            switch( pAwsIotJsonDocument[ i ] )
             {
                 /* Calculate length of a JSON string. */
                 case '\"':
@@ -148,18 +149,18 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
                     i++;
 
                     /* If the end of the document is reached, this isn't a match. */
-                    if( i >= jsonDocumentLength )
+                    if( i >= awsIotJsonDocumentLength )
                     {
                         return false;
                     }
 
                     /* Add the length of all characters in the JSON string. */
-                    while( pJsonDocument[ i ] != '\"' )
+                    while( pAwsIotJsonDocument[ i ] != '\"' )
                     {
                         /* Ignore escaped double quotes. */
-                        if( ( pJsonDocument[ i ] == '\\' ) &&
-                            ( i + 1 < jsonDocumentLength ) &&
-                            ( pJsonDocument[ i + 1 ] == '\"' ) )
+                        if( ( pAwsIotJsonDocument[ i ] == '\\' ) &&
+                            ( i + 1 < awsIotJsonDocumentLength ) &&
+                            ( pAwsIotJsonDocument[ i + 1 ] == '\"' ) )
                         {
                             /* Skip the characters \" */
                             i += 2;
@@ -173,7 +174,7 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
                         }
 
                         /* If the end of the document is reached, this isn't a match. */
-                        if( i >= jsonDocumentLength )
+                        if( i >= awsIotJsonDocumentLength )
                         {
                             return false;
                         }
@@ -197,11 +198,11 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
                 default:
 
                     /* Skip the characters in the JSON value. The JSON value ends with a , or } */
-                    while( pJsonDocument[ i ] != ',' &&
-                           pJsonDocument[ i ] != '}' )
+                    while( pAwsIotJsonDocument[ i ] != ',' &&
+                           pAwsIotJsonDocument[ i ] != '}' )
                     {
                         /* Any whitespace before a , or } means the JSON document is invalid. */
-                        if( IS_WHITESPACE( pJsonDocument, i ) )
+                        if( IS_WHITESPACE( pAwsIotJsonDocument, i ) )
                         {
                             return false;
                         }
@@ -210,7 +211,7 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
                         jsonValueLength++;
 
                         /* If the end of the document is reached, this isn't a match. */
-                        if( i >= jsonDocumentLength )
+                        if( i >= awsIotJsonDocumentLength )
                         {
                             return false;
                         }
@@ -229,32 +230,46 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
                 i++;
 
                 /* If the end of the document is reached, this isn't a match. */
-                if( i >= jsonDocumentLength )
+                if( i >= awsIotJsonDocumentLength )
                 {
                     return false;
                 }
 
                 /* Add the length of all characters in the JSON object or array. This
                  * includes the length of nested objects. */
-                while( pJsonDocument[ i ] != closeCharacter ||
-                       ( pJsonDocument[ i ] == closeCharacter && nestingLevel != 0 ) )
+                while( pAwsIotJsonDocument[ i ] != closeCharacter ||
+                       ( pAwsIotJsonDocument[ i ] == closeCharacter && ( nestingLevel != 0 || isWithinQuotes ) ) )
                 {
-                    /* An opening character starts a nested object. */
-                    if( pJsonDocument[ i ] == openCharacter )
+                    /* Check if its a quote so as to avoid considering the
+                     * nested levels for opening and closing characters within
+                     * quotes.
+                     */
+                    if( IS_QUOTE( pAwsIotJsonDocument, i ) )
                     {
-                        nestingLevel++;
+                        /*Toggle the flag*/
+                        isWithinQuotes = !isWithinQuotes;
                     }
-                    /* A closing character ends a nested object. */
-                    else if( pJsonDocument[ i ] == closeCharacter )
+
+                    /* Calculate the nesting levels only if not in quotes. */
+                    if( !isWithinQuotes )
                     {
-                        nestingLevel--;
+                        /* An opening character starts a nested object. */
+                        if( pAwsIotJsonDocument[ i ] == openCharacter )
+                        {
+                            nestingLevel++;
+                        }
+                        /* A closing character ends a nested object. */
+                        else if( pAwsIotJsonDocument[ i ] == closeCharacter )
+                        {
+                            nestingLevel--;
+                        }
                     }
 
                     i++;
                     jsonValueLength++;
 
                     /* If the end of the document is reached, this isn't a match. */
-                    if( i >= jsonDocumentLength )
+                    if( i >= awsIotJsonDocumentLength )
                     {
                         return false;
                     }
@@ -262,9 +277,9 @@ bool IotJsonUtils_FindJsonValue( const char * pJsonDocument,
             }
 
             /* JSON value length calculated; set the output parameter. */
-            if( pJsonValueLength != NULL )
+            if( pAwsIotJsonValueLength != NULL )
             {
-                *pJsonValueLength = jsonValueLength;
+                *pAwsIotJsonValueLength = jsonValueLength;
             }
 
             return true;
