@@ -321,7 +321,7 @@ typedef struct _mqttOperation
     /* Pointers to neighboring queue elements. */
     IotLink_t link;                           /**< @brief List link member. */
 
-    bool incomingPublish;                     /**< @brief Set to true if this operation an incoming PUBLISH. */
+    bool incomingPublish;                     /**< @brief Set to true if this operation is an incoming PUBLISH. */
     struct _mqttConnection * pMqttConnection; /**< @brief MQTT connection associated with this operation. */
 
     IotTaskPoolJobStorage_t jobStorage;       /**< @brief Task pool job storage associated with this operation. */
@@ -552,6 +552,24 @@ uint8_t _IotMqtt_GetPacketType( void * pNetworkConnection,
  */
 size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
                                     const IotNetworkInterface_t * pNetworkInterface );
+
+/**
+ * @brief Get the remaining length from a stream of bytes off the network.
+ *
+ * @param[in] pNetworkConnection Reference to the network connection.
+ * @param[in] getNextByte Function pointer used to interact with the
+ * network to get next byte.
+ *
+ * @return The remaining length; #MQTT_REMAINING_LENGTH_INVALID on error.
+ *
+ * @note This function is similar to _IotMqtt_GetRemainingLength() but it uses
+ * user provided getNextByte function to parse the stream instead of using
+ * _IotMqtt_GetNextByte(). pNetworkConnection is impelementation dependent and
+ * user provided function makes use of it.
+ *
+ */
+size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnection,
+                                            IotMqttGetNextByte_t getNextByte );
 
 /**
  * @brief Generate a CONNECT packet from the given parameters.
