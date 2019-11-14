@@ -163,6 +163,22 @@ static IotMqttNetworkInfo_t _networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 static IotNetworkInterface_t _networkInterface = { 0 };
 
 /*-----------------------------------------------------------*/
+/**
+ * @brief A function for setting the close callback that just returns success.
+ */
+static IotNetworkError_t _setCloseCallback( IotNetworkConnection_t pConnection,
+                                            IotNetworkCloseCallback_t closeCallback,
+                                            void * pReceiveContext )
+{
+    /* Silence warnings about unused parameters. */
+    ( void ) pConnection;
+    ( void ) closeCallback;
+    ( void ) pReceiveContext;
+
+    return IOT_NETWORK_SUCCESS;
+}
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief A thread routine that simulates an incoming PINGRESP.
@@ -531,6 +547,7 @@ TEST_SETUP( MQTT_Unit_API )
     ( void ) memset( &_networkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
     ( void ) memset( &_networkInterface, 0x00, sizeof( IotNetworkInterface_t ) );
     _networkInterface.setReceiveCallback = _setReceiveCallback;
+    _networkInterface.setCloseCallback = _setCloseCallback;
     _networkInfo.pNetworkInterface = &_networkInterface;
 
     /* Reset the counters. */

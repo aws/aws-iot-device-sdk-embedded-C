@@ -209,6 +209,7 @@ static const IotNetworkInterface_t _networkMbedtls =
 {
     .create             = IotNetworkMbedtls_Create,
     .setReceiveCallback = IotNetworkMbedtls_SetReceiveCallback,
+    .setCloseCallback   = IotNetworkMbedtls_SetCloseCallback,
     .send               = IotNetworkMbedtls_Send,
     .receive            = IotNetworkMbedtls_Receive,
     .close              = IotNetworkMbedtls_Close,

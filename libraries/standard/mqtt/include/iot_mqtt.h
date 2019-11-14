@@ -134,8 +134,7 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
  *
  * @param[in] pNetworkConnection The network connection associated with the MQTT
  * connection, passed by the network stack.
- * @param[in] pNetworkConnection The network connection associated with the MQTT
- * connection, passed by the network stack.
+ * @param[in] reason The reason the network connection was closed.
  * @param[in] pCloseContext A pointer to the MQTT connection handle on which the
  * network connection has closed.
  */

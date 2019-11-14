@@ -848,6 +848,10 @@ void IotMqtt_CloseCallback( IotNetworkConnection_t pNetworkConnection,
                             IotNetworkCloseReason_t reason,
                             void * pCloseContext )
 {
+    /* Eliminate compiler warning for unused parameters */
+    ( void ) reason;
+    ( void ) pNetworkConnection;
+
     /* Cast context to correct type. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pCloseContext;
 
