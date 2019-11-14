@@ -306,20 +306,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
                                                          &subscriptionInfo );
 
         /* Convert MQTT return code to Shadow return code. */
-        switch( subscriptionStatus )
-        {
-            case IOT_MQTT_SUCCESS:
-                status = AWS_IOT_SHADOW_SUCCESS;
-                break;
-
-            case IOT_MQTT_NO_MEMORY:
-                status = AWS_IOT_SHADOW_NO_MEMORY;
-                break;
-
-            default:
-                status = AWS_IOT_SHADOW_MQTT_ERROR;
-                break;
-        }
+        status = SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( subscriptionStatus );
 
         if( status != AWS_IOT_SHADOW_SUCCESS )
         {
@@ -488,20 +475,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
                                                                     &subscriptionInfo );
 
                     /* Convert MQTT return code to Shadow return code. */
-                    switch( unsubscribeStatus )
-                    {
-                        case IOT_MQTT_SUCCESS:
-                            status = AWS_IOT_SHADOW_SUCCESS;
-                            break;
-
-                        case IOT_MQTT_NO_MEMORY:
-                            status = AWS_IOT_SHADOW_NO_MEMORY;
-                            break;
-
-                        default:
-                            status = AWS_IOT_SHADOW_MQTT_ERROR;
-                            break;
-                    }
+                    status = SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( unsubscribeStatus );
 
                     if( status != AWS_IOT_SHADOW_SUCCESS )
                     {
