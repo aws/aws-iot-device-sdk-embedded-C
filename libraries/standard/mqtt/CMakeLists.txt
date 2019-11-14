@@ -13,6 +13,7 @@ add_library( iotmqtt
              ${CONFIG_HEADER_PATH}/iot_config.h
              ${MQTT_SOURCES}
              include/iot_mqtt.h
+             include/iot_mqtt_serialize.h
              include/types/iot_mqtt_types.h
              src/private/iot_mqtt_internal.h )
 
