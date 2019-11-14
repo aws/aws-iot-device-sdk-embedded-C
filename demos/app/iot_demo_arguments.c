@@ -87,16 +87,6 @@ static void _setDefaultArguments( IotDemoArguments_t * pArguments )
     #ifdef IOT_DEMO_PRIVATE_KEY
         pArguments->pPrivateKeyPath = IOT_DEMO_PRIVATE_KEY;
     #endif
-
-    /* Set default MQTT broker username if defined. */
-    #ifdef IOT_DEMO_USER_NAME
-        pArguments->pUserName = IOT_DEMO_USER_NAME;
-    #endif
-
-    /* Set default MQTT broker password if defined. */
-    #ifdef IOT_DEMO_PASSWORD
-        pArguments->pUserName = IOT_DEMO_PASSWORD;
-    #endif
 }
 
 /*-----------------------------------------------------------*/
@@ -143,30 +133,22 @@ static bool _validateArguments( const IotDemoArguments_t * pArguments )
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
 
-        /* There must either be a set of X.509 credentials or a 
-        username/password. First check for username/password.*/
-        if( ( pArguments->pUserName == NULL ) ||
-            ( strlen( pArguments->pUserName ) == 0 ) ||
-            ( pArguments->pPassword == NULL ) ||
-            ( strlen( pArguments->pPassword ) == 0 ) )
+        /* Check that a client certificate path was set. */
+        if( ( pArguments->pClientCertPath == NULL ) ||
+            ( strlen( pArguments->pClientCertPath ) == 0 ) )
         {
-            /* Check that a client certificate path was set. */
-            if( ( pArguments->pClientCertPath == NULL ) ||
-                ( strlen( pArguments->pClientCertPath ) == 0 ) )
-            {
-                IotLogError( "Client certificate path not set. Exiting." );
+            IotLogError( "Client certificate path not set. Exiting." );
 
-                IOT_SET_AND_GOTO_CLEANUP( false );
-            }
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
 
-            /* Check that a client certificate private key was set. */
-            if( ( pArguments->pPrivateKeyPath == NULL ) ||
-                ( strlen( pArguments->pPrivateKeyPath ) == 0 ) )
-            {
-                IotLogError( "Client certificate private key not set. Exiting." );
+        /* Check that a client certificate private key was set. */
+        if( ( pArguments->pPrivateKeyPath == NULL ) ||
+            ( strlen( pArguments->pPrivateKeyPath ) == 0 ) )
+        {
+            IotLogError( "Client certificate private key not set. Exiting." );
 
-                IOT_SET_AND_GOTO_CLEANUP( false );
-            }
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
     }
     else
@@ -221,39 +203,25 @@ bool IotDemo_ParseArguments( int argc,
 
         switch( pOption[ 1 ] )
         {
-            /* Client certificate path. */
-            case 'c':
-                i++;
-                pArguments->pClientCertPath = argv[ i ];
+            /* Secured connection. */
+            case 's':
+                pArguments->securedConnection = true;
+                break;
+
+            /* Unsecured connection. */
+            case 'u':
+                pArguments->securedConnection = false;
+                break;
+
+            /* MQTT server is not AWS. */
+            case 'n':
+                pArguments->awsIotMqttMode = false;
                 break;
 
             /* Server. */
             case 'h':
                 i++;
                 pArguments->pHostName = argv[ i ];
-                break;
-
-            /* Client identifier or Thing Name. */
-            case 'i':
-                i++;
-                pArguments->pIdentifier = argv[ i ];
-                break;
-
-            /* Client certificate private key path. */
-            case 'k':
-                i++;
-                pArguments->pPrivateKeyPath = argv[ i ];
-                break;
-
-            /* Username for MQTT. */
-            case 'm':
-                i++;
-                pArguments->pUserName = argv[ i ];
-                break;
-
-            /* MQTT server is not AWS. */
-            case 'n':
-                pArguments->awsIotMqttMode = false;
                 break;
 
             /* Server port. */
@@ -281,20 +249,22 @@ bool IotDemo_ParseArguments( int argc,
                 pArguments->pRootCaPath = argv[ i ];
                 break;
 
-            /* Secured connection. */
-            case 's':
-                pArguments->securedConnection = true;
-                break;
-
-            /* Unsecured connection. */
-            case 'u':
-                pArguments->securedConnection = false;
-                break;
-
-            /* Password for MQTT. */
-            case 'w':
+            /* Client certificate path. */
+            case 'c':
                 i++;
-                pArguments->pPassword = argv[ i ];
+                pArguments->pClientCertPath = argv[ i ];
+                break;
+
+            /* Client certificate private key path. */
+            case 'k':
+                i++;
+                pArguments->pPrivateKeyPath = argv[ i ];
+                break;
+
+            /* Client identifier or Thing Name. */
+            case 'i':
+                i++;
+                pArguments->pIdentifier = argv[ i ];
                 break;
 
             default:
