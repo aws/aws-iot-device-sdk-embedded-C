@@ -356,6 +356,10 @@ struct IotNetworkCredentials
     size_t clientCertSize;    /**< @brief Size associated with #IotNetworkCredentials.pClientCert. */
     const char * pPrivateKey; /**< @brief String representing the client certificate's private key. */
     size_t privateKeySize;    /**< @brief Size associated with #IotNetworkCredentials.pPrivateKey. */
+    const char * pUserName;   /**< @brief String representing the username for MQTT. */
+    size_t userNameSize;      /**< @brief Size associated with #IotNetworkCredentials.pUserName. */
+    const char * pPassword;   /**< @brief String representing the password for MQTT. */
+    size_t passwordSize;      /**< @brief Size associated with #IotNetworkCredentials.pPassword. */
 };
 
 #endif /* ifndef IOT_NETWORK_H_ */

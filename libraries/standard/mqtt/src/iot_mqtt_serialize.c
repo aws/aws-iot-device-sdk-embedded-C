@@ -692,7 +692,8 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
     }
 
     /* Username and password depend on MQTT mode. */
-    if( pConnectInfo->awsIotMqttMode == true )
+    if( ( pConnectInfo->pUserName == NULL ) && 
+        ( pConnectInfo->awsIotMqttMode == true ) )
     {
         /* Set the username flag for AWS IoT metrics. The AWS IoT MQTT server
          * never uses a password. */
