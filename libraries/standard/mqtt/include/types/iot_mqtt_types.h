@@ -666,7 +666,8 @@ typedef struct IotMqttConnectInfo
     const char * pClientIdentifier;  /**< @brief MQTT client identifier. */
     uint16_t clientIdentifierLength; /**< @brief Length of #IotMqttConnectInfo_t.pClientIdentifier. */
 
-    /* Use these fields if your MQTT broker requires username and password. */
+    /* These credentials are not used by AWS IoT and may be ignored if
+     * awsIotMqttMode is true. */
     const char * pUserName;  /**< @brief Username for MQTT connection. */
     uint16_t userNameLength; /**< @brief Length of #IotMqttConnectInfo_t.pUserName. */
     const char * pPassword;  /**< @brief Password for MQTT connection. */
