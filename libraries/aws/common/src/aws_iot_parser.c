@@ -37,8 +37,8 @@
 /* Error handling include. */
 #include "iot_error.h"
 
-/* JSON utils include. */
-#include "iot_json_utils.h"
+/* AWS Parser include. */
+#include "aws_iot_doc_parser.h"
 
 /**
  * @brief Minimum allowed topic length for an AWS IoT status topic.
@@ -68,12 +68,12 @@ bool AwsIot_GetClientToken( const char * pJsonDocument,
                             size_t * pClientTokenLength )
 {
     /* Extract the client token from the JSON document. */
-    bool status = IotJsonUtils_FindJsonValue( pJsonDocument,
-                                              jsonDocumentLength,
-                                              AWS_IOT_CLIENT_TOKEN_KEY,
-                                              AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
-                                              pClientToken,
-                                              pClientTokenLength );
+    bool status = AwsIotDocParser_FindValue( pJsonDocument,
+                                             jsonDocumentLength,
+                                             AWS_IOT_CLIENT_TOKEN_KEY,
+                                             AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
+                                             pClientToken,
+                                             pClientTokenLength );
 
     if( status == true )
     {

@@ -39,7 +39,7 @@
 #include "iot_error.h"
 
 /* JSON utilities include. */
-#include "iot_json_utils.h"
+#include "aws_iot_doc_parser.h"
 
 /**
  * @brief Minimum length of a Jobs request.
@@ -1003,12 +1003,12 @@ static AwsIotJobsError_t _parseErrorDocument( const char * pErrorDocument,
     size_t codeLength = 0;
 
     /* Find the error code. */
-    if( IotJsonUtils_FindJsonValue( pErrorDocument,
-                                    errorDocumentLength,
-                                    CODE_KEY,
-                                    CODE_KEY_LENGTH,
-                                    &pCode,
-                                    &codeLength ) == false )
+    if( AwsIotDocParser_FindValue( pErrorDocument,
+                                   errorDocumentLength,
+                                   CODE_KEY,
+                                   CODE_KEY_LENGTH,
+                                   &pCode,
+                                   &codeLength ) == false )
     {
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_JOBS_BAD_RESPONSE );
     }
