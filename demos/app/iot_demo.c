@@ -118,17 +118,53 @@ int main( int argc,
     /* For a secured connection, set the members of the credentials. */
     if( demoArguments.securedConnection == true )
     {
-        /* Set credential paths. */
+        /* Set credential information. */
         credentials.pClientCert = demoArguments.pClientCertPath;
         credentials.pPrivateKey = demoArguments.pPrivateKeyPath;
         credentials.pRootCa = demoArguments.pRootCaPath;
+        
+        /* Set the MQTT username, as long as it's not empty or NULL. */
+        if( demoArguments.pUserName != NULL )
+        {
+            credentials.userNameSize = strlen( demoArguments.pUserName );
+            if( credentials.userNameSize > 0 )
+            {
+                credentials.pUserName = demoArguments.pUserName;
+            }
+            else
+            {
+                credentials.pUserName = NULL;
+            }
+        }
+
+        /* Set the MQTT password, as long as it's not empty or NULL. */
+        if( demoArguments.pPassword != NULL )
+        {
+            credentials.passwordSize = strlen( demoArguments.pPassword );
+            if( credentials.passwordSize > 0 )
+            {
+                credentials.pPassword = demoArguments.pPassword;
+            }
+            else
+            {
+                credentials.pPassword = NULL;
+            }
+        }
 
         /* By default, the credential initializer enables ALPN with AWS IoT,
-         * which only works over port 443. Disable ALPN if another port is
+         * which only works over port 443. Clear that value if another port is
          * used. */
         if( demoArguments.port != 443 )
         {
             credentials.pAlpnProtos = NULL;
+        }
+
+        /* Per IANA standard:
+         * https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml. */
+        if( ( demoArguments.pUserName != NULL ) && 
+            ( demoArguments.awsIotMqttMode == true ) )
+        {
+            credentials.pAlpnProtos = "mqtt";
         }
 
         /* Set the pointer to the credentials. */

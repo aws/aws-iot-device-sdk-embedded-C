@@ -34,6 +34,8 @@
 #define IOT_DEMO_ROOT_CA               "" /* Command line: -r */
 #define IOT_DEMO_CLIENT_CERT           "" /* Command line: -c */
 #define IOT_DEMO_PRIVATE_KEY           "" /* Command line: -k */
+#define IOT_DEMO_USER_NAME             "" /* Command line: -m */
+#define IOT_DEMO_PASSWORD              "" /* Command line: -w */
 
 /* MQTT client identifier (MQTT demo only) or AWS IoT Thing Name. May be set at
  * runtime with the command line option -i. Identifiers are optional for the
