@@ -409,7 +409,7 @@ TEST_TEAR_DOWN( Onboarding_System )
  */
 TEST_GROUP_RUNNER( Onboarding_System )
 {
-    RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase );
+    /* RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase ); */
     RUN_TEST_CASE( Onboarding_System, OnboardDeviceNominalCase );
 }
 
@@ -477,8 +477,8 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
 
     requestInfo.pDeviceCertificateId = newCertificateContext.pCertificateIdBuffer;
     requestInfo.deviceCertificateIdLength = newCertificateContext.certificateIdLength;
-    requestInfo.pDeviceCertificateId = newCertificateContext.pCertificateOwnershipToken;
-    requestInfo.deviceCertificateIdLength = newCertificateContext.tokenLength;
+    requestInfo.pCertificateOwnershipToken = newCertificateContext.pCertificateOwnershipToken;
+    requestInfo.ownershipTokenLength = newCertificateContext.tokenLength;
     requestInfo.pTemplateName = AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME;
     requestInfo.templateNameLength = ( sizeof( AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME ) - 1 );
     requestInfo.pParametersStart = _pTestParameters;
