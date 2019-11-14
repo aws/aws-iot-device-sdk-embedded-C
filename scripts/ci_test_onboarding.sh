@@ -67,19 +67,7 @@ configure_credentials() {
 
 configure_credentials
 
-# Create unique certificate on the AWS IoT account that can be used as the certificate to provision
-# the system/integration tests with. We will just save the certificate ID to use in the tests.
-CERTIFICATE_ID=$(aws iot create-keys-and-certificate \
-    --endpoint $AWS_CLI_CI_ENDPOINT \
-    --region $AWS_PROVISIONING_REGION \
-    --no-set-as-active | \
-        grep certificateId | \
-            cut -d ':' -f2 | \
-                tr -d , | \
-                    tr -d ' ' | \
-                        tr -d \")
-
-COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\" -DAWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID=\"\\\"$CERTIFICATE_ID\\\"\" -DAWS_IOT_TEST_PROVISIONING_CLIENT_ID=\"\\\"$CLIENT_ID\\\"\""
+COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\" -DAWS_IOT_TEST_PROVISIONING_CLIENT_ID=\"\\\"$CLIENT_ID\\\"\""
 
 # CMake build configuration without static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
@@ -110,18 +98,21 @@ aws iot list-thing-principals \
                     --region $AWS_PROVISIONING_REGION \
                     --thing-name "ThingPrefix_"$CLIENT_ID \
                     --principal $certificate_arn
+
+                CERTIFICATE_ID=$(echo $certificate_arn | cut -d '/' -f2)
+                aws iot update-certificate \
+                    --endpoint $AWS_CLI_CI_ENDPOINT \
+                    --region $AWS_PROVISIONING_REGION \
+                    --certificate-id $CERTIFICATE_ID \
+                    --new-status INACTIVE
+
+                aws iot delete-certificate \
+                    --endpoint $AWS_CLI_CI_ENDPOINT \
+                    --region $AWS_PROVISIONING_REGION \
+                    --certificate-id $CERTIFICATE_ID \
+                    --force-delete
             done
 aws iot delete-thing \
     --endpoint $AWS_CLI_CI_ENDPOINT \
     --region $AWS_PROVISIONING_REGION \
     --thing-name "ThingPrefix_"$CLIENT_ID
-aws iot update-certificate \
-    --endpoint $AWS_CLI_CI_ENDPOINT \
-    --region $AWS_PROVISIONING_REGION \
-    --certificate-id $CERTIFICATE_ID \
-    --new-status INACTIVE
-aws iot delete-certificate \
-    --endpoint $AWS_CLI_CI_ENDPOINT \
-    --region $AWS_PROVISIONING_REGION \
-    --certificate-id $CERTIFICATE_ID \
-    --force-delete
