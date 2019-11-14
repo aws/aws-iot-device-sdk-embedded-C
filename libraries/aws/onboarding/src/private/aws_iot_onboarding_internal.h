@@ -188,8 +188,7 @@
         #ifdef Iot_DefaultMalloc
             #define AwsIotOnboarding_MallocDeviceConfigurationList    Iot_DefaultMalloc
         #else
-            #error "No malloc function defined for "
-            "AwsIotOnboarding_MallocDeviceConfigurationList"
+            #error "No malloc function defined for AwsIotOnboarding_MallocDeviceConfigurationList"
         #endif
     #endif
 
@@ -197,8 +196,7 @@
         #ifdef Iot_DefaultFree
             #define AwsIotOnboarding_FreeDeviceConfigurationList    Iot_DefaultFree
         #else
-            #error "No Free function defined for "
-            "AwsIotOnboarding_FreeDeviceConfigurationList"
+            #error "No Free function defined for AwsIotOnboarding_FreeDeviceConfigurationList"
         #endif
     #endif
 
@@ -222,7 +220,7 @@
  * It should be utilized in the @ref onboarding_function_getdevicecredentials API function.
  */
 #define ONBOARDING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER \
-    "aws/certificates/create/"ONBOARDING_FORMAT
+    "$aws/certificates/create/"ONBOARDING_FORMAT
 
 /**
  * @brief Length of the MQTT response topic filtert for the GetDeviceCredentials service API.
@@ -272,7 +270,7 @@
  * @brief The common path in the request and response MQTT topics of the OnboardDevice service API.
  */
 #define ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX \
-    "aws/provisioning-templates/"
+    "$aws/provisioning-templates/"
 
 /**
  * @brief The length of the common path in the request and response MQTT topics of the OnboardDevice service API.
@@ -281,16 +279,15 @@
     ( ( uint16_t ) ( sizeof( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX ) - 1 ) )
 
 /**
- * @brief The length of the Template ID text in the MQTT topics of the OnboardDevice service API.
- *
- * @note The Template ID follows the UUID (Universally Unique Identifier) format.
+ * @brief The maximum length of the Template name that can be used for provisioning the device.
+ * @note The template name is part of the MQTT topics of the OnboardDevice service API.
  */
-#define ONBOARDING_TEMPLATE_ID_LENGTH                     ( 36 )
+#define ONBOARDING_MAX_TEMPLATE_NAME_LENGTH               ( 36 )
 
 /**
  * @brief The common suffix in the request and response MQTT topics of the OnboardDevice service API.
  */
-#define ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX    "/register/"ONBOARDING_FORMAT
+#define ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX    "/provision/"ONBOARDING_FORMAT
 
 /**
  * @brief The length of the common suffix in the MQTT topics of the OnboardDevice service API.
@@ -302,8 +299,8 @@
 /**
  * @brief The length of the complete MQTT request topic of the OnboardDevice service API.
  */
-#define ONBOARDING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH                                        \
-    ( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + ONBOARDING_TEMPLATE_ID_LENGTH + \
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH                                              \
+    ( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + ONBOARDING_MAX_TEMPLATE_NAME_LENGTH + \
       ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH )
 
 /**
@@ -321,13 +318,13 @@
  * @note This should be used in serializing the request payload for sending to the server, only if the calling
  * application provides valid device context data.
  */
-#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING        "parameters"
+#define ONBOARDING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING        "deviceContext"
 
 /**
  * @brief The length of the MQTT request topic filter of the OnboardDevice service API.
  */
-#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_TOPIC_FILTER_LENGTH                                \
-    ( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + ONBOARDING_TEMPLATE_ID_LENGTH + \
+#define ONBOARDING_ONBOARD_DEVICE_RESPONSE_TOPIC_FILTER_LENGTH                                      \
+    ( ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + ONBOARDING_MAX_TEMPLATE_NAME_LENGTH + \
       ONBOARDING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH )
 
 /**
@@ -461,15 +458,15 @@ extern const IotSerializerDecodeInterface_t * _pAwsIotOnboardingDecoder;
 /**
  * @brief Utility for generating the request/response MQTT topic filter string for the OnboardingDevice service API.
  *
- * @param[in] pTemplateIdentifier The template ID string for inserting in the topic filter string.
- * @param[in] templateIdentifierLength The length of the template ID string.
+ * @param[in] pTemplateName The template ID string for inserting in the topic filter string.
+ * @param[in] templateNameLength The length of the template ID string.
  * @param[out] pTopicFilterBuffer The pre-allocated buffer for storing the generated topic filter.
  * The buffer should have the required minimum size for storing the MQTT topic filter for the OnboardDevice API.
  *
  * @return Returns the size of the generated topic filter.
  */
-size_t _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter( const char * pTemplateIdentifier,
-                                                           size_t templateIdentifierLength,
+size_t _AwsIotOnboarding_GenerateOnboardDeviceTopicFilter( const char * pTemplateName,
+                                                           size_t templateNameLength,
                                                            char * pTopicFilterBuffer );
 
 /**

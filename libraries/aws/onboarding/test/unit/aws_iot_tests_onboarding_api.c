@@ -225,14 +225,14 @@ static const char * _testCertificateId = "TestCertificateID";
 /**
  * @brief The rejected response topic for the OnboardDevice service API.
  */
-static const char * _onboardDeviceAcceptedResponseTopic = "aws/provisioning-templates/"_testTemplateId
-                                                          "/register/cbor/accepted";
+static const char * _onboardDeviceAcceptedResponseTopic = "$aws/provisioning-templates/"_testTemplateId
+                                                          "/provision/cbor/accepted";
 
 /**
  * @brief The accepted response topic for the OnboardDevice service API.
  */
-static const char * _onboardDeviceRejectedResponseTopic = "aws/provisioning-templates/"_testTemplateId
-                                                          "/register/cbor/rejected";
+static const char * _onboardDeviceRejectedResponseTopic = "$aws/provisioning-templates/"_testTemplateId
+                                                          "/provision/cbor/rejected";
 
 /**
  * @brief Sample CBOR encoded response of OnboardDevice service API containing device configuration and Iot Thing name
@@ -244,7 +244,7 @@ static const uint8_t _sampleOnboardDeviceResponsePayload[] =
     0x73,                                                             /* # text(19) */
     0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74,
     0x69, 0x6F, 0x6E,                                                 /* # "deviceConfiguration" */
-    0xA2,                                                             /* # map(2) */
+    0xBF,                                                             /* # map(2) */
     0x6B,                                                             /* # text(11) */
     0x46, 0x61, 0x6C, 0x6C, 0x62, 0x61, 0x63, 0x6B, 0x55, 0x72, 0x6C, /* # "FallbackUrl" */
     0x78, 0x21,                                                       /* # text(33) */
@@ -256,6 +256,7 @@ static const uint8_t _sampleOnboardDeviceResponsePayload[] =
     0x73,                                                             /* # text(19) */
     0x68, 0x74, 0x74, 0x70, 0x73, 0x3A, 0x2F, 0x2F, 0x65, 0x78, 0x61,
     0x6D, 0x70, 0x6C, 0x65, 0x2E, 0x61, 0x77, 0x73,                   /* # "https://example.aws" */
+    0xFF,
     0x69,                                                             /* # text(9) */
     0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65,             /* # "thingName" */
     0x69,                                                             /* # text(9) */
@@ -285,7 +286,7 @@ static const AwsIotOnboardingResponseDeviceConfigurationEntry_t _expectedDeviceC
 static AwsIotOnboardingOnboardDeviceResponse_t _expectedOnboardDeviceCallbackParams =
 {
     .statusCode                                   = AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED,
-    .u.acceptedResponse.pThingName                = ( const char * ) &_sampleOnboardDeviceResponsePayload[ 112 ],
+    .u.acceptedResponse.pThingName                = ( const char * ) &_sampleOnboardDeviceResponsePayload[ 113 ],
     .u.acceptedResponse.thingNameLength           = 9,
     .u.acceptedResponse.pDeviceConfigList         = _expectedDeviceConfigList,
     .u.acceptedResponse.numOfConfigurationEntries = sizeof( _expectedDeviceConfigList ) /
@@ -507,8 +508,8 @@ static void _testOnboardDeviceAPIWithServerResponse( _serverResponseThreadContex
 
     requestInfo.pDeviceCertificateId = _testCertificateId;
     requestInfo.deviceCertificateIdLength = sizeof( _testCertificateId );
-    requestInfo.pTemplateIdentifier = _testTemplateId;
-    requestInfo.templateIdentifierLength = strlen( _testTemplateId );
+    requestInfo.pTemplateName = _testTemplateId;
+    requestInfo.templateNameLength = strlen( _testTemplateId );
     requestInfo.pParametersStart = NULL;
     requestInfo.numOfParameters = 0;
 
@@ -936,8 +937,8 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIInvalidParameters )
     {
         .pDeviceCertificateId      = _testCertificateId,
         .deviceCertificateIdLength = strlen( _testCertificateId ),
-        .pTemplateIdentifier       = _testTemplateId,
-        .templateIdentifierLength  = strlen( _testTemplateId ),
+        .pTemplateName             = _testTemplateId,
+        .templateNameLength        = strlen( _testTemplateId ),
         .pParametersStart          = NULL,
         .numOfParameters           = 0,
     };
@@ -983,8 +984,8 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPIInvalidParameters )
     /* Invalid template ID in request data. Re-assign certificate data in object. */
     requestInfo.pDeviceCertificateId = _testCertificateId;
     requestInfo.deviceCertificateIdLength = sizeof( _testCertificateId );
-    requestInfo.pTemplateIdentifier = NULL;
-    requestInfo.templateIdentifierLength = 0;
+    requestInfo.pTemplateName = NULL;
+    requestInfo.templateNameLength = 0;
     status = AwsIotOnboarding_OnboardDevice( _pMqttConnection,
                                              &requestInfo,
                                              0,
@@ -1008,8 +1009,8 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPICalledWithoutInit )
     {
         .pDeviceCertificateId      = _testCertificateId,
         .deviceCertificateIdLength = sizeof( _testCertificateId ),
-        .pTemplateIdentifier       = _testTemplateId,
-        .templateIdentifierLength  = strlen( _testTemplateId ),
+        .pTemplateName             = _testTemplateId,
+        .templateNameLength        = strlen( _testTemplateId ),
         .pParametersStart          = NULL,
         .numOfParameters           = 0,
     };
@@ -1045,8 +1046,8 @@ TEST( Onboarding_Unit_API, OnboardDeviceAPINoServerResponse )
     {
         .pDeviceCertificateId      = _testCertificateId,
         .deviceCertificateIdLength = sizeof( _testCertificateId ),
-        .pTemplateIdentifier       = _testTemplateId,
-        .templateIdentifierLength  = strlen( _testTemplateId ),
+        .pTemplateName             = _testTemplateId,
+        .templateNameLength        = strlen( _testTemplateId ),
         .pParametersStart          = NULL,
         .numOfParameters           = 0,
     };

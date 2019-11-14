@@ -106,27 +106,18 @@ static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 /**
  * @brief Client ID for the MQTT connection to the Onboarding service.
  */
-static const char * _pTestMqttClientId = "onnboarding-system-test";
+static const char * _pTestMqttClientId = AWS_IOT_TEST_PROVISIONING_CLIENT_ID;
 
 /**
  * @brief Certificate ID for OnboardDevice API tests.
  */
-static char * _testCertificateId = "1c163fd8fcac4a7dc1da34744b6e7c994664c1d399c356d0fce400027d6e45e4";
+static char _testCertificateId[] = AWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID;
 
 /**
- * @brief Template ID for OnboardDevice API tests.
+ * @brief Parameters to use for testing the OnboardDevice API.
  */
-#define _testTemplateId    "myTemplate1"
-
 static const AwsIotOnboardingRequestParameterEntry_t _pTestParameters[] =
-{
-    {
-        .pParameterKey = "DeviceLocation",
-        .parameterKeyLength = sizeof( "deviceLocation" ) - 1,
-        .pParameterValue = "Seattle",
-        .parameterValueLength = sizeof( "Seattle" ) - 1
-    }
-};
+    AWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS;
 
 /*-----------------------------------------------------------*/
 
@@ -211,8 +202,9 @@ static void _printOnboardDeviceResponseCallback( void * contextParam,
                  configIndex < pResponseInfo->u.acceptedResponse.numOfConfigurationEntries;
                  configIndex++ )
             {
-                IotLogInfo( "Device Configuration no. %d:ConfigName = %.*s, ConfigData = %.*s ",
-                            configIndex,
+                IotLogInfo( "Device Configuration" );
+
+                IotLogInfo( "ConfigName = %.*s, ConfigData = %.*s ",
                             pConfigurationList[ configIndex ].keyLength,
                             pConfigurationList[ configIndex ].pKey,
                             pConfigurationList[ configIndex ].valueLength,
@@ -220,7 +212,6 @@ static void _printOnboardDeviceResponseCallback( void * contextParam,
             }
         }
     }
-
     else
     {
         _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
@@ -348,7 +339,7 @@ TEST_TEAR_DOWN( Onboarding_System )
  */
 TEST_GROUP_RUNNER( Onboarding_System )
 {
-    /* RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase ); */
+    RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase );
     RUN_TEST_CASE( Onboarding_System, OnboardDeviceNominalCase );
 }
 
@@ -393,9 +384,9 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
     AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo;
 
     requestInfo.pDeviceCertificateId = _testCertificateId;
-    requestInfo.deviceCertificateIdLength = strlen( _testCertificateId );
-    requestInfo.pTemplateIdentifier = _testTemplateId;
-    requestInfo.templateIdentifierLength = ( sizeof( _testTemplateId ) - 1 );
+    requestInfo.deviceCertificateIdLength = sizeof( _testCertificateId ) - 1;
+    requestInfo.pTemplateName = AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME;
+    requestInfo.templateNameLength = ( sizeof( AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME ) - 1 );
     requestInfo.pParametersStart = _pTestParameters;
     requestInfo.numOfParameters = sizeof( _pTestParameters ) /
                                   sizeof( AwsIotOnboardingRequestParameterEntry_t );

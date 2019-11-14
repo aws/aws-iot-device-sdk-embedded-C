@@ -216,14 +216,14 @@ typedef struct AwsIotOnboardingResponseDeviceConfigurationEntry
 typedef struct AwsIotOnboardingOnboardDeviceRequestInfo
 {
     /**
-     * @brief The identifier of the template on the AWS IoT account used for onboarding the device.
+     * @brief The name of the template on the AWS IoT account to be used for onboarding the device.
      */
-    const char * pTemplateIdentifier;
+    const char * pTemplateName;
 
     /**
-     * @brief The length of the template identifier.
+     * @brief The length of the template name text.
      */
-    size_t templateIdentifierLength;
+    size_t templateNameLength;
 
     /**
      *  @brief The certificate ID string (of the certificate issued by AWS IoT) to onboard the device with.
