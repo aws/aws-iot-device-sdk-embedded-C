@@ -145,8 +145,14 @@ AwsIotStatus_t AwsIot_ParseStatus( const char * pTopicName,
     IOT_FUNCTION_ENTRY( AwsIotStatus_t, AWS_IOT_UNKNOWN );
     const char * pSuffixStart = NULL;
 
+    /* Both 'accepted' and  'rejected' topics are of the same length
+     * The below is a defensive check at run time to ensure that.
+     */
+    Iot_DefaultAssert( AWS_IOT_ACCEPTED_SUFFIX_LENGTH == AWS_IOT_REJECTED_SUFFIX_LENGTH );
+
     /* Check that the status topic name is at least as long as the
-     * "accepted" suffix. */
+     * "accepted" suffix. This length check will be good for rejected also
+     * as both are of 8 characters in length. */
     if( topicNameLength > AWS_IOT_ACCEPTED_SUFFIX_LENGTH )
     {
         /* Calculate where the "accepted" suffix should start. */
@@ -159,14 +165,6 @@ AwsIotStatus_t AwsIot_ParseStatus( const char * pTopicName,
         {
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_ACCEPTED );
         }
-    }
-
-    /* Check that the status topic name is at least as long as the
-     * "rejected" suffix. */
-    if( topicNameLength > AWS_IOT_REJECTED_SUFFIX_LENGTH )
-    {
-        /* Calculate where the "rejected" suffix should start. */
-        pSuffixStart = pTopicName + topicNameLength - AWS_IOT_REJECTED_SUFFIX_LENGTH;
 
         /* Check if the end of the status topic name is "/rejected". */
         if( strncmp( pSuffixStart,

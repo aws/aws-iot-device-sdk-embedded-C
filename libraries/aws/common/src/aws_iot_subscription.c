@@ -77,7 +77,11 @@ static IotMqttError_t _modifySubscriptions( AwsIotMqttFunction_t mqttOperation,
     subscription.callback.pCallbackContext = NULL;
     subscription.callback.function = pSubscriptionInfo->callbackFunction;
 
-    /* Call the MQTT operation function. */
+    /* Call the MQTT operation function.
+     * Subscription count is 1 in this case.
+     * None of the flags are set in this call. Hence 0 is passed for flags.
+     * Please refer to documentation for AwsIotMqttFunction_t for more details.
+     */
     status = mqttOperation( pSubscriptionInfo->mqttConnection,
                             &subscription,
                             1,
@@ -112,9 +116,7 @@ IotMqttError_t AwsIot_ModifySubscriptions( AwsIotMqttFunction_t mqttOperation,
 
     if( acceptedStatus != IOT_MQTT_SUCCESS )
     {
-        status = acceptedStatus;
-
-        IOT_GOTO_CLEANUP();
+        IOT_SET_AND_GOTO_CLEANUP( acceptedStatus );
     }
 
     /* Place the topic "rejected" suffix at the end of the topic buffer. */

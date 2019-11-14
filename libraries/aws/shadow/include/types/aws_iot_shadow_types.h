@@ -433,14 +433,14 @@ typedef struct AwsIotShadowCallbackInfo
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void* #AwsIotShadowCallbackInfo_t.pCallbackContext
-     * @param[in] AwsIotShadowCallbackParam_t* Details on the outcome of the Shadow
+     * @param[in] pCallbackContext #AwsIotShadowCallbackInfo_t.pCallbackContext
+     * @param[in] pCallbackParam Details on the outcome of the Shadow
      * operation or an incoming Shadow document.
      *
      * @see #AwsIotShadowCallbackParam_t for more information on the second parameter.
      */
-    void ( * function )( void *,
-                         AwsIotShadowCallbackParam_t * );
+    void ( * function )( void * pCallbackContext,
+                         AwsIotShadowCallbackParam_t * pCallbackParam );
 } AwsIotShadowCallbackInfo_t;
 
 /**
@@ -475,10 +475,12 @@ typedef struct AwsIotShadowDocumentInfo
             /**
              * @brief Function to allocate memory for an incoming Shadow document.
              *
+             * @param[in] documentLength Length of the document that needs to
+             * be allocated.
              * This only needs to be set if #AWS_IOT_SHADOW_FLAG_WAITABLE is passed to
              * @ref shadow_function_getasync.
              */
-            void *( *mallocDocument )( size_t );
+            void *( *mallocDocument )( size_t documentLength );
         } get; /**< @brief Valid members for @ref shadow_function_getasync. */
 
         /* Valid for Shadow update. */

@@ -50,7 +50,8 @@ bool AwsIot_InitLists( IotListDouble_t * pPendingOperationsList,
     IOT_FUNCTION_ENTRY( bool, true );
 
     /* Flags to track cleanup. */
-    bool operationsMutexCreated = false, subscriptionsMutexCreated = false;
+    bool operationsMutexCreated = false;
+    bool subscriptionsMutexCreated = false;
 
     /* Create the mutex guarding the pending operations list. */
     operationsMutexCreated = IotMutex_Create( pPendingOperationsMutex, false );

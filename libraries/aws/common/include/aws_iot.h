@@ -107,18 +107,42 @@
  *
  * Currently, this is used to represent @ref mqtt_function_subscribesync or
  * @ref mqtt_function_unsubscribesync.
+ *
+ * @param[in] mqttConnection The MQTT connection to use for the subscription.
+ * @param[in] pSubscriptionList Pointer to the first element in the array of
+ * subscriptions.
+ * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[in] flags Flags which modify the behavior of this function. See @ref mqtt_constants_flags.
+ * Currently, flags are ignored by this function; this parameter is for
+ * future-compatibility.
+ * @param[in] timeoutMs If the MQTT server does not acknowledge the subscriptions within
+ * this timeout in milliseconds, this function returns #IOT_MQTT_TIMEOUT.
+ *
+ * @return One of the following:
+ * - #IOT_MQTT_SUCCESS
+ * - #IOT_MQTT_NOT_INITIALIZED
+ * - #IOT_MQTT_BAD_PARAMETER
+ * - #IOT_MQTT_NO_MEMORY
+ * - #IOT_MQTT_NETWORK_ERROR
+ * - #IOT_MQTT_SCHEDULING_ERROR
+ * - #IOT_MQTT_BAD_RESPONSE
+ * - #IOT_MQTT_TIMEOUT
+ * - #IOT_MQTT_SERVER_REFUSED
  */
-typedef IotMqttError_t ( * AwsIotMqttFunction_t )( IotMqttConnection_t,
-                                                   const IotMqttSubscription_t *,
-                                                   size_t,
-                                                   uint32_t,
-                                                   uint32_t );
+typedef IotMqttError_t ( * AwsIotMqttFunction_t )( IotMqttConnection_t mqttConnection,
+                                                   const IotMqttSubscription_t * pSubscriptionList,
+                                                   size_t subscriptionCount,
+                                                   uint32_t flags,
+                                                   uint32_t timeoutMs );
 
 /**
  * @brief Function pointer representing an MQTT library callback function.
+ *
+ * @param[in] pArgument Ignored.
+ * @param[in] pMessage The received DELTA document (as an MQTT PUBLISH message).
  */
-typedef void ( * AwsIotMqttCallbackFunction_t )( void *,
-                                                 IotMqttCallbackParam_t * );
+typedef void ( * AwsIotMqttCallbackFunction_t )( void * pArgument,
+                                                 IotMqttCallbackParam_t * pMessage );
 
 /**
  * @brief Enumerations representing each of the statuses that may be parsed
@@ -225,7 +249,8 @@ bool AwsIot_GetClientToken( const char * pJsonDocument,
  * @param[out] pThingName Set to point to the Thing Name.
  * @param[out] pThingNameLength Set to the length of the Thing Name.
  *
- * @return `true` if a Thing Name was successfully parsed; `false` otherwise.
+ * @return `true` if a Thing Name was successfully parsed; `false` otherwise. The output
+ * parameters are only valid if this function returns `true`.
  */
 bool AwsIot_ParseThingName( const char * pTopicName,
                             uint16_t topicNameLength,

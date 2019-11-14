@@ -559,14 +559,7 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
                      IotMqtt_strerror( mqttStatus ) );
 
         /* Convert the MQTT "NO MEMORY" error to a Shadow "NO MEMORY" error. */
-        if( mqttStatus == IOT_MQTT_NO_MEMORY )
-        {
-            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_NO_MEMORY );
-        }
-        else
-        {
-            IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_MQTT_ERROR );
-        }
+        IOT_SET_AND_GOTO_CLEANUP( SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( mqttStatus ) );
     }
 
     IotLogDebug( "Successfully %s %.*s Shadow %s callback.",
