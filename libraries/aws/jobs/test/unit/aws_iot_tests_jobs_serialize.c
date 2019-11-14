@@ -41,7 +41,7 @@
 #include "unity_fixture.h"
 
 /* JSON utilities include. */
-#include "iot_json_utils.h"
+#include "aws_iot_doc_parser.h"
 
 /*-----------------------------------------------------------*/
 
@@ -115,12 +115,12 @@ TEST( Jobs_Unit_Serialize, SerializeGetPending )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that a client token is present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
-                                                             &pClientToken,
-                                                             &clientTokenLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
+                                                            &pClientToken,
+                                                            &clientTokenLength ) );
     TEST_ASSERT_EQUAL_PTR( pClientToken, operation.pClientToken );
     TEST_ASSERT_EQUAL( clientTokenLength, operation.clientTokenLength );
 
@@ -136,12 +136,12 @@ TEST( Jobs_Unit_Serialize, SerializeGetPending )
                                               &operation );
 
     /* Check that the custom client token is present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
-                                                             &pClientToken,
-                                                             &clientTokenLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
+                                                            &pClientToken,
+                                                            &clientTokenLength ) );
     TEST_ASSERT_EQUAL_PTR( pClientToken, operation.pClientToken );
     TEST_ASSERT_EQUAL( 6, operation.clientTokenLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "\"test\"", operation.pClientToken, 6 );
@@ -176,12 +176,12 @@ TEST( Jobs_Unit_Serialize, SerializeStartNextClientToken )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that a client token is present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL_PTR( pJsonValue, operation.pClientToken );
     TEST_ASSERT_EQUAL( jsonValueLength, operation.clientTokenLength );
 
@@ -199,12 +199,12 @@ TEST( Jobs_Unit_Serialize, SerializeStartNextClientToken )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that the custom client token is present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL_PTR( pJsonValue, operation.pClientToken );
     TEST_ASSERT_EQUAL( 6, operation.clientTokenLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "\"test\"", pJsonValue, 6 );
@@ -238,12 +238,12 @@ TEST( Jobs_Unit_Serialize, SerializeStartNextStepTimeout )
                                               &operation );
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
-    TEST_ASSERT_EQUAL_INT( false, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                              operation.jobsRequestLength,
-                                                              "stepTimeoutInMinutes",
-                                                              20,
-                                                              &pJsonValue,
-                                                              &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( false, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                             operation.jobsRequestLength,
+                                                             "stepTimeoutInMinutes",
+                                                             20,
+                                                             &pJsonValue,
+                                                             &jsonValueLength ) );
 
     /* Free request document generated by serializer. */
     AwsIotJobs_FreeString( ( void * ) operation.pJobsRequest );
@@ -258,12 +258,12 @@ TEST( Jobs_Unit_Serialize, SerializeStartNextStepTimeout )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that the step timeout is -1. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "stepTimeoutInMinutes",
-                                                             20,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "stepTimeoutInMinutes",
+                                                            20,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 2, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "-1", pJsonValue, 2 );
 
@@ -280,12 +280,12 @@ TEST( Jobs_Unit_Serialize, SerializeStartNextStepTimeout )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that the step timeout is present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "stepTimeoutInMinutes",
-                                                             20,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "stepTimeoutInMinutes",
+                                                            20,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 4, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "3600", pJsonValue, 4 );
 
@@ -322,12 +322,12 @@ TEST( Jobs_Unit_Serialize, SerializeStartNextStatusDetails )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that the status details are present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "statusDetails",
-                                                             13,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "statusDetails",
+                                                            13,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 12, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "{\"status\":0}", pJsonValue, 12 );
 
@@ -346,32 +346,32 @@ TEST( Jobs_Unit_Serialize, SerializeStartNextStatusDetails )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that the status details are present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "statusDetails",
-                                                             13,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "statusDetails",
+                                                            13,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 12, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "{\"status\":0}", pJsonValue, 12 );
 
     /* Check that step timeout is present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "stepTimeoutInMinutes",
-                                                             20,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "stepTimeoutInMinutes",
+                                                            20,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 5, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "10080", pJsonValue, 5 );
 
     /* Check that the custom client token is present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL_PTR( pJsonValue, operation.pClientToken );
     TEST_ASSERT_EQUAL( 6, operation.clientTokenLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "\"test\"", pJsonValue, 6 );
@@ -406,12 +406,12 @@ TEST( Jobs_Unit_Serialize, SerializeDescribe )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that a client token is present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL_PTR( pJsonValue, operation.pClientToken );
     TEST_ASSERT_EQUAL( jsonValueLength, operation.clientTokenLength );
 
@@ -431,12 +431,12 @@ TEST( Jobs_Unit_Serialize, SerializeDescribe )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that the custom client token is present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY,
-                                                             AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY,
+                                                            AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL_PTR( pJsonValue, operation.pClientToken );
     TEST_ASSERT_EQUAL( 6, operation.clientTokenLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "\"test\"", pJsonValue, 6 );
@@ -488,30 +488,30 @@ TEST( Jobs_Unit_Serialize, SerializeUpdateStatus )
         TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
         /* Check the status value. */
-        TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                                 operation.jobsRequestLength,
-                                                                 "status",
-                                                                 6,
-                                                                 &pJsonValue,
-                                                                 &jsonValueLength ) );
+        TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                                operation.jobsRequestLength,
+                                                                "status",
+                                                                6,
+                                                                &pJsonValue,
+                                                                &jsonValueLength ) );
         TEST_ASSERT_EQUAL( strlen( pValidStatusStrings[ i ] ), jsonValueLength );
         TEST_ASSERT_EQUAL_STRING_LEN( pValidStatusStrings[ i ], pJsonValue, jsonValueLength );
 
         /* Check that the step timeout is not present. */
-        TEST_ASSERT_EQUAL_INT( false, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                                  operation.jobsRequestLength,
-                                                                  "stepTimeoutInMinutes",
-                                                                  20,
-                                                                  &pJsonValue,
-                                                                  &jsonValueLength ) );
-
-        /* Check that a client token is present. */
-        TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
+        TEST_ASSERT_EQUAL_INT( false, AwsIotDocParser_FindValue( operation.pJobsRequest,
                                                                  operation.jobsRequestLength,
-                                                                 AWS_IOT_CLIENT_TOKEN_KEY,
-                                                                 AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
+                                                                 "stepTimeoutInMinutes",
+                                                                 20,
                                                                  &pJsonValue,
                                                                  &jsonValueLength ) );
+
+        /* Check that a client token is present. */
+        TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                                operation.jobsRequestLength,
+                                                                AWS_IOT_CLIENT_TOKEN_KEY,
+                                                                AWS_IOT_CLIENT_TOKEN_KEY_LENGTH,
+                                                                &pJsonValue,
+                                                                &jsonValueLength ) );
         TEST_ASSERT_EQUAL_PTR( pJsonValue, operation.pClientToken );
         TEST_ASSERT_EQUAL( jsonValueLength, operation.clientTokenLength );
 
@@ -530,12 +530,12 @@ TEST( Jobs_Unit_Serialize, SerializeUpdateStatus )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that the status details are present. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "statusDetails",
-                                                             13,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "statusDetails",
+                                                            13,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 12, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "{\"status\":0}", pJsonValue, 12 );
 
@@ -571,12 +571,12 @@ TEST( Jobs_Unit_Serialize, SerializeUpdateNumbers )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check the expected version. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "expectedVersion",
-                                                             15,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "expectedVersion",
+                                                            15,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 3, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "\"1\"", pJsonValue, 3 );
 
@@ -593,12 +593,12 @@ TEST( Jobs_Unit_Serialize, SerializeUpdateNumbers )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check the execution number. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "executionNumber",
-                                                             15,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "executionNumber",
+                                                            15,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 9, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "555555555", pJsonValue, 9 );
 
@@ -615,12 +615,12 @@ TEST( Jobs_Unit_Serialize, SerializeUpdateNumbers )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check the step timeout. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "stepTimeoutInMinutes",
-                                                             20,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "stepTimeoutInMinutes",
+                                                            20,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 5, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "10080", pJsonValue, 5 );
 
@@ -637,12 +637,12 @@ TEST( Jobs_Unit_Serialize, SerializeUpdateNumbers )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that step timeout is -1. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "stepTimeoutInMinutes",
-                                                             20,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "stepTimeoutInMinutes",
+                                                            20,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 2, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "-1", pJsonValue, 2 );
 
@@ -679,18 +679,18 @@ TEST( Jobs_Unit_Serialize, SerializeUpdateFlags )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that no flags are present. */
-    TEST_ASSERT_EQUAL_INT( false, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                              operation.jobsRequestLength,
-                                                              "includeJobDocument",
-                                                              18,
-                                                              &pJsonValue,
-                                                              &jsonValueLength ) );
-    TEST_ASSERT_EQUAL_INT( false, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                              operation.jobsRequestLength,
-                                                              "includeJobExecutionState",
-                                                              24,
-                                                              &pJsonValue,
-                                                              &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( false, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                             operation.jobsRequestLength,
+                                                             "includeJobDocument",
+                                                             18,
+                                                             &pJsonValue,
+                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( false, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                             operation.jobsRequestLength,
+                                                             "includeJobExecutionState",
+                                                             24,
+                                                             &pJsonValue,
+                                                             &jsonValueLength ) );
 
     /* Free request document generated by serializer. */
     AwsIotJobs_FreeString( ( void * ) operation.pJobsRequest );
@@ -706,21 +706,21 @@ TEST( Jobs_Unit_Serialize, SerializeUpdateFlags )
     TEST_ASSERT_EQUAL( AWS_IOT_JOBS_SUCCESS, status );
 
     /* Check that flags are set. */
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "includeJobDocument",
-                                                             18,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "includeJobDocument",
+                                                            18,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 4, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "true", pJsonValue, 4 );
 
-    TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( operation.pJobsRequest,
-                                                             operation.jobsRequestLength,
-                                                             "includeJobExecutionState",
-                                                             24,
-                                                             &pJsonValue,
-                                                             &jsonValueLength ) );
+    TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( operation.pJobsRequest,
+                                                            operation.jobsRequestLength,
+                                                            "includeJobExecutionState",
+                                                            24,
+                                                            &pJsonValue,
+                                                            &jsonValueLength ) );
     TEST_ASSERT_EQUAL( 4, jsonValueLength );
     TEST_ASSERT_EQUAL_STRING_LEN( "true", pJsonValue, 4 );
 

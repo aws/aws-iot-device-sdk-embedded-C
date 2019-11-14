@@ -1,6 +1,5 @@
 # Serializer library source files.
 set( SERIALIZER_SOURCES
-     src/iot_json_utils.c
      src/iot_serializer_static_memory.c
      src/cbor/iot_serializer_tinycbor_decoder.c
      src/cbor/iot_serializer_tinycbor_encoder.c )
@@ -9,8 +8,7 @@ set( SERIALIZER_SOURCES
 add_library( iotserializer
              ${CONFIG_HEADER_PATH}/iot_config.h
              ${SERIALIZER_SOURCES}
-             include/iot_serializer.h
-             include/iot_json_utils.h )
+             include/iot_serializer.h )
 
 # Serializer public include path.
 target_include_directories( iotserializer PUBLIC include )
@@ -27,8 +25,7 @@ endif()
 set_property( TARGET iotserializer PROPERTY FOLDER libraries/standard )
 source_group( "" FILES ${CONFIG_HEADER_PATH}/iot_config.h )
 source_group( include FILES
-              include/iot_serializer.h
-              include/iot_json_utils.h )
+              include/iot_serializer.h )
 source_group( src FILES ${SERIALIZER_SOURCES} )
 
 # Build the test executable if needed.
