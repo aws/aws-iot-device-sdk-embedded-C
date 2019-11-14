@@ -2318,7 +2318,13 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo
 
     if( ( pPublishInfo == NULL ) || ( pRemainingLength == NULL ) || ( pPacketSize == NULL ) )
     {
-        IotLogError( "IotMqtt_GetPublishPacketSize() called reuired parameter(s) set to NULL." );
+        IotLogError( "IotMqtt_GetPublishPacketSize() called with required parameter(s) set to NULL." );
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
+    }
+
+    if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0 ) )
+    {
+        IotLogError( "IotMqtt_GetPublishPacketSize() called with no topic." );
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
     }
 
@@ -2354,7 +2360,7 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo
 IotMqttError_t IotMqtt_SerializePublish( IotMqttPublishInfo_t * pPublishInfo,
                                          size_t remainingLength,
                                          uint16_t * pPacketIdentifier,
-                                         uint8_t ** pPakcetIndentifierHigh,
+                                         uint8_t ** pPacketIdentifierHigh,
                                          uint8_t * pBuffer,
                                          size_t bufferSize )
 
@@ -2363,10 +2369,16 @@ IotMqttError_t IotMqtt_SerializePublish( IotMqttPublishInfo_t * pPublishInfo,
 
     if( ( pBuffer == NULL ) || ( pPublishInfo == NULL ) || ( pPacketIdentifier == NULL ) )
     {
-        IotLogError( "IotMqtt_SerializePublish() called reuired parameter(s) set to NULL." );
+        IotLogError( "IotMqtt_SerializePublish() called with required parameter(s) set to NULL." );
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
     }
-    
+
+    if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0 ) )
+    {
+        IotLogError( "IotMqtt_SerializePublish() called with no topic." );
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
+    }
+
     if( remainingLength > bufferSize )
     {
         IotLogError( "Publish packet remaining length (%lu) exceeds buffer size (%lu).",
@@ -2377,7 +2389,7 @@ IotMqttError_t IotMqtt_SerializePublish( IotMqttPublishInfo_t * pPublishInfo,
     _serializePublish( pPublishInfo,
                        remainingLength,
                        pPacketIdentifier,
-                       pPakcetIndentifierHigh,
+                       pPacketIdentifierHigh,
                        pBuffer,
                        bufferSize );
     IOT_FUNCTION_EXIT_NO_CLEANUP();
@@ -2444,7 +2456,7 @@ IotMqttError_t IotMqtt_SerializeDisconnect( uint8_t * pBuffer,
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
     }
 
-    /* Call internal function with local varaibles, as disconnect  uses
+    /* Call internal function with local variables, as disconnect  uses
      * static memory, there is no need to pass the buffer
      * Note: _IotMqtt_SerializeDisconnect always succeeds */
     _IotMqtt_SerializeDisconnect( &pDisconnectPacket, &remainingLength );
@@ -2475,7 +2487,7 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
     }
 
-    /* Call internal function with local varaibles, as ping request uses
+    /* Call internal function with local variables, as ping request uses
      * static memory, there is no need to pass the buffer
      * Note: _IotMqtt_SerializePingReq always succeeds */
     _IotMqtt_SerializePingreq( &pPingreqPacket, &packetSize );
@@ -2505,7 +2517,7 @@ IotMqttError_t IotMqtt_DeserializePublish( IotMqttPacketInfo_t * pMqttPacket )
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
     }
 
-    /* Set intenal mqtt packet parameters. */
+    /* Set internal mqtt packet parameters. */
     memset( ( void * ) &mqttPacket, 0x00, sizeof( _mqttPacket_t ) );
     mqttPacket.pRemainingData = pMqttPacket->pRemainingData;
     mqttPacket.remainingLength = pMqttPacket->remainingLength;
@@ -2534,14 +2546,13 @@ IotMqttError_t IotMqtt_DeserializeResponse( IotMqttPacketInfo_t * pMqttPacket )
     /* Internal MQTT packet structure */
     _mqttPacket_t mqttPacket;
 
-    if( pMqttPacket == NULL )
+    if( ( pMqttPacket == NULL ) || ( pMqttPacket->pRemainingData == NULL ) )
     {
-        IotLogError( "IotMqtt_DeserializeResponse() called with NULL pMqttPacket pointer." );
+        IotLogError( "IotMqtt_DeserializeResponse() called with NULL pMqttPacket pointer or NULL pRemainingLength." );
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
     }
 
-    /* Set intenal mqtt packet parameters. This API does not care about
-     * pMqttConnection it is not set */
+    /* Set internal mqtt packet parameters. */
     memset( ( void * ) &mqttPacket, 0x00, sizeof( _mqttPacket_t ) );
 
     mqttPacket.pRemainingData = pMqttPacket->pRemainingData;
