@@ -563,15 +563,22 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pConnection,
     mbedtls_ssl_conf_authmode( &( pConnection->ssl.config ), MBEDTLS_SSL_VERIFY_REQUIRED );
     mbedtls_ssl_conf_rng( &( pConnection->ssl.config ), mbedtls_ctr_drbg_random, &_ctrDrbgContext );
 
-    if( _readCredentials( pConnection,
-                          pMbedtlsCredentials->pRootCa,
-                          pMbedtlsCredentials->pClientCert,
-                          pMbedtlsCredentials->pPrivateKey ) == false )
+    /* Setup TLS client certificate authentication, if requested. */
+    if( ( pMbedtlsCredentials->pClientCert != NULL ) &&
+        ( strlen( pMbedtlsCredentials->pClientCert ) != 0 ) &&
+        ( pMbedtlsCredentials->pPrivateKey != NULL ) &&
+        ( strlen( pMbedtlsCredentials->pPrivateKey ) ) )
     {
-        IotLogError( "(Network connection %p) Failed to read credentials.",
-                     pConnection );
+        if( _readCredentials( pConnection,
+                            pMbedtlsCredentials->pRootCa,
+                            pMbedtlsCredentials->pClientCert,
+                            pMbedtlsCredentials->pPrivateKey ) == false )
+        {
+            IotLogError( "(Network connection %p) Failed to read credentials.",
+                        pConnection );
 
-        IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
+            IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
+        }
     }
 
     /* Set up ALPN if requested. */
