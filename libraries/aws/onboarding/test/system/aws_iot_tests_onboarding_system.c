@@ -445,7 +445,7 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
 {
     AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
 
-    AwsIotOnboardingOnboardDeviceCallbackInfo_t callbackInfo =
+    AwsIotOnboardingOnboardDeviceCallbackInfo_t onboardDeviceCallback =
     {
         .userParam = NULL,
         .function  = _printOnboardDeviceResponseCallback
@@ -461,7 +461,7 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
     newCertificateContext.pCertificateOwnershipToken = NULL;
     newCertificateContext.tokenLength = 0;
 
-    AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t callbackInfo =
+    AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t createNewCredsCallback =
     {
         .userParam = &newCertificateContext,
         .function  = _storeCertificateDataForProvisioning
@@ -471,7 +471,7 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
     status = AwsIotOnboarding_GetDeviceCredentials( _mqttConnection,
                                                     0,
                                                     AWS_IOT_TEST_ONBOARDING_TIMEOUT,
-                                                    &callbackInfo );
+                                                    &createNewCredsCallback );
 
     AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo;
 
@@ -489,7 +489,7 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
     status = AwsIotOnboarding_OnboardDevice( _mqttConnection,
                                              &requestInfo,
                                              AWS_IOT_TEST_ONBOARDING_TIMEOUT,
-                                             &callbackInfo );
+                                             &onboardDeviceCallback );
 
 
     TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS, status );
