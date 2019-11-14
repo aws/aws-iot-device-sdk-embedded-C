@@ -165,10 +165,38 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonValid )
         const char pJsonDocument[ 42 ] = "{\"key\":{\"key2\":\"{{{{}}\", \"key3\":\"value\"}}";
         size_t jsonDocumentLength = strlen( pJsonDocument );
 
-        /* Attempt to find a key longer than the JSON document. */
+        /* Attempt to find a value which has value a string with '{' '}' */
         _parseJson( true, pJsonDocument, jsonDocumentLength, "key", "{\"key2\":\"{{{{}}\", \"key3\":\"value\"}", 33 );
     }
+
+    /* JSON with objects elements of the array */
+    {
+        const char pJsonDocument[ 63 ] = "{\"key\":\"value\", \"arr\": [{\"key1\":\"value1\"}, {\"key2\":\"value2\"}]}";
+        size_t jsonDocumentLength = strlen( pJsonDocument );
+
+        /* Attempt to find a value with objects as members of the array */
+        _parseJson( true, pJsonDocument, jsonDocumentLength, "arr", "[{\"key1\":\"value1\"}, {\"key2\":\"value2\"}]", 38 );
+    }
+
+    /* JSON with with false in the value */
+    {
+        const char pJsonDocument[ 33 ] = "{\"key\":\"value\", \"keybool\":false}";
+        size_t jsonDocumentLength = strlen( pJsonDocument );
+
+        /* Attempt to find a boolean value */
+        _parseJson( true, pJsonDocument, jsonDocumentLength, "keybool", "false", 5 );
+    }
+
+    /* JSON with with different elements in the array */
+    {
+        const char pJsonDocument[ 85 ] = "{\"key\":\"value\", \"arr\":[4, \"string\", true, {\"key1\":\"value1\", \"arr1\":[1,2,3]}, 99]}";
+        size_t jsonDocumentLength = strlen( pJsonDocument );
+
+        /* Attempt to find a value with different elements in the array */
+        _parseJson( true, pJsonDocument, jsonDocumentLength, "arr", "[4, \"string\", true, {\"key1\":\"value1\", \"arr1\":[1,2,3]}, 99]", 58 );
+    }
 }
+
 
 /*-----------------------------------------------------------*/
 
