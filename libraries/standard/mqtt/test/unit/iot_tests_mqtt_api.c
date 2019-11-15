@@ -1672,7 +1672,7 @@ TEST( MQTT_Unit_API, KeepAliveJobCleanup )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_GetConnectPacketSize works as intented.
+ * @brief Tests that IotMqtt_GetConnectPacketSize works as intended.
  * to @ref mqtt_function_getconnectpacketsize.
  */
 
@@ -1716,7 +1716,7 @@ TEST( MQTT_Unit_API, GetConnectPacketSizeChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_SerializeConnect works as intented.
+ * @brief Tests that IotMqtt_SerializeConnect works as intended.
  * to @ref mqtt_function_serializeconnect.
  */
 TEST( MQTT_Unit_API, SerializeConnectChecks )
@@ -1762,7 +1762,7 @@ TEST( MQTT_Unit_API, SerializeConnectChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_GetSubscribePacketSize works as intented.
+ * @brief Tests that IotMqtt_GetSubscribePacketSize works as intended.
  * to @ref mqtt_function_getsubscriptionpacketsize.
  */
 TEST( MQTT_Unit_API, GetSubscribePacketSizeChecks )
@@ -1832,7 +1832,7 @@ TEST( MQTT_Unit_API, GetSubscribePacketSizeChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_SerializeSubscribe works as intented.
+ * @brief Tests that IotMqtt_SerializeSubscribe works as intended.
  * to @ref mqtt_function_serializesubscribe.
  */
 TEST( MQTT_Unit_API, SerializeSubscribeChecks )
@@ -1917,7 +1917,7 @@ TEST( MQTT_Unit_API, SerializeSubscribeChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_SerializeUnsubscribe works as intented.
+ * @brief Tests that IotMqtt_SerializeUnsubscribe works as intended.
  * to @ref mqtt_function_serializeunsubscribe.
  */
 TEST( MQTT_Unit_API, SerializeUnsubscribeChecks )
@@ -2000,7 +2000,7 @@ TEST( MQTT_Unit_API, SerializeUnsubscribeChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_GetPublishPacketSize works as intented.
+ * @brief Tests that IotMqtt_GetPublishPacketSize works as intended.
  * to @ref mqtt_function_getpublishpacketsize.
  */
 TEST( MQTT_Unit_API, GetPublishPacketSizeChecks )
@@ -2035,7 +2035,7 @@ TEST( MQTT_Unit_API, GetPublishPacketSizeChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_GetPublishPacketSize works as intented.
+ * @brief Tests that IotMqtt_GetPublishPacketSize works as intended.
  * to @ref mqtt_function_serializepublish.
  */
 TEST( MQTT_Unit_API, SerializePublishChecks )
@@ -2106,7 +2106,7 @@ TEST( MQTT_Unit_API, SerializePublishChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_SerializeDisconnect works as intented.
+ * @brief Tests that IotMqtt_SerializeDisconnect works as intended.
  * to @ref mqtt_function_serializedisconnect.
  */
 TEST( MQTT_Unit_API, SerializeDisconnectChecks )
@@ -2130,7 +2130,7 @@ TEST( MQTT_Unit_API, SerializeDisconnectChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_SerializePingReq works as intented.
+ * @brief Tests that IotMqtt_SerializePingReq works as intended.
  * to @ref mqtt_function_serializepingreq.
  */
 TEST( MQTT_Unit_API, SerializePingReqChecks )
@@ -2154,7 +2154,7 @@ TEST( MQTT_Unit_API, SerializePingReqChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_GetIncomingMQTTPacketTypeAndLength works as intented.
+ * @brief Tests that IotMqtt_GetIncomingMQTTPacketTypeAndLength works as intended.
  * to @ref mqtt_function_getincomingmqttpackettypeandlength.
  */
 TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
@@ -2179,7 +2179,7 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_DeserializeResponse works as intented.
+ * @brief Tests that IotMqtt_DeserializeResponse works as intended.
  * to @ref mqtt_function_deserializeresponse.
  */
 TEST( MQTT_Unit_API, DeserializeResponseChecks )
@@ -2209,14 +2209,12 @@ TEST( MQTT_Unit_API, DeserializeResponseChecks )
     mqttPacketInfo.remainingLength = 0x02; /* CONN ACK Remaining Length. */
     status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
-
-    /* TODO add test for each acks */
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_DeserializePublish works as intented.
+ * @brief Tests that IotMqtt_DeserializePublish works as intended.
  * to @ref mqtt_function_deserializepublish.
  */
 TEST( MQTT_Unit_API, DeserializePublishChecks )
