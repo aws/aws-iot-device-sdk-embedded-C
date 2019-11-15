@@ -17,10 +17,10 @@ run_tests() {
     # For commit builds, run the full Provisioning tests. For pull request builds,
     # run only the unit tests (credentials are not available for pull request builds).
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-        ./bin/aws_iot_tests_onboarding
+        ./bin/aws_iot_tests_provisioning
     else
         # Run only Provisioning unit tests.
-        ./bin/aws_iot_tests_onboarding -n
+        ./bin/aws_iot_tests_provisioning -n
     fi
 }
 
@@ -74,7 +74,7 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_C
 #cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DAWS_IOT_PROVISIONING_TEMPLATE_NAME=$TEMPLATE_NAME"
 
 # Build tests.
-make -j2 aws_iot_tests_onboarding
+make -j2 aws_iot_tests_provisioning
 
 # Run tests in no static memory mode.
 run_tests

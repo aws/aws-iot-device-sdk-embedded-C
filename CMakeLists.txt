@@ -101,7 +101,7 @@ add_subdirectory( libraries/aws/jobs )
 add_subdirectory( libraries/aws/defender )
 
 # Onboarding library.
-add_subdirectory( libraries/aws/onboarding )
+add_subdirectory( libraries/aws/provisioning )
 
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
