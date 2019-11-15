@@ -118,7 +118,7 @@ static const AwsIotOnboardingRequestParameterEntry_t _pTestParameters[] =
 /**
  * @brief Type for the context parameter for the #AwsIotOnboarding_DeviceCredentialsCallbackInfo_t callback.
  * It will be used for storing the received Certificate ID and the ownership token data received from the server through
- * the callback, so that that can be used for provisioning the demo application.
+ * the callback, so that can be used for provisioning the demo application.
  */
 typedef struct _deviceCredentialsCallbackContext
 {

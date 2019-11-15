@@ -93,7 +93,7 @@
 /**
  * @brief Type for the context parameter for the #AwsIotOnboarding_DeviceCredentialsCallbackInfo_t callback.
  * It will be used for storing the received Certificate ID and the ownership token data received from the server through
- * the callback, so that that can be used for provisioning the demo application.
+ * the callback, so that can be used for provisioning the demo application.
  */
 typedef struct _demoDeviceCredentialsCallbackContext
 {
@@ -496,9 +496,10 @@ int RunOnboardingDemo( bool awsIotMqttMode,
             IotLogError( "Request to get new credentials failed, error %s ",
                          AwsIotOnboarding_strerror( requestStatus ) );
         }
-        else if( newCertificateDataContext.pCertificateIdBuffer == NULL )
+        else if( ( newCertificateDataContext.pCertificateIdBuffer == NULL ) ||
+                 ( newCertificateDataContext.pCertificateOwnershipToken == NULL ) )
         {
-            IotLogInfo( "Don't have the Certificate ID to proceed for onboarding. So exiting...!" );
+            IotLogInfo( "Don't have either the Certificate ID OR the Certificate Ownership Token (or both) to proceed with provisioning. So exiting...!" );
         }
         else
         {

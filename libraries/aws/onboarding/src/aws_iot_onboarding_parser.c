@@ -455,15 +455,18 @@ AwsIotOnboardingError_t _AwsIotOnboarding_ParseOnboardDeviceResponse( AwsIotStat
                     if( ( deviceConfigInnerKeyDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING ) ||
                         ( deviceConfigInnerValueDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING ) )
                     {
-                        /** Opportunity for HYGENE! The serializer library allocates memory for the iterator. It can
+                        /**The serializer library allocates memory for the iterator. It can
                          * only be released by iterating to the last element in the map containers and "stepping out" of
                          * the container
                          * Thus, we will iterate to the end of the device configuration container to invalidate the
                          * iterator. */
-                        while( ++configurationListIndex < numOfDeviceConfigurationEntries )
+                        size_t nextConfigEntryIndex = configurationListIndex + 1;
+
+                        while( nextConfigEntryIndex < numOfDeviceConfigurationEntries )
                         {
                             _pAwsIotOnboardingDecoder->next( deviceConfigIter );
                             _pAwsIotOnboardingDecoder->next( deviceConfigIter );
+                            nextConfigEntryIndex++;
                         }
 
                         /* Advance to the "end" of the container. */
