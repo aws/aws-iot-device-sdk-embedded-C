@@ -1679,8 +1679,8 @@ TEST( MQTT_Unit_API, KeepAliveJobCleanup )
 TEST( MQTT_Unit_API, GetConnectPacketSizeChecks )
 {
     IotMqttConnectInfo_t connectInfo;
-    size_t remainingLength;
-    size_t packetSize;
+    size_t remainingLength = 0;
+    size_t packetSize = 0;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
     /* Call IotMqtt_GetConnectPacketSize() with various combinations of
@@ -2006,7 +2006,7 @@ TEST( MQTT_Unit_API, SerializeUnsubscribeChecks )
 TEST( MQTT_Unit_API, GetPublishPacketSizeChecks )
 {
     IotMqttPublishInfo_t publishInfo;
-    size_t remainingLength;
+    size_t remainingLength = 0;
     size_t packetSize;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
@@ -2041,7 +2041,7 @@ TEST( MQTT_Unit_API, GetPublishPacketSizeChecks )
 TEST( MQTT_Unit_API, SerializePublishChecks )
 {
     IotMqttPublishInfo_t publishInfo;
-    size_t remainingLength;
+    size_t remainingLength = 98;
     uint16_t packetIdentifier;
     uint8_t * pPakcetIndentifierHigh;
     uint8_t buffer[ 100 ];
@@ -2225,8 +2225,8 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
     IotMqttPublishInfo_t publishInfo;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     uint8_t buffer[ 100 ];
-    size_t bufferSize;
-    size_t remainingLength;
+    size_t bufferSize = sizeof(buffer);
+    size_t remainingLength = 0;
     uint16_t packetIdentifier;
     uint8_t * pPakcetIndentifierHigh;
     uint8_t * pNetworkInterface;
