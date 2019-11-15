@@ -143,29 +143,36 @@ static bool _validateArguments( const IotDemoArguments_t * pArguments )
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
 
-        /* There must either be a set of X.509 credentials or a 
-        username/password. First check for username/password.*/
-        if( ( pArguments->pUserName == NULL ) ||
-            ( strlen( pArguments->pUserName ) == 0 ) ||
-            ( pArguments->pPassword == NULL ) ||
-            ( strlen( pArguments->pPassword ) == 0 ) )
+        /* If the host is connecting to the MQTT broker hosted by AWS IoT Core,
+         * there must either be a set of X.509 credentials or a 
+         * username/password. Therefore, check that here in order to facilitate 
+         * debugging. For other MQTT brokers, assume that the CLI arguments are
+         * as intended.
+         */
+        if( pArguments->awsIotMqttMode == true )
         {
-            /* Check that a client certificate path was set. */
-            if( ( pArguments->pClientCertPath == NULL ) ||
-                ( strlen( pArguments->pClientCertPath ) == 0 ) )
+            if( ( pArguments->pUserName == NULL ) ||
+                ( strlen( pArguments->pUserName ) == 0 ) ||
+                ( pArguments->pPassword == NULL ) ||
+                ( strlen( pArguments->pPassword ) == 0 ) )
             {
-                IotLogError( "Client certificate path not set. Exiting." );
+                /* Check that a client certificate path was set. */
+                if( ( pArguments->pClientCertPath == NULL ) ||
+                    ( strlen( pArguments->pClientCertPath ) == 0 ) )
+                {
+                    IotLogError( "Either username/password or client certificate path must be set. Exiting." );
 
-                IOT_SET_AND_GOTO_CLEANUP( false );
-            }
+                    IOT_SET_AND_GOTO_CLEANUP( false );
+                }
 
-            /* Check that a client certificate private key was set. */
-            if( ( pArguments->pPrivateKeyPath == NULL ) ||
-                ( strlen( pArguments->pPrivateKeyPath ) == 0 ) )
-            {
-                IotLogError( "Client certificate private key not set. Exiting." );
+                /* Check that a client certificate private key was set. */
+                if( ( pArguments->pPrivateKeyPath == NULL ) ||
+                    ( strlen( pArguments->pPrivateKeyPath ) == 0 ) )
+                {
+                    IotLogError( "Either username/password or private key path must be set. Exiting." );
 
-                IOT_SET_AND_GOTO_CLEANUP( false );
+                    IOT_SET_AND_GOTO_CLEANUP( false );
+                }
             }
         }
     }

@@ -454,66 +454,79 @@ static bool _readCredentials( _networkConnection_t * pConnection,
     IOT_FUNCTION_ENTRY( bool, true );
     int mbedtlsError = 0;
 
-    /* Read the root CA certificate. */
-    mbedtlsError = mbedtls_x509_crt_parse_file( &( pConnection->ssl.credentials.rootCa ),
-                                                pRootCaPath );
-
-    if( mbedtlsError < 0 )
+    if( pRootCaPath != NULL &&
+        strlen( pRootCaPath ) != 0 )
     {
-        _logConnectionError( mbedtlsError, pConnection, "Failed to read root CA certificate file." );
+        /* Read the root CA certificate. */
+        mbedtlsError = mbedtls_x509_crt_parse_file( &( pConnection->ssl.credentials.rootCa ),
+                                                    pRootCaPath );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
-    }
-    else if( mbedtlsError > 0 )
-    {
-        IotLogWarn( "Failed to parse all certificates in %s; %d were parsed.",
-                    pRootCaPath,
-                    mbedtlsError );
-    }
+        if( mbedtlsError < 0 )
+        {
+            _logConnectionError( mbedtlsError, pConnection, "Failed to read root CA certificate file." );
 
-    /* Read the client certificate. */
-    mbedtlsError = mbedtls_x509_crt_parse_file( &( pConnection->ssl.credentials.clientCert ),
-                                                pClientCertPath );
-
-    if( mbedtlsError < 0 )
-    {
-        _logConnectionError( mbedtlsError, pConnection, "Failed to read client certificate file." );
-
-        IOT_SET_AND_GOTO_CLEANUP( false );
-    }
-    else if( mbedtlsError > 0 )
-    {
-        IotLogWarn( "Failed to parse all certificates in %s; %d were parsed.",
-                    pClientCertPath,
-                    mbedtlsError );
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+        else if( mbedtlsError > 0 )
+        {
+            IotLogWarn( "Failed to parse all certificates in %s; %d were parsed.",
+                        pRootCaPath,
+                        mbedtlsError );
+        }
+        else
+        {
+            /* Set the root certificate in the SSL configuration. */
+            mbedtls_ssl_conf_ca_chain( &( pConnection->ssl.config ),
+                                    &( pConnection->ssl.credentials.rootCa ),
+                                    NULL );
+        }
     }
 
-    /* Read the client certificate private key. */
-    mbedtlsError = mbedtls_pk_parse_keyfile( &( pConnection->ssl.credentials.privateKey ),
-                                             pCertPrivateKeyPath,
-                                             NULL );
-
-    if( mbedtlsError != 0 )
+    if( pClientCertPath != NULL &&
+        strlen( pClientCertPath ) != 0 &&
+        pCertPrivateKeyPath != NULL &&
+        strlen( pCertPrivateKeyPath ) != 0 )
     {
-        _logConnectionError( mbedtlsError, pConnection, "Failed to read client certificate private key file." );
+        /* Read the client certificate. */
+        mbedtlsError = mbedtls_x509_crt_parse_file( &( pConnection->ssl.credentials.clientCert ),
+                                                    pClientCertPath );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
-    }
+        if( mbedtlsError < 0 )
+        {
+            _logConnectionError( mbedtlsError, pConnection, "Failed to read client certificate file." );
 
-    /* Set the credentials in the SSL configuration. */
-    mbedtls_ssl_conf_ca_chain( &( pConnection->ssl.config ),
-                               &( pConnection->ssl.credentials.rootCa ),
-                               NULL );
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+        else if( mbedtlsError > 0 )
+        {
+            IotLogWarn( "Failed to parse all certificates in %s; %d were parsed.",
+                        pClientCertPath,
+                        mbedtlsError );
+        }
 
-    mbedtlsError = mbedtls_ssl_conf_own_cert( &( pConnection->ssl.config ),
-                                              &( pConnection->ssl.credentials.clientCert ),
-                                              &( pConnection->ssl.credentials.privateKey ) );
+        /* Read the client certificate private key. */
+        mbedtlsError = mbedtls_pk_parse_keyfile( &( pConnection->ssl.credentials.privateKey ),
+                                                pCertPrivateKeyPath,
+                                                NULL );
 
-    if( mbedtlsError != 0 )
-    {
-        _logConnectionError( mbedtlsError, pConnection, "Failed to configure credentials." );
+        if( mbedtlsError != 0 )
+        {
+            _logConnectionError( mbedtlsError, pConnection, "Failed to read client certificate private key file." );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+
+        /* Set the client credential to the SSL context configuration. */
+        mbedtlsError = mbedtls_ssl_conf_own_cert( &( pConnection->ssl.config ),
+                                                &( pConnection->ssl.credentials.clientCert ),
+                                                &( pConnection->ssl.credentials.privateKey ) );
+
+        if( mbedtlsError != 0 )
+        {
+            _logConnectionError( mbedtlsError, pConnection, "Failed to configure credentials." );
+
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
@@ -563,22 +576,16 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pConnection,
     mbedtls_ssl_conf_authmode( &( pConnection->ssl.config ), MBEDTLS_SSL_VERIFY_REQUIRED );
     mbedtls_ssl_conf_rng( &( pConnection->ssl.config ), mbedtls_ctr_drbg_random, &_ctrDrbgContext );
 
-    /* Setup TLS client certificate authentication, if requested. */
-    if( ( pMbedtlsCredentials->pClientCert != NULL ) &&
-        ( strlen( pMbedtlsCredentials->pClientCert ) != 0 ) &&
-        ( pMbedtlsCredentials->pPrivateKey != NULL ) &&
-        ( strlen( pMbedtlsCredentials->pPrivateKey ) ) )
+    /* Setup TLS authentication. */
+    if( _readCredentials( pConnection,
+                        pMbedtlsCredentials->pRootCa,
+                        pMbedtlsCredentials->pClientCert,
+                        pMbedtlsCredentials->pPrivateKey ) == false )
     {
-        if( _readCredentials( pConnection,
-                            pMbedtlsCredentials->pRootCa,
-                            pMbedtlsCredentials->pClientCert,
-                            pMbedtlsCredentials->pPrivateKey ) == false )
-        {
-            IotLogError( "(Network connection %p) Failed to read credentials.",
-                        pConnection );
+        IotLogError( "(Network connection %p) Failed to read credentials.",
+                    pConnection );
 
-            IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
-        }
+        IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }
 
     /* Set up ALPN if requested. */
