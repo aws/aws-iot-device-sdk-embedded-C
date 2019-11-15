@@ -109,15 +109,24 @@ static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 static const char * _pTestMqttClientId = AWS_IOT_TEST_PROVISIONING_CLIENT_ID;
 
 /**
- * @brief Certificate ID for OnboardDevice API tests.
- */
-static char _testCertificateId[] = AWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID;
-
-/**
  * @brief Parameters to use for testing the OnboardDevice API.
  */
 static const AwsIotOnboardingRequestParameterEntry_t _pTestParameters[] =
     AWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS;
+
+
+/**
+ * @brief Type for the context parameter for the #AwsIotOnboarding_DeviceCredentialsCallbackInfo_t callback.
+ * It will be used for storing the received Certificate ID and the ownership token data received from the server through
+ * the callback, so that can be used for provisioning the demo application.
+ */
+typedef struct _deviceCredentialsCallbackContext
+{
+    char * pCertificateIdBuffer;
+    size_t certificateIdLength;
+    char * pCertificateOwnershipToken;
+    size_t tokenLength;
+} _deviceCredentialsCallbackContext_t;
 
 /*-----------------------------------------------------------*/
 
@@ -154,17 +163,74 @@ static void _printDeviceCredentialsCallback( void * contextParam,
         TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pPrivateKey );
         TEST_ASSERT_GREATER_THAN( 0, pResponseInfo->u.acceptedResponse.privateKeyLength );
 
-        IotLogInfo( "\n Certificate PEM = %.*s\n Certificate ID = %.*s\n DREADED PRIVATE KEY = %.*s\n",
+        IotLogInfo( "\n Certificate PEM = %.*s\n Certificate ID = %.*s\n Ownership Token = %.*s\n DREADED PRIVATE KEY = %.*s\n",
                     pResponseInfo->u.acceptedResponse.deviceCertificateLength,
                     pResponseInfo->u.acceptedResponse.pDeviceCertificate,
                     pResponseInfo->u.acceptedResponse.certificateIdLength,
                     pResponseInfo->u.acceptedResponse.pCertificateId,
+                    pResponseInfo->u.acceptedResponse.ownershipTokenLength,
+                    pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken,
                     pResponseInfo->u.acceptedResponse.privateKeyLength,
                     pResponseInfo->u.acceptedResponse.pPrivateKey );
     }
     else
     {
         _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+static void _storeCertificateDataForProvisioning( void * contextParam,
+                                                  const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
+{
+    _deviceCredentialsCallbackContext_t * certificateIdTokenContext =
+        ( _deviceCredentialsCallbackContext_t * ) contextParam;
+
+    IotLogInfo( "Received StatusCode={%d}", pResponseInfo->statusCode );
+
+    if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
+    {
+        /* Allocate buffer space for storing the certificate ID obtained from the server. */
+        certificateIdTokenContext->pCertificateIdBuffer =
+            Iot_DefaultMalloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
+
+        /* Copy the certificate ID into the buffer. */
+        if( certificateIdTokenContext->pCertificateIdBuffer != NULL )
+        {
+            /* Copy the size of the Certificate ID string. */
+            certificateIdTokenContext->certificateIdLength = pResponseInfo->u.acceptedResponse.certificateIdLength;
+
+            memcpy( certificateIdTokenContext->pCertificateIdBuffer,
+                    pResponseInfo->u.acceptedResponse.pCertificateId,
+                    pResponseInfo->u.acceptedResponse.certificateIdLength );
+            /* Add a NULL terminator to the buffer (to treat the buffer as a string!) */
+            *( certificateIdTokenContext->pCertificateIdBuffer + pResponseInfo->u.acceptedResponse.certificateIdLength ) = '\0';
+        }
+
+        /* Allocate buffer space for storing the ownership token string obtained from the server. */
+        certificateIdTokenContext->pCertificateOwnershipToken =
+            Iot_DefaultMalloc( pResponseInfo->u.acceptedResponse.ownershipTokenLength + 1 );
+
+        /* Copy the ownership token into the buffer. */
+        if( certificateIdTokenContext->pCertificateOwnershipToken != NULL )
+        {
+            /* Copy the size of the ownership token string. */
+            certificateIdTokenContext->tokenLength = pResponseInfo->u.acceptedResponse.ownershipTokenLength;
+
+            memcpy( certificateIdTokenContext->pCertificateOwnershipToken,
+                    pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken,
+                    pResponseInfo->u.acceptedResponse.ownershipTokenLength );
+            /* Add a NULL terminator to the buffer (to treat the buffer as a string!) */
+            *( certificateIdTokenContext->pCertificateOwnershipToken + pResponseInfo->u.acceptedResponse.ownershipTokenLength ) = '\0';
+        }
+
+        /* We don't need the rest of the data for provisioning the test. */
+    }
+    else
+    {
+        IotLogInfo( "Request for new credentials was rejected! Test will be aborted." );
+        AwsIotOnboarding_Assert( false );
     }
 }
 
@@ -183,14 +249,18 @@ static void _printOnboardDeviceResponseCallback( void * contextParam,
 
     if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
     {
+        if( pResponseInfo->u.acceptedResponse.pClientId != NULL )
+        {
+            IotLogInfo( "ClientID = %.*s",
+                        pResponseInfo->u.acceptedResponse.clientIdLength,
+                        pResponseInfo->u.acceptedResponse.pClientId );
+        }
+
         if( pResponseInfo->u.acceptedResponse.pThingName != NULL )
         {
-            if( pResponseInfo->u.acceptedResponse.pThingName != NULL )
-            {
-                IotLogInfo( "ThingName = %.*s",
-                            pResponseInfo->u.acceptedResponse.thingNameLength,
-                            pResponseInfo->u.acceptedResponse.pThingName );
-            }
+            IotLogInfo( "ThingName = %.*s",
+                        pResponseInfo->u.acceptedResponse.thingNameLength,
+                        pResponseInfo->u.acceptedResponse.pThingName );
         }
 
         if( pResponseInfo->u.acceptedResponse.numOfConfigurationEntries > 0 )
@@ -375,16 +445,40 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
 {
     AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
 
-    AwsIotOnboardingOnboardDeviceCallbackInfo_t callbackInfo =
+    AwsIotOnboardingOnboardDeviceCallbackInfo_t onboardDeviceCallback =
     {
         .userParam = NULL,
         .function  = _printOnboardDeviceResponseCallback
     };
 
+    /* To test the OnboardDevice API, we need to request credentials from the GetDeviceCredentials API, that */
+    /* we will use for provisioning in the test. */
+
+    _deviceCredentialsCallbackContext_t newCertificateContext;
+
+    newCertificateContext.pCertificateIdBuffer = NULL;
+    newCertificateContext.certificateIdLength = 0;
+    newCertificateContext.pCertificateOwnershipToken = NULL;
+    newCertificateContext.tokenLength = 0;
+
+    AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t createNewCredsCallback =
+    {
+        .userParam = &newCertificateContext,
+        .function  = _storeCertificateDataForProvisioning
+    };
+
+    /* Obtain new certificate and ownership token for testing provisioning API. */
+    status = AwsIotOnboarding_GetDeviceCredentials( _mqttConnection,
+                                                    0,
+                                                    AWS_IOT_TEST_ONBOARDING_TIMEOUT,
+                                                    &createNewCredsCallback );
+
     AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo;
 
-    requestInfo.pDeviceCertificateId = _testCertificateId;
-    requestInfo.deviceCertificateIdLength = sizeof( _testCertificateId ) - 1;
+    requestInfo.pDeviceCertificateId = newCertificateContext.pCertificateIdBuffer;
+    requestInfo.deviceCertificateIdLength = newCertificateContext.certificateIdLength;
+    requestInfo.pCertificateOwnershipToken = newCertificateContext.pCertificateOwnershipToken;
+    requestInfo.ownershipTokenLength = newCertificateContext.tokenLength;
     requestInfo.pTemplateName = AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME;
     requestInfo.templateNameLength = ( sizeof( AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME ) - 1 );
     requestInfo.pParametersStart = _pTestParameters;
@@ -395,8 +489,14 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
     status = AwsIotOnboarding_OnboardDevice( _mqttConnection,
                                              &requestInfo,
                                              AWS_IOT_TEST_ONBOARDING_TIMEOUT,
-                                             &callbackInfo );
+                                             &onboardDeviceCallback );
 
 
     TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS, status );
+
+    /* Test Cleanup */
+
+    /* Release the certificate data buffers. */
+    Iot_DefaultFree( newCertificateContext.pCertificateIdBuffer );
+    Iot_DefaultFree( newCertificateContext.pCertificateOwnershipToken );
 }
