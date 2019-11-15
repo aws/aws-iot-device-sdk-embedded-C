@@ -20,8 +20,8 @@
  */
 
 /**
- * @file aws_iot_tests_onboarding_serializer.c
- * @brief Tests for the serializer functions internal to the Onboarding library.
+ * @file aws_iot_tests_provisioning_serializer.c
+ * @brief Tests for the serializer functions internal to the Provisioning library.
  */
 
 /* The config header is always included first. */
@@ -30,8 +30,8 @@
 /* SDK initialization include. */
 #include "iot_init.h"
 
-/* Onboarding internal include. */
-#include "private/aws_iot_onboarding_internal.h"
+/* Provisioning internal include. */
+#include "private/aws_iot_provisioning_internal.h"
 
 /* Serializer include .*/
 #include "iot_serializer.h"
@@ -42,19 +42,19 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Certificate ID for OnboardDevice Request serialization tests.
+ * @brief Certificate ID for Provisioning's RegisterThing Request serialization tests.
  */
 static const char * _testCertificateId = "TestCertificateId";
 
 /**
- * @brief The token string to use for OnboardDevice Request serialization tests.
+ * @brief The token string to use for Provisioning's RegisterThing Request serialization tests.
  */
 static const char * _testCertificateToken = "Token!";
 
 /**
  * @brief A sample list of parameters entries for testing serialization logic.
  */
-static const AwsIotOnboardingRequestParameterEntry_t _sampleParameters[] =
+static const AwsIotProvisioningRequestParameterEntry_t _sampleParameters[] =
 {
     { "Param1", ( sizeof( "Param1" ) - 1 ), "Value1", ( sizeof( "Value1" ) - 1 ) },
     { "Param2", ( sizeof( "Param2" ) - 1 ), "Value2", ( sizeof( "Value2" ) - 1 ) },
@@ -65,55 +65,56 @@ static const size_t _numOfSampleParameters = 3;
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test group for Onboarding API tests.
+ * @brief Test group for Provisioning API tests.
  */
-TEST_GROUP( Onboarding_Unit_Serializer );
+TEST_GROUP( Provisioning_Unit_Serializer );
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test setup for Onboarding API tests.
+ * @brief Test setup for Provisioning API tests.
  */
-TEST_SETUP( Onboarding_Unit_Serializer )
+TEST_SETUP( Provisioning_Unit_Serializer )
 {
     /* Initialize SDK. */
     TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
 
-    /* Initialize the Onboarding library. */
-    AwsIotOnboarding_Init( 0 );
+    /* Initialize the Provisioning library. */
+    AwsIotProvisioning_Init( 0 );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test tear down for Onboarding API tests.
+ * @brief Test tear down for Provisioning API tests.
  */
-TEST_TEAR_DOWN( Onboarding_Unit_Serializer )
+TEST_TEAR_DOWN( Provisioning_Unit_Serializer )
 {
     IotSdk_Cleanup();
 
-    AwsIotOnboarding_Cleanup();
+    AwsIotProvisioning_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test group runner for Onboarding API tests.
+ * @brief Test group runner for Provisioning API tests.
  */
-TEST_GROUP_RUNNER( Onboarding_Unit_Serializer )
+TEST_GROUP_RUNNER( Provisioning_Unit_Serializer )
 {
-    RUN_TEST_CASE( Onboarding_Unit_Serializer, TestGetDeviceCredentialsSerializationNominalCase );
-    RUN_TEST_CASE( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationNominalCase );
-    RUN_TEST_CASE( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationWithoutParameters );
+    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestCreateKeysAndCertificateSerializationNominalCase );
+    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestRegisterThingSerializationNominalCase );
+    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestRegisterThingSerializationWithoutParameters );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that the serializer for GetDeviceCredentials API generates the expected encoding for an "{}" empty
+ * @brief Tests that the serializer for Provisioning CreateKeysAndCertificate API generates the expected encoding for an
+ *"{}" empty
  * payload.
  */
-TEST( Onboarding_Unit_Serializer, TestGetDeviceCredentialsSerializationNominalCase )
+TEST( Provisioning_Unit_Serializer, TestCreateKeysAndCertificateSerializationNominalCase )
 {
     IotSerializerEncoderObject_t testEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
 
@@ -126,22 +127,22 @@ TEST( Onboarding_Unit_Serializer, TestGetDeviceCredentialsSerializationNominalCa
     uint8_t pSerializationBuffer[ sizeof( pExpectedSerialization ) ] = { 0 };
 
     /* Test the serializer function without a valid buffer. */
-    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS,
-                       _AwsIotOnboarding_SerializeGetDeviceCredentialsRequestPayload( &testEncoder,
-                                                                                      NULL,
-                                                                                      0 ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
+                       _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &testEncoder,
+                                                                                            NULL,
+                                                                                            0 ) );
     TEST_ASSERT_EQUAL( sizeof( pExpectedSerialization ),
-                       _pAwsIotOnboardingEncoder->getExtraBufferSizeNeeded( &testEncoder ) );
-    _pAwsIotOnboardingEncoder->destroy( &testEncoder );
+                       _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &testEncoder ) );
+    _pAwsIotProvisioningEncoder->destroy( &testEncoder );
 
 
     /* Test the serializer function without a valid buffer. */
-    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS,
-                       _AwsIotOnboarding_SerializeGetDeviceCredentialsRequestPayload( &testEncoder,
-                                                                                      pSerializationBuffer,
-                                                                                      sizeof( pSerializationBuffer ) ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
+                       _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &testEncoder,
+                                                                                            pSerializationBuffer,
+                                                                                            sizeof( pSerializationBuffer ) ) );
 
-    _pAwsIotOnboardingEncoder->destroy( &testEncoder );
+    _pAwsIotProvisioningEncoder->destroy( &testEncoder );
 
     /* Make sure that the serializer function generated the expected payload. */
     TEST_ASSERT_EQUAL( 0, memcmp( pExpectedSerialization, pSerializationBuffer,
@@ -151,9 +152,9 @@ TEST( Onboarding_Unit_Serializer, TestGetDeviceCredentialsSerializationNominalCa
 /**
  * @brief Tests the behavior of the serializer for generating a payload containing ONLY the "certificate" data.
  */
-TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationNominalCase )
+TEST( Provisioning_Unit_Serializer, TestRegisterThingSerializationNominalCase )
 {
-    AwsIotOnboardingOnboardDeviceRequestInfo_t testRequestInfo;
+    AwsIotProvisioningRegisterThingRequestInfo_t testRequestInfo;
 
     testRequestInfo.pDeviceCertificateId = _testCertificateId;
     testRequestInfo.deviceCertificateIdLength = strlen( _testCertificateId );
@@ -165,7 +166,7 @@ TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationNominalCase )
     IotSerializerEncoderObject_t testEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
 
     /**
-     * @brief The expected serialized payload for OnboardDevice API request containing #_sampleParameters and
+     * @brief The expected serialized payload for Provisioning's RegisterThing API request containing #_sampleParameters and
      * #_testCertificateId.
      */
     static const uint8_t pExpectedSerialization[] =
@@ -202,23 +203,23 @@ TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationNominalCase )
     uint8_t pSerializationBuffer[ sizeof( pExpectedSerialization ) ] = { 0 };
 
     /* Test the serializer function without a valid buffer. */
-    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS,
-                       _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( &testRequestInfo,
-                                                                               &testEncoder,
-                                                                               NULL,
-                                                                               0 ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
+                       _AwsIotProvisioning_SerializeRegisterThingRequestPayload( &testRequestInfo,
+                                                                                 &testEncoder,
+                                                                                 NULL,
+                                                                                 0 ) );
     TEST_ASSERT_EQUAL( sizeof( pExpectedSerialization ),
-                       _pAwsIotOnboardingEncoder->getExtraBufferSizeNeeded( &testEncoder ) );
-    _pAwsIotOnboardingEncoder->destroy( &testEncoder );
+                       _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &testEncoder ) );
+    _pAwsIotProvisioningEncoder->destroy( &testEncoder );
 
     /* Test the serializer function with a valid buffer. */
-    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS,
-                       _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( &testRequestInfo,
-                                                                               &testEncoder,
-                                                                               pSerializationBuffer,
-                                                                               sizeof( pSerializationBuffer ) ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
+                       _AwsIotProvisioning_SerializeRegisterThingRequestPayload( &testRequestInfo,
+                                                                                 &testEncoder,
+                                                                                 pSerializationBuffer,
+                                                                                 sizeof( pSerializationBuffer ) ) );
 
-    _pAwsIotOnboardingEncoder->destroy( &testEncoder );
+    _pAwsIotProvisioningEncoder->destroy( &testEncoder );
 
     /* Make sure that the serializer generated the expected request payload data. */
     TEST_ASSERT_EQUAL( 0, memcmp( pExpectedSerialization, pSerializationBuffer,
@@ -228,9 +229,9 @@ TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationNominalCase )
 /**
  * @brief Tests the behavior of the serializer for generating a payload containing "certificate" and "parameters".
  */
-TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationWithoutParameters )
+TEST( Provisioning_Unit_Serializer, TestRegisterThingSerializationWithoutParameters )
 {
-    AwsIotOnboardingOnboardDeviceRequestInfo_t testRequestInfo;
+    AwsIotProvisioningRegisterThingRequestInfo_t testRequestInfo;
 
     testRequestInfo.pDeviceCertificateId = _testCertificateId;
     testRequestInfo.deviceCertificateIdLength = strlen( _testCertificateId );
@@ -242,7 +243,7 @@ TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationWithoutParameter
     IotSerializerEncoderObject_t testEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
 
     /**
-     * @brief The expected serialized payload for OnboardDevice API request containing #_sampleParameters and
+     * @brief The expected serialized payload for Provisioning's RegisterThing API request containing #_sampleParameters and
      * #_testCertificateId.
      */
     static const uint8_t pExpectedSerializationWithoutParameters[] =
@@ -263,13 +264,13 @@ TEST( Onboarding_Unit_Serializer, TestOnboardDeviceSerializationWithoutParameter
 
     uint8_t pSerializationBuffer[ sizeof( pExpectedSerializationWithoutParameters ) ] = { 0 };
 
-    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS,
-                       _AwsIotOnboarding_SerializeOnboardDeviceRequestPayload( &testRequestInfo,
-                                                                               &testEncoder,
-                                                                               pSerializationBuffer,
-                                                                               sizeof( pSerializationBuffer ) ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
+                       _AwsIotProvisioning_SerializeRegisterThingRequestPayload( &testRequestInfo,
+                                                                                 &testEncoder,
+                                                                                 pSerializationBuffer,
+                                                                                 sizeof( pSerializationBuffer ) ) );
 
-    _pAwsIotOnboardingEncoder->destroy( &testEncoder );
+    _pAwsIotProvisioningEncoder->destroy( &testEncoder );
 
     /* Make sure that the serializer generated the expected request payload data. */
     TEST_ASSERT_EQUAL( 0, memcmp( pExpectedSerializationWithoutParameters, pSerializationBuffer,

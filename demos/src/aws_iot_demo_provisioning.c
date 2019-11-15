@@ -20,10 +20,10 @@
  */
 
 /**
- * @file aws_iot_demo_onboarding.c
- * @brief Demonstrates usage of the Thing Onboarding library.
+ * @file aws_iot_demo_provisioning.c
+ * @brief Demonstrates usage of the Thing Provisioning library.
  *
- * This program demonstrates the using Onboarding documents to toggle a state called
+ * This program demonstrates the using Provisioning documents to toggle a state called
  * "powerOn" in a remote device.
  */
 
@@ -46,8 +46,8 @@
 /* MQTT include. */
 #include "iot_mqtt.h"
 
-/* Onboarding include. */
-#include "aws_iot_onboarding.h"
+/* Provisioning include. */
+#include "aws_iot_provisioning.h"
 
 /* JSON utilities include. */
 #include "iot_json_utils.h"
@@ -58,11 +58,11 @@
  *
  * Provide default values for undefined configuration settings.
  */
-#ifndef AWS_IOT_DEMO_ONBOARDING_UPDATE_COUNT
-    #define AWS_IOT_DEMO_ONBOARDING_UPDATE_COUNT         ( 20 )
+#ifndef AWS_IOT_DEMO_PROVISIONING_UPDATE_COUNT
+    #define AWS_IOT_DEMO_PROVISIONING_UPDATE_COUNT         ( 20 )
 #endif
-#ifndef AWS_IOT_DEMO_ONBOARDING_TIMEOUT_PERIOD_MS
-    #define AWS_IOT_DEMO_ONBOARDING_TIMEOUT_PERIOD_MS    ( 5000 )
+#ifndef AWS_IOT_DEMO_PROVISIONING_TIMEOUT_PERIOD_MS
+    #define AWS_IOT_DEMO_PROVISIONING_TIMEOUT_PERIOD_MS    ( 5000 )
 #endif
 /** @endcond */
 
@@ -74,7 +74,7 @@
 #define KEEP_ALIVE_SECONDS              ( 60 )
 
 /**
- * @brief The timeout for Onboarding and MQTT operations in this demo.
+ * @brief The timeout for Provisioning and MQTT operations in this demo.
  */
 #define TIMEOUT_MS                      ( 5000 )
 
@@ -91,7 +91,7 @@
 #define NUM_OF_PROVISIONING_PARAMS      1u
 
 /**
- * @brief Type for the context parameter for the #AwsIotOnboarding_DeviceCredentialsCallbackInfo_t callback.
+ * @brief Type for the context parameter for the #AwsIotProvisioning_DeviceCredentialsCallbackInfo_t callback.
  * It will be used for storing the received Certificate ID and the ownership token data received from the server through
  * the callback, so that can be used for provisioning the demo application.
  */
@@ -106,18 +106,18 @@ typedef struct _demoDeviceCredentialsCallbackContext
 /*-----------------------------------------------------------*/
 
 /* Declaration of demo function. */
-int RunOnboardingDemo( bool awsIotMqttMode,
-                       const char * pIdentifier,
-                       void * pNetworkServerInfo,
-                       void * pNetworkCredentialInfo,
-                       const IotNetworkInterface_t * pNetworkInterface );
+int RunProvisioningDemo( bool awsIotMqttMode,
+                         const char * pIdentifier,
+                         void * pNetworkServerInfo,
+                         void * pNetworkCredentialInfo,
+                         const IotNetworkInterface_t * pNetworkInterface );
 
 /*-----------------------------------------------------------*/
 
 /**
  * @brief Prints the rejected reponse information received from the server.
  */
-static void _printRejectedResponse( const AwsIotOnboardingRejectedResponse_t * pResponseInfo )
+static void _printRejectedResponse( const AwsIotProvisioningRejectedResponse_t * pResponseInfo )
 {
     IotLogError( "ErrorCode={%.*s}\n ErrorMessage={%.*s}\n",
                  pResponseInfo->errorCodeLength, pResponseInfo->pErrorCode,
@@ -135,14 +135,14 @@ static void _printRejectedResponse( const AwsIotOnboardingRejectedResponse_t * p
  * shared buffers of the demo.
  */
 static void _demoDeviceCredentialsCallback( void * contextParam,
-                                            const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
+                                            const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
 {
     _demoDeviceCredentialsCallbackContext_t * certificateIdTokenContext =
         ( _demoDeviceCredentialsCallbackContext_t * ) contextParam;
 
     IotLogInfo( "Received StatusCode={%d}", pResponseInfo->statusCode );
 
-    if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
+    if( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED )
     {
         /* Allocate buffer space for storing the certificate ID obtained from the server. */
         certificateIdTokenContext->pCertificateIdBuffer =
@@ -200,19 +200,20 @@ static void _demoDeviceCredentialsCallback( void * contextParam,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Callback for displaying onboarding information sent by the server, if the onboarding request is successful.
+ * @brief Callback for displaying provisioning information sent by the server, if the provisioning request is
+ * successful.
  *
  * @param[in] contextParam Unused parameter for the demo.
  * @param[in] pResponseInfo The information in the response received from the server.
  */
-static void _demoOnboardDeviceCallback( void * contextParam,
-                                        const AwsIotOnboardingOnboardDeviceResponse_t * pResponseInfo )
+static void _demoRegisterThingCallback( void * contextParam,
+                                        const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo )
 {
     ( void ) contextParam;
 
     IotLogInfo( "Received StatusCode={%d}", pResponseInfo->statusCode );
 
-    if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
+    if( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED )
     {
         if( pResponseInfo->u.acceptedResponse.pClientId != NULL )
         {
@@ -230,7 +231,7 @@ static void _demoOnboardDeviceCallback( void * contextParam,
 
         if( pResponseInfo->u.acceptedResponse.numOfConfigurationEntries > 0 )
         {
-            const AwsIotOnboardingResponseDeviceConfigurationEntry_t * pConfigurationList =
+            const AwsIotProvisioningResponseDeviceConfigurationEntry_t * pConfigurationList =
                 pResponseInfo->u.acceptedResponse.pDeviceConfigList;
 
             for( size_t configIndex = 0;
@@ -247,7 +248,7 @@ static void _demoOnboardDeviceCallback( void * contextParam,
     }
     else
     {
-        IotLogInfo( "Oops, server rejected request for onboarding the demo app.Consider re - running the demo !" );
+        IotLogInfo( "Oops, server rejected request for provisioning the demo app.Consider re - running the demo !" );
         _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
     }
 }
@@ -255,7 +256,7 @@ static void _demoOnboardDeviceCallback( void * contextParam,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Initialize the the MQTT library and the Onboarding library.
+ * @brief Initialize the the MQTT library and the Provisioning library.
  *
  * @return `EXIT_SUCCESS` if all libraries were successfully initialized;
  * `EXIT_FAILURE` otherwise.
@@ -264,7 +265,7 @@ static int _initializeDemo( void )
 {
     int status = EXIT_SUCCESS;
     IotMqttError_t mqttInitStatus = IOT_MQTT_SUCCESS;
-    AwsIotOnboardingError_t onboardingInitStatus = AWS_IOT_ONBOARDING_SUCCESS;
+    AwsIotProvisioningError_t provisioningInitStatus = AWS_IOT_PROVISIONING_SUCCESS;
 
     /* Flags to track cleanup on error. */
     bool mqttInitialized = false;
@@ -281,13 +282,13 @@ static int _initializeDemo( void )
         status = EXIT_FAILURE;
     }
 
-    /* Initialize the Onboarding library. */
+    /* Initialize the Provisioning library. */
     if( status == EXIT_SUCCESS )
     {
         /* Use the default MQTT timeout. */
-        onboardingInitStatus = AwsIotOnboarding_Init( 0 );
+        provisioningInitStatus = AwsIotProvisioning_Init( 0 );
 
-        if( onboardingInitStatus != AWS_IOT_ONBOARDING_SUCCESS )
+        if( provisioningInitStatus != AWS_IOT_PROVISIONING_SUCCESS )
         {
             status = EXIT_FAILURE;
         }
@@ -308,20 +309,20 @@ static int _initializeDemo( void )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Clean up the the MQTT library and the Onboarding library.
+ * @brief Clean up the the MQTT library and the Provisioning library.
  */
 static void _cleanupDemo( void )
 {
-    AwsIotOnboarding_Cleanup();
+    AwsIotProvisioning_Cleanup();
     IotMqtt_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Establish a new connection to the MQTT server for the Onboarding demo.
+ * @brief Establish a new connection to the MQTT server for the Provisioning demo.
  *
- * @param[in] pIdentifier NULL-terminated MQTT client identifier. The Onboarding
+ * @param[in] pIdentifier NULL-terminated MQTT client identifier. The Provisioning
  * demo will use the Thing Name as the client identifier.
  * @param[in] pNetworkServerInfo Passed to the MQTT connect function when
  * establishing the MQTT connection.
@@ -380,23 +381,23 @@ static int _establishMqttConnection( const char * pIdentifier,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief The function that runs the Onboarding demo, called by the demo runner.
+ * @brief The function that runs the Provisioning demo, called by the demo runner.
  *
- * @param[in] awsIotMqttMode Ignored for the Onboarding demo.
- * @param[in] pIdentifier NULL-terminated Onboarding Thing Name.
+ * @param[in] awsIotMqttMode Ignored for the Provisioning demo.
+ * @param[in] pIdentifier NULL-terminated Provisioning Thing Name.
  * @param[in] pNetworkServerInfo Passed to the MQTT connect function when
- * establishing the MQTT connection for Onboardings.
+ * establishing the MQTT connection for Provisionings.
  * @param[in] pNetworkCredentialInfo Passed to the MQTT connect function when
- * establishing the MQTT connection for Onboardings.
+ * establishing the MQTT connection for Provisionings.
  * @param[in] pNetworkInterface The network interface to use for this demo.
  *
  * @return `EXIT_SUCCESS` if the demo completes successfully; `EXIT_FAILURE` otherwise.
  */
-int RunOnboardingDemo( bool awsIotMqttMode,
-                       const char * pIdentifier,
-                       void * pNetworkServerInfo,
-                       void * pNetworkCredentialInfo,
-                       const IotNetworkInterface_t * pNetworkInterface )
+int RunProvisioningDemo( bool awsIotMqttMode,
+                         const char * pIdentifier,
+                         void * pNetworkServerInfo,
+                         void * pNetworkCredentialInfo,
+                         const IotNetworkInterface_t * pNetworkInterface )
 {
     /* Return value of this function and the exit status of this program. */
     int status = 0;
@@ -405,8 +406,8 @@ int RunOnboardingDemo( bool awsIotMqttMode,
     IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
     /* Callbacks for the library APIs. */
-    AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t deviceCredentialsCallback = AWS_IOT_ONBOARDING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER;
-    AwsIotOnboardingOnboardDeviceCallbackInfo_t onboardDeviceResponseCallback = AWS_IOT_ONBOARDING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER;
+    AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t deviceCredentialsCallback = AWS_IOT_PROVISIONING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER;
+    AwsIotProvisioningRegisterThingCallbackInfo_t onboardDeviceResponseCallback = AWS_IOT_PROVISIONING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER;
 
     /* Represents memory that will be allocated to store the Certificate ID that will be provided by the credential
      * requesting API through the callback. */
@@ -417,20 +418,20 @@ int RunOnboardingDemo( bool awsIotMqttMode,
     newCertificateDataContext.pCertificateOwnershipToken = NULL;
     newCertificateDataContext.tokenLength = 0;
 
-    /* Request data for onboarding the demo application. */
-    AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo;
+    /* Request data for provisioning the demo application. */
+    AwsIotProvisioningRegisterThingRequestInfo_t requestInfo;
 
     /* Flags for tracking which cleanup functions must be called. */
     bool librariesInitialized = false, connectionEstablished = false;
 
-    /* The first parameter of this demo function is not used. Onboardings are specific
+    /* The first parameter of this demo function is not used. Provisionings are specific
      * to AWS IoT, so this value is hardcoded to true whenever needed. */
     ( void ) awsIotMqttMode;
 
     /* This will be used for tracking the return code from the Provisioning APIs. */
-    AwsIotOnboardingError_t requestStatus = AWS_IOT_ONBOARDING_SUCCESS;
+    AwsIotProvisioningError_t requestStatus = AWS_IOT_PROVISIONING_SUCCESS;
 
-    AwsIotOnboardingRequestParameterEntry_t provisioningParameters;
+    AwsIotProvisioningRequestParameterEntry_t provisioningParameters;
     provisioningParameters.pParameterKey = PROVISIONING_PARAMETER_NAME;
     provisioningParameters.parameterKeyLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_NAME ) - 1 );
     provisioningParameters.pParameterValue = PROVISIONING_PARAMETER_VALUE;
@@ -448,7 +449,7 @@ int RunOnboardingDemo( bool awsIotMqttMode,
     }
     else
     {
-        IotLogError( "A client identifier must be provided for the Onboarding demo." );
+        IotLogError( "A client identifier must be provided for the Provisioning demo." );
 
         status = EXIT_FAILURE;
     }
@@ -485,16 +486,16 @@ int RunOnboardingDemo( bool awsIotMqttMode,
 
         /* Call the API to get new device credentials for this demo, and check that the certificat ID data is populated.
          * */
-        requestStatus = AwsIotOnboarding_GetDeviceCredentials( mqttConnection,
-                                                               0,
-                                                               AWS_IOT_DEMO_ONBOARDING_TIMEOUT_PERIOD_MS,
-                                                               &deviceCredentialsCallback );
+        requestStatus = AwsIotProvisioning_CreateKeysAndCertificate( mqttConnection,
+                                                                     0,
+                                                                     AWS_IOT_DEMO_PROVISIONING_TIMEOUT_PERIOD_MS,
+                                                                     &deviceCredentialsCallback );
 
-        if( requestStatus != AWS_IOT_ONBOARDING_SUCCESS )
+        if( requestStatus != AWS_IOT_PROVISIONING_SUCCESS )
         {
             status = EXIT_FAILURE;
             IotLogError( "Request to get new credentials failed, error %s ",
-                         AwsIotOnboarding_strerror( requestStatus ) );
+                         AwsIotProvisioning_strerror( requestStatus ) );
         }
         else if( ( newCertificateDataContext.pCertificateIdBuffer == NULL ) ||
                  ( newCertificateDataContext.pCertificateOwnershipToken == NULL ) )
@@ -509,7 +510,7 @@ int RunOnboardingDemo( bool awsIotMqttMode,
 
     if( status == EXIT_SUCCESS )
     {
-        /* Set the parameters for requesting onboarding. */
+        /* Set the parameters for requesting provisioning. */
         requestInfo.pDeviceCertificateId = newCertificateDataContext.pCertificateIdBuffer;
         requestInfo.deviceCertificateIdLength = newCertificateDataContext.certificateIdLength;
         requestInfo.pCertificateOwnershipToken = newCertificateDataContext.pCertificateOwnershipToken;
@@ -520,24 +521,24 @@ int RunOnboardingDemo( bool awsIotMqttMode,
         requestInfo.numOfParameters = NUM_OF_PROVISIONING_PARAMS;
 
         /* Set the callback function for handling device credentials that the server will send. */
-        onboardDeviceResponseCallback.function = _demoOnboardDeviceCallback;
+        onboardDeviceResponseCallback.function = _demoRegisterThingCallback;
 
         /* Call the API to onboard the demo application with the certificate ID that we received, and the template name
          * associated with the demo endpoint account. */
-        requestStatus = AwsIotOnboarding_OnboardDevice( mqttConnection,
-                                                        &requestInfo,
-                                                        AWS_IOT_DEMO_ONBOARDING_TIMEOUT_PERIOD_MS,
-                                                        &onboardDeviceResponseCallback );
+        requestStatus = AwsIotProvisioning_RegisterThing( mqttConnection,
+                                                          &requestInfo,
+                                                          AWS_IOT_DEMO_PROVISIONING_TIMEOUT_PERIOD_MS,
+                                                          &onboardDeviceResponseCallback );
 
-        if( requestStatus != AWS_IOT_ONBOARDING_SUCCESS )
+        if( requestStatus != AWS_IOT_PROVISIONING_SUCCESS )
         {
             status = EXIT_FAILURE;
             IotLogError( "Failed to onboard demo application, error %s",
-                         AwsIotOnboarding_strerror( requestStatus ) );
+                         AwsIotProvisioning_strerror( requestStatus ) );
         }
         else
         {
-            IotLogInfo( "Succeeded in onboarding our demo application!" );
+            IotLogInfo( "Succeeded in provisioning our demo application!" );
         }
     }
 

@@ -20,8 +20,8 @@
  */
 
 /**
- * @file aws_iot_tests_onboarding.c
- * @brief Test runner for Onboarding tests.
+ * @file aws_iot_tests_provisioning.c
+ * @brief Test runner for Provisioning tests.
  */
 
 /* Standard includes. */
@@ -32,19 +32,19 @@
 
 /*-----------------------------------------------------------*/
 
-void RunOnboardingTests( bool disableNetworkTests,
+void RunProvisioningTests( bool disableNetworkTests,
                          bool disableLongTests )
 {
     /* Silence warnings about unused parameters. */
     ( void ) disableLongTests;
 
-    RUN_TEST_GROUP( Onboarding_Unit_API );
-    RUN_TEST_GROUP( Onboarding_Unit_Serializer );
-    RUN_TEST_GROUP( Onboarding_Unit_Parser );
+    RUN_TEST_GROUP( Provisioning_Unit_API );
+    RUN_TEST_GROUP( Provisioning_Unit_Serializer );
+    RUN_TEST_GROUP( Provisioning_Unit_Parser );
 
     if( disableNetworkTests == false )
     {
-        RUN_TEST_GROUP( Onboarding_System );
+        RUN_TEST_GROUP( Provisioning_System );
     }
 }
 
