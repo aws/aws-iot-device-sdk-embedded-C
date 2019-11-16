@@ -20,8 +20,8 @@
  */
 
 /**
- * @file aws_iot_tests_onboarding_system.c
- * @brief Full system tests for the AWS IoT Onboarding library.
+ * @file aws_iot_tests_provisioning_system.c
+ * @brief Full system tests for the AWS IoT Provisioning library.
  */
 
 /* The config header is always included first. */
@@ -43,8 +43,8 @@
 /* MQTT include. */
 #include "iot_mqtt.h"
 
-/* Onboarding include. */
-#include "private/aws_iot_onboarding_internal.h"
+/* Provisioning include. */
+#include "private/aws_iot_provisioning_internal.h"
 
 /* Test network header include. */
 #include IOT_TEST_NETWORK_HEADER
@@ -66,16 +66,16 @@
  *
  * Provide default values of test configuration constants.
  */
-#ifndef AWS_IOT_TEST_ONBOARDING_TIMEOUT
-    #define AWS_IOT_TEST_ONBOARDING_TIMEOUT    ( 60000 )
+#ifndef AWS_IOT_TEST_PROVISIONING_TIMEOUT
+    #define AWS_IOT_TEST_PROVISIONING_TIMEOUT    ( 60000 )
 #endif
 /** @endcond */
 
-/* Require ONBOARDING library asserts to be enabled for these tests. The ONBOARDING
- * assert function is used to abort the tests on failure from the ONBOARDING operation
+/* Require PROVISIONING library asserts to be enabled for these tests. The PROVISIONING
+ * assert function is used to abort the tests on failure from the PROVISIONING operation
  * complete callback. */
-#if AWS_IOT_ONBOARDING_ENABLE_ASSERTS == 0
-    #error "ONBOARDING system tests require AWS_IOT_ONBOARDING_ENABLE_ASSERTS to be 1."
+#if AWS_IOT_PROVISIONING_ENABLE_ASSERTS == 0
+    #error "PROVISIONING system tests require AWS_IOT_PROVISIONING_ENABLE_ASSERTS to be 1."
 #endif
 
 /*-----------------------------------------------------------*/
@@ -104,19 +104,19 @@ static IotMqttNetworkInfo_t _networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
- * @brief Client ID for the MQTT connection to the Onboarding service.
+ * @brief Client ID for the MQTT connection to the Provisioning service.
  */
 static const char * _pTestMqttClientId = AWS_IOT_TEST_PROVISIONING_CLIENT_ID;
 
 /**
- * @brief Parameters to use for testing the OnboardDevice API.
+ * @brief Parameters to use for testing the Provisioning RegisterThing API.
  */
-static const AwsIotOnboardingRequestParameterEntry_t _pTestParameters[] =
-    AWS_IOT_TEST_ONBOARDING_TEMPLATE_PARAMETERS;
+static const AwsIotProvisioningRequestParameterEntry_t _pTestParameters[] =
+    AWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS;
 
 
 /**
- * @brief Type for the context parameter for the #AwsIotOnboarding_DeviceCredentialsCallbackInfo_t callback.
+ * @brief Type for the context parameter for the #AwsIotProvisioning_DeviceCredentialsCallbackInfo_t callback.
  * It will be used for storing the received Certificate ID and the ownership token data received from the server through
  * the callback, so that can be used for provisioning the demo application.
  */
@@ -133,9 +133,9 @@ typedef struct _deviceCredentialsCallbackContext
 /**
  * @brief Verifies the validity of the parsed "rejected" response data and prints the data.
  */
-static void _printRejectedResponse( const AwsIotOnboardingRejectedResponse_t * pResponseInfo )
+static void _printRejectedResponse( const AwsIotProvisioningRejectedResponse_t * pResponseInfo )
 {
-    AwsIotOnboarding_Assert( pResponseInfo != NULL );
+    AwsIotProvisioning_Assert( pResponseInfo != NULL );
 
     IotLogError( "\n Request REJECTED!!\n ErrorCode={%.*s}\n ErrorMessage={%.*s}\n",
                  pResponseInfo->errorCodeLength, pResponseInfo->pErrorCode,
@@ -145,17 +145,18 @@ static void _printRejectedResponse( const AwsIotOnboardingRejectedResponse_t * p
 /*-----------------------------------------------------------*/
 
 /**
- * @brief User callback function for printing parsed response data sent by the GetDeviceCredentials service API.
+ * @brief User callback function for printing parsed response data sent by the Provisioning CreateKeysAndCertificate
+ * service API.
  */
 static void _printDeviceCredentialsCallback( void * contextParam,
-                                             const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
+                                             const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
 {
     ( void ) contextParam;
-    AwsIotOnboarding_Assert( pResponseInfo != NULL );
+    AwsIotProvisioning_Assert( pResponseInfo != NULL );
 
     IotLogInfo( "\n Status Code = %d\n", pResponseInfo->statusCode );
 
-    if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
+    if( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED )
     {
         /* Check parameters against expected values. */
         TEST_ASSERT_NOT_NULL( pResponseInfo->u.acceptedResponse.pDeviceCertificate );
@@ -182,14 +183,14 @@ static void _printDeviceCredentialsCallback( void * contextParam,
 /*-----------------------------------------------------------*/
 
 static void _storeCertificateDataForProvisioning( void * contextParam,
-                                                  const AwsIotOnboardingGetDeviceCredentialsResponse_t * pResponseInfo )
+                                                  const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
 {
     _deviceCredentialsCallbackContext_t * certificateIdTokenContext =
         ( _deviceCredentialsCallbackContext_t * ) contextParam;
 
     IotLogInfo( "Received StatusCode={%d}", pResponseInfo->statusCode );
 
-    if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
+    if( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED )
     {
         /* Allocate buffer space for storing the certificate ID obtained from the server. */
         certificateIdTokenContext->pCertificateIdBuffer =
@@ -230,24 +231,24 @@ static void _storeCertificateDataForProvisioning( void * contextParam,
     else
     {
         IotLogInfo( "Request for new credentials was rejected! Test will be aborted." );
-        AwsIotOnboarding_Assert( false );
+        AwsIotProvisioning_Assert( false );
     }
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief User callback function for printing parsed response data sent by the OnboardDevice service API.
+ * @brief User callback function for printing parsed response data sent by the Provisioning RegisterThing service API.
  */
-static void _printOnboardDeviceResponseCallback( void * contextParam,
-                                                 const AwsIotOnboardingOnboardDeviceResponse_t * pResponseInfo )
+static void _printRegisterThingResponseCallback( void * contextParam,
+                                                 const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo )
 {
     ( void ) contextParam;
-    AwsIotOnboarding_Assert( pResponseInfo != NULL );
+    AwsIotProvisioning_Assert( pResponseInfo != NULL );
 
     IotLogInfo( "\n Status Code = %d\n", pResponseInfo->statusCode );
 
-    if( pResponseInfo->statusCode == AWS_IOT_ONBOARDING_SERVER_STATUS_ACCEPTED )
+    if( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED )
     {
         if( pResponseInfo->u.acceptedResponse.pClientId != NULL )
         {
@@ -265,7 +266,7 @@ static void _printOnboardDeviceResponseCallback( void * contextParam,
 
         if( pResponseInfo->u.acceptedResponse.numOfConfigurationEntries > 0 )
         {
-            const AwsIotOnboardingResponseDeviceConfigurationEntry_t * pConfigurationList =
+            const AwsIotProvisioningResponseDeviceConfigurationEntry_t * pConfigurationList =
                 pResponseInfo->u.acceptedResponse.pDeviceConfigList;
 
             for( size_t configIndex = 0;
@@ -291,16 +292,16 @@ static void _printOnboardDeviceResponseCallback( void * contextParam,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test group for Onboarding system tests.
+ * @brief Test group for Provisioning system tests.
  */
-TEST_GROUP( Onboarding_System );
+TEST_GROUP( Provisioning_System );
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test setup for Onboarding system tests.
+ * @brief Test setup for Provisioning system tests.
  */
-TEST_SETUP( Onboarding_System )
+TEST_SETUP( Provisioning_System )
 {
     static uint64_t lastConnectTime = 0;
     uint64_t elapsedTime = 0;
@@ -324,10 +325,10 @@ TEST_SETUP( Onboarding_System )
         TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
     }
 
-    /* Initialize the Onboarding library. */
-    if( AwsIotOnboarding_Init( 0 ) != AWS_IOT_ONBOARDING_SUCCESS )
+    /* Initialize the Provisioning library. */
+    if( AwsIotProvisioning_Init( 0 ) != AWS_IOT_PROVISIONING_SUCCESS )
     {
-        TEST_FAIL_MESSAGE( "Failed to initialize Onboarding library." );
+        TEST_FAIL_MESSAGE( "Failed to initialize Provisioning library." );
     }
 
     /* Set the MQTT network setup parameters. */
@@ -344,12 +345,12 @@ TEST_SETUP( Onboarding_System )
         _networkInfo.pMqttSerializer = IOT_TEST_MQTT_SERIALIZER;
     #endif
 
-    /* Set the members of the connect info. Use the Onboarding Thing Name as the MQTT
+    /* Set the members of the connect info. Use the Provisioning Thing Name as the MQTT
      * client identifier. */
     connectInfo.awsIotMqttMode = true;
     connectInfo.pClientIdentifier = _pTestMqttClientId;
     connectInfo.clientIdentifierLength = strlen( _pTestMqttClientId );
-    connectInfo.keepAliveSeconds = AWS_IOT_TEST_ONBOARDING_TIMEOUT;
+    connectInfo.keepAliveSeconds = AWS_IOT_TEST_PROVISIONING_TIMEOUT;
 
     /* AWS IoT Service limits only allow 1 connection per MQTT client ID per second.
      * Wait until 1100 ms have elapsed since the last connection. */
@@ -364,12 +365,12 @@ TEST_SETUP( Onboarding_System )
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     status = IotMqtt_Connect( &_networkInfo,
                               &connectInfo,
-                              AWS_IOT_TEST_ONBOARDING_TIMEOUT,
+                              AWS_IOT_TEST_PROVISIONING_TIMEOUT,
                               &_mqttConnection );
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        TEST_FAIL_MESSAGE( "Failed to establish MQTT connection for Onboarding tests" );
+        TEST_FAIL_MESSAGE( "Failed to establish MQTT connection for Provisioning tests" );
     }
 
     /* Update the time of the last MQTT connect. */
@@ -379,9 +380,9 @@ TEST_SETUP( Onboarding_System )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test tear down for Onboarding system tests.
+ * @brief Test tear down for Provisioning system tests.
  */
-TEST_TEAR_DOWN( Onboarding_System )
+TEST_TEAR_DOWN( Provisioning_System )
 {
     /* Disconnect the MQTT connection if it was created. */
     if( _mqttConnection != IOT_MQTT_CONNECTION_INITIALIZER )
@@ -390,7 +391,7 @@ TEST_TEAR_DOWN( Onboarding_System )
         _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
     }
 
-    AwsIotOnboarding_Cleanup();
+    AwsIotProvisioning_Cleanup();
 
     /* Clean up the MQTT library. */
     IotMqtt_Cleanup();
@@ -405,53 +406,58 @@ TEST_TEAR_DOWN( Onboarding_System )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test group runner for Onboarding system tests.
+ * @brief Test group runner for Provisioning system tests.
  */
-TEST_GROUP_RUNNER( Onboarding_System )
+TEST_GROUP_RUNNER( Provisioning_System )
 {
-    RUN_TEST_CASE( Onboarding_System, GetDeviceCredentialsNominalCase );
-    RUN_TEST_CASE( Onboarding_System, OnboardDeviceNominalCase );
+    RUN_TEST_CASE( Provisioning_System, CreateKeysAndCertificateNominalCase );
+    RUN_TEST_CASE( Provisioning_System, RegisterThingNominalCase );
 }
 
 /*-----------------------------------------------------------*/
 
 
 /**
- * @brief Tests the behavior of the GetDeviceCredentials API in the nominal (or success) case where the server responds
+ * @brief Tests the behavior of the Provisioning CreateKeysAndCertificate API in the nominal (or success) case where the
+ * server
+ * responds
  * within the specified timeout period.
  */
-TEST( Onboarding_System, GetDeviceCredentialsNominalCase )
+TEST( Provisioning_System, CreateKeysAndCertificateNominalCase )
 {
-    AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
-    AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t callbackInfo =
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
+    AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callbackInfo =
     {
         .userParam = NULL,
         .function  = _printDeviceCredentialsCallback
     };
 
-    status = AwsIotOnboarding_GetDeviceCredentials( _mqttConnection,
-                                                    0,
-                                                    AWS_IOT_TEST_ONBOARDING_TIMEOUT,
-                                                    &callbackInfo );
+    status = AwsIotProvisioning_CreateKeysAndCertificate( _mqttConnection,
+                                                          0,
+                                                          AWS_IOT_TEST_PROVISIONING_TIMEOUT,
+                                                          &callbackInfo );
 
-    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS, status );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, status );
 }
 
 /**
- * @brief Tests the behavior of the OnboardDevice API in the nominal (or success) case where the server responds
+ * @brief Tests the behavior of the Provisioning RegisterThing API in the nominal (or success) case where the server
+ *responds
  * within the specified timeout period.
  */
-TEST( Onboarding_System, OnboardDeviceNominalCase )
+TEST( Provisioning_System, RegisterThingNominalCase )
 {
-    AwsIotOnboardingError_t status = AWS_IOT_ONBOARDING_SUCCESS;
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
 
-    AwsIotOnboardingOnboardDeviceCallbackInfo_t onboardDeviceCallback =
+    AwsIotProvisioningRegisterThingCallbackInfo_t onboardDeviceCallback =
     {
         .userParam = NULL,
-        .function  = _printOnboardDeviceResponseCallback
+        .function  = _printRegisterThingResponseCallback
     };
 
-    /* To test the OnboardDevice API, we need to request credentials from the GetDeviceCredentials API, that */
+    /* To test the Provisioning RegisterThing API, we need to request credentials from the Provisioning
+     * CreateKeysAndCertificate API,
+     * that */
     /* we will use for provisioning in the test. */
 
     _deviceCredentialsCallbackContext_t newCertificateContext;
@@ -461,38 +467,38 @@ TEST( Onboarding_System, OnboardDeviceNominalCase )
     newCertificateContext.pCertificateOwnershipToken = NULL;
     newCertificateContext.tokenLength = 0;
 
-    AwsIotOnboardingGetDeviceCredentialsCallbackInfo_t createNewCredsCallback =
+    AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t createNewCredsCallback =
     {
         .userParam = &newCertificateContext,
         .function  = _storeCertificateDataForProvisioning
     };
 
     /* Obtain new certificate and ownership token for testing provisioning API. */
-    status = AwsIotOnboarding_GetDeviceCredentials( _mqttConnection,
-                                                    0,
-                                                    AWS_IOT_TEST_ONBOARDING_TIMEOUT,
-                                                    &createNewCredsCallback );
+    status = AwsIotProvisioning_CreateKeysAndCertificate( _mqttConnection,
+                                                          0,
+                                                          AWS_IOT_TEST_PROVISIONING_TIMEOUT,
+                                                          &createNewCredsCallback );
 
-    AwsIotOnboardingOnboardDeviceRequestInfo_t requestInfo;
+    AwsIotProvisioningRegisterThingRequestInfo_t requestInfo;
 
     requestInfo.pDeviceCertificateId = newCertificateContext.pCertificateIdBuffer;
     requestInfo.deviceCertificateIdLength = newCertificateContext.certificateIdLength;
     requestInfo.pCertificateOwnershipToken = newCertificateContext.pCertificateOwnershipToken;
     requestInfo.ownershipTokenLength = newCertificateContext.tokenLength;
-    requestInfo.pTemplateName = AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME;
-    requestInfo.templateNameLength = ( sizeof( AWS_IOT_TEST_ONBOARDING_TEMPLATE_NAME ) - 1 );
+    requestInfo.pTemplateName = AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME;
+    requestInfo.templateNameLength = ( sizeof( AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME ) - 1 );
     requestInfo.pParametersStart = _pTestParameters;
     requestInfo.numOfParameters = sizeof( _pTestParameters ) /
-                                  sizeof( AwsIotOnboardingRequestParameterEntry_t );
+                                  sizeof( AwsIotProvisioningRequestParameterEntry_t );
 
     /* Call the API under test. */
-    status = AwsIotOnboarding_OnboardDevice( _mqttConnection,
-                                             &requestInfo,
-                                             AWS_IOT_TEST_ONBOARDING_TIMEOUT,
-                                             &onboardDeviceCallback );
+    status = AwsIotProvisioning_RegisterThing( _mqttConnection,
+                                               &requestInfo,
+                                               AWS_IOT_TEST_PROVISIONING_TIMEOUT,
+                                               &onboardDeviceCallback );
 
 
-    TEST_ASSERT_EQUAL( AWS_IOT_ONBOARDING_SUCCESS, status );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, status );
 
     /* Test Cleanup */
 
