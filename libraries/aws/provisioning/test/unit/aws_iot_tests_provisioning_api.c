@@ -71,15 +71,15 @@ typedef struct _serverResponseThreadContext
 
 /**
  * @brief Test user-callback that validates the credentials parsed and provided by the
- * @provisioning_function_getdevicecredentials API.
+ * @provisioning_function_registerthing API.
  * This is passed as a member of #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t type.
  */
 static void _testCreateKeysAndCertificateCallback( void * contextParam,
                                                    const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo );
 
 /**
- * @brief Test user-callback that validates the onboard device response parsed and provided by the
- * @provisioning_function_onboarddevice API.
+ * @brief Test user-callback that validates the provision device response parsed and provided by the
+ * @provisioning_function_registerthing API.
  * This is passed as a member of #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t type.
  */
 static void _testRegisterThingCallback( void * contextParam,
@@ -94,8 +94,8 @@ static void _simulateServerResponse( void * pArgument );
 /**
  * @brief Dummy user-callback to pass in #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t.
  */
-static void _dummyDeviceCredentialsCallback( void * contextParam,
-                                             const AwsIotProvisioningCreateKeysAndCertificateResponse_t * responseInfo );
+static void _dummyKeysAndCertificateCallback( void * contextParam,
+                                              const AwsIotProvisioningCreateKeysAndCertificateResponse_t * responseInfo );
 
 /**
  * @brief Dummy user-callback to pass in #AwsIotProvisioningRegisterThingCallbackInfo_t.
@@ -156,14 +156,14 @@ static const uint32_t _testProvisioningServerResponseThreadTimeoutMs = 90;
 /**
  * @brief The accepted response topic for the Provisioning CreateKeysAndCertificate service API.
  */
-static const char * _getDeviceCredentialsRejectedResponseTopic =
-    PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER "/rejected";
+static const char * _createKeysAndCertificateRejectedResponseTopic =
+    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER "/rejected";
 
 /**
  * @brief The rejected response topic for the ProvisioningDevice service API.
  */
-static const char * _getDeviceCredentialsAcceptedResponseTopic =
-    PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER "/accepted";
+static const char * _createKeysAndCertificateAcceptedResponseTopic =
+    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER "/accepted";
 
 /**
  * @brief Sample CBOR encoded response of Provisioning CreateKeysAndCertificate service API containing mock certificate
@@ -242,18 +242,18 @@ static const char _testCertificateToken[] = "TestToken";
 /**
  * @brief The rejected response topic for the Provisioning RegisterThing service API.
  */
-static const char * _onboardDeviceAcceptedResponseTopic = "$aws/provisioning-templates/"_testTemplateName
+static const char * _registerThingAcceptedResponseTopic = "$aws/provisioning-templates/"_testTemplateName
                                                           "/provision/cbor/accepted";
 
 /**
  * @brief The accepted response topic for the Provisioning RegisterThing service API.
  */
-static const char * _onboardDeviceRejectedResponseTopic = "$aws/provisioning-templates/"_testTemplateName
+static const char * _registerThingRejectedResponseTopic = "$aws/provisioning-templates/"_testTemplateName
                                                           "/provision/cbor/rejected";
 
 /**
  * @brief Sample CBOR encoded response of Provisioning's RegisterThing service API containing device configuration and
- *Iot Thing name
+ * Iot Thing name
  * data.
  */
 static const uint8_t _sampleRegisterThingResponsePayload[] =
@@ -349,8 +349,8 @@ static const uint8_t _sampleRejectedServerResponsePayload[] =
 
 /*-----------------------------------------------------------*/
 
-static void _dummyDeviceCredentialsCallback( void * contextParam,
-                                             const AwsIotProvisioningCreateKeysAndCertificateResponse_t * responseInfo )
+static void _dummyKeysAndCertificateCallback( void * contextParam,
+                                              const AwsIotProvisioningCreateKeysAndCertificateResponse_t * responseInfo )
 {
     ( void ) contextParam;
     ( void ) responseInfo;
@@ -721,7 +721,7 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPIInvalidParameters )
 {
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
     AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callbackInfo =
-        AWS_IOT_PROVISIONING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER;
+        AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER;
 
     /* Uninitialized MQTT connection. */
     status = AwsIotProvisioning_CreateKeysAndCertificate( NULL,
@@ -761,9 +761,9 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPICalledWithoutInit )
 {
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
     AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callbackInfo =
-        AWS_IOT_PROVISIONING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER;
+        AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER;
 
-    callbackInfo.function = _dummyDeviceCredentialsCallback;
+    callbackInfo.function = _dummyKeysAndCertificateCallback;
 
     /* Reset the library to simulate the test case when the library is not initialized. */
     AwsIotProvisioning_Cleanup();
@@ -779,16 +779,16 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPICalledWithoutInit )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_getpdevicecredentials in case of
+ * @brief Tests the behavior of @ref provisioning_function_getpKeysAndCertificate in case of
  * receiving no response from the server.
  */
 TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPINoServerResponse )
 {
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
     AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callbackInfo =
-        AWS_IOT_PROVISIONING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER;
+        AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER;
 
-    callbackInfo.function = _dummyDeviceCredentialsCallback;
+    callbackInfo.function = _dummyKeysAndCertificateCallback;
 
     /* We will not simulate any server response for the timeout to occur! */
 
@@ -803,20 +803,20 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPINoServerResponse )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_getpdevicecredentials when Provisioning server rejects the
+ * @brief Tests the behavior of @ref provisioning_function_getpKeysAndCertificate when Provisioning server rejects the
  * request by publishing on the "/rejected" topic.
  */
 TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPIRejectedResponse )
 {
     AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callbackInfo =
-        AWS_IOT_PROVISIONING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER;
+        AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER;
 
-    callbackInfo.function = _dummyDeviceCredentialsCallback;
+    callbackInfo.function = _dummyKeysAndCertificateCallback;
 
     _serverResponseThreadContext_t rejectedResponse =
     {
-        .pPublishTopic      = _getDeviceCredentialsRejectedResponseTopic,
-        .publishTopicLength = strlen( _getDeviceCredentialsRejectedResponseTopic ),
+        .pPublishTopic      = _createKeysAndCertificateRejectedResponseTopic,
+        .publishTopicLength = strlen( _createKeysAndCertificateRejectedResponseTopic ),
         .pPublishData       = _sampleRejectedServerResponsePayload,
         .publishDataLength  = sizeof( _sampleRejectedServerResponsePayload )
     };
@@ -830,16 +830,16 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPIRejectedResponse )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_getpdevicecredentials when the "accepted" response sent by
+ * @brief Tests the behavior of @ref provisioning_function_getpKeysAndCertificate when the "accepted" response sent by
  * the
  * Provisioning service contains a corrupt payload.
  */
 TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPICorruptDataInResponse )
 {
     AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callbackInfo =
-        AWS_IOT_PROVISIONING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER;
+        AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER;
 
-    callbackInfo.function = _dummyDeviceCredentialsCallback;
+    callbackInfo.function = _dummyKeysAndCertificateCallback;
 
     /*************** Response payload without certificate entry********************/
     const uint8_t serverResponseWithoutCertificate[] =
@@ -854,8 +854,8 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPICorruptDataInResponse )
 
     _serverResponseThreadContext_t responseWithoutCertificate =
     {
-        .pPublishTopic      = _getDeviceCredentialsAcceptedResponseTopic,
-        .publishTopicLength = strlen( _getDeviceCredentialsAcceptedResponseTopic ),
+        .pPublishTopic      = _createKeysAndCertificateAcceptedResponseTopic,
+        .publishTopicLength = strlen( _createKeysAndCertificateAcceptedResponseTopic ),
         .pPublishData       = serverResponseWithoutCertificate,
         .publishDataLength  = sizeof( serverResponseWithoutCertificate )
     };
@@ -886,8 +886,8 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPICorruptDataInResponse )
 
     _serverResponseThreadContext_t responseWithoutPrivateKey =
     {
-        .pPublishTopic      = _getDeviceCredentialsAcceptedResponseTopic,
-        .publishTopicLength = strlen( _getDeviceCredentialsAcceptedResponseTopic ),
+        .pPublishTopic      = _createKeysAndCertificateAcceptedResponseTopic,
+        .publishTopicLength = strlen( _createKeysAndCertificateAcceptedResponseTopic ),
         .pPublishData       = serverResponseWithCorruptPrivateKeyEntry,
         .publishDataLength  = sizeof( serverResponseWithCorruptPrivateKeyEntry )
     };
@@ -901,15 +901,15 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPICorruptDataInResponse )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_getpdevicecredentials in the nominal case when
+ * @brief Tests the behavior of @ref provisioning_function_getpKeysAndCertificate in the nominal case when
  * the server responds correctly on the "accepted" topic.
  */
 TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPINominalSuccess )
 {
     _serverResponseThreadContext_t serverResponse =
     {
-        .pPublishTopic      = _getDeviceCredentialsAcceptedResponseTopic,
-        .publishTopicLength = strlen( _getDeviceCredentialsAcceptedResponseTopic ),
+        .pPublishTopic      = _createKeysAndCertificateAcceptedResponseTopic,
+        .publishTopicLength = strlen( _createKeysAndCertificateAcceptedResponseTopic ),
         .pPublishData       = _sampleCreateKeysAndCertificateServerResponsePayload,
         .publishDataLength  = sizeof( _sampleCreateKeysAndCertificateServerResponsePayload )
     };
@@ -923,15 +923,15 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPINominalSuccess )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_getpdevicecredentials when server responds much after the
+ * @brief Tests the behavior of @ref provisioning_function_getpKeysAndCertificate when server responds much after the
  * timeout period.
  */
 TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPIServerResponseAfterTimeout )
 {
     _serverResponseThreadContext_t serverResponse =
     {
-        .pPublishTopic      = _getDeviceCredentialsAcceptedResponseTopic,
-        .publishTopicLength = strlen( _getDeviceCredentialsAcceptedResponseTopic ),
+        .pPublishTopic      = _createKeysAndCertificateAcceptedResponseTopic,
+        .publishTopicLength = strlen( _createKeysAndCertificateAcceptedResponseTopic ),
         .pPublishData       = _sampleCreateKeysAndCertificateServerResponsePayload,
         .publishDataLength  = sizeof( _sampleCreateKeysAndCertificateServerResponsePayload )
     };
@@ -945,7 +945,7 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPIServerResponseAfterTimeo
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_getpdevicecredentials when there is a race condition between
+ * @brief Tests the behavior of @ref provisioning_function_getpKeysAndCertificate when there is a race condition between
  * the library receiving the server response and the response timeout firing. Even in such a case, the API is expected
  * to process the response and invoke the user callback with the device credentials instead of treating the case as a
  * timeout!*/
@@ -953,8 +953,8 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPIServerResponseAndTimeout
 {
     _serverResponseThreadContext_t serverResponse =
     {
-        .pPublishTopic      = _getDeviceCredentialsAcceptedResponseTopic,
-        .publishTopicLength = strlen( _getDeviceCredentialsAcceptedResponseTopic ),
+        .pPublishTopic      = _createKeysAndCertificateAcceptedResponseTopic,
+        .publishTopicLength = strlen( _createKeysAndCertificateAcceptedResponseTopic ),
         .pPublishData       = _sampleCreateKeysAndCertificateServerResponsePayload,
         .publishDataLength  = sizeof( _sampleCreateKeysAndCertificateServerResponsePayload )
     };
@@ -975,7 +975,7 @@ TEST( Provisioning_Unit_API, RegisterThingAPIInvalidParameters )
 {
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
     AwsIotProvisioningRegisterThingCallbackInfo_t callbackInfo =
-        AWS_IOT_PROVISIONING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER;
+        AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyRegisterThingCallback;
 
@@ -1062,7 +1062,7 @@ TEST( Provisioning_Unit_API, RegisterThingAPIInvalidParameters )
 TEST( Provisioning_Unit_API, RegisterThingAPICalledWithoutInit )
 {
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
-    AwsIotProvisioningRegisterThingCallbackInfo_t callbackInfo = AWS_IOT_PROVISIONING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER;
+    AwsIotProvisioningRegisterThingCallbackInfo_t callbackInfo = AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyRegisterThingCallback;
 
@@ -1092,7 +1092,7 @@ TEST( Provisioning_Unit_API, RegisterThingAPICalledWithoutInit )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_getpdevicecredentials in case of
+ * @brief Tests the behavior of @ref provisioning_function_getpKeysAndCertificate in case of
  * receiving no response from the server.
  */
 TEST( Provisioning_Unit_API, RegisterThingAPINoServerResponse )
@@ -1131,19 +1131,19 @@ TEST( Provisioning_Unit_API, RegisterThingAPINoServerResponse )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_onboarddevice when Provisioning server rejects the request
+ * @brief Tests the behavior of @ref provisioning_function_registerthing when Provisioning server rejects the request
  * by publishing on the "/rejected" topic.
  */
 TEST( Provisioning_Unit_API, RegisterThingAPIRejectedResponse )
 {
-    AwsIotProvisioningRegisterThingCallbackInfo_t callbackInfo = AWS_IOT_PROVISIONING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER;
+    AwsIotProvisioningRegisterThingCallbackInfo_t callbackInfo = AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyRegisterThingCallback;
 
     _serverResponseThreadContext_t rejectedResponse =
     {
-        .pPublishTopic      = _onboardDeviceRejectedResponseTopic,
-        .publishTopicLength = strlen( _onboardDeviceRejectedResponseTopic ),
+        .pPublishTopic      = _registerThingRejectedResponseTopic,
+        .publishTopicLength = strlen( _registerThingRejectedResponseTopic ),
         .pPublishData       = _sampleRejectedServerResponsePayload,
         .publishDataLength  = sizeof( _sampleRejectedServerResponsePayload )
     };
@@ -1157,12 +1157,12 @@ TEST( Provisioning_Unit_API, RegisterThingAPIRejectedResponse )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_onboarddevice API when the "accepted" response sent by the
+ * @brief Tests the behavior of @ref provisioning_function_registerthing API when the "accepted" response sent by the
  * Provisioning service contains a corrupt payload.
  */
 TEST( Provisioning_Unit_API, RegisterThingAPICorruptDataInResponse )
 {
-    AwsIotProvisioningRegisterThingCallbackInfo_t callbackInfo = AWS_IOT_PROVISIONING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER;
+    AwsIotProvisioningRegisterThingCallbackInfo_t callbackInfo = AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER;
 
     callbackInfo.function = _dummyRegisterThingCallback;
 
@@ -1184,8 +1184,8 @@ TEST( Provisioning_Unit_API, RegisterThingAPICorruptDataInResponse )
 
     _serverResponseThreadContext_t corruptResponseContext =
     {
-        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
-        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishTopic      = _registerThingAcceptedResponseTopic,
+        .publishTopicLength = strlen( _registerThingAcceptedResponseTopic ),
         .pPublishData       = serverResponseWithInvalidDeviceConfigEntry,
         .publishDataLength  = sizeof( serverResponseWithInvalidDeviceConfigEntry )
     };
@@ -1223,15 +1223,15 @@ TEST( Provisioning_Unit_API, RegisterThingAPICorruptDataInResponse )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_onboarddevice in the nominal case when
+ * @brief Tests the behavior of @ref provisioning_function_registerthing in the nominal case when
  * the server responds correctly on the "accepted" topic.
  */
 TEST( Provisioning_Unit_API, RegisterThingAPINominalSuccess )
 {
     _serverResponseThreadContext_t serverResponse =
     {
-        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
-        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishTopic      = _registerThingAcceptedResponseTopic,
+        .publishTopicLength = strlen( _registerThingAcceptedResponseTopic ),
         .pPublishData       = _sampleRegisterThingResponsePayload,
         .publishDataLength  = sizeof( _sampleRegisterThingResponsePayload )
     };
@@ -1244,7 +1244,7 @@ TEST( Provisioning_Unit_API, RegisterThingAPINominalSuccess )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_onboarddevice in the case when
+ * @brief Tests the behavior of @ref provisioning_function_registerthing in the case when
  * the server responds on the "accepted" topic but without any device configuration data in the payload.
  */
 TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseWithoutDeviceConfiguration )
@@ -1264,8 +1264,8 @@ TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseWithoutDeviceConfigur
 
     _serverResponseThreadContext_t serverResponse =
     {
-        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
-        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishTopic      = _registerThingAcceptedResponseTopic,
+        .publishTopicLength = strlen( _registerThingAcceptedResponseTopic ),
         .pPublishData       = pResponseWithoutDeviceConfigData,
         .publishDataLength  = sizeof( pResponseWithoutDeviceConfigData )
     };
@@ -1295,7 +1295,7 @@ TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseWithoutDeviceConfigur
 }
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_onboarddevice in the case when
+ * @brief Tests the behavior of @ref provisioning_function_registerthing in the case when
  * the server responds on the "accepted" topic but without thing name entry in the payload.
  */
 TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseWithoutThingName )
@@ -1319,8 +1319,8 @@ TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseWithoutThingName )
 
     _serverResponseThreadContext_t serverResponse =
     {
-        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
-        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishTopic      = _registerThingAcceptedResponseTopic,
+        .publishTopicLength = strlen( _registerThingAcceptedResponseTopic ),
         .pPublishData       = pServerResponseWithoutThingName,
         .publishDataLength  = sizeof( pServerResponseWithoutThingName )
     };
@@ -1361,15 +1361,15 @@ TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseWithoutThingName )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_onboarddevice when server responds much after the timeout
+ * @brief Tests the behavior of @ref provisioning_function_registerthing when server responds much after the timeout
  * period.
  */
 TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseAfterTimeout )
 {
     _serverResponseThreadContext_t serverResponse =
     {
-        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
-        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishTopic      = _registerThingAcceptedResponseTopic,
+        .publishTopicLength = strlen( _registerThingAcceptedResponseTopic ),
         .pPublishData       = _sampleRegisterThingResponsePayload,
         .publishDataLength  = sizeof( _sampleRegisterThingResponsePayload )
     };
@@ -1383,7 +1383,7 @@ TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseAfterTimeout )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref provisioning_function_onboarddevice when there is a race condition between
+ * @brief Tests the behavior of @ref provisioning_function_registerthing when there is a race condition between
  * the library receiving the server response and the response timeout firing. Even in such a case, the API is expected
  * to process the response and invoke the user callback with the device credentials instead of treating the case as a
  * timeout!*/
@@ -1391,8 +1391,8 @@ TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseAndTimeoutRaceConditi
 {
     _serverResponseThreadContext_t serverResponse =
     {
-        .pPublishTopic      = _onboardDeviceAcceptedResponseTopic,
-        .publishTopicLength = strlen( _onboardDeviceAcceptedResponseTopic ),
+        .pPublishTopic      = _registerThingAcceptedResponseTopic,
+        .publishTopicLength = strlen( _registerThingAcceptedResponseTopic ),
         .pPublishData       = _sampleRegisterThingResponsePayload,
         .publishDataLength  = sizeof( _sampleRegisterThingResponsePayload )
     };

@@ -78,8 +78,8 @@
 /**
  * @brief Printable names for each of the Provisioning operations.
  */
-#define GET_DEVICE_CREDENTIALS_OPERATION_LOG    "GET DEVICE CREDENTIALS"
-#define GET_ONBOARD_DEVICE_OPERATION_LOG        "ONBOARD DEVICE"
+#define CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG    "GET DEVICE CREDENTIALS"
+#define REGISTER_THING_OPERATION_LOG                 "PROVISION DEVICE"
 
 
 #ifndef AWS_IOT_PROVISIONING_FORMAT
@@ -217,76 +217,76 @@
  * @brief The MQTT response topic filter for the Provisioning CreateKeysAndCertificate service API.
  *
  * @note The complete response topics are suffixed with #AWS_IOT_ACCEPTED_SUFFIX or #AWS_IOT_REJECTED_SUFFIX strings.
- * It should be utilized in the @ref provisioning_function_getdevicecredentials API function.
+ * It should be utilized in the @ref provisioning_function_registerthing API function.
  */
-#define PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER \
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER \
     "$aws/certificates/create/"PROVISIONING_FORMAT
 
 /**
  * @brief Length of the MQTT response topic filter for the Provisioning CreateKeysAndCertificate service API.
  */
-#define PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER_LENGTH \
-    ( ( uint16_t ) ( sizeof( PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER ) - 1 ) )
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH \
+    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER ) - 1 ) )
 
 /**
  * @brief The length of the longest MQTT response topic of the Provisioning CreateKeysAndCertificate service API.
  * Out of the two response topics, the "rejected" has the longest length.
  */
-#define PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_MAX_TOPIC_LENGTH    \
-    ( PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER_LENGTH + \
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_MAX_TOPIC_LENGTH    \
+    ( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH + \
       sizeof( AWS_IOT_REJECTED_SUFFIX ) )
 
 
 /**
  * @brief The MQTT request topic for the Provisioning CreateKeysAndCertificate service API.
  *
- * @note It should be utilized in the @ref provisioning_function_getdevicecredentials API function.
+ * @note It should be utilized in the @ref provisioning_function_registerthing API function.
  */
-#define PROVISIONING_GET_DEVICE_CREDENTIALS_REQUEST_TOPIC \
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC \
     "$aws/certificates/create/"PROVISIONING_FORMAT
 
 /**
  * @brief The length of the MQTT request topic for the Provisioning CreateKeysAndCertificate service API.
  */
-#define PROVISIONING_GET_DEVICE_CREDENTIALS_REQUEST_TOPIC_LENGTH \
-    ( ( uint16_t ) ( sizeof( PROVISIONING_GET_DEVICE_CREDENTIALS_REQUEST_TOPIC ) - 1 ) )
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC_LENGTH \
+    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC ) - 1 ) )
 
 /**
  * @brief The key for the device certificate entry in the response payload of the Provisioning CreateKeysAndCertificate
  * service API.
  */
-#define PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING          "certificatePem"
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING          "certificatePem"
 
 /**
  * @brief The key for the certificate Id entry in the response payload of the Provisioning CreateKeysAndCertificate
  * service API.
  */
-#define PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING           "certificateId"
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING           "certificateId"
 
 /**
  * @brief The key for the private key entry in the response payload of the Provisioning CreateKeysAndCertificate service
  * API.
  */
-#define PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING              "privateKey"
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING              "privateKey"
 
 /**
  * @brief The key for the token key entry in the response payload of the Provisioning CreateKeysAndCertificate service
  * API.
  */
-#define PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING    "certificateOwnershipToken"
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING    "certificateOwnershipToken"
 
 /**
  * @brief The common path in the request and response MQTT topics of the Provisioning RegisterThing service API.
  */
-#define PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX \
+#define PROVISIONING_REGISTER_THING_TOPICS_COMMON_PREFIX \
     "$aws/provisioning-templates/"
 
 /**
  * @brief The length of the common path in the request and response MQTT topics of the Provisioning RegisterThing
- *service API.
+ * service API.
  */
-#define PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH \
-    ( ( uint16_t ) ( sizeof( PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX ) - 1 ) )
+#define PROVISIONING_REGISTER_THING_TOPICS_COMMON_PREFIX_LENGTH \
+    ( ( uint16_t ) ( sizeof( PROVISIONING_REGISTER_THING_TOPICS_COMMON_PREFIX ) - 1 ) )
 
 /**
  * @brief The maximum length of the Template name that can be used for provisioning the device.
@@ -297,30 +297,30 @@
 /**
  * @brief The common suffix in the request and response MQTT topics of the Provisioning RegisterThing service API.
  */
-#define PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX    "/provision/"PROVISIONING_FORMAT
+#define PROVISIONING_REGISTER_THING_TOPICS_COMMON_SUFFIX    "/provision/"PROVISIONING_FORMAT
 
 /**
  * @brief The length of the common suffix in the MQTT topics of the Provisioning RegisterThing service API.
  */
-#define PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH \
-    ( ( uint16_t ) ( sizeof( PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX ) - 1 ) )
+#define PROVISIONING_REGISTER_THING_TOPICS_COMMON_SUFFIX_LENGTH \
+    ( ( uint16_t ) ( sizeof( PROVISIONING_REGISTER_THING_TOPICS_COMMON_SUFFIX ) - 1 ) )
 
 
 /**
  * @brief The length of the complete MQTT request topic of the Provisioning RegisterThing service API.
  */
-#define PROVISIONING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH                                                \
-    ( PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + PROVISIONING_MAX_TEMPLATE_NAME_LENGTH + \
-      PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH )
+#define PROVISIONING_REGISTER_THING_REQUEST_TOPIC_LENGTH                                                \
+    ( PROVISIONING_REGISTER_THING_TOPICS_COMMON_PREFIX_LENGTH + PROVISIONING_MAX_TEMPLATE_NAME_LENGTH + \
+      PROVISIONING_REGISTER_THING_TOPICS_COMMON_SUFFIX_LENGTH )
 
 /**
  * @brief The key for the certificate ID's entry to be inserted in the request payload for the Provisioning
- *RegisterThing service
+ * RegisterThing service
  * API.
  *
  * @note This should be used in serializing the request payload for sending to the server.
  */
-#define PROVISIONING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING       "certificateId"
+#define PROVISIONING_REGISTER_THING_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING       "certificateId"
 
 /**
  * @brief The key for the certificate ownership token's entry to be inserted in the request payload for the
@@ -328,7 +328,7 @@
  *
  * @note This should be used in serializing the request payload for sending to the server.
  */
-#define PROVISIONING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_TOKEN_STRING    "certificateOwnershipToken"
+#define PROVISIONING_REGISTER_THING_REQUEST_PAYLOAD_CERTIFICATE_TOKEN_STRING    "certificateOwnershipToken"
 
 /**
  * @brief The key for the device context data's entry to be inserted in the request payload for the RegisterThing
@@ -337,45 +337,45 @@
  * @note This should be used in serializing the request payload for sending to the server, only if the calling
  * application provides valid device context data.
  */
-#define PROVISIONING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING           "parameters"
+#define PROVISIONING_REGISTER_THING_REQUEST_PAYLOAD_PARAMETERS_STRING           "parameters"
 
 /**
  * @brief The length of the MQTT request topic filter of the Provisioning RegisterThing service API.
  */
-#define PROVISIONING_ONBOARD_DEVICE_RESPONSE_TOPIC_FILTER_LENGTH                                        \
-    ( PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH + PROVISIONING_MAX_TEMPLATE_NAME_LENGTH + \
-      PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH )
+#define PROVISIONING_REGISTER_THING_RESPONSE_TOPIC_FILTER_LENGTH                                        \
+    ( PROVISIONING_REGISTER_THING_TOPICS_COMMON_PREFIX_LENGTH + PROVISIONING_MAX_TEMPLATE_NAME_LENGTH + \
+      PROVISIONING_REGISTER_THING_TOPICS_COMMON_SUFFIX_LENGTH )
 
 /**
  * @brief The length of the longest MQTT response topic of the Provisioning RegisterThing service API.
  * Out of the two response topics, the "rejected" has the longest length.
  */
-#define PROVISIONING_ONBOARD_DEVICE_RESPONSE_MAX_TOPIC_LENGTH \
-    ( PROVISIONING_ONBOARD_DEVICE_RESPONSE_TOPIC_FILTER_LENGTH + sizeof( AWS_IOT_REJECTED_SUFFIX ) )
+#define PROVISIONING_REGISTER_THING_RESPONSE_MAX_TOPIC_LENGTH \
+    ( PROVISIONING_REGISTER_THING_RESPONSE_TOPIC_FILTER_LENGTH + sizeof( AWS_IOT_REJECTED_SUFFIX ) )
 
 /**
  * @brief The key for the device configuration data's entry in the response payload of the Provisioning RegisterThing
- *service API.
+ * service API.
  *
  * @note This should be utilized in parsing the success case response payload received from the server.
  */
-#define PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING    "deviceConfiguration"
+#define PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING    "deviceConfiguration"
 
 /**
  * @brief The key for the Thing resource name's entry in the response payload of the Provisioning RegisterThing service
- *API.
+ * API.
  *
  * @note This should be utilized in parsing the success case response payload received from the server.
  */
-#define PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_THING_NAME_STRING              "thingName"
+#define PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_THING_NAME_STRING              "thingName"
 
 /**
  * @brief The key for the connection client ID's entry in the response payload of the Provisioning RegisterThing service
- *API.
+ * API.
  *
  * @note This should be utilized in parsing the success case response payload received from the server.
  */
-#define PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_CLIENT_ID_STRING               "clientId"
+#define PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_CLIENT_ID_STRING               "clientId"
 
 /**
  * @brief The key for the status code entry in the "rejected" response payload from the server.
@@ -407,25 +407,25 @@
  */
 typedef enum _provisioningOperationType
 {
-    PROVISIONING_GET_DEVICE_CREDENTIALS = 0, /**< @ref provisioning_function_getdevicecredentials */
-    PROVISIONING_ONBOARD_DEVICE = 1,         /**< @ref provisioning_function_onboarddevice */
+    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE = 0, /**< @ref provisioning_function_registerthing */
+    PROVISIONING_REGISTER_THING = 1,              /**< @ref provisioning_function_registerthing */
 } _provisioningOperationType_t;
 
 /**
  *  @brief Union representing either of the 2 Provisioning operation APIs' callbacks.
  *
- * @note If an ongoing operation was started by the @ref provisioning_function_getdevicecredentials API,
- * then #_provisioningCallbackInfo.getDeviceCredentialsCallback will be valid, whereas if the active
+ * @note If an ongoing operation was started by the @ref provisioning_function_registerthing API,
+ * then #_provisioningCallbackInfo.createKeysAndCertificateCallback will be valid, whereas if the active
  * operation relates to the @ref AwsIotProvisioning_RegisterThing API, then
- *#_provisioningCallbackInfo.getDeviceCredentialsCallback will be valid.
+ *#_provisioningCallbackInfo.createKeysAndCertificateCallback will be valid.
  */
 typedef union _provisioningCallbackInfo
 {
-    /* The callback provided by the user to the @ref provisioning_function_getdevicecredentials API. */
-    AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t getDeviceCredentialsCallback;
+    /* The callback provided by the user to the @ref provisioning_function_registerthing API. */
+    AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t createKeysAndCertificateCallback;
 
-    /* The callback provided by the user to the @ref provisioning_function_onboarddevice API. */
-    AwsIotProvisioningRegisterThingCallbackInfo_t onboardDeviceCallback;
+    /* The callback provided by the user to the @ref provisioning_function_registerthing API. */
+    AwsIotProvisioningRegisterThingCallbackInfo_t registerThingCallback;
 } _provisioningCallbackInfo_t;
 
 /**
@@ -463,8 +463,8 @@ typedef struct _provisioningOperation
     _provisioningOperationInfo_t info;  /**< @brief The Provisioning operation object that is protected by the above
                                          * mutex. */
     IotSemaphore_t responseReceivedSem; /**< @brief Semaphore to be used used by the synchronous API functions @ref
-                                         * provisioning_function_getdevicecredentials and @ref
-                                         * provisioning_function_onboarddevice. */
+                                         * provisioning_function_registerthing and @ref
+                                         * provisioning_function_registerthing. */
 } _provisioningOperation_t;
 
 /* TODO - Add documentation! */
@@ -491,7 +491,7 @@ extern const IotSerializerDecodeInterface_t * _pAwsIotProvisioningDecoder;
  * @param[in] templateNameLength The length of the template ID string.
  * @param[out] pTopicFilterBuffer The pre-allocated buffer for storing the generated topic filter.
  * The buffer should have the required minimum size for storing the MQTT topic filter for the Provisioning RegisterThing
- *API.
+ * API.
  *
  * @return Returns the size of the generated topic filter.
  */
@@ -504,14 +504,14 @@ size_t _AwsIotProvisioning_GenerateRegisterThingTopicFilter( const char * pTempl
  * with parsed credentials, if parsing was successful.
  *
  * @param[in] responseType The type of response, "accepted" or "rejected" received from the server for the operation.
- * @param[in] pDeviceCredentialsResponse The response payload from the server to parse.
- * @param[in] deviceCredentialsResponseLength The length of the response payload.
+ * @param[in] pKeysAndCertificateResponse The response payload from the server to parse.
+ * @param[in] keysAndCertificateResponseLength The length of the response payload.
  * @param[in] userCallback The user-provided callback to invoke on successful parsing of response.
  */
-AwsIotProvisioningError_t _AwsIotProvisioning_ParseDeviceCredentialsResponse( AwsIotStatus_t responseType,
-                                                                              const void * pDeviceCredentialsResponse,
-                                                                              size_t deviceCredentialsResponseLength,
-                                                                              const _provisioningCallbackInfo_t * userCallbackInfo );
+AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( AwsIotStatus_t responseType,
+                                                                               const void * pKeysAndCertificateResponse,
+                                                                               size_t keysAndCertificateResponseLength,
+                                                                               const _provisioningCallbackInfo_t * userCallbackInfo );
 
 /**
  * @brief Parses the response payload received from the server for device provisioning, and invokes the provided

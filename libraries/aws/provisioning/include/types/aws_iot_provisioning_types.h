@@ -71,8 +71,8 @@ typedef enum AwsIotProvisioningError
      * @brief An API function was called before @ref provisioning_function_init.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_getdevicecredentials
-     * - @ref provisioning_function_onboarddevice
+     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_registerthing
      */
     AWS_IOT_PROVISIONING_NOT_INITIALIZED,
 
@@ -80,8 +80,8 @@ typedef enum AwsIotProvisioningError
      * @brief At least one parameter is invalid.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_getdevicecredentials
-     * - @ref provisioning_function_onboarddevice
+     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_registerthing
      */
     AWS_IOT_PROVISIONING_BAD_PARAMETER,
 
@@ -89,8 +89,8 @@ typedef enum AwsIotProvisioningError
      * @brief Provisioning operation failed because of memory allocation failure.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_getdevicecredentials
-     * - @ref provisioning_function_onboarddevice
+     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_registerthing
      */
     AWS_IOT_PROVISIONING_NO_MEMORY,
 
@@ -98,8 +98,8 @@ typedef enum AwsIotProvisioningError
      * @brief Provisioning response received from the network is malformed, corrupt or incomplete.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_getdevicecredentials
-     * - @ref provisioning_function_onboarddevice
+     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_registerthing
      */
     AWS_IOT_PROVISIONING_BAD_RESPONSE,
 
@@ -107,8 +107,8 @@ typedef enum AwsIotProvisioningError
      * @brief An Provisioning operation timed out.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_getdevicecredentials
-     * - @ref provisioning_function_onboarddevice
+     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_registerthing
      */
     AWS_IOT_PROVISIONING_TIMEOUT,
 
@@ -116,8 +116,8 @@ typedef enum AwsIotProvisioningError
      * @brief An Provisioning operation request is rejected by the server.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_getdevicecredentials
-     * - @ref provisioning_function_onboarddevice
+     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_registerthing
      */
     AWS_IOT_PROVISIONING_SERVER_REFUSED,
 
@@ -125,8 +125,8 @@ typedef enum AwsIotProvisioningError
      * @brief Provisioning operation failed due to internal error.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_getdevicecredentials
-     * - @ref provisioning_function_onboarddevice
+     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_registerthing
      */
     AWS_IOT_PROVISIONING_INTERNAL_FAILURE,
 
@@ -135,8 +135,8 @@ typedef enum AwsIotProvisioningError
      * Provisioning operation.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_getdevicecredentials
-     * - @ref provisioning_function_onboarddevice
+     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_registerthing
      */
     AWS_IOT_PROVISIONING_MQTT_ERROR
 } AwsIotProvisioningError_t;
@@ -185,7 +185,7 @@ typedef enum AwsIotProvisioningServerStatusCode
  * @brief A key-value string pair representation of an entry in the list of parameters that will be
  * sent as part of the request payload to the server for provisioning the device.
  *
- * @paramfor @ref provisioning_function_onboarddevice
+ * @paramfor @ref provisioning_function_registerthing
  */
 typedef struct AwsIotProvisioningRequestParameterEntry
 {
@@ -226,7 +226,7 @@ typedef struct AwsIotProvisioningRegisterThingRequestInfo
     size_t templateNameLength;
 
     /**
-     *  @brief The certificate ID string (of the certificate issued by AWS IoT) to onboard the device with.
+     *  @brief The certificate ID string (of the certificate issued by AWS IoT) to provision the device with.
      */
     const char * pDeviceCertificateId;
 
@@ -259,7 +259,7 @@ typedef struct AwsIotProvisioningRegisterThingRequestInfo
 
 typedef struct AwsIotProvisioningRegisterThingAcceptedResponse
 {
-    /**< The name of the Thing resource that was created to onboard the device.*/
+    /**< The name of the Thing resource that was created to provision the device.*/
     const char * pThingName;
 
     /**< The length of the Thing resource name. */
@@ -333,7 +333,7 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateResponse
  * @brief User-specific callback information for handling server response for the Provisioning CreateKeysAndCertificate
  * service API.
  *
- * @paramfor @ref provisioning_function_getdevicecredentials
+ * @paramfor @ref provisioning_function_registerthing
  *
  * Provides a function to be invoked on successful completion of an #AwsIotProvisioning_CreateKeysAndCertificate API
  * operation.
@@ -350,7 +350,7 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateCallbackInfo
      *
      * @param[in] void* #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo.userParam
      * @param[in] AwsIotProvisioningCallbackParam_t* Parsed server response of either device credentials
-     * or onboarded device information.
+     * or provisioned device information.
      *
      * @see #AwsIotProvisioningCallbackParam_t for more information on the second parameter.
      */
@@ -380,10 +380,10 @@ typedef struct AwsIotProvisioningRegisterThingResponse
 
     union
     {
-        /* Represents the successful/accepted response from the server for the request to onboard device. */
+        /* Represents the successful/accepted response from the server for the request to provision device. */
         struct
         {
-            /**< The name of the Thing resource that was created to onboard the device.*/
+            /**< The name of the Thing resource that was created to provision the device.*/
             const char * pThingName;
 
             /**< The length of the Thing resource name. */
@@ -412,12 +412,12 @@ typedef struct AwsIotProvisioningRegisterThingResponse
  * @brief User-specific callback information for handling server response for the Provisioning RegisterThing service
  * API.
  *
- * @paramfor @ref provisioning_function_onboarddevice
+ * @paramfor @ref provisioning_function_registerthing
  *
  * Provides a function to be invoked on successful completion of an #AwsIotProvisioning_RegisterThing API
  * operation.
  *
- * @initializer{AwsIotProvisioningRegisterThingCallbackInfo_t,AWS_IOT_PROVISIONING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER}
+ * @initializer{AwsIotProvisioningRegisterThingCallbackInfo_t,AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER}
  */
 typedef struct AwsIotProvisioningRegisterThingCallbackInfo
 {
@@ -429,7 +429,7 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
      *
      * @param[in] void* #AwsIotProvisioningRegisterThingCallbackInfo.userParam
      * @param[in] AwsIotProvisioningCallbackParam_t* Parsed server response of either device credentials
-     * or onboarded device information.
+     * or provisioned device information.
      *
      * @see #AwsIotProvisioningCallbackParam_t for more information on the second parameter.
      */
@@ -443,14 +443,14 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
 /*------------------------ Provisioning defined constants -------------------------*/
 
 /* @[define_provisioning_initializers] */
-#define AWS_IOT_PROVISIONING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER    { 0 } /**< @brief Initializer for
-                                                                                        * #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t
-                                                                                        **/
-#define AWS_IOT_PROVISIONING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER            { 0 } /**< @brief Initializer for
-                                                                                        * #AwsIotProvisioningRegisterThingCallbackInfo_t
-                                                                                        **/
+#define AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER    { 0 } /**< @brief Initializer for
+                                                                                             * #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t
+                                                                                             **/
+#define AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER                 { 0 } /**< @brief Initializer for
+                                                                                             * #AwsIotProvisioningRegisterThingCallbackInfo_t
+                                                                                             **/
 /** @brief Initializer for #AwsIotProvisioningRegisterThingInfo_t. */
-#define AWS_IOT_PROVISIONING_ONBOARD_DEVICE_INFO_INITIALIZER                     { 0 }
+#define AWS_IOT_PROVISIONING_REGISTER_THING_INFO_INITIALIZER                          { 0 }
 /* @[define_provisioning_initializers] */
 
 /**
@@ -471,7 +471,7 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
  * Provisioning library functions.
  *
  * The following flag is valid for the Provisioning CreateKeysAndCertificate function:
- * @ref provisioning_function_getdevicecredentials
+ * @ref provisioning_function_registerthing
  * - #AWS_IOT_PROVISIONING_FLAG_ENCRYPT_CREDENTIALS <br>
  *   @copybrief AWS_IOT_PROVISIONING_FLAG_ENCRYPT_CREDENTIALS
  */
@@ -479,7 +479,7 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
 /**
  * @brief Flag for requesting encryption of device credentials in server response.
  *
- * @note Set the flags parameter passed to @ref provisioning_function_getdevicecredentials to this
+ * @note Set the flags parameter passed to @ref provisioning_function_registerthing to this
  * value when using to enable credentials encryption in the response from the server.
  */
 #define AWS_IOT_PROVISIONING_FLAG_ENCRYPT_CREDENTIALS    0x00000001

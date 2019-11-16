@@ -1,10 +1,10 @@
-# ONBOARDING library source files.
+# PROVISIONING library source files.
 set( PROVISIONING_SOURCES
      src/aws_iot_provisioning_api.c
      src/aws_iot_provisioning_parser.c
      src/aws_iot_provisioning_serializer.c )
 
-# ONBOARDING library target.
+# PROVISIONING library target.
 add_library( awsiotprovisioning
             # ${CONFIG_HEADER_PATH}/iot_config.h
              ${PROVISIONING_SOURCES}
@@ -12,10 +12,10 @@ add_library( awsiotprovisioning
              include/types/aws_iot_provisioning_types.h
              src/private/aws_iot_provisioning_internal.h )
 
-# Onboarding public include path.
+# Provisioning public include path.
 target_include_directories( awsiotprovisioning PUBLIC include )
 
-# Onboarding private include path.
+# Provisioning private include path.
 target_include_directories( awsiotprovisioning PRIVATE src )
 
 # Link required libraries.
@@ -24,7 +24,7 @@ target_link_libraries( awsiotprovisioning PRIVATE awsiotcommon iotbase iotserial
 # Jobs is currently implemented on MQTT, so link MQTT as a public dependency.
 target_link_libraries( awsiotprovisioning PUBLIC iotmqtt )
 
-# Organization of ONBOARDING in folders.
+# Organization of PROVISIONING in folders.
 set_property( TARGET awsiotprovisioning PROPERTY FOLDER "lib" )
 source_group( "" FILES ${CONFIG_HEADER_PATH}/iot_config.h )
 source_group( include FILES include/aws_iot_provisioning.h )
@@ -37,17 +37,17 @@ if( ${IOT_BUILD_TESTS} )
     # Link Unity test framework when building tests.
     target_link_libraries( awsiotprovisioning PRIVATE unity )
     
-    # Onboarding unit test sources.
+    # Provisioning unit test sources.
     set( PROVISIONING_UNIT_TEST_SOURCES
          test/unit/aws_iot_tests_provisioning_api.c
          test/unit/aws_iot_tests_provisioning_serializer.c
          test/unit/aws_iot_tests_provisioning_parser.c )
     
-    # Onboarding unit test sources.
+    # Provisioning unit test sources.
     set( PROVISIONING_SYSTEM_TEST_SOURCES
          test/system/aws_iot_tests_provisioning_system.c )
 
-    # Onboarding tests executable.
+    # Provisioning tests executable.
     add_executable( aws_iot_tests_provisioning
                     ${PROVISIONING_UNIT_TEST_SOURCES}
                     ${PROVISIONING_SYSTEM_TEST_SOURCES}
@@ -55,7 +55,7 @@ if( ${IOT_BUILD_TESTS} )
                     ${IOT_TEST_APP_SOURCE}
                     ${CONFIG_HEADER_PATH}/iot_config.h )
     
-    # Include directory for Onboarding and MQTT libraries' private files.
+    # Include directory for Provisioning and MQTT libraries' private files.
     target_include_directories( aws_iot_tests_provisioning PRIVATE
                                 src
                                 ${PROJECT_SOURCE_DIR}/libraries/standard/mqtt/src)
@@ -64,7 +64,7 @@ if( ${IOT_BUILD_TESTS} )
     target_compile_definitions( aws_iot_tests_provisioning PRIVATE
                                 -DRunTests=RunProvisioningTests )
 
-    # Onboarding tests library dependencies.
+    # Provisioning tests library dependencies.
     target_link_libraries( aws_iot_tests_provisioning PRIVATE 
                            awsiotprovisioning 
                            awsiotcommon
@@ -73,7 +73,7 @@ if( ${IOT_BUILD_TESTS} )
                            iotbase
                            iotserializer)
 
-    # Organization of Onboarding tests in folders.
+    # Organization of Provisioning tests in folders.
     set_property( TARGET aws_iot_tests_provisioning PROPERTY FOLDER "tests" )
     source_group( unit FILES ${PROVISIONING_UNIT_TEST_SOURCES} )
     source_group( system FILES ${PROVISIONING_SYSTEM_TEST_SOURCES} )
