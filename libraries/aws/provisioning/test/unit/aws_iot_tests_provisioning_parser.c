@@ -79,7 +79,7 @@ static AwsIotProvisioningRejectedResponse_t _expectedParsedParams =
 /**
  * @brief Sample CBOR encoded response payload of device credentials from the server.
  */
-const uint8_t _sampleAcceptedDeviceCredentialsResponse[] =
+const uint8_t _sampleAcceptedKeysAndCertificateResponse[] =
 {
     0xA4,                                                                               /* # map( 4 ) */
     0x6E,                                                                               /* # text( 14 ) */
@@ -106,20 +106,20 @@ const uint8_t _sampleAcceptedDeviceCredentialsResponse[] =
  * @brief Parameters that represent the expected parsing of device credentials to be done by the parser in the test.
  * This will be provided as a context parameter in the callback object supplied to the parser in the test.
  */
-AwsIotProvisioningCreateKeysAndCertificateResponse_t _expectedDeviceCredentialsParsedParams =
+AwsIotProvisioningCreateKeysAndCertificateResponse_t _expectedKeysAndCertificateParsedParams =
 {
     .statusCode                                    = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED,
     .u.acceptedResponse.pDeviceCertificate         = ( const char * )
-                                                     &_sampleAcceptedDeviceCredentialsResponse[ 17 ],
+                                                     &_sampleAcceptedKeysAndCertificateResponse[ 17 ],
     .u.acceptedResponse.deviceCertificateLength    = 7,
     .u.acceptedResponse.pCertificateId             = ( const char * )
-                                                     &_sampleAcceptedDeviceCredentialsResponse[ 39 ],
+                                                     &_sampleAcceptedKeysAndCertificateResponse[ 39 ],
     .u.acceptedResponse.certificateIdLength        = 6,
     .u.acceptedResponse.pPrivateKey                = ( const char * )
-                                                     &_sampleAcceptedDeviceCredentialsResponse[ 57 ],
+                                                     &_sampleAcceptedKeysAndCertificateResponse[ 57 ],
     .u.acceptedResponse.privateKeyLength           = 7,
     .u.acceptedResponse.pCertificateOwnershipToken = ( const char * )
-                                                     &_sampleAcceptedDeviceCredentialsResponse[ 92 ],
+                                                     &_sampleAcceptedKeysAndCertificateResponse[ 92 ],
     .u.acceptedResponse.ownershipTokenLength       = 6,
 };
 
@@ -140,7 +140,7 @@ static void _testCreateKeysAndCertificateRejectedCallback( void * contextParam,
                                                            const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo );
 
 /**
- * @brief Test user-callback to set expectations on parsing of #_sampleAcceptedDeviceCredentialsResponse as rejected
+ * @brief Test user-callback to set expectations on parsing of #_sampleAcceptedKeysAndCertificateResponse as rejected
  * server response. It will be passed as context parameter in callback parameter passed in tests.
  */
 static void _testCreateKeysAndCertificateAcceptedCallback( void * contextParam,
@@ -150,15 +150,15 @@ static void _testCreateKeysAndCertificateAcceptedCallback( void * contextParam,
  * @brief Callback for the device credentials parser that fails on being invoked. This is meant to be used for tests
  * that DO NOT expect the callback to be invoked!
  */
-static void _deviceCredentialsCallbackThatFailsOnInvokation( void * contextParam,
-                                                             const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo );
+static void _keysAndCertificateCallbackThatFailsOnInvokation( void * contextParam,
+                                                              const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo );
 
 /**
  * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
  * response. It will be passed as context parameter in callback parameter passed in tests.
  */
-static void _testOnboardRejectedDeviceCallback( void * contextParam,
-                                                const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo );
+static void _testRegisterThingRejectedDeviceCallback( void * contextParam,
+                                                      const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo );
 
 
 /*-----------------------------------------------------------*/
@@ -223,8 +223,8 @@ static void _testCreateKeysAndCertificateAcceptedCallback( void * contextParam,
 
 /*-----------------------------------------------------------*/
 
-static void _deviceCredentialsCallbackThatFailsOnInvokation( void * contextParam,
-                                                             const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
+static void _keysAndCertificateCallbackThatFailsOnInvokation( void * contextParam,
+                                                              const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
 {
     ( void ) contextParam;
     ( void ) pResponseInfo;
@@ -234,8 +234,8 @@ static void _deviceCredentialsCallbackThatFailsOnInvokation( void * contextParam
 
 /*-----------------------------------------------------------*/
 
-static void _testOnboardRejectedDeviceCallback( void * contextParam,
-                                                const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo )
+static void _testRegisterThingRejectedDeviceCallback( void * contextParam,
+                                                      const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo )
 {
     AwsIotProvisioningRejectedResponse_t * pExpectedParams = ( AwsIotProvisioningRejectedResponse_t * ) contextParam;
 
@@ -285,58 +285,58 @@ TEST_TEAR_DOWN( Provisioning_Unit_Parser )
  */
 TEST_GROUP_RUNNER( Provisioning_Unit_Parser )
 {
-    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseDeviceCredentialsRejectedResponse );
-    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseDeviceCredentialsAcceptedResponse );
-    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseDeviceCredentialsResponseWithMissingEntries );
+    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseKeysAndCertificateRejectedResponse );
+    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseKeysAndCertificateAcceptedResponse );
+    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseKeysAndCertificateResponseWithMissingEntries );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseRegisterThingRejectedResponse );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Verifies the parser function behavior @ref _AwsIotProvisioning_ParseDeviceCredentialsResponse when the
+ * @brief Verifies the parser function behavior @ref _AwsIotProvisioning_ParseKeysAndCertificateResponse when the
  * Provisioning CreateKeysAndCertificate service API responds with a rejected payload.
  */
-TEST( Provisioning_Unit_Parser, TestParseDeviceCredentialsRejectedResponse )
+TEST( Provisioning_Unit_Parser, TestParseKeysAndCertificateRejectedResponse )
 {
     _provisioningCallbackInfo_t wrapperCallback;
 
-    wrapperCallback.getDeviceCredentialsCallback.userParam = &_expectedParsedParams;
-    wrapperCallback.getDeviceCredentialsCallback.function = _testCreateKeysAndCertificateRejectedCallback;
+    wrapperCallback.createKeysAndCertificateCallback.userParam = &_expectedParsedParams;
+    wrapperCallback.createKeysAndCertificateCallback.function = _testCreateKeysAndCertificateRejectedCallback;
 
-    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SERVER_REFUSED, _AwsIotProvisioning_ParseDeviceCredentialsResponse( AWS_IOT_REJECTED,
-                                                                                                                _sampleRejectedServerResponsePayload,
-                                                                                                                sizeof( _sampleRejectedServerResponsePayload ),
-                                                                                                                &wrapperCallback ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SERVER_REFUSED, _AwsIotProvisioning_ParseKeysAndCertificateResponse( AWS_IOT_REJECTED,
+                                                                                                                 _sampleRejectedServerResponsePayload,
+                                                                                                                 sizeof( _sampleRejectedServerResponsePayload ),
+                                                                                                                 &wrapperCallback ) );
 }
 
 /**
- * @brief Verifies the parser function @ref _AwsIotProvisioning_ParseDeviceCredentialsResponse can parse the device
+ * @brief Verifies the parser function @ref _AwsIotProvisioning_ParseKeysAndCertificateResponse can parse the device
  * credentials response sent by the server.
  */
-TEST( Provisioning_Unit_Parser, TestParseDeviceCredentialsAcceptedResponse )
+TEST( Provisioning_Unit_Parser, TestParseKeysAndCertificateAcceptedResponse )
 {
     _provisioningCallbackInfo_t wrapperCallback;
 
-    wrapperCallback.getDeviceCredentialsCallback.userParam = &_expectedDeviceCredentialsParsedParams;
-    wrapperCallback.getDeviceCredentialsCallback.function = _testCreateKeysAndCertificateAcceptedCallback;
+    wrapperCallback.createKeysAndCertificateCallback.userParam = &_expectedKeysAndCertificateParsedParams;
+    wrapperCallback.createKeysAndCertificateCallback.function = _testCreateKeysAndCertificateAcceptedCallback;
 
-    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, _AwsIotProvisioning_ParseDeviceCredentialsResponse( AWS_IOT_ACCEPTED,
-                                                                                                         _sampleAcceptedDeviceCredentialsResponse,
-                                                                                                         sizeof( _sampleAcceptedDeviceCredentialsResponse ),
-                                                                                                         &wrapperCallback ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, _AwsIotProvisioning_ParseKeysAndCertificateResponse( AWS_IOT_ACCEPTED,
+                                                                                                          _sampleAcceptedKeysAndCertificateResponse,
+                                                                                                          sizeof( _sampleAcceptedKeysAndCertificateResponse ),
+                                                                                                          &wrapperCallback ) );
 }
 
 /**
- * @brief Verifies that the parser function @ref _AwsIotProvisioning_ParseDeviceCredentialsResponse does not call the
+ * @brief Verifies that the parser function @ref _AwsIotProvisioning_ParseKeysAndCertificateResponse does not call the
  * user-callback when the response payload has missing entries from the expected set of response data.
  */
-TEST( Provisioning_Unit_Parser, TestParseDeviceCredentialsResponseWithMissingEntries )
+TEST( Provisioning_Unit_Parser, TestParseKeysAndCertificateResponseWithMissingEntries )
 {
     _provisioningCallbackInfo_t wrapperCallback;
 
-    wrapperCallback.getDeviceCredentialsCallback.userParam = NULL;
-    wrapperCallback.getDeviceCredentialsCallback.function = _testCreateKeysAndCertificateAcceptedCallback;
+    wrapperCallback.createKeysAndCertificateCallback.userParam = NULL;
+    wrapperCallback.createKeysAndCertificateCallback.function = _testCreateKeysAndCertificateAcceptedCallback;
 
     /*************** Response payload only with private key ********************/
     const uint8_t payloadWithOnlyPrivateKey[] =
@@ -348,10 +348,10 @@ TEST( Provisioning_Unit_Parser, TestParseDeviceCredentialsResponseWithMissingEnt
         0x78, 0x9A, 0x78, 0x9A, 0x78, 0x9A, 0x78, 0x9A, 0x78, 0x9A, /* # "x\x9Ax\x9Ax\x9Ax\x9Ax\x9A" */
     };
 
-    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseDeviceCredentialsResponse( AWS_IOT_ACCEPTED,
-                                                                                                              payloadWithOnlyPrivateKey,
-                                                                                                              sizeof( payloadWithOnlyPrivateKey ),
-                                                                                                              &wrapperCallback ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseKeysAndCertificateResponse( AWS_IOT_ACCEPTED,
+                                                                                                               payloadWithOnlyPrivateKey,
+                                                                                                               sizeof( payloadWithOnlyPrivateKey ),
+                                                                                                               &wrapperCallback ) );
 
     /*************** Response payload only with certificate Pem entry********************/
     const uint8_t payloadWithOnlyCertificatePem[] =
@@ -364,10 +364,10 @@ TEST( Provisioning_Unit_Parser, TestParseDeviceCredentialsResponseWithMissingEnt
     };
 
 
-    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseDeviceCredentialsResponse( AWS_IOT_ACCEPTED,
-                                                                                                              payloadWithOnlyCertificatePem,
-                                                                                                              sizeof( payloadWithOnlyCertificatePem ),
-                                                                                                              &wrapperCallback ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseKeysAndCertificateResponse( AWS_IOT_ACCEPTED,
+                                                                                                               payloadWithOnlyCertificatePem,
+                                                                                                               sizeof( payloadWithOnlyCertificatePem ),
+                                                                                                               &wrapperCallback ) );
 
     /*************** Response payload only with certificate ID entry********************/
     const uint8_t payloadWithOnlyCertificateId[] =
@@ -380,10 +380,10 @@ TEST( Provisioning_Unit_Parser, TestParseDeviceCredentialsResponseWithMissingEnt
     };
 
 
-    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseDeviceCredentialsResponse( AWS_IOT_ACCEPTED,
-                                                                                                              payloadWithOnlyCertificateId,
-                                                                                                              sizeof( payloadWithOnlyCertificateId ),
-                                                                                                              &wrapperCallback ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseKeysAndCertificateResponse( AWS_IOT_ACCEPTED,
+                                                                                                               payloadWithOnlyCertificateId,
+                                                                                                               sizeof( payloadWithOnlyCertificateId ),
+                                                                                                               &wrapperCallback ) );
 
     /*************** Response payload only with ownership token entry********************/
     const uint8_t payloadWithOnlyToken[] =
@@ -398,10 +398,10 @@ TEST( Provisioning_Unit_Parser, TestParseDeviceCredentialsResponseWithMissingEnt
     };
 
 
-    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseDeviceCredentialsResponse( AWS_IOT_ACCEPTED,
-                                                                                                              payloadWithOnlyToken,
-                                                                                                              sizeof( payloadWithOnlyToken ),
-                                                                                                              &wrapperCallback ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseKeysAndCertificateResponse( AWS_IOT_ACCEPTED,
+                                                                                                               payloadWithOnlyToken,
+                                                                                                               sizeof( payloadWithOnlyToken ),
+                                                                                                               &wrapperCallback ) );
 }
 
 
@@ -413,8 +413,8 @@ TEST( Provisioning_Unit_Parser, TestParseRegisterThingRejectedResponse )
 {
     _provisioningCallbackInfo_t wrapperCallback;
 
-    wrapperCallback.onboardDeviceCallback.userParam = &_expectedParsedParams;
-    wrapperCallback.onboardDeviceCallback.function = _testOnboardRejectedDeviceCallback;
+    wrapperCallback.registerThingCallback.userParam = &_expectedParsedParams;
+    wrapperCallback.registerThingCallback.function = _testRegisterThingRejectedDeviceCallback;
 
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SERVER_REFUSED, _AwsIotProvisioning_ParseRegisterThingResponse( AWS_IOT_REJECTED,
                                                                                                             _sampleRejectedServerResponsePayload,

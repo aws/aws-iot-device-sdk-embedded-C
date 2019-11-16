@@ -111,7 +111,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
     if( checkSerializerStatus( serializerStatus ) == false )
     {
         IotLogError( "Failed to initialize encoder for payload serialization of %s operation",
-                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+                     REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
 
@@ -189,7 +189,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPaylo
     if( checkSerializerStatus( serializerStatus ) == false )
     {
         IotLogError( "Failed to initialize encoder for payload serialization of %s operation",
-                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+                     REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
 
@@ -200,23 +200,23 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPaylo
 
     /* Insert the entry for the "certificate ID". */
     if( checkSerializerStatus( _pAwsIotProvisioningEncoder->appendKeyValue( &outerMapEncoder,
-                                                                            PROVISIONING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING,
+                                                                            PROVISIONING_REGISTER_THING_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING,
                                                                             certificateIdData ) ) == false )
     {
         IotLogError( "Failed to encode entry keyed by %s in request payload of %s operation",
-                     PROVISIONING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING,
-                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+                     PROVISIONING_REGISTER_THING_REQUEST_PAYLOAD_CERTIFICATE_ID_STRING,
+                     REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
 
     /* Insert the entry for the "certificate ownership token". */
     if( checkSerializerStatus( _pAwsIotProvisioningEncoder->appendKeyValue( &outerMapEncoder,
-                                                                            PROVISIONING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_TOKEN_STRING,
+                                                                            PROVISIONING_REGISTER_THING_REQUEST_PAYLOAD_CERTIFICATE_TOKEN_STRING,
                                                                             certificateTokenData ) ) == false )
     {
         IotLogError( "Failed to encode entry keyed by %s in request payload of %s operation",
-                     PROVISIONING_ONBOARD_DEVICE_REQUEST_PAYLOAD_CERTIFICATE_TOKEN_STRING,
-                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+                     PROVISIONING_REGISTER_THING_REQUEST_PAYLOAD_CERTIFICATE_TOKEN_STRING,
+                     REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
 
@@ -224,15 +224,15 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPaylo
     if( pParametersList != NULL )
     {
         serializerStatus = _pAwsIotProvisioningEncoder->openContainerWithKey( &outerMapEncoder,
-                                                                              PROVISIONING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING,
+                                                                              PROVISIONING_REGISTER_THING_REQUEST_PAYLOAD_PARAMETERS_STRING,
                                                                               &parametersMapEncoder,
                                                                               pRequestData->numOfParameters );
 
         if( checkSerializerStatus( serializerStatus ) == false )
         {
             IotLogError( "Failed to encode entry keyed by %s in request payload of %s operation",
-                         PROVISIONING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING,
-                         GET_ONBOARD_DEVICE_OPERATION_LOG );
+                         PROVISIONING_REGISTER_THING_REQUEST_PAYLOAD_PARAMETERS_STRING,
+                         REGISTER_THING_OPERATION_LOG );
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
         }
 
@@ -270,8 +270,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPaylo
                              pParametersList[ index ].parameterKeyLength,
                              pParametersList[ index ].pParameterValue,
                              pParametersList[ index ].parameterValueLength,
-                             PROVISIONING_ONBOARD_DEVICE_REQUEST_PAYLOAD_PARAMETERS_STRING,
-                             GET_ONBOARD_DEVICE_OPERATION_LOG );
+                             PROVISIONING_REGISTER_THING_REQUEST_PAYLOAD_PARAMETERS_STRING,
+                             REGISTER_THING_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
             }
         }
@@ -304,15 +304,15 @@ size_t _AwsIotProvisioning_GenerateRegisterThingTopicFilter( const char * pTempl
     size_t filledBufferSize = 0;
 
     /* Generate the part of the topic string that is common to both request and response types. */
-    ( void ) memcpy( pTopicFilterBuffer, PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX,
-                     PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH );
-    filledBufferSize += PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_PREFIX_LENGTH;
+    ( void ) memcpy( pTopicFilterBuffer, PROVISIONING_REGISTER_THING_TOPICS_COMMON_PREFIX,
+                     PROVISIONING_REGISTER_THING_TOPICS_COMMON_PREFIX_LENGTH );
+    filledBufferSize += PROVISIONING_REGISTER_THING_TOPICS_COMMON_PREFIX_LENGTH;
     ( void ) memcpy( pTopicFilterBuffer + filledBufferSize, pTemplateName,
                      templateNameLength );
     filledBufferSize += templateNameLength;
     ( void ) memcpy( pTopicFilterBuffer + filledBufferSize,
-                     PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX,
-                     PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH );
-    filledBufferSize += PROVISIONING_ONBOARD_DEVICE_TOPICS_COMMON_SUFFIX_LENGTH;
+                     PROVISIONING_REGISTER_THING_TOPICS_COMMON_SUFFIX,
+                     PROVISIONING_REGISTER_THING_TOPICS_COMMON_SUFFIX_LENGTH );
+    filledBufferSize += PROVISIONING_REGISTER_THING_TOPICS_COMMON_SUFFIX_LENGTH;
     return filledBufferSize;
 }

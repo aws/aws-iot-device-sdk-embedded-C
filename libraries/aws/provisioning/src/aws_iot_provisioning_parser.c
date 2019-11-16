@@ -101,7 +101,7 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
                                            &errorCodeDecoder ) != IOT_SERIALIZER_SUCCESS )
     {
         IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                     PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+                     PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
                      pOperationName );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
     }
@@ -148,17 +148,17 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
 
 /*------------------------------------------------------------------*/
 
-AwsIotProvisioningError_t _AwsIotProvisioning_ParseDeviceCredentialsResponse( AwsIotStatus_t responseType,
-                                                                              const void * pDeviceCredentialsResponse,
-                                                                              size_t deviceCredentialsResponseLength,
+AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( AwsIotStatus_t responseType,
+                                                                              const void * pKeysAndCertificateResponse,
+                                                                              size_t keysAndCertificateResponseLength,
                                                                               const _provisioningCallbackInfo_t * userCallbackInfo )
 {
-    AwsIotProvisioning_Assert( pDeviceCredentialsResponse != NULL );
+    AwsIotProvisioning_Assert( pKeysAndCertificateResponse != NULL );
     AwsIotProvisioning_Assert( userCallbackInfo != NULL );
 
     IOT_FUNCTION_ENTRY( AwsIotProvisioningError_t, AWS_IOT_PROVISIONING_SUCCESS );
     AwsIotProvisioningCreateKeysAndCertificateResponse_t userCallbackParam =
-        AWS_IOT_PROVISIONING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER;
+        AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER;
 
     IotSerializerDecoderObject_t payloadDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t certificatePemDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
@@ -167,13 +167,13 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseDeviceCredentialsResponse( Aw
     IotSerializerDecoderObject_t ownershipTokenDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
     if( _pAwsIotProvisioningDecoder->init( &payloadDecoder,
-                                           pDeviceCredentialsResponse,
-                                           deviceCredentialsResponseLength ) != IOT_SERIALIZER_SUCCESS )
+                                           pKeysAndCertificateResponse,
+                                           keysAndCertificateResponseLength ) != IOT_SERIALIZER_SUCCESS )
     {
         /* Decoder object initialization failed */
         IotLogError(
             "Could not initialize decoder for parsing response from server of %s operation.",
-            GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
 
@@ -181,7 +181,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseDeviceCredentialsResponse( Aw
     {
         IotLogError(
             "Invalid container type of response received from server of %s operation. Payload should be of map type.",
-            GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
     }
 
@@ -191,13 +191,13 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseDeviceCredentialsResponse( Aw
 
             /* Look for the certificate PEM data. */
             if( _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                   PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+                                                   PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
                                                    &certificatePemDecoder ) != IOT_SERIALIZER_SUCCESS )
             {
                 /* Cannot find "certificatePem" */
                 IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                             PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-                             GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+                             CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
 
@@ -205,20 +205,20 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseDeviceCredentialsResponse( Aw
             {
                 IotLogError(
                     "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is text string.",
-                    PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-                    GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+                    CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
 
             /* Look for the certificate ID data. */
             if( _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                   PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
+                                                   PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
                                                    &certificateIdDecoder ) != IOT_SERIALIZER_SUCCESS )
             {
                 /* Cannot find "certificateId" */
                 IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                             PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                             GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
+                             CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
 
@@ -226,20 +226,20 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseDeviceCredentialsResponse( Aw
             {
                 IotLogError(
                     "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is text string.",
-                    PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                    GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
+                    CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
 
             /* Look for the private Key data. */
             if( _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                   PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
+                                                   PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
                                                    &privateKeyDecoder ) != IOT_SERIALIZER_SUCCESS )
             {
                 /* Cannot find "private key" */
                 IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                             PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
-                             GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
+                             CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
 
@@ -247,20 +247,20 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseDeviceCredentialsResponse( Aw
             {
                 IotLogError(
                     "Invalid value type of \"%s\" data in server response of %s operation. Expected type is text string.",
-                    PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
-                    GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
+                    CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
 
             /* Look for the certificate ownership token data. */
             if( _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                   PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                                                   PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
                                                    &ownershipTokenDecoder ) != IOT_SERIALIZER_SUCCESS )
             {
                 /* Cannot find "certificate ownership token" */
                 IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                             PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
-                             GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                             CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
 
@@ -268,8 +268,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseDeviceCredentialsResponse( Aw
             {
                 IotLogError(
                     "Invalid value type of \"%s\" data in server response of %s operation. Expected type is text string.",
-                    PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
-                    GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                    CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
 
@@ -296,24 +296,24 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseDeviceCredentialsResponse( Aw
                 ownershipTokenDecoder.u.value.u.string.length;
 
             /* Invoke the user-provided callback with the parsed credentials data . */
-            userCallbackInfo->getDeviceCredentialsCallback.function( userCallbackInfo->getDeviceCredentialsCallback.userParam,
-                                                                     &userCallbackParam );
+            userCallbackInfo->createKeysAndCertificateCallback.function( userCallbackInfo->createKeysAndCertificateCallback.userParam,
+                                                                         &userCallbackParam );
 
             break;
 
         case AWS_IOT_REJECTED:
             status = _parseRejectedResponse( &payloadDecoder,
-                                             GET_ONBOARD_DEVICE_OPERATION_LOG,
+                                             REGISTER_THING_OPERATION_LOG,
                                              &userCallbackParam.u.rejectedResponse,
                                              &userCallbackParam.statusCode );
             /* Invoke the user-provided callback with the parsed rejected data . */
-            userCallbackInfo->getDeviceCredentialsCallback.function( userCallbackInfo->getDeviceCredentialsCallback.userParam,
-                                                                     &userCallbackParam );
+            userCallbackInfo->createKeysAndCertificateCallback.function( userCallbackInfo->createKeysAndCertificateCallback.userParam,
+                                                                         &userCallbackParam );
 
             break;
 
         default:
-            IotLogError( "Unknown response type from the server for %s operation", GET_ONBOARD_DEVICE_OPERATION_LOG );
+            IotLogError( "Unknown response type from the server for %s operation", REGISTER_THING_OPERATION_LOG );
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
             AwsIotProvisioning_Assert( false );
     }
@@ -340,7 +340,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
 
     IOT_FUNCTION_ENTRY( AwsIotProvisioningError_t, AWS_IOT_PROVISIONING_SUCCESS );
     AwsIotProvisioningRegisterThingResponse_t userCallbackParam =
-        AWS_IOT_PROVISIONING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER;
+        AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER;
     IotSerializerError_t decoderStatus = IOT_SERIALIZER_SUCCESS;
     IotSerializerDecoderObject_t payloadDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t deviceConfigurationDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
@@ -358,7 +358,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
         /* Decoder object initialization failed */
         IotLogError(
             "Could not initialize decoder for parsing response from server of %s operation",
-            GET_ONBOARD_DEVICE_OPERATION_LOG );
+            REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
 
@@ -366,7 +366,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
     {
         IotLogError(
             "Invalid container typeof  response received from server of %s operation. Payload should be of map type.",
-            GET_ONBOARD_DEVICE_OPERATION_LOG );
+            REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
     }
 
@@ -375,7 +375,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
         case AWS_IOT_ACCEPTED:
 
             decoderStatus = _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                               PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
+                                                               PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
                                                                &deviceConfigurationDecoder );
 
             /* Device Configuration entry NOT found in payload. */
@@ -383,8 +383,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
             {
                 IotLogDebug(
                     "Device configuration data (searched with \"%s\" key) NOT present in server response for %s operation",
-                    PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
-                    GET_ONBOARD_DEVICE_OPERATION_LOG );
+                    PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
+                    REGISTER_THING_OPERATION_LOG );
             }
             else if( decoderStatus != IOT_SERIALIZER_SUCCESS )
             {
@@ -397,7 +397,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                 {
                     IotLogError(
                         "Invalid device configuration data received in server response for %s operation. Data is expected to be encoded as map container.",
-                        GET_ONBOARD_DEVICE_OPERATION_LOG );
+                        REGISTER_THING_OPERATION_LOG );
                     IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
                 }
 
@@ -415,7 +415,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                 if( pDeviceConfigurationList == NULL )
                 {
                     IotLogError( "Failure in allocating memory for device configuration data in response payload of %s operation",
-                                 GET_ONBOARD_DEVICE_OPERATION_LOG );
+                                 REGISTER_THING_OPERATION_LOG );
                     IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_NO_MEMORY );
                 }
 
@@ -427,8 +427,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                 {
                     IotLogError(
                         "Failure in iterating inside the data keyed by %s within server response for %s operation.",
-                        PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
-                        GET_ONBOARD_DEVICE_OPERATION_LOG );
+                        PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
+                        REGISTER_THING_OPERATION_LOG );
                     IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
                 }
 
@@ -446,8 +446,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                         IotLogError(
                             "Failure in iterating inside entry of device configuration container (i.e. keyed by %s) within server response "
                             "for %s operation.",
-                            PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
-                            GET_ONBOARD_DEVICE_OPERATION_LOG );
+                            PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
+                            REGISTER_THING_OPERATION_LOG );
                         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
                     }
 
@@ -478,7 +478,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
 
                         IotLogError( "Invalid data type for device configuration entry received within server response for %s operation. Expected data"
                                      "type is text string for both keys and values.",
-                                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+                                     REGISTER_THING_OPERATION_LOG );
 
                         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
                     }
@@ -499,8 +499,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                     {
                         IotLogError(
                             "Failure in iterating to the next pair of device configuration data within server response for %s operation.",
-                            PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
-                            GET_ONBOARD_DEVICE_OPERATION_LOG );
+                            PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
+                            REGISTER_THING_OPERATION_LOG );
 
                         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
                     }
@@ -510,15 +510,15 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                 {
                     IotLogError(
                         "Failure in stepping out of %s container data while decoding server response for %s operation.",
-                        PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
-                        GET_ONBOARD_DEVICE_OPERATION_LOG );
+                        PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_DEVICE_CONFIGURATION_STRING,
+                        REGISTER_THING_OPERATION_LOG );
                     IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
                 }
             }
 
             /* Look for the Thing Name entry. */
             decoderStatus = _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                               PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_THING_NAME_STRING,
+                                                               PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_THING_NAME_STRING,
                                                                &thingNameDecoder );
 
             /* Thing Name entry NOT found in payload. */
@@ -526,8 +526,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
             {
                 IotLogDebug(
                     "Thing Name data (searched with \"%s\" key) NOT present in server response for %s operation",
-                    PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_THING_NAME_STRING,
-                    GET_ONBOARD_DEVICE_OPERATION_LOG );
+                    PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_THING_NAME_STRING,
+                    REGISTER_THING_OPERATION_LOG );
             }
             else if( decoderStatus != IOT_SERIALIZER_SUCCESS )
             {
@@ -540,8 +540,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                 {
                     IotLogError(
                         "Invalid \"%s\" data received in server response for %s operation. Value is expected to be a text string.",
-                        PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_THING_NAME_STRING,
-                        GET_ONBOARD_DEVICE_OPERATION_LOG );
+                        PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_THING_NAME_STRING,
+                        REGISTER_THING_OPERATION_LOG );
                     IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
                 }
 
@@ -553,7 +553,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
 
             /* Look for the client ID entry. */
             decoderStatus = _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                               PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
+                                                               PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
                                                                &clientIdDecoder );
 
             /* Client ID entry NOT found in payload. */
@@ -561,8 +561,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
             {
                 IotLogError(
                     "Client ID entry (searched with \"%s\" key) NOT present in server response for %s operation",
-                    PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
-                    GET_ONBOARD_DEVICE_OPERATION_LOG );
+                    PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
+                    REGISTER_THING_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
             else if( decoderStatus != IOT_SERIALIZER_SUCCESS )
@@ -576,8 +576,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                 {
                     IotLogError(
                         "Invalid \"%s\" data received in server response for %s operation. Value is expected to be a text string.",
-                        PROVISIONING_ONBOARD_DEVICE_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
-                        GET_ONBOARD_DEVICE_OPERATION_LOG );
+                        PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
+                        REGISTER_THING_OPERATION_LOG );
                     IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
                 }
 
@@ -595,24 +595,24 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
             userCallbackParam.u.acceptedResponse.numOfConfigurationEntries = numOfDeviceConfigurationEntries;
 
             /* Invoke the user-provided callback with the parsed credentials data . */
-            userCallbackInfo->onboardDeviceCallback.function( userCallbackInfo->onboardDeviceCallback.userParam,
+            userCallbackInfo->registerThingCallback.function( userCallbackInfo->registerThingCallback.userParam,
                                                               &userCallbackParam );
 
             break;
 
         case AWS_IOT_REJECTED:
             status = _parseRejectedResponse( &payloadDecoder,
-                                             GET_ONBOARD_DEVICE_OPERATION_LOG,
+                                             REGISTER_THING_OPERATION_LOG,
                                              &userCallbackParam.u.rejectedResponse,
                                              &userCallbackParam.statusCode );
             /* Invoke the user-provided callback with the parsed rejected data . */
-            userCallbackInfo->onboardDeviceCallback.function( userCallbackInfo->onboardDeviceCallback.userParam,
+            userCallbackInfo->registerThingCallback.function( userCallbackInfo->registerThingCallback.userParam,
                                                               &userCallbackParam );
 
             break;
 
         default:
-            IotLogError( "Unknown response type from the server for %s operation", GET_ONBOARD_DEVICE_OPERATION_LOG );
+            IotLogError( "Unknown response type from the server for %s operation", REGISTER_THING_OPERATION_LOG );
             IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
             AwsIotProvisioning_Assert( false );
     }
