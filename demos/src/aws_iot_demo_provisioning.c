@@ -91,17 +91,17 @@
 #define NUM_OF_PROVISIONING_PARAMS      1u
 
 /**
- * @brief Type for the context parameter for the #AwsIotProvisioning_DeviceCredentialsCallbackInfo_t callback.
+ * @brief Type for the context parameter for the #AwsIotProvisioning_KeysAndCertificateCallbackInfo_t callback.
  * It will be used for storing the received Certificate ID and the ownership token data received from the server through
  * the callback, so that can be used for provisioning the demo application.
  */
-typedef struct _demoDeviceCredentialsCallbackContext
+typedef struct _demoKeysAndCertificateCallbackContext
 {
     char * pCertificateIdBuffer;
     size_t certificateIdLength;
     char * pCertificateOwnershipToken;
     size_t tokenLength;
-} _demoDeviceCredentialsCallbackContext_t;
+} _demoKeysAndCertificateCallbackContext_t;
 
 /*-----------------------------------------------------------*/
 
@@ -134,11 +134,11 @@ static void _printRejectedResponse( const AwsIotProvisioningRejectedResponse_t *
  * @param[in] pResponseInfo The device credentials information obtained from the server that will be copied into the
  * shared buffers of the demo.
  */
-static void _demoDeviceCredentialsCallback( void * contextParam,
-                                            const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
+static void _demoKeysAndCertificateCallback( void * contextParam,
+                                             const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
 {
-    _demoDeviceCredentialsCallbackContext_t * certificateIdTokenContext =
-        ( _demoDeviceCredentialsCallbackContext_t * ) contextParam;
+    _demoKeysAndCertificateCallbackContext_t * certificateIdTokenContext =
+        ( _demoKeysAndCertificateCallbackContext_t * ) contextParam;
 
     IotLogInfo( "Received StatusCode={%d}", pResponseInfo->statusCode );
 
@@ -406,12 +406,12 @@ int RunProvisioningDemo( bool awsIotMqttMode,
     IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
     /* Callbacks for the library APIs. */
-    AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t deviceCredentialsCallback = AWS_IOT_PROVISIONING_GET_DEVICE_CREDENTIALS_CALLBACK_INFO_INITIALIZER;
-    AwsIotProvisioningRegisterThingCallbackInfo_t onboardDeviceResponseCallback = AWS_IOT_PROVISIONING_ONBOARD_DEVICE_CALLBACK_INFO_INITIALIZER;
+    AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t keysAndCertificateCallback = AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER;
+    AwsIotProvisioningRegisterThingCallbackInfo_t registerThingResponseCallback = AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER;
 
     /* Represents memory that will be allocated to store the Certificate ID that will be provided by the credential
      * requesting API through the callback. */
-    _demoDeviceCredentialsCallbackContext_t newCertificateDataContext;
+    _demoKeysAndCertificateCallbackContext_t newCertificateDataContext;
 
     newCertificateDataContext.pCertificateIdBuffer = NULL;
     newCertificateDataContext.certificateIdLength = 0;
@@ -479,17 +479,17 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         connectionEstablished = true;
 
         /* Set the certificate ID pointer as context parameter to the credentials response processing callback. */
-        deviceCredentialsCallback.userParam = &newCertificateDataContext;
+        keysAndCertificateCallback.userParam = &newCertificateDataContext;
 
         /* Set the callback function for handling device credentials that the server will send. */
-        deviceCredentialsCallback.function = _demoDeviceCredentialsCallback;
+        keysAndCertificateCallback.function = _demoKeysAndCertificateCallback;
 
         /* Call the API to get new device credentials for this demo, and check that the certificat ID data is populated.
          * */
         requestStatus = AwsIotProvisioning_CreateKeysAndCertificate( mqttConnection,
                                                                      0,
                                                                      AWS_IOT_DEMO_PROVISIONING_TIMEOUT_PERIOD_MS,
-                                                                     &deviceCredentialsCallback );
+                                                                     &keysAndCertificateCallback );
 
         if( requestStatus != AWS_IOT_PROVISIONING_SUCCESS )
         {
@@ -521,19 +521,20 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         requestInfo.numOfParameters = NUM_OF_PROVISIONING_PARAMS;
 
         /* Set the callback function for handling device credentials that the server will send. */
-        onboardDeviceResponseCallback.function = _demoRegisterThingCallback;
+        registerThingResponseCallback.function = _demoRegisterThingCallback;
 
-        /* Call the API to onboard the demo application with the certificate ID that we received, and the template name
+        /* Call the API to provision the demo application with the certificate ID that we received, and the template
+         * name
          * associated with the demo endpoint account. */
         requestStatus = AwsIotProvisioning_RegisterThing( mqttConnection,
                                                           &requestInfo,
                                                           AWS_IOT_DEMO_PROVISIONING_TIMEOUT_PERIOD_MS,
-                                                          &onboardDeviceResponseCallback );
+                                                          &registerThingResponseCallback );
 
         if( requestStatus != AWS_IOT_PROVISIONING_SUCCESS )
         {
             status = EXIT_FAILURE;
-            IotLogError( "Failed to onboard demo application, error %s",
+            IotLogError( "Failed to provision demo application, error %s",
                          AwsIotProvisioning_strerror( requestStatus ) );
         }
         else

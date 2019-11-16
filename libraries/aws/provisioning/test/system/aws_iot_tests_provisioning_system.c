@@ -116,17 +116,17 @@ static const AwsIotProvisioningRequestParameterEntry_t _pTestParameters[] =
 
 
 /**
- * @brief Type for the context parameter for the #AwsIotProvisioning_DeviceCredentialsCallbackInfo_t callback.
+ * @brief Type for the context parameter for the #AwsIotProvisioning_KeysAndCertificateCallbackInfo_t callback.
  * It will be used for storing the received Certificate ID and the ownership token data received from the server through
  * the callback, so that can be used for provisioning the demo application.
  */
-typedef struct _deviceCredentialsCallbackContext
+typedef struct _keysAndCertificateCallbackContext
 {
     char * pCertificateIdBuffer;
     size_t certificateIdLength;
     char * pCertificateOwnershipToken;
     size_t tokenLength;
-} _deviceCredentialsCallbackContext_t;
+} _keysAndCertificateCallbackContext_t;
 
 /*-----------------------------------------------------------*/
 
@@ -148,8 +148,8 @@ static void _printRejectedResponse( const AwsIotProvisioningRejectedResponse_t *
  * @brief User callback function for printing parsed response data sent by the Provisioning CreateKeysAndCertificate
  * service API.
  */
-static void _printDeviceCredentialsCallback( void * contextParam,
-                                             const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
+static void _printKeysAndCertificateCallback( void * contextParam,
+                                              const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
 {
     ( void ) contextParam;
     AwsIotProvisioning_Assert( pResponseInfo != NULL );
@@ -185,8 +185,8 @@ static void _printDeviceCredentialsCallback( void * contextParam,
 static void _storeCertificateDataForProvisioning( void * contextParam,
                                                   const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
 {
-    _deviceCredentialsCallbackContext_t * certificateIdTokenContext =
-        ( _deviceCredentialsCallbackContext_t * ) contextParam;
+    _keysAndCertificateCallbackContext_t * certificateIdTokenContext =
+        ( _keysAndCertificateCallbackContext_t * ) contextParam;
 
     IotLogInfo( "Received StatusCode={%d}", pResponseInfo->statusCode );
 
@@ -429,7 +429,7 @@ TEST( Provisioning_System, CreateKeysAndCertificateNominalCase )
     AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callbackInfo =
     {
         .userParam = NULL,
-        .function  = _printDeviceCredentialsCallback
+        .function  = _printKeysAndCertificateCallback
     };
 
     status = AwsIotProvisioning_CreateKeysAndCertificate( _mqttConnection,
@@ -442,14 +442,14 @@ TEST( Provisioning_System, CreateKeysAndCertificateNominalCase )
 
 /**
  * @brief Tests the behavior of the Provisioning RegisterThing API in the nominal (or success) case where the server
- *responds
+ * responds
  * within the specified timeout period.
  */
 TEST( Provisioning_System, RegisterThingNominalCase )
 {
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
 
-    AwsIotProvisioningRegisterThingCallbackInfo_t onboardDeviceCallback =
+    AwsIotProvisioningRegisterThingCallbackInfo_t registerThingCallback =
     {
         .userParam = NULL,
         .function  = _printRegisterThingResponseCallback
@@ -460,7 +460,7 @@ TEST( Provisioning_System, RegisterThingNominalCase )
      * that */
     /* we will use for provisioning in the test. */
 
-    _deviceCredentialsCallbackContext_t newCertificateContext;
+    _keysAndCertificateCallbackContext_t newCertificateContext;
 
     newCertificateContext.pCertificateIdBuffer = NULL;
     newCertificateContext.certificateIdLength = 0;
@@ -495,7 +495,7 @@ TEST( Provisioning_System, RegisterThingNominalCase )
     status = AwsIotProvisioning_RegisterThing( _mqttConnection,
                                                &requestInfo,
                                                AWS_IOT_TEST_PROVISIONING_TIMEOUT,
-                                               &onboardDeviceCallback );
+                                               &registerThingCallback );
 
 
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, status );

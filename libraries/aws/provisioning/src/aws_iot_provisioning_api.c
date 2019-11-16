@@ -112,14 +112,14 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
 /**
  * @brief The MQTT subscription callback for the response from Provisioning CreateKeysAndCertificate service API.
  */
-static void _deviceCredentialsResponseReceivedCallback( void * param1,
-                                                        IotMqttCallbackParam_t * const
-                                                        pPublish );
+static void _keysAndCertificateResponseReceivedCallback( void * param1,
+                                                         IotMqttCallbackParam_t * const
+                                                         pPublish );
 
 /**
  * @brief The MQTT subscription callback for the response from Provisioning's RegisterThing service API.
  */
-static void _onboardDeviceResponseReceivedCallback( void * param1,
+static void _registerThingResponseReceivedCallback( void * param1,
                                                     IotMqttCallbackParam_t * const pPublish );
 
 /**
@@ -170,8 +170,8 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
         if( IotMutex_TryLock( &_activeOperation.lock ) == true )
         {
             /* Is a user thread waiting for the result? */
-            if( ( _activeOperation.info.userCallback.getDeviceCredentialsCallback.function == NULL ) ||
-                ( _activeOperation.info.userCallback.onboardDeviceCallback.function == NULL ) )
+            if( ( _activeOperation.info.userCallback.createKeysAndCertificateCallback.function == NULL ) ||
+                ( _activeOperation.info.userCallback.registerThingCallback.function == NULL ) )
             {
                 IotLogDebug( "Received unexpected server response on topic %s.",
                              pPublishData->u.message.pTopicFilter,
@@ -242,18 +242,18 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
 
 /*-----------------------------------------------------------*/
 
-static void _deviceCredentialsResponseReceivedCallback( void * param1,
-                                                        IotMqttCallbackParam_t * const pPublish )
+static void _keysAndCertificateResponseReceivedCallback( void * param1,
+                                                         IotMqttCallbackParam_t * const pPublish )
 {
     /* Silence warnings about unused variables.*/
     ( void ) param1;
 
-    _commonServerResponseHandler( pPublish, _AwsIotProvisioning_ParseDeviceCredentialsResponse );
+    _commonServerResponseHandler( pPublish, _AwsIotProvisioning_ParseKeysAndCertificateResponse );
 }
 
 /*-----------------------------------------------------------*/
 
-static void _onboardDeviceResponseReceivedCallback( void * param1,
+static void _registerThingResponseReceivedCallback( void * param1,
                                                     IotMqttCallbackParam_t * const pPublish )
 {
     /* Silence warnings about unused variables.*/
@@ -395,21 +395,21 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
                                                                        provisioningConnection,
                                                                        uint32_t flags,
                                                                        uint32_t timeoutMs,
-                                                                       const AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t * deviceCredentialsResponseCallback )
+                                                                       const AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t * keysAndCertificateResponseCallback )
 {
     uint32_t startingMutexRefCount = 0;
     bool mutexRefCountIncremented = false;
-    char responseTopicsBuffer[ PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_MAX_TOPIC_LENGTH ] =
+    char responseTopicsBuffer[ PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_MAX_TOPIC_LENGTH ] =
     { 0 };
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
     /* Configuration for subscribing and unsubsubscribing to/from response topics. */
     AwsIotSubscriptionInfo_t responseSubscription =
     {
         .mqttConnection        = provisioningConnection,
-        .callbackFunction      = _deviceCredentialsResponseReceivedCallback,
+        .callbackFunction      = _keysAndCertificateResponseReceivedCallback,
         .timeout               = _AwsIotProvisioningMqttTimeoutMs,
         .pTopicFilterBase      = responseTopicsBuffer,
-        .topicFilterBaseLength = PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER_LENGTH
+        .topicFilterBaseLength = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH
     };
     bool subscribedToResponseTopics = false;
     IotSerializerEncoderObject_t payloadEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
@@ -436,12 +436,12 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     }
 
     /* Check that a callback function object along with a valid callback functor is provided. */
-    if( ( deviceCredentialsResponseCallback == NULL ) ||
-        ( deviceCredentialsResponseCallback->function == NULL ) )
+    if( ( keysAndCertificateResponseCallback == NULL ) ||
+        ( keysAndCertificateResponseCallback->function == NULL ) )
     {
         IotLogError(
             "Invalid callback provided. Both the callback object and functor within should be provided to the %s operation",
-            GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
     }
@@ -457,8 +457,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     }
 
     /* Copy the response topics in a local buffer for appropriate suffixes to be added. */
-    ( void ) memcpy( responseTopicsBuffer, PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER,
-                     PROVISIONING_GET_DEVICE_CREDENTIALS_RESPONSE_TOPIC_FILTER_LENGTH );
+    ( void ) memcpy( responseTopicsBuffer, PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER,
+                     PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH );
 
     /* Subscribe to the MQTT response topics. */
     mqttOpResult = AwsIot_ModifySubscriptions( IotMqtt_SubscribeSync, &responseSubscription );
@@ -466,7 +466,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     if( mqttOpResult != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Unable to subscribe to response topics for %s operation",
-                     GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                     CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_MQTT_ERROR );
     }
     else
@@ -476,7 +476,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
 
     /* Update the operation object to represent an active "get device credentials" operation. */
     _provisioningCallbackInfo_t callbackInfo;
-    callbackInfo.getDeviceCredentialsCallback = *deviceCredentialsResponseCallback;
+    callbackInfo.createKeysAndCertificateCallback = *keysAndCertificateResponseCallback;
     _setActiveOperation( &callbackInfo );
 
     /* Provisioning already has an acknowledgement mechanism, so sending the message at
@@ -508,7 +508,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     if( pPayloadBuffer == NULL )
     {
         IotLogError( "Unable to allocate memory for request payload in %s API operation",
-                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+                     REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_NO_MEMORY );
     }
     else
@@ -528,11 +528,11 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     publishInfo.payloadLength = payloadSize;
 
     /* Set the operation topic name. */
-    publishInfo.pTopicName = PROVISIONING_GET_DEVICE_CREDENTIALS_REQUEST_TOPIC;
-    publishInfo.topicNameLength = PROVISIONING_GET_DEVICE_CREDENTIALS_REQUEST_TOPIC_LENGTH;
+    publishInfo.pTopicName = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC;
+    publishInfo.topicNameLength = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC_LENGTH;
 
     IotLogDebug( "Provisioning %s message will be published to topic %.*s",
-                 GET_DEVICE_CREDENTIALS_OPERATION_LOG,
+                 CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG,
                  publishInfo.topicNameLength,
                  publishInfo.pTopicName );
 
@@ -545,7 +545,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     if( mqttOpResult != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Unable to subscribe to response topics for %s operation",
-                     GET_DEVICE_CREDENTIALS_OPERATION_LOG );
+                     CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_MQTT_ERROR );
     }
 
@@ -611,20 +611,20 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
 
     /* Use the same buffer for storing the request and response MQTT topic strings (for space efficiency) as both kinds
      * of topics share the same filter. */
-    char requestResponseTopicsBuffer[ PROVISIONING_ONBOARD_DEVICE_RESPONSE_MAX_TOPIC_LENGTH ] = { 0 };
+    char requestResponseTopicsBuffer[ PROVISIONING_REGISTER_THING_RESPONSE_MAX_TOPIC_LENGTH ] = { 0 };
     size_t generatedTopicFilterSize = 0;
-    AwsIotProvisioning_Assert( PROVISIONING_ONBOARD_DEVICE_RESPONSE_MAX_TOPIC_LENGTH >
-                               PROVISIONING_ONBOARD_DEVICE_REQUEST_TOPIC_LENGTH );
+    AwsIotProvisioning_Assert( PROVISIONING_REGISTER_THING_RESPONSE_MAX_TOPIC_LENGTH >
+                               PROVISIONING_REGISTER_THING_REQUEST_TOPIC_LENGTH );
 
     bool subscribedToResponseTopics = false;
     /* Configuration for subscribing and unsubsubscribing to/from response topics. */
     AwsIotSubscriptionInfo_t responseSubscription =
     {
         .mqttConnection        = provisioningConnection,
-        .callbackFunction      = _onboardDeviceResponseReceivedCallback,
+        .callbackFunction      = _registerThingResponseReceivedCallback,
         .timeout               = _AwsIotProvisioningMqttTimeoutMs,
         .pTopicFilterBase      = requestResponseTopicsBuffer,
-        .topicFilterBaseLength = PROVISIONING_ONBOARD_DEVICE_RESPONSE_TOPIC_FILTER_LENGTH
+        .topicFilterBaseLength = PROVISIONING_REGISTER_THING_RESPONSE_TOPIC_FILTER_LENGTH
     };
     IotSerializerEncoderObject_t payloadEncoder =
         IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
@@ -684,7 +684,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
     {
         IotLogError(
             "Invalid callback provided. A valid callback object and functor should be provided to the %s operation",
-            GET_ONBOARD_DEVICE_OPERATION_LOG );
+            REGISTER_THING_OPERATION_LOG );
 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
     }
@@ -723,7 +723,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
     if( mqttOpResult != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Unable to subscribe to response topics for %s operation",
-                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+                     REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_MQTT_ERROR );
     }
     else
@@ -731,9 +731,9 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         subscribedToResponseTopics = true;
     }
 
-    /* Update the operation object to represent an active "onboard device" operation. */
+    /* Update the operation object to represent an active "provision device" operation. */
     _provisioningCallbackInfo_t callbackInfo;
-    callbackInfo.onboardDeviceCallback = *pResponseCallback;
+    callbackInfo.registerThingCallback = *pResponseCallback;
     _setActiveOperation( &callbackInfo );
 
     /* Provisioning already has an acknowledgement mechanism, so sending the message at
@@ -765,7 +765,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
     if( pPayloadBuffer == NULL )
     {
         IotLogError( "Unable to allocate memory for request payload in %s API operation",
-                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+                     REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_NO_MEMORY );
     }
     else
@@ -798,7 +798,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
     publishInfo.topicNameLength = generatedTopicFilterSize;
 
     IotLogDebug( "Provisioning %s message will be published to topic %.*s",
-                 GET_ONBOARD_DEVICE_OPERATION_LOG,
+                 REGISTER_THING_OPERATION_LOG,
                  publishInfo.topicNameLength,
                  publishInfo.pTopicName );
 
@@ -811,7 +811,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
     if( mqttOpResult != IOT_MQTT_SUCCESS )
     {
         IotLogError( "Unable to subscribe to response topics for %s operation",
-                     GET_ONBOARD_DEVICE_OPERATION_LOG );
+                     REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_MQTT_ERROR );
     }
 
