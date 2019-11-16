@@ -57,6 +57,7 @@
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )
 #define AWS_IOT_DEFENDER_ENABLE_ASSERTS         ( 1 )
 #define AWS_IOT_JOBS_ENABLE_ASSERTS             ( 1 )
+#define AWS_IOT_PROVISIONING_ENABLE_ASSERTS     ( 1 )
 
 /* Library logging configuration. IOT_LOG_LEVEL_GLOBAL provides a global log
  * level for all libraries; the library-specific settings override the global
