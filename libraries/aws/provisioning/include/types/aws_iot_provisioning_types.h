@@ -210,7 +210,7 @@ typedef struct AwsIotProvisioningResponseDeviceConfigurationEntry
 
 /**
  * @ingroup provisioning_datatypes_paramstructs
- * @brief Aggregates information required for sending a request to the Provisioning service for
+ * @brief Aggregates information required for sending a request to the AWS IoT Core service for
  * provisioning a device to its customer AWS IoT account.
  */
 typedef struct AwsIotProvisioningRegisterThingRequestInfo

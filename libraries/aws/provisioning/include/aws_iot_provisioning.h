@@ -83,7 +83,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
 
 
 /**
- * @brief Requests a new public-private key pair and certificate for the device from the Provisioning service and
+ * @brief Requests a new public-private key pair and certificate for the device from the AWS IoT Core service and
  * invokes the passed user-callback with the credentials it receives from the server.
  *
  * @note The device should be connected to the user AWS IoT account over MQTT and the calling code should provide the
@@ -123,11 +123,12 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
 /* @[provision_function_createkeysandcertificate] */
 
 /**
- * @brief Requests the Provisioning service to provision the device with the certificate and device context information
- * that is passed to the API, and invokes the passed user-callback with the response it receives from the
- * service on provisioning the device.
+ * @brief Requests the AWS IoT Core service to provision the device, and invokes the passed user-callback with the
+ * response it receives from the service on provisioning the device.
  *
- * The device should use this API to register its certificate and provision itself.
+ * For provisioning the device, the service is expected to register the certificate, and optionally set up the Thing,
+ * Attributes and other cloud settings based on the fleet provisioning template and device context information that are
+ * passed to the API.
  *
  * @note The device should be connected to the user AWS IoT account over MQTT and the calling code should provide the
  * MQTT connection handle to the API for communicating with the server.
