@@ -429,7 +429,7 @@ typedef union _provisioningCallbackInfo
 } _provisioningCallbackInfo_t;
 
 /**
- * @brief Functor for parsing response payload received from Provisioning service.
+ * @brief Functor for parsing response payload received from AWS IoT Core.
  * Parser that will de-serialize the server response, allocate memory for representing parsed data (if required),
  * and invoke the user callback passed to it.
  * @param[in] responseType The type of response, "accepted" or "rejected" received from the server for the operation.

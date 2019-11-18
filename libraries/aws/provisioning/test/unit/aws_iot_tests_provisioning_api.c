@@ -831,8 +831,7 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPIRejectedResponse )
 
 /**
  * @brief Tests the behavior of @ref provisioning_function_getpKeysAndCertificate when the "accepted" response sent by
- * the
- * Provisioning service contains a corrupt payload.
+ * the AWS IoT Core service contains a corrupt payload.
  */
 TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPICorruptDataInResponse )
 {
@@ -1158,7 +1157,7 @@ TEST( Provisioning_Unit_API, RegisterThingAPIRejectedResponse )
 
 /**
  * @brief Tests the behavior of @ref provisioning_function_registerthing API when the "accepted" response sent by the
- * Provisioning service contains a corrupt payload.
+ * AWS IoT Core service contains a corrupt payload.
  */
 TEST( Provisioning_Unit_API, RegisterThingAPICorruptDataInResponse )
 {
