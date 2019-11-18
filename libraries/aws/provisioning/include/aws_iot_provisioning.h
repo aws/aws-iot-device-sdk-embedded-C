@@ -133,6 +133,9 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * @note The device should be connected to the user AWS IoT account over MQTT and the calling code should provide the
  * MQTT connection handle to the API for communicating with the server.
  *
+ * Also, the AWS IoT account being connected to for provisioning the device SHOULD have a fleet provisioning template
+ * created, whose template name should be passed to this API for requesting device provisioning.
+ *
  * @param[in] provisioningConnection The MQTT connection handle to the user AWS IoT account that will be used for
  * provisioning the device.
  * @param[in] pProvisioningDataInfo The data (including the certificate) that needs to be sent to the server for
