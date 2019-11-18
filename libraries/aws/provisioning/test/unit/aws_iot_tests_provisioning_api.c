@@ -258,7 +258,7 @@ static const char * _registerThingRejectedResponseTopic = "$aws/provisioning-tem
  */
 static const uint8_t _sampleRegisterThingResponsePayload[] =
 {
-    0xA3,                                                             /* # map(2) */
+    0xA2,                                                             /* # map(2) */
     0x73,                                                             /* # text(19) */
     0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74,
     0x69, 0x6F, 0x6E,                                                 /* # "deviceConfiguration" */
@@ -279,10 +279,7 @@ static const uint8_t _sampleRegisterThingResponsePayload[] =
     0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65,             /* # "thingName" */
     0x69,                                                             /* # text(9) */
     0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67,             /* # "TestThing" */
-    0x68,                                                             /*# text(8) */
-    0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x49, 0x64,                   /*# "clientId" */
-    0x65,                                                             /*# text(5) */
-    0x44, 0x75, 0x6D, 0x6D, 0x79                                      /*# "Dummy" */
+    0x68                                                              /* # text(8) */
 };
 
 static const AwsIotProvisioningResponseDeviceConfigurationEntry_t _expectedDeviceConfigList[] =
@@ -311,8 +308,6 @@ static AwsIotProvisioningRegisterThingResponse_t _expectedRegisterThingCallbackP
     .statusCode                                   = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED,
     .u.acceptedResponse.pThingName                = ( const char * ) &_sampleRegisterThingResponsePayload[ 113 ],
     .u.acceptedResponse.thingNameLength           = 9,
-    .u.acceptedResponse.pClientId                 = ( const char * ) &_sampleRegisterThingResponsePayload[ 132 ],
-    .u.acceptedResponse.clientIdLength            = 5,
     .u.acceptedResponse.pDeviceConfigList         = _expectedDeviceConfigList,
     .u.acceptedResponse.numOfConfigurationEntries = sizeof( _expectedDeviceConfigList ) /
                                                     sizeof( AwsIotProvisioningResponseDeviceConfigurationEntry_t )
@@ -433,18 +428,6 @@ static void _testRegisterThingCallback( void * contextParam,
                                                pExpectedParams->u.acceptedResponse.pThingName,
                                                pResponseInfo->u.acceptedResponse.pThingName,
                                                pExpectedParams->u.acceptedResponse.thingNameLength ) );
-            }
-
-            AwsIotProvisioning_Assert(
-                pExpectedParams->u.acceptedResponse.clientIdLength ==
-                pResponseInfo->u.acceptedResponse.clientIdLength );
-
-            if( pExpectedParams->u.acceptedResponse.clientIdLength > 0 )
-            {
-                AwsIotProvisioning_Assert( 0 == memcmp(
-                                               pExpectedParams->u.acceptedResponse.pClientId,
-                                               pResponseInfo->u.acceptedResponse.pClientId,
-                                               pExpectedParams->u.acceptedResponse.clientIdLength ) );
             }
 
             AwsIotProvisioning_Assert(
@@ -1207,7 +1190,7 @@ TEST( Provisioning_Unit_API, RegisterThingAPICorruptDataInResponse )
         0x02,                                                 /* # unsigned(2), */
         0x69,                                                 /* # text(9) */
         0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65, /* # "thingName" */
-        0x04                                                  /* # unisgned(4) */
+        0x04                                                  /* # unsigned(4) */
     };
 
     corruptResponseContext.pPublishData = serverResponseWithInvalidThingNameEntry;
@@ -1250,15 +1233,12 @@ TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseWithoutDeviceConfigur
 {
     const uint8_t pResponseWithoutDeviceConfigData[] =
     {
-        0xA2,                                                 /* # map(2) */
+        0xA1,                                                 /* # map(1) */
         0x69,                                                 /* # text(9) */
         0x74, 0x68, 0x69, 0x6E, 0x67, 0x4E, 0x61, 0x6D, 0x65, /* # "thingName" */
         0x69,                                                 /* # text(9) */
         0x54, 0x65, 0x73, 0x74, 0x54, 0x68, 0x69, 0x6E, 0x67, /* # "TestThing" */
-        0x68,                                                 /*# text(8) */
-        0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x49, 0x64,       /*# "clientId" */
-        0x65,                                                 /*# text(5) */
-        0x44, 0x75, 0x6D, 0x6D, 0x79                          /*# "Dummy" */
+        0x68,                                                 /* # text(8) */
     };
 
     _serverResponseThreadContext_t serverResponse =
@@ -1274,8 +1254,6 @@ TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseWithoutDeviceConfigur
         .statusCode                                   = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED,
         .u.acceptedResponse.pThingName                = ( const char * ) &pResponseWithoutDeviceConfigData[ 12 ],
         .u.acceptedResponse.thingNameLength           = 9,
-        .u.acceptedResponse.pClientId                 = ( const char * ) &pResponseWithoutDeviceConfigData[ 31 ],
-        .u.acceptedResponse.clientIdLength            = 5,
         .u.acceptedResponse.pDeviceConfigList         = NULL,
         .u.acceptedResponse.numOfConfigurationEntries = 0
     };
@@ -1301,19 +1279,16 @@ TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseWithoutThingName )
 {
     const uint8_t pServerResponseWithoutThingName[] =
     {
-        0xA2,                                           /* # map(2) */
-        0x73,                                           /* # text(19) */
+        0xA1,                   /* # map(1) */
+        0x73,                   /* # text(19) */
         0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6F, 0x6E, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61,
-        0x74, 0x69, 0x6F, 0x6E,                         /* # "deviceConfiguration" */
-        0xA1,                                           /* # map(1), */
-        0x61,                                           /* # text(1), */
-        0x31,                                           /* # "1", */
-        0x61,                                           /* # text(1), */
-        0x32,                                           /* # "2" */
-        0x68,                                           /*# text(8) */
-        0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x49, 0x64, /*# "clientId" */
-        0x65,                                           /*# text(5) */
-        0x44, 0x75, 0x6D, 0x6D, 0x79                    /*# "Dummy" */
+        0x74, 0x69, 0x6F, 0x6E, /* # "deviceConfiguration" */
+        0xA1,                   /* # map(1), */
+        0x61,                   /* # text(1), */
+        0x31,                   /* # "1", */
+        0x61,                   /* # text(1), */
+        0x32,                   /* # "2" */
+        0x68,                   /*# text(8) */
     };
 
     _serverResponseThreadContext_t serverResponse =
@@ -1339,8 +1314,6 @@ TEST( Provisioning_Unit_API, RegisterThingAPIServerResponseWithoutThingName )
         .statusCode                                   = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED,
         .u.acceptedResponse.pThingName                = NULL,
         .u.acceptedResponse.thingNameLength           = 0,
-        .u.acceptedResponse.pClientId                 = ( const char * ) &pServerResponseWithoutThingName[ 36 ],
-        .u.acceptedResponse.clientIdLength            = 5,
         .u.acceptedResponse.pDeviceConfigList         = pExpectedDeviceConfigList,
         .u.acceptedResponse.numOfConfigurationEntries = 1
     };

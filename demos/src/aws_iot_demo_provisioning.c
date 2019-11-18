@@ -215,13 +215,6 @@ static void _demoRegisterThingCallback( void * contextParam,
 
     if( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED )
     {
-        if( pResponseInfo->u.acceptedResponse.pClientId != NULL )
-        {
-            IotLogInfo( "ClientID = %.*s",
-                        pResponseInfo->u.acceptedResponse.clientIdLength,
-                        pResponseInfo->u.acceptedResponse.pClientId );
-        }
-
         if( pResponseInfo->u.acceptedResponse.pThingName != NULL )
         {
             IotLogInfo( "ThingName = %.*s",
@@ -386,9 +379,9 @@ static int _establishMqttConnection( const char * pIdentifier,
  * @param[in] awsIotMqttMode Ignored for the Provisioning demo.
  * @param[in] pIdentifier NULL-terminated Provisioning Thing Name.
  * @param[in] pNetworkServerInfo Passed to the MQTT connect function when
- * establishing the MQTT connection for Provisionings.
+ * establishing the MQTT connection for testing the Fleet Provisioning feature of AWS Iot Core service.
  * @param[in] pNetworkCredentialInfo Passed to the MQTT connect function when
- * establishing the MQTT connection for Provisionings.
+ * establishing the MQTT connection for testing the Fleet Provisioning feature of AWS Iot Core service.
  * @param[in] pNetworkInterface The network interface to use for this demo.
  *
  * @return `EXIT_SUCCESS` if the demo completes successfully; `EXIT_FAILURE` otherwise.
@@ -424,7 +417,7 @@ int RunProvisioningDemo( bool awsIotMqttMode,
     /* Flags for tracking which cleanup functions must be called. */
     bool librariesInitialized = false, connectionEstablished = false;
 
-    /* The first parameter of this demo function is not used. Provisionings are specific
+    /* The first parameter of this demo function is not used. Provisioning feature is specific
      * to AWS IoT, so this value is hardcoded to true whenever needed. */
     ( void ) awsIotMqttMode;
 

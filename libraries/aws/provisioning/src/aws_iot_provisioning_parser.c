@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_onbording_parser.c
+ * @file aws_iot_provisioning_parser.c
  * @brief Implements the internal functions for parsing server responses for the Provisioning library.
  */
 
@@ -149,9 +149,9 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
 /*------------------------------------------------------------------*/
 
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( AwsIotStatus_t responseType,
-                                                                              const void * pKeysAndCertificateResponse,
-                                                                              size_t keysAndCertificateResponseLength,
-                                                                              const _provisioningCallbackInfo_t * userCallbackInfo )
+                                                                               const void * pKeysAndCertificateResponse,
+                                                                               size_t keysAndCertificateResponseLength,
+                                                                               const _provisioningCallbackInfo_t * userCallbackInfo )
 {
     AwsIotProvisioning_Assert( pKeysAndCertificateResponse != NULL );
     AwsIotProvisioning_Assert( userCallbackInfo != NULL );
@@ -349,7 +349,6 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
     AwsIotProvisioningResponseDeviceConfigurationEntry_t * pDeviceConfigurationList = NULL;
     bool configurationListAllocated = false;
     IotSerializerDecoderObject_t thingNameDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
-    IotSerializerDecoderObject_t clientIdDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
     if( _pAwsIotProvisioningDecoder->init( &payloadDecoder,
                                            pResponsePayload,
@@ -551,42 +550,6 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                 userCallbackParam.u.acceptedResponse.thingNameLength = thingNameDecoder.u.value.u.string.length;
             }
 
-            /* Look for the client ID entry. */
-            decoderStatus = _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                               PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
-                                                               &clientIdDecoder );
-
-            /* Client ID entry NOT found in payload. */
-            if( decoderStatus != IOT_SERIALIZER_SUCCESS )
-            {
-                IotLogError(
-                    "Client ID entry (searched with \"%s\" key) NOT present in server response for %s operation",
-                    PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
-                    REGISTER_THING_OPERATION_LOG );
-                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
-            }
-            else if( decoderStatus != IOT_SERIALIZER_SUCCESS )
-            {
-                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
-            }
-            /* Client ID entry FOUND in payload. */
-            else
-            {
-                if( clientIdDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
-                {
-                    IotLogError(
-                        "Invalid \"%s\" data received in server response for %s operation. Value is expected to be a text string.",
-                        PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_CLIENT_ID_STRING,
-                        REGISTER_THING_OPERATION_LOG );
-                    IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
-                }
-
-                /* Populate information for the "Client ID" data. */
-                userCallbackParam.u.acceptedResponse.pClientId = ( const char * )
-                                                                 clientIdDecoder.u.value.u.string.pString;
-                userCallbackParam.u.acceptedResponse.clientIdLength = clientIdDecoder.u.value.u.string.length;
-            }
-
             /* Populate the status code information to represent success response from the server. */
             userCallbackParam.statusCode = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED;
 
@@ -626,7 +589,6 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
 
     _pAwsIotProvisioningDecoder->destroy( &deviceConfigurationDecoder );
     _pAwsIotProvisioningDecoder->destroy( &thingNameDecoder );
-    _pAwsIotProvisioningDecoder->destroy( &clientIdDecoder );
     _pAwsIotProvisioningDecoder->destroy( &payloadDecoder );
 
     IOT_FUNCTION_CLEANUP_END();

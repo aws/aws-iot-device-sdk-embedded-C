@@ -389,12 +389,6 @@ typedef struct AwsIotProvisioningRegisterThingResponse
             /**< The length of the Thing resource name. */
             size_t thingNameLength;
 
-            /**< The client ID used in the connection to the AWS IoT server for provisioning the device.*/
-            const char * pClientId;
-
-            /**< The length of the client ID text. */
-            size_t clientIdLength;
-
             /**< A list of device configuration data that is received from the server. */
             const AwsIotProvisioningResponseDeviceConfigurationEntry_t * pDeviceConfigList;
 
