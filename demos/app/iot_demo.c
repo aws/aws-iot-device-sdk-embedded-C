@@ -122,18 +122,23 @@ int main( int argc,
         credentials.pClientCert = demoArguments.pClientCertPath;
         credentials.pPrivateKey = demoArguments.pPrivateKeyPath;
         credentials.pRootCa = demoArguments.pRootCaPath;
+        credentials.pUserName = NULL;
+        credentials.pPassword = NULL;
         
         /* Set the MQTT username, as long as it's not empty or NULL. */
         if( demoArguments.pUserName != NULL )
         {
             credentials.userNameSize = strlen( demoArguments.pUserName );
+
+            /* Check for compliance with the MQTT standard. */
+            if( credentials.userNameSize > USHRT_MAX )
+            {
+                IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
+            }
+
             if( credentials.userNameSize > 0 )
             {
                 credentials.pUserName = demoArguments.pUserName;
-            }
-            else
-            {
-                credentials.pUserName = NULL;
             }
         }
 
@@ -141,13 +146,16 @@ int main( int argc,
         if( demoArguments.pPassword != NULL )
         {
             credentials.passwordSize = strlen( demoArguments.pPassword );
+
+            /* Check for compliance with the MQTT standard. */
+            if( credentials.passwordSize > USHRT_MAX )
+            {
+                IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
+            }
+
             if( credentials.passwordSize > 0 )
             {
                 credentials.pPassword = demoArguments.pPassword;
-            }
-            else
-            {
-                credentials.pPassword = NULL;
             }
         }
 
