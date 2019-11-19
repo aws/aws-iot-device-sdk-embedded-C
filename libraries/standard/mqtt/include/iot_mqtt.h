@@ -246,7 +246,7 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
  * // [Optional] Set a local subscription to receive broker messages on an unsolicited topic.
  * subscription.qos = IOT_MQTT_QOS_0;
  * subscription.pTopicFilter = "some/unsolicited/topic";
- * subscription.topicLength = strlen(subscription.pTopicFilter)
+ * subscription.topicLength = ( uint16_t ) strlen( subscription.pTopicFilter );
  * subscription.callback.function = unsolicitedMessageCallback;
  * connectInfo.pPreviousSubscriptions = &subscription;
  * connectInfo.previousSubscriptionCount = 1;
