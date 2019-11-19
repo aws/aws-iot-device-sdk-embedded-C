@@ -72,6 +72,7 @@
 #define AWS_IOT_LOG_LEVEL_SHADOW                IOT_LOG_INFO
 #define AWS_IOT_LOG_LEVEL_DEFENDER              IOT_LOG_INFO
 #define AWS_IOT_LOG_LEVEL_JOBS                  IOT_LOG_INFO
+#define AWS_IOT_LOG_LEVEL_PROVISIONING          IOT_LOG_INFO
 
 /* Default assert and memory allocation functions. */
 #include <assert.h>
