@@ -65,7 +65,7 @@ This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. T
     ```sh
     cmake ..
     ```
-    CMake will generate a project based on the detected operating system. On Linux, the default project is a Makefile. To build the SDK with this Makefile, run `make`.
+    CMake will generate a project based on the detected operating system. On Linux, the default project is a Makefile. To build the SDK with this Makefile, run `make`. The resulting binaries (the demo executables) and libraries will be placed in the `build/output` directory.
 
     You may also use CMake GUI. Specify the SDK's root directory as the source directory and the build directory created in step 4 as the build directory in CMake GUI.
 

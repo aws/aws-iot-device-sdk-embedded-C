@@ -34,12 +34,28 @@
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
+/**
+ * @brief Check that an #IotMqttPublishInfo_t is valid.
+ *
+ * @param[in] awsIotMqttMode Specifies if this PUBLISH packet is being sent to
+ * an AWS IoT MQTT server.
+ * @param[in] maximumPayloadLength Maximum payload length.
+ * @param[in] pPublishTypeDescription String describing the publish type.
+ * @param[in] pPublishInfo The #IotMqttPublishInfo_t to validate.
+ *
+ * @return `true` if `pPublishInfo` is valid; `false` otherwise.
+ */
+static bool _validatePublish( bool awsIotMqttMode,
+                              size_t maximumPayloadLength,
+                              const char * pPublishTypeDescription,
+                              const IotMqttPublishInfo_t * pPublishInfo );
+
 /*-----------------------------------------------------------*/
 
 bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 {
     IOT_FUNCTION_ENTRY( bool, true );
-    uint16_t maxClientIdLength = IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH;
+    uint16_t maxClientIdLength = MQTT_SERVER_MAX_CLIENTID_LENGTH;
     bool enforceMaxClientIdLength = false;
 
     /* Check for NULL. */
@@ -89,20 +105,32 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
     }
 
     /* Check that the number of persistent session subscriptions is valid. */
-    if( pConnectInfo->cleanSession == false )
+    if( pConnectInfo->pPreviousSubscriptions != NULL )
     {
-        if( pConnectInfo->pPreviousSubscriptions != NULL )
+        if( _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
+                                                pConnectInfo->awsIotMqttMode,
+                                                pConnectInfo->pPreviousSubscriptions,
+                                                pConnectInfo->previousSubscriptionCount ) == false )
         {
-            if( pConnectInfo->previousSubscriptionCount == 0 )
-            {
-                IotLogError( "Previous subscription count cannot be 0." );
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+        else
+        {
+            EMPTY_ELSE_MARKER;
+        }
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
 
-                IOT_SET_AND_GOTO_CLEANUP( false );
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
+    /* If will info is provided, check that it is valid. */
+    if( pConnectInfo->pWillInfo != NULL )
+    {
+        if( _IotMqtt_ValidateLwtPublish( pConnectInfo->awsIotMqttMode,
+                                         pConnectInfo->pWillInfo ) == false )
+        {
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
         else
         {
@@ -134,9 +162,11 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
         else
         {
             IotLogError( "A client identifier length of %hu exceeds the "
-                         "the maximum supported length of %hu.",
+                         "maximum supported length of %hu.",
                          pConnectInfo->clientIdentifierLength,
                          maxClientIdLength );
+
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
     }
     else
@@ -148,9 +178,10 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 }
 
 /*-----------------------------------------------------------*/
-
-bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
-                               const IotMqttPublishInfo_t * pPublishInfo )
+static bool _validatePublish( bool awsIotMqttMode,
+                              size_t maximumPayloadLength,
+                              const char * pPublishTypeDescription,
+                              const IotMqttPublishInfo_t * pPublishInfo )
 {
     IOT_FUNCTION_ENTRY( bool, true );
 
@@ -187,18 +218,29 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
         EMPTY_ELSE_MARKER;
     }
 
-    /* Only allow NULL payloads with zero length. */
-    if( pPublishInfo->pPayload == NULL )
+    if( pPublishInfo->payloadLength != 0 )
     {
-        if( pPublishInfo->payloadLength != 0 )
+        if( pPublishInfo->payloadLength > maximumPayloadLength )
         {
-            IotLogError( "Nonzero payload length cannot have a NULL payload." );
+            IotLogError( "%s payload size of %zu exceeds maximum length of %zu.",
+                         pPublishTypeDescription,
+                         pPublishInfo->payloadLength,
+                         maximumPayloadLength );
 
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
         else
         {
-            EMPTY_ELSE_MARKER;
+            if( pPublishInfo->pPayload == NULL )
+            {
+                IotLogError( "Nonzero payload length cannot have a NULL payload." );
+
+                IOT_SET_AND_GOTO_CLEANUP( false );
+            }
+            else
+            {
+                EMPTY_ELSE_MARKER;
+            }
         }
     }
     else
@@ -278,6 +320,39 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
+bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
+                               const IotMqttPublishInfo_t * pPublishInfo )
+{
+    size_t maximumPayloadLength = MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
+
+    if( awsIotMqttMode == true )
+    {
+        maximumPayloadLength = AWS_IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+
+    return _validatePublish( awsIotMqttMode,
+                             maximumPayloadLength,
+                             "Publish",
+                             pPublishInfo );
+}
+
+/*-----------------------------------------------------------*/
+
+bool _IotMqtt_ValidateLwtPublish( bool awsIotMqttMode,
+                                  const IotMqttPublishInfo_t * pLwtPublishInfo )
+{
+    return _validatePublish( awsIotMqttMode,
+                             MQTT_SERVER_MAX_LWT_PAYLOAD_LENGTH,
+                             "LWT",
+                             pLwtPublishInfo );
 }
 
 /*-----------------------------------------------------------*/

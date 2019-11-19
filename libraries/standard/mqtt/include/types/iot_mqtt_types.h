@@ -627,9 +627,13 @@ typedef struct IotMqttConnectInfo
      * Pointer to the start of an array of subscriptions present a previous session,
      * if any. These subscriptions will be immediately restored upon reconnecting.
      *
-     * This member is ignored if it is `NULL` or #IotMqttConnectInfo_t.cleanSession
-     * is `true`. If this member is not `NULL`, #IotMqttConnectInfo_t.previousSubscriptionCount
-     * must be nonzero.
+     * [Optional] The field can also be used to pass a list of subscriptions to be
+     * stored locally without a SUBSCRIBE packet being sent to broker. These subscriptions
+     * are useful to invoke application level callbacks for messages received on unsolicited
+     * topics from broker.
+     *
+     * This member is ignored if it is `NULL`. If this member is not `NULL`,
+     * #IotMqttConnectInfo_t.previousSubscriptionCount must be nonzero.
      */
     const IotMqttSubscription_t * pPreviousSubscriptions;
 
@@ -640,9 +644,8 @@ typedef struct IotMqttConnectInfo
      * #IotMqttConnectInfo_t.pPreviousSubscriptions.
      *
      * This value is ignored if #IotMqttConnectInfo_t.pPreviousSubscriptions
-     * is `NULL` or #IotMqttConnectInfo_t.cleanSession is `true`. If
-     * #IotMqttConnectInfo_t.pPreviousSubscriptions is not `NULL`, this value
-     * must be nonzero.
+     * is `NULL`. If #IotMqttConnectInfo_t.pPreviousSubscriptions is not `NULL`,
+     * this value must be nonzero.
      */
     size_t previousSubscriptionCount;
 
@@ -673,6 +676,29 @@ typedef struct IotMqttConnectInfo
     const char * pPassword;  /**< @brief Password for MQTT connection. */
     uint16_t passwordLength; /**< @brief Length of #IotMqttConnectInfo_t.pPassword. */
 } IotMqttConnectInfo_t;
+
+/**
+ * @ingroup mqtt_datatypes_paramstructs
+ * @brief MQTT packet details.
+ *
+ * @paramfor @ref mqtt_function_deserializeresponse @ref mqtt_function_deserializepublish
+ *
+ * Passed as an argument to public low level mqtt deserialize functions.
+ *
+ * @initializer{IotMqttPacketInfo_t,IOT_MQTT_PACKET_INFO_INITIALIZER}
+ *
+ * @note This structure should be only used while accessing low level MQTT deserialization API.
+ * The low level serialization/ deserialization API should be only used for implementing
+ * light weight single threaded mqtt client.
+ */
+typedef struct IotMqttPacketInfo
+{
+    uint8_t * pRemainingData;     /**< @brief (Input) The remaining data in MQTT packet. */
+    size_t remainingLength;       /**< @brief (Input) Length of the remaining data in the MQTT packet. */
+    uint16_t packetIdentifier;    /**< @brief (Output) MQTT packet identifier. */
+    uint8_t type;                 /**< @brief (Input) A value identifying the packet type. */
+    IotMqttPublishInfo_t pubInfo; /**< @brief (Output) Publish info in case of deserializing PUBLISH. */
+} IotMqttPacketInfo_t;
 
 /**
  * @cond DOXYGEN_IGNORE
@@ -791,6 +817,14 @@ typedef IotMqttError_t ( * IotMqttSerializePuback_t )( uint16_t packetIdentifier
 typedef void ( * IotMqttPublishSetDup_t )( uint8_t * pPublishPacket,
                                            uint8_t * pPacketIdentifierHigh,
                                            uint16_t * pNewPacketIdentifier );
+
+/**
+ * @brief Function pointer to read the next available byte on a network connection.
+ * @param[in] pNetworkContext reference to network connection like socket.
+ * @param[out] pNextByte Pointer to the byte read from the network.
+ */
+typedef IotMqttError_t (* IotMqttGetNextByte_t)( void * pNetworkContext,
+                                                 uint8_t * pNextByte );
 
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
 
@@ -980,14 +1014,14 @@ typedef struct IotMqttNetworkInfo
         struct
         {
             /**
-             * @brief Information on the MQTT server, passed as `pConnectionInfo` to
+             * @brief Information on the MQTT server, passed as `pServerInfo` to
              * #IotNetworkInterface_t::create.
              *
              * This member is opaque to the MQTT library. It is passed to the network
              * interface when creating a new network connection. It is only valid when
              * #IotMqttNetworkInfo_t::createNetworkConnection is `true`.
              */
-            void * pNetworkServerInfo;
+            IotNetworkServerInfo_t pNetworkServerInfo;
 
             /**
              * @brief Credentials for the MQTT server, passed as `pCredentialInfo` to
@@ -997,7 +1031,7 @@ typedef struct IotMqttNetworkInfo
              * interface when creating a new network connection. It is only valid when
              * #IotMqttNetworkInfo_t::createNetworkConnection is `true`.
              */
-            void * pNetworkCredentialInfo;
+            IotNetworkCredentials_t pNetworkCredentialInfo;
         } setup;
 
         /**
@@ -1007,7 +1041,7 @@ typedef struct IotMqttNetworkInfo
          * interface to reference an established network connection. It is only
          * valid when #IotMqttNetworkInfo_t::createNetworkConnection is `false`.
          */
-        void * pNetworkConnection;
+        IotNetworkConnection_t pNetworkConnection;
     } u /**< @brief Valid member depends of IotMqttNetworkInfo_t.createNetworkConnection. */;
 
     /**
@@ -1098,6 +1132,8 @@ typedef struct IotMqttNetworkInfo
 #define IOT_MQTT_CONNECTION_INITIALIZER       NULL
 /** @brief Initializer for #IotMqttOperation_t. */
 #define IOT_MQTT_OPERATION_INITIALIZER        NULL
+/** @brief Initializer for #IotMqttPacketInfo_t. */
+#define IOT_MQTT_PACKET_INFO_INITIALIZER      { .pRemainingData = NULL, remainingLength = 0, packetIdentifier = 0, .type = 0 }
 /* @[define_mqtt_initializers] */
 
 /**

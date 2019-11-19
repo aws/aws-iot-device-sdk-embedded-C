@@ -122,7 +122,7 @@ void IotMqtt_Cleanup( void );
  * the packet was received.
  */
 /* @[declare_mqtt_receivecallback] */
-void IotMqtt_ReceiveCallback( void * pNetworkConnection,
+void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
                               void * pReceiveContext );
 /* @[declare_mqtt_receivecallback] */
 
@@ -147,6 +147,12 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
  * may be used to restore subscriptions present in a re-established persistent session.
  * Any restored subscriptions <b>MUST</b> have been present in the persistent session;
  * <b>this function does not send an MQTT SUBSCRIBE packet!</b>
+ *
+ * [pConnectInfo->pPreviousSubscriptions](@ref IotMqttConnectInfo_t.pPreviousSubscriptions)
+ * and [pConnectInfo->previousSubscriptionCount](@ref IotMqttConnectInfo_t.previousSubscriptionCount) can
+ * also be used to pass a list of subscriptions to be stored locally without a SUBSCRIBE packet being
+ * sent to broker. These subscriptions are useful to invoke application level callbacks for messages received
+ * on unsolicited topics from broker.
  *
  * This MQTT library is network agnostic, meaning it has no knowledge of the
  * underlying network protocol carrying the MQTT packets. It interacts with the
@@ -197,12 +203,18 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
  *
  * <b>Example</b>
  * @code{c}
-*
+ *
+ * // Callback function to receive messages from broker on an unsolicited topic.
+ * void unsolicitedMessageCallback( void * pArgument, IotMqttCallbackParam_t * pPublish );
+ *
  * // Parameters to MQTT connect.
  * IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
  * IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
  * IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
  * IotMqttPublishInfo_t willInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+ *
+ * // A local subscription to receive messages from broker on an unsolicited topic.
+ * IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
  *
  * // Example network abstraction types.
  * IotNetworkServerInfo_t serverInfo = { ... };
@@ -230,6 +242,15 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
  *
  * // Set the pointer to the will info.
  * connectInfo.pWillInfo = &willInfo;
+ *
+ * // [Optional] Set a local subscription to receive broker messages on an unsolicited topic.
+ * subscription.qos = IOT_MQTT_QOS_0;
+ * subscription.pTopicFilter = "some/unsolicited/topic";
+ * subscription.topicLength = ( uint16_t ) strlen( subscription.pTopicFilter );
+ * subscription.callback.function = unsolicitedMessageCallback;
+ * connectInfo.pPreviousSubscriptions = &subscription;
+ * connectInfo.previousSubscriptionCount = 1;
+ *
  *
  * // Call CONNECT with a 5 second block time. Should return
  * // IOT_MQTT_SUCCESS when successful.

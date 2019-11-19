@@ -874,14 +874,7 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
                      IotMqtt_strerror( publishStatus ) );
 
         /* Convert the MQTT "NO MEMORY" error to a Shadow "NO MEMORY" error. */
-        if( publishStatus == IOT_MQTT_NO_MEMORY )
-        {
-            status = AWS_IOT_SHADOW_NO_MEMORY;
-        }
-        else
-        {
-            status = AWS_IOT_SHADOW_MQTT_ERROR;
-        }
+        status = SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( publishStatus );
 
         /* If the "keep subscriptions" flag is not set, decrement the reference
          * count. */

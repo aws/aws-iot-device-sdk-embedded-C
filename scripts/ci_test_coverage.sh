@@ -36,18 +36,18 @@ cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$AWS_IOT_
 make -j2
 
 # Run common tests with code coverage.
-./bin/iot_tests_common
+./output/bin/iot_tests_common
 
 # Run MQTT tests against AWS IoT with code coverage.
-./bin/iot_tests_mqtt
+./output/bin/iot_tests_mqtt
 
 # Run Shadow tests with code coverage.
-./bin/aws_iot_tests_shadow
+./output/bin/aws_iot_tests_shadow
 
 # Run Jobs tests with code coverage.
 create_jobs
 trap "delete_jobs" EXIT
-./bin/aws_iot_tests_jobs
+./output/bin/aws_iot_tests_jobs
 delete_jobs
 trap - EXIT
 

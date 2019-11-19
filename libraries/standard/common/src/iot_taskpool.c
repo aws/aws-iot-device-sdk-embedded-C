@@ -922,6 +922,10 @@ const char * IotTaskPool_strerror( IotTaskPoolError_t status )
             pMessage = "CANCEL FAILED";
             break;
 
+        case IOT_TASKPOOL_GENERAL_FAILURE:
+            pMessage = "GENERAL FAILURE";
+            break;
+
         default:
             pMessage = "INVALID STATUS";
             break;
@@ -1582,12 +1586,12 @@ static IotTaskPoolError_t _tryCancelInternal( _taskPool_t * const pTaskPool,
             break;
 
         case IOT_TASKPOOL_STATUS_COMPLETED:
-            /* Log mesggesong purposes. */
+            /* Log message for debug purposes. */
             IotLogWarn( "Attempt to cancel a job that is already executing, or canceled." );
             break;
 
         default:
-            /* Log mesggesong purposes. */
+            /* Log message for debug purposes. */
             IotLogError( "Attempt to cancel a job with an undefined state." );
             break;
     }

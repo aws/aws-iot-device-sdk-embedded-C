@@ -235,7 +235,9 @@
     #define EMPTY_ELSE_MARKER
 #endif
 
-#define IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                    ( ( uint16_t ) 23 ) /**< @brief Optional maximum length of client identifier specified by MQTT 3.1.1. */
+#define MQTT_SERVER_MAX_CLIENTID_LENGTH                        ( ( uint16_t ) 23 )          /**< @brief Optional maximum length of client identifier specified by MQTT 3.1.1. */
+#define MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH                 ( ( size_t ) ( 268435456 ) ) /**< @brief Maximum publish payload length supported by MQTT 3.1.1. */
+#define MQTT_SERVER_MAX_LWT_PAYLOAD_LENGTH                     ( ( size_t ) UINT16_MAX )    /**< @brief Maximum LWT payload length supported by MQTT 3.1.1. */
 
 /*
  * Constants related to limits defined in AWS Service Limits.
@@ -245,9 +247,10 @@
  *
  * Used to validate parameters if when connecting to an AWS IoT MQTT server.
  */
-#define AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                ( ( uint16_t ) 128 ) /**< @brief Maximum length of client identifier accepted by AWS IoT. */
-#define AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH                   ( 256 )              /**< @brief Maximum length of topic names or filters accepted by AWS IoT. */
-#define AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE    ( 8 )                /**< @brief Maximum number of topic filters in a single SUBSCRIBE packet. */
+#define AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                ( ( uint16_t ) 128 )      /**< @brief Maximum length of client identifier accepted by AWS IoT. */
+#define AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH                   ( ( uint16_t ) 256 )      /**< @brief Maximum length of topic names or filters accepted by AWS IoT. */
+#define AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE    ( ( size_t ) 8 )          /**< @brief Maximum number of topic filters in a single SUBSCRIBE packet. */
+#define AWS_IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH         ( ( size_t ) ( 131072 ) ) /**< @brief Maximum publish payload length accepted by AWS IoT. */
 
 /*
  * MQTT control packet type and flags. Always the first byte of an MQTT
@@ -318,7 +321,7 @@ typedef struct _mqttOperation
     /* Pointers to neighboring queue elements. */
     IotLink_t link;                           /**< @brief List link member. */
 
-    bool incomingPublish;                     /**< @brief Set to true if this operation an incoming PUBLISH. */
+    bool incomingPublish;                     /**< @brief Set to true if this operation is an incoming PUBLISH. */
     struct _mqttConnection * pMqttConnection; /**< @brief MQTT connection associated with this operation. */
 
     IotTaskPoolJobStorage_t jobStorage;       /**< @brief Task pool job storage associated with this operation. */
@@ -484,6 +487,18 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
                                const IotMqttPublishInfo_t * pPublishInfo );
 
 /**
+ * @brief Check that an #IotMqttPublishInfo_t is valid for an LWT publish
+ *
+ * @param[in] awsIotMqttMode Specifies if this PUBLISH packet is being sent to
+ * an AWS IoT MQTT server.
+ * @param[in] pLwtPublishInfo The #IotMqttPublishInfo_t to validate.
+ *
+ * @return `true` if `pLwtPublishInfo` is valid; `false` otherwise.
+ */
+bool _IotMqtt_ValidateLwtPublish( bool awsIotMqttMode,
+                                  const IotMqttPublishInfo_t * pLwtPublishInfo );
+
+/**
  * @brief Check that an #IotMqttOperation_t is valid and waitable.
  *
  * @param[in] operation The #IotMqttOperation_t to validate.
@@ -537,6 +552,24 @@ uint8_t _IotMqtt_GetPacketType( void * pNetworkConnection,
  */
 size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
                                     const IotNetworkInterface_t * pNetworkInterface );
+
+/**
+ * @brief Get the remaining length from a stream of bytes off the network.
+ *
+ * @param[in] pNetworkConnection Reference to the network connection.
+ * @param[in] getNextByte Function pointer used to interact with the
+ * network to get next byte.
+ *
+ * @return The remaining length; #MQTT_REMAINING_LENGTH_INVALID on error.
+ *
+ * @note This function is similar to _IotMqtt_GetRemainingLength() but it uses
+ * user provided getNextByte function to parse the stream instead of using
+ * _IotMqtt_GetNextByte(). pNetworkConnection is impelementation dependent and
+ * user provided function makes use of it.
+ *
+ */
+size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnection,
+                                            IotMqttGetNextByte_t getNextByte );
 
 /**
  * @brief Generate a CONNECT packet from the given parameters.

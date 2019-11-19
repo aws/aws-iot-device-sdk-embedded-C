@@ -60,8 +60,9 @@ if( NOT EXISTS ${PROJECT_SOURCE_DIR}/ports/${IOT_PLATFORM_NAME} )
 endif()
 
 # Set output directories.
-set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
-set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/bin )
+set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib )
 
 # Set the path to the config header.
 if( ${IOT_BUILD_TESTS} )
@@ -106,8 +107,8 @@ add_subdirectory( libraries/aws/provisioning )
 # TinyCBOR library (third-party).
 add_subdirectory( third_party/tinycbor )
 
-# mbed TLS library (third-party).
-if( NOT IOT_NETWORK_USE_OPENSSL )
+# mbed TLS library (third-party). This is only needed on ports using mbed TLS.
+if( ${MBEDTLS_REQUIRED} )
     add_subdirectory( third_party/mbedtls )
 endif()
 

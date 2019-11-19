@@ -46,7 +46,7 @@
 #include "aws_iot_jobs.h"
 
 /* JSON utilities include. */
-#include "iot_json_utils.h"
+#include "aws_iot_doc_parser.h"
 
 /* Atomics include. */
 #include "iot_atomic.h"
@@ -56,14 +56,14 @@
 /**
  * @brief The timeout for Jobs and MQTT operations in this demo.
  */
-#define TIMEOUT_MS                      ( ( uint32_t ) 5000u )
+#define TIMEOUT_MS                ( ( uint32_t ) 5000u )
 
 /**
  * @brief The keep-alive interval used for this demo.
  *
  * An MQTT ping request will be sent periodically at this interval.
  */
-#define KEEP_ALIVE_SECONDS              ( ( uint16_t ) 60u )
+#define KEEP_ALIVE_SECONDS        ( ( uint16_t ) 60u )
 
 /**
  * @brief The JSON key of the Job ID.
@@ -72,12 +72,12 @@
  * All Job documents will contain this key, whose value represents the unique
  * identifier of a Job.
  */
-#define JOB_ID_KEY                      "jobId"
+#define JOB_ID_KEY                "jobId"
 
 /**
  * @brief The length of #JOB_ID_KEY.
  */
-#define JOB_ID_KEY_LENGTH               ( sizeof( JOB_ID_KEY ) - 1 )
+#define JOB_ID_KEY_LENGTH         ( sizeof( JOB_ID_KEY ) - 1 )
 
 /**
  * @brief The JSON key of the Job document.
@@ -86,12 +86,12 @@
  * All Job documents will contain this key, whose value is an application-specific
  * JSON document.
  */
-#define JOB_DOC_KEY                     "jobDocument"
+#define JOB_DOC_KEY               "jobDocument"
 
 /**
  * @brief The length of #JOB_DOC_KEY.
  */
-#define JOB_DOC_KEY_LENGTH              ( sizeof( JOB_DOC_KEY ) - 1 )
+#define JOB_DOC_KEY_LENGTH        ( sizeof( JOB_DOC_KEY ) - 1 )
 
 /**
  * @brief The JSON key whose value represents the action this demo should take.
@@ -99,12 +99,12 @@
  * This demo program expects this key to be in the Job document. It is a key
  * specific to this demo.
  */
-#define JOB_ACTION_KEY                  "action"
+#define JOB_ACTION_KEY            "action"
 
 /**
  * @brief The length of #JOB_ACTION_KEY.
  */
-#define JOB_ACTION_KEY_LENGTH           ( sizeof( JOB_ACTION_KEY ) - 1 )
+#define JOB_ACTION_KEY_LENGTH     ( sizeof( JOB_ACTION_KEY ) - 1 )
 
 /**
  * @brief A message associated with the Job action.
@@ -113,12 +113,12 @@
  * is either "publish" or "print". It represents the message that should be
  * published or printed, respectively.
  */
-#define JOB_MESSAGE_KEY                 "message"
+#define JOB_MESSAGE_KEY           "message"
 
 /**
  * @brief The length of #JOB_MESSAGE_KEY.
  */
-#define JOB_MESSAGE_KEY_LENGTH          ( sizeof( JOB_MESSAGE_KEY ) - 1 )
+#define JOB_MESSAGE_KEY_LENGTH    ( sizeof( JOB_MESSAGE_KEY ) - 1 )
 
 /**
  * @brief An MQTT topic associated with the Job "publish" action.
@@ -127,12 +127,12 @@
  * is "publish". It represents the MQTT topic on which the message should be
  * published.
  */
-#define JOB_TOPIC_KEY                   "topic"
+#define JOB_TOPIC_KEY             "topic"
 
 /**
  * @brief The length of #JOB_TOPIC_KEY.
  */
-#define JOB_TOPIC_KEY_LENGTH            ( sizeof( JOB_TOPIC_KEY ) - 1 )
+#define JOB_TOPIC_KEY_LENGTH      ( sizeof( JOB_TOPIC_KEY ) - 1 )
 
 /**
  * @brief The minimum length of a string in a JSON Job document.
@@ -140,7 +140,7 @@
  * At the very least the Job ID must have the quotes that identify it as a JSON
  * string and 1 character for the string itself (the string must not be empty).
  */
-#define JSON_STRING_MIN_LENGTH          ( ( size_t ) 3 )
+#define JSON_STRING_MIN_LENGTH    ( ( size_t ) 3 )
 
 /**
  * @brief The maximum length of a Job ID.
@@ -150,20 +150,20 @@
  *
  * https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#job-limits
  */
-#define JOB_ID_MAX_LENGTH               ( ( size_t ) 64 )
+#define JOB_ID_MAX_LENGTH         ( ( size_t ) 64 )
 
 /**
  * @brief A value passed as context to #_operationCompleteCallback to specify that
  * it should set the #JOBS_DEMO_FINISHED flag.
  */
-#define JOBS_DEMO_SHOULD_EXIT           ( ( void * ) ( ( intptr_t ) 1 ) )
+#define JOBS_DEMO_SHOULD_EXIT     ( ( void * ) ( ( intptr_t ) 1 ) )
 
 /**
  * @brief Flag value for signaling that the demo is still running.
  *
  * The initial value of #_exitFlag.
  */
-#define JOBS_DEMO_RUNNING     ( ( uint32_t ) 0 )
+#define JOBS_DEMO_RUNNING         ( ( uint32_t ) 0 )
 
 /**
  * @brief Flag value for signaling that the demo is finished.
@@ -171,7 +171,7 @@
  * #_exitFlag will be set to this when a Job document with { "action": "exit" }
  * is received.
  */
-#define JOBS_DEMO_FINISHED    ( ( uint32_t ) 1 )
+#define JOBS_DEMO_FINISHED        ( ( uint32_t ) 1 )
 
 /*-----------------------------------------------------------*/
 
@@ -364,12 +364,19 @@ static bool _getJsonString( const char * pJsonDoc,
                             const char ** pValue,
                             size_t * valueLength )
 {
-    bool keyFound = IotJsonUtils_FindJsonValue( pJsonDoc,
-                                                jsonDocLength,
-                                                pKey,
-                                                keyLength,
-                                                pValue,
-                                                valueLength );
+    /*
+     * Note: This parser used is specific for parsing AWS IoT document received
+     * through a mutually authenticated connection. This parser will not check
+     * for the correctness of the document as it is designed for low memory
+     * footprint rather than checking for correctness of the document. This
+     * parser is not meant to be used as a general purpose JSON parser.
+     */
+    bool keyFound = AwsIotDocParser_FindValue( pJsonDoc,
+                                               jsonDocLength,
+                                               pKey,
+                                               keyLength,
+                                               pValue,
+                                               valueLength );
 
     if( keyFound == true )
     {
@@ -659,13 +666,20 @@ static void _jobsCallback( void * pCallbackContext,
         }
     }
 
-    /* Get the Job document. */
-    docKeyFound = IotJsonUtils_FindJsonValue( pCallbackInfo->u.callback.pDocument,
-                                              pCallbackInfo->u.callback.documentLength,
-                                              JOB_DOC_KEY,
-                                              JOB_DOC_KEY_LENGTH,
-                                              &pJobDoc,
-                                              &jobDocLength );
+    /* Get the Job document.
+     *
+     * Note: This parser used is specific for parsing AWS IoT document received
+     * through a mutually authenticated connection. This parser will not check
+     * for the correctness of the document as it is designed for low memory
+     * footprint rather than checking for correctness of the document. This
+     * parser is not meant to be used as a general purpose JSON parser.
+     */
+    docKeyFound = AwsIotDocParser_FindValue( pCallbackInfo->u.callback.pDocument,
+                                             pCallbackInfo->u.callback.documentLength,
+                                             JOB_DOC_KEY,
+                                             JOB_DOC_KEY_LENGTH,
+                                             &pJobDoc,
+                                             &jobDocLength );
 
     /* When both the Job ID and Job document are available, process the Job. */
     if( ( idKeyFound == true ) && ( docKeyFound == true ) )

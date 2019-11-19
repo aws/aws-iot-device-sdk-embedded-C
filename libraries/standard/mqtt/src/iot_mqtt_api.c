@@ -41,6 +41,9 @@
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
+/* Atomics include. */
+#include "iot_atomic.h"
+
 /* Validate MQTT configuration settings. */
 #if IOT_MQTT_ENABLE_ASSERTS != 0 && IOT_MQTT_ENABLE_ASSERTS != 1
     #error "IOT_MQTT_ENABLE_ASSERTS must be 0 or 1."
@@ -57,6 +60,18 @@
 #if IOT_MQTT_RETRY_MS_CEILING <= 0
     #error "IOT_MQTT_RETRY_MS_CEILING cannot be 0 or negative."
 #endif
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Uninitialized value for @ref _initCalled.
+ */
+#define MQTT_LIBRARY_UNINITIALIZED    ( ( uint32_t ) 0 )
+
+/**
+ * @brief Initialized value for @ref _initCalled.
+ */
+#define MQTT_LIBRARY_INITIALIZED      ( ( uint32_t ) 1 )
 
 /*-----------------------------------------------------------*/
 
@@ -110,6 +125,20 @@ static void _mqttOperation_tryDestroy( void * pData );
 static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo,
                                        uint16_t keepAliveSeconds,
                                        _mqttConnection_t * pMqttConnection );
+
+/**
+ * @brief Initialize a network connection, creating it if necessary.
+ *
+ * @param[in] pNetworkInfo User-provided network information for the connection
+ * connection.
+ * @param[out] pNetworkConnection On success, the created and/or initialized network connection.
+ * @param[out] pCreatedNewNetworkConnection On success, `true` if a new network connection was created; `false` if an existing one will be used.
+ *
+ * @return Any #IotNetworkError_t, as defined by the network stack.
+ */
+static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
+                                                   IotNetworkConnection_t * pNetworkConnection,
+                                                   bool * pCreatedNewNetworkConnection );
 
 /**
  * @brief Creates a new MQTT connection and initializes its members.
@@ -211,7 +240,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                    _getMqttDisconnectSerializer,
                                    _IotMqtt_SerializeDisconnect,
                                    serialize.disconnect )
-#else  /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+#else /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
     #define _getMqttPingreqSerializer( pSerializer )        _IotMqtt_SerializePingreq
     #define _getMqttPublishSerializer( pSerializer )        _IotMqtt_SerializePublish
     #define _getMqttFreePacketFunc( pSerializer )           _IotMqtt_FreePacket
@@ -229,7 +258,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
  *
  * API functions will fail if @ref mqtt_function_init was not called.
  */
-static uint32_t _initCalled = 0;
+static volatile uint32_t _initCalled = MQTT_LIBRARY_UNINITIALIZED;
 
 /*-----------------------------------------------------------*/
 
@@ -237,7 +266,7 @@ static bool _checkInit( void )
 {
     bool status = true;
 
-    if( _initCalled == 0 )
+    if( _initCalled == MQTT_LIBRARY_UNINITIALIZED )
     {
         IotLogError( "IotMqtt_Init was not called." );
 
@@ -400,6 +429,58 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
+                                                   IotNetworkConnection_t * pNetworkConnection,
+                                                   bool * pCreatedNewNetworkConnection )
+{
+    IOT_FUNCTION_ENTRY( IotNetworkError_t, IOT_NETWORK_SUCCESS );
+
+    /* Network info must not be NULL. */
+    if( pNetworkInfo == NULL )
+    {
+        IotLogError( "Network information cannot be NULL." );
+
+        IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_BAD_PARAMETER );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
+    }
+
+    /* Create a new network connection if requested. Otherwise, copy the existing
+     * network connection. */
+    if( pNetworkInfo->createNetworkConnection == true )
+    {
+        status = pNetworkInfo->pNetworkInterface->create( pNetworkInfo->u.setup.pNetworkServerInfo,
+                                                          pNetworkInfo->u.setup.pNetworkCredentialInfo,
+                                                          pNetworkConnection );
+
+        if( status == IOT_NETWORK_SUCCESS )
+        {
+            /* This MQTT connection owns the network connection it created and
+             * should destroy it on cleanup. */
+            *pCreatedNewNetworkConnection = true;
+        }
+        else
+        {
+            IotLogError( "Failed to create network connection: %d", status );
+
+            IOT_GOTO_CLEANUP();
+        }
+    }
+    else
+    {
+        /* A connection already exists; the caller should not destroy
+         * it on cleanup. */
+        *pNetworkConnection = pNetworkInfo->u.pNetworkConnection;
+        *pCreatedNewNetworkConnection = false;
+    }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
@@ -928,8 +1009,11 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
 IotMqttError_t IotMqtt_Init( void )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
+    uint32_t allowInitialization = Atomic_CompareAndSwap_u32( &_initCalled,
+                                                              MQTT_LIBRARY_INITIALIZED,
+                                                              MQTT_LIBRARY_UNINITIALIZED );
 
-    if( _initCalled == 0 )
+    if( allowInitialization == 1 )
     {
         /* Call any additional serializer initialization function if serializer
          * overrides are enabled. */
@@ -937,26 +1021,25 @@ IotMqttError_t IotMqtt_Init( void )
             #ifdef _IotMqtt_InitSerializeAdditional
                 if( _IotMqtt_InitSerializeAdditional() == false )
                 {
+                    /* Log initialization status. */
+                    IotLogError( "Failed to initialize MQTT library serializer. " );
+
                     status = IOT_MQTT_INIT_FAILED;
                 }
                 else
                 {
                     EMPTY_ELSE_MARKER;
                 }
-            #endif
+            #endif /* ifdef _IotMqtt_InitSerializeAdditional */
         #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
-        /* Log initialization status. */
-        if( status != IOT_MQTT_SUCCESS )
+        if( status == IOT_MQTT_SUCCESS )
         {
-            IotLogError( "Failed to initialize MQTT library serializer. " );
+            IotLogInfo( "MQTT library successfully initialized." );
         }
         else
         {
-            /* Set the flag that specifies initialization is complete. */
-            _initCalled = 1;
-
-            IotLogInfo( "MQTT library successfully initialized." );
+            EMPTY_ELSE_MARKER;
         }
     }
     else
@@ -971,10 +1054,12 @@ IotMqttError_t IotMqtt_Init( void )
 
 void IotMqtt_Cleanup( void )
 {
-    if( _initCalled == 1 )
-    {
-        _initCalled = 0;
+    uint32_t allowCleanup = Atomic_CompareAndSwap_u32( &_initCalled,
+                                                       MQTT_LIBRARY_UNINITIALIZED,
+                                                       MQTT_LIBRARY_INITIALIZED );
 
+    if( allowCleanup == 1 )
+    {
         /* Call any additional serializer cleanup initialization function if serializer
          * overrides are enabled. */
         #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
@@ -999,10 +1084,10 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
                                 IotMqttConnection_t * const pMqttConnection )
 {
     IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
-    bool networkCreated = false, ownNetworkConnection = false;
+    bool ownNetworkConnection = false;
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
-    void * pNetworkConnection = NULL;
+    IotNetworkConnection_t pNetworkConnection = { 0 };
     _mqttOperation_t * pOperation = NULL;
     _mqttConnection_t * pNewMqttConnection = NULL;
 
@@ -1010,16 +1095,6 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     if( _checkInit() == false )
     {
         IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NOT_INITIALIZED );
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
-
-    /* Network info must not be NULL. */
-    if( pNetworkInfo == NULL )
-    {
-        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
     }
     else
     {
@@ -1036,84 +1111,17 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         EMPTY_ELSE_MARKER;
     }
 
-    /* If will info is provided, check that it is valid. */
-    if( pConnectInfo->pWillInfo != NULL )
-    {
-        if( _IotMqtt_ValidatePublish( pConnectInfo->awsIotMqttMode,
-                                      pConnectInfo->pWillInfo ) == false )
-        {
-            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
-        }
-        else if( pConnectInfo->pWillInfo->payloadLength > UINT16_MAX )
-        {
-            /* Will message payloads cannot be larger than 65535. This restriction
-             * applies only to will messages, and not normal PUBLISH messages. */
-            IotLogError( "Will payload cannot be larger than 65535." );
+    networkStatus = _createNetworkConnection( pNetworkInfo,
+                                              &pNetworkConnection,
+                                              &ownNetworkConnection );
 
-            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
+    if( networkStatus != IOT_NETWORK_SUCCESS )
+    {
+        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NETWORK_ERROR );
     }
     else
     {
         EMPTY_ELSE_MARKER;
-    }
-
-    /* If previous subscriptions are provided, check that they are valid. */
-    if( pConnectInfo->cleanSession == false )
-    {
-        if( pConnectInfo->pPreviousSubscriptions != NULL )
-        {
-            if( _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
-                                                   pConnectInfo->awsIotMqttMode,
-                                                   pConnectInfo->pPreviousSubscriptions,
-                                                   pConnectInfo->previousSubscriptionCount ) == false )
-            {
-                IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
-
-    /* Create a new MQTT connection if requested. Otherwise, copy the existing
-     * network connection. */
-    if( pNetworkInfo->createNetworkConnection == true )
-    {
-        networkStatus = pNetworkInfo->pNetworkInterface->create( pNetworkInfo->u.setup.pNetworkServerInfo,
-                                                                 pNetworkInfo->u.setup.pNetworkCredentialInfo,
-                                                                 &pNetworkConnection );
-
-        if( networkStatus == IOT_NETWORK_SUCCESS )
-        {
-            networkCreated = true;
-
-            /* This MQTT connection owns the network connection it created and
-             * should destroy it on cleanup. */
-            ownNetworkConnection = true;
-        }
-        else
-        {
-            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NETWORK_ERROR );
-        }
-    }
-    else
-    {
-        pNetworkConnection = pNetworkInfo->u.pNetworkConnection;
-        networkCreated = true;
     }
 
     IotLogInfo( "Establishing new MQTT connection." );
@@ -1274,7 +1282,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
                      IotMqtt_strerror( status ) );
 
         /* The network connection must be closed if it was created. */
-        if( networkCreated == true )
+        if( ownNetworkConnection == true )
         {
             networkStatus = pNetworkInfo->pNetworkInterface->close( pNetworkConnection );
 

@@ -40,10 +40,10 @@ set( DEMO_SOURCES
      src/aws_iot_demo_provisioning.c )
 set( DEMO_LIBRARY_DEPENDENCY
      iotmqtt
-     "awsiotshadow\\\;iotserializer"
+     "awsiotshadow\\\;awsiotcommon"
      awsiotdefender 
-     "awsiotjobs\\\;iotserializer"
-     "awsiotprovisioning\\\;iotserializer" )
+     "awsiotprovisioning\\\;iotcommon" 
+     "awsiotjobs\\\;awsiotcommon" )
 
 # Get the list length to iterate over it. Since CMake indexes from 0, subtract
 # 1 for the iteration range.
