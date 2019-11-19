@@ -59,7 +59,7 @@ cmake ..
 make
 @endcode
 
-Demo application executables will be placed in a `bin` directory of the CMake build directory, i.e. `build/bin` in the example above. The executables will be named `aws_iot_demo_library` or `iot_demo_library`, depending on whether the demo is specific to AWS IoT. For example, the MQTT demo application, which may be used with any MQTT server, will be named `iot_demo_mqtt`. The Thing Shadow demo, which is specific to AWS IoT, will be named `aws_iot_demo_shadow`.
+Demo application executables will be placed in a `output/bin` directory of the CMake build directory, i.e. `build/output/bin` in the example above. The executables will be named `aws_iot_demo_library` or `iot_demo_library`, depending on whether the demo is specific to AWS IoT. For example, the MQTT demo application, which may be used with any MQTT server, will be named `iot_demo_mqtt`. The Thing Shadow demo, which is specific to AWS IoT, will be named `aws_iot_demo_shadow`.
 
 Configuration settings may also be set using CMake by setting `CMAKE_C_FLAGS`. However, placing configuration settings in `demos/iot_demo_config.h` is recommended over setting them using CMake.
 @code{sh}
@@ -147,7 +147,7 @@ make
 
 The `IOT_BUILD_TESTS` option can also be set by a checkbox in CMake GUI.
 
-Test executables will be placed in a `bin` directory of the CMake build directory (i.e. `build/bin`) alongside the demo applications. They will be named `aws_iot_tests_library` or `iot_tests_library`, depending on whether the tests are specific to AWS IoT. For example, the MQTT tests application, which may be used with any MQTT server, will be named `iot_tests_mqtt`. The Thing Shadow tests, which are specific to AWS IoT, will be named `aws_iot_tests_shadow`.
+Test executables will be placed in a `output/bin` directory of the CMake build directory (i.e. `build/output/bin`) alongside the demo applications. They will be named `aws_iot_tests_library` or `iot_tests_library`, depending on whether the tests are specific to AWS IoT. For example, the MQTT tests application, which may be used with any MQTT server, will be named `iot_tests_mqtt`. The Thing Shadow tests, which are specific to AWS IoT, will be named `aws_iot_tests_shadow`.
 
 By default, running a test executable with no command line arguments will only run the basic unit tests and system tests. This run is expected to take up to a few minutes per library test. The command line option `-l` may be passed to a test executable to enable long-running tests (such as stress tests) which may run for several hours. The command line option `-n` may be passed to the test executable to disable tests that require network connectivity.
 */

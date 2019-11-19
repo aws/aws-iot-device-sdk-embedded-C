@@ -54,7 +54,7 @@
 #include "unity_fixture.h"
 
 /* JSON utilities include. */
-#include "iot_json_utils.h"
+#include "aws_iot_doc_parser.h"
 
 /*-----------------------------------------------------------*/
 
@@ -102,19 +102,14 @@ typedef struct _operationCompleteParams
 /**
  * @brief Network server info to share among the tests.
  */
-static const IotTestNetworkServerInfo_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
+static const struct IotNetworkServerInfo _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 
 /**
  * @brief Network credential info to share among the tests.
  */
 #if IOT_TEST_SECURED_CONNECTION == 1
-    static const IotTestNetworkCredentials_t _credentials = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
+    static const struct IotNetworkCredentials _credentials = IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
 #endif
-
-/**
- * @brief An MQTT network setup parameter to share among the tests.
- */
-static IotMqttNetworkInfo_t _networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
 /**
  * @brief An MQTT connection to share among the tests.
@@ -197,12 +192,12 @@ static void _jobsCallback( void * pArgument,
     }
 
     /* Parse the next Job ID. */
-    AwsIotJobs_Assert( IotJsonUtils_FindJsonValue( pCallbackParam->u.callback.pDocument,
-                                                   pCallbackParam->u.callback.documentLength,
-                                                   "jobId",
-                                                   5,
-                                                   &pJobId,
-                                                   &jobIdLength ) == true );
+    AwsIotJobs_Assert( AwsIotDocParser_FindValue( pCallbackParam->u.callback.pDocument,
+                                                  pCallbackParam->u.callback.documentLength,
+                                                  "jobId",
+                                                  5,
+                                                  &pJobId,
+                                                  &jobIdLength ) == true );
 
     /* Verify that the previously queued Job is next. */
     AwsIotJobs_Assert( jobIdLength - 2 == _pJobIdLengths[ checkJobId ] );
@@ -228,23 +223,23 @@ static void _parseJobIds( const AwsIotJobsResponse_t * pJobsResponse )
 
     /* In-progress Jobs for this device will interfere with the tests; fail if
      * any in-progress Jobs are present. */
-    status = IotJsonUtils_FindJsonValue( pJobsResponse->pJobsResponse,
-                                         pJobsResponse->jobsResponseLength,
-                                         "inProgressJobs", 14,
-                                         &pInProgressJobs,
-                                         &inProgressJobsLength );
+    status = AwsIotDocParser_FindValue( pJobsResponse->pJobsResponse,
+                                        pJobsResponse->jobsResponseLength,
+                                        "inProgressJobs", 14,
+                                        &pInProgressJobs,
+                                        &inProgressJobsLength );
     TEST_ASSERT_EQUAL_INT( true, status );
     TEST_ASSERT_NOT_NULL( pInProgressJobs );
     TEST_ASSERT_EQUAL_MESSAGE( 2, inProgressJobsLength, "In-progress Jobs detected. Tests will not run." );
 
     /* Parse for the list of queued Jobs. This is where parsing for Job IDs will
      * start. */
-    status = IotJsonUtils_FindJsonValue( pJobsResponse->pJobsResponse,
-                                         pJobsResponse->jobsResponseLength,
-                                         "queuedJobs",
-                                         10,
-                                         &pParseStart,
-                                         &parseLength );
+    status = AwsIotDocParser_FindValue( pJobsResponse->pJobsResponse,
+                                        pJobsResponse->jobsResponseLength,
+                                        "queuedJobs",
+                                        10,
+                                        &pParseStart,
+                                        &parseLength );
     TEST_ASSERT_EQUAL_INT_MESSAGE( true, status, "Response did not contain any queued Jobs." );
     TEST_ASSERT_NOT_NULL( pParseStart );
     TEST_ASSERT_GREATER_THAN( 0, parseLength );
@@ -252,12 +247,12 @@ static void _parseJobIds( const AwsIotJobsResponse_t * pJobsResponse )
     /* Parse the Job IDs of the first two queued Jobs. */
     for( i = 0; i < 2; i++ )
     {
-        status = IotJsonUtils_FindJsonValue( pParseStart,
-                                             parseLength,
-                                             "jobId",
-                                             5,
-                                             &pJobId,
-                                             &jobIdLength );
+        status = AwsIotDocParser_FindValue( pParseStart,
+                                            parseLength,
+                                            "jobId",
+                                            5,
+                                            &pJobId,
+                                            &jobIdLength );
         TEST_ASSERT_EQUAL_INT_MESSAGE( true, status, "Response did not contain enough queued Jobs." );
         TEST_ASSERT_NOT_NULL( pJobId );
         TEST_ASSERT_GREATER_THAN( 0, jobIdLength );
@@ -455,12 +450,12 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
          * UPDATE; its response does not include the Job ID. */
         if( type != JOBS_UPDATE )
         {
-            TEST_ASSERT_EQUAL_INT( true, IotJsonUtils_FindJsonValue( jobsResponse.pJobsResponse,
-                                                                     jobsResponse.jobsResponseLength,
-                                                                     "jobId",
-                                                                     5,
-                                                                     &pJobId,
-                                                                     &jobIdLength ) );
+            TEST_ASSERT_EQUAL_INT( true, AwsIotDocParser_FindValue( jobsResponse.pJobsResponse,
+                                                                    jobsResponse.jobsResponseLength,
+                                                                    "jobId",
+                                                                    5,
+                                                                    &pJobId,
+                                                                    &jobIdLength ) );
 
             for( i = 0; i < 2; i++ )
             {
@@ -492,57 +487,33 @@ static void _jobsBlockingTest( _jobsOperationType_t type,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test group for Jobs system tests.
+ * @brief Initializes libraries and establishes an MQTT connection for the Jobs tests.
  */
-TEST_GROUP( Jobs_System );
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Test setup for Jobs system tests.
- */
-TEST_SETUP( Jobs_System )
+static void _setupJobsTests()
 {
-    static uint64_t lastConnectTime = 0;
-    uint64_t elapsedTime = 0;
+    int32_t i = 0;
+    IotMqttError_t connectStatus = IOT_MQTT_STATUS_PENDING;
+    IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
 
-    /* Initialize SDK. */
-    if( IotSdk_Init() == false )
-    {
-        TEST_FAIL_MESSAGE( "Failed to initialize SDK." );
-    }
-
-    /* Set up the network stack. */
-    if( IotTestNetwork_Init() != IOT_NETWORK_SUCCESS )
-    {
-        TEST_FAIL_MESSAGE( "Failed to set up network stack." );
-    }
-
-    /* Initialize the MQTT library. */
-    if( IotMqtt_Init() != IOT_MQTT_SUCCESS )
-    {
-        TEST_FAIL_MESSAGE( "Failed to initialize MQTT library." );
-    }
-
-    /* Initialize the Jobs library. */
-    if( AwsIotJobs_Init( 0 ) != AWS_IOT_JOBS_SUCCESS )
-    {
-        TEST_FAIL_MESSAGE( "Failed to initialize Jobs library." );
-    }
+    /* Initialize SDK and libraries. */
+    AwsIotJobs_Assert( IotSdk_Init() == true );
+    AwsIotJobs_Assert( IotTestNetwork_Init() == IOT_NETWORK_SUCCESS );
+    AwsIotJobs_Assert( IotMqtt_Init() == IOT_MQTT_SUCCESS );
+    AwsIotJobs_Assert( AwsIotJobs_Init( 0 ) == AWS_IOT_JOBS_SUCCESS );
 
     /* Set the MQTT network setup parameters. */
-    ( void ) memset( &_networkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
-    _networkInfo.createNetworkConnection = true;
-    _networkInfo.u.setup.pNetworkServerInfo = ( void * ) &_serverInfo;
-    _networkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
+    ( void ) memset( &networkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
+    networkInfo.createNetworkConnection = true;
+    networkInfo.u.setup.pNetworkServerInfo = ( void * ) &_serverInfo;
+    networkInfo.pNetworkInterface = IOT_TEST_NETWORK_INTERFACE;
 
     #if IOT_TEST_SECURED_CONNECTION == 1
-        _networkInfo.u.setup.pNetworkCredentialInfo = ( void * ) &_credentials;
+        networkInfo.u.setup.pNetworkCredentialInfo = ( void * ) &_credentials;
     #endif
 
     #ifdef IOT_TEST_MQTT_SERIALIZER
-        _networkInfo.pMqttSerializer = IOT_TEST_MQTT_SERIALIZER;
+        networkInfo.pMqttSerializer = IOT_TEST_MQTT_SERIALIZER;
     #endif
 
     /* Set the members of the connect info. Use the Jobs Thing Name as the MQTT
@@ -552,34 +523,34 @@ TEST_SETUP( Jobs_System )
     connectInfo.clientIdentifierLength = ( uint16_t ) ( sizeof( AWS_IOT_TEST_JOBS_THING_NAME ) - 1 );
     connectInfo.keepAliveSeconds = IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S;
 
-    /* AWS IoT Service limits only allow 1 connection per MQTT client ID per second.
-     * Wait until 1100 ms have elapsed since the last connection. */
-    elapsedTime = IotClock_GetTimeMs() - lastConnectTime;
-
-    if( elapsedTime < 1100ULL )
+    /* Establish an MQTT connection. Allow up to 3 attempts with a 5 second wait
+     * if the connection fails. */
+    for( i = 0; i < 3; i++ )
     {
-        IotClock_SleepMs( 1100UL - ( uint32_t ) elapsedTime );
+        connectStatus = IotMqtt_Connect( &networkInfo,
+                                         &connectInfo,
+                                         AWS_IOT_TEST_JOBS_TIMEOUT,
+                                         &_mqttConnection );
+
+        if( ( connectStatus == IOT_MQTT_TIMEOUT ) || ( connectStatus == IOT_MQTT_NETWORK_ERROR ) )
+        {
+            IotClock_SleepMs( 5000 );
+        }
+        else
+        {
+            break;
+        }
     }
 
-    /* Establish an MQTT connection. */
-    if( IotMqtt_Connect( &_networkInfo,
-                         &connectInfo,
-                         AWS_IOT_TEST_JOBS_TIMEOUT,
-                         &_mqttConnection ) != IOT_MQTT_SUCCESS )
-    {
-        TEST_FAIL_MESSAGE( "Failed to establish MQTT connection for Jobs tests." );
-    }
-
-    /* Update the time of the last MQTT connect. */
-    lastConnectTime = IotClock_GetTimeMs();
+    AwsIotJobs_Assert( connectStatus == IOT_MQTT_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Test tear down for Jobs system tests.
+ * @brief Cleans up libraries and closes the MQTT connection for the Jobs tests.
  */
-TEST_TEAR_DOWN( Jobs_System )
+static void _cleanupJobsTests()
 {
     /* Disconnect the MQTT connection if it was created. */
     if( _mqttConnection != IOT_MQTT_CONNECTION_INITIALIZER )
@@ -604,10 +575,39 @@ TEST_TEAR_DOWN( Jobs_System )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Test group for Jobs system tests.
+ */
+TEST_GROUP( Jobs_System );
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test setup for Jobs system tests.
+ */
+TEST_SETUP( Jobs_System )
+{
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test tear down for Jobs system tests.
+ */
+TEST_TEAR_DOWN( Jobs_System )
+{
+    /* Cool down time to avoid making too many requests. */
+    IotClock_SleepMs( 100 );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group runner for Jobs system tests.
  */
 TEST_GROUP_RUNNER( Jobs_System )
 {
+    _setupJobsTests();
+
     /* The tests for Get Pending must run first, as they retrieve the list of
      * Jobs for the other tests. */
     RUN_TEST_CASE( Jobs_System, GetPendingAsync );
@@ -626,6 +626,8 @@ TEST_GROUP_RUNNER( Jobs_System )
     }
 
     RUN_TEST_CASE( Jobs_System, PersistentSubscriptions );
+
+    _cleanupJobsTests();
 }
 
 /*-----------------------------------------------------------*/

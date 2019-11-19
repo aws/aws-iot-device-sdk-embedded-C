@@ -17,10 +17,10 @@ run_tests() {
     # For commit builds, run the full Provisioning tests. For pull request builds,
     # run only the unit tests (credentials are not available for pull request builds).
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-        ./bin/aws_iot_tests_provisioning
+        ./output/bin/aws_iot_tests_provisioning
     else
         # Run only Provisioning unit tests.
-        ./bin/aws_iot_tests_provisioning -n
+        ./output/bin/aws_iot_tests_provisioning -n
     fi
 }
 

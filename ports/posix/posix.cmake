@@ -8,6 +8,8 @@ if( ${LIB_REALTIME} STREQUAL "LIB_REALTIME-NOTFOUND" )
     message( FATAL_ERROR "POSIX realtime library (librt) is not available." )
 endif()
 
+unset( LIB_REALTIME CACHE )
+
 # Check for POSIX threads.
 find_package( Threads REQUIRED )
 
@@ -61,15 +63,16 @@ if( ${IOT_NETWORK_USE_OPENSSL} )
 
         # Choose OpenSSL network source file.
         set( NETWORK_HEADER ${PORTS_DIRECTORY}/common/include/iot_network_openssl.h )
-        set( NETWORK_SOURCE_FILE ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/src/iot_network_openssl.c )
+        set( NETWORK_SOURCE_FILE ${PORTS_DIRECTORY}/common/src/iot_network_openssl.c )
 
         # Link OpenSSL.
         set( PLATFORM_DEPENDENCIES OpenSSL::SSL OpenSSL::Crypto )
     endif()
 else()
-    set( NETWORK_HEADER ${PORTS_DIRECTORY}/common/include/iot_network_openssl.h )
+    set( NETWORK_HEADER ${PORTS_DIRECTORY}/common/include/iot_network_mbedtls.h )
     set( NETWORK_SOURCE_FILE ${PORTS_DIRECTORY}/common/src/iot_network_mbedtls.c )
     set( PLATFORM_DEPENDENCIES mbedtls )
+    set( MBEDTLS_REQUIRED TRUE PARENT_SCOPE )
 endif()
 
 # Add the network header for this platform.

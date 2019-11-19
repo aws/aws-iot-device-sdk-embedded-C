@@ -133,7 +133,7 @@ TEST( MQTT_Unit_Validate, ValidateConnectInfo )
 
     /* Client identifier longer than the MQTT 3.1.1 recommended maximum length. */
     connectInfo.pClientIdentifier = "longlongclientidentifier";
-    connectInfo.clientIdentifierLength = strlen( connectInfo.pClientIdentifier );
+    connectInfo.clientIdentifierLength = ( uint16_t ) strlen( connectInfo.pClientIdentifier );
     validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
     TEST_ASSERT_EQUAL_INT( true, validateStatus );
 

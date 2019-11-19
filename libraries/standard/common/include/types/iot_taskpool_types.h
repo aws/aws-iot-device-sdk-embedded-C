@@ -51,97 +51,38 @@ typedef enum IotTaskPoolError
 {
     /**
      * @brief Task pool operation completed successfully.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_createsystemtaskpool
-     * - @ref taskpool_function_create
-     * - @ref taskpool_function_destroy
-     * - @ref taskpool_function_setmaxthreads
-     * - @ref taskpool_function_createjob
-     * - @ref taskpool_function_createrecyclablejob
-     * - @ref taskpool_function_destroyrecyclablejob
-     * - @ref taskpool_function_recyclejob
-     * - @ref taskpool_function_schedule
-     * - @ref taskpool_function_scheduledeferred
-     * - @ref taskpool_function_getstatus
-     * - @ref taskpool_function_trycancel
-     *
      */
     IOT_TASKPOOL_SUCCESS = 0,
 
     /**
-     * @brief Task pool operation failed because at laest one parameter is invalid.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_createsystemtaskpool
-     * - @ref taskpool_function_create
-     * - @ref taskpool_function_destroy
-     * - @ref taskpool_function_setmaxthreads
-     * - @ref taskpool_function_createjob
-     * - @ref taskpool_function_createrecyclablejob
-     * - @ref taskpool_function_destroyrecyclablejob
-     * - @ref taskpool_function_recyclejob
-     * - @ref taskpool_function_schedule
-     * - @ref taskpool_function_scheduledeferred
-     * - @ref taskpool_function_getstatus
-     * - @ref taskpool_function_trycancel
-     *
+     * @brief Task pool operation failed because at least one parameter is invalid.
      */
     IOT_TASKPOOL_BAD_PARAMETER,
 
     /**
      * @brief Task pool operation failed because it is illegal.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_createjob
-     * - @ref taskpool_function_createrecyclablejob
-     * - @ref taskpool_function_destroyrecyclablejob
-     * - @ref taskpool_function_recyclejob
-     * - @ref taskpool_function_schedule
-     * - @ref taskpool_function_scheduledeferred
-     * - @ref taskpool_function_trycancel
-     *
      */
     IOT_TASKPOOL_ILLEGAL_OPERATION,
 
     /**
      * @brief Task pool operation failed because allocating memory failed.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_createsystemtaskpool
-     * - @ref taskpool_function_create
-     * - @ref taskpool_function_setmaxthreads
-     * - @ref taskpool_function_createrecyclablejob
-     * - @ref taskpool_function_scheduledeferred
-     * - @ref taskpool_function_getstatus
-     *
      */
     IOT_TASKPOOL_NO_MEMORY,
 
     /**
      * @brief Task pool operation failed because of an invalid parameter.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_setmaxthreads
-     * - @ref taskpool_function_createrecyclablejob
-     * - @ref taskpool_function_destroyrecyclablejob
-     * - @ref taskpool_function_recyclejob
-     * - @ref taskpool_function_schedule
-     * - @ref taskpool_function_scheduledeferred
-     * - @ref taskpool_function_getstatus
-     * - @ref taskpool_function_trycancel
-     *
      */
     IOT_TASKPOOL_SHUTDOWN_IN_PROGRESS,
 
     /**
      * @brief Task pool cancellation failed.
-     *
-     * Functions that may return this value:
-     * - @ref taskpool_function_trycancel
-     *
      */
     IOT_TASKPOOL_CANCEL_FAILED,
+
+    /**
+     * @brief Task pool operation general failure.
+     */
+    IOT_TASKPOOL_GENERAL_FAILURE,
 } IotTaskPoolError_t;
 
 /**
@@ -252,7 +193,7 @@ typedef struct _taskPoolJob * IotTaskPoolJob_t;
  * @brief Callback type for a user callback.
  *
  * This type identifies the user callback signature to execute a task pool job. This callback will be invoked
- * by the task pool threads with the `pUserContext` parameter, as speficied by the user when
+ * by the task pool threads with the `pUserContext` parameter, as specified by the user when
  * calling @ref IotTaskPool_Schedule.
  *
  */
@@ -322,21 +263,21 @@ typedef struct IotTaskPoolInfo
  */
 /* @[define_taskpool_initializers] */
 /** @brief Initializer for a small #IotTaskPoolInfo_t. */
-#define IOT_TASKPOOL_INFO_INITIALIZER_SMALL     { .minThreads = 1, .maxThreads = 1, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY } 
+#define IOT_TASKPOOL_INFO_INITIALIZER_SMALL     { .minThreads = 1, .maxThreads = 1, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }
 /** @brief Initializer for a medium #IotTaskPoolInfo_t. */
-#define IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM    { .minThreads = 1, .maxThreads = 2, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY } 
+#define IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM    { .minThreads = 1, .maxThreads = 2, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }
 /** @brief Initializer for a large #IotTaskPoolInfo_t. */
-#define IOT_TASKPOOL_INFO_INITIALIZER_LARGE     { .minThreads = 2, .maxThreads = 3, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY } 
+#define IOT_TASKPOOL_INFO_INITIALIZER_LARGE     { .minThreads = 2, .maxThreads = 3, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }
 /** @brief Initializer for a very large #IotTaskPoolInfo_t. */
-#define IOT_TASKPOOL_INFO_INITIALIZER_XLARGE    { .minThreads = 2, .maxThreads = 4, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY } 
+#define IOT_TASKPOOL_INFO_INITIALIZER_XLARGE    { .minThreads = 2, .maxThreads = 4, .stackSize = IOT_THREAD_DEFAULT_STACK_SIZE, .priority = IOT_THREAD_DEFAULT_PRIORITY }
 /** @brief Initializer for a typical #IotTaskPoolInfo_t. */
 #define IOT_TASKPOOL_INFO_INITIALIZER           IOT_TASKPOOL_INFO_INITIALIZER_MEDIUM
 /** @brief Initializer for a #IotTaskPool_t. */
-#define IOT_TASKPOOL_INITIALIZER                NULL           
+#define IOT_TASKPOOL_INITIALIZER                NULL
 /** @brief Initializer for a #IotTaskPoolJobStorage_t. */
-#define IOT_TASKPOOL_JOB_STORAGE_INITIALIZER    { { NULL, NULL }, NULL, NULL, 0, IOT_TASKPOOL_STATUS_UNDEFINED }              
+#define IOT_TASKPOOL_JOB_STORAGE_INITIALIZER    { { NULL, NULL }, NULL, NULL, 0, IOT_TASKPOOL_STATUS_UNDEFINED }
 /** @brief Initializer for a #IotTaskPoolJob_t. */
-#define IOT_TASKPOOL_JOB_INITIALIZER            NULL                                                                                                                    
+#define IOT_TASKPOOL_JOB_INITIALIZER            NULL
 /* @[define_taskpool_initializers] */
 
 /**
@@ -351,7 +292,7 @@ typedef struct IotTaskPoolInfo
 /**
  * @brief Allows the use of the handle to the system task pool.
  *
- * @warning The task pool handle is not valid unless @ref IotTaskPool_CreateSystemTaskPool is
+ * @warning The system task pool handle is not valid unless @ref IotTaskPool_CreateSystemTaskPool is
  * called before the handle is used.
  */
 #define IOT_SYSTEM_TASKPOOL               ( IotTaskPool_GetSystemTaskPool() )

@@ -30,12 +30,34 @@
 
 /* Standard includes. */
 #include <string.h>
+#include <stdio.h>
 
 /* Platform threads include. */
 #include "platform/iot_threads.h"
 
 /* Metrics networking include. */
 #include "iot_network_metrics.h"
+
+/* System headers for retrieving socket info. */
+#if !defined( _WIN32 ) && !defined( _WIN64 )
+    #include <arpa/inet.h>
+    #include <netdb.h>
+    #include <sys/socket.h>
+#endif
+
+/* Configure logs for the functions in this file. */
+#ifdef IOT_LOG_LEVEL_NETWORK
+    #define LIBRARY_LOG_LEVEL        IOT_LOG_LEVEL_NETWORK
+#else
+    #ifdef IOT_LOG_LEVEL_GLOBAL
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
+    #else
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
+    #endif
+#endif
+
+#define LIBRARY_LOG_NAME    ( "NET" )
+#include "iot_logging_setup.h"
 
 /*
  * Provide default values for undefined memory allocation functions.
@@ -64,14 +86,14 @@
 /**
  * @brief Wraps the network connection creation function with metrics.
  */
-static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
-                                                void * pCredentialInfo,
-                                                void ** pConnection );
+static IotNetworkError_t _metricsNetworkCreate( IotNetworkServerInfo_t pServerInfo,
+                                                IotNetworkCredentials_t pCredentialInfo,
+                                                IotNetworkConnection_t * pConnection );
 
 /**
  * @brief Wraps the network connection close function with metrics.
  */
-static IotNetworkError_t _metricsNetworkClose( void * pConnection );
+static IotNetworkError_t _metricsNetworkClose( IotNetworkConnection_t pConnection );
 
 /**
  * @brief Used to match metrics connection records by network connection.
@@ -104,69 +126,73 @@ static IotMutex_t _connectionListMutex;
     /* OpenSSL networking include. */
     #include "iot_network_openssl.h"
 
-    /**
-     * @brief Pointer to the metrics-wrapped network creation function.
-     */
-    static IotNetworkError_t ( * _networkCreate )( void *, void *, void ** ) = IotNetworkOpenssl_Create;
+/**
+ * @brief Pointer to the metrics-wrapped network creation function.
+ */
+    static IotNetworkError_t ( * _networkCreate )( IotNetworkServerInfo_t,
+                                                   IotNetworkCredentials_t,
+                                                   IotNetworkConnection_t * ) = IotNetworkOpenssl_Create;
 
-    /**
-     * @brief Pointer to the metrics-wrapped network close function.
-     */
-    static IotNetworkError_t ( * _networkClose )( void * ) = IotNetworkOpenssl_Close;
+/**
+ * @brief Pointer to the metrics-wrapped network close function.
+ */
+    static IotNetworkError_t ( * _networkClose )( IotNetworkConnection_t ) = IotNetworkOpenssl_Close;
 
-    /**
-     * @brief Pointer to the function that retrieves the server info for a connection.
-     */
-    static void ( * _networkServerInfo )( void *,
-                                        IotMetricsTcpConnection_t * ) = IotNetworkOpenssl_GetServerInfo;
+/**
+ * @brief Pointer to the function that retrieves the socket for a connection.
+ */
+    static int ( * _getSocket )( IotNetworkConnection_t ) = IotNetworkOpenssl_GetSocket;
 
-    /**
-     * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
-     * metrics.
-     */
+/**
+ * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
+ * metrics.
+ */
     static const IotNetworkInterface_t _networkMetrics =
     {
         .create             = _metricsNetworkCreate,
         .setReceiveCallback = IotNetworkOpenssl_SetReceiveCallback,
+        .setCloseCallback   = IotNetworkOpenssl_SetCloseCallback,
         .send               = IotNetworkOpenssl_Send,
         .receive            = IotNetworkOpenssl_Receive,
         .close              = _metricsNetworkClose,
         .destroy            = IotNetworkOpenssl_Destroy
     };
-#else
+#else  /* if IOT_NETWORK_USE_OPENSSL == 1 */
     /* mbed TLS networking include. */
     #include "iot_network_mbedtls.h"
 
-    /**
-     * @brief Pointer to the metrics-wrapped network creation function.
-     */
-    static IotNetworkError_t ( * _networkCreate )( void *, void *, void ** ) = IotNetworkMbedtls_Create;
+/**
+ * @brief Pointer to the metrics-wrapped network creation function.
+ */
+    static IotNetworkError_t ( * _networkCreate )( IotNetworkServerInfo_t,
+                                                   IotNetworkCredentials_t,
+                                                   IotNetworkConnection_t * ) = IotNetworkMbedtls_Create;
 
-    /**
-     * @brief Pointer to the metrics-wrapped network close function.
-     */
-    static IotNetworkError_t ( * _networkClose )( void * ) = IotNetworkMbedtls_Close;
+/**
+ * @brief Pointer to the metrics-wrapped network close function.
+ */
+    static IotNetworkError_t ( * _networkClose )( IotNetworkConnection_t ) = IotNetworkMbedtls_Close;
 
-    /**
-     * @brief Pointer to the function that retrieves the server info for a connection.
-     */
-    static void ( * _networkServerInfo )( void *,
-                                        IotMetricsTcpConnection_t * ) = IotNetworkMbedtls_GetServerInfo;
+/**
+ * @brief Pointer to the function that retrieves the socket for a connection.
+ */
+    static int ( * _getSocket )( IotNetworkConnection_t ) = IotNetworkMbedtls_GetSocket;
 
-    /**
-     * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
-     * metrics.
-     */
+/**
+ * @brief An #IotNetworkInterface_t that wraps network abstraction functions with
+ * metrics.
+ */
     static const IotNetworkInterface_t _networkMetrics =
     {
         .create             = _metricsNetworkCreate,
         .setReceiveCallback = IotNetworkMbedtls_SetReceiveCallback,
+        .setCloseCallback   = IotNetworkMbedtls_SetCloseCallback,
         .send               = IotNetworkMbedtls_Send,
         .receive            = IotNetworkMbedtls_Receive,
         .close              = _metricsNetworkClose,
         .destroy            = IotNetworkMbedtls_Destroy
     };
-#endif
+#endif /* if IOT_NETWORK_USE_OPENSSL == 1 */
 
 /*-----------------------------------------------------------*/
 
@@ -184,10 +210,98 @@ static bool _connectionMatch( const IotLink_t * pConnectionLink,
 
 /*-----------------------------------------------------------*/
 
-static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
-                                                void * pCredentialInfo,
-                                                void ** pConnection )
+static void _getServerInfo( int socket,
+                            IotMetricsTcpConnection_t * pServerInfo )
 {
+    int status = 0, portLength = 0;
+    struct sockaddr_storage server = { 0 };
+    socklen_t length = sizeof( struct sockaddr_storage );
+    const void * pServerAddress = NULL;
+    char * pAddressStart = NULL;
+    const char * pPortFormat = NULL;
+    uint16_t remotePort = 0;
+    size_t addressLength = 0;
+
+    /* Get peer info. */
+    status = getpeername( socket,
+                          ( struct sockaddr * ) &server,
+                          &length );
+
+    if( status == 0 )
+    {
+        /* Calculate the pointer to the IP address and get the remote port based
+         * on protocol version. */
+        if( server.ss_family == AF_INET )
+        {
+            /* IPv4. */
+            pServerAddress = &( ( ( struct sockaddr_in * ) &server )->sin_addr );
+            remotePort = ntohs( ( ( struct sockaddr_in * ) &server )->sin_port );
+
+            /* Print the IPv4 address at the start of the address buffer. */
+            pAddressStart = pServerInfo->pRemoteAddress;
+            addressLength = IOT_METRICS_IP_ADDRESS_LENGTH;
+            pPortFormat = ":%hu";
+        }
+        else
+        {
+            /* IPv6. */
+            pServerAddress = &( ( ( struct sockaddr_in6 * ) &server )->sin6_addr );
+            remotePort = ntohs( ( ( struct sockaddr_in6 * ) &server )->sin6_port );
+
+            /* Enclose the IPv6 address with []. */
+            pServerInfo->pRemoteAddress[ 0 ] = '[';
+            pAddressStart = pServerInfo->pRemoteAddress + 1;
+            addressLength = IOT_METRICS_IP_ADDRESS_LENGTH - 1;
+            pPortFormat = "]:%hu";
+        }
+
+        /* Convert IP address to text. */
+        if( inet_ntop( server.ss_family,
+                       pServerAddress,
+                       pAddressStart,
+                       addressLength ) != NULL )
+        {
+            /* Add the port to the end of the address. */
+            addressLength = strlen( pServerInfo->pRemoteAddress );
+
+            portLength = snprintf( &( pServerInfo->pRemoteAddress[ addressLength ] ),
+                                   7,
+                                   pPortFormat,
+                                   remotePort );
+
+            if( portLength > 0 )
+            {
+                pServerInfo->addressLength = addressLength + ( size_t ) portLength;
+
+                IotLogInfo( "(Socket %d) Collecting network metrics for %s.",
+                            socket,
+                            pServerInfo->pRemoteAddress );
+            }
+            else
+            {
+                IotLogError( "(Socket %d) Failed to add port to IP address buffer." );
+            }
+        }
+        else
+        {
+            IotLogError( "(Socket %d) Failed to convert IP address to text format.",
+                         socket );
+        }
+    }
+    else
+    {
+        IotLogError( "(Socket %d) Failed to query peer name.",
+                     socket );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+static IotNetworkError_t _metricsNetworkCreate( IotNetworkServerInfo_t pServerInfo,
+                                                IotNetworkCredentials_t pCredentialInfo,
+                                                IotNetworkConnection_t * pConnection )
+{
+    int socket = 0;
     IotMetricsTcpConnection_t * pTcpConnection = NULL;
     IotNetworkError_t status = IOT_NETWORK_SUCCESS;
 
@@ -199,18 +313,18 @@ static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
         ( void ) memset( pTcpConnection, 0x00, sizeof( IotMetricsTcpConnection_t ) );
 
         /* Call the wrapped network create function. */
-        status = _networkCreate( pConnectionInfo,
+        status = _networkCreate( pServerInfo,
                                  pCredentialInfo,
                                  pConnection );
 
         /* Add the new metrics connection to the list of connections. */
         if( status == IOT_NETWORK_SUCCESS )
         {
-            /* Get the connection's IPv4 address and port. */
             pTcpConnection->pNetworkContext = *pConnection;
 
-            _networkServerInfo( pTcpConnection->pNetworkContext,
-                                pTcpConnection );
+            /* Get the connection's address and port. */
+            socket = _getSocket( pTcpConnection->pNetworkContext );
+            _getServerInfo( socket, pTcpConnection );
 
             /* Add the new connection to the list of connections. */
             IotMutex_Lock( &_connectionListMutex );
@@ -233,7 +347,7 @@ static IotNetworkError_t _metricsNetworkCreate( void * pConnectionInfo,
 
 /*-----------------------------------------------------------*/
 
-static IotNetworkError_t _metricsNetworkClose( void * pConnection )
+static IotNetworkError_t _metricsNetworkClose( IotNetworkConnection_t pConnection )
 {
     IotLink_t * pConnectionLink = NULL;
     IotMetricsTcpConnection_t * pTcpConnection = NULL;

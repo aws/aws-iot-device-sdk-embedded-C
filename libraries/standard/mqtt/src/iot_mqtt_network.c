@@ -152,7 +152,7 @@ static void _flushPacket( void * pNetworkConnection,
                                    _getMqttFreePacketFunc,
                                    _IotMqtt_FreePacket,
                                    freePacket )
-#else  /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+#else /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
     #define _getPacketTypeFunc( pSerializer )          _IotMqtt_GetPacketType
     #define _getRemainingLengthFunc( pSerializer )     _IotMqtt_GetRemainingLength
     #define _getConnackDeserializer( pSerializer )     _IotMqtt_DeserializeConnack
@@ -691,7 +691,7 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
                                    IotMqttCallbackParam_t * ) = NULL;
 
     /* Network close function. */
-    IotNetworkError_t ( * closeConnection) ( void * ) = NULL;
+    IotNetworkError_t ( * closeConnection) ( IotNetworkConnection_t ) = NULL;
 
     /* Mark the MQTT connection as disconnected and the keep-alive as failed. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
@@ -792,7 +792,7 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
 
 /*-----------------------------------------------------------*/
 
-void IotMqtt_ReceiveCallback( void * pNetworkConnection,
+void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
                               void * pReceiveContext )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
@@ -840,6 +840,45 @@ void IotMqtt_ReceiveCallback( void * pNetworkConnection,
     {
         EMPTY_ELSE_MARKER;
     }
+}
+
+/*-----------------------------------------------------------*/
+
+IotMqttError_t IotMqtt_GetIncomingMQTTPacketTypeAndLength( IotMqttPacketInfo_t * pIncomingPacket,
+                                                           IotMqttGetNextByte_t getNextByte,
+                                                           void * pNetworkConnection )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+
+    /* Read the packet type, which is the first byte available. */
+    if( getNextByte( pNetworkConnection, &( pIncomingPacket->type ) ) == IOT_MQTT_SUCCESS )
+    {
+        /* Check that the incoming packet type is valid. */
+        if( _incomingPacketValid( pIncomingPacket->type ) == false )
+        {
+            IotLogError( "(MQTT connection) Unknown packet type %02x received.",
+                         pIncomingPacket->type );
+
+            status = IOT_MQTT_BAD_RESPONSE;
+        }
+        else
+        {
+            /* Read the remaining length. */
+            pIncomingPacket->remainingLength = _IotMqtt_GetRemainingLength_Generic( pNetworkConnection,
+                                                                                    getNextByte );
+
+            if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+            {
+                status = IOT_MQTT_BAD_RESPONSE;
+            }
+        }
+    }
+    else
+    {
+        status = IOT_MQTT_NETWORK_ERROR;
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
