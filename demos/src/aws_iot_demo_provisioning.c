@@ -49,9 +49,6 @@
 /* Provisioning include. */
 #include "aws_iot_provisioning.h"
 
-/* JSON utilities include. */
-#include "iot_json_utils.h"
-
 /**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.

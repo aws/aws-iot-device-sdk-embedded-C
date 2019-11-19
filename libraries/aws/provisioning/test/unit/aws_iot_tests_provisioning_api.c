@@ -488,8 +488,7 @@ static void _simulateServerResponse( void * pArgument )
     receiveContext.dataLength = serializedPublishDataLength;
 
     /* Call the MQTT receive callback to process the ACK packet. */
-    IotMqtt_ReceiveCallback( &receiveContext,
-                             _pMqttConnection );
+    IotMqtt_ReceiveCallback( _pMqttConnection, &receiveContext );
 
     /* Release the data buffer with the MQTT's free() function as it was the MQTT internal function that allocated the
      * buffer memory. */

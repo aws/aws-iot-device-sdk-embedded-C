@@ -33,9 +33,6 @@
 /* SDK initialization include. */
 #include "iot_init.h"
 
-/* SDK initialization include. */
-#include "iot_init.h"
-
 /* Platform layer includes. */
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
@@ -51,9 +48,6 @@
 
 /* Test framework includes. */
 #include "unity_fixture.h"
-
-/* JSON utilities include. */
-#include "iot_json_utils.h"
 
 /* Logging Include */
 #include "iot_logging_setup.h"
@@ -83,13 +77,13 @@
 /**
  * @brief Network server info to share among the tests.
  */
-static const IotTestNetworkServerInfo_t _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
+static const struct IotNetworkServerInfo _serverInfo = IOT_TEST_NETWORK_SERVER_INFO_INITIALIZER;
 
 /**
  * @brief Network credential info to share among the tests.
  */
 #if IOT_TEST_SECURED_CONNECTION == 1
-    static const IotTestNetworkCredentials_t _credentials =
+    static const struct IotNetworkCredentials _credentials =
         IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER;
 #endif
 
