@@ -100,7 +100,7 @@ static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 /**
  * @brief Client ID for the MQTT connection to the AWS IoT Core service.
  */
-static const char * _pTestMqttClientId = AWS_IOT_TEST_PROVISIONING_CLIENT_ID;
+static const char * _pTestMqttClientId = "SystemTestClientID";
 
 /**
  * @brief Parameters to use for testing the Provisioning RegisterThing API.
