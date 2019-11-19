@@ -463,12 +463,9 @@ TEST_GROUP_RUNNER( Serializer_Decoder_Unit_CBOR )
 {
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap );
-<<<<<<< HEAD
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthMap );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthArray );
-=======
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectReuseAfterIteration );
->>>>>>> public/v4_beta
 }
 
 TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
@@ -655,7 +652,6 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
     _pCborDecoder->destroy( &outerDecoder2 );
 }
 
-<<<<<<< HEAD
 TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthMap )
 {
     const uint8_t pSampleIndefiniteLengthMap[] =
@@ -789,7 +785,7 @@ TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthArray )
     _pCborDecoder->destroy( &elementObject );
     _pCborDecoder->destroy( &arrayDecoder );
 }
-=======
+
 /* Verifies that a container decoder object remains valid for re-use after a complete round of iterating
  * through its contents */
 TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectReuseAfterIteration )
@@ -837,4 +833,3 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectReuseAfterIteration )
     _pCborDecoder->destroy( &valueDecoder );
     _pCborDecoder->destroy( &mapDecoder );
 }
->>>>>>> public/v4_beta

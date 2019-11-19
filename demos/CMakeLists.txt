@@ -42,8 +42,8 @@ set( DEMO_LIBRARY_DEPENDENCY
      iotmqtt
      "awsiotshadow\\\;awsiotcommon"
      awsiotdefender 
-     "awsiotprovisioning\\\;iotcommon" 
-     "awsiotjobs\\\;awsiotcommon" )
+     "awsiotjobs\\\;awsiotcommon" 
+     "awsiotprovisioning\\\;awsiotcommon" )
 
 # Get the list length to iterate over it. Since CMake indexes from 0, subtract
 # 1 for the iteration range.
