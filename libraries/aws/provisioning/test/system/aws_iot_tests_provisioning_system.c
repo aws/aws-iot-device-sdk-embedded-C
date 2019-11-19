@@ -250,13 +250,6 @@ static void _printRegisterThingResponseCallback( void * contextParam,
 
     if( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED )
     {
-        if( pResponseInfo->u.acceptedResponse.pClientId != NULL )
-        {
-            IotLogInfo( "ClientID = %.*s",
-                        pResponseInfo->u.acceptedResponse.clientIdLength,
-                        pResponseInfo->u.acceptedResponse.pClientId );
-        }
-
         if( pResponseInfo->u.acceptedResponse.pThingName != NULL )
         {
             IotLogInfo( "ThingName = %.*s",

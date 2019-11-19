@@ -370,14 +370,6 @@
 #define PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_THING_NAME_STRING              "thingName"
 
 /**
- * @brief The key for the connection client ID's entry in the response payload of the Provisioning RegisterThing service
- * API.
- *
- * @note This should be utilized in parsing the success case response payload received from the server.
- */
-#define PROVISIONING_REGISTER_THING_RESPONSE_PAYLOAD_CLIENT_ID_STRING               "clientId"
-
-/**
  * @brief The key for the status code entry in the "rejected" response payload from the server.
  *
  * @note This should be utilized in parsing the response payload received from the server.
