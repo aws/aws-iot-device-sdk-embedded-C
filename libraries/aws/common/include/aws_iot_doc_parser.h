@@ -45,7 +45,7 @@
  * @warning The parsing will not check for the correctness of the JSON document.
  * It is designed to be light weight and to be of low memory footprint rather
  * than checking for the correctness of the JSON document. Hence this is not
- * meant to be used for a general purpose JSON parsing. This is recommeded to
+ * meant to be used for a general purpose JSON parsing. This is recommended to
  * be used only with mutually authenticated AWS IoT services such as Shadow and
  * Jobs where the document will always be a well formatted JSON.
  *
