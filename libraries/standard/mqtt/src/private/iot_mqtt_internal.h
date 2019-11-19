@@ -564,7 +564,7 @@ size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
  *
  * @note This function is similar to _IotMqtt_GetRemainingLength() but it uses
  * user provided getNextByte function to parse the stream instead of using
- * _IotMqtt_GetNextByte(). pNetworkConnection is impelementation dependent and
+ * _IotMqtt_GetNextByte(). pNetworkConnection is implementation dependent and
  * user provided function makes use of it.
  *
  */

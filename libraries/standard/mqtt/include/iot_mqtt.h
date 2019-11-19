@@ -764,7 +764,7 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
 /**
  * @brief Returns a string that describes an #IotMqttError_t.
  *
- * Like the POSIX's `strerror`, this function returns a string describing a
+ * Like the POSIX `strerror`, this function returns a string describing a
  * return code. In this case, the return code is an MQTT library error code,
  * `status`.
  *
