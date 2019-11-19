@@ -167,9 +167,7 @@ static const char * _createKeysAndCertificateAcceptedResponseTopic =
 
 /**
  * @brief Sample CBOR encoded response of Provisioning CreateKeysAndCertificate service API containing mock certificate
- * and private
- * key
- * data.
+ * and private key data.
  */
 static const uint8_t _sampleCreateKeysAndCertificateServerResponsePayload[] =
 {
@@ -488,7 +486,7 @@ static void _simulateServerResponse( void * pArgument )
     receiveContext.dataLength = serializedPublishDataLength;
 
     /* Call the MQTT receive callback to process the ACK packet. */
-    IotMqtt_ReceiveCallback( _pMqttConnection, &receiveContext );
+    IotMqtt_ReceiveCallback( ( IotNetworkConnection_t ) &receiveContext, _pMqttConnection );
 
     /* Release the data buffer with the MQTT's free() function as it was the MQTT internal function that allocated the
      * buffer memory. */
