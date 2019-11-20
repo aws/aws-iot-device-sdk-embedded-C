@@ -59,28 +59,6 @@ Because the Provisioning MQTT API does not support creating a provisioning templ
 1. Create a user for AWS CLI. See steps 1 @ref guide_developer_automated_tests_provisioning for more information.
 2. Create a provisioning template for the demo. See steps 2 @ref guide_developer_automated_tests_provisioning for more information.
 3. Build and run the demo as described [here](@ref building).
-3. When the following message appears, you may begin creating Provisioning for the demo.
-@code{sh}
-/*-----------------------------------------------------------*/
-
-The Provisioning demo is now ready to accept Provisioning.
-Provisioning may be created using the AWS IoT console or AWS CLI.
-See the following link for more information.
-
-https://docs.aws.amazon.com/cli/latest/reference/iot/create-job.html
-
-This demo expects Job documents to have an "action" JSON key.
-The following actions are currently supported:
- - print
-   Logs a message to the local console. The Job document must also contain a "message".
-   For example: { "action": "print", "message": "Hello world!"} will cause
-   "Hello world!" to be printed on the console.
- - publish
-   Publishes a message to an MQTT topic. The Job document must also contain a "message" and "topic".
-   For example: { "action": "publish", "topic": "demo/provisioning", "message": "Hello world!"} will cause
-   "Hello world!" to be published to the topic "demo/provisioning".
- - exit
-   Exits the demo program. This program will run until { "action": "exit" } is received.
 
 /*-----------------------------------------------------------*/
 @endcode
@@ -257,7 +235,9 @@ The following is the template passed as a string in the above AWS CLI command.
 
 For more information on provisioning template, refer to [this guide](http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html)
 
-When the Provisioning demo is complete, the template it used is no longer needed. Provisioning template can be deleted with the following command, where `TemplateName` is the name of the template that is to be deleted.
+3. Set the name of provisioning template, created in step 2, within demo config file for the  AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME` #define. Build the demo for the `aws_iot_demo_provisioning` target.
+
+4. When the Provisioning demo is complete, the template it used is no longer needed. Provisioning template can be deleted with the following command, where `TemplateName` is the name of the template that is to be deleted.
 ```sh
 aws iot delete-provisioning-template --template-name <TemplateName>
 ```
