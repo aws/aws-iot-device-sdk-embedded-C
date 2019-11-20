@@ -417,10 +417,21 @@ static int _establishMqttConnection( bool awsIotMqttMode,
     connectInfo.cleanSession = true;
     connectInfo.keepAliveSeconds = KEEP_ALIVE_SECONDS;
     connectInfo.pWillInfo = &willInfo;
-    connectInfo.pUserName = pCredentials->pUserName;
-    connectInfo.userNameLength = ( uint16_t ) pCredentials->userNameSize;
-    connectInfo.pPassword = pCredentials->pPassword;
-    connectInfo.passwordLength = ( uint16_t ) pCredentials->passwordSize;
+
+    if( pCredentials != NULL )
+    {
+        connectInfo.pUserName = pCredentials->pUserName;
+        connectInfo.userNameLength = ( uint16_t ) pCredentials->userNameSize;
+        connectInfo.pPassword = pCredentials->pPassword;
+        connectInfo.passwordLength = ( uint16_t ) pCredentials->passwordSize;
+    }
+    else
+    {
+        connectInfo.pUserName = NULL;
+        connectInfo.userNameLength = 0;
+        connectInfo.pPassword = NULL;
+        connectInfo.passwordLength = 0;
+    }
 
     /* Set the members of the Last Will and Testament (LWT) message info. The
      * MQTT server will publish the LWT message if this client disconnects
