@@ -466,7 +466,7 @@ static void _simulateServerResponse( void * pArgument )
     size_t publishPacketSize = 0;
     size_t publishRemainingLength = 0;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    uint16_t usPacketIdentifier;
+    uint16_t publishPacketIdentifier;
 
     publishInfo.qos = IOT_MQTT_QOS_0;
     /* Set the server response.*/
@@ -490,7 +490,7 @@ static void _simulateServerResponse( void * pArgument )
 
     TEST_ASSERT_EQUAL_MESSAGE( IOT_MQTT_SUCCESS, IotMqtt_SerializePublish( &publishInfo,
                                                                            publishRemainingLength,
-                                                                           &usPacketIdentifier,
+                                                                           &publishPacketIdentifier,
                                                                            NULL,
                                                                            pPublishDataBuffer,
                                                                            publishPacketSize ),
