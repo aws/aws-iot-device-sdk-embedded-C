@@ -1140,7 +1140,7 @@ size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
 
 /*-----------------------------------------------------------*/
 
-size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnecton,
+size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnection,
                                             IotMqttGetNextByte_t getNextByte )
 {
     uint8_t encodedByte = 0;
@@ -1156,7 +1156,7 @@ size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnecton,
         }
         else
         {
-            if( getNextByte( pNetworkConnecton, &encodedByte ) == IOT_MQTT_SUCCESS )
+            if( getNextByte( pNetworkConnection, &encodedByte ) == IOT_MQTT_SUCCESS )
             {
                 remainingLength += ( encodedByte & 0x7F ) * multiplier;
                 multiplier *= 128;
@@ -2635,7 +2635,7 @@ IotMqttError_t IotMqtt_DeserializeResponse( IotMqttPacketInfo_t * pMqttPacket )
     }
     else
     {
-        /* set packetIdentfier only if success is returned */
+        /* Set packetIdentifier only if success is returned. */
         pMqttPacket->packetIdentifier = mqttPacket.packetIdentifier;
     }
 

@@ -1208,7 +1208,7 @@ static void _taskPoolWorker( void * pUserContext )
             /* Check if this thread needs to exit  because the worker woke up after a timeout. */
             else if( jobAvailable == false )
             {
-                /* If there was a timeout, shrink back the task pool to the minimum nunber of threads. */
+                /* If there was a timeout, shrink back the task pool to the minimum number of threads. */
                 if( pTaskPool->activeThreads > pTaskPool->minThreads )
                 {
                     /* After waking up from a timeout, the thread will try and pick up a new job, but . */
@@ -1355,7 +1355,7 @@ static _taskPoolJob_t * _fetchOrAllocateJob( _taskPoolCache_t * const pCache )
         }
         else
         {
-            /* Log alocation failure for troubleshooting purposes. */
+            /* Log allocation failure for troubleshooting purposes. */
             IotLogInfo( "Failed to allocate job." );
         }
     }
@@ -1435,7 +1435,7 @@ static void _signalShutdown( _taskPool_t * const pTaskPool,
     /* Set the exit condition. */
     pTaskPool->maxThreads = 0;
 
-    /* Broadcast to all active threads to wake-up. Active threads do check the exit condition right after wakein up. */
+    /* Broadcast to all active threads to wake-up. Active threads do check the exit condition right after waking up. */
     for( count = 0; count < threads; ++count )
     {
         IotSemaphore_Post( &pTaskPool->dispatchSignal );
@@ -1460,7 +1460,7 @@ static IotTaskPoolError_t _scheduleInternal( _taskPool_t * const pTaskPool,
     pTaskPool->activeJobs++;
 
     /* If all threads are busy, try and create a new one. Failing to create a new thread
-     * only has performance implications on correctly exeuting th scheduled job.
+     * only has performance implications on correctly executing th scheduled job.
      */
     uint32_t activeThreads = pTaskPool->activeThreads;
 
@@ -1535,7 +1535,7 @@ static IotTaskPoolError_t _scheduleInternal( _taskPool_t * const pTaskPool,
     else
     {
         /* Scheduling can only fail to allocate a new worker, which is an error
-         * only for high prority tasks. */
+         * only for high priority tasks. */
         IotTaskPool_Assert( mustGrow == true );
 
         /* Revert updating the number of active jobs. */
@@ -1633,7 +1633,7 @@ static IotTaskPoolError_t _tryCancelInternal( _taskPool_t * const pTaskPool,
             {
                 bool shouldReschedule = false;
 
-                /* If the job being cancelled was at the head of the timeouts queue, then we need to reschedule the timer
+                /* If the job being canceled was at the head of the timeouts queue, then we need to reschedule the timer
                  * with the next job timeout */
                 IotLink_t * pHeadLink = IotListDouble_PeekHead( &pTaskPool->timerEventsList );
 
@@ -1659,7 +1659,7 @@ static IotTaskPoolError_t _tryCancelInternal( _taskPool_t * const pTaskPool,
         }
         else
         {
-            /* A cancelable job status should be either 'scheduled' or 'deferrred'. */
+            /* A cancelable job status should be either 'scheduled' or 'deferred'. */
             IotTaskPool_Assert( ( currentStatus == IOT_TASKPOOL_STATUS_READY ) || ( currentStatus == IOT_TASKPOOL_STATUS_CANCELED ) );
         }
     }

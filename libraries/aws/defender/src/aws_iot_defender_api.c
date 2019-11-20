@@ -161,7 +161,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
     /* Assert system task pool is pre-created! */
     AwsIotDefender_Assert( IOT_SYSTEM_TASKPOOL != NULL );
 
-    /* Silence warnigns when asserts are disabled. */
+    /* Silence warnings when asserts are disabled. */
     ( void ) taskPoolError;
 
     /* Initialize flow control states to false. */
@@ -224,7 +224,7 @@ AwsIotDefenderError_t AwsIotDefender_Start( AwsIotDefenderStartInfo_t * pStartIn
         {
             /* Create metrics publish job, which will periodically publish metrics */
             taskPoolError = IotTaskPool_CreateJob( _metricsPublishRoutine, NULL, &_metricsPublishJobStorage, &_metricsPublishJob );
-            /* Silence warnigns when asserts are disabled. */
+            /* Silence warnings when asserts are disabled. */
             ( void ) taskPoolError;
             AwsIotDefender_Assert( taskPoolError == IOT_TASKPOOL_SUCCESS );
             /* Schedule Publish Job */
@@ -398,7 +398,7 @@ const char * AwsIotDefender_EventType( AwsIotDefenderEventType_t eventType )
 {
     const char * pEvent = NULL;
 
-    /* Convert defent event to string  */
+    /* Convert defender event to string  */
     switch( eventType )
     {
         case AWS_IOT_DEFENDER_METRICS_ACCEPTED:
@@ -450,7 +450,7 @@ static void _metricsPublishRoutine( IotTaskPool_t pTaskPool,
                                     IotTaskPoolJob_t pJob,
                                     void * pUserContext )
 {
-    /* Unsed parameter; silence the compiler. */
+    /* Unused parameter; silence the compiler. */
     ( void ) pTaskPool;
     ( void ) pJob;
     ( void ) pUserContext;
