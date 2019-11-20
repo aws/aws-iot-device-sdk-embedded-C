@@ -213,7 +213,7 @@ void IotMutex_Unlock( IotMutex_t * pMutex );
 /**
  * @brief Create a new counting semaphore.
  *
- * This function creates a new counting semaphore with a given intial and
+ * This function creates a new counting semaphore with a given initial and
  * maximum value. It must be called on an uninitialized #IotSemaphore_t.
  * This function must not be called on an already-initialized #IotSemaphore_t.
  *

@@ -157,8 +157,8 @@ IotTaskPoolError_t IotTaskPool_Create( const IotTaskPoolInfo_t * pInfo,
  *
  * This function should be called to destroy one instance of a task pool previously created with a call
  * to @ref IotTaskPool_Create or @ref IotTaskPool_CreateSystemTaskPool.
- * Calling this fuction release all underlying resources. After calling this function, any job scheduled but not yet executed
- * will be cancelled and destroyed.
+ * Calling this function release all underlying resources. After calling this function, any job scheduled but not yet executed
+ * will be canceled and destroyed.
  * The `taskPool` instance will no longer be valid after this function returns.
  *
  * @param[in] taskPool A handle to the task pool, e.g. as returned by a call to @ref IotTaskPool_Create or
@@ -509,7 +509,7 @@ IotTaskPoolJobStorage_t * IotTaskPool_GetJobStorageFromHandle( IotTaskPoolJob_t 
 /**
  * @brief Returns a string that describes an @ref IotTaskPoolError_t.
  *
- * Like the POSIX's `strerror`, this function returns a string describing a
+ * Like the POSIX `strerror`, this function returns a string describing a
  * return code. In this case, the return code is a task pool library error code,
  * `status`.
  *

@@ -317,7 +317,7 @@ IotMqttError_t IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubscr
  *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *    // Make sure the packet size is less than static buffer size.
  *    IotMqtt_Assert( xPacketSize < mqttexampleSHARED_BUFFER_SIZE );
- *    // Serialize subscribe into staticallu allocated ucSharedBuffer.
+ *    // Serialize subscribe into statically allocated ucSharedBuffer.
  *	   xResult = IotMqtt_SerializeUnsubscribe( xMQTTSubscription, 
  *										  sizeof( xMQTTSubscription ) / sizeof( IotMqttSubscription_t ),
  *										  xRemainingLength,
@@ -426,7 +426,7 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo
  *    xResult = IotMqtt_GetPublishPacketSize( &xMQTTPublishInfo, &xRemainingLength, &xPacketSize );
  *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *    // Make sure the packet size is less than static buffer size
- *	  configASSERT( xPacketSize < mqttexampleSHARED_BUFFER_SIZE );
+ *	  IotMqtt_Assert( xPacketSize < mqttexampleSHARED_BUFFER_SIZE );
  * 
  *    xResult = IotMqtt_SerializePublish( &xMQTTPublishInfo,
  *										xRemainingLength,
@@ -472,10 +472,10 @@ IotMqttError_t IotMqtt_SerializePublish( IotMqttPublishInfo_t * pPublishInfo,
  *     size_t xSentBytes = 0;
  * 
  *    // Disconnect is fixed length packet, therefore there is no need to calculate the size,
- *    // just makes sure static buffer can accomodate disconnect request.
+ *    // just makes sure static buffer can accommodate disconnect request.
  *    IotMqtt_Assert( MQTT_PACKET_DISCONNECT_SIZE <= mqttexampleSHARED_BUFFER_SIZE );
  *
- *    // Serialize Disconnect packet into static buffer (dynamicaly allocated buffer can be used as well)
+ *    // Serialize Disconnect packet into static buffer (dynamically allocated buffer can be used as well)
  *    xResult = IotMqtt_SerializeDisconnect( ucSharedBuffer, MQTT_PACKET_DISCONNECT_SIZE );
  *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *
@@ -512,7 +512,7 @@ IotMqttError_t IotMqtt_SerializeDisconnect( uint8_t * pBuffer,
  *    size_t xSentBytes = 0;
  * 
  *    // PingReq is fixed length packet, therefore there is no need to calculate the size,
- *    // just makes sure static buffer can accomodate Ping request.
+ *    // just makes sure static buffer can accommodate Ping request.
  *    IotMqtt_Assert( MQTT_PACKET_PINGREQ_SIZE <= mqttexampleSHARED_BUFFER_SIZE );
  *
  *    xResult = IotMqtt_SerializePingreq( ucSharedBuffer, MQTT_PACKET_PINGREQ_SIZE );
@@ -549,7 +549,7 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
  * // Example code below shows how to implement getNetxByte function with posix sockets.
  * // Note: IotMqttGetNextByte_t typedef IotMqttError_t (* IotMqttGetNextByte_t)( void * pNetworkContext,
  * //                                              uint8_t * pNextByte );
- * // Note: It is assumed that socket is aleady created and connected,
+ * // Note: It is assumed that socket is already created and connected,
  *
  * IotMqttError_t getNextByte( void * pContext,
  *                           uint8_t * pNextByte )
