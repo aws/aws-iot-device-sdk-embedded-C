@@ -53,7 +53,7 @@
 /**
  * The name for the provisioning template that will be used for provisioning the demo app.
  */
-#define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME    "Spencer"
+#define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME    ""
 
 /* Enable asserts in the libraries. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS              ( 1 )

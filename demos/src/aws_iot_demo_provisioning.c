@@ -435,7 +435,7 @@ int RunProvisioningDemo( bool awsIotMqttMode,
     provisioningParameters[ 1 ].parameterValueLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_SERIAL_NUM_VALUE ) - 1 );
 
     /* Determine if a provisioning template name has been specified. */
-    if( strlen( pTemplateName ) != NULL )
+    if( strlen( pTemplateName ) == 0 )
     {
         IotLogError( "A valid provisioning template name must be provided." );
         status = EXIT_FAILURE;
@@ -451,7 +451,7 @@ int RunProvisioningDemo( bool awsIotMqttMode,
             status = EXIT_FAILURE;
         }
     }
-    else if( pIdentifier != NULL )
+    else if( pIdentifier == NULL )
     {
         IotLogError( "A client identifier must be provided for the Provisioning demo." );
 
