@@ -438,7 +438,7 @@ extern IotMutex_t _AwsIotJobsSubscriptionsMutex;
  *
  * @param[in] type The type of Jobs operation for the request.
  * @param[in] pRequestInfo Common Jobs request parameters.
- * @param[in] pRequestContents Additional values to place in tne JSON document,
+ * @param[in] pRequestContents Additional values to place in the JSON document,
  * depending on `type`.
  * @param[in] flags Flags variables passed to a user-facing Jobs function.
  * @param[in] pCallbackInfo User-provided callback function and parameter.
@@ -600,7 +600,7 @@ void _AwsIotJobs_DecrementReferences( _jobsOperation_t * pOperation,
  *
  * @param[in] type The type of Jobs operation for the request.
  * @param[in] pRequestInfo Common Jobs request parameters.
- * @param[in] pRequestContents Additional values to place in tne JSON document,
+ * @param[in] pRequestContents Additional values to place in the JSON document,
  * depending on `type`.
  * @param[in] pOperation Operation associated with the Jobs request.
  *
