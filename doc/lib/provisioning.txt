@@ -3,13 +3,13 @@
 @anchor provisioning
 @brief Library for the Fleet Provisioning feature of AWS IoT.
 
-> AWS IoT provisioning can be used to define a set of remote operations that are sent to and executed on one or more devices connected to AWS IoT.
+> When you use AWS IoT fleet provisioning, AWS IoT can generate and securely deliver device certificates and private keys to your devices when they connect to AWS IoT for the first time.
 
-<span style="float:right;margin-right:4em"> &mdash; <i>Description of Provisioning from [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-provisioning.html)</i></span><br>
+<span style="float:right;margin-right:4em"> &mdash; <i>Description of the Fleet Provisioning feature from [AWS IoT documentation](http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html)</i></span><br>
 
-This library provides an API based on the [Provisioning APIs available over MQTT](https://docs.aws.amazon.com/iot/latest/developerguide/provisioning-api.html#provisioning-mqtt-api). Features of this library include:
+This library provides an API based on the [Fleet Provisioning APIs available over MQTT](http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html#fleet-provision-api). Features of this library include:
 - Fully blocking API functions.
-- User-defined callback based relaying of server response to calling application.
+- User-defined callback based API mechanism for funneling AWS IoT Core service response information to calling application.
 
 @dependencies{provisioning,Provisioning library}
 @dot "Provisioning direct dependencies"
@@ -28,7 +28,6 @@ digraph provisioning_dependencies
         rank = same;
         linear_containers[label="List/Queue", URL="@ref linear_containers"];
         logging[label="Logging", URL="@ref logging"];
-        static_memory[label="Static memory", URL="@ref static_memory"];
     }
     provisioning -> mqtt;
     provisioning -> logging [label=" if logging enabled", style="dashed"];
@@ -37,7 +36,7 @@ digraph provisioning_dependencies
 @enddot
 
 Currently, the Provisioning library has the following dependencies:
-- The MQTT library for sending the messages that interact with the Provisioning service. See [this page](@ref mqtt_dependencies) for the dependencies of the MQTT library, which are not shown in the graph above.
+- The MQTT library for sending the messages that interact with the AWS IoT Core for the Fleet Provisioning feature. See [this page](@ref mqtt_dependencies) for the dependencies of the MQTT library, which are not shown in the graph above.
 - The logging library may be used if @ref AWS_IOT_LOG_LEVEL_PROVISIONING is not #IOT_LOG_NONE.
 
 In addition to the components above, the Provisioning library also depends on C standard library headers.
@@ -49,7 +48,9 @@ In addition to the components above, the Provisioning library also depends on C 
 
 This demo provides a simple example on using the Provisioning library and working with the AWS IoT Fleet Provisioning feature.
 
-The Provisioning demo establishes an MQTT connection and then, requests a new public-private key pair and certificate by registering a credential handling callback. On receiving the new credentials from the server, the registered callback copies the received certificate ID and certificate ownership token into their buffers(for provisioning later in the demo), and prints the remaining credentials. The demo application then requests provisioning with the store certificate ID and certificate ownership token, and also registers a response handler callback. On receiving the server response to the provisioning request, the registered callback prints the contents of the response.
+The Provisioning demo establishes an MQTT connection and then, requests a new private key and associated certificate by providing a callback to the credential generating library function. On receiving the new credentials from the server, the registered callback copies the received certificate ID and certificate ownership token into their buffers(for provisioning later in the demo), and prints the remaining credentials. The demo application then requests provisioning with the store certificate ID and certificate ownership token, and also registers a response handler callback. On receiving the server response to the provisioning request, the registered callback prints the contents of the response.
+
+@image html provisioning_demo.png "Provisioning Demo Workflow" width=80%
 
 @section provisioning_demo_setup Demo Setup
 @brief How to set up a provisioning template for the Provisioning demo.
@@ -59,33 +60,18 @@ Because the Provisioning MQTT API does not support creating a provisioning templ
 1. Create a user for AWS CLI. See steps 1 @ref guide_developer_automated_tests_provisioning for more information.
 2. Create a provisioning template for the demo. See steps 2 @ref guide_developer_automated_tests_provisioning for more information.
 3. Build and run the demo as described [here](@ref building).
+*/
 
-/*-----------------------------------------------------------*/
-@endcode
+/**
+@configpage{provisioning_demo,Provisioning demo,Demo,demos}
 
-The supported actions are described above. As an example, the command to create a "publish" Job with AWS CLI is below. Replace `UniqueId` with a Job ID that is unique, and `ThingARN` with the ARN of the target Thing.
+@section AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME
+@brief The name of the provisioning template associated with the AWS IoT account that the demo will use.
 
-@code{sh}
-aws iot create-job \
-        --job-id UniqueId \
-        --targets ThingARN \
-        --document '{"action":"publish","message":"Hello world!","topic":"provisioningdemo/1"}'
-@endcode
+The Provisioning demo requests the AWS IoT Core service to use the defined template name to demonstrate the fleet provisioning feature.
 
-This will cause the Provisioning demo to publish the message `Hello world!` on the topic `provisioningdemo/1`. You may view this message by subscribing to the topic in AWS IoT Console.
-
-When the demo finishes with a Job, it will mark the Provisioning as complete. Note that completed Provisioning are not automatically removed from the AWS IoT Console. The following command can be used to remove completed Provisioning. Replace `UniqueId` with the Job ID.
-
-@code{sh}
-aws iot delete-job --job-id UniqueId
-@endcode
-
-# Demo Structure
-The Provisioning demo uses the <i>asynchronous</i> API of the Provisioning library. Most of the demo is run from the NotifyNext callback.
-
-@image html provisioning_demo.png "Provisioning Demo Execution Sequence" width=80%
-
-@note Messages from the Provisioning service (which are sent at MQTT QoS 1) may be received multiple times. The Provisioning NotifyNext callback must be able to handle duplicated Job documents.
+@configpossible Any string <br>
+@configdefault `"" (empty string)`
 */
 
 /**
