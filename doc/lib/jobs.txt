@@ -46,6 +46,19 @@ In addition to the components above, the Jobs library also depends on C standard
 */
 
 /**
+@page jobs_design Design
+@brief Architecture behind the Jobs library.
+
+The Jobs library uses MQTT subscriptions and publishes to communicate with the AWS IoT Jobs Service. Jobs operations such as Get Pending, Start Next, Describe, and Update use MQTT subscriptions to two MQTT topics in order to receive their accepted/rejected status, and publish to the appropriate topic for the operation. The Jobs Notify Next callback uses an MQTT subscription to receive data from the AWS IoT Jobs Service when the information for the next job in the queue changes. The Notify Pending callbacks does the same for the case when any job changes. These callbacks are run in MQTT's taskpool context.
+
+@section Synchronous_Design Synchronous Design
+@image html jobs_sync_detail.png width=100%
+
+@section Asynchronous_Design Asynchronous Design
+@image html jobs_async_detail.png width=100%
+*/
+
+/**
 @page jobs_demo Demo
 @brief Demonstrates the usage of the Jobs library.
 
