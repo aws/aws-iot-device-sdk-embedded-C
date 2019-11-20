@@ -338,10 +338,10 @@ static bool _readCredentials( SSL_CTX * pSslContext,
     X509 * pRootCa = NULL;
 
     /* OpenSSL does not provide a single function for reading and loading certificates
-     * from files into stores, so the file API must be called. Start with the 
+     * from files into stores, so the file API must be called. Start with the
      * root certificate. */
-    if( pRootCaPath != NULL &&
-        strlen( pRootCaPath ) != 0 )
+    if( ( pRootCaPath != NULL ) &&
+        ( strlen( pRootCaPath ) != 0 ) )
     {
         IotLogDebug( "Opening root certificate %s", pRootCaPath );
         FILE * pRootCaFile = fopen( pRootCaPath, "r" );
@@ -380,17 +380,17 @@ static bool _readCredentials( SSL_CTX * pSslContext,
         IotLogInfo( "Successfully imported root CA." );
     }
 
-    if( pClientCertPath != NULL &&
-        strlen( pClientCertPath ) != 0 &&
-        pCertPrivateKeyPath != NULL &&
-        strlen( pCertPrivateKeyPath ) != 0 )
+    if( ( pClientCertPath != NULL ) &&
+        ( strlen( pClientCertPath ) != 0 ) &&
+        ( pCertPrivateKeyPath != NULL ) &&
+        ( strlen( pCertPrivateKeyPath ) != 0 ) )
     {
         /* Import the client certificate. */
         if( SSL_CTX_use_certificate_chain_file( pSslContext,
                                                 pClientCertPath ) != 1 )
         {
             IotLogError( "Failed to import client certificate at %s",
-                        pClientCertPath );
+                         pClientCertPath );
 
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
@@ -399,11 +399,11 @@ static bool _readCredentials( SSL_CTX * pSslContext,
 
         /* Import the client certificate private key. */
         if( SSL_CTX_use_PrivateKey_file( pSslContext,
-                                        pCertPrivateKeyPath,
-                                        SSL_FILETYPE_PEM ) != 1 )
+                                         pCertPrivateKeyPath,
+                                         SSL_FILETYPE_PEM ) != 1 )
         {
             IotLogError( "Failed to import client certificate private key at %s",
-                        pCertPrivateKeyPath );
+                         pCertPrivateKeyPath );
 
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
@@ -461,9 +461,9 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pConnection,
 
     /* Setup authentication. */
     if( _readCredentials( pSslContext,
-                        pOpensslCredentials->pRootCa,
-                        pOpensslCredentials->pClientCert,
-                        pOpensslCredentials->pPrivateKey ) == false )
+                          pOpensslCredentials->pRootCa,
+                          pOpensslCredentials->pClientCert,
+                          pOpensslCredentials->pPrivateKey ) == false )
     {
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }

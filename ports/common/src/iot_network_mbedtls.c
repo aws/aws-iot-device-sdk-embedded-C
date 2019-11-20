@@ -454,8 +454,8 @@ static bool _readCredentials( _networkConnection_t * pConnection,
     IOT_FUNCTION_ENTRY( bool, true );
     int mbedtlsError = 0;
 
-    if( pRootCaPath != NULL &&
-        strlen( pRootCaPath ) != 0 )
+    if( ( pRootCaPath != NULL ) &&
+        ( strlen( pRootCaPath ) != 0 ) )
     {
         /* Read the root CA certificate. */
         mbedtlsError = mbedtls_x509_crt_parse_file( &( pConnection->ssl.credentials.rootCa ),
@@ -477,15 +477,15 @@ static bool _readCredentials( _networkConnection_t * pConnection,
         {
             /* Set the root certificate in the SSL configuration. */
             mbedtls_ssl_conf_ca_chain( &( pConnection->ssl.config ),
-                                    &( pConnection->ssl.credentials.rootCa ),
-                                    NULL );
+                                       &( pConnection->ssl.credentials.rootCa ),
+                                       NULL );
         }
     }
 
-    if( pClientCertPath != NULL &&
-        strlen( pClientCertPath ) != 0 &&
-        pCertPrivateKeyPath != NULL &&
-        strlen( pCertPrivateKeyPath ) != 0 )
+    if( ( pClientCertPath != NULL ) &&
+        ( strlen( pClientCertPath ) != 0 ) &&
+        ( pCertPrivateKeyPath != NULL ) &&
+        ( strlen( pCertPrivateKeyPath ) != 0 ) )
     {
         /* Read the client certificate. */
         mbedtlsError = mbedtls_x509_crt_parse_file( &( pConnection->ssl.credentials.clientCert ),
@@ -506,8 +506,8 @@ static bool _readCredentials( _networkConnection_t * pConnection,
 
         /* Read the client certificate private key. */
         mbedtlsError = mbedtls_pk_parse_keyfile( &( pConnection->ssl.credentials.privateKey ),
-                                                pCertPrivateKeyPath,
-                                                NULL );
+                                                 pCertPrivateKeyPath,
+                                                 NULL );
 
         if( mbedtlsError != 0 )
         {
@@ -518,8 +518,8 @@ static bool _readCredentials( _networkConnection_t * pConnection,
 
         /* Set the client credential to the SSL context configuration. */
         mbedtlsError = mbedtls_ssl_conf_own_cert( &( pConnection->ssl.config ),
-                                                &( pConnection->ssl.credentials.clientCert ),
-                                                &( pConnection->ssl.credentials.privateKey ) );
+                                                  &( pConnection->ssl.credentials.clientCert ),
+                                                  &( pConnection->ssl.credentials.privateKey ) );
 
         if( mbedtlsError != 0 )
         {
@@ -578,12 +578,12 @@ static IotNetworkError_t _tlsSetup( _networkConnection_t * pConnection,
 
     /* Setup TLS authentication. */
     if( _readCredentials( pConnection,
-                        pMbedtlsCredentials->pRootCa,
-                        pMbedtlsCredentials->pClientCert,
-                        pMbedtlsCredentials->pPrivateKey ) == false )
+                          pMbedtlsCredentials->pRootCa,
+                          pMbedtlsCredentials->pClientCert,
+                          pMbedtlsCredentials->pPrivateKey ) == false )
     {
         IotLogError( "(Network connection %p) Failed to read credentials.",
-                    pConnection );
+                     pConnection );
 
         IOT_SET_AND_GOTO_CLEANUP( IOT_NETWORK_FAILURE );
     }

@@ -144,8 +144,8 @@ static bool _validateArguments( const IotDemoArguments_t * pArguments )
         }
 
         /* If the host is connecting to the MQTT broker hosted by AWS IoT Core,
-         * there must either be a set of X.509 credentials or a 
-         * username/password. Therefore, check that here in order to facilitate 
+         * there must either be a set of X.509 credentials or a
+         * username/password. Therefore, check that here in order to facilitate
          * debugging. For other MQTT brokers, assume that the CLI arguments are
          * as intended.
          */

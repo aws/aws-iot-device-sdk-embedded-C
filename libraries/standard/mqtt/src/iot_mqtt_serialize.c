@@ -488,13 +488,13 @@ static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
     if( pConnectInfo->awsIotMqttMode == true )
     {
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            connectPacketSize += AWS_IOT_METRICS_USERNAME_LENGTH + 
+            connectPacketSize += AWS_IOT_METRICS_USERNAME_LENGTH +
                                  pConnectInfo->userNameLength + sizeof( uint16_t );
             encodedUserName = true;
         #endif
     }
 
-    /* Add the lengths of the username (if it wasn't already handled above) and 
+    /* Add the lengths of the username (if it wasn't already handled above) and
      * password, if specified. */
     if( ( pConnectInfo->pUserName != NULL ) && ( encodedUserName == false ) )
     {
@@ -664,7 +664,7 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
 {
     uint8_t connectFlags = 0;
     uint8_t * pConnectPacket = pBuffer;
-	char * pcUserName = NULL;
+    char * pcUserName = NULL;
     bool encodedUserName = false;
 
     /* The first byte in the CONNECT packet is the control packet type. */
@@ -695,7 +695,7 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
     }
 
     /* Username and password depend on MQTT mode. */
-    if( ( pConnectInfo->pUserName == NULL ) && 
+    if( ( pConnectInfo->pUserName == NULL ) &&
         ( pConnectInfo->awsIotMqttMode == true ) )
     {
         /* Set the username flag for AWS IoT metrics. The AWS IoT MQTT server
@@ -797,21 +797,21 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
             IotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
                         "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
-			
-			/* Determine if the Connect packet should use a combination of the username 
-			 * for authentication plus the SDK version string. */
-			if( pConnectInfo->pUserName != NULL )
-			{
-				pcUserName = Iot_DefaultMalloc( pConnectInfo->userNameLength + 
+
+            /* Determine if the Connect packet should use a combination of the username
+             * for authentication plus the SDK version string. */
+            if( pConnectInfo->pUserName != NULL )
+            {
+                pcUserName = Iot_DefaultMalloc( pConnectInfo->userNameLength +
                                                 AWS_IOT_METRICS_USERNAME_LENGTH + 1 );
 
-				IotMqtt_Assert( pcUserName != NULL );
+                IotMqtt_Assert( pcUserName != NULL );
 
                 if( pcUserName != NULL )
                 {
                     /* Concatenate the two strings. */
-                    memcpy( pcUserName, 
-                            pConnectInfo->pUserName, 
+                    memcpy( pcUserName,
+                            pConnectInfo->pUserName,
                             pConnectInfo->userNameLength );
                     memcpy( pcUserName + pConnectInfo->userNameLength,
                             AWS_IOT_METRICS_USERNAME,
@@ -820,15 +820,15 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
                     /* Encode the combined username + metrics field. */
                     pBuffer = _encodeString( pBuffer,
                                              pcUserName,
-                                             pConnectInfo->userNameLength + 
+                                             pConnectInfo->userNameLength +
                                              AWS_IOT_METRICS_USERNAME_LENGTH );
 
                     Iot_DefaultFree( pcUserName );
                 }
-			}
+            }
             else
             {
-                /* The username is not being used for authentication, but 
+                /* The username is not being used for authentication, but
                  * metrics are enabled. */
                 pBuffer = _encodeString( pBuffer,
                                          AWS_IOT_METRICS_USERNAME,
@@ -838,8 +838,7 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
             /* Username field encoding has been handled by this conditionally-
              * compiled section, so skip it below. */
             encodedUserName = true;
-
-        #endif
+        #endif /* if AWS_IOT_MQTT_ENABLE_METRICS == 1 */
     }
 
     /* Encode the username if there is one and it hasn't already been done. */

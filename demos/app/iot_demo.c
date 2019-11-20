@@ -101,7 +101,7 @@ int main( int argc,
     /* Network server info and credentials. */
     struct IotNetworkServerInfo serverInfo = IOT_DEMO_SERVER_INFO_INITIALIZER;
     struct IotNetworkCredentials credentials = IOT_DEMO_CREDENTIALS_INITIALIZER,
-                            * pCredentials = NULL;
+                                 * pCredentials = NULL;
 
     /* Parse and validate any command line arguments. */
     if( IotDemo_ParseArguments( argc,
@@ -124,7 +124,7 @@ int main( int argc,
         credentials.pRootCa = demoArguments.pRootCaPath;
         credentials.pUserName = NULL;
         credentials.pPassword = NULL;
-        
+
         /* Set the MQTT username, as long as it's not empty or NULL. */
         if( demoArguments.pUserName != NULL )
         {
@@ -169,7 +169,7 @@ int main( int argc,
 
         /* Per IANA standard:
          * https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml. */
-        if( ( demoArguments.pUserName != NULL ) && 
+        if( ( demoArguments.pUserName != NULL ) &&
             ( demoArguments.awsIotMqttMode == true ) )
         {
             credentials.pAlpnProtos = "mqtt";
