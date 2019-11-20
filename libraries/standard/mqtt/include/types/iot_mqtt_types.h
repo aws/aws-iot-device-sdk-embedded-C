@@ -627,9 +627,13 @@ typedef struct IotMqttConnectInfo
      * Pointer to the start of an array of subscriptions present a previous session,
      * if any. These subscriptions will be immediately restored upon reconnecting.
      *
-     * This member is ignored if it is `NULL` or #IotMqttConnectInfo_t.cleanSession
-     * is `true`. If this member is not `NULL`, #IotMqttConnectInfo_t.previousSubscriptionCount
-     * must be nonzero.
+     * [Optional] The field can also be used to pass a list of subscriptions to be
+     * stored locally without a SUBSCRIBE packet being sent to broker. These subscriptions
+     * are useful to invoke application level callbacks for messages received on unsolicited
+     * topics from broker.
+     *
+     * This member is ignored if it is `NULL`. If this member is not `NULL`,
+     * #IotMqttConnectInfo_t.previousSubscriptionCount must be nonzero.
      */
     const IotMqttSubscription_t * pPreviousSubscriptions;
 
@@ -640,9 +644,8 @@ typedef struct IotMqttConnectInfo
      * #IotMqttConnectInfo_t.pPreviousSubscriptions.
      *
      * This value is ignored if #IotMqttConnectInfo_t.pPreviousSubscriptions
-     * is `NULL` or #IotMqttConnectInfo_t.cleanSession is `true`. If
-     * #IotMqttConnectInfo_t.pPreviousSubscriptions is not `NULL`, this value
-     * must be nonzero.
+     * is `NULL`. If #IotMqttConnectInfo_t.pPreviousSubscriptions is not `NULL`,
+     * this value must be nonzero.
      */
     size_t previousSubscriptionCount;
 

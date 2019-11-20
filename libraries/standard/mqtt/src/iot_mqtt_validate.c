@@ -105,21 +105,14 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
     }
 
     /* Check that the number of persistent session subscriptions is valid. */
-    if( pConnectInfo->cleanSession == false )
+    if( pConnectInfo->pPreviousSubscriptions != NULL )
     {
-        if( pConnectInfo->pPreviousSubscriptions != NULL )
+        if( _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
+                                                pConnectInfo->awsIotMqttMode,
+                                                pConnectInfo->pPreviousSubscriptions,
+                                                pConnectInfo->previousSubscriptionCount ) == false )
         {
-            if( _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
-                                                   pConnectInfo->awsIotMqttMode,
-                                                   pConnectInfo->pPreviousSubscriptions,
-                                                   pConnectInfo->previousSubscriptionCount ) == false )
-            {
-                IOT_SET_AND_GOTO_CLEANUP( false );
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
+            IOT_SET_AND_GOTO_CLEANUP( false );
         }
         else
         {
