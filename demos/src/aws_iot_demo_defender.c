@@ -63,7 +63,7 @@
  * @brief Callback used to get notification of defender's events.
  *
  * @param[in] pCallbackContext context pointer passed by the application
- * when callback is regiested in AwsIotDefender_Start()
+ * when callback is registered in AwsIotDefender_Start()
  *
  * @param[im] pointer to AwsIotDefenderCallbackInfo_t containing status of
  * publish

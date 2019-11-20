@@ -614,7 +614,7 @@ AwsIotJobsError_t AwsIotJobs_UpdateSync( const AwsIotJobsRequestInfo_t * pReques
  * requestInfo.pThingName = THING_NAME;
  * requestInfo.thingNameLength = THING_NAME_LENGTH;
  *
- * // Set the function used to allocte memory for an incoming response.
+ * // Set the function used to allocate memory for an incoming response.
  * requestInfo.mallocResponse = malloc;
  *
  * // A Job ID must be set. AWS_IOT_JOBS_NEXT_JOB is not valid for UPDATE.
