@@ -156,7 +156,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
 {
     IOT_FUNCTION_ENTRY( bool, true );
     int posixErrno = 0;
-    bool threadAttibutesCreated = false;
+    bool threadAttributesCreated = false;
     _threadInfo_t * pThreadInfo = NULL;
     pthread_t newThread;
     pthread_attr_t threadAttributes;
@@ -186,7 +186,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
-    threadAttibutesCreated = true;
+    threadAttributesCreated = true;
 
     /* Set the new thread to detached. */
     posixErrno = pthread_attr_setdetachstate( &threadAttributes,
@@ -220,7 +220,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
     IOT_FUNCTION_CLEANUP_BEGIN();
 
     /* Destroy thread attributes object. */
-    if( threadAttibutesCreated == true )
+    if( threadAttributesCreated == true )
     {
         posixErrno = pthread_attr_destroy( &threadAttributes );
 
