@@ -794,7 +794,7 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
      * AWS IoT MQTT server. */
     if( pConnectInfo->awsIotMqttMode == true )
     {
-        #if AWS_IOT_MQTT_ENABLE_METRICS == 1
+        #if ( AWS_IOT_MQTT_ENABLE_METRICS == 1 ) && ( IOT_STATIC_MEMORY_ONLY == 0 )
             IotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
                         "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
 
@@ -838,7 +838,7 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
             /* Username field encoding has been handled by this conditionally-
              * compiled section, so skip it below. */
             encodedUserName = true;
-        #endif /* if AWS_IOT_MQTT_ENABLE_METRICS == 1 */
+        #endif /* #if AWS_IOT_MQTT_ENABLE_METRICS == 1 && IOT_STATIC_MEMORY_ONLY == 0 */
     }
 
     /* Encode the username if there is one and it hasn't already been done. */
