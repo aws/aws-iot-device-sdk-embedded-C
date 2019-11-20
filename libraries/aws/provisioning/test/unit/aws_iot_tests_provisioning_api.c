@@ -32,7 +32,7 @@
 
 /* MQTT include. */
 #include "iot_mqtt.h"
-#include "private/iot_mqtt_internal.h"
+#include "iot_mqtt_serialize.h"
 
 /* Provisioning internal include. */
 #include "private/aws_iot_provisioning_internal.h"
@@ -462,9 +462,11 @@ static void _simulateServerResponse( void * pArgument )
 {
     _serverResponseThreadContext_t * context = pArgument;
     _receiveContext_t receiveContext = { 0 };
-    uint8_t * pSerializedPublishData = NULL;
-    size_t serializedPublishDataLength = 0;
+    uint8_t * pPublishDataBuffer = NULL;
+    size_t publishPacketSize = 0;
+    size_t publishRemainingLength = 0;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    uint16_t usPacketIdentifier;
 
     publishInfo.qos = IOT_MQTT_QOS_0;
     /* Set the server response.*/
@@ -474,23 +476,34 @@ static void _simulateServerResponse( void * pArgument )
     publishInfo.pTopicName = context->pPublishTopic;
     publishInfo.topicNameLength = context->publishTopicLength;
 
-    TEST_ASSERT_EQUAL_MESSAGE( IOT_MQTT_SUCCESS, _IotMqtt_SerializePublish( &publishInfo,
-                                                                            &pSerializedPublishData,
-                                                                            &
-                                                                            serializedPublishDataLength,
-                                                                            NULL,
-                                                                            NULL ),
+    /* Get the size of buffer needed to store the serialized MQTT packet (that will simulate server response). */
+    TEST_ASSERT_EQUAL_MESSAGE( IOT_MQTT_SUCCESS, IotMqtt_GetPublishPacketSize( &publishInfo,
+                                                                               &publishRemainingLength,
+                                                                               &publishPacketSize ),
+                               "Could not obtain buffer size required for storing PUBLISH packet "
+                               "(that would be used for injecting Provisioning service response" );
+
+    /* Allocate the buffer for serializing PUBLISH data. */
+    pPublishDataBuffer = Iot_DefaultMalloc( publishPacketSize );
+    TEST_ASSERT_MESSAGE( pPublishDataBuffer != NULL, "Memory allocation for PUBLISH packet buffer failed. "
+                                                     "Buffer would be used for injecting Provisioning server response" );
+
+    TEST_ASSERT_EQUAL_MESSAGE( IOT_MQTT_SUCCESS, IotMqtt_SerializePublish( &publishInfo,
+                                                                           publishRemainingLength,
+                                                                           &usPacketIdentifier,
+                                                                           NULL,
+                                                                           pPublishDataBuffer,
+                                                                           publishPacketSize ),
                                "Could not generate serialized publish data for injecting Provisioning server response" );
 
-    receiveContext.pData = pSerializedPublishData;
-    receiveContext.dataLength = serializedPublishDataLength;
+    receiveContext.pData = pPublishDataBuffer;
+    receiveContext.dataLength = publishPacketSize;
 
     /* Call the MQTT receive callback to process the ACK packet. */
     IotMqtt_ReceiveCallback( ( IotNetworkConnection_t ) &receiveContext, _pMqttConnection );
 
-    /* Release the data buffer with the MQTT's free() function as it was the MQTT internal function that allocated the
-     * buffer memory. */
-    IotMqtt_FreeMessage( pSerializedPublishData );
+    /* Release the PUBLISH packet buffer. */
+    Iot_DefaultFree( pPublishDataBuffer );
 }
 
 /*-----------------------------------------------------------*/

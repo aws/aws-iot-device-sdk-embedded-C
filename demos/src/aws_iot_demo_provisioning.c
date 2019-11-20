@@ -68,24 +68,26 @@
  *
  * An MQTT ping request will be sent periodically at this interval.
  */
-#define KEEP_ALIVE_SECONDS              ( 60 )
+#define KEEP_ALIVE_SECONDS                         ( 60 )
 
 /**
  * @brief The timeout for Provisioning and MQTT operations in this demo.
  */
-#define TIMEOUT_MS                      ( 5000 )
-
-/**
- * @brief The name for the provisioning template that will be used for provisioning the demo app.
- */
-#define PROVISIONING_TEMPLATE_NAME      "CI_TEST_TEMPLATE"
+#define TIMEOUT_MS                                 ( 5000 )
 
 /**
  * @brief The parameter that will be used for provisioning the demo application.
  */
-#define PROVISIONING_PARAMETER_NAME     "DeviceLocation"
-#define PROVISIONING_PARAMETER_VALUE    "Seattle"
-#define NUM_OF_PROVISIONING_PARAMS      1u
+#define PROVISIONING_PARAMETER_LOCATION_NAME       "DeviceLocation"
+#define PROVISIONING_PARAMETER_LOCATION_VALUE      "Seattle"
+#define PROVISIONING_PARAMETER_SERIAL_NUM_NAME     "SerialNumber"
+#define PROVISIONING_PARAMETER_SERIAL_NUM_VALUE    "1122334455667788"
+#define NUM_OF_PROVISIONING_PARAMS                 2u
+
+/**
+ * @brief The template name to use for provisioning the demo application.
+ */
+static const char pTemplateName[] = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
 
 /**
  * @brief Type for the context parameter for the #AwsIotProvisioning_KeysAndCertificateCallbackInfo_t callback.
@@ -421,14 +423,26 @@ int RunProvisioningDemo( bool awsIotMqttMode,
     /* This will be used for tracking the return code from the Provisioning APIs. */
     AwsIotProvisioningError_t requestStatus = AWS_IOT_PROVISIONING_SUCCESS;
 
-    AwsIotProvisioningRequestParameterEntry_t provisioningParameters;
-    provisioningParameters.pParameterKey = PROVISIONING_PARAMETER_NAME;
-    provisioningParameters.parameterKeyLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_NAME ) - 1 );
-    provisioningParameters.pParameterValue = PROVISIONING_PARAMETER_VALUE;
-    provisioningParameters.parameterValueLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_VALUE ) - 1 );
+    /* Set the parameters that will be used as "context" for provisioning the demo application. */
+    AwsIotProvisioningRequestParameterEntry_t provisioningParameters[ 2 ];
+    provisioningParameters[ 0 ].pParameterKey = PROVISIONING_PARAMETER_LOCATION_NAME;
+    provisioningParameters[ 0 ].parameterKeyLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_LOCATION_NAME ) - 1 );
+    provisioningParameters[ 0 ].pParameterValue = PROVISIONING_PARAMETER_LOCATION_VALUE;
+    provisioningParameters[ 0 ].parameterValueLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_LOCATION_VALUE ) - 1 );
+    provisioningParameters[ 1 ].pParameterKey = PROVISIONING_PARAMETER_SERIAL_NUM_NAME;
+    provisioningParameters[ 1 ].parameterKeyLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_SERIAL_NUM_NAME ) - 1 );
+    provisioningParameters[ 1 ].pParameterValue = PROVISIONING_PARAMETER_SERIAL_NUM_VALUE;
+    provisioningParameters[ 1 ].parameterValueLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_SERIAL_NUM_VALUE ) - 1 );
+
+    /* Determine if a provisioning template name has been specified. */
+    if( strlen( pTemplateName ) == 0 )
+    {
+        IotLogError( "A valid provisioning template name must be provided." );
+        status = EXIT_FAILURE;
+    }
 
     /* Determine the length of the client ID Name. */
-    if( pIdentifier != NULL )
+    if( ( status != EXIT_FAILURE ) && ( pIdentifier != NULL ) )
     {
         if( strlen( pIdentifier ) == 0 )
         {
@@ -437,7 +451,7 @@ int RunProvisioningDemo( bool awsIotMqttMode,
             status = EXIT_FAILURE;
         }
     }
-    else
+    else if( pIdentifier == NULL )
     {
         IotLogError( "A client identifier must be provided for the Provisioning demo." );
 
@@ -505,9 +519,9 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         requestInfo.deviceCertificateIdLength = newCertificateDataContext.certificateIdLength;
         requestInfo.pCertificateOwnershipToken = newCertificateDataContext.pCertificateOwnershipToken;
         requestInfo.ownershipTokenLength = newCertificateDataContext.tokenLength;
-        requestInfo.pTemplateName = PROVISIONING_TEMPLATE_NAME;
-        requestInfo.templateNameLength = sizeof( PROVISIONING_TEMPLATE_NAME ) - 1;
-        requestInfo.pParametersStart = &provisioningParameters;
+        requestInfo.pTemplateName = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
+        requestInfo.templateNameLength = sizeof( AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME ) - 1;
+        requestInfo.pParametersStart = &provisioningParameters[ 0 ];
         requestInfo.numOfParameters = NUM_OF_PROVISIONING_PARAMS;
 
         /* Set the callback function for handling device credentials that the server will send. */
