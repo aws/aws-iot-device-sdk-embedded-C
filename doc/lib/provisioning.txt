@@ -1,7 +1,7 @@
 /**
 @mainpage
 @anchor provisioning
-@brief AWS IoT Device Provisioning library.
+@brief Library for the Fleet Provisioning feature of AWS IoT.
 
 > AWS IoT provisioning can be used to define a set of remote operations that are sent to and executed on one or more devices connected to AWS IoT.
 
@@ -47,18 +47,18 @@ In addition to the components above, the Provisioning library also depends on C 
 @page provisioning_demo Demo
 @brief Demonstrates the usage of the Provisioning library.
 
-This demo provides a simple example on using the Provisioning library and working with the AWS IoT fleet provisioning feature.
+This demo provides a simple example on using the Provisioning library and working with the AWS IoT Fleet Provisioning feature.
 
 The Provisioning demo establishes an MQTT connection and then, requests a new public-private key pair and certificate by registering a credential handling callback. On receiving the new credentials from the server, the registered callback copies the received certificate ID and certificate ownership token into their buffers(for provisioning later in the demo), and prints the remaining credentials. The demo application then requests provisioning with the store certificate ID and certificate ownership token, and also registers a response handler callback. On receiving the server response to the provisioning request, the registered callback prints the contents of the response.
 
 @section provisioning_demo_setup Demo Setup
-@brief How to set up Provisioning for the Provisioning demo.
+@brief How to set up a provisioning template for the Provisioning demo.
 
 Because the Provisioning MQTT API does not support creating a provisioning template, you must create a template for the demo separately. We recommend using AWS CLI to create the template.
 
 1. Create a user for AWS CLI. See steps 1 @ref guide_developer_automated_tests_provisioning for more information.
-1. Create a provisioning template for the demo. See steps 1 @ref guide_developer_automated_tests_provisioning for more information.
-2. Build and run the demo as described [here](@ref building).
+2. Create a provisioning template for the demo. See steps 2 @ref guide_developer_automated_tests_provisioning for more information.
+3. Build and run the demo as described [here](@ref building).
 3. When the following message appears, you may begin creating Provisioning for the demo.
 @code{sh}
 /*-----------------------------------------------------------*/

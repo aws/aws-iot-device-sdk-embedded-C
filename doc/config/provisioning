@@ -4,7 +4,7 @@
 
 # Basic project information.
 PROJECT_NAME = "Provisioning"
-PROJECT_BRIEF = "AWS IoT Provisioning library"
+PROJECT_BRIEF = "AWS IoT Fleet Provisioning feature"
 
 # Library documentation output directory.
 HTML_OUTPUT = provisioning
