@@ -90,7 +90,7 @@ static void _initJobsCache( _taskPoolCache_t * const pCache );
  * @param[in] pJob The job to initialize.
  * @param[in] userCallback The user callback for the job.
  * @param[in] pUserContext The context tp be passed to the callback.
- * @param[in] isStatic A flag to indicate whether the job is statically or synamically allocated.
+ * @param[in] isStatic A flag to indicate whether the job is statically or dynamically allocated.
  */
 static void _initializeJob( _taskPoolJob_t * const pJob,
                             IotTaskPoolRoutine_t userCallback,
@@ -147,7 +147,7 @@ static int32_t _timerEventCompare( const IotLink_t * const pTimerEventLink1,
  * Reschedules the timer for handling deferred jobs to the next timeout.
  *
  * param[in] pTimer The timer to reschedule.
- * param[in] pFirstTimerEvent The timer event that carries the timeout and job inforamtion.
+ * param[in] pFirstTimerEvent The timer event that carries the timeout and job information.
  */
 static void _rescheduleDeferredJobsTimer( IotTimer_t * const pTimer,
                                           _taskPoolTimerEvent_t * const pFirstTimerEvent );
@@ -218,7 +218,7 @@ static void _signalShutdown( _taskPool_t * const pTaskPool,
 /**
  * Places a job in the dispatch queue.
  *
- * @param[in] pTaskPool The task pool to scheduel the job with.
+ * @param[in] pTaskPool The task pool to schedule the job with.
  * @param[in] pJob The job to schedule.
  * @param[in] flags The job flags.
  *
@@ -967,7 +967,7 @@ static IotTaskPoolError_t _initTaskPoolControlStructures( const IotTaskPoolInfo_
     memset( ( void * ) pTaskPool, 0x00, sizeof( IotTaskPool_t ) );
 
     /* Initialize a job data structures that require no de-initialization.
-     * All other data structures carry a value of 'NULL' before initailization.
+     * All other data structures carry a value of 'NULL' before initialization.
      */
     IotDeQueue_Create( &pTaskPool->dispatchQueue );
     IotListDouble_Create( &pTaskPool->timerEventsList );
@@ -1154,7 +1154,7 @@ static void _taskPoolWorker( void * pUserContext )
     /* Signal that this worker completed initialization and it is ready to receive notifications. */
     IotSemaphore_Post( &pTaskPool->startStopSignal );
 
-    /* OUTER LOOP: it controls the lifetiem of the worker thread: exit condition for a worker thread
+    /* OUTER LOOP: it controls the lifetime of the worker thread: exit condition for a worker thread
      * is setting maxThreads to zero. A worker thread is running until the maximum number of allowed
      * threads is not zero and the active threads are less than the maximum number of allowed threads.
      */
@@ -1194,7 +1194,7 @@ static void _taskPoolWorker( void * pUserContext )
             /* Check if this thread needs to exit because 'max threads' quota was exceeded.
              * In that case, let is run once, so we can support the case for scheduling 'high priority'
              * jobs that causes exceeding the max threads quota for the purpose of executing
-             * the high-piority task. */
+             * the high-priority task. */
             if( pTaskPool->activeThreads > pTaskPool->maxThreads )
             {
                 IotLogDebug( "Worker thread will exit because maximum quota was exceeded." );
@@ -1261,7 +1261,7 @@ static void _taskPoolWorker( void * pUserContext )
                 /* If this thread exceeded the quota, then let it terminate. */
                 if( running == false )
                 {
-                    /* Abandon the INNER LOOP. Execution will tranfer back to the OUTER LOOP condition. */
+                    /* Abandon the INNER LOOP. Execution will transfer back to the OUTER LOOP condition. */
                     break;
                 }
             }
@@ -1283,7 +1283,7 @@ static void _taskPoolWorker( void * pUserContext )
                 {
                     TASKPOOL_EXIT_CRITICAL();
 
-                    /* Abandon the INNER LOOP. Execution will tranfer back to the OUTER LOOP condition. */
+                    /* Abandon the INNER LOOP. Execution will transfer back to the OUTER LOOP condition. */
                     break;
                 }
                 else

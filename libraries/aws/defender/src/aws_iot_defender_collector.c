@@ -161,7 +161,7 @@ bool AwsIotDefenderInternal_CreateReport( void )
         /* Actual serialization. */
         _serialize();
 
-        /* Ouput the report to stdout if debugging mode is enabled. */
+        /* Output the report to stdout if debugging mode is enabled. */
         #if DEBUG_CBOR_PRINT == 1
             _printReport();
         #endif
