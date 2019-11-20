@@ -758,7 +758,7 @@ TEST( Jobs_System, PersistentSubscriptions )
 
     IotTest_Free( ( void * ) response.pJobsResponse );
 
-    /* Becuase the second operation has persistent subscriptions and does not
+    /* Because the second operation has persistent subscriptions and does not
      * need to subscribe to anything, it should be significantly faster. */
     TEST_ASSERT_LESS_THAN( elapsedTime1, elapsedTime2 );
 
