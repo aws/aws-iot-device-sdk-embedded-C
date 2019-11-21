@@ -1657,7 +1657,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
     }
 
     /* Calculate the length of the payload. QoS 1 or 2 PUBLISH packets contain
-     * a packet identifer, but QoS 0 PUBLISH packets do not. */
+     * a packet identifier, but QoS 0 PUBLISH packets do not. */
     if( pOutput->qos == IOT_MQTT_QOS_0 )
     {
         pOutput->payloadLength = ( pPublish->remainingLength - pOutput->topicNameLength - sizeof( uint16_t ) );
@@ -1845,7 +1845,7 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
     const uint8_t * pVariableHeader = pSuback->pRemainingData;
 
     /* A SUBACK must have a remaining length of at least 3 to accommodate the
-     * packet identifer and at least 1 return code. */
+     * packet identifier and at least 1 return code. */
     if( remainingLength < 3 )
     {
         IotLog( IOT_LOG_DEBUG,

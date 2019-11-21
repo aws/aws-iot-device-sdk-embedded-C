@@ -251,7 +251,7 @@ AwsIotDefenderError_t AwsIotDefender_SetMetrics( AwsIotDefenderMetricsGroup_t me
  *
  * @param[in] pStartInfo Pointer of parameters of start function
  *
- * Periodically, defender agent collects metrics and publish to specifc AWS reserved MQTT topic.
+ * Periodically, defender agent collects metrics and publish to specific AWS reserved MQTT topic.
  *
  * @return
  * * On success, #AWS_IOT_DEFENDER_SUCCESS is returned.
@@ -362,7 +362,7 @@ void AwsIotDefender_Stop( void );
  * @brief Set period in seconds.
  *
  *
- * @param[in] periodSeconds Period is specified in seconds. Mininum is 300 (5 minutes)
+ * @param[in] periodSeconds Period is specified in seconds. Minimum is 300 (5 minutes)
  *
  * @return
  * * On success, #AWS_IOT_DEFENDER_SUCCESS is returned.
