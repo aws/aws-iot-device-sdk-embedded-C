@@ -60,9 +60,9 @@
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
  */
-#define AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER_FOR_CLIENT_CERTIFICATE \
-    {                                                                          \
-        .pAlpnProtos = "\x0ex-amzn-mqtt-ca"                                    \
+#define AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER \
+    {                                                   \
+        .pAlpnProtos = "\x0ex-amzn-mqtt-ca"             \
     }
 
 /**

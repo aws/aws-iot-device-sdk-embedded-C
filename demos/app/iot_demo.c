@@ -55,13 +55,13 @@
 
     #define IotDemoNetwork_Init                          IotNetworkOpenssl_Init
     #define IotDemoNetwork_Cleanup                       IotNetworkOpenssl_Cleanup
-#else  /* if IOT_NETWORK_USE_OPENSSL == 1 */
+#else /* if IOT_NETWORK_USE_OPENSSL == 1 */
     /* mbed TLS network include. */
     #include "iot_network_mbedtls.h"
 
     #define IOT_DEMO_NETWORK_INTERFACE                   IOT_NETWORK_INTERFACE_MBEDTLS
     #define IOT_DEMO_SERVER_INFO_INITIALIZER             IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER
-    #define IOT_DEMO_CREDENTIALS_INITIALIZER             AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER_FOR_CLIENT_CERTIFICATE
+    #define IOT_DEMO_CREDENTIALS_INITIALIZER             AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER
     #define IOT_DEMO_ALPN_FOR_PASSWORD_AUTHENTICATION    AWS_IOT_PASSWORD_ALPN_FOR_MBEDTLS
 
     #define IotDemoNetwork_Init                          IotNetworkMbedtls_Init

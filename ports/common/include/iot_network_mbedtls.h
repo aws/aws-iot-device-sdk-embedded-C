@@ -57,9 +57,9 @@
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
  */
-#define AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER_FOR_CLIENT_CERTIFICATE \
-    {                                                                          \
-        .pAlpnProtos = "x-amzn-mqtt-ca"                                        \
+#define AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER \
+    {                                                   \
+        .pAlpnProtos = "x-amzn-mqtt-ca"                 \
     }
 
 /**
