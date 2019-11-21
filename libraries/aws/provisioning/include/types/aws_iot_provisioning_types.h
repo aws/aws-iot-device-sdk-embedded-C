@@ -285,17 +285,17 @@ typedef struct AwsIotProvisioningRejectedResponse
  * @paramfor Response Callback function of @ref provisioning_function_createkeysandcertificate
  *
  * The @ref AwsIotProvisioning_CreateKeysAndCertificate library API passes this object to a user-provided callback
- *function
+ * function
  * whenever the operation completes with a response from the server.
  */
 typedef struct AwsIotProvisioningCreateKeysAndCertificateResponse
 {
-    /* The highest level HTTP based status code sent by the server. */
+    /** @brief The highest level HTTP based status code sent by the server. */
     AwsIotProvisioningServerStatusCode_t statusCode;
 
     union
     {
-        /* Represents the successful/accepted response of device credentials received from the server. */
+        /** @brief Represents the successful/accepted response of device credentials received from the server. */
         struct
         {
             const char * pDeviceCertificate;         /**< The new certificate for the device.*/
@@ -311,7 +311,7 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateResponse
             size_t ownershipTokenLength;             /**< The size of the ownership token.*/
         } acceptedResponse;
 
-        /* Represents the rejected response information received from the server. */
+        /** @brief Represents the rejected response information received from the server. */
         AwsIotProvisioningRejectedResponse_t rejectedResponse;
     } u; /**< @brief Valid member depends on operation status. */
 } AwsIotProvisioningCreateKeysAndCertificateResponse_t;
@@ -326,7 +326,7 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateResponse
  * Provides a function to be invoked on successful completion of an @ref AwsIotProvisioning_CreateKeysAndCertificate API
  * operation.
  *
- * @initializer{AwsIotProvisioningCallbackInfo_t,AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED_CALLBACK_INFO_INITIALIZER}
+ * @initializer{AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t,AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED_CALLBACK_INFO_INITIALIZER}
  */
 typedef struct AwsIotProvisioningCreateKeysAndCertificateCallbackInfo
 {
@@ -336,11 +336,11 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateCallbackInfo
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void* #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo.userParam
+     * @param[in] void* #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t.userParam
      * @param[in] AwsIotProvisioningCallbackParam_t* Parsed server response of either device credentials
      * or provisioned device information.
      *
-     * @see #AwsIotProvisioningCallbackParam_t for more information on the second parameter.
+     * @see #AwsIotProvisioningCreateKeysAndCertificateResponse_t for more information on the second parameter.
      */
     void ( * function )( void *,
                          const AwsIotProvisioningCreateKeysAndCertificateResponse_t * ); /*<** The user-provided
@@ -353,26 +353,6 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateCallbackInfo
 
 /**
  * @ingroup provisioning_datatypes_paramstructs
- * @brief Aggregates the information received as response from the AWS IoT Core service when the request for
- * provisioning device with the Fleet Provisioning feature is successful.
- */
-typedef struct AwsIotProvisioningRegisterThingAcceptedResponse
-{
-    /**< The name of the Thing resource that was created to provision the device.*/
-    const char * pThingName;
-
-    /**< The length of the Thing resource name. */
-    size_t thingNameLength;
-
-    /**< A list of device configuration data that is received from the server. */
-    const AwsIotProvisioningResponseDeviceConfigurationEntry_t * pDeviceConfigList;
-
-    /**< The number of configuration entries in the device configuration list. */
-    size_t numOfConfigurationEntries;
-} AwsIotProvisioningRegisterThingAcceptedResponse_t;
-
-/**
- * @ingroup provisioning_datatypes_paramstructs
  * @brief Aggregates the AWS IoT Core server response data sent for the request to provision device.
  *
  * @paramfor Response Callback function of @ref provisioning_function_registerthing
@@ -382,28 +362,29 @@ typedef struct AwsIotProvisioningRegisterThingAcceptedResponse
  */
 typedef struct AwsIotProvisioningRegisterThingResponse
 {
-    /* The highest level HTTP based status code sent by the server. */
+    /**< @brief The highest level HTTP based status code sent by the server. */
     AwsIotProvisioningServerStatusCode_t statusCode;
 
     union
     {
-        /* Represents the successful/accepted response from the server for the request to provision device. */
         struct
         {
-            /**< The name of the Thing resource that was created to provision the device.*/
+            /**< @brief The name of the Thing resource that was created to provision the device.*/
             const char * pThingName;
 
-            /**< The length of the Thing resource name. */
+            /**< @brief The length of the Thing resource name. */
             size_t thingNameLength;
 
-            /**< A list of device configuration data that is received from the server. */
+            /**< @brief A list of device configuration data that is received from the server. */
             const AwsIotProvisioningResponseDeviceConfigurationEntry_t * pDeviceConfigList;
 
-            /**< The number of configuration entries in the device configuration list. */
+            /**< @brief The number of configuration entries in the device configuration list. */
             size_t numOfConfigurationEntries;
-        } acceptedResponse;
+        } acceptedResponse; /**< @brief Represents the information received as response from the AWS IoT Core service
+                             * when the request for provisioning device with the Fleet Provisioning feature is
+                             * successful */
 
-        /* Represents the rejected response information received from the server. */
+        /**< @brief Represents the rejected response information received from the server. */
         AwsIotProvisioningRejectedResponse_t rejectedResponse;
     } u; /**< @brief Valid member depends on operation status. */
 } AwsIotProvisioningRegisterThingResponse_t;
@@ -418,7 +399,7 @@ typedef struct AwsIotProvisioningRegisterThingResponse
  * Provides a function to be invoked on successful completion of an @ref AwsIotProvisioning_RegisterThing API
  * operation.
  *
- * @initializer{AwsIotProvisioningRegisterThingCallbackInfo_t,AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER}
+ * @initializer{AwsIotProvisioningRegisterThingCallbackInfo_t,AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER}
  */
 typedef struct AwsIotProvisioningRegisterThingCallbackInfo
 {
@@ -428,7 +409,7 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void* #AwsIotProvisioningRegisterThingCallbackInfo.userParam
+     * @param[in] void* #AwsIotProvisioningRegisterThingCallbackInfo_t.userParam
      * @param[in] AwsIotProvisioningRegisterThingResponse_t* Parsed server response of either device credentials
      * or provisioned device information.
      *
@@ -450,8 +431,6 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
 #define AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER                 { 0 } /**< @brief Initializer for
                                                                                              * #AwsIotProvisioningRegisterThingCallbackInfo_t
                                                                                              **/
-/** @brief Initializer for #AwsIotProvisioningRegisterThingInfo_t. */
-#define AWS_IOT_PROVISIONING_REGISTER_THING_INFO_INITIALIZER                          { 0 }
 /* @[define_provisioning_initializers] */
 
 /**

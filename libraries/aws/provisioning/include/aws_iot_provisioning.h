@@ -49,13 +49,12 @@
 
 /**
  * @functionpage{AwsIotProvisioning_Init,provisioning,init}
- * @functionpage{AwsIotProvisioning_CreateKeysAndCertificate,provisioning,registerthing}
+ * @functionpage{AwsIotProvisioning_CreateKeysAndCertificate,provisioning,createkeysandcertificate}
  * @functionpage{AwsIotProvisioning_RegisterThing,provisioning,registerthing}
  * @functionpage{AwsIotProvisioning_Cleanup,provisioning,cleanup}
  * @functionpage{AwsIotProvisioning_strerror,provisioning,strerror}
  */
 
-/* @[declare_provisioning_init] */
 
 /**
  * @brief One-time initialization function for the Provisioning library.
@@ -120,7 +119,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
                                                                        uint32_t flags,
                                                                        uint32_t timeoutMs,
                                                                        const AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t * pResponseCallback );
-/* @[provisioning_function_createkeysandcertificate] */
+/* @[declare_provisioning_createkeysandcertificate] */
 
 /**
  * @brief Requests the AWS IoT Core service to provision the device, and invokes the passed user-callback with the

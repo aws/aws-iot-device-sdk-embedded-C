@@ -46,7 +46,7 @@
 /**
  * @brief Parses the rejected response payload received from the server, and populates the data of the passed
  * @a pResponseData parameter.
- * @param[in]pPayloadDecoder The outermost decoder object representing the response payload.
+ * @param[in] pPayloadDecoder The outermost decoder object representing the response payload.
  * @param[in] pOperationName The Provisioning library operation (or API) that the response is associated with.
  * @param[out] pResponseData This will be populated with the data parsed from the response payload, if successful.
  * @param[out] pStatusCode This will be populated with the error status code parsed from the response payload,

@@ -236,18 +236,29 @@ aws iot delete-provisioning-template --template-name <TemplateName>
 @section AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME
 @brief The Template name to use in the Provisioning system tests.
 
-Provisioning Templates are used to facilitate provisioning of devices with AWS IoT. <b>No default value is provided for Template Names, so this constant must be defined.</b> In addition to the Thing Name, AWS IoT credentials ([root CA certificate](@ref IOT_TEST_ROOT_CA), [client certificate](@ref IOT_TEST_CLIENT_CERT), and [client certificate private key](@ref IOT_TEST_PRIVATE_KEY)) must be provided to run the system tests. The [AWS IoT policy](https://docs.aws.amazon.com/iot/latest/developerguide/iot-policies.html) must also be properly configured.
+Provisioning Templates are used to facilitate provisioning of devices with AWS IoT Core. <b>No default value is provided for Template Names, so this constant must be defined.</b> In addition to the Template Name, AWS IoT credentials ([root CA certificate](@ref IOT_TEST_ROOT_CA), [client certificate](@ref IOT_TEST_CLIENT_CERT), and [client certificate private key](@ref IOT_TEST_PRIVATE_KEY)) must be provided to run the system tests. The [AWS IoT policy](https://docs.aws.amazon.com/iot/latest/developerguide/iot-policies.html) must also be properly configured.
 
 @configpossible A string representing an AWS IoT Fleet Provisioning Template Name.
 
-@section provisioning_IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S IOT_TEST_MQTT_SHORT_KEEPALIVE_INTERVAL_S
-@brief The keep-alive interval to use in the Provisioning system tests.
+@section AWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS
+@brief The list of parameters to pass as device context in the Provisioning system tests.
 
-MQTT PINGREQ packets will be sent at this interval.
+Template parameters are used to provide device context of device when requesting provisioning using the @see AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME template. 
 
-@configpossible Any positive integer. <br>
-@configrecommended This value should be the shortest keep-alive interval supported by the connection. <br>
-@configdefault `30`
+@configpossible A C-style list initialization of parameters.
+@configrecommended A "SerialNumber" parameter required by the the default Provisioning Template created by AWS IoT Console, if creating Thing resource as part of provisioning.
+@configdefault A "SerialNumber" parameter name without the value. The parameter value should to be specified.
+@code{c}
+ {                                                              \
+        {                                                       \
+            .pParameterKey = "SerialNumber",                    \
+            .parameterKeyLength = sizeof( "SerialNumber" ) - 1, \
+            .pParameterValue = "",                              \
+            .parameterValueLength = 0                           \
+        }                                                       \
+    }
+@endcode
+
 */
 
 /**
