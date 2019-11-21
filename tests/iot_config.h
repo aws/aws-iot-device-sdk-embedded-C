@@ -62,6 +62,12 @@
     #ifndef IOT_TEST_PRIVATE_KEY
         #define IOT_TEST_PRIVATE_KEY    ""
     #endif
+    #ifndef IOT_TEST_USER_NAME
+        #define IOT_TEST_USER_NAME      ""
+    #endif
+    #ifndef IOT_TEST_PASSWORD
+        #define IOT_TEST_PASSWORD       ""
+    #endif
 #endif /* if IOT_TEST_MQTT_MOSQUITTO == 1 */
 
 /* Shadow tests configuration. */
@@ -100,6 +106,12 @@
 #endif
 #ifdef IOT_TEST_PRIVATE_KEY
     #define IOT_DEMO_PRIVATE_KEY    IOT_TEST_PRIVATE_KEY
+#endif
+#ifdef IOT_TEST_USER_NAME
+    #define IOT_DEMO_USER_NAME      IOT_TEST_USER_NAME
+#endif
+#ifdef IOT_TEST_PASSWORD
+    #define IOT_DEMO_PASSWORD       IOT_TEST_PASSWORD
 #endif
 #if defined( IOT_TEST_MQTT_CLIENT_IDENTIFIER )
     #define IOT_DEMO_IDENTIFIER     IOT_TEST_MQTT_CLIENT_IDENTIFIER
@@ -192,7 +204,9 @@
         .pAlpnProtos = IOT_TEST_ALPN_PROTOS,         \
         .pRootCa = IOT_TEST_ROOT_CA,                 \
         .pClientCert = IOT_TEST_CLIENT_CERT,         \
-        .pPrivateKey = IOT_TEST_PRIVATE_KEY          \
+        .pPrivateKey = IOT_TEST_PRIVATE_KEY,         \
+        .pUserName = IOT_TEST_USER_NAME,             \
+        .pPassword = IOT_TEST_PASSWORD               \
     }
 #else
     #define IOT_TEST_NETWORK_CREDENTIALS_INITIALIZER    { 0 }

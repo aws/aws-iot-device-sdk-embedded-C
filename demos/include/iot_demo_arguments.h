@@ -56,8 +56,10 @@ typedef struct IotDemoArguments
     const char * pRootCaPath;     /**< @brief The path to the server root certificate to use for the connection. */
     const char * pClientCertPath; /**< @brief The path to the client certificate to use for the connection. */
     const char * pPrivateKeyPath; /**< @brief The path to the private key that matches the client certificate. */
+    const char * pUserName;       /**< @brief The username for authenticating to the MQTT broker. */
+    const char * pPassword;       /**< @brief The password for authenticating to the MQTT broker. */
 
-    const char * pIdentifier;     /**< @brief Client identifier or Thing Name to use for demo. */
+    const char * pIdentifier;     /**< @brief The client identifier or Thing Name to use for demo. */
 } IotDemoArguments_t;
 
 /**

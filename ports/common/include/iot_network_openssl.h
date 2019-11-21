@@ -54,8 +54,8 @@
 #define IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER    { 0 }
 
 /**
- * @brief Initialize an #IotNetworkCredentials for AWS IoT with ALPN enabled
- * when using this OpenSSL network stack.
+ * @brief Initialize an #IotNetworkCredentials for AWS IoT for using TLS mutual
+ * authentication with certificates, TCP port 443, and OpenSSL.
  *
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
@@ -64,6 +64,13 @@
     {                                                   \
         .pAlpnProtos = "\x0ex-amzn-mqtt-ca"             \
     }
+
+/**
+ * @brief This is the ALPN (Application-Layer Protocol Negotiation) string
+ * required by AWS IoT for password-based authentication to the MQTT broker,
+ * TCP port 443, and OpenSSL.
+ */
+#define AWS_IOT_PASSWORD_ALPN_FOR_OPENSSL              "\x04mqtt"
 
 /**
  * @brief Generic initializer for an #IotNetworkCredentials when using this
