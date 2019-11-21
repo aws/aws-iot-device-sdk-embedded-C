@@ -188,7 +188,7 @@ static void _storeCertificateDataForProvisioning( void * contextParam,
     {
         /* Allocate buffer space for storing the certificate ID obtained from the server. */
         certificateIdTokenContext->pCertificateIdBuffer =
-            Iot_TestMalloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
+            IotTest_Malloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
 
         /* Copy the certificate ID into the buffer. */
         if( certificateIdTokenContext->pCertificateIdBuffer != NULL )
@@ -205,7 +205,7 @@ static void _storeCertificateDataForProvisioning( void * contextParam,
 
         /* Allocate buffer space for storing the ownership token string obtained from the server. */
         certificateIdTokenContext->pCertificateOwnershipToken =
-            Iot_TestMalloc( pResponseInfo->u.acceptedResponse.ownershipTokenLength + 1 );
+            IotTest_Malloc( pResponseInfo->u.acceptedResponse.ownershipTokenLength + 1 );
 
         /* Copy the ownership token into the buffer. */
         if( certificateIdTokenContext->pCertificateOwnershipToken != NULL )
@@ -487,6 +487,6 @@ TEST( Provisioning_System, RegisterThingNominalCase )
     /* Test Cleanup */
 
     /* Release the certificate data buffers. */
-    Iot_TestFree( newCertificateContext.pCertificateIdBuffer );
-    Iot_TestFree( newCertificateContext.pCertificateOwnershipToken );
+    IotTest_Free( newCertificateContext.pCertificateIdBuffer );
+    IotTest_Free( newCertificateContext.pCertificateOwnershipToken );
 }
