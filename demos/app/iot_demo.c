@@ -159,7 +159,7 @@ int main( int argc,
 
         /* Per IANA standard:
          * https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml. */
-        if( ( demoArguments.pUserName != NULL ) &&
+        if( ( credentials.pUserName != NULL ) &&
             ( demoArguments.awsIotMqttMode == true ) )
         {
             credentials.pAlpnProtos = IOT_DEMO_ALPN_FOR_PASSWORD_AUTHENTICATION;
