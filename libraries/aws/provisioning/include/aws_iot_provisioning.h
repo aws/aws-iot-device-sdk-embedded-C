@@ -86,22 +86,22 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  * invokes the passed user-callback with the credentials it receives from the server.
  *
  * @note The device should be connected to the user AWS IoT account over MQTT and the calling code should provide the
- * MQTT
- * connection handle to the API for communicating with the server.
+ * MQTT connection handle to the API for communicating with the server.
  *
  * @param[in] provisioningConnection The MQTT connection handle to the user AWS IoT account, which will be used for
  * communicating with the server for creating new device credentials.
  * @param[in] flags The flags for configuring the behavior of the API. See the options available in the
  * aws_iot_provisioning_types.h file.
- * @param[in] timeoutMs The timeout for a response from the server. If there is a timeout, this function returns
- * #AWS_IOT_PROVISIONING_TIMEOUT.
+ * @param[in] timeoutMs The timeout (in milliseconds) for a response from the server. If there is a timeout, this
+ * function returns #AWS_IOT_PROVISIONING_TIMEOUT.
  * @param[in] pResponseCallback The user-defined callback that will be invoked with the response from the server,
  * whether new credentials for the device in case of success, OR error response in case of server rejection of the
  * credentials generation request.
  * The callback should be defined appropriately for storing the credentials provided by the server on the device.
- * @warning Do not overwrite the Provisioning claim credentials with the new credentials provided by the server. It is
- * RECOMMENDED NOT to overwrite the certificate used for the passed connection handle until the device has been
- * provisioned with a new certificate.
+ * @warning Do not overwrite the existing Provisioning claim credentials with the new credentials provided by
+ * the server. It is RECOMMENDED NOT to delete the certificate and private key used for the passed connection handle
+ * until the device has been provisioned with a new certificate with the @ref provisioning_function_registerthing
+ * function.
  * @return This function will return #AWS_IOT_PROVISIONING_SUCCESS upon success; otherwise,
  *   #AWS_IOT_PROVISIONING_NOT_INITIALIZED, if the API is called without initializing the Provisioning library (i.e.
  *   with a prior call to @ref AwsIotProvisioning_Init function.)
@@ -139,7 +139,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * provisioning the device.
  * @param[in] pProvisioningDataInfo The data (including the certificate) that needs to be sent to the server for
  * provisioning the device.
- * @param[in] timeoutMs The timeout for a response from the server. If there is a timeout, this function returns
+ * @param[in] timeoutMs The timeout (in milliseconds) for a response from the server. If there is a timeout, this
+ * function returns
  * #AWS_IOT_PROVISIONING_TIMEOUT.
  * @param[in] pResponseCallback The user-defined functor that will be called with the response received from the server,
  * whether post-provisioning data in case of success OR error message in case of server rejection of provisioning
