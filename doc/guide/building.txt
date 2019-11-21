@@ -33,7 +33,7 @@ The following options may be passed to the CMake build system to modify the buil
   Set this to `ON` to automatically clone any required Git submodules. When `OFF`, submodules must be manually cloned.
 - <b>`IOT_BUILD_TESTS`</b> <br>
   <i>Default:</i> `OFF` <br>
-  Set this to `ON` to build both demo and test executables. When `OFF`, only demo executables are built.
+  Set this to `ON` to build both demo and test executables. When `OFF`, only demo executables are built. If enabled, both demos and tests will use the settings defined in `tests/iot_config.h`.
 - <b>`IOT_NETWORK_USE_OPENSSL` [Linux only]</b> <br>
   <i>Default:</i> `OFF` <br>
   Set this to `ON` to use a network implementation based on OpenSSL instead of the default mbed TLS network implementation. If this is set to `ON`, OpenSSL development libraries and headers must be installed.
@@ -131,7 +131,7 @@ See @ref IOT_DEMO_IDENTIFIER for the compile-time default settings of this optio
 @section building_tests Building and running the tests
 @brief How to build and run the SDK tests.
 
-Like the demo applications, the tests also build with CMake. [Global test configuration settings](@ref global_tests_config), as well as specific library test settings, should be defined in `tests/iot_config.h`. They are built by passing the option `IOT_BUILD_TESTS=1` to CMake.
+Like the demo applications, the tests also build with CMake. [Global test configuration settings](@ref global_tests_config), as well as specific library test settings, should be defined in `tests/iot_config.h`. They are built by passing the option `IOT_BUILD_TESTS=1` to CMake. Note that enabling this option means that <b>both</b> demos and tests will use the settings defined in `tests/iot_config.h`. If distinct configurations for demos and tests are desired, they can be built in separate build directories.
 
 @code{sh}
 # Create build directory and change to build directory.
