@@ -70,7 +70,7 @@
  * required by AWS IoT for password-based authentication to the MQTT broker,
  * TCP port 443, and OpenSSL.
  */
-#define AWS_IOT_PASSWORD_ALPN_FOR_MBEDTLS              "\x04mqtt"
+#define AWS_IOT_PASSWORD_ALPN_FOR_OPENSSL              "\x04mqtt"
 
 /**
  * @brief Generic initializer for an #IotNetworkCredentials when using this
