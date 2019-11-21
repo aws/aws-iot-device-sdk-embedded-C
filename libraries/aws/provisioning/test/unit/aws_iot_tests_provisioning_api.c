@@ -466,7 +466,7 @@ static void _simulateServerResponse( void * pArgument )
     size_t publishPacketSize = 0;
     size_t publishRemainingLength = 0;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
-    uint16_t usPacketIdentifier;
+    uint16_t publishPacketIdentifier;
 
     publishInfo.qos = IOT_MQTT_QOS_0;
     /* Set the server response.*/
@@ -484,13 +484,13 @@ static void _simulateServerResponse( void * pArgument )
                                "(that would be used for injecting Provisioning service response" );
 
     /* Allocate the buffer for serializing PUBLISH data. */
-    pPublishDataBuffer = Iot_DefaultMalloc( publishPacketSize );
+    pPublishDataBuffer = IotTest_Malloc( publishPacketSize );
     TEST_ASSERT_MESSAGE( pPublishDataBuffer != NULL, "Memory allocation for PUBLISH packet buffer failed. "
                                                      "Buffer would be used for injecting Provisioning server response" );
 
     TEST_ASSERT_EQUAL_MESSAGE( IOT_MQTT_SUCCESS, IotMqtt_SerializePublish( &publishInfo,
                                                                            publishRemainingLength,
-                                                                           &usPacketIdentifier,
+                                                                           &publishPacketIdentifier,
                                                                            NULL,
                                                                            pPublishDataBuffer,
                                                                            publishPacketSize ),
@@ -503,7 +503,7 @@ static void _simulateServerResponse( void * pArgument )
     IotMqtt_ReceiveCallback( ( IotNetworkConnection_t ) &receiveContext, _pMqttConnection );
 
     /* Release the PUBLISH packet buffer. */
-    Iot_DefaultFree( pPublishDataBuffer );
+    IotTest_Free( pPublishDataBuffer );
 }
 
 /*-----------------------------------------------------------*/

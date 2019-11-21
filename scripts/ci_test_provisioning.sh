@@ -78,7 +78,6 @@ COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TE
 
 # CMake build configuration without static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
-#cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DAWS_IOT_PROVISIONING_TEMPLATE_NAME=$TEMPLATE_NAME"
 
 # Build tests.
 make -j2 aws_iot_tests_provisioning
@@ -86,8 +85,11 @@ make -j2 aws_iot_tests_provisioning
 # Run tests in no static memory mode.
 run_tests
 
-# Rebuild and run tests in static memory mode.
-cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DIOT_STATIC_MEMORY_ONLY=1 $COMMON_CMAKE_C_FLAGS"
+# Rebuild and run tests in static memory mode. Specify a buffer size to accommodate for credentials.
+cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DIOT_STATIC_MEMORY_ONLY=1 -DIOT_MESSAGE_BUFFER_SIZE=4096 $COMMON_CMAKE_C_FLAGS"
+
+# Build tests.
+make -j2 aws_iot_tests_provisioning
 
 # Run tests in no static memory mode.
 run_tests
