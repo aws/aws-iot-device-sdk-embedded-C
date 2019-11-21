@@ -30,6 +30,7 @@
 
 /* Standard includes. */
 #include <string.h>
+#include <limits.h>
 
 /* Error handling include. */
 #include "iot_error.h"
@@ -463,6 +464,7 @@ static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
                                 size_t * pPacketSize )
 {
     bool status = true;
+    bool encodedUserName = false;
     size_t connectPacketSize = 0, remainingLength = 0;
 
     /* The CONNECT packet will always include a 10-byte variable header. */
@@ -487,30 +489,30 @@ static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
     if( pConnectInfo->awsIotMqttMode == true )
     {
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            connectPacketSize += AWS_IOT_METRICS_USERNAME_LENGTH + sizeof( uint16_t );
+            connectPacketSize += AWS_IOT_METRICS_USERNAME_LENGTH +
+                                 pConnectInfo->userNameLength + sizeof( uint16_t );
+            encodedUserName = true;
         #endif
+    }
+
+    /* Add the lengths of the username (if it wasn't already handled above) and
+     * password, if specified. */
+    if( ( pConnectInfo->pUserName != NULL ) && ( encodedUserName == false ) )
+    {
+        connectPacketSize += pConnectInfo->userNameLength + sizeof( uint16_t );
     }
     else
     {
-        /* Add the lengths of the username and password if provided and not
-         * connecting to an AWS IoT MQTT server. */
-        if( pConnectInfo->pUserName != NULL )
-        {
-            connectPacketSize += pConnectInfo->userNameLength + sizeof( uint16_t );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
+        EMPTY_ELSE_MARKER;
+    }
 
-        if( pConnectInfo->pPassword != NULL )
-        {
-            connectPacketSize += pConnectInfo->passwordLength + sizeof( uint16_t );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
+    if( pConnectInfo->pPassword != NULL )
+    {
+        connectPacketSize += pConnectInfo->passwordLength + sizeof( uint16_t );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
     }
 
     /* At this point, the "Remaining Length" field of the MQTT CONNECT packet has
@@ -663,6 +665,7 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
 {
     uint8_t connectFlags = 0;
     uint8_t * pConnectPacket = pBuffer;
+    bool encodedUserName = false;
 
     /* The first byte in the CONNECT packet is the control packet type. */
     *pBuffer = MQTT_PACKET_TYPE_CONNECT;
@@ -692,7 +695,8 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
     }
 
     /* Username and password depend on MQTT mode. */
-    if( pConnectInfo->awsIotMqttMode == true )
+    if( ( pConnectInfo->pUserName == NULL ) &&
+        ( pConnectInfo->awsIotMqttMode == true ) )
     {
         /* Set the username flag for AWS IoT metrics. The AWS IoT MQTT server
          * never uses a password. */
@@ -786,7 +790,7 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
     }
 
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
-     * Otherwise, write the username and password only when not connecting to an
+     * Otherwise, write the username and password only when not connecting to the
      * AWS IoT MQTT server. */
     if( pConnectInfo->awsIotMqttMode == true )
     {
@@ -794,34 +798,73 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
             IotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
                         "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
 
-            pBuffer = _encodeString( pBuffer,
-                                     AWS_IOT_METRICS_USERNAME,
-                                     AWS_IOT_METRICS_USERNAME_LENGTH );
-        #endif
+            /* Determine if the Connect packet should use a combination of the username
+             * for authentication plus the SDK version string. */
+            if( pConnectInfo->pUserName != NULL )
+            {
+                /* Only include metrics if it will fit within the encoding
+                 * standard. */
+                if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= UINT16_MAX )
+                {
+                    /* Write the high byte of the combined length. */
+                    *pBuffer = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
+                                                   AWS_IOT_METRICS_USERNAME_LENGTH ) );
+
+                    /* Write the low byte of the combined length. */
+                    *( pBuffer + sizeof( uint8_t ) ) = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
+                                                                          AWS_IOT_METRICS_USERNAME_LENGTH ) );
+                    pBuffer += sizeof( uint16_t );
+
+                    /* Write the identity portion of the username. */
+                    memcpy( pBuffer,
+                            pConnectInfo->pUserName,
+                            pConnectInfo->userNameLength );
+                    pBuffer += pConnectInfo->userNameLength;
+
+                    /* Write the metrics portion of the username. */
+                    memcpy( pBuffer,
+                            AWS_IOT_METRICS_USERNAME,
+                            AWS_IOT_METRICS_USERNAME_LENGTH );
+                    pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
+
+                    encodedUserName = true;
+                }
+            }
+            else
+            {
+                /* The username is not being used for authentication, but
+                 * metrics are enabled. */
+                pBuffer = _encodeString( pBuffer,
+                                         AWS_IOT_METRICS_USERNAME,
+                                         AWS_IOT_METRICS_USERNAME_LENGTH );
+
+                encodedUserName = true;
+            }
+        #endif /* #if AWS_IOT_MQTT_ENABLE_METRICS == 1 && IOT_STATIC_MEMORY_ONLY == 0 */
+    }
+
+    /* Encode the username if there is one and it hasn't already been done. */
+    if( ( pConnectInfo->pUserName != NULL ) && ( encodedUserName == false ) )
+    {
+        pBuffer = _encodeString( pBuffer,
+                                 pConnectInfo->pUserName,
+                                 pConnectInfo->userNameLength );
     }
     else
     {
-        if( pConnectInfo->pUserName != NULL )
-        {
-            pBuffer = _encodeString( pBuffer,
-                                     pConnectInfo->pUserName,
-                                     pConnectInfo->userNameLength );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
+        EMPTY_ELSE_MARKER;
+    }
 
-        if( pConnectInfo->pPassword != NULL )
-        {
-            pBuffer = _encodeString( pBuffer,
-                                     pConnectInfo->pPassword,
-                                     pConnectInfo->passwordLength );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
+    /* Encode the password field, if requested by the app. */
+    if( pConnectInfo->pPassword != NULL )
+    {
+        pBuffer = _encodeString( pBuffer,
+                                 pConnectInfo->pPassword,
+                                 pConnectInfo->passwordLength );
+    }
+    else
+    {
+        EMPTY_ELSE_MARKER;
     }
 
     /* Ensure that the difference between the end and beginning of the buffer
