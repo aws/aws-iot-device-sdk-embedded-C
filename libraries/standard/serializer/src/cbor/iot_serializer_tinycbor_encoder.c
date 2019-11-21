@@ -82,7 +82,7 @@ static void _translateErrorCode( CborError cborError,
      */
     IotSerializer_Assert( cborError == 0 || *pSerializerError == 0 );
 
-    /* Only translate if there is no error on serizlier currently. */
+    /* Only translate if there is no error on serializer currently. */
     if( *pSerializerError == IOT_SERIALIZER_SUCCESS )
     {
         switch( cborError )
@@ -160,7 +160,7 @@ static void _destroy( IotSerializerEncoderObject_t * pEncoderObject )
 {
     CborEncoder * pCborEncoder = ( CborEncoder * ) pEncoderObject->pHandle;
 
-    /* Free the memorry allocated in init function. */
+    /* Free the memory allocated in init function. */
     IotSerializer_FreeCborEncoder( pCborEncoder );
 
     /* Reset pHandle to be NULL. */

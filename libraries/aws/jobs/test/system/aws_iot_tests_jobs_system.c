@@ -156,7 +156,7 @@ static void _operationComplete( void * pArgument,
     AwsIotJobs_Assert( pOperation->u.operation.pResponse != NULL );
     AwsIotJobs_Assert( pOperation->u.operation.responseLength > 0 );
 
-    /* Unblock the main test thead. */
+    /* Unblock the main test thread. */
     IotSemaphore_Post( &( pParams->waitSem ) );
 }
 
@@ -205,7 +205,7 @@ static void _jobsCallback( void * pArgument,
                                 pJobId + 1,
                                 _pJobIdLengths[ checkJobId ] ) == 0 );
 
-    /* Unblock the main test thead. */
+    /* Unblock the main test thread. */
     IotSemaphore_Post( pWaitSem );
 }
 

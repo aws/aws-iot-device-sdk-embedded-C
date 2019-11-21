@@ -163,7 +163,7 @@ typedef enum AwsIotShadowError
     AWS_IOT_SHADOW_MQTT_ERROR = 5,
 
     /**
-     * @brief Reponse received from Shadow service not understood.
+     * @brief Response received from Shadow service not understood.
      *
      * Functions that may return this value:
      * - @ref shadow_function_deletesync

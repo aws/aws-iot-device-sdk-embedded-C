@@ -53,7 +53,7 @@
 #define TIMEOUT_MS            ( ( uint32_t ) 5000 )
 
 /**
- * @brief Defender metrics publish interval, 5 minutes (300 seconds) is minumum.
+ * @brief Defender metrics publish interval, 5 minutes (300 seconds) is minimum.
  */
 #define DEFENDER_PUBLISH_INTERVAL    ( ( uint32_t ) 300 )
 
@@ -65,7 +65,7 @@
  * @param[in] pCallbackContext context pointer passed by the application
  * when callback is registered in AwsIotDefender_Start()
  *
- * @param[im] pointer to AwsIotDefenderCallbackInfo_t containing status of
+ * @param[in] pointer to AwsIotDefenderCallbackInfo_t containing status of
  * publish
  */
 void _defenderCallback( void * pCallbackContext,
