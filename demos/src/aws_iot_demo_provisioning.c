@@ -419,7 +419,7 @@ int RunProvisioningDemo( bool awsIotMqttMode,
     AwsIotProvisioningRequestParameterEntry_t provisioningParameters[ 2 ];
 
     /* Determine if a provisioning template name has been specified. */
-    if( strlen( pTemplateName ) == 0 )
+    if( ( pTemplateName == NULL ) || ( strlen( pTemplateName ) == 0 ) )
     {
         IotLogError( "A valid provisioning template name must be provided." );
         status = EXIT_FAILURE;
