@@ -846,7 +846,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_Grow )
             for( count = 0; count < TEST_TASKPOOL_NUMBER_OF_JOBS; ++count )
             {
                 /* Schedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
-                /* The callback will block indefintely, stealing a task pool thread. The task pool will need to grow to pass this test. */
+                /* The callback will block indefinitely, stealing a task pool thread. The task pool will need to grow to pass this test. */
                 TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionBlockingWithoutDestroyCb, &userContext, &jobsStorage[ count ], &jobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
             }
 
@@ -917,7 +917,7 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_GrowHighPri )
             for( count = 0; count < TEST_TASKPOOL_NUMBER_OF_JOBS; ++count )
             {
                 /* Schedule the job NOT to be recycle in the callback, since the buffer is statically allocated. */
-                /* The callback will block indefintely, stealing a task pool thread. The task pool will need to grow to pass this test. */
+                /* The callback will block indefinitely, stealing a task pool thread. The task pool will need to grow to pass this test. */
                 TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionBlockingWithoutDestroyCb, &userContext, &jobsStorage[ count ], &jobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
             }
 
