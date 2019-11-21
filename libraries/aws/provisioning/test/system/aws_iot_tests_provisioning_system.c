@@ -98,6 +98,11 @@ static IotMqttNetworkInfo_t _networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
+ * @brief Client ID for the MQTT connection to the AWS IoT Core service.
+ */
+static const char * _pTestMqttClientId = "SystemTestClientID";
+
+/**
  * @brief Parameters to use for testing the Provisioning RegisterThing API.
  */
 static const AwsIotProvisioningRequestParameterEntry_t _pTestParameters[] =
@@ -327,8 +332,8 @@ TEST_SETUP( Provisioning_System )
     /* Set the members of the connect info. Use the Provisioning Thing Name as the MQTT
      * client identifier. */
     connectInfo.awsIotMqttMode = true;
-    connectInfo.pClientIdentifier = NULL;
-    connectInfo.clientIdentifierLength = 0;
+    connectInfo.pClientIdentifier = _pTestMqttClientId;
+    connectInfo.clientIdentifierLength = strlen( _pTestMqttClientId );
     connectInfo.keepAliveSeconds = AWS_IOT_TEST_PROVISIONING_TIMEOUT;
 
     /* AWS IoT Service limits only allow 1 connection per MQTT client ID per second.
