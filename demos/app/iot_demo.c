@@ -31,7 +31,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 
 /* SDK initialization include. */
 #include "iot_init.h"
@@ -49,22 +48,24 @@
     /* OpenSSL network include. */
     #include "iot_network_openssl.h"
 
-    #define IOT_DEMO_NETWORK_INTERFACE          IOT_NETWORK_INTERFACE_OPENSSL
-    #define IOT_DEMO_SERVER_INFO_INITIALIZER    IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER
-    #define IOT_DEMO_CREDENTIALS_INITIALIZER    AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER
+    #define IOT_DEMO_NETWORK_INTERFACE                   IOT_NETWORK_INTERFACE_OPENSSL
+    #define IOT_DEMO_SERVER_INFO_INITIALIZER             IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER
+    #define IOT_DEMO_CREDENTIALS_INITIALIZER             AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER_FOR_CLIENT_CERTIFICATE
+    #define IOT_DEMO_ALPN_FOR_PASSWORD_AUTHENTICATION    AWS_IOT_PASSWORD_ALPN_FOR_OPENSSL
 
-    #define IotDemoNetwork_Init                 IotNetworkOpenssl_Init
-    #define IotDemoNetwork_Cleanup              IotNetworkOpenssl_Cleanup
-#else
+    #define IotDemoNetwork_Init                          IotNetworkOpenssl_Init
+    #define IotDemoNetwork_Cleanup                       IotNetworkOpenssl_Cleanup
+#else  /* if IOT_NETWORK_USE_OPENSSL == 1 */
     /* mbed TLS network include. */
     #include "iot_network_mbedtls.h"
 
-    #define IOT_DEMO_NETWORK_INTERFACE          IOT_NETWORK_INTERFACE_MBEDTLS
-    #define IOT_DEMO_SERVER_INFO_INITIALIZER    IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER
-    #define IOT_DEMO_CREDENTIALS_INITIALIZER    AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER
+    #define IOT_DEMO_NETWORK_INTERFACE                   IOT_NETWORK_INTERFACE_MBEDTLS
+    #define IOT_DEMO_SERVER_INFO_INITIALIZER             IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER
+    #define IOT_DEMO_CREDENTIALS_INITIALIZER             AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER_FOR_CLIENT_CERTIFICATE
+    #define IOT_DEMO_ALPN_FOR_PASSWORD_AUTHENTICATION    AWS_IOT_PASSWORD_ALPN_FOR_MBEDTLS
 
-    #define IotDemoNetwork_Init                 IotNetworkMbedtls_Init
-    #define IotDemoNetwork_Cleanup              IotNetworkMbedtls_Cleanup
+    #define IotDemoNetwork_Init                          IotNetworkMbedtls_Init
+    #define IotDemoNetwork_Cleanup                       IotNetworkMbedtls_Cleanup
 #endif /* if IOT_NETWORK_USE_OPENSSL == 1 */
 
 /* This file calls a generic placeholder demo function. The build system selects
@@ -131,12 +132,6 @@ int main( int argc,
         {
             credentials.userNameSize = strlen( demoArguments.pUserName );
 
-            /* Check for compliance with the MQTT standard. */
-            if( credentials.userNameSize > USHRT_MAX )
-            {
-                IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
-            }
-
             if( credentials.userNameSize > 0 )
             {
                 credentials.pUserName = demoArguments.pUserName;
@@ -147,12 +142,6 @@ int main( int argc,
         if( demoArguments.pPassword != NULL )
         {
             credentials.passwordSize = strlen( demoArguments.pPassword );
-
-            /* Check for compliance with the MQTT standard. */
-            if( credentials.passwordSize > USHRT_MAX )
-            {
-                IOT_SET_AND_GOTO_CLEANUP( EXIT_FAILURE );
-            }
 
             if( credentials.passwordSize > 0 )
             {
@@ -173,7 +162,7 @@ int main( int argc,
         if( ( demoArguments.pUserName != NULL ) &&
             ( demoArguments.awsIotMqttMode == true ) )
         {
-            credentials.pAlpnProtos = "mqtt";
+            credentials.pAlpnProtos = IOT_DEMO_ALPN_FOR_PASSWORD_AUTHENTICATION;
         }
 
         /* Set the pointer to the credentials. */

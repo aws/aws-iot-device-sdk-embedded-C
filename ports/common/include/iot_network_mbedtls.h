@@ -51,16 +51,23 @@
 #define IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER    { 0 }
 
 /**
- * @brief Initialize an #IotNetworkCredentials for AWS IoT with ALPN enabled
- * when using this mbed TLS network stack.
+ * @brief Initialize an #IotNetworkCredentials for AWS IoT for using TLS mutual
+ * authentication with certificates, TCP port 443, and mbedTLS.
  *
  * @note This initializer may change at any time in future versions, but its
  * name will remain the same.
  */
-#define AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER \
-    {                                                   \
-        .pAlpnProtos = "x-amzn-mqtt-ca"                 \
+#define AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER_FOR_CLIENT_CERTIFICATE \
+    {                                                                          \
+        .pAlpnProtos = "x-amzn-mqtt-ca"                                        \
     }
+
+/**
+ * @brief This is the ALPN (Application-Layer Protocol Negotiation) string
+ * required by AWS IoT for password-based authentication to the MQTT broker,
+ * TCP port 443, and mbedTLS.
+ */
+#define AWS_IOT_PASSWORD_ALPN_FOR_MBEDTLS              "mqtt"
 
 /**
  * @brief Generic initializer for an #IotNetworkCredentials when using this

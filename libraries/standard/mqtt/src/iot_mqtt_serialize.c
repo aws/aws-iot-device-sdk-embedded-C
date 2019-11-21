@@ -30,6 +30,7 @@
 
 /* Standard includes. */
 #include <string.h>
+#include <limits.h>
 
 /* Error handling include. */
 #include "iot_error.h"
@@ -664,7 +665,6 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
 {
     uint8_t connectFlags = 0;
     uint8_t * pConnectPacket = pBuffer;
-    char * pcUserName = NULL;
     bool encodedUserName = false;
 
     /* The first byte in the CONNECT packet is the control packet type. */
@@ -794,7 +794,7 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
      * AWS IoT MQTT server. */
     if( pConnectInfo->awsIotMqttMode == true )
     {
-        #if ( AWS_IOT_MQTT_ENABLE_METRICS == 1 ) && ( IOT_STATIC_MEMORY_ONLY == 0 )
+        #if AWS_IOT_MQTT_ENABLE_METRICS == 1
             IotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
                         "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
 
@@ -802,28 +802,32 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
              * for authentication plus the SDK version string. */
             if( pConnectInfo->pUserName != NULL )
             {
-                pcUserName = Iot_DefaultMalloc( pConnectInfo->userNameLength +
-                                                AWS_IOT_METRICS_USERNAME_LENGTH + 1 );
-
-                IotMqtt_Assert( pcUserName != NULL );
-
-                if( pcUserName != NULL )
+                /* Only include metrics if it will fit within the encoding
+                 * standard. */
+                if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= UINT16_MAX )
                 {
-                    /* Concatenate the two strings. */
-                    memcpy( pcUserName,
+                    /* Write the high byte of the combined length. */
+                    *pBuffer = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
+                                                   AWS_IOT_METRICS_USERNAME_LENGTH ) );
+
+                    /* Write the low byte of the combined length. */
+                    *( pBuffer + sizeof( uint8_t ) ) = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
+                                                                          AWS_IOT_METRICS_USERNAME_LENGTH ) );
+                    pBuffer += sizeof( uint16_t );
+
+                    /* Write the identity portion of the username. */
+                    memcpy( pBuffer,
                             pConnectInfo->pUserName,
                             pConnectInfo->userNameLength );
-                    memcpy( pcUserName + pConnectInfo->userNameLength,
+                    pBuffer += pConnectInfo->userNameLength;
+
+                    /* Write the metrics portion of the username. */
+                    memcpy( pBuffer,
                             AWS_IOT_METRICS_USERNAME,
-                            AWS_IOT_METRICS_USERNAME_LENGTH + 1 );
+                            AWS_IOT_METRICS_USERNAME_LENGTH );
+                    pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
 
-                    /* Encode the combined username + metrics field. */
-                    pBuffer = _encodeString( pBuffer,
-                                             pcUserName,
-                                             pConnectInfo->userNameLength +
-                                             AWS_IOT_METRICS_USERNAME_LENGTH );
-
-                    Iot_DefaultFree( pcUserName );
+                    encodedUserName = true;
                 }
             }
             else
@@ -833,11 +837,9 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
                 pBuffer = _encodeString( pBuffer,
                                          AWS_IOT_METRICS_USERNAME,
                                          AWS_IOT_METRICS_USERNAME_LENGTH );
-            }
 
-            /* Username field encoding has been handled by this conditionally-
-             * compiled section, so skip it below. */
-            encodedUserName = true;
+                encodedUserName = true;
+            }
         #endif /* #if AWS_IOT_MQTT_ENABLE_METRICS == 1 && IOT_STATIC_MEMORY_ONLY == 0 */
     }
 

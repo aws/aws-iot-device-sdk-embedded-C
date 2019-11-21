@@ -30,6 +30,7 @@
 /* Standard includes. */
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 /* Error handling include. */
 #include "iot_error.h"
@@ -182,6 +183,26 @@ static bool _validateArguments( const IotDemoArguments_t * pArguments )
         {
             IotLogError( "AWS IoT does not support unsecured connections." );
 
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+    }
+
+    /* Check that the length of the encoded username, if any, will be within
+     * the specification of the MQTT standard. */
+    if( pArguments->pUserName != NULL )
+    {
+        if( strlen( pArguments->pUserName ) > UINT16_MAX )
+        {
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+    }
+
+    /* Check that the length of the encoded username, if any, will be within
+     * the specification of the MQTT standard. */
+    if( pArguments->pPassword != NULL )
+    {
+        if( strlen( pArguments->pPassword ) > UINT16_MAX )
+        {
             IOT_SET_AND_GOTO_CLEANUP( false );
         }
     }
