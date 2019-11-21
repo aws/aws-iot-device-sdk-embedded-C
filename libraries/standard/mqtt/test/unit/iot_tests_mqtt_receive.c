@@ -1081,7 +1081,7 @@ TEST( MQTT_Unit_Receive, PublishValid )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of @ref mqtt_function_receivecallback with a PUBLIS
+ * @brief Tests the behavior of @ref mqtt_function_receivecallback with a PUBLISH
  * that doesn't comply to MQTT spec.
  */
 TEST( MQTT_Unit_Receive, PublishInvalid )
