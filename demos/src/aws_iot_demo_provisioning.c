@@ -81,7 +81,7 @@
 static const char pTemplateName[] = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
 
 /**
- * @brief Type for the context parameter for the #AwsIotProvisioning_KeysAndCertificateCallbackInfo_t callback.
+ * @brief Type for the context parameter for the #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callback.
  * It will be used for storing the received Certificate ID and the ownership token data received from the server through
  * the callback, so that can be used for provisioning the demo application.
  */

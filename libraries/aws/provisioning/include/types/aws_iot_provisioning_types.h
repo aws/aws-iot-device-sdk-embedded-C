@@ -177,7 +177,7 @@ typedef enum AwsIotProvisioningServerStatusCode
 /*------------------------- Provisioning parameter structs --------------------------*/
 
 /**
- * @paramstructs{provisioning,Provisioning}
+ * @paramstructs{provisioning,Provisioning Library}
  */
 
 /**
@@ -212,6 +212,8 @@ typedef struct AwsIotProvisioningResponseDeviceConfigurationEntry
  * @ingroup provisioning_datatypes_paramstructs
  * @brief Aggregates information required for sending a request to the AWS IoT Core service for
  * provisioning a device to its customer AWS IoT account.
+ *
+ * @paramfor @ref provisioning_function_registerthing
  */
 typedef struct AwsIotProvisioningRegisterThingRequestInfo
 {
@@ -257,26 +259,11 @@ typedef struct AwsIotProvisioningRegisterThingRequestInfo
     size_t numOfParameters;
 } AwsIotProvisioningRegisterThingRequestInfo_t;
 
-typedef struct AwsIotProvisioningRegisterThingAcceptedResponse
-{
-    /**< The name of the Thing resource that was created to provision the device.*/
-    const char * pThingName;
-
-    /**< The length of the Thing resource name. */
-    size_t thingNameLength;
-
-    /**< A list of device configuration data that is received from the server. */
-    const AwsIotProvisioningResponseDeviceConfigurationEntry_t * pDeviceConfigList;
-
-    /**< The number of configuration entries in the device configuration list. */
-    size_t numOfConfigurationEntries;
-} AwsIotProvisioningRegisterThingAcceptedResponse_t;
-
 /**
  * @ingroup provisioning_datatypes_paramstructs
  * @brief Parameter to a Provisioning callback function.
  *
- * @paramfor Provisioning server rejected response callback functions
+ * @paramfor Server rejected response callback functions
  *
  * The Provisioning library passes this struct to a callback function whenever an
  * Provisioning operation completes with a rejected response from the server.
@@ -292,12 +279,13 @@ typedef struct AwsIotProvisioningRejectedResponse
 
 /**
  * @ingroup provisioning_datatypes_paramstructs
- * @brief Encapsulates the server response data sent for the request to generate new key-pair and
+ * @brief Aggregates the data sent as response from AWS IoT Core service for the request to generate new key-pair and
  * certificate for the device.
  *
- * @paramfor Provisioning server accepted response callback functions
+ * @paramfor Response Callback function of @ref provisioning_function_createkeysandcertificate
  *
- * The #AwsIotProvisioning_CreateKeysAndCertificate library API passes this object to a user-provided callback function
+ * The @ref AwsIotProvisioning_CreateKeysAndCertificate library API passes this object to a user-provided callback
+ *function
  * whenever the operation completes with a response from the server.
  */
 typedef struct AwsIotProvisioningCreateKeysAndCertificateResponse
@@ -335,7 +323,7 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateResponse
  *
  * @paramfor @ref provisioning_function_registerthing
  *
- * Provides a function to be invoked on successful completion of an #AwsIotProvisioning_CreateKeysAndCertificate API
+ * Provides a function to be invoked on successful completion of an @ref AwsIotProvisioning_CreateKeysAndCertificate API
  * operation.
  *
  * @initializer{AwsIotProvisioningCallbackInfo_t,AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED_CALLBACK_INFO_INITIALIZER}
@@ -365,12 +353,31 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateCallbackInfo
 
 /**
  * @ingroup provisioning_datatypes_paramstructs
- * @brief Encpasulates the server response data sent for the request to provision device with an AWS IoT issued
- * certificate.
+ * @brief Aggregates the information received as response from the AWS IoT Core service when the request for
+ * provisioning device with the Fleet Provisioning feature is successful.
+ */
+typedef struct AwsIotProvisioningRegisterThingAcceptedResponse
+{
+    /**< The name of the Thing resource that was created to provision the device.*/
+    const char * pThingName;
+
+    /**< The length of the Thing resource name. */
+    size_t thingNameLength;
+
+    /**< A list of device configuration data that is received from the server. */
+    const AwsIotProvisioningResponseDeviceConfigurationEntry_t * pDeviceConfigList;
+
+    /**< The number of configuration entries in the device configuration list. */
+    size_t numOfConfigurationEntries;
+} AwsIotProvisioningRegisterThingAcceptedResponse_t;
+
+/**
+ * @ingroup provisioning_datatypes_paramstructs
+ * @brief Aggregates the AWS IoT Core server response data sent for the request to provision device.
  *
- * @paramfor Provisioning server accepted response callback functions
+ * @paramfor Response Callback function of @ref provisioning_function_registerthing
  *
- * The #AwsIotProvisioning_RegisterThing library API passes this object as a parameter to a user-provided callback
+ * The @ref AwsIotProvisioning_RegisterThing library API passes this object as a parameter to a user-provided callback
  * function whenever the operation completes with a response from the server.
  */
 typedef struct AwsIotProvisioningRegisterThingResponse
@@ -408,7 +415,7 @@ typedef struct AwsIotProvisioningRegisterThingResponse
  *
  * @paramfor @ref provisioning_function_registerthing
  *
- * Provides a function to be invoked on successful completion of an #AwsIotProvisioning_RegisterThing API
+ * Provides a function to be invoked on successful completion of an @ref AwsIotProvisioning_RegisterThing API
  * operation.
  *
  * @initializer{AwsIotProvisioningRegisterThingCallbackInfo_t,AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER}
@@ -422,10 +429,10 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
      * @brief User-provided callback function signature.
      *
      * @param[in] void* #AwsIotProvisioningRegisterThingCallbackInfo.userParam
-     * @param[in] AwsIotProvisioningCallbackParam_t* Parsed server response of either device credentials
+     * @param[in] AwsIotProvisioningRegisterThingResponse_t* Parsed server response of either device credentials
      * or provisioned device information.
      *
-     * @see #AwsIotProvisioningCallbackParam_t for more information on the second parameter.
+     * @see #AwsIotProvisioningRegisterThingResponse_t for more information on the second parameter.
      */
     void ( * function )( void *,
                          const AwsIotProvisioningRegisterThingResponse_t * ); /*<** The user-provided callback to

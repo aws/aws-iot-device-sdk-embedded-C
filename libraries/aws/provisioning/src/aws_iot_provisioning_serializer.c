@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_onbording_serializer.c
+ * @file aws_iot_provisioning_serializer.c
  * @brief Implements the internal serializer functions of the Provisioning library.
  */
 

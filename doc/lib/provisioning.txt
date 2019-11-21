@@ -26,7 +26,7 @@ digraph provisioning_dependencies
     {
         node[fillcolor="#aed8a9ff"];
         rank = same;
-        linear_containers[label="List/Queue", URL="@ref linear_containers"];
+        static_memory[label="Static memory", URL="@ref static_memory"];
         logging[label="Logging", URL="@ref logging"];
     }
     provisioning -> mqtt;
@@ -57,8 +57,8 @@ The Provisioning demo establishes an MQTT connection and then, requests a new pr
 
 Because the Provisioning MQTT API does not support creating a provisioning template, you must create a template for the demo separately. We recommend using AWS CLI to create the template.
 
-1. Create a user for AWS CLI. See steps 1 @ref guide_developer_automated_tests_provisioning for more information.
-2. Create a provisioning template for the demo. See steps 2 @ref guide_developer_automated_tests_provisioning for more information.
+1. Create a user for AWS CLI. See steps 1 @ref guide_developer_automated_tests_jobs for more information.
+2. Create a provisioning template for the demo. See steps 2 @ref provisioning_system_tests_setup for more information.
 3. Build and run the demo as described [here](@ref building).
 */
 
@@ -93,7 +93,7 @@ The current Provisioning tests use the [Unity test framework](http://www.throwth
 
 The Provisioning system tests require Provisioning Template to be created with an AWS account. AWS does not provide the functionality to create Provisioning Template using the Device API; therefore, Provisioning will have to be created using another method.
 
-See @ref guide_developer_automated_tests_provisioning for additional setup for running the Provisioning tests on Travis CI.
+See @ref guide_developer_automated_tests_jobs for additional setup for running the Provisioning tests on Travis CI.
 
 1. Create an IAM user for the tests. This needs to be done only once. <br>
 Follow [this guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) to create an IAM user for the Provisioning tests.
@@ -115,6 +115,7 @@ Follow [this guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_cr
         ]
     }
 }
+```
 
 2. Create the template resource which will be used for provisioning the demo application. This needs to be done only once. <br>
 To create a template, the following AWS CLI command may be used. Replace `TemplateName` with the name of the template that was used in the IAM user's policy in step 1.
