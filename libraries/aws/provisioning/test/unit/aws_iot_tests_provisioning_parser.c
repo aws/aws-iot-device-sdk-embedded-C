@@ -336,7 +336,7 @@ TEST( Provisioning_Unit_Parser, TestParseKeysAndCertificateResponseWithMissingEn
     _provisioningCallbackInfo_t wrapperCallback;
 
     wrapperCallback.createKeysAndCertificateCallback.userParam = NULL;
-    wrapperCallback.createKeysAndCertificateCallback.function = _testCreateKeysAndCertificateAcceptedCallback;
+    wrapperCallback.createKeysAndCertificateCallback.function = _keysAndCertificateCallbackThatFailsOnInvokation;
 
     /*************** Response payload only with private key ********************/
     const uint8_t payloadWithOnlyPrivateKey[] =
