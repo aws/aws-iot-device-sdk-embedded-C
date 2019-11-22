@@ -167,7 +167,7 @@ static void _demoKeysAndCertificateCallback( void * contextParam,
             certificateIdTokenContext->tokenLength = pResponseInfo->u.acceptedResponse.ownershipTokenLength;
 
             memcpy( certificateIdTokenContext->pOwnershipTokenBuffer,
-                    pResponseInfo->u.acceptedResponse.pOwnershipTokenBuffer,
+                    pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken,
                     pResponseInfo->u.acceptedResponse.ownershipTokenLength );
             /* Add a NULL terminator to the buffer (to treat the buffer as a string!) */
             *( certificateIdTokenContext->pOwnershipTokenBuffer + pResponseInfo->u.acceptedResponse.ownershipTokenLength ) = '\0';
@@ -181,7 +181,7 @@ static void _demoKeysAndCertificateCallback( void * contextParam,
                     pResponseInfo->u.acceptedResponse.certificateIdLength,
                     pResponseInfo->u.acceptedResponse.pCertificateId,
                     pResponseInfo->u.acceptedResponse.ownershipTokenLength,
-                    pResponseInfo->u.acceptedResponse.pOwnershipTokenBuffer,
+                    pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken,
                     pResponseInfo->u.acceptedResponse.privateKeyLength,
                     pResponseInfo->u.acceptedResponse.pPrivateKey );
     }
@@ -448,11 +448,11 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         else
         {
             provisioningParameters[ 0 ].pParameterKey = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME;
-            provisioningParameters[ 0 ].parameterKeyLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH;
+            provisioningParameters[ 0 ].parameterKeyLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME_LENGTH;
             provisioningParameters[ 0 ].pParameterValue = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE;
             provisioningParameters[ 0 ].parameterValueLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH;
             provisioningParameters[ 1 ].pParameterKey = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME;
-            provisioningParameters[ 1 ].parameterKeyLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH;
+            provisioningParameters[ 1 ].parameterKeyLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH;
             provisioningParameters[ 1 ].pParameterValue = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE;
             provisioningParameters[ 1 ].parameterValueLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH;
         }
@@ -537,7 +537,7 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         /* Set the parameters for requesting provisioning. */
         requestInfo.pDeviceCertificateId = newCertificateDataContext.pCertificateIdBuffer;
         requestInfo.deviceCertificateIdLength = newCertificateDataContext.certificateIdLength;
-        requestInfo.pOwnershipTokenBuffer = newCertificateDataContext.pOwnershipTokenBuffer;
+        requestInfo.pCertificateOwnershipToken = newCertificateDataContext.pOwnershipTokenBuffer;
         requestInfo.ownershipTokenLength = newCertificateDataContext.tokenLength;
         requestInfo.pTemplateName = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
         requestInfo.templateNameLength = sizeof( AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME ) - 1;
