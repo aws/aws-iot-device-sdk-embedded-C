@@ -326,7 +326,7 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateResponse
  * Provides a function to be invoked on successful completion of an @ref AwsIotProvisioning_CreateKeysAndCertificate API
  * operation.
  *
- * @initializer{AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t,AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED_CALLBACK_INFO_INITIALIZER}
+ * @initializer{AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t,AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER}
  */
 typedef struct AwsIotProvisioningCreateKeysAndCertificateCallbackInfo
 {
@@ -399,7 +399,7 @@ typedef struct AwsIotProvisioningRegisterThingResponse
  * Provides a function to be invoked on successful completion of an @ref AwsIotProvisioning_RegisterThing API
  * operation.
  *
- * @initializer{AwsIotProvisioningRegisterThingCallbackInfo_t,AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER}
+ * @initializer{AwsIotProvisioningRegisterThingCallbackInfo_t,AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER}
  */
 typedef struct AwsIotProvisioningRegisterThingCallbackInfo
 {

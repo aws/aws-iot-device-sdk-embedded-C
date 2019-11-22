@@ -37,7 +37,7 @@ digraph provisioning_dependencies
 
 Currently, the Provisioning library has the following dependencies:
 - The MQTT library for sending the messages that interact with the AWS IoT Core for the Fleet Provisioning feature. See [this page](@ref mqtt) for more information on the MQTT library (and [its dependencies](@ref mqtt_dependencies))
-- The static memory library will be used if the library is built with #IOT_STATIC_MEMORY_ONLY flag set as `1`
+- The static memory library will be used if the library is built with `IOT_STATIC_MEMORY_ONLY` flag set as `1`
 - The logging library may be used if @ref AWS_IOT_LOG_LEVEL_PROVISIONING is not #IOT_LOG_NONE.
 
 In addition to the components above, the Provisioning library also depends on C standard libraries.
@@ -184,27 +184,48 @@ Follow [this guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_cr
         "Effect": "Allow",
         "Action": [
             "iot:CreateProvisioningTemplate",
+            "iot:UpdateProvisioningTemplate",
+            "iot:DescribeProvisioningTemplate",
             "iot:DeleteProvisioningTemplate",
-            "iot:ListProvisioningTemplate"
+            "iot:ListProvisioningTemplates"
         ],
         "Resource": [
-            "arn:aws:iot:<region>:<account>:provisioningtemplate/<TemplateName>",
+            "arn:aws:iot:<region>:<account>:provisioningtemplate/*",
+            arn:aws:iot:<region>:<account>:service-role/*
         ]
     }
 }
 ```
+2. Create an IAM role that will be needed by a fleet provisioning template. Replace `RoleName` with a name of the role you want to create.
+```sh
+aws iam create-role 
+    --role-name <RoleName> 
+    --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.test.amazonaws.com"}}]}'
+```
+
+3. Attach a policy to the role created in step2. Replace `RoleName` with the name of the role you created in Step 2. 
+```sh
+aws iam attach-role-policy 
+        --role-name <RoleName>
+        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
+```
 
 2. Create the template resource which will be used for provisioning the demo application. This needs to be done only once. <br>
-To create a template, the following AWS CLI command may be used. Replace `TemplateName` with the name of the fleet provisioning template that was used in the IAM user's policy in step 1. Replace `TemplateJSON` with the template body as a JSON string (containing escape characters). <br><br>Following is an example template JSON string (that uses "SerialNumber" for Thing resource name and accepts an additional "DeviceLocation" parameter) which can be viewed on AWS IoT Console after the AWS CLI command using it is executed <br>`{\"Parameters\":{\"DeviceLocation\":{\"Type\":\"String\"},\"AWS::IoT::Certificate::Id\":{\"Type\":\"String\"},\"SerialNumber\":{\"Type\":\"String\"}},\"Mappings\":{\"LocationTable\":{\"Seattle\":{\"LocationUrl\":\"https://example.aws\"}}},\"Resources\":{\"thing\":{\"Type\":\"AWS::IoT::Thing\",\"Properties\":{\"ThingName\":{\"Fn::Join\":[\"\",[\"ThingPrefix_\",{\"Ref\":\"SerialNumber\"}]]},\"AttributePayload\":{\"version\":\"v1\",\"serialNumber\":\"serialNumber\"}},\"OverrideSettings\":{\"AttributePayload\":\"MERGE\",\"ThingTypeName\":\"REPLACE\",\"ThingGroups\":\"DO_NOTHING\"}},\"certificate\":{\"Type\":\"AWS::IoT::Certificate\",\"Properties\":{\"CertificateId\":{\"Ref\":\"AWS::IoT::Certificate::Id\"},\"Status\":\"Active\"},\"OverrideSettings\":{\"Status\":\"REPLACE\"}},\"policy\":{\"Type\":\"AWS::IoT::Policy\",\"Properties\":{\"PolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iot:Connect\",\"iot:Subscribe\",\"iot:Publish\",\"iot:Receive\"],\"Resource\":\"*\"}]}}}},\"DeviceConfiguration\":{\"FallbackUrl\":\"https://www.example.com/test-site\",\"LocationUrl\":{\"Fn::FindInMap\":[\"LocationTable\",{\"Ref\":\"DeviceLocation\"},\"LocationUrl\"]}}}`.
+To create a template, the following AWS CLI command may be used. Replace `TemplateName` with the name of the fleet provisioning template you want to create. Replace `RoleName` with the name of the role you created in Step 2. . Replace `TemplateJSON` with the template body as a JSON string (containing escape characters).
 
 ```sh
 aws iot create-provisioning-template \
         --template-name <TemplateName> \
-        --provisioning-role-arn arn:aws:iam::$AWS_ACCOUNT_ID:role/Admin \
+        --provisioning-role-arn arn:aws:iam::<account>:service-role/ <RoleName> \
         --template-body  "<TemplateJSON>" \
         --enabled 
 ```
 For more information on provisioning template, refer to [this guide](http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html)
+Following is an example template JSON string (that uses "SerialNumber" for Thing resource name and accepts an additional "DeviceLocation" parameter) which can be viewed on AWS IoT Console after the AWS CLI command using it is executed <br>`{\"Parameters\":{\"DeviceLocation\":{\"Type\":\"String\"},\"AWS::IoT::Certificate::Id\":{\"Type\":\"String\"},\"SerialNumber\":{\"Type\":\"String\"}},\"Mappings\":{\"LocationTable\":{\"Seattle\":{\"LocationUrl\":\"https://example.aws\"}}},\"Resources\":{\"thing\":{\"Type\":\"AWS::IoT::Thing\",\"Properties\":{\"ThingName\":{\"Fn::Join\":[\"\",[\"ThingPrefix_\",{\"Ref\":\"SerialNumber\"}]]},\"AttributePayload\":{\"version\":\"v1\",\"serialNumber\":\"serialNumber\"}},\"OverrideSettings\":{\"AttributePayload\":\"MERGE\",\"ThingTypeName\":\"REPLACE\",\"ThingGroups\":\"DO_NOTHING\"}},\"certificate\":{\"Type\":\"AWS::IoT::Certificate\",\"Properties\":{\"CertificateId\":{\"Ref\":\"AWS::IoT::Certificate::Id\"},\"Status\":\"Active\"},\"OverrideSettings\":{\"Status\":\"REPLACE\"}},\"policy\":{\"Type\":\"AWS::IoT::Policy\",\"Properties\":{\"PolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iot:Connect\",\"iot:Subscribe\",\"iot:Publish\",\"iot:Receive\"],\"Resource\":\"*\"}]}}}},\"DeviceConfiguration\":{\"FallbackUrl\":\"https://www.example.com/test-site\",\"LocationUrl\":{\"Fn::FindInMap\":[\"LocationTable\",{\"Ref\":\"DeviceLocation\"},\"LocationUrl\"]}}}`.<br>
+You can query the created template using the following CLI command. Replace the <TemplateName> with the fleet provisioning template you created.
+```sh
+aws iot describe-provisioning-template \
+        --template-name <TemplateName>
 
 3. Set the name of provisioning template, created in step 2, in the config file for the `AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME` macro. Build the tests for the `aws_iot_demo_provisioning` target.
 

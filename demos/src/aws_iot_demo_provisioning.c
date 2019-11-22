@@ -87,13 +87,13 @@ static const char pTemplateName[] = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
  */
 typedef struct _demoKeysAndCertificateCallbackContext
 {
-    char * pCertificateIdBuffer;  /** @brief Buffer for storing certificate ID that is obtained from the server. */
-    size_t certificateIdLength;   /** @brief Will be assigned with the length of the certificate ID that will be
+    char * pCertificateIdBuffer;  /**< @brief Buffer for storing certificate ID that is obtained from the server. */
+    size_t certificateIdLength;   /**< @brief Will be assigned with the length of the certificate ID that will be
                                    * stored in the #_demoKeysAndCertificateCallbackContext_t.pCertificateIdBuffer
                                    * buffer.**/
-    char * pOwnershipTokenBuffer; /** @brief Buffer for storing ownership token for the certificate that is obtained
+    char * pOwnershipTokenBuffer; /**< @brief Buffer for storing ownership token for the certificate that is obtained
                                    * from the server. */
-    size_t tokenLength;           /** @brief Will be assigned with the length of token string that will be
+    size_t tokenLength;           /**< @brief Will be assigned with the length of token string that will be
                                    * stored in the #_demoKeysAndCertificateCallbackContext_t.pOwnershipTokenBuffer
                                    * buffer*/
 } _demoKeysAndCertificateCallbackContext_t;
