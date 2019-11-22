@@ -1,11 +1,11 @@
 /**
 @mainpage
-@anchor provisioning
+@anchor Fleet Provisioning
 @brief Library for the Fleet Provisioning feature of AWS IoT.
 
 > When you use AWS IoT fleet provisioning, AWS IoT can generate and securely deliver device certificates and private keys to your devices when they connect to AWS IoT for the first time.
 
-<span style="float:right;margin-right:4em"> &mdash; <i>Description of the Fleet Provisioning feature from [AWS IoT documentation](http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html)</i></span><br>
+<span style="float:right;margin-right:4em"> &mdash; <i>Description of the Fleet Provisioning feature from [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-provision.html)</i></span><br>
 
 This library provides an API based on the [Fleet Provisioning APIs available over MQTT](http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html#fleet-provision-api). Features of this library include:
 - Synchronous API functions.
@@ -47,7 +47,7 @@ In addition to the components above, the Provisioning library also depends on C 
 @page provisioning_design Design
 @brief Architecture behind the Provisioning library.
 
-Provisioning library uses MQTT subscriptions and MQTT publishes for communicating with the AWS IoT Core service for the Fleet Provisioning feature. Each of the operations within the library ("CreateKeysAndCertificate", "RegisterThing") uses MQTT two subscriptions, one for accepted topic and other for rejected topic, to obtain the server response of the MQTT publish request it makes for the specific operation. Each of the operations also require a user-callback for handling the server response. The callbacks will be run in MQTT's taskpool context.
+The Provisioning library uses MQTT subscriptions and MQTT publishes for communicating with the AWS IoT Core service for the Fleet Provisioning feature. Each of the operations within the library ("CreateKeysAndCertificate", "RegisterThing") uses two MQTT subscriptions, one for the accepted topic and other for the rejected topic, to obtain the server response of the MQTT publish request that the operation makes. Each of the operations also requires a user-callback for handling the server response. The callbacks will be run in MQTT's taskpool context.
 
 @section CreateKeysAndCertificate_Design CreateKeysAndCertificate Design
 @image html provisioning_createkeysandcertificate_design.png width=100%
@@ -63,19 +63,23 @@ Provisioning library uses MQTT subscriptions and MQTT publishes for communicatin
 
 This demo provides a simple example on using the Provisioning library and working with the AWS IoT Fleet Provisioning feature.
 
-The Provisioning demo establishes an MQTT connection and then, requests a new private key and associated certificate by providing a callback to the credential generating library function. On receiving the new credentials from the server, the registered callback copies the received certificate ID and certificate ownership token into separate buffers (that are be used by the demo application later for provisioning), and prints the remaining credentials. The demo application then requests provisioning with the received certificate ID and certificate ownership token, and also registers a response handler callback. On receiving the server response to the provisioning request, the registered callback prints the contents of the response.
+The Provisioning demo establishes an MQTT connection and then, requests a new private key and associated certificate. On receiving the new credentials from the server, the registered callback copies the received certificate ID and certificate ownership token into separate buffers (that are to be used by the demo application later for provisioning), and prints the remaining credentials. The demo application then requests provisioning with the received certificate ID and certificate ownership token, and also registers a response handler callback. On receiving the server response to the provisioning request, the registered callback prints the contents of the response.
+
+
+The provisioning demo establishes an MQTT connection and makes two API calls to the AWS IoT Core service through the @ref provisioning_function_createkeysandcertificate and @ref provisioning_function_registerthing functions. It registers callbacks with both the API functions for printing server responses. Also, the callback registered with the @ref provisioning_function_createkeysandcertificate function copies the certificate ID and certificate ownership token from the server response in separate buffers, which are then passed by the demo application in the call to the @ref provisioning_function_registerthing function for provisioning.
 
 @image html provisioning_demo.png "Provisioning Demo Workflow" width=80%
 
 @section provisioning_demo_setup Demo Setup
 @brief How to set up a fleet provisioning template for the Provisioning demo.
 
-The demo assumes that a fleet provisioning template that takes parameters (including one for "SerialNumber") from the device has been created in the account that will be used for connecting to AWS IoT Core. 
-To create a template, we recommend using AWS CLI to create the template. (For more information on fleet provisioning templates, refer [here]((http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html))
+The demo assumes that a fleet provisioning template, that takes parameters (including one for "SerialNumber") from the device, has been created in the account that will be used for connecting to AWS IoT Core. 
+To create a template, you can use the AWS IoT Console or AWS CLI. (For more information on fleet provisioning templates, refer [here](http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html) )
 
-1. Create a user for AWS CLI. See steps 1 @ref guide_developer_automated_tests_jobs for more information.
-2. Create a provisioning template for the demo. See steps 2 @ref provisioning_system_tests_setup for more information.
-3. Build and run the demo as described [here](@ref building).
+1. Create an IAM user for AWS CLI. See steps 1 @ref guide_developer_automated_tests_jobs_and_provisioning for more information.
+2. Create an IAM role and attach a policy to the role. The role is required for the provisioning template to be created. (The provisioning template assumes the role for its runtime behavior.) See steps 2 and 3 in @ref provisioning_system_tests_setup for more information
+3. Create a provisioning template for the demo. See step 4 in @ref provisioning_system_tests_setup for more information.
+4. Build and run the demo as described [here](@ref building).
 
 See @subpage provisioning_demo_config for configuration settings that change the behavior of the demo.
 
@@ -170,14 +174,14 @@ The current Provisioning tests use the [Unity test framework](http://www.throwth
 
 The Provisioning system tests require Provisioning Template to be created with an AWS account. AWS does not provide the functionality to create Provisioning Template using the Device API; therefore, Provisioning will have to be created using another method.
 
-See @ref guide_developer_automated_tests_jobs for additional setup for running the Provisioning tests on Travis CI.
+See @ref guide_developer_automated_tests_jobs_and_provisioning for additional setup for running the Provisioning tests on Travis CI.
 
 1. Create an IAM user for the tests. This needs to be done only once. <br>
 Follow [this guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) to create an IAM user for the Provisioning tests.
     - Only <b>programmatic access</b> is required.
     - Save the <b>access key</b> and <b>secret access key</b> for this user.
-    - The following policy grants the necessary permissions for this user. Replace `<region>` and `<account>` with your AWS region and account number, respectively; replace `<TemplateName>` with the name of the Provisioning Template that will be created in the next step (step 2).
-```
+    - The following policy grants the necessary permissions for this user. Replace `<region>` and `<account>` with your AWS region and account number, respectively; replace `<TemplateName>` with the name of the Provisioning Template that will be created in the next step (step 2).<br>
+@code
 {
     "Version": "2012-10-17",
     "Statement": {
@@ -191,48 +195,51 @@ Follow [this guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_cr
         ],
         "Resource": [
             "arn:aws:iot:<region>:<account>:provisioningtemplate/*",
-            arn:aws:iot:<region>:<account>:service-role/*
+            "arn:aws:iot:<region>:<account>:service-role/*"
         ]
     }
 }
-```
+@endcode
+
 2. Create an IAM role that will be needed by a fleet provisioning template. Replace `RoleName` with a name of the role you want to create.
-```sh
-aws iam create-role 
-    --role-name <RoleName> 
-    --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.test.amazonaws.com"}}]}'
-```
+@code{sh}
+aws iam create-role \
+    --role-name <RoleName> \
+    --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}'
+@code
 
 3. Attach a policy to the role created in step2. Replace `RoleName` with the name of the role you created in Step 2. 
-```sh
-aws iam attach-role-policy 
-        --role-name <RoleName>
+@code{sh}
+aws iam attach-role-policy \
+        --role-name <RoleName> \
         --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
-```
+@endcode
 
-2. Create the template resource which will be used for provisioning the demo application. This needs to be done only once. <br>
-To create a template, the following AWS CLI command may be used. Replace `TemplateName` with the name of the fleet provisioning template you want to create. Replace `RoleName` with the name of the role you created in Step 2. . Replace `TemplateJSON` with the template body as a JSON string (containing escape characters).
-
-```sh
+4. Create the template resource which will be used for provisioning the demo application. This needs to be done only once. <br>
+To create a template, the following AWS CLI command may be used. Replace `TemplateName` with the name of the fleet provisioning template you want to create. Replace `RoleName` with the name of the role you created in Step 2. Replace `TemplateJSON` with the template body as a JSON string (containing escape characters). Replace `account` with your AWS account number.
+@code{sh}
 aws iot create-provisioning-template \
         --template-name <TemplateName> \
         --provisioning-role-arn arn:aws:iam::<account>:service-role/ <RoleName> \
         --template-body  "<TemplateJSON>" \
         --enabled 
-```
+@endcode
 For more information on provisioning template, refer to [this guide](http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html)
-Following is an example template JSON string (that uses "SerialNumber" for Thing resource name and accepts an additional "DeviceLocation" parameter) which can be viewed on AWS IoT Console after the AWS CLI command using it is executed <br>`{\"Parameters\":{\"DeviceLocation\":{\"Type\":\"String\"},\"AWS::IoT::Certificate::Id\":{\"Type\":\"String\"},\"SerialNumber\":{\"Type\":\"String\"}},\"Mappings\":{\"LocationTable\":{\"Seattle\":{\"LocationUrl\":\"https://example.aws\"}}},\"Resources\":{\"thing\":{\"Type\":\"AWS::IoT::Thing\",\"Properties\":{\"ThingName\":{\"Fn::Join\":[\"\",[\"ThingPrefix_\",{\"Ref\":\"SerialNumber\"}]]},\"AttributePayload\":{\"version\":\"v1\",\"serialNumber\":\"serialNumber\"}},\"OverrideSettings\":{\"AttributePayload\":\"MERGE\",\"ThingTypeName\":\"REPLACE\",\"ThingGroups\":\"DO_NOTHING\"}},\"certificate\":{\"Type\":\"AWS::IoT::Certificate\",\"Properties\":{\"CertificateId\":{\"Ref\":\"AWS::IoT::Certificate::Id\"},\"Status\":\"Active\"},\"OverrideSettings\":{\"Status\":\"REPLACE\"}},\"policy\":{\"Type\":\"AWS::IoT::Policy\",\"Properties\":{\"PolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iot:Connect\",\"iot:Subscribe\",\"iot:Publish\",\"iot:Receive\"],\"Resource\":\"*\"}]}}}},\"DeviceConfiguration\":{\"FallbackUrl\":\"https://www.example.com/test-site\",\"LocationUrl\":{\"Fn::FindInMap\":[\"LocationTable\",{\"Ref\":\"DeviceLocation\"},\"LocationUrl\"]}}}`.<br>
-You can query the created template using the following CLI command. Replace the <TemplateName> with the fleet provisioning template you created.
-```sh
-aws iot describe-provisioning-template \
-        --template-name <TemplateName>
+Following is an example template JSON string (that uses "SerialNumber" for Thing resource name and accepts an additional "DeviceLocation" parameter) which can be viewed on AWS IoT Console after the AWS CLI command using it is executed <br>
+@code
+{\"Parameters\":{\"DeviceLocation\":{\"Type\":\"String\"},\"AWS::IoT::Certificate::Id\":{\"Type\":\"String\"},\"SerialNumber\":{\"Type\":\"String\"}},\"Mappings\":{\"LocationTable\":{\"Seattle\":{\"LocationUrl\":\"https://example.aws\"}}},\"Resources\":{\"thing\":{\"Type\":\"AWS::IoT::Thing\",\"Properties\":{\"ThingName\":{\"Fn::Join\":[\"\",[\"ThingPrefix_\",{\"Ref\":\"SerialNumber\"}]]},\"AttributePayload\":{\"version\":\"v1\",\"serialNumber\":\"serialNumber\"}},\"OverrideSettings\":{\"AttributePayload\":\"MERGE\",\"ThingTypeName\":\"REPLACE\",\"ThingGroups\":\"DO_NOTHING\"}},\"certificate\":{\"Type\":\"AWS::IoT::Certificate\",\"Properties\":{\"CertificateId\":{\"Ref\":\"AWS::IoT::Certificate::Id\"},\"Status\":\"Active\"},\"OverrideSettings\":{\"Status\":\"REPLACE\"}},\"policy\":{\"Type\":\"AWS::IoT::Policy\",\"Properties\":{\"PolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iot:Connect\",\"iot:Subscribe\",\"iot:Publish\",\"iot:Receive\"],\"Resource\":\"*\"}]}}}},\"DeviceConfiguration\":{\"FallbackUrl\":\"https://www.example.com/test-site\",\"LocationUrl\":{\"Fn::FindInMap\":[\"LocationTable\",{\"Ref\":\"DeviceLocation\"},\"LocationUrl\"]}}}
+@endcode
+You can query the created template using the following CLI command. Replace the `TemplateName` with the fleet provisioning template you created.
+@code{sh}
+aws iot describe-provisioning-template --template-name <TemplateName>
+@endcode
 
-3. Set the name of provisioning template, created in step 2, in the config file for the `AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME` macro. Build the tests for the `aws_iot_demo_provisioning` target.
+5. Set the name of provisioning template, created in step 2, in the config file for the `AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME` macro. Build the tests for the `aws_iot_tests_provisioning` target.<br>
 
-4. When the Provisioning demo is complete, the template it used is no longer needed. Provisioning template can be deleted with the following command, where `TemplateName` is the name of the template that is to be deleted.
-```sh
-aws iot delete-provisioning-template --template-name <TemplateName>
-```
+6. When the Provisioning demo is complete, the template it used is no longer needed. Provisioning template can be deleted with the following command, where `TemplateName` is the name of the template that is to be deleted.
+@code{sh}
+aws iot delete-provisioning-template --template-name TemplateName 
+@endcode
 */
 
 /**

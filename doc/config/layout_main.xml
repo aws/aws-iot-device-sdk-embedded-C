@@ -11,6 +11,7 @@
     <tab type="user" title="Thing Shadows" url="../shadow/index.html"/>
     <tab type="user" title="Jobs" url="../jobs/index.html"/>
     <tab type="user" title="Device Defender" url="../defender/index.html"/>
+    <tab type="user" title="Fleet Provisioning" url="../provisioning/index.html"/>
     <tab type="usergroup" title="Common" url="[none]">
       <tab type="user" title="Linear Containers" url="../linear_containers/index.html"/>
       <tab type="user" title="Logging" url="../logging/index.html"/>

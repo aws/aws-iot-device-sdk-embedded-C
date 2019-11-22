@@ -20,12 +20,14 @@ box "AWS Iot Core service" #LightPink
 end box
 
 main -> library: Request new credentials (set credentials callback)
+note over library: AwsIotProvisioning_CreateKeysAndCertificate
 library -> credentials_api: Request new credentials 
 credentials_api -> library: Send new credentials
 library -> credentials_callback: Invoke callback with server response
 note left of credentials_callback: Print credentials, and \nstore <b>certificate ID</b> and \n<b>certificate ownership token</b>
 
 main -> library: Request provisioning of device (set provisioning response callback)
+note over library: AwsIotProvisioning_RegisterThing
 note left of main: Provides\n1.Certificate ID and Token\n stored in credentials callback\n2.Template Name (defined in demo config)\n3.Device Parameters (defined in demo app)
 library -> provision_api: Request provisioning  
 note right of provision_api: Register <b>certificate</b>,\nattach <b>policy</b>,\ncreate <b>Thing</b> resource,\nand attach certificate to Thing.
