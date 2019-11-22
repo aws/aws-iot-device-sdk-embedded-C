@@ -542,7 +542,7 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         requestInfo.pTemplateName = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
         requestInfo.templateNameLength = sizeof( AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME ) - 1;
         requestInfo.pParametersStart = provisioningParameters;
-        requestInfo.numOfParameters = NUM_OF_PROVISIONING_PARAMS;
+        requestInfo.numOfParameters = sizeof( provisioningParameters ) / sizeof( AwsIotProvisioningRequestParameterEntry_t );
 
         /* Set the callback function for handling device credentials that the server will send. */
         registerThingResponseCallback.function = _demoRegisterThingCallback;
