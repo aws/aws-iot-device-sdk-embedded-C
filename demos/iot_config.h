@@ -76,7 +76,6 @@
 #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH                 sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME ) - 1
 #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE                       ""
 #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH                sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE ) - 1
-#define NUM_OF_PROVISIONING_PARAMS                                        2u
 
 /* Enable asserts in the libraries. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS                                     ( 1 )

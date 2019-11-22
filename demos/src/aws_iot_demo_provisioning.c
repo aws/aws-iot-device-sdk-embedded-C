@@ -443,11 +443,11 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         else
         {
             provisioningParameters[ 0 ].pParameterKey = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME;
-            provisioningParameters[ 0 ].parameterKeyLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH;
+            provisioningParameters[ 0 ].parameterKeyLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME_LENGTH;
             provisioningParameters[ 0 ].pParameterValue = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE;
             provisioningParameters[ 0 ].parameterValueLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH;
             provisioningParameters[ 1 ].pParameterKey = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME;
-            provisioningParameters[ 1 ].parameterKeyLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH;
+            provisioningParameters[ 1 ].parameterKeyLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH;
             provisioningParameters[ 1 ].pParameterValue = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE;
             provisioningParameters[ 1 ].parameterValueLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH;
         }
@@ -537,7 +537,7 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         requestInfo.pTemplateName = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
         requestInfo.templateNameLength = sizeof( AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME ) - 1;
         requestInfo.pParametersStart = provisioningParameters;
-        requestInfo.numOfParameters = NUM_OF_PROVISIONING_PARAMS;
+        requestInfo.numOfParameters = sizeof( provisioningParameters ) / sizeof( AwsIotProvisioningRequestParameterEntry_t );
 
         /* Set the callback function for handling device credentials that the server will send. */
         registerThingResponseCallback.function = _demoRegisterThingCallback;
