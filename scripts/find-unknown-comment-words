@@ -9,6 +9,7 @@ set -o errexit
 set -f
 
 BLUE="\e[1;34m"
+GREEN="\e[1;32m"
 DEFAULTFG="\e[39m"
 
 function usage () {
@@ -107,21 +108,24 @@ do
         # search and reuse it within the if statement (I gave up trying
         # to find one after a few minutes), that would be nice.
         #
-        extract-comments $file | grep -i $word
+        extract-comments $file | grep -iw $word
         if [ $? == "0" ]
         then
             if [ $STATUS"" != "1"  ]
             then
-                echo ""
-                echo -e $BLUE"\tUnknown word(s) found.  Please either correct the spelling or add them to the"$DEFAULTFG
-                echo -e $BLUE"\tlexicon file '"$LEXICON"'".$DEFAULTFG
+                echo -e $GREEN"############################################################################"$DEFAULTFG
+                echo -e $GREEN"#"$DEFAULTFG
+                echo -e $GREEN"#  Unknown word(s) found.  Please either correct the spelling or add them"$DEFAULTFG
+                echo -e $GREEN"#  to the lexicon file '"$LEXICON"'".$DEFAULTFG
+                echo -e $GREEN"#"$DEFAULTFG
+                echo -e $GREEN"############################################################################"$DEFAULTFG
                 echo ""
                 STATUS=1  # Return non-zero status if any unidentified words are found
             fi
+            echo ""
             echo -e $BLUE$file$DEFAULTFG
             echo ""
-            extract-comments $file | grep --color=always -i $word | GREP_COLORS="mt=01;32" grep --color=always -E -e '^[ \t]*[0-9]+'
-            echo ""
+            extract-comments $file | grep --color=always -iw $word | GREP_COLORS="mt=01;32" grep --color=always -E -e '^[ \t]*[0-9]+'
         fi
         # Reenable errexit
         set -o errexit

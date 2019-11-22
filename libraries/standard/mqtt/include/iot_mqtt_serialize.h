@@ -546,7 +546,7 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
  *
  * <b>Example</b>
  * @code{c}
- * // Example code below shows how to implement getNetxByte function with posix sockets.
+ * // Example code below shows how to implement getNextByte function with posix sockets.
  * // Note: IotMqttGetNextByte_t typedef IotMqttError_t (* IotMqttGetNextByte_t)( void * pNetworkContext,
  * //                                              uint8_t * pNextByte );
  * // Note: It is assumed that socket is already created and connected,

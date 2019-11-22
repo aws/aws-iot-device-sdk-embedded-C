@@ -109,7 +109,7 @@ void IotStaticMemory_ReturnInUse( void * ptr,
     size_t i = 0;
     uint8_t * pElement = NULL;
 
-    /* Clear ptr. */
+    /* Clear memory region at this address. */
     ( void ) memset( ptr, 0x00, elementSize );
 
     for( i = 0; i < limit; i++ )
