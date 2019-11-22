@@ -106,7 +106,7 @@ end alt
 provisioning -> provisioning: Access shared "_provisioningOperation_t" object protected by mutex.
 provisioning -> provisioning: Overwrite status value with status value in shared "_provisioningOperation_t" object
 note over provisioning: This is to address race condition between occurrence of\nsemaphore timeout and reception of server response at similar time. \nAccept server response if callback execution has completed.
-provisioning -> provisiong: Release mutex of shared "_provisioningOperation_t" object.
+provisioning -> provisioning: Release mutex of shared "_provisioningOperation_t" object.
 
 provisioning -> internal: Unsubscribe from "accepted" and "rejected" topics
 deactivate provisioning
