@@ -60,9 +60,6 @@ The Provisioning library uses MQTT subscriptions and MQTT publishes for communic
 
 This demo provides a simple example on using the Provisioning library and working with the AWS IoT Fleet Provisioning feature.
 
-The Provisioning demo establishes an MQTT connection and then, requests a new private key and associated certificate. On receiving the new credentials from the server, the registered callback copies the received certificate ID and certificate ownership token into separate buffers (that are to be used by the demo application later for provisioning), and prints the remaining credentials. The demo application then requests provisioning with the received certificate ID and certificate ownership token, and also registers a response handler callback. On receiving the server response to the provisioning request, the registered callback prints the contents of the response.
-
-
 The provisioning demo establishes an MQTT connection and makes two API calls to the AWS IoT Core service through the @ref provisioning_function_createkeysandcertificate and @ref provisioning_function_registerthing functions. It registers callbacks with both the API functions for printing server responses. Also, the callback registered with the @ref provisioning_function_createkeysandcertificate function copies the certificate ID and certificate ownership token from the server response in separate buffers, which are then passed by the demo application in the call to the @ref provisioning_function_registerthing function for provisioning.
 
 @image html provisioning_demo.png "Provisioning Demo Workflow" width=80%
