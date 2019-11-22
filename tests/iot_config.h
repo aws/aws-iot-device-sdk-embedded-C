@@ -81,18 +81,19 @@
 
 /* Provisioning tests configuration */
 #ifndef AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME
-    #define AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME          ""
+    #define AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME    ""
 #endif
 #ifndef AWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS
-    #define AWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS    {}
+    #define AWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS       \
+    {                                                           \
+        {                                                       \
+            .pParameterKey = "SerialNumber",                    \
+            .parameterKeyLength = sizeof( "SerialNumber" ) - 1, \
+            .pParameterValue = "",                              \
+            .parameterValueLength = 0                           \
+        }                                                       \
+    }
 #endif /* ifndef AWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS */
-
-#ifndef AWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID
-    #define AWS_IOT_TEST_PROVISIONING_CERTIFICATE_ID    ""
-#endif
-#ifndef AWS_IOT_TEST_PROVISIONING_CLIENT_ID
-    #define AWS_IOT_TEST_PROVISIONING_CLIENT_ID         ""
-#endif
 
 /* Log level for testing the demos. */
 #define IOT_LOG_LEVEL_DEMO    IOT_LOG_INFO

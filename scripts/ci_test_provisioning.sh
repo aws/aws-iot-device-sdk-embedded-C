@@ -27,14 +27,21 @@ run_tests() {
 # Hard-coded with template present in CI account.
 # TODO - Update with creating template (using Aws CLI) for system test setup. 
 TEMPLATE_NAME="CI_TEST_TEMPLATE"
-CLIENT_ID="Provisioning_CI_Test"
 
-PROVISION_PARAMETERS="{ \
+# Parameters to inject in the syste/integration test to pass as provisioning parameters.
+SERIAL_NUMBER_DEVICE_CONTEXT="1122334455667788"
+PROVISIONING_PARAMETERS="{ \
     { \
         .pParameterKey = \"\\\"DeviceLocation\\\"\", \
         .parameterKeyLength = sizeof( \"\\\"DeviceLocation\\\"\" ) - 1, \
         .pParameterValue = \"\\\"Seattle\\\"\", \
         .parameterValueLength = sizeof(\"\\\"Seattle\\\"\" ) - 1 \
+    }, \
+    { \
+        .pParameterKey = \"\\\"SerialNumber\\\"\", \
+        .parameterKeyLength = sizeof( \"\\\"SerialNumber\\\"\" ) - 1, \
+        .pParameterValue = \"\\\"$SERIAL_NUMBER_DEVICE_CONTEXT\\\"\", \
+        .parameterValueLength = sizeof(\"\\\"$SERIAL_NUMBER_DEVICE_CONTEXT\\\"\" ) - 1 \
     } \
 }"
 
@@ -67,11 +74,10 @@ configure_credentials() {
 
 configure_credentials
 
-COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISION_PARAMETERS\" -DAWS_IOT_TEST_PROVISIONING_CLIENT_ID=\"\\\"$CLIENT_ID\\\"\""
+COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
 
 # CMake build configuration without static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
-#cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DAWS_IOT_PROVISIONING_TEMPLATE_NAME=$TEMPLATE_NAME"
 
 # Build tests.
 make -j2 aws_iot_tests_provisioning
@@ -79,8 +85,11 @@ make -j2 aws_iot_tests_provisioning
 # Run tests in no static memory mode.
 run_tests
 
-# Rebuild and run tests in static memory mode.
-cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DIOT_STATIC_MEMORY_ONLY=1 $COMMON_CMAKE_C_FLAGS"
+# Rebuild and run tests in static memory mode. Specify a buffer size to accommodate for credentials.
+cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DIOT_STATIC_MEMORY_ONLY=1 -DIOT_MESSAGE_BUFFER_SIZE=4096 $COMMON_CMAKE_C_FLAGS"
+
+# Build tests.
+make -j2 aws_iot_tests_provisioning
 
 # Run tests in no static memory mode.
 run_tests
@@ -95,7 +104,7 @@ apt-get install -y jq
 aws iot list-thing-principals \
     --endpoint $AWS_CLI_CI_ENDPOINT \
     --region $AWS_PROVISIONING_REGION \
-    --thing-name "ThingPrefix_"$CLIENT_ID | \
+    --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT | \
         grep arn | tr -d \",' ' | 
             while read -r CERTIFICATE_ARN
             do
@@ -103,7 +112,7 @@ aws iot list-thing-principals \
                 aws iot detach-thing-principal \
                     --endpoint $AWS_CLI_CI_ENDPOINT \
                     --region $AWS_PROVISIONING_REGION \
-                    --thing-name "ThingPrefix_"$CLIENT_ID \
+                    --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT \
                     --principal $CERTIFICATE_ARN
 
                 CERTIFICATE_ID=$(echo $CERTIFICATE_ARN | cut -d '/' -f2)
@@ -123,9 +132,9 @@ aws iot list-thing-principals \
 aws iot delete-thing \
     --endpoint $AWS_CLI_CI_ENDPOINT \
     --region $AWS_PROVISIONING_REGION \
-    --thing-name "ThingPrefix_"$CLIENT_ID
+    --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT
 
-# Delete any inactive certificate that may have been created by the integration tests.
+# Make best effort to delete any inactive certificate that may have been created by the integration tests.
 aws iot list-certificates \
     --endpoint https://gamma.us-east-1.iot.amazonaws.com \
     --region $AWS_PROVISIONING_REGION | \
@@ -133,10 +142,13 @@ aws iot list-certificates \
             tr -d \" | \
                 while read -r cert_arn 
                 do 
-                     CERTIFICATE_ID=$(echo $cert_arn | cut -d '/' -f2)
+                    CERTIFICATE_ID=$(echo $cert_arn | cut -d '/' -f2)
+                    # Attempt to delete the certificate (and ignore any errors that come with 
+                    # the deletion request).
                     aws iot delete-certificate \
                         --endpoint https://gamma.us-east-1.iot.amazonaws.com \
                         --region $AWS_PROVISIONING_REGION \
                         --certificate-id $CERTIFICATE_ID \
-                        --force-delete 
+                        --force-delete | \
+                            echo true
                 done

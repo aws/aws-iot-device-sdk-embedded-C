@@ -100,7 +100,7 @@ static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 /**
  * @brief Client ID for the MQTT connection to the AWS IoT Core service.
  */
-static const char * _pTestMqttClientId = AWS_IOT_TEST_PROVISIONING_CLIENT_ID;
+static const char * _pTestMqttClientId = "SystemTestClientID";
 
 /**
  * @brief Parameters to use for testing the Provisioning RegisterThing API.
@@ -188,7 +188,7 @@ static void _storeCertificateDataForProvisioning( void * contextParam,
     {
         /* Allocate buffer space for storing the certificate ID obtained from the server. */
         certificateIdTokenContext->pCertificateIdBuffer =
-            Iot_DefaultMalloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
+            IotTest_Malloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
 
         /* Copy the certificate ID into the buffer. */
         if( certificateIdTokenContext->pCertificateIdBuffer != NULL )
@@ -205,7 +205,7 @@ static void _storeCertificateDataForProvisioning( void * contextParam,
 
         /* Allocate buffer space for storing the ownership token string obtained from the server. */
         certificateIdTokenContext->pCertificateOwnershipToken =
-            Iot_DefaultMalloc( pResponseInfo->u.acceptedResponse.ownershipTokenLength + 1 );
+            IotTest_Malloc( pResponseInfo->u.acceptedResponse.ownershipTokenLength + 1 );
 
         /* Copy the ownership token into the buffer. */
         if( certificateIdTokenContext->pCertificateOwnershipToken != NULL )
@@ -253,9 +253,6 @@ static void _printRegisterThingResponseCallback( void * contextParam,
 
         if( pResponseInfo->u.acceptedResponse.numOfConfigurationEntries > 0 )
         {
-            const AwsIotProvisioningResponseDeviceConfigurationEntry_t * pConfigurationList =
-                pResponseInfo->u.acceptedResponse.pDeviceConfigList;
-
             for( size_t configIndex = 0;
                  configIndex < pResponseInfo->u.acceptedResponse.numOfConfigurationEntries;
                  configIndex++ )
@@ -263,10 +260,10 @@ static void _printRegisterThingResponseCallback( void * contextParam,
                 IotLogInfo( "Device Configuration" );
 
                 IotLogInfo( "ConfigName = %.*s, ConfigData = %.*s ",
-                            pConfigurationList[ configIndex ].keyLength,
-                            pConfigurationList[ configIndex ].pKey,
-                            pConfigurationList[ configIndex ].valueLength,
-                            pConfigurationList[ configIndex ].pValue );
+                            pResponseInfo->u.acceptedResponse.pDeviceConfigList[ configIndex ].keyLength,
+                            pResponseInfo->u.acceptedResponse.pDeviceConfigList[ configIndex ].pKey,
+                            pResponseInfo->u.acceptedResponse.pDeviceConfigList[ configIndex ].valueLength,
+                            pResponseInfo->u.acceptedResponse.pDeviceConfigList[ configIndex ].pValue );
             }
         }
     }
@@ -490,6 +487,6 @@ TEST( Provisioning_System, RegisterThingNominalCase )
     /* Test Cleanup */
 
     /* Release the certificate data buffers. */
-    Iot_DefaultFree( newCertificateContext.pCertificateIdBuffer );
-    Iot_DefaultFree( newCertificateContext.pCertificateOwnershipToken );
+    IotTest_Free( newCertificateContext.pCertificateIdBuffer );
+    IotTest_Free( newCertificateContext.pCertificateOwnershipToken );
 }

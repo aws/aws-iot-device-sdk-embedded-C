@@ -68,24 +68,17 @@
  *
  * An MQTT ping request will be sent periodically at this interval.
  */
-#define KEEP_ALIVE_SECONDS              ( 60 )
+#define KEEP_ALIVE_SECONDS    ( 60 )
 
 /**
  * @brief The timeout for Provisioning and MQTT operations in this demo.
  */
-#define TIMEOUT_MS                      ( 5000 )
+#define TIMEOUT_MS            ( 5000 )
 
 /**
- * @brief The name for the provisioning template that will be used for provisioning the demo app.
+ * @brief The template name to use for provisioning the demo application.
  */
-#define PROVISIONING_TEMPLATE_NAME      "CI_TEST_TEMPLATE"
-
-/**
- * @brief The parameter that will be used for provisioning the demo application.
- */
-#define PROVISIONING_PARAMETER_NAME     "DeviceLocation"
-#define PROVISIONING_PARAMETER_VALUE    "Seattle"
-#define NUM_OF_PROVISIONING_PARAMS      1u
+static const char pTemplateName[] = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
 
 /**
  * @brief Type for the context parameter for the #AwsIotProvisioning_KeysAndCertificateCallbackInfo_t callback.
@@ -421,27 +414,63 @@ int RunProvisioningDemo( bool awsIotMqttMode,
     /* This will be used for tracking the return code from the Provisioning APIs. */
     AwsIotProvisioningError_t requestStatus = AWS_IOT_PROVISIONING_SUCCESS;
 
-    AwsIotProvisioningRequestParameterEntry_t provisioningParameters;
-    provisioningParameters.pParameterKey = PROVISIONING_PARAMETER_NAME;
-    provisioningParameters.parameterKeyLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_NAME ) - 1 );
-    provisioningParameters.pParameterValue = PROVISIONING_PARAMETER_VALUE;
-    provisioningParameters.parameterValueLength = ( size_t ) ( sizeof( PROVISIONING_PARAMETER_VALUE ) - 1 );
+    /* The list of parameters that will be used as "context" for provisioning the demo application.
+     * This demo will pass exactly 2 different parameter entries for requesting provisioning. */
+    AwsIotProvisioningRequestParameterEntry_t provisioningParameters[ 2 ] = { 0 };
 
-    /* Determine the length of the client ID Name. */
-    if( pIdentifier != NULL )
+    /* Determine if a provisioning template name has been specified. */
+    if( ( pTemplateName == NULL ) || ( strlen( pTemplateName ) == 0 ) )
     {
-        if( strlen( pIdentifier ) == 0 )
+        IotLogError( "A valid provisioning template name must be provided." );
+        status = EXIT_FAILURE;
+    }
+
+    /* Generate the list of parameters to send for provisioning */
+    if( status != EXIT_FAILURE )
+    {
+        if( ( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME == NULL ) ||
+            ( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME_LENGTH == 0 ) ||
+            ( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE == NULL ) ||
+            ( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH == 0 ) ||
+            ( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME == NULL ) ||
+            ( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH == 0 ) ||
+            ( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE == NULL ) ||
+            ( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH == 0 ) )
         {
-            IotLogError( "The length of the MQTT client identifier must be nonzero." );
+            IotLogError( "The provisioning demo requires 2 pairs of name and value data for parameters to be configured." );
+            status = EXIT_FAILURE;
+        }
+        else
+        {
+            provisioningParameters[ 0 ].pParameterKey = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME;
+            provisioningParameters[ 0 ].parameterKeyLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH;
+            provisioningParameters[ 0 ].pParameterValue = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE;
+            provisioningParameters[ 0 ].parameterValueLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH;
+            provisioningParameters[ 1 ].pParameterKey = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME;
+            provisioningParameters[ 1 ].parameterKeyLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH;
+            provisioningParameters[ 1 ].pParameterValue = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE;
+            provisioningParameters[ 1 ].parameterValueLength = AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH;
+        }
+    }
+
+    if( status != EXIT_FAILURE )
+    {
+        /* Determine the length of the client ID Name. */
+        if( pIdentifier != NULL )
+        {
+            if( strlen( pIdentifier ) == 0 )
+            {
+                IotLogError( "The length of the MQTT client identifier must be nonzero." );
+
+                status = EXIT_FAILURE;
+            }
+        }
+        else if( pIdentifier == NULL )
+        {
+            IotLogError( "A client identifier must be provided for the Provisioning demo." );
 
             status = EXIT_FAILURE;
         }
-    }
-    else
-    {
-        IotLogError( "A client identifier must be provided for the Provisioning demo." );
-
-        status = EXIT_FAILURE;
     }
 
     /* Initialize the libraries required for this demo. */
@@ -505,17 +534,16 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         requestInfo.deviceCertificateIdLength = newCertificateDataContext.certificateIdLength;
         requestInfo.pCertificateOwnershipToken = newCertificateDataContext.pCertificateOwnershipToken;
         requestInfo.ownershipTokenLength = newCertificateDataContext.tokenLength;
-        requestInfo.pTemplateName = PROVISIONING_TEMPLATE_NAME;
-        requestInfo.templateNameLength = sizeof( PROVISIONING_TEMPLATE_NAME ) - 1;
-        requestInfo.pParametersStart = &provisioningParameters;
+        requestInfo.pTemplateName = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
+        requestInfo.templateNameLength = sizeof( AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME ) - 1;
+        requestInfo.pParametersStart = provisioningParameters;
         requestInfo.numOfParameters = NUM_OF_PROVISIONING_PARAMS;
 
         /* Set the callback function for handling device credentials that the server will send. */
         registerThingResponseCallback.function = _demoRegisterThingCallback;
 
         /* Call the API to provision the demo application with the certificate ID that we received, and the template
-         * name
-         * associated with the demo endpoint account. */
+         * name associated with the demo endpoint account. */
         requestStatus = AwsIotProvisioning_RegisterThing( mqttConnection,
                                                           &requestInfo,
                                                           AWS_IOT_DEMO_PROVISIONING_TIMEOUT_PERIOD_MS,
