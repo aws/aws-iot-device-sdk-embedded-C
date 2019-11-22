@@ -1,0 +1,124 @@
+@startuml
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+
+box "Application Task" #LightBlue
+actor Application as app
+participant "Provisioning API" as provisioning
+participant "Internal Provisioning functions" as internal
+participant "MQTT API" as mqtt
+end box
+
+box "Task Pool" #LightGreen
+participant "MQTT subscription callback" as callback
+end box
+
+box "Task Pool" #LightPink
+participant "AWS IoT Core" as aws
+end box
+
+app -> provisioning: Call Provisioning CreateKeysAndCertificate\nInput:\nIotMqttConnection_t,\nFlags,\nTimeout,\nAwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t
+activate provisioning
+
+provisioning -> provisioning: Check that library is initialized
+return Return NOT_INITIALIZED if library not initialized
+
+provisioning -> provisioning: Validate arguments\nInput:\nIotMqttConnection_t,\nAwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t,\nFlags
+provisioning --> app: Return BAD_PARAMETER for any invalid input argument
+
+provisioning -> provisioning: Atomically, increment mutex reference count,\n and check that the previous count is > 0
+note over provisioning: Mutex is there to protect shared "_provisioningOperation_t" object\n Refernce count is there to protect mutex
+provisioning --> app: Return INTERNAL_FAILURE if reference count is zero
+
+provisioning -> internal: Subscription for 'accepted' and 'rejected' topics\nPass subscription common callback
+deactivate provisioning
+activate internal
+internal -> mqtt: Subscribe to 'accepted' and 'rejected' topics of CreateKeysAndCertificate AWS IoT service API
+mqtt -> aws: Transmit MQTT packet using network stack
+mqtt -> internal: Return SUCCESS or error
+internal -> provisioning: Return SUCCESS or error
+provisioning --> app: Return MQTT_ERROR if error for subscription
+deactivate internal
+activate provisioning
+
+provisioning -> provisioning: Update shared "_provisioningOperation_t" object protected by mutex\nRegister response parser,\nAwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callback
+
+provisioning -> internal: Dry-run payload serialization for PUBLISH request\n(to calculate required payload buffer size)
+deactivate provisioning
+activate internal
+note over internal: _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload
+internal -> provisioning: Return SUCCESS (and buffer size) or INTERNAL_FAILURE
+provisioning -> app: Return INTERNAL_FAILURE if serializalion failure
+deactivate internal
+activate provisioning
+
+provisioning -> provisioning: Allocate memory for payload buffer
+provisioning -> internal: Actual payload serialization for PUBLISH request\n<i>with</i>buffer
+deactivate provisioning
+activate internal
+note over internal: _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload
+internal -> provisioning: Return SUCCESS or INTERNAL_FAILURE
+provisioning -> app: Return INTERNAL_FAILURE if serializalion failure
+deactivate internal
+activate provisioning
+
+provisioning -> provisioning: Create MQTT PUBLISH command
+provisioning -> mqtt: Send MQTT PUBLISH
+mqtt -> aws: Transmit MQTT packet using network stack
+mqtt -> internal: Return SUCCESS or error
+internal -> provisioning: Return SUCCESS or error
+provisioning --> app: Return MQTT_ERROR if error for publish
+
+provisioning -> provisioning: Timed wait on semaphore for response from server
+alt Receive Server Response within timeout period
+aws -> mqtt : incoming PUBLISH response packet from server
+mqtt -> callback: Invoke registered subscription callback. Pass server response information.
+activate callback
+callback -> callback: Atomically increment mutex reference count, and check that previous reference count is non-zero
+alt Previous reference count is zero
+callback -> callback: Atomically decrement reference count
+else
+callback -> callback: Access shared "_provisioningOperation_t" object protected by mutex
+callback -> callback: Check if user-callback function is set
+note over callback: This addresses case when server response\ncomes after API function has exited
+callback -> internal: Parse ACCEPTED or REJECTED Status of server response from incoming PUBLISH topic
+internal -> callback: Return status type
+callback -> internal: Invoke response payload parser. Pass response status, user-callback 
+note over internal: _AwsIotProvisioning_ParseKeysAndCertificateResponse
+internal -> internal: Parse credentials or error response (depending on response type) from server response payload
+alt If error in parsing
+internal -> callback: Return appropriate error BAD_RESPONSE, INTERNAL_FAILURE
+callback -> callback: Set error status in shared "_provisioningOperation_t" object
+else 
+internal -> internal: Invoke user-callback, and pass parsed credentials or error message information.
+internal -> callback: Return SUCCESS.
+callback -> callback: Set SUCCESS status in shared "_provisioningOperation_t" object if response type is ACCEPTED.\nSet SERVER_REFUSED status in shared "_provisioningOperation_t" object if response type is REJECTED.
+end alt
+callback -> callback: Release mutex of shared "_provisioningOperation_t" object.
+callback -> callback: Decrement mutex reference count
+callback -> provisioning: Post to semaphore for response received notification
+end alt
+deactivate callback
+else
+provisioning -> provisioning: Semaphore wait timeout occurred
+provisioning -> provisioning: Set return status to TIMEOUT
+end alt
+provisioning -> provisioning: Access shared "_provisioningOperation_t" object protected by mutex.
+provisioning -> provisioning: Overwrite status value with status value in shared "_provisioningOperation_t" object
+note over provisioning: This is to address race condition between occurrence of\nsemaphore timeout and reception of server response at similar time. \nAccept server response if callback execution has completed.
+provisioning -> provisiong: Release mutex of shared "_provisioningOperation_t" object.
+
+provisioning -> internal: Unsubscribe from "accepted" and "rejected" topics
+deactivate provisioning
+activate internal
+internal -> mqtt: Unsubscribe for 'accepted' and 'rejected' topics for Provisioning
+mqtt -> aws: Transmit MQTT packet using network stack
+mqtt -> internal: Return SUCCESS or error
+return
+deactivate internal
+activate provisioning
+provisioning -> provisioning: Release PUBLISH payload buffer memory
+provisioning -> app: Return operation status, AwsIotProvisioningError_t
+deactivate provisioning
+
+@enduml

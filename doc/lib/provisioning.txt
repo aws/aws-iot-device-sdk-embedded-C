@@ -52,6 +52,9 @@ Provisioning library uses MQTT subscriptions and MQTT publishes for communicatin
 @section CreateKeysAndCertificate_Design CreateKeysAndCertificate Design
 @image html provisioning_createkeysandcertificate_design.png width=100%
 
+@section RegisterThing_Design RegisterThing Design
+@brief html <Work-in-progress>
+
 */
 
 /**
