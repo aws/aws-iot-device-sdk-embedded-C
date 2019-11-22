@@ -99,13 +99,27 @@ The fleet provisioning template, `AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME`, shou
 It is recommended to use serial number (or an equivalent unique device identifier) to provide as parameter to the AWS IoT Core service for provisioning of the device.
 
 @configpossible Any string that can be accepted by the template.
-@configdefault `"SERIAL_NUMBER"`
+@configdefault `"SerialNumber"`
+
+@section AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME_LENGTH
+@brief The length of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME`.
+
+@configpossible Length of the AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME string<br>
+@configdefault `sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME ) - 1` (empty string)<br>
+@configrecommended Don't change default calculated value unless there is a need to use a different length.
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE
-@brief The value of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME`.
+@brief The value of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE`.
 
 @configpossible Any string value<br>
 @configdefault `""` (empty string)
+
+@section AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH
+@brief The length of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME`.
+
+@configpossible Length of the AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH string<br>
+@configdefault `sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH ) - 1` (empty string)<br>
+@configrecommended Don't change default calculated value unless there is a need to use a different length.
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME
 @brief The name of the additional parameter that will be sent as part of provisioning request payload by the demo.
@@ -115,11 +129,25 @@ An additional parameter can be sent to AWS IoT Core service to utilize for _eval
 @configpossible Any string that can be accepted by the template.
 @configdefault `""`
 
+@section AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH
+@brief The length of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH_NAME`.
+
+@configpossible Length of the AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH string<br>
+@configdefault `sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH ) - 1` (empty string)<br>
+@configrecommended Don't change default calculated value unless there is a need to use a different length.
+
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE
 @brief The value of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME`.
 
 @configpossible Any string value<br>
 @configdefault `""` (empty string)
+
+@section AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH
+@brief The length of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH_VALUE`.
+
+@configpossible Length of the AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH string<br>
+@configdefault `sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH ) - 1` (empty string)<br>
+@configrecommended Don't change default calculated value unless there is a need to use a different length.
 
 */
 
@@ -167,111 +195,18 @@ Follow [this guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_cr
 ```
 
 2. Create the template resource which will be used for provisioning the demo application. This needs to be done only once. <br>
-To create a template, the following AWS CLI command may be used. Replace `TemplateName` with the name of the template that was used in the IAM user's policy in step 1.
+To create a template, the following AWS CLI command may be used. Replace `TemplateName` with the name of the fleet provisioning template that was used in the IAM user's policy in step 1. Replace `TemplateJSON` with the template body as a JSON string (containing escape characters). <br><br>Following is an example template JSON string (that uses "SerialNumber" for Thing resource name and accepts an additional "DeviceLocation" parameter) which can be viewed on AWS IoT Console after the AWS CLI command using it is executed <br>`{\"Parameters\":{\"DeviceLocation\":{\"Type\":\"String\"},\"AWS::IoT::Certificate::Id\":{\"Type\":\"String\"},\"SerialNumber\":{\"Type\":\"String\"}},\"Mappings\":{\"LocationTable\":{\"Seattle\":{\"LocationUrl\":\"https://example.aws\"}}},\"Resources\":{\"thing\":{\"Type\":\"AWS::IoT::Thing\",\"Properties\":{\"ThingName\":{\"Fn::Join\":[\"\",[\"ThingPrefix_\",{\"Ref\":\"SerialNumber\"}]]},\"AttributePayload\":{\"version\":\"v1\",\"serialNumber\":\"serialNumber\"}},\"OverrideSettings\":{\"AttributePayload\":\"MERGE\",\"ThingTypeName\":\"REPLACE\",\"ThingGroups\":\"DO_NOTHING\"}},\"certificate\":{\"Type\":\"AWS::IoT::Certificate\",\"Properties\":{\"CertificateId\":{\"Ref\":\"AWS::IoT::Certificate::Id\"},\"Status\":\"Active\"},\"OverrideSettings\":{\"Status\":\"REPLACE\"}},\"policy\":{\"Type\":\"AWS::IoT::Policy\",\"Properties\":{\"PolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iot:Connect\",\"iot:Subscribe\",\"iot:Publish\",\"iot:Receive\"],\"Resource\":\"*\"}]}}}},\"DeviceConfiguration\":{\"FallbackUrl\":\"https://www.example.com/test-site\",\"LocationUrl\":{\"Fn::FindInMap\":[\"LocationTable\",{\"Ref\":\"DeviceLocation\"},\"LocationUrl\"]}}}`.
+
 ```sh
 aws iot create-provisioning-template \
         --template-name <TemplateName> \
         --provisioning-role-arn arn:aws:iam::$AWS_ACCOUNT_ID:role/Admin \
-        --template-body  "{\"Parameters\":{\"DeviceLocation\":{\"Type\":\"String\"},\"AWS::IoT::Certificate::Id\":{\"Type\":\"String\"},\"AWS::IoT::Connection::ClientId\":{\"Type\":\"String\"}},\"Mappings\":{\"LocationTable\":{\"Seattle\":{\"LocationUrl\":\"https:\/\/example.aws\"}}},\"Resources\":{\"thing\":{\"Type\":\"AWS::IoT::Thing\",\"Properties\":{\"ThingName\":{\"Fn::Join\":[\"\",[\"ThingPrefix_\",{\"Ref\":\"AWS::IoT::Connection::ClientId\"}]]},\"AttributePayload\":{\"version\":\"v1\",\"serialNumber\":\"serialNumber\"},\"ThingTypeName\":\"lightBulb-versionA\",\"ThingGroups\":[\"v1-lightbulbs\",\"WA\"]},\"OverrideSettings\":{\"AttributePayload\":\"MERGE\",\"ThingTypeName\":\"REPLACE\",\"ThingGroups\":\"DO_NOTHING\"}},\"certificate\":{\"Type\":\"AWS::IoT::Certificate\",\"Properties\":{\"CertificateId\":{\"Ref\":\"AWS::IoT::Certificate::Id\"},\"Status\":\"Active\"},\"OverrideSettings\":{\"Status\":\"REPLACE\"}},\"policy\":{\"Type\":\"AWS::IoT::Policy\",\"Properties\":{\"PolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iot:Connect\",\"iot:Subscribe\",\"iot:Publish\",\"iot:Receive\"],\"Resource\":\"*\"}]}}}},\"DeviceConfiguration\":{\"FallbackUrl\":\"https:\/\/www.example.com\/test-site\",\"LocationUrl\":{\"Fn::FindInMap\":[\"LocationTable\",{\"Ref\":\"DeviceLocation\"},\"LocationUrl\"]}}}" \
+        --template-body  "<TemplateJSON>" \
         --enabled 
 ```
-The template used in the above AWS CLI command is specific to the demo application, as the demo application provides named context parameters that needs to be recognized by the template. 
-The following is the template passed as a string in the above AWS CLI command.
-```
-{
-  "Parameters": {
-    "DeviceLocation": {
-      "Type": "String"
-    },
-    "AWS::IoT::Certificate::Id": {
-      "Type": "String"
-    },
-    "SerialNumber": {
-      "Type": "String"
-    }
-  },
-  "Mappings": {
-    "LocationTable": {
-      "Seattle": {
-        "LocationUrl": "https://example.aws"
-      }
-    }
-  },
-  "Resources": {
-    "thing": {
-      "Type": "AWS::IoT::Thing",
-      "Properties": {
-        "ThingName": {
-          "Fn::Join": [
-            "",
-            [
-              "ThingPrefix_",
-              {
-                "Ref": "SerialNumber"
-              }
-            ]
-          ]
-        },
-        "AttributePayload": {
-          "version": "v1",
-          "serialNumber": "serialNumber"
-        },
-      },
-      "OverrideSettings": {
-        "AttributePayload": "MERGE",
-      }
-    },
-    "certificate": {
-      "Type": "AWS::IoT::Certificate",
-      "Properties": {
-        "CertificateId": {
-          "Ref": "AWS::IoT::Certificate::Id"
-        },
-        "Status": "Active"
-      },
-      "OverrideSettings": {
-        "Status": "REPLACE"
-      }
-    },
-    "policy": {
-      "Type": "AWS::IoT::Policy",
-      "Properties": {
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Action": [
-                "iot:Connect",
-                "iot:Subscribe",
-                "iot:Publish",
-                "iot:Receive"
-              ],
-              "Resource": "*"
-            }
-          ]
-        }
-      }
-    }
-  },
-  "DeviceConfiguration": {
-    "FallbackUrl": "https://www.example.com/test-site",
-    "LocationUrl": {
-      "Fn::FindInMap": [
-        "LocationTable",
-        {
-          "Ref": "DeviceLocation"
-        },
-        "LocationUrl"
-      ]
-    }
-  }
-}
-```
-
 For more information on provisioning template, refer to [this guide](http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html)
 
-3. Set the name of provisioning template, created in step 2, within demo config file for the  AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME` #define. Build the demo for the `aws_iot_demo_provisioning` target.
+3. Set the name of provisioning template, created in step 2, in the config file for the `AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME` macro. Build the tests for the `aws_iot_demo_provisioning` target.
 
 4. When the Provisioning demo is complete, the template it used is no longer needed. Provisioning template can be deleted with the following command, where `TemplateName` is the name of the template that is to be deleted.
 ```sh
