@@ -26,14 +26,10 @@ return Return NOT_INITIALIZED if library not initialized
 provisioning -> provisioning: Validate arguments\nInput:\nIotMqttConnection_t,\nAwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t,\nFlags
 provisioning --> app: Return BAD_PARAMETER for any invalid input argument
 
-provisioning -> provisioning: Atomically, increment mutex reference count,\n and check that the previous count is > 0
-note over provisioning: Mutex is there to protect shared "_provisioningOperation_t" object\n Refernce count is there to protect mutex
-provisioning --> app: Return INTERNAL_FAILURE if reference count is zero
-
-provisioning -> internal: Subscription for 'accepted' and 'rejected' topics\nPass subscription common callback
+provisioning -> internal: Subscription for 'accepted' and 'rejected' topics\nPass common subscription callback
 deactivate provisioning
 activate internal
-internal -> mqtt: Subscribe to 'accepted' and 'rejected' topics of CreateKeysAndCertificate AWS IoT service API
+internal -> mqtt: Subscribe to 'accepted' and 'rejected' topics of AWS IoT Core's CreateKeysAndCertificate API
 mqtt -> aws: Transmit MQTT packet using network stack
 mqtt -> internal: Return SUCCESS or error
 internal -> provisioning: Return SUCCESS or error
@@ -41,7 +37,7 @@ provisioning --> app: Return MQTT_ERROR if error for subscription
 deactivate internal
 activate provisioning
 
-provisioning -> provisioning: Update shared "_provisioningOperation_t" object protected by mutex\nRegister response parser,\nAwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callback
+provisioning -> provisioning: Update shared "_provisioningOperation_t" object with AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callback
 
 provisioning -> internal: Dry-run payload serialization for PUBLISH request\n(to calculate required payload buffer size)
 deactivate provisioning
@@ -74,39 +70,30 @@ alt Receive Server Response within timeout period
 aws -> mqtt : incoming PUBLISH response packet from server
 mqtt -> callback: Invoke registered subscription callback. Pass server response information.
 activate callback
-callback -> callback: Atomically increment mutex reference count, and check that previous reference count is non-zero
-alt Previous reference count is zero
-callback -> callback: Atomically decrement reference count
-else
-callback -> callback: Access shared "_provisioningOperation_t" object protected by mutex
-callback -> callback: Check if user-callback function is set
-note over callback: This addresses case when server response\ncomes after API function has exited
+callback -> callback: Check if user-callback function is set in shared "_provisioningOperation_t" object.
+note over callback: This addresses case when server response\ncomes after API function has exited.
 callback -> internal: Parse ACCEPTED or REJECTED Status of server response from incoming PUBLISH topic
 internal -> callback: Return status type
-callback -> internal: Invoke response payload parser. Pass response status, user-callback 
+callback -> internal: Invoke response payload parser. Pass response status, user-callback.
 note over internal: _AwsIotProvisioning_ParseKeysAndCertificateResponse
 internal -> internal: Parse credentials or error response (depending on response type) from server response payload
 alt If error in parsing
 internal -> callback: Return appropriate error BAD_RESPONSE, INTERNAL_FAILURE
 callback -> callback: Set error status in shared "_provisioningOperation_t" object
 else 
-internal -> internal: Invoke user-callback, and pass parsed credentials or error message information.
+internal -> internal: Invoke user-callback, and pass parsed payload information (credentials or error message).
 internal -> callback: Return SUCCESS.
 callback -> callback: Set SUCCESS status in shared "_provisioningOperation_t" object if response type is ACCEPTED.\nSet SERVER_REFUSED status in shared "_provisioningOperation_t" object if response type is REJECTED.
 end alt
-callback -> callback: Release mutex of shared "_provisioningOperation_t" object.
-callback -> callback: Decrement mutex reference count
-callback -> provisioning: Post to semaphore for response received notification
-end alt
+callback -> provisioning: Post to semaphore to unblock wait on server response.
 deactivate callback
 else
 provisioning -> provisioning: Semaphore wait timeout occurred
 provisioning -> provisioning: Set return status to TIMEOUT
 end alt
-provisioning -> provisioning: Access shared "_provisioningOperation_t" object protected by mutex.
+provisioning -> provisioning: Access shared "_provisioningOperation_t" object.
 provisioning -> provisioning: Overwrite status value with status value in shared "_provisioningOperation_t" object
 note over provisioning: This is to address race condition between occurrence of\nsemaphore timeout and reception of server response at similar time. \nAccept server response if callback execution has completed.
-provisioning -> provisioning: Release mutex of shared "_provisioningOperation_t" object.
 
 provisioning -> internal: Unsubscribe from "accepted" and "rejected" topics
 deactivate provisioning
