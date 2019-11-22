@@ -17,19 +17,19 @@ box "Task Pool" #LightPink
 participant "AWS IoT Core" as aws
 end box
 
-app -> provisioning: Call Provisioning CreateKeysAndCertificate\nInput:\nIotMqttConnection_t,\nFlags,\nTimeout,\nAwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t
+app -> provisioning: Call Provisioning operation.Input contains\n operation-specific response handling callback.
 activate provisioning
 
 provisioning -> provisioning: Check that library is initialized
 return Return NOT_INITIALIZED if library not initialized
 
-provisioning -> provisioning: Validate arguments\nInput:\nIotMqttConnection_t,\nAwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t,\nFlags
+provisioning -> provisioning: Validate arguments
 provisioning --> app: Return BAD_PARAMETER for any invalid input argument
 
 provisioning -> internal: Subscription for 'accepted' and 'rejected' topics\nPass common subscription callback
 deactivate provisioning
 activate internal
-internal -> mqtt: Subscribe to 'accepted' and 'rejected' topics \nof CreateKeysAndCertificate API
+internal -> mqtt: Subscribe to 'accepted' and 'rejected' topics \nof operation API on the AWS IoT Core
 mqtt -> aws: Transmit MQTT packet using network stack
 mqtt -> internal: Return SUCCESS or error
 internal -> provisioning: Return SUCCESS or error
@@ -37,22 +37,20 @@ provisioning --> app: Return MQTT_ERROR if error for subscription
 deactivate internal
 activate provisioning
 
-provisioning -> provisioning: Update shared "_provisioningOperation_t" object with\n AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t\ncallback
+provisioning -> provisioning: Update shared "_provisioningOperation_t" object with\n input callback.
 
 provisioning -> internal: Dry-run payload serialization for PUBLISH request\n(to calculate required payload buffer size)
 deactivate provisioning
 activate internal
-note over internal: _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload
 internal -> provisioning: Return SUCCESS (and buffer size) or INTERNAL_FAILURE
 provisioning -> app: Return INTERNAL_FAILURE if serializalion failure
 deactivate internal
 activate provisioning
 
 provisioning -> provisioning: Allocate memory for payload buffer
-provisioning -> internal: Actual payload serialization for PUBLISH request\n<i>with</i>buffer
+provisioning -> internal: Actual payload serialization for PUBLISH request\n<i>with</i> buffer
 deactivate provisioning
 activate internal
-note over internal: _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload
 internal -> provisioning: Return SUCCESS or INTERNAL_FAILURE
 provisioning -> app: Return INTERNAL_FAILURE if serializalion failure
 deactivate internal
@@ -75,8 +73,7 @@ note over callback: This addresses case when server response\ncomes after API fu
 callback -> internal: Parse ACCEPTED or REJECTED Status \nof server response from incoming PUBLISH topic
 internal -> callback: Return status type
 callback -> internal: Invoke response payload parser. Pass response payload, user-callback.
-note over internal: _AwsIotProvisioning_ParseKeysAndCertificateResponse
-internal -> internal: Parse credentials or error response\n (depending on response type).
+internal -> internal: Parse success or error response\n (depending on response type).
 alt If error in parsing
 internal -> callback: Return appropriate error BAD_RESPONSE, INTERNAL_FAILURE
 callback -> callback: Set error status in shared "_provisioningOperation_t" object
