@@ -91,7 +91,7 @@ static size_t _calculateSizeOfCborObject( CborValue * pValue );
  * and `cbor_value_get_array_length()`
  *
  * @param pCborValue[in]  The `CborValue` representing the indefinite-length container.
- * @param pContainerSize[in/out] This will be populated with the calculated size of the container.
+ * @param pContainerSize[in,out] This will be populated with the calculated size of the container.
  * @return `CborNoError` if successful, otherwise returns the appropriate `CborError` error.
  */
 static CborError _calculateSizeOfIndefiniteLengthContainer( CborValue * pCborValue,

@@ -1,0 +1,32 @@
+# Include common configuration options.
+@INCLUDE_PATH = doc/config
+@INCLUDE = common
+
+# Basic project information.
+PROJECT_NAME = "Fleet Provisioning"
+PROJECT_BRIEF = "AWS IoT Fleet Provisioning"
+
+# Library documentation output directory.
+HTML_OUTPUT = provisioning
+
+# Generate Doxygen tag file for this library.
+GENERATE_TAGFILE = doc/tag/provisioning.tag
+
+# Directories containing library source code.
+INPUT = doc/lib/ \
+        libraries/aws/provisioning/include \
+        libraries/aws/provisioning/include/types \
+        libraries/aws/provisioning/src \
+        libraries/aws/provisioning/src/private \
+        libraries/aws/provisioning/test \
+        demos/src
+
+# Library file names.
+FILE_PATTERNS = *provisioning*.h *provisioning*.c *provisioning*.txt
+
+# External tag files required by this library.
+TAGFILES = doc/tag/main.tag=../main \
+           doc/tag/mqtt.tag=../mqtt \
+           doc/tag/logging.tag=../logging \
+           doc/tag/static_memory.tag=../static_memory \
+           doc/tag/platform.tag=../platform

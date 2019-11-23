@@ -1,0 +1,108 @@
+@startuml
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+
+box "Application Task" #LightBlue
+actor Application as app
+participant "Provisioning API" as provisioning
+participant "Internal Provisioning functions" as internal
+participant "MQTT API" as mqtt
+end box
+
+box "Task Pool" #LightGreen
+participant "MQTT subscription callback" as callback
+end box
+
+box "Task Pool" #LightPink
+participant "AWS IoT Core" as aws
+end box
+
+app -> provisioning: Call Provisioning operation.Input contains\n operation-specific response handling callback.
+activate provisioning
+
+provisioning -> provisioning: Check that library is initialized
+return Return NOT_INITIALIZED if library not initialized
+
+provisioning -> provisioning: Validate arguments
+provisioning --> app: Return BAD_PARAMETER for any invalid input argument
+
+provisioning -> internal: Subscription for 'accepted' and 'rejected' topics\nPass common subscription callback
+deactivate provisioning
+activate internal
+internal -> mqtt: Subscribe to 'accepted' and 'rejected' topics \nof operation API on the AWS IoT Core
+mqtt -> aws: Transmit MQTT packet using network stack
+mqtt -> internal: Return SUCCESS or error
+internal -> provisioning: Return SUCCESS or error
+provisioning --> app: Return MQTT_ERROR if error for subscription
+deactivate internal
+activate provisioning
+
+provisioning -> provisioning: Update shared "_provisioningOperation_t" object with\n input callback.
+
+provisioning -> internal: Dry-run payload serialization for PUBLISH request\n(to calculate required payload buffer size)
+deactivate provisioning
+activate internal
+internal -> provisioning: Return SUCCESS (and buffer size) or INTERNAL_FAILURE
+provisioning -> app: Return INTERNAL_FAILURE if serializalion failure
+deactivate internal
+activate provisioning
+
+provisioning -> provisioning: Allocate memory for payload buffer
+provisioning -> internal: Actual payload serialization for PUBLISH request\n<i>with</i> buffer
+deactivate provisioning
+activate internal
+internal -> provisioning: Return SUCCESS or INTERNAL_FAILURE
+provisioning -> app: Return INTERNAL_FAILURE if serializalion failure
+deactivate internal
+activate provisioning
+
+provisioning -> provisioning: Create MQTT PUBLISH command
+provisioning -> mqtt: Send MQTT PUBLISH
+mqtt -> aws: Transmit MQTT packet using network stack
+mqtt -> internal: Return SUCCESS or error
+internal -> provisioning: Return SUCCESS or error
+provisioning --> app: Return MQTT_ERROR if error for publish
+
+provisioning -> provisioning: Timed wait on semaphore for response from server
+alt Receive Server Response within timeout period
+aws -> mqtt : incoming PUBLISH response packet from server
+mqtt -> callback: Invoke registered subscription callback.\n Pass server response information.
+activate callback
+callback -> callback: Check if user-callback function is set\n in shared "_provisioningOperation_t" object.
+note over callback: This addresses case when server response\ncomes after API function has exited.
+callback -> internal: Parse ACCEPTED or REJECTED Status \nof server response from incoming PUBLISH topic
+internal -> callback: Return status type
+callback -> internal: Invoke response payload parser. Pass response payload, user-callback.
+internal -> internal: Parse success or error response\n (depending on response type).
+alt If error in parsing
+internal -> callback: Return appropriate error BAD_RESPONSE, INTERNAL_FAILURE
+callback -> callback: Set error status in shared "_provisioningOperation_t" object
+else 
+internal -> internal: Invoke user-callback. Pass parsed payload information.
+internal -> callback: Return SUCCESS.
+callback -> callback: Set SUCCESS status in shared "_provisioningOperation_t" object\n if response type is ACCEPTED, otherwise,\n SERVER_REFUSED status for response status as REJECTED.
+end alt
+callback -> provisioning: Post to semaphore to unblock wait on server response.
+deactivate callback
+else
+provisioning -> provisioning: Semaphore wait timeout occurred
+provisioning -> provisioning: Set return status to TIMEOUT
+end alt
+provisioning -> provisioning: Access shared "_provisioningOperation_t" object.
+provisioning -> provisioning: Overwrite return status with\n status value in shared "_provisioningOperation_t" object
+note over provisioning: This is to address race condition between occurrence of\nsemaphore timeout and reception of server response at similar time. \nAccept server response if callback execution has completed.
+
+provisioning -> internal: Unsubscribe from "accepted" and "rejected" topics
+deactivate provisioning
+activate internal
+internal -> mqtt: Unsubscribe for 'accepted' and 'rejected' topics
+mqtt -> aws: Transmit MQTT packet using network stack
+mqtt -> internal: Return SUCCESS or error
+return
+deactivate internal
+activate provisioning
+provisioning -> provisioning: Release PUBLISH payload buffer memory
+provisioning -> app: Return operation status, AwsIotProvisioningError_t
+deactivate provisioning
+
+@enduml

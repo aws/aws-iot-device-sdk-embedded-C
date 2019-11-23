@@ -77,7 +77,8 @@ const IotSerializerDecodeInterface_t * _pAwsIotProvisioningDecoder = NULL;
 static _provisioningOperation_t _activeOperation;
 
 /**
- * @brief Timeout for MQTT operations (that are required within the Provisioning operations).
+ * @brief Timeout for MQTT operations that will be used for communicating with the fleet provisioning APIs of the AWS
+ * IoT Core server.
  */
 uint32_t _AwsIotProvisioningMqttTimeoutMs = AWS_IOT_PROVISIONING_DEFAULT_MQTT_TIMEOUT_MS;
 

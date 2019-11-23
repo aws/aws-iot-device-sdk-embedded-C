@@ -78,10 +78,18 @@
 /**
  * @brief Printable names for each of the Provisioning operations.
  */
+/**@{ */
 #define CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG    "GET DEVICE CREDENTIALS"
 #define REGISTER_THING_OPERATION_LOG                 "PROVISION DEVICE"
+/**@} */
 
-
+/**
+ * @brief Default format for communication payload with AWS IoT Core service for Fleet Provisioning feature.
+ *
+ * <b>Possible values:</b>  #AWS_IOT_PROVISIONING_FORMAT_CBOR (JSON is not supported for now by the library) <br>
+ * <b>Recommended values:</b> Cbor is more compact than Json, thus more efficient. <br>
+ * <b>Default value (if undefined):</b>  #AWS_IOT_PROVISIONING_FORMAT_CBOR <br>
+ */
 #ifndef AWS_IOT_PROVISIONING_FORMAT
     #define AWS_IOT_PROVISIONING_FORMAT    AWS_IOT_PROVISIONING_FORMAT_CBOR
 #endif
@@ -216,7 +224,7 @@
 /**
  * @brief The MQTT response topic filter for the Provisioning CreateKeysAndCertificate service API.
  *
- * @note The complete response topics are suffixed with #AWS_IOT_ACCEPTED_SUFFIX or #AWS_IOT_REJECTED_SUFFIX strings.
+ * @note The complete response topics are suffixed with `AWS_IOT_ACCEPTED_SUFFIX` or `AWS_IOT_REJECTED_SUFFIX` strings.
  * It should be utilized in the @ref provisioning_function_registerthing API function.
  */
 #define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER \
@@ -232,10 +240,8 @@
  * @brief The length of the longest MQTT response topic of the Provisioning CreateKeysAndCertificate service API.
  * Out of the two response topics, the "rejected" has the longest length.
  */
-#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_MAX_TOPIC_LENGTH    \
-    ( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH + \
-      sizeof( AWS_IOT_REJECTED_SUFFIX ) )
-
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_MAX_TOPIC_LENGTH \
+    ( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH + sizeof( AWS_IOT_REJECTED_SUFFIX ) )
 
 /**
  * @brief The MQTT request topic for the Provisioning CreateKeysAndCertificate service API.
@@ -390,8 +396,6 @@
  */
 #define PROVISIONING_REJECTED_RESPONSE_ERROR_MESSAGE_STRING                         "errorMessage"
 
-
-
 /*---------------------- Provisioning internal data structures ----------------------*/
 
 /**
@@ -404,19 +408,19 @@ typedef enum _provisioningOperationType
 } _provisioningOperationType_t;
 
 /**
- *  @brief Union representing either of the 2 Provisioning operation APIs' callbacks.
+ * @brief Union representing either of the 2 Provisioning operation APIs' callbacks.
  *
  * @note If an ongoing operation was started by the @ref provisioning_function_registerthing API,
- * then #_provisioningCallbackInfo.createKeysAndCertificateCallback will be valid, whereas if the active
+ * then #_provisioningCallbackInfo_t.createKeysAndCertificateCallback will be valid, whereas if the active
  * operation relates to the @ref AwsIotProvisioning_RegisterThing API, then
- *#_provisioningCallbackInfo.createKeysAndCertificateCallback will be valid.
+ * #_provisioningCallbackInfo_t.registerThingCallback will be valid.
  */
 typedef union _provisioningCallbackInfo
 {
-    /* The callback provided by the user to the @ref provisioning_function_registerthing API. */
+    /** @brief The callback provided by the user to the @ref provisioning_function_registerthing API. */
     AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t createKeysAndCertificateCallback;
 
-    /* The callback provided by the user to the @ref provisioning_function_registerthing API. */
+    /** @brief The callback provided by the user to the @ref provisioning_function_registerthing API. */
     AwsIotProvisioningRegisterThingCallbackInfo_t registerThingCallback;
 } _provisioningCallbackInfo_t;
 
@@ -459,22 +463,13 @@ typedef struct _provisioningOperation
                                          * provisioning_function_registerthing. */
 } _provisioningOperation_t;
 
-/* TODO - Add documentation! */
+/*----------------- Declaration of INTERNAL global variables --------------------*/
+
 extern uint32_t _AwsIotProvisioningMqttTimeoutMs;
-
-/**
- * @brief Pointer to the encoder utility that will be used for serialization
- * of payload data in the library.
- */
 extern const IotSerializerEncodeInterface_t * _pAwsIotProvisioningEncoder;
-
-/**
- * @brief Pointer to the decoder utility that will be used for de-serialization
- * of payload data in the library.
- */
 extern const IotSerializerDecodeInterface_t * _pAwsIotProvisioningDecoder;
 
-/*---------------------- Provisioning internal functions ----------------------*/
+/*---------------------- Declaration of Provisioning INTERNAL functions ----------------------*/
 
 /**
  * @brief Utility for generating the request/response MQTT topic filter string for the ProvisioningDevice service API.
@@ -498,7 +493,7 @@ size_t _AwsIotProvisioning_GenerateRegisterThingTopicFilter( const char * pTempl
  * @param[in] responseType The type of response, "accepted" or "rejected" received from the server for the operation.
  * @param[in] pKeysAndCertificateResponse The response payload from the server to parse.
  * @param[in] keysAndCertificateResponseLength The length of the response payload.
- * @param[in] userCallback The user-provided callback to invoke on successful parsing of response.
+ * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( AwsIotStatus_t responseType,
                                                                                const void * pKeysAndCertificateResponse,
@@ -523,10 +518,10 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
  * @brief Serializes for payload of MQTT request to the Provisioning CreateKeysAndCertificate service API.
  *
  * @param[in] pOutermostEncoder The encoder object to use for serializing payload.
- * @param[in/out] pSerializationBuffer The pre-allocated buffer for storing the serialized data.
+ * @param[in,out] pSerializationBuffer The pre-allocated buffer for storing the serialized data.
  * @param[in] bufferSize The size of the serialization buffer.
- * @return #AWS_IOT_SERIALIZER_SUCCESS if serialization is successful; otherwise #AWS_IOT_SERIALIZER_BAD_PARAMETER
- * if the device context data cannot be appended to the payload.
+ * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise
+ * #AWS_IOT_PROVISIONING_INTERNAL_FAILURE for any serialization error.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( IotSerializerEncoderObject_t * pOutermostEncoder,
                                                                                                uint8_t * pSerializationBuffer,
@@ -537,10 +532,10 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
  *
  * @param[in] pRequestData The data that will be serialized for sending with the request.
  * @param[in] pOutermostEncoder The encoder object to use for serializing payload.
- * @param[in/out] pSerializationBuffer The pre-allocated buffer for storing the serialized data.
+ * @param[in,out] pSerializationBuffer The pre-allocated buffer for storing the serialized data.
  * @param[in] bufferSize The size of the serialization buffer.
- * @return #AWS_IOT_SERIALIZER_SUCCESS if serialization is successful; otherwise #AWS_IOT_SERIALIZER_BAD_PARAMETER
- * if the device context data cannot be appended to the payload.
+ * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise
+ * #AWS_IOT_PROVISIONING_INTERNAL_FAILURE for any serialization error.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPayload( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData,
                                                                                     IotSerializerEncoderObject_t * pOutermostEncoder,

@@ -20,7 +20,7 @@
  */
 
 /**
- * @file aws_iot_onbording_serializer.c
+ * @file aws_iot_provisioning_serializer.c
  * @brief Implements the internal serializer functions of the Provisioning library.
  */
 
@@ -47,7 +47,7 @@
 /*------------------------------------------------------------------*/
 
 /**
- * @brief Wrapper for assert checking the passed serializer error code for #IOT_SERIALIZER_SUCCESS value.
+ * @brief Wrapper for assert checking the passed serializer error code for `IOT_SERIALIZER_SUCCESS` value.
  *
  * This should be used for asserting serializer status codes when performing actual serialization into a buffer.
  *
@@ -56,8 +56,8 @@
 static bool _checkSuccess( IotSerializerError_t error );
 
 /**
- * @brief Wrapper for assert checking the passed serializer error code for either #IOT_SERIALIZER_SUCCESS
- * or #IOT_SERIALIZER_BUFFER_TOO_SMALL values.
+ * @brief Wrapper for assert checking the passed serializer error code for either `IOT_SERIALIZER_SUCCESS`
+ * or `IOT_SERIALIZER_BUFFER_TOO_SMALL` values.
  *
  * This should be used for asserting serializer status codes when performing a serialization dry-run (i.e. serializing
  * without a buffer)
@@ -123,7 +123,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
     /* Close the map. */
     if( checkSerializerStatus( _pAwsIotProvisioningEncoder->closeContainer( pOutermostEncoder, &emptyPayloadEncoder ) ) == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
+        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();

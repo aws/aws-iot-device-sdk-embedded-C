@@ -58,7 +58,7 @@ The Jobs demo establishes an MQTT connection and registers a [Jobs NotifyNext ca
 
 Because the Jobs MQTT API does not support creating Jobs, you must create Jobs for the demo separately. We recommend using AWS CLI to create Jobs.
 
-1. Create a user for AWS CLI. See steps 1 and 2 of @ref guide_developer_automated_tests_jobs for more information.
+1. Create a user for AWS CLI. See steps 1 and 2 of @ref guide_developer_automated_tests_jobs_and_provisioning for more information.
 2. Build and run the demo as described [here](@ref building).
 3. When the following message appears, you may begin creating Jobs for the demo.
 @code{sh}
@@ -130,7 +130,7 @@ The current Jobs tests use the [Unity test framework](http://www.throwtheswitch.
 
 The Jobs system tests require Jobs to be created with an AWS account. AWS does not provide the functionality to create Jobs using the Device API; therefore, Jobs will have to be created using another method.
 
-See @ref guide_developer_automated_tests_jobs for additional setup for running the Jobs tests on Travis CI.
+See @ref guide_developer_automated_tests_jobs_and_provisioning for additional setup for running the Jobs tests on Travis CI.
 
 1. Register a Thing for the tests. This needs to be done only once. <br>
 Follow [this guide](https://docs.aws.amazon.com/iot/latest/developerguide/register-device.html) to register a new Thing.

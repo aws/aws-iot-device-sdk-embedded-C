@@ -40,22 +40,21 @@
 
 /**
  * @functionspage{provisioning,Provisioning library}
- * - @functionname{provision_function_init}
- * - @functionname{provision_function_createkeysandcertificate}
- * - @functionname{provision_function_registerthing}
- * - @functionname{provision_function_cleanup}
- * - @functionname{provision_function_strerror}
+ * - @functionname{provisioning_function_init}
+ * - @functionname{provisioning_function_createkeysandcertificate}
+ * - @functionname{provisioning_function_registerthing}
+ * - @functionname{provisioning_function_cleanup}
+ * - @functionname{provisioning_function_strerror}
  */
 
 /**
- * @functionpage{AwsIotProvisioning_Init,provision,init}
- * @functionpage{AwsIotProvisioning_CreateKeysAndCertificate,provision,registerthing}
- * @functionpage{AwsIotProvisioning_RegisterThing,provision,registerthing}
- * @functionpage{AwsIotProvisioning_Cleanup,provision,cleanup}
- * @functionpage{AwsIotProvisioning_strerror,provision,strerror}
+ * @functionpage{AwsIotProvisioning_Init,provisioning,init}
+ * @functionpage{AwsIotProvisioning_CreateKeysAndCertificate,provisioning,createkeysandcertificate}
+ * @functionpage{AwsIotProvisioning_RegisterThing,provisioning,registerthing}
+ * @functionpage{AwsIotProvisioning_Cleanup,provisioning,cleanup}
+ * @functionpage{AwsIotProvisioning_strerror,provisioning,strerror}
  */
 
-/* @[declare_provisioning_init] */
 
 /**
  * @brief One-time initialization function for the Provisioning library.
@@ -87,22 +86,22 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  * invokes the passed user-callback with the credentials it receives from the server.
  *
  * @note The device should be connected to the user AWS IoT account over MQTT and the calling code should provide the
- * MQTT
- * connection handle to the API for communicating with the server.
+ * MQTT connection handle to the API for communicating with the server.
  *
  * @param[in] provisioningConnection The MQTT connection handle to the user AWS IoT account, which will be used for
  * communicating with the server for creating new device credentials.
  * @param[in] flags The flags for configuring the behavior of the API. See the options available in the
  * aws_iot_provisioning_types.h file.
- * @param[in] timeoutMs The timeout for a response from the server. If there is a timeout, this function returns
- * #AWS_IOT_PROVISIONING_TIMEOUT.
- * @param[in] pResonseCallback The user-defined callback that will be invoked with the response from the server, whether
- * new credentials for the device in case of success, OR error response in case of server rejection of the credential
- * generation request.
+ * @param[in] timeoutMs The timeout (in milliseconds) for a response from the server. If there is a timeout, this
+ * function returns #AWS_IOT_PROVISIONING_TIMEOUT.
+ * @param[in] pResponseCallback The user-defined callback that will be invoked with the response from the server,
+ * whether new credentials for the device in case of success, OR error response in case of server rejection of the
+ * credentials generation request.
  * The callback should be defined appropriately for storing the credentials provided by the server on the device.
- * @warning Do not overwrite the Provisioning claim credentials with the new credentials provided by the server. It is
- * RECOMMENDED NOT to overwrite the certificate used for the passed connection handle until the device has been
- * provisioned with a new certificate.
+ * @warning Do not overwrite the existing Provisioning claim credentials with the new credentials provided by
+ * the server. It is RECOMMENDED NOT to delete the certificate and private key used for the passed connection handle
+ * until the device has been provisioned with a new certificate with the @ref provisioning_function_registerthing
+ * function.
  * @return This function will return #AWS_IOT_PROVISIONING_SUCCESS upon success; otherwise,
  *   #AWS_IOT_PROVISIONING_NOT_INITIALIZED, if the API is called without initializing the Provisioning library (i.e.
  *   with a prior call to @ref AwsIotProvisioning_Init function.)
@@ -114,13 +113,13 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  *   #AWS_IOT_PROVISIONING_SERVER_REFUSED, if the server rejects the request for generating device credentials.
  *   #AWS_IOT_PROVISIONING_BAD_RESPONSE, if the response from the server cannot be successfully parsed or comprehended.
  *   #AWS_IOT_PROVISIONING_INTERNAL_FAILURE, if any there are operation failures internal to the library.
- * @see @ref provision_function_createkeysandcertificate
  */
+/* @[declare_provisioning_createkeysandcertificate] */
 AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttConnection_t provisioningConnection,
                                                                        uint32_t flags,
                                                                        uint32_t timeoutMs,
                                                                        const AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t * pResponseCallback );
-/* @[provision_function_createkeysandcertificate] */
+/* @[declare_provisioning_createkeysandcertificate] */
 
 /**
  * @brief Requests the AWS IoT Core service to provision the device, and invokes the passed user-callback with the
@@ -140,8 +139,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * provisioning the device.
  * @param[in] pProvisioningDataInfo The data (including the certificate) that needs to be sent to the server for
  * provisioning the device.
- * @param[in] timeoutMs The timeout for a response from the server. If there is a timeout, this function returns
- * #AWS_IOT_PROVISIONING_TIMEOUT.
+ * @param[in] timeoutMs The timeout (in milliseconds) for a response from the server. If there is a timeout, this
+ * function returns #AWS_IOT_PROVISIONING_TIMEOUT.
  * @param[in] pResponseCallback The user-defined functor that will be called with the response received from the server,
  * whether post-provisioning data in case of success OR error message in case of server rejection of provisioning
  * request.
