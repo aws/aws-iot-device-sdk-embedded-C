@@ -108,7 +108,7 @@ do
         # search and reuse it within the if statement (I gave up trying
         # to find one after a few minutes), that would be nice.
         #
-        extract-comments $file | grep -iw $word
+        extract-comments $file | grep -iw $word > /dev/null
         if [ $? == "0" ]
         then
             if [ $STATUS"" != "1"  ]
