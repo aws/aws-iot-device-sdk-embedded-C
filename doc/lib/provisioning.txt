@@ -47,7 +47,7 @@ In addition to the components above, the Provisioning library also depends on C 
 @page provisioning_design Design
 @brief Provisioning library architecture.
 
-The Provisioning library uses MQTT subscriptions and MQTT publishes for communicating with the AWS IoT Core service for the Fleet Provisioning feature. Each of the operations within the library ("CreateKeysAndCertificate", "RegisterThing") uses two MQTT subscriptions, one for the accepted topic and other for the rejected topic, to obtain the server response of the MQTT publish request that the operation makes. Each of the operations also requires a user-callback for handling the server response. The callbacks will be run in MQTT's taskpool context.
+The Provisioning library uses MQTT publish/subscribe to interact with the AWS IoT Core service for the Fleet Provisioning feature. Each library operation ("CreateKeysAndCertificate", "RegisterThing") uses two MQTT subscriptions, one for the accepted topic and one for the rejected topic, to obtain the AWS Iot Core response of the MQTT publish request that the operation makes. Each operations also requires a user-callback for handling the server response. The callbacks will be run in MQTT's taskpool context.
 
 @section SyncOperationApi_Design Synchronous Operation Design
 @image html provisioning_sync_operation_design.png width=100%
