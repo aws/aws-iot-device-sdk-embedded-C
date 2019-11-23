@@ -185,6 +185,7 @@ unsuback
 unsubscribeasync
 unsubscribeserializeroverride
 unsubscribesync
+username
 usernamelength
 utf
 waitable
