@@ -47,7 +47,7 @@ In addition to the components above, the Provisioning library also depends on C 
 @page provisioning_design Design
 @brief Provisioning library architecture.
 
-The Provisioning library uses MQTT publish/subscribe to interact with the AWS IoT Core service for the Fleet Provisioning feature. Each library operation ("CreateKeysAndCertificate", "RegisterThing") uses two MQTT subscriptions, one for the accepted topic and one for the rejected topic, to obtain the AWS Iot Core response of the MQTT publish request that the operation makes. Each operation also requires a user-callback for handling the server response. The callbacks will run in MQTT's taskpool context.
+The Provisioning library uses MQTT publish/subscribe to interact with the AWS IoT Core service for the Fleet Provisioning feature. Each library operation ("CreateKeysAndCertificate", "RegisterThing") uses two MQTT subscriptions, one for the accepted topic and one for the rejected topic, to obtain the AWS Iot Core response to the MQTT publish request that the operation makes. Each operation also requires a user-callback for handling the server response. The callbacks will run in MQTT's taskpool context.
 
 @section SyncOperationApi_Design Synchronous Operation Design
 @image html provisioning_sync_operation_design.png width=100%
@@ -250,7 +250,7 @@ Provisioning Templates are used to facilitate provisioning of devices with AWS I
 @section AWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS
 @brief The list of parameters to pass as device context in the Provisioning system tests.
 
-Template parameters are used to provide context of device requesting provisioning. 
+Template parameters are used to provide context of the device requesting provisioning. 
 
 @configpossible A C-style list initialization of parameters.
 @configrecommended A "SerialNumber" parameter required by the the default Provisioning Template created by AWS IoT Console, if creating Thing resource as part of provisioning.
