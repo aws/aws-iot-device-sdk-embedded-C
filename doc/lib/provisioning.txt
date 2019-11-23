@@ -36,7 +36,7 @@ digraph provisioning_dependencies
 @enddot
 
 Currently, the Provisioning library has the following dependencies:
-- The MQTT library for sending the messages that interact with the AWS IoT Core for the Fleet Provisioning feature. See [this page](@ref mqtt) for more information on the MQTT library (and [its dependencies](@ref mqtt_dependencies))
+- The MQTT library used to communicate with AWS IoT Core service. See [this page](@ref mqtt) for more information on the MQTT library (and [its dependencies](@ref mqtt_dependencies))
 - The static memory library will be used if the library is built with `IOT_STATIC_MEMORY_ONLY` flag set to `1`
 - The logging library may be used if @ref AWS_IOT_LOG_LEVEL_PROVISIONING is not #IOT_LOG_NONE.
 
@@ -83,7 +83,7 @@ See @subpage provisioning_demo_config for configuration settings that change the
 @configpage{provisioning_demo,Provisioning demo,Demo,demos}
 
 @section AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME
-@brief The name of the provisioning template associated with the AWS IoT account that the demo will use.
+@brief The provisioning demo uses this template to demonstrate the fleet provisioning feature.
 
 The provisioning demo uses this template to demonstrate the fleet provisioning feature.
 
