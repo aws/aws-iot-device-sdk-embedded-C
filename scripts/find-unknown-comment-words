@@ -82,16 +82,21 @@ then
 fi
 
 TMPFILE=${0##*/}-$USER-$RANDOM
-unknowns=( )
+unknowns=( "not-used" )     # get around empty array with nounset
 extract-comments `find $DIRNAME -name \*.[ch]` |
     tr [:upper:] [:lower:] |
     grep -o -E '[a-zA-Z]+' |
     ablexicon -l $LEXICON > $TMPFILE
-readarray -t unknowns < $TMPFILE
+readarray -O 1 -t unknowns < $TMPFILE
 rm -f $TMPFILE
 
 for word in "${unknowns[@]}"
 do
+    if [ $word"" == "not-used" ]
+	then
+        continue
+	fi
+
     if [ $TERSE"" != "" ]
     then
         echo $word
