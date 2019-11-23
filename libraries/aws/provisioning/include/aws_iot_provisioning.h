@@ -140,8 +140,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * @param[in] pProvisioningDataInfo The data (including the certificate) that needs to be sent to the server for
  * provisioning the device.
  * @param[in] timeoutMs The timeout (in milliseconds) for a response from the server. If there is a timeout, this
- * function returns
- * #AWS_IOT_PROVISIONING_TIMEOUT.
+ * function returns #AWS_IOT_PROVISIONING_TIMEOUT.
  * @param[in] pResponseCallback The user-defined functor that will be called with the response received from the server,
  * whether post-provisioning data in case of success OR error message in case of server rejection of provisioning
  * request.

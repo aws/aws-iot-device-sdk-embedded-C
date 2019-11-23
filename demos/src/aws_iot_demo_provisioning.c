@@ -81,21 +81,15 @@
 static const char pTemplateName[] = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
 
 /**
- * @brief Type for the context parameter for the #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t callback.
- * It will be used for storing the received Certificate ID and the ownership token data received from the server through
- * the callback, so that can be used for provisioning the demo application.
+ * @brief Stores the received certificate ID and certificate ownership token from the server.
  */
 typedef struct _demoKeysAndCertificateCallbackContext
 {
-    char * pCertificateIdBuffer;  /**< @brief Buffer for storing certificate ID that is obtained from the server. */
-    size_t certificateIdLength;   /**< @brief Will be assigned with the length of the certificate ID that will be
-                                   * stored in the #_demoKeysAndCertificateCallbackContext_t.pCertificateIdBuffer
-                                   * buffer.**/
-    char * pOwnershipTokenBuffer; /**< @brief Buffer for storing ownership token for the certificate that is obtained
-                                   * from the server. */
-    size_t tokenLength;           /**< @brief Will be assigned with the length of token string that will be
-                                   * stored in the #_demoKeysAndCertificateCallbackContext_t.pOwnershipTokenBuffer
-                                   * buffer*/
+    char * pCertificateIdBuffer;  /**< @brief Buffer containing the certificate ID returned by the server. */
+    size_t certificateIdLength;   /**< @brief Length of the certificate ID* buffer. */
+    char * pOwnershipTokenBuffer; /**< @brief Buffer containing the certificate ownership token returned
+                                   * by the server. */
+    size_t tokenLength;           /**< @brief Length of the ownership token. */
 } _demoKeysAndCertificateCallbackContext_t;
 
 /*-----------------------------------------------------------*/
@@ -122,8 +116,8 @@ static void _printRejectedResponse( const AwsIotProvisioningRejectedResponse_t *
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Callback for displaying the credentials sent by the server (if server is successful), and
- * copying the Certificate ID and ownership token data obtained from the server issued with the new device credentials.
+ * @brief Callback for displaying the information in the server response. If the response is successful (i.e. contains
+ * credentials), the Certificate ID and ownership token data will be copied into buffers for use later in the demo.
  *
  * @param[in] contextParam The context of the callback containing buffers to copy the credentials to.
  * @param[in] pResponseInfo The device credentials information obtained from the server that will be copied into the

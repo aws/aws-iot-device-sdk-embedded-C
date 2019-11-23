@@ -1,11 +1,11 @@
 /**
 @mainpage
 @anchor Fleet Provisioning
-@brief Library for the Fleet Provisioning feature of AWS IoT.
+@brief Library for the fleet provisioning feature of AWS IoT.
 
 > When you use AWS IoT fleet provisioning, AWS IoT can generate and securely deliver device certificates and private keys to your devices when they connect to AWS IoT for the first time.
 
-<span style="float:right;margin-right:4em"> &mdash; <i>Description of the Fleet Provisioning feature from [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html)</i></span><br>
+<span style="float:right;margin-right:4em"> &mdash; <i>Description of the fleet provisioning feature from [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html)</i></span><br>
 
 This library provides an API based on the [Fleet Provisioning APIs available over MQTT](https://docs.aws.amazon.com/iot/latest/apireference/Welcome). Features of this library include:
 - Synchronous API functions.
@@ -37,7 +37,7 @@ digraph provisioning_dependencies
 
 Currently, the Provisioning library has the following dependencies:
 - The MQTT library for sending the messages that interact with the AWS IoT Core for the Fleet Provisioning feature. See [this page](@ref mqtt) for more information on the MQTT library (and [its dependencies](@ref mqtt_dependencies))
-- The static memory library will be used if the library is built with `IOT_STATIC_MEMORY_ONLY` flag set as `1`
+- The static memory library will be used if the library is built with `IOT_STATIC_MEMORY_ONLY` flag set to `1`
 - The logging library may be used if @ref AWS_IOT_LOG_LEVEL_PROVISIONING is not #IOT_LOG_NONE.
 
 In addition to the components above, the Provisioning library also depends on C standard libraries.
@@ -45,7 +45,7 @@ In addition to the components above, the Provisioning library also depends on C 
 
 /**
 @page provisioning_design Design
-@brief Architecture behind the Provisioning library.
+@brief Provisioning library architecture.
 
 The Provisioning library uses MQTT subscriptions and MQTT publishes for communicating with the AWS IoT Core service for the Fleet Provisioning feature. Each of the operations within the library ("CreateKeysAndCertificate", "RegisterThing") uses two MQTT subscriptions, one for the accepted topic and other for the rejected topic, to obtain the server response of the MQTT publish request that the operation makes. Each of the operations also requires a user-callback for handling the server response. The callbacks will be run in MQTT's taskpool context.
 
@@ -67,11 +67,11 @@ The provisioning demo establishes an MQTT connection and makes two API calls to 
 @section provisioning_demo_setup Demo Setup
 @brief How to set up a fleet provisioning template for the Provisioning demo.
 
-The demo assumes that a fleet provisioning template, that takes parameters (including one for "SerialNumber") from the device, has been created in the account that will be used for connecting to AWS IoT Core. 
-To create a template, you can use the AWS IoT Console or AWS CLI. (For more information on fleet provisioning templates, refer [here](https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html) )
+The demo assumes a fleet provisioning template which takes parameters (including one for "SerialNumber") from the device has been created in the account that will be used for connecting to AWS IoT Core. 
+To create a template, you can use the AWS IoT Console or AWS CLI. (For more information on fleet provisioning templates, refer [here](https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html). )
 
 1. Create an IAM user for AWS CLI. See steps 1 @ref guide_developer_automated_tests_jobs_and_provisioning for more information.
-2. Create an IAM role and attach a policy to the role. The role is required for the provisioning template to be created. (The provisioning template assumes the role for its runtime behavior.) See steps 2 and 3 in @ref provisioning_system_tests_setup for more information
+2. Create an IAM role and attach a policy to the role. The role is required for to create the provisioning template. (The provisioning template assumes the role for its runtime behavior.) See steps 2 and 3 in @ref provisioning_system_tests_setup for more information
 3. Create a provisioning template for the demo. See step 4 in @ref provisioning_system_tests_setup for more information.
 4. Build and run the demo as described [here](@ref building).
 
@@ -85,13 +85,13 @@ See @subpage provisioning_demo_config for configuration settings that change the
 @section AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME
 @brief The name of the provisioning template associated with the AWS IoT account that the demo will use.
 
-The Provisioning demo requests the AWS IoT Core service to use the defined template name to demonstrate the fleet provisioning feature.
+The provisioning demo uses this template to demonstrate the fleet provisioning feature.
 
 @configpossible Any string <br>
 @configdefault `""` (empty string)
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME
-@brief The name of the serial number parameter that will be sent as part of provisioning request payload by the demo.
+@brief The name of the serial number parameter sent in the provisioning request.
 
 The fleet provisioning template, `AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME`, should be configured to accept the parameter. (The default template generated by AWS IoT Console uses "SerialNumber" to generate Thing resource name on provisioning device.)
 It is recommended to use serial number (or an equivalent unique device identifier) to provide as parameter to the AWS IoT Core service for provisioning of the device.
@@ -100,27 +100,27 @@ It is recommended to use serial number (or an equivalent unique device identifie
 @configdefault `"SerialNumber"`
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME_LENGTH
-@brief The length of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME`.
+@brief The length of the parameter associated with `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME`.
 
 @configpossible Length of the AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME string<br>
 @configdefault `sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME ) - 1` (empty string)<br>
 @configrecommended Don't change default calculated value unless there is a need to use a different length.
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE
-@brief The value of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE`.
+@brief The value of the parameter associated with `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE`.
 
 @configpossible Any string value<br>
 @configdefault `""` (empty string)
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH
-@brief The length of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME`.
+@brief The length of the parameter associated with `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME`.
 
 @configpossible Length of the AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH string<br>
 @configdefault `sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_VALUE_LENGTH ) - 1` (empty string)<br>
 @configrecommended Don't change default calculated value unless there is a need to use a different length.
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME
-@brief The name of the additional parameter that will be sent as part of provisioning request payload by the demo.
+@brief The name of the additional parameter sent in the provisioning request.
 
 An additional parameter can be sent to AWS IoT Core service to utilize for _evaluating_ and sending back device configuration in the response. In that case, make sure that the fleet provisioning template is configured to accept the parameter.
 
@@ -128,20 +128,20 @@ An additional parameter can be sent to AWS IoT Core service to utilize for _eval
 @configdefault `""`
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH
-@brief The length of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH_NAME`.
+@brief The length of the parameter associated with `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH_NAME`.
 
 @configpossible Length of the AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH string<br>
 @configdefault `sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH ) - 1` (empty string)<br>
 @configrecommended Don't change default calculated value unless there is a need to use a different length.
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE
-@brief The value of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME`.
+@brief The value of the parameter associated with `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME`.
 
 @configpossible Any string value<br>
 @configdefault `""` (empty string)
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH
-@brief The length of the parameter associated to `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH_VALUE`.
+@brief The length of the parameter associated with `AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_NAME_LENGTH_VALUE`.
 
 @configpossible Length of the AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH string<br>
 @configdefault `sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_2_VALUE_LENGTH ) - 1` (empty string)<br>
