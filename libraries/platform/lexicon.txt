@@ -60,4 +60,5 @@ timercreate
 timerdestroy
 tls
 uint
+username
 usernamesize

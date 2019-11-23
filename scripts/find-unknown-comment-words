@@ -119,7 +119,6 @@ do
                 echo -e $GREEN"#  to the lexicon file '"$LEXICON"'".$DEFAULTFG
                 echo -e $GREEN"#"$DEFAULTFG
                 echo -e $GREEN"############################################################################"$DEFAULTFG
-                echo ""
                 STATUS=1  # Return non-zero status if any unidentified words are found
             fi
             echo ""

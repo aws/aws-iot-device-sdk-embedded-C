@@ -20,6 +20,7 @@ PATH=$PATH:$PWD/scripts
 # Check for find-unknown-comment-words.
 command -v find-unknown-comment-words > /dev/null || { echo "Can't find spellcheck script, exiting."; exit 1; }
 
+STATUS=
 #
 # Check spelling in all directories with a 'lexicon.txt' file.
 #
@@ -29,6 +30,11 @@ do
     find-unknown-comment-words --directory $dir
     if [ $? -ne "0" ]
     then
-        exit 1
+        STATUS=1
     fi
 done
+
+if [ $STATUS"" = "1" ]
+then
+    exit 1
+fi
