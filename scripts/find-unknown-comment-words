@@ -82,6 +82,7 @@ then
 fi
 
 TMPFILE=${0##*/}-$USER-$RANDOM
+unknowns=( )
 extract-comments `find $DIRNAME -name \*.[ch]` |
     tr [:upper:] [:lower:] |
     grep -o -E '[a-zA-Z]+' |
