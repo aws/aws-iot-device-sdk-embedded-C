@@ -3,8 +3,8 @@
 @INCLUDE = common
 
 # Basic project information.
-PROJECT_NAME = "Provisioning"
-PROJECT_BRIEF = "AWS IoT Fleet Provisioning feature"
+PROJECT_NAME = "Fleet Provisioning"
+PROJECT_BRIEF = "AWS IoT Fleet Provisioning"
 
 # Library documentation output directory.
 HTML_OUTPUT = provisioning
