@@ -54,7 +54,7 @@
 /**
  * The name for the provisioning template that will be used for provisioning the demo app.
  */
-#define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME    "DEMO_TEMPLATE"
+#define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME    ""
 
 /**
  * List of parameters that will be used for provisioning in the demo application.
