@@ -71,7 +71,7 @@ The demo assumes a fleet provisioning template which takes parameters (including
 To create a template, you can use the AWS IoT Console or AWS CLI. (For more information on fleet provisioning templates, refer [here](https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html). )
 
 1. Create an IAM user for AWS CLI. See steps 1 @ref guide_developer_automated_tests_jobs_and_provisioning for more information.
-2. Create an IAM role and attach a policy to the role. The role is required for to create the provisioning template. (The provisioning template assumes the role for its runtime behavior.) See steps 2 and 3 in @ref provisioning_system_tests_setup for more information
+2. Create an IAM role and attach a policy to the role. The role is required to create the provisioning template. (The provisioning template assumes the role for its runtime behavior.) See steps 2 and 3 in @ref provisioning_system_tests_setup for more information
 3. Create a provisioning template for the demo. See step 4 in @ref provisioning_system_tests_setup for more information.
 4. Build and run the demo as described [here](@ref building).
 
