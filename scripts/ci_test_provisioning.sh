@@ -102,7 +102,6 @@ apt-get install -y jq
 # Iterate over all the principals/certificates attached to the Thing resource (created by the integration test)
 # and delete the certificates.
 aws iot list-thing-principals \
-    --endpoint $AWS_CLI_CI_ENDPOINT \
     --region $AWS_PROVISIONING_REGION \
     --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT | \
         grep arn | tr -d \",' ' | 
@@ -110,7 +109,6 @@ aws iot list-thing-principals \
             do
                 # Detach the principal from the Thing resource.
                 aws iot detach-thing-principal \
-                    --endpoint $AWS_CLI_CI_ENDPOINT \
                     --region $AWS_PROVISIONING_REGION \
                     --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT \
                     --principal $CERTIFICATE_ARN
@@ -118,19 +116,16 @@ aws iot list-thing-principals \
                 CERTIFICATE_ID=$(echo $CERTIFICATE_ARN | cut -d '/' -f2)
 
                 aws iot update-certificate \
-                    --endpoint $AWS_CLI_CI_ENDPOINT \
                     --region $AWS_PROVISIONING_REGION \
                     --certificate-id $CERTIFICATE_ID \
                     --new-status INACTIVE
 
                 aws iot delete-certificate \
-                    --endpoint $AWS_CLI_CI_ENDPOINT \
                     --region $AWS_PROVISIONING_REGION \
                     --certificate-id $CERTIFICATE_ID \
                     --force-delete
             done
 aws iot delete-thing \
-    --endpoint $AWS_CLI_CI_ENDPOINT \
     --region $AWS_PROVISIONING_REGION \
     --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT
 
