@@ -248,7 +248,7 @@ Provisioning Templates are used to facilitate provisioning of devices with AWS I
 Template parameters are used to provide context of the device requesting provisioning. 
 
 @configpossible A C-style list initialization of parameters.<br>
-@configrecommended A "SerialNumber" parameter is required by the the default Provisioning Template created by AWS IoT Console for creating a Thing resource. It should also include other parameter name-value pairs that are needed by the Provisioning Template.<br>
+@configrecommended A "SerialNumber" parameter is required by the default Provisioning Template, that is created by the AWS IoT Console, to create a Thing resource. It should also include other parameter name-value pairs that are needed by the Provisioning Template.<br>
 @configdefault A "SerialNumber" parameter name without the value. The parameter value should to be specified.
 @code{c}
     {                                                           \
