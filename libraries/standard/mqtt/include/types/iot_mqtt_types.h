@@ -669,8 +669,14 @@ typedef struct IotMqttConnectInfo
     const char * pClientIdentifier;  /**< @brief MQTT client identifier. */
     uint16_t clientIdentifierLength; /**< @brief Length of #IotMqttConnectInfo_t.pClientIdentifier. */
 
-    /* Use these fields if your MQTT broker requires username and password. */
-    const char * pUserName;  /**< @brief Username for MQTT connection. */
+    /**
+     * @brief Username for MQTT connection.
+     *
+     * The MQTT username and password can be used for AWS IoT Enhanced Custom
+     * Authentication as described [here]
+     * (https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html).
+     */
+    const char * pUserName;
     uint16_t userNameLength; /**< @brief Length of #IotMqttConnectInfo_t.pUserName. */
     const char * pPassword;  /**< @brief Password for MQTT connection. */
     uint16_t passwordLength; /**< @brief Length of #IotMqttConnectInfo_t.pPassword. */
