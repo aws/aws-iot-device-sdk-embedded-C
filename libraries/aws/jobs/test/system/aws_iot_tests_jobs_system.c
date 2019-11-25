@@ -156,7 +156,7 @@ static void _operationComplete( void * pArgument,
     AwsIotJobs_Assert( pOperation->u.operation.pResponse != NULL );
     AwsIotJobs_Assert( pOperation->u.operation.responseLength > 0 );
 
-    /* Unblock the main test thead. */
+    /* Unblock the main test thread. */
     IotSemaphore_Post( &( pParams->waitSem ) );
 }
 
@@ -205,7 +205,7 @@ static void _jobsCallback( void * pArgument,
                                 pJobId + 1,
                                 _pJobIdLengths[ checkJobId ] ) == 0 );
 
-    /* Unblock the main test thead. */
+    /* Unblock the main test thread. */
     IotSemaphore_Post( pWaitSem );
 }
 
@@ -758,7 +758,7 @@ TEST( Jobs_System, PersistentSubscriptions )
 
     IotTest_Free( ( void * ) response.pJobsResponse );
 
-    /* Becuase the second operation has persistent subscriptions and does not
+    /* Because the second operation has persistent subscriptions and does not
      * need to subscribe to anything, it should be significantly faster. */
     TEST_ASSERT_LESS_THAN( elapsedTime1, elapsedTime2 );
 

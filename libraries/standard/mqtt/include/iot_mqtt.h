@@ -151,8 +151,8 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
  * [pConnectInfo->pPreviousSubscriptions](@ref IotMqttConnectInfo_t.pPreviousSubscriptions)
  * and [pConnectInfo->previousSubscriptionCount](@ref IotMqttConnectInfo_t.previousSubscriptionCount) can
  * also be used to pass a list of subscriptions to be stored locally without a SUBSCRIBE packet being
- * sent to broker. These subscriptions are useful to invoke application level callbacks for messages received
- * on unsolicited topics from broker.
+ * sent to the broker. These subscriptions are useful to invoke application level callbacks for messages received
+ * on unsolicited topics from the broker.
  *
  * This MQTT library is network agnostic, meaning it has no knowledge of the
  * underlying network protocol carrying the MQTT packets. It interacts with the
@@ -204,7 +204,7 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
  * <b>Example</b>
  * @code{c}
  *
- * // Callback function to receive messages from broker on an unsolicited topic.
+ * // Callback function to receive messages from the broker on an unsolicited topic.
  * void unsolicitedMessageCallback( void * pArgument, IotMqttCallbackParam_t * pPublish );
  *
  * // Parameters to MQTT connect.
@@ -213,7 +213,7 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
  * IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
  * IotMqttPublishInfo_t willInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
  *
- * // A local subscription to receive messages from broker on an unsolicited topic.
+ * // A local subscription to receive messages from the broker on an unsolicited topic.
  * IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
  *
  * // Example network abstraction types.
@@ -243,7 +243,7 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
  * // Set the pointer to the will info.
  * connectInfo.pWillInfo = &willInfo;
  *
- * // [Optional] Set a local subscription to receive broker messages on an unsolicited topic.
+ * // [Optional] Set a local subscription to receive the broker messages on an unsolicited topic.
  * subscription.qos = IOT_MQTT_QOS_0;
  * subscription.pTopicFilter = "some/unsolicited/topic";
  * subscription.topicLength = ( uint16_t ) strlen( subscription.pTopicFilter );
@@ -764,7 +764,7 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
 /**
  * @brief Returns a string that describes an #IotMqttError_t.
  *
- * Like the POSIX's `strerror`, this function returns a string describing a
+ * Like the POSIX `strerror`, this function returns a string describing a
  * return code. In this case, the return code is an MQTT library error code,
  * `status`.
  *

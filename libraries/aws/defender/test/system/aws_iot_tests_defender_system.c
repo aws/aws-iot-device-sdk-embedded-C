@@ -104,7 +104,7 @@ static void _copyDataCallbackFunction( void * param1,
 
 static bool _waitForAnyEvent( uint32_t timeoutSec );
 
-/* Wait for metrics to be accepted by defender service, for maxinum timeout. */
+/* Wait for metrics to be accepted by defender service, for maximum timeout. */
 static void _waitForMetricsAccepted( uint32_t timeoutSec );
 
 /* Verify common section of metrics report. */
@@ -754,10 +754,10 @@ static void _assertRejectDueToThrottle( void )
 
 static void _waitForMetricsAccepted( uint32_t timeoutSec )
 {
-    /* If not event has occured, simply fail the test. */
+    /* If not event has occurred, simply fail the test. */
     if( !_waitForAnyEvent( timeoutSec ) )
     {
-        TEST_FAIL_MESSAGE( "No event has occured within timeout." );
+        TEST_FAIL_MESSAGE( "No event has occurred within timeout." );
     }
 
     if( _callbackInfo.eventType == AWS_IOT_DEFENDER_METRICS_REJECTED )

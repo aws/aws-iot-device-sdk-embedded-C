@@ -628,9 +628,9 @@ typedef struct IotMqttConnectInfo
      * if any. These subscriptions will be immediately restored upon reconnecting.
      *
      * [Optional] The field can also be used to pass a list of subscriptions to be
-     * stored locally without a SUBSCRIBE packet being sent to broker. These subscriptions
+     * stored locally without a SUBSCRIBE packet being sent to the broker. These subscriptions
      * are useful to invoke application level callbacks for messages received on unsolicited
-     * topics from broker.
+     * topics from the broker.
      *
      * This member is ignored if it is `NULL`. If this member is not `NULL`,
      * #IotMqttConnectInfo_t.previousSubscriptionCount must be nonzero.
@@ -669,8 +669,7 @@ typedef struct IotMqttConnectInfo
     const char * pClientIdentifier;  /**< @brief MQTT client identifier. */
     uint16_t clientIdentifierLength; /**< @brief Length of #IotMqttConnectInfo_t.pClientIdentifier. */
 
-    /* These credentials are not used by AWS IoT and may be ignored if
-     * awsIotMqttMode is true. */
+    /* Use these fields if your MQTT broker requires username and password. */
     const char * pUserName;  /**< @brief Username for MQTT connection. */
     uint16_t userNameLength; /**< @brief Length of #IotMqttConnectInfo_t.pUserName. */
     const char * pPassword;  /**< @brief Password for MQTT connection. */

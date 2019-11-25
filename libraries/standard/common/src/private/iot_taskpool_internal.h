@@ -39,12 +39,12 @@
 /* Establish a few convenience macros to handle errors in a standard way. */
 
 /**
- * @brief Every public API return an enumeration value with an undelying value of 0 in case of success.
+ * @brief Every public API return an enumeration value with an underlying value of 0 in case of success.
  */
 #define TASKPOOL_SUCCEEDED( x )               ( ( x ) == IOT_TASKPOOL_SUCCESS )
 
 /**
- * @brief Every public API returns an enumeration value with an undelying value different than 0 in case of success.
+ * @brief Every public API returns an enumeration value with an underlying value different than 0 in case of success.
  */
 #define TASKPOOL_FAILED( x )                  ( ( x ) != IOT_TASKPOOL_SUCCESS )
 
