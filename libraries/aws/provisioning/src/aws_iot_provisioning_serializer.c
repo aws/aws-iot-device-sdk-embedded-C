@@ -243,7 +243,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPaylo
                                                                            pParametersList[ index ].parameterValueLength );
 
             /* Copy the key string to a buffer that we will terminate with the NULL character.
-             * The parameters list does NOT need to have NULL-terminated string members. */
+             * The list of parameters does NOT need to have NULL-terminated string members. */
             pParameterKeyCopy = AwsIotProvisioning_MallocString( pParametersList[ index ].parameterKeyLength * sizeof( char ) );
             strncpy( pParameterKeyCopy, pParametersList[ index ].pParameterKey, pParametersList[ index ].parameterKeyLength );
 

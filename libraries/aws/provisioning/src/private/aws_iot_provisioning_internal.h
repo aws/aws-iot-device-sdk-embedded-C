@@ -116,28 +116,28 @@
     #include "iot_static_memory.h"
 
 /**
- * @brief Allocate an . This function should have the same
+ * @brief Allocate buffer for the payload of an MQTT publish operation. This function should have the same
  * signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
     #define AwsIotProvisioning_MallocPayload    Iot_MallocMessageBuffer
 
 /**
- * @brief Free an . This function should have the same
- * signature as [free]
- * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
+ * @brief Free an MQTT publish payload buffer. This function should have the same
+ * signature as [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
     #define AwsIotProvisioning_FreePayload      Iot_FreeMessageBuffer
 
 /**
- * @brief Allocate an . This function should have the same
- * signature as [malloc]
+ * @brief Allocate a buffer for a short string, which is used for temporarily storing the
+ * "parameter" name during serialization of the publish payload of a registerthing
+ * request operation. This function should have the same signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
     #define AwsIotProvisioning_MallocString     Iot_MallocMessageBuffer
 
 /**
- * @brief Free an . This function should have the same
+ * @brief Free a string. This function should have the same
  * signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
@@ -145,15 +145,15 @@
 
 
 /**
- * @brief Allocate an . This function should have the same
- * signature as [malloc]
+ * @brief Allocate a list of #AwsIotProvisioningResponseDeviceConfigurationEntry_t.
+ * This function should have the same signature as [malloc]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
  */
     #define AwsIotProvisioning_MallocDeviceConfigurationList    Iot_MallocMessageBuffer
 
 /**
- * @brief Free an . This function should have the same
- * signature as [free]
+ * @brief Free a list of #AwsIotProvisioningResponseDeviceConfigurationEntry_t.
+ * This function should have the same signature as [free]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
  */
     #define AwsIotProvisioning_FreeDeviceConfigurationList      Iot_FreeMessageBuffer
