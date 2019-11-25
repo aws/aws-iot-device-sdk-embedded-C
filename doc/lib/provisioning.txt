@@ -162,7 +162,7 @@ The current Provisioning tests use the [Unity test framework](http://www.throwth
 
 @pre The steps below assume basic familiarity with AWS and AWS CLI.
 
-The Provisioning system tests require Provisioning Template to be created with an AWS account. AWS does not provide the functionality to create fleet provisioning template using the Device API; therefore, a fleet provisioning template will have to be created using another method.
+The Provisioning system tests require a Provisioning Template to be created with an AWS account. AWS does not provide the functionality to create a fleet provisioning template using the Device API; therefore, a fleet provisioning template will have to be created using another method.
 
 See @ref guide_developer_automated_tests_jobs_and_provisioning for additional setup for running the Provisioning tests on Travis CI.
 
