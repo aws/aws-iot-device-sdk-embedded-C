@@ -100,8 +100,7 @@ It is recommended to use serial number (or an equivalent unique device identifie
 @configdefault `"SerialNumber"`
 
 @section AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME_LENGTH
-@brief The length ofenecccceudddnnenknehflfutifigkriuteectkelevt
- the parameter associated with `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME`.
+@brief The length of the parameter associated with `AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME`.
 
 @configpossible Length of the AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME string<br>
 @configdefault `sizeof( AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME ) - 1` (empty string)<br>
