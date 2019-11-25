@@ -49,7 +49,7 @@ fi
 
 eval set -- "$GETOPT_OUT"
 
-DIRNAME=/dev/stdin
+DIRNAME=/dev/fd/0
 LEXICON=
 STATUS=
 TERSE=
@@ -132,7 +132,7 @@ do
             echo ""
             extract-comments $file | grep --color=always -iw $word | GREP_COLORS="mt=01;32" grep --color=always -E -e '^[ \t]*[0-9]+'
         fi
-        # Reenable errexit
+        # Re-enable errexit
         set -o errexit
     done
 done

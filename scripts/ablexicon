@@ -14,7 +14,7 @@ function usage () {
     echo " ${0##*/} [options]"
     echo ""
     echo "Options:"
-    echo " -f, --file         source text (defaults to stdin)"
+    echo " -f, --file         source text (defaults to /dev/fd/0)"
     echo " -l, --lexicon      lexicon file (one word per line)"
     echo " -h, --help         display this help"
     exit 1
@@ -43,7 +43,7 @@ fi
 
 eval set -- "$GETOPT_OUT"
 
-INFILE=/dev/stdin
+INFILE=/dev/fd/0
 LEXICON=/dev/null
 while true; do
   case "$1" in
@@ -55,7 +55,7 @@ while true; do
   esac
 done
 
-if [ ! -f $INFILE"" ] && [ $INFILE"" != /dev/stdin ]
+if [ ! -f $INFILE"" ] && [ $INFILE"" != /dev/fd/0 ]
 then
     echo "Invalid input file"
     usage

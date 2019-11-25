@@ -11,8 +11,6 @@ if [ -z "$TRAVIS_PULL_REQUEST" ]; then
     cd $1
 else
     set -ev
-    sudo apt-get -y install util-linux    # for gnu getopt
-    sudo apt-get -y install spell         # for spell
     cd ..                                 # change to SDK root directory
 fi
 PATH=$PATH:$PWD/scripts
