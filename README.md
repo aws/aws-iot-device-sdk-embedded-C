@@ -28,6 +28,9 @@ The Device SDK implements the specific protocol for Thing Shadows to retrieve, u
 ### Jobs
 The Device SDK implements features to facilitate use of the AWS Jobs service. The Jobs service can be used for device management tasks such as updating program files, rotating device certificates, or running other maintenance tasks such are restoring device settings or restarting devices.
 
+### Fleet Provisioning<sup>BETA</sup>
+The Device SDK implements support for the use of AWS IoT Core’s Fleet Provisioning<sup>BETA</sup> feature. The Fleet Provisioning feature can be used to automatically set up generically manufactured devices with unique digital identities, IoT Policy, and other required device-side and cloud-side configuration upon devices’ first connection to AWS IoT Core. <b>Available on 11/25/2019.</b> 
+
 ## Design Goals of this SDK
 The embedded C SDK was specifically designed for resource constrained devices (running on micro-controllers and RTOS).
 
