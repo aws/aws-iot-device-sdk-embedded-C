@@ -1,4 +1,4 @@
-# AWS IoT Device SDK C v4.1.0
+# AWS IoT Device SDK C with Fleet Provisioning<sup>BETA</sup> support
 
 **[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/index.html)**
 
@@ -11,7 +11,7 @@ This library supersedes both the AWS IoT Device SDK Embedded C and the libraries
 
 ## Features
 
-This branch contains all libraries from the [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch, and an additional library to facilitate use of AWS Iot Core's Fleet Provisioning<sup>BETA</sup> feature. The Fleet Provisioning feature can be used to automatically set up generically manufactured devices with unique digital identities, IoT Policy, and other required device-side and cloud-side configuration upon devices’ first connection to AWS IoT Core.
+This branch contains all libraries from the [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch, and <b>an additional library to facilitate use of AWS Iot Core's Fleet Provisioning<sup>BETA</sup> feature</b>. The Fleet Provisioning feature can be used to automatically set up generically manufactured devices with unique digital identities, IoT Policy, and other required device-side and cloud-side configuration upon devices’ first connection to AWS IoT Core. For more information, refer to [Provisioning Devices That Don't Have Device Certificates Using Fleet Provisioning](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
 
 ## Building and Running the Fleet Provisioning library Demo
 
@@ -31,7 +31,7 @@ This SDK builds with [CMake](https://cmake.org/), a cross-platform build tool. T
     - For any other download, the submodules must be downloaded and placed in their respective `third_party` directory.
         - [mbed TLS](https://github.com/ARMmbed/mbedtls/tree/mbedtls-2.17) → `third_party/mbedtls/mbedtls`
         - [tinyCBOR](https://github.com/intel/tinycbor) → `third_party/tinycbor/tinycbor`
-2. Complete the steps to setup your device and AWS IoT account outline [here](https://docs.aws.amazon.com/iot/latest/developerguide/create-iot-policy.html).
+2. Complete the steps to setup your device and AWS IoT account outlined [here](https://docs.aws.amazon.com/iot/latest/developerguide/create-iot-policy.html).
     1. [Sign in to the AWS IoT Console](https://docs.aws.amazon.com/iot/latest/developerguide/iot-console-signin.html)
     2. Create and Activate a Provisioning Claim certificate for the device. [Here](https://docs.aws.amazon.com/iot/latest/developerguide/create-device-certificate.html) are instructions on creating a device certificate which can act as a [Provisioning claim](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based).
     3. Create an AWS IoT Policy for the Provisioning Claim. Use the specific policy mentioned in step 3. of [Provisioning By Claim](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based). ([Here](https://docs.aws.amazon.com/iot/latest/developerguide/create-iot-policy.html) is more information on creating an AWS IoT Policy.)
