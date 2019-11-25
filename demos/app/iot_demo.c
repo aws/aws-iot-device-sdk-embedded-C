@@ -48,22 +48,24 @@
     /* OpenSSL network include. */
     #include "iot_network_openssl.h"
 
-    #define IOT_DEMO_NETWORK_INTERFACE          IOT_NETWORK_INTERFACE_OPENSSL
-    #define IOT_DEMO_SERVER_INFO_INITIALIZER    IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER
-    #define IOT_DEMO_CREDENTIALS_INITIALIZER    AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER
+    #define IOT_DEMO_NETWORK_INTERFACE                   IOT_NETWORK_INTERFACE_OPENSSL
+    #define IOT_DEMO_SERVER_INFO_INITIALIZER             IOT_NETWORK_SERVER_INFO_OPENSSL_INITIALIZER
+    #define IOT_DEMO_CREDENTIALS_INITIALIZER             AWS_IOT_NETWORK_CREDENTIALS_OPENSSL_INITIALIZER
+    #define IOT_DEMO_ALPN_FOR_PASSWORD_AUTHENTICATION    AWS_IOT_PASSWORD_ALPN_FOR_OPENSSL
 
-    #define IotDemoNetwork_Init                 IotNetworkOpenssl_Init
-    #define IotDemoNetwork_Cleanup              IotNetworkOpenssl_Cleanup
-#else
+    #define IotDemoNetwork_Init                          IotNetworkOpenssl_Init
+    #define IotDemoNetwork_Cleanup                       IotNetworkOpenssl_Cleanup
+#else /* if IOT_NETWORK_USE_OPENSSL == 1 */
     /* mbed TLS network include. */
     #include "iot_network_mbedtls.h"
 
-    #define IOT_DEMO_NETWORK_INTERFACE          IOT_NETWORK_INTERFACE_MBEDTLS
-    #define IOT_DEMO_SERVER_INFO_INITIALIZER    IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER
-    #define IOT_DEMO_CREDENTIALS_INITIALIZER    AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER
+    #define IOT_DEMO_NETWORK_INTERFACE                   IOT_NETWORK_INTERFACE_MBEDTLS
+    #define IOT_DEMO_SERVER_INFO_INITIALIZER             IOT_NETWORK_SERVER_INFO_MBEDTLS_INITIALIZER
+    #define IOT_DEMO_CREDENTIALS_INITIALIZER             AWS_IOT_NETWORK_CREDENTIALS_MBEDTLS_INITIALIZER
+    #define IOT_DEMO_ALPN_FOR_PASSWORD_AUTHENTICATION    AWS_IOT_PASSWORD_ALPN_FOR_MBEDTLS
 
-    #define IotDemoNetwork_Init                 IotNetworkMbedtls_Init
-    #define IotDemoNetwork_Cleanup              IotNetworkMbedtls_Cleanup
+    #define IotDemoNetwork_Init                          IotNetworkMbedtls_Init
+    #define IotDemoNetwork_Cleanup                       IotNetworkMbedtls_Cleanup
 #endif /* if IOT_NETWORK_USE_OPENSSL == 1 */
 
 /* This file calls a generic placeholder demo function. The build system selects
@@ -101,7 +103,7 @@ int main( int argc,
     /* Network server info and credentials. */
     struct IotNetworkServerInfo serverInfo = IOT_DEMO_SERVER_INFO_INITIALIZER;
     struct IotNetworkCredentials credentials = IOT_DEMO_CREDENTIALS_INITIALIZER,
-                            * pCredentials = NULL;
+                                 * pCredentials = NULL;
 
     /* Parse and validate any command line arguments. */
     if( IotDemo_ParseArguments( argc,
@@ -118,17 +120,49 @@ int main( int argc,
     /* For a secured connection, set the members of the credentials. */
     if( demoArguments.securedConnection == true )
     {
-        /* Set credential paths. */
+        /* Set credential information. */
         credentials.pClientCert = demoArguments.pClientCertPath;
         credentials.pPrivateKey = demoArguments.pPrivateKeyPath;
         credentials.pRootCa = demoArguments.pRootCaPath;
+        credentials.pUserName = NULL;
+        credentials.pPassword = NULL;
+
+        /* Set the MQTT username, as long as it's not empty or NULL. */
+        if( demoArguments.pUserName != NULL )
+        {
+            credentials.userNameSize = strlen( demoArguments.pUserName );
+
+            if( credentials.userNameSize > 0 )
+            {
+                credentials.pUserName = demoArguments.pUserName;
+            }
+        }
+
+        /* Set the MQTT password, as long as it's not empty or NULL. */
+        if( demoArguments.pPassword != NULL )
+        {
+            credentials.passwordSize = strlen( demoArguments.pPassword );
+
+            if( credentials.passwordSize > 0 )
+            {
+                credentials.pPassword = demoArguments.pPassword;
+            }
+        }
 
         /* By default, the credential initializer enables ALPN with AWS IoT,
-         * which only works over port 443. Disable ALPN if another port is
+         * which only works over port 443. Clear that value if another port is
          * used. */
         if( demoArguments.port != 443 )
         {
             credentials.pAlpnProtos = NULL;
+        }
+
+        /* Per IANA standard:
+         * https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml. */
+        if( ( credentials.pUserName != NULL ) &&
+            ( demoArguments.awsIotMqttMode == true ) )
+        {
+            credentials.pAlpnProtos = IOT_DEMO_ALPN_FOR_PASSWORD_AUTHENTICATION;
         }
 
         /* Set the pointer to the credentials. */

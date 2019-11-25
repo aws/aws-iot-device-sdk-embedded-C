@@ -1747,7 +1747,7 @@ TEST( MQTT_Unit_API, SerializeConnectChecks )
     connectInfo.clientIdentifierLength = 4;
     status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
-    /* Make sure test suceeds. */
+    /* Make sure test succeeds. */
     status = IotMqtt_SerializeConnect( &connectInfo, remainingLength, buffer, packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
     
@@ -2164,7 +2164,7 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
     uint8_t buffer[ 10 ];
     uint8_t * bufPtr = buffer;
 
-    /* Dummy network inteface - pointer to pointer to buffer. */
+    /* Dummy network interface - pointer to pointer to buffer. */
     void * pNetworkInterface = ( void * ) &bufPtr;
 
     buffer[ 0 ] = 0x20; /* CONN ACK */
@@ -2243,7 +2243,7 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
 
 
     /* Good case succeeds - Test for Publish. */
-    /* 1. Find out lenght of the packet .*/
+    /* 1. Find out length of the packet .*/
     memset( &publishInfo, 0x00, sizeof( publishInfo ) );
     publishInfo.pTopicName = "/test/topic";
     publishInfo.topicNameLength = strlen( "/test/topic" );

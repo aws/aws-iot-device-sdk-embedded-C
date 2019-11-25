@@ -287,7 +287,7 @@ TEST( Aws_Iot_Doc_Unit_Parser, JsonInvalid )
         _parseJson( true, pJsonDocument, jsonDocumentLength, "key", "\"value\"", 7 );
     }
 
-    /* Invalid JSON not validated for correctness. Incorrect paranthesis. */
+    /* Invalid JSON not validated for correctness. Incorrect parenthesis. */
     {
         const char pJsonDocument[ 30 ] = "{\"key\": \"value\", \"key2\": {}";
         size_t jsonDocumentLength = strlen( pJsonDocument );
