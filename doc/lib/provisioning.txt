@@ -7,7 +7,7 @@
 
 <span style="float:right;margin-right:4em"> &mdash; <i>Description of the fleet provisioning feature from [AWS IoT documentation](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html)</i></span><br>
 
-This library provides an API based on the [Fleet Provisioning APIs available over MQTT](https://docs.aws.amazon.com/iot/latest/apireference/Welcome). Features of this library include:
+This library provides an API based on the [Fleet Provisioning APIs available over MQTT](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#fleet-provision-api). Features of this library include:
 - Synchronous API functions.
 - User-defined callbacks for handling responses.
 
@@ -214,7 +214,7 @@ aws iot create-provisioning-template \
         --template-body "<TemplateJSON>" \
         --enabled 
 @endcode
-For more information on provisioning template, refer to [this guide](http://michgre.aka.corp.amazon.com/FoundryDocs/build/AWSIcebreakerDocs/AWSIcebreakerDocs-3.0/RHEL5_64/DEV.STD.PTHREAD/build/server-root/iot/latest/developerguide/provision-wo-cert.html)
+For more information on fleet provisioning template, refer to [this guide](https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html#fleet-provision-template)
 Following is an example template JSON string (that uses "SerialNumber" for Thing resource name and accepts an additional "DeviceLocation" parameter) which can be viewed on AWS IoT Console after the AWS CLI command using it is executed <br>
 ```
 {\"Parameters\":{\"DeviceLocation\":{\"Type\":\"String\"},\"AWS::IoT::Certificate::Id\":{\"Type\":\"String\"},\"SerialNumber\":{\"Type\":\"String\"}},\"Mappings\":{\"LocationTable\":{\"Seattle\":{\"LocationUrl\":\"https://example.aws\"}}},\"Resources\":{\"thing\":{\"Type\":\"AWS::IoT::Thing\",\"Properties\":{\"ThingName\":{\"Fn::Join\":[\"\",[\"ThingPrefix_\",{\"Ref\":\"SerialNumber\"}]]},\"AttributePayload\":{\"version\":\"v1\",\"serialNumber\":\"serialNumber\"}},\"OverrideSettings\":{\"AttributePayload\":\"MERGE\",\"ThingTypeName\":\"REPLACE\",\"ThingGroups\":\"DO_NOTHING\"}},\"certificate\":{\"Type\":\"AWS::IoT::Certificate\",\"Properties\":{\"CertificateId\":{\"Ref\":\"AWS::IoT::Certificate::Id\"},\"Status\":\"Active\"},\"OverrideSettings\":{\"Status\":\"REPLACE\"}},\"policy\":{\"Type\":\"AWS::IoT::Policy\",\"Properties\":{\"PolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iot:Connect\",\"iot:Subscribe\",\"iot:Publish\",\"iot:Receive\"],\"Resource\":\"*\"}]}}}},\"DeviceConfiguration\":{\"FallbackUrl\":\"https://www.example.com/test-site\",\"LocationUrl\":{\"Fn::FindInMap\":[\"LocationTable\",{\"Ref\":\"DeviceLocation\"},\"LocationUrl\"]}}}
