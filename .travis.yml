@@ -21,6 +21,9 @@ jobs:
     # Documentation check for pull requests.
     - if: type = pull_request
       env: RUN_TEST=doc
+    # Spelling check for pull requests.
+    - if: type = pull_request
+      env: RUN_TEST=spelling
     # Library tests.
     - env: RUN_TEST=common
     - env: RUN_TEST=mqtt NETWORK_STACK=mbedtls

@@ -141,7 +141,7 @@ static IotSerializerError_t _init( IotSerializerEncoderObject_t * pEncoderObject
         /* Always set outmost type to IOT_SERIALIZER_CONTAINER_STREAM. */
         pEncoderObject->type = IOT_SERIALIZER_CONTAINER_STREAM;
 
-        /* Perfomr the tinycbor init. */
+        /* Perform the tinycbor init. */
         cbor_encoder_init( pCborEncoder, pDataBuffer, maxSize, unusedCborFlags );
     }
     else

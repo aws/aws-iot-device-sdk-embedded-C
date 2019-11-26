@@ -921,13 +921,13 @@ TEST( Common_Unit_Task_Pool, ScheduleTasks_GrowHighPri )
                 TEST_ASSERT( IotTaskPool_CreateJob( &ExecutionBlockingWithoutDestroyCb, &userContext, &jobsStorage[ count ], &jobs[ count ] ) == IOT_TASKPOOL_SUCCESS );
             }
 
-            /* After scheduling _NUMBER_OF_JOBS - 1 jobs the task pool is maxed out, only a high pri task can make it grow more. */
+            /* After scheduling _NUMBER_OF_JOBS - 1 jobs the task pool is maxed out, only a high priority task can make it grow more. */
             for( count = 0; count < TEST_TASKPOOL_NUMBER_OF_THREADS; ++count )
             {
                 TEST_ASSERT( IotTaskPool_Schedule( taskPool, jobs[ count ], 0 ) == IOT_TASKPOOL_SUCCESS );
             }
 
-            /*Schedule a high pri task can make it grow more. */
+            /*Schedule a high priority task can make it grow more. */
             TEST_ASSERT( IotTaskPool_Schedule( taskPool, jobs[ count ], IOT_TASKPOOL_JOB_HIGH_PRIORITY ) == IOT_TASKPOOL_SUCCESS );
 
             count = 0;

@@ -293,7 +293,7 @@ typedef struct IotSerializerDecoderObject
     {
         /* Useful if the type is a container. */
         void * pHandle;
-        /* if the type is a container, the scalarValue is unuseful */
+        /* if the type is a container, the scalarValue is not useful */
         IotSerializerScalarValue_t value;
     } u;
 } IotSerializerDecoderObject_t;
