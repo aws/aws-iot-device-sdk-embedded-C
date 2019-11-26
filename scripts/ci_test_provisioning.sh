@@ -29,18 +29,20 @@ PROVISIONING_ROLE_NAME="CI_SYSTEM_TEST_ROLE"
 
 # Sets up all resources (Provisioning role, Fleet Provisioning template) on the AWS IoT account for running integration tests.
 setup() {
-    # Delete all existing templates in the account to start afresh.
-    aws iot delete-provisioning-template \
-        --region $AWS_PROVISIONING_REGION \
-        --template-name $TEMPLATE_NAME | echo true
-    
     # Create a provisioning role. Ignore error if IAM service role already exists.
     aws iam create-role \
+        --region $AWS_PROVISIONING_REGION \
         --role-name $PROVISIONING_ROLE_NAME \
-        --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' | echo true
+        --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' || true
     aws iam attach-role-policy \
+        --region $AWS_PROVISIONING_REGION \
         --role-name $PROVISIONING_ROLE_NAME \
-        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration | echo true
+        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration || true
+
+    # Delete an existing fleet provisioning template by the same name, if it exists. Ignore the error if the template does not exist.
+    aws iot delete-provisioning-template \
+        --region $AWS_PROVISIONING_REGION \
+        --template-name $TEMPLATE_NAME || true
 
     # Add a single provisioning template to test with.
     aws iot create-provisioning-template \
@@ -55,9 +57,11 @@ setup() {
 teardown() {
     # Delete Provisioning role.
     aws iam detach-role-policy \
+        --region $AWS_PROVISIONING_REGION \
         --role-name $PROVISIONING_ROLE_NAME \
         --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
     aws iam delete-role \
+        --region $AWS_PROVISIONING_REGION \
         --role-name $PROVISIONING_ROLE_NAME
 
     # Delete Fleet Provisioning Template.
@@ -174,8 +178,7 @@ aws iot list-certificates \
                     aws iot delete-certificate \
                         --region $AWS_PROVISIONING_REGION \
                         --certificate-id $CERTIFICATE_ID \
-                        --force-delete | \
-                            echo true
+                        --force-delete || true
                 done
 
 teardown
