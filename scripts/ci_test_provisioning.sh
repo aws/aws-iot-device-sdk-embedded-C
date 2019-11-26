@@ -83,39 +83,30 @@ PROVISIONING_PARAMETERS="{ \
     } \
 }"
 
-AWS_IOT_CREDENTIAL_DEFINES=""
-# Function that creates a compiler flags string for network and credentials configuration of the tests.
-configure_credentials() {
+COMMON_CMAKE_C_FLAGS=""
+# Function that creates compiler flags for configuring the integration tests.
+create_integration_test_config() {
 
-    mkdir credentials
+    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+        mkdir credentials
 
-    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then
+        # Download Root CA certificate.
         wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; 
-    fi
-
-    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then
+        
+        # CI should have credentials for the AWS IoT account.
         echo -e $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
-    fi
-
-    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then
         echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
-    fi
-
-    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then 
+        
         AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"credentials/privateKey.pem\\\"\""; 
+        COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
     fi
 }
 
 # Setup the AWS IoT account for integration tests.
 setup
 
-configure_credentials
-
-COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
+# Create configuration for integration tests.
+create_integration_test_config
 
 # CMake build configuration without static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
