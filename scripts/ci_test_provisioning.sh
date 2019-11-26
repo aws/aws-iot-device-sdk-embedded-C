@@ -24,9 +24,51 @@ run_tests() {
     fi
 }
 
-# Hard-coded with template present in CI account.
-# TODO - Update with creating template (using Aws CLI) for system test setup. 
-TEMPLATE_NAME="CI_TEST_TEMPLATE"
+TEMPLATE_NAME="CI_SYSTEM_TEST_TEMPLATE"
+PROVISIONING_ROLE_NAME="CI_SYSTEM_TEST_ROLE"
+
+# Sets up all resources (Provisioning role, Fleet Provisioning template) on the AWS IoT account for running integration tests.
+setup() {
+    # Create a provisioning role. Ignore error if IAM service role already exists.
+    aws iam create-role \
+        --region $AWS_PROVISIONING_REGION \
+        --role-name $PROVISIONING_ROLE_NAME \
+        --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' || true
+    aws iam attach-role-policy \
+        --region $AWS_PROVISIONING_REGION \
+        --role-name $PROVISIONING_ROLE_NAME \
+        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration || true
+
+    # Delete an existing fleet provisioning template by the same name, if it exists. Ignore the error if the template does not exist.
+    aws iot delete-provisioning-template \
+        --region $AWS_PROVISIONING_REGION \
+        --template-name $TEMPLATE_NAME || true
+
+    # Add a single provisioning template to test with.
+    aws iot create-provisioning-template \
+        --region $AWS_PROVISIONING_REGION \
+        --template-name $TEMPLATE_NAME \
+        --provisioning-role-arn arn:aws:iam::$AWS_ACCOUNT_ID:role/$PROVISIONING_ROLE_NAME \
+        --template-body  "{\"Parameters\":{\"DeviceLocation\":{\"Type\":\"String\"},\"AWS::IoT::Certificate::Id\":{\"Type\":\"String\"},\"SerialNumber\":{\"Type\":\"String\"}},\"Mappings\":{\"LocationTable\":{\"Seattle\":{\"LocationUrl\":\"https://example.aws\"}}},\"Resources\":{\"thing\":{\"Type\":\"AWS::IoT::Thing\",\"Properties\":{\"ThingName\":{\"Fn::Join\":[\"\",[\"ThingPrefix_\",{\"Ref\":\"SerialNumber\"}]]},\"AttributePayload\":{\"version\":\"v1\",\"serialNumber\":\"serialNumber\"}},\"OverrideSettings\":{\"AttributePayload\":\"MERGE\",\"ThingTypeName\":\"REPLACE\",\"ThingGroups\":\"DO_NOTHING\"}},\"certificate\":{\"Type\":\"AWS::IoT::Certificate\",\"Properties\":{\"CertificateId\":{\"Ref\":\"AWS::IoT::Certificate::Id\"},\"Status\":\"Active\"},\"OverrideSettings\":{\"Status\":\"REPLACE\"}},\"policy\":{\"Type\":\"AWS::IoT::Policy\",\"Properties\":{\"PolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iot:Connect\",\"iot:Subscribe\",\"iot:Publish\",\"iot:Receive\"],\"Resource\":\"*\"}]}}}},\"DeviceConfiguration\":{\"FallbackUrl\":\"https://www.example.com/test-site\",\"LocationUrl\":{\"Fn::FindInMap\":[\"LocationTable\",{\"Ref\":\"DeviceLocation\"},\"LocationUrl\"]}}}" \
+        --enabled 
+}
+
+# Removes all resources (Provisioning role, Fleet Provisioning template) that were created for integration tests in the AWS IoT account.
+teardown() {
+    # Delete Provisioning role.
+    aws iam detach-role-policy \
+        --region $AWS_PROVISIONING_REGION \
+        --role-name $PROVISIONING_ROLE_NAME \
+        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
+    aws iam delete-role \
+        --region $AWS_PROVISIONING_REGION \
+        --role-name $PROVISIONING_ROLE_NAME
+
+    # Delete Fleet Provisioning Template.
+    aws iot delete-provisioning-template \
+        --region $AWS_PROVISIONING_REGION \
+        --template-name $TEMPLATE_NAME
+}
 
 # Parameters to inject in the syste/integration test to pass as provisioning parameters.
 SERIAL_NUMBER_DEVICE_CONTEXT="1122334455667788"
@@ -45,36 +87,30 @@ PROVISIONING_PARAMETERS="{ \
     } \
 }"
 
-AWS_IOT_CREDENTIAL_DEFINES=""
-# Function that creates a compiler flags string for network and credentials configuration of the tests.
-configure_credentials() {
+COMMON_CMAKE_C_FLAGS=""
+# Function that creates compiler flags for configuring the integration tests.
+create_integration_test_config() {
 
-    mkdir credentials
+    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+        mkdir credentials
 
-    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then
+        # Download Root CA certificate.
         wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; 
-    fi
-
-    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then
+        
+        # CI should have credentials for the AWS IoT account.
         echo -e $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
-    fi
-
-    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then
         echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
-    fi
-
-    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; 
-    then 
+        
         AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"credentials/privateKey.pem\\\"\""; 
+        COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
     fi
 }
 
-configure_credentials
+# Setup the AWS IoT account for integration tests.
+setup
 
-COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
+# Create configuration for integration tests.
+create_integration_test_config
 
 # CMake build configuration without static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
@@ -142,6 +178,7 @@ aws iot list-certificates \
                     aws iot delete-certificate \
                         --region $AWS_PROVISIONING_REGION \
                         --certificate-id $CERTIFICATE_ID \
-                        --force-delete | \
-                            echo true
+                        --force-delete || true
                 done
+
+teardown

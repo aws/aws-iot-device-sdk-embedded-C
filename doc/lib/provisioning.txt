@@ -201,7 +201,7 @@ aws iam create-role \
 3. Attach a policy to the role created in step2. Replace `RoleName` with the name of the role you created in Step 2. 
 @code{sh}
 aws iam attach-role-policy \
-        --role-name doc_test_role \
+        --role-name <RoleName> \
         --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
 @endcode
 
