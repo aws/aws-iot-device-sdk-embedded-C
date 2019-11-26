@@ -42,4 +42,19 @@ typedef void * _IotSystemSemaphore_t;
  */
 typedef void * _IotSystemTimer_t;
 
+/**
+ * @brief The format for remote server host and port on this system.
+ */
+typedef void * _IotNetworkServerInfo_t;
+
+/**
+ * @brief The format for network credentials on this system.
+ */
+typedef void * _IotNetworkCredentials_t;
+
+/**
+ * @brief The handle of a network connection on this system.
+ */
+typedef void * _IotNetworkConnection_t;
+
 #endif /* ifndef IOT_PLATFORM_TYPES_TEMPLATE_H_ */
