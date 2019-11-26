@@ -34,13 +34,13 @@ setup() {
         --region $AWS_PROVISIONING_REGION \
         --template-name $TEMPLATE_NAME | echo true
     
-    # Create a provisioning role.
+    # Create a provisioning role. Ignore error if IAM service role already exists.
     aws iam create-role \
         --role-name $PROVISIONING_ROLE_NAME \
-        --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}'
+        --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' | echo true
     aws iam attach-role-policy \
         --role-name $PROVISIONING_ROLE_NAME \
-        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
+        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration | echo true
 
     # Add a single provisioning template to test with.
     aws iot create-provisioning-template \
