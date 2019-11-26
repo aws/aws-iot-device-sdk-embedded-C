@@ -87,30 +87,11 @@ PROVISIONING_PARAMETERS="{ \
     } \
 }"
 
-COMMON_CMAKE_C_FLAGS=""
-# Function that creates compiler flags for configuring the integration tests.
-create_integration_test_config() {
-
-    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-        mkdir credentials
-
-        # Download Root CA certificate.
-        wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; 
-        
-        # CI should have credentials for the AWS IoT account.
-        echo -e $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
-        echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
-        
-        AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"credentials/privateKey.pem\\\"\""; 
-        COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
-    fi
-}
-
 # Setup the AWS IoT account for integration tests.
 setup
 
-# Create configuration for integration tests.
-create_integration_test_config
+# Compiler flags for integration tests.
+COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
 
 # CMake build configuration without static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
@@ -132,8 +113,8 @@ run_tests
 
 # Cleanup the created resources created by the integration tests on the CI AWS IoT account.
 # (Resources include Thing resource, its attached certificates and their policies)
-# (First, we will install a json parser utility, jq)
-apt-get install -y jq
+# (First, we will install a json parser utility, jq and its dependencies)
+apt-get install -y flex bison jq
 
 # Iterate over all the principals/certificates attached to the Thing resource (created by the integration test)
 # and delete the certificates.

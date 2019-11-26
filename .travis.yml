@@ -27,6 +27,7 @@ jobs:
     - env: RUN_TEST=mqtt NETWORK_STACK=openssl
     - env: RUN_TEST=shadow
     - env: RUN_TEST=jobs
+    - env: RUN_TEST=provisioning
     - if: type = push
       compiler: gcc
       env: RUN_TEST=coverage
