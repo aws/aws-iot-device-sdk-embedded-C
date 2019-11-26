@@ -96,7 +96,7 @@ static void _setDefaultArguments( IotDemoArguments_t * pArguments )
 
     /* Set default MQTT broker password if defined. */
     #ifdef IOT_DEMO_PASSWORD
-        pArguments->pUserName = IOT_DEMO_PASSWORD;
+        pArguments->pPassword = IOT_DEMO_PASSWORD;
     #endif
 }
 
