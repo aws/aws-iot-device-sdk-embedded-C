@@ -21,6 +21,11 @@ if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
     if [ "$RUN_TEST" = "doc" ]; then
         sudo apt-get install -y graphviz;
     fi
+    # Install util-linux and spell for spelling checks.
+    if [ "$RUN_TEST" = "spelling" ]; then
+        sudo apt-get -y install util-linux    # for gnu getopt
+        sudo apt-get -y install spell         # for spell
+    fi
 # Set up for coverage builds.
 else
     # Install dependencies for Jobs tests.
