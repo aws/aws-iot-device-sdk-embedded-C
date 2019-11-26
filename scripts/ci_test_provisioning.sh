@@ -26,7 +26,30 @@ run_tests() {
 
 # Hard-coded with template present in CI account.
 # TODO - Update with creating template (using Aws CLI) for system test setup. 
-TEMPLATE_NAME="CI_TEST_TEMPLATE"
+TEMPLATE_NAME="CI_SYSTEM_TEST_TEMPLATE"
+
+# Function to setup template for the integration tests.
+create_provisioning_template() {
+    # Delete all existing templates in the account to start afresh.
+    aws iot delete-provisioning-template \
+         --region $AWS_PROVISIONING_REGION \
+        --template-name $TEMPLATE_NAME | echo true
+    
+    # Add a single provisioning template to test with.
+    aws iot create-provisioning-template \
+        --region $AWS_PROVISIONING_REGION \
+        --template-name $TEMPLATE_NAME \
+        --provisioning-role-arn arn:aws:iam::$AWS_ACCOUNT_ID:role/Admin \
+        --template-body  "{\"Parameters\":{\"DeviceLocation\":{\"Type\":\"String\"},\"AWS::IoT::Certificate::Id\":{\"Type\":\"String\"},\"SerialNumber\":{\"Type\":\"String\"}},\"Mappings\":{\"LocationTable\":{\"Seattle\":{\"LocationUrl\":\"https://example.aws\"}}},\"Resources\":{\"thing\":{\"Type\":\"AWS::IoT::Thing\",\"Properties\":{\"ThingName\":{\"Fn::Join\":[\"\",[\"ThingPrefix_\",{\"Ref\":\"SerialNumber\"}]]},\"AttributePayload\":{\"version\":\"v1\",\"serialNumber\":\"serialNumber\"}},\"OverrideSettings\":{\"AttributePayload\":\"MERGE\",\"ThingTypeName\":\"REPLACE\",\"ThingGroups\":\"DO_NOTHING\"}},\"certificate\":{\"Type\":\"AWS::IoT::Certificate\",\"Properties\":{\"CertificateId\":{\"Ref\":\"AWS::IoT::Certificate::Id\"},\"Status\":\"Active\"},\"OverrideSettings\":{\"Status\":\"REPLACE\"}},\"policy\":{\"Type\":\"AWS::IoT::Policy\",\"Properties\":{\"PolicyDocument\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iot:Connect\",\"iot:Subscribe\",\"iot:Publish\",\"iot:Receive\"],\"Resource\":\"*\"}]}}}},\"DeviceConfiguration\":{\"FallbackUrl\":\"https://www.example.com/test-site\",\"LocationUrl\":{\"Fn::FindInMap\":[\"LocationTable\",{\"Ref\":\"DeviceLocation\"},\"LocationUrl\"]}}}" \
+        --enabled 
+}
+
+# Function to delete the template from the account
+delete_provisioning_template() {
+    aws iot delete-provisioning-template \
+        --region $AWS_PROVISIONING_REGION \
+        --template-name $TEMPLATE_NAME
+}
 
 # Parameters to inject in the syste/integration test to pass as provisioning parameters.
 SERIAL_NUMBER_DEVICE_CONTEXT="1122334455667788"
@@ -71,6 +94,9 @@ configure_credentials() {
         AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"credentials/privateKey.pem\\\"\""; 
     fi
 }
+
+# Setup the AWS IoT account for integration tests.
+create_provisioning_template
 
 configure_credentials
 
@@ -145,3 +171,5 @@ aws iot list-certificates \
                         --force-delete | \
                             echo true
                 done
+
+delete_provisioning_template
