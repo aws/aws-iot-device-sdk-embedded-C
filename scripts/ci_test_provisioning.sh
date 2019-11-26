@@ -24,17 +24,24 @@ run_tests() {
     fi
 }
 
-# Hard-coded with template present in CI account.
-# TODO - Update with creating template (using Aws CLI) for system test setup. 
 TEMPLATE_NAME="CI_SYSTEM_TEST_TEMPLATE"
+PROVISIONING_ROLE_NAME="CI_SYSTEM_TEST_ROLE"
 
-# Function to setup template for the integration tests.
-create_provisioning_template() {
+# Sets up all resources (Provisioning role, Fleet Provisioning template) on the AWS IoT account for running integration tests.
+setup() {
     # Delete all existing templates in the account to start afresh.
     aws iot delete-provisioning-template \
-         --region $AWS_PROVISIONING_REGION \
+        --region $AWS_PROVISIONING_REGION \
         --template-name $TEMPLATE_NAME | echo true
     
+    # Create a provisioning role.
+    aws iam create-role \
+        --role-name $PROVISIONING_ROLE_NAME \
+        --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}'
+    aws iam attach-role-policy \
+        --role-name $PROVISIONING_ROLE_NAME \
+        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
+
     # Add a single provisioning template to test with.
     aws iot create-provisioning-template \
         --region $AWS_PROVISIONING_REGION \
@@ -44,8 +51,16 @@ create_provisioning_template() {
         --enabled 
 }
 
-# Function to delete the template from the account
-delete_provisioning_template() {
+# Removes all resources (Provisioning role, Fleet Provisioning template) that were created for integration tests in the AWS IoT account.
+teardown() {
+    # Delete Provisioning role.
+    aws iam detach-role-policy \
+        --role-name $PROVISIONING_ROLE_NAME \
+        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
+    aws iam delete-role \
+        --role-name $PROVISIONING_ROLE_NAME
+
+    # Delete Fleet Provisioning Template.
     aws iot delete-provisioning-template \
         --region $AWS_PROVISIONING_REGION \
         --template-name $TEMPLATE_NAME
@@ -96,7 +111,7 @@ configure_credentials() {
 }
 
 # Setup the AWS IoT account for integration tests.
-create_provisioning_template
+setup
 
 configure_credentials
 
@@ -172,4 +187,4 @@ aws iot list-certificates \
                             echo true
                 done
 
-delete_provisioning_template
+teardown
