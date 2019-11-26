@@ -14,11 +14,7 @@ set( PLATFORM_COMMON_HEADERS ${PLATFORM_COMMON_HEADERS}
 set( PLATFORM_SOURCES
      # Stubs
      ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/src/iot_clock_${IOT_PLATFORM_NAME}.c
-     ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/src/iot_threads_${IOT_PLATFORM_NAME}.c
-
-     # Network sources
-     ${PORTS_DIRECTORY}/common/src/iot_network_mbedtls.c
-     ${PORTS_DIRECTORY}/common/src/iot_network_metrics.c )
+     ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/src/iot_threads_${IOT_PLATFORM_NAME}.c )
 
 # Set the types header for this port.
 set( PORT_TYPES_HEADER ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/include/iot_platform_types_${IOT_PLATFORM_NAME}.h )
