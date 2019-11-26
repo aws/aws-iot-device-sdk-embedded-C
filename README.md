@@ -11,7 +11,7 @@ This library supersedes both the AWS IoT Device SDK Embedded C and the libraries
 
 ## Features
 
-This branch contains all libraries from the [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch, and <b>an additional library to facilitate use of AWS Iot Core's Fleet Provisioning<sup>BETA</sup> feature</b>. The Fleet Provisioning feature can be used to automatically set up generically manufactured devices with unique digital identities, IoT Policy, and other required device-side and cloud-side configuration upon devices’ first connection to AWS IoT Core. For more information, refer to [Provisioning Devices That Don't Have Device Certificates Using Fleet Provisioning](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
+This branch contains all libraries from the [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch, and <b>an additional library to facilitate use of AWS Iot Core's Fleet Provisioning<sup>BETA</sup> feature</b>. The Fleet Provisioning feature can be used to automatically set up generically manufactured devices with unique digital identities, IoT Policies, and other required device-side and cloud-side configurations upon devices’ first connection to AWS IoT Core. For more information, refer to [Provisioning Devices That Don't Have Device Certificates Using Fleet Provisioning](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
 
 ## Building and Running the Fleet Provisioning library Demo
 
