@@ -29,15 +29,17 @@ PROVISIONING_ROLE_NAME="CI_SYSTEM_TEST_ROLE"
 
 # Sets up all resources (Provisioning role, Fleet Provisioning template) on the AWS IoT account for running integration tests.
 setup() {
-    # Create a provisioning role. Ignore error if IAM service role already exists.
+    # Create a provisioning role, if it does not exist in the account. If a new one is created, we add some delay time (10 sec) for the role to be available
+    # (IAM role creation is "eventually consistent"). If the provisioning role already exists, then ignore errors. 
+    # SUGGESTION: Do not delete the Provisioning Role from the account to ensure that the setup executes reliably.
     aws iam create-role \
-        --region $AWS_PROVISIONING_REGION \
-        --role-name $PROVISIONING_ROLE_NAME \
-        --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' || true
+        --role-name PROVISIONING_ROLE_NAME \
+        --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' && sleep 10 \
+            || true
     aws iam attach-role-policy \
         --region $AWS_PROVISIONING_REGION \
         --role-name $PROVISIONING_ROLE_NAME \
-        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration || true
+        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration  || true
 
     # Delete an existing fleet provisioning template by the same name, if it exists. Ignore the error if the template does not exist.
     aws iot delete-provisioning-template \
@@ -53,17 +55,10 @@ setup() {
         --enabled 
 }
 
-# Removes all resources (Provisioning role, Fleet Provisioning template) that were created for integration tests in the AWS IoT account.
+# Removes the fleet provisioning template resource that was created for integration tests in the AWS IoT account.
+# Note - We do not delete the Provisioning Role as the immediate availability of an IAM role that is created on every CI script run is not guaranteed
+# (due to the eventually consistent characterstic of the IAM role creation).
 teardown() {
-    # Delete Provisioning role.
-    aws iam detach-role-policy \
-        --region $AWS_PROVISIONING_REGION \
-        --role-name $PROVISIONING_ROLE_NAME \
-        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
-    aws iam delete-role \
-        --region $AWS_PROVISIONING_REGION \
-        --role-name $PROVISIONING_ROLE_NAME
-
     # Delete Fleet Provisioning Template.
     aws iot delete-provisioning-template \
         --region $AWS_PROVISIONING_REGION \
@@ -87,30 +82,11 @@ PROVISIONING_PARAMETERS="{ \
     } \
 }"
 
-COMMON_CMAKE_C_FLAGS=""
-# Function that creates compiler flags for configuring the integration tests.
-create_integration_test_config() {
-
-    if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-        mkdir credentials
-
-        # Download Root CA certificate.
-        wget https://www.amazontrust.com/repository/AmazonRootCA1.pem -O credentials/AmazonRootCA1.pem; 
-        
-        # CI should have credentials for the AWS IoT account.
-        echo -e $AWS_IOT_CLIENT_CERT > credentials/clientCert.pem;
-        echo -e $AWS_IOT_PRIVATE_KEY > credentials/privateKey.pem; 
-        
-        AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"credentials/privateKey.pem\\\"\""; 
-        COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
-    fi
-}
-
 # Setup the AWS IoT account for integration tests.
 setup
 
-# Create configuration for integration tests.
-create_integration_test_config
+# Compiler flags for integration tests.
+COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
 
 # CMake build configuration without static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
@@ -132,8 +108,8 @@ run_tests
 
 # Cleanup the created resources created by the integration tests on the CI AWS IoT account.
 # (Resources include Thing resource, its attached certificates and their policies)
-# (First, we will install a json parser utility, jq)
-apt-get install -y jq
+# (First, we will install a json parser utility, jq and its dependencies)
+apt-get install -y flex bison jq
 
 # Iterate over all the principals/certificates attached to the Thing resource (created by the integration test)
 # and delete the certificates.
