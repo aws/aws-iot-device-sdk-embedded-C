@@ -142,6 +142,9 @@ static void _operationComplete( void * pArgument,
 {
     _operationCompleteParams_t * pParams = ( _operationCompleteParams_t * ) pArgument;
 
+    /* Silence warnings when asserts are enabled. */
+    ( void ) pOperation;
+
     /* Check parameters against expected values. */
     AwsIotJobs_Assert( pParams->expectedType == pOperation->callbackType );
     AwsIotJobs_Assert( pParams->operation == pOperation->u.operation.reference );
@@ -173,6 +176,11 @@ static void _jobsCallback( void * pArgument,
     uint32_t checkJobId = 0;
     const char * pJobId = NULL;
     size_t jobIdLength = 0;
+
+    /* Silence warnings when asserts are disabled. */
+    ( void ) pCallbackParam;
+    ( void ) pJobId;
+    ( void ) jobIdLength;
 
     /* Check parameters against expected values. */
     AwsIotJobs_Assert( pCallbackParam->mqttConnection == _mqttConnection );
