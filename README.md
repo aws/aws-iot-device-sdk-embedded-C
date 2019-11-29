@@ -7,10 +7,16 @@ Please be aware that v4 beta may have bugs and performance issues. Additionally,
 ## Branches
 
 ### Master branch
-The master branch will now contain bug fixes/features that have been minimally tested to ensure nothing major is broken. The current version on the master branch is v3.0.1. Eventually, we will move v4.0.0 to the master branch and move v3.0.1 to a legacy branch.
+The [master](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/master) branch will now contain bug fixes/features that have been minimally tested to ensure nothing major is broken. The current version on the master branch is v3.0.1. Eventually, we will move v4.0.0 to the master branch and move v3.0.1 to a legacy branch.
 
 ### Release branch
-The release branch will contain new releases for the SDK that have been tested thoroughly on all supported platforms. Please ensure that you are tracking the release branch for all production work. The current version on the release branch is v3.0.1. Eventually, we will move v4.0.0 to the release branch and move v3.0.1 to a legacy branch.
+The [release](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/release) branch will contain new releases for the SDK that have been tested thoroughly on all supported platforms. Please ensure that you are tracking the release branch for all production work. The current version on the release branch is v3.0.1. Eventually, we will move v4.0.0 to the release branch and move v3.0.1 to a legacy branch.
+
+### FleetProvisioning_beta branch
+The [FleetProvisioning_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/FleetProvisioning_beta) branch will contain support for the use of AWS IoT Core’s Fleet Provisioning<sup>BETA</sup> feature. The Fleet Provisioning feature can be used to automatically set up generically manufactured devices with unique digital identities, IoT Policies, and other required device-side and cloud-side configurations upon devices’ first connection to AWS IoT Core. Eventually, we will move Fleet Provisioning feature to master/release branches and delete FleetProvisioning_beta branch.
+
+### v4_beta branch
+The [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch will contain new features and a new design that inherits from both the AWS IoT Device SDK Embedded C and the libraries provided with Amazon FreeRTOS. This is version 4.0.0 of the SDK. Please be aware that v4 beta may have bugs and performance issues. Eventually, we will move v4.0.0 to the master/release branches and delete v4 beta branch.
 
 ## Overview
 
