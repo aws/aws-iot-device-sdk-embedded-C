@@ -1,7 +1,7 @@
-# Only run on the v4 beta branch for now.
+# Only run on the FleetProvisioning_beta branch for now.
 branches:
   only:
-  - v4_beta
+  - FleetProvisioning_beta
 
 # Build on Ubuntu 16.04 by default.
 os: linux
