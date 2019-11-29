@@ -251,7 +251,7 @@
  */
 typedef struct _taskPoolCache
 {
-    IotListDouble_t freeList; /**< @brief A list ot hold cached jobs. */
+    IotListDouble_t freeList; /**< @brief A list of hold cached jobs. */
 
     uint32_t freeCount;       /**< @brief A counter to track the number of jobs in the cache. */
 } _taskPoolCache_t;
