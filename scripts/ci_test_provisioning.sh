@@ -32,6 +32,7 @@ PROVISIONING_ROLE_NAME="CI_SYSTEM_TEST_ROLE"
 
 # Sets up all resources (Provisioning role, Fleet Provisioning template) on the AWS IoT account for running integration tests.
 setup() {
+
     # Create a provisioning role, if it does not exist in the account. If a new one is created, we add some delay time (10 sec) for the role to be available
     # (IAM role creation is "eventually consistent"). If the provisioning role already exists, then ignore errors. 
     # SUGGESTION: Do not delete the Provisioning Role from the account to ensure that the setup executes reliably.
@@ -85,8 +86,10 @@ PROVISIONING_PARAMETERS="{ \
     } \
 }"
 
-# Setup the AWS IoT account for integration tests.
-setup
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+    # Setup the AWS IoT account for integration tests.
+    setup
+fi
 
 # Compiler flags for integration tests.
 COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
@@ -109,53 +112,54 @@ make -j2 aws_iot_tests_provisioning
 # Run tests in no static memory mode.
 run_tests
 
-# Cleanup the created resources created by the integration tests on the CI AWS IoT account.
-# (Resources include Thing resource, its attached certificates and their policies)
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+    # Cleanup the created resources created by the integration tests on the CI AWS IoT account.
+    # (Resources include Thing resource, its attached certificates and their policies)
 
-# Iterate over all the principals/certificates attached to the Thing resource (created by the integration test)
-# and delete the certificates.
-aws iot list-thing-principals \
-    --region $AWS_PROVISIONING_REGION \
-    --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT | \
-        grep arn | tr -d \",' ' | 
-            while read -r CERTIFICATE_ARN
-            do
-                # Detach the principal from the Thing resource.
-                aws iot detach-thing-principal \
-                    --region $AWS_PROVISIONING_REGION \
-                    --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT \
-                    --principal $CERTIFICATE_ARN
+    # Iterate over all the principals/certificates attached to the Thing resource (created by the integration test)
+    # and delete the certificates.
+    aws iot list-thing-principals \
+        --region $AWS_PROVISIONING_REGION \
+        --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT | \
+            grep arn | tr -d \",' ' | 
+                while read -r CERTIFICATE_ARN
+                do
+                    # Detach the principal from the Thing resource.
+                    aws iot detach-thing-principal \
+                        --region $AWS_PROVISIONING_REGION \
+                        --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT \
+                        --principal $CERTIFICATE_ARN
 
-                CERTIFICATE_ID=$(echo $CERTIFICATE_ARN | cut -d '/' -f2)
+                    CERTIFICATE_ID=$(echo $CERTIFICATE_ARN | cut -d '/' -f2)
 
-                aws iot update-certificate \
-                    --region $AWS_PROVISIONING_REGION \
-                    --certificate-id $CERTIFICATE_ID \
-                    --new-status INACTIVE
+                    aws iot update-certificate \
+                        --region $AWS_PROVISIONING_REGION \
+                        --certificate-id $CERTIFICATE_ID \
+                        --new-status INACTIVE
 
-                aws iot delete-certificate \
-                    --region $AWS_PROVISIONING_REGION \
-                    --certificate-id $CERTIFICATE_ID \
-                    --force-delete
-            done
-aws iot delete-thing \
-    --region $AWS_PROVISIONING_REGION \
-    --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT
-
-# Make best effort to delete any inactive certificate that may have been created by the integration tests.
-aws iot list-certificates \
-    --region $AWS_PROVISIONING_REGION | \
-        jq -c '.certificates[] | select(.status | contains("INACTIVE")) | .certificateArn' | \
-            tr -d \" | \
-                while read -r cert_arn 
-                do 
-                    CERTIFICATE_ID=$(echo $cert_arn | cut -d '/' -f2)
-                    # Attempt to delete the certificate (and ignore any errors that come with 
-                    # the deletion request).
                     aws iot delete-certificate \
                         --region $AWS_PROVISIONING_REGION \
                         --certificate-id $CERTIFICATE_ID \
-                        --force-delete || true
+                        --force-delete
                 done
+    aws iot delete-thing \
+        --region $AWS_PROVISIONING_REGION \
+        --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT
 
-teardown
+    # Make best effort to delete any inactive certificate that may have been created by the integration tests.
+    aws iot list-certificates \
+        --region $AWS_PROVISIONING_REGION | \
+            jq -c '.certificates[] | select(.status | contains("INACTIVE")) | .certificateArn' | \
+                tr -d \" | \
+                    while read -r cert_arn 
+                    do 
+                        CERTIFICATE_ID=$(echo $cert_arn | cut -d '/' -f2)
+                        # Attempt to delete the certificate (and ignore any errors that come with 
+                        # the deletion request).
+                        aws iot delete-certificate \
+                            --region $AWS_PROVISIONING_REGION \
+                            --certificate-id $CERTIFICATE_ID \
+                            --force-delete || true
+                    done
+    teardown
+fi
