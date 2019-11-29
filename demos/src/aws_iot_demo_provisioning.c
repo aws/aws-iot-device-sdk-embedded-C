@@ -502,7 +502,7 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         /* Set the callback function for handling device credentials that the server will send. */
         keysAndCertificateCallback.function = _demoKeysAndCertificateCallback;
 
-        /* Call the API to get new device credentials for this demo, and check that the certificat ID data is populated.
+        /* Call the API to get new device credentials for this demo, and check that the certificate ID data is populated.
          * */
         requestStatus = AwsIotProvisioning_CreateKeysAndCertificate( mqttConnection,
                                                                      0,
