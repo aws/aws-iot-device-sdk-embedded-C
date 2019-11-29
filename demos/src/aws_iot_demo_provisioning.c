@@ -415,10 +415,10 @@ int RunProvisioningDemo( bool awsIotMqttMode,
 
     /* The list of parameters that will be used as "context" for provisioning the demo application.
      * This demo will pass exactly 2 different parameter entries for requesting provisioning. */
-    AwsIotProvisioningRequestParameterEntry_t provisioningParameters[ 2 ] = { 0 };
+    AwsIotProvisioningRequestParameterEntry_t provisioningParameters[ 2 ] = { { 0 } };
 
     /* Determine if a provisioning template name has been specified. */
-    if( ( pTemplateName == NULL ) || ( strlen( pTemplateName ) == 0 ) )
+    if( ( pTemplateName[ 0 ] == NULL ) || ( strlen( pTemplateName ) == 0 ) )
     {
         IotLogError( "A valid provisioning template name must be provided." );
         status = EXIT_FAILURE;
