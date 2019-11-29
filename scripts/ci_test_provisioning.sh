@@ -5,6 +5,9 @@
 # Exit on any nonzero return code.
 set -exu
 
+# First we will make sure that a JSON parser utility is available.
+jq --version || { echo "Need to have the jq utility installed for AWS CLI command output parsing" && false; }
+
 AWS_ACCOUNT_ID=""
 
 # Query the AWS account ID.
@@ -108,9 +111,6 @@ run_tests
 
 # Cleanup the created resources created by the integration tests on the CI AWS IoT account.
 # (Resources include Thing resource, its attached certificates and their policies)
-
-# First we will make sure that a JSON parser utility is available.
-jq --version || { echo "Need to have the jq utility installed for AWS CLI command output parsing" && false; }
 
 # Iterate over all the principals/certificates attached to the Thing resource (created by the integration test)
 # and delete the certificates.
