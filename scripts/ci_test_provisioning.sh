@@ -110,7 +110,7 @@ run_tests
 # (Resources include Thing resource, its attached certificates and their policies)
 
 # First we will make sure that a JSON parser utility is available.
-jq --version || { echo "Need to have the jq utility installed for AWS CLI command output parsing" && false }
+jq --version || ( echo "Need to have the jq utility installed for AWS CLI command output parsing" && false )
 
 # Iterate over all the principals/certificates attached to the Thing resource (created by the integration test)
 # and delete the certificates.
