@@ -136,8 +136,8 @@
 #endif
 
 /* Set defines required for Provisioning demo when building demo target with IOT_BUILD_TESTS set to 1. */
-#ifndef AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME
-    #define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME                           ""
+#ifdef AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME
+    #define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME                           AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME
 #endif
 #ifndef AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME
     #define AWS_IOT_DEMO_PROVISIONING_PARAMETER_SERIAL_NUMBER_NAME            "SerialNumber"
