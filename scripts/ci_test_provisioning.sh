@@ -69,30 +69,33 @@ teardown() {
         --template-name $TEMPLATE_NAME
 }
 
-# Parameters to inject in the syste/integration test to pass as provisioning parameters.
-SERIAL_NUMBER_DEVICE_CONTEXT="1122334455667788"
-PROVISIONING_PARAMETERS="{ \
-    { \
-        .pParameterKey = \"\\\"DeviceLocation\\\"\", \
-        .parameterKeyLength = sizeof( \"\\\"DeviceLocation\\\"\" ) - 1, \
-        .pParameterValue = \"\\\"Seattle\\\"\", \
-        .parameterValueLength = sizeof(\"\\\"Seattle\\\"\" ) - 1 \
-    }, \
-    { \
-        .pParameterKey = \"\\\"SerialNumber\\\"\", \
-        .parameterKeyLength = sizeof( \"\\\"SerialNumber\\\"\" ) - 1, \
-        .pParameterValue = \"\\\"$SERIAL_NUMBER_DEVICE_CONTEXT\\\"\", \
-        .parameterValueLength = sizeof(\"\\\"$SERIAL_NUMBER_DEVICE_CONTEXT\\\"\" ) - 1 \
-    } \
-}"
-
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
     # Setup the AWS IoT account for integration tests.
     setup
-fi
 
-# Compiler flags for integration tests.
-COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
+    # Parameters to inject in the integration test to pass as provisioning parameters.
+    SERIAL_NUMBER_DEVICE_CONTEXT="1122334455667788"
+    PROVISIONING_PARAMETERS="{ \
+        { \
+            .pParameterKey = \"\\\"DeviceLocation\\\"\", \
+            .parameterKeyLength = sizeof( \"\\\"DeviceLocation\\\"\" ) - 1, \
+            .pParameterValue = \"\\\"Seattle\\\"\", \
+            .parameterValueLength = sizeof(\"\\\"Seattle\\\"\" ) - 1 \
+        }, \
+        { \
+            .pParameterKey = \"\\\"SerialNumber\\\"\", \
+            .parameterKeyLength = sizeof( \"\\\"SerialNumber\\\"\" ) - 1, \
+            .pParameterValue = \"\\\"$SERIAL_NUMBER_DEVICE_CONTEXT\\\"\", \
+            .parameterValueLength = sizeof(\"\\\"$SERIAL_NUMBER_DEVICE_CONTEXT\\\"\" ) - 1 \
+        } \
+    }"
+
+    # Compiler flags for integration tests.
+    COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
+else
+    # No compiler flags needed for unit tests.
+    COMMON_CMAKE_C_FLAGS=""
+fi        
 
 # CMake build configuration without static memory mode.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"

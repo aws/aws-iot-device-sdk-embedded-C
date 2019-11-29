@@ -1,7 +1,3 @@
-getSizeof
-https
-ietf
-iterable
 api
 aws
 bool
@@ -42,7 +38,7 @@ sizeof
 tinycbor
 todo
 www
-getSizeof
+getsizeof
 https
 ietf
 iterable
