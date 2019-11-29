@@ -1,7 +1,7 @@
-# Only run on the v4 beta branch for now.
+# Only run on the FleetProvisioning_beta branch for now.
 branches:
   only:
-  - v4_beta
+  - FleetProvisioning_beta
 
 # Build on Ubuntu 16.04 by default.
 os: linux
@@ -30,6 +30,7 @@ jobs:
     - env: RUN_TEST=mqtt NETWORK_STACK=openssl
     - env: RUN_TEST=shadow
     - env: RUN_TEST=jobs
+    - env: RUN_TEST=provisioning AWS_PROVISIONING_REGION=us-east-1
     - if: type = push
       compiler: gcc
       env: RUN_TEST=coverage

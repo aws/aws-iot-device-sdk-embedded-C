@@ -463,16 +463,20 @@ TEST_GROUP_RUNNER( Serializer_Decoder_Unit_CBOR )
 {
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap );
+    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthMap );
+    RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthArray );
     RUN_TEST_CASE( Serializer_Decoder_Unit_CBOR, TestDecoderObjectReuseAfterIteration );
 }
 
 TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
 {
     IotSerializerDecoderObject_t outermostDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t numOfEntriesInOuterMap;
     const uint8_t * pDecoderObjectStartAddr = NULL;
     size_t decoderDataLength = 0;
     IotSerializerDecoderObject_t outerMapDecoder1 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t innerMapDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t numOfEntriesInInnerMap;
     IotSerializerDecoderObject_t outerMapDecoder2 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     size_t unsupportedTypeDecoderObjectLength = 0;
 
@@ -480,6 +484,11 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
                                                                     _testEncodedNestedMap,
                                                                     sizeof( _testEncodedNestedMap ) ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, outermostDecoder.type );
+
+
+    /* Verify the functionality of getSizeOf() API on the outer map. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &outermostDecoder, &numOfEntriesInOuterMap ) );
+    TEST_ASSERT_EQUAL( 2, numOfEntriesInOuterMap );
 
     /* Make sure that the getBufferAddress() API returns the first location of the buffer for the
      * outermost decoder object.*/
@@ -497,6 +506,10 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderObjectWithNestedMap )
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &outermostDecoder, "1",
                                                                     &outerMapDecoder1 ) );
     TEST_ASSERT_EQUAL( IOT_SERIALIZER_CONTAINER_MAP, outerMapDecoder1.type );
+
+    /* Verify the functionality of getSizeOf() API on the inner map. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &outerMapDecoder1, &numOfEntriesInInnerMap ) );
+    TEST_ASSERT_EQUAL( 1, numOfEntriesInInnerMap );
 
     /* Make sure that the getBufferAddress() API returns the first location in the buffer to the value
      * for the entry keyed by "1".*/
@@ -637,6 +650,140 @@ TEST( Serializer_Decoder_Unit_CBOR, TestDecoderIteratorWithNestedMap )
                                                                        &nestedMapDecoder ) );
     _pCborDecoder->destroy( &nestedMapDecoder );
     _pCborDecoder->destroy( &outerDecoder2 );
+}
+
+TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthMap )
+{
+    const uint8_t pSampleIndefiniteLengthMap[] =
+    {
+        0xBF,                   /*# map(*)  <---------------   Indefinite map length */
+        0x64,                   /*# text(4) */
+        0x4B, 0x65, 0x79, 0x31, /*# "Key1" */
+        0x01,                   /*# unsigned(1) */
+        0x64,                   /*# text(4) */
+        0x4B, 0x65, 0x79, 0x32, /*# "Key2" */
+        0x64,                   /*# text(4) */
+        0x4C, 0x61, 0x73, 0x74, /*# "Last" */
+        0xFF,                   /*# primitive(*) <------------------ "break" */
+    };
+
+    IotSerializerDecoderObject_t mapDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t mapSize = 0;
+    IotSerializerDecoderIterator_t iter = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
+    IotSerializerDecoderObject_t keyObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t valueObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t valueObject2 = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS,
+                       _pCborDecoder->init( &mapDecoder,
+                                            pSampleIndefiniteLengthMap,
+                                            sizeof( pSampleIndefiniteLengthMap ) ) );
+
+    /* Test that size of an indefinite length map can be calculated. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &mapDecoder, &mapSize ) );
+    TEST_ASSERT_EQUAL( 2, mapSize );
+
+    /* Test iterating through the map and extracting the first and last iterable elements. */
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &mapDecoder, &iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( iter, &keyObject ) );
+
+    /* Validate that we can obtain the first key value in the indefinite length map. */
+    TEST_ASSERT_EQUAL_STRING_LEN( "Key1", keyObject.u.value.u.string.pString,
+                                  keyObject.u.value.u.string.length );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+
+    /* The last element is a special case for byte/text string extraction due to the succeeding byte being the "break"
+     * byte. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( iter, &valueObject ) );
+    TEST_ASSERT_EQUAL_STRING_LEN( "Last", valueObject.u.value.u.string.pString,
+                                  valueObject.u.value.u.string.length );
+
+
+    /* Make sure that we can obtain the same value entry from the "find()" API */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->find( &mapDecoder, "Key2", &valueObject2 ) );
+    TEST_ASSERT_EQUAL_STRING_LEN( "Last", valueObject2.u.value.u.string.pString,
+                                  valueObject2.u.value.u.string.length );
+
+    /* Destroy the iterator. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iter, &mapDecoder ) );
+
+    _pCborDecoder->destroy( &keyObject );
+    _pCborDecoder->destroy( &valueObject );
+    _pCborDecoder->destroy( &mapDecoder );
+}
+
+TEST( Serializer_Decoder_Unit_CBOR, TestGetSizeOfForIndefiniteLengthArray )
+{
+    const uint8_t pSampleIndefiniteLengthMap[] =
+    {
+        0x9F,                   /*# array(*)  <---------------   Indefinite length array */
+        0x63,                   /*# text(3) */
+        0x45, 0x6C, 0x31,       /*# "El1" */
+        0x01,                   /*# unsigned(1) */
+        0x63,                   /*# text(3) */
+        0x45, 0x6C, 0x33,       /*# "El3" */
+        0x9F,                   /*# array(*)  <---------------   Indefinite length nested array */
+        0x64,                   /*# text(4) */
+        0x4C, 0x61, 0x73, 0x74, /*# "Last" */
+        0xFF,                   /*# primitive(*) <------------------ "break" */
+        0xFF,                   /*# primitive(*) <------------------ "break" */
+    };
+
+    IotSerializerDecoderObject_t arrayDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    size_t arraySize = 0;
+    IotSerializerDecoderIterator_t iter = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
+    IotSerializerDecoderIterator_t nestedIter = IOT_SERIALIZER_DECODER_ITERATOR_INITIALIZER;
+    IotSerializerDecoderObject_t elementObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t nestedArrayObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t nestedObject = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->init( &arrayDecoder,
+                                                                    pSampleIndefiniteLengthMap,
+                                                                    sizeof( pSampleIndefiniteLengthMap ) ) );
+
+    /* Test that size of an indefinite length map can be calculated. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->getSizeOf( &arrayDecoder, &arraySize ) );
+    TEST_ASSERT_EQUAL( 4, arraySize );
+
+    /* Test iterating through the array and extracting the first and last iterable elements. */
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &arrayDecoder, &iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( iter, &elementObject ) );
+
+    /* Validate that we can obtain the first element value in the indefinite length array. */
+    TEST_ASSERT_EQUAL_STRING_LEN( "El1", elementObject.u.value.u.string.pString,
+                                  elementObject.u.value.u.string.length );
+
+    /* Go to the last element in the list. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+
+    /* The last element is a special case for byte/text string extraction as it is an indefinite-length nested array
+     * within the outer indefinite-length array. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( iter, &nestedArrayObject ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepIn( &nestedArrayObject, &nestedIter ) );
+
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->get( nestedIter, &nestedObject ) );
+    TEST_ASSERT_EQUAL_STRING_LEN( "Last", nestedObject.u.value.u.string.pString,
+                                  nestedObject.u.value.u.string.length );
+
+    /* Destroy the iterators. */
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( nestedIter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( nestedIter, &nestedArrayObject ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->next( iter ) );
+    TEST_ASSERT_EQUAL( IOT_SERIALIZER_SUCCESS, _pCborDecoder->stepOut( iter, &arrayDecoder ) );
+
+    _pCborDecoder->destroy( &nestedObject );
+    _pCborDecoder->destroy( &nestedArrayObject );
+    _pCborDecoder->destroy( &elementObject );
+    _pCborDecoder->destroy( &arrayDecoder );
 }
 
 /* Verifies that a container decoder object remains valid for re-use after a complete round of iterating

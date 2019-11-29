@@ -35,6 +35,13 @@ else
         pip3 install --user wheel;
         pip3 install --user awscli;
     fi
+    
+    # Install dependencies for Provisioning tests.
+    if [ "$RUN_TEST" = "provisioning" ]; then
+        # Install pip for awscli, and install a json parser utility, jq and its dependencies.
+        sudo apt-get install -y python3-pip flex bison jq;
+        pip3 install --user awscli;
+    fi
 
     # Install dependencies for coverage builds.
     if [ "$RUN_TEST" = "coverage" ]; then
