@@ -37,7 +37,7 @@ setup() {
     # (IAM role creation is "eventually consistent"). If the provisioning role already exists, then ignore errors. 
     # SUGGESTION: Do not delete the Provisioning Role from the account to ensure that the setup executes reliably.
     aws iam create-role \
-        --role-name PROVISIONING_ROLE_NAME \
+        --role-name $PROVISIONING_ROLE_NAME \
         --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' && sleep 10 \
             || true
     aws iam attach-role-policy \
