@@ -13,7 +13,10 @@ run_tests_and_demos() {
     if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
         ./output/bin/aws_iot_tests_shadow
         sleep 1.1
-        ./output/bin/aws_iot_demo_shadow
+
+        if [ "$RUN_TEST" != "coverage" ]; then
+            ./output/bin/aws_iot_demo_shadow
+        fi
     else
         # Run only Shadow unit tests.
         ./output/bin/aws_iot_tests_shadow -n
