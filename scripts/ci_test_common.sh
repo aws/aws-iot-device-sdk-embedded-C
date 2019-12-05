@@ -15,7 +15,7 @@ make -j2 iot_tests_common
 # Run common tests.
 ./output/bin/iot_tests_common
 
-# We do not build in static memory mode if the script has been invoked in a coverage job.
+# Don't reconfigure CMake if script is invoked for coverage build.
 if [ "$RUN_TEST" != "coverage" ]; then 
     # Rebuild in static memory mode.
     cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FLAGS -DIOT_STATIC_MEMORY_ONLY=1"

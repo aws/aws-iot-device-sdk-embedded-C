@@ -33,7 +33,7 @@ make -j2 iot_tests_mqtt iot_demo_mqtt
 
 ./output/bin/iot_tests_mqtt $TEST_OPTIONS
 
-# We do not build in static memory mode if the script has been invoked in a coverage job.
+# Don't reconfigure CMake if script is invoked for coverage build.
 if [ "$RUN_TEST" != "coverage" ]; then
     if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         ./output/bin/iot_demo_mqtt $DEMO_OPTIONS
