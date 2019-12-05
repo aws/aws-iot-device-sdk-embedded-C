@@ -14,7 +14,8 @@ run_tests_and_demos() {
         ./output/bin/aws_iot_tests_shadow
         sleep 1.1
 
-        if [ "$RUN_TEST" != "coverage" ]; then
+        # We do not build in static memory mode if the script has been invoked in a coverage job.
+if [ "$RUN_TEST" != "coverage" ]; then
             ./output/bin/aws_iot_demo_shadow
         fi
     else
@@ -33,6 +34,7 @@ make -j2 aws_iot_tests_shadow aws_iot_demo_shadow
 # Run tests and demos.
 run_tests_and_demos
 
+# We do not build in static memory mode if the script has been invoked in a coverage job.
 if [ "$RUN_TEST" != "coverage" ]; then
     # Rebuild in static memory mode.
     cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="$CMAKE_FLAGS -DIOT_STATIC_MEMORY_ONLY=1"
