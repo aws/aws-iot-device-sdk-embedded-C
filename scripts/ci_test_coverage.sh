@@ -4,59 +4,50 @@
 # It does not run tests that require the network.
 
 # Exit on any nonzero return code.
-set -ev
+set -e
 
-# Query the AWS account ID.
-AWS_ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
+# Function that generates code coverage report from the gcov files for a library. (it ignores all non-production code)
+function generate_coverage() {
+    if [ $# -ne 1 ]; then
+        echo '"generate_coverage" requires input argument of coverage filename.'
+        exit 1
+    fi
 
-# Prefix of Job IDs used in the tests, set by the create_jobs function.
-JOB_PREFIX=""
-
-# Function to create Jobs to use in the tests.
-create_jobs() {
-    JOB_PREFIX=$IOT_IDENTIFIER-$(jot -r 1 1 100000)
-    aws iot create-job \
-        --job-id $JOB_PREFIX-1 \
-        --targets arn:aws:iot:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:thing/$IOT_IDENTIFIER \
-        --document '{"action":"print","message":"Hello world!"}'
-    aws iot create-job \
-        --job-id $JOB_PREFIX-2 \
-        --targets arn:aws:iot:$AWS_DEFAULT_REGION:$AWS_ACCOUNT_ID:thing/$IOT_IDENTIFIER \
-        --document '{"action":"print","message":"Hello world!"}'
+    # Generate code coverage results, but only for files in libraries/.
+    lcov --directory . --capture --output-file $1
+    lcov --remove $1 '*demo*' --output-file $1
+    lcov --remove $1 '*ports*' --output-file $1
+    lcov --remove $1 '*tests*' --output-file $1
+    lcov --remove $1 '*third_party*' --output-file $1
 }
 
-# Function to delete Jobs and clean up the tests.
-delete_jobs() {
-    aws iot delete-job --job-id $JOB_PREFIX-1 --force
-    aws iot delete-job --job-id $JOB_PREFIX-2 --force
-}
+# Overwrite the value of the COMPILER_OPTIONS varirable to remove any thread sanitizer flags, and replace with coverage flags.
+export COMPILER_OPTIONS="-DIOT_TEST_COVERAGE=1 --coverage"
 
-# Build tests and demos against AWS IoT with coverage.
-cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_SHADOW_THING_NAME=\"\\\"$IOT_IDENTIFIER\\\"\" -DAWS_IOT_TEST_JOBS_THING_NAME=\"\\\"$IOT_IDENTIFIER\\\"\" -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG -DIOT_DEMO_MQTT_TOPIC_PREFIX=\"\\\"$IOT_IDENTIFIER\\\"\" -DIOT_TEST_COVERAGE=1 --coverage"
-make -j2
+SCRIPTS_FOLDER_PATH=../scripts
 
 # Run common tests with code coverage.
-./output/bin/iot_tests_common
+$SCRIPTS_FOLDER_PATH/ci_test_common.sh
+generate_coverage common.info
 
 # Run MQTT tests against AWS IoT with code coverage.
-./output/bin/iot_tests_mqtt
+$SCRIPTS_FOLDER_PATH/ci_test_mqtt.sh
+generate_coverage mqtt.info
 
 # Run Shadow tests with code coverage.
-./output/bin/aws_iot_tests_shadow
+$SCRIPTS_FOLDER_PATH/ci_test_shadow.sh
+generate_coverage shadow.info
 
 # Run Jobs tests with code coverage.
-create_jobs
-trap "delete_jobs" EXIT
-./output/bin/aws_iot_tests_jobs
-delete_jobs
-trap - EXIT
+$SCRIPTS_FOLDER_PATH/ci_test_jobs.sh
+generate_coverage jobs.info
 
-# Generate code coverage results, but only for files in libraries/.
-lcov --directory . --capture --output-file coverage.info
-lcov --remove coverage.info '*demo*' --output-file coverage.info
-lcov --remove coverage.info '*ports*' --output-file coverage.info
-lcov --remove coverage.info '*tests*' --output-file coverage.info
-lcov --remove coverage.info '*third_party*' --output-file coverage.info
+# Combine the coverage files of all libraries into a single master coverage file.
+lcov --add-tracefile common.info \
+     --add-tracefile mqtt.info \
+     --add-tracefile shadow.info \ 
+     --add-tracefile jobs.info \
+     --output-file coverage.info  
 
 # Submit the code coverage results. Must be submitted from SDK root directory so
 # Coveralls displays the correct paths.
