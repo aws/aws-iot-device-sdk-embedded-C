@@ -15,8 +15,10 @@ compiler:
 # Matrix of tests to run.
 jobs:
   include:
+    # Code checks.
+    - stage: Code checks
     # Build checks for pull requests.
-    - if: type = pull_request
+      if: type = pull_request
       env: RUN_TEST=build
     # Documentation check for pull requests.
     - if: type = pull_request
@@ -24,8 +26,10 @@ jobs:
     # Spelling check for pull requests.
     - if: type = pull_request
       env: RUN_TEST=spelling
+
     # Library tests.
-    - env: RUN_TEST=common
+    - stage: Tests
+      env: RUN_TEST=common
     - env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
     - env: RUN_TEST=mqtt NETWORK_STACK=openssl
     - env: RUN_TEST=shadow
