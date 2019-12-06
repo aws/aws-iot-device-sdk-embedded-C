@@ -113,12 +113,14 @@ static const uint8_t _pSampleResponseWithoutErrorCode[] =
 /* Sample CBOR encoded payload for "rejected" response from server without the "error message" entry.*/
 static const uint8_t _pSampleResponseWithoutErrorMessage[] =
 {
-    0xA2,                                                       /*# map(2) */
-    0x6A,                                                       /*# text(10) */
-    0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x43, 0x6F, 0x64, 0x65, /*# "statusCode" */
-    0x19, 0x01, 0xF4,                                           /*# unsigned(500) */
-    0x69,                                                       /*# text(9) */
-    0x65, 0x72, 0x72, 0x6F, 0x72, 0x43, 0x6F, 0x64, 0x65,       /*# "errorCode" */
+    0xA2,                                                                               /*# map(2) */
+    0x6A,                                                                               /*# text(10) */
+    0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x43, 0x6F, 0x64, 0x65,                         /*# "statusCode" */
+    0x19, 0x01, 0xF4,                                                                   /*# unsigned(500) */
+    0x69,                                                                               /*# text(9) */
+    0x65, 0x72, 0x72, 0x6F, 0x72, 0x43, 0x6F, 0x64, 0x65,                               /*# "errorCode" */
+    0x6E,                                                                               /*# text(14) */
+    0x49, 0x6E, 0x76, 0x61, 0x6C, 0x69, 0x64, 0x50, 0x61, 0x79, 0x6C, 0x6F, 0x61, 0x64, /*# "InvalidPayload" */
 };
 
 /**
