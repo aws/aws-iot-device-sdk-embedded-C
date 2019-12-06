@@ -59,7 +59,7 @@ This section explains the individual steps to retrieve the necessary files and b
 
 Steps:
 
- * Create a directory to hold your application e.g. (/home/<user>/aws_iot/my_app)
+ * Create a directory to hold your application e.g. (/home/&lt;user&gt;/aws_iot/my_app)
  * Change directory to this new directory
  * Download the SDK to device and place in the newly created directory
  * Expand the tarball (tar -xf <tarball.tar>).  This will create the below directories:
