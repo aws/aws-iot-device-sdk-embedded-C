@@ -138,33 +138,36 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
     }"
 
     # Compiler flags for integration tests.
-    COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\""
+    COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\" $COMPILER_OPTIONS"
 
     # Run teardown routine if we ever encounter a failure for best effort to cleanup resources on the AWS IoT account.
     # We register on the EXIT signal as the set -e flag will convert errors to EXIT.
     trap "teardown" EXIT
 else
     # No compiler flags needed for unit tests.
-    COMMON_CMAKE_C_FLAGS=""
+    COMMON_CMAKE_C_FLAGS="$COMPILER_OPTIONS"
 fi        
 
-# CMake build configuration without static memory mode.
+# CMake build configuration.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
 
 # Build tests.
 make -j2 aws_iot_tests_provisioning
 
-# Run tests in no static memory mode.
+# Run tests.
 run_tests
 
-# Rebuild and run tests in static memory mode. Specify a buffer size to accommodate for credentials.
-cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DIOT_STATIC_MEMORY_ONLY=1 -DIOT_MESSAGE_BUFFER_SIZE=4096 $COMMON_CMAKE_C_FLAGS"
+# Don't reconfigure CMake if script is invoked for coverage build.
+if [ "$RUN_TEST" != "coverage" ]; then
+    # Rebuild and run tests in static memory mode. Specify a buffer size to accommodate for credentials.
+    cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DIOT_NETWORK_USE_OPENSSL=$IOT_NETWORK_USE_OPENSSL -DCMAKE_C_FLAGS="-DIOT_STATIC_MEMORY_ONLY=1 -DIOT_MESSAGE_BUFFER_SIZE=4096 $COMMON_CMAKE_C_FLAGS"
 
-# Build tests.
-make -j2 aws_iot_tests_provisioning
+    # Build tests.
+    make -j2 aws_iot_tests_provisioning
 
-# Run tests in no static memory mode.
-run_tests
+    # Run tests in no static memory mode.
+    run_tests
+fi
 
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
     teardown
