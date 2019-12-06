@@ -178,12 +178,16 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 }
 
 /*-----------------------------------------------------------*/
+
 static bool _validatePublish( bool awsIotMqttMode,
                               size_t maximumPayloadLength,
                               const char * pPublishTypeDescription,
                               const IotMqttPublishInfo_t * pPublishInfo )
 {
     IOT_FUNCTION_ENTRY( bool, true );
+
+    /* This parameter is not used when logging is disabled. */
+    ( void ) pPublishTypeDescription;
 
     /* Check for NULL. */
     if( pPublishInfo == NULL )

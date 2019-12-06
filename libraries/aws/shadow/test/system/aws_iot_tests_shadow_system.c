@@ -141,6 +141,10 @@ static void _operationComplete( void * pArgument,
     const char * pJsonValue = NULL;
     size_t jsonValueLength = 0;
 
+    /* Silence warnings when asserts are disabled. */
+    ( void ) pJsonValue;
+    ( void ) jsonValueLength;
+
     /* Check parameters against received operation information. */
     AwsIotShadow_Assert( pOperation->callbackType == pParams->expectedType );
     AwsIotShadow_Assert( pOperation->mqttConnection == _mqttConnection );
@@ -183,6 +187,13 @@ static void _deltaCallback( void * pArgument,
     const char * pValue = NULL, * pClientToken = NULL;
     size_t valueLength = 0, clientTokenLength = 0;
 
+    /* Silence warnings when asserts are disabled. */
+    ( void ) pCallback;
+    ( void ) pValue;
+    ( void ) pClientToken;
+    ( void ) valueLength;
+    ( void ) clientTokenLength;
+
     /* Check callback type and MQTT connection. */
     AwsIotShadow_Assert( pCallback->callbackType == AWS_IOT_SHADOW_DELTA_CALLBACK );
     AwsIotShadow_Assert( pCallback->mqttConnection == _mqttConnection );
@@ -203,7 +214,7 @@ static void _deltaCallback( void * pArgument,
                                                     "clientToken",
                                                     11,
                                                     &pClientToken,
-                                                    &clientTokenLength ) );
+                                                    &clientTokenLength ) == true );
     AwsIotShadow_Assert( clientTokenLength == 12 );
     AwsIotShadow_Assert( strncmp( "\"shadowtest\"", pClientToken, 12 ) == 0 );
 
@@ -223,6 +234,15 @@ static void _updatedCallback( void * pArgument,
     IotSemaphore_t * pWaitSem = ( IotSemaphore_t * ) pArgument;
     const char * pPrevious = NULL, * pCurrent = NULL, * pClientToken = NULL;
     size_t previousStateLength = 0, currentStateLength = 0, clientTokenLength = 0;
+
+    /* Silence warnings when asserts are disabled. */
+    ( void ) pCallback;
+    ( void ) pPrevious;
+    ( void ) pCurrent;
+    ( void ) pClientToken;
+    ( void ) previousStateLength;
+    ( void ) currentStateLength;
+    ( void ) clientTokenLength;
 
     /* Check MQTT connection. */
     AwsIotShadow_Assert( pCallback->mqttConnection == _mqttConnection );
@@ -257,7 +277,7 @@ static void _updatedCallback( void * pArgument,
                                                     "clientToken",
                                                     11,
                                                     &pClientToken,
-                                                    &clientTokenLength ) );
+                                                    &clientTokenLength ) == true );
     AwsIotShadow_Assert( clientTokenLength == 12 );
     AwsIotShadow_Assert( strncmp( "\"shadowtest\"", pClientToken, 12 ) == 0 );
 
