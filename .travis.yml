@@ -23,9 +23,6 @@ jobs:
     # Documentation check for pull requests.
     - if: type = pull_request
       env: RUN_TEST=doc
-    # Code quality check for pull requests.
-    - if: type = pull_request
-      env: RUN_TEST=quality
     # Spelling check for pull requests.
     - if: type = pull_request
       env: RUN_TEST=spelling
