@@ -277,7 +277,7 @@ static bool _subscriptionPacketSize( IotMqttOperationType_t type,
  * @param[in] connectPacketSize Size of the buffer pointed to by `pBuffer`.
  *
  */
-void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
+static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
                         size_t remainingLength,
                         uint8_t * pBuffer,
                         size_t connectPacketSize );
@@ -294,7 +294,7 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
  * @param[in] publishPacketSize Size of buffer pointed to by `pBuffer`.
  *
  */
-void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
+static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
                         size_t remainingLength,
                         uint16_t * pPacketIdentifier,
                         uint8_t ** pPacketIdentifierHigh,
@@ -312,7 +312,7 @@ void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
  * @param[in] subscribePacketSize Size of the buffer pointed to by  `pBuffer`.
  *
  */
-void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
+static void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
                           size_t subscriptionCount,
                           size_t remainingLength,
                           uint16_t * pPacketIdentifier,
@@ -330,7 +330,7 @@ void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
  * @param[in] unsubscribePacketSize size of the buffer pointed to by  `pBuffer`.
  *
  */
-void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList,
+static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList,
                             size_t subscriptionCount,
                             size_t remainingLength,
                             uint16_t * pPacketIdentifier,
@@ -658,7 +658,7 @@ static bool _subscriptionPacketSize( IotMqttOperationType_t type,
 
 /*-----------------------------------------------------------*/
 
-void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
+static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
                         size_t remainingLength,
                         uint8_t * pBuffer,
                         size_t connectPacketSize )
@@ -666,6 +666,10 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
     uint8_t connectFlags = 0;
     uint8_t * pConnectPacket = pBuffer;
     bool encodedUserName = false;
+
+    /* Avoid unused variable warning when logging and asserts are disabled. */
+    ( void ) pConnectPacket;
+    ( void ) connectPacketSize;
 
     /* The first byte in the CONNECT packet is the control packet type. */
     *pBuffer = MQTT_PACKET_TYPE_CONNECT;
@@ -877,7 +881,7 @@ void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
 
 /*-----------------------------------------------------------*/
 
-void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
+static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
                         size_t remainingLength,
                         uint16_t * pPacketIdentifier,
                         uint8_t ** pPacketIdentifierHigh,
@@ -887,6 +891,10 @@ void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
     uint8_t publishFlags = 0;
     uint16_t packetIdentifier = 0;
     uint8_t * pPublishPacket = pBuffer;
+
+    /* Avoid unused variable warning when logging and asserts are disabled. */
+    ( void ) pPublishPacket;
+    ( void ) publishPacketSize;
 
     /* The first byte of a PUBLISH packet contains the packet type and flags. */
     publishFlags = MQTT_PACKET_TYPE_PUBLISH;
@@ -974,7 +982,7 @@ void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
 
 /*-----------------------------------------------------------*/
 
-void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
+static void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
                           size_t subscriptionCount,
                           size_t remainingLength,
                           uint16_t * pPacketIdentifier,
@@ -984,6 +992,10 @@ void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
     uint16_t packetIdentifier = 0;
     size_t i = 0;
     uint8_t * pSubscribePacket = pBuffer;
+
+    /* Avoid unused variable warning when logging and asserts are disabled. */
+    ( void ) pSubscribePacket;
+    ( void ) subscribePacketSize;
 
     /* The first byte in SUBSCRIBE is the packet type. */
     *pBuffer = MQTT_PACKET_TYPE_SUBSCRIBE;
@@ -1024,7 +1036,7 @@ void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
 
 /*-----------------------------------------------------------*/
 
-void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList,
+static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList,
                             size_t subscriptionCount,
                             size_t remainingLength,
                             uint16_t * pPacketIdentifier,
@@ -1034,6 +1046,10 @@ void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList,
     uint16_t packetIdentifier = 0;
     size_t i = 0;
     uint8_t * pUnsubscribePacket = pBuffer;
+    
+    /* Avoid unused variable warning when logging and asserts are disabled. */
+    ( void ) pUnsubscribePacket;
+    ( void ) unsubscribePacketSize;
 
     /* The first byte in UNSUBSCRIBE is the packet type. */
     *pBuffer = MQTT_PACKET_TYPE_UNSUBSCRIBE;
