@@ -137,14 +137,14 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
         } \
     }"
 
-    # Compiler flags for integration tests.
+    # Compiler flags for integration and units tests.
     COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\" $COMPILER_OPTIONS"
 
     # Run teardown routine if we ever encounter a failure for best effort to cleanup resources on the AWS IoT account.
     # We register on the EXIT signal as the set -e flag will convert errors to EXIT.
     trap "teardown" EXIT
 else
-    # No compiler flags needed for unit tests.
+    # Compiler flags only for unit tests.
     COMMON_CMAKE_C_FLAGS="$COMPILER_OPTIONS"
 fi        
 
