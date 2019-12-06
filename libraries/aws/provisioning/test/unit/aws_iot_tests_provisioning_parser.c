@@ -76,6 +76,53 @@ static AwsIotProvisioningRejectedResponse_t _expectedParsedParams =
     .errorMessageLength = 45
 };
 
+/* Sample CBOR encoded payload for "rejected" response without the "status code" entry.*/
+static const uint8_t _pSampleResponseWithoutStatusCode[] =
+{
+    0xA2,                                                                               /*# map(2) */
+    0x69,                                                                               /*# text(9) */
+    0x65, 0x72, 0x72, 0x6F, 0x72, 0x43, 0x6F, 0x64, 0x65,                               /*# "errorCode" */
+    0x6E,                                                                               /*# text(14) */
+    0x49, 0x6E, 0x76, 0x61, 0x6C, 0x69, 0x64, 0x50, 0x61, 0x79, 0x6C, 0x6F, 0x61, 0x64, /*# "InvalidPayload" */
+    0x6C,                                                                               /*# text(12) */
+    0x65, 0x72, 0x72, 0x6F, 0x72, 0x4D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,             /*# "errorMessage" */
+    0x78, 0x2D,                                                                         /*# text(45) */
+    0x4F, 0x6F, 0x70, 0x73, 0x21, 0x20, 0x57, 0x65, 0x20, 0x68, 0x61, 0x76, 0x65,
+    0x20, 0x61, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x65, 0x72, 0x72, 0x6F, 0x72,
+    0x20, 0x6D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E,
+    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E /*# "Oops! We have a long error message..........." */
+};
+
+/* Sample CBOR encoded payload for "rejected" response from server without the "error code" entry.*/
+static const uint8_t _pSampleResponseWithoutErrorCode[] =
+{
+    0xA2,                                                                   /*# map(2) */
+    0x6A,                                                                   /*# text(10) */
+    0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x43, 0x6F, 0x64, 0x65,             /*# "statusCode" */
+    0x19, 0x01, 0xF4,                                                       /*# unsigned(500) */
+    0x6C,                                                                   /*# text(12) */
+    0x65, 0x72, 0x72, 0x6F, 0x72, 0x4D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, /*# "errorMessage" */
+    0x78, 0x2D,                                                             /*# text(45) */
+    0x4F, 0x6F, 0x70, 0x73, 0x21, 0x20, 0x57, 0x65, 0x20, 0x68, 0x61, 0x76, 0x65,
+    0x20, 0x61, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x65, 0x72, 0x72, 0x6F, 0x72,
+    0x20, 0x6D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E,
+    0x2E, 0x2E, 0x2E, 0x2E, 0x2E, 0x2E /*# "Oops! We have a long error message..........." */
+};
+
+
+/* Sample CBOR encoded payload for "rejected" response from server without the "error message" entry.*/
+static const uint8_t _pSampleResponseWithoutErrorMessage[] =
+{
+    0xA2,                                                                               /*# map(2) */
+    0x6A,                                                                               /*# text(10) */
+    0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x43, 0x6F, 0x64, 0x65,                         /*# "statusCode" */
+    0x19, 0x01, 0xF4,                                                                   /*# unsigned(500) */
+    0x69,                                                                               /*# text(9) */
+    0x65, 0x72, 0x72, 0x6F, 0x72, 0x43, 0x6F, 0x64, 0x65,                               /*# "errorCode" */
+    0x6E,                                                                               /*# text(14) */
+    0x49, 0x6E, 0x76, 0x61, 0x6C, 0x69, 0x64, 0x50, 0x61, 0x79, 0x6C, 0x6F, 0x61, 0x64, /*# "InvalidPayload" */
+};
+
 /**
  * @brief Sample CBOR encoded response payload of device credentials from the server.
  */
@@ -154,6 +201,13 @@ static void _keysAndCertificateCallbackThatFailsOnInvokation( void * contextPara
                                                               const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo );
 
 /**
+ * @brief Callback for register thing response that fails on being invoked. This is meant to be used for tests
+ * that DO NOT expect the callback to be invoked!
+ */
+static void _registerThingCallbackThatFailsOnInvokation( void * contextParam,
+                                                         const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo );
+
+/**
  * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
  * response. It will be passed as context parameter in callback parameter passed in tests.
  */
@@ -229,8 +283,22 @@ static void _keysAndCertificateCallbackThatFailsOnInvokation( void * contextPara
     ( void ) contextParam;
     ( void ) pResponseInfo;
 
+    /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
     AwsIotProvisioning_Assert( false );
 }
+
+/*-----------------------------------------------------------*/
+
+static void _registerThingCallbackThatFailsOnInvokation( void * contextParam,
+                                                         const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo )
+{
+    ( void ) contextParam;
+    ( void ) pResponseInfo;
+
+    /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
+    AwsIotProvisioning_Assert( false );
+}
+
 
 /*-----------------------------------------------------------*/
 
@@ -288,7 +356,8 @@ TEST_GROUP_RUNNER( Provisioning_Unit_Parser )
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseKeysAndCertificateRejectedResponse );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseKeysAndCertificateAcceptedResponse );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseKeysAndCertificateResponseWithMissingEntries );
-    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseRegisterThingRejectedResponse );
+    RUN_TEST_CASE( Provisioning_Unit_Parser, TestRegisterThingParsesWithRejectedResponseContainingMissingEntries );
+    RUN_TEST_CASE( Provisioning_Unit_Parser, TestDeviceCredentialsParsesWithRejectedResponseContainingMissingEntries );
 }
 
 /*-----------------------------------------------------------*/
@@ -420,4 +489,58 @@ TEST( Provisioning_Unit_Parser, TestParseRegisterThingRejectedResponse )
                                                                                                             _sampleRejectedServerResponsePayload,
                                                                                                             sizeof( _sampleRejectedServerResponsePayload ),
                                                                                                             &wrapperCallback ) );
+}
+
+/**
+ * @brief Verifies the behavior of the register thing response parser when a reject response is received with missing entries.
+ */
+TEST( Provisioning_Unit_Parser, TestRegisterThingParsesWithRejectedResponseContainingMissingEntries )
+{
+    _provisioningCallbackInfo_t wrapperCallback;
+
+    wrapperCallback.registerThingCallback.userParam = NULL;
+    wrapperCallback.registerThingCallback.function = _registerThingCallbackThatFailsOnInvokation;
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseRegisterThingResponse( AWS_IOT_REJECTED,
+                                                                                                          _pSampleResponseWithoutStatusCode,
+                                                                                                          sizeof( _pSampleResponseWithoutStatusCode ),
+                                                                                                          &wrapperCallback ) );
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseRegisterThingResponse( AWS_IOT_REJECTED,
+                                                                                                          _pSampleResponseWithoutErrorCode,
+                                                                                                          sizeof( _pSampleResponseWithoutErrorCode ),
+                                                                                                          &wrapperCallback ) );
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseRegisterThingResponse( AWS_IOT_REJECTED,
+                                                                                                          _pSampleResponseWithoutErrorMessage,
+                                                                                                          sizeof( _pSampleResponseWithoutErrorMessage ),
+                                                                                                          &wrapperCallback ) );
+}
+
+/**
+ * @brief Verifies the behavior of the device credentials response parser when a reject response is received with missing entries.
+ */
+TEST( Provisioning_Unit_Parser, TestDeviceCredentialsParsesWithRejectedResponseContainingMissingEntries )
+{
+    _provisioningCallbackInfo_t wrapperCallback;
+
+    wrapperCallback.createKeysAndCertificateCallback.userParam = NULL;
+    wrapperCallback.createKeysAndCertificateCallback.function = _keysAndCertificateCallbackThatFailsOnInvokation;
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseKeysAndCertificateResponse( AWS_IOT_REJECTED,
+                                                                                                               _pSampleResponseWithoutStatusCode,
+                                                                                                               sizeof( _pSampleResponseWithoutStatusCode ),
+                                                                                                               &wrapperCallback ) );
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseKeysAndCertificateResponse( AWS_IOT_REJECTED,
+                                                                                                               _pSampleResponseWithoutErrorCode,
+                                                                                                               sizeof( _pSampleResponseWithoutErrorCode ),
+                                                                                                               &wrapperCallback ) );
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseKeysAndCertificateResponse( AWS_IOT_REJECTED,
+                                                                                                               _pSampleResponseWithoutErrorMessage,
+                                                                                                               sizeof( _pSampleResponseWithoutErrorMessage ),
+                                                                                                               &wrapperCallback ) );
 }

@@ -306,9 +306,13 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
                                              REGISTER_THING_OPERATION_LOG,
                                              &userCallbackParam.u.rejectedResponse,
                                              &userCallbackParam.statusCode );
-            /* Invoke the user-provided callback with the parsed rejected data . */
-            userCallbackInfo->createKeysAndCertificateCallback.function( userCallbackInfo->createKeysAndCertificateCallback.userParam,
-                                                                         &userCallbackParam );
+
+            /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
+            if( status == AWS_IOT_PROVISIONING_SUCCESS )
+            {
+                userCallbackInfo->createKeysAndCertificateCallback.function( userCallbackInfo->createKeysAndCertificateCallback.userParam,
+                                                                             &userCallbackParam );
+            }
 
             break;
 
@@ -568,9 +572,13 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                                              REGISTER_THING_OPERATION_LOG,
                                              &userCallbackParam.u.rejectedResponse,
                                              &userCallbackParam.statusCode );
-            /* Invoke the user-provided callback with the parsed rejected data . */
-            userCallbackInfo->registerThingCallback.function( userCallbackInfo->registerThingCallback.userParam,
-                                                              &userCallbackParam );
+
+            /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
+            if( status == AWS_IOT_PROVISIONING_SUCCESS )
+            {
+                userCallbackInfo->registerThingCallback.function( userCallbackInfo->registerThingCallback.userParam,
+                                                                  &userCallbackParam );
+            }
 
             break;
 
