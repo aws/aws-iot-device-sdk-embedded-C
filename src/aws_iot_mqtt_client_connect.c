@@ -527,7 +527,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_disconnect(AWS_IoT_Client *pClient) {
 	/* Clean network stack */
 	pClient->networkStack.disconnect(&(pClient->networkStack));
 	rc = pClient->networkStack.destroy(&(pClient->networkStack));
-	if(0 != rc) {
+	if(SUCCESS != rc) {
 		/* TLS Destroy failed, return error */
 		FUNC_EXIT_RC(FAILURE);
 	}
