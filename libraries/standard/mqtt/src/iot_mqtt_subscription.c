@@ -32,9 +32,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-/* Error handling include. */
-#include "iot_error.h"
-
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
@@ -94,7 +91,7 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
 static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                          void * pMatch )
 {
-    IOT_FUNCTION_ENTRY( bool, false );
+    bool status = false;
     uint16_t nameIndex = 0, filterIndex = 0;
 
     /* Because this function is called from a container function, the given link
@@ -117,7 +114,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     {
         status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 );
 
-        IOT_GOTO_CLEANUP();
+        goto cleanup;
     }
     else
     {
@@ -128,7 +125,8 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
      * false. */
     if( pParam->exactMatchOnly == true )
     {
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
     else
     {
@@ -152,7 +150,8 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                     {
                         if( pTopicFilter[ filterIndex + 2 ] == '#' )
                         {
-                            IOT_SET_AND_GOTO_CLEANUP( true );
+                            status = true;
+                            goto cleanup;
                         }
                         else
                         {
@@ -181,7 +180,8 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                 {
                     if( pTopicFilter[ filterIndex + 1 ] == '+' )
                     {
-                        IOT_SET_AND_GOTO_CLEANUP( true );
+                        status = true;
+                        goto cleanup;
                     }
                     else
                     {
@@ -218,13 +218,15 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
             {
                 /* Subsequent characters don't need to be checked if the for the
                  * multi-level wildcard. */
-                IOT_SET_AND_GOTO_CLEANUP( true );
+                status = true;
+                goto cleanup;
             }
             else
             {
                 /* Any character mismatch other than '+' or '#' means the topic
                  * name does not match the topic filter. */
-                IOT_SET_AND_GOTO_CLEANUP( false );
+                status = false;
+                goto cleanup;
             }
         }
 
@@ -236,14 +238,16 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     /* If the end of both strings has been reached, they match. */
     if( ( nameIndex == topicNameLength ) && ( filterIndex == topicFilterLength ) )
     {
-        IOT_SET_AND_GOTO_CLEANUP( true );
+        status = true;
+        goto cleanup;
     }
     else
     {
         EMPTY_ELSE_MARKER;
     }
 
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+cleanup:
+    return status;
 }
 
 /*-----------------------------------------------------------*/

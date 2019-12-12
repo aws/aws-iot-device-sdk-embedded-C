@@ -31,9 +31,6 @@
 /* Standard includes. */
 #include <string.h>
 
-/* Error handling include. */
-#include "iot_error.h"
-
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
@@ -199,7 +196,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
                                           const _mqttConnection_t * pMqttConnection,
                                           _mqttPacket_t * pIncomingPacket )
 {
-    IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
     size_t dataBytesRead = 0;
 
     /* No buffer for remaining data should be allocated. */
@@ -217,7 +214,8 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
                      pMqttConnection,
                      pIncomingPacket->type );
 
-        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
+        status = IOT_MQTT_BAD_RESPONSE;
+        goto cleanup;
     }
     else
     {
@@ -230,7 +228,8 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
 
     if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
     {
-        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
+        status = IOT_MQTT_BAD_RESPONSE;
+        goto cleanup;
     }
     else
     {
@@ -252,7 +251,8 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
 
             _flushPacket( pNetworkConnection, pMqttConnection, pIncomingPacket->remainingLength );
 
-            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
+            status = IOT_MQTT_NO_MEMORY;
+            goto cleanup;
         }
         else
         {
@@ -265,7 +265,8 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
 
         if( dataBytesRead != pIncomingPacket->remainingLength )
         {
-            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_RESPONSE );
+            status = IOT_MQTT_BAD_RESPONSE;
+            goto cleanup;
         }
         else
         {
@@ -278,7 +279,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
     }
 
     /* Clean up on error. */
-    IOT_FUNCTION_CLEANUP_BEGIN();
+cleanup:
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -296,7 +297,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
         EMPTY_ELSE_MARKER;
     }
 
-    IOT_FUNCTION_CLEANUP_END();
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -576,7 +577,7 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        IOT_GOTO_CLEANUP();
+        goto cleanup;
     }
 
     /* Set the operation type. */
@@ -589,7 +590,7 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        IOT_GOTO_CLEANUP();
+        goto cleanup;
     }
 
     /* Add the PUBACK operation to the send queue for network transmission. */
@@ -602,7 +603,7 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
         IotLogError( "(MQTT connection %p) Failed to enqueue PUBACK for sending.",
                      pMqttConnection );
 
-        IOT_GOTO_CLEANUP();
+        goto cleanup;
     }
     else
     {
@@ -610,7 +611,7 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
     }
 
     /* Clean up on error. */
-    IOT_FUNCTION_CLEANUP_BEGIN();
+cleanup:
 
     if( status != IOT_MQTT_SUCCESS )
     {
