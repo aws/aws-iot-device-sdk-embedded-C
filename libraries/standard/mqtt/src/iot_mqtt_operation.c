@@ -31,9 +31,6 @@
 /* Standard includes. */
 #include <string.h>
 
-/* Error handling include. */
-#include "iot_error.h"
-
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
@@ -59,7 +56,7 @@
                                    _getMqttFreePacketFunc,
                                    _IotMqtt_FreePacket,
                                    freePacket )
-#else  /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
+#else /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
     #define _getMqttFreePacketFunc( pSerializer )       _IotMqtt_FreePacket
     #define _getMqttPublishSetDupFunc( pSerializer )    _IotMqtt_PublishSetDup
 #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
@@ -349,7 +346,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                                          const IotMqttCallbackInfo_t * pCallbackInfo,
                                          _mqttOperation_t ** pNewOperation )
 {
-    IOT_FUNCTION_ENTRY( IotMqttError_t, IOT_MQTT_SUCCESS );
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
     bool decrementOnError = false;
     _mqttOperation_t * pOperation = NULL;
     bool waitable = ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE );
@@ -361,7 +358,8 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
         {
             IotLogError( "Callback should not be set for a waitable operation." );
 
-            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_BAD_PARAMETER );
+            status = IOT_MQTT_BAD_PARAMETER;
+            goto cleanup;
         }
         else
         {
@@ -384,7 +382,8 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                      " for a closed connection",
                      pMqttConnection );
 
-        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NETWORK_ERROR );
+        status = IOT_MQTT_NETWORK_ERROR;
+        goto cleanup;
     }
     else
     {
@@ -401,7 +400,8 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                      "operation record.",
                      pMqttConnection );
 
-        IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
+        status = IOT_MQTT_NO_MEMORY;
+        goto cleanup;
     }
     else
     {
@@ -426,7 +426,8 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                          "waitable operation.",
                          pMqttConnection );
 
-            IOT_SET_AND_GOTO_CLEANUP( IOT_MQTT_NO_MEMORY );
+            status = IOT_MQTT_NO_MEMORY;
+            goto cleanup;
         }
         else
         {
@@ -459,7 +460,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
     *pNewOperation = pOperation;
 
     /* Clean up operation and decrement reference count if this function failed. */
-    IOT_FUNCTION_CLEANUP_BEGIN();
+cleanup:
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -486,7 +487,7 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
         EMPTY_ELSE_MARKER;
     }
 
-    IOT_FUNCTION_CLEANUP_END();
+    return status;
 }
 
 /*-----------------------------------------------------------*/

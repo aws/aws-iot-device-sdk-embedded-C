@@ -44,9 +44,6 @@
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
-/* Error handling include. */
-#include "iot_error.h"
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -317,7 +314,7 @@ static size_t _receive( IotNetworkConnection_t pNetworkConnection,
 
 bool IotTest_MqttMockInit( IotMqttConnection_t * pMqttConnection )
 {
-    IOT_FUNCTION_ENTRY( bool, true );
+    bool status = true;
     IotMqttNetworkInfo_t networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
 
     /* Flags to track clean up */
@@ -334,7 +331,8 @@ bool IotTest_MqttMockInit( IotMqttConnection_t * pMqttConnection )
 
     if( packetMutexCreated == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
 
     /* Create the receive thread timer. */
@@ -344,7 +342,8 @@ bool IotTest_MqttMockInit( IotMqttConnection_t * pMqttConnection )
 
     if( timerCreated == false )
     {
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
 
     /* Initialize the MQTT connection object. */
@@ -354,10 +353,11 @@ bool IotTest_MqttMockInit( IotMqttConnection_t * pMqttConnection )
 
     if( _pMqttConnection == NULL )
     {
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
 
-    IOT_FUNCTION_CLEANUP_BEGIN();
+cleanup:
 
     /* Clean up on error. */
     if( status == false )
@@ -378,7 +378,7 @@ bool IotTest_MqttMockInit( IotMqttConnection_t * pMqttConnection )
         *pMqttConnection = _pMqttConnection;
     }
 
-    IOT_FUNCTION_CLEANUP_END();
+    return status;
 }
 
 /*-----------------------------------------------------------*/
