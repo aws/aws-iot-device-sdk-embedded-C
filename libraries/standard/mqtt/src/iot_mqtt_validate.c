@@ -28,9 +28,6 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
-/* Error handling include. */
-#include "iot_error.h"
-
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
@@ -54,7 +51,7 @@ static bool _validatePublish( bool awsIotMqttMode,
 
 bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 {
-    IOT_FUNCTION_ENTRY( bool, true );
+    bool status = true;
     uint16_t maxClientIdLength = MQTT_SERVER_MAX_CLIENTID_LENGTH;
     bool enforceMaxClientIdLength = false;
 
@@ -63,7 +60,8 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
     {
         IotLogError( "MQTT connection information cannot be NULL." );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
     else
     {
@@ -75,7 +73,8 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
     {
         IotLogError( "Client identifier must be set." );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
     else
     {
@@ -92,7 +91,8 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
         {
             IotLogError( "A zero-length client identifier cannot be used with a clean session." );
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -108,11 +108,12 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
     if( pConnectInfo->pPreviousSubscriptions != NULL )
     {
         if( _IotMqtt_ValidateSubscriptionList( IOT_MQTT_SUBSCRIBE,
-                                                pConnectInfo->awsIotMqttMode,
-                                                pConnectInfo->pPreviousSubscriptions,
-                                                pConnectInfo->previousSubscriptionCount ) == false )
+                                               pConnectInfo->awsIotMqttMode,
+                                               pConnectInfo->pPreviousSubscriptions,
+                                               pConnectInfo->previousSubscriptionCount ) == false )
         {
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -130,7 +131,8 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
         if( _IotMqtt_ValidateLwtPublish( pConnectInfo->awsIotMqttMode,
                                          pConnectInfo->pWillInfo ) == false )
         {
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -166,7 +168,8 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
                          pConnectInfo->clientIdentifierLength,
                          maxClientIdLength );
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
     }
     else
@@ -174,7 +177,8 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
         EMPTY_ELSE_MARKER;
     }
 
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+cleanup:
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -184,7 +188,7 @@ static bool _validatePublish( bool awsIotMqttMode,
                               const char * pPublishTypeDescription,
                               const IotMqttPublishInfo_t * pPublishInfo )
 {
-    IOT_FUNCTION_ENTRY( bool, true );
+    bool status = true;
 
     /* This parameter is not used when logging is disabled. */
     ( void ) pPublishTypeDescription;
@@ -194,7 +198,8 @@ static bool _validatePublish( bool awsIotMqttMode,
     {
         IotLogError( "Publish information cannot be NULL." );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
     else
     {
@@ -215,7 +220,8 @@ static bool _validatePublish( bool awsIotMqttMode,
     {
         IotLogError( "Publish topic name length cannot be 0." );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
     else
     {
@@ -231,7 +237,8 @@ static bool _validatePublish( bool awsIotMqttMode,
                          pPublishInfo->payloadLength,
                          maximumPayloadLength );
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -239,7 +246,8 @@ static bool _validatePublish( bool awsIotMqttMode,
             {
                 IotLogError( "Nonzero payload length cannot have a NULL payload." );
 
-                IOT_SET_AND_GOTO_CLEANUP( false );
+                status = false;
+                goto cleanup;
             }
             else
             {
@@ -259,7 +267,8 @@ static bool _validatePublish( bool awsIotMqttMode,
         {
             IotLogError( "Publish QoS must be either 0 or 1." );
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -278,7 +287,8 @@ static bool _validatePublish( bool awsIotMqttMode,
         {
             IotLogError( "Publish retry time must be positive." );
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -298,7 +308,8 @@ static bool _validatePublish( bool awsIotMqttMode,
         {
             IotLogError( "AWS IoT does not support retained publish messages." );
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -311,7 +322,8 @@ static bool _validatePublish( bool awsIotMqttMode,
             IotLogError( "AWS IoT does not support topic names longer than %d bytes.",
                          AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -323,7 +335,8 @@ static bool _validatePublish( bool awsIotMqttMode,
         EMPTY_ELSE_MARKER;
     }
 
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+cleanup:
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -363,14 +376,15 @@ bool _IotMqtt_ValidateLwtPublish( bool awsIotMqttMode,
 
 bool _IotMqtt_ValidateOperation( IotMqttOperation_t operation )
 {
-    IOT_FUNCTION_ENTRY( bool, true );
+    bool status = true;
 
     /* Check for NULL. */
     if( operation == NULL )
     {
         IotLogError( "Operation reference cannot be NULL." );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
     else
     {
@@ -382,14 +396,16 @@ bool _IotMqtt_ValidateOperation( IotMqttOperation_t operation )
     {
         IotLogError( "Operation is not waitable." );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
     else
     {
         EMPTY_ELSE_MARKER;
     }
 
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+cleanup:
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -399,7 +415,7 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                                         const IotMqttSubscription_t * pListStart,
                                         size_t listSize )
 {
-    IOT_FUNCTION_ENTRY( bool, true );
+    bool status = true;
     size_t i = 0;
     uint16_t j = 0;
     const IotMqttSubscription_t * pListElement = NULL;
@@ -413,7 +429,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
     {
         IotLogError( "Subscription list pointer cannot be NULL." );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
     else
     {
@@ -424,7 +441,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
     {
         IotLogError( "Empty subscription list." );
 
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        status = false;
+        goto cleanup;
     }
     else
     {
@@ -440,7 +458,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                          "subscription request.",
                          AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE );
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -465,7 +484,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                 {
                     IotLogError( "Subscription QoS must be either 0 or 1." );
 
-                    IOT_SET_AND_GOTO_CLEANUP( false );
+                    status = false;
+                    goto cleanup;
                 }
                 else
                 {
@@ -481,7 +501,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
             {
                 IotLogError( "Callback function must be set." );
 
-                IOT_SET_AND_GOTO_CLEANUP( false );
+                status = false;
+                goto cleanup;
             }
             else
             {
@@ -498,7 +519,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
         {
             IotLogError( "Subscription topic filter cannot be NULL." );
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -509,7 +531,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
         {
             IotLogError( "Subscription topic filter length cannot be 0." );
 
-            IOT_SET_AND_GOTO_CLEANUP( false );
+            status = false;
+            goto cleanup;
         }
         else
         {
@@ -525,7 +548,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                 IotLogError( "AWS IoT does not support topic filters longer than %d bytes.",
                              AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
 
-                IOT_SET_AND_GOTO_CLEANUP( false );
+                status = false;
+                goto cleanup;
             }
             else
             {
@@ -554,7 +578,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                                          pListElement->topicFilterLength,
                                          pListElement->pTopicFilter );
 
-                            IOT_SET_AND_GOTO_CLEANUP( false );
+                            status = false;
+                            goto cleanup;
                         }
                         else
                         {
@@ -575,7 +600,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                                          pListElement->topicFilterLength,
                                          pListElement->pTopicFilter );
 
-                            IOT_SET_AND_GOTO_CLEANUP( false );
+                            status = false;
+                            goto cleanup;
                         }
                         else
                         {
@@ -599,7 +625,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                                      pListElement->topicFilterLength,
                                      pListElement->pTopicFilter );
 
-                        IOT_SET_AND_GOTO_CLEANUP( false );
+                        status = false;
+                        goto cleanup;
                     }
                     else
                     {
@@ -615,7 +642,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                                          pListElement->topicFilterLength,
                                          pListElement->pTopicFilter );
 
-                            IOT_SET_AND_GOTO_CLEANUP( false );
+                            status = false;
+                            goto cleanup;
                         }
                         else
                         {
@@ -635,7 +663,8 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
         }
     }
 
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+cleanup:
+    return status;
 }
 
 /*-----------------------------------------------------------*/
