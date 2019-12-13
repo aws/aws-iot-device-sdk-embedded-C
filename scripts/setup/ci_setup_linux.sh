@@ -45,7 +45,6 @@ else
     # Install dependencies for coverage builds.
     if [ "$RUN_TEST" = "coverage" ]; then
         sudo apt-get install -y lcov;
-        pip3 install --user cpp-coveralls;
     fi
 fi
 
