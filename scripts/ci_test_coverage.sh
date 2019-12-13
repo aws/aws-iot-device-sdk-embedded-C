@@ -14,15 +14,15 @@ function generate_coverage() {
     fi
 
     # Generate code coverage results, but only for files in libraries/.
-    lcov --directory . --capture --output-file $1
-    lcov --remove $1 '*demo*' --output-file $1
-    lcov --remove $1 '*ports*' --output-file $1
-    lcov --remove $1 '*tests*' --output-file $1
-    lcov --remove $1 '*third_party*' --output-file $1
+    lcov --rc lcov_branch_coverage=1 --directory . --capture --output-file $1
+    lcov --rc lcov_branch_coverage=1 --remove $1 '*demo*' --output-file $1
+    lcov --rc lcov_branch_coverage=1 --remove $1 '*ports*' --output-file $1
+    lcov --rc lcov_branch_coverage=1 --remove $1 '*test*' --output-file $1
+    lcov --rc lcov_branch_coverage=1 --remove $1 '*third_party*' --output-file $1
 }
 
-# Overwrite the value of the COMPILER_OPTIONS varirable to remove any thread sanitizer flags, and replace with coverage flags.
-export COMPILER_OPTIONS="-DIOT_TEST_COVERAGE=1 --coverage"
+# Overwrite the value of the COMPILER_OPTIONS variable to remove any thread sanitizer flags, and replace with coverage flags.
+export COMPILER_OPTIONS="-DIOT_TEST_COVERAGE=1 --coverage -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG"
 
 SCRIPTS_FOLDER_PATH=../scripts
 
@@ -43,13 +43,9 @@ $SCRIPTS_FOLDER_PATH/ci_test_jobs.sh
 generate_coverage jobs.info
 
 # Combine the coverage files of all libraries into a single master coverage file.
-lcov --add-tracefile common.info \
+lcov --rc lcov_branch_coverage=1 \
+     --add-tracefile common.info \
      --add-tracefile mqtt.info \
      --add-tracefile shadow.info \
      --add-tracefile jobs.info \
      --output-file coverage.info
-
-# Submit the code coverage results. Must be submitted from SDK root directory so
-# Coveralls displays the correct paths.
-cd ..
-coveralls --lcov-file build/coverage.info
