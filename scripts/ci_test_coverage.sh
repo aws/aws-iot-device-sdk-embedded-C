@@ -24,9 +24,6 @@ function generate_coverage() {
 # Overwrite the value of the COMPILER_OPTIONS variable to remove any thread sanitizer flags, and replace with coverage flags.
 export COMPILER_OPTIONS="-DIOT_TEST_COVERAGE=1 --coverage -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG"
 
-# Define NDEBUG to remove asserts, which show as untaken branches.
-export COMPILER_OPTIONS+=" -DNDEBUG"
-
 SCRIPTS_FOLDER_PATH=../scripts
 
 # Run common tests with code coverage.
