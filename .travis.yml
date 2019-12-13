@@ -63,3 +63,7 @@ script:
   - cd build
   # Run test script.
   - bash ../scripts/ci_test_$RUN_TEST.sh
+
+after_success:
+  # Submit coverage results.
+  - if [ "$RUN_TEST" = "coverage" ]; then bash <(curl -s https://codecov.io/bash) -f coverage.info ; fi
