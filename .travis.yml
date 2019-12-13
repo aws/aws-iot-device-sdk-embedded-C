@@ -65,4 +65,4 @@ script:
 
 after_success:
   # Submit coverage results.
-  - if [ "$RUN_TEST" = "coverage" ]; then bash <(curl -s https://codecov.io/bash); fi
+  - if [ "$RUN_TEST" = "coverage" ]; then bash <(curl -s https://codecov.io/bash) -f coverage.info ; fi
