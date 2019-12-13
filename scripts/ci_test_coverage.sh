@@ -21,8 +21,11 @@ function generate_coverage() {
     lcov --rc lcov_branch_coverage=1 --remove $1 '*third_party*' --output-file $1
 }
 
-# Overwrite the value of the COMPILER_OPTIONS varirable to remove any thread sanitizer flags, and replace with coverage flags.
+# Overwrite the value of the COMPILER_OPTIONS variable to remove any thread sanitizer flags, and replace with coverage flags.
 export COMPILER_OPTIONS="-DIOT_TEST_COVERAGE=1 --coverage -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG"
+
+# Define NDEBUG to remove asserts, which show as untaken branches.
+export COMPILER_OPTIONS+=" -DNDEBUG"
 
 SCRIPTS_FOLDER_PATH=../scripts
 
