@@ -43,7 +43,8 @@ $SCRIPTS_FOLDER_PATH/ci_test_jobs.sh
 generate_coverage jobs.info
 
 # Combine the coverage files of all libraries into a single master coverage file.
-lcov --add-tracefile common.info \
+lcov --rc lcov_branch_coverage=1 \
+     --add-tracefile common.info \
      --add-tracefile mqtt.info \
      --add-tracefile shadow.info \
      --add-tracefile jobs.info \
