@@ -2,7 +2,12 @@
 
 **[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/index.html)**
 
+<<<<<<< HEAD
 [![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=FleetProvisioning_beta)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
+=======
+[![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
+[![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/v4_beta/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
+>>>>>>> 1cbdd6b... Update documentation for new coverage tool (#685)
 
 The AWS IoT Device SDK for C is a collection of C99 source files that allow applications to securely connect to the AWS IoT platform. It includes an MQTT 3.1.1 client, as well as libraries specific to AWS IoT, such as Thing Shadows. It is distributed in source form and may be built into firmware along with application code.
 
