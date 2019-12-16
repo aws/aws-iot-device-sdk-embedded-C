@@ -217,10 +217,6 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
         status = IOT_MQTT_BAD_RESPONSE;
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Read the remaining length. */
     pIncomingPacket->remainingLength = _getRemainingLengthFunc( pMqttConnection->pSerializer )( pNetworkConnection,
@@ -230,10 +226,6 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
     {
         status = IOT_MQTT_BAD_RESPONSE;
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Allocate a buffer for the remaining data and read the data. */
@@ -254,10 +246,6 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
             status = IOT_MQTT_NO_MEMORY;
             goto cleanup;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
 
         dataBytesRead = pMqttConnection->pNetworkInterface->receive( pNetworkConnection,
                                                                      pIncomingPacket->pRemainingData,
@@ -268,14 +256,6 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
             status = IOT_MQTT_BAD_RESPONSE;
             goto cleanup;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Clean up on error. */
@@ -287,14 +267,6 @@ cleanup:
         {
             IotMqtt_FreeMessage( pIncomingPacket->pRemainingData );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     return status;
@@ -333,10 +305,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
                 pOperation->u.operation.status = status;
                 _IotMqtt_Notify( pOperation );
             }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
 
             break;
 
@@ -372,10 +340,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
                 {
                     _sendPuback( pMqttConnection, pIncomingPacket->packetIdentifier );
                 }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
 
                 /* Transfer ownership of the received MQTT packet to the PUBLISH operation. */
                 pOperation->u.publish.pReceivedData = pIncomingPacket->pRemainingData;
@@ -399,10 +363,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
                     status = IOT_MQTT_NETWORK_ERROR;
                 }
             }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
 
             /* Free PUBLISH operation on error. */
             if( status != IOT_MQTT_SUCCESS )
@@ -414,10 +374,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
                     IotMqtt_Assert( pIncomingPacket->pRemainingData == NULL );
                     pIncomingPacket->pRemainingData = ( uint8_t * ) pOperation->u.publish.pReceivedData;
                 }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
 
                 /* Remove operation from pending processing list. */
                 IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
@@ -426,19 +382,11 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
                 {
                     IotListDouble_Remove( &( pOperation->link ) );
                 }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
 
                 IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
                 IotMqtt_Assert( pOperation != NULL );
                 IotMqtt_FreeOperation( pOperation );
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
             }
 
             break;
@@ -457,10 +405,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
             {
                 pOperation->u.operation.status = status;
                 _IotMqtt_Notify( pOperation );
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
             }
 
             break;
@@ -482,10 +426,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
                 pOperation->u.operation.status = status;
                 _IotMqtt_Notify( pOperation );
             }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
 
             break;
 
@@ -503,10 +443,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
             {
                 pOperation->u.operation.status = status;
                 _IotMqtt_Notify( pOperation );
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
             }
 
             break;
@@ -535,10 +471,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
                                 pMqttConnection );
                 }
             }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
 
             break;
     }
@@ -548,10 +480,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
         IotLogError( "(MQTT connection %p) Packet parser status %s.",
                      pMqttConnection,
                      IotMqtt_strerror( status ) );
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     return status;
@@ -605,10 +533,6 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
 
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Clean up on error. */
 cleanup:
@@ -619,14 +543,6 @@ cleanup:
         {
             _IotMqtt_DestroyOperation( pPubackOperation );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 }
 
@@ -733,14 +649,6 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
             IotLogDebug( "(MQTT connection %p) Keep-alive job canceled and cleaned up.",
                          pMqttConnection );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Copy the function pointers and contexts, as the MQTT connection may be
@@ -785,10 +693,6 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
         disconnectCallback( pDisconnectCallbackContext,
                             &callbackParam );
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 }
 
 /*-----------------------------------------------------------*/
@@ -818,14 +722,6 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
         {
             IotMqtt_FreeMessage( incomingPacket.pRemainingData );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Close the network connection on a bad response. */
@@ -836,10 +732,6 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
 
         _IotMqtt_CloseNetworkConnection( IOT_MQTT_BAD_PACKET_RECEIVED,
                                          pMqttConnection );
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 }
 

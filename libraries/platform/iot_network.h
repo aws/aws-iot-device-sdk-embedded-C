@@ -35,6 +35,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+/* Platform types include. */
+#include "types/iot_platform_types.h"
+
 /**
  * @ingroup platform_datatypes_enums
  * @brief Return codes for [network functions](@ref platform_network_functions).
