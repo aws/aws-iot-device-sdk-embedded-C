@@ -116,10 +116,6 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
 
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* If the topic lengths are different but an exact match is required, return
      * false. */
@@ -127,10 +123,6 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     {
         status = false;
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     while( ( nameIndex < topicNameLength ) && ( filterIndex < topicFilterLength ) )
@@ -153,24 +145,8 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                             status = true;
                             goto cleanup;
                         }
-                        else
-                        {
-                            EMPTY_ELSE_MARKER;
-                        }
-                    }
-                    else
-                    {
-                        EMPTY_ELSE_MARKER;
                     }
                 }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
             }
 
             /* Filter "sport/+" also matches the "sport/" but not "sport". */
@@ -183,19 +159,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
                         status = true;
                         goto cleanup;
                     }
-                    else
-                    {
-                        EMPTY_ELSE_MARKER;
-                    }
                 }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
             }
         }
         else
@@ -240,10 +204,6 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     {
         status = true;
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
 cleanup:
@@ -296,14 +256,6 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
              * will remove and clean up this subscription. */
             pSubscription->unsubscribed = true;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     return match;
@@ -388,10 +340,6 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
                                                   pSubscriptionList,
                                                   i );
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     return status;
 }
@@ -431,10 +379,6 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
         if( pCurrentLink == NULL )
         {
             break;
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
         }
 
         /* Subscription found. Calculate pointer to subscription object. */
@@ -484,14 +428,6 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
             {
                 IotMqtt_FreeSubscription( pSubscription );
             }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
         }
 
         /* Move current link pointer. */
@@ -575,10 +511,6 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnecti
                 IotMqtt_FreeSubscription( pSubscription );
             }
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
     }
 
     IotMutex_Unlock( &( pMqttConnection->subscriptionMutex ) );
@@ -624,16 +556,8 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
             pCurrentSubscription->qos = IOT_MQTT_QOS_0;
             pCurrentSubscription->callback = pSubscription->callback;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
 
         status = true;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     IotMutex_Unlock( &( mqttConnection->subscriptionMutex ) );
