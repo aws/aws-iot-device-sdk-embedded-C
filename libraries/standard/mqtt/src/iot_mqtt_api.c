@@ -269,10 +269,6 @@ static bool _checkInit( void )
 
         status = false;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     return status;
 }
@@ -316,10 +312,6 @@ static void _mqttSubscription_tryDestroy( void * pData )
     {
         IotMqtt_FreeSubscription( pSubscription );
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 }
 
 /*-----------------------------------------------------------*/
@@ -350,11 +342,6 @@ static void _mqttOperation_tryDestroy( void * pData )
                                              pOperation->job,
                                              pOperation );
         }
-        else
-        {
-            /* The executing job will process the PUBLISH, so nothing is done here. */
-            EMPTY_ELSE_MARKER;
-        }
     }
     else
     {
@@ -362,10 +349,6 @@ static void _mqttOperation_tryDestroy( void * pData )
         if( _IotMqtt_DecrementOperationReferences( pOperation, true ) == true )
         {
             _IotMqtt_DestroyOperation( pOperation );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
         }
     }
 }
@@ -416,10 +399,6 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
 
             IotMqtt_Assert( false );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
 
         /* Keep-alive references its MQTT connection, so increment reference. */
         ( pMqttConnection->references )++;
@@ -443,10 +422,6 @@ static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * 
 
         status = IOT_NETWORK_BAD_PARAMETER;
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Create a new network connection if requested. Otherwise, copy the existing
@@ -525,10 +500,6 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
         status = false;
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Create the subscription mutex for a new connection. */
     subscriptionMutexCreated = IotMutex_Create( &( pMqttConnection->subscriptionMutex ), false );
@@ -539,10 +510,6 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
 
         status = false;
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Create the new connection's subscription and operation lists. */
@@ -560,14 +527,6 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
             status = false;
             goto cleanup;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Clean up mutexes and connection if this function failed. */
@@ -579,18 +538,10 @@ cleanup:
         {
             IotMutex_Destroy( &( pMqttConnection->subscriptionMutex ) );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
 
         if( referencesMutexCreated == true )
         {
             IotMutex_Destroy( &( pMqttConnection->referencesMutex ) );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
         }
 
         if( pMqttConnection != NULL )
@@ -598,14 +549,6 @@ cleanup:
             IotMqtt_FreeConnection( pMqttConnection );
             pMqttConnection = NULL;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     return pMqttConnection;
@@ -631,10 +574,6 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 
         /* Decrement reference count. */
         pMqttConnection->references--;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* A connection to be destroyed should have no keep-alive and at most 1
@@ -669,10 +608,6 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
                         pMqttConnection );
         }
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Destroy mutexes. */
     IotMutex_Destroy( &( pMqttConnection->referencesMutex ) );
@@ -704,10 +639,6 @@ static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation
         status = IOT_MQTT_NOT_INITIALIZED;
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Check that all elements in the subscription list are valid. */
     if( _IotMqtt_ValidateSubscriptionList( operation,
@@ -717,10 +648,6 @@ static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation
     {
         status = IOT_MQTT_BAD_PARAMETER;
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Check that a reference pointer is provided for a waitable operation. */
@@ -734,14 +661,6 @@ static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation
             status = IOT_MQTT_BAD_PARAMETER;
             goto cleanup;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
 cleanup:
@@ -793,10 +712,6 @@ static IotMqttError_t _subscriptionCreateAndSerialize( IotMqttOperationType_t op
     {
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Check the serialized MQTT packet. */
     IotMqtt_Assert( pSubscriptionOperation->u.operation.pMqttPacket != NULL );
@@ -834,10 +749,6 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     {
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Add the subscription list for a SUBSCRIBE. */
     if( operation == IOT_MQTT_SUBSCRIBE )
@@ -851,20 +762,12 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
         {
             goto cleanup;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
     }
 
     /* Set the reference, if provided. */
     if( pOperationReference != NULL )
     {
         *pOperationReference = pSubscriptionOperation;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Send the SUBSCRIBE packet. */
@@ -890,19 +793,11 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                                      pSubscriptionOperation->u.operation.packetIdentifier,
                                                      MQTT_REMOVE_ALL_SUBSCRIPTIONS );
             }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
 
             /* Clear the previously set (and now invalid) reference. */
             if( pOperationReference != NULL )
             {
                 *pOperationReference = IOT_MQTT_OPERATION_INITIALIZER;
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
             }
 
             goto cleanup;
@@ -917,10 +812,6 @@ cleanup:
         if( pSubscriptionOperation != NULL )
         {
             _IotMqtt_DestroyOperation( pSubscriptionOperation );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
         }
     }
     else
@@ -992,10 +883,6 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
     {
         destroyConnection = true;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
@@ -1005,10 +892,6 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
         IotLogDebug( "(MQTT connection %p) Connection will be destroyed now.",
                      pMqttConnection );
         _destroyMqttConnection( pMqttConnection );
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 }
 
@@ -1034,20 +917,12 @@ IotMqttError_t IotMqtt_Init( void )
 
                     status = IOT_MQTT_INIT_FAILED;
                 }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
             #endif /* ifdef _IotMqtt_InitSerializeAdditional */
         #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
         if( status == IOT_MQTT_SUCCESS )
         {
             IotLogInfo( "MQTT library successfully initialized." );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
         }
     }
     else
@@ -1105,20 +980,12 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         status = IOT_MQTT_NOT_INITIALIZED;
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Validate network interface and connect info. */
     if( _IotMqtt_ValidateConnect( pConnectInfo ) == false )
     {
         status = IOT_MQTT_BAD_PARAMETER;
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     networkStatus = _createNetworkConnection( pNetworkInfo,
@@ -1129,10 +996,6 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     {
         status = IOT_MQTT_NETWORK_ERROR;
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     IotLogInfo( "Establishing new MQTT connection." );
@@ -1173,10 +1036,6 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         status = IOT_MQTT_NETWORK_ERROR;
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Create a CONNECT operation. */
     status = _IotMqtt_CreateOperation( pNewMqttConnection,
@@ -1187,10 +1046,6 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     if( status != IOT_MQTT_SUCCESS )
     {
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Ensure the members set by operation creation and serialization
@@ -1218,14 +1073,6 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         {
             goto cleanup;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Convert the connect info and will info objects to an MQTT CONNECT packet. */
@@ -1236,10 +1083,6 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     if( status != IOT_MQTT_SUCCESS )
     {
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Check the serialized MQTT packet. */
@@ -1273,19 +1116,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
                 status = IOT_MQTT_SCHEDULING_ERROR;
                 goto cleanup;
             }
-            else
-            {
-                EMPTY_ELSE_MARKER;
-            }
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
 cleanup:
@@ -1309,27 +1140,15 @@ cleanup:
                 IotLogInfo( "Network connection closed on error." );
             }
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
 
         if( pOperation != NULL )
         {
             _IotMqtt_DestroyOperation( pOperation );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
 
         if( pNewMqttConnection != NULL )
         {
             _destroyMqttConnection( pNewMqttConnection );
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
         }
     }
     else
@@ -1358,10 +1177,6 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
     if( initCalled == false )
     {
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Only send a DISCONNECT packet if the connection is active and the "cleanup only"
@@ -1406,10 +1221,6 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
         status = _getMqttDisconnectSerializer( mqttConnection->pSerializer )( &( pOperation->u.operation.pMqttPacket ),
                                                                               &( pOperation->u.operation.packetSize ) );
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     if( status == IOT_MQTT_SUCCESS )
     {
@@ -1439,10 +1250,6 @@ void IotMqtt_Disconnect( IotMqttConnection_t mqttConnection,
                         mqttConnection,
                         IotMqtt_strerror( status ) );
         }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* This function has no return value and no cleanup, but uses the cleanup
@@ -1504,10 +1311,6 @@ IotMqttError_t IotMqtt_SubscribeAsync( IotMqttConnection_t mqttConnection,
                                       pCallbackInfo,
                                       pSubscribeOperation );
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     return status;
 }
@@ -1538,10 +1341,6 @@ IotMqttError_t IotMqtt_SubscribeSync( IotMqttConnection_t mqttConnection,
     if( status == IOT_MQTT_STATUS_PENDING )
     {
         status = IotMqtt_Wait( subscribeOperation, timeoutMs );
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Ensure that a status was set. */
@@ -1582,10 +1381,6 @@ IotMqttError_t IotMqtt_UnsubscribeAsync( IotMqttConnection_t mqttConnection,
                                       pCallbackInfo,
                                       pUnsubscribeOperation );
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     return status;
 }
@@ -1617,10 +1412,6 @@ IotMqttError_t IotMqtt_UnsubscribeSync( IotMqttConnection_t mqttConnection,
     {
         status = IotMqtt_Wait( unsubscribeOperation, timeoutMs );
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Ensure that a status was set. */
     IotMqtt_Assert( status != IOT_MQTT_STATUS_PENDING );
@@ -1646,10 +1437,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
         status = IOT_MQTT_NOT_INITIALIZED;
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Check that the PUBLISH information is valid. */
     if( _IotMqtt_ValidatePublish( mqttConnection->awsIotMqttMode,
@@ -1657,10 +1444,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     {
         status = IOT_MQTT_BAD_PARAMETER;
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Check that no notification is requested for a QoS 0 publish. */
@@ -1680,23 +1463,11 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
             status = IOT_MQTT_BAD_PARAMETER;
             goto cleanup;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
 
         if( pPublishOperation != NULL )
         {
             IotLogWarn( "Ignoring reference parameter for QoS 0 publish." );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Check that a reference pointer is provided for a waitable operation. */
@@ -1709,14 +1480,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
             status = IOT_MQTT_BAD_PARAMETER;
             goto cleanup;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Create a PUBLISH operation. */
@@ -1729,10 +1492,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     {
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Check the PUBLISH operation data and set the operation type. */
     IotMqtt_Assert( pOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
@@ -1742,10 +1501,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     if( mqttConnection->awsIotMqttMode == true )
     {
         pPacketIdentifierHigh = &( pOperation->u.operation.pPacketIdentifierHigh );
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Generate a PUBLISH packet from pPublishInfo. */
@@ -1758,10 +1513,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     if( status != IOT_MQTT_SUCCESS )
     {
         goto cleanup;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Check the serialized MQTT packet. */
@@ -1777,14 +1528,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
             pOperation->u.operation.periodic.retry.limit = pPublishInfo->retryLimit;
             pOperation->u.operation.periodic.retry.nextPeriodMs = pPublishInfo->retryMs;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Set the reference, if provided. */
@@ -1794,14 +1537,6 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
         {
             *pPublishOperation = pOperation;
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Send the PUBLISH packet. */
@@ -1827,21 +1562,9 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
                 {
                     *pPublishOperation = IOT_MQTT_OPERATION_INITIALIZER;
                 }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
-            }
-            else
-            {
-                EMPTY_ELSE_MARKER;
             }
 
             goto cleanup;
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
         }
     }
 
@@ -1855,20 +1578,12 @@ cleanup:
         {
             _IotMqtt_DestroyOperation( pOperation );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
     }
     else
     {
         if( pPublishInfo->qos > IOT_MQTT_QOS_0 )
         {
             status = IOT_MQTT_STATUS_PENDING;
-        }
-        else
-        {
-            EMPTY_ELSE_MARKER;
         }
 
         IotLogInfo( "(MQTT connection %p) MQTT PUBLISH operation queued.",
@@ -1898,10 +1613,6 @@ IotMqttError_t IotMqtt_PublishSync( IotMqttConnection_t mqttConnection,
         flags |= IOT_MQTT_FLAG_WAITABLE;
         pPublishOperation = &publishOperation;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Call the asynchronous PUBLISH function. */
     status = IotMqtt_PublishAsync( mqttConnection,
@@ -1917,14 +1628,6 @@ IotMqttError_t IotMqtt_PublishSync( IotMqttConnection_t mqttConnection,
         {
             status = IotMqtt_Wait( publishOperation, timeoutMs );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     return status;
@@ -1944,19 +1647,11 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
         status = IOT_MQTT_NOT_INITIALIZED;
         goto cleanup;
     }
-    else
-    {
-        EMPTY_ELSE_MARKER;
-    }
 
     /* Validate the given operation reference. */
     if( _IotMqtt_ValidateOperation( operation ) == false )
     {
         status = IOT_MQTT_BAD_PARAMETER;
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
     /* Check the MQTT connection status. */
@@ -2009,10 +1704,6 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
                                                          operation->u.operation.packetIdentifier,
                                                          MQTT_REMOVE_ALL_SUBSCRIPTIONS );
                 }
-                else
-                {
-                    EMPTY_ELSE_MARKER;
-                }
             }
             else
             {
@@ -2026,24 +1717,12 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
                         operation,
                         IotMqtt_strerror( status ) );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
 
         /* Wait is finished; decrement operation reference count. */
         if( _IotMqtt_DecrementOperationReferences( operation, false ) == true )
         {
             _IotMqtt_DestroyOperation( operation );
         }
-        else
-        {
-            EMPTY_ELSE_MARKER;
-        }
-    }
-    else
-    {
-        EMPTY_ELSE_MARKER;
     }
 
 cleanup:
