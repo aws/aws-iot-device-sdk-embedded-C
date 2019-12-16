@@ -5,8 +5,8 @@
 The SDK's GitHub repo relies on the following tools to provide automated testing of commits and pull requests.
 - [Travis CI](https://travis-ci.org/) is the primary service used for testing. <br>
   <i>See:</i> [aws-iot-device-sdk-embedded-C on Travis CI](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
-- [Coveralls](https://coveralls.io/) provides code coverage results. <br>
-  <i>See</i>: [aws-iot-device-sdk-embedded-C on Coveralls](https://coveralls.io/github/aws/aws-iot-device-sdk-embedded-C)
+- [Codecov](https://codecov.io/) provides code coverage results. <br>
+  <i>See</i>: [aws-iot-device-sdk-embedded-C on Codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
 
 The following files on the GitHub repo control the automated tests:
 - `.travis.yml` <br>
@@ -15,7 +15,7 @@ The following files on the GitHub repo control the automated tests:
   Shell scripts (`sh`) that run on Travis CI servers.
   - The scripts that test the libraries are named after the library they test. For example, `ci_test_mqtt.sh` tests the MQTT library.
   - `ci_test_doc.sh` tests the documentation build. Runs for pull requests only.
-  - `ci_test_coverage.sh` generates and submits coverage results to Coveralls. Runs for commits only.
+  - `ci_test_coverage.sh` generates and submits coverage results to Codecov. Runs for commits only.
 
 @section guide_developer_automated_tests_setup Setup
 @brief How to set up the automated testing services.
@@ -32,15 +32,15 @@ All of the automated testing services have web interfaces that can be connected 
 3. On the <i>Settings</i> page, toggle the switch next to your fork of the C SDK to <i>On</i>.
 4. Travis CI is now set up. See @ref guide_developer_automated_tests_credentials_policy_travis for adding commit credentials to Travis CI.
 
-@subsection guide_developer_automated_tests_setup_coveralls Coveralls
-@brief How to set up Coveralls.
+@subsection guide_developer_automated_tests_setup_codecov Codecov
+@brief How to set up Codecov.
 
-<b>Link to Coveralls:</b> https://coveralls.io/
+<b>Link to Codecov:</b> https://codecov.io/
 
-1. Click <i>SIGN IN</i> in the upper right corner.  Then select <i>GITHUB SIGN IN</i> to log in with your GitHub account. On your first login, Coveralls will prompt for GitHub permissions access.
-2. Once signed in, hover over the menu on the left and click <i>ADD REPOS</i>.
-3. On the <i>ADD REPO</i> page, toggle the switch next to your fork of the C SDK to <i>ON</i>.
-4. Coveralls is now set up up. Travis CI will automatically submit coverage data on commit check builds.
+1. Click <i>Log In</i> in the upper right corner.  Then select <i>Log in with GitHub</i> to log in with your GitHub account. On your first login, Codecov will prompt for GitHub permissions access.
+2. Navigate to codecov.io/gh/<b>your GitHub username</b>/aws-iot-device-sdk-embedded-C
+3. Click on <i>Settings</i>, then copy the <i>Repository Upload Token</i> displayed.
+4. Set the Travis CI environment variable `CODECOV_TOKEN` to the Repository Upload Token. Travis CI will automatically submit coverage data on commit check builds.
 
 @section guide_developer_automated_tests_commit_pr Commit vs. Pull Request
 @brief The automated tests distinguish between GitHub commits and pull requests. Different sets of tests run on commits and pull requests.
@@ -55,7 +55,7 @@ For commits, the credentials necessary for connecting to AWS IoT are provided by
 - Common (`ci_test_common.sh`): runs the same tests as the common pull request tests.
 - MQTT (`ci_test_mqtt.sh`): runs the same MQTT tests as the MQTT pull request tests, but against the AWS IoT MQTT broker instead of a Mosquitto broker.
 - Shadow (`ci_test_shadow.sh`): runs both the Shadow unit tests and the Shadow system tests. Requires connection to AWS IoT.
-- Coverage (`ci_test_coverage.sh`): Gathers code coverage data and submits it to Coveralls.
+- Coverage (`ci_test_coverage.sh`): Gathers code coverage data and submits it to Codecov.
 
 @note Rarely, the Shadow tests on a GitHub fork will fail with a `429 TOO MANY REQUESTS` error. If this happens, restart the Shadow tests. The main C SDK GitHub repo has an increased limit for Shadow requests, so it should not encounter this error.
 
