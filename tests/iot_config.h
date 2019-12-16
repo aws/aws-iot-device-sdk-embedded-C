@@ -218,9 +218,6 @@
         #error "Unsupported compiler. Only gcc and clang are supported for coverage."
     #endif
 
-    /* Define the empty else marker if test coverage is enabled. */
-    #define EMPTY_ELSE_MARKER    __asm__ __volatile__ ( "nop" )
-
     /* Define a custom logging puts function. This function allows coverage
      * testing of logging functions, but prevents excessive logs from being
      * printed. */
