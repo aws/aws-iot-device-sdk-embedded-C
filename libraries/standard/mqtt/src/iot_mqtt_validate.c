@@ -67,6 +67,54 @@ static bool _validateQos( IotMqttQos_t qos );
 static bool _validateString( const char * pString,
                              uint16_t length );
 
+/**
+ * @brief Check that a list of subscriptions is valid.
+ *
+ * @param[in] awsIotMqttMode Whether to enforce list length restrictions from AWS IoT.
+ * @param[in] pListStart First element of the list.
+ * @param[in] listSize Length of the list.
+ *
+ * @return `true` if `pListStart` is valid; `false` otherwise.
+ */
+static bool _validateListSize( bool awsIotMqttMode,
+                               const IotMqttSubscription_t * pListStart,
+                               size_t listSize );
+
+/**
+ * @brief Check that a single subscription is valid.
+ *
+ * @param[in] awsIotMqttMode Whether to enforce the topic filter restrictions from AWS IoT.
+ * @param[in] operation Either #IOT_MQTT_SUBSCRIBE or #IOT_MQTT_UNSUBSCRIBE.
+ * @param[in] pSubscription The subscription to check.
+ *
+ * @return `true` if `pSubscription` is valid; `false` otherwise.
+ */
+static bool _validateSubscription( bool awsIotMqttMode,
+                                   IotMqttOperationType_t operation,
+                                   const IotMqttSubscription_t * pSubscription );
+
+/**
+ * @brief Check that the MQTT `+` wildcard is being used correctly.
+ *
+ * @param[in] index Index of `+` in the topic filter.
+ * @param[in] pSubscription Subscription with the topic filter to check.
+ *
+ * @return `true` if the `+` wilcard is valid; `false` otherwise.
+ */
+static bool _validateWildcardPlus( uint16_t index,
+                                   const IotMqttSubscription_t * pSubscription );
+
+/**
+ * @brief Check that the MQTT `#` wildcard is being used correctly.
+ *
+ * @param[in] index Index of `#` in the topic filter.
+ * @param[in] pSubscription Subscription with the topic filter to check.
+ *
+ * @return `true` if the `#` wilcard is valid; `false` otherwise.
+ */
+static bool _validateWildcardHash( uint16_t index,
+                                   const IotMqttSubscription_t * pSubscription );
+
 /*-----------------------------------------------------------*/
 
 static bool _validateQos( IotMqttQos_t qos )
@@ -205,6 +253,202 @@ static bool _validatePublish( bool awsIotMqttMode,
         {
             IotLogError( "AWS IoT does not support topic names longer than %d bytes.",
                          AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
+
+            status = false;
+            goto cleanup;
+        }
+    }
+
+cleanup:
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static bool _validateListSize( bool awsIotMqttMode,
+                               const IotMqttSubscription_t * pListStart,
+                               size_t listSize )
+{
+    bool status = true;
+
+    /* Check for empty list. */
+    if( pListStart == NULL )
+    {
+        IotLogError( "Subscription list pointer cannot be NULL." );
+
+        status = false;
+        goto cleanup;
+    }
+
+    if( listSize == 0 )
+    {
+        IotLogError( "Empty subscription list." );
+
+        status = false;
+        goto cleanup;
+    }
+
+    /* AWS IoT supports at most 8 topic filters in a single SUBSCRIBE packet. */
+    if( awsIotMqttMode == true )
+    {
+        if( listSize > AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE )
+        {
+            IotLogError( "AWS IoT does not support more than %d topic filters per "
+                         "subscription request.",
+                         AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE );
+
+            status = false;
+            goto cleanup;
+        }
+    }
+
+cleanup:
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static bool _validateSubscription( bool awsIotMqttMode,
+                                   IotMqttOperationType_t operation,
+                                   const IotMqttSubscription_t * pSubscription )
+{
+    bool status = true;
+    uint16_t i = 0;
+
+    /* Check for a valid QoS and callback function when subscribing. */
+    if( operation == IOT_MQTT_SUBSCRIBE )
+    {
+        status = _validateQos( pSubscription->qos );
+
+        if( status == false )
+        {
+            goto cleanup;
+        }
+
+        if( pSubscription->callback.function == NULL )
+        {
+            IotLogError( "Callback function must be set." );
+
+            status = false;
+            goto cleanup;
+        }
+    }
+
+    /* Check subscription topic filter. */
+    status = _validateString( pSubscription->pTopicFilter, pSubscription->topicFilterLength );
+
+    if( status == false )
+    {
+        IotLogError( "Subscription topic filter must be set." );
+
+        goto cleanup;
+    }
+
+    /* Check for compatibility with AWS IoT MQTT server. */
+    if( awsIotMqttMode == true )
+    {
+        /* Check topic filter length. */
+        if( pSubscription->topicFilterLength > AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
+        {
+            IotLogError( "AWS IoT does not support topic filters longer than %d bytes.",
+                         AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
+
+            status = false;
+            goto cleanup;
+        }
+    }
+
+    /* Check that the wildcards '+' and '#' are being used correctly. */
+    for( i = 0; i < pSubscription->topicFilterLength; i++ )
+    {
+        if( pSubscription->pTopicFilter[ i ] == '+' )
+        {
+            status = _validateWildcardPlus( i, pSubscription );
+        }
+        else if( pSubscription->pTopicFilter[ i ] == '#' )
+        {
+            status = _validateWildcardHash( i, pSubscription );
+        }
+
+        if( status == false )
+        {
+            goto cleanup;
+        }
+    }
+
+cleanup:
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static bool _validateWildcardPlus( uint16_t index,
+                                   const IotMqttSubscription_t * pSubscription )
+{
+    bool status = true;
+
+    /* Unless '+' is the first character in the filter, it must be preceded by '/'. */
+    if( index > 0 )
+    {
+        if( pSubscription->pTopicFilter[ index - 1 ] != '/' )
+        {
+            IotLogError( "Invalid topic filter %.*s -- '+' must be preceded by '/'.",
+                         pSubscription->topicFilterLength,
+                         pSubscription->pTopicFilter );
+
+            status = false;
+            goto cleanup;
+        }
+    }
+
+    /* Unless '+' is the last character in the filter, it must be succeeded by '/'. */
+    if( index < pSubscription->topicFilterLength - 1 )
+    {
+        if( pSubscription->pTopicFilter[ index + 1 ] != '/' )
+        {
+            IotLogError( "Invalid topic filter %.*s -- '+' must be succeeded by '/'.",
+                         pSubscription->topicFilterLength,
+                         pSubscription->pTopicFilter );
+
+            status = false;
+            goto cleanup;
+        }
+    }
+
+cleanup:
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static bool _validateWildcardHash( uint16_t index,
+                                   const IotMqttSubscription_t * pSubscription )
+{
+    bool status = true;
+
+    /* '#' must be the last character in the filter. */
+    if( index != pSubscription->topicFilterLength - 1 )
+    {
+        IotLogError( "Invalid topic filter %.*s -- '#' must be the last character.",
+                     pSubscription->topicFilterLength,
+                     pSubscription->pTopicFilter );
+
+        status = false;
+        goto cleanup;
+    }
+
+    /* Unless '#' is standalone, it must be preceded by '/'. */
+    if( pSubscription->topicFilterLength > 1 )
+    {
+        if( pSubscription->pTopicFilter[ index - 1 ] != '/' )
+        {
+            IotLogError( "Invalid topic filter %.*s -- '#' must be preceded by '/'.",
+                         pSubscription->topicFilterLength,
+                         pSubscription->pTopicFilter );
 
             status = false;
             goto cleanup;
@@ -382,162 +626,31 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
 {
     bool status = true;
     size_t i = 0;
-    uint16_t j = 0;
-    const IotMqttSubscription_t * pListElement = NULL;
 
     /* Operation must be either subscribe or unsubscribe. */
     IotMqtt_Assert( ( operation == IOT_MQTT_SUBSCRIBE ) ||
                     ( operation == IOT_MQTT_UNSUBSCRIBE ) );
 
-    /* Check for empty list. */
-    if( pListStart == NULL )
-    {
-        IotLogError( "Subscription list pointer cannot be NULL." );
+    /* Check that subscription list is valid. */
+    status = _validateListSize( awsIotMqttMode,
+                                pListStart,
+                                listSize );
 
-        status = false;
+    if( status == false )
+    {
         goto cleanup;
     }
 
-    if( listSize == 0 )
-    {
-        IotLogError( "Empty subscription list." );
-
-        status = false;
-        goto cleanup;
-    }
-
-    /* AWS IoT supports at most 8 topic filters in a single SUBSCRIBE packet. */
-    if( awsIotMqttMode == true )
-    {
-        if( listSize > AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE )
-        {
-            IotLogError( "AWS IoT does not support more than %d topic filters per "
-                         "subscription request.",
-                         AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE );
-
-            status = false;
-            goto cleanup;
-        }
-    }
-
+    /* Check each member of the subscription list. */
     for( i = 0; i < listSize; i++ )
     {
-        pListElement = &( pListStart[ i ] );
-
-        /* Check for a valid QoS and callback function when subscribing. */
-        if( operation == IOT_MQTT_SUBSCRIBE )
-        {
-            status = _validateQos( pListElement->qos );
-
-            if( status == false )
-            {
-                goto cleanup;
-            }
-
-            if( pListElement->callback.function == NULL )
-            {
-                IotLogError( "Callback function must be set." );
-
-                status = false;
-                goto cleanup;
-            }
-        }
-
-        /* Check subscription topic filter. */
-        status = _validateString( pListElement->pTopicFilter, pListElement->topicFilterLength );
+        status = _validateSubscription( awsIotMqttMode,
+                                        operation,
+                                        &( pListStart[ i ] ) );
 
         if( status == false )
         {
-            IotLogError( "Subscription topic filter must be set." );
-
-            goto cleanup;
-        }
-
-        /* Check for compatibility with AWS IoT MQTT server. */
-        if( awsIotMqttMode == true )
-        {
-            /* Check topic filter length. */
-            if( pListElement->topicFilterLength > AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
-            {
-                IotLogError( "AWS IoT does not support topic filters longer than %d bytes.",
-                             AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
-
-                status = false;
-                goto cleanup;
-            }
-        }
-
-        /* Check that the wildcards '+' and '#' are being used correctly. */
-        for( j = 0; j < pListElement->topicFilterLength; j++ )
-        {
-            switch( pListElement->pTopicFilter[ j ] )
-            {
-                /* Check that the single level wildcard '+' is used correctly. */
-                case '+':
-
-                    /* Unless '+' is the first character in the filter, it must be preceded by '/'. */
-                    if( j > 0 )
-                    {
-                        if( pListElement->pTopicFilter[ j - 1 ] != '/' )
-                        {
-                            IotLogError( "Invalid topic filter %.*s -- '+' must be preceded by '/'.",
-                                         pListElement->topicFilterLength,
-                                         pListElement->pTopicFilter );
-
-                            status = false;
-                            goto cleanup;
-                        }
-                    }
-
-                    /* Unless '+' is the last character in the filter, it must be succeeded by '/'. */
-                    if( j < pListElement->topicFilterLength - 1 )
-                    {
-                        if( pListElement->pTopicFilter[ j + 1 ] != '/' )
-                        {
-                            IotLogError( "Invalid topic filter %.*s -- '+' must be succeeded by '/'.",
-                                         pListElement->topicFilterLength,
-                                         pListElement->pTopicFilter );
-
-                            status = false;
-                            goto cleanup;
-                        }
-                    }
-
-                    break;
-
-                /* Check that the multi-level wildcard '#' is used correctly. */
-                case '#':
-
-                    /* '#' must be the last character in the filter. */
-                    if( j != pListElement->topicFilterLength - 1 )
-                    {
-                        IotLogError( "Invalid topic filter %.*s -- '#' must be the last character.",
-                                     pListElement->topicFilterLength,
-                                     pListElement->pTopicFilter );
-
-                        status = false;
-                        goto cleanup;
-                    }
-
-                    /* Unless '#' is standalone, it must be preceded by '/'. */
-                    if( pListElement->topicFilterLength > 1 )
-                    {
-                        if( pListElement->pTopicFilter[ j - 1 ] != '/' )
-                        {
-                            IotLogError( "Invalid topic filter %.*s -- '#' must be preceded by '/'.",
-                                         pListElement->topicFilterLength,
-                                         pListElement->pTopicFilter );
-
-                            status = false;
-                            goto cleanup;
-                        }
-                    }
-
-                    break;
-
-                default:
-                    break;
-            }
+            break;
         }
     }
 
