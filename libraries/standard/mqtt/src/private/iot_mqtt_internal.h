@@ -224,17 +224,6 @@
 #endif
 /** @endcond */
 
-/**
- * @brief Marks the empty statement of an `else` branch.
- *
- * Does nothing, but allows test coverage to detect branches not taken. By default,
- * this is defined to nothing. When running code coverage testing, this is defined
- * to an assembly NOP.
- */
-#ifndef EMPTY_ELSE_MARKER
-    #define EMPTY_ELSE_MARKER
-#endif
-
 #define MQTT_SERVER_MAX_CLIENTID_LENGTH                        ( ( uint16_t ) 23 )          /**< @brief Optional maximum length of client identifier specified by MQTT 3.1.1. */
 #define MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH                 ( ( size_t ) ( 268435456 ) ) /**< @brief Maximum publish payload length supported by MQTT 3.1.1. */
 #define MQTT_SERVER_MAX_LWT_PAYLOAD_LENGTH                     ( ( size_t ) UINT16_MAX )    /**< @brief Maximum LWT payload length supported by MQTT 3.1.1. */
@@ -1022,15 +1011,8 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
             {                                                                                        \
                 _returnValue = pSerializer->_serializerMember;                                       \
             }                                                                                        \
-            else                                                                                     \
-            {                                                                                        \
-                EMPTY_ELSE_MARKER;                                                                   \
-            }                                                                                        \
         }                                                                                            \
-        else                                                                                         \
-        {                                                                                            \
-            EMPTY_ELSE_MARKER;                                                                       \
-        }                                                                                            \
+                                                                                                     \
         return _returnValue;                                                                         \
     }
 #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
