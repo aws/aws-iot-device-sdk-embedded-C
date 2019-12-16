@@ -7,7 +7,7 @@ ABSTRACTIONS = \
 	--remove-function-body _IotMqtt_RemoveSubscriptionByPacket \
 
 UNWINDING = \
-	--unwindset _IotMqtt_DeserializeSuback.0:$(BUFFER_SIZE) \
+	--unwindset _decodeSubackStatus.0:$(BUFFER_SIZE) \
 
 OBJS = \
 	$(ENTRY)_harness.goto \
