@@ -47,6 +47,175 @@ static bool _validatePublish( bool awsIotMqttMode,
                               const char * pPublishTypeDescription,
                               const IotMqttPublishInfo_t * pPublishInfo );
 
+/**
+ * @brief Check that an #IotMqttQos_t is valid.
+ *
+ * @param[in] qos The QoS to check.
+ *
+ * @return `true` if `qos` is valid; `false` otherwise.
+ */
+static bool _validateQos( IotMqttQos_t qos );
+
+/**
+ * @brief Check that a string is valid.
+ *
+ * @param[in] pString The string to check.
+ * @param[in] length Length of string to check.
+ *
+ * @return `true` if `pString` is valid; `false` otherwise.
+ */
+static bool _validateString( const char * pString,
+                             uint16_t length );
+
+/*-----------------------------------------------------------*/
+
+static bool _validateQos( IotMqttQos_t qos )
+{
+    bool status = false;
+
+    switch( qos )
+    {
+        case IOT_MQTT_QOS_0:
+        case IOT_MQTT_QOS_1:
+            status = true;
+            break;
+
+        default:
+            IotLogError( "QoS must be either 0 or 1." );
+
+            break;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static bool _validateString( const char * pString,
+                             uint16_t length )
+{
+    bool status = true;
+
+    if( pString == NULL )
+    {
+        status = false;
+        goto cleanup;
+    }
+
+    if( length == 0 )
+    {
+        status = false;
+        goto cleanup;
+    }
+
+cleanup:
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static bool _validatePublish( bool awsIotMqttMode,
+                              size_t maximumPayloadLength,
+                              const char * pPublishTypeDescription,
+                              const IotMqttPublishInfo_t * pPublishInfo )
+{
+    bool status = true;
+
+    /* This parameter is not used when logging is disabled. */
+    ( void ) pPublishTypeDescription;
+
+    /* Check for NULL. */
+    if( pPublishInfo == NULL )
+    {
+        IotLogError( "Publish information cannot be NULL." );
+
+        status = false;
+        goto cleanup;
+    }
+
+    /* Check topic name for NULL or zero-length. */
+    status = _validateString( pPublishInfo->pTopicName, pPublishInfo->topicNameLength );
+
+    if( status == false )
+    {
+        IotLogError( "Publish topic name must be set." );
+
+        goto cleanup;
+    }
+
+    if( pPublishInfo->payloadLength != 0 )
+    {
+        if( pPublishInfo->payloadLength > maximumPayloadLength )
+        {
+            IotLogError( "%s payload size of %zu exceeds maximum length of %zu.",
+                         pPublishTypeDescription,
+                         pPublishInfo->payloadLength,
+                         maximumPayloadLength );
+
+            status = false;
+            goto cleanup;
+        }
+        else
+        {
+            if( pPublishInfo->pPayload == NULL )
+            {
+                IotLogError( "Nonzero payload length cannot have a NULL payload." );
+
+                status = false;
+                goto cleanup;
+            }
+        }
+    }
+
+    /* Check for a valid QoS. */
+    status = _validateQos( pPublishInfo->qos );
+
+    if( status == false )
+    {
+        goto cleanup;
+    }
+
+    /* Check the retry parameters. */
+    if( pPublishInfo->retryLimit > 0 )
+    {
+        if( pPublishInfo->retryMs == 0 )
+        {
+            IotLogError( "Publish retry time must be positive." );
+
+            status = false;
+            goto cleanup;
+        }
+    }
+
+    /* Check for compatibility with AWS IoT MQTT server. */
+    if( awsIotMqttMode == true )
+    {
+        /* Check for retained message. */
+        if( pPublishInfo->retain == true )
+        {
+            IotLogError( "AWS IoT does not support retained publish messages." );
+
+            status = false;
+            goto cleanup;
+        }
+
+        /* Check topic name length. */
+        if( pPublishInfo->topicNameLength > AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
+        {
+            IotLogError( "AWS IoT does not support topic names longer than %d bytes.",
+                         AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
+
+            status = false;
+            goto cleanup;
+        }
+    }
+
+cleanup:
+
+    return status;
+}
+
 /*-----------------------------------------------------------*/
 
 bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
@@ -142,116 +311,7 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
     }
 
 cleanup:
-    return status;
-}
 
-/*-----------------------------------------------------------*/
-
-static bool _validatePublish( bool awsIotMqttMode,
-                              size_t maximumPayloadLength,
-                              const char * pPublishTypeDescription,
-                              const IotMqttPublishInfo_t * pPublishInfo )
-{
-    bool status = true;
-
-    /* This parameter is not used when logging is disabled. */
-    ( void ) pPublishTypeDescription;
-
-    /* Check for NULL. */
-    if( pPublishInfo == NULL )
-    {
-        IotLogError( "Publish information cannot be NULL." );
-
-        status = false;
-        goto cleanup;
-    }
-
-    /* Check topic name for NULL or zero-length. */
-    if( pPublishInfo->pTopicName == NULL )
-    {
-        IotLogError( "Publish topic name must be set." );
-    }
-
-    if( pPublishInfo->topicNameLength == 0 )
-    {
-        IotLogError( "Publish topic name length cannot be 0." );
-
-        status = false;
-        goto cleanup;
-    }
-
-    if( pPublishInfo->payloadLength != 0 )
-    {
-        if( pPublishInfo->payloadLength > maximumPayloadLength )
-        {
-            IotLogError( "%s payload size of %zu exceeds maximum length of %zu.",
-                         pPublishTypeDescription,
-                         pPublishInfo->payloadLength,
-                         maximumPayloadLength );
-
-            status = false;
-            goto cleanup;
-        }
-        else
-        {
-            if( pPublishInfo->pPayload == NULL )
-            {
-                IotLogError( "Nonzero payload length cannot have a NULL payload." );
-
-                status = false;
-                goto cleanup;
-            }
-        }
-    }
-
-    /* Check for a valid QoS. */
-    if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
-    {
-        if( pPublishInfo->qos != IOT_MQTT_QOS_1 )
-        {
-            IotLogError( "Publish QoS must be either 0 or 1." );
-
-            status = false;
-            goto cleanup;
-        }
-    }
-
-    /* Check the retry parameters. */
-    if( pPublishInfo->retryLimit > 0 )
-    {
-        if( pPublishInfo->retryMs == 0 )
-        {
-            IotLogError( "Publish retry time must be positive." );
-
-            status = false;
-            goto cleanup;
-        }
-    }
-
-    /* Check for compatibility with AWS IoT MQTT server. */
-    if( awsIotMqttMode == true )
-    {
-        /* Check for retained message. */
-        if( pPublishInfo->retain == true )
-        {
-            IotLogError( "AWS IoT does not support retained publish messages." );
-
-            status = false;
-            goto cleanup;
-        }
-
-        /* Check topic name length. */
-        if( pPublishInfo->topicNameLength > AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
-        {
-            IotLogError( "AWS IoT does not support topic names longer than %d bytes.",
-                         AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
-
-            status = false;
-            goto cleanup;
-        }
-    }
-
-cleanup:
     return status;
 }
 
@@ -309,6 +369,7 @@ bool _IotMqtt_ValidateOperation( IotMqttOperation_t operation )
     }
 
 cleanup:
+
     return status;
 }
 
@@ -366,15 +427,11 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
         /* Check for a valid QoS and callback function when subscribing. */
         if( operation == IOT_MQTT_SUBSCRIBE )
         {
-            if( pListElement->qos != IOT_MQTT_QOS_0 )
-            {
-                if( pListElement->qos != IOT_MQTT_QOS_1 )
-                {
-                    IotLogError( "Subscription QoS must be either 0 or 1." );
+            status = _validateQos( pListElement->qos );
 
-                    status = false;
-                    goto cleanup;
-                }
+            if( status == false )
+            {
+                goto cleanup;
             }
 
             if( pListElement->callback.function == NULL )
@@ -387,19 +444,12 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
         }
 
         /* Check subscription topic filter. */
-        if( pListElement->pTopicFilter == NULL )
+        status = _validateString( pListElement->pTopicFilter, pListElement->topicFilterLength );
+
+        if( status == false )
         {
-            IotLogError( "Subscription topic filter cannot be NULL." );
+            IotLogError( "Subscription topic filter must be set." );
 
-            status = false;
-            goto cleanup;
-        }
-
-        if( pListElement->topicFilterLength == 0 )
-        {
-            IotLogError( "Subscription topic filter length cannot be 0." );
-
-            status = false;
             goto cleanup;
         }
 
@@ -492,6 +542,7 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
     }
 
 cleanup:
+
     return status;
 }
 
