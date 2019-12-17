@@ -68,6 +68,7 @@ typedef struct _packetMatchParams
  * @param[in] pTopicFilter The topic filter containing the wildcard.
  * @param[in] nameIndex Index of the topic name being examined.
  * @param[in] filterIndex Index of the topic filter being examined.
+ * @param[in] topicNameLength Length of the topic name being examined.
  * @param[in] topicFilterLength Length of the topic filter being examined.
  *
  * @return `true` if `pTopicFilter` should match; `false` otherwise.
@@ -147,7 +148,7 @@ static bool _matchTerminalWildcards( const char * pTopicFilter,
                                      uint16_t topicNameLength,
                                      uint16_t topicFilterLength )
 {
-    bool status = false, terminalChar = false, wildcardFound = false;
+    bool status = false, terminalChar = false;
 
     /* Determine if the terminal character is reached for both topic name and topic
      * filter for the '#' wildcard. */
@@ -189,7 +190,6 @@ static bool _matchWildcards( const char * pTopicFilter,
                              bool * pMatch )
 {
     bool status = false;
-    uint16_t nameIndex = 0;
 
     /* Check for wildcards. */
     if( pTopicFilter[ filterIndex ] == '+' )
