@@ -334,6 +334,19 @@ static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionLi
                                    uint8_t * pBuffer,
                                    size_t unsubscribePacketSize );
 
+/**
+ * @brief Decode the status bytes of a SUBACK packet.
+ *
+ * @param[in] statusCount Number of status bytes in the SUBACK.
+ * @param[in] pStatusStart The first status byte in the SUBACK.
+ * @param[in] pSuback The SUBACK packet received from the network.
+ *
+ * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_SERVER_REFUSED, or #IOT_MQTT_BAD_RESPONSE.
+ */
+static IotMqttError_t _decodeSubackStatus( size_t statusCount,
+                                           const uint8_t * pStatusStart,
+                                           _mqttPacket_t * pSuback );
+
 /*-----------------------------------------------------------*/
 
 #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
@@ -1007,6 +1020,68 @@ static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionLi
 
 /*-----------------------------------------------------------*/
 
+static IotMqttError_t _decodeSubackStatus( size_t statusCount,
+                                           const uint8_t * pStatusStart,
+                                           _mqttPacket_t * pSuback )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+    uint8_t subscriptionStatus = 0;
+    size_t i = 0;
+
+    /* Iterate through each status byte in the SUBACK packet. */
+    for( i = 0; i < statusCount; i++ )
+    {
+        /* Read a single status byte in SUBACK. */
+        subscriptionStatus = *( pStatusStart + i );
+
+        /* MQTT 3.1.1 defines the following values as status codes. */
+        switch( subscriptionStatus )
+        {
+            case 0x00:
+            case 0x01:
+            case 0x02:
+                IotLog( IOT_LOG_DEBUG,
+                        &_logHideAll,
+                        "Topic filter %lu accepted, max QoS %hhu.",
+                        ( unsigned long ) i, subscriptionStatus );
+                break;
+
+            case 0x80:
+                IotLog( IOT_LOG_DEBUG,
+                        &_logHideAll,
+                        "Topic filter %lu refused.", ( unsigned long ) i );
+
+                /* Remove a rejected subscription from the subscription manager. */
+                _IotMqtt_RemoveSubscriptionByPacket( pSuback->u.pMqttConnection,
+                                                     pSuback->packetIdentifier,
+                                                     ( int32_t ) i );
+
+                status = IOT_MQTT_SERVER_REFUSED;
+
+                break;
+
+            default:
+                IotLog( IOT_LOG_DEBUG,
+                        &_logHideAll,
+                        "Bad SUBSCRIBE status %hhu.", subscriptionStatus );
+
+                status = IOT_MQTT_BAD_RESPONSE;
+
+                break;
+        }
+
+        /* Stop parsing the subscription statuses if a bad response was received. */
+        if( status == IOT_MQTT_BAD_RESPONSE )
+        {
+            break;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 uint8_t _IotMqtt_GetPacketType( void * pNetworkConnection,
                                 const IotNetworkInterface_t * pNetworkInterface )
 {
@@ -1169,6 +1244,7 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
     _serializeConnect( pConnectInfo, remainingLength, pBuffer, connectPacketSize );
 
 cleanup:
+
     return status;
 }
 
@@ -1283,6 +1359,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
     }
 
 cleanup:
+
     return status;
 }
 
@@ -1339,6 +1416,7 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
                        publishPacketSize );
 
 cleanup:
+
     return status;
 }
 
@@ -1554,6 +1632,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
             "Payload length %hu.", pOutput->payloadLength );
 
 cleanup:
+
     return status;
 }
 
@@ -1639,6 +1718,7 @@ IotMqttError_t _IotMqtt_DeserializePuback( _mqttPacket_t * pPuback )
     }
 
 cleanup:
+
     return status;
 }
 
@@ -1700,6 +1780,7 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubsc
 
 
 cleanup:
+
     return status;
 }
 
@@ -1708,8 +1789,7 @@ cleanup:
 IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
-    size_t i = 0, remainingLength = pSuback->remainingLength;
-    uint8_t subscriptionStatus = 0;
+    size_t remainingLength = pSuback->remainingLength;
     const uint8_t * pVariableHeader = pSuback->pRemainingData;
 
     /* A SUBACK must have a remaining length of at least 3 to accommodate the
@@ -1744,56 +1824,12 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
         goto cleanup;
     }
 
-    /* Iterate through each status byte in the SUBACK packet. */
-    for( i = 0; i < remainingLength - sizeof( uint16_t ); i++ )
-    {
-        /* Read a single status byte in SUBACK. */
-        subscriptionStatus = *( pVariableHeader + sizeof( uint16_t ) + i );
-
-        /* MQTT 3.1.1 defines the following values as status codes. */
-        switch( subscriptionStatus )
-        {
-            case 0x00:
-            case 0x01:
-            case 0x02:
-                IotLog( IOT_LOG_DEBUG,
-                        &_logHideAll,
-                        "Topic filter %lu accepted, max QoS %hhu.",
-                        ( unsigned long ) i, subscriptionStatus );
-                break;
-
-            case 0x80:
-                IotLog( IOT_LOG_DEBUG,
-                        &_logHideAll,
-                        "Topic filter %lu refused.", ( unsigned long ) i );
-
-                /* Remove a rejected subscription from the subscription manager. */
-                _IotMqtt_RemoveSubscriptionByPacket( pSuback->u.pMqttConnection,
-                                                     pSuback->packetIdentifier,
-                                                     ( int32_t ) i );
-
-                status = IOT_MQTT_SERVER_REFUSED;
-
-                break;
-
-            default:
-                IotLog( IOT_LOG_DEBUG,
-                        &_logHideAll,
-                        "Bad SUBSCRIBE status %hhu.", subscriptionStatus );
-
-                status = IOT_MQTT_BAD_RESPONSE;
-
-                break;
-        }
-
-        /* Stop parsing the subscription statuses if a bad response was received. */
-        if( status == IOT_MQTT_BAD_RESPONSE )
-        {
-            break;
-        }
-    }
+    status = _decodeSubackStatus( remainingLength - sizeof( uint16_t ),
+                                  pVariableHeader + sizeof( uint16_t ),
+                                  pSuback );
 
 cleanup:
+
     return status;
 }
 
@@ -1854,6 +1890,7 @@ IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSub
                            unsubscribePacketSize );
 
 cleanup:
+
     return status;
 }
 
@@ -1903,6 +1940,7 @@ IotMqttError_t _IotMqtt_DeserializeUnsuback( _mqttPacket_t * pUnsuback )
     }
 
 cleanup:
+
     return status;
 }
 
@@ -1959,6 +1997,7 @@ IotMqttError_t _IotMqtt_DeserializePingresp( _mqttPacket_t * pPingresp )
     }
 
 cleanup:
+
     return status;
 }
 
@@ -2050,6 +2089,7 @@ IotMqttError_t IotMqtt_GetConnectPacketSize( const IotMqttConnectInfo_t * pConne
     }
 
 cleanup:
+
     return status;
 }
 
@@ -2090,6 +2130,7 @@ IotMqttError_t IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectIn
                        bufferSize );
 
 cleanup:
+
     return status;
 }
 
@@ -2148,6 +2189,7 @@ IotMqttError_t IotMqtt_GetSubscriptionPacketSize( IotMqttOperationType_t type,
     }
 
 cleanup:
+
     return status;
 }
 
@@ -2192,6 +2234,7 @@ IotMqttError_t IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubscr
                          bufferSize );
 
 cleanup:
+
     return status;
 }
 
@@ -2240,6 +2283,7 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo
     }
 
 cleanup:
+
     return status;
 }
 
@@ -2284,6 +2328,7 @@ IotMqttError_t IotMqtt_SerializePublish( IotMqttPublishInfo_t * pPublishInfo,
                        pBuffer,
                        bufferSize );
 cleanup:
+
     return status;
 }
 
@@ -2327,6 +2372,7 @@ IotMqttError_t IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSubs
                            pBuffer,
                            bufferSize );
 cleanup:
+
     return status;
 }
 
@@ -2361,6 +2407,7 @@ IotMqttError_t IotMqtt_SerializeDisconnect( uint8_t * pBuffer,
 
     memcpy( pBuffer, pDisconnectPacket, MQTT_PACKET_DISCONNECT_SIZE );
 cleanup:
+
     return status;
 }
 
@@ -2394,6 +2441,7 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
     _IotMqtt_SerializePingreq( &pPingreqPacket, &packetSize );
     memcpy( pBuffer, pPingreqPacket, MQTT_PACKET_PINGREQ_SIZE );
 cleanup:
+
     return status;
 }
 
@@ -2440,6 +2488,7 @@ IotMqttError_t IotMqtt_DeserializePublish( IotMqttPacketInfo_t * pMqttPacket )
     }
 
 cleanup:
+
     return status;
 }
 
@@ -2506,6 +2555,7 @@ IotMqttError_t IotMqtt_DeserializeResponse( IotMqttPacketInfo_t * pMqttPacket )
     }
 
 cleanup:
+
     return status;
 }
 
