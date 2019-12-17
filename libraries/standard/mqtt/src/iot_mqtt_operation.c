@@ -976,20 +976,11 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
     operationMatchParams.type = type;
     operationMatchParams.pPacketIdentifier = pPacketIdentifier;
 
-    if( pPacketIdentifier != NULL )
-    {
-        IotLogDebug( "(MQTT connection %p) Searching for operation %s pending response "
-                     "with packet identifier %hu.",
-                     pMqttConnection,
-                     IotMqtt_OperationType( type ),
-                     *pPacketIdentifier );
-    }
-    else
-    {
-        IotLogDebug( "(MQTT connection %p) Searching for operation %s pending response.",
-                     pMqttConnection,
-                     IotMqtt_OperationType( type ) );
-    }
+    IotLogDebug( "(MQTT connection %p) Searching for operation %s "
+                 "with packet identifier %hu.",
+                 pMqttConnection,
+                 IotMqtt_OperationType( type ),
+                 ( pPacketIdentifier == NULL ) ? 0 : *pPacketIdentifier );
 
     /* Find and remove the first matching element in the list. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
@@ -1018,12 +1009,6 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
             if( taskPoolStatus != IOT_TASKPOOL_SUCCESS )
             {
                 pResult = NULL;
-            }
-            else
-            {
-                /* Check job reference counts. A waitable operation should have a
-                 * count of 2; a non-waitable operation should have a count of 1. */
-                IotMqtt_Assert( pResult->u.operation.jobReference == ( 1 + ( waitable == true ) ) );
             }
         }
         else
