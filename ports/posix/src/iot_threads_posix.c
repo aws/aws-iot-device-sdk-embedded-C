@@ -160,10 +160,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
     _threadInfo_t * pThreadInfo = NULL;
     pthread_t newThread;
     pthread_attr_t threadAttributes;
-
-    /* Ignore priority and stack size. */
-    ( void ) priority;
-    ( void ) stackSize;
+    struct sched_param priorityParam;
 
     /* Allocate memory for the new thread info. */
     pThreadInfo = IotThreads_Malloc( sizeof( _threadInfo_t ) );
@@ -198,6 +195,34 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
                      posixErrno );
 
         IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    if( stackSize != 0 )
+    {
+        posixErrno = pthread_attr_setstacksize( &threadAttributes, stackSize );
+
+        if( posixErrno != 0 )
+        {
+            IotLogError( "Failed to set thread stack size. errno=%d.",
+                         posixErrno );
+
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
+    }
+
+    if( priority != 0 )
+    {
+        priorityParam.sched_priority = priority;
+        posixErrno = pthread_attr_setschedparam( &threadAttributes,
+                                                 &priorityParam );
+
+        if( posixErrno != 0 )
+        {
+            IotLogError( "Failed to set thread priority. errno=%d.",
+                         posixErrno );
+
+            IOT_SET_AND_GOTO_CLEANUP( false );
+        }
     }
 
     /* Set the thread routine and argument. */
