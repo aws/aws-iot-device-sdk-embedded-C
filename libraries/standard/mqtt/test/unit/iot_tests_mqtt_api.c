@@ -2246,9 +2246,9 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
     /* 1. Find out length of the packet .*/
     memset( &publishInfo, 0x00, sizeof( publishInfo ) );
     publishInfo.pTopicName = "/test/topic";
-    publishInfo.topicNameLength = strlen( "/test/topic" );
+    publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
     publishInfo.pPayload = "Hello World";
-    publishInfo.payloadLength = strlen( "Hello World" );
+    publishInfo.payloadLength = ( uint16_t ) strlen( publishInfo.pPayload );
     publishInfo.qos = IOT_MQTT_QOS_0;
     /* Calculate exact packet size and remaining length */
     status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &bufferSize );
