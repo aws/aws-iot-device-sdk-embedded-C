@@ -167,7 +167,6 @@ struct
 structs
 suback
 subacks
-subsciption
 subscribeasync
 subscribeserializeroverride
 subscribesync
