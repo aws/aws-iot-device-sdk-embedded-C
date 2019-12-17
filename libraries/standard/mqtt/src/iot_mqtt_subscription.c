@@ -305,22 +305,14 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
     if( topicNameLength == topicFilterLength )
     {
         status = ( strncmp( pTopicName, pTopicFilter, topicNameLength ) == 0 );
-
-        goto cleanup;
     }
 
-    /* If the topic lengths are different but an exact match is required, return
-     * false. */
-    if( pParam->exactMatchOnly == true )
+    /* If  an exact match is required, return the result of the comparison above.
+     * Otherwise, attempt to match with MQTT wildcards in topic filters. */
+    if( pParam->exactMatchOnly == false )
     {
-        status = false;
-        goto cleanup;
+        status = _topicFilterMatch( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
     }
-
-    /* Attempt to match with MQTT wildcards in topic filters. */
-    status = _topicFilterMatch( pTopicName, topicNameLength, pTopicFilter, topicFilterLength );
-
-cleanup:
 
     return status;
 }
