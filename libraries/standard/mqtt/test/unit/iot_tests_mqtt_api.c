@@ -1724,7 +1724,8 @@ TEST( MQTT_Unit_API, SerializeConnectChecks )
     IotMqttConnectInfo_t connectInfo;
     size_t remainingLength = 0;
     uint8_t buffer[ 20 ];
-    size_t packetSize = sizeof( buffer );
+    size_t bufferSize = sizeof( buffer );
+    size_t packetSize = bufferSize;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
     /* Verify bad parameter errors. */
@@ -1747,10 +1748,12 @@ TEST( MQTT_Unit_API, SerializeConnectChecks )
     connectInfo.clientIdentifierLength = 4;
     status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+    /* Make sure buffer has enough space */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
     /* Make sure test succeeds. */
     status = IotMqtt_SerializeConnect( &connectInfo, remainingLength, buffer, packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
-    
+
     /* For this example, IotMqtt_GetConnectPacketSize() will return
      * packetSize = remainingLength +2 (two byte fixed header).
      * Make sure IotMqtt_SerializeConnect()
@@ -1841,8 +1844,9 @@ TEST( MQTT_Unit_API, SerializeSubscribeChecks )
     size_t subscriptionCount = 0;
     size_t remainingLength = 0;
     uint16_t packetIdentifier;
-    uint8_t buffer[ 20 ];
-    size_t packetSize = sizeof( buffer );
+    uint8_t buffer[ 25 ];
+    size_t bufferSize = sizeof( buffer );
+    size_t packetSize = bufferSize;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
     /* Verify bad parameters fail. */
@@ -1882,8 +1886,10 @@ TEST( MQTT_Unit_API, SerializeSubscribeChecks )
                                                 &remainingLength,
                                                 &packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+    /* Make sure buffer has enough space */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
 
-    /* Make sure subsciption count of zero fails. */
+    /* Make sure subscription count of zero fails. */
     status = IotMqtt_SerializeSubscribe( &subscriptionList,
                                          0,
                                          remainingLength,
@@ -1926,8 +1932,9 @@ TEST( MQTT_Unit_API, SerializeUnsubscribeChecks )
     size_t subscriptionCount = 0;
     size_t remainingLength = 0;
     uint16_t packetIdentifier;
-    uint8_t buffer[ 20 ];
-    size_t packetSize = sizeof( buffer );
+    uint8_t buffer[ 25 ];
+    size_t bufferSize = sizeof( buffer );
+    size_t packetSize = bufferSize;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
     status = IotMqtt_SerializeUnsubscribe( NULL,
@@ -1966,8 +1973,10 @@ TEST( MQTT_Unit_API, SerializeUnsubscribeChecks )
                                                 &remainingLength,
                                                 &packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+    /* Make sure buffer has enough space */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
 
-    /* Make sure subsciption count of zero fails. */
+    /* Make sure subscription count of zero fails. */
     status = IotMqtt_SerializeUnsubscribe( &subscriptionList,
                                            0,
                                            remainingLength,
@@ -2043,9 +2052,10 @@ TEST( MQTT_Unit_API, SerializePublishChecks )
     IotMqttPublishInfo_t publishInfo;
     size_t remainingLength = 98;
     uint16_t packetIdentifier;
-    uint8_t * pPakcetIndentifierHigh;
+    uint8_t * pPacketIdentifierHigh;
     uint8_t buffer[ 100 ];
-    size_t bufferSize;
+    size_t bufferSize = sizeof( buffer );
+    size_t packetSize = bufferSize;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
     /* Verify bad parameters fail. */
@@ -2056,25 +2066,25 @@ TEST( MQTT_Unit_API, SerializePublishChecks )
     status = IotMqtt_SerializePublish( &publishInfo,
                                        remainingLength,
                                        NULL,
-                                       &pPakcetIndentifierHigh,
+                                       &pPacketIdentifierHigh,
                                        buffer,
-                                       100 );
+                                       packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
     status = IotMqtt_SerializePublish( NULL,
                                        remainingLength,
                                        &packetIdentifier,
-                                       &pPakcetIndentifierHigh,
+                                       &pPacketIdentifierHigh,
                                        buffer,
-                                       100 );
+                                       packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
     status = IotMqtt_SerializePublish( &publishInfo,
                                        remainingLength,
                                        &packetIdentifier,
-                                       &pPakcetIndentifierHigh,
+                                       &pPacketIdentifierHigh,
                                        NULL,
-                                       100 );
+                                       packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
     /* NULL topic fails. */
@@ -2082,24 +2092,26 @@ TEST( MQTT_Unit_API, SerializePublishChecks )
     status = IotMqtt_SerializePublish( &publishInfo,
                                        remainingLength,
                                        &packetIdentifier,
-                                       &pPakcetIndentifierHigh,
+                                       &pPacketIdentifierHigh,
                                        buffer,
-                                       100 );
+                                       packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
     /* Good case succeeds */
     publishInfo.pTopicName = "/test/topic";
     publishInfo.topicNameLength = sizeof( "/test/topic" );
     /* Calculate exact packet size and remaining length. */
-    status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &bufferSize );
+    status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+    /* Make sure buffer has enough space */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
 
     status = IotMqtt_SerializePublish( &publishInfo,
                                        remainingLength,
                                        &packetIdentifier,
-                                       &pPakcetIndentifierHigh,
+                                       &pPacketIdentifierHigh,
                                        buffer,
-                                       bufferSize );
+                                       packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 }
 
@@ -2204,7 +2216,7 @@ TEST( MQTT_Unit_API, DeserializeResponseChecks )
     buffer[ 0 ] = 0x00;
     buffer[ 1 ] = 0x00;
     /* Set type, remaining length and remaining data. */
-    mqttPacketInfo.type = 0x20;         /* CONN ACK */
+    mqttPacketInfo.type = 0x20;            /* CONN ACK */
     mqttPacketInfo.pRemainingData = buffer;
     mqttPacketInfo.remainingLength = 0x02; /* CONN ACK Remaining Length. */
     status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
@@ -2223,10 +2235,12 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
     IotMqttPublishInfo_t publishInfo;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     uint8_t buffer[ 100 ];
-    size_t bufferSize = sizeof(buffer);
+    size_t bufferSize = sizeof( buffer );
+    size_t packetSize = bufferSize;
+
     size_t remainingLength = 0;
     uint16_t packetIdentifier;
-    uint8_t * pPakcetIndentifierHigh;
+    uint8_t * pPacketIdentifierHigh;
     uint8_t * pNetworkInterface;
 
     /* Verify parameters. */
@@ -2251,16 +2265,18 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
     publishInfo.payloadLength = ( uint16_t ) strlen( publishInfo.pPayload );
     publishInfo.qos = IOT_MQTT_QOS_0;
     /* Calculate exact packet size and remaining length */
-    status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &bufferSize );
+    status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+    /* Make sure buffer has enough space */
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
 
     /* 2. Serialize packet in the buffer. */
     status = IotMqtt_SerializePublish( &publishInfo,
                                        remainingLength,
                                        &packetIdentifier,
-                                       &pPakcetIndentifierHigh,
+                                       &pPacketIdentifierHigh,
                                        buffer,
-                                       bufferSize );
+                                       packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
     /* 3. Deserialize - get type and length. */
@@ -2275,4 +2291,3 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
 }
 
 /*-----------------------------------------------------------*/
-
