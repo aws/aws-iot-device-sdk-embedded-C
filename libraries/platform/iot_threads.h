@@ -82,10 +82,12 @@
  * @param[in] pArgument The argument passed to `threadRoutine`.
  * @param[in] priority Represents the priority of the new thread, as defined by
  * the system. The value #IOT_THREAD_DEFAULT_PRIORITY (i.e. `0`) must be used to
- * represent the system default for thread priority.
+ * represent the system default for thread priority. #IOT_THREAD_IGNORE_PRIORITY
+ * should be passed if this parameter is not relevant for the port implementation.
  * @param[in] stackSize Represents the stack size of the new thread, as defined
  * by the system. The value #IOT_THREAD_DEFAULT_STACK_SIZE (i.e. `0`) must be used
- * to represent the system default for stack size.
+ * to represent the system default for stack size. #IOT_THREAD_IGNORE_STACK_SIZE
+ * should be passed if this parameter is not relevant for the port implementation.
  *
  * @return `true` if the new thread was successfully created; `false` otherwise.
  *
