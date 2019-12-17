@@ -70,22 +70,25 @@ typedef struct _packetMatchParams
  * @param[in] filterIndex Index of the topic filter being examined.
  * @param[in] topicNameLength Length of the topic name being examined.
  * @param[in] topicFilterLength Length of the topic filter being examined.
+ * @param[out] pMatch Whether the topic filter and topic name match.
  *
- * @return `true` if `pTopicFilter` should match; `false` otherwise.
+ * @return `true` if the caller of this function should exit; `false` if the caller
+ * should continue parsing the topics.
  */
 static bool _matchEndWildcards( const char * pTopicFilter,
+                                uint16_t topicNameLength,
+                                uint16_t topicFilterLength,
                                 uint16_t nameIndex,
                                 uint16_t filterIndex,
-                                uint16_t topicNameLength,
-                                uint16_t topicFilterLength );
+                                bool * pMatch );
 
 /**
  * @brief Attempt to match characters in a topic filter by wildcards.
  *
  * @param[in] pTopicFilter The topic filter containing the wildcard.
  * @param[in] pTopicName The topic name to check.
- * @param[in] filterIndex Index of the wildcard in the topic filter.
  * @param[in] topicNameLength Length of the topic name.
+ * @param[in] filterIndex Index of the wildcard in the topic filter.
  * @param[in,out] pNameIndex Index of character in topic name. This variable is
  * advanced for `+` wildcards.
  * @param[out] pMatch Whether the topic filter and topic name match.
@@ -95,8 +98,8 @@ static bool _matchEndWildcards( const char * pTopicFilter,
  */
 static bool _matchWildcards( const char * pTopicFilter,
                              const char * pTopicName,
-                             uint16_t filterIndex,
                              uint16_t topicNameLength,
+                             uint16_t filterIndex,
                              uint16_t * pNameIndex,
                              bool * pMatch );
 
@@ -143,10 +146,11 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
 /*-----------------------------------------------------------*/
 
 static bool _matchEndWildcards( const char * pTopicFilter,
+                                uint16_t topicNameLength,
+                                uint16_t topicFilterLength,
                                 uint16_t nameIndex,
                                 uint16_t filterIndex,
-                                uint16_t topicNameLength,
-                                uint16_t topicFilterLength )
+                                bool * pMatch )
 {
     bool status = false, endChar = false;
 
@@ -176,6 +180,7 @@ static bool _matchEndWildcards( const char * pTopicFilter,
     }
 
 cleanup:
+    *pMatch = status;
 
     return status;
 }
@@ -184,8 +189,8 @@ cleanup:
 
 static bool _matchWildcards( const char * pTopicFilter,
                              const char * pTopicName,
-                             uint16_t filterIndex,
                              uint16_t topicNameLength,
+                             uint16_t filterIndex,
                              uint16_t * pNameIndex,
                              bool * pMatch )
 {
@@ -237,14 +242,14 @@ static bool _topicFilterMatch( const char * pTopicName,
          * character in the topic filter string. */
         if( pTopicName[ nameIndex ] == pTopicFilter[ filterIndex ] )
         {
-            /* Handle special corner cases as documented by the MQTT protocol spec. */
-            status = _matchEndWildcards( pTopicFilter,
-                                         nameIndex,
-                                         filterIndex,
-                                         topicNameLength,
-                                         topicFilterLength );
-
-            if( status == true )
+            /* Handle special corner cases regarding wildcards at the end of
+             * topic filters, as documented by the MQTT protocol spec. */
+            if( _matchEndWildcards( pTopicFilter,
+                                    topicNameLength,
+                                    topicFilterLength,
+                                    nameIndex,
+                                    filterIndex,
+                                    &status ) == true )
             {
                 goto cleanup;
             }
@@ -254,8 +259,8 @@ static bool _topicFilterMatch( const char * pTopicName,
             /* Check for matching wildcards. */
             if( _matchWildcards( pTopicFilter,
                                  pTopicName,
-                                 filterIndex,
                                  topicNameLength,
+                                 filterIndex,
                                  &nameIndex,
                                  &status ) == true )
             {
