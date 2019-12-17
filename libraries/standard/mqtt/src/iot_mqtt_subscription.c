@@ -62,8 +62,8 @@ typedef struct _packetMatchParams
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Handle special corner cases regarding terminal wildcards, as
- * documented by the MQTT protocol spec.
+ * @brief Handle special corner cases regarding wildcards at the end of topic
+ * filters, as documented by the MQTT protocol spec.
  *
  * @param[in] pTopicFilter The topic filter containing the wildcard.
  * @param[in] nameIndex Index of the topic name being examined.
@@ -73,11 +73,11 @@ typedef struct _packetMatchParams
  *
  * @return `true` if `pTopicFilter` should match; `false` otherwise.
  */
-static bool _matchTerminalWildcards( const char * pTopicFilter,
-                                     uint16_t nameIndex,
-                                     uint16_t filterIndex,
-                                     uint16_t topicNameLength,
-                                     uint16_t topicFilterLength );
+static bool _matchEndWildcards( const char * pTopicFilter,
+                                uint16_t nameIndex,
+                                uint16_t filterIndex,
+                                uint16_t topicNameLength,
+                                uint16_t topicFilterLength );
 
 /**
  * @brief Attempt to match characters in a topic filter by wildcards.
@@ -142,19 +142,19 @@ static bool _packetMatch( const IotLink_t * pSubscriptionLink,
 
 /*-----------------------------------------------------------*/
 
-static bool _matchTerminalWildcards( const char * pTopicFilter,
-                                     uint16_t nameIndex,
-                                     uint16_t filterIndex,
-                                     uint16_t topicNameLength,
-                                     uint16_t topicFilterLength )
+static bool _matchEndWildcards( const char * pTopicFilter,
+                                uint16_t nameIndex,
+                                uint16_t filterIndex,
+                                uint16_t topicNameLength,
+                                uint16_t topicFilterLength )
 {
-    bool status = false, terminalChar = false;
+    bool status = false, endChar = false;
 
-    /* Determine if the terminal character is reached for both topic name and topic
+    /* Determine if the last character is reached for both topic name and topic
      * filter for the '#' wildcard. */
-    terminalChar = ( nameIndex == topicNameLength - 1 ) && ( filterIndex == topicFilterLength - 3 );
+    endChar = ( nameIndex == topicNameLength - 1 ) && ( filterIndex == topicFilterLength - 3 );
 
-    if( terminalChar == true )
+    if( endChar == true )
     {
         /* Determine if the topic filter ends with the '#' wildcard. */
         status = ( pTopicFilter[ filterIndex + 1 ] == '/' ) && ( pTopicFilter[ filterIndex + 2 ] == '#' );
@@ -165,11 +165,11 @@ static bool _matchTerminalWildcards( const char * pTopicFilter,
         }
     }
 
-    /* Determine if the terminal character is reached for both topic name and topic
+    /* Determine if the last character is reached for both topic name and topic
      * filter for the '+' wildcard. */
-    terminalChar = ( nameIndex == topicNameLength - 1 ) && ( filterIndex == topicFilterLength - 2 );
+    endChar = ( nameIndex == topicNameLength - 1 ) && ( filterIndex == topicFilterLength - 2 );
 
-    if( terminalChar == true )
+    if( endChar == true )
     {
         /* Filter "sport/+" also matches the "sport/" but not "sport". */
         status = ( pTopicFilter[ filterIndex + 1 ] == '+' );
@@ -238,11 +238,11 @@ static bool _topicFilterMatch( const char * pTopicName,
         if( pTopicName[ nameIndex ] == pTopicFilter[ filterIndex ] )
         {
             /* Handle special corner cases as documented by the MQTT protocol spec. */
-            status = _matchTerminalWildcards( pTopicFilter,
-                                              nameIndex,
-                                              filterIndex,
-                                              topicNameLength,
-                                              topicFilterLength );
+            status = _matchEndWildcards( pTopicFilter,
+                                         nameIndex,
+                                         filterIndex,
+                                         topicNameLength,
+                                         topicFilterLength );
 
             if( status == true )
             {
@@ -286,8 +286,8 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
 {
     bool status = false;
 
-    /* Because this function is called from a container function, the given link
-     * must never be NULL. */
+    /* This function is called from a container function; the caller
+     * will never pass NULL. */
     IotMqtt_Assert( pSubscriptionLink != NULL );
 
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
