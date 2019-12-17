@@ -197,7 +197,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
         IOT_SET_AND_GOTO_CLEANUP( false );
     }
 
-    if( stackSize != 0 )
+    if( stackSize != IOT_THREAD_IGNORE_STACK_SIZE )
     {
         posixErrno = pthread_attr_setstacksize( &threadAttributes, stackSize );
 
@@ -210,7 +210,7 @@ bool Iot_CreateDetachedThread( IotThreadRoutine_t threadRoutine,
         }
     }
 
-    if( priority != 0 )
+    if( priority != IOT_THREAD_IGNORE_PRIORITY )
     {
         priorityParam.sched_priority = priority;
         posixErrno = pthread_attr_setschedparam( &threadAttributes,

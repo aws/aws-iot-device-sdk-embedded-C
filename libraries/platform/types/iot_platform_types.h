@@ -37,17 +37,29 @@
 /*------------------------- Thread management types -------------------------*/
 
 /**
+ * @brief Placeholder value that should cause implementations of
+ * @ref platform_threads_function_createdetachedthread to ignore the priority argument.
+ */
+#define IOT_THREAD_IGNORE_PRIORITY      ( -1 )
+
+/**
+ * @brief Placeholder value that should cause implementations of
+ * @ref platform_threads_function_createdetachedthread to ignore the stack size argument.
+ */
+#define IOT_THREAD_IGNORE_STACK_SIZE    ( 0 )
+
+/**
  * @brief A value representing the system default for new thread priority.
  */
 #ifndef IOT_THREAD_DEFAULT_PRIORITY
-    #define IOT_THREAD_DEFAULT_PRIORITY      0
+    #define IOT_THREAD_DEFAULT_PRIORITY    IOT_THREAD_IGNORE_PRIORITY
 #endif
 
 /**
  * @brief A value representhing the system default for new thread stack size.
  */
 #ifndef IOT_THREAD_DEFAULT_STACK_SIZE
-    #define IOT_THREAD_DEFAULT_STACK_SIZE    0
+    #define IOT_THREAD_DEFAULT_STACK_SIZE    IOT_THREAD_IGNORE_STACK_SIZE
 #endif
 
 /**
@@ -114,7 +126,7 @@ typedef void ( * IotThreadRoutine_t )( void * );
  * #include "iot_clock.h"
  * @endcode
  */
-typedef _IotSystemTimer_t IotTimer_t;
+typedef _IotSystemTimer_t          IotTimer_t;
 
 /*--------------------------- Network stack types ---------------------------*/
 
@@ -130,7 +142,7 @@ typedef _IotSystemTimer_t IotTimer_t;
  * the necessary information to connect to a TCP peer. For other network protocols,
  * this type should be set to an alternate structure as needed by the other protocol.
  */
-typedef _IotNetworkServerInfo_t IotNetworkServerInfo_t;
+typedef _IotNetworkServerInfo_t    IotNetworkServerInfo_t;
 
 /**
  * @ingroup platform_datatypes_handles
@@ -145,7 +157,7 @@ typedef _IotNetworkServerInfo_t IotNetworkServerInfo_t;
  * protocols, this type should be set to an alternate structure as needed by the other
  * protocol.
  */
-typedef _IotNetworkCredentials_t IotNetworkCredentials_t;
+typedef _IotNetworkCredentials_t   IotNetworkCredentials_t;
 
 /**
  * @ingroup platform_datatypes_handles
@@ -155,7 +167,7 @@ typedef _IotNetworkCredentials_t IotNetworkCredentials_t;
  * For the provided ports, `_IotNetworkConnection_t` will be automatically configured.
  * For other ports, `_IotNetworkConnection_t` should be set in `iot_config.h`.
  */
-typedef _IotNetworkConnection_t IotNetworkConnection_t;
+typedef _IotNetworkConnection_t    IotNetworkConnection_t;
 
 /*------------------------------ Metrics types ------------------------------*/
 
