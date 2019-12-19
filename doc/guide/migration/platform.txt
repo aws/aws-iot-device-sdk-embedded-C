@@ -113,5 +113,17 @@ The table below provides examples of the equivalent mutex types and interfaces i
 </table>
 
 @section migration_platform_timer Timer
-@brief How to migrate the timer type from v3 to v4.
+@brief Differences between v3 and v4 timers.
+
+The timers in v4 are more efficient than v3, but their interface is completely different. In v4, the timer interface is designed to be similar to the timer APIs provided by most operating systems.
+
+Because of the differences between the timers in v3 and v4, it is not possible to migrate a v3 timer implementation to v4. Therefore, a new timer implementation will need to be written for v4. See @ref platform_clock_functions for the list of functions that need to be implemented.
+
+@section migration_platform_semaphore Semaphores
+@brief Details about counting semaphores needed in v4.
+
+Counting semaphores are a new addition to the platform layer in v4. They were not present in v3. See the IotSemaphore functions in @ref platform_threads_functions for the list of functions that need to be implemented.
+
+@section migration_platform_network Networking
+@brief How to migrate the network implementation for v3 to v4.
 */
