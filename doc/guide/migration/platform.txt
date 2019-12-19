@@ -127,7 +127,7 @@ Because of the differences between the timers in v3 and v4, it is not possible t
 Counting semaphores are a new addition to the platform layer in v4. They were not present in v3. See the IotSemaphore functions in @ref platform_threads_functions for the list of functions that need to be implemented.
 
 @section migration_platform_network Networking
-@brief How to migrate the network implementation for v3 to v4.
+@brief How to migrate the network implementation from v3 to v4.
 
 The networking functions are similar between v3 and v4. However, v4 requires some additional function to be implemented.
 
