@@ -108,7 +108,7 @@ The table below provides examples of the equivalent mutex types and interfaces i
     <tr>
         <td>Sample implementation (POSIX)</td>
         <td><a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/platform/linux/pthread/threads_pthread_wrapper.c">threads_pthread_wrapper.c</a></td>
-        <td><a href="https://github.com/gordonwang0/aws-iot-device-sdk-embedded-C/blob/9de8d2a4277903225e72b05e2c4ea00badf9fd19/ports/posix/src/iot_threads_posix.c">iot_threads_posix.c</a></td>
+        <td><a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/9de8d2a4277903225e72b05e2c4ea00badf9fd19/ports/posix/src/iot_threads_posix.c">iot_threads_posix.c</a></td>
     </tr>
 </table>
 
