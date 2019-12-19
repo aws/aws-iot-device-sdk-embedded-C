@@ -1,0 +1,117 @@
+/**
+@page migration_platform Platform layer
+@brief How to migrate the platform layer from v3 to v4.
+
+@section migration_platform_mutex Mutex
+@brief How to migrate the mutex type from v3 to v4.
+
+The mutexes used in v3 and v4 implement the same interface. In v4, recursive mutexes must be supported.
+
+The table below shows the equivalent mutex types for v3 and v4.
+
+<table>
+    <tr>
+        <th></th>
+        <th>Version 3</th>
+        <th>Version 4</th>
+        <th>Notes</th>
+    </tr>
+    <tr>
+        <td>Name</td>
+        <td>struct _IoT_Mutex_t</td>
+        <td>_IotSystemMutex_t</td>
+        <td>In v3, the mutex type must be a struct.<br>In v4, the mutex type may be any type.</td>
+    </tr>
+    <tr>
+        <td>Declare in file</td>
+        <td>threads_platform.h</td>
+        <td>iot_config.h</td>
+        <td>
+            In v3, the mutex type <i>must</i> be declared in a file called threads_platform.h.
+            <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/platform/linux/pthread/threads_platform.h">Link to sample</a>
+            <br>
+            In v4, we recommend declaring the mutex type in iot_config.h.
+        </td>
+    </tr>
+</table>
+
+@subsection migration_platform_mutex_interface Interface
+@brief Equivalent functions of the mutex interface between v3 and v4.
+
+The following functions should be implemented for the mutex type:
+- v3: See functions in <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/include/threads_interface.h">threads_interface.h</a>
+- v4: IotMutex functions in @ref platform_threads_functions
+
+The table below shows the equivalent functions in v3 and v4.
+
+<table>
+    <tr>
+        <th>Version 3</th>
+        <th>Version 4</th>
+        <th>Notes</th>
+    </tr>
+    <tr>
+        <td>aws_iot_thread_mutex_init</td>
+        <td>@ref platform_threads_function_mutexcreate</td>
+        <td>The v4 function must support recursive mutexes.</td>
+    </tr>
+    <tr>
+        <td>aws_iot_thread_mutex_lock</td>
+        <td>@ref platform_threads_function_mutexlock</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>aws_iot_thread_mutex_trylock</td>
+        <td>@ref platform_threads_function_mutextrylock</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>aws_iot_thread_mutex_unlock</td>
+        <td>@ref platform_threads_function_mutexunlock</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>aws_iot_thread_mutex_destroy</td>
+        <td>@ref platform_threads_function_mutexdestroy</td>
+        <td></td>
+    </tr>
+</table>
+
+@subsection migration_platform_mutex_example Example
+@brief Example of migration between v3 and v4.
+
+The table below provides examples of the equivalent mutex types and interfaces implemented on v3 and v4.
+
+<table>
+    <tr>
+        <th></th>
+        <th>Version 3</th>
+        <th>Version 4</th>
+    </tr>
+    <tr>
+        <td>Declaration</td>
+        <td>
+        @code{c}
+        /* In threads_platform.h */
+        struct _IoT_Mutex_t {
+            pthread_mutex_t lock;
+        };
+        @endcode
+        </td>
+        <td>
+        @code{c}
+        /* In iot_config.h */
+        typedef pthread_mutex_t _IotSystemMutex_t;
+        @endcode
+        </td>
+    </tr>
+    <tr>
+        <td>Sample implementation (POSIX)</td>
+        <td><a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/platform/linux/pthread/threads_pthread_wrapper.c">threads_pthread_wrapper.c</a></td>
+        <td><a href="https://github.com/gordonwang0/aws-iot-device-sdk-embedded-C/blob/9de8d2a4277903225e72b05e2c4ea00badf9fd19/ports/posix/src/iot_threads_posix.c">iot_threads_posix.c</a></td>
+    </tr>
+</table>
+
+@section migration_platform_timer Timer
+@brief How to migrate the timer type from v3 to v4.
+*/
