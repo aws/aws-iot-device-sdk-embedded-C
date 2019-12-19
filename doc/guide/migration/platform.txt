@@ -126,4 +126,161 @@ Counting semaphores are a new addition to the platform layer in v4. They were no
 
 @section migration_platform_network Networking
 @brief How to migrate the network implementation for v3 to v4.
+
+The networking functions are similar between v3 and v4. However, v4 requires some additional function to be implemented.
+
+The networking component requires a type to provide credentials for secured connections. The table below shows the equivalent credentials type for v3 and v4.
+
+<table>
+    <tr>
+        <th></th>
+        <th>Version 3</th>
+        <th>Version 4</th>
+        <th>Notes</th>
+    </tr>
+    <tr>
+        <td>Name</td>
+        <td>TLSDataParams</td>
+        <td>_IotNetworkCredentials_t</td>
+        <td>v4 provides @ref IotNetworkCredentials as a struct that satisfies most use cases.</td>
+    </tr>
+    <tr>
+        <td>Declare in file</td>
+        <td>network_platform.h</td>
+        <td>iot_config.h</td>
+        <td>
+            In v3, the credentials type <i>must</i> be declared in a file called network_platform.h.
+            <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/platform/linux/mbedtls/network_platform.h">Link to sample</a>
+            <br>
+            In v4, we recommend declaring the credentials type in iot_config.h.
+        </td>
+    </tr>
+</table>
+
+Version 4 requires two additional types to be declared:
+- `_IotNetworkServerInfo_t` which provides data on the remote server. @ref IotNetworkServerInfo should satisfy most use cases.
+- `_IotNetworkConnection_t` to represent the handle of a network connection. This should be an opaque handle.
+
+@subsection migration_platform_networking_interface Interface
+@brief Equivalent functions of the networking interface between v3 and v4.
+
+The following functions should be implemented for networking:
+- v3: See functions in <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/include/network_interface.h">network_interface.h</a>
+- v4: Functions in @ref platform_network_functions
+
+The table below shows the equivalent functions in v3 and v4.
+
+<table>
+    <tr>
+        <th>Version 3</th>
+        <th>Version 4</th>
+        <th>Notes</th>
+    </tr>
+    <tr>
+        <td>iot_tls_init</td>
+        <td><i>Platform-specific init functions</i></td>
+        <td>
+            The v4 networking interface does not define a function that must be implemented to initialize the network, as some network stacks do not require initialization. It may be implemented if needed.<br><br>
+            The parameters of iot_tls_init have been moved to @ref platform_network_function_create.
+        </td>
+    </tr>
+    <tr>
+        <td>iot_tls_connect</td>
+        <td>@ref platform_network_function_create</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>iot_tls_write</td>
+        <td>@ref platform_network_function_send</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>iot_tls_read</td>
+        <td>@ref platform_network_function_receive</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>iot_tls_disconnect</td>
+        <td>@ref platform_network_function_close</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>iot_tls_destroy</td>
+        <td>@ref platform_network_function_destroy</td>
+        <td>In v3, this function destroys the entire network stack.<br>In v4, this function only destroys the connection passed to it.</td>
+    </tr>
+</table>
+
+Version 4 has the following new functions that must be implemented:
+- @ref platform_network_function_setreceivecallback
+- @ref platform_network_function_setclosecallback
+
+Version 4 requires the networking functions to be given as an @ref IotNetworkInterface_t. We recommend implementing a function that returns the @ref IotNetworkInterface_t containing the networking functions.
+
+@subsection migration_platform_networking_example Example
+@brief Example of migration between v3 and v4.
+
+The table below provides examples of the equivalent networking types and interfaces implemented on v3 and v4.
+
+<table>
+    <tr>
+        <th></th>
+        <th>Version 3</th>
+        <th>Version 4</th>
+    </tr>
+    <tr>
+        <td>Credentials type declaration</td>
+        <td>
+        @code{c}
+        /* In threads_platform.h */
+        typedef struct _TLSDataParams {
+            /* Members omitted due to length. */
+        } TLSDataParams;
+        @endcode
+        </td>
+        <td>
+        @code{c}
+        /* In iot_config.h */
+
+        /* Forward declare standard type from v4. */
+        struct IotNetworkCredentials;
+
+        typedef struct IotNetworkCredentials * _IotNetworkCredentials_t;
+        @endcode
+        </td>
+    </tr>
+    <tr>
+        <td>Server info declaration</td>
+        <td><i>None</i></td>
+        <td>
+        @code{c}
+        /* In iot_config.h */
+
+        /* Forward declare standard type from v4. */
+        struct IotNetworkServerInfo;
+
+        typedef struct IotNetworkServerInfo * _IotNetworkServerInfo_t;
+        @endcode
+        </td>
+    </tr>
+    <tr>
+        <td>Opaque network type declaration</td>
+        <td><i>None</i></td>
+        <td>
+        @code{c}
+        /* In iot_config.h */
+
+        /* Forward declare opaque struct. */
+        struct _networkConnection;
+
+        typedef struct _networkConnection * _IotNetworkConnection_t;
+        @endcode
+        </td>
+    </tr>
+    <tr>
+        <td>Sample implementation (mbed TLS)</td>
+        <td><a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/platform/linux/mbedtls/network_mbedtls_wrapper.c">network_mbedtls_wrapper.c</a></td>
+        <td><a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/706daad20b4d810704ba5929786dd8f30ab1105f/ports/common/src/iot_network_mbedtls.c">iot_network_mbedtls.c</a></td>
+    </tr>
+</table>
 */
