@@ -2,7 +2,7 @@
 @page migration Migration Guide
 @brief Migration guide from C SDK version 2 or 3 to version 4.
 
-Version 4 of the C SDK is a new design, and therefore NOT backwards compatible with previous versions. This page provides instructions on migrating from version 2 or 3 to version 4.
+Version 4 of the C SDK is a new design, and therefore NOT backwards compatible with previous versions. The pages below provide instructions on migrating from version 2 or 3 to version 4.
 
 In these pages, <i>v3</i> refers to both previous versions 2 and 3, which are largely compatible with each other.
 - @subpage migration_platform <br>
