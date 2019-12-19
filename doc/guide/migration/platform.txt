@@ -2,6 +2,8 @@
 @page migration_platform Platform layer
 @brief How to migrate the platform layer from v3 to v4.
 
+The platform layer provides portability across different operating systems. Both v3 and v4 provide a POSIX port as an example. If you are running on a v3 application on a POSIX system, you can switch the to provided v4 POSIX port and skip this page. This guide is intended for applications running on other operating systems that would like to move their porting layer from v3 to v4.
+
 @section migration_platform_mutex Mutex
 @brief How to migrate the mutex type from v3 to v4.
 
