@@ -10,7 +10,7 @@ The features of the MQTT libraries in v3 and v4 are defined by the common MQTT 3
 @brief The following features which were present in v3 were removed in v4.
 - Auto-reconnect <br>
   Version 3 has an auto-reconnect feature triggered through a call to `aws_iot_mqtt_yield`. In version 4, `aws_iot_mqtt_yield` has been removed and replaced with background tasks. <br>
-  <b>Workaround:</b> When a version 4 API call returns @ref IOT_MQTT_NETWORK_ERROR or the version 4 MQTT disconnect callback is invoked, call @ref mqtt_function_connect through the application.
+  <b>Workaround:</b> When a version 4 API call returns @ref IOT_MQTT_NETWORK_ERROR or the version 4 MQTT disconnect callback is invoked, call @ref mqtt_function_connect through the application. The application should employ an exponential backoff strategy when re-establishing connections.
 
 @section migration_mqtt_datatypes Data Types
 @brief The following table lists equivalent data types in v3 and v4.
