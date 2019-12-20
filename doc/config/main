@@ -14,7 +14,8 @@ GENERATE_TAGFILE = doc/tag/main.tag
 # Input directories.
 INPUT = doc/ \
         doc/guide \
-        doc/guide/developer
+        doc/guide/developer \
+        doc/guide/migration
 
 # Path of CMake GUI image.
 IMAGE_PATH += doc/guide
