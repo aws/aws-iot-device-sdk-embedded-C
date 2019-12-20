@@ -217,15 +217,6 @@ static uint8_t * _encodeString( uint8_t * pDestination,
                                 uint16_t sourceLength );
 
 /**
- * @brief Get the CONNECT flags based on the given parameters.
- * 
- * @param[in] pConnectInfo User-provided CONNECT information.
- * 
- * @return CONNECT flags field for an MQTT packet.
- */
-static uint8_t _getConnectFlags( const IotMqttConnectInfo_t * pConnectInfo );
-
-/**
  * @brief Encode a username into a CONNECT packet, if necessary.
  * 
  * @param[out] pBuffer Buffer for the CONNECT packet.
@@ -486,70 +477,6 @@ static uint8_t * _encodeString( uint8_t * pDestination,
 
 /*-----------------------------------------------------------*/
 
-static uint8_t _getConnectFlags( const IotMqttConnectInfo_t * pConnectInfo )
-{
-    uint8_t connectFlags = 0;
-
-    /* Set the CONNECT flags based on the given parameters. */
-    if( pConnectInfo->cleanSession == true )
-    {
-        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_CLEAN );
-    }
-
-    /* Username and password depend on MQTT mode. */
-    if( ( pConnectInfo->pUserName == NULL ) &&
-        ( pConnectInfo->awsIotMqttMode == true ) )
-    {
-        /* Set the username flag for AWS IoT metrics. The AWS IoT MQTT server
-         * never uses a password. */
-        #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
-        #endif
-    }
-    else
-    {
-        /* Set the flags for username and password if provided. */
-        if( pConnectInfo->pUserName != NULL )
-        {
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
-        }
-
-        if( pConnectInfo->pPassword != NULL )
-        {
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_PASSWORD );
-        }
-    }
-
-    /* Set will flag if an LWT is provided. */
-    if( pConnectInfo->pWillInfo != NULL )
-    {
-        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL );
-
-        /* Flags only need to be changed for will QoS 1 and 2. */
-        switch( pConnectInfo->pWillInfo->qos )
-        {
-            case IOT_MQTT_QOS_1:
-                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
-                break;
-
-            case IOT_MQTT_QOS_2:
-                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS2 );
-                break;
-
-            default:
-                break;
-        }
-
-        if( pConnectInfo->pWillInfo->retain == true )
-        {
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_RETAIN );
-        }
-    }
-    return connectFlags;
-}
-
-/*-----------------------------------------------------------*/
-
 static uint8_t * _encodeUserName( uint8_t * pBuffer,
                                   const IotMqttConnectInfo_t * pConnectInfo )
 {
@@ -805,6 +732,7 @@ static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
                                uint8_t * pBuffer,
                                size_t connectPacketSize )
 {
+    uint8_t connectFlags = 0;
     uint8_t * pConnectPacket = pBuffer;
 
     /* Avoid unused variable warning when logging and asserts are disabled. */
@@ -828,7 +756,63 @@ static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
     *pBuffer = MQTT_VERSION_3_1_1;
     pBuffer++;
 
-    *pBuffer = _getConnectFlags( pConnectInfo );
+    /* Set the CONNECT flags based on the given parameters. */
+    if( pConnectInfo->cleanSession == true )
+    {
+        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_CLEAN );
+    }
+
+    /* Username and password depend on MQTT mode. */
+    if( ( pConnectInfo->pUserName == NULL ) &&
+        ( pConnectInfo->awsIotMqttMode == true ) )
+    {
+        /* Set the username flag for AWS IoT metrics. The AWS IoT MQTT server
+         * never uses a password. */
+        #if AWS_IOT_MQTT_ENABLE_METRICS == 1
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
+        #endif
+    }
+    else
+    {
+        /* Set the flags for username and password if provided. */
+        if( pConnectInfo->pUserName != NULL )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
+        }
+
+        if( pConnectInfo->pPassword != NULL )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_PASSWORD );
+        }
+    }
+
+    /* Set will flag if an LWT is provided. */
+    if( pConnectInfo->pWillInfo != NULL )
+    {
+        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL );
+
+        /* Flags only need to be changed for will QoS 1 and 2. */
+        switch( pConnectInfo->pWillInfo->qos )
+        {
+            case IOT_MQTT_QOS_1:
+                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
+                break;
+
+            case IOT_MQTT_QOS_2:
+                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS2 );
+                break;
+
+            default:
+                break;
+        }
+
+        if( pConnectInfo->pWillInfo->retain == true )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_RETAIN );
+        }
+    }
+
+    *pBuffer = connectFlags;
     pBuffer++;
 
     /* Write the 2 bytes of the keep alive interval into the CONNECT packet. */
