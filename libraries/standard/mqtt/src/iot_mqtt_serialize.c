@@ -217,6 +217,18 @@ static uint8_t * _encodeString( uint8_t * pDestination,
                                 uint16_t sourceLength );
 
 /**
+ * @brief Encode a username into a CONNECT packet, if necessary.
+ * 
+ * @param[out] pBuffer Buffer for the CONNECT packet.
+ * @param[in] pConnectInfo User-provided CONNECT information.
+ * 
+ * @return Pointer to the end of the encoded string, which will be identical to
+ * `pBuffer` if nothing was encoded.
+ */
+static uint8_t * _encodeUserName( uint8_t * pBuffer,
+                                  const IotMqttConnectInfo_t * pConnectInfo );
+
+/**
  * @brief Calculate the size and "Remaining length" of a CONNECT packet generated
  * from the given parameters.
  *
@@ -465,6 +477,77 @@ static uint8_t * _encodeString( uint8_t * pDestination,
 
 /*-----------------------------------------------------------*/
 
+static uint8_t * _encodeUserName( uint8_t * pBuffer,
+                                  const IotMqttConnectInfo_t * pConnectInfo )
+{
+    bool encodedUserName = false;
+
+    /* If metrics are enabled, write the metrics username into the CONNECT packet.
+     * Otherwise, write the username and password only when not connecting to the
+     * AWS IoT MQTT server. */
+    if( pConnectInfo->awsIotMqttMode == true )
+    {
+        #if AWS_IOT_MQTT_ENABLE_METRICS == 1
+            IotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
+                        "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
+
+            /* Determine if the Connect packet should use a combination of the username
+             * for authentication plus the SDK version string. */
+            if( pConnectInfo->pUserName != NULL )
+            {
+                /* Only include metrics if it will fit within the encoding
+                 * standard. */
+                if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= UINT16_MAX )
+                {
+                    /* Write the high byte of the combined length. */
+                    *( pBuffer++ ) = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
+                                                         AWS_IOT_METRICS_USERNAME_LENGTH ) );
+
+                    /* Write the low byte of the combined length. */
+                    *( pBuffer++ ) = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
+                                                        AWS_IOT_METRICS_USERNAME_LENGTH ) );
+
+                    /* Write the identity portion of the username. */
+                    memcpy( pBuffer,
+                            pConnectInfo->pUserName,
+                            pConnectInfo->userNameLength );
+                    pBuffer += pConnectInfo->userNameLength;
+
+                    /* Write the metrics portion of the username. */
+                    memcpy( pBuffer,
+                            AWS_IOT_METRICS_USERNAME,
+                            AWS_IOT_METRICS_USERNAME_LENGTH );
+                    pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
+
+                    encodedUserName = true;
+                }
+            }
+            else
+            {
+                /* The username is not being used for authentication, but
+                 * metrics are enabled. */
+                pBuffer = _encodeString( pBuffer,
+                                         AWS_IOT_METRICS_USERNAME,
+                                         AWS_IOT_METRICS_USERNAME_LENGTH );
+
+                encodedUserName = true;
+            }
+        #endif /* #if AWS_IOT_MQTT_ENABLE_METRICS == 1 */
+    }
+
+    /* Encode the username if there is one and it hasn't already been done. */
+    if( ( pConnectInfo->pUserName != NULL ) && ( encodedUserName == false ) )
+    {
+        pBuffer = _encodeString( pBuffer,
+                                 pConnectInfo->pUserName,
+                                 pConnectInfo->userNameLength );
+    }
+
+    return pBuffer;
+}
+
+/*-----------------------------------------------------------*/
+
 static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
                                 size_t * pRemainingLength,
                                 size_t * pPacketSize )
@@ -651,7 +734,6 @@ static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
 {
     uint8_t connectFlags = 0;
     uint8_t * pConnectPacket = pBuffer;
-    bool encodedUserName = false;
 
     /* Avoid unused variable warning when logging and asserts are disabled. */
     ( void ) pConnectPacket;
@@ -755,67 +837,8 @@ static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
                                  ( uint16_t ) pConnectInfo->pWillInfo->payloadLength );
     }
 
-    /* If metrics are enabled, write the metrics username into the CONNECT packet.
-     * Otherwise, write the username and password only when not connecting to the
-     * AWS IoT MQTT server. */
-    if( pConnectInfo->awsIotMqttMode == true )
-    {
-        #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            IotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
-                        "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
-
-            /* Determine if the Connect packet should use a combination of the username
-             * for authentication plus the SDK version string. */
-            if( pConnectInfo->pUserName != NULL )
-            {
-                /* Only include metrics if it will fit within the encoding
-                 * standard. */
-                if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= UINT16_MAX )
-                {
-                    /* Write the high byte of the combined length. */
-                    *pBuffer = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
-                                                   AWS_IOT_METRICS_USERNAME_LENGTH ) );
-
-                    /* Write the low byte of the combined length. */
-                    *( pBuffer + sizeof( uint8_t ) ) = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
-                                                                          AWS_IOT_METRICS_USERNAME_LENGTH ) );
-                    pBuffer += sizeof( uint16_t );
-
-                    /* Write the identity portion of the username. */
-                    memcpy( pBuffer,
-                            pConnectInfo->pUserName,
-                            pConnectInfo->userNameLength );
-                    pBuffer += pConnectInfo->userNameLength;
-
-                    /* Write the metrics portion of the username. */
-                    memcpy( pBuffer,
-                            AWS_IOT_METRICS_USERNAME,
-                            AWS_IOT_METRICS_USERNAME_LENGTH );
-                    pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
-
-                    encodedUserName = true;
-                }
-            }
-            else
-            {
-                /* The username is not being used for authentication, but
-                 * metrics are enabled. */
-                pBuffer = _encodeString( pBuffer,
-                                         AWS_IOT_METRICS_USERNAME,
-                                         AWS_IOT_METRICS_USERNAME_LENGTH );
-
-                encodedUserName = true;
-            }
-        #endif /* #if AWS_IOT_MQTT_ENABLE_METRICS == 1 && IOT_STATIC_MEMORY_ONLY == 0 */
-    }
-
-    /* Encode the username if there is one and it hasn't already been done. */
-    if( ( pConnectInfo->pUserName != NULL ) && ( encodedUserName == false ) )
-    {
-        pBuffer = _encodeString( pBuffer,
-                                 pConnectInfo->pUserName,
-                                 pConnectInfo->userNameLength );
-    }
+    /* Encode the username if there is one or metrics are enabled. */
+    pBuffer = _encodeUserName( pBuffer, pConnectInfo );
 
     /* Encode the password field, if requested by the app. */
     if( pConnectInfo->pPassword != NULL )
