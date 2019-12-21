@@ -381,7 +381,19 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
         pOperation->u.publish.pReceivedData = pIncomingPacket->pRemainingData;
         pIncomingPacket->pRemainingData = NULL;
 
-        /* Add the PUBLISH to the list of operations pending processing. */
+        /* Add the PUBLISH to the list of operations pending processing.
+         * Coverity checker USE_AFTER_FREE found a warning when trying to
+         * dereference the 'pMqttConnection' in 'IotMutex_Lock'. For this
+         * warning, freeing the pointer 'pMqttConnection' happens in function
+         * '_sendPuback' invoked at an earlier place in this function.
+         * '_sendPuback' further calls '_IotMqtt_CreateOperation' with 'flags'
+         * with value 0. It takes an invalid path by evaluating 'waitable' as
+         * 'true' by the below expression.
+         * waitable = ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE ).
+         * IOT_MQTT_FLAG_WAITABLE is defined as 1.
+         * Hence, this warning is a false positive result and with Coverity
+         * annotation, marking to ignore for future runs. */
+         /* coverity[deref_after_free] */
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
         IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ),
                                   &( pOperation->link ) );
@@ -547,6 +559,18 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
     if( status != IOT_MQTT_SUCCESS )
     {
+        /* Coverity checker USE_AFTER_FREE found a warning when trying to
+         * dereference the 'pMqttConnection' in 'IotMutex_Lock'. For this
+         * warning, freeing the pointer 'pMqttConnection' happens in function
+         * '_deserializePublish', invoked at an earlier place in this function.
+         * '_deserializePublish' calls '_sendPuback' which further calls
+         * '_IotMqtt_CreateOperation' with 'flags' as 0. It takes an invalid
+         * path by evaluating 'waitable' as 'true' by the below expression.
+         * waitable = ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE ).
+         * IOT_MQTT_FLAG_WAITABLE is defined as 1.
+         * Hence, this warning is a false positive result and with Coverity
+         * annotation, marking to ignore for future runs. */
+         /* coverity[pass_freed_arg] */
         IotLogError( "(MQTT connection %p) Packet parser status %s.",
                      pMqttConnection,
                      IotMqtt_strerror( status ) );
