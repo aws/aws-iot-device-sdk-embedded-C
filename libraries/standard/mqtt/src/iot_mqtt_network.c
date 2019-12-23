@@ -382,17 +382,24 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
         pIncomingPacket->pRemainingData = NULL;
 
         /* Add the PUBLISH to the list of operations pending processing.
-         * Coverity checker USE_AFTER_FREE found a false positive warning when
-         * trying to dereference the 'pMqttConnection' in 'IotMutex_Lock'. For
-         * this warning, freeing the pointer 'pMqttConnection' happens in function
-         * '_sendPuback' invoked at an earlier place in this function.
-         * '_sendPuback' further calls '_IotMqtt_CreateOperation' with 'flags'
-         * with value 0. It takes an invalid path by evaluating 'waitable' as
-         * 'true' by the below expression.
-         * waitable = ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE ).
+         * Coverity finds a USE_AFTER_FREE error at this line. This is a false positive.
+         *
+         * This error is triggered by dereference of 'pMqttConnection' in
+         * 'IotMutex_Lock'. Coverity assumes that 'pMqttConnection' was freed in
+         * '_IotMqtt_CreateOperation', which was invoked from '_sendPuback'
+         * invoked above, where cleanup code will free 'pNewMqttConnection' upon
+         * allocation failure.
+         *
+         * This will never happen as 'pMqttConnection' is allocated with a reference
+         * count of 1, therefore, '_IotMqtt_CreateOperation' will not free it. Only
+         * unreferenced MQTT connections will be freed. Also, Coverity scan takes
+         * an invalid path in '_IotMqtt_CreateOperation' by evaluating the below
+         * expression to true when 'flags' is 0.
+         * ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
          * IOT_MQTT_FLAG_WAITABLE is defined as 1.
-         * Hence, this warning is a false positive result and with Coverity
-         * annotation, marking to ignore for future runs. */
+         *
+         * The annotation below suppresses this Coverity error.
+         */
         /* coverity[deref_after_free] */
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
         IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ),
@@ -559,17 +566,24 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        /* Coverity checker USE_AFTER_FREE found a false positive warning when
-         * trying to dereference the 'pMqttConnection' in 'IotMutex_Lock'. For
-         * this warning, freeing the pointer 'pMqttConnection' happens in function
-         * '_deserializePublish', invoked at an earlier place in this function.
-         * '_deserializePublish' calls '_sendPuback' which further calls
-         * '_IotMqtt_CreateOperation' with 'flags' as 0. It takes an invalid
-         * path by evaluating 'waitable' as 'true' by the below expression.
-         * waitable = ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE ).
+        /* Coverity finds a USE_AFTER_FREE error at this line. This is a false positive.
+         *
+         * This error is triggered by passing a freed argument 'pMqttConnection'
+         * to 'IotLogError'. Coverity assumes that 'pMqttConnection' was freed in
+         * '_IotMqtt_CreateOperation', which was invoked from '_deserializePublish'
+         * invoked above, where cleanup code will free 'pNewMqttConnection' upon
+         * allocation failure.
+         *
+         * This will never happen as 'pMqttConnection' is allocated with a reference
+         * count of 1, therefore, '_IotMqtt_CreateOperation' will not free it. Only
+         * unreferenced MQTT connections will be freed. Also, Coverity scan takes
+         * an invalid path in '_IotMqtt_CreateOperation' by evaluating the below
+         * expression to true when 'flags' is 0.
+         * ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
          * IOT_MQTT_FLAG_WAITABLE is defined as 1.
-         * Hence, this warning is a false positive result and with Coverity
-         * annotation, marking to ignore for future runs. */
+         *
+         * The annotation below suppresses this Coverity error.
+         */
         /* coverity[pass_freed_arg] */
         IotLogError( "(MQTT connection %p) Packet parser status %s.",
                      pMqttConnection,

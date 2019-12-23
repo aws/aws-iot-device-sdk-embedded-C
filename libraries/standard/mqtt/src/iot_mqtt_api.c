@@ -1148,20 +1148,19 @@ cleanup:
 
         if( pNewMqttConnection != NULL )
         {
-            /* Coverity checker USE_AFTER_FREE found a false positive warning
-             * when trying to dereference the 'pNewMqttConnection' in
-             * '_destroyMqttConnection'. For this warning, freeing the pointer
-             * 'pNewMqttConnection' was from '_IotMqtt_CreateOperation' function
-             * invoked at an earlier place in the this function. In
-             * '_IotMqtt_CreateOperation', when allocation fails for the
-             * 'waitSemaphore', cleanup code will try to free 'pNewMqttConnection'.
-             * This will never happen as 'pNewMqttConnection' is reference counted.
-             * The first increment of the reference counter is when allocating
-             * 'pNewMqttConnection' and the last decrement is when disconnecting
-             * 'pNewMqttConnection'. '_IotMqtt_CreateOperation' cannot decrement
-             * the reference counter to be 0. Hence, this warning is a false
-             * positive result and with Coverity annotation, marking to ignore
-             * for future runs.*/
+            /* Coverity finds a USE_AFTER_FREE error at this line. This is a false positive.
+             *
+             * This error is triggered by a dereference of 'pNewMqttConnection' in
+             * '_destroyMqttConnection'. Coverity assumes that 'pNewMqttConnection'
+             * was freed in '_IotMqtt_CreateOperation' above, where cleanup code will
+             * free 'pNewMqttConnection' upon allocation failure.
+             *
+             * This will never happen as 'pNewMqttConnection' is allocated with a reference
+             * count of 1, therefore, '_IotMqtt_CreateOperation' will not free it. Only
+             * unreferenced MQTT connections will be freed.
+             *
+             * The annotation below suppresses this Coverity error.
+             */
             /* coverity[deref_arg] */
             _destroyMqttConnection( pNewMqttConnection );
         }
@@ -1273,20 +1272,19 @@ cleanup:
 
     if( initCalled == true )
     {
-        /* Close the underlying network connection. This also cleans up keep-alive.
-         * Coverity checker USE_AFTER_FREE found a false positive warning when
-         * trying to dereference the 'mqttConnection' in '_IotMqtt_CloseNetworkConnection'.
-         * For this warning, freeing the pointer 'mqttConnection' was from
-         * '_IotMqtt_CreateOperation' function invoked at an earlier place in
-         * this function. In '_IotMqtt_CloseNetworkConnection', when allocation
-         * fails for the 'waitSemaphore', cleanup code will try to free
-         * 'mqttConnection'. This will never happen as 'mqttConnection' is
-         * reference counted. The first increment of the reference counter
-         * is when allocating 'mqttConnection' and the last decrement is when
-         * disconnecting 'mqttConnection'. '_IotMqtt_CreateOperation' cannot
-         * decrement the reference counter to be 0. Hence, this warning is a
-         * false positive result and with Coverity annotation, marking to ignore
-         * for future runs.*/
+        /* Coverity finds a USE_AFTER_FREE error at this line. This is a false positive.
+         *
+         * This error is triggered by a dereference of 'mqttConnection' in
+         * '_IotMqtt_CloseNetworkConnection'. Coverity assumes that 'mqttConnection'
+         * was freed in '_IotMqtt_CreateOperation' above, where cleanup code will
+         * free 'pNewMqttConnection' upon allocation failure.
+         *
+         * This will never happen as 'mqttConnection' is allocated with a reference
+         * count of 1, therefore, '_IotMqtt_CreateOperation' will not free it. Only
+         * unreferenced MQTT connections will be freed.
+         *
+         * The annotation below suppresses this Coverity error.
+         */
         /* coverity[deref_arg] */
         _IotMqtt_CloseNetworkConnection( IOT_MQTT_DISCONNECT_CALLED,
                                          mqttConnection );
