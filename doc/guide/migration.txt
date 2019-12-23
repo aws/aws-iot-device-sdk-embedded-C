@@ -7,4 +7,6 @@ Version 4 of the C SDK is a new design, and therefore NOT backwards compatible w
 In these pages, <i>v3</i> refers to both previous versions 2 and 3, which are largely compatible with each other.
 - @subpage migration_platform <br>
   Migrating @ref platform from v3 to v4. This must be done before any other component.
+- @subpage migration_mqtt <br>
+  Migrating an [MQTT](@ref mqtt) application from v3 to v4.
 */
