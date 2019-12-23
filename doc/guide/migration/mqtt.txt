@@ -1,0 +1,113 @@
+/**
+@page migration_mqtt MQTT
+@brief How to migrate an MQTT application from v3 to v4.
+
+The MQTT library has been redesigned in v4 as a thread-aware library supporting asynchronous operations. New features such as persistent session support and retry of QoS 1 publish messages have also been added.
+
+The features of the MQTT libraries in v3 and v4 are defined by the common MQTT 3.1.1 spec; therefore, the two versions are similar.
+
+@section migration_mqtt_removed Removed features
+@brief The following features which were present in v3 were removed in v4.
+- Auto-reconnect <br>
+  Version 3 has an auto-reconnect feature triggered through a call to `aws_iot_mqtt_yield`. In version 4, `aws_iot_mqtt_yield` has been removed and replaced with background tasks. <br>
+  <b>Workaround:</b> When a version 4 API call returns @ref IOT_MQTT_NETWORK_ERROR or the version 4 MQTT disconnect callback is invoked, call @ref mqtt_function_connect through the application. The application should employ an exponential backoff strategy when re-establishing connections.
+
+@section migration_mqtt_datatypes Data Types
+@brief The following table lists equivalent data types in v3 and v4.
+
+<table>
+    <tr>
+        <th>Version 3</th>
+        <th>Version 4</th>
+        <th>Notes</th>
+    </tr>
+    <tr>
+        <td>enum QoS</td>
+        <td>@ref IotMqttQos_t</td>
+        <td>MQTT Quality of service.</td>
+    </tr>
+    <tr>
+        <td>AWS_IoT_Client</td>
+        <td>@ref IotMqttConnection_t</td>
+        <td>MQTT connection handle.</td>
+    </tr>
+    <tr>
+        <td>IoT_Publish_Message_Params</td>
+        <td>@ref IotMqttPublishInfo_t</td>
+        <td>Parameters of an MQTT publish.</td>
+    </tr>
+    <tr>
+        <td>IoT_MQTT_Will_Options <br> IoT_Client_Connect_Params</td>
+        <td>@ref IotMqttConnectInfo_t</td>
+        <td>Parameters of an MQTT connect. <br> The two v3 structs are combined in v4.</td>
+    </tr>
+    <tr>
+        <td>IoT_Client_Init_Params</td>
+        <td><i>None</i></td>
+        <td>The members of this struct in v3 handled setup of the network connection.<br>This has been moved to @ref platform_network in v4.</td>
+    </tr>
+</table>
+
+@section migration_mqtt_functions Functions
+@brief The following table lists equivalent API functions in v3 and v4. These functions are the API functions declared in:
+- In v3: <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/include/aws_iot_mqtt_client_interface.h">aws_iot_mqtt_client_interface.h</a>
+- In v4: [MQTT functions](@ref mqtt_functions)
+
+<table>
+    <tr>
+        <th>Version 3</th>
+        <th>Version 4</th>
+        <th>Notes</th>
+    </tr>
+    <tr>
+        <td>aws_iot_mqtt_init</td>
+        <td>@ref mqtt_function_init</td>
+        <td>In v3, this function initializes a single client.<br>In v4, this function initializes the entire library.</td>
+    </tr>
+    <tr>
+        <td>aws_iot_mqtt_free</td>
+        <td>@ref mqtt_function_cleanup</td>
+        <td>In v3, this function frees a single client.<br>In v4, this function cleans up the entire library.</td>
+    </tr>
+    <tr>
+        <td>aws_iot_mqtt_connect</td>
+        <td>@ref mqtt_function_connect</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>aws_iot_mqtt_publish</td>
+        <td>@ref mqtt_function_publishsync</td>
+        <td>@ref mqtt_function_publishasync is the equivalent asynchronous function.</td>
+    </tr>
+    <tr>
+        <td>aws_iot_mqtt_subscribe</td>
+        <td>@ref mqtt_function_subscribesync</td>
+        <td>@ref mqtt_function_subscribeasync is the equivalent asynchronous function.</td>
+    </tr>
+    <tr>
+        <td>aws_iot_mqtt_resubscribe</td>
+        <td><i>None</i></td>
+        <td>Function removed because auto-reconnect was removed.</td>
+    </tr>
+    <tr>
+        <td>aws_iot_mqtt_unsubscribe</td>
+        <td>@ref mqtt_function_unsubscribesync</td>
+        <td>@ref mqtt_function_unsubscribeasync is the equivalent asynchronous function.</td>
+    </tr>
+    <tr>
+        <td>aws_iot_mqtt_disconnect</td>
+        <td>@ref mqtt_function_disconnect</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>aws_iot_mqtt_yield</td>
+        <td><i>None</i></td>
+        <td>Removed in favor of background tasks.<br>Nothing needs to be changed in an application.</td>
+    </tr>
+    <tr>
+        <td>aws_iot_mqtt_attempt_reconnect</td>
+        <td><i>None</i></td>
+        <td>Function removed because auto-reconnect was removed.</td>
+    </tr>
+</table>
+*/
