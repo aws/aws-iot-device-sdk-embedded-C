@@ -1,0 +1,90 @@
+/**
+@page migration_jobs Jobs
+@brief How to migrate a Jobs application from v3 to v4.
+
+The Jobs library has been redesigned in v4 as a thread-aware library supporting asynchronous operations.
+
+The features of the Jobs libraries in v3 and v4 are defined by the common AWS service; therefore, the two versions are similar.
+
+@section migration_jobs_functions Functions
+@brief The following table lists equivalent API functions in v3 and v4. These functions are the API functions declared in:
+- In v3: <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/0da87f06f1501fad7b03b5d89a1322cc8a8848b4/include/aws_iot_jobs_interface.h">aws_iot_jobs_interface.h</a>
+- In v4: [Jobs functions](@ref jobs_functions)
+
+<table>
+    <tr>
+        <th>Version 3</th>
+        <th>Version 4</th>
+        <th>Notes</th>
+    </tr>
+    <tr>
+        <td>
+            aws_iot_jobs_subscribe_to_job_messages<br>
+            aws_iot_jobs_subscribe_to_all_job_messages<br>
+            aws_iot_jobs_unsubscribe_from_job_messages<br>
+            aws_iot_jobs_send_query
+        </td>
+        <td><i>Specific Jobs operation function</i></td>
+        <td>
+            These v3 functions for sending generic Jobs operations have been removed and replaced with individual functions for each supported Jobs operation.<br><br>
+            In v3, the `topicType` parameter determined the Jobs operation. The equivalent functions in v4 are:
+            <table>
+                <tr>
+                    <th>v3 topicType</th>
+                    <th>v4 Function</th>
+                </tr>
+                <tr>
+                    <td>JOB_UNRECOGNIZED_TOPIC</td>
+                    <td><i>None (not valid)</i></td>
+                </tr>
+                <tr>
+                    <td>JOB_GET_PENDING_TOPIC</td>
+                    <td>@ref jobs_function_getpendingsync</td>
+                </tr>
+                <tr>
+                    <td>JOB_START_NEXT_TOPIC</td>
+                    <td>@ref jobs_function_startnextsync</td>
+                </tr>
+                <tr>
+                    <td>JOB_DESCRIBE_TOPIC</td>
+                    <td>@ref jobs_function_describesync</td>
+                </tr>
+                <tr>
+                    <td>JOB_UPDATE_TOPIC</td>
+                    <td>@ref jobs_function_updatesync</td>
+                </tr>
+                <tr>
+                    <td>JOB_NOTIFY_TOPIC</td>
+                    <td>@ref jobs_function_setnotifypendingcallback</td>
+                </tr>
+                <tr>
+                    <td>JOB_NOTIFY_NEXT_TOPIC</td>
+                    <td>@ref jobs_function_setnotifynextcallback</td>
+                </tr>
+                <tr>
+                    <td>JOB_WILDCARD_TOPIC</td>
+                    <td><i>Combination of functions, based on what the wildcard represented</i></td>
+                </tr>
+            </table>
+
+            For example, a call to `aws_iot_jobs_send_query(..., topicType=JOB_GET_PENDING_TOPIC, ...)` should be replaced with a call to the v4 API @ref jobs_function_getpendingsync.
+        </td>
+    </tr>
+    <tr>
+        <td>aws_iot_jobs_start_next</td>
+        <td>@ref jobs_function_startnextsync</td>
+        <td>@ref jobs_function_startnextasync is the equivalent asynchronous function.</td>
+    </tr>
+    <tr>
+        <td>aws_iot_jobs_describe</td>
+        <td>@ref jobs_function_describesync</td>
+        <td>@ref jobs_function_describeasync is the equivalent asynchronous function.</td>
+    </tr>
+    <tr>
+        <td>aws_iot_jobs_update</td>
+        <td>@ref jobs_function_updatesync</td>
+        <td>@ref jobs_function_updateasync is the equivalent asynchronous function.</td>
+    </tr>
+</table>
+
+*/

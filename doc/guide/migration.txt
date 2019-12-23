@@ -11,4 +11,6 @@ In these pages, <i>v3</i> refers to both previous versions 2 and 3, which are la
   Migrating an [MQTT](@ref mqtt) application from v3 to v4.
 - @subpage migration_shadow <br>
   Migrating a [Shadow](@ref shadow) application from v3 to v4.
+- @subpage migration_jobs <br>
+  Migrating a [Jobs](@ref jobs) application from v3 to v4.
 */
