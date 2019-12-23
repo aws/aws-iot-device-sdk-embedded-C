@@ -1148,19 +1148,20 @@ cleanup:
 
         if( pNewMqttConnection != NULL )
         {
-            /* Coverity checker USE_AFTER_FREE found a warning when trying to
-             * dereference the 'pNewMqttConnection' in '_destroyMqttConnection'.
-             * For this warning, freeing the pointer 'pNewMqttConnection' was
-             * from '_IotMqtt_CreateOperation' function invoked at an earlier place
-             * in the this function. In '_IotMqtt_CreateOperation', when allocation
-             * fails for the 'waitSemaphore', cleanup code will try to free
-             * 'pNewMqttConnection'. This will never happen as 'pNewMqttConnection'
-             * is reference counted. The first increment of the reference counter
-             * is when allocating 'pNewMqttConnection' and the last decrement is
-             * when disconnecting 'pNewMqttConnection'. '_IotMqtt_CreateOperation'
-             * cannot decrement the reference counter to be 0. Hence, this warning
-             * is a false positive result and with Coverity annotation, marking
-             * to ignore for future runs.*/
+            /* Coverity checker USE_AFTER_FREE found a false positive warning
+             * when trying to dereference the 'pNewMqttConnection' in
+             * '_destroyMqttConnection'. For this warning, freeing the pointer
+             * 'pNewMqttConnection' was from '_IotMqtt_CreateOperation' function
+             * invoked at an earlier place in the this function. In
+             * '_IotMqtt_CreateOperation', when allocation fails for the
+             * 'waitSemaphore', cleanup code will try to free 'pNewMqttConnection'.
+             * This will never happen as 'pNewMqttConnection' is reference counted.
+             * The first increment of the reference counter is when allocating
+             * 'pNewMqttConnection' and the last decrement is when disconnecting
+             * 'pNewMqttConnection'. '_IotMqtt_CreateOperation' cannot decrement
+             * the reference counter to be 0. Hence, this warning is a false
+             * positive result and with Coverity annotation, marking to ignore
+             * for future runs.*/
             /* coverity[deref_arg] */
             _destroyMqttConnection( pNewMqttConnection );
         }
@@ -1273,8 +1274,8 @@ cleanup:
     if( initCalled == true )
     {
         /* Close the underlying network connection. This also cleans up keep-alive.
-         * Coverity checker USE_AFTER_FREE found a warning when trying to
-         * dereference the 'mqttConnection' in '_IotMqtt_CloseNetworkConnection'.
+         * Coverity checker USE_AFTER_FREE found a false positive warning when
+         * trying to dereference the 'mqttConnection' in '_IotMqtt_CloseNetworkConnection'.
          * For this warning, freeing the pointer 'mqttConnection' was from
          * '_IotMqtt_CreateOperation' function invoked at an earlier place in
          * this function. In '_IotMqtt_CloseNetworkConnection', when allocation

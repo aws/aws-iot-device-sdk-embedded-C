@@ -382,9 +382,9 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
         pIncomingPacket->pRemainingData = NULL;
 
         /* Add the PUBLISH to the list of operations pending processing.
-         * Coverity checker USE_AFTER_FREE found a warning when trying to
-         * dereference the 'pMqttConnection' in 'IotMutex_Lock'. For this
-         * warning, freeing the pointer 'pMqttConnection' happens in function
+         * Coverity checker USE_AFTER_FREE found a false positive warning when
+         * trying to dereference the 'pMqttConnection' in 'IotMutex_Lock'. For
+         * this warning, freeing the pointer 'pMqttConnection' happens in function
          * '_sendPuback' invoked at an earlier place in this function.
          * '_sendPuback' further calls '_IotMqtt_CreateOperation' with 'flags'
          * with value 0. It takes an invalid path by evaluating 'waitable' as
@@ -559,9 +559,9 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
     if( status != IOT_MQTT_SUCCESS )
     {
-        /* Coverity checker USE_AFTER_FREE found a warning when trying to
-         * dereference the 'pMqttConnection' in 'IotMutex_Lock'. For this
-         * warning, freeing the pointer 'pMqttConnection' happens in function
+        /* Coverity checker USE_AFTER_FREE found a false positive warning when
+         * trying to dereference the 'pMqttConnection' in 'IotMutex_Lock'. For
+         * this warning, freeing the pointer 'pMqttConnection' happens in function
          * '_deserializePublish', invoked at an earlier place in this function.
          * '_deserializePublish' calls '_sendPuback' which further calls
          * '_IotMqtt_CreateOperation' with 'flags' as 0. It takes an invalid
