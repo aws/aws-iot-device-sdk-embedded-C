@@ -9,4 +9,6 @@ In these pages, <i>v3</i> refers to both previous versions 2 and 3, which are la
   Migrating @ref platform from v3 to v4. This must be done before any other component.
 - @subpage migration_mqtt <br>
   Migrating an [MQTT](@ref mqtt) application from v3 to v4.
+- @subpage migration_shadow <br>
+  Migrating a [Shadow](@ref shadow) application from v3 to v4.
 */
