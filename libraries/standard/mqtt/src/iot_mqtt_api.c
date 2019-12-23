@@ -1279,7 +1279,7 @@ cleanup:
          * '_IotMqtt_CreateOperation' function invoked at an earlier place in
          * this function. In '_IotMqtt_CloseNetworkConnection', when allocation
          * fails for the 'waitSemaphore', cleanup code will try to free
-         * 'mqttConnetion'. This will never happen as 'mqttConnetion' is
+         * 'mqttConnection'. This will never happen as 'mqttConnetion' is
          * reference counted. The first increment of the reference counter
          * is when allocating 'mqttConnection' and the last decrement is when
          * disconnecting 'mqttConnection'. '_IotMqtt_CreateOperation' cannot
