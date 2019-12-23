@@ -393,7 +393,7 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
          * IOT_MQTT_FLAG_WAITABLE is defined as 1.
          * Hence, this warning is a false positive result and with Coverity
          * annotation, marking to ignore for future runs. */
-         /* coverity[deref_after_free] */
+        /* coverity[deref_after_free] */
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
         IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ),
                                   &( pOperation->link ) );
@@ -570,7 +570,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
          * IOT_MQTT_FLAG_WAITABLE is defined as 1.
          * Hence, this warning is a false positive result and with Coverity
          * annotation, marking to ignore for future runs. */
-         /* coverity[pass_freed_arg] */
+        /* coverity[pass_freed_arg] */
         IotLogError( "(MQTT connection %p) Packet parser status %s.",
                      pMqttConnection,
                      IotMqtt_strerror( status ) );

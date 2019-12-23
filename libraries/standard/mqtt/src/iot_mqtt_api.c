@@ -1274,12 +1274,12 @@ cleanup:
     {
         /* Close the underlying network connection. This also cleans up keep-alive.
          * Coverity checker USE_AFTER_FREE found a warning when trying to
-         * dereference the 'mqttConnetion' in '_IotMqtt_CloseNetworkConnection'.
+         * dereference the 'mqttConnection' in '_IotMqtt_CloseNetworkConnection'.
          * For this warning, freeing the pointer 'mqttConnection' was from
          * '_IotMqtt_CreateOperation' function invoked at an earlier place in
          * this function. In '_IotMqtt_CloseNetworkConnection', when allocation
          * fails for the 'waitSemaphore', cleanup code will try to free
-         * 'mqttConnection'. This will never happen as 'mqttConnetion' is
+         * 'mqttConnection'. This will never happen as 'mqttConnection' is
          * reference counted. The first increment of the reference counter
          * is when allocating 'mqttConnection' and the last decrement is when
          * disconnecting 'mqttConnection'. '_IotMqtt_CreateOperation' cannot
