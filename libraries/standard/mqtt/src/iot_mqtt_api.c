@@ -1155,9 +1155,10 @@ cleanup:
              * was freed in '_IotMqtt_CreateOperation' above, where cleanup code will
              * free 'pNewMqttConnection' upon allocation failure.
              *
-             * This will never happen as 'pNewMqttConnection' is allocated with a reference
-             * count of 1, therefore, '_IotMqtt_CreateOperation' will not free it. Only
-             * unreferenced MQTT connections will be freed.
+             * This will never happen as a valid MQTT connection passed to this
+             * function always has a positive reference count; therefore,
+             * '_IotMqtt_CreateOperation' will not free it. Only unreferenced MQTT
+             * connections will be freed.
              *
              * The annotation below suppresses this Coverity error.
              */
@@ -1279,9 +1280,10 @@ cleanup:
          * was freed in '_IotMqtt_CreateOperation' above, where cleanup code will
          * free 'pNewMqttConnection' upon allocation failure.
          *
-         * This will never happen as 'mqttConnection' is allocated with a reference
-         * count of 1, therefore, '_IotMqtt_CreateOperation' will not free it. Only
-         * unreferenced MQTT connections will be freed.
+         * This will never happen as a valid MQTT connection passed to this
+         * function always has a positive reference count; therefore,
+         * '_IotMqtt_CreateOperation' will not free it. Only unreferenced MQTT
+         * connections will be freed.
          *
          * The annotation below suppresses this Coverity error.
          */

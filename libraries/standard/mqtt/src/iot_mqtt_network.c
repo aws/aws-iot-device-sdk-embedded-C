@@ -384,19 +384,16 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
         /* Add the PUBLISH to the list of operations pending processing.
          * Coverity finds a USE_AFTER_FREE error at this line. This is a false positive.
          *
-         * This error is triggered by dereference of 'pMqttConnection' in
+         * This error is triggered by a dereference of 'pMqttConnection' in
          * 'IotMutex_Lock'. Coverity assumes that 'pMqttConnection' was freed in
-         * '_IotMqtt_CreateOperation', which was invoked from '_sendPuback'
-         * invoked above, where cleanup code will free 'pNewMqttConnection' upon
-         * allocation failure.
+         * '_IotMqtt_CreateOperation', which was invoked in '_sendPuback'.
          *
-         * This will never happen as 'pMqttConnection' is allocated with a reference
-         * count of 1, therefore, '_IotMqtt_CreateOperation' will not free it. Only
-         * unreferenced MQTT connections will be freed. Also, Coverity scan takes
-         * an invalid path in '_IotMqtt_CreateOperation' by evaluating the below
-         * expression to true when 'flags' is 0.
-         * ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
-         * IOT_MQTT_FLAG_WAITABLE is defined as 1.
+         * This will never happen as a valid MQTT connection passed to this
+         * function always has a positive reference count; therefore,
+         * '_IotMqtt_CreateOperation' will not free it. Only unreferenced MQTT
+         * connections will be freed. Coverity also evaluates an incorrect
+         * path by assuming a waitable (1) value for flags, while the flags
+         * passed to this function were explicitly 0.
          *
          * The annotation below suppresses this Coverity error.
          */
@@ -570,17 +567,14 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
          *
          * This error is triggered by passing a freed argument 'pMqttConnection'
          * to 'IotLogError'. Coverity assumes that 'pMqttConnection' was freed in
-         * '_IotMqtt_CreateOperation', which was invoked from '_deserializePublish'
-         * invoked above, where cleanup code will free 'pNewMqttConnection' upon
-         * allocation failure.
+         * '_IotMqtt_CreateOperation', which was invoked in '_deserializePublish'.
          *
-         * This will never happen as 'pMqttConnection' is allocated with a reference
-         * count of 1, therefore, '_IotMqtt_CreateOperation' will not free it. Only
-         * unreferenced MQTT connections will be freed. Also, Coverity scan takes
-         * an invalid path in '_IotMqtt_CreateOperation' by evaluating the below
-         * expression to true when 'flags' is 0.
-         * ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
-         * IOT_MQTT_FLAG_WAITABLE is defined as 1.
+         * This will never happen as a valid MQTT connection passed to this
+         * function always has a positive reference count; therefore,
+         * '_IotMqtt_CreateOperation' will not free it. Only unreferenced MQTT
+         * connections will be freed. Coverity also evaluates an incorrect
+         * path by assuming a waitable (1) value for flags, while the flags
+         * passed to this function were explicitly 0.
          *
          * The annotation below suppresses this Coverity error.
          */
