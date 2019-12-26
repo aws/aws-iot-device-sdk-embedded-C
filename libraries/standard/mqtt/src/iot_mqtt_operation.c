@@ -134,7 +134,7 @@ static IotMqttError_t _scheduleCallback( _mqttOperation_t * pOperation );
  * @param[in] pOperation The pending MQTT send operation.
  * @param[out] pDestroyOperation Whether the operation should be destroyed afterwards.
  *
- * @return `true if the operation is awaiting a response from the network;
+ * @return `true` if the operation is awaiting a response from the network;
  * `false` if not.
  */
 static bool _completePendingSend( _mqttOperation_t * pOperation,
