@@ -116,7 +116,7 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation );
  *
  * @return `true` if the operation was successful; `false` otherwise.
  */
-static bool _sendKeepAlivePingReq( _mqttConnection_t * pMqttConnection );
+static bool _sendPingReq( _mqttConnection_t * pMqttConnection );
 
 /**
  * @brief Schedule a callback for a completed MQTT operation.
@@ -332,7 +332,7 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
 
 /*-----------------------------------------------------------*/
 
-static bool _sendKeepAlivePingReq( _mqttConnection_t * pMqttConnection )
+static bool _sendPingReq( _mqttConnection_t * pMqttConnection )
 {
     bool status = true;
     uint32_t swapStatus = 0;
@@ -363,12 +363,10 @@ static bool _sendKeepAlivePingReq( _mqttConnection_t * pMqttConnection )
                                                 0 );
         IotMqtt_Assert( swapStatus == 1 );
 
-        /* Schedule a check for PINGRESP. */
+        /* Set the period for scheduling a PINGRESP check. */
         pPingreqOperation->u.operation.periodic.ping.nextPeriodMs = IOT_MQTT_RESPONSE_WAIT_MS;
 
-        IotLogDebug( "(MQTT connection %p) PINGREQ sent. Scheduling check for PINGRESP in %d ms.",
-                     pMqttConnection,
-                     IOT_MQTT_RESPONSE_WAIT_MS );
+        IotLogDebug( "(MQTT connection %p) PINGREQ sent.", pMqttConnection );
     }
 
     return status;
@@ -779,7 +777,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     {
         IotLogDebug( "(MQTT connection %p) Sending PINGREQ.", pMqttConnection );
 
-        status = _sendKeepAlivePingReq( pMqttConnection );
+        status = _sendPingReq( pMqttConnection );
     }
     else
     {
