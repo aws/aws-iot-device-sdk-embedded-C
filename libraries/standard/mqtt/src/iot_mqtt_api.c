@@ -1148,6 +1148,21 @@ cleanup:
 
         if( pNewMqttConnection != NULL )
         {
+            /* Coverity finds a USE_AFTER_FREE error at this line. This is a false positive.
+             *
+             * This error is triggered by a dereference of 'pNewMqttConnection' in
+             * '_destroyMqttConnection'. Coverity assumes that 'pNewMqttConnection'
+             * was freed in '_IotMqtt_CreateOperation' above, where cleanup code will
+             * free 'pNewMqttConnection' upon allocation failure.
+             *
+             * This will never happen as a valid MQTT connection passed to this
+             * function always has a positive reference count; therefore,
+             * '_IotMqtt_CreateOperation' will not free it. Only unreferenced MQTT
+             * connections will be freed.
+             *
+             * The annotation below suppresses this Coverity error.
+             */
+            /* coverity[deref_arg] */
             _destroyMqttConnection( pNewMqttConnection );
         }
     }
@@ -1258,7 +1273,22 @@ cleanup:
 
     if( initCalled == true )
     {
-        /* Close the underlying network connection. This also cleans up keep-alive. */
+        /* Close the underlying network connection. This also cleans up keep-alive.
+         * Coverity finds a USE_AFTER_FREE error at this line. This is a false positive.
+         *
+         * This error is triggered by a dereference of 'mqttConnection' in
+         * '_IotMqtt_CloseNetworkConnection'. Coverity assumes that 'mqttConnection'
+         * was freed in '_IotMqtt_CreateOperation' above, where cleanup code will
+         * free 'pNewMqttConnection' upon allocation failure.
+         *
+         * This will never happen as a valid MQTT connection passed to this
+         * function always has a positive reference count; therefore,
+         * '_IotMqtt_CreateOperation' will not free it. Only unreferenced MQTT
+         * connections will be freed.
+         *
+         * The annotation below suppresses this Coverity error.
+         */
+        /* coverity[deref_arg] */
         _IotMqtt_CloseNetworkConnection( IOT_MQTT_DISCONNECT_CALLED,
                                          mqttConnection );
 
