@@ -218,10 +218,10 @@ static uint8_t * _encodeString( uint8_t * pDestination,
 
 /**
  * @brief Encode a username into a CONNECT packet, if necessary.
- * 
+ *
  * @param[out] pBuffer Buffer for the CONNECT packet.
  * @param[in] pConnectInfo User-provided CONNECT information.
- * 
+ *
  * @return Pointer to the end of the encoded string, which will be identical to
  * `pBuffer` if nothing was encoded.
  */
@@ -358,6 +358,22 @@ static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionLi
 static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                                            const uint8_t * pStatusStart,
                                            _mqttPacket_t * pSuback );
+
+/**
+ * @brief Check the remaining length against some value for QoS 0 or QoS 1/2.
+ *
+ * @param[in] pPublish Pointer to an MQTT packet struct representing a PUBLISH.
+ * @param[in] qos The QoS of the PUBLISH.
+ * @param[in] qos0Minimum Minimum possible remaining length for a QoS 0 PUBLISH.
+ * @param[in] defaultMinimum Minimum possible remaining length for a QoS 1 or 2
+ * PUBLISH.
+ *
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_BAD_RESPONSE.
+ */
+static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
+                                             IotMqttQos_t qos,
+                                             size_t qos0Minimum,
+                                             size_t defaultMinimum );
 
 /*-----------------------------------------------------------*/
 
@@ -1105,6 +1121,46 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
 
 /*-----------------------------------------------------------*/
 
+static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
+                                             IotMqttQos_t qos,
+                                             size_t qos0Minimum,
+                                             size_t defaultMinimum )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+
+    /* Sanity checks for "Remaining length". */
+    if( qos == IOT_MQTT_QOS_0 )
+    {
+        /* Check that the "Remaining length" is greater than the minimum. */
+        if( pPublish->remainingLength < qos0Minimum )
+        {
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "QoS 0 PUBLISH cannot have a remaining length less than %lu.",
+                    qos0Minimum );
+
+            status = IOT_MQTT_BAD_RESPONSE;
+        }
+    }
+    else
+    {
+        /* Check that the "Remaining length" is greater than the minimum. */
+        if( pPublish->remainingLength < defaultMinimum )
+        {
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "QoS 1 or 2 PUBLISH cannot have a remaining length less than %lu.",
+                    defaultMinimum );
+
+            status = IOT_MQTT_BAD_RESPONSE;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 uint8_t _IotMqtt_GetPacketType( void * pNetworkConnection,
                                 const IotNetworkInterface_t * pNetworkInterface )
 {
@@ -1542,69 +1598,32 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
                 "DUP is 0." );
     }
 
-    /* Sanity checks for "Remaining length". */
-    if( pOutput->qos == IOT_MQTT_QOS_0 )
-    {
-        /* A QoS 0 PUBLISH must have a remaining length of at least 3 to accommodate
-         * topic name length (2 bytes) and topic name (at least 1 byte). */
-        if( pPublish->remainingLength < 3 )
-        {
-            IotLog( IOT_LOG_DEBUG,
-                    &_logHideAll,
-                    "QoS 0 PUBLISH cannot have a remaining length less than 3." );
+    /* Sanity checks for "Remaining length". A QoS 0 PUBLISH  must have a remaining
+     * length of at least 3 to accommodate topic name length (2 bytes) and topic
+     * name (at least 1 byte). A QoS 1 or 2 PUBLISH must have a remaining length of
+     * at least 5 for the packet identifier in addition to the topic name length and
+     * topic name. */
+    status = _checkRemainingLength( pPublish, pOutput->qos, 3, 5 );
 
-            status = IOT_MQTT_BAD_RESPONSE;
-            goto cleanup;
-        }
-    }
-    else
+    if( status != IOT_MQTT_SUCCESS )
     {
-        /* A QoS 1 or 2 PUBLISH must have a remaining length of at least 5 to
-         * accommodate a packet identifier as well as the topic name length and
-         * topic name. */
-        if( pPublish->remainingLength < 5 )
-        {
-            IotLog( IOT_LOG_DEBUG,
-                    &_logHideAll,
-                    "QoS 1 or 2 PUBLISH cannot have a remaining length less than 5." );
-
-            status = IOT_MQTT_BAD_RESPONSE;
-            goto cleanup;
-        }
+        goto cleanup;
     }
 
     /* Extract the topic name starting from the first byte of the variable header.
      * The topic name string starts at byte 3 in the variable header. */
     pOutput->topicNameLength = UINT16_DECODE( pVariableHeader );
 
-    /* Sanity checks for topic name length and "Remaining length". */
-    if( pOutput->qos == IOT_MQTT_QOS_0 )
-    {
-        /* Check that the "Remaining length" is at least as large as the variable
-         * header. */
-        if( pPublish->remainingLength < pOutput->topicNameLength + sizeof( uint16_t ) )
-        {
-            IotLog( IOT_LOG_DEBUG,
-                    &_logHideAll,
-                    "Remaining length cannot be less than variable header length." );
+    /* Sanity checks for topic name length and "Remaining length". The remaining
+     * length must be at least as large as the variable length header. */
+    status = _checkRemainingLength( pPublish,
+                                    pOutput->qos,
+                                    pOutput->topicNameLength + sizeof( uint16_t ),
+                                    pOutput->topicNameLength + 2 * sizeof( uint16_t ) );
 
-            status = IOT_MQTT_BAD_RESPONSE;
-            goto cleanup;
-        }
-    }
-    else
+    if( status != IOT_MQTT_SUCCESS )
     {
-        /* Check that the "Remaining length" is at least as large as the variable
-         * header. */
-        if( pPublish->remainingLength < pOutput->topicNameLength + 2 * sizeof( uint16_t ) )
-        {
-            IotLog( IOT_LOG_DEBUG,
-                    &_logHideAll,
-                    "Remaining length cannot be less than variable header length." );
-
-            status = IOT_MQTT_BAD_RESPONSE;
-            goto cleanup;
-        }
+        goto cleanup;
     }
 
     /* Parse the topic. */

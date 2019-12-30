@@ -222,7 +222,7 @@ static IotMqttError_t _checkPublishSetup( IotMqttConnection_t mqttConnection,
                                           const IotMqttPublishInfo_t * pPublishInfo,
                                           uint32_t flags,
                                           const IotMqttCallbackInfo_t * pCallbackInfo,
-                                          IotMqttOperation_t * const pPublishOperation);
+                                          IotMqttOperation_t * const pPublishOperation );
 
 /**
  * @brief Utility function used by @ref mqtt_function_wait.
@@ -855,7 +855,7 @@ cleanup:
 static void _setOperationIfNotNull( IotMqttOperation_t * const pOperationReference,
                                     _mqttOperation_t * pNewOperation )
 {
-    if( pOperationReference != NULL)
+    if( pOperationReference != NULL )
     {
         *pOperationReference = pNewOperation;
     }
@@ -867,7 +867,7 @@ static IotMqttError_t _checkPublishSetup( IotMqttConnection_t mqttConnection,
                                           const IotMqttPublishInfo_t * pPublishInfo,
                                           uint32_t flags,
                                           const IotMqttCallbackInfo_t * pCallbackInfo,
-                                          IotMqttOperation_t * const pPublishOperation)
+                                          IotMqttOperation_t * const pPublishOperation )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
@@ -1678,7 +1678,7 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
                          mqttConnection );
 
             /* Clear the previously set (and now invalid) reference. */
-            if( pPublishInfo-> qos != IOT_MQTT_QOS_0 )
+            if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
             {
                 _setOperationIfNotNull( pPublishOperation, IOT_MQTT_OPERATION_INITIALIZER );
             }
