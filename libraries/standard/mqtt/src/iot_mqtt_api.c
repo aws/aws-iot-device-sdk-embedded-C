@@ -1273,7 +1273,8 @@ cleanup:
 
     if( initCalled == true )
     {
-        /* Coverity finds a USE_AFTER_FREE error at this line. This is a false positive.
+        /* Close the underlying network connection. This also cleans up keep-alive.
+         * Coverity finds a USE_AFTER_FREE error at this line. This is a false positive.
          *
          * This error is triggered by a dereference of 'mqttConnection' in
          * '_IotMqtt_CloseNetworkConnection'. Coverity assumes that 'mqttConnection'
