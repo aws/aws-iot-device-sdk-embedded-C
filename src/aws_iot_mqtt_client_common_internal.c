@@ -315,7 +315,7 @@ IoT_Error_t aws_iot_mqtt_internal_send_packet(AWS_IoT_Client *pClient, size_t le
 		FUNC_EXIT_RC(SUCCESS);
 	}
 
-	FUNC_EXIT_RC(rc) 
+	FUNC_EXIT_RC(rc)
 }
 
 static IoT_Error_t _aws_iot_mqtt_internal_readWrapper( AWS_IoT_Client *pClient, size_t offset, size_t size, Timer *pTimer, size_t * read_len ) {
@@ -344,7 +344,7 @@ static IoT_Error_t _aws_iot_mqtt_internal_readWrapper( AWS_IoT_Client *pClient, 
         rc = SUCCESS;
     }
 
- 
+
 
     return rc;
 }
@@ -404,8 +404,8 @@ static IoT_Error_t _aws_iot_mqtt_internal_read_packet(AWS_IoT_Client *pClient, T
 	rc = _aws_iot_mqtt_internal_decode_packet_remaining_len(pClient, &offset, &rem_len, pTimer);
 	if(SUCCESS != rc) {
 		return rc;
-	} 
-     
+	}
+
 	/* if the buffer is too short then the message will be dropped silently */
 	if((rem_len + offset) >= pClient->clientData.readBufSize) {
 		bytes_to_be_read = pClient->clientData.readBufSize;
@@ -529,12 +529,13 @@ static IoT_Error_t _aws_iot_mqtt_internal_deliver_message(AWS_IoT_Client *pClien
 	FUNC_EXIT_RC(rc);
 }
 
-static IoT_Error_t _aws_iot_mqtt_internal_handle_publish(AWS_IoT_Client *pClient, Timer *pTimer) {
+static IoT_Error_t _aws_iot_mqtt_internal_handle_publish(AWS_IoT_Client *pClient) {
 	char *topicName;
 	uint16_t topicNameLen;
 	uint32_t len;
 	IoT_Error_t rc;
 	IoT_Publish_Message_Params msg;
+	Timer sendTimer;
 
 	FUNC_ENTRY;
 
@@ -552,25 +553,29 @@ static IoT_Error_t _aws_iot_mqtt_internal_handle_publish(AWS_IoT_Client *pClient
 		FUNC_EXIT_RC(rc);
 	}
 
+	/* Send acknowledgement of QoS 1 message. */
+	if(QOS1 == msg.qos) {
+		/* Initialize timer for sending PUBACK. */
+		init_timer(&sendTimer);
+		countdown_ms(&sendTimer, pClient->clientData.commandTimeoutMs);
+
+		/* Generate and send a PUBACK. Warn if the PUBACK isn't sent; the server
+		will send the PUBLISH again in that case. */
+		rc = aws_iot_mqtt_internal_serialize_ack(pClient->clientData.writeBuf,
+			pClient->clientData.writeBufSize, PUBACK, 0, msg.id, &len);
+
+		if(SUCCESS == rc) {
+			rc = aws_iot_mqtt_internal_send_packet(pClient, len, &sendTimer);
+
+			if(SUCCESS != rc) {
+				IOT_WARN("Failed to send PUBACK");
+			}
+		} else {
+			IOT_WARN("Failed to generate PUBACK");
+		}
+	}
+
 	rc = _aws_iot_mqtt_internal_deliver_message(pClient, topicName, topicNameLen, &msg);
-	if(SUCCESS != rc) {
-		FUNC_EXIT_RC(rc);
-	}
-
-	if(QOS0 == msg.qos) {
-		/* No further processing required for QoS0 */
-		FUNC_EXIT_RC(SUCCESS);
-	}
-
-	/* Message assumed to be QoS1 since we do not support QoS2 at this time */
-	rc = aws_iot_mqtt_internal_serialize_ack(pClient->clientData.writeBuf, pClient->clientData.writeBufSize,
-											 PUBACK, 0, msg.id, &len);
-
-	if(SUCCESS != rc) {
-		FUNC_EXIT_RC(rc);
-	}
-
-	rc = aws_iot_mqtt_internal_send_packet(pClient, len, pTimer);
 	if(SUCCESS != rc) {
 		FUNC_EXIT_RC(rc);
 	}
@@ -621,7 +626,7 @@ IoT_Error_t aws_iot_mqtt_internal_cycle_read(AWS_IoT_Client *pClient, Timer *pTi
 			/* SDK is blocking, these responses will be forwarded to calling function to process */
 			break;
 		case PUBLISH: {
-			rc = _aws_iot_mqtt_internal_handle_publish(pClient, pTimer);
+			rc = _aws_iot_mqtt_internal_handle_publish(pClient);
 			break;
 		}
 		case PUBREC:
