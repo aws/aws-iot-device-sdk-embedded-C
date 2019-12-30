@@ -11,6 +11,7 @@ config
 connack
 connectserializeroverride
 const
+coverity
 createnetworkconnection
 dataindex
 datalength
