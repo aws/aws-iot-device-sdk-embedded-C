@@ -366,6 +366,9 @@ static void _testCreateKeysAndCertificateCallback( void * contextParam,
     AwsIotProvisioningCreateKeysAndCertificateResponse_t * pExpectedParams =
         ( AwsIotProvisioningCreateKeysAndCertificateResponse_t * ) contextParam;
 
+    /* Disable unused warning. */
+    ( void ) pExpectedParams;
+
     AwsIotProvisioning_Assert( pExpectedParams->statusCode == pResponseInfo->statusCode );
 
     switch( pResponseInfo->statusCode )
@@ -404,11 +407,16 @@ static void _testCreateKeysAndCertificateCallback( void * contextParam,
     }
 }
 
+/*-----------------------------------------------------------*/
+
 static void _testRegisterThingCallback( void * contextParam,
                                         const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo )
 {
     AwsIotProvisioningRegisterThingResponse_t * pExpectedParams =
         ( AwsIotProvisioningRegisterThingResponse_t * ) contextParam;
+
+    /* Disable unused warning. */
+    ( void ) pExpectedParams;
 
     AwsIotProvisioning_Assert( pExpectedParams->statusCode == pResponseInfo->statusCode );
 

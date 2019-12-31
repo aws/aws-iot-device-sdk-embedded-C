@@ -129,6 +129,9 @@ typedef struct _keysAndCertificateCallbackContext
  */
 static void _printRejectedResponse( const AwsIotProvisioningRejectedResponse_t * pResponseInfo )
 {
+    /*Disable unused parameter warning. */
+    ( void ) pResponseInfo;
+
     AwsIotProvisioning_Assert( pResponseInfo != NULL );
 
     IotLogError( "\n Request REJECTED!!\n ErrorCode={%.*s}\n ErrorMessage={%.*s}\n",

@@ -220,6 +220,10 @@ static void _testRegisterThingRejectedDeviceCallback( void * contextParam,
 static void _verifyParsedRejectedResponse( const AwsIotProvisioningRejectedResponse_t * pExpectedData,
                                            const AwsIotProvisioningRejectedResponse_t * pParsedData )
 {
+    /* Disable unused parameter warnings. */
+    ( void ) pExpectedData;
+    ( void ) pParsedData;
+
     /* Verify that the rejected response was parsed as expected. */
     AwsIotProvisioning_Assert( pParsedData->errorCodeLength == pExpectedData->errorCodeLength );
     AwsIotProvisioning_Assert( 0 == memcmp( pParsedData->pErrorCode,
@@ -251,6 +255,10 @@ static void _testCreateKeysAndCertificateAcceptedCallback( void * contextParam,
 {
     AwsIotProvisioningCreateKeysAndCertificateResponse_t * pExpectedParams =
         ( AwsIotProvisioningCreateKeysAndCertificateResponse_t * ) contextParam;
+
+    /* Disable unused variable warnings. */
+    ( void ) pExpectedParams;
+    ( void ) pResponseInfo;
 
     /* Verify that the rejected response was parsed as expected. */
     AwsIotProvisioning_Assert( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED );
@@ -332,6 +340,9 @@ TEST_SETUP( Provisioning_Unit_Parser )
 
     /* Initialize the Provisioning library. */
     AwsIotProvisioning_Init( 0 );
+
+    /* Disable unused variable warnings on global variables. */
+    ( void ) _expectedStatusCode;
 }
 
 /*-----------------------------------------------------------*/
