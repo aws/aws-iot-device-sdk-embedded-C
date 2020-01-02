@@ -392,6 +392,37 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeoutMs )
 
 /*-----------------------------------------------------------*/
 
+AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs )
+{
+    IOT_FUNCTION_ENTRY( AwsIotProvisioningError_t, AWS_IOT_PROVISIONING_SUCCESS );
+
+    /* Wait for response from the server. */
+    if( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem,
+                                timeoutMs ) == false )
+    {
+        status = AWS_IOT_PROVISIONING_TIMEOUT;
+    }
+
+    /* There can be an edge case of receiving the server response right after the timeout has occurred.
+     * If such an edge case has occurred and is causing the subscription callback is to currently execute,
+     * we will void the "timeout" resolution and instead use the outcome of the callback execution.
+     * Rationale - This API is not intended to have an "exact" implementation of server timeout, as completing
+     * the operation is more valuable for the customer. */
+    IotMutex_Lock( &_activeOperation.lock );
+
+    /* Check if we hit the edge case of a race condition between receiving the server response and the timer firing . */
+    if( _activeOperation.info.status != AWS_IOT_PROVISIONING_MQTT_ERROR )
+    {
+        status = _activeOperation.info.status;
+    }
+
+    IotMutex_Unlock( &_activeOperation.lock );
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*-----------------------------------------------------------*/
+
 AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttConnection_t
                                                                        provisioningConnection,
                                                                        uint32_t flags,
@@ -496,8 +527,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     }
 
     /* Get the calculated required size. */
-    payloadSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded(
-        &payloadEncoder );
+    payloadSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &payloadEncoder );
     AwsIotProvisioning_Assert( payloadSize != 0 );
 
     /* Clean the encoder object handle. */
@@ -557,8 +587,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
         status = AWS_IOT_PROVISIONING_TIMEOUT;
     }
 
-    /* There can be an edge case of receiving the server response right after the timeout has occured.
-     * If such an edge case has occured and is causing the subscription callback is to currently execute,
+    /* There can be an edge case of receiving the server response right after the timeout has occurred.
+     * If such an edge case has occurred and is causing the subscription callback is to currently execute,
      * we will void the "timeout" resolution and instead use the outcome of the callback execution.
      * Rationale - This API is not intended to have an "exact" implementation of server timeout, as completing
      * the operation is more valuable for the customer. */
@@ -574,7 +604,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
-    /* Unsubscibe from the MQTT response topics only if subscription to those topics was successful. */
+    /* Unsubscribe from the MQTT response topics only if subscription to those topics was successful. */
     if( subscribedToResponseTopics )
     {
         AwsIot_ModifySubscriptions( IotMqtt_UnsubscribeSync,
@@ -618,7 +648,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
                                PROVISIONING_REGISTER_THING_REQUEST_TOPIC_LENGTH );
 
     bool subscribedToResponseTopics = false;
-    /* Configuration for subscribing and unsubsubscribing to/from response topics. */
+    /* Configuration for subscribing and unsubscribing to/from response topics. */
     AwsIotSubscriptionInfo_t responseSubscription =
     {
         .mqttConnection        = provisioningConnection,
@@ -627,8 +657,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         .pTopicFilterBase      = requestResponseTopicsBuffer,
         .topicFilterBaseLength = PROVISIONING_REGISTER_THING_RESPONSE_TOPIC_FILTER_LENGTH
     };
-    IotSerializerEncoderObject_t payloadEncoder =
-        IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
+
     size_t payloadSize = 0;
     uint8_t * pPayloadBuffer = NULL;
     bool payloadBufferAllocated = false;
@@ -706,19 +735,16 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         pRequestData->templateNameLength,
         requestResponseTopicsBuffer );
 
-    /* We should never hit the "insufficient buffer size" case for generating topic filter, but if we do, we need to
-     * gracefully exit. */
-    AwsIotProvisioning_Assert( generatedTopicFilterSize != 0 );
-
-    if( responseSubscription.topicFilterBaseLength == 0 )
+    if( generatedTopicFilterSize == 0 )
     {
-        /* TODO - Rethink about handling insufficient buffer size error (that is a bit contrived) */
+        IotLogError( "Unable to generate MQTT topic filter for topics related to %s operation",
+                     REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
 
     responseSubscription.topicFilterBaseLength = generatedTopicFilterSize;
 
-    /* Subscibe to the MQTT response topics. */
+    /* Subscribe to the MQTT response topics. */
     mqttOpResult = AwsIot_ModifySubscriptions( IotMqtt_TimedSubscribe, &responseSubscription );
 
     if( mqttOpResult != IOT_MQTT_SUCCESS )
@@ -732,7 +758,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         subscribedToResponseTopics = true;
     }
 
-    /* Update the operation object to represent an active "provision device" operation. */
+    /* Update the operation object to represent an active "register thing" operation. */
     _provisioningCallbackInfo_t callbackInfo;
     callbackInfo.registerThingCallback = *pResponseCallback;
     _setActiveOperation( &callbackInfo );
@@ -743,25 +769,9 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
 
     /* Generate the serialized payload for requesting provisioning of the device.*/
 
-    /* Dry-run serialization to calculate the required size. */
-    status = _AwsIotProvisioning_SerializeRegisterThingRequestPayload( pRequestData, &payloadEncoder,
-                                                                       NULL, 0 );
-
-    if( status != AWS_IOT_PROVISIONING_SUCCESS )
-    {
-        IOT_GOTO_CLEANUP();
-    }
-
-    /* Get the calculated required size. */
-    payloadSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded(
-        &payloadEncoder );
-    AwsIotProvisioning_Assert( payloadSize != 0 );
-
-    /* Clean the encoder object handle. */
-    _pAwsIotProvisioningEncoder->destroy( &payloadEncoder );
-
-    /* Allocate memory for the request payload based on the size required from the dry-run of serialization */
-    pPayloadBuffer = AwsIotProvisioning_MallocPayload( payloadSize * sizeof( uint8_t ) );
+    status = _AwsIotProvisioning_SerializeRegisterThingRequestPayload( pRequestData,
+                                                                       &pPayloadBuffer,
+                                                                       &payloadSize );
 
     if( pPayloadBuffer == NULL )
     {
@@ -774,19 +784,10 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         payloadBufferAllocated = true;
     }
 
-    /* Actual serialization. */
-    status = _AwsIotProvisioning_SerializeRegisterThingRequestPayload( pRequestData,
-                                                                       &payloadEncoder,
-                                                                       pPayloadBuffer,
-                                                                       payloadSize );
-
     if( status != AWS_IOT_PROVISIONING_SUCCESS )
     {
         IOT_GOTO_CLEANUP();
     }
-
-    /* Re-clean the encoder object handle after the actual serialization exercise. */
-    _pAwsIotProvisioningEncoder->destroy( &payloadEncoder );
 
     /* Set the payload for the device provisioning request. */
     publishInfo.pPayload = pPayloadBuffer;
@@ -816,31 +817,11 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_MQTT_ERROR );
     }
 
-    /* Wait for response from the server. */
-    if( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem,
-                                timeoutMs ) == false )
-    {
-        status = AWS_IOT_PROVISIONING_TIMEOUT;
-    }
-
-    /* There can be an edge case of receiving the server response right after the timeout has occured.
-     * If such an edge case has occured and is causing the subscription callback is to currently execute,
-     * we will void the "timeout" resolution and instead use the outcome of the callback execution.
-     * Rationale - This API is not intended to have an "exact" implementation of server timeout, as completing
-     * the operation is more valuable for the customer. */
-    IotMutex_Lock( &_activeOperation.lock );
-
-    /* Check if we hit the edge case of a race condition between receiving the server response and the timer firing . */
-    if( _activeOperation.info.status != AWS_IOT_PROVISIONING_MQTT_ERROR )
-    {
-        status = _activeOperation.info.status;
-    }
-
-    IotMutex_Unlock( &_activeOperation.lock );
+    _timedWaitForServerResponse( timeoutMs );
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
-    /* Unsubscibe from the MQTT response topics only if subscription to those topics was successful. */
+    /* Unsubscribe from the MQTT response topics only if subscription to those topics was successful. */
     if( subscribedToResponseTopics )
     {
         AwsIot_ModifySubscriptions( IotMqtt_TimedUnsubscribe,
