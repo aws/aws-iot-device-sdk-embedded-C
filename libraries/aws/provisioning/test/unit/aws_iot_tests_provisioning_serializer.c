@@ -137,7 +137,8 @@ TEST( Provisioning_Unit_Serializer, TestSerializeCreateKeysAndCertificatePayload
                        memcmp( pExpectedSerialization, pSerializationBuffer,
                                sizeof( pExpectedSerialization ) ) );
 
-    unity_free_mt( pSerializationBuffer );
+    /* Release the buffer that was allocated by the serializer function. */
+    AwsIotProvisioning_FreePayload( pSerializationBuffer );
 }
 
 /**
@@ -189,7 +190,6 @@ TEST( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadNominalCase
         /* *INDENT-ON* */
     };
 
-
     uint8_t * pSerializationBuffer = NULL;
     size_t bufferSize = 0;
 
@@ -205,7 +205,8 @@ TEST( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadNominalCase
     TEST_ASSERT_EQUAL( 0, memcmp( pExpectedSerialization, pSerializationBuffer,
                                   sizeof( pExpectedSerialization ) ) );
 
-    unity_free_mt( pSerializationBuffer );
+    /* Release the buffer memory that was allocated by the serializer function. */
+    AwsIotProvisioning_FreePayload( pSerializationBuffer );
 }
 
 /**
@@ -257,5 +258,6 @@ TEST( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadCaseWithout
     TEST_ASSERT_EQUAL( 0, memcmp( pExpectedSerializationWithoutParameters, pSerializationBuffer,
                                   sizeof( pExpectedSerializationWithoutParameters ) ) );
 
-    unity_free_mt( pSerializationBuffer );
+    /* Release the buffer that was allocated by the serializer function. */
+    AwsIotProvisioning_FreePayload( pSerializationBuffer );
 }
