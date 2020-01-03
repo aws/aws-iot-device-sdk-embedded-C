@@ -403,7 +403,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeoutMs )
 
 AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs )
 {
-    IOT_FUNCTION_ENTRY( AwsIotProvisioningError_t, AWS_IOT_PROVISIONING_SUCCESS );
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
 
     /* Wait for response from the server. */
     if( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem,
@@ -427,7 +427,7 @@ AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs )
 
     IotMutex_Unlock( &_activeOperation.lock );
 
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+    return status;
 }
 
 /*-----------------------------------------------------------*/
