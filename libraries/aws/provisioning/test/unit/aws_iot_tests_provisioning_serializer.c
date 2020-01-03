@@ -102,9 +102,9 @@ TEST_TEAR_DOWN( Provisioning_Unit_Serializer )
  */
 TEST_GROUP_RUNNER( Provisioning_Unit_Serializer )
 {
-    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestCreateKeysAndCertificateSerializationNominalCase );
-    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestRegisterThingSerializationNominalCase );
-    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestRegisterThingSerializationWithoutParameters );
+    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateKeysAndCertificatePayloadNominalCase );
+    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadNominalCase );
+    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadCaseWithoutParameters );
 }
 
 /*-----------------------------------------------------------*/
@@ -114,45 +114,36 @@ TEST_GROUP_RUNNER( Provisioning_Unit_Serializer )
  *"{}" empty
  * payload.
  */
-TEST( Provisioning_Unit_Serializer, TestCreateKeysAndCertificateSerializationNominalCase )
+TEST( Provisioning_Unit_Serializer, TestSerializeCreateKeysAndCertificatePayloadNominalCase )
 {
-    IotSerializerEncoderObject_t testEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
-
     /* The request payload is an empty map container that needs. */
     const uint8_t pExpectedSerialization[] =
     {
         0xA0 /*# map( 0 ) */
     };
 
-    uint8_t pSerializationBuffer[ sizeof( pExpectedSerialization ) ] = { 0 };
+    uint8_t * pSerializationBuffer = NULL;
+    size_t bufferSize = 0;
 
-    /* Test the serializer function without a valid buffer. */
+    /* Test the serializer function. */
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
-                       _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &testEncoder,
-                                                                                            NULL,
-                                                                                            0 ) );
-    TEST_ASSERT_EQUAL( sizeof( pExpectedSerialization ),
-                       _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &testEncoder ) );
-    _pAwsIotProvisioningEncoder->destroy( &testEncoder );
-
-
-    /* Test the serializer function without a valid buffer. */
-    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
-                       _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &testEncoder,
-                                                                                            pSerializationBuffer,
-                                                                                            sizeof( pSerializationBuffer ) ) );
-
-    _pAwsIotProvisioningEncoder->destroy( &testEncoder );
+                       _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &pSerializationBuffer,
+                                                                                            &bufferSize ) );
+    TEST_ASSERT_NOT_NULL( pSerializationBuffer );
+    TEST_ASSERT_EQUAL( sizeof( pExpectedSerialization ), bufferSize );
 
     /* Make sure that the serializer function generated the expected payload. */
-    TEST_ASSERT_EQUAL( 0, memcmp( pExpectedSerialization, pSerializationBuffer,
-                                  sizeof( pExpectedSerialization ) ) );
+    TEST_ASSERT_EQUAL( 0,
+                       memcmp( pExpectedSerialization, pSerializationBuffer,
+                               sizeof( pExpectedSerialization ) ) );
+
+    unity_free_mt( pSerializationBuffer );
 }
 
 /**
  * @brief Tests the behavior of the serializer for generating a payload containing ONLY the "certificate" data.
  */
-TEST( Provisioning_Unit_Serializer, TestRegisterThingSerializationNominalCase )
+TEST( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadNominalCase )
 {
     AwsIotProvisioningRegisterThingRequestInfo_t testRequestInfo;
 
@@ -200,36 +191,29 @@ TEST( Provisioning_Unit_Serializer, TestRegisterThingSerializationNominalCase )
         /* *INDENT-ON* */
     };
 
-    uint8_t pSerializationBuffer[ sizeof( pExpectedSerialization ) ] = { 0 };
 
-    /* Test the serializer function without a valid buffer. */
+    uint8_t * pSerializationBuffer = NULL;
+    size_t bufferSize = 0;
+
+    /* Test the serializer function. */
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
                        _AwsIotProvisioning_SerializeRegisterThingRequestPayload( &testRequestInfo,
-                                                                                 &testEncoder,
-                                                                                 NULL,
-                                                                                 0 ) );
-    TEST_ASSERT_EQUAL( sizeof( pExpectedSerialization ),
-                       _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &testEncoder ) );
-    _pAwsIotProvisioningEncoder->destroy( &testEncoder );
-
-    /* Test the serializer function with a valid buffer. */
-    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
-                       _AwsIotProvisioning_SerializeRegisterThingRequestPayload( &testRequestInfo,
-                                                                                 &testEncoder,
-                                                                                 pSerializationBuffer,
-                                                                                 sizeof( pSerializationBuffer ) ) );
-
-    _pAwsIotProvisioningEncoder->destroy( &testEncoder );
+                                                                                 &pSerializationBuffer,
+                                                                                 &bufferSize ) );
+    TEST_ASSERT_NOT_NULL( pSerializationBuffer );
+    TEST_ASSERT_EQUAL( sizeof( pExpectedSerialization ), bufferSize );
 
     /* Make sure that the serializer generated the expected request payload data. */
     TEST_ASSERT_EQUAL( 0, memcmp( pExpectedSerialization, pSerializationBuffer,
                                   sizeof( pExpectedSerialization ) ) );
+
+    unity_free_mt( pSerializationBuffer );
 }
 
 /**
  * @brief Tests the behavior of the serializer for generating a payload containing "certificate" and "parameters".
  */
-TEST( Provisioning_Unit_Serializer, TestRegisterThingSerializationWithoutParameters )
+TEST( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadCaseWithoutParameters )
 {
     AwsIotProvisioningRegisterThingRequestInfo_t testRequestInfo;
 
@@ -262,17 +246,20 @@ TEST( Provisioning_Unit_Serializer, TestRegisterThingSerializationWithoutParamet
         /* *INDENT-ON* */
     };
 
-    uint8_t pSerializationBuffer[ sizeof( pExpectedSerializationWithoutParameters ) ] = { 0 };
+    uint8_t * pSerializationBuffer = NULL;
+    size_t bufferSize = 0;
 
+    /* Test the serializer function. */
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
                        _AwsIotProvisioning_SerializeRegisterThingRequestPayload( &testRequestInfo,
-                                                                                 &testEncoder,
-                                                                                 pSerializationBuffer,
-                                                                                 sizeof( pSerializationBuffer ) ) );
-
-    _pAwsIotProvisioningEncoder->destroy( &testEncoder );
+                                                                                 &pSerializationBuffer,
+                                                                                 &bufferSize ) );
+    TEST_ASSERT_NOT_NULL( pSerializationBuffer );
+    TEST_ASSERT_EQUAL( sizeof( pExpectedSerializationWithoutParameters ), bufferSize );
 
     /* Make sure that the serializer generated the expected request payload data. */
     TEST_ASSERT_EQUAL( 0, memcmp( pExpectedSerializationWithoutParameters, pSerializationBuffer,
                                   sizeof( pExpectedSerializationWithoutParameters ) ) );
+
+    unity_free_mt( pSerializationBuffer );
 }

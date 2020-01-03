@@ -136,6 +136,15 @@ static void _setActiveOperation( const _provisioningCallbackInfo_t * pUserCallba
  */
 static void _resetActiveOperationData();
 
+/**
+ * @brief Waits for server response within the provided timeout period, and returns the result of the wait operation.
+ *
+ * @param timeoutMs The time period (in milliseconds) to wait for server response.
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if a server response is received within the @p timeoutMs period; otherwise returns
+ * #AWS_IOT_PROVISIONING_TIMEOUT
+ */
+static AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs );
+
 /*------------------------------------------------------------------*/
 
 static bool _checkInit( void )
@@ -404,10 +413,10 @@ AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs )
     }
 
     /* There can be an edge case of receiving the server response right after the timeout has occurred.
-     * If such an edge case has occurred and is causing the subscription callback is to currently execute,
-     * we will void the "timeout" resolution and instead use the outcome of the callback execution.
-     * Rationale - This API is not intended to have an "exact" implementation of server timeout, as completing
-     * the operation is more valuable for the customer. */
+     * If such an edge case has occurred and causes the subscription callback to finish its execution after we timeout,
+     * we use the outcome of the callback execution instead of treating this case as a "timeout".
+     * Rationale - This API is not intended to have an "exact" implementation of server timeout, as the completion of the
+     * the operation is more valuable for the customer than having an exact behavior of server timeout. */
     IotMutex_Lock( &_activeOperation.lock );
 
     /* Check if we hit the edge case of a race condition between receiving the server response and the timer firing . */
@@ -434,7 +443,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     char responseTopicsBuffer[ PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_MAX_TOPIC_LENGTH ] =
     { 0 };
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
-    /* Configuration for subscribing and unsubsubscribing to/from response topics. */
+    /* Configuration for subscribing and unsubscribing to/from response topics. */
     AwsIotSubscriptionInfo_t responseSubscription =
     {
         .mqttConnection        = provisioningConnection,
@@ -444,7 +453,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
         .topicFilterBaseLength = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH
     };
     bool subscribedToResponseTopics = false;
-    IotSerializerEncoderObject_t payloadEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
     size_t payloadSize = 0;
     uint8_t * pPayloadBuffer = NULL;
     bool payloadBufferAllocated = false;
@@ -517,24 +525,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
 
     /* Generate the serialized payload for requesting provisioning of the device.*/
 
-    /* Dry-run serialization to calculate the required size. */
-    status = _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &payloadEncoder,
-                                                                                  NULL, 0 );
-
-    if( status != AWS_IOT_PROVISIONING_SUCCESS )
-    {
-        IOT_GOTO_CLEANUP();
-    }
-
-    /* Get the calculated required size. */
-    payloadSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &payloadEncoder );
-    AwsIotProvisioning_Assert( payloadSize != 0 );
-
-    /* Clean the encoder object handle. */
-    _pAwsIotProvisioningEncoder->destroy( &payloadEncoder );
-
-    /* Allocate memory for the request payload based on the size required from the dry-run of serialization */
-    pPayloadBuffer = AwsIotProvisioning_MallocPayload( payloadSize * sizeof( uint8_t ) );
+    status = _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &pPayloadBuffer,
+                                                                                  &payloadSize );
 
     if( pPayloadBuffer == NULL )
     {
@@ -546,14 +538,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     {
         payloadBufferAllocated = true;
     }
-
-    /* Actual serialization. */
-    status = _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &payloadEncoder,
-                                                                                  pPayloadBuffer,
-                                                                                  payloadSize );
-
-    /* Clean the encoder object handle. */
-    _pAwsIotProvisioningEncoder->destroy( &payloadEncoder );
 
     publishInfo.pPayload = pPayloadBuffer;
     publishInfo.payloadLength = payloadSize;
@@ -580,27 +564,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_MQTT_ERROR );
     }
 
-    /* Wait for response from the server. */
-    if( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem,
-                                timeoutMs ) == false )
-    {
-        status = AWS_IOT_PROVISIONING_TIMEOUT;
-    }
-
-    /* There can be an edge case of receiving the server response right after the timeout has occurred.
-     * If such an edge case has occurred and is causing the subscription callback is to currently execute,
-     * we will void the "timeout" resolution and instead use the outcome of the callback execution.
-     * Rationale - This API is not intended to have an "exact" implementation of server timeout, as completing
-     * the operation is more valuable for the customer. */
-    IotMutex_Lock( &_activeOperation.lock );
-
-    /* Check if we hit the edge case of a race condition between receiving the server response and the timer firing . */
-    if( _activeOperation.info.status != AWS_IOT_PROVISIONING_MQTT_ERROR )
-    {
-        status = _activeOperation.info.status;
-    }
-
-    IotMutex_Unlock( &_activeOperation.lock );
+    /* Wait for response from server using the given timeout period. */
+    status = _timedWaitForServerResponse( timeoutMs );
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
@@ -817,7 +782,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_MQTT_ERROR );
     }
 
-    _timedWaitForServerResponse( timeoutMs );
+    /* Wait for response from server using the given timeout period. */
+    status = _timedWaitForServerResponse( timeoutMs );
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
