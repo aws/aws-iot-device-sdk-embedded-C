@@ -80,6 +80,7 @@ static AwsIotProvisioningError_t _serializeCreateKeysAndCertificateRequestPayloa
 
 /**
  * @brief Performs serializes operations on the passed buffer for creating the MQTT request payload for the RegisterThing operation.
+ * @param[in] pRequestData The data that will be serialized for sending with the request.
  * @param[in] pOutermostEncoder The outermost encoder object to use for serialization.
  * @param[out] pSerializationBuffer The buffer to store the serialized payload data.
  * @param[in] bufferSize The size of the serialization buffer.

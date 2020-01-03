@@ -519,7 +519,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
  *
  * @param[out] pSerializationBuffer This will be assigned to a buffer that will be allocated and populated with the
  * serialized payload data.
- * @param[out] bufferSize This will be populated with the size of the allocated payload data buffer.
+ * @param[out] pBufferSize This will be populated with the size of the allocated payload data buffer.
  * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise* #AWS_IOT_PROVISIONING_INTERNAL_FAILURE
  * for any serialization error.
  */
@@ -534,7 +534,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
  * serialized payload data.
  *
  * @note The calling code is responsible for de-allocation of the buffer memory.
- * @param[out] bufferSize This will be populated with the size of the allocated payload data buffer.
+ * @param[out] pBufferSize This will be populated with the size of the allocated payload data buffer.
  * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise #AWS_IOT_PROVISIONING_INTERNAL_FAILURE
  * for any serialization error.
  */
