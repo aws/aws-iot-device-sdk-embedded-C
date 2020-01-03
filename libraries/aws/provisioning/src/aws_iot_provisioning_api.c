@@ -145,6 +145,13 @@ static void _resetActiveOperationData();
  */
 static AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs );
 
+/**
+ * @brief Checks whether the data that is provided to send along with the provisioning device request is valid.
+ * @param pRequestData The data for the RegisterThing service API request whose validity will be checked.
+ * @return Returns #true if data is valid; #false otherwise.
+ */
+static bool _isDataForRegisterThingRequestValid( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData );
+
 /*------------------------------------------------------------------*/
 
 static bool _checkInit( void )
@@ -316,6 +323,48 @@ static void _setActiveOperation( const _provisioningCallbackInfo_t * pUserCallba
 
     /* Decrement the reference count as we have released the mutex. */
     ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+}
+
+/*-----------------------------------------------------------*/
+
+static bool _isDataForRegisterThingRequestValid( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData )
+{
+    IOT_FUNCTION_ENTRY( bool, true );
+
+    if( pRequestData == NULL )
+    {
+        IotLogError( "Invalid request data passed for provisioning device." );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    if( ( pRequestData->pDeviceCertificateId == NULL ) ||
+        ( pRequestData->deviceCertificateIdLength == 0 ) )
+    {
+        IotLogError( "Invalid certificate ID data passed for device provisioning request." );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    if( ( pRequestData->pCertificateOwnershipToken == NULL ) ||
+        ( pRequestData->ownershipTokenLength == 0 ) )
+    {
+        IotLogError( "Invalid certificate ownership token data passed for device provisioning request." );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* Check that the provided template name is valid. */
+    if( ( pRequestData->pTemplateName == NULL ) ||
+        ( pRequestData->templateNameLength == 0 ) ||
+        ( pRequestData->templateNameLength > PROVISIONING_MAX_TEMPLATE_NAME_LENGTH ) )
+    {
+        IotLogError( "Invalid template name information passed for device provisioning request." );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
 /*-----------------------------------------------------------*/
@@ -641,36 +690,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
     }
 
-    if( pRequestData == NULL )
+    if( _isDataForRegisterThingRequestValid( pRequestData ) == false )
     {
-        IotLogError( "Invalid request data passed for provisioning device." );
-
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
-    }
-
-    if( ( pRequestData->pDeviceCertificateId == NULL ) ||
-        ( pRequestData->deviceCertificateIdLength == 0 ) )
-    {
-        IotLogError( "Invalid certificate ID data passed for device provisioning request." );
-
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
-    }
-
-    if( ( pRequestData->pCertificateOwnershipToken == NULL ) ||
-        ( pRequestData->ownershipTokenLength == 0 ) )
-    {
-        IotLogError( "Invalid certificate ownership token data passed for device provisioning request." );
-
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
-    }
-
-    /* Check that the provided template name is valid. */
-    if( ( pRequestData->pTemplateName == NULL ) ||
-        ( pRequestData->templateNameLength == 0 ) ||
-        ( pRequestData->templateNameLength > PROVISIONING_MAX_TEMPLATE_NAME_LENGTH ) )
-    {
-        IotLogError( "Invalid template name information passed for device provisioning request." );
-
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
     }
 
