@@ -154,8 +154,6 @@ TEST( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadNominalCase
     testRequestInfo.pParametersStart = _sampleParameters;
     testRequestInfo.numOfParameters = _numOfSampleParameters;
 
-    IotSerializerEncoderObject_t testEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
-
     /**
      * @brief The expected serialized payload for Provisioning's RegisterThing API request containing #_sampleParameters and
      * #_testCertificateId.
@@ -223,8 +221,6 @@ TEST( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadCaseWithout
     testRequestInfo.ownershipTokenLength = strlen( _testCertificateToken );
     testRequestInfo.pParametersStart = NULL;
     testRequestInfo.numOfParameters = 0;
-
-    IotSerializerEncoderObject_t testEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
 
     /**
      * @brief The expected serialized payload for Provisioning's RegisterThing API request containing #_sampleParameters and
