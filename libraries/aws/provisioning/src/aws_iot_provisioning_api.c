@@ -173,7 +173,7 @@ static bool _checkInit( void )
 static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
                                           _provisioningServerResponseParser responseParser )
 {
-    AwsIotStatus_t operationStatus = AWS_IOT_UNKNOWN;
+    AwsIotStatus_t responseStatus = AWS_IOT_UNKNOWN;
 
     /* Determine whether the mutex is still valid (i.e. not destroyed) based on the reference count. If the mutex is
      * valid, indicate that we will be accessing the mutex by incrementing the reference count.
@@ -184,78 +184,60 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
         /* We will use a non-blocking mutex acquiring call to account for scenario
          * when server response is received after the mutex is destroyed
          * and thus, no longer valid. */
-        if( IotMutex_TryLock( &_activeOperation.lock ) == true )
+        IotMutex_Lock( &_activeOperation.lock );
+
+        /* Is a user thread waiting for the result? */
+        if( ( _activeOperation.info.userCallback.createKeysAndCertificateCallback.function == NULL ) ||
+            ( _activeOperation.info.userCallback.registerThingCallback.function == NULL ) )
         {
-            /* Is a user thread waiting for the result? */
-            if( ( _activeOperation.info.userCallback.createKeysAndCertificateCallback.function == NULL ) ||
-                ( _activeOperation.info.userCallback.registerThingCallback.function == NULL ) )
+            IotLogDebug( "Received unexpected server response on topic %s.",
+                         pPublishData->u.message.pTopicFilter,
+                         pPublishData->u.message.topicFilterLength );
+        }
+        else
+        {
+            /* Determine whether the response from the server is "accepted" or "rejected". */
+            responseStatus = AwsIot_ParseStatus( pPublishData->u.message.pTopicFilter,
+                                                 pPublishData->u.message.topicFilterLength );
+
+            if( responseStatus == AWS_IOT_UNKNOWN )
             {
-                IotLogDebug( "Received unexpected server response on topic %s.",
-                             pPublishData->u.message.pTopicFilter,
-                             pPublishData->u.message.topicFilterLength );
+                IotLogWarn( "Unknown parsing status on topic %s. Ignoring message.",
+                            pPublishData->u.message.pTopicFilter,
+                            pPublishData->u.message.topicFilterLength );
+                _activeOperation.info.status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
             }
             else
             {
-                /* Determine whether the response from the server is "accepted" or "rejected". */
-                operationStatus = AwsIot_ParseStatus( pPublishData->u.message.pTopicFilter,
-                                                      pPublishData->u.message.topicFilterLength );
-
-                switch( operationStatus )
-                {
-                    case AWS_IOT_ACCEPTED:
-                        /* Parse the server response and execute the user callback. */
-                        _activeOperation.info.status = responseParser(
-                            AWS_IOT_ACCEPTED,
-                            pPublishData->u.message.info.pPayload,
-                            pPublishData->u.message.info.payloadLength,
-                            &_activeOperation.info.userCallback );
-
-                        break;
-
-                    case AWS_IOT_REJECTED:
-                        /* Parse the server response and execute the user callback. */
-                        _activeOperation.info.status = responseParser(
-                            AWS_IOT_REJECTED,
-                            pPublishData->u.message.info.pPayload,
-                            pPublishData->u.message.info.payloadLength,
-                            &_activeOperation.info.userCallback );
-                        break;
-
-                    default:
-                        IotLogWarn( "Unknown parsing status on topic %s. Ignoring message.",
-                                    pPublishData->u.message.pTopicFilter,
-                                    pPublishData->u.message.topicFilterLength );
-                        _activeOperation.info.status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
-                        break;
-                }
-
-                /* Notify the waiting thread about arrival of response from server */
-                /* Increment the number of PUBLISH messages received. */
-                IotSemaphore_Post( &_activeOperation.responseReceivedSem );
-
-                /* Invalidate the user-callback information to prevent re-processing the response
-                 * if we receive the same response multiple times (which is possible for a QoS 1 publish
-                 * from the server). This is done to post on the semaphore ONLY ONCE on receiving the
-                 * response from the server.*/
-                memset( &_activeOperation.info.userCallback, 0, sizeof( _activeOperation.info.userCallback ) );
+                /* Parse the server response and execute the user callback. */
+                _activeOperation.info.status = responseParser(
+                    responseStatus,
+                    pPublishData->u.message.info.pPayload,
+                    pPublishData->u.message.info.payloadLength,
+                    &_activeOperation.info.userCallback );
             }
 
-            IotMutex_Unlock( &_activeOperation.lock );
+            /* Notify the waiting thread about arrival of response from server */
+            /* Increment the number of PUBLISH messages received. */
+            IotSemaphore_Post( &_activeOperation.responseReceivedSem );
 
-            /* If no other thread/context is alive needing the mutex, then we will destroy it. */
-            if( Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount ) == 1 )
-            {
-                IotMutex_Destroy( &_activeOperation.lock );
-            }
+            /* Invalidate the user-callback information to prevent re-processing the response
+             * if we receive the same response multiple times (which is possible for a QoS 1 publish
+             * from the server). This is done to post on the semaphore ONLY ONCE on receiving the
+             * response from the server.*/
+            memset( &_activeOperation.info.userCallback, 0, sizeof( _activeOperation.info.userCallback ) );
         }
+
+        IotMutex_Unlock( &_activeOperation.lock );
     }
-    else
+
+    /* Decrement the mutex reference count, as we don't need the mutex anymore.
+     * If there is no other thread/context is alive that needs the mutex, then we will destroy it. */
+    if( Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount ) == 1 )
     {
-        /* Reverse the previous increment operation as mutex is not valid. */
-        Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+        IotMutex_Destroy( &_activeOperation.lock );
     }
 }
-
 
 /*-----------------------------------------------------------*/
 
