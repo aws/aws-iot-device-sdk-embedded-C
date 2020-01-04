@@ -366,6 +366,27 @@ static bool _isDataForRegisterThingRequestValid( const AwsIotProvisioningRegiste
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
+/*-----------------------------------------------------------*/
+
+static AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs )
+{
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_TIMEOUT;
+
+    /* Wait for response from the server. */
+    if( ( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem, timeoutMs ) == true )
+        &&
+        ( _activeOperation.info.status != AWS_IOT_PROVISIONING_MQTT_ERROR ) )
+    {
+        /* Use the status value calculated from processing the server response in the MQTT callback. */
+        status = _activeOperation.info.status;
+    }
+    else
+    {
+        /* Do nothing as the default return status value is set to timeout. */
+    }
+
+    return status;
+}
 
 /*-----------------------------------------------------------*/
 
@@ -448,36 +469,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeoutMs )
     IOT_FUNCTION_CLEANUP_END();
 }
 
-/*-----------------------------------------------------------*/
-
-AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs )
-{
-    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
-
-    /* Wait for response from the server. */
-    if( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem,
-                                timeoutMs ) == false )
-    {
-        status = AWS_IOT_PROVISIONING_TIMEOUT;
-    }
-
-    /* There can be an edge case of receiving the server response right after the timeout has occurred.
-     * If such an edge case has occurred and causes the subscription callback to finish its execution after we timeout,
-     * we use the outcome of the callback execution instead of treating this case as a "timeout".
-     * Rationale - This API is not intended to have an "exact" implementation of server timeout, as the completion of the
-     * the operation is more valuable for the customer than having an exact behavior of server timeout. */
-    IotMutex_Lock( &_activeOperation.lock );
-
-    /* Check if we hit the edge case of a race condition between receiving the server response and the timer firing . */
-    if( _activeOperation.info.status != AWS_IOT_PROVISIONING_MQTT_ERROR )
-    {
-        status = _activeOperation.info.status;
-    }
-
-    IotMutex_Unlock( &_activeOperation.lock );
-
-    return status;
-}
 
 /*-----------------------------------------------------------*/
 
