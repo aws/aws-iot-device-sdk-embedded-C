@@ -148,7 +148,7 @@ static AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs
 /**
  * @brief Checks whether the data that is provided to send along with the provisioning device request is valid.
  * @param pRequestData The data for the RegisterThing service API request whose validity will be checked.
- * @return Returns #true if data is valid; #false otherwise.
+ * @return Returns `true` if data is valid; `false` otherwise.
  */
 static bool _isDataForRegisterThingRequestValid( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData );
 
