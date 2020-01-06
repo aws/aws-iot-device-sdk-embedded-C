@@ -1129,24 +1129,31 @@ TEST( MQTT_Unit_API, DisconnectMallocFail )
  */
 TEST( MQTT_Unit_API, DisconnectAlreadyDisconnected )
 {
-    IotNetworkInterface_t networkInterface = { 0 };
-    IotMqttNetworkInfo_t networkInfo = { 0 };
-    IotMqttDisconnectReason_t expectedReason = IOT_MQTT_DISCONNECT_CALLED;
     IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
-
-    /* Set the members of the network interface. */
-    networkInterface.send = _sendSuccess;
-    networkInterface.close = _close;
-    networkInfo.createNetworkConnection = false;
-    networkInfo.disconnectCallback.pCallbackContext = &expectedReason;
-    networkInfo.disconnectCallback.function = _disconnectCallback;
 
     /* Set up a mocked MQTT connection. */
     TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &mqttConnection ) );
+    TEST_ASSERT_EQUAL_INT( 1, mqttConnection->references );
 
-    mqttConnection->disconnected = true;
+    /* Increase reference count to 3 so the subsequent disconnect
+     * calls do not free the connection. */
+    mqttConnection->references += 2;
+    /* Call Disconnect, reference count should decrement. */
     IotMqtt_Disconnect( mqttConnection, 0 );
-    /* There should not be any asserts or test memory leak errors */
+    TEST_ASSERT_EQUAL_INT( 2, mqttConnection->references );
+    /* 'disconnected' flag should be set */
+    TEST_ASSERT_EQUAL( true, mqttConnection->disconnected );
+
+    /* Make sure reference count is decremented when 'disconnected'
+     * connection is passed without any attempts to close socket again. */
+    IotMqtt_Disconnect( mqttConnection, 0 );
+    TEST_ASSERT_EQUAL_INT( 1, mqttConnection->references );
+
+    /* One final disconnect to bring reference count to zero and free
+     * the connection */
+    IotMqtt_Disconnect( mqttConnection, 0 );
+    /* mqttConnection should be freed after above call.
+     * Test should not fail with any Unity memory leak asserts. */
 }
 /*-----------------------------------------------------------*/
 
