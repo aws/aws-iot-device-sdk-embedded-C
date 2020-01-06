@@ -136,6 +136,22 @@ static void _setActiveOperation( const _provisioningCallbackInfo_t * pUserCallba
  */
 static void _resetActiveOperationData();
 
+/**
+ * @brief Waits for server response within the provided timeout period, and returns the result of the wait operation.
+ *
+ * @param timeoutMs The time period (in milliseconds) to wait for server response.
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if a server response is received within the @p timeoutMs period; otherwise returns
+ * #AWS_IOT_PROVISIONING_TIMEOUT
+ */
+static AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs );
+
+/**
+ * @brief Checks whether the data that is provided to send along with the provisioning device request is valid.
+ * @param pRequestData The data for the RegisterThing service API request whose validity will be checked.
+ * @return Returns `true` if data is valid; `false` otherwise.
+ */
+static bool _isDataForRegisterThingRequestValid( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData );
+
 /*------------------------------------------------------------------*/
 
 static bool _checkInit( void )
@@ -157,7 +173,7 @@ static bool _checkInit( void )
 static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
                                           _provisioningServerResponseParser responseParser )
 {
-    AwsIotStatus_t operationStatus = AWS_IOT_UNKNOWN;
+    AwsIotStatus_t responseStatus = AWS_IOT_UNKNOWN;
 
     /* Determine whether the mutex is still valid (i.e. not destroyed) based on the reference count. If the mutex is
      * valid, indicate that we will be accessing the mutex by incrementing the reference count.
@@ -168,78 +184,60 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
         /* We will use a non-blocking mutex acquiring call to account for scenario
          * when server response is received after the mutex is destroyed
          * and thus, no longer valid. */
-        if( IotMutex_TryLock( &_activeOperation.lock ) == true )
+        IotMutex_Lock( &_activeOperation.lock );
+
+        /* Is a user thread waiting for the result? */
+        if( ( _activeOperation.info.userCallback.createKeysAndCertificateCallback.function == NULL ) ||
+            ( _activeOperation.info.userCallback.registerThingCallback.function == NULL ) )
         {
-            /* Is a user thread waiting for the result? */
-            if( ( _activeOperation.info.userCallback.createKeysAndCertificateCallback.function == NULL ) ||
-                ( _activeOperation.info.userCallback.registerThingCallback.function == NULL ) )
+            IotLogDebug( "Received unexpected server response on topic %s.",
+                         pPublishData->u.message.pTopicFilter,
+                         pPublishData->u.message.topicFilterLength );
+        }
+        else
+        {
+            /* Determine whether the response from the server is "accepted" or "rejected". */
+            responseStatus = AwsIot_ParseStatus( pPublishData->u.message.pTopicFilter,
+                                                 pPublishData->u.message.topicFilterLength );
+
+            if( responseStatus == AWS_IOT_UNKNOWN )
             {
-                IotLogDebug( "Received unexpected server response on topic %s.",
-                             pPublishData->u.message.pTopicFilter,
-                             pPublishData->u.message.topicFilterLength );
+                IotLogWarn( "Unknown parsing status on topic %s. Ignoring message.",
+                            pPublishData->u.message.pTopicFilter,
+                            pPublishData->u.message.topicFilterLength );
+                _activeOperation.info.status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
             }
             else
             {
-                /* Determine whether the response from the server is "accepted" or "rejected". */
-                operationStatus = AwsIot_ParseStatus( pPublishData->u.message.pTopicFilter,
-                                                      pPublishData->u.message.topicFilterLength );
-
-                switch( operationStatus )
-                {
-                    case AWS_IOT_ACCEPTED:
-                        /* Parse the server response and execute the user callback. */
-                        _activeOperation.info.status = responseParser(
-                            AWS_IOT_ACCEPTED,
-                            pPublishData->u.message.info.pPayload,
-                            pPublishData->u.message.info.payloadLength,
-                            &_activeOperation.info.userCallback );
-
-                        break;
-
-                    case AWS_IOT_REJECTED:
-                        /* Parse the server response and execute the user callback. */
-                        _activeOperation.info.status = responseParser(
-                            AWS_IOT_REJECTED,
-                            pPublishData->u.message.info.pPayload,
-                            pPublishData->u.message.info.payloadLength,
-                            &_activeOperation.info.userCallback );
-                        break;
-
-                    default:
-                        IotLogWarn( "Unknown parsing status on topic %s. Ignoring message.",
-                                    pPublishData->u.message.pTopicFilter,
-                                    pPublishData->u.message.topicFilterLength );
-                        _activeOperation.info.status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
-                        break;
-                }
-
-                /* Notify the waiting thread about arrival of response from server */
-                /* Increment the number of PUBLISH messages received. */
-                IotSemaphore_Post( &_activeOperation.responseReceivedSem );
-
-                /* Invalidate the user-callback information to prevent re-processing the response
-                 * if we receive the same response multiple times (which is possible for a QoS 1 publish
-                 * from the server). This is done to post on the semaphore ONLY ONCE on receiving the
-                 * response from the server.*/
-                memset( &_activeOperation.info.userCallback, 0, sizeof( _activeOperation.info.userCallback ) );
+                /* Parse the server response and execute the user callback. */
+                _activeOperation.info.status = responseParser(
+                    responseStatus,
+                    pPublishData->u.message.info.pPayload,
+                    pPublishData->u.message.info.payloadLength,
+                    &_activeOperation.info.userCallback );
             }
 
-            IotMutex_Unlock( &_activeOperation.lock );
+            /* Notify the waiting thread about arrival of response from server */
+            /* Increment the number of PUBLISH messages received. */
+            IotSemaphore_Post( &_activeOperation.responseReceivedSem );
 
-            /* If no other thread/context is alive needing the mutex, then we will destroy it. */
-            if( Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount ) == 1 )
-            {
-                IotMutex_Destroy( &_activeOperation.lock );
-            }
+            /* Invalidate the user-callback information to prevent re-processing the response
+             * if we receive the same response multiple times (which is possible for a QoS 1 publish
+             * from the server). This is done to post on the semaphore ONLY ONCE on receiving the
+             * response from the server.*/
+            memset( &_activeOperation.info.userCallback, 0, sizeof( _activeOperation.info.userCallback ) );
         }
+
+        IotMutex_Unlock( &_activeOperation.lock );
     }
-    else
+
+    /* Decrement the mutex reference count, as we don't need the mutex anymore.
+     * If there is no other thread/context is alive that needs the mutex, then we will destroy it. */
+    if( Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount ) == 1 )
     {
-        /* Reverse the previous increment operation as mutex is not valid. */
-        Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+        IotMutex_Destroy( &_activeOperation.lock );
     }
 }
-
 
 /*-----------------------------------------------------------*/
 
@@ -307,6 +305,69 @@ static void _setActiveOperation( const _provisioningCallbackInfo_t * pUserCallba
 
     /* Decrement the reference count as we have released the mutex. */
     ( void ) Atomic_Decrement_u32( &_activeOperation.mutexReferenceCount );
+}
+
+/*-----------------------------------------------------------*/
+
+static bool _isDataForRegisterThingRequestValid( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData )
+{
+    IOT_FUNCTION_ENTRY( bool, true );
+
+    if( pRequestData == NULL )
+    {
+        IotLogError( "Invalid request data passed for provisioning device." );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    if( ( pRequestData->pDeviceCertificateId == NULL ) ||
+        ( pRequestData->deviceCertificateIdLength == 0 ) )
+    {
+        IotLogError( "Invalid certificate ID data passed for device provisioning request." );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    if( ( pRequestData->pCertificateOwnershipToken == NULL ) ||
+        ( pRequestData->ownershipTokenLength == 0 ) )
+    {
+        IotLogError( "Invalid certificate ownership token data passed for device provisioning request." );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    /* Check that the provided template name is valid. */
+    if( ( pRequestData->pTemplateName == NULL ) ||
+        ( pRequestData->templateNameLength == 0 ) ||
+        ( pRequestData->templateNameLength > PROVISIONING_MAX_TEMPLATE_NAME_LENGTH ) )
+    {
+        IotLogError( "Invalid template name information passed for device provisioning request." );
+
+        IOT_SET_AND_GOTO_CLEANUP( false );
+    }
+
+    IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+/*-----------------------------------------------------------*/
+
+static AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs )
+{
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_TIMEOUT;
+
+    /* Wait for response from the server. */
+    if( ( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem, timeoutMs ) == true )
+        &&
+        ( _activeOperation.info.status != AWS_IOT_PROVISIONING_MQTT_ERROR ) )
+    {
+        /* Use the status value calculated from processing the server response in the MQTT callback. */
+        status = _activeOperation.info.status;
+    }
+    else
+    {
+        /* Do nothing as the default return status value is set to timeout. */
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -390,6 +451,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeoutMs )
     IOT_FUNCTION_CLEANUP_END();
 }
 
+
 /*-----------------------------------------------------------*/
 
 AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttConnection_t
@@ -403,7 +465,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     char responseTopicsBuffer[ PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_MAX_TOPIC_LENGTH ] =
     { 0 };
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
-    /* Configuration for subscribing and unsubsubscribing to/from response topics. */
+    /* Configuration for subscribing and unsubscribing to/from response topics. */
     AwsIotSubscriptionInfo_t responseSubscription =
     {
         .mqttConnection        = provisioningConnection,
@@ -413,7 +475,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
         .topicFilterBaseLength = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH
     };
     bool subscribedToResponseTopics = false;
-    IotSerializerEncoderObject_t payloadEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
     size_t payloadSize = 0;
     uint8_t * pPayloadBuffer = NULL;
     bool payloadBufferAllocated = false;
@@ -486,25 +547,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
 
     /* Generate the serialized payload for requesting provisioning of the device.*/
 
-    /* Dry-run serialization to calculate the required size. */
-    status = _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &payloadEncoder,
-                                                                                  NULL, 0 );
-
-    if( status != AWS_IOT_PROVISIONING_SUCCESS )
-    {
-        IOT_GOTO_CLEANUP();
-    }
-
-    /* Get the calculated required size. */
-    payloadSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded(
-        &payloadEncoder );
-    AwsIotProvisioning_Assert( payloadSize != 0 );
-
-    /* Clean the encoder object handle. */
-    _pAwsIotProvisioningEncoder->destroy( &payloadEncoder );
-
-    /* Allocate memory for the request payload based on the size required from the dry-run of serialization */
-    pPayloadBuffer = AwsIotProvisioning_MallocPayload( payloadSize * sizeof( uint8_t ) );
+    status = _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &pPayloadBuffer,
+                                                                                  &payloadSize );
 
     if( pPayloadBuffer == NULL )
     {
@@ -516,14 +560,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     {
         payloadBufferAllocated = true;
     }
-
-    /* Actual serialization. */
-    status = _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( &payloadEncoder,
-                                                                                  pPayloadBuffer,
-                                                                                  payloadSize );
-
-    /* Clean the encoder object handle. */
-    _pAwsIotProvisioningEncoder->destroy( &payloadEncoder );
 
     publishInfo.pPayload = pPayloadBuffer;
     publishInfo.payloadLength = payloadSize;
@@ -550,31 +586,12 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_MQTT_ERROR );
     }
 
-    /* Wait for response from the server. */
-    if( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem,
-                                timeoutMs ) == false )
-    {
-        status = AWS_IOT_PROVISIONING_TIMEOUT;
-    }
-
-    /* There can be an edge case of receiving the server response right after the timeout has occured.
-     * If such an edge case has occured and is causing the subscription callback is to currently execute,
-     * we will void the "timeout" resolution and instead use the outcome of the callback execution.
-     * Rationale - This API is not intended to have an "exact" implementation of server timeout, as completing
-     * the operation is more valuable for the customer. */
-    IotMutex_Lock( &_activeOperation.lock );
-
-    /* Check if we hit the edge case of a race condition between receiving the server response and the timer firing . */
-    if( _activeOperation.info.status != AWS_IOT_PROVISIONING_MQTT_ERROR )
-    {
-        status = _activeOperation.info.status;
-    }
-
-    IotMutex_Unlock( &_activeOperation.lock );
+    /* Wait for response from server using the given timeout period. */
+    status = _timedWaitForServerResponse( timeoutMs );
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
-    /* Unsubscibe from the MQTT response topics only if subscription to those topics was successful. */
+    /* Unsubscribe from the MQTT response topics only if subscription to those topics was successful. */
     if( subscribedToResponseTopics )
     {
         AwsIot_ModifySubscriptions( IotMqtt_UnsubscribeSync,
@@ -618,7 +635,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
                                PROVISIONING_REGISTER_THING_REQUEST_TOPIC_LENGTH );
 
     bool subscribedToResponseTopics = false;
-    /* Configuration for subscribing and unsubsubscribing to/from response topics. */
+    /* Configuration for subscribing and unsubscribing to/from response topics. */
     AwsIotSubscriptionInfo_t responseSubscription =
     {
         .mqttConnection        = provisioningConnection,
@@ -627,8 +644,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         .pTopicFilterBase      = requestResponseTopicsBuffer,
         .topicFilterBaseLength = PROVISIONING_REGISTER_THING_RESPONSE_TOPIC_FILTER_LENGTH
     };
-    IotSerializerEncoderObject_t payloadEncoder =
-        IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
+
     size_t payloadSize = 0;
     uint8_t * pPayloadBuffer = NULL;
     bool payloadBufferAllocated = false;
@@ -647,36 +663,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
     }
 
-    if( pRequestData == NULL )
+    if( _isDataForRegisterThingRequestValid( pRequestData ) == false )
     {
-        IotLogError( "Invalid request data passed for provisioning device." );
-
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
-    }
-
-    if( ( pRequestData->pDeviceCertificateId == NULL ) ||
-        ( pRequestData->deviceCertificateIdLength == 0 ) )
-    {
-        IotLogError( "Invalid certificate ID data passed for device provisioning request." );
-
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
-    }
-
-    if( ( pRequestData->pCertificateOwnershipToken == NULL ) ||
-        ( pRequestData->ownershipTokenLength == 0 ) )
-    {
-        IotLogError( "Invalid certificate ownership token data passed for device provisioning request." );
-
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
-    }
-
-    /* Check that the provided template name is valid. */
-    if( ( pRequestData->pTemplateName == NULL ) ||
-        ( pRequestData->templateNameLength == 0 ) ||
-        ( pRequestData->templateNameLength > PROVISIONING_MAX_TEMPLATE_NAME_LENGTH ) )
-    {
-        IotLogError( "Invalid template name information passed for device provisioning request." );
-
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
     }
 
@@ -706,19 +694,16 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         pRequestData->templateNameLength,
         requestResponseTopicsBuffer );
 
-    /* We should never hit the "insufficient buffer size" case for generating topic filter, but if we do, we need to
-     * gracefully exit. */
-    AwsIotProvisioning_Assert( generatedTopicFilterSize != 0 );
-
-    if( responseSubscription.topicFilterBaseLength == 0 )
+    if( generatedTopicFilterSize == 0 )
     {
-        /* TODO - Rethink about handling insufficient buffer size error (that is a bit contrived) */
+        IotLogError( "Unable to generate MQTT topic filter for topics related to %s operation",
+                     REGISTER_THING_OPERATION_LOG );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
 
     responseSubscription.topicFilterBaseLength = generatedTopicFilterSize;
 
-    /* Subscibe to the MQTT response topics. */
+    /* Subscribe to the MQTT response topics. */
     mqttOpResult = AwsIot_ModifySubscriptions( IotMqtt_TimedSubscribe, &responseSubscription );
 
     if( mqttOpResult != IOT_MQTT_SUCCESS )
@@ -732,7 +717,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         subscribedToResponseTopics = true;
     }
 
-    /* Update the operation object to represent an active "provision device" operation. */
+    /* Update the operation object to represent an active "register thing" operation. */
     _provisioningCallbackInfo_t callbackInfo;
     callbackInfo.registerThingCallback = *pResponseCallback;
     _setActiveOperation( &callbackInfo );
@@ -743,25 +728,9 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
 
     /* Generate the serialized payload for requesting provisioning of the device.*/
 
-    /* Dry-run serialization to calculate the required size. */
-    status = _AwsIotProvisioning_SerializeRegisterThingRequestPayload( pRequestData, &payloadEncoder,
-                                                                       NULL, 0 );
-
-    if( status != AWS_IOT_PROVISIONING_SUCCESS )
-    {
-        IOT_GOTO_CLEANUP();
-    }
-
-    /* Get the calculated required size. */
-    payloadSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded(
-        &payloadEncoder );
-    AwsIotProvisioning_Assert( payloadSize != 0 );
-
-    /* Clean the encoder object handle. */
-    _pAwsIotProvisioningEncoder->destroy( &payloadEncoder );
-
-    /* Allocate memory for the request payload based on the size required from the dry-run of serialization */
-    pPayloadBuffer = AwsIotProvisioning_MallocPayload( payloadSize * sizeof( uint8_t ) );
+    status = _AwsIotProvisioning_SerializeRegisterThingRequestPayload( pRequestData,
+                                                                       &pPayloadBuffer,
+                                                                       &payloadSize );
 
     if( pPayloadBuffer == NULL )
     {
@@ -774,19 +743,10 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         payloadBufferAllocated = true;
     }
 
-    /* Actual serialization. */
-    status = _AwsIotProvisioning_SerializeRegisterThingRequestPayload( pRequestData,
-                                                                       &payloadEncoder,
-                                                                       pPayloadBuffer,
-                                                                       payloadSize );
-
     if( status != AWS_IOT_PROVISIONING_SUCCESS )
     {
         IOT_GOTO_CLEANUP();
     }
-
-    /* Re-clean the encoder object handle after the actual serialization exercise. */
-    _pAwsIotProvisioningEncoder->destroy( &payloadEncoder );
 
     /* Set the payload for the device provisioning request. */
     publishInfo.pPayload = pPayloadBuffer;
@@ -816,31 +776,12 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_MQTT_ERROR );
     }
 
-    /* Wait for response from the server. */
-    if( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem,
-                                timeoutMs ) == false )
-    {
-        status = AWS_IOT_PROVISIONING_TIMEOUT;
-    }
-
-    /* There can be an edge case of receiving the server response right after the timeout has occured.
-     * If such an edge case has occured and is causing the subscription callback is to currently execute,
-     * we will void the "timeout" resolution and instead use the outcome of the callback execution.
-     * Rationale - This API is not intended to have an "exact" implementation of server timeout, as completing
-     * the operation is more valuable for the customer. */
-    IotMutex_Lock( &_activeOperation.lock );
-
-    /* Check if we hit the edge case of a race condition between receiving the server response and the timer firing . */
-    if( _activeOperation.info.status != AWS_IOT_PROVISIONING_MQTT_ERROR )
-    {
-        status = _activeOperation.info.status;
-    }
-
-    IotMutex_Unlock( &_activeOperation.lock );
+    /* Wait for response from server using the given timeout period. */
+    status = _timedWaitForServerResponse( timeoutMs );
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
-    /* Unsubscibe from the MQTT response topics only if subscription to those topics was successful. */
+    /* Unsubscribe from the MQTT response topics only if subscription to those topics was successful. */
     if( subscribedToResponseTopics )
     {
         AwsIot_ModifySubscriptions( IotMqtt_TimedUnsubscribe,

@@ -67,22 +67,47 @@ static bool _checkSuccess( IotSerializerError_t error );
  */
 static bool _checkSuccessOrBufferToSmall( IotSerializerError_t error );
 
+/**
+ * @brief Performs serialization operations on the passed buffer for creating the MQTT request payload for the CreateKeysAndCertification operation.
+ * @param[in] pOutermostEncoder The outermost encoder object to use for serialization.
+ * @param[out] pSerializationBuffer The buffer to store the serialized payload data.
+ * @param[in] bufferSize The size of the serialization buffer.
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if payload serialization is successful; otherwise #AWS_IOT_PROVISIONING_INTERNAL_FAILURE.
+ */
+static AwsIotProvisioningError_t _serializeCreateKeysAndCertificateRequestPayload( IotSerializerEncoderObject_t * pOutermostEncoder,
+                                                                                   uint8_t * pSerializationBuffer,
+                                                                                   size_t bufferSize );
+
+/**
+ * @brief Performs serializes operations on the passed buffer for creating the MQTT request payload for the RegisterThing operation.
+ * @param[in] pRequestData The data that will be serialized for sending with the request.
+ * @param[in] pOutermostEncoder The outermost encoder object to use for serialization.
+ * @param[out] pSerializationBuffer The buffer to store the serialized payload data.
+ * @param[in] bufferSize The size of the serialization buffer.
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if payload serialization is successful; otherwise #AWS_IOT_PROVISIONING_INTERNAL_FAILURE.
+ */
+static AwsIotProvisioningError_t _serializeRegisterThingRequestPayload( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData,
+                                                                        IotSerializerEncoderObject_t * pOutermostEncoder,
+                                                                        uint8_t * pSerializationBuffer,
+                                                                        size_t bufferSize );
+
 static bool _checkSuccess( IotSerializerError_t error )
 {
     return( error == IOT_SERIALIZER_SUCCESS );
 }
 
+/*------------------------------------------------------------------*/
+
 static bool _checkSuccessOrBufferToSmall( IotSerializerError_t error )
 {
-    return( error == IOT_SERIALIZER_SUCCESS || error ==
-            IOT_SERIALIZER_BUFFER_TOO_SMALL );
+    return( error == IOT_SERIALIZER_SUCCESS || error == IOT_SERIALIZER_BUFFER_TOO_SMALL );
 }
 
 /*------------------------------------------------------------------*/
 
-AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( IotSerializerEncoderObject_t * pOutermostEncoder,
-                                                                                               uint8_t * pSerializationBuffer,
-                                                                                               size_t bufferSize )
+static AwsIotProvisioningError_t _serializeCreateKeysAndCertificateRequestPayload( IotSerializerEncoderObject_t * pOutermostEncoder,
+                                                                                   uint8_t * pSerializationBuffer,
+                                                                                   size_t bufferSize )
 {
     AwsIotProvisioning_Assert( pOutermostEncoder != NULL );
     IotSerializerEncoderObject_t emptyPayloadEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
@@ -129,13 +154,12 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
     IOT_FUNCTION_EXIT_NO_CLEANUP();
 }
 
-
 /*------------------------------------------------------------------*/
 
-AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPayload( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData,
-                                                                                    IotSerializerEncoderObject_t * pOutermostEncoder,
-                                                                                    uint8_t * pSerializationBuffer,
-                                                                                    size_t bufferSize )
+static AwsIotProvisioningError_t _serializeRegisterThingRequestPayload( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData,
+                                                                        IotSerializerEncoderObject_t * pOutermostEncoder,
+                                                                        uint8_t * pSerializationBuffer,
+                                                                        size_t bufferSize )
 {
     AwsIotProvisioning_Assert( ( pRequestData->pDeviceCertificateId != NULL ) && ( pRequestData->deviceCertificateIdLength > 0 ) );
     AwsIotProvisioning_Assert( ( pRequestData->pCertificateOwnershipToken != NULL ) && ( pRequestData->ownershipTokenLength > 0 ) );
@@ -290,6 +314,82 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPaylo
     }
 
     IOT_FUNCTION_EXIT_NO_CLEANUP();
+}
+
+/*------------------------------------------------------------------*/
+
+AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( uint8_t ** pSerializationBuffer,
+                                                                                               size_t * pBufferSize )
+{
+    IOT_FUNCTION_ENTRY( AwsIotProvisioningError_t, AWS_IOT_PROVISIONING_SUCCESS );
+    IotSerializerEncoderObject_t outermostPayloadEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
+    *pBufferSize = 0;
+
+    status = _serializeCreateKeysAndCertificateRequestPayload( &outermostPayloadEncoder, NULL, 0 );
+
+    if( status != AWS_IOT_PROVISIONING_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Get the calculated required size. */
+    *pBufferSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &outermostPayloadEncoder );
+    AwsIotProvisioning_Assert( *pBufferSize != 0 );
+
+    /* Clean the encoder object handle. */
+    _pAwsIotProvisioningEncoder->destroy( &outermostPayloadEncoder );
+
+    /* Allocate memory for the request payload based on the size required from the dry-run of serialization */
+    *pSerializationBuffer = AwsIotProvisioning_MallocPayload( *pBufferSize * sizeof( uint8_t ) );
+
+    status = _serializeCreateKeysAndCertificateRequestPayload( &outermostPayloadEncoder,
+                                                               *pSerializationBuffer,
+                                                               *pBufferSize );
+
+    IOT_FUNCTION_CLEANUP_BEGIN();
+
+    _pAwsIotProvisioningEncoder->destroy( &outermostPayloadEncoder );
+
+    IOT_FUNCTION_CLEANUP_END();
+}
+
+/*------------------------------------------------------------------*/
+
+AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPayload( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData,
+                                                                                    uint8_t ** pSerializationBuffer,
+                                                                                    size_t * pBufferSize )
+{
+    IOT_FUNCTION_ENTRY( AwsIotProvisioningError_t, AWS_IOT_PROVISIONING_SUCCESS );
+    IotSerializerEncoderObject_t outermostPayloadEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
+    *pBufferSize = 0;
+
+    status = _serializeRegisterThingRequestPayload( pRequestData, &outermostPayloadEncoder, NULL, 0 );
+
+    if( status != AWS_IOT_PROVISIONING_SUCCESS )
+    {
+        IOT_GOTO_CLEANUP();
+    }
+
+    /* Get the calculated required size. */
+    *pBufferSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &outermostPayloadEncoder );
+    AwsIotProvisioning_Assert( *pBufferSize != 0 );
+
+    /* Clean the encoder object handle. */
+    _pAwsIotProvisioningEncoder->destroy( &outermostPayloadEncoder );
+
+    /* Allocate memory for the request payload based on the size required from the dry-run of serialization */
+    *pSerializationBuffer = AwsIotProvisioning_MallocPayload( *pBufferSize * sizeof( uint8_t ) );
+
+    status = _serializeRegisterThingRequestPayload( pRequestData,
+                                                    &outermostPayloadEncoder,
+                                                    *pSerializationBuffer,
+                                                    *pBufferSize );
+
+    IOT_FUNCTION_CLEANUP_BEGIN();
+
+    _pAwsIotProvisioningEncoder->destroy( &outermostPayloadEncoder );
+
+    IOT_FUNCTION_CLEANUP_END();
 }
 
 /*------------------------------------------------------------------*/

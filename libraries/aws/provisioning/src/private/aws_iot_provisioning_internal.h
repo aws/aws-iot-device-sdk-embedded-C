@@ -515,31 +515,31 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                                                                           const _provisioningCallbackInfo_t * userCallbackInfo );
 
 /**
- * @brief Serializes for payload of MQTT request to the Provisioning CreateKeysAndCertificate service API.
+ * @brief Serializes payload data for MQTT request to the Provisioning CreateKeysAndCertificate service API.
  *
- * @param[in] pOutermostEncoder The encoder object to use for serializing payload.
- * @param[in,out] pSerializationBuffer The pre-allocated buffer for storing the serialized data.
- * @param[in] bufferSize The size of the serialization buffer.
- * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise
- * #AWS_IOT_PROVISIONING_INTERNAL_FAILURE for any serialization error.
+ * @param[out] pSerializationBuffer This will be assigned to a buffer that will be allocated and populated with the
+ * serialized payload data.
+ * @param[out] pBufferSize This will be populated with the size of the allocated payload data buffer.
+ * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise* #AWS_IOT_PROVISIONING_INTERNAL_FAILURE
+ * for any serialization error.
  */
-AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( IotSerializerEncoderObject_t * pOutermostEncoder,
-                                                                                               uint8_t * pSerializationBuffer,
-                                                                                               size_t bufferSize );
+AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( uint8_t ** pSerializationBuffer,
+                                                                                               size_t * pBufferSize );
 
 /**
- * @brief Serializes for payload of MQTT request to the Provisioning RegisterThing service API.
+ * @brief Serializes payload data for MQTT request to the Provisioning RegisterThing service API.
  *
  * @param[in] pRequestData The data that will be serialized for sending with the request.
- * @param[in] pOutermostEncoder The encoder object to use for serializing payload.
- * @param[in,out] pSerializationBuffer The pre-allocated buffer for storing the serialized data.
- * @param[in] bufferSize The size of the serialization buffer.
- * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise
- * #AWS_IOT_PROVISIONING_INTERNAL_FAILURE for any serialization error.
+ * @param[out] pSerializationBuffer This will be assigned to a buffer that will be allocated and populated with the
+ * serialized payload data.
+ *
+ * @note The calling code is responsible for de-allocation of the buffer memory.
+ * @param[out] pBufferSize This will be populated with the size of the allocated payload data buffer.
+ * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise #AWS_IOT_PROVISIONING_INTERNAL_FAILURE
+ * for any serialization error.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPayload( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData,
-                                                                                    IotSerializerEncoderObject_t * pOutermostEncoder,
-                                                                                    uint8_t * pSerializationBuffer,
-                                                                                    size_t bufferSize );
+                                                                                    uint8_t ** pSerializationBuffer,
+                                                                                    size_t * pBufferSize );
 
 #endif /* ifndef AWS_IOT_PROVISIONING_INTERNAL_H_ */
