@@ -1682,6 +1682,7 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
     if( _IotMqtt_ValidateOperation( operation ) == false )
     {
         status = IOT_MQTT_BAD_PARAMETER;
+        goto cleanup;
     }
 
     /* Check the MQTT connection status. */
