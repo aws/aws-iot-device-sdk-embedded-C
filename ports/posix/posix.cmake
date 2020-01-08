@@ -94,7 +94,7 @@ set( PLATFORM_DEPENDENCIES ${PLATFORM_DEPENDENCIES} Threads::Threads rt )
 
 
 install(FILES ${PLATFORM_COMMON_HEADERS}
-        DESTINATION include/aws_iot/)
+        DESTINATION include/aws_iot/platform)
 
 install(FILES ${PORT_TYPES_HEADER}
-        DESTINATION include/aws_iot/)
+        DESTINATION include/aws_iot/types)

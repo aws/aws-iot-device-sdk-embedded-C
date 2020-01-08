@@ -44,8 +44,10 @@ install(TARGETS awsiotjobs
         DESTINATION lib)
 
 install(FILES include/aws_iot_jobs.h
-            include/types/aws_iot_jobs_types.h
         DESTINATION include/aws_iot/)
+
+install(FILES include/types/aws_iot_jobs_types.h
+        DESTINATION include/aws_iot/types)
 
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )

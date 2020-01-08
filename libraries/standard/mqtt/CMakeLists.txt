@@ -54,7 +54,7 @@ install(FILES ${MQTT_PUBLIC_HEADERS}
         DESTINATION include/aws_iot/)
 
 install(FILES ${MQTT_TYPES_HEADERS}
-        DESTINATION include/aws_iot/)
+        DESTINATION include/aws_iot/types)
 
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )

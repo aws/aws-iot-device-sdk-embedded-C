@@ -44,8 +44,10 @@ install(TARGETS awsiotshadow
         DESTINATION lib)
 
 install(FILES include/aws_iot_shadow.h
-        include/types/aws_iot_shadow_types.h
         DESTINATION include/aws_iot/)
+
+install(FILES include/types/aws_iot_shadow_types.h
+        DESTINATION include/aws_iot/types)
 
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )
