@@ -203,12 +203,12 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            IotMqttOperation_t * const pOperationReference );
 
 /**
- * @brief Sets an operation if the pointer to its address is not NULL.
+ * @brief Set an operation reference if provided.
  *
- * @param[out] pOperationReference Pointer to an operation's address.
+ * @param[out] pOperationReference Operation reference provided by the application.
  * @param[in] pNewOperation Operation to set.
  */
-static void _setOperationIfNotNull( IotMqttOperation_t * const pOperationReference,
+static void _setOperationReference( IotMqttOperation_t * const pOperationReference,
                                     _mqttOperation_t * pNewOperation );
 
 /**
@@ -225,12 +225,12 @@ static IotMqttError_t _checkPublishSetup( IotMqttConnection_t mqttConnection,
                                           IotMqttOperation_t * const pPublishOperation );
 
 /**
- * @brief Utility function used by @ref mqtt_function_wait.
+ * @brief Wait for an MQTT operation to complete.
  *
  * See @ref mqtt_function_wait for a description of the parameters and return values.
  */
-static IotMqttError_t _performWait( IotMqttOperation_t operation,
-                                    uint32_t timeoutMs );
+static IotMqttError_t _waitForOperation( IotMqttOperation_t operation,
+                                         uint32_t timeoutMs );
 
 /**
  * @cond DOXYGEN_IGNORE
@@ -795,7 +795,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     }
 
     /* Set the reference, if provided. */
-    _setOperationIfNotNull( pOperationReference, pSubscriptionOperation );
+    _setOperationReference( pOperationReference, pSubscriptionOperation );
 
     /* Send the SUBSCRIBE packet. */
     if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
@@ -822,7 +822,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
             }
 
             /* Clear the previously set (and now invalid) reference. */
-            _setOperationIfNotNull( pOperationReference, IOT_MQTT_OPERATION_INITIALIZER );
+            _setOperationReference( pOperationReference, IOT_MQTT_OPERATION_INITIALIZER );
 
             goto cleanup;
         }
@@ -852,7 +852,7 @@ cleanup:
 
 /*-----------------------------------------------------------*/
 
-static void _setOperationIfNotNull( IotMqttOperation_t * const pOperationReference,
+static void _setOperationReference( IotMqttOperation_t * const pOperationReference,
                                     _mqttOperation_t * pNewOperation )
 {
     if( pOperationReference != NULL )
@@ -920,8 +920,8 @@ static IotMqttError_t _checkPublishSetup( IotMqttConnection_t mqttConnection,
 
 /*-----------------------------------------------------------*/
 
-static IotMqttError_t _performWait( IotMqttOperation_t operation,
-                                    uint32_t timeoutMs )
+static IotMqttError_t _waitForOperation( IotMqttOperation_t operation,
+                                         uint32_t timeoutMs )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
@@ -1658,7 +1658,7 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     /* Set the reference, if provided. */
     if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
     {
-        _setOperationIfNotNull( pPublishOperation, pOperation );
+        _setOperationReference( pPublishOperation, pOperation );
     }
 
     /* Send the PUBLISH packet. */
@@ -1680,7 +1680,7 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
             /* Clear the previously set (and now invalid) reference. */
             if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
             {
-                _setOperationIfNotNull( pPublishOperation, IOT_MQTT_OPERATION_INITIALIZER );
+                _setOperationReference( pPublishOperation, IOT_MQTT_OPERATION_INITIALIZER );
             }
 
             goto cleanup;
@@ -1804,7 +1804,7 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
         /* Only wait on an operation if the MQTT connection is active. */
         if( status == IOT_MQTT_SUCCESS )
         {
-            status = _performWait( operation, timeoutMs );
+            status = _waitForOperation( operation, timeoutMs );
         }
 
         /* Wait is finished; decrement operation reference count. */
