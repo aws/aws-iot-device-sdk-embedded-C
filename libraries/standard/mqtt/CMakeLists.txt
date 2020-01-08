@@ -8,14 +8,21 @@ set( MQTT_SOURCES
      src/iot_mqtt_subscription.c
      src/iot_mqtt_validate.c )
 
+set( MQTT_PUBLIC_HEADERS
+        include/iot_mqtt.h
+        include/iot_mqtt_serialize.h)
+set( MQTT_PRIVATE_HEADERS
+        src/private/iot_mqtt_internal.h )
+set( MQTT_TYPES_HEADERS
+        include/types/iot_mqtt_types.h )
+
 # MQTT library target.
 add_library( iotmqtt
              ${CONFIG_HEADER_PATH}/iot_config.h
              ${MQTT_SOURCES}
-             include/iot_mqtt.h
-             include/iot_mqtt_serialize.h
-             include/types/iot_mqtt_types.h
-             src/private/iot_mqtt_internal.h )
+             ${MQTT_PUBLIC_HEADERS}
+             ${MQTT_PRIVATE_HEADERS}
+             ${MQTT_TYPES_HEADERS} )
 
 # MQTT public include path.
 target_include_directories( iotmqtt PUBLIC include )
@@ -35,6 +42,19 @@ source_group( include FILES include/iot_mqtt.h )
 source_group( include\\types FILES include/types/iot_mqtt_types.h )
 source_group( src FILES ${MQTT_SOURCES} )
 source_group( src\\private FILES src/private/iot_mqtt_internal.h )
+
+# Install the library with public headers.
+install(TARGETS iotmqtt
+        LIBRARY
+        DESTINATION lib
+        ARCHIVE
+        DESTINATION lib)
+
+install(FILES ${MQTT_PUBLIC_HEADERS}
+        DESTINATION include/aws_iot/)
+
+install(FILES ${MQTT_TYPES_HEADERS}
+        DESTINATION include/aws_iot/)
 
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )

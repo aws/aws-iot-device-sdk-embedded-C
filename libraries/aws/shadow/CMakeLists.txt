@@ -36,6 +36,17 @@ source_group( include\\types include/types/aws_iot_shadow_types.h )
 source_group( src\\private src/private/aws_iot_shadow_internal.h )
 source_group( src FILES ${SHADOW_SOURCES} )
 
+# Install the library with public headers.
+install(TARGETS awsiotshadow
+        LIBRARY
+        DESTINATION lib
+        ARCHIVE
+        DESTINATION lib)
+
+install(FILES include/aws_iot_shadow.h
+        include/types/aws_iot_shadow_types.h
+        DESTINATION include/aws_iot/)
+
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )
     # Shadow system test sources.

@@ -28,6 +28,16 @@ source_group( include FILES
               include/iot_serializer.h )
 source_group( src FILES ${SERIALIZER_SOURCES} )
 
+# Install the library with public headers.
+install(TARGETS iotserializer
+        LIBRARY
+        DESTINATION lib
+        ARCHIVE
+        DESTINATION lib)
+
+install(FILES include/iot_serializer.h
+        DESTINATION include/aws_iot/)
+
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )
     # Serializer unit test sources.

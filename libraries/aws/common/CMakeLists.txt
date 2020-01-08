@@ -6,12 +6,15 @@ set( AWS_IOT_COMMON_SOURCES
      src/aws_iot_subscription.c
      src/aws_iot_validate.c )
 
+set( AWS_IOT_COMMON_PUBLIC_HEADERS
+        include/aws_iot.h
+        include/aws_iot_doc_parser.h)
+
 # AWS IoT common library target.
 add_library( awsiotcommon
              ${CONFIG_HEADER_PATH}/iot_config.h
              ${AWS_IOT_COMMON_SOURCES}
-             include/aws_iot.h 
-             include/aws_iot_doc_parser.h )
+             ${AWS_IOT_COMMON_PUBLIC_HEADERS} )
 
 # AWS IoT common public include path.
 target_include_directories( awsiotcommon PUBLIC include )
@@ -29,6 +32,17 @@ set_property( TARGET awsiotcommon PROPERTY FOLDER libraries/aws )
 source_group( "" FILES ${CONFIG_HEADER_PATH}/iot_config.h )
 source_group( include FILES include/aws_iot.h include/aws_iotdoc_parser.h )
 source_group( src FILES ${AWS_IOT_COMMON_SOURCES} )
+
+# Install the library with public headers.
+install(TARGETS awsiotcommon
+        LIBRARY
+        DESTINATION lib
+        ARCHIVE
+        DESTINATION lib)
+
+install(FILES ${AWS_IOT_COMMON_PUBLIC_HEADERS}
+        DESTINATION include/aws_iot/)
+
 
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )

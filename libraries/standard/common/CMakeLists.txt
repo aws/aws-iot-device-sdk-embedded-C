@@ -96,6 +96,19 @@ source_group( platform\\include FILES ${PLATFORM_INTERFACE_HEADERS} ${PLATFORM_C
 source_group( platform\\include\\types FILES ${PLATFORM_TYPES_HEADER} ${PORT_TYPES_HEADER} )
 source_group( platform\\src FILES ${PLATFORM_SOURCES} )
 
+# Install the library with public headers.
+install(TARGETS iotbase
+        LIBRARY
+        DESTINATION lib
+        ARCHIVE
+        DESTINATION lib)
+
+install(FILES ${COMMON_PUBLIC_HEADERS}
+        DESTINATION include/aws_iot/)
+
+install(FILES ${COMMON_TYPES_HEADERS}
+        DESTINATION include/aws_iot/)
+
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )
     # Common unit test sources.

@@ -32,6 +32,16 @@ source_group( include FILES include/aws_iot_defender.h )
 source_group( src\\private src/private/aws_iot_defender_internal.h )
 source_group( src FILES ${DEFENDER_SOURCES} )
 
+# Install the library with public headers.
+install(TARGETS awsiotdefender
+        LIBRARY
+        DESTINATION lib
+        ARCHIVE
+        DESTINATION lib)
+
+install(FILES include/aws_iot_defender.h
+        DESTINATION include/aws_iot/)
+
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )
     # Defender system test sources.
