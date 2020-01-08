@@ -91,3 +91,10 @@ set( PORT_TYPES_HEADER ${PORTS_DIRECTORY}/${IOT_PLATFORM_NAME}/include/iot_platf
 
 # Link POSIX threads and real-time library.
 set( PLATFORM_DEPENDENCIES ${PLATFORM_DEPENDENCIES} Threads::Threads rt )
+
+
+install(FILES ${PLATFORM_COMMON_HEADERS}
+        DESTINATION include/aws_iot/)
+
+install(FILES ${PORT_TYPES_HEADER}
+        DESTINATION include/aws_iot/)

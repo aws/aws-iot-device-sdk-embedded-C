@@ -109,6 +109,15 @@ install(FILES ${COMMON_PUBLIC_HEADERS}
 install(FILES ${COMMON_TYPES_HEADERS}
         DESTINATION include/aws_iot/)
 
+install(FILES ${PLATFORM_INTERFACE_HEADERS}
+        DESTINATION include/aws_iot/)
+
+install(FILES ${PLATFORM_TYPES_HEADER}
+        DESTINATION include/aws_iot/)
+
+install(FILES ${PLATFORM_COMMON_HEADERS}
+        DESTINATION include/aws_iot/)
+
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )
     # Common unit test sources.
