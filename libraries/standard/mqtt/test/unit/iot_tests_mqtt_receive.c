@@ -418,7 +418,10 @@ static void _publishCallback( void * pCallbackContext,
 
     /* Check that the parameters to this function are valid. */
     if( ( _IotMqtt_ValidatePublish( AWS_IOT_MQTT_SERVER,
-                                    &( pPublish->u.message.info ) ) == true ) &&
+                                    &( pPublish->u.message.info ),
+                                    0,
+                                    NULL,
+                                    NULL ) == true ) &&
         ( pPublish->u.message.info.topicNameLength == TEST_TOPIC_LENGTH ) &&
         ( strncmp( TEST_TOPIC_NAME, pPublish->u.message.info.pTopicName, TEST_TOPIC_LENGTH ) == 0 ) )
     {

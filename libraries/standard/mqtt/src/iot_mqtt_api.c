@@ -203,6 +203,23 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
                                            IotMqttOperation_t * const pOperationReference );
 
 /**
+ * @brief Set an operation reference if provided.
+ *
+ * @param[out] pOperationReference Operation reference provided by the application.
+ * @param[in] pNewOperation Operation to set.
+ */
+static void _setOperationReference( IotMqttOperation_t * const pOperationReference,
+                                    _mqttOperation_t * pNewOperation );
+
+/**
+ * @brief Wait for an MQTT operation to complete.
+ *
+ * See @ref mqtt_function_wait for a description of the parameters and return values.
+ */
+static IotMqttError_t _waitForOperation( IotMqttOperation_t operation,
+                                         uint32_t timeoutMs );
+
+/**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
  *
@@ -765,10 +782,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
     }
 
     /* Set the reference, if provided. */
-    if( pOperationReference != NULL )
-    {
-        *pOperationReference = pSubscriptionOperation;
-    }
+    _setOperationReference( pOperationReference, pSubscriptionOperation );
 
     /* Send the SUBSCRIBE packet. */
     if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
@@ -795,10 +809,7 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
             }
 
             /* Clear the previously set (and now invalid) reference. */
-            if( pOperationReference != NULL )
-            {
-                *pOperationReference = IOT_MQTT_OPERATION_INITIALIZER;
-            }
+            _setOperationReference( pOperationReference, IOT_MQTT_OPERATION_INITIALIZER );
 
             goto cleanup;
         }
@@ -822,6 +833,60 @@ cleanup:
                     mqttConnection,
                     IotMqtt_OperationType( operation ) );
     }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static void _setOperationReference( IotMqttOperation_t * const pOperationReference,
+                                    _mqttOperation_t * pNewOperation )
+{
+    if( pOperationReference != NULL )
+    {
+        *pOperationReference = pNewOperation;
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+static IotMqttError_t _waitForOperation( IotMqttOperation_t operation,
+                                         uint32_t timeoutMs )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+
+    if( IotSemaphore_TimedWait( &( operation->u.operation.notify.waitSemaphore ),
+                                timeoutMs ) == false )
+    {
+        status = IOT_MQTT_TIMEOUT;
+
+        /* Attempt to cancel the job of the timed out operation. */
+        ( void ) _IotMqtt_DecrementOperationReferences( operation, true );
+
+        /* Clean up lingering subscriptions from a timed-out SUBSCRIBE. */
+        if( operation->u.operation.type == IOT_MQTT_SUBSCRIBE )
+        {
+            IotLogDebug( "(MQTT connection %p, SUBSCRIBE operation %p) Cleaning up"
+                         " subscriptions of timed-out SUBSCRIBE.",
+                         operation->pMqttConnection,
+                         operation );
+
+            _IotMqtt_RemoveSubscriptionByPacket( operation->pMqttConnection,
+                                                 operation->u.operation.packetIdentifier,
+                                                 MQTT_REMOVE_ALL_SUBSCRIPTIONS );
+        }
+    }
+    else
+    {
+        /* Retrieve the status of the completed operation. */
+        status = operation->u.operation.status;
+    }
+
+    IotLogInfo( "(MQTT connection %p, %s operation %p) Wait complete with result %s.",
+                operation->pMqttConnection,
+                IotMqtt_OperationType( operation->u.operation.type ),
+                operation,
+                IotMqtt_strerror( status ) );
 
     return status;
 }
@@ -1468,48 +1533,14 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
         goto cleanup;
     }
 
-    /* Check that the PUBLISH information is valid. */
     if( _IotMqtt_ValidatePublish( mqttConnection->awsIotMqttMode,
-                                  pPublishInfo ) == false )
+                                  pPublishInfo,
+                                  flags,
+                                  pCallbackInfo,
+                                  pPublishOperation ) == false )
     {
         status = IOT_MQTT_BAD_PARAMETER;
         goto cleanup;
-    }
-
-    /* Check that no notification is requested for a QoS 0 publish. */
-    if( pPublishInfo->qos == IOT_MQTT_QOS_0 )
-    {
-        if( pCallbackInfo != NULL )
-        {
-            IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
-
-            status = IOT_MQTT_BAD_PARAMETER;
-            goto cleanup;
-        }
-        else if( ( flags & IOT_MQTT_FLAG_WAITABLE ) != 0 )
-        {
-            IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
-
-            status = IOT_MQTT_BAD_PARAMETER;
-            goto cleanup;
-        }
-
-        if( pPublishOperation != NULL )
-        {
-            IotLogWarn( "Ignoring reference parameter for QoS 0 publish." );
-        }
-    }
-
-    /* Check that a reference pointer is provided for a waitable operation. */
-    if( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
-    {
-        if( pPublishOperation == NULL )
-        {
-            IotLogError( "Reference must be provided for a waitable PUBLISH." );
-
-            status = IOT_MQTT_BAD_PARAMETER;
-            goto cleanup;
-        }
     }
 
     /* Create a PUBLISH operation. */
@@ -1563,10 +1594,7 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     /* Set the reference, if provided. */
     if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
     {
-        if( pPublishOperation != NULL )
-        {
-            *pPublishOperation = pOperation;
-        }
+        _setOperationReference( pPublishOperation, pOperation );
     }
 
     /* Send the PUBLISH packet. */
@@ -1588,10 +1616,7 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
             /* Clear the previously set (and now invalid) reference. */
             if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
             {
-                if( pPublishOperation != NULL )
-                {
-                    *pPublishOperation = IOT_MQTT_OPERATION_INITIALIZER;
-                }
+                _setOperationReference( pPublishOperation, IOT_MQTT_OPERATION_INITIALIZER );
             }
 
             goto cleanup;
@@ -1715,38 +1740,7 @@ IotMqttError_t IotMqtt_Wait( IotMqttOperation_t operation,
         /* Only wait on an operation if the MQTT connection is active. */
         if( status == IOT_MQTT_SUCCESS )
         {
-            if( IotSemaphore_TimedWait( &( operation->u.operation.notify.waitSemaphore ),
-                                        timeoutMs ) == false )
-            {
-                status = IOT_MQTT_TIMEOUT;
-
-                /* Attempt to cancel the job of the timed out operation. */
-                ( void ) _IotMqtt_DecrementOperationReferences( operation, true );
-
-                /* Clean up lingering subscriptions from a timed-out SUBSCRIBE. */
-                if( operation->u.operation.type == IOT_MQTT_SUBSCRIBE )
-                {
-                    IotLogDebug( "(MQTT connection %p, SUBSCRIBE operation %p) Cleaning up"
-                                 " subscriptions of timed-out SUBSCRIBE.",
-                                 pMqttConnection,
-                                 operation );
-
-                    _IotMqtt_RemoveSubscriptionByPacket( pMqttConnection,
-                                                         operation->u.operation.packetIdentifier,
-                                                         MQTT_REMOVE_ALL_SUBSCRIPTIONS );
-                }
-            }
-            else
-            {
-                /* Retrieve the status of the completed operation. */
-                status = operation->u.operation.status;
-            }
-
-            IotLogInfo( "(MQTT connection %p, %s operation %p) Wait complete with result %s.",
-                        pMqttConnection,
-                        IotMqtt_OperationType( operation->u.operation.type ),
-                        operation,
-                        IotMqtt_strerror( status ) );
+            status = _waitForOperation( operation, timeoutMs );
         }
 
         /* Wait is finished; decrement operation reference count. */
