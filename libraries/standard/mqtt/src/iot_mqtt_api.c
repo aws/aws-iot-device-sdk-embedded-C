@@ -212,19 +212,6 @@ static void _setOperationReference( IotMqttOperation_t * const pOperationReferen
                                     _mqttOperation_t * pNewOperation );
 
 /**
- * @brief Validate the arguments of @ref mqtt_function_publishasync.
- *
- * See @ref mqtt_function_publishasync for a description of the parameters.
- *
- * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_NOT_INITIALIZED, or #IOT_MQTT_BAD_PARAMETER.
- */
-static IotMqttError_t _checkPublishSetup( IotMqttConnection_t mqttConnection,
-                                          const IotMqttPublishInfo_t * pPublishInfo,
-                                          uint32_t flags,
-                                          const IotMqttCallbackInfo_t * pCallbackInfo,
-                                          IotMqttOperation_t * const pPublishOperation );
-
-/**
  * @brief Wait for an MQTT operation to complete.
  *
  * See @ref mqtt_function_wait for a description of the parameters and return values.
@@ -859,63 +846,6 @@ static void _setOperationReference( IotMqttOperation_t * const pOperationReferen
     {
         *pOperationReference = pNewOperation;
     }
-}
-
-/*-----------------------------------------------------------*/
-
-static IotMqttError_t _checkPublishSetup( IotMqttConnection_t mqttConnection,
-                                          const IotMqttPublishInfo_t * pPublishInfo,
-                                          uint32_t flags,
-                                          const IotMqttCallbackInfo_t * pCallbackInfo,
-                                          IotMqttOperation_t * const pPublishOperation )
-{
-    IotMqttError_t status = IOT_MQTT_SUCCESS;
-
-    /* Check that IotMqtt_Init was called. */
-    if( _checkInit() == false )
-    {
-        status = IOT_MQTT_NOT_INITIALIZED;
-    }
-    /* Check that the PUBLISH information is valid. */
-    else if( _IotMqtt_ValidatePublish( mqttConnection->awsIotMqttMode,
-                                       pPublishInfo ) == false )
-    {
-        status = IOT_MQTT_BAD_PARAMETER;
-    }
-    /* Check that no notification is requested for a QoS 0 publish. */
-    else if( pPublishInfo->qos == IOT_MQTT_QOS_0 )
-    {
-        if( pCallbackInfo != NULL )
-        {
-            IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
-
-            status = IOT_MQTT_BAD_PARAMETER;
-        }
-        else if( ( flags & IOT_MQTT_FLAG_WAITABLE ) != 0 )
-        {
-            IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
-
-            status = IOT_MQTT_BAD_PARAMETER;
-        }
-
-        if( pPublishOperation != NULL )
-        {
-            IotLogWarn( "Ignoring reference parameter for QoS 0 publish." );
-        }
-    }
-
-    /* Check that a reference pointer is provided for a waitable operation. */
-    if( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
-    {
-        if( pPublishOperation == NULL )
-        {
-            IotLogError( "Reference must be provided for a waitable PUBLISH." );
-
-            status = IOT_MQTT_BAD_PARAMETER;
-        }
-    }
-
-    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1596,14 +1526,20 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
     _mqttOperation_t * pOperation = NULL;
     uint8_t ** pPacketIdentifierHigh = NULL;
 
-    status = _checkPublishSetup( mqttConnection,
-                                 pPublishInfo,
-                                 flags,
-                                 pCallbackInfo,
-                                 pPublishOperation );
-
-    if( status != IOT_MQTT_SUCCESS )
+    /* Check that IotMqtt_Init was called. */
+    if( _checkInit() == false )
     {
+        status = IOT_MQTT_NOT_INITIALIZED;
+        goto cleanup;
+    }
+
+    if( _IotMqtt_ValidatePublish( mqttConnection->awsIotMqttMode,
+                                  pPublishInfo,
+                                  flags,
+                                  pCallbackInfo,
+                                  pPublishOperation ) == false )
+    {
+        status = IOT_MQTT_BAD_PARAMETER;
         goto cleanup;
     }
 

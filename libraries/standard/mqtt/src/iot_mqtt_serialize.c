@@ -106,6 +106,12 @@
  */
 #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
 
+/*
+ * The minimum remaining length for a QoS PUBLISH, including two bytes for
+ * topic name length and one byte for topic name.
+ */
+#define MQTT_MIN_PUBLISH_REMAINING_LENGTH_QOS0      ( 3 )
+
 /**
  * @brief The maximum possible size of a CONNECT packet.
  *
@@ -362,18 +368,17 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
 /**
  * @brief Check the remaining length against some value for QoS 0 or QoS 1/2.
  *
+ * The remaining length for a QoS 1/2 will always be two greater than for a QoS 0.
+ *
  * @param[in] pPublish Pointer to an MQTT packet struct representing a PUBLISH.
  * @param[in] qos The QoS of the PUBLISH.
  * @param[in] qos0Minimum Minimum possible remaining length for a QoS 0 PUBLISH.
- * @param[in] defaultMinimum Minimum possible remaining length for a QoS 1 or 2
- * PUBLISH.
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_BAD_RESPONSE.
  */
 static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
                                              IotMqttQos_t qos,
-                                             size_t qos0Minimum,
-                                             size_t defaultMinimum );
+                                             size_t qos0Minimum );
 
 /*-----------------------------------------------------------*/
 
@@ -1123,8 +1128,7 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
 
 static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
                                              IotMqttQos_t qos,
-                                             size_t qos0Minimum,
-                                             size_t defaultMinimum )
+                                             size_t qos0Minimum )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
@@ -1144,13 +1148,15 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
     }
     else
     {
-        /* Check that the "Remaining length" is greater than the minimum. */
-        if( pPublish->remainingLength < defaultMinimum )
+        /* Check that the "Remaining length" is greater than the minimum. For
+         * QoS 1 or 2, this will be two bytes greater than for QoS due to the
+         * packet identifier. */
+        if( pPublish->remainingLength < qos0Minimum + 2 )
         {
             IotLog( IOT_LOG_DEBUG,
                     &_logHideAll,
                     "QoS 1 or 2 PUBLISH cannot have a remaining length less than %lu.",
-                    defaultMinimum );
+                    qos0Minimum + 2 );
 
             status = IOT_MQTT_BAD_RESPONSE;
         }
@@ -1603,7 +1609,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
      * name (at least 1 byte). A QoS 1 or 2 PUBLISH must have a remaining length of
      * at least 5 for the packet identifier in addition to the topic name length and
      * topic name. */
-    status = _checkRemainingLength( pPublish, pOutput->qos, 3, 5 );
+    status = _checkRemainingLength( pPublish, pOutput->qos, MQTT_MIN_PUBLISH_REMAINING_LENGTH_QOS0 );
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -1618,8 +1624,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
      * length must be at least as large as the variable length header. */
     status = _checkRemainingLength( pPublish,
                                     pOutput->qos,
-                                    pOutput->topicNameLength + sizeof( uint16_t ),
-                                    pOutput->topicNameLength + 2 * sizeof( uint16_t ) );
+                                    pOutput->topicNameLength + sizeof( uint16_t ) );
 
     if( status != IOT_MQTT_SUCCESS )
     {
