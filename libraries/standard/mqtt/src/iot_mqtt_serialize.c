@@ -106,9 +106,10 @@
  */
 #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
 
-/*
- * The minimum remaining length for a QoS PUBLISH, including two bytes for
- * topic name length and one byte for topic name.
+/**
+ * @brief The minimum remaining length for a QoS PUBLISH.
+ *
+ * Includes two bytes for topic name length and one byte for topic name.
  */
 #define MQTT_MIN_PUBLISH_REMAINING_LENGTH_QOS0      ( 3 )
 
