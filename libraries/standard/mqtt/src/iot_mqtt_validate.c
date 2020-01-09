@@ -562,8 +562,12 @@ cleanup:
 /*-----------------------------------------------------------*/
 
 bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
-                               const IotMqttPublishInfo_t * pPublishInfo )
+                               const IotMqttPublishInfo_t * pPublishInfo,
+                               uint32_t flags,
+                               const IotMqttCallbackInfo_t * pCallbackInfo,
+                               IotMqttOperation_t * const pPublishOperation )
 {
+    bool status = true;
     size_t maximumPayloadLength = MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
 
     if( awsIotMqttMode == true )
@@ -571,10 +575,48 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
         maximumPayloadLength = AWS_IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
     }
 
-    return _validatePublish( awsIotMqttMode,
-                             maximumPayloadLength,
-                             "Publish",
-                             pPublishInfo );
+    status = _validatePublish( awsIotMqttMode,
+                               maximumPayloadLength,
+                               "Publish",
+                               pPublishInfo );
+
+    if( status == true )
+    {
+        /* Check that no notification is requested for a QoS 0 publish. */
+        if( pPublishInfo->qos == IOT_MQTT_QOS_0 )
+        {
+            if( pCallbackInfo != NULL )
+            {
+                IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
+
+                status = false;
+            }
+            else if( ( flags & IOT_MQTT_FLAG_WAITABLE ) != 0 )
+            {
+                IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
+
+                status = false;
+            }
+
+            if( pPublishOperation != NULL )
+            {
+                IotLogWarn( "Ignoring reference parameter for QoS 0 publish." );
+            }
+        }
+
+        /* Check that a reference pointer is provided for a waitable operation. */
+        if( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
+        {
+            if( pPublishOperation == NULL )
+            {
+                IotLogError( "Reference must be provided for a waitable PUBLISH." );
+
+                status = false;
+            }
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/

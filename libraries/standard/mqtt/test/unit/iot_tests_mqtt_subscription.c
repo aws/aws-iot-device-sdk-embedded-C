@@ -236,7 +236,10 @@ static void _publishCallback( void * pArgument,
     /* Ensure that publish info is valid. */
     TEST_ASSERT_EQUAL_INT( true,
                            _IotMqtt_ValidatePublish( AWS_IOT_MQTT_SERVER,
-                                                     &( pPublish->u.message.info ) ) );
+                                                     &( pPublish->u.message.info ),
+                                                     0,
+                                                     NULL,
+                                                     NULL ) );
 }
 
 /*-----------------------------------------------------------*/

@@ -464,16 +464,22 @@ typedef struct _mqttPacket
 bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo );
 
 /**
- * @brief Check that an #IotMqttPublishInfo_t is valid.
+ * @brief Check that parameters for an MQTT PUBLISH are valid.
  *
  * @param[in] awsIotMqttMode Specifies if this PUBLISH packet is being sent to
  * an AWS IoT MQTT server.
  * @param[in] pPublishInfo The #IotMqttPublishInfo_t to validate.
+ * @param[in] flags Behavior modification flags to validate. See @ref mqtt_constants_flags.
+ * @param[in] pCallbackInfo #IotMqttCallbackInfo_t to validate.
+ * @param[in] pPublishOperation Handle to a PUBLISH operation.
  *
- * @return `true` if `pPublishInfo` is valid; `false` otherwise.
+ * @return `true` if all parameters are valid; `false` otherwise.
  */
 bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
-                               const IotMqttPublishInfo_t * pPublishInfo );
+                               const IotMqttPublishInfo_t * pPublishInfo,
+                               uint32_t flags,
+                               const IotMqttCallbackInfo_t * pCallbackInfo,
+                               IotMqttOperation_t * const pPublishOperation );
 
 /**
  * @brief Check that an #IotMqttPublishInfo_t is valid for an LWT publish
