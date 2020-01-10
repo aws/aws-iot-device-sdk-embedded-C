@@ -565,8 +565,6 @@ static IotMqttError_t _getNextByte( void * pNetworkInterface,
     /* Send next byte */
     if( ( pNetworkInterface != NULL ) && ( nextByte != NULL ) )
     {
-        IotTest_Assert( nextByte != NULL );
-
         buffer = ( *( uint8_t ** ) pNetworkInterface );
         /*  read single byte */
         *nextByte = *buffer;
@@ -2280,12 +2278,12 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
     TEST_ASSERT_EQUAL_INT( 0x20, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 0x02, mqttPacket.remainingLength );
 
-    /* Test failures send NULL network interface */
+    /* Test with NULL network interface */
     status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, NULL );
     TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
 
     /* Test with incorrect packet type. */
-    buffer[ 0 ] = 0x10;  /* INVALID */
+    buffer[ 0 ] = 0x10; /* INVALID */
     status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, pNetworkInterface );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
 
