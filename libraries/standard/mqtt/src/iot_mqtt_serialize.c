@@ -1085,6 +1085,7 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
             case 0x00:
             case 0x01:
             case 0x02:
+                /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
                         &_logHideAll,
                         "Topic filter %lu accepted, max QoS %hhu.",
@@ -1092,6 +1093,7 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                 break;
 
             case 0x80:
+                /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
                         &_logHideAll,
                         "Topic filter %lu refused.", ( unsigned long ) i );

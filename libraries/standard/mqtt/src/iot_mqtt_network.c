@@ -276,6 +276,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
 
         if( pIncomingPacket->pRemainingData == NULL )
         {
+            /* coverity[misra_c_2012_directive_4_6_violation] */
             IotLogError( "(MQTT connection %p) Failed to allocate buffer of length "
                          "%lu for incoming packet type %lu.",
                          pMqttConnection,

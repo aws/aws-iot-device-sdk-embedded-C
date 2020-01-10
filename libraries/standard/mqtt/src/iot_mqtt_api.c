@@ -910,6 +910,8 @@ bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * pMqttConnection
     if( disconnected == false )
     {
         ( pMqttConnection->references )++;
+
+        /* coverity[misra_c_2012_directive_4_6_violation] */
         IotLogDebug( "(MQTT connection %p) Reference count changed from %ld to %ld.",
                      pMqttConnection,
                      ( long int ) pMqttConnection->references - 1,
@@ -938,6 +940,7 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
     ( pMqttConnection->references )--;
     IotMqtt_Assert( pMqttConnection->references >= 0 );
 
+    /* coverity[misra_c_2012_directive_4_6_violation] */
     IotLogDebug( "(MQTT connection %p) Reference count changed from %ld to %ld.",
                  pMqttConnection,
                  ( long int ) pMqttConnection->references + 1,
