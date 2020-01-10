@@ -1085,6 +1085,10 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
             case 0x00:
             case 0x01:
             case 0x02:
+                /* In some implementations IotLog() maps to C standard printing API 
+                 * that need specific primitive types for format specifiers. Also 
+                 * inttypes.h has the implication that it is not available on some C99 
+                 * compilers, despite stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
                         &_logHideAll,
@@ -1093,6 +1097,10 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                 break;
 
             case 0x80:
+                /* In some implementations IotLog() maps to C standard printing API 
+                 * that need specific primitive types for format specifiers. Also 
+                 * inttypes.h has the implication that it is not available on some C99 
+                 * compilers, despite stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
                         &_logHideAll,
