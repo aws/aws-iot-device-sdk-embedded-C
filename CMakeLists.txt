@@ -123,8 +123,12 @@ else()
     set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT iot_demo_mqtt )
 endif()
 
-# Install dependencies
+# Install config file and dependencies
 if( INSTALL_FUNC_FOUND )
+    set( PORT_TYPES_HEADER iot_platform_types_${IOT_PLATFORM_NAME}.h )
+    configure_file(iot_config.h.in ${CMAKE_BINARY_DIR}/iot_config.h)
+    InstallHeaders(${CMAKE_BINARY_DIR}/iot_config.h aws_iot)
+
     if( ${MBEDTLS_REQUIRED} )
         InstallBinary(mbedtls)
     endif()
