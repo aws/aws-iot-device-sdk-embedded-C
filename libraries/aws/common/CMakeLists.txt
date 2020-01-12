@@ -34,14 +34,13 @@ source_group( include FILES include/aws_iot.h include/aws_iotdoc_parser.h )
 source_group( src FILES ${AWS_IOT_COMMON_SOURCES} )
 
 # Install the library with public headers.
-install(TARGETS awsiotcommon
-        LIBRARY
-        DESTINATION lib
-        ARCHIVE
-        DESTINATION lib)
+include( ${PROJECT_SOURCE_DIR}/ports/install_${IOT_PLATFORM_NAME}/${IOT_PLATFORM_NAME}.cmake
+         OPTIONAL RESULT_VARIABLE INSTALL_FUNC_FOUND )
 
-install(FILES ${AWS_IOT_COMMON_PUBLIC_HEADERS}
-        DESTINATION include/aws_iot/)
+if ( INSTALL_FUNC_FOUND )
+    InstallBinary( awsiotcommon )
+    InstallHeaders( AWS_IOT_COMMON_PUBLIC_HEADERS aws_iot )
+endif()
 
 
 # Build the test executable if needed.

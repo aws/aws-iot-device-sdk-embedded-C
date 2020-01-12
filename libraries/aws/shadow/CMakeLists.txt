@@ -37,17 +37,14 @@ source_group( src\\private src/private/aws_iot_shadow_internal.h )
 source_group( src FILES ${SHADOW_SOURCES} )
 
 # Install the library with public headers.
-install(TARGETS awsiotshadow
-        LIBRARY
-        DESTINATION lib
-        ARCHIVE
-        DESTINATION lib)
+include( ${PROJECT_SOURCE_DIR}/ports/install_${IOT_PLATFORM_NAME}/${IOT_PLATFORM_NAME}.cmake
+        OPTIONAL RESULT_VARIABLE INSTALL_FUNC_FOUND )
 
-install(FILES include/aws_iot_shadow.h
-        DESTINATION include/aws_iot/)
-
-install(FILES include/types/aws_iot_shadow_types.h
-        DESTINATION include/aws_iot/types)
+if ( INSTALL_FUNC_FOUND )
+    InstallBinary( awsiotshadow )
+    InstallHeaders( include/aws_iot_shadow.h aws_iot )
+    InstallHeaders( include/types/aws_iot_shadow_types.h aws_iot/types )
+endif()
 
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )

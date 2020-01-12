@@ -29,14 +29,13 @@ source_group( include FILES
 source_group( src FILES ${SERIALIZER_SOURCES} )
 
 # Install the library with public headers.
-install(TARGETS iotserializer
-        LIBRARY
-        DESTINATION lib
-        ARCHIVE
-        DESTINATION lib)
+include( ${PROJECT_SOURCE_DIR}/ports/install_${IOT_PLATFORM_NAME}/${IOT_PLATFORM_NAME}.cmake
+        OPTIONAL RESULT_VARIABLE INSTALL_FUNC_FOUND )
 
-install(FILES include/iot_serializer.h
-        DESTINATION include/aws_iot/)
+if ( INSTALL_FUNC_FOUND )
+    InstallBinary( iotserializer )
+    InstallHeaders( include/iot_serializer.h aws_iot )
+endif()
 
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )

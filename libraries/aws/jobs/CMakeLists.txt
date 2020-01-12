@@ -37,17 +37,15 @@ source_group( src\\private src/private/aws_iot_jobs_internal.h )
 source_group( src FILES ${JOBS_SOURCES} )
 
 # Install the library with public headers.
-install(TARGETS awsiotjobs
-        LIBRARY
-        DESTINATION lib
-        ARCHIVE
-        DESTINATION lib)
+include( ${PROJECT_SOURCE_DIR}/ports/install_${IOT_PLATFORM_NAME}/${IOT_PLATFORM_NAME}.cmake
+        OPTIONAL RESULT_VARIABLE INSTALL_FUNC_FOUND )
 
-install(FILES include/aws_iot_jobs.h
-        DESTINATION include/aws_iot/)
+if ( INSTALL_FUNC_FOUND )
+    InstallBinary( awsiotjobs )
+    InstallHeaders( include/aws_iot_jobs.h aws_iot )
+    InstallHeaders( include/types/aws_iot_jobs_types.h aws_iot/types )
+endif()
 
-install(FILES include/types/aws_iot_jobs_types.h
-        DESTINATION include/aws_iot/types)
 
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )

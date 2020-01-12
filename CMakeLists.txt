@@ -64,6 +64,7 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/bin )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib )
 
+
 # Set the path to the config header.
 if( ${IOT_BUILD_TESTS} )
     set( CONFIG_HEADER_PATH ${PROJECT_SOURCE_DIR}/tests )
@@ -75,6 +76,12 @@ endif()
 # Build Unity test framework when building tests.
 if( ${IOT_BUILD_TESTS} )
     add_subdirectory( third_party/unity )
+endif()
+
+include( ${PROJECT_SOURCE_DIR}/ports/install_${IOT_PLATFORM_NAME}/${IOT_PLATFORM_NAME}.cmake
+        OPTIONAL RESULT_VARIABLE INSTALL_FUNC_FOUND )
+if( INSTALL_FUNC_FOUND )
+    PrepareRPATH()
 endif()
 
 # Build the demos.
@@ -114,4 +121,12 @@ if( ${IOT_BUILD_TESTS} )
     set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT iot_tests_mqtt )
 else()
     set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT iot_demo_mqtt )
+endif()
+
+# Install dependencies
+if( INSTALL_FUNC_FOUND )
+    if( ${MBEDTLS_REQUIRED} )
+        InstallBinary(mbedtls)
+    endif()
+    InstallBinary(tinycbor)
 endif()

@@ -97,26 +97,17 @@ source_group( platform\\include\\types FILES ${PLATFORM_TYPES_HEADER} ${PORT_TYP
 source_group( platform\\src FILES ${PLATFORM_SOURCES} )
 
 # Install the library with public headers.
-install(TARGETS iotbase
-        LIBRARY
-        DESTINATION lib
-        ARCHIVE
-        DESTINATION lib)
+include( ${PROJECT_SOURCE_DIR}/ports/install_${IOT_PLATFORM_NAME}/${IOT_PLATFORM_NAME}.cmake
+        OPTIONAL RESULT_VARIABLE INSTALL_FUNC_FOUND )
 
-install(FILES ${COMMON_PUBLIC_HEADERS}
-        DESTINATION include/aws_iot/)
-
-install(FILES ${COMMON_TYPES_HEADERS}
-        DESTINATION include/aws_iot/types)
-
-install(FILES ${PLATFORM_INTERFACE_HEADERS}
-        DESTINATION include/aws_iot/platform)
-
-install(FILES ${PLATFORM_TYPES_HEADER}
-        DESTINATION include/aws_iot/types)
-
-install(FILES ${PLATFORM_COMMON_HEADERS}
-        DESTINATION include/aws_iot/platform)
+if ( INSTALL_FUNC_FOUND )
+    InstallBinary( iotbase )
+    InstallHeaders( COMMON_PUBLIC_HEADERS aws_iot )
+    InstallHeaders( COMMON_TYPES_HEADERS aws_iot/types )
+    InstallHeaders( PLATFORM_INTERFACE_HEADERS aws_iot/platform )
+    InstallHeaders( PLATFORM_TYPES_HEADER aws_iot/types  )
+    InstallHeaders( PLATFORM_COMMON_HEADERS aws_iot/platform )
+endif()
 
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )

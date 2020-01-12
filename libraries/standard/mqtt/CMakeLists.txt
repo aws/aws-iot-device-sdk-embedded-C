@@ -44,17 +44,14 @@ source_group( src FILES ${MQTT_SOURCES} )
 source_group( src\\private FILES src/private/iot_mqtt_internal.h )
 
 # Install the library with public headers.
-install(TARGETS iotmqtt
-        LIBRARY
-        DESTINATION lib
-        ARCHIVE
-        DESTINATION lib)
+include( ${PROJECT_SOURCE_DIR}/ports/install_${IOT_PLATFORM_NAME}/${IOT_PLATFORM_NAME}.cmake
+        OPTIONAL RESULT_VARIABLE INSTALL_FUNC_FOUND )
 
-install(FILES ${MQTT_PUBLIC_HEADERS}
-        DESTINATION include/aws_iot/)
-
-install(FILES ${MQTT_TYPES_HEADERS}
-        DESTINATION include/aws_iot/types)
+if ( INSTALL_FUNC_FOUND )
+    InstallBinary( iotmqtt )
+    InstallHeaders( MQTT_PUBLIC_HEADERS aws_iot )
+    InstallHeaders( MQTT_TYPES_HEADERS aws_iot/types )
+endif()
 
 # Build the test executable if needed.
 if( ${IOT_BUILD_TESTS} )
