@@ -256,25 +256,24 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
                      pIncomingPacket->type );
 
         status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
     }
 
-    /* Read the remaining length. */
-    pIncomingPacket->remainingLength = _getRemainingLengthFunc( pMqttConnection->pSerializer )( pNetworkConnection,
-                                                                                                pMqttConnection->pNetworkInterface );
-
-    if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+    if( status == IOT_MQTT_SUCCESS )
     {
-        status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
+        /* Read the remaining length. */
+        pIncomingPacket->remainingLength = _getRemainingLengthFunc( pMqttConnection->pSerializer )( pNetworkConnection,
+                                                                                                    pMqttConnection->pNetworkInterface );
+
+        if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+        {
+            status = IOT_MQTT_BAD_RESPONSE;
+        }
     }
 
-    /* Allocate a buffer for the remaining data and read the data. */
-    if( pIncomingPacket->remainingLength > 0 )
+    if( status == IOT_MQTT_SUCCESS )
     {
-        pIncomingPacket->pRemainingData = IotMqtt_MallocMessage( pIncomingPacket->remainingLength );
-
-        if( pIncomingPacket->pRemainingData == NULL )
+        /* Allocate a buffer for the remaining data and read the data. */
+        if( pIncomingPacket->remainingLength > 0 )
         {
             /* In some implementations IotLog() maps to C standard printing API 
              * that need specific primitive types for format specifiers. Also,
@@ -286,27 +285,37 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
                          pMqttConnection,
                          ( unsigned long ) pIncomingPacket->remainingLength,
                          ( unsigned long ) pIncomingPacket->type );
+                         
+            pIncomingPacket->pRemainingData = IotMqtt_MallocMessage( pIncomingPacket->remainingLength );
 
-            _flushPacket( pNetworkConnection, pMqttConnection, pIncomingPacket->remainingLength );
+            if( pIncomingPacket->pRemainingData == NULL )
+            {
+                IotLogError( "(MQTT connection %p) Failed to allocate buffer of length "
+                             "%lu for incoming packet type %lu.",
+                             pMqttConnection,
+                             ( unsigned long ) pIncomingPacket->remainingLength,
+                             ( unsigned long ) pIncomingPacket->type );
 
-            status = IOT_MQTT_NO_MEMORY;
-            goto cleanup;
-        }
+                _flushPacket( pNetworkConnection, pMqttConnection, pIncomingPacket->remainingLength );
 
-        dataBytesRead = pMqttConnection->pNetworkInterface->receive( pNetworkConnection,
-                                                                     pIncomingPacket->pRemainingData,
-                                                                     pIncomingPacket->remainingLength );
+                status = IOT_MQTT_NO_MEMORY;
+            }
 
-        if( dataBytesRead != pIncomingPacket->remainingLength )
-        {
-            status = IOT_MQTT_BAD_RESPONSE;
-            goto cleanup;
+            if( status == IOT_MQTT_SUCCESS )
+            {
+                dataBytesRead = pMqttConnection->pNetworkInterface->receive( pNetworkConnection,
+                                                                             pIncomingPacket->pRemainingData,
+                                                                             pIncomingPacket->remainingLength );
+
+                if( dataBytesRead != pIncomingPacket->remainingLength )
+                {
+                    status = IOT_MQTT_BAD_RESPONSE;
+                }
+            }
         }
     }
 
     /* Clean up on error. */
-cleanup:
-
     if( status != IOT_MQTT_SUCCESS )
     {
         if( pIncomingPacket->pRemainingData != NULL )
@@ -359,8 +368,6 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
     {
         IotLogWarn( "Failed to allocate memory for incoming PUBLISH." );
         status = IOT_MQTT_NO_MEMORY;
-
-        goto cleanup;
     }
     else
     {
@@ -369,10 +376,9 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
         pOperation->incomingPublish = true;
         pOperation->pMqttConnection = pMqttConnection;
         pIncomingPacket->u.pIncomingPublish = pOperation;
+        /* Deserialize incoming PUBLISH. */
+        status = _getPublishDeserializer( pMqttConnection->pSerializer )( pIncomingPacket );
     }
-
-    /* Deserialize incoming PUBLISH. */
-    status = _getPublishDeserializer( pMqttConnection->pSerializer )( pIncomingPacket );
 
     if( status == IOT_MQTT_SUCCESS )
     {
@@ -445,8 +451,6 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
         IotMqtt_Assert( pOperation != NULL );
         IotMqtt_FreeOperation( pOperation );
     }
-
-cleanup:
 
     return status;
 }
@@ -610,39 +614,30 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
                                        NULL,
                                        &pPubackOperation );
 
-    if( status != IOT_MQTT_SUCCESS )
+    if( status == IOT_MQTT_SUCCESS )
     {
-        goto cleanup;
+        /* Set the operation type. */
+        pPubackOperation->u.operation.type = IOT_MQTT_PUBACK;
+
+        /* Generate a PUBACK packet from the packet identifier. */
+        status = _getMqttPubackSerializer( pMqttConnection->pSerializer )( packetIdentifier,
+                                                                           &( pPubackOperation->u.operation.pMqttPacket ),
+                                                                           &( pPubackOperation->u.operation.packetSize ) );
+
+        if( status == IOT_MQTT_SUCCESS )
+        {
+            /* Add the PUBACK operation to the send queue for network transmission. */
+            status = _IotMqtt_ScheduleOperation( pPubackOperation,
+                                                 _IotMqtt_ProcessSend,
+                                                 0 );
+
+            if( status != IOT_MQTT_SUCCESS )
+            {
+                IotLogError( "(MQTT connection %p) Failed to enqueue PUBACK for sending.",
+                             pMqttConnection );
+            }
+        }
     }
-
-    /* Set the operation type. */
-    pPubackOperation->u.operation.type = IOT_MQTT_PUBACK;
-
-    /* Generate a PUBACK packet from the packet identifier. */
-    status = _getMqttPubackSerializer( pMqttConnection->pSerializer )( packetIdentifier,
-                                                                       &( pPubackOperation->u.operation.pMqttPacket ),
-                                                                       &( pPubackOperation->u.operation.packetSize ) );
-
-    if( status != IOT_MQTT_SUCCESS )
-    {
-        goto cleanup;
-    }
-
-    /* Add the PUBACK operation to the send queue for network transmission. */
-    status = _IotMqtt_ScheduleOperation( pPubackOperation,
-                                         _IotMqtt_ProcessSend,
-                                         0 );
-
-    if( status != IOT_MQTT_SUCCESS )
-    {
-        IotLogError( "(MQTT connection %p) Failed to enqueue PUBACK for sending.",
-                     pMqttConnection );
-
-        goto cleanup;
-    }
-
-    /* Clean up on error. */
-cleanup:
 
     if( status != IOT_MQTT_SUCCESS )
     {

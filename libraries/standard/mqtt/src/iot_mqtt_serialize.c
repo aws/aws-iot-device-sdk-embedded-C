@@ -47,7 +47,7 @@
  * Macros for reading the high and low byte of a 2-byte unsigned int.
  */
 #define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( x >> 8 ) )            /**< @brief Get high byte. */
-#define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( x & 0x00ffU ) )        /**< @brief Get low byte. */
+#define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( x & 0x00ffU ) )       /**< @brief Get low byte. */
 
 /**
  * @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
@@ -124,7 +124,7 @@
 /*
  * Constants relating to CONNACK packets, defined by MQTT 3.1.1 spec.
  */
-#define MQTT_PACKET_CONNACK_REMAINING_LENGTH        ( ( uint8_t ) 2 )    /**< @brief A CONNACK packet always has a "Remaining length" of 2. */
+#define MQTT_PACKET_CONNACK_REMAINING_LENGTH        ( ( uint8_t ) 2 )     /**< @brief A CONNACK packet always has a "Remaining length" of 2. */
 #define MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK    ( ( uint8_t ) 0x01U ) /**< @brief The "Session Present" bit is always the lowest bit. */
 
 /*
@@ -2562,57 +2562,53 @@ IotMqttError_t IotMqtt_DeserializeResponse( IotMqttPacketInfo_t * pMqttPacket )
     {
         IotLogError( "IotMqtt_DeserializeResponse() called with NULL pMqttPacket pointer or NULL pRemainingLength." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
 
-    /* Set internal mqtt packet parameters. */
-    memset( ( void * ) &mqttPacket, 0x00, sizeof( _mqttPacket_t ) );
-
-    mqttPacket.pRemainingData = pMqttPacket->pRemainingData;
-    mqttPacket.remainingLength = pMqttPacket->remainingLength;
-    mqttPacket.type = pMqttPacket->type;
-
-    /* Call internal deserialize */
-    switch( pMqttPacket->type & 0xf0U )
+    if( status == IOT_MQTT_SUCCESS )
     {
-        case MQTT_PACKET_TYPE_CONNACK:
-            status = _IotMqtt_DeserializeConnack( &mqttPacket );
-            break;
+        /* Set internal mqtt packet parameters. */
+        memset( ( void * ) &mqttPacket, 0x00, sizeof( _mqttPacket_t ) );
 
-        case MQTT_PACKET_TYPE_PUBACK:
-            status = _IotMqtt_DeserializePuback( &mqttPacket );
-            break;
+        mqttPacket.pRemainingData = pMqttPacket->pRemainingData;
+        mqttPacket.remainingLength = pMqttPacket->remainingLength;
+        mqttPacket.type = pMqttPacket->type;
 
-        case MQTT_PACKET_TYPE_SUBACK:
-            status = _IotMqtt_DeserializeSuback( &mqttPacket );
-            break;
+        /* Call internal deserialize */
+        switch( pMqttPacket->type & 0xf0U )
+        {
+            case MQTT_PACKET_TYPE_CONNACK:
+                status = _IotMqtt_DeserializeConnack( &mqttPacket );
+                break;
 
-        case MQTT_PACKET_TYPE_UNSUBACK:
-            status = _IotMqtt_DeserializeUnsuback( &mqttPacket );
-            break;
+            case MQTT_PACKET_TYPE_PUBACK:
+                status = _IotMqtt_DeserializePuback( &mqttPacket );
+                break;
 
-        case MQTT_PACKET_TYPE_PINGRESP:
-            status = _IotMqtt_DeserializePingresp( &mqttPacket );
-            break;
+            case MQTT_PACKET_TYPE_SUBACK:
+                status = _IotMqtt_DeserializeSuback( &mqttPacket );
+                break;
 
-        /* Any other packet type is invalid. */
-        default:
-            IotLogError( "IotMqtt_DeserializeResponse() called with unknown packet type:(%lu).", pMqttPacket->type );
-            status = IOT_MQTT_BAD_PARAMETER;
-            goto cleanup;
+            case MQTT_PACKET_TYPE_UNSUBACK:
+                status = _IotMqtt_DeserializeUnsuback( &mqttPacket );
+                break;
+
+            case MQTT_PACKET_TYPE_PINGRESP:
+                status = _IotMqtt_DeserializePingresp( &mqttPacket );
+                break;
+
+            /* Any other packet type is invalid. */
+            default:
+                IotLogError( "IotMqtt_DeserializeResponse() called with unknown packet type:(%lu).", pMqttPacket->type );
+                status = IOT_MQTT_BAD_PARAMETER;
+                break;
+        }
     }
 
-    if( status != IOT_MQTT_SUCCESS )
-    {
-        goto cleanup;
-    }
-    else
+    if( status == IOT_MQTT_SUCCESS )
     {
         /* Set packetIdentifier only if success is returned. */
         pMqttPacket->packetIdentifier = mqttPacket.packetIdentifier;
     }
-
-cleanup:
 
     return status;
 }

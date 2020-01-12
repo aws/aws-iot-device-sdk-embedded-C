@@ -2290,6 +2290,8 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
     /* Test with invalid remaining length. */
     buffer[ 0 ] = 0x20; /* CONN ACK */
     buffer[ 1 ] = 0xFF; /* Remaining length. */
+    buffer[ 2 ] = 0xFF; 
+    buffer[ 3 ] = 0xFF; 
     status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, pNetworkInterface );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
 }
