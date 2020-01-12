@@ -95,4 +95,13 @@ foreach( i RANGE ${DEMO_COUNT} )
     source_group( include FILES ${DEMO_COMMON_HEADERS} )
     source_group( src FILES ${CURRENT_DEMO_SOURCE} )
     source_group( "" FILES ${CONFIG_HEADER} )
+
+    # Install the binaries.
+    include( ${PROJECT_SOURCE_DIR}/ports/install_${IOT_PLATFORM_NAME}/${IOT_PLATFORM_NAME}.cmake
+            OPTIONAL RESULT_VARIABLE INSTALL_FUNC_FOUND )
+
+    if ( INSTALL_FUNC_FOUND )
+        InstallBinary( ${DEMO_EXE_NAME} )
+    endif()
+
 endforeach()
