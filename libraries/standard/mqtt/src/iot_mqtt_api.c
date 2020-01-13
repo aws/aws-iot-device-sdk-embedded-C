@@ -913,7 +913,7 @@ bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * pMqttConnection
 
         /* In some implementations IotLog() maps to C standard printing API 
          * that need specific primitive types for format specifiers. Also, 
-         * inttypes.h has may not available on some C99 compilers, despite 
+         * inttypes.h may not be available on some C99 compilers, despite 
          * stdint.h being available. */
         /* coverity[misra_c_2012_directive_4_6_violation] */
         IotLogDebug( "(MQTT connection %p) Reference count changed from %ld to %ld.",
@@ -946,7 +946,7 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
 
     /* In some implementations IotLog() maps to C standard printing API 
      * that need specific primitive types for format specifiers. Also, 
-     * inttypes.h may not available on some C99 compilers, despite stdint.h 
+     * inttypes.h may not be available on some C99 compilers, despite stdint.h 
      * being available. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     IotLogDebug( "(MQTT connection %p) Reference count changed from %ld to %ld.",
