@@ -55,6 +55,7 @@ int
 iot
 iotlink
 iotlistdouble
+iotlog
 iotmqtt
 iotmqttcallbackinfo
 iotmqttconnectinfo

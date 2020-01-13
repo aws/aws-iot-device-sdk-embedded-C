@@ -278,8 +278,8 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
         {
             /* In some implementations IotLog() maps to C standard printing API 
              * that need specific primitive types for format specifiers. Also,
-             * inttypes.h has the implication that it is not available on some C99 
-             * compilers, despite stdint.h being available. */
+             * inttypes.h may not available on some C99 compilers, despite stdint.h 
+             * being available. */
             /* coverity[misra_c_2012_directive_4_6_violation] */
             IotLogError( "(MQTT connection %p) Failed to allocate buffer of length "
                          "%lu for incoming packet type %lu.",
