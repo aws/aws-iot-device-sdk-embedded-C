@@ -1314,32 +1314,33 @@ IotMqttError_t _IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectI
                      MQTT_PACKET_CONNECT_MAX_SIZE );
 
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
 
-    /* Total size of the connect packet should be larger than the "Remaining length"
-     * field. */
-    IotMqtt_Assert( connectPacketSize > remainingLength );
-
-    /* Allocate memory to hold the CONNECT packet. */
-    pBuffer = IotMqtt_MallocMessage( connectPacketSize );
-
-    /* Check that sufficient memory was allocated. */
-    if( pBuffer == NULL )
+    if( status == IOT_MQTT_SUCCESS )
     {
-        IotLogError( "Failed to allocate memory for CONNECT packet." );
+        /* Total size of the connect packet should be larger than the "Remaining length"
+         * field. */
+        IotMqtt_Assert( connectPacketSize > remainingLength );
 
-        status = IOT_MQTT_NO_MEMORY;
-        goto cleanup;
+        /* Allocate memory to hold the CONNECT packet. */
+        pBuffer = IotMqtt_MallocMessage( connectPacketSize );
+
+        /* Check that sufficient memory was allocated. */
+        if( pBuffer == NULL )
+        {
+            IotLogError( "Failed to allocate memory for CONNECT packet." );
+
+            status = IOT_MQTT_NO_MEMORY;
+        }
+        else
+        {
+            /* Set the output parameters. The remainder of this function always succeeds. */
+            *pConnectPacket = pBuffer;
+            *pPacketSize = connectPacketSize;
+
+            _serializeConnect( pConnectInfo, remainingLength, pBuffer, connectPacketSize );
+        }
     }
-
-    /* Set the output parameters. The remainder of this function always succeeds. */
-    *pConnectPacket = pBuffer;
-    *pPacketSize = connectPacketSize;
-
-    _serializeConnect( pConnectInfo, remainingLength, pBuffer, connectPacketSize );
-
-cleanup:
 
     return status;
 }
@@ -1480,38 +1481,39 @@ IotMqttError_t _IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishI
                      MQTT_MAX_REMAINING_LENGTH );
 
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
 
-    /* Total size of the publish packet should be larger than the "Remaining length"
-     * field. */
-    IotMqtt_Assert( publishPacketSize > remainingLength );
-
-    /* Allocate memory to hold the PUBLISH packet. */
-    pBuffer = IotMqtt_MallocMessage( publishPacketSize );
-
-    /* Check that sufficient memory was allocated. */
-    if( pBuffer == NULL )
+    if( status == IOT_MQTT_SUCCESS )
     {
-        IotLogError( "Failed to allocate memory for PUBLISH packet." );
+        /* Total size of the publish packet should be larger than the "Remaining length"
+         * field. */
+        IotMqtt_Assert( publishPacketSize > remainingLength );
 
-        status = IOT_MQTT_NO_MEMORY;
-        goto cleanup;
+        /* Allocate memory to hold the PUBLISH packet. */
+        pBuffer = IotMqtt_MallocMessage( publishPacketSize );
+
+        /* Check that sufficient memory was allocated. */
+        if( pBuffer == NULL )
+        {
+            IotLogError( "Failed to allocate memory for PUBLISH packet." );
+
+            status = IOT_MQTT_NO_MEMORY;
+        }
+        else
+        {
+            /* Set the output parameters. The remainder of this function always succeeds. */
+            *pPublishPacket = pBuffer;
+            *pPacketSize = publishPacketSize;
+
+            /* Serialize publish into buffer pointed to by pBuffer */
+            _serializePublish( pPublishInfo,
+                               remainingLength,
+                               pPacketIdentifier,
+                               pPacketIdentifierHigh,
+                               pBuffer,
+                               publishPacketSize );
+        }
     }
-
-    /* Set the output parameters. The remainder of this function always succeeds. */
-    *pPublishPacket = pBuffer;
-    *pPacketSize = publishPacketSize;
-
-    /* Serialize publish into buffer pointed to by pBuffer */
-    _serializePublish( pPublishInfo,
-                       remainingLength,
-                       pPacketIdentifier,
-                       pPacketIdentifierHigh,
-                       pBuffer,
-                       publishPacketSize );
-
-cleanup:
 
     return status;
 }
