@@ -110,15 +110,6 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation );
 static bool _scheduleNextRetry( _mqttOperation_t * pOperation );
 
 /**
- * @brief Send a PINGREQ packet for a keep-alive operation.
- *
- * @param[in] pMqttConnection The associated MQTT connection.
- *
- * @return `true` if the operation was successful; `false` otherwise.
- */
-static bool _sendPingReq( _mqttConnection_t * pMqttConnection );
-
-/**
  * @brief Schedule a callback for a completed MQTT operation.
  *
  * @param[in] pOperation The completed MQTT operation.
@@ -328,48 +319,6 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
     }
 
     return( status == IOT_MQTT_SUCCESS );
-}
-
-/*-----------------------------------------------------------*/
-
-static bool _sendPingReq( _mqttConnection_t * pMqttConnection )
-{
-    bool status = true;
-    uint32_t swapStatus = 0;
-    size_t bytesSent = 0;
-    _mqttOperation_t * pPingreqOperation = &( pMqttConnection->pingreq );
-
-    /* Swap status is not checked when asserts are disabled. */
-    ( void ) swapStatus;
-
-    /* Because PINGREQ may be used to keep the MQTT connection alive, it is
-     * more important than other operations. Bypass the queue of jobs for
-     * operations by directly sending the PINGREQ in this job. */
-    bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
-                                                          pPingreqOperation->u.operation.pMqttPacket,
-                                                          pPingreqOperation->u.operation.packetSize );
-
-    if( bytesSent != pPingreqOperation->u.operation.packetSize )
-    {
-        IotLogError( "(MQTT connection %p) Failed to send PINGREQ.", pMqttConnection );
-        status = false;
-    }
-    else
-    {
-        /* Assume the keep-alive will fail. The network receive callback will
-         * clear the failure flag upon receiving a PINGRESP. */
-        swapStatus = Atomic_CompareAndSwap_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ),
-                                                1,
-                                                0 );
-        IotMqtt_Assert( swapStatus == 1 );
-
-        /* Set the period for scheduling a PINGRESP check. */
-        pPingreqOperation->u.operation.periodic.ping.nextPeriodMs = IOT_MQTT_RESPONSE_WAIT_MS;
-
-        IotLogDebug( "(MQTT connection %p) PINGREQ sent.", pMqttConnection );
-    }
-
-    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -750,7 +699,12 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
                                 void * pContext )
 {
     bool status = true;
+    uint32_t swapStatus = 0;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
+    size_t bytesSent = 0;
+
+    /* Swap status is not checked when asserts are disabled. */
+    ( void ) swapStatus;
 
     /* Retrieve the MQTT connection from the context. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
@@ -777,7 +731,34 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     {
         IotLogDebug( "(MQTT connection %p) Sending PINGREQ.", pMqttConnection );
 
-        status = _sendPingReq( pMqttConnection );
+        /* Because PINGREQ may be used to keep the MQTT connection alive, it is
+         * more important than other operations. Bypass the queue of jobs for
+         * operations by directly sending the PINGREQ in this job. */
+        bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
+                                                              pPingreqOperation->u.operation.pMqttPacket,
+                                                              pPingreqOperation->u.operation.packetSize );
+
+        if( bytesSent != pPingreqOperation->u.operation.packetSize )
+        {
+            IotLogError( "(MQTT connection %p) Failed to send PINGREQ.", pMqttConnection );
+            status = false;
+        }
+        else
+        {
+            /* Assume the keep-alive will fail. The network receive callback will
+             * clear the failure flag upon receiving a PINGRESP. */
+            swapStatus = Atomic_CompareAndSwap_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ),
+                                                    1,
+                                                    0 );
+            IotMqtt_Assert( swapStatus == 1 );
+
+            /* Set the period for scheduling a PINGRESP check. */
+            pPingreqOperation->u.operation.periodic.ping.nextPeriodMs = IOT_MQTT_RESPONSE_WAIT_MS;
+
+            IotLogDebug( "(MQTT connection %p) PINGREQ sent. Scheduling check for PINGRESP in %d ms.",
+                         pMqttConnection,
+                         IOT_MQTT_RESPONSE_WAIT_MS );
+        }
     }
     else
     {
