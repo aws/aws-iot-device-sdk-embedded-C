@@ -270,6 +270,11 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
             pOperation->u.operation.periodic.retry.nextPeriodMs = IOT_MQTT_RETRY_MS_CEILING;
         }
 
+        /* In some implementations IotLog() maps to C standard printing API 
+         * that need specific primitive types for format specifiers. Also 
+         * inttypes.h may not be available on some C99 compilers, despite 
+         * stdint.h being available. */
+        /* coverity[misra_c_2012_directive_4_6_violation] */
         IotLogDebug( "(MQTT connection %p, PUBLISH operation %p) Scheduling retry %lu of %lu in %lu ms.",
                      pMqttConnection,
                      pOperation,
@@ -587,6 +592,11 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
         pOperation->u.operation.jobReference--;
 
+        /* In some implementations IotLog() maps to C standard printing API 
+         * that need specific primitive types for format specifiers. Also 
+         * inttypes.h may not be available on some C99 compilers, despite 
+         * stdint.h being available. */
+        /* coverity[misra_c_2012_directive_4_6_violation] */
         IotLogDebug( "(MQTT connection %p, %s operation %p) Job reference changed"
                      " from %ld to %ld.",
                      pMqttConnection,
@@ -802,6 +812,11 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
 
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
+            /* In some implementations IotLog() maps to a C standard printing API 
+             * that need specific primitive types for format specifiers. Also,
+             * inttypes.h may not be available on some C99 compilers, despite 
+             * stdint.h being available. */
+            /* coverity[misra_c_2012_directive_4_6_violation] */
             IotLogDebug( "(MQTT connection %p) Next keep-alive job in %lu ms.",
                          pMqttConnection,
                          ( unsigned long ) pPingreqOperation->u.operation.periodic.ping.nextPeriodMs );
@@ -1107,6 +1122,11 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
             {
                 ( pResult->u.operation.jobReference )++;
 
+                /* In some implementations IotLog() maps to C standard printing API 
+                 * that need specific primitive types for format specifiers. Also 
+                 * inttypes.h may not be available on some C99 compilers, despite 
+                 * stdint.h being available. */
+                /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLogDebug( "(MQTT connection %p, %s operation %p) Job reference changed from %ld to %ld.",
                              pMqttConnection,
                              IotMqtt_OperationType( type ),
