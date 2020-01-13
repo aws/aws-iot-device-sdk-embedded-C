@@ -421,25 +421,23 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
                 status = IOT_MQTT_NO_MEMORY;
                 break;
             }
-            else
-            {
-                /* Clear the new subscription. */
-                ( void ) memset( pNewSubscription,
-                                 0x00,
-                                 sizeof( _mqttSubscription_t ) + pSubscriptionList[ i ].topicFilterLength );
 
-                /* Set the members of the new subscription and add it to the list. */
-                pNewSubscription->packetInfo.identifier = subscribePacketIdentifier;
-                pNewSubscription->packetInfo.order = i;
-                pNewSubscription->callback = pSubscriptionList[ i ].callback;
-                pNewSubscription->topicFilterLength = pSubscriptionList[ i ].topicFilterLength;
-                ( void ) memcpy( pNewSubscription->pTopicFilter,
-                                 pSubscriptionList[ i ].pTopicFilter,
-                                 ( size_t ) ( pSubscriptionList[ i ].topicFilterLength ) );
+            /* Clear the new subscription. */
+            ( void ) memset( pNewSubscription,
+                             0x00,
+                             sizeof( _mqttSubscription_t ) + pSubscriptionList[ i ].topicFilterLength );
 
-                IotListDouble_InsertHead( &( pMqttConnection->subscriptionList ),
-                                          &( pNewSubscription->link ) );
-            }
+            /* Set the members of the new subscription and add it to the list. */
+            pNewSubscription->packetInfo.identifier = subscribePacketIdentifier;
+            pNewSubscription->packetInfo.order = i;
+            pNewSubscription->callback = pSubscriptionList[ i ].callback;
+            pNewSubscription->topicFilterLength = pSubscriptionList[ i ].topicFilterLength;
+            ( void ) memcpy( pNewSubscription->pTopicFilter,
+                             pSubscriptionList[ i ].pTopicFilter,
+                             ( size_t ) ( pSubscriptionList[ i ].topicFilterLength ) );
+
+            IotListDouble_InsertHead( &( pMqttConnection->subscriptionList ),
+                                      &( pNewSubscription->link ) );
         }
     }
 
