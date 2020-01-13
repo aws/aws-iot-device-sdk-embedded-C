@@ -559,18 +559,24 @@ static IotMqttError_t _getNextByte( void * pNetworkInterface,
                                     uint8_t * nextByte )
 {
     uint8_t * buffer;
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
 
     /* Treat network interface as pointer to buffer for mocking  */
     /* Send next byte */
-    IotTest_Assert( pNetworkInterface != NULL );
-    IotTest_Assert( nextByte != NULL );
+    if( ( pNetworkInterface != NULL ) && ( nextByte != NULL ) )
+    {
+        buffer = ( *( uint8_t ** ) pNetworkInterface );
+        /*  read single byte */
+        *nextByte = *buffer;
+        /* Move stream by 1 byte */
+        ( *( uint8_t ** ) pNetworkInterface ) = ++buffer;
+    }
+    else
+    {
+        status = IOT_MQTT_NETWORK_ERROR;
+    }
 
-    buffer = ( *( uint8_t ** ) pNetworkInterface );
-    /*  read single byte */
-    *nextByte = *buffer;
-    /* Move stream by 1 byte */
-    ( *( uint8_t ** ) pNetworkInterface ) = ++buffer;
-    return IOT_MQTT_SUCCESS;
+    return status;
 }
 
 /*-----------------------------------------------------------*/
@@ -1152,6 +1158,7 @@ TEST( MQTT_Unit_API, DisconnectAlreadyDisconnected )
     /* One final disconnect to bring reference count to zero and free
      * the connection */
     IotMqtt_Disconnect( mqttConnection, 0 );
+
     /* mqttConnection should be freed after above call.
      * Test should not fail with any Unity memory leak asserts. */
 }
@@ -2260,7 +2267,7 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
     uint8_t buffer[ 10 ];
     uint8_t * bufPtr = buffer;
 
-    /* Dummy network interface - pointer to pointer to buffer. */
+    /* Dummy network interface - pointer to pointer to a buffer. */
     void * pNetworkInterface = ( void * ) &bufPtr;
 
     buffer[ 0 ] = 0x20; /* CONN ACK */
@@ -2270,6 +2277,21 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
     TEST_ASSERT_EQUAL_INT( 0x20, mqttPacket.type );
     TEST_ASSERT_EQUAL_INT( 0x02, mqttPacket.remainingLength );
+
+    /* Test with NULL network interface */
+    status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, NULL );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
+
+    /* Test with incorrect packet type. */
+    buffer[ 0 ] = 0x10; /* INVALID */
+    status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, pNetworkInterface );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* Test with invalid remaining length. */
+    buffer[ 0 ] = 0x20; /* CONN ACK */
+    buffer[ 1 ] = 0xFF; /* Remaining length. */
+    status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, pNetworkInterface );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
 }
 
 /*-----------------------------------------------------------*/
