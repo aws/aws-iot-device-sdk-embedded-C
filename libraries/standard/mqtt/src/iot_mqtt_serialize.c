@@ -47,7 +47,7 @@
  * Macros for reading the high and low byte of a 2-byte unsigned int.
  */
 #define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( x >> 8 ) )            /**< @brief Get high byte. */
-#define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( x & 0x00ff ) )        /**< @brief Get low byte. */
+#define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( x & 0x00ffU ) )        /**< @brief Get low byte. */
 
 /**
  * @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
@@ -64,7 +64,7 @@
  * @param[in] x The unsigned int to set.
  * @param[in] position Which bit to set.
  */
-#define UINT8_SET_BIT( x, position )      ( x = ( uint8_t ) ( x | ( 0x01 << position ) ) )
+#define UINT8_SET_BIT( x, position )      ( x = ( uint8_t ) ( x | ( 0x01U << position ) ) )
 
 /**
  * @brief Macro for checking if a bit is set in a 1-byte unsigned int.
@@ -72,7 +72,7 @@
  * @param[in] x The unsigned int to check.
  * @param[in] position Which bit to check.
  */
-#define UINT8_CHECK_BIT( x, position )    ( ( x & ( 0x01 << position ) ) == ( 0x01 << position ) )
+#define UINT8_CHECK_BIT( x, position )    ( ( x & ( 0x01U << position ) ) == ( 0x01U << position ) )
 
 /*
  * Positions of each flag in the "Connect Flag" field of an MQTT CONNECT
@@ -125,7 +125,7 @@
  * Constants relating to CONNACK packets, defined by MQTT 3.1.1 spec.
  */
 #define MQTT_PACKET_CONNACK_REMAINING_LENGTH        ( ( uint8_t ) 2 )    /**< @brief A CONNACK packet always has a "Remaining length" of 2. */
-#define MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK    ( ( uint8_t ) 0x01 ) /**< @brief The "Session Present" bit is always the lowest bit. */
+#define MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK    ( ( uint8_t ) 0x01U ) /**< @brief The "Session Present" bit is always the lowest bit. */
 
 /*
  * Constants relating to PUBLISH and PUBACK packets, defined by MQTT
@@ -164,7 +164,7 @@
 /**
  * @brief The length of #AWS_IOT_METRICS_USERNAME.
  */
-        #define AWS_IOT_METRICS_USERNAME_LENGTH    ( ( uint16_t ) sizeof( AWS_IOT_METRICS_USERNAME ) - 1 )
+        #define AWS_IOT_METRICS_USERNAME_LENGTH    ( ( uint16_t ) sizeof( AWS_IOT_METRICS_USERNAME ) - 1U )
     #endif /* ifndef AWS_IOT_METRICS_USERNAME */
 #endif /* if AWS_IOT_MQTT_ENABLE_METRICS == 1 || DOXYGEN == 1 */
 
@@ -1213,7 +1213,7 @@ size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
                                       pNetworkInterface,
                                       &encodedByte ) == true )
             {
-                remainingLength += ( encodedByte & 0x7F ) * multiplier;
+                remainingLength += ( encodedByte & 0x7FU ) * multiplier;
                 multiplier *= 128;
                 bytesDecoded++;
             }
@@ -1223,7 +1223,7 @@ size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
                 break;
             }
         }
-    } while( ( encodedByte & 0x80 ) != 0 );
+    } while( ( encodedByte & 0x80U ) != 0 );
 
     /* Check that the decoded remaining length conforms to the MQTT specification. */
     if( remainingLength != MQTT_REMAINING_LENGTH_INVALID )
@@ -1264,7 +1264,7 @@ size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnection,
         {
             if( getNextByte( pNetworkConnection, &encodedByte ) == IOT_MQTT_SUCCESS )
             {
-                remainingLength += ( encodedByte & 0x7F ) * multiplier;
+                remainingLength += ( encodedByte & 0x7FU ) * multiplier;
                 multiplier *= 128;
                 bytesDecoded++;
             }
@@ -1274,7 +1274,7 @@ size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnection,
                 break;
             }
         }
-    } while( ( encodedByte & 0x80 ) != 0 );
+    } while( ( encodedByte & 0x80U ) != 0 );
 
     /* Check that the decoded remaining length conforms to the MQTT specification. */
     if( remainingLength != MQTT_REMAINING_LENGTH_INVALID )
@@ -1392,7 +1392,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
 
     /* Check the reserved bits in CONNACK. The high 7 bits of the second byte
      * in CONNACK must be 0. */
-    if( ( pRemainingData[ 0 ] | 0x01 ) != 0x01 )
+    if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
     {
         IotLog( IOT_LOG_ERROR,
                 &_logHideAll,
@@ -2520,7 +2520,7 @@ IotMqttError_t IotMqtt_DeserializePublish( IotMqttPacketInfo_t * pMqttPacket )
         goto cleanup;
     }
 
-    if( ( pMqttPacket->type & 0xf0 ) != MQTT_PACKET_TYPE_PUBLISH )
+    if( ( pMqttPacket->type & 0xf0U ) != MQTT_PACKET_TYPE_PUBLISH )
     {
         IotLogError( "IotMqtt_DeserializePublish() called with incorrect packet type:(%lu).", pMqttPacket->type );
         status = IOT_MQTT_BAD_PARAMETER;
@@ -2573,7 +2573,7 @@ IotMqttError_t IotMqtt_DeserializeResponse( IotMqttPacketInfo_t * pMqttPacket )
     mqttPacket.type = pMqttPacket->type;
 
     /* Call internal deserialize */
-    switch( pMqttPacket->type & 0xf0 )
+    switch( pMqttPacket->type & 0xf0U )
     {
         case MQTT_PACKET_TYPE_CONNACK:
             status = _IotMqtt_DeserializeConnack( &mqttPacket );

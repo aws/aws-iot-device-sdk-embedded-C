@@ -211,7 +211,7 @@ static bool _incomingPacketValid( uint8_t packetType )
     bool status = true;
 
     /* Check packet type. Mask out lower bits to ignore flags. */
-    switch( packetType & 0xf0 )
+    switch( packetType & 0xf0U )
     {
         /* Valid incoming packet types. */
         case MQTT_PACKET_TYPE_CONNACK:
@@ -494,7 +494,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
     IotMqtt_Assert( _incomingPacketValid( pIncomingPacket->type ) == true );
 
     /* Mask out the low bits of packet type to ignore flags. */
-    switch( ( pIncomingPacket->type & 0xf0 ) )
+    switch( ( pIncomingPacket->type & 0xf0U ) )
     {
         case MQTT_PACKET_TYPE_CONNACK:
             IotLogDebug( "(MQTT connection %p) CONNACK in data stream.", pMqttConnection );
@@ -556,7 +556,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
         default:
             /* The only remaining valid type is PINGRESP. */
-            IotMqtt_Assert( ( pIncomingPacket->type & 0xf0 ) == MQTT_PACKET_TYPE_PINGRESP );
+            IotMqtt_Assert( ( pIncomingPacket->type & 0xf0U ) == MQTT_PACKET_TYPE_PINGRESP );
 
             IotLogDebug( "(MQTT connection %p) PINGRESP in data stream.", pMqttConnection );
 
