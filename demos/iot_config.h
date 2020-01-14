@@ -40,8 +40,9 @@
 /* MQTT client identifier (MQTT demo only) or AWS IoT Thing Name. May be set at
  * runtime with the command line option -i. Identifiers are optional for the
  * MQTT demo, but required for demos requiring a Thing Name. (The MQTT demo will
- * generate a unique identifier if no identifier is given). */
-/* #define IOT_DEMO_IDENTIFIER         "" */
+ * generate a unique identifier if no identifier is given). If a specific Thing Name
+ * is required please define the following line:
+ * #define IOT_DEMO_IDENTIFIER         "" */
 
 /* MQTT demo configuration. The demo publishes bursts of messages. */
 #define IOT_DEMO_MQTT_PUBLISH_BURST_COUNT       ( 10 ) /* Number of message bursts. */
