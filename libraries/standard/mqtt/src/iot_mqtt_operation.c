@@ -551,7 +551,6 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
     }
 
     /* Clean up operation and decrement reference count if this function failed. */
-cleanup:
 
     if( status != IOT_MQTT_SUCCESS )
     {

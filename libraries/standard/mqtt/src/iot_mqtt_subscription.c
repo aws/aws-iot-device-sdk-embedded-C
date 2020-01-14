@@ -162,24 +162,21 @@ static bool _matchEndWildcards( const char * pTopicFilter,
     {
         /* Determine if the topic filter ends with the '#' wildcard. */
         status = ( pTopicFilter[ filterIndex + 1 ] == '/' ) && ( pTopicFilter[ filterIndex + 2 ] == '#' );
+    }
 
-        if( status == true )
+    if( status == false )
+    {
+        /* Determine if the last character is reached for both topic name and topic
+         * filter for the '+' wildcard. */
+        endChar = ( nameIndex == topicNameLength - 1 ) && ( filterIndex == topicFilterLength - 2 );
+
+        if( endChar == true )
         {
-            goto cleanup;
+            /* Filter "sport/+" also matches the "sport/" but not "sport". */
+            status = ( pTopicFilter[ filterIndex + 1 ] == '+' );
         }
     }
 
-    /* Determine if the last character is reached for both topic name and topic
-     * filter for the '+' wildcard. */
-    endChar = ( nameIndex == topicNameLength - 1 ) && ( filterIndex == topicFilterLength - 2 );
-
-    if( endChar == true )
-    {
-        /* Filter "sport/+" also matches the "sport/" but not "sport". */
-        status = ( pTopicFilter[ filterIndex + 1 ] == '+' );
-    }
-
-cleanup:
     *pMatch = status;
 
     return status;
@@ -251,7 +248,7 @@ static bool _topicFilterMatch( const char * pTopicName,
                                     filterIndex,
                                     &status ) == true )
             {
-                goto cleanup;
+                break;
             }
         }
         else
@@ -264,7 +261,7 @@ static bool _topicFilterMatch( const char * pTopicName,
                                  &nameIndex,
                                  &status ) == true )
             {
-                goto cleanup;
+                break;
             }
         }
 
@@ -273,13 +270,14 @@ static bool _topicFilterMatch( const char * pTopicName,
         filterIndex++;
     }
 
-    /* If the end of both strings has been reached, they match. */
-    if( ( nameIndex == topicNameLength ) && ( filterIndex == topicFilterLength ) )
+    if( status == false )
     {
-        status = true;
+        /* If the end of both strings has been reached, they match. */
+        if( ( nameIndex == topicNameLength ) && ( filterIndex == topicFilterLength ) )
+        {
+            status = true;
+        }
     }
-
-cleanup:
 
     return status;
 }
