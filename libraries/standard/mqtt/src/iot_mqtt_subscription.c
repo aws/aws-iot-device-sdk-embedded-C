@@ -273,10 +273,7 @@ static bool _topicFilterMatch( const char * pTopicName,
     if( status == false )
     {
         /* If the end of both strings has been reached, they match. */
-        if( ( nameIndex == topicNameLength ) && ( filterIndex == topicFilterLength ) )
-        {
-            status = true;
-        }
+        status = ( ( nameIndex == topicNameLength ) && ( filterIndex == topicFilterLength ) );
     }
 
     return status;
