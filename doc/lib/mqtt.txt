@@ -35,17 +35,14 @@ digraph mqtt_dependencies
     subgraph
     {
         rank = same;
-        platform_threads[label="Thread management", fillcolor="#e89025ff", URL="@ref platform_threads"];
-        platform_clock[label="Clock", fillcolor="#e89025ff", URL="@ref platform_clock"];
+        task_pool[label="Task pool", fillcolor="#e89025ff", URL="@ref taskpool"];
         platform_network[label="Network", fillcolor="#e89025ff", URL="@ref platform_network"];
     }
     mqtt -> linear_containers;
     mqtt -> logging [label=" if logging enabled", style="dashed"];
-    mqtt -> platform_threads;
-    mqtt -> platform_clock;
+    mqtt -> task_pool;
     mqtt -> platform_network;
     mqtt -> static_memory [label=" if static memory only", style="dashed"];
-    logging -> platform_clock;
     logging -> static_memory [label=" if static memory only", style="dashed"];
 }
 @enddot
@@ -53,9 +50,157 @@ digraph mqtt_dependencies
 Currently, the MQTT library has the following dependencies:
 - The queue library for maintaining the data structures for managing in-progress MQTT operations.
 - The logging library may be used if @ref IOT_LOG_LEVEL_MQTT is not #IOT_LOG_NONE.
-- The platform layer provides an interface to the operating system for thread management, clock functions, networking, etc.
+- The task pool to submit background jobs. The MQTT library does not create or manage any threads, but relies on at least one thread being available in the task pool.
 
-In addition to the components above, the MQTT library also depends on C standard library headers.
+In addition to the components above, the MQTT library also depends on C standard library headers and the [platform layer](@ref platform).
+
+@section mqtt_memory Memory requirements
+@brief Memory requirements of the MQTT library.
+
+@subsection mqtt_memory_code Code size
+@brief Code size of the MQTT library.
+
+The following measurements were taken with arm-none-eabi-gcc v9.2.1 (October 2019) with the [MQTT library from January 2020](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/f1a8b698b1d2fd5b8475b11a16d399181c1d867f). These values are rough estimates not tuned for any specific ARM processor.
+
+<b>Debug Build</b> <br>
+All logging, asserts, and diagnostic information enabled. Debugging symbols available. Compiled using the ARM Thumb instruction set (`-mthumb`). Values are in <i>bytes</i>.
+
+<table>
+    <tr>
+        <td><b>object</b></td>
+        <td><b>text</b></td>
+        <td><b>data</b></td>
+        <td><b>bss</b></td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_api</td>
+        <td>11897</td>
+        <td>0</td>
+        <td>4</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_network</td>
+        <td>5412</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_operation</td>
+        <td>10484</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_serialize</td>
+        <td>14454</td>
+        <td>28</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_subscription</td>
+        <td>3885</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_validate</td>
+        <td>4330</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td><b>total</b></td>
+        <td><b>50462</b></td>
+        <td><b>28</b></td>
+        <td><b>4</b></td>
+    </tr>
+</table>
+
+<b>Minimal Size Build</b> <br>
+No logging, asserts, or diagnostic information. Compiled using the ARM Thumb instruction set (`-mthumb`) and optimized for size (`-Os`). Values are in <i>bytes</i>.
+
+<table>
+    <tr>
+        <td><b>object</b></td>
+        <td><b>text</b></td>
+        <td><b>data</b></td>
+        <td><b>bss</b></td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_api</td>
+        <td>2703</td>
+        <td>0</td>
+        <td>4</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_network</td>
+        <td>884</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_operation</td>
+        <td>1773</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_serialize</td>
+        <td>2606</td>
+        <td>4</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_subscription</td>
+        <td>1244</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_validate</td>
+        <td>444</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td><b>total</b></td>
+        <td><b>9654</b></td>
+        <td><b>4</b></td>
+        <td><b>4</b></td>
+    </tr>
+</table>
+
+@subsection mqtt_memory_runtime Runtime memory requirements
+@brief Runtime memory requirements of the MQTT library.
+
+<b>The values given below do not consider any dependencies, such as the task pool or TLS stack.</b>
+
+Approximate sizes of MQTT objects are given below. Note that the exact size depends on how certain platform types (such as mutexes) are implemented.<br>
+<table>
+    <tr>
+        <td>Each MQTT connection</td>
+        <td>250 bytes</td>
+    </tr>
+    <tr>
+        <td>Each MQTT operation</td>
+        <td>150 bytes, plus the length of a topic name and message if publishing</td>
+    </tr>
+    <tr>
+        <td>Each MQTT subscription</td>
+        <td>70 bytes, plus the length of the subscription topic filter</td>
+    </tr>
+</table>
+
+For example, consider an application that does the following:
+1. Establishes an MQTT connection.
+2. Subscribes to a topic.
+3. Publishes a message to a topic.
+4. Unsubscribes from a topic.
+5. Closes the connection.
+
+This application is expected to have a peak runtime memory usage of about 600 bytes (not counting any usage by dependencies or the TLS stack).
+
+@image html mqtt_memory_example.png width=80%
 */
 
 /**
