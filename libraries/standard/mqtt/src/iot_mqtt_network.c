@@ -425,7 +425,7 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
     if( status != IOT_MQTT_SUCCESS )
     {
         /* Check ownership of the received MQTT packet. */
-        if( pOperation->u.publish.pReceivedData != NULL )
+        if( ( pOperation != NULL ) && ( pOperation->u.publish.pReceivedData != NULL ) )
         {
             /* Retrieve the pointer MQTT packet pointer so it may be freed later. */
             IotMqtt_Assert( pIncomingPacket->pRemainingData == NULL );
