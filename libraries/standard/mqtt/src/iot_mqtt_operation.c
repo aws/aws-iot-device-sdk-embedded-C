@@ -180,7 +180,7 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
         /* The retry count may be at most one more than the retry limit, which
          * accounts for the final check for a PUBACK. */
         IotMqtt_Assert( pOperation->u.operation.periodic.retry.count ==
-                        pOperation->u.operation.periodic.retry.limit + 1U );
+                        ( pOperation->u.operation.periodic.retry.limit + 1U ) );
 
         IotLogDebug( "(MQTT connection %p, PUBLISH operation %p) No response received after %lu retries.",
                      pMqttConnection,

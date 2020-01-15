@@ -153,7 +153,7 @@
 #define MQTT_PACKET_DISCONNECT_SIZE                 ( 2U ) /**< @brief A DISCONNECT packet is always 2 bytes in size. */
 
 /* Username for metrics with AWS IoT. */
-#if AWS_IOT_MQTT_ENABLE_METRICS == 1 || DOXYGEN == 1
+#if ( AWS_IOT_MQTT_ENABLE_METRICS == 1 ) || ( DOXYGEN == 1 )
     #ifndef AWS_IOT_METRICS_USERNAME
 
 /**
@@ -1182,7 +1182,7 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
         /* Check that the "Remaining length" is greater than the minimum. For
          * QoS 1 or 2, this will be two bytes greater than for QoS due to the
          * packet identifier. */
-        if( pPublish->remainingLength < qos0Minimum + 2U )
+        if( pPublish->remainingLength < ( qos0Minimum + 2U ) )
         {
             IotLog( IOT_LOG_DEBUG,
                     &_logHideAll,
