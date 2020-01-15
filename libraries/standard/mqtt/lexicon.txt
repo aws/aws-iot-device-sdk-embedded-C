@@ -85,6 +85,7 @@ keepaliveseconds
 lu
 lwt
 malloc
+misra
 mqtt
 mqttconnection
 mqttoperation
