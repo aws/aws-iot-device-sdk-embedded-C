@@ -208,9 +208,9 @@ This application is expected to have a peak runtime memory usage of about 600 by
 @brief Architecture behind the MQTT library.
 
 @section mqtt_design_operations Asynchronous and synchronous operations
-@brief This library provides both asynchronous and synchronous MQTT operations. Asynchronous operations functions end with <b>Async</b>, and their synchronous variants end with <b>Sync</b>.
+@brief This library provides both asynchronous and synchronous MQTT operations. Asynchronous operation functions end with <b>Async</b>, and their synchronous variants end with <b>Sync</b>.
 
-For example, @ref mqtt_function_publishasync and @ref mqtt_function_publishsync are the respective asynchronous and synchronous MQTT PUBLISH functions. The CONNECT and DISCONNECT operation only have synchronous functions.
+For example, @ref mqtt_function_publishasync and @ref mqtt_function_publishsync are the respective asynchronous and synchronous MQTT PUBLISH functions. The CONNECT and DISCONNECT operations only have synchronous functions.
 
 Asynchronous functions return immediately to the calling thread after allocating appropriate resources. The application thread can then continue executing while the MQTT operation is processed in the background. Once the MQTT operation is complete, the MQTT library will invoke a callback function provided by the application. The function @ref mqtt_function_wait can be used to wait for an asynchronous operation's completion. It can also be used to cancel asynchronous operations if passed a timeout of `0`.
 
@@ -221,7 +221,7 @@ Synchronous functions block their calling thread until the MQTT operation is com
 
 MQTT relies on the [task pool library](@ref taskpool) to process asynchronous MQTT operations in the background. The MQTT API [functions](@ref mqtt_functions) post a job to the task pool, which is transmitted from a background task. Incoming responses are received through a [network receive callback](@ref platform_network_function_receivecallback), which posts another job to process the response to the task pool.
 
-Synchronous operations are implemented as a call to an asynchronous operation. The synchronous function then waits on a semaphore until it receives a notification of completion. The workflow of a synchronous operation is otherwise identical to an asynchronous operation.
+Synchronous operations are implemented as a call to the corresponding asynchronous operation. The synchronous function then waits on a semaphore until it receives a notification of completion. The workflow of a synchronous operation is otherwise identical to an asynchronous operation.
 
 Some operations, such as QoS 1 PUBLISHes, may be retried. See @ref IotMqttPublishInfo_t for a description of the retry strategy.
 
