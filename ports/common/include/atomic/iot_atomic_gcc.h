@@ -36,6 +36,9 @@
 /**
  * @brief GCC function attribute to always inline a function.
  */
+/* This header file is intended to be used with only the gcc compiler 
+ * which will have the __attribute__ language extension available. */
+/* coverity[misra_banned_extension_origin] */
 #define FORCE_INLINE    inline __attribute__( ( always_inline ) )
 
 /*---------------- Swap and compare-and-swap ------------------*/
@@ -43,9 +46,6 @@
 /**
  * @brief Implementation of atomic compare-and-swap for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDestination,
                                                         uint32_t newValue,
                                                         uint32_t comparand )
@@ -73,9 +73,6 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDes
 /**
  * @brief Implementation of atomic pointer swap for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE void * Atomic_Swap_Pointer( void * volatile * pDestination,
                                                 void * pNewValue )
 {
@@ -94,9 +91,6 @@ static FORCE_INLINE void * Atomic_Swap_Pointer( void * volatile * pDestination,
 /**
  * @brief Implementation of atomic pointer compare-and-swap for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pDestination,
                                                             void * pNewValue,
                                                             void * pComparand )
@@ -121,9 +115,6 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pD
 /**
  * @brief Implementation of atomic addition for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAugend,
                                              uint32_t addend )
 {
@@ -138,9 +129,6 @@ static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAugend,
 /**
  * @brief Implementation of atomic subtraction for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pMinuend,
                                                   uint32_t subtrahend )
 {
@@ -155,9 +143,6 @@ static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pMinuend,
 /**
  * @brief Implementation of atomic increment for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAugend )
 {
     return __atomic_fetch_add( pAugend, 1, __ATOMIC_SEQ_CST );
@@ -168,9 +153,6 @@ static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAugend )
 /**
  * @brief Implementation of atomic decrement for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pMinuend )
 {
     return __atomic_fetch_sub( pMinuend, 1, __ATOMIC_SEQ_CST );
@@ -181,9 +163,6 @@ static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pMinuend 
 /**
  * @brief Implementation of atomic OR for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pOperand,
                                             uint32_t mask )
 {
@@ -198,9 +177,6 @@ static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pOperand,
 /**
  * @brief Implementation of atomic XOR for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pOperand,
                                              uint32_t mask )
 {
@@ -215,9 +191,6 @@ static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pOperand,
 /**
  * @brief Implementation of atomic AND for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pOperand,
                                              uint32_t mask )
 {
@@ -232,9 +205,6 @@ static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pOperand,
 /**
  * @brief Implementation of atomic NAND for gcc.
  */
-/* This header file is intended to be used with only the gcc compiler 
- * which will have the __attribute__ language extension available. */
-/* coverity[misra_c_2012_rule_1_2_violation] */
 static FORCE_INLINE uint32_t Atomic_NAND_u32( uint32_t volatile * pOperand,
                                               uint32_t mask )
 {
