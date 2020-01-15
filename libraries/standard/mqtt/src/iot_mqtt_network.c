@@ -442,8 +442,10 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
 
         IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-        IotMqtt_Assert( pOperation != NULL );
-        IotMqtt_FreeOperation( pOperation );
+        if( pOperation != NULL )
+        {
+            IotMqtt_FreeOperation( pOperation );
+        }
     }
 
     return status;
