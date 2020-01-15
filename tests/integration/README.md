@@ -42,3 +42,13 @@ This test verifies Auto-reconnect functionality. It creates one client instance.
 This test is used to validate thread-safe operations. This creates on client instance, one yield thread, one thread to test subscribe/unsubscribe behavior and MAX_PUB_THREAD_COUNT number of publish threads. Then it proceeds to publish PUBLISH_COUNT messages on the test topic from each publish thread. The subscribe/unsubscribe thread runs in the background constantly subscribing and unsubscribing to a second test topic. The yield threads records which messages were received.
 
 The test verifies whether all the messages that were published were received or not. It also checks for errors that could occur in multi-threaded scenarios. The test has been run with 10 threads sending 500 messages each and verified to be working fine. It can be used as a reference testing application to validate whether your use case will work with multi-threading enabled.
+
+### Test 5 - MQTT Download Agent Test
+This test verifies downloading file from AWS IoT over the MQTT connection. The expected behavior of this test is to start the download agent and wait until timeout or a job notification from the cloud. The download agent should receive the JSON job document and start download the file block by block thru MQTT.
+
+ * Tests the download agent by creating a [custom job](https://github.com/aws-samples/aws-iot-mqtt-download-agent/tree/master/samples/linux/download_agent_sample)
+ * Tests the correctness of file by md5
+
+You can deploy the job by [MQTT OTA Deployment Tool](https://github.com/aws-samples/aws-iot-ota-deployment-tool)
+sh OtaStressStart.sh <ThingListFile> <JobID> <Rounds> <job.json> <create-stream.json> <StreamID>
+

@@ -23,6 +23,7 @@ CPP_PLATFORM = Gcc
 CPPUTEST_CFLAGS += -std=gnu99
 CPPUTEST_LDFLAGS += -lpthread
 CPPUTEST_CFLAGS += -D__USE_BSD
+CPPUTEST_CFLAGS += -DENABLE_TINYCBOR
 CPPUTEST_USE_GCOV = Y
 
 #IoT client directory
@@ -54,6 +55,13 @@ TEMP_MBEDTLS_SRC_DIR = $(APP_DIR)/tls_mock
 TLS_LIB_DIR = $(TEMP_MBEDTLS_SRC_DIR)
 TLS_INCLUDE_DIR = -I $(TEMP_MBEDTLS_SRC_DIR)
 
+#CBOR - tinycbor
+TINYCBOR_DIR = $(IOT_CLIENT_DIR)/external_libs/tinycbor
+CBOR_LIB_DIR = $(TINYCBOR_DIR)/lib
+CBOR_INCLUDE_DIR = -I $(TINYCBOR_DIR)/src
+
+CPPUTEST_LDFLAGS += $(CBOR_LIB_DIR)/libtinycbor.a
+
 # Logging level control
 #LOG_FLAGS += -DENABLE_IOT_DEBUG
 #LOG_FLAGS += -DENABLE_IOT_TRACE
@@ -63,6 +71,7 @@ TLS_INCLUDE_DIR = -I $(TEMP_MBEDTLS_SRC_DIR)
 COMPILER_FLAGS += $(LOG_FLAGS)
 
 EXTERNAL_LIBS += -L$(CPPUTEST_BUILD_LIB)
+EXTERNAL_LIBS += -L$(CBOR_LIB_DIR)
 
 #IoT client directory
 PLATFORM_COMMON_DIR = $(PLATFORM_DIR)/common
@@ -79,6 +88,7 @@ IOT_SRC_FILES += $(shell find $(IOT_CLIENT_DIR)/external_libs/jsmn/ -name '*.c')
 INCLUDE_DIRS += $(IOT_INCLUDE_DIRS)
 INCLUDE_DIRS += $(APP_INCLUDE_DIRS)
 INCLUDE_DIRS += $(TLS_INCLUDE_DIR)
+INCLUDE_DIRS += $(CBOR_INCLUDE_DIR)
 INCLUDE_DIRS += $(CPPUTEST_INCLUDE)
 
 TEST_SRC_DIRS = $(APP_DIR)/src
@@ -94,7 +104,8 @@ PRE_MAKE_CMDS += make &&
 PRE_MAKE_CMDS += cd - &&
 PRE_MAKE_CMDS += pwd &&
 PRE_MAKE_CMDS += cp -f $(CPPUTEST_DIR)/src/CppUTest/libCppUTest.a $(CPPUTEST_DIR)/libCppUTest.a &&
-PRE_MAKE_CMDS += cp -f $(CPPUTEST_DIR)/src/CppUTestExt/libCppUTestExt.a $(CPPUTEST_DIR)/libCppUTestExt.a
+PRE_MAKE_CMDS += cp -f $(CPPUTEST_DIR)/src/CppUTestExt/libCppUTestExt.a $(CPPUTEST_DIR)/libCppUTestExt.a &&
+PRE_MAKE_CMDS += $(MAKE) -C $(TINYCBOR_DIR)
 
 # Using TLS Mock for running Unit Tests
 MOCKS_SRC += $(APP_DIR)/tls_mock/aws_iot_tests_unit_mock_tls_params.c

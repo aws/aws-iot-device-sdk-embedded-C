@@ -40,3 +40,6 @@ This is the same sample as above but it is built using a C++ compiler. It demons
 
 ## Subscribe Publish Library Sample
 This is also the same code as the Subscribe Publish sample. In this case, the SDK is built as a separate library and then used in the sample program.
+
+## Download Agent Sample
+This is the sample that uses the file download agent to download a file over MQTT. The API of the download agent is defined in /include/aws_iot_download_agent.h.

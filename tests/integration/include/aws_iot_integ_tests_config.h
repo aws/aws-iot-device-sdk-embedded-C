@@ -30,6 +30,9 @@
 /* Max number of initial connect retries */
 #define CONNECT_MAX_ATTEMPT_COUNT 3
 
+/* Max timeout of file downloading thru download agent */
+#define TIMEOUT_DOWNLOAD_FILE_SEC 100
+
 /* Interval that each thread sleeps for */
 #define THREAD_SLEEP_INTERVAL_USEC 500000
 

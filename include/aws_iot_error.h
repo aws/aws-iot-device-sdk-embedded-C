@@ -38,6 +38,10 @@ extern "C" {
  * Values greater than 0 are specific non-error return codes
  */
 typedef enum {
+	/** Returned when the Download file block was a duplicate but that's OK. Continue. */
+			DOWNLOAD_DUPLICATE_CONTINUE = 8,
+	/** Returned when the Download file block was accepted and we're expecting more. */
+			DOWNLOAD_ACCEPTED_CONTINUE = 7,
 	/** Returned when the Network physical layer is connected */
 			NETWORK_PHYSICAL_LAYER_CONNECTED = 6,
 	/** Returned when the Network is manually disconnected */
@@ -156,7 +160,17 @@ typedef enum {
 	/** Some limit has been exceeded, e.g. the maximum number of subscriptions has been reached */
 			LIMIT_EXCEEDED_ERROR = -51,
 	/** Invalid input topic type */
-			INVALID_TOPIC_TYPE_ERROR = -52
+			INVALID_TOPIC_TYPE_ERROR = -52,
+	/* We were asked to ingest a block but weren't expecting one. */
+			DOWNLOAD_UNEXPECTED_BLOCK = -53,
+	/* The received block is out of the expected range. */
+			DOWNLOAD_BLOCK_OUT_OF_RANGE = -54,
+	/* The data block from the server was malformed. */
+			DOWNLOAD_BAD_DATA = -55,
+	/* The customer layer failed to write the file block. */
+			DOWNLOAD_WRITE_BLOCK_ERROR = -56,
+	/* Software BUG: We forgot to set the result code. */
+			DOWNLOAD_UNINITIALIZED = -57
 } IoT_Error_t;
 
 #ifdef __cplusplus

@@ -39,5 +39,6 @@
 int aws_iot_mqtt_tests_basic_connectivity();
 int aws_iot_mqtt_tests_multiple_clients();
 int aws_iot_mqtt_tests_auto_reconnect();
+int aws_iot_download_agent_basic_test();
 
 #endif /* TESTS_INTEGRATION_COMMON_H_ */
