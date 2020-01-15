@@ -422,10 +422,10 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
     }
 
     /* Free PUBLISH operation on error. */
-    if( status != IOT_MQTT_SUCCESS )
+    if( ( status != IOT_MQTT_NO_MEMORY ) && ( status != IOT_MQTT_SUCCESS ) )
     {
         /* Check ownership of the received MQTT packet. */
-        if( ( pOperation != NULL ) && ( pOperation->u.publish.pReceivedData != NULL ) )
+        if( pOperation->u.publish.pReceivedData != NULL )
         {
             /* Retrieve the pointer MQTT packet pointer so it may be freed later. */
             IotMqtt_Assert( pIncomingPacket->pRemainingData == NULL );
@@ -442,10 +442,8 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
 
         IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-        if( pOperation != NULL )
-        {
-            IotMqtt_FreeOperation( pOperation );
-        }
+        IotMqtt_Assert( pOperation != NULL );
+        IotMqtt_FreeOperation( pOperation );
     }
 
     return status;
