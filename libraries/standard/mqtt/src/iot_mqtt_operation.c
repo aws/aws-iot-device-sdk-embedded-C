@@ -202,6 +202,10 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
              * identifier) must be reset on every retry. */
             setDup = true;
         }
+        else
+        {
+            setDup = false;
+        }
 
         if( setDup == true )
         {
@@ -959,6 +963,11 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
                 pOperation->u.operation.status = IOT_MQTT_SUCCESS;
             }
         }
+        else
+        {
+            /* Empty else MISRA 15.7 */
+        }
+        
     }
 
     /* Check if this operation requires further processing. */

@@ -838,6 +838,7 @@ static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
                 break;
 
             default:
+                /* Empty default MISRA 16.4 */
                 break;
         }
 
@@ -918,6 +919,10 @@ static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
     else if( pPublishInfo->qos == IOT_MQTT_QOS_2 )
     {
         UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 );
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     if( pPublishInfo->retain == true )
