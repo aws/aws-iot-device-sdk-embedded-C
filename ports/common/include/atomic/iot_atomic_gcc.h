@@ -60,7 +60,7 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDes
                                    &newValue,
                                    false,
                                    __ATOMIC_SEQ_CST,
-                                   __ATOMIC_SEQ_CST )  == ( ( bool )( true ) ) );
+                                   __ATOMIC_SEQ_CST )  == ( ( bool )( true ) ) )
     {
         swapped = 1;
     }
@@ -105,7 +105,7 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pD
                                   &pNewValue,
                                   false,
                                   __ATOMIC_SEQ_CST,
-                                  __ATOMIC_SEQ_CST ) == ( ( bool )( true ) ) );
+                                  __ATOMIC_SEQ_CST ) == ( ( bool )( true ) ) )
     {
         swapped = 1;
     }
