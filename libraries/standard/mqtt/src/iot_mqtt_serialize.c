@@ -391,9 +391,9 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
  */
     static const IotLogConfig_t _logHideAll =
     {
-        .hideLibraryName = ( bool )( true ),
-        .hideLogLevel    = ( bool )( true ),
-        .hideTimestring  = ( bool )( true )
+        .hideLibraryName = ( bool ) ( true ),
+        .hideLogLevel    = ( bool ) ( true ),
+        .hideTimestring  = ( bool ) ( true )
     };
 #endif
 
@@ -457,7 +457,7 @@ static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
     /* This algorithm is copied from the MQTT v3.1.1 spec. */
     do
     {
-        lengthByte = ( uint8_t )( length % 128U );
+        lengthByte = ( uint8_t ) ( length % 128U );
         length = length / 128U;
 
         /* Set the high bit of this byte, indicating that there's more data. */
@@ -1085,9 +1085,10 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
             case 0x00:
             case 0x01:
             case 0x02:
-                /* In some implementations IotLog() maps to C standard printing API 
-                 * that need specific primitive types for format specifiers. Also 
-                 * inttypes.h may not be available on some C99 compilers, despite 
+
+                /* In some implementations IotLog() maps to C standard printing API
+                 * that need specific primitive types for format specifiers. Also
+                 * inttypes.h may not be available on some C99 compilers, despite
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
@@ -1097,9 +1098,10 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                 break;
 
             case 0x80:
-                /* In some implementations IotLog() maps to C standard printing API 
-                 * that need specific primitive types for format specifiers. Also 
-                 * inttypes.h may not be available on some C99 compilers, despite 
+
+                /* In some implementations IotLog() maps to C standard printing API
+                 * that need specific primitive types for format specifiers. Also
+                 * inttypes.h may not be available on some C99 compilers, despite
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
@@ -2101,7 +2103,7 @@ void _IotMqtt_FreePacket( uint8_t * pPacket )
 }
 
 /*-----------------------------------------------------------*/
- 
+
 /* Public interface functions for serialization */
 
 /*-----------------------------------------------------------*/
