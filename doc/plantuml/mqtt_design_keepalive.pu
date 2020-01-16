@@ -1,0 +1,57 @@
+@startuml
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+autonumber
+
+box "Application" #LightGreen
+    participant "Application thread" as application
+    create participant "MQTT CONNECT" as api
+end box
+
+box "Task pool" #LightBlue
+    participant "Task pool jobs" as task_pool
+end box
+
+box "Network stack" #Orange
+    participant "Receive\ncallback" as receive_callback
+    participant "Network IO" as network
+end box
+
+== Create PINGREQ (one-time) ==
+activate application
+application -> api: Call MQTT CONNECT
+deactivate application
+activate api
+api -> api: Initialize failure=0
+api -> api: Generate PINGREQ
+api -> task_pool: Schedule PINGREQ\nsend in keepAliveSec
+api -> application: Return
+deactivate api
+activate application
+
+== Periodic keep-alive ==
+
+loop While connection is open
+    ... After keepAliveSec ...
+    task_pool -> task_pool: Set failure=1
+    task_pool -> network: Send PINGREQ
+    network -> : PINGREQ\nto server
+    task_pool -> task_pool: Schedule check in\nIOT_MQTT_RESPONSE_WAIT_MS
+
+    alt Connection is alive
+        network <- : PINGRESP\nfrom server
+        network -> receive_callback: Notify of PINGRESP
+        receive_callback -> receive_callback: Set failure=0
+    end
+
+    ... After IOT_MQTT_RESPONSE_WAIT_MS ...
+    alt failure=0
+        task_pool -> task_pool: Schedule next PINGREQ\nin keepAliveSec
+    else failure=1
+        task_pool -> application: No response, terminate connection
+    end
+end
+
+deactivate application
+
+@enduml

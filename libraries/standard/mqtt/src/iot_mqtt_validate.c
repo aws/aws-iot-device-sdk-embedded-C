@@ -173,10 +173,10 @@ static bool _validatePublish( bool awsIotMqttMode,
     /* This parameter is not used when logging is disabled. */
     ( void ) pPublishTypeDescription;
 
-    /* Check for NULL. */
-    if( pPublishInfo == NULL )
+    /* Check for a valid QoS and callback function when subscribing. */
+    if( operation == IOT_MQTT_SUBSCRIBE )
     {
-        IotLogError( "Publish information cannot be NULL." );
+        status = _validateQos( pSubscription->qos );
 
         status = false;
         goto cleanup;
@@ -192,9 +192,10 @@ static bool _validatePublish( bool awsIotMqttMode,
         goto cleanup;
     }
 
-    if( pPublishInfo->payloadLength != 0 )
+    /* Check that the wildcards '+' and '#' are being used correctly. */
+    for( i = 0; i < pSubscription->topicFilterLength; i++ )
     {
-        if( pPublishInfo->payloadLength > maximumPayloadLength )
+        if( pSubscription->pTopicFilter[ i ] == '+' )
         {
             IotLogError( "%s payload size of %zu exceeds maximum length of %zu.",
                          pPublishTypeDescription,
@@ -204,11 +205,10 @@ static bool _validatePublish( bool awsIotMqttMode,
             status = false;
             goto cleanup;
         }
-        else
+        else if( pSubscription->pTopicFilter[ i ] == '#' )
         {
-            if( pPublishInfo->pPayload == NULL )
-            {
-                IotLogError( "Nonzero payload length cannot have a NULL payload." );
+            status = _validateWildcardHash( i, pSubscription );
+        }
 
                 status = false;
                 goto cleanup;
@@ -224,35 +224,45 @@ static bool _validatePublish( bool awsIotMqttMode,
         goto cleanup;
     }
 
-    /* Check the retry parameters. */
-    if( pPublishInfo->retryLimit > 0 )
+    /* Unless '#' is standalone, it must be preceded by '/'. */
+    if( pSubscription->topicFilterLength > 1 )
     {
-        if( pPublishInfo->retryMs == 0 )
+        if( pSubscription->pTopicFilter[ index - 1 ] != '/' )
         {
-            IotLogError( "Publish retry time must be positive." );
+            IotLogError( "Invalid topic filter %.*s -- '#' must be preceded by '/'.",
+                         pSubscription->topicFilterLength,
+                         pSubscription->pTopicFilter );
 
             status = false;
             goto cleanup;
         }
     }
 
-    /* Check for compatibility with AWS IoT MQTT server. */
-    if( awsIotMqttMode == true )
+    /* Check for a zero-length client identifier. Zero-length client identifiers
+     * are not allowed with clean sessions. */
+    if( pConnectInfo->clientIdentifierLength == 0 )
     {
-        /* Check for retained message. */
-        if( pPublishInfo->retain == true )
+        IotLogWarn( "A zero-length client identifier was provided." );
+
+        if( pConnectInfo->cleanSession == true )
         {
-            IotLogError( "AWS IoT does not support retained publish messages." );
+            IotLogError( "A zero-length client identifier cannot be used with a clean session." );
 
             status = false;
             goto cleanup;
         }
+    }
 
-        /* Check topic name length. */
-        if( pPublishInfo->topicNameLength > AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
+    /* If will info is provided, check that it is valid. */
+    if( pConnectInfo->pWillInfo != NULL )
+    {
+        if( _IotMqtt_ValidateLwtPublish( pConnectInfo->awsIotMqttMode,
+                                         pConnectInfo->pWillInfo ) == false )
         {
-            IotLogError( "AWS IoT does not support topic names longer than %d bytes.",
-                         AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
+            status = false;
+            goto cleanup;
+        }
+    }
 
             status = false;
             goto cleanup;
@@ -562,8 +572,12 @@ cleanup:
 /*-----------------------------------------------------------*/
 
 bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
-                               const IotMqttPublishInfo_t * pPublishInfo )
+                               const IotMqttPublishInfo_t * pPublishInfo,
+                               uint32_t flags,
+                               const IotMqttCallbackInfo_t * pCallbackInfo,
+                               IotMqttOperation_t * const pPublishOperation )
 {
+    bool status = true;
     size_t maximumPayloadLength = MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
 
     if( awsIotMqttMode == true )
@@ -571,10 +585,48 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
         maximumPayloadLength = AWS_IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
     }
 
-    return _validatePublish( awsIotMqttMode,
-                             maximumPayloadLength,
-                             "Publish",
-                             pPublishInfo );
+    status = _validatePublish( awsIotMqttMode,
+                               maximumPayloadLength,
+                               "Publish",
+                               pPublishInfo );
+
+    if( status == true )
+    {
+        /* Check that no notification is requested for a QoS 0 publish. */
+        if( pPublishInfo->qos == IOT_MQTT_QOS_0 )
+        {
+            if( pCallbackInfo != NULL )
+            {
+                IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
+
+                status = false;
+            }
+            else if( ( flags & IOT_MQTT_FLAG_WAITABLE ) != 0 )
+            {
+                IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
+
+                status = false;
+            }
+
+            if( pPublishOperation != NULL )
+            {
+                IotLogWarn( "Ignoring reference parameter for QoS 0 publish." );
+            }
+        }
+
+        /* Check that a reference pointer is provided for a waitable operation. */
+        if( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE )
+        {
+            if( pPublishOperation == NULL )
+            {
+                IotLogError( "Reference must be provided for a waitable PUBLISH." );
+
+                status = false;
+            }
+        }
+    }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
