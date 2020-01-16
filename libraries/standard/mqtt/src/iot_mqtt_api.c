@@ -770,27 +770,28 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
         {
             _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pSubscriptionOperation->job, pSubscriptionOperation );
         }
-        else if( ( status = _IotMqtt_ScheduleOperation( pSubscriptionOperation,
-                                                        _IotMqtt_ProcessSend,
-                                                        0 ) ) != IOT_MQTT_SUCCESS )
-        {
-            IotLogError( "(MQTT connection %p) Failed to schedule %s for sending.",
-                         mqttConnection,
-                         IotMqtt_OperationType( operation ) );
-
-            if( operation == IOT_MQTT_SUBSCRIBE )
-            {
-                _IotMqtt_RemoveSubscriptionByPacket( mqttConnection,
-                                                     pSubscriptionOperation->u.operation.packetIdentifier,
-                                                     MQTT_REMOVE_ALL_SUBSCRIPTIONS );
-            }
-
-            /* Clear the previously set (and now invalid) reference. */
-            _setOperationReference( pOperationReference, IOT_MQTT_OPERATION_INITIALIZER );
-        }
         else
         {
-            /* Empty else MISRA 15.7 */
+            status = _IotMqtt_ScheduleOperation( pSubscriptionOperation,
+                                                 _IotMqtt_ProcessSend,
+                                                 0 );
+
+            if( status != IOT_MQTT_SUCCESS )
+            {
+                IotLogError( "(MQTT connection %p) Failed to schedule %s for sending.",
+                             mqttConnection,
+                             IotMqtt_OperationType( operation ) );
+
+                if( operation == IOT_MQTT_SUBSCRIBE )
+                {
+                    _IotMqtt_RemoveSubscriptionByPacket( mqttConnection,
+                                                         pSubscriptionOperation->u.operation.packetIdentifier,
+                                                         MQTT_REMOVE_ALL_SUBSCRIPTIONS );
+                }
+
+                /* Clear the previously set (and now invalid) reference. */
+                _setOperationReference( pOperationReference, IOT_MQTT_OPERATION_INITIALIZER );
+            }
         }
     }
 
@@ -888,8 +889,8 @@ bool _IotMqtt_IncrementConnectionReferences( _mqttConnection_t * pMqttConnection
     {
         ( pMqttConnection->references )++;
 
-        /* In some implementations IotLog() maps to C standard printing API
-         * that need specific primitive types for format specifiers. Also,
+        /* In some implementations IotLogDebug() maps to C standard printing API
+         * that needs specific primitive types for format specifiers. Also,
          * inttypes.h may not be available on some C99 compilers, despite
          * stdint.h being available. */
         /* coverity[misra_c_2012_directive_4_6_violation] */
@@ -921,8 +922,8 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
     ( pMqttConnection->references )--;
     IotMqtt_Assert( pMqttConnection->references >= 0 );
 
-    /* In some implementations IotLog() maps to C standard printing API
-     * that need specific primitive types for format specifiers. Also,
+    /* In some implementations IotLogDebug() maps to C standard printing API
+     * that needs specific primitive types for format specifiers. Also,
      * inttypes.h may not be available on some C99 compilers, despite stdint.h
      * being available. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
@@ -1581,18 +1582,22 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
         {
             _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
         }
-        else if( ( ( status = _IotMqtt_ScheduleOperation( pOperation,
-                                                          _IotMqtt_ProcessSend,
-                                                          0 ) ) != IOT_MQTT_SUCCESS ) )
-
+        else
         {
-            IotLogError( "(MQTT connection %p) Failed to enqueue PUBLISH for sending.",
-                         mqttConnection );
+            status = _IotMqtt_ScheduleOperation( pOperation,
+                                                 _IotMqtt_ProcessSend,
+                                                 0 );
 
-            /* Clear the previously set (and now invalid) reference. */
-            if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
+            if( status != IOT_MQTT_SUCCESS )
             {
-                _setOperationReference( pPublishOperation, IOT_MQTT_OPERATION_INITIALIZER );
+                IotLogError( "(MQTT connection %p) Failed to enqueue PUBLISH for sending.",
+                             mqttConnection );
+
+                /* Clear the previously set (and now invalid) reference. */
+                if( pPublishInfo->qos != IOT_MQTT_QOS_0 )
+                {
+                    _setOperationReference( pPublishOperation, IOT_MQTT_OPERATION_INITIALIZER );
+                }
             }
         }
     }
