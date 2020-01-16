@@ -535,12 +535,14 @@ static uint8_t * _encodeUserName( uint8_t * pBuffer,
                 if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( uint16_t ) ( UINT16_MAX ) ) )
                 {
                     /* Write the high byte of the combined length. */
-                    *( pBuffer++ ) = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
-                                                         AWS_IOT_METRICS_USERNAME_LENGTH ) );
+                    *pBuffer = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
+                                                   AWS_IOT_METRICS_USERNAME_LENGTH ) );
+                    pBuffer++;
 
                     /* Write the low byte of the combined length. */
-                    *( pBuffer++ ) = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
-                                                        AWS_IOT_METRICS_USERNAME_LENGTH ) );
+                    *pBuffer = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
+                                                  AWS_IOT_METRICS_USERNAME_LENGTH ) );
+                    pBuffer++;
 
                     /* Write the identity portion of the username. */
                     memcpy( pBuffer,
