@@ -242,7 +242,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
 
     /* No buffer for remaining data should be allocated. */
     IotMqtt_Assert( pIncomingPacket->pRemainingData == NULL );
-    IotMqtt_Assert( pIncomingPacket->remainingLength == 0 );
+    IotMqtt_Assert( pIncomingPacket->remainingLength == 0U );
 
     /* Read the packet type, which is the first byte available. */
     pIncomingPacket->type = _getPacketTypeFunc( pMqttConnection->pSerializer )( pNetworkConnection,
@@ -273,7 +273,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
     if( status == IOT_MQTT_SUCCESS )
     {
         /* Allocate a buffer for the remaining data and read the data. */
-        if( pIncomingPacket->remainingLength > 0 )
+        if( pIncomingPacket->remainingLength > 0U )
         {             
             pIncomingPacket->pRemainingData = IotMqtt_MallocMessage( pIncomingPacket->remainingLength );
 
@@ -461,8 +461,8 @@ static IotMqttError_t _deserializePingResp( _mqttConnection_t * pMqttConnection,
     if( status == IOT_MQTT_SUCCESS )
     {
         if( Atomic_CompareAndSwap_u32( &( pMqttConnection->pingreq.u.operation.periodic.ping.failure ),
-                                       0,
-                                       1 ) == 1 )
+                                       0U,
+                                       1U ) == 1U )
         {
             IotLogDebug( "(MQTT connection %p) PINGRESP successfully parsed.",
                          pMqttConnection );
@@ -485,7 +485,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
 
     /* A buffer for remaining data must be allocated if remaining length is not 0. */
-    IotMqtt_Assert( ( pIncomingPacket->remainingLength > 0 ) ==
+    IotMqtt_Assert( ( pIncomingPacket->remainingLength > 0U ) ==
                     ( pIncomingPacket->pRemainingData != NULL ) );
 
     /* Only valid packets should be given to this function. */
@@ -675,7 +675,7 @@ bool _IotMqtt_GetNextByte( void * pNetworkConnection,
                                                 1 );
 
     /* Set the output parameter and return success if 1 byte was read. */
-    if( bytesReceived == 1 )
+    if( bytesReceived == 1U )
     {
         *pIncomingByte = incomingByte;
         status = true;
@@ -683,7 +683,7 @@ bool _IotMqtt_GetNextByte( void * pNetworkConnection,
     else
     {
         /* Network receive must return 0 on failure. */
-        IotMqtt_Assert( bytesReceived == 0 );
+        IotMqtt_Assert( bytesReceived == 0U );
     }
 
     return status;
@@ -710,11 +710,11 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
     pMqttConnection->disconnected = true;
 
-    if( pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0 )
+    if( pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0U )
     {
         /* Keep-alive must have a PINGREQ allocated. */
         IotMqtt_Assert( pMqttConnection->pingreq.u.operation.pMqttPacket != NULL );
-        IotMqtt_Assert( pMqttConnection->pingreq.u.operation.packetSize != 0 );
+        IotMqtt_Assert( pMqttConnection->pingreq.u.operation.packetSize != 0U );
 
         /* PINGREQ provides a reference to the connection, so reference count must
          * be nonzero. */
@@ -733,9 +733,9 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
             _getMqttFreePacketFunc( pMqttConnection->pSerializer )( pMqttConnection->pingreq.u.operation.pMqttPacket );
 
             /* Clear data about the keep-alive. */
-            pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = 0;
+            pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = 0U;
             pMqttConnection->pingreq.u.operation.pMqttPacket = NULL;
-            pMqttConnection->pingreq.u.operation.packetSize = 0;
+            pMqttConnection->pingreq.u.operation.packetSize = 0U;
 
             /* Keep-alive is cleaned up; decrement reference count. Since this
              * function must be followed with a call to DISCONNECT, a check to

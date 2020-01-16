@@ -52,12 +52,12 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDes
     /* This header file is used with only the gcc compiler which 
      * requires an int parameter for this routine. */ 
     /* coverity[misra_c_2012_directive_4_6_violation] */
-    if( __atomic_compare_exchange( pDestination,
-                                   &comparand,
-                                   &newValue,
-                                   false,
-                                   __ATOMIC_SEQ_CST,
-                                   __ATOMIC_SEQ_CST ) == true )
+    if( ( ( bool ) ( __atomic_compare_exchange( pDestination,
+                                                &comparand,
+                                                &newValue,
+                                                false,
+                                                __ATOMIC_SEQ_CST,
+                                                __ATOMIC_SEQ_CST ) ) )  == ( ( bool )( true ) ) )
     {
         swapped = 1;
     }
@@ -94,12 +94,12 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pD
 {
     uint32_t swapped = 0;
 
-    if( __atomic_compare_exchange( pDestination,
-                                   &pComparand,
-                                   &pNewValue,
-                                   false,
-                                   __ATOMIC_SEQ_CST,
-                                   __ATOMIC_SEQ_CST ) == true )
+    if( ( ( bool ) ( __atomic_compare_exchange( pDestination,
+                                                &pComparand,
+                                                &pNewValue,
+                                                false,
+                                                __ATOMIC_SEQ_CST,
+                                                __ATOMIC_SEQ_CST ) ) ) == ( ( bool )( true ) ) )
     {
         swapped = 1;
     }
