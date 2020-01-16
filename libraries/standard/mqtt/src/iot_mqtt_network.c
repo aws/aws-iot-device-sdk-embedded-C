@@ -61,7 +61,7 @@ static bool _incomingPacketValid( uint8_t packetType );
  *
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_NO_MEMORY or #IOT_MQTT_BAD_RESPONSE.
  */
-static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
+static IotMqttError_t _getIncomingPacket( IotNetworkConnection_t pNetworkConnection,
                                           const _mqttConnection_t * pMqttConnection,
                                           _mqttPacket_t * pIncomingPacket );
 
@@ -139,7 +139,7 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
  * @param[in] pMqttConnection The associated MQTT connection.
  * @param[in] length The length of the packet to flush.
  */
-static void _flushPacket( void * pNetworkConnection,
+static void _flushPacket( IotNetworkConnection_t pNetworkConnection,
                           const _mqttConnection_t * pMqttConnection,
                           size_t length );
 
@@ -233,7 +233,7 @@ static bool _incomingPacketValid( uint8_t packetType )
 
 /*-----------------------------------------------------------*/
 
-static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
+static IotMqttError_t _getIncomingPacket( IotNetworkConnection_t pNetworkConnection,
                                           const _mqttConnection_t * pMqttConnection,
                                           _mqttPacket_t * pIncomingPacket )
 {
@@ -644,7 +644,7 @@ static void _sendPuback( _mqttConnection_t * pMqttConnection,
 
 /*-----------------------------------------------------------*/
 
-static void _flushPacket( void * pNetworkConnection,
+static void _flushPacket( IotNetworkConnection_t pNetworkConnection,
                           const _mqttConnection_t * pMqttConnection,
                           size_t length )
 {
@@ -661,7 +661,7 @@ static void _flushPacket( void * pNetworkConnection,
 
 /*-----------------------------------------------------------*/
 
-bool _IotMqtt_GetNextByte( void * pNetworkConnection,
+bool _IotMqtt_GetNextByte( IotNetworkConnection_t pNetworkConnection,
                            const IotNetworkInterface_t * pNetworkInterface,
                            uint8_t * pIncomingByte )
 {
@@ -697,7 +697,8 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     IotNetworkError_t closeStatus = IOT_NETWORK_SUCCESS;
     IotMqttCallbackParam_t callbackParam = { .u.message = { 0 } };
-    void * pNetworkConnection = NULL, * pDisconnectCallbackContext = NULL;
+    IotNetworkConnection_t pNetworkConnection = NULL;
+    void * pDisconnectCallbackContext = NULL;
 
     /* Disconnect callback function. */
     void ( * disconnectCallback )( void *,
@@ -835,7 +836,7 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
 
 IotMqttError_t IotMqtt_GetIncomingMQTTPacketTypeAndLength( IotMqttPacketInfo_t * pIncomingPacket,
                                                            IotMqttGetNextByte_t getNextByte,
-                                                           void * pNetworkConnection )
+                                                           IotNetworkConnection_t pNetworkConnection )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
