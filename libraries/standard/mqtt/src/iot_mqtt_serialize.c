@@ -391,18 +391,9 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
  */
     static const IotLogConfig_t _logHideAll =
     {
-        /* The variables 'true' and 'false' are defined as 1 and 0, respectively, in
-         * most compiler's implementations of stdbool.h. */
-        /* coverity[misra_c_2012_rule_10_3_violation] */
-        .hideLibraryName = true,
-        /* The variables 'true' and 'false' are defined as 1 and 0, respectively, in
-         * most compiler's implementations of stdbool.h. */
-        /* coverity[misra_c_2012_rule_10_3_violation] */
-        .hideLogLevel    = true,
-        /* The variables 'true' and 'false' are defined as 1 and 0, respectively, in
-         * most compiler's implementations of stdbool.h. */
-        /* coverity[misra_c_2012_rule_10_3_violation] */
-        .hideTimestring  = true
+        .hideLibraryName = ( bool )( true ),
+        .hideLogLevel    = ( bool )( true ),
+        .hideTimestring  = ( bool )( true )
     };
 #endif
 
@@ -2110,7 +2101,7 @@ void _IotMqtt_FreePacket( uint8_t * pPacket )
 }
 
 /*-----------------------------------------------------------*/
-
+ 
 /* Public interface functions for serialization */
 
 /*-----------------------------------------------------------*/
