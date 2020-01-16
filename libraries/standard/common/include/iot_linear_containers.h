@@ -496,6 +496,11 @@ static inline void IotListDouble_Remove( IotLink_t * const pLink )
     IotContainers_Assert( pLink != NULL );
 
     /* This function must be called on a linked element. */
+    /* Coverity finds a false positive in the below assert.
+     * As this is only an assert, the sizeof operator should
+     * not be called. Regardless, as IotLink_IsLinked does not
+     * mutate any data, there is no side effect in calling it. */
+    /* coverity[misra_c_2012_rule_13_6_violation] */
     IotContainers_Assert( IotLink_IsLinked( pLink ) == true );
 
     pLink->pPrevious->pNext = pLink->pNext;

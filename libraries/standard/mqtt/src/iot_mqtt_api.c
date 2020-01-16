@@ -979,6 +979,11 @@ IotMqttError_t IotMqtt_Init( void )
             #endif /* ifdef _IotMqtt_InitSerializeAdditional */
         #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
+        /* If the above preprocessor conditions are satisfied, it is
+         * possible that status != IOT_MQTT_SUCCESS. Therefore, this
+         * condition is not an invariant, and the MISRA 14.3 violation is
+         * a false positive. */
+        /* coverity[misra_c_2012_rule_14_3_violation] */
         if( status == IOT_MQTT_SUCCESS )
         {
             IotLogInfo( "MQTT library successfully initialized." );

@@ -483,13 +483,18 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
                                                   _mqttPacket_t * pIncomingPacket )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    bool packetValidity = false;
+
+    /* Packet validity is not checked when asserts are disabled. */
+    ( void ) packetValidity;
 
     /* A buffer for remaining data must be allocated if remaining length is not 0. */
     IotMqtt_Assert( ( pIncomingPacket->remainingLength > 0U ) ==
                     ( pIncomingPacket->pRemainingData != NULL ) );
 
     /* Only valid packets should be given to this function. */
-    IotMqtt_Assert( _incomingPacketValid( pIncomingPacket->type ) == true );
+    packetValidity = _incomingPacketValid( pIncomingPacket->type );
+    IotMqtt_Assert( packetValidity == true );
 
     /* Mask out the low bits of packet type to ignore flags. */
     switch( ( pIncomingPacket->type & 0xf0U ) )

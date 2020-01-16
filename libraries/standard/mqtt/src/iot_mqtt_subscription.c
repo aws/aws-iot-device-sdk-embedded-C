@@ -457,10 +457,14 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
     _mqttSubscription_t * pSubscription = NULL;
     IotLink_t * pCurrentLink = NULL, * pNextLink = NULL;
     void * pCallbackContext = NULL;
+    bool linkStatus = false;
 
     void ( * callbackFunction )( void *,
                                  IotMqttCallbackParam_t * ) = NULL;
     _topicMatchParams_t topicMatchParams = { 0 };
+
+    /* Link status is not checked when asserts are disabled. */
+    ( void ) linkStatus;
 
     /* Set the members of the search parameter. */
     topicMatchParams.pTopicName = pCallbackParam->u.message.info.pTopicName;
@@ -526,7 +530,8 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
         if( pSubscription->unsubscribed == true )
         {
             /* An unsubscribed subscription should have been removed from the list. */
-            IotMqtt_Assert( IotLink_IsLinked( &( pSubscription->link ) ) == false );
+            linkStatus = IotLink_IsLinked( &( pSubscription->link ) );
+            IotMqtt_Assert( linkStatus == false );
 
             /* Free subscriptions with no references. */
             if( pSubscription->references == 0 )
