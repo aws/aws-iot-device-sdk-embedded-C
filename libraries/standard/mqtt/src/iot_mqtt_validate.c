@@ -173,10 +173,10 @@ static bool _validatePublish( bool awsIotMqttMode,
     /* This parameter is not used when logging is disabled. */
     ( void ) pPublishTypeDescription;
 
-    /* Check for a valid QoS and callback function when subscribing. */
-    if( operation == IOT_MQTT_SUBSCRIBE )
+    /* Check for NULL. */
+    if( pPublishInfo == NULL )
     {
-        status = _validateQos( pSubscription->qos );
+        IotLogError( "Publish information cannot be NULL." );
 
         status = false;
         goto cleanup;
@@ -192,10 +192,9 @@ static bool _validatePublish( bool awsIotMqttMode,
         goto cleanup;
     }
 
-    /* Check that the wildcards '+' and '#' are being used correctly. */
-    for( i = 0; i < pSubscription->topicFilterLength; i++ )
+    if( pPublishInfo->payloadLength != 0 )
     {
-        if( pSubscription->pTopicFilter[ i ] == '+' )
+        if( pPublishInfo->payloadLength > maximumPayloadLength )
         {
             IotLogError( "%s payload size of %zu exceeds maximum length of %zu.",
                          pPublishTypeDescription,
@@ -205,10 +204,11 @@ static bool _validatePublish( bool awsIotMqttMode,
             status = false;
             goto cleanup;
         }
-        else if( pSubscription->pTopicFilter[ i ] == '#' )
+        else
         {
-            status = _validateWildcardHash( i, pSubscription );
-        }
+            if( pPublishInfo->pPayload == NULL )
+            {
+                IotLogError( "Nonzero payload length cannot have a NULL payload." );
 
                 status = false;
                 goto cleanup;
@@ -224,45 +224,35 @@ static bool _validatePublish( bool awsIotMqttMode,
         goto cleanup;
     }
 
-    /* Unless '#' is standalone, it must be preceded by '/'. */
-    if( pSubscription->topicFilterLength > 1 )
+    /* Check the retry parameters. */
+    if( pPublishInfo->retryLimit > 0 )
     {
-        if( pSubscription->pTopicFilter[ index - 1 ] != '/' )
+        if( pPublishInfo->retryMs == 0 )
         {
-            IotLogError( "Invalid topic filter %.*s -- '#' must be preceded by '/'.",
-                         pSubscription->topicFilterLength,
-                         pSubscription->pTopicFilter );
+            IotLogError( "Publish retry time must be positive." );
 
             status = false;
             goto cleanup;
         }
     }
 
-    /* Check for a zero-length client identifier. Zero-length client identifiers
-     * are not allowed with clean sessions. */
-    if( pConnectInfo->clientIdentifierLength == 0 )
+    /* Check for compatibility with AWS IoT MQTT server. */
+    if( awsIotMqttMode == true )
     {
-        IotLogWarn( "A zero-length client identifier was provided." );
-
-        if( pConnectInfo->cleanSession == true )
+        /* Check for retained message. */
+        if( pPublishInfo->retain == true )
         {
-            IotLogError( "A zero-length client identifier cannot be used with a clean session." );
+            IotLogError( "AWS IoT does not support retained publish messages." );
 
             status = false;
             goto cleanup;
         }
-    }
 
-    /* If will info is provided, check that it is valid. */
-    if( pConnectInfo->pWillInfo != NULL )
-    {
-        if( _IotMqtt_ValidateLwtPublish( pConnectInfo->awsIotMqttMode,
-                                         pConnectInfo->pWillInfo ) == false )
+        /* Check topic name length. */
+        if( pPublishInfo->topicNameLength > AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
         {
-            status = false;
-            goto cleanup;
-        }
-    }
+            IotLogError( "AWS IoT does not support topic names longer than %d bytes.",
+                         AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
 
             status = false;
             goto cleanup;

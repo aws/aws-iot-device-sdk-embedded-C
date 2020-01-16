@@ -1085,9 +1085,9 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
             case 0x00:
             case 0x01:
             case 0x02:
-                /* In some implementations IotLog() maps to C standard printing API
-                 * that need specific primitive types for format specifiers. Also
-                 * inttypes.h may not be available on some C99 compilers, despite
+                /* In some implementations IotLog() maps to C standard printing API 
+                 * that need specific primitive types for format specifiers. Also 
+                 * inttypes.h may not be available on some C99 compilers, despite 
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
@@ -1097,9 +1097,9 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                 break;
 
             case 0x80:
-                /* In some implementations IotLog() maps to C standard printing API
-                 * that need specific primitive types for format specifiers. Also
-                 * inttypes.h may not be available on some C99 compilers, despite
+                /* In some implementations IotLog() maps to C standard printing API 
+                 * that need specific primitive types for format specifiers. Also 
+                 * inttypes.h may not be available on some C99 compilers, despite 
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
@@ -2564,10 +2564,6 @@ IotMqttError_t IotMqtt_DeserializeResponse( IotMqttPacketInfo_t * pMqttPacket )
     {
         IotLogError( "IotMqtt_DeserializeResponse() called with NULL pMqttPacket pointer or NULL pRemainingLength." );
         status = IOT_MQTT_BAD_PARAMETER;
-<<<<<<< HEAD
-        goto cleanup;
-=======
->>>>>>> upstream/v4_beta
     }
 
     if( status == IOT_MQTT_SUCCESS )
