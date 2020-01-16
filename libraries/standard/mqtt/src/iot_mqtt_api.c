@@ -860,6 +860,11 @@ static IotMqttError_t _waitForOperation( IotMqttOperation_t operation,
         status = operation->u.operation.status;
     }
 
+    /* Coverity finds a MISRA 13.2 violation in this log statement as the order
+     * of evaluation for IotMqtt_OperationType and IotMqtt_strerror is not
+     * defined. This is not an issue as these functions do not change data and
+     * only convert codes into constant strings. */
+    /* coverity[misra_c_2012_rule_13_2_violation] */
     IotLogInfo( "(MQTT connection %p, %s operation %p) Wait complete with result %s.",
                 operation->pMqttConnection,
                 IotMqtt_OperationType( operation->u.operation.type ),
