@@ -87,7 +87,7 @@ static bool _checkInit( void );
  *
  * @return Always returns `true`.
  */
-static bool _mqttSubscription_setUnsubscribe( const IotLink_t * pSubscriptionLink,
+static bool _mqttSubscription_setUnsubscribe( const IotLink_t * const pSubscriptionLink,
                                               void * pMatch );
 
 /**
@@ -292,7 +292,7 @@ static bool _checkInit( void )
 
 /*-----------------------------------------------------------*/
 
-static bool _mqttSubscription_setUnsubscribe( const IotLink_t * pSubscriptionLink,
+static bool _mqttSubscription_setUnsubscribe( const IotLink_t * const pSubscriptionLink,
                                               void * pMatch )
 {
     /* Because this function is called from a container function, the given link

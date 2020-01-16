@@ -85,7 +85,7 @@ typedef struct _operationMatchParam
  * @return `true` if the operation matches the parameters in `pArgument`; `false`
  * otherwise.
  */
-static bool _mqttOperation_match( const IotLink_t * pOperationLink,
+static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
                                   void * pMatch );
 
 /**
@@ -133,7 +133,7 @@ static bool _completePendingSend( _mqttOperation_t * pOperation,
 
 /*-----------------------------------------------------------*/
 
-static bool _mqttOperation_match( const IotLink_t * pOperationLink,
+static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
                                   void * pMatch )
 {
     bool match = false;
