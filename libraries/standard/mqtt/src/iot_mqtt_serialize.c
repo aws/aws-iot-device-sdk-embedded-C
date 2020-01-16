@@ -722,7 +722,7 @@ static bool _subscriptionPacketSize( IotMqttOperationType_t type,
         /* Only SUBSCRIBE packets include the QoS. */
         if( type == IOT_MQTT_SUBSCRIBE )
         {
-            subscriptionPacketSize += 1U );
+            subscriptionPacketSize += 1U;
         }
     }
 

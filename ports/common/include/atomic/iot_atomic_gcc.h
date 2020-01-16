@@ -50,14 +50,17 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDes
     uint32_t swapped = 0;
 
     /* This header file is used with only the gcc compiler which 
-     * requires an int parameter for this routine. */ 
+     * requires an int parameter for this routine.
+     * This routine is built into gcc and defined to return a bool
+     * type. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
-    if( ( ( bool ) ( __atomic_compare_exchange( pDestination,
-                                                &comparand,
-                                                &newValue,
-                                                false,
-                                                __ATOMIC_SEQ_CST,
-                                                __ATOMIC_SEQ_CST ) ) )  == ( ( bool )( true ) ) )
+    /* coverity[misra_c_2012_rule_10_4_violation] */
+    if( __atomic_compare_exchange( pDestination,
+                                   &comparand,
+                                   &newValue,
+                                   false,
+                                   __ATOMIC_SEQ_CST,
+                                   __ATOMIC_SEQ_CST )  == ( ( bool )( true ) ) );
     {
         swapped = 1;
     }
@@ -94,12 +97,15 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pD
 {
     uint32_t swapped = 0;
 
-    if( ( ( bool ) ( __atomic_compare_exchange( pDestination,
-                                                &pComparand,
-                                                &pNewValue,
-                                                false,
-                                                __ATOMIC_SEQ_CST,
-                                                __ATOMIC_SEQ_CST ) ) ) == ( ( bool )( true ) ) )
+    /* This routine is built into gcc and defined to return a bool
+     * type. */
+    /* coverity[misra_c_2012_rule_10_4_violation] */
+    if( __atomic_compare_exchange( pDestination,
+                                  &pComparand,
+                                  &pNewValue,
+                                  false,
+                                  __ATOMIC_SEQ_CST,
+                                  __ATOMIC_SEQ_CST ) == ( ( bool )( true ) ) );
     {
         swapped = 1;
     }
