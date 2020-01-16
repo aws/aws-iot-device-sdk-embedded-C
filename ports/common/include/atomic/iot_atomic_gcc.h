@@ -49,7 +49,7 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDes
 {
     uint32_t swapped = 0;
 
-    /* This header file is used with only the gcc compiler which 
+    /* This header file is used with only the gcc compiler which
      * requires an int parameter for this routine.
      * This routine is built into gcc and defined to return a bool
      * type. */
@@ -60,7 +60,7 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDes
                                    &newValue,
                                    false,
                                    __ATOMIC_SEQ_CST,
-                                   __ATOMIC_SEQ_CST )  == ( ( bool )( true ) ) )
+                                   __ATOMIC_SEQ_CST ) == ( ( bool ) ( true ) ) )
     {
         swapped = 1;
     }
@@ -78,7 +78,7 @@ static FORCE_INLINE void * Atomic_Swap_Pointer( void * volatile * pDestination,
 {
     void * pOldValue = NULL;
 
-    /* This header file is used with only the gcc compiler which 
+    /* This header file is used with only the gcc compiler which
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     __atomic_exchange( pDestination, &pNewValue, &pOldValue, __ATOMIC_SEQ_CST );
@@ -101,11 +101,11 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pD
      * type. */
     /* coverity[misra_c_2012_rule_10_4_violation] */
     if( __atomic_compare_exchange( pDestination,
-                                  &pComparand,
-                                  &pNewValue,
-                                  false,
-                                  __ATOMIC_SEQ_CST,
-                                  __ATOMIC_SEQ_CST ) == ( ( bool )( true ) ) )
+                                   &pComparand,
+                                   &pNewValue,
+                                   false,
+                                   __ATOMIC_SEQ_CST,
+                                   __ATOMIC_SEQ_CST ) == ( ( bool ) ( true ) ) )
     {
         swapped = 1;
     }
@@ -121,7 +121,7 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pD
 static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAugend,
                                              uint32_t addend )
 {
-    /* This header file is used with only the gcc compiler which 
+    /* This header file is used with only the gcc compiler which
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     return __atomic_fetch_add( pAugend, addend, __ATOMIC_SEQ_CST );
@@ -135,7 +135,7 @@ static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAugend,
 static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pMinuend,
                                                   uint32_t subtrahend )
 {
-    /* This header file is used with only the gcc compiler which 
+    /* This header file is used with only the gcc compiler which
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     return __atomic_fetch_sub( pMinuend, subtrahend, __ATOMIC_SEQ_CST );
@@ -169,7 +169,7 @@ static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pMinuend 
 static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pOperand,
                                             uint32_t mask )
 {
-    /* This header file is used with only the gcc compiler which 
+    /* This header file is used with only the gcc compiler which
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     return __atomic_fetch_or( pOperand, mask, __ATOMIC_SEQ_CST );
@@ -183,7 +183,7 @@ static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pOperand,
 static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pOperand,
                                              uint32_t mask )
 {
-    /* This header file is used with only the gcc compiler which 
+    /* This header file is used with only the gcc compiler which
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     return __atomic_fetch_xor( pOperand, mask, __ATOMIC_SEQ_CST );
@@ -197,7 +197,7 @@ static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pOperand,
 static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pOperand,
                                              uint32_t mask )
 {
-    /* This header file is used with only the gcc compiler which 
+    /* This header file is used with only the gcc compiler which
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     return __atomic_fetch_and( pOperand, mask, __ATOMIC_SEQ_CST );
@@ -211,7 +211,7 @@ static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pOperand,
 static FORCE_INLINE uint32_t Atomic_NAND_u32( uint32_t volatile * pOperand,
                                               uint32_t mask )
 {
-    /* This header file is used with only the gcc compiler which 
+    /* This header file is used with only the gcc compiler which
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
     return __atomic_fetch_nand( pOperand, mask, __ATOMIC_SEQ_CST );

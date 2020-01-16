@@ -605,12 +605,12 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
          * stdint.h being available. */
         /* coverity[misra_c_2012_directive_4_6_violation] */
         IotLogDebug( "(MQTT connection %p, %s operation %p) Job reference changed"
-                     " from %ld to %ld.",
+                     " from %d to %d.",
                      pMqttConnection,
                      IotMqtt_OperationType( pOperation->u.operation.type ),
                      pOperation,
-                     ( long ) ( pOperation->u.operation.jobReference + 1 ),
-                     ( long ) ( pOperation->u.operation.jobReference ) );
+                     ( int ) ( pOperation->u.operation.jobReference + 1 ),
+                     ( int ) ( pOperation->u.operation.jobReference ) );
 
         /* The job reference count must be 0 or 1 after the decrement. */
         IotMqtt_Assert( ( pOperation->u.operation.jobReference == 0 ) ||
@@ -1134,12 +1134,12 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
                  * inttypes.h may not be available on some C99 compilers, despite
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
-                IotLogDebug( "(MQTT connection %p, %s operation %p) Job reference changed from %ld to %ld.",
+                IotLogDebug( "(MQTT connection %p, %s operation %p) Job reference changed from %d to %d.",
                              pMqttConnection,
                              IotMqtt_OperationType( type ),
                              pResult,
-                             ( long int ) ( pResult->u.operation.jobReference - 1 ),
-                             ( long int ) ( pResult->u.operation.jobReference ) );
+                             ( int ) ( pResult->u.operation.jobReference - 1 ),
+                             ( int ) ( pResult->u.operation.jobReference ) );
             }
         }
     }

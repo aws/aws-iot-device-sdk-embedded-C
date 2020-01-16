@@ -387,8 +387,8 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
     pMqttConnection->pingreq.u.operation.type = IOT_MQTT_PINGREQ;
 
     /* Convert the keep-alive interval to milliseconds. */
-    pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = ( uint32_t )( keepAliveSeconds * 1000U );
-    pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs = ( uint32_t )( keepAliveSeconds * 1000U );
+    pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = ( uint32_t ) ( keepAliveSeconds * 1000U );
+    pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs = ( uint32_t ) ( keepAliveSeconds * 1000U );
 
     /* Generate a PINGREQ packet. */
     serializeStatus = _getMqttPingreqSerializer( pMqttConnection->pSerializer )( &( pMqttConnection->pingreq.u.operation.pMqttPacket ),

@@ -519,7 +519,7 @@ static uint8_t * _encodeUserName( uint8_t * pBuffer,
             {
                 /* Only include metrics if it will fit within the encoding
                  * standard. */
-                if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( uint16_t )( UINT16_MAX ) ) )
+                if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( uint16_t ) ( UINT16_MAX ) ) )
                 {
                     /* Write the high byte of the combined length. */
                     *( pBuffer++ ) = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
@@ -596,8 +596,8 @@ static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
     if( pConnectInfo->awsIotMqttMode == true )
     {
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            connectPacketSize += AWS_IOT_METRICS_USERNAME_LENGTH +
-                                 pConnectInfo->userNameLength + sizeof( uint16_t );
+            connectPacketSize += ( size_t ) ( AWS_IOT_METRICS_USERNAME_LENGTH +
+                                              pConnectInfo->userNameLength + ( uint16_t ) ( sizeof( uint16_t ) ) );
             encodedUserName = true;
         #endif
     }
@@ -872,7 +872,7 @@ static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is equal to connectPacketSize, i.e. pBuffer did not overflow. */
-    IotMqtt_Assert( ( size_t ) ( pBuffer - pConnectPacket ) == connectPacketSize );
+    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pConnectPacket ) ) == connectPacketSize );
 
     /* Print out the serialized CONNECT packet for debugging purposes. */
     IotLog_PrintBuffer( "MQTT CONNECT packet:", pConnectPacket, connectPacketSize );
@@ -953,7 +953,7 @@ static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is equal to publishPacketSize, i.e. pBuffer did not overflow. */
-    IotMqtt_Assert( ( size_t ) ( pBuffer - pPublishPacket ) == publishPacketSize );
+    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pPublishPacket ) ) == publishPacketSize );
 
     /* Print out the serialized PUBLISH packet for debugging purposes. */
     IotLog_PrintBuffer( "MQTT PUBLISH packet:", pPublishPacket, publishPacketSize );
@@ -1007,7 +1007,7 @@ static void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is equal to subscribePacketSize, i.e. pBuffer did not overflow. */
-    IotMqtt_Assert( ( size_t ) ( pBuffer - pSubscribePacket ) == subscribePacketSize );
+    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pSubscribePacket ) ) == subscribePacketSize );
 
     /* Print out the serialized SUBSCRIBE packet for debugging purposes. */
     IotLog_PrintBuffer( "MQTT SUBSCRIBE packet:", pSubscribePacket, subscribePacketSize );
@@ -1057,7 +1057,7 @@ static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionLi
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is equal to unsubscribePacketSize, i.e. pBuffer did not overflow. */
-    IotMqtt_Assert( ( size_t ) ( pBuffer - pUnsubscribePacket ) == unsubscribePacketSize );
+    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pUnsubscribePacket ) ) == unsubscribePacketSize );
 
     /* Print out the serialized UNSUBSCRIBE packet for debugging purposes. */
     IotLog_PrintBuffer( "MQTT UNSUBSCRIBE packet:", pUnsubscribePacket, unsubscribePacketSize );
@@ -1085,9 +1085,10 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
             case 0x00:
             case 0x01:
             case 0x02:
-                /* In some implementations IotLog() maps to C standard printing API 
-                 * that need specific primitive types for format specifiers. Also 
-                 * inttypes.h may not be available on some C99 compilers, despite 
+
+                /* In some implementations IotLog() maps to C standard printing API
+                 * that need specific primitive types for format specifiers. Also
+                 * inttypes.h may not be available on some C99 compilers, despite
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
@@ -1097,9 +1098,10 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                 break;
 
             case 0x80:
-                /* In some implementations IotLog() maps to C standard printing API 
-                 * that need specific primitive types for format specifiers. Also 
-                 * inttypes.h may not be available on some C99 compilers, despite 
+
+                /* In some implementations IotLog() maps to C standard printing API
+                 * that need specific primitive types for format specifiers. Also
+                 * inttypes.h may not be available on some C99 compilers, despite
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
@@ -1213,7 +1215,7 @@ size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
                                       pNetworkInterface,
                                       &encodedByte ) == true )
             {
-                remainingLength += ( encodedByte & 0x7FU ) * multiplier;
+                remainingLength += ( size_t ) ( encodedByte & 0x7FU ) * multiplier;
                 multiplier *= 128U;
                 bytesDecoded++;
             }
@@ -1264,7 +1266,7 @@ size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnection,
         {
             if( getNextByte( pNetworkConnection, &encodedByte ) == IOT_MQTT_SUCCESS )
             {
-                remainingLength += ( encodedByte & 0x7FU ) * multiplier;
+                remainingLength += ( size_t ) ( encodedByte & 0x7FU ) * multiplier;
                 multiplier *= 128U;
                 bytesDecoded++;
             }
