@@ -118,7 +118,7 @@ static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAugend,
     /* This header file is used with only the gcc compiler which 
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
-    return __atomic_fetch_add( pAugend, addend, __ATOMIC_SEQ_CST );
+    return ( uint32_t )( __atomic_fetch_add( pAugend, addend, __ATOMIC_SEQ_CST ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -132,7 +132,7 @@ static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pMinuend,
     /* This header file is used with only the gcc compiler which 
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
-    return __atomic_fetch_sub( pMinuend, subtrahend, __ATOMIC_SEQ_CST );
+    return ( uint32_t )( __atomic_fetch_sub( pMinuend, subtrahend, __ATOMIC_SEQ_CST ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -142,7 +142,7 @@ static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pMinuend,
  */
 static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAugend )
 {
-    return __atomic_fetch_add( pAugend, 1, __ATOMIC_SEQ_CST );
+    return ( uint32_t )( __atomic_fetch_add( pAugend, 1U, __ATOMIC_SEQ_CST ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -152,7 +152,7 @@ static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAugend )
  */
 static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pMinuend )
 {
-    return __atomic_fetch_sub( pMinuend, 1, __ATOMIC_SEQ_CST );
+    return ( uint32_t )( __atomic_fetch_sub( pMinuend, 1U, __ATOMIC_SEQ_CST ) );
 }
 
 /*--------------------- Bitwise logic -------------------------*/
@@ -166,7 +166,7 @@ static FORCE_INLINE uint32_t Atomic_OR_u32( uint32_t volatile * pOperand,
     /* This header file is used with only the gcc compiler which 
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
-    return __atomic_fetch_or( pOperand, mask, __ATOMIC_SEQ_CST );
+    return ( uint32_t )( __atomic_fetch_or( pOperand, mask, __ATOMIC_SEQ_CST ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -180,7 +180,7 @@ static FORCE_INLINE uint32_t Atomic_XOR_u32( uint32_t volatile * pOperand,
     /* This header file is used with only the gcc compiler which 
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
-    return __atomic_fetch_xor( pOperand, mask, __ATOMIC_SEQ_CST );
+    return ( uint32_t )( __atomic_fetch_xor( pOperand, mask, __ATOMIC_SEQ_CST ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -194,7 +194,7 @@ static FORCE_INLINE uint32_t Atomic_AND_u32( uint32_t volatile * pOperand,
     /* This header file is used with only the gcc compiler which 
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
-    return __atomic_fetch_and( pOperand, mask, __ATOMIC_SEQ_CST );
+    return ( uint32_t )( __atomic_fetch_and( pOperand, mask, __ATOMIC_SEQ_CST ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -208,7 +208,7 @@ static FORCE_INLINE uint32_t Atomic_NAND_u32( uint32_t volatile * pOperand,
     /* This header file is used with only the gcc compiler which 
      * requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
-    return __atomic_fetch_nand( pOperand, mask, __ATOMIC_SEQ_CST );
+    return ( uint32_t )( __atomic_fetch_nand( pOperand, mask, __ATOMIC_SEQ_CST ) );
 }
 
 #endif /* IOT_ATOMIC_GCC_H_ */

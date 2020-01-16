@@ -391,8 +391,17 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
  */
     static const IotLogConfig_t _logHideAll =
     {
+        /* The variables 'true' and 'false' are defined as 1 and 0, respectively, in
+         * most compiler's implementations of stdbool.h. */
+        /* coverity[misra_c_2012_rule_10_3_violation] */
         .hideLibraryName = true,
+        /* The variables 'true' and 'false' are defined as 1 and 0, respectively, in
+         * most compiler's implementations of stdbool.h. */
+        /* coverity[misra_c_2012_rule_10_3_violation] */
         .hideLogLevel    = true,
+        /* The variables 'true' and 'false' are defined as 1 and 0, respectively, in
+         * most compiler's implementations of stdbool.h. */
+        /* coverity[misra_c_2012_rule_10_3_violation] */
         .hideTimestring  = true
     };
 #endif
@@ -457,8 +466,8 @@ static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
     /* This algorithm is copied from the MQTT v3.1.1 spec. */
     do
     {
-        lengthByte = length % 128;
-        length = length / 128;
+        lengthByte = ( uint8_t )( length % 128U );
+        length = length / 128U;
 
         /* Set the high bit of this byte, indicating that there's more data. */
         if( length > 0 )
