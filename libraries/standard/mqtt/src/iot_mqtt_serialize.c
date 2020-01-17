@@ -381,6 +381,18 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
                                              IotMqttQos_t qos,
                                              size_t qos0Minimum );
 
+/**
+ * @brief Determine QOS for incoming publish flags.
+ *
+ * @param[in] publishFlags Incoming publish flags where QOS is encoded.
+ * @param[in, out] pOutput Pointer to IotMqttPublishInfo_t struct where QOS will be written.
+ *
+ * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_BAD_RESPONSE.
+ */
+
+static IotMqttError_t _getIncomingPublishQOS( const uint8_t publishFlags,
+                                              IotMqttPublishInfo_t * pOutput );
+
 /*-----------------------------------------------------------*/
 
 #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
@@ -1085,9 +1097,10 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
             case 0x00:
             case 0x01:
             case 0x02:
-                /* In some implementations IotLog() maps to C standard printing API 
-                 * that need specific primitive types for format specifiers. Also 
-                 * inttypes.h may not be available on some C99 compilers, despite 
+
+                /* In some implementations IotLog() maps to C standard printing API
+                 * that need specific primitive types for format specifiers. Also
+                 * inttypes.h may not be available on some C99 compilers, despite
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
@@ -1097,9 +1110,10 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                 break;
 
             case 0x80:
-                /* In some implementations IotLog() maps to C standard printing API 
-                 * that need specific primitive types for format specifiers. Also 
-                 * inttypes.h may not be available on some C99 compilers, despite 
+
+                /* In some implementations IotLog() maps to C standard printing API
+                 * that need specific primitive types for format specifiers. Also
+                 * inttypes.h may not be available on some C99 compilers, despite
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLog( IOT_LOG_DEBUG,
@@ -1171,6 +1185,46 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
 
             status = IOT_MQTT_BAD_RESPONSE;
         }
+    }
+
+    return status;
+}
+
+static IotMqttError_t _getIncomingPublishQOS( uint8_t publishFlags,
+                                              IotMqttPublishInfo_t * pOutput )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+
+    if( pOutput == NULL )
+    {
+        status = IOT_MQTT_BAD_RESPONSE;
+    }
+    /* Check for QoS 2. */
+    else if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 ) == true )
+    {
+        /* PUBLISH packet is invalid if both QoS 1 and QoS 2 bits are set. */
+        if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 ) == true )
+        {
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "Bad QoS: 3." );
+
+            status = IOT_MQTT_BAD_RESPONSE;
+        }
+        else
+        {
+            pOutput->qos = IOT_MQTT_QOS_2;
+        }
+    }
+    /* Check for QoS 1. */
+    else if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 ) == true )
+    {
+        pOutput->qos = IOT_MQTT_QOS_1;
+    }
+    /* If the PUBLISH isn't QoS 1 or 2, then it's QoS 0. */
+    else
+    {
+        pOutput->qos = IOT_MQTT_QOS_0;
     }
 
     return status;
@@ -1375,12 +1429,11 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
                 pConnack->type );
 
         status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
     }
 
     /* According to MQTT 3.1.1, the second byte of CONNACK must specify a
      * "Remaining length" of 2. */
-    if( pConnack->remainingLength != MQTT_PACKET_CONNACK_REMAINING_LENGTH )
+    else if( pConnack->remainingLength != MQTT_PACKET_CONNACK_REMAINING_LENGTH )
     {
         IotLog( IOT_LOG_ERROR,
                 &_logHideAll,
@@ -1388,74 +1441,74 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
                 MQTT_PACKET_CONNACK_REMAINING_LENGTH );
 
         status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
     }
 
     /* Check the reserved bits in CONNACK. The high 7 bits of the second byte
      * in CONNACK must be 0. */
-    if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
+    else if( ( pRemainingData[ 0 ] | 0x01U ) != 0x01U )
     {
         IotLog( IOT_LOG_ERROR,
                 &_logHideAll,
                 "Reserved bits in CONNACK incorrect." );
 
         status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
-    }
-
-    /* Determine if the "Session Present" bit it set. This is the lowest bit of
-     * the second byte in CONNACK. */
-    if( ( pRemainingData[ 0 ] & MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
-        == MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
-    {
-        IotLog( IOT_LOG_DEBUG,
-                &_logHideAll,
-                "CONNACK session present bit set." );
-
-        /* MQTT 3.1.1 specifies that the fourth byte in CONNACK must be 0 if the
-         * "Session Present" bit is set. */
-        if( pRemainingData[ 1 ] != 0 )
-        {
-            status = IOT_MQTT_BAD_RESPONSE;
-            goto cleanup;
-        }
     }
     else
     {
-        IotLog( IOT_LOG_DEBUG,
-                &_logHideAll,
-                "CONNACK session present bit not set." );
+        /* Determine if the "Session Present" bit is set. This is the lowest bit of
+         * the second byte in CONNACK. */
+        if( ( pRemainingData[ 0 ] & MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
+            == MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK )
+        {
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "CONNACK session present bit set." );
+
+            /* MQTT 3.1.1 specifies that the fourth byte in CONNACK must be 0 if the
+             * "Session Present" bit is set. */
+            if( pRemainingData[ 1 ] != 0 )
+            {
+                status = IOT_MQTT_BAD_RESPONSE;
+            }
+        }
+        else
+        {
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "CONNACK session present bit not set." );
+        }
     }
 
-    /* In MQTT 3.1.1, only values 0 through 5 are valid CONNACK response codes. */
-    if( pRemainingData[ 1 ] > 5 )
+    if( status == IOT_MQTT_SUCCESS )
     {
-        IotLog( IOT_LOG_DEBUG,
-                &_logHideAll,
-                "CONNACK response %hhu is not valid.",
-                pRemainingData[ 1 ] );
+        /* In MQTT 3.1.1, only values 0 through 5 are valid CONNACK response codes. */
+        if( pRemainingData[ 1 ] > 5 )
+        {
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "CONNACK response %hhu is not valid.",
+                    pRemainingData[ 1 ] );
 
-        status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
+            status = IOT_MQTT_BAD_RESPONSE;
+        }
+        else
+        {
+            /* Print the appropriate message for the CONNACK response code if logs are
+             * enabled. */
+            #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
+                IotLog( IOT_LOG_DEBUG,
+                        &_logHideAll,
+                        "%s",
+                        pConnackResponses[ pRemainingData[ 1 ] ] );
+            #endif
+
+            /* A nonzero CONNACK response code means the connection was refused. */
+            if( pRemainingData[ 1 ] > 0 )
+            {
+                status = IOT_MQTT_SERVER_REFUSED;
+            }
+        }
     }
-
-    /* Print the appropriate message for the CONNACK response code if logs are
-     * enabled. */
-    #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
-        IotLog( IOT_LOG_DEBUG,
-                &_logHideAll,
-                "%s",
-                pConnackResponses[ pRemainingData[ 1 ] ] );
-    #endif
-
-    /* A nonzero CONNACK response code means the connection was refused. */
-    if( pRemainingData[ 1 ] > 0 )
-    {
-        status = IOT_MQTT_SERVER_REFUSED;
-        goto cleanup;
-    }
-
-cleanup:
 
     return status;
 }
@@ -1572,126 +1625,100 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
             &_logHideAll,
             "Retain bit is %d.", pOutput->retain );
 
-    /* Check for QoS 2. */
-    if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 ) == true )
+    status = _getIncomingPublishQOS( publishFlags, pOutput );
+
+    if( status == IOT_MQTT_SUCCESS )
     {
-        /* PUBLISH packet is invalid if both QoS 1 and QoS 2 bits are set. */
-        if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 ) == true )
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "QoS is %d.", pOutput->qos );
+
+        /* Parse the DUP bit. */
+        if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP ) == true )
         {
             IotLog( IOT_LOG_DEBUG,
                     &_logHideAll,
-                    "Bad QoS: 3." );
-
-            status = IOT_MQTT_BAD_RESPONSE;
-            goto cleanup;
+                    "DUP is 1." );
         }
-
-        pOutput->qos = IOT_MQTT_QOS_2;
-    }
-    /* Check for QoS 1. */
-    else if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 ) == true )
-    {
-        pOutput->qos = IOT_MQTT_QOS_1;
-    }
-    /* If the PUBLISH isn't QoS 1 or 2, then it's QoS 0. */
-    else
-    {
-        pOutput->qos = IOT_MQTT_QOS_0;
-    }
-
-    IotLog( IOT_LOG_DEBUG,
-            &_logHideAll,
-            "QoS is %d.", pOutput->qos );
-
-    /* Parse the DUP bit. */
-    if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP ) == true )
-    {
-        IotLog( IOT_LOG_DEBUG,
-                &_logHideAll,
-                "DUP is 1." );
-    }
-    else
-    {
-        IotLog( IOT_LOG_DEBUG,
-                &_logHideAll,
-                "DUP is 0." );
-    }
-
-    /* Sanity checks for "Remaining length". A QoS 0 PUBLISH  must have a remaining
-     * length of at least 3 to accommodate topic name length (2 bytes) and topic
-     * name (at least 1 byte). A QoS 1 or 2 PUBLISH must have a remaining length of
-     * at least 5 for the packet identifier in addition to the topic name length and
-     * topic name. */
-    status = _checkRemainingLength( pPublish, pOutput->qos, MQTT_MIN_PUBLISH_REMAINING_LENGTH_QOS0 );
-
-    if( status != IOT_MQTT_SUCCESS )
-    {
-        goto cleanup;
-    }
-
-    /* Extract the topic name starting from the first byte of the variable header.
-     * The topic name string starts at byte 3 in the variable header. */
-    pOutput->topicNameLength = UINT16_DECODE( pVariableHeader );
-
-    /* Sanity checks for topic name length and "Remaining length". The remaining
-     * length must be at least as large as the variable length header. */
-    status = _checkRemainingLength( pPublish,
-                                    pOutput->qos,
-                                    pOutput->topicNameLength + sizeof( uint16_t ) );
-
-    if( status != IOT_MQTT_SUCCESS )
-    {
-        goto cleanup;
-    }
-
-    /* Parse the topic. */
-    pOutput->pTopicName = ( const char * ) ( pVariableHeader + sizeof( uint16_t ) );
-
-    IotLog( IOT_LOG_DEBUG,
-            &_logHideAll,
-            "Topic name length %hu: %.*s",
-            pOutput->topicNameLength,
-            pOutput->topicNameLength,
-            pOutput->pTopicName );
-
-    /* Extract the packet identifier for QoS 1 or 2 PUBLISH packets. Packet
-     * identifier starts immediately after the topic name. */
-    pPacketIdentifierHigh = ( const uint8_t * ) ( pOutput->pTopicName + pOutput->topicNameLength );
-
-    if( pOutput->qos > IOT_MQTT_QOS_0 )
-    {
-        pPublish->packetIdentifier = UINT16_DECODE( pPacketIdentifierHigh );
-
-        IotLog( IOT_LOG_DEBUG,
-                &_logHideAll,
-                "Packet identifier %hu.", pPublish->packetIdentifier );
-
-        /* Packet identifier cannot be 0. */
-        if( pPublish->packetIdentifier == 0 )
+        else
         {
-            status = IOT_MQTT_BAD_RESPONSE;
-            goto cleanup;
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "DUP is 0." );
+        }
+
+        /* Sanity checks for "Remaining length". A QoS 0 PUBLISH  must have a remaining
+         * length of at least 3 to accommodate topic name length (2 bytes) and topic
+         * name (at least 1 byte). A QoS 1 or 2 PUBLISH must have a remaining length of
+         * at least 5 for the packet identifier in addition to the topic name length and
+         * topic name. */
+        status = _checkRemainingLength( pPublish, pOutput->qos, MQTT_MIN_PUBLISH_REMAINING_LENGTH_QOS0 );
+    }
+
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        /* Extract the topic name starting from the first byte of the variable header.
+         * The topic name string starts at byte 3 in the variable header. */
+        pOutput->topicNameLength = UINT16_DECODE( pVariableHeader );
+
+        /* Sanity checks for topic name length and "Remaining length". The remaining
+         * length must be at least as large as the variable length header. */
+        status = _checkRemainingLength( pPublish,
+                                        pOutput->qos,
+                                        pOutput->topicNameLength + sizeof( uint16_t ) );
+    }
+
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        /* Parse the topic. */
+        pOutput->pTopicName = ( const char * ) ( pVariableHeader + sizeof( uint16_t ) );
+
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "Topic name length %hu: %.*s",
+                pOutput->topicNameLength,
+                pOutput->topicNameLength,
+                pOutput->pTopicName );
+
+        /* Extract the packet identifier for QoS 1 or 2 PUBLISH packets. Packet
+         * identifier starts immediately after the topic name. */
+        pPacketIdentifierHigh = ( const uint8_t * ) ( pOutput->pTopicName + pOutput->topicNameLength );
+
+        if( pOutput->qos > IOT_MQTT_QOS_0 )
+        {
+            pPublish->packetIdentifier = UINT16_DECODE( pPacketIdentifierHigh );
+
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "Packet identifier %hu.", pPublish->packetIdentifier );
+
+            /* Packet identifier cannot be 0. */
+            if( pPublish->packetIdentifier == 0 )
+            {
+                status = IOT_MQTT_BAD_RESPONSE;
+            }
         }
     }
 
-    /* Calculate the length of the payload. QoS 1 or 2 PUBLISH packets contain
-     * a packet identifier, but QoS 0 PUBLISH packets do not. */
-    if( pOutput->qos == IOT_MQTT_QOS_0 )
+    if( status == IOT_MQTT_SUCCESS )
     {
-        pOutput->payloadLength = ( pPublish->remainingLength - pOutput->topicNameLength - sizeof( uint16_t ) );
-        pOutput->pPayload = pPacketIdentifierHigh;
-    }
-    else
-    {
-        pOutput->payloadLength = ( pPublish->remainingLength - pOutput->topicNameLength - 2 * sizeof( uint16_t ) );
-        pOutput->pPayload = pPacketIdentifierHigh + sizeof( uint16_t );
-    }
+        /* Calculate the length of the payload. QoS 1 or 2 PUBLISH packets contain
+         * a packet identifier, but QoS 0 PUBLISH packets do not. */
+        if( pOutput->qos == IOT_MQTT_QOS_0 )
+        {
+            pOutput->payloadLength = ( pPublish->remainingLength - pOutput->topicNameLength - sizeof( uint16_t ) );
+            pOutput->pPayload = pPacketIdentifierHigh;
+        }
+        else
+        {
+            pOutput->payloadLength = ( pPublish->remainingLength - pOutput->topicNameLength - 2 * sizeof( uint16_t ) );
+            pOutput->pPayload = pPacketIdentifierHigh + sizeof( uint16_t );
+        }
 
-    IotLog( IOT_LOG_DEBUG,
-            &_logHideAll,
-            "Payload length %hu.", pOutput->payloadLength );
-
-cleanup:
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "Payload length %hu.", pOutput->payloadLength );
+    }
 
     return status;
 }
@@ -1747,37 +1774,36 @@ IotMqttError_t _IotMqtt_DeserializePuback( _mqttPacket_t * pPuback )
                 MQTT_PACKET_PUBACK_REMAINING_LENGTH );
 
         status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
     }
-
-    /* Extract the packet identifier (third and fourth bytes) from PUBACK. */
-    pPuback->packetIdentifier = UINT16_DECODE( pPuback->pRemainingData );
-
-    IotLog( IOT_LOG_DEBUG,
-            &_logHideAll,
-            "Packet identifier %hu.", pPuback->packetIdentifier );
-
-    /* Packet identifier cannot be 0. */
-    if( pPuback->packetIdentifier == 0 )
+    else
     {
-        status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
-    }
+        /* Extract the packet identifier (third and fourth bytes) from PUBACK. */
+        pPuback->packetIdentifier = UINT16_DECODE( pPuback->pRemainingData );
 
-    /* Check that the control packet type is 0x40 (this must be done after the
-     * packet identifier is parsed). */
-    if( pPuback->type != MQTT_PACKET_TYPE_PUBACK )
-    {
-        IotLog( IOT_LOG_ERROR,
+        IotLog( IOT_LOG_DEBUG,
                 &_logHideAll,
-                "Bad control packet type 0x%02x.",
-                pPuback->type );
+                "Packet identifier %hu.", pPuback->packetIdentifier );
 
-        status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
+        /* Packet identifier cannot be 0. */
+        if( pPuback->packetIdentifier == 0 )
+        {
+            status = IOT_MQTT_BAD_RESPONSE;
+        }
+        else
+        {
+            /* Check that the control packet type is 0x40 (this must be done after the
+             * packet identifier is parsed). */
+            if( pPuback->type != MQTT_PACKET_TYPE_PUBACK )
+            {
+                IotLog( IOT_LOG_ERROR,
+                        &_logHideAll,
+                        "Bad control packet type 0x%02x.",
+                        pPuback->type );
+
+                status = IOT_MQTT_BAD_RESPONSE;
+            }
+        }
     }
-
-cleanup:
 
     return status;
 }
@@ -1807,39 +1833,38 @@ IotMqttError_t _IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubsc
                      MQTT_MAX_REMAINING_LENGTH );
 
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    /* Total size of the subscribe packet should be larger than the "Remaining length"
-     * field. */
-    IotMqtt_Assert( subscribePacketSize > remainingLength );
-
-    /* Allocate memory to hold the SUBSCRIBE packet. */
-    pBuffer = IotMqtt_MallocMessage( subscribePacketSize );
-
-    /* Check that sufficient memory was allocated. */
-    if( pBuffer == NULL )
+    else
     {
-        IotLogError( "Failed to allocate memory for SUBSCRIBE packet." );
+        /* Total size of the subscribe packet should be larger than the "Remaining length"
+         * field. */
+        IotMqtt_Assert( subscribePacketSize > remainingLength );
 
-        status = IOT_MQTT_NO_MEMORY;
-        goto cleanup;
+        /* Allocate memory to hold the SUBSCRIBE packet. */
+        pBuffer = IotMqtt_MallocMessage( subscribePacketSize );
+
+        /* Check that sufficient memory was allocated. */
+        if( pBuffer == NULL )
+        {
+            IotLogError( "Failed to allocate memory for SUBSCRIBE packet." );
+
+            status = IOT_MQTT_NO_MEMORY;
+        }
+        else
+        {
+            /* Set the output parameters. The remainder of this function always succeeds. */
+            *pSubscribePacket = pBuffer;
+            *pPacketSize = subscribePacketSize;
+
+            /* Serialize subscribe into buffer pointed to by pBuffer */
+            _serializeSubscribe( pSubscriptionList,
+                                 subscriptionCount,
+                                 remainingLength,
+                                 pPacketIdentifier,
+                                 pBuffer,
+                                 subscribePacketSize );
+        }
     }
-
-    /* Set the output parameters. The remainder of this function always succeeds. */
-    *pSubscribePacket = pBuffer;
-    *pPacketSize = subscribePacketSize;
-
-    /* Serialize subscribe into buffer pointed to by pBuffer */
-    _serializeSubscribe( pSubscriptionList,
-                         subscriptionCount,
-                         remainingLength,
-                         pPacketIdentifier,
-                         pBuffer,
-                         subscribePacketSize );
-
-
-cleanup:
 
     return status;
 }
@@ -1861,34 +1886,34 @@ IotMqttError_t _IotMqtt_DeserializeSuback( _mqttPacket_t * pSuback )
                 "SUBACK cannot have a remaining length less than 3." );
 
         status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
     }
-
-    /* Extract the packet identifier (first 2 bytes of variable header) from SUBACK. */
-    pSuback->packetIdentifier = UINT16_DECODE( pVariableHeader );
-
-    IotLog( IOT_LOG_DEBUG,
-            &_logHideAll,
-            "Packet identifier %hu.", pSuback->packetIdentifier );
-
-    /* Check that the control packet type is 0x90 (this must be done after the
-     * packet identifier is parsed). */
-    if( pSuback->type != MQTT_PACKET_TYPE_SUBACK )
+    else
     {
-        IotLog( IOT_LOG_ERROR,
+        /* Extract the packet identifier (first 2 bytes of variable header) from SUBACK. */
+        pSuback->packetIdentifier = UINT16_DECODE( pVariableHeader );
+
+        IotLog( IOT_LOG_DEBUG,
                 &_logHideAll,
-                "Bad control packet type 0x%02x.",
-                pSuback->type );
+                "Packet identifier %hu.", pSuback->packetIdentifier );
 
-        status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
+        /* Check that the control packet type is 0x90 (this must be done after the
+         * packet identifier is parsed). */
+        if( pSuback->type != MQTT_PACKET_TYPE_SUBACK )
+        {
+            IotLog( IOT_LOG_ERROR,
+                    &_logHideAll,
+                    "Bad control packet type 0x%02x.",
+                    pSuback->type );
+
+            status = IOT_MQTT_BAD_RESPONSE;
+        }
+        else
+        {
+            status = _decodeSubackStatus( remainingLength - sizeof( uint16_t ),
+                                          pVariableHeader + sizeof( uint16_t ),
+                                          pSuback );
+        }
     }
-
-    status = _decodeSubackStatus( remainingLength - sizeof( uint16_t ),
-                                  pVariableHeader + sizeof( uint16_t ),
-                                  pSuback );
-
-cleanup:
 
     return status;
 }
@@ -1918,38 +1943,38 @@ IotMqttError_t _IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSub
                      MQTT_MAX_REMAINING_LENGTH );
 
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    /* Total size of the unsubscribe packet should be larger than the "Remaining length"
-     * field. */
-    IotMqtt_Assert( unsubscribePacketSize > remainingLength );
-
-    /* Allocate memory to hold the UNSUBSCRIBE packet. */
-    pBuffer = IotMqtt_MallocMessage( unsubscribePacketSize );
-
-    /* Check that sufficient memory was allocated. */
-    if( pBuffer == NULL )
+    else
     {
-        IotLogError( "Failed to allocate memory for UNSUBSCRIBE packet." );
+        /* Total size of the unsubscribe packet should be larger than the "Remaining length"
+         * field. */
+        IotMqtt_Assert( unsubscribePacketSize > remainingLength );
 
-        status = IOT_MQTT_NO_MEMORY;
-        goto cleanup;
+        /* Allocate memory to hold the UNSUBSCRIBE packet. */
+        pBuffer = IotMqtt_MallocMessage( unsubscribePacketSize );
+
+        /* Check that sufficient memory was allocated. */
+        if( pBuffer == NULL )
+        {
+            IotLogError( "Failed to allocate memory for UNSUBSCRIBE packet." );
+
+            status = IOT_MQTT_NO_MEMORY;
+        }
+        else
+        {
+            /* Set the output parameters. The remainder of this function always succeeds. */
+            *pUnsubscribePacket = pBuffer;
+            *pPacketSize = unsubscribePacketSize;
+
+            /* Serialize unsubscribe into buffer pointed to by pBuffer */
+            _serializeUnsubscribe( pSubscriptionList,
+                                   subscriptionCount,
+                                   remainingLength,
+                                   pPacketIdentifier,
+                                   pBuffer,
+                                   unsubscribePacketSize );
+        }
     }
-
-    /* Set the output parameters. The remainder of this function always succeeds. */
-    *pUnsubscribePacket = pBuffer;
-    *pPacketSize = unsubscribePacketSize;
-
-    /* Serialize unsubscribe into buffer pointed to by pBuffer */
-    _serializeUnsubscribe( pSubscriptionList,
-                           subscriptionCount,
-                           remainingLength,
-                           pPacketIdentifier,
-                           pBuffer,
-                           unsubscribePacketSize );
-
-cleanup:
 
     return status;
 }
@@ -1969,37 +1994,37 @@ IotMqttError_t _IotMqtt_DeserializeUnsuback( _mqttPacket_t * pUnsuback )
                 MQTT_PACKET_UNSUBACK_REMAINING_LENGTH );
 
         status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
+    }
+    else
+    {
+        /* Extract the packet identifier (third and fourth bytes) from UNSUBACK. */
+        pUnsuback->packetIdentifier = UINT16_DECODE( pUnsuback->pRemainingData );
+
+        /* Packet identifier cannot be 0. */
+        if( pUnsuback->packetIdentifier == 0 )
+        {
+            status = IOT_MQTT_BAD_RESPONSE;
+        }
     }
 
-    /* Extract the packet identifier (third and fourth bytes) from UNSUBACK. */
-    pUnsuback->packetIdentifier = UINT16_DECODE( pUnsuback->pRemainingData );
-
-    /* Packet identifier cannot be 0. */
-    if( pUnsuback->packetIdentifier == 0 )
+    if( status == IOT_MQTT_SUCCESS )
     {
-        status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
-    }
-
-    IotLog( IOT_LOG_DEBUG,
-            &_logHideAll,
-            "Packet identifier %hu.", pUnsuback->packetIdentifier );
-
-    /* Check that the control packet type is 0xb0 (this must be done after the
-     * packet identifier is parsed). */
-    if( pUnsuback->type != MQTT_PACKET_TYPE_UNSUBACK )
-    {
-        IotLog( IOT_LOG_ERROR,
+        IotLog( IOT_LOG_DEBUG,
                 &_logHideAll,
-                "Bad control packet type 0x%02x.",
-                pUnsuback->type );
+                "Packet identifier %hu.", pUnsuback->packetIdentifier );
 
-        status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
+        /* Check that the control packet type is 0xb0 (this must be done after the
+         * packet identifier is parsed). */
+        if( pUnsuback->type != MQTT_PACKET_TYPE_UNSUBACK )
+        {
+            IotLog( IOT_LOG_ERROR,
+                    &_logHideAll,
+                    "Bad control packet type 0x%02x.",
+                    pUnsuback->type );
+
+            status = IOT_MQTT_BAD_RESPONSE;
+        }
     }
-
-cleanup:
 
     return status;
 }
@@ -2041,11 +2066,9 @@ IotMqttError_t _IotMqtt_DeserializePingresp( _mqttPacket_t * pPingresp )
                 pPingresp->type );
 
         status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
     }
-
     /* Check the "Remaining length" (second byte) of the received PINGRESP. */
-    if( pPingresp->remainingLength != MQTT_PACKET_PINGRESP_REMAINING_LENGTH )
+    else if( pPingresp->remainingLength != MQTT_PACKET_PINGRESP_REMAINING_LENGTH )
     {
         IotLog( IOT_LOG_ERROR,
                 &_logHideAll,
@@ -2053,10 +2076,7 @@ IotMqttError_t _IotMqtt_DeserializePingresp( _mqttPacket_t * pPingresp )
                 MQTT_PACKET_PINGRESP_REMAINING_LENGTH );
 
         status = IOT_MQTT_BAD_RESPONSE;
-        goto cleanup;
     }
-
-cleanup:
 
     return status;
 }
@@ -2116,39 +2136,34 @@ IotMqttError_t IotMqtt_GetConnectPacketSize( const IotMqttConnectInfo_t * pConne
     {
         IotLogError( "IotMqtt_GetConnectPacketSize() called with required parameter(s) set to NULL." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( ( pConnectInfo->clientIdentifierLength == 0 ) || ( pConnectInfo->pClientIdentifier == NULL ) )
+    else if( ( pConnectInfo->clientIdentifierLength == 0 ) || ( pConnectInfo->pClientIdentifier == NULL ) )
     {
         IotLogError( "IotMqtt_GetConnectPacketSize() client identifier must be set." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
 
     /* Calculate the "Remaining length" field and total packet size. If it exceeds
      * what is allowed in the MQTT standard, return an error. */
-    if( _connectPacketSize( pConnectInfo, pRemainingLength, pPacketSize ) == false )
+    else if( _connectPacketSize( pConnectInfo, pRemainingLength, pPacketSize ) == false )
     {
         IotLogError( "Connect packet length exceeds %lu, which is the maximum"
                      " size allowed by MQTT 3.1.1.",
                      MQTT_PACKET_CONNECT_MAX_SIZE );
 
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    /* Total size of the subscribe packet should be larger than the "Remaining length"
-     * field. */
-    if( ( *pPacketSize ) < ( *pRemainingLength ) )
+    else
     {
-        IotLogError( "Connection packet remaining length (%lu) exceeds packet size (%lu)",
-                     ( *pRemainingLength ), ( *pPacketSize ) );
-        status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
+        /* Total size of the subscribe packet should be larger than the "Remaining length"
+         * field. */
+        if( ( *pPacketSize ) < ( *pRemainingLength ) )
+        {
+            IotLogError( "Connection packet remaining length (%lu) exceeds packet size (%lu)",
+                         ( *pRemainingLength ), ( *pPacketSize ) );
+            status = IOT_MQTT_BAD_PARAMETER;
+        }
     }
-
-cleanup:
 
     return status;
 }
@@ -2166,30 +2181,25 @@ IotMqttError_t IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectIn
     {
         IotLogError( "IotMqtt_SerializeConnect() called with required parameter(s) set to NULL." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( ( pConnectInfo->clientIdentifierLength == 0 ) || ( pConnectInfo->pClientIdentifier == NULL ) )
+    else if( ( pConnectInfo->clientIdentifierLength == 0 ) || ( pConnectInfo->pClientIdentifier == NULL ) )
     {
         IotLogError( "IotMqtt_SerializeConnect() client identifier must be set." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( remainingLength > bufferSize )
+    else if( remainingLength > bufferSize )
     {
         IotLogError( " Serialize Connect packet remaining length (%lu) exceeds buffer size (%lu)",
                      remainingLength, bufferSize );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    _serializeConnect( pConnectInfo,
-                       remainingLength,
-                       pBuffer,
-                       bufferSize );
-
-cleanup:
+    else
+    {
+        _serializeConnect( pConnectInfo,
+                           remainingLength,
+                           pBuffer,
+                           bufferSize );
+    }
 
     return status;
 }
@@ -2208,47 +2218,39 @@ IotMqttError_t IotMqtt_GetSubscriptionPacketSize( IotMqttOperationType_t type,
     {
         IotLogError( "IotMqtt_GetSubscriptionPacketSize() called with required parameter(s) set to NULL." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( ( type != IOT_MQTT_SUBSCRIBE ) && ( type != IOT_MQTT_UNSUBSCRIBE ) )
+    else if( ( type != IOT_MQTT_SUBSCRIBE ) && ( type != IOT_MQTT_UNSUBSCRIBE ) )
     {
         IotLogError( "IotMqtt_GetSubscriptionPacketSize() called with unknown type." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( subscriptionCount == 0 )
+    else if( subscriptionCount == 0 )
     {
         IotLogError( "IotMqtt_GetSubscriptionPacketSize() called with zero subscription count." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( _subscriptionPacketSize( type,
-                                 pSubscriptionList,
-                                 subscriptionCount,
-                                 pRemainingLength,
-                                 pPacketSize ) == false )
+    else if( _subscriptionPacketSize( type,
+                                      pSubscriptionList,
+                                      subscriptionCount,
+                                      pRemainingLength,
+                                      pPacketSize ) == false )
     {
         IotLogError( "Unsubscribe packet remaining length exceeds %lu, which is the "
                      "maximum size allowed by MQTT 3.1.1.",
                      MQTT_MAX_REMAINING_LENGTH );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    /* Total size of the subscribe packet should be larger than the "Remaining length"
-     * field. */
-    if( ( *pPacketSize ) < ( *pRemainingLength ) )
+    else
     {
-        IotLogError( "Subscription packet remaining length (%lu) exceeds packet size (%lu)",
-                     ( *pRemainingLength ), ( *pPacketSize ) );
-        status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
+        /* Total size of the subscribe packet should be larger than the "Remaining length"
+         * field. */
+        if( ( *pPacketSize ) < ( *pRemainingLength ) )
+        {
+            IotLogError( "Subscription packet remaining length (%lu) exceeds packet size (%lu)",
+                         ( *pRemainingLength ), ( *pPacketSize ) );
+            status = IOT_MQTT_BAD_PARAMETER;
+        }
     }
-
-cleanup:
 
     return status;
 }
@@ -2268,32 +2270,27 @@ IotMqttError_t IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubscr
     {
         IotLogError( "IotMqtt_SerializeSubscribe() called with required parameter(s) set to NULL." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( subscriptionCount == 0 )
+    else if( subscriptionCount == 0 )
     {
         IotLogError( "IotMqtt_SerializeSubscribe() called with zero subscription count." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( remainingLength > bufferSize )
+    else if( remainingLength > bufferSize )
     {
         IotLogError( " Subscribe packet remaining length (%lu) exceeds buffer size (%lu).",
                      remainingLength, bufferSize );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    _serializeSubscribe( pSubscriptionList,
-                         subscriptionCount,
-                         remainingLength,
-                         pPacketIdentifier,
-                         pBuffer,
-                         bufferSize );
-
-cleanup:
+    else
+    {
+        _serializeSubscribe( pSubscriptionList,
+                             subscriptionCount,
+                             remainingLength,
+                             pPacketIdentifier,
+                             pBuffer,
+                             bufferSize );
+    }
 
     return status;
 }
@@ -2310,39 +2307,34 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo
     {
         IotLogError( "IotMqtt_GetPublishPacketSize() called with required parameter(s) set to NULL." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0 ) )
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0 ) )
     {
         IotLogError( "IotMqtt_GetPublishPacketSize() called with no topic." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
 
     /* Calculate the "Remaining length" field and total packet size. If it exceeds
      * what is allowed in the MQTT standard, return an error. */
-    if( _publishPacketSize( pPublishInfo, pRemainingLength, pPacketSize ) == false )
+    else if( _publishPacketSize( pPublishInfo, pRemainingLength, pPacketSize ) == false )
     {
         IotLogError( "Publish packet remaining length exceeds %lu, which is the "
                      "maximum size allowed by MQTT 3.1.1.",
                      MQTT_MAX_REMAINING_LENGTH );
 
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    /* Total size of the publish packet should be larger than the "Remaining length"
-     * field. */
-    if( ( *pPacketSize ) < ( *pRemainingLength ) )
+    else
     {
-        IotLogError( "Publish packet remaining length (%lu) exceeds packet size (%lu).",
-                     ( *pRemainingLength ), ( *pPacketSize ) );
-        status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
+        /* Total size of the publish packet should be larger than the "Remaining length"
+         * field. */
+        if( ( *pPacketSize ) < ( *pRemainingLength ) )
+        {
+            IotLogError( "Publish packet remaining length (%lu) exceeds packet size (%lu).",
+                         ( *pRemainingLength ), ( *pPacketSize ) );
+            status = IOT_MQTT_BAD_PARAMETER;
+        }
     }
-
-cleanup:
 
     return status;
 }
@@ -2363,31 +2355,27 @@ IotMqttError_t IotMqtt_SerializePublish( IotMqttPublishInfo_t * pPublishInfo,
     {
         IotLogError( "IotMqtt_SerializePublish() called with required parameter(s) set to NULL." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0 ) )
+    else if( ( pPublishInfo->pTopicName == NULL ) || ( pPublishInfo->topicNameLength == 0 ) )
     {
         IotLogError( "IotMqtt_SerializePublish() called with no topic." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( remainingLength > bufferSize )
+    else if( remainingLength > bufferSize )
     {
         IotLogError( "Publish packet remaining length (%lu) exceeds buffer size (%lu).",
                      remainingLength, bufferSize );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    _serializePublish( pPublishInfo,
-                       remainingLength,
-                       pPacketIdentifier,
-                       pPacketIdentifierHigh,
-                       pBuffer,
-                       bufferSize );
-cleanup:
+    else
+    {
+        _serializePublish( pPublishInfo,
+                           remainingLength,
+                           pPacketIdentifier,
+                           pPacketIdentifierHigh,
+                           pBuffer,
+                           bufferSize );
+    }
 
     return status;
 }
@@ -2407,31 +2395,27 @@ IotMqttError_t IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSubs
     {
         IotLogError( "IotMqtt_SerializeUnsubscribe() called with required parameter(s) set to NULL." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( subscriptionCount == 0 )
+    else if( subscriptionCount == 0 )
     {
         IotLogError( "IotMqtt_SerializeUnsubscribe() called with zero subscription count." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( remainingLength > bufferSize )
+    else if( remainingLength > bufferSize )
     {
         IotLogError( "Unsubscribe packet remaining length (%lu) exceeds buffer size (%lu).",
                      remainingLength, bufferSize );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    _serializeUnsubscribe( pSubscriptionList,
-                           subscriptionCount,
-                           remainingLength,
-                           pPacketIdentifier,
-                           pBuffer,
-                           bufferSize );
-cleanup:
+    else
+    {
+        _serializeUnsubscribe( pSubscriptionList,
+                               subscriptionCount,
+                               remainingLength,
+                               pPacketIdentifier,
+                               pBuffer,
+                               bufferSize );
+    }
 
     return status;
 }
@@ -2449,24 +2433,23 @@ IotMqttError_t IotMqtt_SerializeDisconnect( uint8_t * pBuffer,
     {
         IotLogError( "IotMqtt_SerializeDisconnect() called with NULL buffer pointer." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
 
-    if( bufferSize < MQTT_PACKET_DISCONNECT_SIZE )
+    else if( bufferSize < MQTT_PACKET_DISCONNECT_SIZE )
     {
         IotLogError( "Disconnect packet length (%lu) exceeds buffer size (%lu).",
                      MQTT_PACKET_DISCONNECT_SIZE, bufferSize );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
+    else
+    {
+        /* Call internal function with local variables, as disconnect  uses
+         * static memory, there is no need to pass the buffer
+         * Note: _IotMqtt_SerializeDisconnect always succeeds */
+        _IotMqtt_SerializeDisconnect( &pDisconnectPacket, &remainingLength );
 
-    /* Call internal function with local variables, as disconnect  uses
-     * static memory, there is no need to pass the buffer
-     * Note: _IotMqtt_SerializeDisconnect always succeeds */
-    _IotMqtt_SerializeDisconnect( &pDisconnectPacket, &remainingLength );
-
-    memcpy( pBuffer, pDisconnectPacket, MQTT_PACKET_DISCONNECT_SIZE );
-cleanup:
+        memcpy( pBuffer, pDisconnectPacket, MQTT_PACKET_DISCONNECT_SIZE );
+    }
 
     return status;
 }
@@ -2484,23 +2467,21 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
     {
         IotLogError( "IotMqtt_SerializePingreq() called with NULL buffer pointer." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( bufferSize < MQTT_PACKET_PINGREQ_SIZE )
+    else if( bufferSize < MQTT_PACKET_PINGREQ_SIZE )
     {
         IotLogError( "Pingreq length (%lu) exceeds buffer size (%lu).",
                      MQTT_PACKET_DISCONNECT_SIZE, bufferSize );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    /* Call internal function with local variables, as ping request uses
-     * static memory, there is no need to pass the buffer
-     * Note: _IotMqtt_SerializePingReq always succeeds */
-    _IotMqtt_SerializePingreq( &pPingreqPacket, &packetSize );
-    memcpy( pBuffer, pPingreqPacket, MQTT_PACKET_PINGREQ_SIZE );
-cleanup:
+    else
+    {
+        /* Call internal function with local variables, as ping request uses
+         * static memory, there is no need to pass the buffer
+         * Note: _IotMqtt_SerializePingReq always succeeds */
+        _IotMqtt_SerializePingreq( &pPingreqPacket, &packetSize );
+        memcpy( pBuffer, pPingreqPacket, MQTT_PACKET_PINGREQ_SIZE );
+    }
 
     return status;
 }
@@ -2519,35 +2500,32 @@ IotMqttError_t IotMqtt_DeserializePublish( IotMqttPacketInfo_t * pMqttPacket )
     {
         IotLogError( "IotMqtt_DeserializePublish()called with NULL pMqttPacket pointer." );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    if( ( pMqttPacket->type & 0xf0U ) != MQTT_PACKET_TYPE_PUBLISH )
+    else if( ( pMqttPacket->type & 0xf0U ) != MQTT_PACKET_TYPE_PUBLISH )
     {
         IotLogError( "IotMqtt_DeserializePublish() called with incorrect packet type:(%lu).", pMqttPacket->type );
         status = IOT_MQTT_BAD_PARAMETER;
-        goto cleanup;
     }
-
-    /* Set internal mqtt packet parameters. */
-    memset( ( void * ) &mqttPacket, 0x00, sizeof( _mqttPacket_t ) );
-    mqttPacket.pRemainingData = pMqttPacket->pRemainingData;
-    mqttPacket.remainingLength = pMqttPacket->remainingLength;
-    mqttPacket.type = pMqttPacket->type;
-
-    /* Set Publish specific parameters */
-    memset( ( void * ) &mqttOperation, 0x00, sizeof( _mqttOperation_t ) );
-    mqttOperation.incomingPublish = true;
-    mqttPacket.u.pIncomingPublish = &mqttOperation;
-    status = _IotMqtt_DeserializePublish( &mqttPacket );
-
-    if( status == IOT_MQTT_SUCCESS )
+    else
     {
-        pMqttPacket->pubInfo = mqttOperation.u.publish.publishInfo;
-        pMqttPacket->packetIdentifier = mqttPacket.packetIdentifier;
-    }
+        /* Set internal mqtt packet parameters. */
+        memset( ( void * ) &mqttPacket, 0x00, sizeof( _mqttPacket_t ) );
+        mqttPacket.pRemainingData = pMqttPacket->pRemainingData;
+        mqttPacket.remainingLength = pMqttPacket->remainingLength;
+        mqttPacket.type = pMqttPacket->type;
 
-cleanup:
+        /* Set Publish specific parameters */
+        memset( ( void * ) &mqttOperation, 0x00, sizeof( _mqttOperation_t ) );
+        mqttOperation.incomingPublish = true;
+        mqttPacket.u.pIncomingPublish = &mqttOperation;
+        status = _IotMqtt_DeserializePublish( &mqttPacket );
+
+        if( status == IOT_MQTT_SUCCESS )
+        {
+            pMqttPacket->pubInfo = mqttOperation.u.publish.publishInfo;
+            pMqttPacket->packetIdentifier = mqttPacket.packetIdentifier;
+        }
+    }
 
     return status;
 }
