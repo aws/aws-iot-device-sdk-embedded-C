@@ -279,7 +279,7 @@ static IotMqttError_t _getIncomingPacket( void * pNetworkConnection,
 
             if( pIncomingPacket->pRemainingData == NULL )
             {
-                /* In some implementations IotLog() maps to C standard printing API
+                /* In some implementations IotLogError() maps to C standard printing API
                  * that need specific primitive types for format specifiers. Also,
                  * inttypes.h may not be available on some C99 compilers, despite stdint.h
                  * being available. */

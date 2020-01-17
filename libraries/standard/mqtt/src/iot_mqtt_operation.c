@@ -270,7 +270,7 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
             pOperation->u.operation.periodic.retry.nextPeriodMs = IOT_MQTT_RETRY_MS_CEILING;
         }
 
-        /* In some implementations IotLog() maps to C standard printing API
+        /* In some implementations IotLogDebug() maps to C standard printing API
          * that need specific primitive types for format specifiers. Also
          * inttypes.h may not be available on some C99 compilers, despite
          * stdint.h being available. */
@@ -599,7 +599,7 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
         pOperation->u.operation.jobReference--;
 
-        /* In some implementations IotLog() maps to C standard printing API
+        /* In some implementations IotLogDebug() maps to C standard printing API
          * that need specific primitive types for format specifiers. Also
          * inttypes.h may not be available on some C99 compilers, despite
          * stdint.h being available. */
@@ -819,7 +819,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
 
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
-            /* In some implementations IotLog() maps to a C standard printing API
+            /* In some implementations IotLogDebug() maps to a C standard printing API
              * that need specific primitive types for format specifiers. Also,
              * inttypes.h may not be available on some C99 compilers, despite
              * stdint.h being available. */
@@ -1129,7 +1129,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
             {
                 ( pResult->u.operation.jobReference )++;
 
-                /* In some implementations IotLog() maps to C standard printing API
+                /* In some implementations IotLogDebug() maps to C standard printing API
                  * that need specific primitive types for format specifiers. Also
                  * inttypes.h may not be available on some C99 compilers, despite
                  * stdint.h being available. */
