@@ -56,6 +56,7 @@ iot
 iotlink
 iotlistdouble
 iotlog
+iotlogdebug
 iotmqtt
 iotmqttcallbackinfo
 iotmqttconnectinfo
@@ -85,6 +86,7 @@ keepaliveseconds
 lu
 lwt
 malloc
+misra
 mqtt
 mqttconnection
 mqttoperation
