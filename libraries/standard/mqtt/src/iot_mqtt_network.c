@@ -422,7 +422,7 @@ static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
     }
 
     /* Free PUBLISH operation on error. */
-    if( ( status != IOT_MQTT_NO_MEMORY ) && ( status != IOT_MQTT_SUCCESS ) )
+    if( ( status != IOT_MQTT_SUCCESS ) && ( pOperation != NULL ) )
     {
         /* Check ownership of the received MQTT packet. */
         if( pOperation->u.publish.pReceivedData != NULL )
