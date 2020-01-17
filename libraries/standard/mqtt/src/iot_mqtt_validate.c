@@ -113,7 +113,7 @@ static bool _validateSubscription( bool awsIotMqttMode,
  * @param[in] index Index of `+` in the topic filter.
  * @param[in] pSubscription Subscription with the topic filter to check.
  *
- * @return `true` if the `+` wilcard is valid; `false` otherwise.
+ * @return `true` if the `+` wildcard is valid; `false` otherwise.
  */
 static bool _validateWildcardPlus( uint16_t index,
                                    const IotMqttSubscription_t * pSubscription );
@@ -124,7 +124,7 @@ static bool _validateWildcardPlus( uint16_t index,
  * @param[in] index Index of `#` in the topic filter.
  * @param[in] pSubscription Subscription with the topic filter to check.
  *
- * @return `true` if the `#` wilcard is valid; `false` otherwise.
+ * @return `true` if the `#` wildcard is valid; `false` otherwise.
  */
 static bool _validateWildcardHash( uint16_t index,
                                    const IotMqttSubscription_t * pSubscription );
@@ -134,6 +134,7 @@ static bool _validateWildcardHash( uint16_t index,
  *
  * @param[in] pConnectInfo The #IotMqttConnectInfo_t to validate.
  *
+ * @return `true` if client id length is valid, `false` otherwise. 
  */
 static bool _validateClientIdLength( const IotMqttConnectInfo_t * pConnectInfo );
 
@@ -221,6 +222,11 @@ static bool _validatePublishPayload( const IotMqttPublishInfo_t * pPublishInfo,
             /* Empty else MISRA 15.7 */
         }
     }
+    else
+    {
+        /* Empty else MISRA 15.7 */
+    }
+    
 
     return status;
 }
@@ -734,7 +740,7 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
                                 pListStart,
                                 listSize );
 
-    if( status != false )
+    if( status == true )
     {
         /* Check each member of the subscription list. */
         for( i = 0; i < listSize; i++ )

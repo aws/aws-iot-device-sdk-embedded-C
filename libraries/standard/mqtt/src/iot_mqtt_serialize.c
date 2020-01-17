@@ -382,16 +382,17 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
                                              size_t qos0Minimum );
 
 /**
- * @brief Determine QOS for incoming publish flags.
+ * @brief Process incoming publish flags.
  *
- * @param[in] publishFlags Incoming publish flags where QOS is encoded.
- * @param[in, out] pOutput Pointer to IotMqttPublishInfo_t struct where QOS will be written.
+ * @param[in] publishFlags Incoming publish flags.
+ * @param[in, out] pOutput Pointer to #IotMqttPublishInfo_t struct.
+ * where output will be written.
  *
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_BAD_RESPONSE.
  */
 
-static IotMqttError_t _getIncomingPublishQOS( const uint8_t publishFlags,
-                                              IotMqttPublishInfo_t * pOutput );
+static IotMqttError_t _processIncomingPublishFlags( const uint8_t publishFlags,
+                                                    IotMqttPublishInfo_t * pOutput );
 
 /*-----------------------------------------------------------*/
 
@@ -1190,8 +1191,8 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
     return status;
 }
 
-static IotMqttError_t _getIncomingPublishQOS( uint8_t publishFlags,
-                                              IotMqttPublishInfo_t * pOutput )
+static IotMqttError_t _processIncomingPublishFlags( uint8_t publishFlags,
+                                                    IotMqttPublishInfo_t * pOutput )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
@@ -1225,6 +1226,34 @@ static IotMqttError_t _getIncomingPublishQOS( uint8_t publishFlags,
     else
     {
         pOutput->qos = IOT_MQTT_QOS_0;
+    }
+
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "QoS is %d.", pOutput->qos );
+
+        /* Parse the Retain bit. */
+        pOutput->retain = UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
+
+        IotLog( IOT_LOG_DEBUG,
+                &_logHideAll,
+                "Retain bit is %d.", pOutput->retain );
+
+        /* Parse the DUP bit. */
+        if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP ) == true )
+        {
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "DUP is 1." );
+        }
+        else
+        {
+            IotLog( IOT_LOG_DEBUG,
+                    &_logHideAll,
+                    "DUP is 0." );
+        }
     }
 
     return status;
@@ -1618,35 +1647,10 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
     /* The flags are the lower 4 bits of the first byte in PUBLISH. */
     publishFlags = pPublish->type;
 
-    /* Parse the Retain bit. */
-    pOutput->retain = UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_RETAIN );
-
-    IotLog( IOT_LOG_DEBUG,
-            &_logHideAll,
-            "Retain bit is %d.", pOutput->retain );
-
-    status = _getIncomingPublishQOS( publishFlags, pOutput );
+    status = _processIncomingPublishFlags( publishFlags, pOutput );
 
     if( status == IOT_MQTT_SUCCESS )
     {
-        IotLog( IOT_LOG_DEBUG,
-                &_logHideAll,
-                "QoS is %d.", pOutput->qos );
-
-        /* Parse the DUP bit. */
-        if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_DUP ) == true )
-        {
-            IotLog( IOT_LOG_DEBUG,
-                    &_logHideAll,
-                    "DUP is 1." );
-        }
-        else
-        {
-            IotLog( IOT_LOG_DEBUG,
-                    &_logHideAll,
-                    "DUP is 0." );
-        }
-
         /* Sanity checks for "Remaining length". A QoS 0 PUBLISH  must have a remaining
          * length of at least 3 to accommodate topic name length (2 bytes) and topic
          * name (at least 1 byte). A QoS 1 or 2 PUBLISH must have a remaining length of
@@ -2076,6 +2080,10 @@ IotMqttError_t _IotMqtt_DeserializePingresp( _mqttPacket_t * pPingresp )
                 MQTT_PACKET_PINGRESP_REMAINING_LENGTH );
 
         status = IOT_MQTT_BAD_RESPONSE;
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     return status;
@@ -2519,12 +2527,12 @@ IotMqttError_t IotMqtt_DeserializePublish( IotMqttPacketInfo_t * pMqttPacket )
         mqttOperation.incomingPublish = true;
         mqttPacket.u.pIncomingPublish = &mqttOperation;
         status = _IotMqtt_DeserializePublish( &mqttPacket );
+    }
 
-        if( status == IOT_MQTT_SUCCESS )
-        {
-            pMqttPacket->pubInfo = mqttOperation.u.publish.publishInfo;
-            pMqttPacket->packetIdentifier = mqttPacket.packetIdentifier;
-        }
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        pMqttPacket->pubInfo = mqttOperation.u.publish.publishInfo;
+        pMqttPacket->packetIdentifier = mqttPacket.packetIdentifier;
     }
 
     return status;
