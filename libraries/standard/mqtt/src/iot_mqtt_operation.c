@@ -270,9 +270,9 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
             pOperation->u.operation.periodic.retry.nextPeriodMs = IOT_MQTT_RETRY_MS_CEILING;
         }
 
-        /* In some implementations IotLog() maps to C standard printing API 
-         * that need specific primitive types for format specifiers. Also 
-         * inttypes.h may not be available on some C99 compilers, despite 
+        /* In some implementations IotLog() maps to C standard printing API
+         * that need specific primitive types for format specifiers. Also
+         * inttypes.h may not be available on some C99 compilers, despite
          * stdint.h being available. */
         /* coverity[misra_c_2012_directive_4_6_violation] */
         IotLogDebug( "(MQTT connection %p, PUBLISH operation %p) Scheduling retry %lu of %lu in %lu ms.",
@@ -454,96 +454,103 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
             IotLogError( "Callback should not be set for a waitable operation." );
 
             status = IOT_MQTT_BAD_PARAMETER;
-            goto cleanup;
         }
     }
 
-    IotLogDebug( "(MQTT connection %p) Creating new operation record.",
-                 pMqttConnection );
-
-    /* Increment the reference count for the MQTT connection when creating a new
-     * operation. */
-    if( _IotMqtt_IncrementConnectionReferences( pMqttConnection ) == false )
+    if( status == IOT_MQTT_SUCCESS )
     {
-        IotLogError( "(MQTT connection %p) New operation record cannot be created"
-                     " for a closed connection",
+        IotLogDebug( "(MQTT connection %p) Creating new operation record.",
                      pMqttConnection );
 
-        status = IOT_MQTT_NETWORK_ERROR;
-        goto cleanup;
-    }
-    else
-    {
-        /* Reference count will need to be decremented on error. */
-        decrementOnError = true;
-    }
-
-    /* Allocate memory for a new operation. */
-    pOperation = IotMqtt_MallocOperation( sizeof( _mqttOperation_t ) );
-
-    if( pOperation == NULL )
-    {
-        IotLogError( "(MQTT connection %p) Failed to allocate memory for new "
-                     "operation record.",
-                     pMqttConnection );
-
-        status = IOT_MQTT_NO_MEMORY;
-        goto cleanup;
-    }
-    else
-    {
-        /* Clear the operation data. */
-        ( void ) memset( pOperation, 0x00, sizeof( _mqttOperation_t ) );
-
-        /* Initialize some members of the new operation. */
-        pOperation->pMqttConnection = pMqttConnection;
-        pOperation->u.operation.jobReference = 1;
-        pOperation->u.operation.flags = flags;
-        pOperation->u.operation.status = IOT_MQTT_STATUS_PENDING;
-    }
-
-    /* Check if the waitable flag is set. If it is, create a semaphore to
-     * wait on. */
-    if( waitable == true )
-    {
-        /* Create a semaphore to wait on for a waitable operation. */
-        if( IotSemaphore_Create( &( pOperation->u.operation.notify.waitSemaphore ), 0, 1 ) == false )
+        /* Increment the reference count for the MQTT connection when creating a new
+         * operation. */
+        if( _IotMqtt_IncrementConnectionReferences( pMqttConnection ) == false )
         {
-            IotLogError( "(MQTT connection %p) Failed to create semaphore for "
-                         "waitable operation.",
+            IotLogError( "(MQTT connection %p) New operation record cannot be created"
+                         " for a closed connection",
                          pMqttConnection );
 
-            status = IOT_MQTT_NO_MEMORY;
-            goto cleanup;
+            status = IOT_MQTT_NETWORK_ERROR;
         }
         else
         {
-            /* A waitable operation is created with an additional reference for the
-             * Wait function. */
-            ( pOperation->u.operation.jobReference )++;
+            /* Reference count will need to be decremented on error. */
+            decrementOnError = true;
         }
     }
-    else
+
+    if( status == IOT_MQTT_SUCCESS )
     {
-        /* If the waitable flag isn't set but a callback is, copy the callback
-         * information. */
-        if( pCallbackInfo != NULL )
+        /* Allocate memory for a new operation. */
+        pOperation = IotMqtt_MallocOperation( sizeof( _mqttOperation_t ) );
+
+        if( pOperation == NULL )
         {
-            pOperation->u.operation.notify.callback = *pCallbackInfo;
+            IotLogError( "(MQTT connection %p) Failed to allocate memory for new "
+                         "operation record.",
+                         pMqttConnection );
+
+            status = IOT_MQTT_NO_MEMORY;
+        }
+        else
+        {
+            /* Clear the operation data. */
+            ( void ) memset( pOperation, 0x00, sizeof( _mqttOperation_t ) );
+
+            /* Initialize some members of the new operation. */
+            pOperation->pMqttConnection = pMqttConnection;
+            pOperation->u.operation.jobReference = 1;
+            pOperation->u.operation.flags = flags;
+            pOperation->u.operation.status = IOT_MQTT_STATUS_PENDING;
         }
     }
 
-    /* Add this operation to the MQTT connection's operation list. */
-    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-    IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ),
-                              &( pOperation->link ) );
-    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        /* Check if the waitable flag is set. If it is, create a semaphore to
+         * wait on. */
+        if( waitable == true )
+        {
+            /* Create a semaphore to wait on for a waitable operation. */
+            if( IotSemaphore_Create( &( pOperation->u.operation.notify.waitSemaphore ), 0, 1 ) == false )
+            {
+                IotLogError( "(MQTT connection %p) Failed to create semaphore for "
+                             "waitable operation.",
+                             pMqttConnection );
 
-    /* Set the output parameter. */
-    *pNewOperation = pOperation;
+                status = IOT_MQTT_NO_MEMORY;
+            }
+            else
+            {
+                /* A waitable operation is created with an additional reference for the
+                 * Wait function. */
+                ( pOperation->u.operation.jobReference )++;
+            }
+        }
+        else
+        {
+            /* If the waitable flag isn't set but a callback is, copy the callback
+             * information. */
+            if( pCallbackInfo != NULL )
+            {
+                pOperation->u.operation.notify.callback = *pCallbackInfo;
+            }
+        }
+
+        if( status == IOT_MQTT_SUCCESS )
+        {
+            /* Add this operation to the MQTT connection's operation list. */
+            IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+            IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ),
+                                      &( pOperation->link ) );
+            IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
+            /* Set the output parameter. */
+            *pNewOperation = pOperation;
+        }
+    }
 
     /* Clean up operation and decrement reference count if this function failed. */
-cleanup:
 
     if( status != IOT_MQTT_SUCCESS )
     {
@@ -592,9 +599,9 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
         pOperation->u.operation.jobReference--;
 
-        /* In some implementations IotLog() maps to C standard printing API 
-         * that need specific primitive types for format specifiers. Also 
-         * inttypes.h may not be available on some C99 compilers, despite 
+        /* In some implementations IotLog() maps to C standard printing API
+         * that need specific primitive types for format specifiers. Also
+         * inttypes.h may not be available on some C99 compilers, despite
          * stdint.h being available. */
         /* coverity[misra_c_2012_directive_4_6_violation] */
         IotLogDebug( "(MQTT connection %p, %s operation %p) Job reference changed"
@@ -812,9 +819,9 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
 
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
-            /* In some implementations IotLog() maps to a C standard printing API 
+            /* In some implementations IotLog() maps to a C standard printing API
              * that need specific primitive types for format specifiers. Also,
-             * inttypes.h may not be available on some C99 compilers, despite 
+             * inttypes.h may not be available on some C99 compilers, despite
              * stdint.h being available. */
             /* coverity[misra_c_2012_directive_4_6_violation] */
             IotLogDebug( "(MQTT connection %p) Next keep-alive job in %lu ms.",
@@ -1122,9 +1129,9 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
             {
                 ( pResult->u.operation.jobReference )++;
 
-                /* In some implementations IotLog() maps to C standard printing API 
-                 * that need specific primitive types for format specifiers. Also 
-                 * inttypes.h may not be available on some C99 compilers, despite 
+                /* In some implementations IotLog() maps to C standard printing API
+                 * that need specific primitive types for format specifiers. Also
+                 * inttypes.h may not be available on some C99 compilers, despite
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
                 IotLogDebug( "(MQTT connection %p, %s operation %p) Job reference changed from %ld to %ld.",
