@@ -545,15 +545,15 @@ static uint8_t * _encodeUserName( uint8_t * pBuffer,
                     pBuffer++;
 
                     /* Write the identity portion of the username. */
-                    memcpy( pBuffer,
-                            pConnectInfo->pUserName,
-                            pConnectInfo->userNameLength );
+                    ( void ) memcpy( pBuffer,
+                                     pConnectInfo->pUserName,
+                                     pConnectInfo->userNameLength );
                     pBuffer += pConnectInfo->userNameLength;
 
                     /* Write the metrics portion of the username. */
-                    memcpy( pBuffer,
-                            AWS_IOT_METRICS_USERNAME,
-                            AWS_IOT_METRICS_USERNAME_LENGTH );
+                    ( void ) memcpy( pBuffer,
+                                     AWS_IOT_METRICS_USERNAME,
+                                     AWS_IOT_METRICS_USERNAME_LENGTH );
                     pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
 
                     encodedUserName = true;
@@ -2461,9 +2461,9 @@ IotMqttError_t IotMqtt_SerializeDisconnect( uint8_t * pBuffer,
         /* Call internal function with local variables, as disconnect  uses
          * static memory, there is no need to pass the buffer
          * Note: _IotMqtt_SerializeDisconnect always succeeds */
-        _IotMqtt_SerializeDisconnect( &pDisconnectPacket, &remainingLength );
+        ( void ) _IotMqtt_SerializeDisconnect( &pDisconnectPacket, &remainingLength );
 
-        memcpy( pBuffer, pDisconnectPacket, MQTT_PACKET_DISCONNECT_SIZE );
+        ( void ) memcpy( pBuffer, pDisconnectPacket, MQTT_PACKET_DISCONNECT_SIZE );
     }
 
     return status;
@@ -2494,8 +2494,8 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
         /* Call internal function with local variables, as ping request uses
          * static memory, there is no need to pass the buffer
          * Note: _IotMqtt_SerializePingReq always succeeds */
-        _IotMqtt_SerializePingreq( &pPingreqPacket, &packetSize );
-        memcpy( pBuffer, pPingreqPacket, MQTT_PACKET_PINGREQ_SIZE );
+        ( void ) _IotMqtt_SerializePingreq( &pPingreqPacket, &packetSize );
+        ( void ) memcpy( pBuffer, pPingreqPacket, MQTT_PACKET_PINGREQ_SIZE );
     }
 
     return status;
@@ -2524,13 +2524,13 @@ IotMqttError_t IotMqtt_DeserializePublish( IotMqttPacketInfo_t * pMqttPacket )
     else
     {
         /* Set internal mqtt packet parameters. */
-        memset( ( void * ) &mqttPacket, 0x00, sizeof( _mqttPacket_t ) );
+        ( void ) memset( ( void * ) &mqttPacket, 0x00, sizeof( _mqttPacket_t ) );
         mqttPacket.pRemainingData = pMqttPacket->pRemainingData;
         mqttPacket.remainingLength = pMqttPacket->remainingLength;
         mqttPacket.type = pMqttPacket->type;
 
         /* Set Publish specific parameters */
-        memset( ( void * ) &mqttOperation, 0x00, sizeof( _mqttOperation_t ) );
+        ( void ) memset( ( void * ) &mqttOperation, 0x00, sizeof( _mqttOperation_t ) );
         mqttOperation.incomingPublish = true;
         mqttPacket.u.pIncomingPublish = &mqttOperation;
         status = _IotMqtt_DeserializePublish( &mqttPacket );
@@ -2562,7 +2562,7 @@ IotMqttError_t IotMqtt_DeserializeResponse( IotMqttPacketInfo_t * pMqttPacket )
     if( status == IOT_MQTT_SUCCESS )
     {
         /* Set internal mqtt packet parameters. */
-        memset( ( void * ) &mqttPacket, 0x00, sizeof( _mqttPacket_t ) );
+        ( void ) memset( ( void * ) &mqttPacket, 0x00, sizeof( _mqttPacket_t ) );
 
         mqttPacket.pRemainingData = pMqttPacket->pRemainingData;
         mqttPacket.remainingLength = pMqttPacket->remainingLength;

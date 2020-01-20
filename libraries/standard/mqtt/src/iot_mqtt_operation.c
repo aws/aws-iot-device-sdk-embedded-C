@@ -1092,7 +1092,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
     IotLink_t * pResultLink = NULL;
     _operationMatchParam_t operationMatchParams;
 
-    memset( &operationMatchParams, 0, sizeof( _operationMatchParam_t ) );
+    ( void ) memset( &operationMatchParams, 0, sizeof( _operationMatchParam_t ) );
 
     /* Set the members of the search parameter. */
     operationMatchParams.type = type;
