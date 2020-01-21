@@ -57,6 +57,7 @@ iotlink
 iotlistdouble
 iotlog
 iotlogdebug
+iotlogerror
 iotmqtt
 iotmqttcallbackinfo
 iotmqttconnectinfo

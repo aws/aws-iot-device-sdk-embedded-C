@@ -180,7 +180,7 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
         /* The retry count may be at most one more than the retry limit, which
          * accounts for the final check for a PUBACK. */
         IotMqtt_Assert( pOperation->u.operation.periodic.retry.count ==
-                        pOperation->u.operation.periodic.retry.limit + 1 );
+                        pOperation->u.operation.periodic.retry.limit + 1U );
 
         IotLogDebug( "(MQTT connection %p, PUBLISH operation %p) No response received after %lu retries.",
                      pMqttConnection,
@@ -191,7 +191,7 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
     }
     else
     {
-        if( pOperation->u.operation.periodic.retry.count == 1 )
+        if( pOperation->u.operation.periodic.retry.count == 1U )
         {
             /* The DUP flag should always be set on the first retry. */
             setDup = true;
@@ -263,14 +263,14 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
         scheduleDelay = pOperation->u.operation.periodic.retry.nextPeriodMs;
 
         /* Double the retry period, subject to a ceiling value. */
-        pOperation->u.operation.periodic.retry.nextPeriodMs *= 2;
+        pOperation->u.operation.periodic.retry.nextPeriodMs *= 2U;
 
         if( pOperation->u.operation.periodic.retry.nextPeriodMs > IOT_MQTT_RETRY_MS_CEILING )
         {
             pOperation->u.operation.periodic.retry.nextPeriodMs = IOT_MQTT_RETRY_MS_CEILING;
         }
 
-        /* In some implementations IotLog() maps to C standard printing API
+        /* In some implementations IotLogDebug() maps to C standard printing API
          * that need specific primitive types for format specifiers. Also
          * inttypes.h may not be available on some C99 compilers, despite
          * stdint.h being available. */
@@ -283,7 +283,7 @@ static bool _scheduleNextRetry( _mqttOperation_t * pOperation )
                      ( unsigned long ) scheduleDelay );
 
         /* Check if this is the first retry. */
-        firstRetry = ( pOperation->u.operation.periodic.retry.count == 1 );
+        firstRetry = ( pOperation->u.operation.periodic.retry.count == 1U );
 
         /* On the first retry, the PUBLISH will be moved from the pending processing
          * list to the pending responses list. Lock the connection references mutex
@@ -388,7 +388,7 @@ static bool _completePendingSend( _mqttOperation_t * pOperation,
     waitable = ( pOperation->u.operation.flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE;
 
     /* Check if this operation should be scheduled for retransmission. */
-    if( pOperation->u.operation.periodic.retry.limit > 0 )
+    if( pOperation->u.operation.periodic.retry.limit > 0U )
     {
         if( _scheduleNextRetry( pOperation ) == false )
         {
@@ -599,18 +599,18 @@ bool _IotMqtt_DecrementOperationReferences( _mqttOperation_t * pOperation,
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
         pOperation->u.operation.jobReference--;
 
-        /* In some implementations IotLog() maps to C standard printing API
+        /* In some implementations IotLogDebug() maps to C standard printing API
          * that need specific primitive types for format specifiers. Also
          * inttypes.h may not be available on some C99 compilers, despite
          * stdint.h being available. */
         /* coverity[misra_c_2012_directive_4_6_violation] */
         IotLogDebug( "(MQTT connection %p, %s operation %p) Job reference changed"
-                     " from %ld to %ld.",
+                     " from %d to %d.",
                      pMqttConnection,
                      IotMqtt_OperationType( pOperation->u.operation.type ),
                      pOperation,
-                     ( long ) ( pOperation->u.operation.jobReference + 1 ),
-                     ( long ) ( pOperation->u.operation.jobReference ) );
+                     ( int ) ( pOperation->u.operation.jobReference + 1 ),
+                     ( int ) ( pOperation->u.operation.jobReference ) );
 
         /* The job reference count must be 0 or 1 after the decrement. */
         IotMqtt_Assert( ( pOperation->u.operation.jobReference == 0 ) ||
@@ -732,7 +732,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
 
     /* Check that keep-alive interval is valid. The MQTT spec states its maximum
      * value is 65,535 seconds. */
-    IotMqtt_Assert( pPingreqOperation->u.operation.periodic.ping.keepAliveMs <= 65535000 );
+    IotMqtt_Assert( pPingreqOperation->u.operation.periodic.ping.keepAliveMs <= 65535000U );
 
     /* Only two values are valid for the next keep alive job delay. */
     IotMqtt_Assert( ( pPingreqOperation->u.operation.periodic.ping.nextPeriodMs ==
@@ -767,7 +767,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
             swapStatus = Atomic_CompareAndSwap_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ),
                                                     1,
                                                     0 );
-            IotMqtt_Assert( swapStatus == 1 );
+            IotMqtt_Assert( swapStatus == 1U );
 
             /* Set the period for scheduling a PINGRESP check. */
             pPingreqOperation->u.operation.periodic.ping.nextPeriodMs = IOT_MQTT_RESPONSE_WAIT_MS;
@@ -781,7 +781,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     {
         IotLogDebug( "(MQTT connection %p) Checking for PINGRESP.", pMqttConnection );
 
-        if( Atomic_Add_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ), 0 ) == 0 )
+        if( Atomic_Add_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ), 0U ) == 0U )
         {
             IotLogDebug( "(MQTT connection %p) PINGRESP was received.", pMqttConnection );
 
@@ -819,7 +819,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
 
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
-            /* In some implementations IotLog() maps to a C standard printing API
+            /* In some implementations IotLogDebug() maps to a C standard printing API
              * that need specific primitive types for format specifiers. Also,
              * inttypes.h may not be available on some C99 compilers, despite
              * stdint.h being available. */
@@ -910,14 +910,14 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
 
     /* The given operation must have an allocated packet and be waiting for a status. */
     IotMqtt_Assert( pOperation->u.operation.pMqttPacket != NULL );
-    IotMqtt_Assert( pOperation->u.operation.packetSize != 0 );
+    IotMqtt_Assert( pOperation->u.operation.packetSize != 0U );
     IotMqtt_Assert( pOperation->u.operation.status == IOT_MQTT_STATUS_PENDING );
 
     /* Check if this operation is waitable. */
     waitable = ( pOperation->u.operation.flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE;
 
     /* Check PUBLISH retry counts and limits. */
-    if( pOperation->u.operation.periodic.retry.limit > 0 )
+    if( pOperation->u.operation.periodic.retry.limit > 0U )
     {
         if( _checkRetryLimit( pOperation ) == false )
         {
@@ -1088,7 +1088,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
                  "with packet identifier %hu.",
                  pMqttConnection,
                  IotMqtt_OperationType( type ),
-                 ( pPacketIdentifier == NULL ) ? 0 : *pPacketIdentifier );
+                 ( pPacketIdentifier == NULL ) ? 0U : *pPacketIdentifier );
 
     /* Find and remove the first matching element in the list. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
@@ -1106,7 +1106,7 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
 
         /* Check if the matched operation is a PUBLISH with retry. If it is, cancel
          * the retry job. */
-        if( pResult->u.operation.periodic.retry.limit > 0 )
+        if( pResult->u.operation.periodic.retry.limit > 0U )
         {
             taskPoolStatus = IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
                                                     pResult->job,
@@ -1131,17 +1131,17 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
             {
                 ( pResult->u.operation.jobReference )++;
 
-                /* In some implementations IotLog() maps to C standard printing API
+                /* In some implementations IotLogDebug() maps to C standard printing API
                  * that need specific primitive types for format specifiers. Also
                  * inttypes.h may not be available on some C99 compilers, despite
                  * stdint.h being available. */
                 /* coverity[misra_c_2012_directive_4_6_violation] */
-                IotLogDebug( "(MQTT connection %p, %s operation %p) Job reference changed from %ld to %ld.",
+                IotLogDebug( "(MQTT connection %p, %s operation %p) Job reference changed from %d to %d.",
                              pMqttConnection,
                              IotMqtt_OperationType( type ),
                              pResult,
-                             ( long int ) ( pResult->u.operation.jobReference - 1 ),
-                             ( long int ) ( pResult->u.operation.jobReference ) );
+                             ( int ) ( pResult->u.operation.jobReference - 1 ),
+                             ( int ) ( pResult->u.operation.jobReference ) );
             }
         }
     }
