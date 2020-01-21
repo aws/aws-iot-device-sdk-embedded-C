@@ -156,24 +156,24 @@ static bool _matchEndWildcards( const char * pTopicFilter,
 
     /* Determine if the last character is reached for both topic name and topic
      * filter for the '#' wildcard. */
-    endChar = ( nameIndex == topicNameLength - 1 ) && ( filterIndex == topicFilterLength - 3 );
+    endChar = ( nameIndex == topicNameLength - 1U ) && ( filterIndex == topicFilterLength - 3U );
 
     if( endChar == true )
     {
         /* Determine if the topic filter ends with the '#' wildcard. */
-        status = ( pTopicFilter[ filterIndex + 1 ] == '/' ) && ( pTopicFilter[ filterIndex + 2 ] == '#' );
+        status = ( pTopicFilter[ filterIndex + 1U ] == '/' ) && ( pTopicFilter[ filterIndex + 2U ] == '#' );
     }
 
     if( status == false )
     {
         /* Determine if the last character is reached for both topic name and topic
          * filter for the '+' wildcard. */
-        endChar = ( nameIndex == topicNameLength - 1 ) && ( filterIndex == topicFilterLength - 2 );
+        endChar = ( nameIndex == topicNameLength - 1U ) && ( filterIndex == topicFilterLength - 2U );
 
         if( endChar == true )
         {
             /* Filter "sport/+" also matches the "sport/" but not "sport". */
-            status = ( pTopicFilter[ filterIndex + 1 ] == '+' );
+            status = ( pTopicFilter[ filterIndex + 1U ] == '+' );
         }
     }
 

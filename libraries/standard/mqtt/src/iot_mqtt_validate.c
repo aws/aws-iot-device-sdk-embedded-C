@@ -150,7 +150,7 @@ static bool _validateString( const char * pString,
         goto cleanup;
     }
 
-    if( length == 0 )
+    if( length == 0U )
     {
         status = false;
         goto cleanup;
@@ -192,7 +192,7 @@ static bool _validatePublish( bool awsIotMqttMode,
         goto cleanup;
     }
 
-    if( pPublishInfo->payloadLength != 0 )
+    if( pPublishInfo->payloadLength != 0U )
     {
         if( pPublishInfo->payloadLength > maximumPayloadLength )
         {
@@ -225,9 +225,9 @@ static bool _validatePublish( bool awsIotMqttMode,
     }
 
     /* Check the retry parameters. */
-    if( pPublishInfo->retryLimit > 0 )
+    if( pPublishInfo->retryLimit > 0U )
     {
-        if( pPublishInfo->retryMs == 0 )
+        if( pPublishInfo->retryMs == 0U )
         {
             IotLogError( "Publish retry time must be positive." );
 
@@ -281,7 +281,7 @@ static bool _validateListSize( bool awsIotMqttMode,
         goto cleanup;
     }
 
-    if( listSize == 0 )
+    if( listSize == 0U )
     {
         IotLogError( "Empty subscription list." );
 
@@ -391,9 +391,9 @@ static bool _validateWildcardPlus( uint16_t index,
     bool status = true;
 
     /* Unless '+' is the first character in the filter, it must be preceded by '/'. */
-    if( index > 0 )
+    if( index > 0U )
     {
-        if( pSubscription->pTopicFilter[ index - 1 ] != '/' )
+        if( pSubscription->pTopicFilter[ index - 1U ] != '/' )
         {
             IotLogError( "Invalid topic filter %.*s -- '+' must be preceded by '/'.",
                          pSubscription->topicFilterLength,
@@ -405,9 +405,9 @@ static bool _validateWildcardPlus( uint16_t index,
     }
 
     /* Unless '+' is the last character in the filter, it must be succeeded by '/'. */
-    if( index < pSubscription->topicFilterLength - 1 )
+    if( index < pSubscription->topicFilterLength - 1U )
     {
-        if( pSubscription->pTopicFilter[ index + 1 ] != '/' )
+        if( pSubscription->pTopicFilter[ index + 1U ] != '/' )
         {
             IotLogError( "Invalid topic filter %.*s -- '+' must be succeeded by '/'.",
                          pSubscription->topicFilterLength,
@@ -431,7 +431,7 @@ static bool _validateWildcardHash( uint16_t index,
     bool status = true;
 
     /* '#' must be the last character in the filter. */
-    if( index != pSubscription->topicFilterLength - 1 )
+    if( index != pSubscription->topicFilterLength - 1U )
     {
         IotLogError( "Invalid topic filter %.*s -- '#' must be the last character.",
                      pSubscription->topicFilterLength,
@@ -442,9 +442,9 @@ static bool _validateWildcardHash( uint16_t index,
     }
 
     /* Unless '#' is standalone, it must be preceded by '/'. */
-    if( pSubscription->topicFilterLength > 1 )
+    if( pSubscription->topicFilterLength > 1U )
     {
-        if( pSubscription->pTopicFilter[ index - 1 ] != '/' )
+        if( pSubscription->pTopicFilter[ index - 1U ] != '/' )
         {
             IotLogError( "Invalid topic filter %.*s -- '#' must be preceded by '/'.",
                          pSubscription->topicFilterLength,
@@ -488,7 +488,7 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 
     /* Check for a zero-length client identifier. Zero-length client identifiers
      * are not allowed with clean sessions. */
-    if( pConnectInfo->clientIdentifierLength == 0 )
+    if( pConnectInfo->clientIdentifierLength == 0U )
     {
         IotLogWarn( "A zero-length client identifier was provided." );
 
@@ -591,7 +591,7 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
 
                 status = false;
             }
-            else if( ( flags & IOT_MQTT_FLAG_WAITABLE ) != 0 )
+            else if( ( flags & IOT_MQTT_FLAG_WAITABLE ) != 0U )
             {
                 IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
 
