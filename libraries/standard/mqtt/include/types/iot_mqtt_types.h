@@ -1154,7 +1154,7 @@ typedef struct IotMqttNetworkInfo
  * @note If this flag is set, @ref mqtt_function_wait <b>MUST</b> be called to clean up
  * resources.
  */
-#define IOT_MQTT_FLAG_WAITABLE        ( 0x00000001UL )
+#define IOT_MQTT_FLAG_WAITABLE        ( 0x00000001U )
 
 /**
  * @brief Causes @ref mqtt_function_disconnect to only free memory and not send
