@@ -520,6 +520,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
 {
     bool encodedUserName = false;
     uint8_t * pBuffer = pDestination;
+    const char * pMetricsUserName = AWS_IOT_METRICS_USERNAME;
 
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
      * Otherwise, write the username and password only when not connecting to the
@@ -556,7 +557,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
 
                     /* Write the metrics portion of the username. */
                     ( void ) memcpy( pBuffer,
-                                     AWS_IOT_METRICS_USERNAME,
+                                     pMetricsUserName,
                                      AWS_IOT_METRICS_USERNAME_LENGTH );
                     pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
 
@@ -568,7 +569,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
                 /* The username is not being used for authentication, but
                  * metrics are enabled. */
                 pBuffer = _encodeString( pBuffer,
-                                         AWS_IOT_METRICS_USERNAME,
+                                         pMetricsUserName,
                                          AWS_IOT_METRICS_USERNAME_LENGTH );
 
                 encodedUserName = true;
