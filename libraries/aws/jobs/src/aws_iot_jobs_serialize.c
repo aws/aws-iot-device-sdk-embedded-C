@@ -999,7 +999,7 @@ static AwsIotJobsError_t _generateUpdateRequest( const AwsIotJobsRequestInfo_t *
 static AwsIotJobsError_t _parseErrorDocument( const char * pErrorDocument,
                                               size_t errorDocumentLength )
 {
-    AwsIotJobsError_t status = AWS_IOT_JOBS_STATUS_PENDING;
+    AwsIotJobsError_t status = AWS_IOT_JOBS_BAD_RESPONSE;
     const char * pCode = NULL;
     size_t codeLength = 0;
 
@@ -1009,11 +1009,7 @@ static AwsIotJobsError_t _parseErrorDocument( const char * pErrorDocument,
                                    CODE_KEY,
                                    CODE_KEY_LENGTH,
                                    &pCode,
-                                   &codeLength ) == false )
-    {
-        status = AWS_IOT_JOBS_BAD_RESPONSE;
-    }
-    else
+                                   &codeLength ) == true )
     {
         switch( codeLength )
         {
@@ -1103,9 +1099,7 @@ static AwsIotJobsError_t _parseErrorDocument( const char * pErrorDocument,
 
             default:
 
-                /* Match the JSON error code to a Jobs return value. Assume invalid status
-                 * unless matched.*/
-                status = AWS_IOT_JOBS_BAD_RESPONSE;
+                /* Assume bad response status unless matched.*/
                 break;
         }
     }
