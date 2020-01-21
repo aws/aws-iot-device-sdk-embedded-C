@@ -226,13 +226,13 @@ static uint8_t * _encodeString( uint8_t * pDestination,
 /**
  * @brief Encode a username into a CONNECT packet, if necessary.
  *
- * @param[out] pBuffer Buffer for the CONNECT packet.
+ * @param[out] pDestination Buffer for the CONNECT packet.
  * @param[in] pConnectInfo User-provided CONNECT information.
  *
  * @return Pointer to the end of the encoded string, which will be identical to
- * `pBuffer` if nothing was encoded.
+ * `pDestination` if nothing was encoded.
  */
-static uint8_t * _encodeUserName( uint8_t * pBuffer,
+static uint8_t * _encodeUserName( uint8_t * pDestination,
                                   const IotMqttConnectInfo_t * pConnectInfo );
 
 /**
@@ -289,13 +289,13 @@ static bool _subscriptionPacketSize( IotMqttOperationType_t type,
  *
  * @param[in] pConnectInfo User-provided CONNECT information.
  * @param[in] remainingLength User provided remaining length.
- * @param[in, out] pBuffer User provided buffer where the CONNECT packet is written.
- * @param[in] connectPacketSize Size of the buffer pointed to by `pBuffer`.
+ * @param[in, out] pPacket User provided buffer where the CONNECT packet is written.
+ * @param[in] connectPacketSize Size of the buffer pointed to by `pPacket`.
  *
  */
 static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
                                size_t remainingLength,
-                               uint8_t * pBuffer,
+                               uint8_t * pPacket,
                                size_t connectPacketSize );
 
 /**
@@ -306,15 +306,15 @@ static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
  * @param[out] pPacketIdentifier The packet identifier generated for this PUBLISH.
  * @param[out] pPacketIdentifierHigh Where the high byte of the packet identifier
  * is written.
- * @param[in, out] pBuffer User provided buffer where the PUBLISH packet is written.
- * @param[in] publishPacketSize Size of buffer pointed to by `pBuffer`.
+ * @param[in, out] pPacket User provided buffer where the PUBLISH packet is written.
+ * @param[in] publishPacketSize Size of buffer pointed to by `pPacket`.
  *
  */
 static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
                                size_t remainingLength,
                                uint16_t * pPacketIdentifier,
                                uint8_t ** pPacketIdentifierHigh,
-                               uint8_t * pBuffer,
+                               uint8_t * pPacket,
                                size_t publishPacketSize );
 
 /**
@@ -324,15 +324,15 @@ static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
  * @param[in] subscriptionCount Size of `pSubscriptionList`.
  * @param[in] remainingLength User provided remaining length.
  * @param[out] pPacketIdentifier The packet identifier generated for this SUBSCRIBE.
- * @param[in, out] pBuffer User provided buffer where the SUBSCRIBE packet is written.
- * @param[in] subscribePacketSize Size of the buffer pointed to by  `pBuffer`.
+ * @param[in, out] pPacket User provided buffer where the SUBSCRIBE packet is written.
+ * @param[in] subscribePacketSize Size of the buffer pointed to by  `pPacket`.
  *
  */
 static void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
                                  size_t subscriptionCount,
                                  size_t remainingLength,
                                  uint16_t * pPacketIdentifier,
-                                 uint8_t * pBuffer,
+                                 uint8_t * pPacket,
                                  size_t subscribePacketSize );
 
 /**
@@ -342,15 +342,15 @@ static void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList
  * @param[in] subscriptionCount Size of `pSubscriptionList`.
  * @param[in] remainingLength User provided remaining length.
  * @param[out] pPacketIdentifier The packet identifier generated for this UNSUBSCRIBE.
- * @param[in, out] pBuffer User provided buffer where the UNSUBSCRIBE packet is written.
- * @param[in] unsubscribePacketSize size of the buffer pointed to by  `pBuffer`.
+ * @param[in, out] pPacket User provided buffer where the UNSUBSCRIBE packet is written.
+ * @param[in] unsubscribePacketSize size of the buffer pointed to by  `pPacket`.
  *
  */
 static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList,
                                    size_t subscriptionCount,
                                    size_t remainingLength,
                                    uint16_t * pPacketIdentifier,
-                                   uint8_t * pBuffer,
+                                   uint8_t * pPacket,
                                    size_t unsubscribePacketSize );
 
 /**
@@ -466,15 +466,16 @@ static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
                                          size_t length )
 {
     uint8_t lengthByte = 0, * pLengthEnd = pDestination;
+    size_t remainingLength = length;
 
     /* This algorithm is copied from the MQTT v3.1.1 spec. */
     do
     {
-        lengthByte = length % 128U;
-        length = length / 128U;
+        lengthByte = remainingLength % 128U;
+        remainingLength = remainingLength / 128U;
 
         /* Set the high bit of this byte, indicating that there's more data. */
-        if( length > 0U )
+        if( remainingLength > 0U )
         {
             UINT8_SET_BIT( lengthByte, 7 );
         }
@@ -482,7 +483,7 @@ static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
         /* Output a single encoded byte. */
         *pLengthEnd = lengthByte;
         pLengthEnd++;
-    } while( length > 0U );
+    } while( remainingLength > 0U );
 
     return pLengthEnd;
 }
@@ -493,29 +494,32 @@ static uint8_t * _encodeString( uint8_t * pDestination,
                                 const char * source,
                                 uint16_t sourceLength )
 {
+    uint8_t * pBuffer = pDestination;
+
     /* The first byte of a UTF-8 string is the high byte of the string length. */
-    *pDestination = UINT16_HIGH_BYTE( sourceLength );
-    pDestination++;
+    *pBuffer = UINT16_HIGH_BYTE( sourceLength );
+    pBuffer++;
 
     /* The second byte of a UTF-8 string is the low byte of the string length. */
-    *pDestination = UINT16_LOW_BYTE( sourceLength );
-    pDestination++;
+    *pBuffer = UINT16_LOW_BYTE( sourceLength );
+    pBuffer++;
 
-    /* Copy the string into pDestination. */
-    ( void ) memcpy( pDestination, source, sourceLength );
+    /* Copy the string into pBuffer. */
+    ( void ) memcpy( pBuffer, source, sourceLength );
 
     /* Return the pointer to the end of the encoded string. */
-    pDestination += sourceLength;
+    pBuffer += sourceLength;
 
-    return pDestination;
+    return pBuffer;
 }
 
 /*-----------------------------------------------------------*/
 
-static uint8_t * _encodeUserName( uint8_t * pBuffer,
+static uint8_t * _encodeUserName( uint8_t * pDestination,
                                   const IotMqttConnectInfo_t * pConnectInfo )
 {
     bool encodedUserName = false;
+    uint8_t * pBuffer = pDestination;
 
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
      * Otherwise, write the username and password only when not connecting to the
@@ -766,14 +770,14 @@ static bool _subscriptionPacketSize( IotMqttOperationType_t type,
 
 static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
                                size_t remainingLength,
-                               uint8_t * pBuffer,
+                               uint8_t * pPacket,
                                size_t connectPacketSize )
 {
     uint8_t connectFlags = 0;
-    uint8_t * pConnectPacket = pBuffer;
+    uint8_t * pBuffer = pPacket;
 
     /* Avoid unused variable warning when logging and asserts are disabled. */
-    ( void ) pConnectPacket;
+    ( void ) pPacket;
     ( void ) connectPacketSize;
 
     /* The first byte in the CONNECT packet is the control packet type. */
@@ -888,10 +892,10 @@ static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is equal to connectPacketSize, i.e. pBuffer did not overflow. */
-    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pConnectPacket ) ) == connectPacketSize );
+    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pPacket ) ) == connectPacketSize );
 
     /* Print out the serialized CONNECT packet for debugging purposes. */
-    IotLog_PrintBuffer( "MQTT CONNECT packet:", pConnectPacket, connectPacketSize );
+    IotLog_PrintBuffer( "MQTT CONNECT packet:", pPacket, connectPacketSize );
 }
 
 /*-----------------------------------------------------------*/
@@ -900,15 +904,15 @@ static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
                                size_t remainingLength,
                                uint16_t * pPacketIdentifier,
                                uint8_t ** pPacketIdentifierHigh,
-                               uint8_t * pBuffer,
+                               uint8_t * pPacket,
                                size_t publishPacketSize )
 {
     uint8_t publishFlags = 0;
     uint16_t packetIdentifier = 0;
-    uint8_t * pPublishPacket = pBuffer;
+    uint8_t * pBuffer = pPacket;
 
     /* Avoid unused variable warning when logging and asserts are disabled. */
-    ( void ) pPublishPacket;
+    ( void ) pPacket;
     ( void ) publishPacketSize;
 
     /* The first byte of a PUBLISH packet contains the packet type and flags. */
@@ -973,10 +977,10 @@ static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is equal to publishPacketSize, i.e. pBuffer did not overflow. */
-    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pPublishPacket ) ) == publishPacketSize );
+    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pPacket ) ) == publishPacketSize );
 
     /* Print out the serialized PUBLISH packet for debugging purposes. */
-    IotLog_PrintBuffer( "MQTT PUBLISH packet:", pPublishPacket, publishPacketSize );
+    IotLog_PrintBuffer( "MQTT PUBLISH packet:", pPacket, publishPacketSize );
 }
 
 /*-----------------------------------------------------------*/
@@ -985,15 +989,15 @@ static void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList
                                  size_t subscriptionCount,
                                  size_t remainingLength,
                                  uint16_t * pPacketIdentifier,
-                                 uint8_t * pBuffer,
+                                 uint8_t * pPacket,
                                  size_t subscribePacketSize )
 {
     uint16_t packetIdentifier = 0;
     size_t i = 0;
-    uint8_t * pSubscribePacket = pBuffer;
+    uint8_t * pBuffer = pPacket;
 
     /* Avoid unused variable warning when logging and asserts are disabled. */
-    ( void ) pSubscribePacket;
+    ( void ) pPacket;
     ( void ) subscribePacketSize;
 
     /* The first byte in SUBSCRIBE is the packet type. */
@@ -1027,10 +1031,10 @@ static void _serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is equal to subscribePacketSize, i.e. pBuffer did not overflow. */
-    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pSubscribePacket ) ) == subscribePacketSize );
+    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pPacket ) ) == subscribePacketSize );
 
     /* Print out the serialized SUBSCRIBE packet for debugging purposes. */
-    IotLog_PrintBuffer( "MQTT SUBSCRIBE packet:", pSubscribePacket, subscribePacketSize );
+    IotLog_PrintBuffer( "MQTT SUBSCRIBE packet:", pPacket, subscribePacketSize );
 }
 
 /*-----------------------------------------------------------*/
@@ -1039,15 +1043,15 @@ static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionLi
                                    size_t subscriptionCount,
                                    size_t remainingLength,
                                    uint16_t * pPacketIdentifier,
-                                   uint8_t * pBuffer,
+                                   uint8_t * pPacket,
                                    size_t unsubscribePacketSize )
 {
     uint16_t packetIdentifier = 0;
     size_t i = 0;
-    uint8_t * pUnsubscribePacket = pBuffer;
+    uint8_t * pBuffer = pPacket;
 
     /* Avoid unused variable warning when logging and asserts are disabled. */
-    ( void ) pUnsubscribePacket;
+    ( void ) pPacket;
     ( void ) unsubscribePacketSize;
 
     /* The first byte in UNSUBSCRIBE is the packet type. */
@@ -1077,10 +1081,10 @@ static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionLi
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is equal to unsubscribePacketSize, i.e. pBuffer did not overflow. */
-    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pUnsubscribePacket ) ) == unsubscribePacketSize );
+    IotMqtt_Assert( ( ( size_t ) ( pBuffer - pPacket ) ) == unsubscribePacketSize );
 
     /* Print out the serialized UNSUBSCRIBE packet for debugging purposes. */
-    IotLog_PrintBuffer( "MQTT UNSUBSCRIBE packet:", pUnsubscribePacket, unsubscribePacketSize );
+    IotLog_PrintBuffer( "MQTT UNSUBSCRIBE packet:", pPacket, unsubscribePacketSize );
 }
 
 /*-----------------------------------------------------------*/
