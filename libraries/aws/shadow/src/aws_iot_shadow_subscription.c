@@ -35,9 +35,6 @@
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
 
-/* Error handling include. */
-#include "iot_error.h"
-
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
 
