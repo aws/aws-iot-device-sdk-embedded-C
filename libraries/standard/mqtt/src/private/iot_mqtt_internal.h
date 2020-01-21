@@ -275,7 +275,7 @@
  * use only. Nevertheless, its value must be bitwise exclusive of all conflicting
  * @ref mqtt_constants_flags.
  */
-#define MQTT_INTERNAL_FLAG_BLOCK_ON_SEND                       ( 0x80000000 )
+#define MQTT_INTERNAL_FLAG_BLOCK_ON_SEND                       ( 0x80000000U )
 
 /**
  * @brief When calling #_IotMqtt_RemoveSubscriptionByPacket, use this value

@@ -391,9 +391,9 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
  */
     static const IotLogConfig_t _logHideAll =
     {
-        .hideLibraryName = true,
-        .hideLogLevel    = true,
-        .hideTimestring  = true
+        .hideLibraryName = ( bool ) ( true ),
+        .hideLogLevel    = ( bool ) ( true ),
+        .hideTimestring  = ( bool ) ( true )
     };
 #endif
 
