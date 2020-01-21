@@ -54,7 +54,7 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDes
     uint32_t swapped = 0;
 
     /* This header file is intended to be used with only the gcc compiler
-     * which requires an int parameter for this routine. */
+     * which requires an int parameter for this routine.
      * This routine is built into gcc and defined to return a bool
      * type. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
