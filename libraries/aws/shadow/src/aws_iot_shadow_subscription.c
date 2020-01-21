@@ -181,7 +181,7 @@ void _AwsIotShadow_RemoveSubscription( _shadowSubscription_t * pSubscription,
         {
             IotLogDebug( "Reference count %ld for %.*s subscription object. "
                          "Subscription cannot be removed yet.",
-                         ( long int ) pSubscription->references[ i ],
+                         ( int32_t ) pSubscription->references[ i ],
                          pSubscription->thingNameLength,
                          pSubscription->pThingName );
 
