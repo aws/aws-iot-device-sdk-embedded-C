@@ -1076,7 +1076,9 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     _mqttOperation_t * pResult = NULL;
     IotLink_t * pResultLink = NULL;
-    _operationMatchParam_t operationMatchParams = { 0 };
+    _operationMatchParam_t operationMatchParams;
+
+    memset( &operationMatchParams, 0, sizeof( _operationMatchParam_t ) );
 
     /* Set the members of the search parameter. */
     operationMatchParams.type = type;
