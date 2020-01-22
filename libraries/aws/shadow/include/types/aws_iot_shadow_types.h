@@ -563,7 +563,7 @@ typedef struct AwsIotShadowDocumentInfo
  * @note If this flag is set, @ref shadow_function_wait <b>MUST</b> be called to
  * clean up resources.
  */
-#define AWS_IOT_SHADOW_FLAG_WAITABLE                       ( 0x00000001 )
+#define AWS_IOT_SHADOW_FLAG_WAITABLE                       ( 0x00000001UL )
 
 /**
  * @brief Maintain the subscriptions for the Shadow operation topics, even after
@@ -591,7 +591,7 @@ typedef struct AwsIotShadowDocumentInfo
  * shadow_function_removepersistentsubscriptions may be used to remove
  * subscriptions maintained by this flag.
  */
-#define AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS             ( 0x00000002 )
+#define AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS             ( 0x00000002UL )
 
 /**
  * @brief Remove the persistent subscriptions from a Shadow delete operation.
@@ -606,7 +606,7 @@ typedef struct AwsIotShadowDocumentInfo
  * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Shadow delete operations.
  */
-#define AWS_IOT_SHADOW_FLAG_REMOVE_DELETE_SUBSCRIPTIONS    ( 0x00000001 )
+#define AWS_IOT_SHADOW_FLAG_REMOVE_DELETE_SUBSCRIPTIONS    ( 0x00000001UL )
 
 /**
  * @brief Remove the persistent subscriptions from a Shadow get operation.
@@ -621,7 +621,7 @@ typedef struct AwsIotShadowDocumentInfo
  * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Shadow get operations.
  */
-#define AWS_IOT_SHADOW_FLAG_REMOVE_GET_SUBSCRIPTIONS       ( 0x00000002 )
+#define AWS_IOT_SHADOW_FLAG_REMOVE_GET_SUBSCRIPTIONS       ( 0x00000002UL )
 
 /**
  * @brief Remove the persistent subscriptions from a Shadow update operation.
@@ -636,6 +636,6 @@ typedef struct AwsIotShadowDocumentInfo
  * @warning Do not call @ref shadow_function_removepersistentsubscriptions with
  * this flag for Thing Names with any in-progress Shadow update operations.
  */
-#define AWS_IOT_SHADOW_FLAG_REMOVE_UPDATE_SUBSCRIPTIONS    ( 0x00000004 )
+#define AWS_IOT_SHADOW_FLAG_REMOVE_UPDATE_SUBSCRIPTIONS    ( 0x00000004UL )
 
 #endif /* ifndef AWS_IOT_SHADOW_TYPES_H_ */
