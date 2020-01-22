@@ -316,7 +316,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
 
     /* Increment the number of subscription references for this operation when
      * the keep subscriptions flag is not set. */
-    if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS ) == 0 )
+    if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS ) == 0U )
     {
         ( pSubscription->references[ type ] )++;
 
@@ -443,9 +443,9 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
 
         pSubscription = IotLink_Container( _shadowSubscription_t, pSubscriptionLink, link );
 
-        for( i = 0; i < SHADOW_OPERATION_COUNT; i++ )
+        for( i = 0; i < ( uint32_t ) SHADOW_OPERATION_COUNT; i++ )
         {
-            if( ( flags & ( 0x1UL << i ) ) != 0 )
+            if( ( flags & ( 0x1UL << i ) ) != 0U )
             {
                 IotLogDebug( "Removing %.*s %s persistent subscriptions.",
                              thingNameLength,
