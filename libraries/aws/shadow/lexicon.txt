@@ -13,6 +13,7 @@ clienttokenlength
 com
 config
 const
+coverity
 deleteasync
 deletesync
 deltacallbackfunction
