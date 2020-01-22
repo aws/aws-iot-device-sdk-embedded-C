@@ -443,7 +443,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
 
         pSubscription = IotLink_Container( _shadowSubscription_t, pSubscriptionLink, link );
 
-        for( i = 0; i < ( uint32_t ) SHADOW_OPERATION_COUNT; i++ )
+        for( i = 0; i < SHADOW_OPERATION_COUNT; i++ )
         {
             if( ( flags & ( 0x1UL << i ) ) != 0U )
             {
