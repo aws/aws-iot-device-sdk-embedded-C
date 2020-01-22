@@ -176,6 +176,11 @@ void _AwsIotShadow_RemoveSubscription( _shadowSubscription_t * pSubscription,
     {
         if( pSubscription->references[ i ] > 0 )
         {
+            /* In some implementations IotLogDebug() maps to C standard printing API
+            * that needs specific primitive types for format specifiers. Also,
+            * inttypes.h may not be available on some C99 compilers, despite
+            * stdint.h being available. */
+            /* coverity[misra_c_2012_directive_4_6_violation] */
             IotLogDebug( "Reference count %ld for %.*s subscription object. "
                          "Subscription cannot be removed yet.",
                          ( long int ) pSubscription->references[ i ],
