@@ -35,9 +35,6 @@
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
 
-/* Error handling include. */
-#include "iot_error.h"
-
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
 
@@ -275,7 +272,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
                                                        uint16_t operationTopicLength,
                                                        AwsIotMqttCallbackFunction_t callback )
 {
-    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_SUCCESS );
+    AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
     const _shadowOperationType_t type = pOperation->type;
     _shadowSubscription_t * pSubscription = pOperation->pSubscription;
     IotMqttError_t subscriptionStatus = IOT_MQTT_STATUS_PENDING;
@@ -289,60 +286,58 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
                      _pAwsIotShadowOperationNames[ type ],
                      pSubscription->thingNameLength,
                      pSubscription->pThingName );
-
-        IOT_GOTO_CLEANUP();
     }
-
-    /* When persistent subscriptions are not present, the reference count must
-     * not be negative. */
-    AwsIotShadow_Assert( pSubscription->references[ type ] >= 0 );
-
-    /* Check if there are any existing references for this operation. */
-    if( pSubscription->references[ type ] == 0 )
+    else
     {
-        /* Set the parameters needed to add subscriptions. */
-        subscriptionInfo.mqttConnection = pOperation->mqttConnection;
-        subscriptionInfo.callbackFunction = callback;
-        subscriptionInfo.timeout = _AwsIotShadowMqttTimeoutMs;
-        subscriptionInfo.pTopicFilterBase = pTopicBuffer;
-        subscriptionInfo.topicFilterBaseLength = operationTopicLength;
+        /* When persistent subscriptions are not present, the reference count must
+         * not be negative. */
+        AwsIotShadow_Assert( pSubscription->references[ type ] >= 0 );
 
-        subscriptionStatus = AwsIot_ModifySubscriptions( IotMqtt_SubscribeSync,
-                                                         &subscriptionInfo );
-
-        /* Convert MQTT return code to Shadow return code. */
-        status = SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( subscriptionStatus );
-
-        if( status != AWS_IOT_SHADOW_SUCCESS )
+        /* Check if there are any existing references for this operation. */
+        if( pSubscription->references[ type ] == 0 )
         {
-            IOT_GOTO_CLEANUP();
+            /* Set the parameters needed to add subscriptions. */
+            subscriptionInfo.mqttConnection = pOperation->mqttConnection;
+            subscriptionInfo.callbackFunction = callback;
+            subscriptionInfo.timeout = _AwsIotShadowMqttTimeoutMs;
+            subscriptionInfo.pTopicFilterBase = pTopicBuffer;
+            subscriptionInfo.topicFilterBaseLength = operationTopicLength;
+
+            subscriptionStatus = AwsIot_ModifySubscriptions( IotMqtt_SubscribeSync,
+                                                             &subscriptionInfo );
+
+            /* Convert MQTT return code to Shadow return code. */
+            status = SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( subscriptionStatus );
+        }
+
+        if( status == AWS_IOT_SHADOW_SUCCESS )
+        {
+            /* Increment the number of subscription references for this operation when
+             * the keep subscriptions flag is not set. */
+            if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS ) == 0 )
+            {
+                ( pSubscription->references[ type ] )++;
+
+                IotLogDebug( "Shadow %s subscriptions for %.*s now has count %d.",
+                             _pAwsIotShadowOperationNames[ type ],
+                             pSubscription->thingNameLength,
+                             pSubscription->pThingName,
+                             pSubscription->references[ type ] );
+            }
+            /* Otherwise, set the persistent subscriptions flag. */
+            else
+            {
+                pSubscription->references[ type ] = AWS_IOT_PERSISTENT_SUBSCRIPTION;
+
+                IotLogDebug( "Set persistent subscriptions flag for Shadow %s of %.*s.",
+                             _pAwsIotShadowOperationNames[ type ],
+                             pSubscription->thingNameLength,
+                             pSubscription->pThingName );
+            }
         }
     }
 
-    /* Increment the number of subscription references for this operation when
-     * the keep subscriptions flag is not set. */
-    if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS ) == 0 )
-    {
-        ( pSubscription->references[ type ] )++;
-
-        IotLogDebug( "Shadow %s subscriptions for %.*s now has count %d.",
-                     _pAwsIotShadowOperationNames[ type ],
-                     pSubscription->thingNameLength,
-                     pSubscription->pThingName,
-                     pSubscription->references[ type ] );
-    }
-    /* Otherwise, set the persistent subscriptions flag. */
-    else
-    {
-        pSubscription->references[ type ] = AWS_IOT_PERSISTENT_SUBSCRIPTION;
-
-        IotLogDebug( "Set persistent subscriptions flag for Shadow %s of %.*s.",
-                     _pAwsIotShadowOperationNames[ type ],
-                     pSubscription->thingNameLength,
-                     pSubscription->pThingName );
-    }
-
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+    return status;
 }
 
 /*-----------------------------------------------------------*/
