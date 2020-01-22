@@ -35,9 +35,6 @@
 /* Shadow internal include. */
 #include "private/aws_iot_shadow_internal.h"
 
-/* Error handling include. */
-#include "iot_error.h"
-
 /* AWS Parser include. */
 #include "aws_iot_doc_parser.h"
 
@@ -133,7 +130,7 @@ static AwsIotShadowError_t _codeToShadowStatus( uint32_t code )
 AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * pErrorDocument,
                                                       size_t errorDocumentLength )
 {
-    IOT_FUNCTION_ENTRY( AwsIotShadowError_t, AWS_IOT_SHADOW_STATUS_PENDING );
+    AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     const char * pCode = NULL, * pMessage = NULL;
     size_t codeLength = 0, messageLength = 0;
     uint32_t code = 0;
@@ -144,52 +141,53 @@ AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * pErrorDocumen
                                    ERROR_DOCUMENT_CODE_KEY,
                                    ERROR_DOCUMENT_CODE_KEY_LENGTH,
                                    &pCode,
-                                   &codeLength ) == false )
+                                   &codeLength ) == true )
+    {
+        /* Code must be in error document. */
+        AwsIotShadow_Assert( ( pCode > pErrorDocument ) &&
+                             ( pCode + codeLength < pErrorDocument + errorDocumentLength ) );
+
+        /* Convert the code to an unsigned integer value. */
+        code = ( uint32_t ) strtoul( pCode, NULL, 10 );
+
+        /* Parse the error message and print it. An error document must always contain
+         * a message. */
+        if( AwsIotDocParser_FindValue( pErrorDocument,
+                                       errorDocumentLength,
+                                       ERROR_DOCUMENT_MESSAGE_KEY,
+                                       ERROR_DOCUMENT_MESSAGE_KEY_LENGTH,
+                                       &pMessage,
+                                       &messageLength ) == true )
+        {
+            IotLogWarn( "Code %lu: %.*s.",
+                        code,
+                        messageLength,
+                        pMessage );
+
+            /* Convert a successfully parsed JSON code to a Shadow status. */
+            status = _codeToShadowStatus( code );
+        }
+        else
+        {
+            IotLogWarn( "Code %lu; failed to parse message from error document.\n%.*s",
+                        code,
+                        errorDocumentLength,
+                        pErrorDocument );
+
+            status = AWS_IOT_SHADOW_BAD_RESPONSE;
+        }
+    }
+    else
     {
         /* Error parsing JSON document, or no "code" key was found. */
         IotLogWarn( "Failed to parse code from error document.\n%.*s",
                     errorDocumentLength,
                     pErrorDocument );
 
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_RESPONSE );
+        status = AWS_IOT_SHADOW_BAD_RESPONSE;
     }
 
-    /* Code must be in error document. */
-    AwsIotShadow_Assert( ( pCode > pErrorDocument ) &&
-                         ( pCode + codeLength < pErrorDocument + errorDocumentLength ) );
-
-    /* Convert the code to an unsigned integer value. */
-    code = ( uint32_t ) strtoul( pCode, NULL, 10 );
-
-    /* Parse the error message and print it. An error document must always contain
-     * a message. */
-    if( AwsIotDocParser_FindValue( pErrorDocument,
-                                   errorDocumentLength,
-                                   ERROR_DOCUMENT_MESSAGE_KEY,
-                                   ERROR_DOCUMENT_MESSAGE_KEY_LENGTH,
-                                   &pMessage,
-                                   &messageLength ) == true )
-    {
-        IotLogWarn( "Code %lu: %.*s.",
-                    code,
-                    messageLength,
-                    pMessage );
-    }
-    else
-    {
-        IotLogWarn( "Code %lu; failed to parse message from error document.\n%.*s",
-                    code,
-                    errorDocumentLength,
-                    pErrorDocument );
-
-        /* An error document must contain a message; if it does not, then it is invalid. */
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_SHADOW_BAD_RESPONSE );
-    }
-
-    /* Convert a successfully parsed JSON code to a Shadow status. */
-    status = _codeToShadowStatus( code );
-
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+    return status;
 }
 
 /*-----------------------------------------------------------*/
