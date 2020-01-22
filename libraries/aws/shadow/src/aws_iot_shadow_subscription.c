@@ -409,7 +409,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
                                                                 size_t thingNameLength,
                                                                 uint32_t flags )
 {
-    int32_t i = 0;
+    uint32_t i = 0;
     uint16_t operationTopicLength = 0;
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     IotMqttError_t unsubscribeStatus = IOT_MQTT_STATUS_PENDING;
