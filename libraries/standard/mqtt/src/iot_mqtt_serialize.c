@@ -153,7 +153,7 @@
 #define MQTT_PACKET_DISCONNECT_SIZE                 ( 2U ) /**< @brief A DISCONNECT packet is always 2 bytes in size. */
 
 /* Username for metrics with AWS IoT. */
-#if AWS_IOT_MQTT_ENABLE_METRICS == 1 || DOXYGEN == 1
+#if ( AWS_IOT_MQTT_ENABLE_METRICS == 1 ) || ( DOXYGEN == 1 )
     #ifndef AWS_IOT_METRICS_USERNAME
 
 /**
@@ -535,12 +535,14 @@ static uint8_t * _encodeUserName( uint8_t * pBuffer,
                 if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( uint16_t ) ( UINT16_MAX ) ) )
                 {
                     /* Write the high byte of the combined length. */
-                    *( pBuffer++ ) = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
-                                                         AWS_IOT_METRICS_USERNAME_LENGTH ) );
+                    *pBuffer = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
+                                                   AWS_IOT_METRICS_USERNAME_LENGTH ) );
+                    pBuffer++;
 
                     /* Write the low byte of the combined length. */
-                    *( pBuffer++ ) = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
-                                                        AWS_IOT_METRICS_USERNAME_LENGTH ) );
+                    *pBuffer = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
+                                                  AWS_IOT_METRICS_USERNAME_LENGTH ) );
+                    pBuffer++;
 
                     /* Write the identity portion of the username. */
                     memcpy( pBuffer,
@@ -838,6 +840,7 @@ static void _serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
                 break;
 
             default:
+                /* Empty default MISRA 16.4 */
                 break;
         }
 
@@ -918,6 +921,10 @@ static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
     else if( pPublishInfo->qos == IOT_MQTT_QOS_2 )
     {
         UINT8_SET_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 );
+    }
+    else
+    {
+        /* Empty else MISRA 15.7 */
     }
 
     if( pPublishInfo->retain == true )
@@ -1177,7 +1184,7 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
         /* Check that the "Remaining length" is greater than the minimum. For
          * QoS 1 or 2, this will be two bytes greater than for QoS due to the
          * packet identifier. */
-        if( pPublish->remainingLength < qos0Minimum + 2U )
+        if( pPublish->remainingLength < ( qos0Minimum + 2U ) )
         {
             IotLog( IOT_LOG_DEBUG,
                     &_logHideAll,

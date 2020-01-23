@@ -85,7 +85,7 @@ typedef struct _operationMatchParam
  * @return `true` if the operation matches the parameters in `pArgument`; `false`
  * otherwise.
  */
-static bool _mqttOperation_match( const IotLink_t * pOperationLink,
+static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
                                   void * pMatch );
 
 /**
@@ -158,7 +158,7 @@ static bool _sendPingRequest( _mqttConnection_t * pMqttConnection );
 
 /*-----------------------------------------------------------*/
 
-static bool _mqttOperation_match( const IotLink_t * pOperationLink,
+static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
                                   void * pMatch )
 {
     bool match = false;
@@ -205,7 +205,7 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
         /* The retry count may be at most one more than the retry limit, which
          * accounts for the final check for a PUBACK. */
         IotMqtt_Assert( pOperation->u.operation.periodic.retry.count ==
-                        pOperation->u.operation.periodic.retry.limit + 1U );
+                        ( pOperation->u.operation.periodic.retry.limit + 1U ) );
 
         IotLogDebug( "(MQTT connection %p, PUBLISH operation %p) No response received after %lu retries.",
                      pMqttConnection,
@@ -226,6 +226,10 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
             /* In AWS IoT MQTT mode, the DUP flag (really a change to the packet
              * identifier) must be reset on every retry. */
             setDup = true;
+        }
+        else
+        {
+            setDup = false;
         }
 
         if( setDup == true )
@@ -1011,6 +1015,11 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
                 pOperation->u.operation.status = IOT_MQTT_SUCCESS;
             }
         }
+        else
+        {
+            /* Empty else MISRA 15.7 */
+        }
+        
     }
 
     /* Check if this operation requires further processing. */
@@ -1106,6 +1115,11 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * pOperation,
         IotMqtt_Assert( taskPoolStatus != IOT_TASKPOOL_BAD_PARAMETER );
         IotMqtt_Assert( taskPoolStatus != IOT_TASKPOOL_ILLEGAL_OPERATION );
 
+        /* Coverity finds a MISRA 13.2 violation in this log statement as the order
+         * of evaluation for IotMqtt_OperationType and IotTaskPool_strerror is not
+         * defined. This is not an issue as these functions do not change data and
+         * only convert codes into constant strings. */
+        /* coverity[misra_c_2012_rule_13_2_violation] */
         IotLogWarn( "(MQTT connection %p, %s operation %p) Failed to schedule operation job, error %s.",
                     pOperation->pMqttConnection,
                     IotMqtt_OperationType( pOperation->u.operation.type ),

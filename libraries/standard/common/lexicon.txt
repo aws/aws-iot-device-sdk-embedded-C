@@ -5,6 +5,7 @@ cancelable
 cas
 config
 const
+coverity
 createjob
 createrecyclablejob
 createsystemtaskpool
