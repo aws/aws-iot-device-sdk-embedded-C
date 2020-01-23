@@ -187,7 +187,7 @@ static bool _disconnectCallbackCalled = false;
 /**
  * @brief Get packet type function override.
  */
-static uint8_t _getPacketType( void * pNetworkConnection,
+static uint8_t _getPacketType( IotNetworkConnection_t pNetworkConnection,
                                const IotNetworkInterface_t * pNetworkInterface )
 {
     _getPacketTypeCalled = true;
@@ -200,7 +200,7 @@ static uint8_t _getPacketType( void * pNetworkConnection,
 /**
  * @brief Get remaining length function override.
  */
-static size_t _getRemainingLength( void * pNetworkConnection,
+static size_t _getRemainingLength( IotNetworkConnection_t pNetworkConnection,
                                    const IotNetworkInterface_t * pNetworkInterface )
 {
     _getRemainingLengthCalled = true;
@@ -663,7 +663,7 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
         receiveContext.dataLength = 4;
 
         TEST_ASSERT_EQUAL( 0,
-                           _IotMqtt_GetRemainingLength( &receiveContext,
+                           _IotMqtt_GetRemainingLength( ( IotNetworkConnection_t ) &receiveContext,
                                                         &_networkInterface ) );
     }
 
@@ -677,7 +677,7 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
         receiveContext.dataLength = 4;
 
         TEST_ASSERT_EQUAL( 129,
-                           _IotMqtt_GetRemainingLength( &receiveContext,
+                           _IotMqtt_GetRemainingLength( ( IotNetworkConnection_t ) &receiveContext,
                                                         &_networkInterface ) );
     }
 
@@ -691,7 +691,7 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
         receiveContext.dataLength = 4;
 
         TEST_ASSERT_EQUAL( 16386,
-                           _IotMqtt_GetRemainingLength( &receiveContext,
+                           _IotMqtt_GetRemainingLength( ( IotNetworkConnection_t ) &receiveContext,
                                                         &_networkInterface ) );
     }
 
@@ -706,7 +706,7 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
         receiveContext.dataLength = 4;
 
         TEST_ASSERT_EQUAL( 268435455,
-                           _IotMqtt_GetRemainingLength( &receiveContext,
+                           _IotMqtt_GetRemainingLength( ( IotNetworkConnection_t ) &receiveContext,
                                                         &_networkInterface ) );
     }
 
@@ -720,7 +720,7 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
         receiveContext.dataLength = 4;
 
         TEST_ASSERT_EQUAL( MQTT_REMAINING_LENGTH_INVALID,
-                           _IotMqtt_GetRemainingLength( &receiveContext,
+                           _IotMqtt_GetRemainingLength( ( IotNetworkConnection_t ) &receiveContext,
                                                         &_networkInterface ) );
     }
 
@@ -735,7 +735,7 @@ TEST( MQTT_Unit_Receive, DecodeRemainingLength )
         receiveContext.dataLength = 4;
 
         TEST_ASSERT_EQUAL( MQTT_REMAINING_LENGTH_INVALID,
-                           _IotMqtt_GetRemainingLength( &receiveContext,
+                           _IotMqtt_GetRemainingLength( ( IotNetworkConnection_t ) &receiveContext,
                                                         &_networkInterface ) );
     }
 
