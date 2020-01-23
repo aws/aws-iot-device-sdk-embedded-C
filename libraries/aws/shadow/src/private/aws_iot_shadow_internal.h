@@ -389,14 +389,14 @@ extern IotMutex_t _AwsIotShadowSubscriptionsMutex;
  * @brief Create a record for a new in-progress Shadow operation.
  *
  * @param[out] pNewOperation Set to point to the new operation on success.
- * @param[in] operation The type of Shadow operation.
+ * @param[in] type The type of Shadow operation.
  * @param[in] flags Flags variables passed to a user-facing Shadow function.
  * @param[in] pCallbackInfo User-provided callback function and parameter.
  *
  * @return #AWS_IOT_SHADOW_SUCCESS or #AWS_IOT_SHADOW_NO_MEMORY
  */
 AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOperation,
-                                                   _shadowOperationType_t operation,
+                                                   _shadowOperationType_t type,
                                                    uint32_t flags,
                                                    const AwsIotShadowCallbackInfo_t * pCallbackInfo );
 
