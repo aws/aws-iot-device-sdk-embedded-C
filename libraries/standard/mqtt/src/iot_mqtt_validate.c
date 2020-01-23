@@ -416,6 +416,10 @@ static bool _validateSubscription( bool awsIotMqttMode,
             {
                 status = _validateWildcardHash( i, pSubscription );
             }
+            else
+            {
+                /* Empty else MISRA 15.7 */
+            }
 
             if( status == false )
             {
@@ -660,6 +664,10 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
                 IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
 
                 status = false;
+            }
+            else
+            {
+                /* Empty else MISRA 15.7 */
             }
 
             if( pPublishOperation != NULL )

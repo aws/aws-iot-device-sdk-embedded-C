@@ -85,7 +85,7 @@ typedef struct _operationMatchParam
  * @return `true` if the operation matches the parameters in `pArgument`; `false`
  * otherwise.
  */
-static bool _mqttOperation_match( const IotLink_t * pOperationLink,
+static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
                                   void * pMatch );
 
 /**
@@ -133,7 +133,7 @@ static bool _completePendingSend( _mqttOperation_t * pOperation,
 
 /*-----------------------------------------------------------*/
 
-static bool _mqttOperation_match( const IotLink_t * pOperationLink,
+static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
                                   void * pMatch )
 {
     bool match = false;
@@ -201,6 +201,10 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
             /* In AWS IoT MQTT mode, the DUP flag (really a change to the packet
              * identifier) must be reset on every retry. */
             setDup = true;
+        }
+        else
+        {
+            setDup = false;
         }
 
         if( setDup == true )
@@ -959,6 +963,11 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
                 pOperation->u.operation.status = IOT_MQTT_SUCCESS;
             }
         }
+        else
+        {
+            /* Empty else MISRA 15.7 */
+        }
+        
     }
 
     /* Check if this operation requires further processing. */
