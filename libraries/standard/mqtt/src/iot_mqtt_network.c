@@ -52,7 +52,7 @@
 static bool _incomingPacketValid( uint8_t packetType );
 
 /**
- * @brief allocate space for an incoming MQTT packet received from the network.
+ * @brief Allocate space for an incoming MQTT packet received from the network.
  *
  * @param[in] pNetworkConnection Network connection to be used for receive.
  * @param[in] pMqttConnection The associated MQTT connection.
@@ -254,7 +254,6 @@ static IotMqttError_t _allocateAndReceivePacket( IotNetworkConnection_t pNetwork
     size_t dataBytesRead = 0;
 
     IotMqtt_Assert( pMqttConnection != NULL );
-    IotMqtt_Assert( pNetworkConnection != NULL );
     IotMqtt_Assert( pIncomingPacket != NULL );
 
     /* Allocate a buffer for the remaining data and read the data. */

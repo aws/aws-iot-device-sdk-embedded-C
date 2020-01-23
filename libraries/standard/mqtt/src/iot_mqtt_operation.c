@@ -151,12 +151,10 @@ static IotMqttError_t _initializeOperation( _mqttConnection_t * pMqttConnection,
  * @brief Send MQTT Ping Request to the broker.
  *
  * @param[in] pMqttConnection The MQTT connection associated with the request.
- * @param[in] pPingreqOperation The Ping Request Operation.
  *
- * @return `true` if send successful or; false if not.
+ * @return `true` if send is successful; `false` otherwise.
  */
-static bool _sendPingRequest( _mqttConnection_t * pMqttConnection,
-                                        _mqttOperation_t * pPingreqOperation );
+static bool _sendPingRequest( _mqttConnection_t * pMqttConnection );
 
 /*-----------------------------------------------------------*/
 
@@ -473,7 +471,7 @@ static IotMqttError_t _initializeOperation( _mqttConnection_t * pMqttConnection,
 
     IotMqtt_Assert( pMqttConnection != NULL );
     IotMqtt_Assert( pOperation != NULL );
-   
+
     /* Clear the operation data. */
     ( void ) memset( pOperation, 0x00, sizeof( _mqttOperation_t ) );
 
@@ -518,17 +516,18 @@ static IotMqttError_t _initializeOperation( _mqttConnection_t * pMqttConnection,
 
 /*-----------------------------------------------------------*/
 
-static bool _sendPingRequest( _mqttConnection_t * pMqttConnection,
-                              _mqttOperation_t * pPingreqOperation )
+static bool _sendPingRequest( _mqttConnection_t * pMqttConnection )
 {
     size_t bytesSent = 0;
     bool status = true;
     uint32_t swapStatus = 0;
+    _mqttOperation_t * pPingreqOperation = NULL;
 
     IotMqtt_Assert( pMqttConnection != NULL );
-    IotMqtt_Assert( pPingreqOperation != NULL );
 
     IotLogDebug( "(MQTT connection %p) Sending PINGREQ.", pMqttConnection );
+
+    pPingreqOperation = &( pMqttConnection->pingreq );
 
     /* Because PINGREQ may be used to keep the MQTT connection alive, it is
      * more important than other operations. Bypass the queue of jobs for
@@ -554,9 +553,7 @@ static bool _sendPingRequest( _mqttConnection_t * pMqttConnection,
         /* Set the period for scheduling a PINGRESP check. */
         pPingreqOperation->u.operation.periodic.ping.nextPeriodMs = IOT_MQTT_RESPONSE_WAIT_MS;
 
-        IotLogDebug( "(MQTT connection %p) PINGREQ sent. Scheduling check for PINGRESP in %d ms.",
-                     pMqttConnection,
-                     IOT_MQTT_RESPONSE_WAIT_MS );
+        IotLogDebug( "(MQTT connection %p) PINGREQ sent.", pMqttConnection );
     }
 
     return status;
@@ -805,12 +802,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
                                 void * pContext )
 {
     bool status = true;
-    uint32_t swapStatus = 0;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
-    size_t bytesSent = 0;
-
-    /* Swap status is not checked when asserts are disabled. */
-    ( void ) swapStatus;
 
     /* Retrieve the MQTT connection from the context. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
@@ -835,7 +827,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     if( pPingreqOperation->u.operation.periodic.ping.nextPeriodMs ==
         pPingreqOperation->u.operation.periodic.ping.keepAliveMs )
     {
-        status = _sendPingRequest( pMqttConnection, pPingreqOperation );
+        status = _sendPingRequest( pMqttConnection );
     }
     else
     {
