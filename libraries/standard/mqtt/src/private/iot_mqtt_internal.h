@@ -217,10 +217,10 @@
     #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 0 )
 #endif
 #ifndef IOT_MQTT_RESPONSE_WAIT_MS
-    #define IOT_MQTT_RESPONSE_WAIT_MS               ( 1000 )
+    #define IOT_MQTT_RESPONSE_WAIT_MS               ( 1000U )
 #endif
 #ifndef IOT_MQTT_RETRY_MS_CEILING
-    #define IOT_MQTT_RETRY_MS_CEILING               ( 60000 )
+    #define IOT_MQTT_RETRY_MS_CEILING               ( 60000U )
 #endif
 /** @endcond */
 
@@ -275,7 +275,7 @@
  * use only. Nevertheless, its value must be bitwise exclusive of all conflicting
  * @ref mqtt_constants_flags.
  */
-#define MQTT_INTERNAL_FLAG_BLOCK_ON_SEND                       ( 0x80000000 )
+#define MQTT_INTERNAL_FLAG_BLOCK_ON_SEND                       ( 0x80000000U )
 
 /**
  * @brief When calling #_IotMqtt_RemoveSubscriptionByPacket, use this value
