@@ -144,7 +144,7 @@ AwsIotShadowError_t _AwsIotShadow_ParseErrorDocument( const char * pErrorDocumen
                                    &codeLength ) == true )
     {
         /* Code must be in error document. */
-        AwsIotShadow_Assert( ( pCode > pErrorDocument ) &&
+        AwsIotShadow_Assert( ( pCode >= pErrorDocument ) &&
                              ( pCode + codeLength < pErrorDocument + errorDocumentLength ) );
 
         /* Convert the code to an unsigned integer value. */
