@@ -43,7 +43,7 @@
     /* Both clang and gcc define __GNUC__, but only clang defines __clang__ */
     #ifdef __clang__
         /* clang versions 3.1.0 and greater have built-in atomic support. */
-        #define CLANG_VERSION    ( __clang_major__ * 100 + __clang_minor__ )
+        #define CLANG_VERSION    ( ( __clang_major__ * 100 ) + __clang_minor__ )
         #if CLANG_VERSION > 301
             /* clang is compatible with gcc atomic extensions. */
             #include "atomic/iot_atomic_gcc.h"
@@ -52,7 +52,7 @@
         #endif
     #else
         /* GCC versions 4.7.0 and greater have built-in atomic support. */
-        #define GCC_VERSION    ( __GNUC__ * 100 + __GNUC_MINOR__ )
+        #define GCC_VERSION    ( ( __GNUC__ * 100 ) + __GNUC_MINOR__ )
         #if GCC_VERSION >= 407
             #include "atomic/iot_atomic_gcc.h"
         #else
