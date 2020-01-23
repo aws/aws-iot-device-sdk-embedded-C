@@ -20,6 +20,9 @@ jobs:
     # Build checks for pull requests.
       if: type = pull_request
       env: RUN_TEST=build
+    # Code quality checks for pull requests.
+    - if: type = pull_request
+      env: RUN_TEST=quality
     # Documentation check for pull requests.
     - if: type = pull_request
       env: RUN_TEST=doc
