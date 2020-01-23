@@ -563,7 +563,7 @@ typedef struct AwsIotShadowDocumentInfo
  * @note If this flag is set, @ref shadow_function_wait <b>MUST</b> be called to
  * clean up resources.
  */
-#define AWS_IOT_SHADOW_FLAG_WAITABLE                       ( 0x00000001UL )
+#define AWS_IOT_SHADOW_FLAG_WAITABLE                       ( 0x00000001U )
 
 /**
  * @brief Maintain the subscriptions for the Shadow operation topics, even after

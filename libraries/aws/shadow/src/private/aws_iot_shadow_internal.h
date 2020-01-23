@@ -211,7 +211,7 @@
 /**
  * @brief The length of #SHADOW_DELETE_OPERATION_STRING.
  */
-#define SHADOW_DELETE_OPERATION_STRING_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_DELETE_OPERATION_STRING ) - 1 ) )
+#define SHADOW_DELETE_OPERATION_STRING_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_DELETE_OPERATION_STRING ) - 1U ) )
 
 /**
  * @brief The string representing a Shadow GET operation in a Shadow MQTT topic.
@@ -221,7 +221,7 @@
 /**
  * @brief The length of #SHADOW_GET_OPERATION_STRING.
  */
-#define SHADOW_GET_OPERATION_STRING_LENGTH       ( ( uint16_t ) ( sizeof( SHADOW_GET_OPERATION_STRING ) - 1 ) )
+#define SHADOW_GET_OPERATION_STRING_LENGTH       ( ( uint16_t ) ( sizeof( SHADOW_GET_OPERATION_STRING ) - 1U ) )
 
 /**
  * @brief The string representing a Shadow UPDATE operation in a Shadow MQTT topic.
@@ -231,7 +231,7 @@
 /**
  * @brief The length of #SHADOW_UPDATE_OPERATION_STRING.
  */
-#define SHADOW_UPDATE_OPERATION_STRING_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_UPDATE_OPERATION_STRING ) - 1 ) )
+#define SHADOW_UPDATE_OPERATION_STRING_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_UPDATE_OPERATION_STRING ) - 1U ) )
 
 /**
  * @brief The suffix for a Shadow delta topic.
@@ -241,7 +241,7 @@
 /**
  * @brief The length of #SHADOW_DELTA_SUFFIX.
  */
-#define SHADOW_DELTA_SUFFIX_LENGTH               ( ( uint16_t ) ( sizeof( SHADOW_DELTA_SUFFIX ) - 1 ) )
+#define SHADOW_DELTA_SUFFIX_LENGTH               ( ( uint16_t ) ( sizeof( SHADOW_DELTA_SUFFIX ) - 1U ) )
 
 /**
  * @brief The suffix for a Shadow updated topic.
@@ -251,7 +251,7 @@
 /**
  * @brief The length of #SHADOW_UPDATED_SUFFIX.
  */
-#define SHADOW_UPDATED_SUFFIX_LENGTH             ( ( uint16_t ) ( sizeof( SHADOW_UPDATED_SUFFIX ) - 1 ) )
+#define SHADOW_UPDATED_SUFFIX_LENGTH             ( ( uint16_t ) ( sizeof( SHADOW_UPDATED_SUFFIX ) - 1U ) )
 
 /**
  * @brief The length of the longest Shadow suffix.

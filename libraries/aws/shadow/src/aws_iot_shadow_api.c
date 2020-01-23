@@ -163,7 +163,7 @@ static void _updatedCallbackWrapper( void * pArgument,
  *
  * API functions will fail if @ref shadow_function_init was not called.
  */
-static uint32_t _initCalled = 0;
+static uint32_t _initCalled = 0U;
 
 /**
  * @brief Timeout used for MQTT operations.
@@ -188,7 +188,7 @@ static bool _checkInit( void )
 {
     bool status = true;
 
-    if( _initCalled == 0 )
+    if( _initCalled == 0U )
     {
         IotLogError( "AwsIotShadow_Init was not called." );
 
@@ -245,7 +245,7 @@ static AwsIotShadowError_t _validateThingNameFlags( _shadowOperationType_t type,
 
     /* A callback info must be passed to a non-waitable GET. */
     if( ( type == SHADOW_GET ) &&
-        ( ( flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0 ) &&
+        ( ( flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0U ) &&
         ( pCallbackInfo == NULL ) )
     {
         IotLogError( "Callback info must be provided for non-waitable Shadow GET." );
@@ -290,9 +290,9 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
     }
 
     /* Check the retry parameters. */
-    if( pDocumentInfo->retryLimit > 0 )
+    if( pDocumentInfo->retryLimit > 0U )
     {
-        if( pDocumentInfo->retryMs == 0 )
+        if( pDocumentInfo->retryMs == 0U )
         {
             IotLogError( "Retry time of Shadow %s must be positive.",
                          _pAwsIotShadowOperationNames[ type ] );
@@ -318,7 +318,7 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
     {
         /* Check UPDATE document pointer and length. */
         if( ( pDocumentInfo->u.update.pUpdateDocument == NULL ) ||
-            ( pDocumentInfo->u.update.updateDocumentLength == 0 ) )
+            ( pDocumentInfo->u.update.updateDocumentLength == 0U ) )
         {
             IotLogError( "Shadow document for Shadow UPDATE cannot be NULL or"
                          " have length 0." );
@@ -674,7 +674,7 @@ AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeoutMs )
     AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
     bool listInitStatus = false;
 
-    if( _initCalled == 0 )
+    if( _initCalled == 0U )
     {
         /* Initialize Shadow lists and mutexes. */
         listInitStatus = AwsIot_InitLists( &_AwsIotShadowPendingOperations,
@@ -691,13 +691,13 @@ AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeoutMs )
         else
         {
             /* Save the MQTT timeout option. */
-            if( mqttTimeoutMs != 0 )
+            if( mqttTimeoutMs != 0U )
             {
                 _AwsIotShadowMqttTimeoutMs = mqttTimeoutMs;
             }
 
             /* Set the flag that specifies initialization is complete. */
-            _initCalled = 1;
+            _initCalled = 1U;
 
             IotLogInfo( "Shadow library successfully initialized." );
         }
@@ -714,9 +714,9 @@ AwsIotShadowError_t AwsIotShadow_Init( uint32_t mqttTimeoutMs )
 
 void AwsIotShadow_Cleanup( void )
 {
-    if( _initCalled == 1 )
+    if( _initCalled == 1U )
     {
-        _initCalled = 0;
+        _initCalled = 0U;
 
         /* Remove and free all items in the Shadow pending operation list. */
         IotMutex_Lock( &( _AwsIotShadowPendingOperationsMutex ) );
@@ -1150,7 +1150,7 @@ AwsIotShadowError_t AwsIotShadow_Wait( AwsIotShadowOperation_t operation,
     }
 
     /* Check that reference is waitable. */
-    if( ( operation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0 )
+    if( ( operation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0U )
     {
         IotLogError( "Operation is not waitable." );
 

@@ -214,9 +214,9 @@ static bool _shadowOperation_match( const IotLink_t * pOperationLink,
     {
         /* Check document pointers. */
         AwsIotShadow_Assert( pParam->pDocument != NULL );
-        AwsIotShadow_Assert( pParam->documentLength > 0 );
+        AwsIotShadow_Assert( pParam->documentLength > 0U );
         AwsIotShadow_Assert( pOperation->u.update.pClientToken != NULL );
-        AwsIotShadow_Assert( pOperation->u.update.clientTokenLength > 0 );
+        AwsIotShadow_Assert( pOperation->u.update.clientTokenLength > 0U );
 
         IotLogDebug( "Verifying client tokens for Shadow UPDATE." );
 
@@ -304,7 +304,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
 
         /* Remove a non-waitable operation from the pending operation list.
          * Waitable operations are removed by the Wait function. */
-        if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0 )
+        if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0U )
         {
             IotListDouble_Remove( &( pOperation->link ) );
             IotMutex_Unlock( &( _AwsIotShadowPendingOperationsMutex ) );
@@ -417,7 +417,7 @@ static AwsIotShadowError_t _processAcceptedGet( _shadowOperation_t * pOperation,
      * But a waitable operation must copy the data from the publish info because
      * AwsIotShadow_Wait may be called after the MQTT library frees the publish
      * info. */
-    if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0 )
+    if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == 0U )
     {
         pOperation->u.get.pDocument = pPublishInfo->pPayload;
         pOperation->u.get.documentLength = pPublishInfo->payloadLength;
@@ -702,7 +702,7 @@ void _AwsIotShadow_DestroyOperation( void * pData )
     if( ( pOperation->type == SHADOW_UPDATE ) &&
         ( pOperation->u.update.pClientToken != NULL ) )
     {
-        AwsIotShadow_Assert( pOperation->u.update.clientTokenLength > 0 );
+        AwsIotShadow_Assert( pOperation->u.update.clientTokenLength > 0U );
 
         AwsIotShadow_FreeString( ( void * ) ( pOperation->u.update.pClientToken ) );
     }
@@ -878,7 +878,7 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
 
         /* If the "keep subscriptions" flag is not set, decrement the reference
          * count. */
-        if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS ) == 0 )
+        if( ( pOperation->flags & AWS_IOT_SHADOW_FLAG_KEEP_SUBSCRIPTIONS ) == 0U )
         {
             IotMutex_Lock( &_AwsIotShadowSubscriptionsMutex );
             _AwsIotShadow_DecrementReferences( pOperation,
