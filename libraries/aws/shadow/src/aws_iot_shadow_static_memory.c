@@ -73,7 +73,7 @@
  * the constant `AWS_IOT_MAX_THING_NAME_LENGTH` is used for the length of
  * #_shadowSubscription_t.pThingName.
  */
-#define SHADOW_SUBSCRIPTION_SIZE   ( ( size_t ) ( sizeof( _shadowSubscription_t ) + ( size_t ) AWS_IOT_MAX_THING_NAME_LENGTH ) )
+#define SHADOW_SUBSCRIPTION_SIZE   ( sizeof( _shadowSubscription_t ) + ( size_t ) AWS_IOT_MAX_THING_NAME_LENGTH )
 
 /*-----------------------------------------------------------*/
 
