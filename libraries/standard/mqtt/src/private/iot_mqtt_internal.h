@@ -374,7 +374,7 @@ typedef struct _mqttConnection
 {
     bool awsIotMqttMode;                             /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
     bool ownNetworkConnection;                       /**< @brief Whether this MQTT connection owns its network connection. */
-    void * pNetworkConnection;                       /**< @brief References the transport-layer network connection. */
+    IotNetworkConnection_t pNetworkConnection;       /**< @brief References the transport-layer network connection. */
     const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
     IotMqttCallbackInfo_t disconnectCallback;        /**< @brief A function to invoke when this connection is disconnected. */
 
@@ -533,7 +533,7 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
  * @note This function is only used for incoming packets, and may not work
  * correctly for outgoing packets.
  */
-uint8_t _IotMqtt_GetPacketType( void * pNetworkConnection,
+uint8_t _IotMqtt_GetPacketType( IotNetworkConnection_t pNetworkConnection,
                                 const IotNetworkInterface_t * pNetworkInterface );
 
 /**
@@ -545,7 +545,7 @@ uint8_t _IotMqtt_GetPacketType( void * pNetworkConnection,
  *
  * @return The remaining length; #MQTT_REMAINING_LENGTH_INVALID on error.
  */
-size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
+size_t _IotMqtt_GetRemainingLength( IotNetworkConnection_t pNetworkConnection,
                                     const IotNetworkInterface_t * pNetworkInterface );
 
 /**
@@ -563,7 +563,7 @@ size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
  * user provided function makes use of it.
  *
  */
-size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnection,
+size_t _IotMqtt_GetRemainingLength_Generic( IotNetworkConnection_t pNetworkConnection,
                                             IotMqttGetNextByte_t getNextByte );
 
 /**
@@ -983,7 +983,7 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
  * @return `true` if a byte was successfully received from the network; `false`
  * otherwise.
  */
-bool _IotMqtt_GetNextByte( void * pNetworkConnection,
+bool _IotMqtt_GetNextByte( IotNetworkConnection_t pNetworkConnection,
                            const IotNetworkInterface_t * pNetworkInterface,
                            uint8_t * pIncomingByte );
 
