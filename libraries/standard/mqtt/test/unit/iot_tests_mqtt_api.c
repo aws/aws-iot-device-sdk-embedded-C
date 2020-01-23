@@ -555,7 +555,7 @@ static void _decrementReferencesJob( IotTaskPool_t pTaskPool,
 /**
  * @brief get next byte mock function to test MQTT serializer API
  */
-static IotMqttError_t _getNextByte( void * pNetworkInterface,
+static IotMqttError_t _getNextByte( IotNetworkConnection_t pNetworkInterface,
                                     uint8_t * nextByte )
 {
     uint8_t * buffer;
@@ -854,7 +854,7 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
         TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
         /* Set parameter to network send function. */
-        _pMqttConnection->pNetworkConnection = &waitSem;
+        _pMqttConnection->pNetworkConnection = ( IotNetworkConnection_t ) &waitSem;
 
         /* Create a new operation referencing the MQTT connection. */
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( _pMqttConnection,
@@ -1362,7 +1362,7 @@ TEST( MQTT_Unit_API, PublishDuplicates )
     TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Set the serializers and parameter to the send function. */
-    _pMqttConnection->pNetworkConnection = &dupCheckResult;
+    _pMqttConnection->pNetworkConnection = ( IotNetworkConnection_t ) &dupCheckResult;
     _pMqttConnection->pSerializer = &serializer;
 
     /* Set the publish info. */
@@ -1734,7 +1734,7 @@ TEST( MQTT_Unit_API, KeepAliveJobCleanup )
         TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
         /* Set the parameter to the send function. */
-        _pMqttConnection->pNetworkConnection = &waitSem;
+        _pMqttConnection->pNetworkConnection = ( IotNetworkConnection_t ) &waitSem;
 
         /* Set a short keep-alive interval so this test runs faster. */
         _pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = SHORT_KEEP_ALIVE_MS;
@@ -2268,7 +2268,7 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
     uint8_t * bufPtr = buffer;
 
     /* Dummy network interface - pointer to pointer to a buffer. */
-    void * pNetworkInterface = ( void * ) &bufPtr;
+    IotNetworkConnection_t pNetworkInterface = ( IotNetworkConnection_t ) &bufPtr;
 
     buffer[ 0 ] = 0x20; /* CONN ACK */
     buffer[ 1 ] = 0x02; /* Remaining length. */

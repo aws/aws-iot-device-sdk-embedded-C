@@ -721,7 +721,7 @@ struct _mqttPacket;
  * @param[in] pNetworkInterface Function pointers used to interact with the
  * network.
  */
-typedef uint8_t ( * IotMqttGetPacketType_t )( void * pNetworkConnection,
+typedef uint8_t ( * IotMqttGetPacketType_t )( IotNetworkConnection_t pNetworkConnection,
                                               const IotNetworkInterface_t * pNetworkInterface );
 
 /**
@@ -731,7 +731,7 @@ typedef uint8_t ( * IotMqttGetPacketType_t )( void * pNetworkConnection,
  * @param[in] pNetworkInterface Function pointers used to interact with the
  * network.
  */
-typedef size_t ( * IotMqttGetRemainingLength_t )( void * pNetworkConnection,
+typedef size_t ( * IotMqttGetRemainingLength_t )( IotNetworkConnection_t pNetworkConnection,
                                                   const IotNetworkInterface_t * pNetworkInterface );
 
 /**
@@ -828,7 +828,7 @@ typedef void ( * IotMqttPublishSetDup_t )( uint8_t * pPublishPacket,
  * @param[in] pNetworkContext reference to network connection like socket.
  * @param[out] pNextByte Pointer to the byte read from the network.
  */
-typedef IotMqttError_t (* IotMqttGetNextByte_t)( void * pNetworkContext,
+typedef IotMqttError_t (* IotMqttGetNextByte_t)( IotNetworkConnection_t pNetworkContext,
                                                  uint8_t * pNextByte );
 
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1

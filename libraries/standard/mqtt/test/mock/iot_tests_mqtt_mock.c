@@ -200,7 +200,7 @@ static size_t _sendSuccess( IotNetworkConnection_t pNetworkConnection,
     IotMutex_Lock( &_lastPacketMutex );
 
     /* Read the remaining length. */
-    mqttPacket.remainingLength = _IotMqtt_GetRemainingLength( &receiveContext,
+    mqttPacket.remainingLength = _IotMqtt_GetRemainingLength( ( IotNetworkConnection_t ) &receiveContext,
                                                               &_networkInterface );
     IotTest_Assert( mqttPacket.remainingLength != MQTT_REMAINING_LENGTH_INVALID );
 

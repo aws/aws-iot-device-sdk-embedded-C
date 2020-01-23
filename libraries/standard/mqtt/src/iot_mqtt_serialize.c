@@ -1261,7 +1261,7 @@ static IotMqttError_t _processIncomingPublishFlags( uint8_t publishFlags,
 
 /*-----------------------------------------------------------*/
 
-uint8_t _IotMqtt_GetPacketType( void * pNetworkConnection,
+uint8_t _IotMqtt_GetPacketType( IotNetworkConnection_t pNetworkConnection,
                                 const IotNetworkInterface_t * pNetworkInterface )
 {
     uint8_t packetType = 0xff;
@@ -1276,7 +1276,7 @@ uint8_t _IotMqtt_GetPacketType( void * pNetworkConnection,
 
 /*-----------------------------------------------------------*/
 
-size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
+size_t _IotMqtt_GetRemainingLength( IotNetworkConnection_t pNetworkConnection,
                                     const IotNetworkInterface_t * pNetworkInterface )
 {
     uint8_t encodedByte = 0;
@@ -1329,7 +1329,7 @@ size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
 
 /*-----------------------------------------------------------*/
 
-size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnection,
+size_t _IotMqtt_GetRemainingLength_Generic( IotNetworkConnection_t pNetworkConnection,
                                             IotMqttGetNextByte_t getNextByte )
 {
     uint8_t encodedByte = 0;

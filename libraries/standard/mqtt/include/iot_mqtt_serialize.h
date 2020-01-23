@@ -547,11 +547,11 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
  * <b>Example</b>
  * @code{c}
  * // Example code below shows how to implement getNextByte function with posix sockets.
- * // Note: IotMqttGetNextByte_t typedef IotMqttError_t (* IotMqttGetNextByte_t)( void * pNetworkContext,
+ * // Note: IotMqttGetNextByte_t typedef IotMqttError_t (* IotMqttGetNextByte_t)( IotNetworkConnection_t pNetworkContext,
  * //                                              uint8_t * pNextByte );
  * // Note: It is assumed that socket is already created and connected,
  *
- * IotMqttError_t getNextByte( void * pContext,
+ * IotMqttError_t getNextByte( IotNetworkConnection_t pContext,
  *                           uint8_t * pNextByte )
  * {
  *      int socket = ( int ) ( *pvContext );
@@ -578,7 +578,7 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
  * void getTypeAndLengthFromIncomingMQTTPingResponse( int xMQTTSocket )
  * {
  *    IotMqttPacketInfo_t xIncomingPacket;
- *    IotMqttError_t xResult = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &xIncomingPacket, getNextByte, ( void * ) xMQTTSocket );
+ *    IotMqttError_t xResult = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &xIncomingPacket, getNextByte, ( IotNetworkConnection_t ) xMQTTSocket );
  *	  IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *    IotMqtt_Assert( xIncomingPacket.type == MQTT_PACKET_TYPE_PINGRESP );
  * }
@@ -588,7 +588,7 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
 /* @[declare_mqtt_getincomingmqttpackettypeandlength] */
 IotMqttError_t IotMqtt_GetIncomingMQTTPacketTypeAndLength( IotMqttPacketInfo_t * pIncomingPacket,
                                                            IotMqttGetNextByte_t getNextByte,
-                                                           void * pNetworkConnection );
+                                                           IotNetworkConnection_t pNetworkConnection );
 /* @[declare_mqtt_getincomingmqttpackettypeandlength] */
 
 /**
