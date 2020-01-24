@@ -416,6 +416,10 @@ static bool _validateSubscription( bool awsIotMqttMode,
             {
                 status = _validateWildcardHash( i, pSubscription );
             }
+            else
+            {
+                /* Empty else MISRA 15.7 */
+            }
 
             if( status == false )
             {
@@ -450,7 +454,7 @@ static bool _validateWildcardPlus( uint16_t index,
     if( status == true )
     {
         /* Unless '+' is the last character in the filter, it must be succeeded by '/'. */
-        if( index < pSubscription->topicFilterLength - 1U )
+        if( index < ( pSubscription->topicFilterLength - 1U ) )
         {
             if( pSubscription->pTopicFilter[ index + 1U ] != '/' )
             {
@@ -474,7 +478,7 @@ static bool _validateWildcardHash( uint16_t index,
     bool status = true;
 
     /* '#' must be the last character in the filter. */
-    if( index != pSubscription->topicFilterLength - 1U )
+    if( index != ( pSubscription->topicFilterLength - 1U ) )
     {
         IotLogError( "Invalid topic filter %.*s -- '#' must be the last character.",
                      pSubscription->topicFilterLength,
@@ -660,6 +664,10 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
                 IotLogError( "QoS 0 PUBLISH should not have notification parameters set." );
 
                 status = false;
+            }
+            else
+            {
+                /* Empty else MISRA 15.7 */
             }
 
             if( pPublishOperation != NULL )

@@ -683,7 +683,7 @@ static inline IotLink_t * IotListDouble_FindFirstMatch( const IotListDouble_t * 
 /* @[declare_linear_containers_list_double_removefirstmatch] */
 static inline IotLink_t * IotListDouble_RemoveFirstMatch( IotListDouble_t * const pList,
                                                           const IotLink_t * const pStartPoint,
-                                                          bool ( *isMatch )( const IotLink_t *, void * ),
+                                                          bool ( *isMatch )( const IotLink_t * const, void * ),
                                                           void * pMatch )
 /* @[declare_linear_containers_list_double_removefirstmatch] */
 {
@@ -718,7 +718,7 @@ static inline IotLink_t * IotListDouble_RemoveFirstMatch( IotListDouble_t * cons
  */
 /* @[declare_linear_containers_list_double_removeallmatches] */
 static inline void IotListDouble_RemoveAllMatches( IotListDouble_t * const pList,
-                                                   bool ( *isMatch )( const IotLink_t *, void * ),
+                                                   bool ( *isMatch )( const IotLink_t * const, void * ),
                                                    void * pMatch,
                                                    void ( *freeElement )( void * ),
                                                    size_t linkOffset )
@@ -944,7 +944,7 @@ static inline void IotDeQueue_RemoveAll( IotDeQueue_t * const pQueue,
  */
 /* @[declare_linear_containers_queue_removeallmatches] */
 static inline void IotDeQueue_RemoveAllMatches( IotDeQueue_t * const pQueue,
-                                                bool ( * isMatch )( const IotLink_t *, void * ),
+                                                bool ( * isMatch )( const IotLink_t * const, void * ),
                                                 void * pMatch,
                                                 void ( * freeElement )( void * ),
                                                 size_t linkOffset )

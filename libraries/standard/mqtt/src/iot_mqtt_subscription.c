@@ -128,7 +128,7 @@ static bool _topicFilterMatch( const char * pTopicName,
  * @return `true` if the arguments match the subscription topic filter; `false`
  * otherwise.
  */
-static bool _topicMatch( const IotLink_t * pSubscriptionLink,
+static bool _topicMatch( const IotLink_t * const pSubscriptionLink,
                          void * pMatch );
 
 /**
@@ -140,7 +140,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
  * @return `true` if the arguments match the subscription's packet info; `false`
  * otherwise.
  */
-static bool _packetMatch( const IotLink_t * pSubscriptionLink,
+static bool _packetMatch( const IotLink_t * const pSubscriptionLink,
                           void * pMatch );
 
 /*-----------------------------------------------------------*/
@@ -156,7 +156,7 @@ static bool _matchEndWildcards( const char * pTopicFilter,
 
     /* Determine if the last character is reached for both topic name and topic
      * filter for the '#' wildcard. */
-    endChar = ( nameIndex == topicNameLength - 1U ) && ( filterIndex == topicFilterLength - 3U );
+    endChar = ( nameIndex == ( topicNameLength - 1U ) ) && ( filterIndex == ( topicFilterLength - 3U ) );
 
     if( endChar == true )
     {
@@ -168,7 +168,7 @@ static bool _matchEndWildcards( const char * pTopicFilter,
     {
         /* Determine if the last character is reached for both topic name and topic
          * filter for the '+' wildcard. */
-        endChar = ( nameIndex == topicNameLength - 1U ) && ( filterIndex == topicFilterLength - 2U );
+        endChar = ( nameIndex == ( topicNameLength - 1U ) ) && ( filterIndex == ( topicFilterLength - 2U ) );
 
         if( endChar == true )
         {
@@ -281,7 +281,7 @@ static bool _topicFilterMatch( const char * pTopicName,
 
 /*-----------------------------------------------------------*/
 
-static bool _topicMatch( const IotLink_t * pSubscriptionLink,
+static bool _topicMatch( const IotLink_t * const pSubscriptionLink,
                          void * pMatch )
 {
     bool status = false;
@@ -319,7 +319,7 @@ static bool _topicMatch( const IotLink_t * pSubscriptionLink,
 
 /*-----------------------------------------------------------*/
 
-static bool _packetMatch( const IotLink_t * pSubscriptionLink,
+static bool _packetMatch( const IotLink_t * const pSubscriptionLink,
                           void * pMatch )
 {
     bool match = false;

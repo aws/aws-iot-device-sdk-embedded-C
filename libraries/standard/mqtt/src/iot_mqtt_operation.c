@@ -85,7 +85,7 @@ typedef struct _operationMatchParam
  * @return `true` if the operation matches the parameters in `pArgument`; `false`
  * otherwise.
  */
-static bool _mqttOperation_match( const IotLink_t * pOperationLink,
+static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
                                   void * pMatch );
 
 /**
@@ -131,9 +131,34 @@ static IotMqttError_t _scheduleCallback( _mqttOperation_t * pOperation );
 static bool _completePendingSend( _mqttOperation_t * pOperation,
                                   bool * pDestroyOperation );
 
+/**
+ * @brief Initialize newly created  MQTT operation.
+ *
+ * @param[in] pMqttConnection The MQTT connection associated with the operation.
+ * @param[in] pOperation pointer to the new operation.
+ * @param[in] flags Flags variable passed to a user-facing MQTT function.
+ * @param[in] pCallbackInfo User-provided callback function and parameter.
+ *
+ *
+ * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_NO_MEMORY.
+ */
+static IotMqttError_t _initializeOperation( _mqttConnection_t * pMqttConnection,
+                                            _mqttOperation_t * pOperation,
+                                            uint32_t flags,
+                                            const IotMqttCallbackInfo_t * pCallbackInfo );
+
+/**
+ * @brief Send MQTT Ping Request to the broker.
+ *
+ * @param[in] pMqttConnection The MQTT connection associated with the request.
+ *
+ * @return `true` if send is successful; `false` otherwise.
+ */
+static bool _sendPingRequest( _mqttConnection_t * pMqttConnection );
+
 /*-----------------------------------------------------------*/
 
-static bool _mqttOperation_match( const IotLink_t * pOperationLink,
+static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
                                   void * pMatch )
 {
     bool match = false;
@@ -180,7 +205,7 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
         /* The retry count may be at most one more than the retry limit, which
          * accounts for the final check for a PUBACK. */
         IotMqtt_Assert( pOperation->u.operation.periodic.retry.count ==
-                        pOperation->u.operation.periodic.retry.limit + 1U );
+                        ( pOperation->u.operation.periodic.retry.limit + 1U ) );
 
         IotLogDebug( "(MQTT connection %p, PUBLISH operation %p) No response received after %lu retries.",
                      pMqttConnection,
@@ -201,6 +226,10 @@ static bool _checkRetryLimit( _mqttOperation_t * pOperation )
             /* In AWS IoT MQTT mode, the DUP flag (really a change to the packet
              * identifier) must be reset on every retry. */
             setDup = true;
+        }
+        else
+        {
+            setDup = false;
         }
 
         if( setDup == true )
@@ -436,6 +465,106 @@ static bool _completePendingSend( _mqttOperation_t * pOperation,
 
 /*-----------------------------------------------------------*/
 
+static IotMqttError_t _initializeOperation( _mqttConnection_t * pMqttConnection,
+                                            _mqttOperation_t * pOperation,
+                                            uint32_t flags,
+                                            const IotMqttCallbackInfo_t * pCallbackInfo )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+    bool waitable = ( ( flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE );
+
+    IotMqtt_Assert( pMqttConnection != NULL );
+    IotMqtt_Assert( pOperation != NULL );
+
+    /* Clear the operation data. */
+    ( void ) memset( pOperation, 0x00, sizeof( _mqttOperation_t ) );
+
+    /* Initialize some members of the new operation. */
+    pOperation->pMqttConnection = pMqttConnection;
+    pOperation->u.operation.jobReference = 1;
+    pOperation->u.operation.flags = flags;
+    pOperation->u.operation.status = IOT_MQTT_STATUS_PENDING;
+
+    /* Check if the waitable flag is set. If it is, create a semaphore to
+     * wait on. */
+    if( waitable == true )
+    {
+        /* Create a semaphore to wait on for a waitable operation. */
+        if( IotSemaphore_Create( &( pOperation->u.operation.notify.waitSemaphore ), 0, 1 ) == false )
+        {
+            IotLogError( "(MQTT connection %p) Failed to create semaphore for "
+                         "waitable operation.",
+                         pMqttConnection );
+
+            status = IOT_MQTT_NO_MEMORY;
+        }
+        else
+        {
+            /* A waitable operation is created with an additional reference for the
+             * Wait function. */
+            ( pOperation->u.operation.jobReference )++;
+        }
+    }
+    else
+    {
+        /* If the waitable flag isn't set but a callback is, copy the callback
+         * information. */
+        if( pCallbackInfo != NULL )
+        {
+            pOperation->u.operation.notify.callback = *pCallbackInfo;
+        }
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static bool _sendPingRequest( _mqttConnection_t * pMqttConnection )
+{
+    size_t bytesSent = 0;
+    bool status = true;
+    uint32_t swapStatus = 0;
+    _mqttOperation_t * pPingreqOperation = NULL;
+
+    IotMqtt_Assert( pMqttConnection != NULL );
+
+    IotLogDebug( "(MQTT connection %p) Sending PINGREQ.", pMqttConnection );
+
+    pPingreqOperation = &( pMqttConnection->pingreq );
+
+    /* Because PINGREQ may be used to keep the MQTT connection alive, it is
+     * more important than other operations. Bypass the queue of jobs for
+     * operations by directly sending the PINGREQ in this job. */
+    bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
+                                                          pPingreqOperation->u.operation.pMqttPacket,
+                                                          pPingreqOperation->u.operation.packetSize );
+
+    if( bytesSent != pPingreqOperation->u.operation.packetSize )
+    {
+        IotLogError( "(MQTT connection %p) Failed to send PINGREQ.", pMqttConnection );
+        status = false;
+    }
+    else
+    {
+        /* Assume the keep-alive will fail. The network receive callback will
+         * clear the failure flag upon receiving a PINGRESP. */
+        swapStatus = Atomic_CompareAndSwap_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ),
+                                                1,
+                                                0 );
+        IotMqtt_Assert( swapStatus == 1U );
+
+        /* Set the period for scheduling a PINGRESP check. */
+        pPingreqOperation->u.operation.periodic.ping.nextPeriodMs = IOT_MQTT_RESPONSE_WAIT_MS;
+
+        IotLogDebug( "(MQTT connection %p) PINGREQ sent.", pMqttConnection );
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
 IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
                                          uint32_t flags,
                                          const IotMqttCallbackInfo_t * pCallbackInfo,
@@ -492,62 +621,23 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
 
             status = IOT_MQTT_NO_MEMORY;
         }
-        else
-        {
-            /* Clear the operation data. */
-            ( void ) memset( pOperation, 0x00, sizeof( _mqttOperation_t ) );
-
-            /* Initialize some members of the new operation. */
-            pOperation->pMqttConnection = pMqttConnection;
-            pOperation->u.operation.jobReference = 1;
-            pOperation->u.operation.flags = flags;
-            pOperation->u.operation.status = IOT_MQTT_STATUS_PENDING;
-        }
     }
 
     if( status == IOT_MQTT_SUCCESS )
     {
-        /* Check if the waitable flag is set. If it is, create a semaphore to
-         * wait on. */
-        if( waitable == true )
-        {
-            /* Create a semaphore to wait on for a waitable operation. */
-            if( IotSemaphore_Create( &( pOperation->u.operation.notify.waitSemaphore ), 0, 1 ) == false )
-            {
-                IotLogError( "(MQTT connection %p) Failed to create semaphore for "
-                             "waitable operation.",
-                             pMqttConnection );
+        status = _initializeOperation( pMqttConnection, pOperation, flags, pCallbackInfo );
+    }
 
-                status = IOT_MQTT_NO_MEMORY;
-            }
-            else
-            {
-                /* A waitable operation is created with an additional reference for the
-                 * Wait function. */
-                ( pOperation->u.operation.jobReference )++;
-            }
-        }
-        else
-        {
-            /* If the waitable flag isn't set but a callback is, copy the callback
-             * information. */
-            if( pCallbackInfo != NULL )
-            {
-                pOperation->u.operation.notify.callback = *pCallbackInfo;
-            }
-        }
+    if( status == IOT_MQTT_SUCCESS )
+    {
+        /* Add this operation to the MQTT connection's operation list. */
+        IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+        IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ),
+                                  &( pOperation->link ) );
+        IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-        if( status == IOT_MQTT_SUCCESS )
-        {
-            /* Add this operation to the MQTT connection's operation list. */
-            IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-            IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ),
-                                      &( pOperation->link ) );
-            IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
-
-            /* Set the output parameter. */
-            *pNewOperation = pOperation;
-        }
+        /* Set the output parameter. */
+        *pNewOperation = pOperation;
     }
 
     /* Clean up operation and decrement reference count if this function failed. */
@@ -716,12 +806,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
                                 void * pContext )
 {
     bool status = true;
-    uint32_t swapStatus = 0;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
-    size_t bytesSent = 0;
-
-    /* Swap status is not checked when asserts are disabled. */
-    ( void ) swapStatus;
 
     /* Retrieve the MQTT connection from the context. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
@@ -746,36 +831,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     if( pPingreqOperation->u.operation.periodic.ping.nextPeriodMs ==
         pPingreqOperation->u.operation.periodic.ping.keepAliveMs )
     {
-        IotLogDebug( "(MQTT connection %p) Sending PINGREQ.", pMqttConnection );
-
-        /* Because PINGREQ may be used to keep the MQTT connection alive, it is
-         * more important than other operations. Bypass the queue of jobs for
-         * operations by directly sending the PINGREQ in this job. */
-        bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
-                                                              pPingreqOperation->u.operation.pMqttPacket,
-                                                              pPingreqOperation->u.operation.packetSize );
-
-        if( bytesSent != pPingreqOperation->u.operation.packetSize )
-        {
-            IotLogError( "(MQTT connection %p) Failed to send PINGREQ.", pMqttConnection );
-            status = false;
-        }
-        else
-        {
-            /* Assume the keep-alive will fail. The network receive callback will
-             * clear the failure flag upon receiving a PINGRESP. */
-            swapStatus = Atomic_CompareAndSwap_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ),
-                                                    1,
-                                                    0 );
-            IotMqtt_Assert( swapStatus == 1U );
-
-            /* Set the period for scheduling a PINGRESP check. */
-            pPingreqOperation->u.operation.periodic.ping.nextPeriodMs = IOT_MQTT_RESPONSE_WAIT_MS;
-
-            IotLogDebug( "(MQTT connection %p) PINGREQ sent. Scheduling check for PINGRESP in %d ms.",
-                         pMqttConnection,
-                         IOT_MQTT_RESPONSE_WAIT_MS );
-        }
+        status = _sendPingRequest( pMqttConnection );
     }
     else
     {
@@ -959,6 +1015,11 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
                 pOperation->u.operation.status = IOT_MQTT_SUCCESS;
             }
         }
+        else
+        {
+            /* Empty else MISRA 15.7 */
+        }
+        
     }
 
     /* Check if this operation requires further processing. */
@@ -1054,6 +1115,11 @@ IotMqttError_t _IotMqtt_ScheduleOperation( _mqttOperation_t * pOperation,
         IotMqtt_Assert( taskPoolStatus != IOT_TASKPOOL_BAD_PARAMETER );
         IotMqtt_Assert( taskPoolStatus != IOT_TASKPOOL_ILLEGAL_OPERATION );
 
+        /* Coverity finds a MISRA 13.2 violation in this log statement as the order
+         * of evaluation for IotMqtt_OperationType and IotTaskPool_strerror is not
+         * defined. This is not an issue as these functions do not change data and
+         * only convert codes into constant strings. */
+        /* coverity[misra_c_2012_rule_13_2_violation] */
         IotLogWarn( "(MQTT connection %p, %s operation %p) Failed to schedule operation job, error %s.",
                     pOperation->pMqttConnection,
                     IotMqtt_OperationType( pOperation->u.operation.type ),
