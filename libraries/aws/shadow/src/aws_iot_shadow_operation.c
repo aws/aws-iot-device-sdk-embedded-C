@@ -189,7 +189,7 @@ IotMutex_t _AwsIotShadowPendingOperationsMutex;
 
 _shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n )
 {
-    AwsIotShadow_Assert( n < 3 && n >= 0 );
+    AwsIotShadow_Assert( n < 5 && n >= 0 );
     _shadowOperationType_t val = SHADOW_DELETE;
 
     switch( n )
@@ -204,6 +204,14 @@ _shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n )
 
         case 2:
             val = SHADOW_UPDATE;
+            break;
+
+        case 3:
+            val = SET_DELTA_CALLBACK;
+            break;
+
+        case 4:
+            val = SET_UPDATED_CALLBACK;
             break;
     }
 
