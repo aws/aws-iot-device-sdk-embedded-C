@@ -590,7 +590,7 @@ static void _callbackWrapperCommon( _shadowCallbackType_t type,
                                     IotMqttCallbackParam_t * pMessage )
 {
     AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
-    AwsIotShadowCallbackParam_t callbackParam = { .callbackType = _AwsIotShadow_IntToShadowCallbackType( 0 ) };
+    AwsIotShadowCallbackParam_t callbackParam = { .callbackType = AWS_IOT_SHADOW_DELETE_COMPLETE };
     _shadowSubscription_t * pSubscription = NULL;
     const char * pThingName = NULL;
     size_t thingNameLength = 0;
