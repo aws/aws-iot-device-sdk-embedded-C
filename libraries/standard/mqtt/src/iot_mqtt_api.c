@@ -42,13 +42,13 @@
 #include "iot_atomic.h"
 
 /* Validate MQTT configuration settings. */
-#if IOT_MQTT_ENABLE_ASSERTS != 0 && IOT_MQTT_ENABLE_ASSERTS != 1
+#if ( IOT_MQTT_ENABLE_ASSERTS != 0 ) && ( IOT_MQTT_ENABLE_ASSERTS != 1 )
     #error "IOT_MQTT_ENABLE_ASSERTS must be 0 or 1."
 #endif
-#if IOT_MQTT_ENABLE_METRICS != 0 && IOT_MQTT_ENABLE_METRICS != 1
+#if ( IOT_MQTT_ENABLE_METRICS != 0 ) && ( IOT_MQTT_ENABLE_METRICS != 1 )
     #error "IOT_MQTT_ENABLE_METRICS must be 0 or 1."
 #endif
-#if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 0 && IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 1
+#if ( IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 0 ) && ( IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 1 )
     #error "IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES must be 0 or 1."
 #endif
 #if IOT_MQTT_RESPONSE_WAIT_MS <= 0
@@ -87,7 +87,7 @@ static bool _checkInit( void );
  *
  * @return Always returns `true`.
  */
-static bool _mqttSubscription_setUnsubscribe( const IotLink_t * pSubscriptionLink,
+static bool _mqttSubscription_setUnsubscribe( const IotLink_t * const pSubscriptionLink,
                                               void * pMatch );
 
 /**
@@ -292,7 +292,7 @@ static bool _checkInit( void )
 
 /*-----------------------------------------------------------*/
 
-static bool _mqttSubscription_setUnsubscribe( const IotLink_t * pSubscriptionLink,
+static bool _mqttSubscription_setUnsubscribe( const IotLink_t * const pSubscriptionLink,
                                               void * pMatch )
 {
     /* Because this function is called from a container function, the given link
@@ -860,6 +860,11 @@ static IotMqttError_t _waitForOperation( IotMqttOperation_t operation,
         status = operation->u.operation.status;
     }
 
+    /* Coverity finds a MISRA 13.2 violation in this log statement as the order
+     * of evaluation for IotMqtt_OperationType and IotMqtt_strerror is not
+     * defined. This is not an issue as these functions do not change data and
+     * only convert codes into constant strings. */
+    /* coverity[misra_c_2012_rule_13_2_violation] */
     IotLogInfo( "(MQTT connection %p, %s operation %p) Wait complete with result %s.",
                 operation->pMqttConnection,
                 IotMqtt_OperationType( operation->u.operation.type ),
@@ -974,6 +979,11 @@ IotMqttError_t IotMqtt_Init( void )
             #endif /* ifdef _IotMqtt_InitSerializeAdditional */
         #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
+        /* If the above preprocessor conditions are satisfied, it is
+         * possible that status != IOT_MQTT_SUCCESS. Therefore, this
+         * condition is not an invariant, and the MISRA 14.3 violation is
+         * a false positive. */
+        /* coverity[misra_c_2012_rule_14_3_violation] */
         if( status == IOT_MQTT_SUCCESS )
         {
             IotLogInfo( "MQTT library successfully initialized." );
