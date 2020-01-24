@@ -94,7 +94,7 @@ static IotMqttError_t _deserializeAck( _mqttConnection_t * pMqttConnection,
                                        _mqttPacket_t * pIncomingPacket,
                                        IotMqttDeserialize_t _deserializer,
                                        IotMqttOperationType_t opType,
-                                       uint16_t * pPacketIdentifier );
+                                       const uint16_t * pPacketIdentifier );
 
 /**
  * @brief Deserialize a PUBLISH packet.
@@ -356,7 +356,7 @@ static IotMqttError_t _deserializeAck( _mqttConnection_t * pMqttConnection,
                                        _mqttPacket_t * pIncomingPacket,
                                        IotMqttDeserialize_t _deserializer,
                                        IotMqttOperationType_t opType,
-                                       uint16_t * pPacketIdentifier )
+                                       const uint16_t * pPacketIdentifier )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t * pOperation = NULL;

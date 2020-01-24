@@ -169,7 +169,7 @@ static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation
                                                 const IotMqttSubscription_t * pSubscriptionList,
                                                 size_t subscriptionCount,
                                                 uint32_t flags,
-                                                IotMqttOperation_t * const pOperationReference );
+                                                const IotMqttOperation_t * const pOperationReference );
 
 /**
  * @brief Utility function for creating and serializing subscription requests
@@ -633,7 +633,7 @@ static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation
                                                 const IotMqttSubscription_t * pSubscriptionList,
                                                 size_t subscriptionCount,
                                                 uint32_t flags,
-                                                IotMqttOperation_t * const pOperationReference )
+                                                const IotMqttOperation_t * const pOperationReference )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 

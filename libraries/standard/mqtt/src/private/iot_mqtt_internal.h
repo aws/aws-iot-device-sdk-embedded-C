@@ -483,7 +483,7 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
                                const IotMqttPublishInfo_t * pPublishInfo,
                                uint32_t flags,
                                const IotMqttCallbackInfo_t * pCallbackInfo,
-                               IotMqttOperation_t * const pPublishOperation );
+                               const IotMqttOperation_t * const pPublishOperation );
 
 /**
  * @brief Check that an #IotMqttPublishInfo_t is valid for an LWT publish

@@ -378,7 +378,7 @@ IotMqttError_t IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSubs
  * @endcode
  */
 /* @[declare_mqtt_getpublishpacketsize] */
-IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo,
+IotMqttError_t IotMqtt_GetPublishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
                                              size_t * pRemainingLength,
                                              size_t * pPacketSize );
 /* @[declare_mqtt_getpublishpacketsize] */
@@ -443,7 +443,7 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo
  * @endcode
  */
 /* @[declare_mqtt_serializepublish] */
-IotMqttError_t IotMqtt_SerializePublish( IotMqttPublishInfo_t * pPublishInfo,
+IotMqttError_t IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishInfo,
                                          size_t remainingLength,
                                          uint16_t * pPacketIdentifier,
                                          uint8_t ** pPacketIdentifierHigh,

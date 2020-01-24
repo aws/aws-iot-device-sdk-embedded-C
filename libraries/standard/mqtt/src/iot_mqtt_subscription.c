@@ -290,10 +290,10 @@ static bool _topicMatch( const IotLink_t * const pSubscriptionLink,
      * will never pass NULL. */
     IotMqtt_Assert( pSubscriptionLink != NULL );
 
-    _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
+    const _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                              pSubscriptionLink,
                                                              link );
-    _topicMatchParams_t * pParam = ( _topicMatchParams_t * ) pMatch;
+    const _topicMatchParams_t * pParam = ( _topicMatchParams_t * ) pMatch;
 
     /* Extract the relevant strings and lengths from parameters. */
     const char * pTopicName = pParam->pTopicName;
@@ -331,7 +331,7 @@ static bool _packetMatch( const IotLink_t * const pSubscriptionLink,
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                              pSubscriptionLink,
                                                              link );
-    _packetMatchParams_t * pParam = ( _packetMatchParams_t * ) pMatch;
+    const _packetMatchParams_t * pParam = ( _packetMatchParams_t * ) pMatch;
 
     /* Compare packet identifiers. */
     if( pParam->packetIdentifier == pSubscription->packetInfo.identifier )
@@ -629,8 +629,8 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
                            IotMqttSubscription_t * const pCurrentSubscription )
 {
     bool status = false;
-    _mqttSubscription_t * pSubscription = NULL;
-    IotLink_t * pSubscriptionLink = NULL;
+    const _mqttSubscription_t * pSubscription = NULL;
+    const IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams = { 0 };
 
     /* Set the members of the search parameter. */
