@@ -349,7 +349,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
     }
 
     /* Check parameters. */
-    status = _validateThingNameFlags( ( _shadowOperationType_t ) ( ( ( int32_t ) type ) + SHADOW_OPERATION_COUNT ),
+    status = _validateThingNameFlags( _AwsIotShadow_IntToShadowOperationType( ( ( int32_t ) type ) + SHADOW_OPERATION_COUNT ),
                                       pThingName,
                                       thingNameLength,
                                       0,
@@ -590,7 +590,7 @@ static void _callbackWrapperCommon( _shadowCallbackType_t type,
                                     IotMqttCallbackParam_t * pMessage )
 {
     AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
-    AwsIotShadowCallbackParam_t callbackParam = { .callbackType = ( AwsIotShadowCallbackType_t ) 0 };
+    AwsIotShadowCallbackParam_t callbackParam = { .callbackType = _AwsIotShadow_IntToShadowCallbackType( 0 ) };
     _shadowSubscription_t * pSubscription = NULL;
     const char * pThingName = NULL;
     size_t thingNameLength = 0;
@@ -628,7 +628,7 @@ static void _callbackWrapperCommon( _shadowCallbackType_t type,
     IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
 
     /* Set the callback type. Shadow callbacks are enumerated after the operations. */
-    callbackParam.callbackType = ( AwsIotShadowCallbackType_t ) ( ( ( int32_t ) type ) + SHADOW_OPERATION_COUNT );
+    callbackParam.callbackType = _AwsIotShadow_IntToShadowCallbackType( ( ( int32_t ) type ) + SHADOW_OPERATION_COUNT );
 
     /* Set the remaining members of the callback param. */
     callbackParam.mqttConnection = pMessage->mqttConnection;

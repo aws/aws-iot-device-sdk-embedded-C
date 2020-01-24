@@ -459,7 +459,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
                 {
                     /* Generate the prefix of the Shadow topic. This function will not
                      * fail when given a buffer. */
-                    ( void ) _AwsIotShadow_GenerateShadowTopic( ( _shadowOperationType_t ) i,
+                    ( void ) _AwsIotShadow_GenerateShadowTopic( _AwsIotShadow_IntToShadowOperationType( ( int32_t ) i ),
                                                                 pThingName,
                                                                 thingNameLength,
                                                                 &( pSubscription->pTopicBuffer ),

@@ -454,6 +454,26 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
                                                     _shadowOperation_t * pOperation,
                                                     const AwsIotShadowDocumentInfo_t * pDocumentInfo );
 
+
+
+/**
+ * @brief Convert an integer to the shadow operation type.
+ *
+ * @param[in] n The integer to convert.
+ *
+ * @return The enum value associated with the input.
+ */
+_shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n );
+
+/**
+ * @brief Convert an integer to the shadow callback type.
+ *
+ * @param[in] n The integer to convert.
+ *
+ * @return The enum value associated with the input.
+ */
+AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( int32_t n );
+
 /*---------------------- Shadow subscription functions ----------------------*/
 
 /**
