@@ -52,6 +52,19 @@
 static bool _incomingPacketValid( uint8_t packetType );
 
 /**
+ * @brief Allocate space for an incoming MQTT packet received from the network.
+ *
+ * @param[in] pNetworkConnection Network connection to be used for receive.
+ * @param[in] pMqttConnection The associated MQTT connection.
+ * @param[out] pIncomingPacket Output parameter for the incoming packet.
+ *
+ * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_NO_MEMORY or #IOT_MQTT_BAD_RESPONSE.
+ */
+static IotMqttError_t _allocateAndReceivePacket( IotNetworkConnection_t pNetworkConnection,
+                                                 const _mqttConnection_t * pMqttConnection,
+                                                 _mqttPacket_t * pIncomingPacket );
+
+/**
  * @brief Get an incoming MQTT packet from the network.
  *
  * @param[in] pNetworkConnection Network connection to use for receive, which
@@ -233,12 +246,60 @@ static bool _incomingPacketValid( uint8_t packetType )
 
 /*-----------------------------------------------------------*/
 
+static IotMqttError_t _allocateAndReceivePacket( IotNetworkConnection_t pNetworkConnection,
+                                                 const _mqttConnection_t * pMqttConnection,
+                                                 _mqttPacket_t * pIncomingPacket )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+    size_t dataBytesRead = 0;
+
+    IotMqtt_Assert( pMqttConnection != NULL );
+    IotMqtt_Assert( pIncomingPacket != NULL );
+
+    /* Allocate a buffer for the remaining data and read the data. */
+    if( pIncomingPacket->remainingLength > 0U )
+    {
+        pIncomingPacket->pRemainingData = IotMqtt_MallocMessage( pIncomingPacket->remainingLength );
+
+        if( pIncomingPacket->pRemainingData == NULL )
+        {
+            /* In some implementations IotLogError() maps to C standard printing API
+             * that need specific primitive types for format specifiers. Also,
+             * inttypes.h may not be available on some C99 compilers, despite stdint.h
+             * being available. */
+            /* coverity[misra_c_2012_directive_4_6_violation] */
+            IotLogError( "(MQTT connection %p) Failed to allocate buffer of length "
+                         "%lu for incoming packet type %lu.",
+                         pMqttConnection,
+                         ( unsigned long ) pIncomingPacket->remainingLength,
+                         ( unsigned long ) pIncomingPacket->type );
+
+            _flushPacket( pNetworkConnection, pMqttConnection, pIncomingPacket->remainingLength );
+
+            status = IOT_MQTT_NO_MEMORY;
+        }
+
+        if( status == IOT_MQTT_SUCCESS )
+        {
+            dataBytesRead = pMqttConnection->pNetworkInterface->receive( pNetworkConnection,
+                                                                         pIncomingPacket->pRemainingData,
+                                                                         pIncomingPacket->remainingLength );
+
+            if( dataBytesRead != pIncomingPacket->remainingLength )
+            {
+                status = IOT_MQTT_BAD_RESPONSE;
+            }
+        }
+    }
+
+    return status;
+}
+
 static IotMqttError_t _getIncomingPacket( IotNetworkConnection_t pNetworkConnection,
                                           const _mqttConnection_t * pMqttConnection,
                                           _mqttPacket_t * pIncomingPacket )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
-    size_t dataBytesRead = 0;
 
     /* No buffer for remaining data should be allocated. */
     IotMqtt_Assert( pIncomingPacket->pRemainingData == NULL );
@@ -272,41 +333,9 @@ static IotMqttError_t _getIncomingPacket( IotNetworkConnection_t pNetworkConnect
 
     if( status == IOT_MQTT_SUCCESS )
     {
-        /* Allocate a buffer for the remaining data and read the data. */
-        if( pIncomingPacket->remainingLength > 0U )
-        {
-            pIncomingPacket->pRemainingData = IotMqtt_MallocMessage( pIncomingPacket->remainingLength );
-
-            if( pIncomingPacket->pRemainingData == NULL )
-            {
-                /* In some implementations IotLogError() maps to C standard printing API
-                 * that need specific primitive types for format specifiers. Also,
-                 * inttypes.h may not be available on some C99 compilers, despite stdint.h
-                 * being available. */
-                /* coverity[misra_c_2012_directive_4_6_violation] */
-                IotLogError( "(MQTT connection %p) Failed to allocate buffer of length "
-                             "%lu for incoming packet type %lu.",
-                             pMqttConnection,
-                             ( unsigned long ) pIncomingPacket->remainingLength,
-                             ( unsigned long ) pIncomingPacket->type );
-
-                _flushPacket( pNetworkConnection, pMqttConnection, pIncomingPacket->remainingLength );
-
-                status = IOT_MQTT_NO_MEMORY;
-            }
-
-            if( status == IOT_MQTT_SUCCESS )
-            {
-                dataBytesRead = pMqttConnection->pNetworkInterface->receive( pNetworkConnection,
-                                                                             pIncomingPacket->pRemainingData,
-                                                                             pIncomingPacket->remainingLength );
-
-                if( dataBytesRead != pIncomingPacket->remainingLength )
-                {
-                    status = IOT_MQTT_BAD_RESPONSE;
-                }
-            }
-        }
+        status = _allocateAndReceivePacket( pNetworkConnection,
+                                            pMqttConnection,
+                                            pIncomingPacket );
     }
 
     /* Clean up on error. */
