@@ -187,6 +187,64 @@ IotMutex_t _AwsIotShadowPendingOperationsMutex;
 
 /*-----------------------------------------------------------*/
 
+_shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n )
+{
+    AwsIotShadow_Assert( n < 3 && n >= 0 );
+    _shadowOperationType_t val = SHADOW_DELETE;
+
+    switch( n )
+    {
+        case 0:
+            val = SHADOW_DELETE;
+            break;
+
+        case 1:
+            val = SHADOW_GET;
+            break;
+
+        case 2:
+            val = SHADOW_UPDATE;
+            break;
+    }
+
+    return val;
+}
+
+/*-----------------------------------------------------------*/
+
+AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( int32_t n )
+{
+    AwsIotShadow_Assert( n < 5 && n >= 0 );
+    AwsIotShadowCallbackType_t val = AWS_IOT_SHADOW_DELETE_COMPLETE;
+
+    switch( n )
+    {
+        case 0:
+            val = AWS_IOT_SHADOW_DELETE_COMPLETE;
+            break;
+
+        case 1:
+            val = AWS_IOT_SHADOW_GET_COMPLETE;
+            break;
+
+        case 2:
+            val = AWS_IOT_SHADOW_UPDATE_COMPLETE;
+            break;
+
+        case 3:
+            val = AWS_IOT_SHADOW_DELTA_CALLBACK;
+            break;
+
+        case 4:
+            val = AWS_IOT_SHADOW_UPDATED_CALLBACK;
+            break;
+    }
+
+    return val;
+}
+
+/*-----------------------------------------------------------*/
+
 static bool _shadowOperation_match( const IotLink_t * pOperationLink,
                                     void * pMatch )
 {
@@ -255,7 +313,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
     _shadowOperation_t * pOperation = NULL;
     IotLink_t * pOperationLink = NULL;
     AwsIotStatus_t status = AWS_IOT_UNKNOWN;
-    _operationMatchParams_t param = { .type = ( _shadowOperationType_t ) 0 };
+    _operationMatchParams_t param = { .type = SHADOW_DELETE };
     uint32_t flags = 0;
 
     /* Set operation type to search. */
@@ -466,7 +524,7 @@ static void _updateCallback( void * pArgument,
 
 static void _notifyCompletion( _shadowOperation_t * pOperation )
 {
-    AwsIotShadowCallbackParam_t callbackParam = { .callbackType = ( AwsIotShadowCallbackType_t ) 0 };
+    AwsIotShadowCallbackParam_t callbackParam = { .callbackType = AWS_IOT_SHADOW_DELETE_COMPLETE };
     _shadowSubscription_t * pSubscription = pOperation->pSubscription,
                           * pRemovedSubscription = NULL;
 
@@ -498,7 +556,7 @@ static void _notifyCompletion( _shadowOperation_t * pOperation )
         if( pOperation->notify.callback.function != NULL )
         {
             /* Set the common members of the callback parameter. */
-            callbackParam.callbackType = ( AwsIotShadowCallbackType_t ) pOperation->type;
+            callbackParam.callbackType = _AwsIotShadow_IntToShadowCallbackType( ( int32_t ) pOperation->type );
             callbackParam.mqttConnection = pOperation->mqttConnection;
             callbackParam.u.operation.result = pOperation->status;
             callbackParam.u.operation.reference = pOperation;
