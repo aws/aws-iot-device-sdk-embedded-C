@@ -85,6 +85,7 @@ static FORCE_INLINE void * Atomic_Swap_Pointer( void * volatile * pDestination,
     /* This header file is intended to be used with only the gcc compiler
      * which requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
+    /* coverity[misra_c_2012_rule_17_7_violation] */
     __atomic_exchange( pDestination, &pNewValue, &pOldValue, __ATOMIC_SEQ_CST );
 
     return pOldValue;

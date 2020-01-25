@@ -420,6 +420,9 @@ typedef struct _mqttSubscription
     IotMqttCallbackInfo_t callback; /**< @brief Callback information for this subscription. */
 
     uint16_t topicFilterLength;     /**< @brief Length of #_mqttSubscription_t.pTopicFilter. */
+    /* A flexible length array is used here so that the topic filter may
+     * be of an arbitrary length. */
+    /* coverity[misra_c_2012_rule_18_7_violation] */
     char pTopicFilter[];            /**< @brief The subscription topic filter. */
 } _mqttSubscription_t;
 
