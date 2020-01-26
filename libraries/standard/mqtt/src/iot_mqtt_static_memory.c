@@ -92,7 +92,7 @@ static uint32_t _pInUseMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = {
 static _mqttOperation_t _pMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { { .link = { 0 } } }; /**< @brief MQTT operations. */
 
 static uint32_t _pInUseMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ] = { 0U };                      /**< @brief MQTT subscription in-use flags. */
-static char _pMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ][ MQTT_SUBSCRIPTION_SIZE ] = { { 0 } };  /**< @brief MQTT subscriptions. */
+static char _pMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ][ MQTT_SUBSCRIPTION_SIZE ] = { { '\0' } };  /**< @brief MQTT subscriptions. */
 
 /*-----------------------------------------------------------*/
 
