@@ -471,7 +471,7 @@ static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
     /* This algorithm is copied from the MQTT v3.1.1 spec. */
     do
     {
-        lengthByte = remainingLength % 128U;
+        lengthByte = ( uint8_t ) ( remainingLength % 128U );
         remainingLength = remainingLength / 128U;
 
         /* Set the high bit of this byte, indicating that there's more data. */
@@ -615,8 +615,8 @@ static bool _connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
     if( pConnectInfo->awsIotMqttMode == true )
     {
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            connectPacketSize += ( size_t ) ( AWS_IOT_METRICS_USERNAME_LENGTH +
-                                              pConnectInfo->userNameLength + ( uint16_t ) ( sizeof( uint16_t ) ) );
+            connectPacketSize += ( AWS_IOT_METRICS_USERNAME_LENGTH +
+                                   ( size_t ) ( pConnectInfo->userNameLength ) + sizeof( uint16_t ) );
             encodedUserName = true;
         #endif
     }
@@ -1307,7 +1307,7 @@ size_t _IotMqtt_GetRemainingLength( IotNetworkConnection_t pNetworkConnection,
                                       pNetworkInterface,
                                       &encodedByte ) == true )
             {
-                remainingLength += ( size_t ) ( encodedByte & 0x7FU ) * multiplier;
+                remainingLength += ( ( size_t ) encodedByte & 0x7FU ) * multiplier;
                 multiplier *= 128U;
                 bytesDecoded++;
             }
@@ -1358,7 +1358,7 @@ size_t _IotMqtt_GetRemainingLength_Generic( IotNetworkConnection_t pNetworkConne
         {
             if( getNextByte( pNetworkConnection, &encodedByte ) == IOT_MQTT_SUCCESS )
             {
-                remainingLength += ( size_t ) ( encodedByte & 0x7FU ) * multiplier;
+                remainingLength += ( ( size_t ) encodedByte & 0x7FU ) * multiplier;
                 multiplier *= 128U;
                 bytesDecoded++;
             }
@@ -1708,7 +1708,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
                     "Packet identifier %hu.", pPublish->packetIdentifier );
 
             /* Packet identifier cannot be 0. */
-            if( pPublish->packetIdentifier == 0 )
+            if( pPublish->packetIdentifier == 0U )
             {
                 status = IOT_MQTT_BAD_RESPONSE;
             }
@@ -1726,7 +1726,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
         }
         else
         {
-            pOutput->payloadLength = ( pPublish->remainingLength - pOutput->topicNameLength - 2 * sizeof( uint16_t ) );
+            pOutput->payloadLength = ( pPublish->remainingLength - pOutput->topicNameLength - 2U * sizeof( uint16_t ) );
             pOutput->pPayload = pPacketIdentifierHigh + sizeof( uint16_t );
         }
 
