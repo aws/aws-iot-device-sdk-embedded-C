@@ -187,19 +187,15 @@ static IotMqttError_t _subscriptionCreateAndSerialize( IotMqttOperationType_t op
                                                        _mqttOperation_t ** ppSubscriptionOperation );
 
 /**
- * @brief Utility function for sending or scheduling subscribe or unsubscribe message.
+ * @brief Utility function for sending/scheduling a subscribe, unsubscribe or publish message.
  *
- * @param[in] operation Type of operation SUBSCRIBE or UNSUBSCRIBE
- * @param[in] mqttConnection MQTT connection reference.
- * @param[in] pSubscriptionOperation Reference to subscription operation.
+ * @param[in] pMqttOperation Reference to MQTT operation.
  * @param[in] flags Flags which modify the behavior of this function.
- * 
+ *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_SCHEDULING_ERROR.
  */
-static IotMqttError_t _sendSubscribeRequest( IotMqttOperationType_t operation,
-                                             IotMqttConnection_t mqttConnection,
-                                             _mqttOperation_t * pSubscriptionOperation,
-                                             uint32_t flags );
+static IotMqttError_t _sendMqttMessage( _mqttOperation_t * pMqttOperation,
+                                        uint32_t flags );
 
 /**
  * @brief The common component of both @ref mqtt_function_subscribeasync and @ref
@@ -239,21 +235,10 @@ static IotMqttError_t _waitForOperation( IotMqttOperation_t operation,
  * with the broker is established.
  *
  * @param[in] pMqttConnection MQTT connection reference.
- * 
+ *
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_SCHEDULING_ERROR.
  */
 static IotMqttError_t _scheduleKeepAlive( IotMqttConnection_t pMqttConnection );
-
-/**
- * @brief Utility function for sending or scheduling publish message.
- *
- * @param[in] flags Publish request flags.
- * @param[in] pOperation PUBLISH operation reference.
- *
- * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_SCHEDULING_ERROR.
- */
-static IotMqttError_t _sendPublish( uint32_t flags,
-                                    _mqttOperation_t * pOperation );
 
 /**
  * @brief Utility function for sending connect request.
@@ -284,7 +269,7 @@ static IotMqttError_t _addSubscriptions( _mqttOperation_t * pOperation,
  *
  * @param[in] pMqttConnection MQTT connection reference.
  * @param[in] pNetworkConnection Network connection reference.
- * @param[in] pNetworkInfo  User-provided network information.
+ * @param[in] pNetworkInfo User-provided network information.
  * @param[in] pOperation CONNECT operation reference.
  * @param[in] ownNetworkConnection if true, connection needs to be closed.
  *
@@ -802,39 +787,23 @@ static IotMqttError_t _subscriptionCreateAndSerialize( IotMqttOperationType_t op
 
 /*-----------------------------------------------------------*/
 
-static IotMqttError_t _sendSubscribeRequest( IotMqttOperationType_t operation,
-                                             IotMqttConnection_t mqttConnection,
-                                             _mqttOperation_t * pSubscriptionOperation,
-                                             uint32_t flags )
+static IotMqttError_t _sendMqttMessage( _mqttOperation_t * pMqttOperation,
+                                        uint32_t flags )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
-    IotMqtt_Assert( pSubscriptionOperation != NULL );
+    IotMqtt_Assert( pMqttOperation != NULL );
 
     /* Send the SUBSCRIBE packet. */
     if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
     {
-        _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pSubscriptionOperation->job, pSubscriptionOperation );
+        _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pMqttOperation->job, pMqttOperation );
     }
     else
     {
-        status = _IotMqtt_ScheduleOperation( pSubscriptionOperation,
+        status = _IotMqtt_ScheduleOperation( pMqttOperation,
                                              _IotMqtt_ProcessSend,
                                              0 );
-
-        if( status != IOT_MQTT_SUCCESS )
-        {
-            IotLogError( "(MQTT connection %p) Failed to schedule %s for sending.",
-                         mqttConnection,
-                         IotMqtt_OperationType( operation ) );
-
-            if( operation == IOT_MQTT_SUBSCRIBE )
-            {
-                _IotMqtt_RemoveSubscriptionByPacket( mqttConnection,
-                                                     pSubscriptionOperation->u.operation.packetIdentifier,
-                                                     MQTT_REMOVE_ALL_SUBSCRIPTIONS );
-            }
-        }
     }
 
     return status;
@@ -882,13 +851,21 @@ static IotMqttError_t _subscriptionCommon( IotMqttOperationType_t operation,
         _setOperationReference( pOperationReference, pSubscriptionOperation );
 
         /* Send or schedule subscribe request. */
-        status = _sendSubscribeRequest( operation,
-                                        mqttConnection,
-                                        pSubscriptionOperation,
-                                        flags );
+        status = _sendMqttMessage( pSubscriptionOperation, flags );
 
         if( status != IOT_MQTT_SUCCESS )
         {
+            IotLogError( "(MQTT connection %p) Failed to schedule %s for sending.",
+                         mqttConnection,
+                         IotMqtt_OperationType( operation ) );
+
+            if( operation == IOT_MQTT_SUBSCRIBE )
+            {
+                _IotMqtt_RemoveSubscriptionByPacket( mqttConnection,
+                                                     pSubscriptionOperation->u.operation.packetIdentifier,
+                                                     MQTT_REMOVE_ALL_SUBSCRIPTIONS );
+            }
+
             /* Clear the previously set (and now invalid) reference. */
             _setOperationReference( pOperationReference, IOT_MQTT_OPERATION_INITIALIZER );
         }
@@ -1000,28 +977,6 @@ static IotMqttError_t _scheduleKeepAlive( IotMqttConnection_t pMqttConnection )
 
 /*-----------------------------------------------------------*/
 
-static IotMqttError_t _sendPublish( uint32_t flags,
-                                    _mqttOperation_t * pOperation )
-{
-    IotMqttError_t status = IOT_MQTT_SUCCESS;
-
-    /* Send the PUBLISH packet. */
-    if( ( flags & MQTT_INTERNAL_FLAG_BLOCK_ON_SEND ) == MQTT_INTERNAL_FLAG_BLOCK_ON_SEND )
-    {
-        _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
-    }
-    else
-    {
-        status = _IotMqtt_ScheduleOperation( pOperation,
-                                             _IotMqtt_ProcessSend,
-                                             0 );
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
 static IotMqttError_t _sendConnectRequest( _mqttOperation_t * pOperation,
                                            uint32_t timeoutMs )
 {
@@ -1110,21 +1065,6 @@ static void _handleConnectFailure( IotMqttConnection_t pMqttConnection,
 
     if( pMqttConnection != NULL )
     {
-        /* Coverity finds a USE_AFTER_FREE error at this line. This is a false positive.
-         *
-         * This error is triggered by a dereference of 'pNewMqttConnection' in
-         * '_destroyMqttConnection'. Coverity assumes that 'pNewMqttConnection'
-         * was freed in '_IotMqtt_CreateOperation' above, where cleanup code will
-         * free 'pNewMqttConnection' upon allocation failure.
-         *
-         * This will never happen as a valid MQTT connection passed to this
-         * function always has a positive reference count; therefore,
-         * '_IotMqtt_CreateOperation' will not free it. Only unreferenced MQTT
-         * connections will be freed.
-         *
-         * The annotation below suppresses this Coverity error.
-         */
-        /* coverity[deref_arg] */
         _destroyMqttConnection( pMqttConnection );
     }
 }
@@ -1772,8 +1712,7 @@ IotMqttError_t IotMqtt_PublishAsync( IotMqttConnection_t mqttConnection,
         }
 
         /* Send the PUBLISH packet. */
-
-        status = _sendPublish( flags, pOperation );
+        status = _sendMqttMessage( pOperation, flags );
 
         if( status != IOT_MQTT_SUCCESS )
         {
