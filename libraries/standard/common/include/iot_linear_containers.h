@@ -623,7 +623,8 @@ static inline IotLink_t * IotListDouble_FindFirstMatch( const IotListDouble_t * 
 {
     /* The const must be cast away to match this function's return value. Nevertheless,
      * this function will respect the const-ness of pStartPoint. */
-    IotLink_t * pCurrent = ( IotLink_t * ) pStartPoint;
+    IotLink_t * pCurrent = ( IotLink_t * ) pStartPoint, * pMatchedLink = NULL;
+    bool shouldExit = false;
 
     /* This function must not be called with a NULL pList parameter. */
     IotContainers_Assert( pList != NULL );
@@ -640,24 +641,24 @@ static inline IotLink_t * IotListDouble_FindFirstMatch( const IotListDouble_t * 
         /* Call isMatch if provided. Otherwise, compare pointers. */
         if( isMatch != NULL )
         {
-            if( isMatch( pCurrent, pMatch ) == true )
-            {
-                return pCurrent;
-            }
+            shouldExit = isMatch( pCurrent, pMatch );
         }
         else
         {
-            if( pCurrent == pMatch )
-            {
-                return pCurrent;
-            }
+            shouldExit = ( pCurrent == pMatch );
+        }
+
+        if( shouldExit == true )
+        {
+            pMatchedLink = pCurrent;
+            break;
         }
 
         pCurrent = pCurrent->pNext;
     }
 
-    /* No match found, return NULL. */
-    return NULL;
+    /* Return match if found, else NULL. */
+    return pMatchedLink;
 }
 
 /**
