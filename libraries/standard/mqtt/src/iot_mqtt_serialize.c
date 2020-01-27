@@ -391,7 +391,7 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_BAD_RESPONSE.
  */
 
-static IotMqttError_t _processIncomingPublishFlags( const uint8_t publishFlags,
+static IotMqttError_t _processIncomingPublishFlags( uint8_t publishFlags,
                                                     IotMqttPublishInfo_t * pOutput );
 
 /*-----------------------------------------------------------*/
