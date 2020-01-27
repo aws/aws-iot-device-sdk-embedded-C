@@ -66,8 +66,8 @@ typedef struct _operationMatchParams
  *
  * @return `true` if `pMatch` matches the received response; `false` otherwise.
  */
-static bool _shadowOperation_match( const IotLink_t * pOperationLink,
-                                    void * pMatch );
+static bool _shadowOperationMatch( const IotLink_t * pOperationLink,
+                                   void * pMatch );
 
 /**
  * @brief Common function for processing received Shadow responses.
@@ -184,8 +184,8 @@ IotMutex_t _AwsIotShadowPendingOperationsMutex;
 
 /*-----------------------------------------------------------*/
 
-static bool _shadowOperation_match( const IotLink_t * pOperationLink,
-                                    void * pMatch )
+static bool _shadowOperationMatch( const IotLink_t * pOperationLink,
+                                   void * pMatch )
 {
     /* Because this function is called from a container function, the given link
      * must never be NULL. */
@@ -277,7 +277,7 @@ static void _commonOperationCallback( _shadowOperationType_t type,
         /* Search for a matching pending operation. */
         pOperationLink = IotListDouble_FindFirstMatch( &( _AwsIotShadowPendingOperations ),
                                                        NULL,
-                                                       _shadowOperation_match,
+                                                       _shadowOperationMatch,
                                                        &param );
 
         /* Find and remove the first Shadow operation of the given type. */
@@ -353,7 +353,6 @@ static void _commonOperationCallback( _shadowOperationType_t type,
                                 pOperation->pSubscription->pThingName );
 
                     pOperation->status = AWS_IOT_SHADOW_BAD_RESPONSE;
-                    break;
             }
 
             /* Copy the flags from the Shadow operation. The notify function may delete the operation. */
@@ -612,15 +611,7 @@ AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOpe
     /* Allocate memory for a new Shadow operation. */
     pOperation = AwsIotShadow_MallocOperation( sizeof( _shadowOperation_t ) );
 
-    if( pOperation == NULL )
-    {
-        IotLogError( "Failed to allocate memory for Shadow %s.",
-                     _pAwsIotShadowOperationNames[ type ] );
-
-        status = AWS_IOT_SHADOW_NO_MEMORY;
-    }
-
-    if( status == AWS_IOT_SHADOW_SUCCESS )
+    if( pOperation != NULL )
     {
         /* Clear the operation data. */
         ( void ) memset( pOperation, 0x00, sizeof( _shadowOperation_t ) );
@@ -646,24 +637,28 @@ AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOpe
                 pOperation->notify.callback = *pCallbackInfo;
             }
         }
-    }
 
-    if( status == AWS_IOT_SHADOW_SUCCESS )
-    {
-        /* Set the remaining common members of the Shadow operation. */
-        pOperation->type = type;
-        pOperation->flags = flags;
-        pOperation->status = AWS_IOT_SHADOW_STATUS_PENDING;
+        if( status == AWS_IOT_SHADOW_SUCCESS )
+        {
+            /* Set the remaining common members of the Shadow operation. */
+            pOperation->type = type;
+            pOperation->flags = flags;
+            pOperation->status = AWS_IOT_SHADOW_STATUS_PENDING;
 
-        /* Set the output parameter. */
-        *pNewOperation = pOperation;
-    }
-    else
-    {
-        if( pOperation != NULL )
+            /* Set the output parameter. */
+            *pNewOperation = pOperation;
+        }
+        else
         {
             AwsIotShadow_FreeOperation( pOperation );
         }
+    }
+    else
+    {
+        IotLogError( "Failed to allocate memory for Shadow %s.",
+                     _pAwsIotShadowOperationNames[ type ] );
+
+        status = AWS_IOT_SHADOW_NO_MEMORY;
     }
 
     return status;
