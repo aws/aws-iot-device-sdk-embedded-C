@@ -37,6 +37,7 @@
 
 /* MQTT include. */
 #include "iot_mqtt.h"
+#include "iot_mqtt_serialize.h"
 
 /* Task pool include. */
 #include "iot_taskpool.h"
