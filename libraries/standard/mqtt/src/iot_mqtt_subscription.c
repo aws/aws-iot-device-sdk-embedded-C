@@ -458,8 +458,8 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
     IotLink_t * pCurrentLink = NULL, * pNextLink = NULL;
     void * pCallbackContext = NULL;
 
-    void ( * callbackFunction )( void *,
-                                 IotMqttCallbackParam_t * ) = NULL;
+    void ( * callbackFunction )( void * pContext,
+                                 IotMqttCallbackParam_t * pParam ) = NULL;
     _topicMatchParams_t topicMatchParams = { 0 };
 
     /* Set the members of the search parameter. */

@@ -730,11 +730,11 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
     void * pDisconnectCallbackContext = NULL;
 
     /* Disconnect callback function. */
-    void ( * disconnectCallback )( void *,
-                                   IotMqttCallbackParam_t * ) = NULL;
+    void ( * disconnectCallback )( void * pContext,
+                                   IotMqttCallbackParam_t * pParam ) = NULL;
 
     /* Network close function. */
-    IotNetworkError_t ( * closeConnection) ( IotNetworkConnection_t ) = NULL;
+    IotNetworkError_t ( * closeConnection) ( IotNetworkConnection_t pConnection ) = NULL;
 
     /* Mark the MQTT connection as disconnected and the keep-alive as failed. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
