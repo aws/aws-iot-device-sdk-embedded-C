@@ -616,6 +616,14 @@ AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOpe
         /* Clear the operation data. */
         ( void ) memset( pOperation, 0x00, sizeof( _shadowOperation_t ) );
 
+        /* Set the remaining common members of the Shadow operation. */
+        pOperation->type = type;
+        pOperation->flags = flags;
+        pOperation->status = AWS_IOT_SHADOW_STATUS_PENDING;
+
+        /* Set the output parameter. */
+        *pNewOperation = pOperation;
+
         /* Check if the waitable flag is set. If it is, create a semaphore to
          * wait on. */
         if( ( flags & AWS_IOT_SHADOW_FLAG_WAITABLE ) == AWS_IOT_SHADOW_FLAG_WAITABLE )
@@ -627,6 +635,11 @@ AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOpe
 
                 status = AWS_IOT_SHADOW_NO_MEMORY;
             }
+            else
+            {
+                *pNewOperation = NULL;
+                AwsIotShadow_FreeOperation( pOperation );
+            }
         }
         else
         {
@@ -636,21 +649,6 @@ AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOpe
             {
                 pOperation->notify.callback = *pCallbackInfo;
             }
-        }
-
-        if( status == AWS_IOT_SHADOW_SUCCESS )
-        {
-            /* Set the remaining common members of the Shadow operation. */
-            pOperation->type = type;
-            pOperation->flags = flags;
-            pOperation->status = AWS_IOT_SHADOW_STATUS_PENDING;
-
-            /* Set the output parameter. */
-            *pNewOperation = pOperation;
-        }
-        else
-        {
-            AwsIotShadow_FreeOperation( pOperation );
         }
     }
     else
