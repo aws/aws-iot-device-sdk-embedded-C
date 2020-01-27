@@ -511,7 +511,7 @@ typedef struct IotMqttCallbackInfo
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] pCallbackContext #IotMqttCallbackInfo_t.pCallbackContext
+     * @param[in] pCallbackContext #IotMqttCallbackInfo_t.pCallbackContext.
      * @param[in] pCallbackParam Details on the outcome of the MQTT operation
      * or an incoming MQTT PUBLISH.
      *
