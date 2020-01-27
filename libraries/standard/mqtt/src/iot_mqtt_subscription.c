@@ -230,7 +230,7 @@ static bool _topicFilterMatch( const char * pTopicName,
                                const char * pTopicFilter,
                                uint16_t topicFilterLength )
 {
-    bool status = false;
+    bool status = false, shouldBreak = false;
     uint16_t nameIndex = 0, filterIndex = 0;
 
     while( ( nameIndex < topicNameLength ) && ( filterIndex < topicFilterLength ) )
@@ -241,28 +241,27 @@ static bool _topicFilterMatch( const char * pTopicName,
         {
             /* Handle special corner cases regarding wildcards at the end of
              * topic filters, as documented by the MQTT protocol spec. */
-            if( _matchEndWildcards( pTopicFilter,
-                                    topicNameLength,
-                                    topicFilterLength,
-                                    nameIndex,
-                                    filterIndex,
-                                    &status ) == true )
-            {
-                break;
-            }
+            shouldBreak = _matchEndWildcards( pTopicFilter,
+                                              topicNameLength,
+                                              topicFilterLength,
+                                              nameIndex,
+                                              filterIndex,
+                                              &status );
         }
         else
         {
             /* Check for matching wildcards. */
-            if( _matchWildcards( pTopicFilter,
-                                 pTopicName,
-                                 topicNameLength,
-                                 filterIndex,
-                                 &nameIndex,
-                                 &status ) == true )
-            {
-                break;
-            }
+            shouldBreak = _matchWildcards( pTopicFilter,
+                                           pTopicName,
+                                           topicNameLength,
+                                           filterIndex,
+                                           &nameIndex,
+                                           &status );
+        }
+
+        if( shouldBreak == true )
+        {
+            break;
         }
 
         /* Increment indexes. */
