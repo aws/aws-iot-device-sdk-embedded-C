@@ -104,7 +104,7 @@
  */
 typedef struct _operationCompleteParams
 {
-    AwsIotShadowCallbackType_t expectedType; /**< @brief Expected callback type. */
+    uint32_t expectedType; /**< @brief Expected callback type. */
     IotSemaphore_t waitSem;                  /**< @brief Used to unblock waiting test thread. */
     AwsIotShadowOperation_t operation;       /**< @brief Reference to expected completed operation. */
 } _operationCompleteParams_t;
@@ -295,7 +295,7 @@ static void _updateGetDeleteAsync( IotMqttQos_t qos )
     AwsIotShadowError_t status = AWS_IOT_SHADOW_STATUS_PENDING;
     AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
     AwsIotShadowDocumentInfo_t documentInfo = AWS_IOT_SHADOW_DOCUMENT_INFO_INITIALIZER;
-    _operationCompleteParams_t callbackParam = { .expectedType = ( AwsIotShadowCallbackType_t ) 0 };
+    _operationCompleteParams_t callbackParam = { .expectedType = ( uint32_t ) 0 };
 
     /* Initialize the members of the operation callback info. */
     callbackInfo.pCallbackContext = &callbackParam;

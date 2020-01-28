@@ -273,7 +273,7 @@ AwsIotShadowError_t _AwsIotShadow_IncrementReferences( _shadowOperation_t * pOpe
                                                        AwsIotMqttCallbackFunction_t callback )
 {
     AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
-    const _shadowOperationType_t type = pOperation->type;
+    const uint32_t type = pOperation->type;
     _shadowSubscription_t * pSubscription = pOperation->pSubscription;
     IotMqttError_t subscriptionStatus = IOT_MQTT_STATUS_PENDING;
     AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
@@ -346,7 +346,7 @@ void _AwsIotShadow_DecrementReferences( _shadowOperation_t * pOperation,
                                         char * pTopicBuffer,
                                         _shadowSubscription_t ** pRemovedSubscription )
 {
-    const _shadowOperationType_t type = pOperation->type;
+    const uint32_t type = pOperation->type;
     _shadowSubscription_t * pSubscription = pOperation->pSubscription;
     uint16_t operationTopicLength = 0;
     AwsIotSubscriptionInfo_t subscriptionInfo = { 0 };
@@ -372,7 +372,7 @@ void _AwsIotShadow_DecrementReferences( _shadowOperation_t * pOperation,
 
             /* Generate the prefix of the Shadow topic. This function will not
              * fail when given a buffer. */
-            ( void ) _AwsIotShadow_GenerateShadowTopic( ( _shadowOperationType_t ) type,
+            ( void ) _AwsIotShadow_GenerateShadowTopic( type,
                                                         pSubscription->pThingName,
                                                         pSubscription->thingNameLength,
                                                         &( pSubscription->pTopicBuffer ),
@@ -459,7 +459,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
                 {
                     /* Generate the prefix of the Shadow topic. This function will not
                      * fail when given a buffer. */
-                    ( void ) _AwsIotShadow_GenerateShadowTopic( _AwsIotShadow_IntToShadowOperationType( ( int32_t ) i ),
+                    ( void ) _AwsIotShadow_GenerateShadowTopic( i,
                                                                 pThingName,
                                                                 thingNameLength,
                                                                 &( pSubscription->pTopicBuffer ),

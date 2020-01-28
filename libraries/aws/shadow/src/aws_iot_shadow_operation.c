@@ -50,7 +50,7 @@
  */
 typedef struct _operationMatchParams
 {
-    _shadowOperationType_t type; /**< @brief DELETE, GET, or UPDATE. */
+    uint32_t type; /**< @brief DELETE, GET, or UPDATE. */
     const char * pThingName;     /**< @brief Thing Name of Shadow operation. */
     size_t thingNameLength;      /**< @brief Length of #_operationMatchParams_t.pThingName. */
     const char * pDocument;      /**< @brief Shadow UPDATE response document. */
@@ -78,7 +78,7 @@ static bool _shadowOperation_match( const IotLink_t * pOperationLink,
  * @param[in] type DELETE, GET, or UPDATE.
  * @param[in] pMessage Received Shadow response (as an MQTT PUBLISH message).
  */
-static void _commonOperationCallback( _shadowOperationType_t type,
+static void _commonOperationCallback( uint32_t type,
                                       IotMqttCallbackParam_t * pMessage );
 
 /**
@@ -187,72 +187,6 @@ IotMutex_t _AwsIotShadowPendingOperationsMutex;
 
 /*-----------------------------------------------------------*/
 
-_shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n )
-{
-    AwsIotShadow_Assert( n < 5 && n >= 0 );
-    _shadowOperationType_t val = SHADOW_DELETE;
-
-    switch( n )
-    {
-        case 0:
-            val = SHADOW_DELETE;
-            break;
-
-        case 1:
-            val = SHADOW_GET;
-            break;
-
-        case 2:
-            val = SHADOW_UPDATE;
-            break;
-
-        case 3:
-            val = SET_DELTA_CALLBACK;
-            break;
-
-        case 4:
-            val = SET_UPDATED_CALLBACK;
-            break;
-    }
-
-    return val;
-}
-
-/*-----------------------------------------------------------*/
-
-AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( int32_t n )
-{
-    AwsIotShadow_Assert( n < 5 && n >= 0 );
-    AwsIotShadowCallbackType_t val = AWS_IOT_SHADOW_DELETE_COMPLETE;
-
-    switch( n )
-    {
-        case 0:
-            val = AWS_IOT_SHADOW_DELETE_COMPLETE;
-            break;
-
-        case 1:
-            val = AWS_IOT_SHADOW_GET_COMPLETE;
-            break;
-
-        case 2:
-            val = AWS_IOT_SHADOW_UPDATE_COMPLETE;
-            break;
-
-        case 3:
-            val = AWS_IOT_SHADOW_DELTA_CALLBACK;
-            break;
-
-        case 4:
-            val = AWS_IOT_SHADOW_UPDATED_CALLBACK;
-            break;
-    }
-
-    return val;
-}
-
-/*-----------------------------------------------------------*/
-
 static bool _shadowOperation_match( const IotLink_t * pOperationLink,
                                     void * pMatch )
 {
@@ -315,7 +249,7 @@ static bool _shadowOperation_match( const IotLink_t * pOperationLink,
 
 /*-----------------------------------------------------------*/
 
-static void _commonOperationCallback( _shadowOperationType_t type,
+static void _commonOperationCallback( uint32_t type,
                                       IotMqttCallbackParam_t * pMessage )
 {
     _shadowOperation_t * pOperation = NULL;
@@ -564,7 +498,7 @@ static void _notifyCompletion( _shadowOperation_t * pOperation )
         if( pOperation->notify.callback.function != NULL )
         {
             /* Set the common members of the callback parameter. */
-            callbackParam.callbackType = _AwsIotShadow_IntToShadowCallbackType( ( int32_t ) pOperation->type );
+            callbackParam.callbackType = pOperation->type;
             callbackParam.mqttConnection = pOperation->mqttConnection;
             callbackParam.u.operation.result = pOperation->status;
             callbackParam.u.operation.reference = pOperation;
@@ -676,7 +610,7 @@ static AwsIotShadowError_t _findSubscription( const char * pThingName,
 /*-----------------------------------------------------------*/
 
 AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOperation,
-                                                   _shadowOperationType_t type,
+                                                   uint32_t type,
                                                    uint32_t flags,
                                                    const AwsIotShadowCallbackInfo_t * pCallbackInfo )
 {
@@ -779,7 +713,7 @@ void _AwsIotShadow_DestroyOperation( void * pData )
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t type,
+AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( uint32_t type,
                                                        const char * pThingName,
                                                        size_t thingNameLength,
                                                        char ** pTopicBuffer,
