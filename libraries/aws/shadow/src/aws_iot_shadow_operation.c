@@ -184,7 +184,7 @@ IotMutex_t _AwsIotShadowPendingOperationsMutex;
 
 /*-----------------------------------------------------------*/
 
-_shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n )
+_shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( uint32_t n )
 {
     _shadowOperationType_t val = SHADOW_DELETE;
 
@@ -211,7 +211,7 @@ _shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n )
             break;
 
         default:
-            AwsIotShadow_Assert( n < 5 && n >= 0 );
+            AwsIotShadow_Assert( n < 5U );
             break;
     }
 
@@ -220,7 +220,7 @@ _shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n )
 
 /*-----------------------------------------------------------*/
 
-AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( int32_t n )
+AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( uint32_t n )
 {
     AwsIotShadowCallbackType_t val = AWS_IOT_SHADOW_DELETE_COMPLETE;
 
@@ -247,7 +247,7 @@ AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( int32_t n )
             break;
 
         default:
-            AwsIotShadow_Assert( n < 5 && n >= 0 );
+            AwsIotShadow_Assert( n < 5U );
             break;
     }
 
@@ -558,7 +558,7 @@ static void _notifyCompletion( _shadowOperation_t * pOperation )
         if( pOperation->notify.callback.function != NULL )
         {
             /* Set the common members of the callback parameter. */
-            callbackParam.callbackType = _AwsIotShadow_IntToShadowCallbackType( ( int32_t ) pOperation->type );
+            callbackParam.callbackType = _AwsIotShadow_IntToShadowCallbackType( ( uint32_t ) pOperation->type );
             callbackParam.mqttConnection = pOperation->mqttConnection;
             callbackParam.u.operation.result = pOperation->status;
             callbackParam.u.operation.reference = pOperation;

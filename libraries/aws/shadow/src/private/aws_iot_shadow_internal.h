@@ -193,7 +193,7 @@
  *
  * The 3 Shadow operations are DELETE, GET, and UPDATE.
  */
-#define SHADOW_OPERATION_COUNT                   ( 3 )
+#define SHADOW_OPERATION_COUNT                   ( 3U )
 
 /**
  * @brief The number of currently available Shadow callbacks.
@@ -265,8 +265,8 @@
  * IOT_MQTT_NO_MEMORY to AWS_IOT_SHADOW_NO_MEMORY
  * all other error codes to AWS_IOT_SHADOW_MQTT_ERROR
  */
-#define SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( X ) \
-    ( ( X ) == IOT_MQTT_SUCCESS ) ? AWS_IOT_SHADOW_SUCCESS : \
+#define SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( X )           \
+    ( ( X ) == IOT_MQTT_SUCCESS ) ? AWS_IOT_SHADOW_SUCCESS :     \
     ( ( X ) == IOT_MQTT_NO_MEMORY ) ? AWS_IOT_SHADOW_NO_MEMORY : \
     AWS_IOT_SHADOW_MQTT_ERROR
 
@@ -463,7 +463,7 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
  *
  * @return The enum value associated with the input.
  */
-_shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n );
+_shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( uint32_t n );
 
 /**
  * @brief Convert an integer to the shadow callback type.
@@ -472,7 +472,7 @@ _shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n );
  *
  * @return The enum value associated with the input.
  */
-AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( int32_t n );
+AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( uint32_t n );
 
 /*---------------------- Shadow subscription functions ----------------------*/
 
