@@ -257,7 +257,7 @@ AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( int32_t n )
 /*-----------------------------------------------------------*/
 
 static bool _shadowOperationMatch( const IotLink_t * pOperationLink,
-                                    void * pMatch )
+                                   void * pMatch )
 {
     /* Because this function is called from a container function, the given link
      * must never be NULL. */
