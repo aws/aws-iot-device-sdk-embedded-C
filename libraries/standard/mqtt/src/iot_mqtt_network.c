@@ -157,6 +157,19 @@ static void _flushPacket( IotNetworkConnection_t pNetworkConnection,
                           size_t length );
 
 /**
+ * @brief Begin the automatic reconnection process by creating and scheduling a
+ * reconnection operation.
+ *
+ * @param[in] pMqttConnection The MQTT connection to reconnect.
+ * @param[in] disconnectReason The reason for disconnection incase the reconnection
+ * process fails.
+ *
+ * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_NO_MEMORY, or #IOT_MQTT_SCHEDULING_ERROR.
+ */
+static IotMqttError_t _beginAutoReconnect( _mqttConnection_t * pMqttConnection,
+                                           IotMqttDisconnectReason_t disconnectReason );
+
+/**
  * @cond DOXYGEN_IGNORE
  * Doxygen should ignore this section.
  *
@@ -690,6 +703,35 @@ static void _flushPacket( IotNetworkConnection_t pNetworkConnection,
 
 /*-----------------------------------------------------------*/
 
+static IotMqttError_t _beginAutoReconnect( _mqttConnection_t * pMqttConnection,
+                                           IotMqttDisconnectReason_t disconnectReason )
+{
+    /* This is a dummy function that is to be filled in. */
+    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+
+    /* Set the current state of the connection. */
+    pMqttConnection->reconnecting = true;
+
+    /* Save the disconnectReason for if the scheduled reconnection operation fails. */
+    pMqttConnection->disconnectReason = disconnectReason;
+
+    /* Delete the reference that was increased before this function was invoked.
+     * That was done to protect the connection from being destroyed before this
+     * function grabbed the mutex. */
+    ( pMqttConnection->references )--;
+
+    /* TO DO: Delete all pendingProcessing operations. */
+    /* TO DO: Delete all pendingResponse operations. */
+    /* TO DO: Create reconnection operation. */
+    /* TO DO: Schedule reconnection operation for reconnectRetryMs later. */
+
+    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
+    return IOT_MQTT_SCHEDULING_ERROR;
+}
+
+/*-----------------------------------------------------------*/
+
 bool _IotMqtt_GetNextByte( IotNetworkConnection_t pNetworkConnection,
                            const IotNetworkInterface_t * pNetworkInterface,
                            uint8_t * pIncomingByte )
@@ -725,6 +767,7 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
 {
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
     IotNetworkError_t closeStatus = IOT_NETWORK_SUCCESS;
+    IotMqttError_t reconnectStatus = IOT_MQTT_STATUS_PENDING;
     IotMqttCallbackParam_t callbackParam = { .u.message = { 0 } };
     IotNetworkConnection_t pNetworkConnection = NULL;
     void * pDisconnectCallbackContext = NULL;
@@ -770,10 +813,22 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
             /* Keep-alive is cleaned up; decrement reference count. Since this
              * function must be followed with a call to DISCONNECT, a check to
              * destroy the connection is not done here. */
-            pMqttConnection->references--;
+            ( pMqttConnection->references )--;
 
             IotLogDebug( "(MQTT connection %p) Keep-alive job canceled and cleaned up.",
                          pMqttConnection );
+        }
+    }
+
+    /* If auto-reconnect is enabled, then increment the reference count for the
+    * entire reconnection process. The reference count helps keep the
+    * pMqttConnection from being destroyed after the mutex is release. This
+    * reference count will be restarted to 1 when the reconnections succeed. */
+    if( pMqttConnection->reconnectEnabled == true )
+    {
+        if( disconnectReason != IOT_MQTT_DISCONNECT_CALLED )
+        {
+            ( pMqttConnection->references )++;
         }
     }
 
@@ -787,7 +842,8 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
 
     IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-    /* Close the network connection. */
+    /* Close the network connection. The closeConnection callback could take a
+     * long time so it is invoked outside of the referencesMutex section. */
     if( closeConnection != NULL )
     {
         closeStatus = closeConnection( pNetworkConnection );
@@ -809,15 +865,27 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
                     " not closed.", pMqttConnection );
     }
 
-    /* Invoke the disconnect callback. */
-    if( disconnectCallback != NULL )
+    if( pMqttConnection->reconnectEnabled == true )
     {
-        /* Set the members of the callback parameter. */
-        callbackParam.mqttConnection = pMqttConnection;
-        callbackParam.u.disconnectReason = disconnectReason;
+        if( disconnectReason != IOT_MQTT_DISCONNECT_CALLED )
+        {
+            reconnectStatus = _beginAutoReconnect( pMqttConnection, disconnectReason );
+        }
+    }
 
-        disconnectCallback( pDisconnectCallbackContext,
-                            &callbackParam );
+    if( reconnectStatus != IOT_MQTT_SUCCESS )
+    {
+        if( disconnectCallback != NULL )
+        {
+            /* Set the members of the callback parameter. */
+            callbackParam.mqttConnection = pMqttConnection;
+            callbackParam.u.disconnectReason = disconnectReason;
+
+            /* Invoke the disconnect callback. This callback will be invoked if
+             * automatic reconnection fails. */
+            disconnectCallback( pDisconnectCallbackContext,
+                                &callbackParam );
+        }
     }
 }
 

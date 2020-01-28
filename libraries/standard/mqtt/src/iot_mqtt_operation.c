@@ -168,8 +168,8 @@ static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
     IotMqtt_Assert( pOperationLink != NULL );
 
     const _mqttOperation_t * pOperation = IotLink_Container( _mqttOperation_t,
-                                                       pOperationLink,
-                                                       link );
+                                                             pOperationLink,
+                                                             link );
     const _operationMatchParam_t * pParam = ( _operationMatchParam_t * ) pMatch;
 
     /* Check for matching operations. */
@@ -641,7 +641,6 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
     }
 
     /* Clean up operation and decrement reference count if this function failed. */
-
     if( status != IOT_MQTT_SUCCESS )
     {
         if( decrementOnError == true )
@@ -1019,7 +1018,6 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
         {
             /* Empty else MISRA 15.7 */
         }
-        
     }
 
     /* Check if this operation requires further processing. */

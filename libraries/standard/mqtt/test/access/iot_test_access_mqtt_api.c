@@ -46,7 +46,7 @@ _mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
                                                       const IotMqttNetworkInfo_t * pNetworkInfo,
                                                       uint16_t keepAliveSeconds )
 {
-    return _createMqttConnection( awsIotMqttMode, pNetworkInfo, keepAliveSeconds );
+    return _createMqttConnection( awsIotMqttMode, pNetworkInfo, keepAliveSeconds, false, 0 );
 }
 
 /*-----------------------------------------------------------*/

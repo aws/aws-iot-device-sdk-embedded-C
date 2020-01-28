@@ -677,9 +677,13 @@ typedef struct IotMqttConnectInfo
      * (https://docs.aws.amazon.com/iot/latest/developerguide/enhanced-custom-authentication.html).
      */
     const char * pUserName;
-    uint16_t userNameLength; /**< @brief Length of #IotMqttConnectInfo_t.pUserName. */
-    const char * pPassword;  /**< @brief Password for MQTT connection. */
-    uint16_t passwordLength; /**< @brief Length of #IotMqttConnectInfo_t.pPassword. */
+    uint16_t userNameLength;       /**< @brief Length of #IotMqttConnectInfo_t.pUserName. */
+    const char * pPassword;        /**< @brief Password for MQTT connection. */
+    uint16_t passwordLength;       /**< @brief Length of #IotMqttConnectInfo_t.pPassword. */
+
+    bool disableAutoReconnect;     /**< @brief Set this to true to disable automatic MQTT reconnection. */
+    uint32_t autoReconnectRetryMs; /**< @brief Initial period for the automatic MQTT reconnection attempts. */
+    uint32_t autoReconnectLimit;   /**< @brief Limit on the number of automatic reconnection attempts. */
 } IotMqttConnectInfo_t;
 
 /**
@@ -1126,7 +1130,7 @@ typedef struct IotMqttNetworkInfo
 /** @brief Initializer for #IotMqttSerializer_t. */
 #define IOT_MQTT_SERIALIZER_INITIALIZER       { 0 }
 /** @brief Initializer for #IotMqttConnectInfo_t. */
-#define IOT_MQTT_CONNECT_INFO_INITIALIZER     { .cleanSession = true }
+#define IOT_MQTT_CONNECT_INFO_INITIALIZER     { .cleanSession = true, .disableAutoReconnect = false }
 /** @brief Initializer for #IotMqttPublishInfo_t. */
 #define IOT_MQTT_PUBLISH_INFO_INITIALIZER     { .qos = IOT_MQTT_QOS_0 }
 /** @brief Initializer for #IotMqttSubscription_t. */

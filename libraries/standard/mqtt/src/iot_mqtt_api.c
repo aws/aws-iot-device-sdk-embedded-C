@@ -144,12 +144,18 @@ static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * 
  * @param[in] pNetworkInfo User-provided network information for the new
  * connection.
  * @param[in] keepAliveSeconds User-provided keep-alive interval for the new connection.
+ * @param[in] disableAutoReconnect Specifies if automatic reconnection should be disabled.
+ * @param[in] autoReconnectRetryMs User-provided automatic reconnection interval.
+ * @param[in] autoReconnectLimit User-provided automatic reconnection retry attempt limit.
  *
  * @return Pointer to a newly-created MQTT connection; `NULL` on failure.
  */
 static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
                                                   const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                  uint16_t keepAliveSeconds );
+                                                  uint16_t keepAliveSeconds,
+                                                  bool disableAutoReconnect,
+                                                  uint32_t autoReconnectRetryMs,
+                                                  uint32_t autoReconnectLimit );
 
 /**
  * @brief Destroys the members of an MQTT connection.
@@ -473,7 +479,10 @@ static IotNetworkError_t _createNetworkConnection( const IotMqttNetworkInfo_t * 
 
 static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
                                                   const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                  uint16_t keepAliveSeconds )
+                                                  uint16_t keepAliveSeconds,
+                                                  bool disableAutoReconnect,
+                                                  uint32_t autoReconnectRetryMs,
+                                                  uint32_t autoReconnectLimit )
 {
     bool status = true;
     _mqttConnection_t * pMqttConnection = NULL;
@@ -496,6 +505,12 @@ static _mqttConnection_t * _createMqttConnection( bool awsIotMqttMode,
         pMqttConnection->awsIotMqttMode = awsIotMqttMode;
         pMqttConnection->pNetworkInterface = pNetworkInfo->pNetworkInterface;
         pMqttConnection->disconnectCallback = pNetworkInfo->disconnectCallback;
+
+        /* Disable automatic reconnect if the application desires, set the
+        * initial retry period, and the limit on reconnection attempts. */
+        pMqttConnection->reconnectEnabled = !( disableAutoReconnect );
+        pMqttConnection->reconnectRetryMs = autoReconnectRetryMs;
+        pMqttConnection->reconnectLimit = autoReconnectLimit;
 
         /* Start a new MQTT connection with a reference count of 1. */
         pMqttConnection->references = 1;
@@ -1067,7 +1082,10 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         /* Initialize a new MQTT connection object. */
         pNewMqttConnection = _createMqttConnection( pConnectInfo->awsIotMqttMode,
                                                     pNetworkInfo,
-                                                    pConnectInfo->keepAliveSeconds );
+                                                    pConnectInfo->keepAliveSeconds,
+                                                    pConnectInfo->disableAutoReconnect,
+                                                    pConnectInfo->autoReconnectRetryMs,
+                                                    pConnectInfo->autoReconnectLimit );
 
         if( pNewMqttConnection == NULL )
         {

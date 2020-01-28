@@ -1,11 +1,13 @@
 ack
 api
 app
+autoreconnectretryms
 aws
 awsiotmqttmode
 bool
 clientid
 clientidentifierlength
+closeconnection
 com
 config
 connack
@@ -23,6 +25,7 @@ deserializer
 deserializeresponse
 deserializing
 developerguide
+disableautoreconnect
 disconnectcallback
 disconnectreason
 disconnectserializeroverride
@@ -153,8 +156,11 @@ publishsync
 pusername
 qos
 receivecallback
+reconnectenabled
+reconnectretryms
 referencesmutex
 remaininglength
+resubscribe
 retrylimit
 retryms
 sdk

@@ -348,7 +348,7 @@ typedef struct _mqttOperation
                     uint32_t count;        /**< @brief Current number of retries. */
                     uint32_t limit;        /**< @brief Maximum number of retries allowed. */
                     uint32_t nextPeriodMs; /**< @brief Next retry period. */
-                } retry;                   /**< @brief Additional information for PUBLISH retry. */
+                } retry;                   /**< @brief Additional information for operations that require a retry, like PUBLISH, auto-reconnection, resubscribe. */
 
                 struct
                 {
@@ -391,6 +391,12 @@ typedef struct _mqttConnection
     IotMutex_t subscriptionMutex;                    /**< @brief Grants exclusive access to the subscription list. */
 
     _mqttOperation_t pingreq;                        /**< @brief Operation used for MQTT keep-alive. */
+
+    bool reconnectEnabled;                           /**< @brief Reconnection is enabled by default unless set to disabled in @ref IotMqttConnectInfo_t.disableAutoReconnect */
+    uint32_t reconnectRetryMs;                       /**< @brief Initial period for the automatic reconnection attempts. */
+    uint32_t reconnectLimit;                         /**< @brief Limit on the number of automatic reconnection attempts. */
+    bool reconnecting;                               /**< @brief Indicates that this MQTT connection is currently under the auto-reconnection process. */
+    IotMqttDisconnectReason_t disconnectReason;      /**< @brief The reason for the disconnect to pass back to the application, if auto-connection fails. */
 } _mqttConnection_t;
 
 /**
@@ -421,10 +427,11 @@ typedef struct _mqttSubscription
     IotMqttCallbackInfo_t callback; /**< @brief Callback information for this subscription. */
 
     uint16_t topicFilterLength;     /**< @brief Length of #_mqttSubscription_t.pTopicFilter. */
+
     /* A flexible length array is used here so that the topic filter may
      * be of an arbitrary length. */
     /* coverity[misra_c_2012_rule_18_7_violation] */
-    char pTopicFilter[];            /**< @brief The subscription topic filter. */
+    char pTopicFilter[]; /**< @brief The subscription topic filter. */
 } _mqttSubscription_t;
 
 /**
