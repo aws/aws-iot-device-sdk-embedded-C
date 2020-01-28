@@ -186,7 +186,6 @@ IotMutex_t _AwsIotShadowPendingOperationsMutex;
 
 _shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n )
 {
-    AwsIotShadow_Assert( n < 5 && n >= 0 );
     _shadowOperationType_t val = SHADOW_DELETE;
 
     switch( n )
@@ -210,6 +209,10 @@ _shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n )
         case 4:
             val = SET_UPDATED_CALLBACK;
             break;
+
+        default:
+            AwsIotShadow_Assert( n < 5 && n >= 0 );
+            break;
     }
 
     return val;
@@ -219,7 +222,6 @@ _shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n )
 
 AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( int32_t n )
 {
-    AwsIotShadow_Assert( n < 5 && n >= 0 );
     AwsIotShadowCallbackType_t val = AWS_IOT_SHADOW_DELETE_COMPLETE;
 
     switch( n )
@@ -242,6 +244,10 @@ AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( int32_t n )
 
         case 4:
             val = AWS_IOT_SHADOW_UPDATED_CALLBACK;
+            break;
+
+        default:
+            AwsIotShadow_Assert( n < 5 && n >= 0 );
             break;
     }
 
