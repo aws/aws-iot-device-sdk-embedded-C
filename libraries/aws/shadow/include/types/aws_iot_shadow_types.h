@@ -332,6 +332,21 @@ typedef enum AwsIotShadowError
     AWS_IOT_SHADOW_SERVER_ERROR = 500,
 } AwsIotShadowError_t;
 
+/**
+ * @ingroup shadow_datatypes_enums
+ * @brief Types of Shadow library callbacks.
+ *
+ * One of these values will be placed in #AwsIotShadowCallbackParam_t.callbackType
+ * to identify the reason for invoking a callback function.
+ */
+typedef enum AwsIotShadowCallbackType
+{
+    AWS_IOT_SHADOW_DELETE_COMPLETE, /**< Callback invoked because a [Shadow delete](@ref shadow_function_deleteasync) completed. */
+    AWS_IOT_SHADOW_GET_COMPLETE,    /**< Callback invoked because a [Shadow get](@ref shadow_function_getasync) completed. */
+    AWS_IOT_SHADOW_UPDATE_COMPLETE, /**< Callback invoked because a [Shadow update](@ref shadow_function_updateasync) completed. */
+    AWS_IOT_SHADOW_DELTA_CALLBACK,  /**< Callback invoked for an incoming message on a [Shadow delta](@ref shadow_function_setdeltacallback) topic. */
+    AWS_IOT_SHADOW_UPDATED_CALLBACK /**< Callback invoked for an incoming message on a [Shadow updated](@ref shadow_function_setupdatedcallback) topic. */
+} AwsIotShadowCallbackType_t;
 
 /*------------------------- Shadow parameter structs ------------------------*/
 
@@ -366,7 +381,7 @@ typedef enum AwsIotShadowError
  */
 typedef struct AwsIotShadowCallbackParam
 {
-    uint32_t callbackType; /**< @brief Reason for invoking the Shadow callback function to provide context. */
+    AwsIotShadowCallbackType_t callbackType; /**< @brief Reason for invoking the Shadow callback function to provide context. */
 
     const char * pThingName;                 /**< @brief The Thing Name associated with this Shadow callback. */
     size_t thingNameLength;                  /**< @brief Length of #AwsIotShadowCallbackParam_t.pThingName. */
@@ -528,13 +543,6 @@ typedef struct AwsIotShadowDocumentInfo
  * @note The values of the flags may change at any time in future versions, but
  * their names will remain the same. Additionally, flags which may be used at
  * the same time will be bitwise-exclusive of each other.
- *
- * @section shadow_callback_type Shadow Callback Types
- *
- * Types of Shadow library callbacks.
- *
- * One of these values will be placed in #AwsIotShadowCallbackParam_t.callbackType
- * to identify the reason for invoking a callback function.
  */
 
 /* @[define_shadow_initializers] */
@@ -630,29 +638,4 @@ typedef struct AwsIotShadowDocumentInfo
  */
 #define AWS_IOT_SHADOW_FLAG_REMOVE_UPDATE_SUBSCRIPTIONS    ( 0x00000004UL )
 
-
-/**
- * @brief Callback invoked because a [Shadow delete](@ref shadow_function_deleteasync) completed.
- */
-#define AWS_IOT_SHADOW_DELETE_COMPLETE  0U
-
-/**
- * @brief Callback invoked because a [Shadow get](@ref shadow_function_getasync) completed.
- */
-#define AWS_IOT_SHADOW_GET_COMPLETE     1U
-
-/**
- * @brief Callback invoked because a [Shadow update](@ref shadow_function_updateasync) completed.
- */
-#define AWS_IOT_SHADOW_UPDATE_COMPLETE  2U
-
-/**
- * @brief Callback invoked for an incoming message on a [Shadow delta](@ref shadow_function_setdeltacallback) topic.
- */
-#define AWS_IOT_SHADOW_DELTA_CALLBACK   3U
-
-/**
- * @brief Callback invoked for an incoming message on a [Shadow updated](@ref shadow_function_setupdatedcallback) topic.
- */
-#define AWS_IOT_SHADOW_UPDATED_CALLBACK 4U
 #endif /* ifndef AWS_IOT_SHADOW_TYPES_H_ */

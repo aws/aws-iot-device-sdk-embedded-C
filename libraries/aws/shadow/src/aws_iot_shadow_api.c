@@ -72,7 +72,7 @@ static bool _checkInit( void );
  *
  * @return #AWS_IOT_SHADOW_SUCCESS or #AWS_IOT_SHADOW_BAD_PARAMETER.
  */
-static AwsIotShadowError_t _validateThingNameFlags( uint32_t type,
+static AwsIotShadowError_t _validateThingNameFlags( _shadowOperationType_t type,
                                                     const char * pThingName,
                                                     size_t thingNameLength,
                                                     uint32_t flags,
@@ -88,7 +88,7 @@ static AwsIotShadowError_t _validateThingNameFlags( uint32_t type,
  *
  * @return #AWS_IOT_SHADOW_SUCCESS or #AWS_IOT_SHADOW_BAD_PARAMETER.
  */
-static AwsIotShadowError_t _validateDocumentInfo( uint32_t type,
+static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
                                                   uint32_t flags,
                                                   const AwsIotShadowDocumentInfo_t * pDocumentInfo );
 
@@ -105,7 +105,7 @@ static AwsIotShadowError_t _validateDocumentInfo( uint32_t type,
  * #AWS_IOT_SHADOW_NO_MEMORY, or #AWS_IOT_SHADOW_MQTT_ERROR.
  */
 static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
-                                               uint32_t type,
+                                               _shadowCallbackType_t type,
                                                const char * pThingName,
                                                size_t thingNameLength,
                                                const AwsIotShadowCallbackInfo_t * pCallbackInfo );
@@ -124,7 +124,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
  * #AWS_IOT_SHADOW_MQTT_ERROR.
  */
 static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttConnection,
-                                                         uint32_t type,
+                                                         _shadowCallbackType_t type,
                                                          _shadowSubscription_t * pSubscription,
                                                          AwsIotMqttFunction_t mqttOperation );
 
@@ -135,7 +135,7 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
  * @param[in] pMessage The received Shadow callback document (as an MQTT PUBLISH
  * message).
  */
-static void _callbackWrapperCommon( uint32_t type,
+static void _callbackWrapperCommon( _shadowCallbackType_t type,
                                     IotMqttCallbackParam_t * pMessage );
 
 /**
@@ -200,7 +200,7 @@ static bool _checkInit( void )
 
 /*-----------------------------------------------------------*/
 
-static AwsIotShadowError_t _validateThingNameFlags( uint32_t type,
+static AwsIotShadowError_t _validateThingNameFlags( _shadowOperationType_t type,
                                                     const char * pThingName,
                                                     size_t thingNameLength,
                                                     uint32_t flags,
@@ -268,7 +268,7 @@ static AwsIotShadowError_t _validateThingNameFlags( uint32_t type,
 
 /*-----------------------------------------------------------*/
 
-static AwsIotShadowError_t _validateDocumentInfo( uint32_t type,
+static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
                                                   uint32_t flags,
                                                   const AwsIotShadowDocumentInfo_t * pDocumentInfo )
 {
@@ -333,7 +333,7 @@ static AwsIotShadowError_t _validateDocumentInfo( uint32_t type,
 /*-----------------------------------------------------------*/
 
 static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnection,
-                                               uint32_t type,
+                                               _shadowCallbackType_t type,
                                                const char * pThingName,
                                                size_t thingNameLength,
                                                const AwsIotShadowCallbackInfo_t * pCallbackInfo )
@@ -349,7 +349,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
     }
 
     /* Check parameters. */
-    status = _validateThingNameFlags( type + ( ( uint32_t ) SHADOW_OPERATION_COUNT ),
+    status = _validateThingNameFlags( _AwsIotShadow_IntToShadowOperationType( ( ( int32_t ) type ) + SHADOW_OPERATION_COUNT ),
                                       pThingName,
                                       thingNameLength,
                                       0,
@@ -470,7 +470,7 @@ static AwsIotShadowError_t _setCallbackCommon( IotMqttConnection_t mqttConnectio
 /*-----------------------------------------------------------*/
 
 static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqttConnection,
-                                                         uint32_t type,
+                                                         _shadowCallbackType_t type,
                                                          _shadowSubscription_t * pSubscription,
                                                          AwsIotMqttFunction_t mqttOperation )
 {
@@ -586,7 +586,7 @@ static AwsIotShadowError_t _modifyCallbackSubscriptions( IotMqttConnection_t mqt
 
 /*-----------------------------------------------------------*/
 
-static void _callbackWrapperCommon( uint32_t type,
+static void _callbackWrapperCommon( _shadowCallbackType_t type,
                                     IotMqttCallbackParam_t * pMessage )
 {
     AwsIotShadowCallbackInfo_t callbackInfo = AWS_IOT_SHADOW_CALLBACK_INFO_INITIALIZER;
@@ -628,7 +628,7 @@ static void _callbackWrapperCommon( uint32_t type,
     IotMutex_Unlock( &_AwsIotShadowSubscriptionsMutex );
 
     /* Set the callback type. Shadow callbacks are enumerated after the operations. */
-    callbackParam.callbackType = type + ( ( uint32_t ) SHADOW_OPERATION_COUNT );
+    callbackParam.callbackType = _AwsIotShadow_IntToShadowCallbackType( ( ( int32_t ) type ) + SHADOW_OPERATION_COUNT );
 
     /* Set the remaining members of the callback param. */
     callbackParam.mqttConnection = pMessage->mqttConnection;

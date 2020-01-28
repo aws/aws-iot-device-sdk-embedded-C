@@ -265,62 +265,36 @@
  * IOT_MQTT_NO_MEMORY to AWS_IOT_SHADOW_NO_MEMORY
  * all other error codes to AWS_IOT_SHADOW_MQTT_ERROR
  */
-#define SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( X )           \
-    ( ( X ) == IOT_MQTT_SUCCESS ) ? AWS_IOT_SHADOW_SUCCESS :     \
+#define SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( X ) \
+    ( ( X ) == IOT_MQTT_SUCCESS ) ? AWS_IOT_SHADOW_SUCCESS : \
     ( ( X ) == IOT_MQTT_NO_MEMORY ) ? AWS_IOT_SHADOW_NO_MEMORY : \
     AWS_IOT_SHADOW_MQTT_ERROR
 
 /*----------------------- Shadow internal data types ------------------------*/
 
 /**
- * @brief The value representing the Shadow Delete API function.
- *
- * @ref shadow_function_deleteasync
+ * @brief Enumerations representing each of the Shadow library's API functions.
  */
-#define SHADOW_DELETE           0U
+typedef enum _shadowOperationType
+{
+    /* Shadow operations. */
+    SHADOW_DELETE = 0, /**< @ref shadow_function_deleteasync */
+    SHADOW_GET = 1,    /**< @ref shadow_function_getasync */
+    SHADOW_UPDATE = 2, /**< @ref shadow_function_updateasync */
+
+    /* Shadow callbacks. */
+    SET_DELTA_CALLBACK = 3,  /**< @ref shadow_function_setdeltacallback */
+    SET_UPDATED_CALLBACK = 4 /**< @ref shadow_function_setupdatedcallback */
+} _shadowOperationType_t;
 
 /**
- * @brief The value representing the Shadow Get API function.
- *
- * @ref shadow_function_getasync
+ * @brief Enumerations representing each of the Shadow callback functions.
  */
-#define SHADOW_GET              1U
-
-/**
- * @brief The value representing the Shadow Update API function.
- *
- * @ref shadow_function_updateasync
- */
-#define SHADOW_UPDATE           2U
-
-/**
- * @brief The value representing the Shadow Delta Callback function.
- *
- * @ref shadow_function_setdeltacallback
- */
-#define SET_DELTA_CALLBACK      3U
-
-/**
- * @brief The value representing the Shadow Updated Callback function.
- *
- * @ref shadow_function_setupdatedcallback
- */
-#define SET_UPDATED_CALLBACK    4U
-
-
-/**
- * @brief The value representing the Delta Callback.
- *
- * @ref shadow_function_setupdatedcallback
- */
-#define DELTA_CALLBACK   0U
-
-/**
- * @brief The value representing the Updated Callback.
- *
- * @ref shadow_function_setupdatedcallback
- */
-#define UPDATED_CALLBACK 1U
+typedef enum _shadowCallbackType
+{
+    DELTA_CALLBACK = 0,  /**< Delta callback. */
+    UPDATED_CALLBACK = 1 /**< Updated callback. */
+} _shadowCallbackType_t;
 
 /**
  * @brief Represents a Shadow subscriptions object.
@@ -357,7 +331,7 @@ typedef struct _shadowOperation
     IotLink_t link; /**< @brief List link member. */
 
     /* Basic operation information. */
-    uint32_t type;           /**< @brief Operation type. */
+    _shadowOperationType_t type;           /**< @brief Operation type. */
     uint32_t flags;                        /**< @brief Flags passed to operation API function. */
     AwsIotShadowError_t status;            /**< @brief Status of operation. */
 
@@ -422,7 +396,7 @@ extern IotMutex_t _AwsIotShadowSubscriptionsMutex;
  * @return #AWS_IOT_SHADOW_SUCCESS or #AWS_IOT_SHADOW_NO_MEMORY
  */
 AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOperation,
-                                                   uint32_t type,
+                                                   _shadowOperationType_t type,
                                                    uint32_t flags,
                                                    const AwsIotShadowCallbackInfo_t * pCallbackInfo );
 
@@ -455,7 +429,7 @@ void _AwsIotShadow_DestroyOperation( void * pData );
  * @return #AWS_IOT_SHADOW_SUCCESS or #AWS_IOT_SHADOW_NO_MEMORY. This function
  * will not return #AWS_IOT_SHADOW_NO_MEMORY when a buffer is provided.
  */
-AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( uint32_t type,
+AwsIotShadowError_t _AwsIotShadow_GenerateShadowTopic( _shadowOperationType_t type,
                                                        const char * pThingName,
                                                        size_t thingNameLength,
                                                        char ** pTopicBuffer,
@@ -479,6 +453,26 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
                                                     size_t thingNameLength,
                                                     _shadowOperation_t * pOperation,
                                                     const AwsIotShadowDocumentInfo_t * pDocumentInfo );
+
+
+
+/**
+ * @brief Convert an integer to the shadow operation type.
+ *
+ * @param[in] n The integer to convert.
+ *
+ * @return The enum value associated with the input.
+ */
+_shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( int32_t n );
+
+/**
+ * @brief Convert an integer to the shadow callback type.
+ *
+ * @param[in] n The integer to convert.
+ *
+ * @return The enum value associated with the input.
+ */
+AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( int32_t n );
 
 /*---------------------- Shadow subscription functions ----------------------*/
 
