@@ -43,7 +43,7 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief First parameter to #_shadowOperation_match.
+ * @brief First parameter to #_shadowOperationMatch.
  */
 typedef struct _operationMatchParams
 {
