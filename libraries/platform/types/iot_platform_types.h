@@ -104,10 +104,10 @@ typedef _IotSystemSemaphore_t   IotSemaphore_t;
 /**
  * @brief Thread routine function.
  *
- * @param[in] void * The argument passed to the @ref
+ * @param[in] pArgument The argument passed to the @ref
  * platform_threads_function_createdetachedthread. For application use.
  */
-typedef void ( * IotThreadRoutine_t )( void * );
+typedef void ( * IotThreadRoutine_t )( void * pArgument );
 
 /*-------------------------- Clock and timer types --------------------------*/
 

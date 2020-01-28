@@ -364,7 +364,7 @@ static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionLi
  */
 static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                                            const uint8_t * pStatusStart,
-                                           _mqttPacket_t * pSuback );
+                                           const _mqttPacket_t * pSuback );
 
 /**
  * @brief Check the remaining length against some value for QoS 0 or QoS 1/2.
@@ -377,7 +377,7 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_BAD_RESPONSE.
  */
-static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
+static IotMqttError_t _checkRemainingLength( const _mqttPacket_t * pPublish,
                                              IotMqttQos_t qos,
                                              size_t qos0Minimum );
 
@@ -391,7 +391,7 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_BAD_RESPONSE.
  */
 
-static IotMqttError_t _processIncomingPublishFlags( const uint8_t publishFlags,
+static IotMqttError_t _processIncomingPublishFlags( uint8_t publishFlags,
                                                     IotMqttPublishInfo_t * pOutput );
 
 /*-----------------------------------------------------------*/
@@ -520,6 +520,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
 {
     bool encodedUserName = false;
     uint8_t * pBuffer = pDestination;
+    const char * pMetricsUserName = AWS_IOT_METRICS_USERNAME;
 
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
      * Otherwise, write the username and password only when not connecting to the
@@ -556,7 +557,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
 
                     /* Write the metrics portion of the username. */
                     ( void ) memcpy( pBuffer,
-                                     AWS_IOT_METRICS_USERNAME,
+                                     pMetricsUserName,
                                      AWS_IOT_METRICS_USERNAME_LENGTH );
                     pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
 
@@ -568,7 +569,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
                 /* The username is not being used for authentication, but
                  * metrics are enabled. */
                 pBuffer = _encodeString( pBuffer,
-                                         AWS_IOT_METRICS_USERNAME,
+                                         pMetricsUserName,
                                          AWS_IOT_METRICS_USERNAME_LENGTH );
 
                 encodedUserName = true;
@@ -1091,7 +1092,7 @@ static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionLi
 
 static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                                            const uint8_t * pStatusStart,
-                                           _mqttPacket_t * pSuback )
+                                           const _mqttPacket_t * pSuback )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     uint8_t subscriptionStatus = 0;
@@ -1163,7 +1164,7 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
 
 /*-----------------------------------------------------------*/
 
-static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
+static IotMqttError_t _checkRemainingLength( const _mqttPacket_t * pPublish,
                                              IotMqttQos_t qos,
                                              size_t qos0Minimum )
 {
@@ -1451,7 +1452,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
     /* If logging is enabled, declare the CONNACK response code strings. The
      * fourth byte of CONNACK indexes into this array for the corresponding response. */
     #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
-        static const char * pConnackResponses[ 6 ] =
+        static const char * const pConnackResponses[ 6 ] =
         {
             "Connection accepted.",                               /* 0 */
             "Connection refused: unacceptable protocol version.", /* 1 */
@@ -2318,7 +2319,7 @@ IotMqttError_t IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubscr
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo,
+IotMqttError_t IotMqtt_GetPublishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
                                              size_t * pRemainingLength,
                                              size_t * pPacketSize )
 {
@@ -2362,7 +2363,7 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_SerializePublish( IotMqttPublishInfo_t * pPublishInfo,
+IotMqttError_t IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishInfo,
                                          size_t remainingLength,
                                          uint16_t * pPacketIdentifier,
                                          uint8_t ** pPacketIdentifierHigh,

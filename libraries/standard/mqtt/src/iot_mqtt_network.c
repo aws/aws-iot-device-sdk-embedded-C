@@ -94,7 +94,7 @@ static IotMqttError_t _deserializeAck( _mqttConnection_t * pMqttConnection,
                                        _mqttPacket_t * pIncomingPacket,
                                        IotMqttDeserialize_t _deserializer,
                                        IotMqttOperationType_t opType,
-                                       uint16_t * pPacketIdentifier );
+                                       const uint16_t * pPacketIdentifier );
 
 /**
  * @brief Deserialize a PUBLISH packet.
@@ -356,7 +356,7 @@ static IotMqttError_t _deserializeAck( _mqttConnection_t * pMqttConnection,
                                        _mqttPacket_t * pIncomingPacket,
                                        IotMqttDeserialize_t _deserializer,
                                        IotMqttOperationType_t opType,
-                                       uint16_t * pPacketIdentifier )
+                                       const uint16_t * pPacketIdentifier )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t * pOperation = NULL;
@@ -730,11 +730,11 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
     void * pDisconnectCallbackContext = NULL;
 
     /* Disconnect callback function. */
-    void ( * disconnectCallback )( void *,
-                                   IotMqttCallbackParam_t * ) = NULL;
+    void ( * disconnectCallback )( void * pContext,
+                                   IotMqttCallbackParam_t * pParam ) = NULL;
 
     /* Network close function. */
-    IotNetworkError_t ( * closeConnection) ( IotNetworkConnection_t ) = NULL;
+    IotNetworkError_t ( * closeConnection) ( IotNetworkConnection_t pConnection ) = NULL;
 
     /* Mark the MQTT connection as disconnected and the keep-alive as failed. */
     IotMutex_Lock( &( pMqttConnection->referencesMutex ) );

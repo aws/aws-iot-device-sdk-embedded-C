@@ -633,7 +633,7 @@ bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
                                const IotMqttPublishInfo_t * pPublishInfo,
                                uint32_t flags,
                                const IotMqttCallbackInfo_t * pCallbackInfo,
-                               IotMqttOperation_t * const pPublishOperation )
+                               const IotMqttOperation_t * const pPublishOperation )
 {
     bool status = true;
     size_t maximumPayloadLength = MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH;
