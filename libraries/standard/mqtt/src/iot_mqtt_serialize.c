@@ -46,8 +46,8 @@
 /*
  * Macros for reading the high and low byte of a 2-byte unsigned int.
  */
-#define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( x >> 8 ) )            /**< @brief Get high byte. */
-#define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( x & 0x00ffU ) )       /**< @brief Get low byte. */
+#define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( ( x ) >> 8 ) )          /**< @brief Get high byte. */
+#define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( ( x ) & 0x00ffU ) )     /**< @brief Get low byte. */
 
 /**
  * @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
@@ -56,7 +56,7 @@
  */
 #define UINT16_DECODE( ptr )                                \
     ( uint16_t ) ( ( ( ( uint16_t ) ( *( ptr ) ) ) << 8 ) | \
-                   ( ( uint16_t ) ( *( ptr + 1 ) ) ) )
+                   ( ( uint16_t ) ( *( ( ptr ) + 1 ) ) ) )
 
 /**
  * @brief Macro for setting a bit in a 1-byte unsigned int.
@@ -64,7 +64,7 @@
  * @param[in] x The unsigned int to set.
  * @param[in] position Which bit to set.
  */
-#define UINT8_SET_BIT( x, position )      ( x = ( uint8_t ) ( x | ( 0x01U << position ) ) )
+#define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
 /**
  * @brief Macro for checking if a bit is set in a 1-byte unsigned int.
@@ -72,7 +72,7 @@
  * @param[in] x The unsigned int to check.
  * @param[in] position Which bit to check.
  */
-#define UINT8_CHECK_BIT( x, position )    ( ( x & ( 0x01U << position ) ) == ( 0x01U << position ) )
+#define UINT8_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
 
 /*
  * Positions of each flag in the "Connect Flag" field of an MQTT CONNECT
@@ -1201,6 +1201,8 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 static IotMqttError_t _processIncomingPublishFlags( uint8_t publishFlags,
                                                     IotMqttPublishInfo_t * pOutput )
