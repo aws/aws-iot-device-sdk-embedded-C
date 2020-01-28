@@ -167,10 +167,10 @@ static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
      * must never be NULL. */
     IotMqtt_Assert( pOperationLink != NULL );
 
-    _mqttOperation_t * pOperation = IotLink_Container( _mqttOperation_t,
+    const _mqttOperation_t * pOperation = IotLink_Container( _mqttOperation_t,
                                                        pOperationLink,
                                                        link );
-    _operationMatchParam_t * pParam = ( _operationMatchParam_t * ) pMatch;
+    const _operationMatchParam_t * pParam = ( _operationMatchParam_t * ) pMatch;
 
     /* Check for matching operations. */
     if( pParam->type == pOperation->u.operation.type )
