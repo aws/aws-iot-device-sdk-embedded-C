@@ -633,12 +633,9 @@ AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOpe
                 IotLogError( "Failed to create semaphore for waitable Shadow %s.",
                              _pAwsIotShadowOperationNames[ type ] );
 
-                status = AWS_IOT_SHADOW_NO_MEMORY;
-            }
-            else
-            {
                 *pNewOperation = NULL;
                 AwsIotShadow_FreeOperation( pOperation );
+                status = AWS_IOT_SHADOW_NO_MEMORY;
             }
         }
         else
