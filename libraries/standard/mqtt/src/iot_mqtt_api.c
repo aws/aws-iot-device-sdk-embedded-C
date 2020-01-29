@@ -988,6 +988,7 @@ IotMqttError_t IotMqtt_Init( void )
          * condition is not an invariant, and the MISRA 14.3 violation is
          * a false positive. */
         /* coverity[misra_c_2012_rule_14_3_violation] */
+        /* coverity[const] */
         if( status == IOT_MQTT_SUCCESS )
         {
             IotLogInfo( "MQTT library successfully initialized." );
