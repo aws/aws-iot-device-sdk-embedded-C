@@ -511,14 +511,14 @@ typedef struct IotMqttCallbackInfo
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void * #IotMqttCallbackInfo_t.pCallbackContext
-     * @param[in] IotMqttCallbackParam_t * Details on the outcome of the MQTT operation
+     * @param[in] pCallbackContext #IotMqttCallbackInfo_t.pCallbackContext.
+     * @param[in] pCallbackParam Details on the outcome of the MQTT operation
      * or an incoming MQTT PUBLISH.
      *
      * @see #IotMqttCallbackParam_t for more information on the second parameter.
      */
-    void ( * function )( void *,
-                         IotMqttCallbackParam_t * );
+    void ( * function )( void * pCallbackContext,
+                         IotMqttCallbackParam_t * pCallbackParam );
 } IotMqttCallbackInfo_t;
 
 /**

@@ -46,8 +46,8 @@
 /*
  * Macros for reading the high and low byte of a 2-byte unsigned int.
  */
-#define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( x >> 8 ) )            /**< @brief Get high byte. */
-#define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( x & 0x00ffU ) )       /**< @brief Get low byte. */
+#define UINT16_HIGH_BYTE( x )    ( ( uint8_t ) ( ( x ) >> 8 ) )          /**< @brief Get high byte. */
+#define UINT16_LOW_BYTE( x )     ( ( uint8_t ) ( ( x ) & 0x00ffU ) )     /**< @brief Get low byte. */
 
 /**
  * @brief Macro for decoding a 2-byte unsigned int from a sequence of bytes.
@@ -56,7 +56,7 @@
  */
 #define UINT16_DECODE( ptr )                                \
     ( uint16_t ) ( ( ( ( uint16_t ) ( *( ptr ) ) ) << 8 ) | \
-                   ( ( uint16_t ) ( *( ptr + 1 ) ) ) )
+                   ( ( uint16_t ) ( *( ( ptr ) + 1 ) ) ) )
 
 /**
  * @brief Macro for setting a bit in a 1-byte unsigned int.
@@ -64,7 +64,7 @@
  * @param[in] x The unsigned int to set.
  * @param[in] position Which bit to set.
  */
-#define UINT8_SET_BIT( x, position )      ( x = ( uint8_t ) ( x | ( 0x01U << position ) ) )
+#define UINT8_SET_BIT( x, position )      ( ( x ) = ( uint8_t ) ( ( x ) | ( 0x01U << ( position ) ) ) )
 
 /**
  * @brief Macro for checking if a bit is set in a 1-byte unsigned int.
@@ -72,7 +72,7 @@
  * @param[in] x The unsigned int to check.
  * @param[in] position Which bit to check.
  */
-#define UINT8_CHECK_BIT( x, position )    ( ( x & ( 0x01U << position ) ) == ( 0x01U << position ) )
+#define UINT8_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
 
 /*
  * Positions of each flag in the "Connect Flag" field of an MQTT CONNECT
@@ -364,7 +364,7 @@ static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionLi
  */
 static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                                            const uint8_t * pStatusStart,
-                                           _mqttPacket_t * pSuback );
+                                           const _mqttPacket_t * pSuback );
 
 /**
  * @brief Check the remaining length against some value for QoS 0 or QoS 1/2.
@@ -377,7 +377,7 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_BAD_RESPONSE.
  */
-static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
+static IotMqttError_t _checkRemainingLength( const _mqttPacket_t * pPublish,
                                              IotMqttQos_t qos,
                                              size_t qos0Minimum );
 
@@ -391,7 +391,7 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_BAD_RESPONSE.
  */
 
-static IotMqttError_t _processIncomingPublishFlags( const uint8_t publishFlags,
+static IotMqttError_t _processIncomingPublishFlags( uint8_t publishFlags,
                                                     IotMqttPublishInfo_t * pOutput );
 
 /*-----------------------------------------------------------*/
@@ -520,6 +520,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
 {
     bool encodedUserName = false;
     uint8_t * pBuffer = pDestination;
+    const char * pMetricsUserName = AWS_IOT_METRICS_USERNAME;
 
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
      * Otherwise, write the username and password only when not connecting to the
@@ -556,7 +557,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
 
                     /* Write the metrics portion of the username. */
                     ( void ) memcpy( pBuffer,
-                                     AWS_IOT_METRICS_USERNAME,
+                                     pMetricsUserName,
                                      AWS_IOT_METRICS_USERNAME_LENGTH );
                     pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
 
@@ -568,7 +569,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
                 /* The username is not being used for authentication, but
                  * metrics are enabled. */
                 pBuffer = _encodeString( pBuffer,
-                                         AWS_IOT_METRICS_USERNAME,
+                                         pMetricsUserName,
                                          AWS_IOT_METRICS_USERNAME_LENGTH );
 
                 encodedUserName = true;
@@ -1091,7 +1092,7 @@ static void _serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionLi
 
 static IotMqttError_t _decodeSubackStatus( size_t statusCount,
                                            const uint8_t * pStatusStart,
-                                           _mqttPacket_t * pSuback )
+                                           const _mqttPacket_t * pSuback )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     uint8_t subscriptionStatus = 0;
@@ -1163,7 +1164,7 @@ static IotMqttError_t _decodeSubackStatus( size_t statusCount,
 
 /*-----------------------------------------------------------*/
 
-static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
+static IotMqttError_t _checkRemainingLength( const _mqttPacket_t * pPublish,
                                              IotMqttQos_t qos,
                                              size_t qos0Minimum )
 {
@@ -1201,6 +1202,8 @@ static IotMqttError_t _checkRemainingLength( _mqttPacket_t * pPublish,
 
     return status;
 }
+
+/*-----------------------------------------------------------*/
 
 static IotMqttError_t _processIncomingPublishFlags( uint8_t publishFlags,
                                                     IotMqttPublishInfo_t * pOutput )
@@ -1299,7 +1302,6 @@ size_t _IotMqtt_GetRemainingLength( IotNetworkConnection_t pNetworkConnection,
         if( multiplier > 2097152U ) /* 128 ^ 3 */
         {
             remainingLength = MQTT_REMAINING_LENGTH_INVALID;
-            break;
         }
         else
         {
@@ -1314,8 +1316,12 @@ size_t _IotMqtt_GetRemainingLength( IotNetworkConnection_t pNetworkConnection,
             else
             {
                 remainingLength = MQTT_REMAINING_LENGTH_INVALID;
-                break;
             }
+        }
+
+        if( remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+        {
+            break;
         }
     } while( ( encodedByte & 0x80U ) != 0U );
 
@@ -1352,7 +1358,6 @@ size_t _IotMqtt_GetRemainingLength_Generic( IotNetworkConnection_t pNetworkConne
         if( multiplier > 2097152U ) /* 128 ^ 3 */
         {
             remainingLength = MQTT_REMAINING_LENGTH_INVALID;
-            break;
         }
         else
         {
@@ -1365,8 +1370,12 @@ size_t _IotMqtt_GetRemainingLength_Generic( IotNetworkConnection_t pNetworkConne
             else
             {
                 remainingLength = MQTT_REMAINING_LENGTH_INVALID;
-                break;
             }
+        }
+
+        if( remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+        {
+            break;
         }
     } while( ( encodedByte & 0x80U ) != 0U );
 
@@ -1449,7 +1458,7 @@ IotMqttError_t _IotMqtt_DeserializeConnack( _mqttPacket_t * pConnack )
     /* If logging is enabled, declare the CONNACK response code strings. The
      * fourth byte of CONNACK indexes into this array for the corresponding response. */
     #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
-        static const char * pConnackResponses[ 6 ] =
+        static const char * const pConnackResponses[ 6 ] =
         {
             "Connection accepted.",                               /* 0 */
             "Connection refused: unacceptable protocol version.", /* 1 */
@@ -2316,7 +2325,7 @@ IotMqttError_t IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubscr
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo,
+IotMqttError_t IotMqtt_GetPublishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
                                              size_t * pRemainingLength,
                                              size_t * pPacketSize )
 {
@@ -2360,7 +2369,7 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( IotMqttPublishInfo_t * pPublishInfo
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_SerializePublish( IotMqttPublishInfo_t * pPublishInfo,
+IotMqttError_t IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishInfo,
                                          size_t remainingLength,
                                          uint16_t * pPacketIdentifier,
                                          uint8_t ** pPacketIdentifierHigh,

@@ -169,7 +169,7 @@ static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation
                                                 const IotMqttSubscription_t * pSubscriptionList,
                                                 size_t subscriptionCount,
                                                 uint32_t flags,
-                                                IotMqttOperation_t * const pOperationReference );
+                                                const IotMqttOperation_t * const pOperationReference );
 
 /**
  * @brief Utility function for creating and serializing subscription requests.
@@ -360,6 +360,10 @@ static bool _mqttSubscription_setUnsubscribe( const IotLink_t * const pSubscript
      * must never be NULL. */
     IotMqtt_Assert( pSubscriptionLink != NULL );
 
+    /* Adding parentheses to parameters of IotLink_Container is not applicable
+     * because it uses type-casting and offsetof, and would cause compiling errors. */
+    /* coverity[misra_c_2012_rule_20_7_violation] */
+    /* coverity[caretline] */
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                              pSubscriptionLink,
                                                              link );
@@ -694,7 +698,7 @@ static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation
                                                 const IotMqttSubscription_t * pSubscriptionList,
                                                 size_t subscriptionCount,
                                                 uint32_t flags,
-                                                IotMqttOperation_t * const pOperationReference )
+                                                const IotMqttOperation_t * const pOperationReference )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
@@ -1179,6 +1183,7 @@ IotMqttError_t IotMqtt_Init( void )
          * condition is not an invariant, and the MISRA 14.3 violation is
          * a false positive. */
         /* coverity[misra_c_2012_rule_14_3_violation] */
+        /* coverity[const] */
         if( status == IOT_MQTT_SUCCESS )
         {
             IotLogInfo( "MQTT library successfully initialized." );
