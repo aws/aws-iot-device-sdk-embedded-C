@@ -517,7 +517,7 @@ static bool _validateClientId( const IotMqttConnectInfo_t * pConnectInfo )
     }
 
     /* Check for a zero-length client identifier. Zero-length client identifiers
-     * are not allowed with clean sessions. */
+     * are not allowed with persistent sessions. */
     if( status == true )
     {
         if( pConnectInfo->clientIdentifierLength == 0U )

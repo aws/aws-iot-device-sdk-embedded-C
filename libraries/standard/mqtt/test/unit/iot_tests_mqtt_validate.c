@@ -129,6 +129,13 @@ TEST( MQTT_Unit_Validate, ValidateConnectInfo )
     validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
     TEST_ASSERT_EQUAL_INT( false, validateStatus );
 
+    /* Zero-length client identifier with clean session. */
+    connectInfo.cleanSession = true;
+    connectInfo.pClientIdentifier = "";
+    connectInfo.clientIdentifierLength = 0;
+    validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
+    TEST_ASSERT_EQUAL_INT( true, validateStatus );
+
     /* Client identifier longer than the MQTT 3.1.1 recommended maximum length. */
     connectInfo.pClientIdentifier = "longlongclientidentifier";
     connectInfo.clientIdentifierLength = ( uint16_t ) strlen( connectInfo.pClientIdentifier );
