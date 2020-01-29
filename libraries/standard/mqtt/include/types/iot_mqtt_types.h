@@ -445,6 +445,7 @@ typedef struct IotMqttCallbackParam
      */
     IotMqttConnection_t mqttConnection;
 
+    /* coverity[misra_c_2012_rule_19_2_violation] */
     union
     {
         /* Valid for completed operations. */
@@ -1014,6 +1015,7 @@ typedef struct IotMqttNetworkInfo
      */
     bool createNetworkConnection;
 
+    /* coverity[misra_c_2012_rule_19_2_violation] */
     union
     {
         struct

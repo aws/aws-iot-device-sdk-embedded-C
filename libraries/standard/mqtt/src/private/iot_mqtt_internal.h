@@ -317,6 +317,7 @@ typedef struct _mqttOperation
     IotTaskPoolJobStorage_t jobStorage;       /**< @brief Task pool job storage associated with this operation. */
     IotTaskPoolJob_t job;                     /**< @brief Task pool job associated with this operation. */
 
+    /* coverity[misra_c_2012_rule_19_2_violation] */
     union
     {
         /* If incomingPublish is false, this struct is valid. */
@@ -334,6 +335,7 @@ typedef struct _mqttOperation
             size_t packetSize;               /**< @brief Size of `pMqttPacket`. */
 
             /* How to notify of an operation's completion. */
+            /* coverity[misra_c_2012_rule_19_2_violation] */
             union
             {
                 IotSemaphore_t waitSemaphore;   /**< @brief Semaphore to be used with @ref mqtt_function_wait. */
@@ -341,6 +343,7 @@ typedef struct _mqttOperation
             } notify;                           /**< @brief How to notify of this operation's completion. */
             IotMqttError_t status;              /**< @brief Result of this operation. This is reported once a response is received. */
 
+            /* coverity[misra_c_2012_rule_19_2_violation] */
             union
             {
                 struct
@@ -421,10 +424,11 @@ typedef struct _mqttSubscription
     IotMqttCallbackInfo_t callback; /**< @brief Callback information for this subscription. */
 
     uint16_t topicFilterLength;     /**< @brief Length of #_mqttSubscription_t.pTopicFilter. */
+
     /* A flexible length array is used here so that the topic filter may
      * be of an arbitrary length. */
     /* coverity[misra_c_2012_rule_18_7_violation] */
-    char pTopicFilter[];            /**< @brief The subscription topic filter. */
+    char pTopicFilter[]; /**< @brief The subscription topic filter. */
 } _mqttSubscription_t;
 
 /**
@@ -435,6 +439,7 @@ typedef struct _mqttSubscription
  */
 typedef struct _mqttPacket
 {
+    /* coverity[misra_c_2012_rule_19_2_violation] */
     union
     {
         /**
