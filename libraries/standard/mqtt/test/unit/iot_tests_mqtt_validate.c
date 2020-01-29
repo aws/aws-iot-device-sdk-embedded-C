@@ -124,8 +124,8 @@ TEST( MQTT_Unit_Validate, ValidateConnectInfo )
     validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
     TEST_ASSERT_EQUAL_INT( false, validateStatus );
 
-    /* Zero-length client identifier with clean session. */
-    connectInfo.cleanSession = true;
+    /* Zero-length client identifier with persistent session. */
+    connectInfo.cleanSession = false;
     connectInfo.pClientIdentifier = "";
     connectInfo.clientIdentifierLength = 0;
     validateStatus = _IotMqtt_ValidateConnect( &connectInfo );

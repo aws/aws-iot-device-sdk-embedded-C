@@ -524,9 +524,9 @@ static bool _validateClientId( const IotMqttConnectInfo_t * pConnectInfo )
         {
             IotLogWarn( "A zero-length client identifier was provided." );
 
-            if( pConnectInfo->cleanSession == true )
+            if( pConnectInfo->cleanSession == false )
             {
-                IotLogError( "A zero-length client identifier cannot be used with a clean session." );
+                IotLogError( "A zero-length client identifier cannot be used with a persistent session." );
 
                 status = false;
             }
