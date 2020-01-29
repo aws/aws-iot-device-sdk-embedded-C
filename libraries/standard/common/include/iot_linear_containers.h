@@ -106,9 +106,12 @@ typedef IotLink_t   IotDeQueue_t;
             #error "Asserts are enabled for containers, but IotContainers_Assert is not defined"
         #endif
     #endif
-#else  /* if IOT_CONTAINERS_ENABLE_ASSERTS == 1 */
+#else /* if IOT_CONTAINERS_ENABLE_ASSERTS == 1 */
     #define IotContainers_Assert( expression )
 #endif /* if IOT_CONTAINERS_ENABLE_ASSERTS == 1 */
+
+/* Adding parentheses to macro parameters are not applicable to type casting and 'offsetof'. */
+/* coverity[misra_c_2012_rule_20_7_violation] */
 
 /**
  * @brief Calculates the starting address of a containing struct.
