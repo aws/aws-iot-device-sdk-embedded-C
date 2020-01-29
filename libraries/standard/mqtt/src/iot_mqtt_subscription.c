@@ -289,6 +289,10 @@ static bool _topicMatch( const IotLink_t * const pSubscriptionLink,
      * will never pass NULL. */
     IotMqtt_Assert( pSubscriptionLink != NULL );
 
+    /* Adding parentheses to parameters of IotLink_Container is not applicable
+     * because it uses type-casting and offsetof, and would cause compiling errors. */
+    /* coverity[misra_c_2012_rule_20_7_violation] */
+    /* coverity[caretline] */
     const _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                                    pSubscriptionLink,
                                                                    link );
@@ -327,6 +331,10 @@ static bool _packetMatch( const IotLink_t * const pSubscriptionLink,
      * must never be NULL. */
     IotMqtt_Assert( pSubscriptionLink != NULL );
 
+    /* Adding parentheses to parameters of IotLink_Container is not applicable
+     * because it uses type-casting and offsetof, and would cause compiling errors. */
+    /* coverity[misra_c_2012_rule_20_7_violation] */
+    /* coverity[caretline] */
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                              pSubscriptionLink,
                                                              link );
@@ -394,6 +402,10 @@ IotMqttError_t _IotMqtt_AddSubscriptions( _mqttConnection_t * pMqttConnection,
 
         if( pSubscriptionLink != NULL )
         {
+            /* Adding parentheses to parameters of IotLink_Container is not applicable
+             * because it uses type-casting and offsetof, and would cause compiling errors. */
+            /* coverity[misra_c_2012_rule_20_7_violation] */
+            /* coverity[caretline] */
             pNewSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
 
             /* The lengths of exactly matching topic filters must match. */
@@ -486,6 +498,11 @@ void _IotMqtt_InvokeSubscriptionCallback( _mqttConnection_t * pMqttConnection,
         }
 
         /* Subscription found. Calculate pointer to subscription object. */
+
+        /* Adding parentheses to parameters of IotLink_Container is not applicable
+         * because it uses type-casting and offsetof, and would cause compiling errors. */
+        /* coverity[misra_c_2012_rule_20_7_violation] */
+        /* coverity[caretline] */
         pSubscription = IotLink_Container( _mqttSubscription_t, pCurrentLink, link );
 
         /* Subscription validation should not have allowed a NULL callback function. */
@@ -593,6 +610,10 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnecti
 
         if( pSubscriptionLink != NULL )
         {
+            /* Adding parentheses to parameters of IotLink_Container is not applicable
+             * because it uses type-casting and offsetof, and would cause compiling errors. */
+            /* coverity[misra_c_2012_rule_20_7_violation] */
+            /* coverity[caretline] */
             pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
 
             /* Reference count must not be negative. */
@@ -650,6 +671,10 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
     /* Check if a matching subscription was found. */
     if( pSubscriptionLink != NULL )
     {
+        /* Adding parentheses to parameters of IotLink_Container is not applicable
+         * because it uses type-casting and offsetof, and would cause compiling errors. */
+        /* coverity[misra_c_2012_rule_20_7_violation] */
+        /* coverity[caretline] */
         pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
 
         /* Copy the matching subscription to the output parameter. */

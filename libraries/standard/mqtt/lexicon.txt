@@ -4,6 +4,7 @@ app
 aws
 awsiotmqttmode
 bool
+caretline
 clientid
 clientidentifierlength
 com
@@ -96,6 +97,7 @@ mqttsubscription
 mutex
 mutexes
 nextperiodms
+offsetof
 onlinepubs
 opengroup
 operationcomplete
