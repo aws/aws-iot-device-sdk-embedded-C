@@ -4,6 +4,7 @@ app
 aws
 awsiotmqttmode
 bool
+caretline
 clientid
 clientidentifierlength
 com
