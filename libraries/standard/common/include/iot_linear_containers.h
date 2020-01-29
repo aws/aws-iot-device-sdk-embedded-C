@@ -112,7 +112,6 @@ typedef IotLink_t   IotDeQueue_t;
 
 /* Adding parentheses to macro parameters are not applicable to type casting and 'offsetof'. */
 /* coverity[misra_c_2012_rule_20_7_violation] */
-
 /**
  * @brief Calculates the starting address of a containing struct.
  *
