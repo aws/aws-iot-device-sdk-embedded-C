@@ -251,6 +251,8 @@ Once MQTT CONNECT returns to the application, the keep-alive is processed entire
 
 The MQTT demo demonstrates the subscribe-publish workflow of MQTT. After subscribing to multiple topic filters, it publishes [bursts](@ref IOT_DEMO_MQTT_PUBLISH_BURST_SIZE) of data to various topic names. The demo then waits for all messages in a burst to be received on a topic filter. As each message arrives, the demo publishes an acknowledgement message back to the MQTT server. It repeats this cycle @ref IOT_DEMO_MQTT_PUBLISH_BURST_COUNT times.
 
+Messages in this demo are sent at QoS 1, which the MQTT spec guarantees at least once delivery. However, for practical purposes, QoS 1 messages are subject to the retry policy described [here](@ref IotMqttPublishInfo_t). A QoS 1 message may fail to be delivered if all its retries are exhausted.
+
 @image html mqtt_demo.png "MQTT Demo Workflow" width=80%
 
 See @subpage mqtt_demo_config for configuration settings that change the behavior of the demo.
@@ -364,7 +366,7 @@ Metrics allow AWS IoT to prioritize engineering resources based on SDK usage. SD
 @configpossible `0` (metrics reporting disabled) or `1` (metrics reporting enabled)<br>
 @configrecommended `1`<br>
 @configdefault `1`
-@note This setting is only in effect for [MQTT connections with AWS IoT](@ref IotMqttConnectInfo_t.awsIotMqttMode). Metrics are reported through [the MQTT username.](@ref IotMqttConnectInfo_t.pUserName) The MQTT library may overwrite any provided user name if metrics are enabled.
+@note This setting is only in effect for [MQTT connections with AWS IoT](@ref IotMqttConnectInfo_t.awsIotMqttMode).
 
 @section IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES
 @brief Set this to `1` to allow the MQTT packet serializer and deserializer functions to be overridden.
