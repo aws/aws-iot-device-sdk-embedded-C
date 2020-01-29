@@ -117,10 +117,9 @@ typedef IotLink_t   IotDeQueue_t;
  * @param[in] pLink Pointer to a link member.
  * @param[in] linkName Name of the #IotLink_t in the containing struct.
  */
-/* Adding parentheses to macro parameters are not applicable to type casting and 'offsetof'. */
+/* Adding parentheses to macro parameters are not applicable to type casting. */
 /* coverity[misra_c_2012_rule_20_7_violation] */
-#define IotLink_Container( type, pLink, linkName ) \
-    ( ( type * ) ( void * ) ( ( ( uint8_t * ) ( pLink ) ) - offsetof( type, linkName ) ) )
+#define IotLink_Container( type, pLink, linkName )    ( ( type * ) ( void * ) ( ( ( uint8_t * ) ( pLink ) ) - offsetof( type, linkName ) ) )
 
 /**
  * @brief Iterates through all elements of a linear container.
