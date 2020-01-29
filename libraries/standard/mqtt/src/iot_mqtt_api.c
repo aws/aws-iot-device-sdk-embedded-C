@@ -329,6 +329,14 @@ static void _handleConnectFailure( IotMqttConnection_t pMqttConnection,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Place holder packet identifier used when
+ * _IotMqtt_AddSubscriptions is called with previous subscriptions lists.
+ */
+#define IOT_MQTT_PREVIOUS_SUBSCRIPTIONS_PACKET_ID    2
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Tracks whether @ref mqtt_function_init has been called.
  *
  * API functions will fail if @ref mqtt_function_init was not called.
@@ -1029,7 +1037,7 @@ static IotMqttError_t _addSubscriptions( _mqttOperation_t * pOperation,
         IotMqtt_Assert( pConnectInfo->previousSubscriptionCount > 0U );
 
         status = _IotMqtt_AddSubscriptions( pMqttConnection,
-                                            2,
+                                            IOT_MQTT_PREVIOUS_SUBSCRIPTIONS_PACKET_ID,
                                             pConnectInfo->pPreviousSubscriptions,
                                             pConnectInfo->previousSubscriptionCount );
     }
