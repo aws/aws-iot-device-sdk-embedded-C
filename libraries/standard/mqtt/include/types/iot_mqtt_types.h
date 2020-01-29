@@ -683,7 +683,7 @@ typedef struct IotMqttConnectInfo
 
     bool disableAutoReconnect;     /**< @brief Set this to true to disable automatic MQTT reconnection. */
     uint32_t autoReconnectRetryMs; /**< @brief Initial period for the automatic MQTT reconnection attempts. */
-    uint32_t autoReconnectLimit;   /**< @brief Limit on the number of automatic reconnection attempts. */
+    uint32_t autoReconnectLimit;   /**< @brief Limit on the number of automatic reconnection attempts. Set this to 0 to retry infinitely on failed connection attempts. */
 } IotMqttConnectInfo_t;
 
 /**

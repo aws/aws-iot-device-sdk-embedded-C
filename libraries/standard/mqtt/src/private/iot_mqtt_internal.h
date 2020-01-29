@@ -394,7 +394,7 @@ typedef struct _mqttConnection
 
     bool reconnectEnabled;                           /**< @brief Reconnection is enabled by default unless set to disabled in @ref IotMqttConnectInfo_t.disableAutoReconnect */
     uint32_t reconnectRetryMs;                       /**< @brief Initial period for the automatic reconnection attempts. */
-    uint32_t reconnectLimit;                         /**< @brief Limit on the number of automatic reconnection attempts. */
+    uint32_t reconnectLimit;                         /**< @brief Limit on the number of automatic reconnection attempts. When this is zero there is no limit on the reconnection attempts. */
     bool reconnecting;                               /**< @brief Indicates that this MQTT connection is currently under the auto-reconnection process. */
     IotMqttDisconnectReason_t disconnectReason;      /**< @brief The reason for the disconnect to pass back to the application, if auto-connection fails. */
 } _mqttConnection_t;

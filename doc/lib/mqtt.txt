@@ -398,21 +398,6 @@ The MQTT spec states that if a response to a keep-alive request is not received 
 @configpossible Any positive integer.<br>
 @configdefault `1000`
 
-@section IOT_MQTT_ENABLE_AUTO_RECONNECT
-@brief Enable automatic reconnection in the MQTT library.
-
-Auto-reconnection will begin when a network disconnect is invoked by the MQTT library.
-
-@configpossible `0` (auto-reconnect disabled) or `1` (aut-reconnect enabled)<br>
-@configrecommended The default value is <b>strongly recommended</b>.<br>
-@configdefault `1`
-
-@section IOT_MQTT_RETRY_MS_BASE
-@brief The base retry period in auto-reconnection.
-
-@configpossible Any positive integer. <br>
-@configdefault `1000`
-
 @section IOT_MQTT_RETRY_MS_CEILING
 @brief Controls the maximum [retry interval](@ref IotMqttPublishInfo_t.retryMs) of QoS 1 PUBLISH retransmissions.
 
