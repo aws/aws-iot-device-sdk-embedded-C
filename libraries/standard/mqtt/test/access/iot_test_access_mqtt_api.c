@@ -53,7 +53,7 @@ _mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
 
 void IotTestMqtt_mqttOperation_tryDestroy( void * pData )
 {
-    return _mqttOperation_tryDestroy( pData );
+    _mqttOperation_tryDestroy( pData );
 }
 
 /*-----------------------------------------------------------*/
