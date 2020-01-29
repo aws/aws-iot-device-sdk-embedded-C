@@ -97,6 +97,7 @@ mqttsubscription
 mutex
 mutexes
 nextperiodms
+offsetof
 onlinepubs
 opengroup
 operationcomplete
