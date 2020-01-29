@@ -1302,7 +1302,6 @@ size_t _IotMqtt_GetRemainingLength( IotNetworkConnection_t pNetworkConnection,
         if( multiplier > 2097152U ) /* 128 ^ 3 */
         {
             remainingLength = MQTT_REMAINING_LENGTH_INVALID;
-            break;
         }
         else
         {
@@ -1317,8 +1316,12 @@ size_t _IotMqtt_GetRemainingLength( IotNetworkConnection_t pNetworkConnection,
             else
             {
                 remainingLength = MQTT_REMAINING_LENGTH_INVALID;
-                break;
             }
+        }
+
+        if( remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+        {
+            break;
         }
     } while( ( encodedByte & 0x80U ) != 0U );
 
@@ -1355,7 +1358,6 @@ size_t _IotMqtt_GetRemainingLength_Generic( IotNetworkConnection_t pNetworkConne
         if( multiplier > 2097152U ) /* 128 ^ 3 */
         {
             remainingLength = MQTT_REMAINING_LENGTH_INVALID;
-            break;
         }
         else
         {
@@ -1368,8 +1370,12 @@ size_t _IotMqtt_GetRemainingLength_Generic( IotNetworkConnection_t pNetworkConne
             else
             {
                 remainingLength = MQTT_REMAINING_LENGTH_INVALID;
-                break;
             }
+        }
+
+        if( remainingLength == MQTT_REMAINING_LENGTH_INVALID )
+        {
+            break;
         }
     } while( ( encodedByte & 0x80U ) != 0U );
 

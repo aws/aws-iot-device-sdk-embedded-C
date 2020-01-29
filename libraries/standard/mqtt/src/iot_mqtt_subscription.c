@@ -230,7 +230,7 @@ static bool _topicFilterMatch( const char * pTopicName,
                                const char * pTopicFilter,
                                uint16_t topicFilterLength )
 {
-    bool status = false;
+    bool status = false, matchFound = false;
     uint16_t nameIndex = 0, filterIndex = 0;
 
     while( ( nameIndex < topicNameLength ) && ( filterIndex < topicFilterLength ) )
@@ -241,28 +241,27 @@ static bool _topicFilterMatch( const char * pTopicName,
         {
             /* Handle special corner cases regarding wildcards at the end of
              * topic filters, as documented by the MQTT protocol spec. */
-            if( _matchEndWildcards( pTopicFilter,
-                                    topicNameLength,
-                                    topicFilterLength,
-                                    nameIndex,
-                                    filterIndex,
-                                    &status ) == true )
-            {
-                break;
-            }
+            matchFound = _matchEndWildcards( pTopicFilter,
+                                             topicNameLength,
+                                             topicFilterLength,
+                                             nameIndex,
+                                             filterIndex,
+                                             &status );
         }
         else
         {
             /* Check for matching wildcards. */
-            if( _matchWildcards( pTopicFilter,
-                                 pTopicName,
-                                 topicNameLength,
-                                 filterIndex,
-                                 &nameIndex,
-                                 &status ) == true )
-            {
-                break;
-            }
+            matchFound = _matchWildcards( pTopicFilter,
+                                          pTopicName,
+                                          topicNameLength,
+                                          filterIndex,
+                                          &nameIndex,
+                                          &status );
+        }
+
+        if( matchFound == true )
+        {
+            break;
         }
 
         /* Increment indexes. */
@@ -291,8 +290,8 @@ static bool _topicMatch( const IotLink_t * const pSubscriptionLink,
     IotMqtt_Assert( pSubscriptionLink != NULL );
 
     const _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
-                                                             pSubscriptionLink,
-                                                             link );
+                                                                   pSubscriptionLink,
+                                                                   link );
     const _topicMatchParams_t * pParam = ( _topicMatchParams_t * ) pMatch;
 
     /* Extract the relevant strings and lengths from parameters. */
