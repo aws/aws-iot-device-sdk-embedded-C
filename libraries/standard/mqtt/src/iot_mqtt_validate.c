@@ -217,10 +217,6 @@ static bool _validatePublishPayload( const IotMqttPublishInfo_t * pPublishInfo,
             /* Empty else MISRA 15.7 */
         }
     }
-    else
-    {
-        /* Empty else MISRA 15.7 */
-    }
 
     return status;
 }
@@ -539,10 +535,6 @@ static bool _validateClientId( const IotMqttConnectInfo_t * pConnectInfo )
         maxClientIdLength = AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH;
         enforceMaxClientIdLength = true;
     }
-    else
-    {
-        /* Empty else MISRA 15.7 */
-    }
 
     if( status == true )
     {
@@ -584,10 +576,9 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 
         status = false;
     }
-
-    /* Check client identifier. */
-    if( status == true )
+    else
     {
+        /* Check client identifier.*/
         status = _validateClientId( pConnectInfo );
     }
 
