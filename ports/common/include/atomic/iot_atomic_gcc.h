@@ -58,6 +58,7 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_u32( uint32_t volatile * pDes
      * This routine is built into gcc and defined to return a bool
      * type. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
+    /* coverity[misra_c_2012_rule_8_5_violation] */
     /* coverity[misra_c_2012_rule_10_4_violation] */
     /* coverity[misra_c_2012_rule_17_3_violation] */
     /* coverity[caretline] */
@@ -111,6 +112,7 @@ static FORCE_INLINE uint32_t Atomic_CompareAndSwap_Pointer( void * volatile * pD
     /* coverity[misra_c_2012_rule_10_4_violation] */
     /* coverity[misra_c_2012_rule_17_3_violation] */
     /* coverity[caretline] */
+    /* coverity[other_declaration] */
     if( __atomic_compare_exchange( pDestination,
                                    &pComparand,
                                    &pNewValue,
@@ -135,6 +137,7 @@ static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAugend,
     /* This header file is intended to be used with only the gcc compiler
      * which requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
+    /* coverity[misra_c_2012_rule_8_5_violation] */
     /* coverity[misra_c_2012_rule_17_3_violation] */
     /* coverity[caretline] */
     return ( uint32_t ) ( __atomic_fetch_add( pAugend, addend, __ATOMIC_SEQ_CST ) );
@@ -151,6 +154,7 @@ static FORCE_INLINE uint32_t Atomic_Subtract_u32( uint32_t volatile * pMinuend,
     /* This header file is intended to be used with only the gcc compiler
      * which requires an int parameter for this routine. */
     /* coverity[misra_c_2012_directive_4_6_violation] */
+    /* coverity[misra_c_2012_rule_8_5_violation] */
     /* coverity[misra_c_2012_rule_17_3_violation] */
     /* coverity[caretline] */
     return ( uint32_t ) ( __atomic_fetch_sub( pMinuend, subtrahend, __ATOMIC_SEQ_CST ) );
@@ -165,6 +169,7 @@ static FORCE_INLINE uint32_t Atomic_Increment_u32( uint32_t volatile * pAugend )
 {
     /* coverity[misra_c_2012_rule_17_3_violation] */
     /* coverity[caretline] */
+    /* coverity[other_declaration] */
     return ( uint32_t ) ( __atomic_fetch_add( pAugend, 1U, __ATOMIC_SEQ_CST ) );
 }
 
@@ -177,6 +182,7 @@ static FORCE_INLINE uint32_t Atomic_Decrement_u32( uint32_t volatile * pMinuend 
 {
     /* coverity[misra_c_2012_rule_17_3_violation] */
     /* coverity[caretline] */
+    /* coverity[other_declaration] */
     return ( uint32_t ) ( __atomic_fetch_sub( pMinuend, 1U, __ATOMIC_SEQ_CST ) );
 }
 
