@@ -167,9 +167,11 @@ static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
      * must never be NULL. */
     IotMqtt_Assert( pOperationLink != NULL );
 
+    /* coverity[misra_c_2012_rule_20_7_violation] */
+    /* coverity[caretline] */
     const _mqttOperation_t * pOperation = IotLink_Container( _mqttOperation_t,
-                                                       pOperationLink,
-                                                       link );
+                                                             pOperationLink,
+                                                             link );
     const _operationMatchParam_t * pParam = ( _operationMatchParam_t * ) pMatch;
 
     /* Check for matching operations. */
@@ -1019,7 +1021,6 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
         {
             /* Empty else MISRA 15.7 */
         }
-        
     }
 
     /* Check if this operation requires further processing. */
@@ -1167,6 +1168,8 @@ _mqttOperation_t * _IotMqtt_FindOperation( _mqttConnection_t * pMqttConnection,
     if( pResultLink != NULL )
     {
         /* Get operation pointer and check if it is waitable. */
+        /* coverity[misra_c_2012_rule_20_7_violation] */
+        /* coverity[caretline] */
         pResult = IotLink_Container( _mqttOperation_t, pResultLink, link );
         waitable = ( pResult->u.operation.flags & IOT_MQTT_FLAG_WAITABLE ) == IOT_MQTT_FLAG_WAITABLE;
 

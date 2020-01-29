@@ -299,6 +299,8 @@ static bool _mqttSubscription_setUnsubscribe( const IotLink_t * const pSubscript
      * must never be NULL. */
     IotMqtt_Assert( pSubscriptionLink != NULL );
 
+    /* coverity[misra_c_2012_rule_20_7_violation] */
+    /* coverity[caretline] */
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                              pSubscriptionLink,
                                                              link );
