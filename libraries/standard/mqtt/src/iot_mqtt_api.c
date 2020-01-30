@@ -45,8 +45,8 @@
 #if ( IOT_MQTT_ENABLE_ASSERTS != 0 ) && ( IOT_MQTT_ENABLE_ASSERTS != 1 )
     #error "IOT_MQTT_ENABLE_ASSERTS must be 0 or 1."
 #endif
-#if ( IOT_MQTT_ENABLE_METRICS != 0 ) && ( IOT_MQTT_ENABLE_METRICS != 1 )
-    #error "IOT_MQTT_ENABLE_METRICS must be 0 or 1."
+#if ( AWS_IOT_MQTT_ENABLE_METRICS != 0 ) && ( AWS_IOT_MQTT_ENABLE_METRICS != 1 )
+    #error "AWS_IOT_MQTT_ENABLE_METRICS must be 0 or 1."
 #endif
 #if ( IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 0 ) && ( IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 1 )
     #error "IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES must be 0 or 1."
@@ -332,7 +332,7 @@ static void _handleConnectFailure( IotMqttConnection_t pMqttConnection,
  * @brief Place holder packet identifier used when
  * _IotMqtt_AddSubscriptions is called with previous subscriptions lists.
  * Any non-zero value is acceptable, since this value is never sent out to
- * the broker. 
+ * the broker.
  */
 #define IOT_MQTT_PREVIOUS_SUBSCRIPTIONS_PACKET_ID    1
 
