@@ -130,13 +130,14 @@ static bool _validateWildcardHash( uint16_t index,
                                    const IotMqttSubscription_t * pSubscription );
 
 /**
- * @brief Check the MQTT clientId length does not exceed.
+ * @brief Validate the MQTT client identifier.
  *
- * @param[in] pConnectInfo The #IotMqttConnectInfo_t to validate.
+ * @param[in] pConnectInfo The #IotMqttConnectInfo_t containing the client identifier
+ * to validate.
  *
- * @return `true` if client id length is valid, `false` otherwise. 
+ * @return `true` if client identifier is valid, `false` otherwise.
  */
-static bool _validateClientIdLength( const IotMqttConnectInfo_t * pConnectInfo );
+static bool _validateClientId( const IotMqttConnectInfo_t * pConnectInfo );
 
 /*-----------------------------------------------------------*/
 
@@ -194,13 +195,7 @@ static bool _validatePublishPayload( const IotMqttPublishInfo_t * pPublishInfo,
     /* This parameter is not used when logging is disabled. */
     ( void ) pPublishTypeDescription;
 
-    if( pPublishInfo == NULL )
-    {
-        IotLogError( "Publish information cannot be NULL." );
-
-        status = false;
-    }
-    else if( pPublishInfo->payloadLength != 0U )
+    if( pPublishInfo->payloadLength != 0U )
     {
         if( pPublishInfo->payloadLength > maximumPayloadLength )
         {
@@ -222,11 +217,6 @@ static bool _validatePublishPayload( const IotMqttPublishInfo_t * pPublishInfo,
             /* Empty else MISRA 15.7 */
         }
     }
-    else
-    {
-        /* Empty else MISRA 15.7 */
-    }
-    
 
     return status;
 }
@@ -508,27 +498,42 @@ static bool _validateWildcardHash( uint16_t index,
 
 /*-----------------------------------------------------------*/
 
-static bool _validateClientIdLength( const IotMqttConnectInfo_t * pConnectInfo )
+static bool _validateClientId( const IotMqttConnectInfo_t * pConnectInfo )
 {
     bool status = true;
     uint16_t maxClientIdLength = MQTT_SERVER_MAX_CLIENTID_LENGTH;
     bool enforceMaxClientIdLength = false;
 
-    if( pConnectInfo == NULL )
+    /* Check that a client identifier was set. */
+    if( pConnectInfo->pClientIdentifier == NULL )
     {
-        IotLogError( "MQTT connection information cannot be NULL." );
+        IotLogError( "Client identifier must be set." );
 
         status = false;
     }
+
+    /* Check for a zero-length client identifier. Zero-length client identifiers
+     * are not allowed with persistent sessions. */
+    if( status == true )
+    {
+        if( pConnectInfo->clientIdentifierLength == 0U )
+        {
+            IotLogWarn( "A zero-length client identifier was provided." );
+
+            if( pConnectInfo->cleanSession == false )
+            {
+                IotLogError( "A zero-length client identifier cannot be used with a persistent session." );
+
+                status = false;
+            }
+        }
+    }
+
     /* The AWS IoT MQTT service enforces a client ID length limit. */
-    else if( pConnectInfo->awsIotMqttMode == true )
+    if( pConnectInfo->awsIotMqttMode == true )
     {
         maxClientIdLength = AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH;
         enforceMaxClientIdLength = true;
-    }
-    else
-    {
-        /* Empty else MISRA 15.7 */
     }
 
     if( status == true )
@@ -571,30 +576,10 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
 
         status = false;
     }
-    /* Check that a client identifier was set. */
-    else if( pConnectInfo->pClientIdentifier == NULL )
-    {
-        IotLogError( "Client identifier must be set." );
-
-        status = false;
-    }
-
-    /* Check for a zero-length client identifier. Zero-length client identifiers
-     * are not allowed with clean sessions. */
-    else if( pConnectInfo->clientIdentifierLength == 0U )
-    {
-        IotLogWarn( "A zero-length client identifier was provided." );
-
-        if( pConnectInfo->cleanSession == true )
-        {
-            IotLogError( "A zero-length client identifier cannot be used with a clean session." );
-
-            status = false;
-        }
-    }
     else
     {
-        /* Empty else MISRA 15.7 */
+        /* Check client identifier.*/
+        status = _validateClientId( pConnectInfo );
     }
 
     if( status == true )
@@ -617,11 +602,6 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
             status = _IotMqtt_ValidateLwtPublish( pConnectInfo->awsIotMqttMode,
                                                   pConnectInfo->pWillInfo );
         }
-    }
-
-    if( status == true )
-    {
-        status = _validateClientIdLength( pConnectInfo );
     }
 
     return status;

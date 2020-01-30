@@ -121,7 +121,7 @@
 
 /* Enable asserts in the libraries. */
 #define IOT_CONTAINERS_ENABLE_ASSERTS           ( 1 )
-#define IOT_MQTT_ENABLE_ASSERTS                 ( 1 )
+#define IOT_MQTT_ENABLE_ASSERTS                 ( ! IOT_TEST_COVERAGE )
 #define IOT_TASKPOOL_ENABLE_ASSERTS             ( 1 )
 #define IOT_SERIALIZER_ENABLE_ASSERTS           ( 1 )
 #define AWS_IOT_SHADOW_ENABLE_ASSERTS           ( 1 )

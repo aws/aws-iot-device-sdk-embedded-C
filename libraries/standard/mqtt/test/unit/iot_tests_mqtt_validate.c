@@ -114,8 +114,6 @@ TEST( MQTT_Unit_Validate, ValidateConnectInfo )
     bool validateStatus = false;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
 
-    connectInfo.awsIotMqttMode = AWS_IOT_MQTT_SERVER;
-
     /* NULL parameter. */
     validateStatus = _IotMqtt_ValidateConnect( NULL );
     TEST_ASSERT_EQUAL_INT( false, validateStatus );
@@ -124,12 +122,19 @@ TEST( MQTT_Unit_Validate, ValidateConnectInfo )
     validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
     TEST_ASSERT_EQUAL_INT( false, validateStatus );
 
+    /* Zero-length client identifier with persistent session. */
+    connectInfo.cleanSession = false;
+    connectInfo.pClientIdentifier = "";
+    connectInfo.clientIdentifierLength = 0;
+    validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
+    TEST_ASSERT_EQUAL_INT( false, validateStatus );
+
     /* Zero-length client identifier with clean session. */
     connectInfo.cleanSession = true;
     connectInfo.pClientIdentifier = "";
     connectInfo.clientIdentifierLength = 0;
     validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
-    TEST_ASSERT_EQUAL_INT( false, validateStatus );
+    TEST_ASSERT_EQUAL_INT( true, validateStatus );
 
     /* Client identifier longer than the MQTT 3.1.1 recommended maximum length. */
     connectInfo.pClientIdentifier = "longlongclientidentifier";
@@ -137,14 +142,11 @@ TEST( MQTT_Unit_Validate, ValidateConnectInfo )
     validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
     TEST_ASSERT_EQUAL_INT( true, validateStatus );
 
-    /* AWS IoT MQTT service limit tests. */
-    #if AWS_IOT_MQTT_SERVER == true
-        /* Client identifier too long. */
-        connectInfo.clientIdentifierLength = AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH + 1;
-        validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
-        TEST_ASSERT_EQUAL_INT( false, validateStatus );
-        connectInfo.clientIdentifierLength = 24;
-    #endif /* if AWS_IOT_MQTT_SERVER == true */
+    /* Client identifier too long for AWS. */
+    connectInfo.awsIotMqttMode = true;
+    connectInfo.clientIdentifierLength = AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH + 1;
+    validateStatus = _IotMqtt_ValidateConnect( &connectInfo );
+    TEST_ASSERT_EQUAL_INT( false, validateStatus );
 }
 
 /*-----------------------------------------------------------*/
