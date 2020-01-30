@@ -319,43 +319,6 @@ static size_t _sendDelay( IotNetworkConnection_t pSendContext,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief A create function that fails when server info is not supplied.
- */
-static IotNetworkError_t _createMock( IotNetworkServerInfo_t pServerInfo,
-                                      IotNetworkCredentials_t pCredentialInfo,
-                                      IotNetworkConnection_t * pConnection )
-{
-    ( void ) pCredentialInfo;
-    ( void ) pConnection;
-
-    if( pServerInfo == NULL )
-    {
-        return IOT_NETWORK_FAILURE;
-    }
-    else
-    {
-        return IOT_NETWORK_SUCCESS;
-    }
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief An empty function for task pool job.
- */
-static void _testTaskRoutine( IotTaskPool_t pTaskPool,
-                              IotTaskPoolJob_t pJob,
-                              void * pUserContext )
-{
-    /* Do Nothing */
-    ( void ) pTaskPool;
-    ( void ) pJob;
-    ( void ) pUserContext;
-}
-
-/*-----------------------------------------------------------*/
-
-/**
  * @brief This send function checks that a duplicate outgoing message differs from
  * the original.
  */
@@ -601,16 +564,6 @@ IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
     }
 
     return status;
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Wrapper for unity_free_mt.
- */
-void _freePacket( uint8_t * pPacket )
-{
-    IotTest_Free( pPacket );
 }
 
 /*-----------------------------------------------------------*/
@@ -1042,7 +995,6 @@ TEST( MQTT_Unit_API, ConnectMallocFail )
     connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
 
     serializer.serialize.pingreq = _serializePingreq;
-    serializer.freePacket = _freePacket;
     _networkInfo.pMqttSerializer = &serializer;
 
     for( i = 0; ; i++ )
