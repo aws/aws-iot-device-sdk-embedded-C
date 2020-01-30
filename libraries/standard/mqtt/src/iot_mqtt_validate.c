@@ -360,8 +360,7 @@ static bool _validateSubscription( bool awsIotMqttMode,
 
             status = false;
         }
-
-        if( status == true )
+        else
         {
             status = _validateQos( pSubscription->qos );
         }
