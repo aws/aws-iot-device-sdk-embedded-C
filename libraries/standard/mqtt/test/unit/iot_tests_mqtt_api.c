@@ -2289,11 +2289,12 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
 
     /* Test with invalid remaining length. */
     buffer[ 0 ] = 0x20; /* CONN ACK */
+
     /* To generate invalid remaining length response,
      * three bytes need to have MSB (or continuation bit, 0x80) set */
     buffer[ 1 ] = 0xFF;
-    buffer[ 2 ] = 0xFF; 
-    buffer[ 3 ] = 0xFF; 
+    buffer[ 2 ] = 0xFF;
+    buffer[ 3 ] = 0xFF;
     status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, pNetworkInterface );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
 }
