@@ -165,6 +165,11 @@ static IotMqttNetworkInfo_t _networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
  */
 static IotNetworkInterface_t _networkInterface = { 0 };
 
+/**
+ * @brief A packet allocated by _serializePingreq.
+ */
+static uint8_t * pAllocatedPingreq = NULL;
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -551,11 +556,11 @@ IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
                                   size_t * pPacketSize )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
-    uint8_t * pNewPingreq = IotTest_Malloc( 1 );
+    pAllocatedPingreq = IotTest_Malloc( 1 );
 
-    if( pNewPingreq != NULL )
+    if( pAllocatedPingreq != NULL )
     {
-        *pPingreqPacket = pNewPingreq;
+        *pPingreqPacket = pAllocatedPingreq;
         *pPacketSize = 1;
     }
     else
@@ -1007,6 +1012,12 @@ TEST( MQTT_Unit_API, ConnectMallocFail )
                                   &connectInfo,
                                   TIMEOUT_MS,
                                   &_pMqttConnection );
+
+        /* Free any allocated PINGREQ. */
+        if( pAllocatedPingreq != NULL )
+        {
+            IotTest_Free( pAllocatedPingreq );
+        }
 
         /* If the return value is timeout, then all memory allocation succeeded
          * and the loop can exit. The expected return value is timeout (and not
