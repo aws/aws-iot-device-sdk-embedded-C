@@ -661,8 +661,6 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, DeserializeResponseChecks );
     RUN_TEST_CASE( MQTT_Unit_API, DeserializePublishChecks );
     RUN_TEST_CASE( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks );
-    RUN_TEST_CASE( MQTT_Unit_API, MqttOperationTryDestroy );
-    RUN_TEST_CASE( MQTT_Unit_API, CreateNetworkConnectionCheck );
 }
 
 /*-----------------------------------------------------------*/
@@ -1155,12 +1153,8 @@ TEST( MQTT_Unit_API, DisconnectAlreadyDisconnected )
     IotMqtt_Disconnect( mqttConnection, 0 );
     TEST_ASSERT_EQUAL_INT( 1, mqttConnection->references );
 
-    /* One final disconnect to bring reference count to zero and free
-     * the connection */
-    IotMqtt_Disconnect( mqttConnection, 0 );
-
-    /* mqttConnection should be freed after above call.
-     * Test should not fail with any Unity memory leak asserts. */
+    /* Clean up test. */
+    IotTest_MqttMockCleanup();
 }
 /*-----------------------------------------------------------*/
 
@@ -2399,91 +2393,6 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
     /* 4. Deserialize publish. */
     status = IotMqtt_DeserializePublish( &mqttPacketInfo );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Tests internal function  _mqttOperation_tryDestroy works
- * as intended.
- * @note: Uses access function.
- */
-TEST( MQTT_Unit_API, MqttOperationTryDestroy )
-{
-    _mqttOperation_t * pMqttOperation = NULL;
-    /* _mqttOperation_t mqttOperation ; */
-    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
-    IotTaskPoolJob_t pTaskPoolJob = IOT_TASKPOOL_JOB_INITIALIZER;
-    IotTaskPoolError_t taskPoolError = IOT_TASKPOOL_SUCCESS;
-    IotTaskPoolJobStorage_t _testJobStorage = IOT_TASKPOOL_JOB_STORAGE_INITIALIZER;
-
-    /* Create Task pool Job */
-    taskPoolError = IotTaskPool_CreateJob( _testTaskRoutine, NULL, &_testJobStorage, &pTaskPoolJob );
-    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, taskPoolError );
-    /* Allocate operation */
-    pMqttOperation = IotMqtt_MallocOperation( sizeof( _mqttOperation_t ) );
-    TEST_ASSERT_NOT_NULL( pMqttOperation )
-    /* Set up a mocked MQTT connection. */
-    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &mqttConnection ) );
-
-    void * pData = ( void * ) pMqttOperation;
-    memset( pData, 0, sizeof( _mqttOperation_t ) );
-
-    /* Non Publish operation */
-    pMqttOperation->incomingPublish = false;
-    pMqttOperation->pMqttConnection = mqttConnection;
-    pMqttOperation->job = pTaskPoolJob;
-    pMqttOperation->u.operation.jobReference = 2;
-    IotTestMqtt_mqttOperation_tryDestroy( pData );
-    /* Job reference must be decremented, Operation must be still allocated */
-    TEST_ASSERT_EQUAL_INT( 1, pMqttOperation->u.operation.jobReference );
-
-    /* Publish Operation */
-    /* reset mocked MQTT connection. */
-    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &mqttConnection ) );
-    pMqttOperation->incomingPublish = true;
-    pMqttOperation->u.publish.pReceivedData = IotMqtt_MallocMessage( 10 );
-
-    /*
-     * pOperation will be destroyed after this call and the test
-     * should not report any memory leaks because the destroy
-     * Operation should free all memory.
-     */
-    IotTestMqtt_mqttOperation_tryDestroy( pData );
-
-    /* The call should not assert, operation should be destroyed */
-    IotTest_MqttMockCleanup();
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Tests internal function  _createNetworkConnection works
- * as intended.
- * @note: Uses access function.
- */
-TEST( MQTT_Unit_API, CreateNetworkConnectionCheck )
-{
-    IotMqttNetworkInfo_t * pNetworkInfo = NULL;
-    IotNetworkConnection_t * pNetworkConnection = { 0 };
-    bool createdNetworkConnection = false;
-
-    /* Test for parameter validation */
-    TEST_ASSERT_EQUAL( IOT_NETWORK_BAD_PARAMETER, IotTestMqtt_createNetworkConnection( pNetworkInfo,
-                                                                                       pNetworkConnection,
-                                                                                       &createdNetworkConnection ) );
-
-    /* Setup correct network info */
-    pNetworkInfo = &_networkInfo;
-    pNetworkInfo->createNetworkConnection = true;
-    pNetworkInfo->pNetworkInterface = &_networkInterface;
-    _networkInterface.create = _createMock;
-    /* Invalid server info */
-    pNetworkInfo->u.setup.pNetworkServerInfo = NULL;
-
-    TEST_ASSERT_NOT_EQUAL( IOT_MQTT_SUCCESS, IotTestMqtt_createNetworkConnection( pNetworkInfo,
-                                                                                  pNetworkConnection,
-                                                                                  &createdNetworkConnection ) );
 }
 
 /*-----------------------------------------------------------*/
