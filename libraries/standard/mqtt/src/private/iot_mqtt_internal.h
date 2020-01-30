@@ -373,7 +373,7 @@ typedef struct _mqttOperation
         struct
         {
             IotMqttPublishInfo_t publishInfo; /**< @brief Deserialized PUBLISH. */
-            const void * pReceivedData;       /**< @brief Any buffer associated with this PUBLISH that should be freed. */
+            void * pReceivedData;             /**< @brief Any buffer associated with this PUBLISH that should be freed. */
         } publish;
     } u;                                      /**< @brief Valid member depends on _mqttOperation_t.incomingPublish. */
 } _mqttOperation_t;
