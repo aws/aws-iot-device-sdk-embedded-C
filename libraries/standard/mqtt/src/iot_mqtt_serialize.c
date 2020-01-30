@@ -505,7 +505,7 @@ static uint8_t * _encodeString( uint8_t * pDestination,
     pBuffer++;
 
     /* Copy the string into pBuffer. */
-    ( void ) memcpy( pBuffer, source, sourceLength );
+    ( void ) memcpy( ( void * ) pBuffer, ( const void * ) source, sourceLength );
 
     /* Return the pointer to the end of the encoded string. */
     pBuffer += sourceLength;
@@ -550,14 +550,14 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
                     pBuffer++;
 
                     /* Write the identity portion of the username. */
-                    ( void ) memcpy( pBuffer,
-                                     pConnectInfo->pUserName,
+                    ( void ) memcpy( ( void * ) pBuffer,
+                                     ( const void * ) pConnectInfo->pUserName,
                                      pConnectInfo->userNameLength );
                     pBuffer += pConnectInfo->userNameLength;
 
                     /* Write the metrics portion of the username. */
-                    ( void ) memcpy( pBuffer,
-                                     pMetricsUserName,
+                    ( void ) memcpy( ( void * ) pBuffer,
+                                     ( const void * ) pMetricsUserName,
                                      AWS_IOT_METRICS_USERNAME_LENGTH );
                     pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
 
@@ -972,7 +972,7 @@ static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
     /* The payload is placed after the packet identifier. */
     if( pPublishInfo->payloadLength > 0U )
     {
-        ( void ) memcpy( pBuffer, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        ( void ) memcpy( ( void * ) pBuffer, ( const void * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
         pBuffer += pPublishInfo->payloadLength;
     }
 
@@ -2476,7 +2476,7 @@ IotMqttError_t IotMqtt_SerializeDisconnect( uint8_t * pBuffer,
          * Note: _IotMqtt_SerializeDisconnect always succeeds */
         ( void ) _IotMqtt_SerializeDisconnect( &pDisconnectPacket, &remainingLength );
 
-        ( void ) memcpy( pBuffer, pDisconnectPacket, MQTT_PACKET_DISCONNECT_SIZE );
+        ( void ) memcpy( ( void * ) pBuffer, ( const void * ) pDisconnectPacket, MQTT_PACKET_DISCONNECT_SIZE );
     }
 
     return status;
@@ -2508,7 +2508,7 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
          * static memory, there is no need to pass the buffer
          * Note: _IotMqtt_SerializePingReq always succeeds */
         ( void ) _IotMqtt_SerializePingreq( &pPingreqPacket, &packetSize );
-        ( void ) memcpy( pBuffer, pPingreqPacket, MQTT_PACKET_PINGREQ_SIZE );
+        ( void ) memcpy( ( void * ) pBuffer, ( const void * ) pPingreqPacket, MQTT_PACKET_PINGREQ_SIZE );
     }
 
     return status;
