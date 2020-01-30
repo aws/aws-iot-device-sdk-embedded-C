@@ -206,6 +206,22 @@ static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
                                          size_t length );
 
 /**
+ * @brief Perform a memcpy and return pointer to end of destination buffer.
+ *
+ * @param[in] pDestination Where to copy the bytes.
+ * @param[in] pSource The bytes to copy.
+ * @param[in] sourceLength The length of the source.
+ *
+ * @return `pDestination + sourceLength`.
+ *
+ * @warning The size of `pDestination` is not checked. Ensure that `pDestination`
+ * is large enough to hold `sourceLength` bytes to avoid a buffer overflow.
+ */
+static uint8_t * _copyBytes( uint8_t * pDestination,
+                             const uint8_t * pSource,
+                             size_t sourceLength );
+
+/**
  * @brief Encode a C string as a UTF-8 string, per MQTT 3.1.1 spec.
  *
  * @param[out] pDestination Where to write the encoded string.
@@ -490,6 +506,19 @@ static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
 
 /*-----------------------------------------------------------*/
 
+static uint8_t * _copyBytes( uint8_t * pDestination,
+                             const uint8_t * pSource,
+                             size_t sourceLength )
+{
+    /* Copy the bytes to the destination. */
+    ( void ) memcpy( pDestination, pSource, sourceLength );
+
+    /* Return pointer to the end of the encoded bytes. */
+    return pDestination + sourceLength;
+}
+
+/*-----------------------------------------------------------*/
+
 static uint8_t * _encodeString( uint8_t * pDestination,
                                 const char * source,
                                 uint16_t sourceLength )
@@ -535,6 +564,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
                         "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
 
             pMetricsUserName = AWS_IOT_METRICS_USERNAME;
+
             /* Determine if the Connect packet should use a combination of the username
              * for authentication plus the SDK version string. */
             if( pConnectInfo->pUserName != NULL )
@@ -553,16 +583,10 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
                     pBuffer += 2;
 
                     /* Write the identity portion of the username. */
-                    ( void ) memcpy( pBuffer,
-                                     pConnectInfo->pUserName,
-                                     pConnectInfo->userNameLength );
-                    pBuffer += pConnectInfo->userNameLength;
+                    pBuffer = _copyBytes( pBuffer, pConnectInfo->pUserName, pConnectInfo->userNameLength );
 
                     /* Write the metrics portion of the username. */
-                    ( void ) memcpy( pBuffer,
-                                     pMetricsUserName,
-                                     AWS_IOT_METRICS_USERNAME_LENGTH );
-                    pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
+                    pBuffer = _copyBytes( pBuffer, pMetricsUserName, AWS_IOT_METRICS_USERNAME_LENGTH );
 
                     encodedUserName = true;
                 }
