@@ -520,7 +520,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
 {
     bool encodedUserName = false;
     uint8_t * pBuffer = pDestination;
-    const char * pMetricsUserName = AWS_IOT_METRICS_USERNAME;
+    const char * pMetricsUserName = NULL;
 
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
      * Otherwise, write the username and password only when not connecting to the
@@ -531,6 +531,7 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
             IotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
                         "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
 
+            pMetricsUserName = AWS_IOT_METRICS_USERNAME;
             /* Determine if the Connect packet should use a combination of the username
              * for authentication plus the SDK version string. */
             if( pConnectInfo->pUserName != NULL )
