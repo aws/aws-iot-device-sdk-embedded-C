@@ -54,9 +54,9 @@ typedef sem_t             _IotSystemSemaphore_t;
  */
 typedef struct _IotSystemTimer
 {
-    timer_t timer;                      /**< @brief Underlying POSIX timer. */
-    void * pArgument;                   /**< @brief First argument to threadRoutine. */
-    void ( * threadRoutine )( void * ); /**< @brief Thread function to run on timer expiration. */
+    timer_t timer;                           /**< @brief Underlying POSIX timer. */
+    void * pArgument;                        /**< @brief First argument to threadRoutine. */
+    void ( * threadRoutine )( void * pArg ); /**< @brief Thread function to run on timer expiration. */
 } _IotSystemTimer_t;
 
 /**
