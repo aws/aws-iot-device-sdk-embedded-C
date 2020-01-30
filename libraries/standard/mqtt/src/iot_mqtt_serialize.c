@@ -533,11 +533,9 @@ static uint8_t * _encodeString( uint8_t * pDestination,
     *pBuffer = UINT16_LOW_BYTE( sourceLength );
     pBuffer++;
 
-    /* Copy the string into pBuffer. */
-    ( void ) memcpy( pBuffer, source, sourceLength );
-
-    /* Return the pointer to the end of the encoded string. */
-    pBuffer += sourceLength;
+    /* Copy the string into pBuffer and return the pointer to the end of the
+     * encoded string. */
+    pBuffer = _copyBytes( pBuffer, source, sourceLength );
 
     return pBuffer;
 }
@@ -999,8 +997,7 @@ static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
     /* The payload is placed after the packet identifier. */
     if( pPublishInfo->payloadLength > 0U )
     {
-        ( void ) memcpy( pBuffer, pPublishInfo->pPayload, pPublishInfo->payloadLength );
-        pBuffer += pPublishInfo->payloadLength;
+        pBuffer = _copyBytes( pBuffer, pPublishInfo->pPayload, pPublishInfo->payloadLength );
     }
 
     /* Ensure that the difference between the end and beginning of the buffer
