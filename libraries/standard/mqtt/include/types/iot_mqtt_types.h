@@ -445,6 +445,9 @@ typedef struct IotMqttCallbackParam
      */
     IotMqttConnection_t mqttConnection;
 
+    /* MISRA rule 19.2 doesn't allow usage of union
+     * but it is intentionally used here to reduce the size of struct. */
+    /* coverity[misra_c_2012_rule_19_2_violation] */
     union
     {
         /* Valid for completed operations. */
@@ -1014,6 +1017,9 @@ typedef struct IotMqttNetworkInfo
      */
     bool createNetworkConnection;
 
+    /* MISRA rule 19.2 doesn't allow usage of union
+     * but it is intentionally used here to reduce the size of struct. */
+    /* coverity[misra_c_2012_rule_19_2_violation] */
     union
     {
         struct
