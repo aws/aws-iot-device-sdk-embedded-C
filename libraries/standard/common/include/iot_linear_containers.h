@@ -623,6 +623,7 @@ static inline IotLink_t * IotListDouble_FindFirstMatch( const IotListDouble_t * 
 {
     /* The const must be cast away to match this function's return value. Nevertheless,
      * this function will respect the const-ness of pStartPoint. */
+    /* coverity[misra_c_2012_rule_11_8_violation] */
     IotLink_t * pCurrent = ( IotLink_t * ) pStartPoint, * pMatchedLink = NULL;
     bool matchFound = false;
 

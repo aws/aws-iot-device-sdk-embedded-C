@@ -287,34 +287,34 @@ static void _handleConnectFailure( IotMqttConnection_t pMqttConnection,
  * Declaration of local MQTT serializer override selectors
  */
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializePingreq_t,
-                                   _getMqttPingreqSerializer,
-                                   _IotMqtt_SerializePingreq,
-                                   serialize.pingreq )
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqtt_SerializePublish_t,
-                                   _getMqttPublishSerializer,
-                                   _IotMqtt_SerializePublish,
-                                   serialize.publish )
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttFreePacket_t,
-                                   _getMqttFreePacketFunc,
-                                   _IotMqtt_FreePacket,
-                                   freePacket )
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializeSubscribe_t,
-                                   _getMqttSubscribeSerializer,
-                                   _IotMqtt_SerializeSubscribe,
-                                   serialize.subscribe )
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializeSubscribe_t,
-                                   _getMqttUnsubscribeSerializer,
-                                   _IotMqtt_SerializeUnsubscribe,
-                                   serialize.unsubscribe )
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializeConnect_t,
-                                   _getMqttConnectSerializer,
-                                   _IotMqtt_SerializeConnect,
-                                   serialize.connect )
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializeDisconnect_t,
-                                   _getMqttDisconnectSerializer,
-                                   _IotMqtt_SerializeDisconnect,
-                                   serialize.disconnect )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializePingreq_t,
+                                  _getMqttPingreqSerializer,
+                                  _IotMqtt_SerializePingreq,
+                                  serialize.pingreq )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqtt_SerializePublish_t,
+                                  _getMqttPublishSerializer,
+                                  _IotMqtt_SerializePublish,
+                                  serialize.publish )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqttFreePacket_t,
+                                  _getMqttFreePacketFunc,
+                                  _IotMqtt_FreePacket,
+                                  freePacket )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializeSubscribe_t,
+                                  _getMqttSubscribeSerializer,
+                                  _IotMqtt_SerializeSubscribe,
+                                  serialize.subscribe )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializeSubscribe_t,
+                                  _getMqttUnsubscribeSerializer,
+                                  _IotMqtt_SerializeUnsubscribe,
+                                  serialize.unsubscribe )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializeConnect_t,
+                                  _getMqttConnectSerializer,
+                                  _IotMqtt_SerializeConnect,
+                                  serialize.connect )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqttSerializeDisconnect_t,
+                                  _getMqttDisconnectSerializer,
+                                  _IotMqtt_SerializeDisconnect,
+                                  serialize.disconnect )
 #else /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
     #define _getMqttPingreqSerializer( pSerializer )        _IotMqtt_SerializePingreq
     #define _getMqttPublishSerializer( pSerializer )        _IotMqtt_SerializePublish
@@ -332,7 +332,7 @@ static void _handleConnectFailure( IotMqttConnection_t pMqttConnection,
  * @brief Place holder packet identifier used when
  * _IotMqtt_AddSubscriptions is called with previous subscriptions lists.
  * Any non-zero value is acceptable, since this value is never sent out to
- * the broker. 
+ * the broker.
  */
 #define IOT_MQTT_PREVIOUS_SUBSCRIPTIONS_PACKET_ID    1
 
@@ -370,8 +370,11 @@ static bool _mqttSubscription_setUnsubscribe( const IotLink_t * const pSubscript
      * must never be NULL. */
     IotMqtt_Assert( pSubscriptionLink != NULL );
 
-    /* Adding parentheses to parameters of IotLink_Container is not applicable
+    /* Casting `pSubscriptionLink` to uint8_t * is done only to calculate the
+     * starting address of the struct and does not modify the link it points to.
+     * Adding parentheses to parameters of IotLink_Container is not applicable
      * because it uses type-casting and offsetof, and would cause compiling errors. */
+    /* coverity[misra_c_2012_rule_11_8_violation] */
     /* coverity[misra_c_2012_rule_20_7_violation] */
     /* coverity[caretline] */
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
@@ -1243,7 +1246,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     bool ownNetworkConnection = false;
     IotNetworkError_t networkStatus = IOT_NETWORK_SUCCESS;
-    IotNetworkConnection_t pNetworkConnection = { 0 };
+    IotNetworkConnection_t pNetworkConnection = NULL;
     _mqttOperation_t * pOperation = NULL;
     _mqttConnection_t * pNewMqttConnection = NULL;
 

@@ -2063,7 +2063,11 @@ IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
                                           size_t * pPacketSize )
 {
     /* PINGREQ packets are always the same. */
-    static const uint8_t pPingreq[ MQTT_PACKET_PINGREQ_SIZE ] =
+    /* It is not necessary to make this array const. Since there are other
+     * types of MQTT packets that are not constant, this array would be
+     * cast to remove the const qualifier anyway. */
+    /* coverity[misra_c_2012_rule_8_13_violation] */
+    static uint8_t pPingreq[ MQTT_PACKET_PINGREQ_SIZE ] =
     {
         MQTT_PACKET_TYPE_PINGREQ,
         0x00
@@ -2119,7 +2123,11 @@ IotMqttError_t _IotMqtt_SerializeDisconnect( uint8_t ** pDisconnectPacket,
                                              size_t * pPacketSize )
 {
     /* DISCONNECT packets are always the same. */
-    static const uint8_t pDisconnect[ MQTT_PACKET_DISCONNECT_SIZE ] =
+    /* It is not necessary to make this array const. Since there are other
+     * types of MQTT packets that are not constant, this array would be
+     * cast to remove the const qualifier anyway. */
+    /* coverity[misra_c_2012_rule_8_13_violation] */
+    static uint8_t pDisconnect[ MQTT_PACKET_DISCONNECT_SIZE ] =
     {
         MQTT_PACKET_TYPE_DISCONNECT,
         0x00
