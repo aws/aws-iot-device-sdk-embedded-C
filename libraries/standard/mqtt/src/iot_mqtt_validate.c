@@ -354,41 +354,41 @@ static bool _validateSubscription( bool awsIotMqttMode,
     /* Check for a valid QoS and callback function when subscribing. */
     if( operation == IOT_MQTT_SUBSCRIBE )
     {
-        status = _validateQos( pSubscription->qos );
+        if( pSubscription->callback.function == NULL )
+        {
+            IotLogError( "Callback function must be set." );
+
+            status = false;
+        }
 
         if( status == true )
         {
-            if( pSubscription->callback.function == NULL )
-            {
-                IotLogError( "Callback function must be set." );
-
-                status = false;
-            }
+            status = _validateQos( pSubscription->qos );
         }
     }
 
+    /* Check subscription topic filter. */
     if( status == true )
     {
-        /* Check subscription topic filter. */
         status = _validateString( pSubscription->pTopicFilter, pSubscription->topicFilterLength );
 
         if( status == false )
         {
             IotLogError( "Subscription topic filter must be set." );
         }
-        else
-        {
-            /* Check for compatibility with AWS IoT MQTT server. */
-            if( awsIotMqttMode == true )
-            {
-                /* Check topic filter length. */
-                if( pSubscription->topicFilterLength > AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
-                {
-                    IotLogError( "AWS IoT does not support topic filters longer than %d bytes.",
-                                 AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
+    }
 
-                    status = false;
-                }
+    /* Check topic filter length compatibility with AWS IoT MQTT server. */
+    if( status == true )
+    {
+        if( awsIotMqttMode == true )
+        {
+            if( pSubscription->topicFilterLength > AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH )
+            {
+                IotLogError( "AWS IoT does not support topic filters longer than %d bytes.",
+                             AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH );
+
+                status = false;
             }
         }
     }
