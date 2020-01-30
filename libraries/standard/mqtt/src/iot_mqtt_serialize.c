@@ -535,7 +535,7 @@ static uint8_t * _encodeString( uint8_t * pDestination,
 
     /* Copy the string into pBuffer and return the pointer to the end of the
      * encoded string. */
-    pBuffer = _copyBytes( pBuffer, source, sourceLength );
+    pBuffer = _copyBytes( pBuffer, ( const uint8_t * ) source, sourceLength );
 
     return pBuffer;
 }
@@ -581,10 +581,14 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
                     pBuffer += 2;
 
                     /* Write the identity portion of the username. */
-                    pBuffer = _copyBytes( pBuffer, pConnectInfo->pUserName, pConnectInfo->userNameLength );
+                    pBuffer = _copyBytes( pBuffer,
+                                          ( const uint8_t * ) pConnectInfo->pUserName,
+                                          pConnectInfo->userNameLength );
 
                     /* Write the metrics portion of the username. */
-                    pBuffer = _copyBytes( pBuffer, pMetricsUserName, AWS_IOT_METRICS_USERNAME_LENGTH );
+                    pBuffer = _copyBytes( pBuffer,
+                                          ( const uint8_t * ) pMetricsUserName,
+                                          AWS_IOT_METRICS_USERNAME_LENGTH );
 
                     encodedUserName = true;
                 }
@@ -997,7 +1001,9 @@ static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
     /* The payload is placed after the packet identifier. */
     if( pPublishInfo->payloadLength > 0U )
     {
-        pBuffer = _copyBytes( pBuffer, pPublishInfo->pPayload, pPublishInfo->payloadLength );
+        pBuffer = _copyBytes( pBuffer,
+                              ( const uint8_t * ) pPublishInfo->pPayload,
+                              pPublishInfo->payloadLength );
     }
 
     /* Ensure that the difference between the end and beginning of the buffer
