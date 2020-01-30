@@ -168,7 +168,7 @@ static IotNetworkInterface_t _networkInterface = { 0 };
 /**
  * @brief A packet allocated by _serializePingreq.
  */
-static uint8_t * pAllocatedPingreq = NULL;
+static uint8_t * _pAllocatedPingreq = NULL;
 
 /*-----------------------------------------------------------*/
 
@@ -556,11 +556,14 @@ IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
                                   size_t * pPacketSize )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
-    pAllocatedPingreq = IotTest_Malloc( 1 );
 
-    if( pAllocatedPingreq != NULL )
+    TEST_ASSERT_NULL( _pAllocatedPingreq );
+    _pAllocatedPingreq = IotTest_Malloc( 1 );
+
+    if( _pAllocatedPingreq != NULL )
     {
-        *pPingreqPacket = pAllocatedPingreq;
+        *_pAllocatedPingreq = MQTT_PACKET_TYPE_PINGREQ;
+        *pPingreqPacket = _pAllocatedPingreq;
         *pPacketSize = 1;
     }
     else
@@ -991,6 +994,8 @@ TEST( MQTT_Unit_API, ConnectMallocFail )
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
 
+    _pAllocatedPingreq = NULL;
+
     /* Initialize parameters. */
     _networkInterface.send = _sendSuccess;
     _networkInterface.close = _close;
@@ -1014,9 +1019,10 @@ TEST( MQTT_Unit_API, ConnectMallocFail )
                                   &_pMqttConnection );
 
         /* Free any allocated PINGREQ. */
-        if( pAllocatedPingreq != NULL )
+        if( _pAllocatedPingreq != NULL )
         {
-            IotTest_Free( pAllocatedPingreq );
+            IotTest_Free( _pAllocatedPingreq );
+            _pAllocatedPingreq = NULL;
         }
 
         /* If the return value is timeout, then all memory allocation succeeded
