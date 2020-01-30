@@ -161,7 +161,7 @@ static bool _matchEndWildcards( const char * pTopicFilter,
     if( endChar == true )
     {
         /* Determine if the topic filter ends with the '#' wildcard. */
-        status = ( pTopicFilter[ filterIndex + 1U ] == '/' ) && ( pTopicFilter[ filterIndex + 2U ] == '#' );
+        status = ( pTopicFilter[ filterIndex + 2U ] == '#' );
     }
 
     if( status == false )
