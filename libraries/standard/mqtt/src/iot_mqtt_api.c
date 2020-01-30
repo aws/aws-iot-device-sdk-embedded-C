@@ -469,8 +469,8 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
     pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs = ( uint32_t ) keepAliveSeconds * 1000U;
 
     /* Generate a PINGREQ packet. */
-    serializeStatus = _getMqttPingreqSerializer( pMqttConnection->pSerializer )( &( pMqttConnection->pingreq.u.operation.pMqttPacket ),
-                                                                                 &( pMqttConnection->pingreq.u.operation.packetSize ) );
+    serializeStatus = _getMqttPingreqSerializer( pNetworkInfo->pMqttSerializer )( &( pMqttConnection->pingreq.u.operation.pMqttPacket ),
+                                                                                  &( pMqttConnection->pingreq.u.operation.packetSize ) );
 
     if( serializeStatus != IOT_MQTT_SUCCESS )
     {

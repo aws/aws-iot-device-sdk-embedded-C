@@ -582,6 +582,40 @@ static IotMqttError_t _getNextByte( IotNetworkConnection_t pNetworkInterface,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief A PINGREQ serializer that attempts to allocate memory (unlike the default).
+ */
+IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
+                                  size_t * pPacketSize )
+{
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+    uint8_t * pNewPingreq = IotTest_Malloc( 1 );
+
+    if( pNewPingreq != NULL )
+    {
+        *pPingreqPacket = pNewPingreq;
+        *pPacketSize = 1;
+    }
+    else
+    {
+        status = IOT_MQTT_NO_MEMORY;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Wrapper for unity_free_mt.
+ */
+void _freePacket( uint8_t * pPacket )
+{
+    IotTest_Free( pPacket );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group for MQTT API tests.
  */
 TEST_GROUP( MQTT_Unit_API );
@@ -997,6 +1031,7 @@ TEST( MQTT_Unit_API, ConnectMallocFail )
     int32_t i = 0;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
 
     /* Initialize parameters. */
     _networkInterface.send = _sendSuccess;
@@ -1005,6 +1040,10 @@ TEST( MQTT_Unit_API, ConnectMallocFail )
     connectInfo.cleanSession = true;
     connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
     connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+
+    serializer.serialize.pingreq = _serializePingreq;
+    serializer.freePacket = _freePacket;
+    _networkInfo.pMqttSerializer = &serializer;
 
     for( i = 0; ; i++ )
     {
