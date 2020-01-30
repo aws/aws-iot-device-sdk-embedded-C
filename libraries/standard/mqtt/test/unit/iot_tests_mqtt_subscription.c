@@ -829,7 +829,14 @@ TEST( MQTT_Unit_Subscription, SubscriptionUnsubscribe )
     _IotMqtt_InvokeSubscriptionCallback( _pMqttConnection, &callbackParam );
     TEST_ASSERT_EQUAL_INT( false, IotLink_IsLinked( &( pSubscription->link ) ) );
 
-    /* Clean up the test. */
+    /* Put the subscription back in the list. */
+    IotListDouble_InsertHead( &( _pMqttConnection->subscriptionList ), pSubscriptionLink );
+
+    /* Disconnect the MQTT connection. As the subscription had its reference count
+     * incremented by this test, it should not be by disconnect. */
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+    _connectionCreated = false;
+
     IotMqtt_FreeSubscription( pSubscription );
 }
 
