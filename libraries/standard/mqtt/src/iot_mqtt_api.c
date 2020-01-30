@@ -331,8 +331,10 @@ static void _handleConnectFailure( IotMqttConnection_t pMqttConnection,
 /**
  * @brief Place holder packet identifier used when
  * _IotMqtt_AddSubscriptions is called with previous subscriptions lists.
+ * Any non-zero value is acceptable, since this value is never sent out to
+ * the broker. 
  */
-#define IOT_MQTT_PREVIOUS_SUBSCRIPTIONS_PACKET_ID    2
+#define IOT_MQTT_PREVIOUS_SUBSCRIPTIONS_PACKET_ID    1
 
 /*-----------------------------------------------------------*/
 
