@@ -48,14 +48,14 @@
  * Declaration of local MQTT serializer override selectors
  */
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttPublishSetDup_t,
-                                   _getMqttPublishSetDupFunc,
-                                   _IotMqtt_PublishSetDup,
-                                   serialize.publishSetDup )
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttFreePacket_t,
-                                   _getMqttFreePacketFunc,
-                                   _IotMqtt_FreePacket,
-                                   freePacket )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqttPublishSetDup_t,
+                                  _getMqttPublishSetDupFunc,
+                                  _IotMqtt_PublishSetDup,
+                                  serialize.publishSetDup )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqttFreePacket_t,
+                                  _getMqttFreePacketFunc,
+                                  _IotMqtt_FreePacket,
+                                  freePacket )
 #else /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
     #define _getMqttFreePacketFunc( pSerializer )       _IotMqtt_FreePacket
     #define _getMqttPublishSetDupFunc( pSerializer )    _IotMqtt_PublishSetDup

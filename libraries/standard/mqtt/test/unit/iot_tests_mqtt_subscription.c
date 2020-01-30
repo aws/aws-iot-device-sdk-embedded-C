@@ -203,6 +203,22 @@ static bool _waitForCount( IotMutex_t * pMutex,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief A subscription callback function that unlinks its subscription.
+ */
+static void _removalCallback( void * pArgument,
+                              IotMqttCallbackParam_t * pPublish )
+{
+    _mqttSubscription_t * pSubscription = pArgument;
+
+    /* Silence warnings about unused parameters. */
+    ( void ) pPublish;
+
+    IotListDouble_Remove( &( pSubscription->link ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief A subscription callback function that only reports whether it was invoked.
  */
 static void _publishCallback( void * pArgument,
@@ -328,6 +344,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_Subscription )
     RUN_TEST_CASE( MQTT_Unit_Subscription, SubscriptionAddMallocFail );
     RUN_TEST_CASE( MQTT_Unit_Subscription, ProcessPublish );
     RUN_TEST_CASE( MQTT_Unit_Subscription, ProcessPublishMultiple );
+    RUN_TEST_CASE( MQTT_Unit_Subscription, SubscriptionUnsubscribe );
     RUN_TEST_CASE( MQTT_Unit_Subscription, SubscriptionReferences );
     RUN_TEST_CASE( MQTT_Unit_Subscription, TopicFilterMatchTrue );
     RUN_TEST_CASE( MQTT_Unit_Subscription, TopicFilterMatchFalse );
@@ -764,6 +781,63 @@ TEST( MQTT_Unit_Subscription, ProcessPublishMultiple )
     TEST_ASSERT_EQUAL_INT( true, callbackInvoked[ 0 ] );
     TEST_ASSERT_EQUAL_INT( true, callbackInvoked[ 1 ] );
     TEST_ASSERT_EQUAL_INT( true, callbackInvoked[ 2 ] );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests that the unsubscribed flag is respected for subscriptions.
+ */
+TEST( MQTT_Unit_Subscription, SubscriptionUnsubscribe )
+{
+    IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
+    _mqttSubscription_t * pSubscription = NULL;
+    IotLink_t * pSubscriptionLink;
+    IotMqttCallbackParam_t callbackParam = { .u.message = { 0 } };
+
+    /* Set the subscription and corresponding publish info. */
+    subscription.pTopicFilter = "/test";
+    subscription.topicFilterLength = 5;
+    subscription.callback.function = _removalCallback;
+
+    callbackParam.u.message.info.pTopicName = "/test";
+    callbackParam.u.message.info.topicNameLength = 5;
+    callbackParam.u.message.info.pPayload = "";
+    callbackParam.u.message.info.payloadLength = 0;
+
+    /* Add the subscription. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( _pMqttConnection,
+                                                                    1,
+                                                                    &subscription,
+                                                                    1 ) );
+
+    /* Increment reference count of subscription and connection. */
+    pSubscriptionLink = IotListDouble_PeekHead( &( _pMqttConnection->subscriptionList ) );
+    pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
+    pSubscription->references++;
+    _pMqttConnection->references++;
+
+    /* Attempt to remove the subscription. */
+    _IotMqtt_RemoveSubscriptionByPacket( _pMqttConnection, 1, MQTT_REMOVE_ALL_SUBSCRIPTIONS );
+
+    /* Check that the subscription wasn't removed and the unsubscribed flag was set. */
+    TEST_ASSERT_EQUAL_INT( true, IotLink_IsLinked( &( pSubscription->link ) ) );
+    TEST_ASSERT_EQUAL_INT( true, pSubscription->unsubscribed );
+
+    /* Invoke the publish callback. This should remove the subscription. */
+    pSubscription->callback.pCallbackContext = pSubscription;
+    _IotMqtt_InvokeSubscriptionCallback( _pMqttConnection, &callbackParam );
+    TEST_ASSERT_EQUAL_INT( false, IotLink_IsLinked( &( pSubscription->link ) ) );
+
+    /* Put the subscription back in the list. */
+    IotListDouble_InsertHead( &( _pMqttConnection->subscriptionList ), pSubscriptionLink );
+
+    /* Disconnect the MQTT connection. As the subscription had its reference count
+     * incremented by this test, it should not be freed by disconnect. */
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+    _connectionCreated = false;
+
+    IotMqtt_FreeSubscription( pSubscription );
 }
 
 /*-----------------------------------------------------------*/
