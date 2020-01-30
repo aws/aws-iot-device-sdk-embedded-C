@@ -833,7 +833,7 @@ TEST( MQTT_Unit_Subscription, SubscriptionUnsubscribe )
     IotListDouble_InsertHead( &( _pMqttConnection->subscriptionList ), pSubscriptionLink );
 
     /* Disconnect the MQTT connection. As the subscription had its reference count
-     * incremented by this test, it should not be by disconnect. */
+     * incremented by this test, it should not be freed by disconnect. */
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
     _connectionCreated = false;
 
