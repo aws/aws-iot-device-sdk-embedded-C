@@ -289,8 +289,11 @@ static bool _topicMatch( const IotLink_t * const pSubscriptionLink,
      * will never pass NULL. */
     IotMqtt_Assert( pSubscriptionLink != NULL );
 
-    /* Adding parentheses to parameters of IotLink_Container is not applicable
+    /* Casting `pSubscriptionLink` to uint8_t * is done only to calculate the
+     * starting address of the struct and does not modify the link it points to.
+     * Adding parentheses to parameters of IotLink_Container is not applicable
      * because it uses type-casting and offsetof, and would cause compiling errors. */
+    /* coverity[misra_c_2012_rule_11_8_violation] */
     /* coverity[misra_c_2012_rule_20_7_violation] */
     /* coverity[caretline] */
     const _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
@@ -331,8 +334,11 @@ static bool _packetMatch( const IotLink_t * const pSubscriptionLink,
      * must never be NULL. */
     IotMqtt_Assert( pSubscriptionLink != NULL );
 
-    /* Adding parentheses to parameters of IotLink_Container is not applicable
+    /* Casting `pSubscriptionLink` to uint8_t * is done only to calculate the
+     * starting address of the struct and does not modify the link it points to.
+     * Adding parentheses to parameters of IotLink_Container is not applicable
      * because it uses type-casting and offsetof, and would cause compiling errors. */
+    /* coverity[misra_c_2012_rule_11_8_violation] */
     /* coverity[misra_c_2012_rule_20_7_violation] */
     /* coverity[caretline] */
     _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
@@ -671,8 +677,11 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
     /* Check if a matching subscription was found. */
     if( pSubscriptionLink != NULL )
     {
-        /* Adding parentheses to parameters of IotLink_Container is not applicable
+        /* Casting `pSubscriptionLink` to uint8_t * is done only to calculate the
+         * starting address of the struct and does not modify the link it points to.
+         * Adding parentheses to parameters of IotLink_Container is not applicable
          * because it uses type-casting and offsetof, and would cause compiling errors. */
+        /* coverity[misra_c_2012_rule_11_8_violation] */
         /* coverity[misra_c_2012_rule_20_7_violation] */
         /* coverity[caretline] */
         pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
