@@ -28,6 +28,9 @@
 /* The config header is always included first. */
 #include "iot_config.h"
 
+/* Standard includes. */
+#include <string.h>
+
 /* SDK initialization include. */
 #include "iot_init.h"
 
@@ -55,11 +58,6 @@
 #define CLIENT_IDENTIFIER_LENGTH    ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) ) /**< @brief Length of client identifier. */
 
 /*-----------------------------------------------------------*/
-
-/**
- * @brief An MQTT connection to share among the tests.
- */
-static _mqttConnection_t * _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
  * @brief An #IotMqttNetworkInfo_t to share among the tests.
@@ -300,8 +298,9 @@ TEST( MQTT_Unit_Platform, DisconnectSendFailure )
     pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 100 );
     TEST_ASSERT_NOT_NULL( pMqttConnection );
 
-    /* Clean up. */
-    IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+    /* Call disconnect with a failing send. */
+    _sendStatus = IOT_NETWORK_FAILURE;
+    IotMqtt_Disconnect( pMqttConnection, 0 );
 }
 
 /*-----------------------------------------------------------*/
