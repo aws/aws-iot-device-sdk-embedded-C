@@ -1212,7 +1212,7 @@ TEST( MQTT_Unit_API, DisconnectAlreadyDisconnected )
     TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
 
     /* Disconnect and clean up test. */
-    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+    IotMqtt_Disconnect( _pMqttConnection, 0 );
 }
 
 /*-----------------------------------------------------------*/
