@@ -73,6 +73,7 @@ static IotNetworkInterface_t _networkInterface = { 0 };
  */
 static IotNetworkError_t _createStatus = IOT_NETWORK_SUCCESS;             /**< @brief Return value for #_networkCreate. */
 static IotNetworkError_t _setReceiveCallbackStatus = IOT_NETWORK_SUCCESS; /**< @brief Return value for #_networkSetReceiveCallback. */
+static IotNetworkError_t _sendStatus = IOT_NETWORK_SUCCESS;               /**< @brief Return value for #_networkSend. */
 static IotNetworkError_t _closeStatus = IOT_NETWORK_SUCCESS;              /**< @brief Return value for #_networkClose. */
 static IotNetworkError_t _destroyStatus = IOT_NETWORK_SUCCESS;            /**< @brief Return value for #_networkDestroy. */
 
@@ -107,6 +108,28 @@ static IotNetworkError_t _networkSetReceiveCallback( IotNetworkConnection_t pCon
     ( void ) pContext;
 
     return _setReceiveCallbackStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Mocked network send function.
+ */
+static size_t _networkSend( IotNetworkConnection_t pConnection,
+                            const uint8_t * pMessage,
+                            size_t messageLength )
+{
+    size_t bytesSent = 0;
+
+    ( void ) pConnection;
+    ( void ) pMessage;
+
+    if( _sendStatus == IOT_NETWORK_SUCCESS )
+    {
+        bytesSent = messageLength;
+    }
+
+    return bytesSent;
 }
 
 /*-----------------------------------------------------------*/
@@ -153,11 +176,13 @@ TEST_SETUP( MQTT_Unit_Platform )
 
     _createStatus = IOT_NETWORK_SUCCESS;
     _setReceiveCallbackStatus = IOT_NETWORK_SUCCESS;
+    _sendStatus = IOT_NETWORK_SUCCESS;
     _closeStatus = IOT_NETWORK_SUCCESS;
     _destroyStatus = IOT_NETWORK_SUCCESS;
 
     _networkInterface.create = _networkCreate;
     _networkInterface.setReceiveCallback = _networkSetReceiveCallback;
+    _networkInterface.send = _networkSend;
     _networkInterface.close = _networkClose;
     _networkInterface.destroy = _networkDestroy;
 
@@ -219,6 +244,14 @@ TEST( MQTT_Unit_Platform, ConnectNetworkFailures )
     /* Failure in set receive callback, close, and destroy. */
     _closeStatus = IOT_NETWORK_FAILURE;
     _destroyStatus = IOT_NETWORK_FAILURE;
+    status = IotMqtt_Connect( &_networkInfo, &connectInfo, TIMEOUT_MS, &mqttConnection );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
+
+    /* Failure to send MQTT Connect. */
+    _setReceiveCallbackStatus = IOT_NETWORK_SUCCESS;
+    _closeStatus = IOT_NETWORK_SUCCESS;
+    _destroyStatus = IOT_NETWORK_SUCCESS;
+    _sendStatus = IOT_NETWORK_FAILURE;
     status = IotMqtt_Connect( &_networkInfo, &connectInfo, TIMEOUT_MS, &mqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
 }
