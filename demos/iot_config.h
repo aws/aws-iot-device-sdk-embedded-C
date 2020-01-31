@@ -24,11 +24,6 @@
 #ifndef IOT_CONFIG_H_
 #define IOT_CONFIG_H_
 
-/* Disable test builds by default. */
-#ifndef IOT_BUILD_TESTS
-    #define IOT_BUILD_TESTS    ( 0 )
-#endif
-
 /* Server endpoints used for the demos. May be overridden with command line
  * options at runtime. */
 #define IOT_DEMO_SECURED_CONNECTION    ( true ) /* Command line: -s (secured) or -u (unsecured) */

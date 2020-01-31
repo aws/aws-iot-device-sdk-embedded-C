@@ -42,6 +42,11 @@
 /* Task pool include. */
 #include "iot_taskpool.h"
 
+/* Disable test builds by default. */
+#ifndef IOT_BUILD_TESTS
+    #define IOT_BUILD_TESTS    ( 0 )
+#endif
+
 /**
  * @def IotMqtt_Assert( expression )
  * @brief Assertion macro for the MQTT library.
