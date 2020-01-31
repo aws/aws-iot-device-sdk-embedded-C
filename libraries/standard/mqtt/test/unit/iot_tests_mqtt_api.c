@@ -994,8 +994,6 @@ TEST( MQTT_Unit_API, ConnectMallocFail )
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
 
-    _pAllocatedPingreq = NULL;
-
     /* Initialize parameters. */
     _networkInterface.send = _sendSuccess;
     _networkInterface.close = _close;
