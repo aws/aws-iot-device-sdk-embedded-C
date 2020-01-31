@@ -34,6 +34,9 @@
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
+/* MQTT test access include. */
+#include "iot_test_access_mqtt.h"
+
 /* Test framework includes. */
 #include "unity_fixture.h"
 
@@ -212,6 +215,7 @@ TEST_TEAR_DOWN( MQTT_Unit_Platform )
 TEST_GROUP_RUNNER( MQTT_Unit_Platform )
 {
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectNetworkFailures );
+    RUN_TEST_CASE( MQTT_Unit_Platform, ConnectScheduleFailures );
 }
 
 /*-----------------------------------------------------------*/
@@ -254,6 +258,28 @@ TEST( MQTT_Unit_Platform, ConnectNetworkFailures )
     _sendStatus = IOT_NETWORK_FAILURE;
     status = IotMqtt_Connect( &_networkInfo, &connectInfo, TIMEOUT_MS, &mqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref mqtt_function_connect when the keep-alive
+ * job fails to schedule.
+ */
+TEST( MQTT_Unit_Platform, ConnectScheduleFailures )
+{
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    _mqttConnection_t * pMqttConnection = NULL;
+
+    /* Create a new MQTT connection. */
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 100 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+
+    /* Set an invalid status for the keep-alive job, preventing it from being
+     * scheduled. */
+    pMqttConnection->pingreq.jobStorage.status = IOT_TASKPOOL_STATUS_COMPLETED;
+    status = IotTestMqtt_scheduleKeepAlive( pMqttConnection );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SCHEDULING_ERROR, status );
 }
 
 /*-----------------------------------------------------------*/

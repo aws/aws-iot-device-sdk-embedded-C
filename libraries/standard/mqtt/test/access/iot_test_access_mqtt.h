@@ -40,6 +40,13 @@ _mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
                                                       const IotMqttNetworkInfo_t * pNetworkInfo,
                                                       uint16_t keepAliveSeconds );
 
+/**
+ * @brief Test access function for #_scheduleKeepAlive.
+ *
+ * @see #_scheduleKeepAlive.
+ */
+IotMqttError_t IotTestMqtt_scheduleKeepAlive( IotMqttConnection_t pMqttConnection );
+
 /*------------------------- iot_mqtt_serialize.c ------------------------*/
 
 /*
