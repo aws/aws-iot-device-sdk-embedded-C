@@ -132,6 +132,7 @@ pnetworkcontext
 pnetworkinterface
 pnextbyte
 poperation
+poperationlink
 posix
 ppacketidentifier
 ppacketidentifierhigh
@@ -143,6 +144,7 @@ pre
 preceiveddata
 premainingdata
 pserializer
+psubscriptionlink
 ptopicfilter
 ptopicname
 puback
