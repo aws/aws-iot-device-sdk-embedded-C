@@ -816,6 +816,51 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
     /* Disconnect the MQTT connection, then call Wait to clean up the operation. */
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
     IotMqtt_Wait( pOperation, 0 );
+
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Allocate an operation for an incoming publish. */
+    pOperation = IotMqtt_MallocConnection( sizeof( _mqttOperation_t ) );
+    TEST_ASSERT_NOT_NULL( pOperation );
+    ( void ) memset( pOperation, 0x00, sizeof( _mqttOperation_t ) );
+
+    pOperation->incomingPublish = true;
+    pOperation->pMqttConnection = _pMqttConnection;
+    pOperation->u.publish.publishInfo.pTopicName = "test/";
+    pOperation->u.publish.publishInfo.topicNameLength = 5;
+    pOperation->u.publish.pReceivedData = IotMqtt_MallocMessage( 1 );
+    pOperation->u.publish.publishInfo.pPayload = pOperation->u.publish.pReceivedData;
+    pOperation->u.publish.publishInfo.payloadLength = 1;
+
+    /* Increment the MQTT connection's reference count to prevent it from being destroyed
+     * until the test is over. */
+    _pMqttConnection->references += 2;
+
+    /* Set an invalid job status, which will cause cancellation of the job to fail. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _IotMqtt_ProcessIncomingPublish,
+                                                                    NULL,
+                                                                    &( pOperation->jobStorage ),
+                                                                    &( pOperation->job ) ) );
+    pOperation->jobStorage.status = IOT_TASKPOOL_STATUS_COMPLETED;
+
+    /* Insert the publish into the list of operations pending processing. Cancellation
+     * failure will cause it to be removed from the list, but it will not be destroyed. */
+    IotListDouble_InsertHead( &( _pMqttConnection->pendingProcessing ), &( pOperation->link ) );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+    TEST_ASSERT_EQUAL_INT( false, IotLink_IsLinked( &( pOperation->link ) ) );
+
+    /* Set a valid job status to test behavior when job cancellation succeeds. This
+     * should free everything allocated by this test. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _IotMqtt_ProcessIncomingPublish,
+                                                                    NULL,
+                                                                    &( pOperation->jobStorage ),
+                                                                    &( pOperation->job ) ) );
+    IotListDouble_InsertHead( &( _pMqttConnection->pendingProcessing ), &( pOperation->link ) );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
