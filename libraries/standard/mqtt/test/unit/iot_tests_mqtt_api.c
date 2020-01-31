@@ -1184,29 +1184,37 @@ TEST( MQTT_Unit_API, DisconnectMallocFail )
  */
 TEST( MQTT_Unit_API, DisconnectAlreadyDisconnected )
 {
-    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
-    /* Set up a mocked MQTT connection. */
-    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &mqttConnection ) );
-    TEST_ASSERT_EQUAL_INT( 1, mqttConnection->references );
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
 
-    /* Increase reference count to 3 so the subsequent disconnect
-     * calls do not free the connection. */
-    mqttConnection->references += 2;
+    /* Increment the MQTT connection's reference count to prevent it from being destroyed
+     * until the test is over. */
+    _pMqttConnection->references++;
+
     /* Call Disconnect, reference count should decrement. */
-    IotMqtt_Disconnect( mqttConnection, 0 );
-    TEST_ASSERT_EQUAL_INT( 2, mqttConnection->references );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+    TEST_ASSERT_EQUAL_INT( 1, _pMqttConnection->references );
     /* 'disconnected' flag should be set */
-    TEST_ASSERT_EQUAL( true, mqttConnection->disconnected );
+    TEST_ASSERT_EQUAL( true, _pMqttConnection->disconnected );
 
-    /* Make sure reference count is decremented when 'disconnected'
-     * connection is passed without any attempts to close socket again. */
-    IotMqtt_Disconnect( mqttConnection, 0 );
-    TEST_ASSERT_EQUAL_INT( 1, mqttConnection->references );
+    /* Attempt to use a closed connection. */
+    publishInfo.pTopicName = "test/";
+    publishInfo.topicNameLength = 5;
+    publishInfo.pPayload = "";
+    publishInfo.payloadLength = 0;
 
-    /* Clean up test. */
-    IotTest_MqttMockCleanup();
+    status = IotMqtt_PublishSync( _pMqttConnection, &publishInfo, 0, TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
+
+    /* Disconnect and clean up test. */
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
+
 /*-----------------------------------------------------------*/
 
 /**

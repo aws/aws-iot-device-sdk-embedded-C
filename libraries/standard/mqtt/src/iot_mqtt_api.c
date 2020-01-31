@@ -699,6 +699,7 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 }
 
 /*-----------------------------------------------------------*/
+
 static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation,
                                                 IotMqttConnection_t mqttConnection,
                                                 const IotMqttSubscription_t * pSubscriptionList,

@@ -580,6 +580,8 @@ static void _subscribePublishWait( IotMqttQos_t qos )
             publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
             publishInfo.pPayload = _pSamplePayload;
             publishInfo.payloadLength = _samplePayloadLength;
+            publishInfo.retryLimit = 3;
+            publishInfo.retryMs = 5000;
 
             /* Publish the message. */
             status = IotMqtt_PublishSync( _mqttConnection,
