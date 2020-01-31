@@ -40,6 +40,102 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Timeout to use for the tests. This can be short, but should allow time
+ * for other threads to run.
+ */
+#define TIMEOUT_MS                  ( 400 )
+
+/*
+ * Client identifier and length to use for the MQTT API tests.
+ */
+#define CLIENT_IDENTIFIER           ( "test" )                                           /**< @brief Client identifier. */
+#define CLIENT_IDENTIFIER_LENGTH    ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) ) /**< @brief Length of client identifier. */
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief An MQTT connection to share among the tests.
+ */
+static _mqttConnection_t * _pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+
+/**
+ * @brief An #IotMqttNetworkInfo_t to share among the tests.
+ */
+static IotMqttNetworkInfo_t _networkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
+
+/**
+ * @brief An #IotNetworkInterface_t to share among the tests.
+ */
+static IotNetworkInterface_t _networkInterface = { 0 };
+
+/*
+ * Return values of the mocked network functions.
+ */
+static IotNetworkError_t _createStatus = IOT_NETWORK_SUCCESS;             /**< @brief Return value for #_networkCreate. */
+static IotNetworkError_t _setReceiveCallbackStatus = IOT_NETWORK_SUCCESS; /**< @brief Return value for #_networkSetReceiveCallback. */
+static IotNetworkError_t _closeStatus = IOT_NETWORK_SUCCESS;              /**< @brief Return value for #_networkClose. */
+static IotNetworkError_t _destroyStatus = IOT_NETWORK_SUCCESS;            /**< @brief Return value for #_networkDestroy. */
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Mocked network create function.
+ */
+static IotNetworkError_t _networkCreate( IotNetworkServerInfo_t pServerInfo,
+                                         IotNetworkCredentials_t pCredentialInfo,
+                                         IotNetworkConnection_t * pConnection )
+{
+    ( void ) pServerInfo;
+    ( void ) pCredentialInfo;
+
+    *pConnection = NULL;
+
+    return _createStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Mocked network set receive callback function.
+ */
+static IotNetworkError_t _networkSetReceiveCallback( IotNetworkConnection_t pConnection,
+                                                     IotNetworkReceiveCallback_t receiveCallback,
+                                                     void * pContext )
+{
+    ( void ) pConnection;
+    ( void ) receiveCallback;
+    ( void ) pContext;
+
+    return _setReceiveCallbackStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Mocked network close function.
+ */
+static IotNetworkError_t _networkClose( IotNetworkConnection_t pConnection )
+{
+    ( void ) pConnection;
+
+    return _closeStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Mocked network destroy function.
+ */
+static IotNetworkError_t _networkDestroy( IotNetworkConnection_t pConnection )
+{
+    ( void ) pConnection;
+
+    return _destroyStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group for MQTT platform tests.
  */
 TEST_GROUP( MQTT_Unit_Platform );
@@ -51,6 +147,22 @@ TEST_GROUP( MQTT_Unit_Platform );
  */
 TEST_SETUP( MQTT_Unit_Platform )
 {
+    /* Reset the network info and interface. */
+    ( void ) memset( &_networkInfo, 0x00, sizeof( IotMqttNetworkInfo_t ) );
+    ( void ) memset( &_networkInterface, 0x00, sizeof( IotNetworkInterface_t ) );
+
+    _createStatus = IOT_NETWORK_SUCCESS;
+    _setReceiveCallbackStatus = IOT_NETWORK_SUCCESS;
+    _closeStatus = IOT_NETWORK_SUCCESS;
+    _destroyStatus = IOT_NETWORK_SUCCESS;
+
+    _networkInterface.create = _networkCreate;
+    _networkInterface.setReceiveCallback = _networkSetReceiveCallback;
+    _networkInterface.close = _networkClose;
+    _networkInterface.destroy = _networkDestroy;
+
+    _networkInfo.pNetworkInterface = &_networkInterface;
+
     /* Initialize libraries. */
     TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
@@ -74,6 +186,41 @@ TEST_TEAR_DOWN( MQTT_Unit_Platform )
  */
 TEST_GROUP_RUNNER( MQTT_Unit_Platform )
 {
+    RUN_TEST_CASE( MQTT_Unit_Platform, ConnectNetworkFailures );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref mqtt_function_connect when the network fails.
+ */
+TEST( MQTT_Unit_Platform, ConnectNetworkFailures )
+{
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+
+    /* Set test client identifier. */
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+
+    /* Network connection creation failure. */
+    _networkInfo.createNetworkConnection = true;
+    _createStatus = IOT_NETWORK_FAILURE;
+    status = IotMqtt_Connect( &_networkInfo, &connectInfo, TIMEOUT_MS, &mqttConnection );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
+
+    /* Set receive callback failure. */
+    _createStatus = IOT_NETWORK_SUCCESS;
+    _setReceiveCallbackStatus = IOT_NETWORK_FAILURE;
+    status = IotMqtt_Connect( &_networkInfo, &connectInfo, TIMEOUT_MS, &mqttConnection );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
+
+    /* Failure in set receive callback, close, and destroy. */
+    _closeStatus = IOT_NETWORK_FAILURE;
+    _destroyStatus = IOT_NETWORK_FAILURE;
+    status = IotMqtt_Connect( &_networkInfo, &connectInfo, TIMEOUT_MS, &mqttConnection );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
 }
 
 /*-----------------------------------------------------------*/
