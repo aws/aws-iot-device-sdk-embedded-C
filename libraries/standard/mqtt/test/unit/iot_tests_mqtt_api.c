@@ -824,7 +824,7 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
     TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Allocate an operation for an incoming publish. */
-    pOperation = IotMqtt_MallocConnection( sizeof( _mqttOperation_t ) );
+    pOperation = IotMqtt_MallocOperation( sizeof( _mqttOperation_t ) );
     TEST_ASSERT_NOT_NULL( pOperation );
     ( void ) memset( pOperation, 0x00, sizeof( _mqttOperation_t ) );
 
