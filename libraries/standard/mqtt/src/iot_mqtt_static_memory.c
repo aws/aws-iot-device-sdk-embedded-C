@@ -85,14 +85,14 @@
 /*
  * Static memory buffers and flags, allocated and zeroed at compile-time.
  */
-static uint32_t _pInUseMqttConnections[ IOT_MQTT_CONNECTIONS ] = { 0U };                          /**< @brief MQTT connection in-use flags. */
-static _mqttConnection_t _pMqttConnections[ IOT_MQTT_CONNECTIONS ];                               /**< @brief MQTT connections. */
+static uint32_t _pInUseMqttConnections[ IOT_MQTT_CONNECTIONS ];                      /**< @brief MQTT connection in-use flags. */
+static _mqttConnection_t _pMqttConnections[ IOT_MQTT_CONNECTIONS ];                  /**< @brief MQTT connections. */
 
-static uint32_t _pInUseMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { 0U };                   /**< @brief MQTT operation in-use flags. */
-static _mqttOperation_t _pMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ] = { { .link = { 0 } } }; /**< @brief MQTT operations. */
+static uint32_t _pInUseMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ];        /**< @brief MQTT operation in-use flags. */
+static _mqttOperation_t _pMqttOperations[ IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS ];     /**< @brief MQTT operations. */
 
-static uint32_t _pInUseMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ] = { 0U };                      /**< @brief MQTT subscription in-use flags. */
-static char _pMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ][ MQTT_SUBSCRIPTION_SIZE ] = { { '\0' } };  /**< @brief MQTT subscriptions. */
+static uint32_t _pInUseMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ];                  /**< @brief MQTT subscription in-use flags. */
+static char _pMqttSubscriptions[ IOT_MQTT_SUBSCRIPTIONS ][ MQTT_SUBSCRIPTION_SIZE ]; /**< @brief MQTT subscriptions. */
 
 /*-----------------------------------------------------------*/
 
