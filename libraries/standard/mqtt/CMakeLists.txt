@@ -70,6 +70,7 @@ if( ${IOT_BUILD_TESTS} )
     # MQTT unit test sources.
     set( MQTT_UNIT_TEST_SOURCES
          test/unit/iot_tests_mqtt_api.c
+         test/unit/iot_tests_mqtt_platform.c
          test/unit/iot_tests_mqtt_receive.c
          test/unit/iot_tests_mqtt_subscription.c
          test/unit/iot_tests_mqtt_validate.c )

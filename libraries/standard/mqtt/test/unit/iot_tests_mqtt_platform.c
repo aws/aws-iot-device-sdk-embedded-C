@@ -1,6 +1,6 @@
 /*
  * IoT MQTT V2.1.0
- * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,12 +21,18 @@
  */
 
 /**
- * @file iot_tests_mqtt.c
- * @brief Test runner for MQTT tests.
+ * @file iot_tests_mqtt_platform.c
+ * @brief Tests interaction of MQTT with the lower layers, such as network and task pool.
  */
 
-/* Standard includes. */
-#include <stdbool.h>
+/* The config header is always included first. */
+#include "iot_config.h"
+
+/* SDK initialization include. */
+#include "iot_init.h"
+
+/* MQTT internal include. */
+#include "private/iot_mqtt_internal.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -34,26 +40,40 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Runs the MQTT test groups.
- *
- * @param[in] disableNetworkTests Whether tests that require the network should run.
- * @param[in] disableLongTests Whether tests that take a long time should run.
+ * @brief Test group for MQTT platform tests.
  */
-void RunMqttTests( bool disableNetworkTests, bool disableLongTests )
+TEST_GROUP( MQTT_Unit_Platform );
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test setup for MQTT platform tests.
+ */
+TEST_SETUP( MQTT_Unit_Platform )
 {
-    /* Silence warnings about unused parameters. */
-    ( void ) disableLongTests;
+    /* Initialize libraries. */
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
+}
 
-    RUN_TEST_GROUP( MQTT_Unit_Subscription );
-    RUN_TEST_GROUP( MQTT_Unit_Validate );
-    RUN_TEST_GROUP( MQTT_Unit_Receive );
-    RUN_TEST_GROUP( MQTT_Unit_Platform );
-    RUN_TEST_GROUP( MQTT_Unit_API );
+/*-----------------------------------------------------------*/
 
-    if( disableNetworkTests == false )
-    {
-        RUN_TEST_GROUP( MQTT_System );
-    }
+/**
+ * @brief Test tear down for MQTT platform tests.
+ */
+TEST_TEAR_DOWN( MQTT_Unit_Platform )
+{
+    IotMqtt_Cleanup();
+    IotSdk_Cleanup();
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test group runner for MQTT platform tests.
+ */
+TEST_GROUP_RUNNER( MQTT_Unit_Platform )
+{
 }
 
 /*-----------------------------------------------------------*/
