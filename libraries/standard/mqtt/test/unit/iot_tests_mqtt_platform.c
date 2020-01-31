@@ -37,8 +37,17 @@
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
+/* Allow these tests to manipulate the task pool and create failures by including
+ * the task pool internal header. */
+#undef LIBRARY_LOG_LEVEL
+#undef LIBRARY_LOG_NAME
+#include "../src/private/iot_taskpool_internal.h"
+
 /* MQTT test access include. */
 #include "iot_test_access_mqtt.h"
+
+/* MQTT mock include. */
+#include "iot_tests_mqtt_mock.h"
 
 /* Test framework includes. */
 #include "unity_fixture.h"
@@ -212,9 +221,10 @@ TEST_TEAR_DOWN( MQTT_Unit_Platform )
  */
 TEST_GROUP_RUNNER( MQTT_Unit_Platform )
 {
-    RUN_TEST_CASE( MQTT_Unit_Platform, ConnectNetworkFailures );
-    RUN_TEST_CASE( MQTT_Unit_Platform, ConnectScheduleFailures );
+    RUN_TEST_CASE( MQTT_Unit_Platform, ConnectNetworkFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, ConnectScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, DisconnectSendFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, PublishScheduleFailure );
 }
 
 /*-----------------------------------------------------------*/
@@ -222,7 +232,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_Platform )
 /**
  * @brief Tests the behavior of @ref mqtt_function_connect when the network fails.
  */
-TEST( MQTT_Unit_Platform, ConnectNetworkFailures )
+TEST( MQTT_Unit_Platform, ConnectNetworkFailure )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
@@ -265,7 +275,7 @@ TEST( MQTT_Unit_Platform, ConnectNetworkFailures )
  * @brief Tests the behavior of @ref mqtt_function_connect when the keep-alive
  * job fails to schedule.
  */
-TEST( MQTT_Unit_Platform, ConnectScheduleFailures )
+TEST( MQTT_Unit_Platform, ConnectScheduleFailure )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttConnection_t * pMqttConnection = NULL;
@@ -301,6 +311,50 @@ TEST( MQTT_Unit_Platform, DisconnectSendFailure )
     /* Call disconnect with a failing send. */
     _sendStatus = IOT_NETWORK_FAILURE;
     IotMqtt_Disconnect( pMqttConnection, 0 );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref mqtt_function_publishasync when scheduling fails.
+ */
+TEST( MQTT_Unit_Platform, PublishScheduleFailure )
+{
+    IotMqttConnection_t pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+    IotTaskPool_t taskPool = IOT_SYSTEM_TASKPOOL;
+    IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER;
+    uint32_t maxThreads = 0;
+
+    /* Create a new MQTT connection. */
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 0 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+
+    /* Set the task pool to an invalid state and cause all further scheduling to fail. */
+    maxThreads = taskPool->maxThreads;
+    taskPool->maxThreads = 0;
+
+    /* Send a QoS 0 publish that fails to schedule. */
+    publishInfo.pTopicName = "test/";
+    publishInfo.topicNameLength = 5;
+    publishInfo.pPayload = "";
+    publishInfo.payloadLength = 0;
+
+    status = IotMqtt_PublishAsync( pMqttConnection, &publishInfo, 0, NULL, NULL );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SCHEDULING_ERROR, status );
+
+    /* Send a QoS 1 publish that fails to schedule. */
+    publishInfo.qos = IOT_MQTT_QOS_1;
+    status = IotMqtt_PublishAsync( pMqttConnection, &publishInfo, 0, NULL, &publishOperation );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SCHEDULING_ERROR, status );
+    TEST_ASSERT_EQUAL( NULL, publishOperation );
+
+    /* Restore the task pool to a valid state. */
+    taskPool->maxThreads = maxThreads;
+
+    /* Clean up. */
+    IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
