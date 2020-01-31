@@ -1983,6 +1983,8 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation )
 /*-----------------------------------------------------------*/
 
 /* Provide access to internal functions and variables if testing. */
+/* IOT_BUILD_TESTS is defined outside the codebase, e.g. passed in by CMake command. */
+/* coverity[misra_c_2012_rule_20_9_violation] */
 #if IOT_BUILD_TESTS == 1
     #include "iot_test_access_mqtt_api.c"
 #endif
