@@ -45,8 +45,8 @@
 #if ( IOT_MQTT_ENABLE_ASSERTS != 0 ) && ( IOT_MQTT_ENABLE_ASSERTS != 1 )
     #error "IOT_MQTT_ENABLE_ASSERTS must be 0 or 1."
 #endif
-#if ( IOT_MQTT_ENABLE_METRICS != 0 ) && ( IOT_MQTT_ENABLE_METRICS != 1 )
-    #error "IOT_MQTT_ENABLE_METRICS must be 0 or 1."
+#if ( AWS_IOT_MQTT_ENABLE_METRICS != 0 ) && ( AWS_IOT_MQTT_ENABLE_METRICS != 1 )
+    #error "AWS_IOT_MQTT_ENABLE_METRICS must be 0 or 1."
 #endif
 #if ( IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 0 ) && ( IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 1 )
     #error "IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES must be 0 or 1."
@@ -1979,6 +1979,9 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation )
 /*-----------------------------------------------------------*/
 
 /* Provide access to internal functions and variables if testing. */
+/* IOT_BUILD_TESTS is defined outside the code base, e.g. passed in by build command. */
+/* coverity[misra_c_2012_rule_20_9_violation] */
+/* coverity[caretline] */
 #if IOT_BUILD_TESTS == 1
     #include "iot_test_access_mqtt_api.c"
 #endif
