@@ -216,6 +216,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_Platform )
 {
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectNetworkFailures );
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectScheduleFailures );
+    RUN_TEST_CASE( MQTT_Unit_Platform, DisconnectSendFailure );
 }
 
 /*-----------------------------------------------------------*/
@@ -280,6 +281,27 @@ TEST( MQTT_Unit_Platform, ConnectScheduleFailures )
     pMqttConnection->pingreq.jobStorage.status = IOT_TASKPOOL_STATUS_COMPLETED;
     status = IotTestMqtt_scheduleKeepAlive( pMqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_SCHEDULING_ERROR, status );
+
+    /* Clean up. */
+    pMqttConnection->references--;
+    IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref mqtt_function_disconnect when the network fails.
+ */
+TEST( MQTT_Unit_Platform, DisconnectSendFailure )
+{
+    _mqttConnection_t * pMqttConnection = NULL;
+
+    /* Create a new MQTT connection. */
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 100 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+
+    /* Clean up. */
+    IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
