@@ -22,7 +22,7 @@ function generate_coverage() {
 }
 
 # Overwrite the value of the COMPILER_OPTIONS variable to remove any thread sanitizer flags, and replace with coverage flags.
-export COMPILER_OPTIONS="-DIOT_TEST_COVERAGE=1 --coverage -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG"
+export COMPILER_OPTIONS="-DIOT_BUILD_TESTS=1 -DIOT_TEST_COVERAGE=1 --coverage -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG"
 
 SCRIPTS_FOLDER_PATH=../scripts
 

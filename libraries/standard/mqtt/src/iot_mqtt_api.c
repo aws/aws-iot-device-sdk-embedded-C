@@ -469,8 +469,8 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
     pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs = ( uint32_t ) keepAliveSeconds * 1000U;
 
     /* Generate a PINGREQ packet. */
-    serializeStatus = _getMqttPingreqSerializer( pMqttConnection->pSerializer )( &( pMqttConnection->pingreq.u.operation.pMqttPacket ),
-                                                                                 &( pMqttConnection->pingreq.u.operation.packetSize ) );
+    serializeStatus = _getMqttPingreqSerializer( pNetworkInfo->pMqttSerializer )( &( pMqttConnection->pingreq.u.operation.pMqttPacket ),
+                                                                                  &( pMqttConnection->pingreq.u.operation.packetSize ) );
 
     if( serializeStatus != IOT_MQTT_SUCCESS )
     {
@@ -480,20 +480,13 @@ static bool _createKeepAliveOperation( const IotMqttNetworkInfo_t * pNetworkInfo
     }
     else
     {
-        /* Create the task pool job that processes keep-alive. */
+        /* Create the task pool job that processes keep-alive. Task pool job
+         * creation for a pre-allocated job should never fail. */
         jobStatus = IotTaskPool_CreateJob( _IotMqtt_ProcessKeepAlive,
                                            pMqttConnection,
                                            &( pMqttConnection->pingreq.jobStorage ),
                                            &( pMqttConnection->pingreq.job ) );
-
-        /* Task pool job creation for a pre-allocated job should never fail.
-         * Abort the program if it does. */
-        if( jobStatus != IOT_TASKPOOL_SUCCESS )
-        {
-            IotLogError( "Failed to create keep-alive job for new connection." );
-
-            IotMqtt_Assert( false );
-        }
+        IotMqtt_Assert( jobStatus == IOT_TASKPOOL_SUCCESS );
 
         /* Keep-alive references its MQTT connection, so increment reference. */
         ( pMqttConnection->references )++;

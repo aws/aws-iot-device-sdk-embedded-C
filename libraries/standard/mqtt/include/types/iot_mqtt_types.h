@@ -760,7 +760,7 @@ typedef IotMqttError_t ( * IotMqttSerializeConnect_t )( const IotMqttConnectInfo
  * @param[out] uint8_t** Where the PINGREQ packet is written.
  * @param[out] size_t* Size of the PINGREQ packet.
  */
-typedef IotMqttError_t ( * IotMqttSerializePingreq_t )( uint8_t ** pDisconnectPacket,
+typedef IotMqttError_t ( * IotMqttSerializePingreq_t )( uint8_t ** pPingreqPacket,
                                                         size_t * pPacketSize );
 
 /**
@@ -797,7 +797,7 @@ typedef IotMqttError_t ( * IotMqttSerializeSubscribe_t )( const IotMqttSubscript
  * @param[out] uint8_t** Where the DISCONNECT packet is written.
  * @param[out] size_t* Size of the DISCONNECT packet.
  */
-typedef IotMqttError_t ( * IotMqttSerializeDisconnect_t )( uint8_t ** ppDisconnectPacket,
+typedef IotMqttError_t ( * IotMqttSerializeDisconnect_t )( uint8_t ** pDisconnectPacket,
                                                            size_t * pPacketSize );
 
 /**
