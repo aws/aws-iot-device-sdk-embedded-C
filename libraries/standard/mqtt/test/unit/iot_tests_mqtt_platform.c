@@ -337,7 +337,7 @@ TEST( MQTT_Unit_Platform, PublishScheduleFailure )
 
     /* Send a QoS 0 publish that fails to schedule. */
     publishInfo.pTopicName = "test/";
-    publishInfo.topicNameLength = 5;
+    publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
     publishInfo.pPayload = "";
     publishInfo.payloadLength = 0;
 

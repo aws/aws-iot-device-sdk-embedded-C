@@ -57,15 +57,21 @@
  * Provide default values of test configuration constants.
  */
 #ifndef IOT_TEST_MQTT_TIMEOUT_MS
-    #define IOT_TEST_MQTT_TIMEOUT_MS    ( 5000 )
+    #define IOT_TEST_MQTT_TIMEOUT_MS             ( 5000 )
 #endif
 #ifndef IOT_TEST_MQTT_CONNECT_RETRY_COUNT
     #define IOT_TEST_MQTT_CONNECT_RETRY_COUNT    ( 1 )
+#endif
+#ifndef IOT_TEST_MQTT_PUBLISH_RETRY_COUNT
+    #define IOT_TEST_MQTT_PUBLISH_RETRY_COUNT    ( 3 )
 #endif
 /** @endcond */
 
 #if IOT_TEST_MQTT_CONNECT_RETRY_COUNT < 1
     #error "IOT_TEST_MQTT_CONNECT_RETRY_COUNT must be at least 1."
+#endif
+#if IOT_TEST_MQTT_PUBLISH_RETRY_COUNT < 0
+    #error "IOT_TEST_MQTT_CONNECT_RETRY_COUNT must be at least 0."
 #endif
 
 /**
@@ -246,7 +252,7 @@ static IotMqttError_t _mqttConnect( const IotMqttNetworkInfo_t * pNetworkInfo,
             if( ( status == IOT_MQTT_NETWORK_ERROR ) || ( status == IOT_MQTT_TIMEOUT ) )
             {
                 /* AWS IoT Service limits only allow 1 connection per MQTT client ID per second.
-                 * Initially wait until 1100 ms have elapsed since the last connection, then 
+                 * Initially wait until 1100 ms have elapsed since the last connection, then
                  * increase exponentially. */
                 IotClock_SleepMs( 1100 << retryCount );
             }
@@ -444,8 +450,8 @@ static void _reentrantCallback( void * pArgument,
     publishInfo.topicNameLength = topicLength;
     publishInfo.pPayload = _pSamplePayload;
     publishInfo.payloadLength = _samplePayloadLength;
-    publishInfo.retryLimit = 3;
-    publishInfo.retryMs = 5000;
+    publishInfo.retryLimit = IOT_TEST_MQTT_PUBLISH_RETRY_COUNT;
+    publishInfo.retryMs = IOT_TEST_MQTT_TIMEOUT_MS;
 
     mqttStatus = IotMqtt_PublishSync( pOperation->mqttConnection,
                                       &publishInfo,
@@ -580,8 +586,8 @@ static void _subscribePublishWait( IotMqttQos_t qos )
             publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
             publishInfo.pPayload = _pSamplePayload;
             publishInfo.payloadLength = _samplePayloadLength;
-            publishInfo.retryLimit = 3;
-            publishInfo.retryMs = 5000;
+            publishInfo.retryLimit = IOT_TEST_MQTT_PUBLISH_RETRY_COUNT;
+            publishInfo.retryMs = IOT_TEST_MQTT_TIMEOUT_MS;
 
             /* Publish the message. */
             status = IotMqtt_PublishSync( _mqttConnection,
@@ -1127,8 +1133,8 @@ TEST( MQTT_System, WaitAfterDisconnect )
     publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
     publishInfo.pPayload = _pSamplePayload;
     publishInfo.payloadLength = _samplePayloadLength;
-    publishInfo.retryLimit = 3;
-    publishInfo.retryMs = 5000;
+    publishInfo.retryLimit = IOT_TEST_MQTT_PUBLISH_RETRY_COUNT;
+    publishInfo.retryMs = IOT_TEST_MQTT_TIMEOUT_MS;
 
     /* Establish the MQTT connection. */
     status = _mqttConnect( &_networkInfo,
@@ -1310,8 +1316,8 @@ TEST( MQTT_System, IncomingPublishReentrancy )
                 publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
                 publishInfo.pPayload = _pSamplePayload;
                 publishInfo.payloadLength = _samplePayloadLength;
-                publishInfo.retryLimit = 3;
-                publishInfo.retryMs = 5000;
+                publishInfo.retryLimit = IOT_TEST_MQTT_PUBLISH_RETRY_COUNT;
+                publishInfo.retryMs = IOT_TEST_MQTT_TIMEOUT_MS;
 
                 status = IotMqtt_PublishSync( _mqttConnection,
                                               &publishInfo,

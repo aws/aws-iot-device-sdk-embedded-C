@@ -128,6 +128,12 @@
       4 * DUP_CHECK_RETRY_MS + \
       IOT_MQTT_RESPONSE_WAIT_MS )
 
+/**
+ * @brief Length of an arbitrary packet for testing. A buffer will be allocated
+ * for it, but its contents don't matter.
+ */
+#define PACKET_LENGTH    ( 1 )
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -558,13 +564,13 @@ IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
     TEST_ASSERT_NULL( _pAllocatedPingreq );
-    _pAllocatedPingreq = IotTest_Malloc( 1 );
+    _pAllocatedPingreq = IotTest_Malloc( PACKET_LENGTH );
 
     if( _pAllocatedPingreq != NULL )
     {
         *_pAllocatedPingreq = MQTT_PACKET_TYPE_PINGREQ;
         *pPingreqPacket = _pAllocatedPingreq;
-        *pPacketSize = 1;
+        *pPacketSize = PACKET_LENGTH;
     }
     else
     {
@@ -830,11 +836,12 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
 
     pOperation->incomingPublish = true;
     pOperation->pMqttConnection = _pMqttConnection;
-    pOperation->u.publish.publishInfo.pTopicName = "test/";
-    pOperation->u.publish.publishInfo.topicNameLength = 5;
-    pOperation->u.publish.pReceivedData = IotMqtt_MallocMessage( 1 );
+    pOperation->u.publish.publishInfo.pTopicName = TEST_TOPIC_NAME;
+    pOperation->u.publish.publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+
+    pOperation->u.publish.publishInfo.payloadLength = PACKET_LENGTH;
+    pOperation->u.publish.pReceivedData = IotMqtt_MallocMessage( pOperation->u.publish.publishInfo.payloadLength );
     pOperation->u.publish.publishInfo.pPayload = pOperation->u.publish.pReceivedData;
-    pOperation->u.publish.publishInfo.payloadLength = 1;
 
     /* Increment the MQTT connection's reference count to prevent it from being destroyed
      * until the test is over. */
@@ -1203,8 +1210,8 @@ TEST( MQTT_Unit_API, DisconnectAlreadyDisconnected )
     TEST_ASSERT_EQUAL( true, _pMqttConnection->disconnected );
 
     /* Attempt to use a closed connection. */
-    publishInfo.pTopicName = "test/";
-    publishInfo.topicNameLength = 5;
+    publishInfo.pTopicName = TEST_TOPIC_NAME;
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
     publishInfo.pPayload = "";
     publishInfo.payloadLength = 0;
 
