@@ -36,6 +36,10 @@
 #ifndef IOT_ATOMIC_H_
 #define IOT_ATOMIC_H_
 
+#ifndef IOT_ATOMIC_USE_PORT
+    #define IOT_ATOMIC_USE_PORT    ( 0 )
+#endif
+
 /* Use an atomic port if provided. */
 #if IOT_ATOMIC_USE_PORT == 1
     #include "atomic/iot_atomic_port.h"
@@ -59,9 +63,13 @@
             #define IOT_ATOMIC_GENERIC    1
         #endif
     #endif /* ifdef __clang__ */
-#else  /* if IOT_ATOMIC_USE_PORT == 1 */
+#else /* if IOT_ATOMIC_USE_PORT == 1 */
     #define IOT_ATOMIC_GENERIC    1
 #endif /* if IOT_ATOMIC_USE_PORT == 1 */
+
+#ifndef IOT_ATOMIC_GENERIC
+    #define IOT_ATOMIC_GENERIC    ( 0 )
+#endif
 
 /* Include the generic atomic header if no supported compiler was found. */
 #if ( IOT_ATOMIC_GENERIC == 1 )
