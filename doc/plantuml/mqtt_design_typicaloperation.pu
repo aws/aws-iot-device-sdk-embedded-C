@@ -4,7 +4,7 @@ skinparam classFontName Helvetica
 autonumber
 
 box "Application" #LightGreen
-    participant "Application thread" as application
+    participant "Application code" as application
     create participant "MQTT API\nfunction" as api
 end box
 

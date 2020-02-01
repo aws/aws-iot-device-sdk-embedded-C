@@ -219,7 +219,7 @@ Synchronous functions block their calling thread until the MQTT operation is com
 @section mqtt_design_asyncoperation Operation diagram
 @brief The following diagram shows the workflow of an operation.
 
-MQTT relies on the [task pool library](@ref taskpool) to process asynchronous MQTT operations in the background. The MQTT API [functions](@ref mqtt_functions) post a job to the task pool, which is transmitted from a background task. Incoming responses are received through a [network receive callback](@ref platform_network_function_receivecallback), which posts another job to process the response to the task pool.
+MQTT relies on the [task pool library](@ref taskpool) to process asynchronous MQTT operations in the background. Each MQTT API [function](@ref mqtt_functions) allocates the required resources, then schedules a background task to send the MQTT packet and receive the server's response. Incoming responses are received through a [network receive callback](@ref platform_network_function_receivecallback), which schedules another job to process the response.
 
 Synchronous operations are implemented as a call to the corresponding asynchronous operation. The synchronous function then waits on a semaphore until it receives a notification of completion. The workflow of a synchronous operation is otherwise identical to an asynchronous operation.
 
