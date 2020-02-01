@@ -45,8 +45,8 @@
 #if ( IOT_MQTT_ENABLE_ASSERTS != 0 ) && ( IOT_MQTT_ENABLE_ASSERTS != 1 )
     #error "IOT_MQTT_ENABLE_ASSERTS must be 0 or 1."
 #endif
-#if ( IOT_MQTT_ENABLE_METRICS != 0 ) && ( IOT_MQTT_ENABLE_METRICS != 1 )
-    #error "IOT_MQTT_ENABLE_METRICS must be 0 or 1."
+#if ( AWS_IOT_MQTT_ENABLE_METRICS != 0 ) && ( AWS_IOT_MQTT_ENABLE_METRICS != 1 )
+    #error "AWS_IOT_MQTT_ENABLE_METRICS must be 0 or 1."
 #endif
 #if ( IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 0 ) && ( IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES != 1 )
     #error "IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES must be 0 or 1."
@@ -699,6 +699,7 @@ static void _destroyMqttConnection( _mqttConnection_t * pMqttConnection )
 }
 
 /*-----------------------------------------------------------*/
+
 static IotMqttError_t _subscriptionCommonSetup( IotMqttOperationType_t operation,
                                                 IotMqttConnection_t mqttConnection,
                                                 const IotMqttSubscription_t * pSubscriptionList,
@@ -1181,16 +1182,10 @@ IotMqttError_t IotMqtt_Init( void )
 
                     status = IOT_MQTT_INIT_FAILED;
                 }
+
+                if( status == IOT_MQTT_SUCCESS )
             #endif /* ifdef _IotMqtt_InitSerializeAdditional */
         #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
-
-        /* If the above preprocessor conditions are satisfied, it is
-         * possible that status != IOT_MQTT_SUCCESS. Therefore, this
-         * condition is not an invariant, and the MISRA 14.3 violation is
-         * a false positive. */
-        /* coverity[misra_c_2012_rule_14_3_violation] */
-        /* coverity[const] */
-        if( status == IOT_MQTT_SUCCESS )
         {
             IotLogInfo( "MQTT library successfully initialized." );
         }
@@ -1979,6 +1974,9 @@ const char * IotMqtt_OperationType( IotMqttOperationType_t operation )
 /*-----------------------------------------------------------*/
 
 /* Provide access to internal functions and variables if testing. */
+/* IOT_BUILD_TESTS is defined outside the code base, e.g. passed in by build command. */
+/* coverity[misra_c_2012_rule_20_9_violation] */
+/* coverity[caretline] */
 #if IOT_BUILD_TESTS == 1
     #include "iot_test_access_mqtt_api.c"
 #endif

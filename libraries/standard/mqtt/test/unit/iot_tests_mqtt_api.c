@@ -128,6 +128,12 @@
       4 * DUP_CHECK_RETRY_MS + \
       IOT_MQTT_RESPONSE_WAIT_MS )
 
+/**
+ * @brief Length of an arbitrary packet for testing. A buffer will be allocated
+ * for it, but its contents don't matter.
+ */
+#define PACKET_LENGTH    ( 1 )
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -558,13 +564,13 @@ IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
     TEST_ASSERT_NULL( _pAllocatedPingreq );
-    _pAllocatedPingreq = IotTest_Malloc( 1 );
+    _pAllocatedPingreq = IotTest_Malloc( PACKET_LENGTH );
 
     if( _pAllocatedPingreq != NULL )
     {
         *_pAllocatedPingreq = MQTT_PACKET_TYPE_PINGREQ;
         *pPingreqPacket = _pAllocatedPingreq;
-        *pPacketSize = 1;
+        *pPacketSize = PACKET_LENGTH;
     }
     else
     {
@@ -816,6 +822,52 @@ TEST( MQTT_Unit_API, OperationCreateDestroy )
     /* Disconnect the MQTT connection, then call Wait to clean up the operation. */
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
     IotMqtt_Wait( pOperation, 0 );
+
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Allocate an operation for an incoming publish. */
+    pOperation = IotMqtt_MallocOperation( sizeof( _mqttOperation_t ) );
+    TEST_ASSERT_NOT_NULL( pOperation );
+    ( void ) memset( pOperation, 0x00, sizeof( _mqttOperation_t ) );
+
+    pOperation->incomingPublish = true;
+    pOperation->pMqttConnection = _pMqttConnection;
+    pOperation->u.publish.publishInfo.pTopicName = TEST_TOPIC_NAME;
+    pOperation->u.publish.publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+
+    pOperation->u.publish.publishInfo.payloadLength = PACKET_LENGTH;
+    pOperation->u.publish.pReceivedData = IotMqtt_MallocMessage( pOperation->u.publish.publishInfo.payloadLength );
+    pOperation->u.publish.publishInfo.pPayload = pOperation->u.publish.pReceivedData;
+
+    /* Increment the MQTT connection's reference count to prevent it from being destroyed
+     * until the test is over. */
+    _pMqttConnection->references += 2;
+
+    /* Set an invalid job status, which will cause cancellation of the job to fail. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _IotMqtt_ProcessIncomingPublish,
+                                                                    NULL,
+                                                                    &( pOperation->jobStorage ),
+                                                                    &( pOperation->job ) ) );
+    pOperation->jobStorage.status = IOT_TASKPOOL_STATUS_COMPLETED;
+
+    /* Insert the publish into the list of operations pending processing. Cancellation
+     * failure will cause it to be removed from the list, but it will not be destroyed. */
+    IotListDouble_InsertHead( &( _pMqttConnection->pendingProcessing ), &( pOperation->link ) );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+    TEST_ASSERT_EQUAL_INT( false, IotLink_IsLinked( &( pOperation->link ) ) );
+
+    /* Set a valid job status to test behavior when job cancellation succeeds. This
+     * should free everything allocated by this test. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _IotMqtt_ProcessIncomingPublish,
+                                                                    NULL,
+                                                                    &( pOperation->jobStorage ),
+                                                                    &( pOperation->job ) ) );
+    IotListDouble_InsertHead( &( _pMqttConnection->pendingProcessing ), &( pOperation->link ) );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
@@ -1139,29 +1191,37 @@ TEST( MQTT_Unit_API, DisconnectMallocFail )
  */
 TEST( MQTT_Unit_API, DisconnectAlreadyDisconnected )
 {
-    IotMqttConnection_t mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
-    /* Set up a mocked MQTT connection. */
-    TEST_ASSERT_EQUAL_INT( true, IotTest_MqttMockInit( &mqttConnection ) );
-    TEST_ASSERT_EQUAL_INT( 1, mqttConnection->references );
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
 
-    /* Increase reference count to 3 so the subsequent disconnect
-     * calls do not free the connection. */
-    mqttConnection->references += 2;
+    /* Increment the MQTT connection's reference count to prevent it from being destroyed
+     * until the test is over. */
+    _pMqttConnection->references++;
+
     /* Call Disconnect, reference count should decrement. */
-    IotMqtt_Disconnect( mqttConnection, 0 );
-    TEST_ASSERT_EQUAL_INT( 2, mqttConnection->references );
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+    TEST_ASSERT_EQUAL_INT( 1, _pMqttConnection->references );
     /* 'disconnected' flag should be set */
-    TEST_ASSERT_EQUAL( true, mqttConnection->disconnected );
+    TEST_ASSERT_EQUAL( true, _pMqttConnection->disconnected );
 
-    /* Make sure reference count is decremented when 'disconnected'
-     * connection is passed without any attempts to close socket again. */
-    IotMqtt_Disconnect( mqttConnection, 0 );
-    TEST_ASSERT_EQUAL_INT( 1, mqttConnection->references );
+    /* Attempt to use a closed connection. */
+    publishInfo.pTopicName = TEST_TOPIC_NAME;
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+    publishInfo.pPayload = "";
+    publishInfo.payloadLength = 0;
 
-    /* Clean up test. */
-    IotTest_MqttMockCleanup();
+    status = IotMqtt_PublishSync( _pMqttConnection, &publishInfo, 0, TIMEOUT_MS );
+    TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
+
+    /* Disconnect and clean up test. */
+    IotMqtt_Disconnect( _pMqttConnection, 0 );
 }
+
 /*-----------------------------------------------------------*/
 
 /**
