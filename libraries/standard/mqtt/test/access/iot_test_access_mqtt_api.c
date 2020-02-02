@@ -33,12 +33,7 @@ _mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
                                                       const IotMqttNetworkInfo_t * pNetworkInfo,
                                                       uint16_t keepAliveSeconds );
 
-void IotTestMqtt_mqttOperation_tryDestroy( void * pData );
-
-IotNetworkError_t IotTestMqtt_createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                       IotNetworkConnection_t * pNetworkConnection,
-                                                       bool * pCreatedNewNetworkConnection );
-
+IotMqttError_t IotTestMqtt_scheduleKeepAlive( IotMqttConnection_t pMqttConnection );
 
 /*-----------------------------------------------------------*/
 
@@ -51,18 +46,9 @@ _mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
 
 /*-----------------------------------------------------------*/
 
-void IotTestMqtt_mqttOperation_tryDestroy( void * pData )
+IotMqttError_t IotTestMqtt_scheduleKeepAlive( IotMqttConnection_t pMqttConnection )
 {
-    _mqttOperation_tryDestroy( pData );
-}
-
-/*-----------------------------------------------------------*/
-
-IotNetworkError_t IotTestMqtt_createNetworkConnection( const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                       IotNetworkConnection_t * pNetworkConnection,
-                                                       bool * pCreatedNewNetworkConnection )
-{
-    return _createNetworkConnection( pNetworkInfo, pNetworkConnection, pCreatedNewNetworkConnection );
+    return _scheduleKeepAlive( pMqttConnection );
 }
 
 /*-----------------------------------------------------------*/
