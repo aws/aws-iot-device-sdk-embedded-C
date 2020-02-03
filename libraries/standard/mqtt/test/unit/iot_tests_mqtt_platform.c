@@ -231,7 +231,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_Platform )
 {
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectNetworkFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectScheduleFailure );
-    RUN_TEST_CASE( MQTT_Unit_Platform, DisconnectSendFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, DisconnectNetworkFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, PublishScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, SubscriptionScheduleFailure );
 }
@@ -309,17 +309,22 @@ TEST( MQTT_Unit_Platform, ConnectScheduleFailure )
 /**
  * @brief Tests the behavior of @ref mqtt_function_disconnect when the network fails.
  */
-TEST( MQTT_Unit_Platform, DisconnectSendFailure )
+TEST( MQTT_Unit_Platform, DisconnectNetworkFailure )
 {
     _mqttConnection_t * pMqttConnection = NULL;
 
-    /* Create a new MQTT connection. */
+    /* Call disconnect with a failing send. */
     pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 100 );
     TEST_ASSERT_NOT_NULL( pMqttConnection );
-
-    /* Call disconnect with a failing send. */
     _sendStatus = IOT_NETWORK_FAILURE;
     IotMqtt_Disconnect( pMqttConnection, 0 );
+    _sendStatus = IOT_NETWORK_SUCCESS;
+
+    /* Call disconnect with a failing close. */
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 100 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+    _closeStatus = IOT_NETWORK_FAILURE;
+    IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
