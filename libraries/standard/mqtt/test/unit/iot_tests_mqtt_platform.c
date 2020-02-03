@@ -177,6 +177,22 @@ static IotNetworkError_t _networkDestroy( IotNetworkConnection_t pConnection )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Serializer override for PUBACK that always fails.
+ */
+static IotMqttError_t _serializePuback( uint16_t packetIdentifier,
+                                              uint8_t ** pPubackPacket,
+                                              size_t * pPacketSize )
+{
+    ( void ) packetIdentifier;
+    ( void ) pPubackPacket;
+    ( void ) pPacketSize;
+
+    return IOT_MQTT_NO_MEMORY;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group for MQTT platform tests.
  */
 TEST_GROUP( MQTT_Unit_Platform );
@@ -231,8 +247,9 @@ TEST_GROUP_RUNNER( MQTT_Unit_Platform )
 {
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectNetworkFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectScheduleFailure );
-    RUN_TEST_CASE( MQTT_Unit_Platform, DisconnectSendFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, DisconnectNetworkFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, PublishScheduleFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, PubackScheduleSerializeFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, SubscriptionScheduleFailure );
 }
 
@@ -309,17 +326,22 @@ TEST( MQTT_Unit_Platform, ConnectScheduleFailure )
 /**
  * @brief Tests the behavior of @ref mqtt_function_disconnect when the network fails.
  */
-TEST( MQTT_Unit_Platform, DisconnectSendFailure )
+TEST( MQTT_Unit_Platform, DisconnectNetworkFailure )
 {
     _mqttConnection_t * pMqttConnection = NULL;
 
-    /* Create a new MQTT connection. */
+    /* Call disconnect with a failing send. */
     pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 100 );
     TEST_ASSERT_NOT_NULL( pMqttConnection );
-
-    /* Call disconnect with a failing send. */
     _sendStatus = IOT_NETWORK_FAILURE;
     IotMqtt_Disconnect( pMqttConnection, 0 );
+    _sendStatus = IOT_NETWORK_SUCCESS;
+
+    /* Call disconnect with a failing close. */
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 100 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+    _closeStatus = IOT_NETWORK_FAILURE;
+    IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
@@ -346,7 +368,7 @@ TEST( MQTT_Unit_Platform, PublishScheduleFailure )
 
     /* Send a QoS 0 publish that fails to schedule. */
     publishInfo.pTopicName = "test/";
-    publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
+    publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
     publishInfo.pPayload = "";
     publishInfo.payloadLength = 0;
 
@@ -369,6 +391,44 @@ TEST( MQTT_Unit_Platform, PublishScheduleFailure )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Tests the behavior of the client-to-server PUBACK when scheduling and
+  * serializing fail.
+ */
+TEST( MQTT_Unit_Platform, PubackScheduleSerializeFailure )
+{
+    IotMqttConnection_t pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
+    IotTaskPool_t taskPool = IOT_SYSTEM_TASKPOOL;
+    uint32_t maxThreads = 0;
+
+    /* Create a new MQTT connection. */
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 0 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+
+    /* Set the task pool to an invalid state and cause all further scheduling to fail. */
+    maxThreads = taskPool->maxThreads;
+    taskPool->maxThreads = 0;
+
+    /* Call the function to send a PUBACK with scheduling failure. The failed PUBACK
+     * should be cleaned up and not create memory leaks. */
+    IotTestMqtt_sendPuback( pMqttConnection, 1 );
+
+    /* Restore the task pool to a valid state. */
+    taskPool->maxThreads = maxThreads;
+
+    /* Call the function to send PUBACK with serializer failure. The failed PUBACK
+     * should be cleaned up and not create memory leaks. */
+    serializer.serialize.puback = _serializePuback;
+    pMqttConnection->pSerializer = &serializer;
+    IotTestMqtt_sendPuback( pMqttConnection, 1 );
+
+    /* Clean up. */
+    IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Tests the behavior of @ref mqtt_function_subscribeasync and
  * @ref mqtt_function_unsubscribeasync when scheduling fails.
  */
@@ -383,7 +443,7 @@ TEST( MQTT_Unit_Platform, SubscriptionScheduleFailure )
 
     /* Set subscription parameters. */
     subscription.pTopicFilter = "test/";
-    subscription.topicFilterLength = strlen( subscription.pTopicFilter );
+    subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
     subscription.callback.function = SUBSCRIPTION_CALLBACK_FUNCTION;
 
     /* Create a new MQTT connection. */

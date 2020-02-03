@@ -903,3 +903,11 @@ IotMqttError_t IotMqtt_GetIncomingMQTTPacketTypeAndLength( IotMqttPacketInfo_t *
 }
 
 /*-----------------------------------------------------------*/
+
+/* Provide access to internal functions and variables if testing. */
+/* IOT_BUILD_TESTS is defined outside the code base, e.g. passed in by build command. */
+/* coverity[misra_c_2012_rule_20_9_violation] */
+/* coverity[caretline] */
+#if IOT_BUILD_TESTS == 1
+    #include "iot_test_access_mqtt_network.c"
+#endif
