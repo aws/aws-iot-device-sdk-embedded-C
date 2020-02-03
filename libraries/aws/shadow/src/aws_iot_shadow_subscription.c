@@ -172,14 +172,14 @@ void _AwsIotShadow_RemoveSubscription( _shadowSubscription_t * pSubscription,
 
     /* Check for active operations. If any Shadow operation's subscription
      * reference count is not 0, then the subscription cannot be removed. */
-    for( i = 0; i < SHADOW_OPERATION_COUNT; i++ )
+    for( i = 0; i < ( int32_t ) SHADOW_OPERATION_COUNT; i++ )
     {
         if( pSubscription->references[ i ] > 0 )
         {
             /* In some implementations IotLogDebug() maps to C standard printing API
-            * that needs specific primitive types for format specifiers. Also,
-            * inttypes.h may not be available on some C99 compilers, despite
-            * stdint.h being available. */
+             * that needs specific primitive types for format specifiers. Also,
+             * inttypes.h may not be available on some C99 compilers, despite
+             * stdint.h being available. */
             /* coverity[misra_c_2012_directive_4_6_violation] */
             IotLogDebug( "Reference count %ld for %.*s subscription object. "
                          "Subscription cannot be removed yet.",
@@ -443,7 +443,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
 
         pSubscription = IotLink_Container( _shadowSubscription_t, pSubscriptionLink, link );
 
-        for( i = 0; i < ( uint32_t ) SHADOW_OPERATION_COUNT; i++ )
+        for( i = 0; i < SHADOW_OPERATION_COUNT; i++ )
         {
             if( ( flags & ( 0x1UL << i ) ) != 0U )
             {
@@ -459,7 +459,7 @@ AwsIotShadowError_t AwsIotShadow_RemovePersistentSubscriptions( IotMqttConnectio
                 {
                     /* Generate the prefix of the Shadow topic. This function will not
                      * fail when given a buffer. */
-                    ( void ) _AwsIotShadow_GenerateShadowTopic( ( _shadowOperationType_t ) i,
+                    ( void ) _AwsIotShadow_GenerateShadowTopic( _AwsIotShadow_IntToShadowOperationType( i ),
                                                                 pThingName,
                                                                 thingNameLength,
                                                                 &( pSubscription->pTopicBuffer ),

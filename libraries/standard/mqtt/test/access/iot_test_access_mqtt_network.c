@@ -1,6 +1,6 @@
 /*
  * IoT MQTT V2.1.0
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,34 +21,23 @@
  */
 
 /**
- * @file iot_test_access_mqtt_api.c
+ * @file iot_test_access_mqtt_network.c
  * @brief Provides access to the internal functions and variables of
- * iot_mqtt_api.c
+ * iot_mqtt_network.c
  *
- * This file should only be included at the bottom of iot_mqtt_api.c and never
- * compiled by itself.
+ * This file should only be included at the bottom of iot_mqtt_network.c
+ * and never compiled by itself.
  */
 
-_mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
-                                                      const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                      uint16_t keepAliveSeconds );
-
-IotMqttError_t IotTestMqtt_scheduleKeepAlive( IotMqttConnection_t pMqttConnection );
+void IotTestMqtt_sendPuback( _mqttConnection_t * pMqttConnection,
+                             uint16_t packetIdentifier );
 
 /*-----------------------------------------------------------*/
 
-_mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
-                                                      const IotMqttNetworkInfo_t * pNetworkInfo,
-                                                      uint16_t keepAliveSeconds )
+void IotTestMqtt_sendPuback( _mqttConnection_t * pMqttConnection,
+                             uint16_t packetIdentifier )
 {
-    return _createMqttConnection( awsIotMqttMode, pNetworkInfo, keepAliveSeconds );
-}
-
-/*-----------------------------------------------------------*/
-
-IotMqttError_t IotTestMqtt_scheduleKeepAlive( IotMqttConnection_t pMqttConnection )
-{
-    return _scheduleKeepAlive( pMqttConnection );
+    _sendPuback( pMqttConnection, packetIdentifier );
 }
 
 /*-----------------------------------------------------------*/

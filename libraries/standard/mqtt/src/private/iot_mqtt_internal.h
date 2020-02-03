@@ -373,7 +373,7 @@ typedef struct _mqttOperation
         struct
         {
             IotMqttPublishInfo_t publishInfo; /**< @brief Deserialized PUBLISH. */
-            const void * pReceivedData;       /**< @brief Any buffer associated with this PUBLISH that should be freed. */
+            void * pReceivedData;             /**< @brief Any buffer associated with this PUBLISH that should be freed. */
         } publish;
     } u;                                      /**< @brief Valid member depends on _mqttOperation_t.incomingPublish. */
 } _mqttOperation_t;
@@ -1024,20 +1024,20 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
 /**
  * @brief Utility macro for creating serializer override selector functions
  */
-    #define _SERIALIZER_OVERRIDE_SELECTOR( _funcType_t, _funcName, _defaultFunc, _serializerMember ) \
-    static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer );                         \
-    static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer )                          \
-    {                                                                                                \
-        _funcType_t _returnValue = _defaultFunc;                                                     \
-        if( pSerializer != NULL )                                                                    \
-        {                                                                                            \
-            if( pSerializer->_serializerMember != NULL )                                             \
-            {                                                                                        \
-                _returnValue = pSerializer->_serializerMember;                                       \
-            }                                                                                        \
-        }                                                                                            \
-                                                                                                     \
-        return _returnValue;                                                                         \
+    #define SERIALIZER_OVERRIDE_SELECTOR( funcType_t, funcName, defaultFunc, serializerMember ) \
+    static funcType_t funcName( const IotMqttSerializer_t * pSerializer );                      \
+    static funcType_t funcName( const IotMqttSerializer_t * pSerializer )                       \
+    {                                                                                           \
+        funcType_t returnValue = defaultFunc;                                                   \
+        if( pSerializer != NULL )                                                               \
+        {                                                                                       \
+            if( pSerializer->serializerMember != NULL )                                         \
+            {                                                                                   \
+                returnValue = pSerializer->serializerMember;                                    \
+            }                                                                                   \
+        }                                                                                       \
+                                                                                                \
+        return returnValue;                                                                     \
     }
 #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 
