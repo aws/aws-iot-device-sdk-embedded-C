@@ -132,7 +132,7 @@
  * @brief Length of an arbitrary packet for testing. A buffer will be allocated
  * for it, but its contents don't matter.
  */
-#define PACKET_LENGTH    ( 1 )
+#define PACKET_LENGTH    ( 32 )
 
 /*-----------------------------------------------------------*/
 
@@ -644,6 +644,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS0Parameters );
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS0MallocFail );
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS1 );
+    RUN_TEST_CASE( MQTT_Unit_API, PublishRetryPeriod );
     RUN_TEST_CASE( MQTT_Unit_API, PublishDuplicates );
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeUnsubscribeParameters );
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeMallocFail );
@@ -1453,6 +1454,63 @@ TEST( MQTT_Unit_API, PublishQoS1 )
     }
 
     /* Clean up MQTT connection. */
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests that PUBLISH retry periods are calculated correctly.
+ */
+TEST( MQTT_Unit_API, PublishRetryPeriod )
+{
+    _mqttOperation_t * pOperation = NULL;
+    uint32_t periodMs = IOT_MQTT_RETRY_MS_CEILING / 2;
+
+    /* Create a new MQTT connection. */
+    _networkInterface.send = _sendSuccess;
+    _pMqttConnection = IotTestMqtt_createMqttConnection( false,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Create a PUBLISH with retry operation. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( _pMqttConnection,
+                                                                   IOT_MQTT_FLAG_WAITABLE,
+                                                                   NULL,
+                                                                   &pOperation ) );
+    TEST_ASSERT_NOT_NULL( pOperation );
+    pOperation->u.operation.type = IOT_MQTT_PUBLISH_TO_SERVER;
+    pOperation->u.operation.pMqttPacket = IotMqtt_MallocMessage( PACKET_LENGTH );
+    pOperation->u.operation.packetSize = PACKET_LENGTH;
+    pOperation->u.operation.periodic.retry.limit = DUP_CHECK_RETRY_LIMIT;
+    pOperation->u.operation.periodic.retry.nextPeriodMs = periodMs;
+    IotListDouble_Remove( &( pOperation->link ) );
+
+    /* Simulate send of PUBLISH. */
+    _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+
+    /* Immediately cancel retried PUBLISH, then check statuses set by send. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
+                                                                    pOperation->job,
+                                                                    NULL ) );
+    TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING, pOperation->u.operation.status );
+    TEST_ASSERT_EQUAL( 1, pOperation->u.operation.periodic.retry.count );
+    TEST_ASSERT_EQUAL( 2 * periodMs, pOperation->u.operation.periodic.retry.nextPeriodMs );
+
+    /* Simulate another send. Check that the retry ceiling is respected. */
+    _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+
+    /* Immediately cancel retried PUBLISH, then check statuses set by send. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
+                                                                    pOperation->job,
+                                                                    NULL ) );
+    TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING, pOperation->u.operation.status );
+    TEST_ASSERT_EQUAL( 2, pOperation->u.operation.periodic.retry.count );
+    TEST_ASSERT_EQUAL( IOT_MQTT_RETRY_MS_CEILING, pOperation->u.operation.periodic.retry.nextPeriodMs );
+
+    /* Clean up. */
+    TEST_ASSERT_EQUAL_INT( false, _IotMqtt_DecrementOperationReferences( pOperation, false ) );
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
