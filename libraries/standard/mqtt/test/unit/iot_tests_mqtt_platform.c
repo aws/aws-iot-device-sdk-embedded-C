@@ -248,6 +248,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_Platform )
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectNetworkFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, DisconnectNetworkFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, PingreqSendFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, PublishScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, PubackScheduleSerializeFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, SubscriptionScheduleFailure );
@@ -343,6 +344,22 @@ TEST( MQTT_Unit_Platform, DisconnectNetworkFailure )
     TEST_ASSERT_NOT_NULL( pMqttConnection );
     _closeStatus = IOT_NETWORK_FAILURE;
     IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior when a PINGREQ cannot be sent.
+ */
+TEST( MQTT_Unit_Platform, PingreqSendFailure )
+{
+    _mqttConnection_t * pMqttConnection = NULL;
+
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 100 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+
+    _sendStatus = IOT_NETWORK_FAILURE;
+    _IotMqtt_ProcessKeepAlive( IOT_SYSTEM_TASKPOOL, pMqttConnection->pingreq.job, pMqttConnection );
 }
 
 /*-----------------------------------------------------------*/
