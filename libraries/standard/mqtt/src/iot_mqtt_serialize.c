@@ -522,6 +522,9 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
     uint8_t * pBuffer = pDestination;
     const char * pMetricsUserName = NULL;
 
+    /* Avoid unused variable warning when AWS_IOT_MQTT_ENABLE_METRICS is set to 0 */
+    ( void ) pMetricsUserName;
+
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
      * Otherwise, write the username and password only when not connecting to the
      * AWS IoT MQTT server. */
