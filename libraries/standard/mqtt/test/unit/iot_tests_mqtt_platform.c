@@ -177,6 +177,22 @@ static IotNetworkError_t _networkDestroy( IotNetworkConnection_t pConnection )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Serializer override for PUBACK that always fails.
+ */
+static IotMqttError_t _serializePuback( uint16_t packetIdentifier,
+                                              uint8_t ** pPubackPacket,
+                                              size_t * pPacketSize )
+{
+    ( void ) packetIdentifier;
+    ( void ) pPubackPacket;
+    ( void ) pPacketSize;
+
+    return IOT_MQTT_NO_MEMORY;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group for MQTT platform tests.
  */
 TEST_GROUP( MQTT_Unit_Platform );
@@ -233,7 +249,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_Platform )
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, DisconnectNetworkFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, PublishScheduleFailure );
-    RUN_TEST_CASE( MQTT_Unit_Platform, PubackScheduleFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, PubackScheduleSerializeFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, SubscriptionScheduleFailure );
 }
 
@@ -375,11 +391,13 @@ TEST( MQTT_Unit_Platform, PublishScheduleFailure )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of the client-to-server PUBACK when scheduling fails.
+ * @brief Tests the behavior of the client-to-server PUBACK when scheduling and
+  * serializing fail.
  */
-TEST( MQTT_Unit_Platform, PubackScheduleFailure )
+TEST( MQTT_Unit_Platform, PubackScheduleSerializeFailure )
 {
     IotMqttConnection_t pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    IotMqttSerializer_t serializer = IOT_MQTT_SERIALIZER_INITIALIZER;
     IotTaskPool_t taskPool = IOT_SYSTEM_TASKPOOL;
     uint32_t maxThreads = 0;
 
@@ -391,12 +409,18 @@ TEST( MQTT_Unit_Platform, PubackScheduleFailure )
     maxThreads = taskPool->maxThreads;
     taskPool->maxThreads = 0;
 
-    /* Call the function to send a PUBACK. The failed PUBACK should be cleaned up and not
-     * create memory leaks. */
+    /* Call the function to send a PUBACK with scheduling failure. The failed PUBACK
+     * should be cleaned up and not create memory leaks. */
     IotTestMqtt_sendPuback( pMqttConnection, 1 );
 
     /* Restore the task pool to a valid state. */
     taskPool->maxThreads = maxThreads;
+
+    /* Call the function to send PUBACK with serializer failure. The failed PUBACK
+     * should be cleaned up and not create memory leaks. */
+    serializer.serialize.puback = _serializePuback;
+    pMqttConnection->pSerializer = &serializer;
+    IotTestMqtt_sendPuback( pMqttConnection, 1 );
 
     /* Clean up. */
     IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
