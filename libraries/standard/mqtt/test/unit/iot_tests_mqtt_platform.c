@@ -233,6 +233,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_Platform )
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, DisconnectNetworkFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, PublishScheduleFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, PubackScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, SubscriptionScheduleFailure );
 }
 
@@ -363,6 +364,36 @@ TEST( MQTT_Unit_Platform, PublishScheduleFailure )
     status = IotMqtt_PublishAsync( pMqttConnection, &publishInfo, 0, NULL, &publishOperation );
     TEST_ASSERT_EQUAL( IOT_MQTT_SCHEDULING_ERROR, status );
     TEST_ASSERT_EQUAL( NULL, publishOperation );
+
+    /* Restore the task pool to a valid state. */
+    taskPool->maxThreads = maxThreads;
+
+    /* Clean up. */
+    IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of the client-to-server PUBACK when scheduling fails.
+ */
+TEST( MQTT_Unit_Platform, PubackScheduleFailure )
+{
+    IotMqttConnection_t pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    IotTaskPool_t taskPool = IOT_SYSTEM_TASKPOOL;
+    uint32_t maxThreads = 0;
+
+    /* Create a new MQTT connection. */
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 0 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+
+    /* Set the task pool to an invalid state and cause all further scheduling to fail. */
+    maxThreads = taskPool->maxThreads;
+    taskPool->maxThreads = 0;
+
+    /* Call the function to send a PUBACK. The failed PUBACK should be cleaned up and not
+     * create memory leaks. */
+    IotTestMqtt_sendPuback( pMqttConnection, 1 );
 
     /* Restore the task pool to a valid state. */
     taskPool->maxThreads = maxThreads;
