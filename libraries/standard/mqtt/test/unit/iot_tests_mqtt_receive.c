@@ -540,6 +540,45 @@ static void _disconnectCallback( void * pCallbackContext,
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Common code for PUBLISH malloc failure tests.
+ */
+static void _publishMallocFail( IotMqttQos_t qos )
+{
+    int32_t i = 0;
+    bool status = false;
+
+    for( i = 0; ; i++ )
+    {
+        DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
+
+        if( qos == IOT_MQTT_QOS_1 )
+        {
+            pPublish[ 0 ] = 0x32;
+        }
+
+        UnityMalloc_MakeMallocFailAfterCount( i );
+
+        /* Attempt to process a PUBLISH. Memory allocation will fail at various
+         * times during this call. */
+        status = _processPublish( pPublish, publishSize, 1 );
+
+        /* Exit once the publish is successfully processed. */
+        if( status == true )
+        {
+            break;
+        }
+
+        /* Network close function should not have been invoked. */
+        TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
+        TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
+    }
+
+    UnityMalloc_MakeMallocFailAfterCount( -1 );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Test group for MQTT Receive tests.
  */
 TEST_GROUP( MQTT_Unit_Receive );
@@ -1036,8 +1075,7 @@ TEST( MQTT_Unit_Receive, PublishValid )
                                                       1 ) );
     }
 
-    /* Process a valid QoS 1 PUBLISH. Prevent an attempt to send PUBACK by
-     * making no memory available for the PUBACK. */
+    /* Process a valid QoS 1 PUBLISH. */
     {
         DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
         pPublish[ 0 ] = 0x32;
@@ -1224,32 +1262,9 @@ TEST( MQTT_Unit_Receive, PublishInvalid )
  */
 TEST( MQTT_Unit_Receive, PublishResourceFailure )
 {
-    int32_t i = 0;
-    bool status = false;
-
-    /* Test the behavior when memory allocation fails. */
-    for( i = 0; ; i++ )
-    {
-        DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
-
-        UnityMalloc_MakeMallocFailAfterCount( i );
-
-        /* Attempt to process a PUBLISH. Memory allocation will fail at various
-         * times during this call. */
-        status = _processPublish( pPublish, publishSize, 1 );
-
-        /* Exit once the publish is successfully processed. */
-        if( status == true )
-        {
-            break;
-        }
-
-        /* Network close function should not have been invoked. */
-        TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
-        TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
-    }
-
-    UnityMalloc_MakeMallocFailAfterCount( -1 );
+    /* Test the behavior when memory allocation fails for QoS 0 and 1 PUBLISH. */
+    _publishMallocFail( IOT_MQTT_QOS_0 );
+    _publishMallocFail( IOT_MQTT_QOS_1 );
 
     /* Test the behavior when a closed connection is used. */
     {
