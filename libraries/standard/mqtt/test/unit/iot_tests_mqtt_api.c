@@ -2324,7 +2324,7 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     IotMqttPacketInfo_t mqttPacket;
-    uint8_t buffer[ 10 ] = { 0 };
+    uint8_t buffer[ 10 ];
     uint8_t * bufPtr = buffer;
 
     /* Dummy network interface - pointer to pointer to a buffer. */
@@ -2339,15 +2339,18 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
     TEST_ASSERT_EQUAL_INT( 0x02, mqttPacket.remainingLength );
 
     /* Test with NULL network interface */
+    bufPtr = buffer;
     status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, NULL );
     TEST_ASSERT_EQUAL( IOT_MQTT_NETWORK_ERROR, status );
 
     /* Test with incorrect packet type. */
+    bufPtr = buffer;
     buffer[ 0 ] = 0x10; /* INVALID */
     status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, pNetworkInterface );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
 
     /* Test with invalid remaining length. */
+    bufPtr = buffer;
     buffer[ 0 ] = 0x20; /* CONN ACK */
 
     /* To generate invalid remaining length response,
