@@ -1249,6 +1249,8 @@ TEST( MQTT_Unit_Receive, PublishResourceFailure )
         TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
     }
 
+    UnityMalloc_MakeMallocFailAfterCount( -1 );
+
     /* Test the behavior when a closed connection is used. */
     {
         DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
@@ -1256,6 +1258,10 @@ TEST( MQTT_Unit_Receive, PublishResourceFailure )
         /* Mark the connection as closed, then attempt to process a PUBLISH with a closed connection. */
         _pMqttConnection->disconnected = true;
         TEST_ASSERT_EQUAL_INT( true, _processPublish( pPublish, publishSize, 0 ) );
+
+        /* Network close function should not have been invoked. */
+        TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
+        TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
     }
 }
 
