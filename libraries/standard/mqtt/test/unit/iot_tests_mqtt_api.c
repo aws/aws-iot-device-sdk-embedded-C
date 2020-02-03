@@ -995,6 +995,13 @@ TEST( MQTT_Unit_API, OperationFindMatch )
                                                 &packetIdentifier );
     TEST_ASSERT_NULL( pMatchedOperation );
 
+    /* Clean up operations. */
+    for( i = 0; i < 2; i++ )
+    {
+        TEST_ASSERT_EQUAL_INT( true, _IotMqtt_DecrementOperationReferences( pOperation[ i ], false ) );
+        _IotMqtt_DestroyOperation( pOperation[ i ] );
+    }
+
     /* Disconnect the MQTT connection. */
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
