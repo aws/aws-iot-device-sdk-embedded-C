@@ -558,8 +558,8 @@ static IotMqttError_t _getNextByte( IotNetworkConnection_t pNetworkInterface,
 /**
  * @brief A PINGREQ serializer that attempts to allocate memory (unlike the default).
  */
-IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
-                                  size_t * pPacketSize )
+static IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
+                                         size_t * pPacketSize )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
@@ -578,6 +578,18 @@ IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief A completion callback that does nothing.
+ */
+static void _completionCallback( void * pContext,
+                                 IotMqttCallbackParam_t * pCallbackParam )
+{
+    ( void ) pContext;
+    ( void ) pCallbackParam;
 }
 
 /*-----------------------------------------------------------*/
@@ -636,6 +648,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, OperationCreateDestroy );
     RUN_TEST_CASE( MQTT_Unit_API, OperationWaitTimeout );
     RUN_TEST_CASE( MQTT_Unit_API, OperationFindMatch );
+    RUN_TEST_CASE( MQTT_Unit_API, OperationLists );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectParameters );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectMallocFail );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectRestoreSessionMallocFail );
@@ -972,12 +985,12 @@ TEST( MQTT_Unit_API, OperationFindMatch )
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
         TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _IotMqtt_ProcessCompletedOperation,
-                                                                        pOperation[i],
-                                                                        &( pOperation[i]->jobStorage ),
-                                                                        &( pOperation[i]->job ) ) );
+                                                                        pOperation[ i ],
+                                                                        &( pOperation[ i ]->jobStorage ),
+                                                                        &( pOperation[ i ]->job ) ) );
 
-        IotListDouble_Remove( &( pOperation[i]->link ) );
-        IotListDouble_InsertHead( &( _pMqttConnection->pendingResponse ), &( pOperation[i]->link ) );
+        IotListDouble_Remove( &( pOperation[ i ]->link ) );
+        IotListDouble_InsertHead( &( _pMqttConnection->pendingResponse ), &( pOperation[ i ]->link ) );
 
         pOperation[ i ]->u.operation.packetIdentifier = ( uint16_t ) ( i + 1 );
         pOperation[ i ]->u.operation.periodic.retry.nextPeriodMs = DUP_CHECK_RETRY_MS;
@@ -1002,6 +1015,46 @@ TEST( MQTT_Unit_API, OperationFindMatch )
         TEST_ASSERT_EQUAL_INT( true, _IotMqtt_DecrementOperationReferences( pOperation[ i ], false ) );
         _IotMqtt_DestroyOperation( pOperation[ i ] );
     }
+
+    /* Disconnect the MQTT connection. */
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of send and notify with different link statuses.
+ */
+TEST( MQTT_Unit_API, OperationLists )
+{
+    _mqttOperation_t * pOperation = NULL;
+    IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
+
+    /* Create a new MQTT connection. */
+    _networkInterface.send = _sendSuccess;
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Create a new MQTT operation. */
+    callbackInfo.function = _completionCallback;
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( _pMqttConnection,
+                                                                   0,
+                                                                   &callbackInfo,
+                                                                   &pOperation ) );
+    TEST_ASSERT_NOT_NULL( pOperation );
+    pOperation->u.operation.pMqttPacket = IotMqtt_MallocMessage( PACKET_LENGTH );
+    pOperation->u.operation.packetSize = PACKET_LENGTH;
+
+    /* Process a send with operation unlinked. Check that operation gets linked afterwards. */
+    IotListDouble_Remove( &( pOperation->link ) );
+    _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+    TEST_ASSERT_EQUAL_INT( true, IotLink_IsLinked( &( pOperation->link ) ) );
+
+    /* Notify with the operation linked. */
+    pOperation->u.operation.status = IOT_MQTT_SUCCESS;
+    _IotMqtt_Notify( pOperation );
 
     /* Disconnect the MQTT connection. */
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
