@@ -1061,6 +1061,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t pTaskPool,
                                          IotTaskPoolJob_t pOperationJob,
                                          void * pContext )
 {
+    bool destroyOperation = false;
     _mqttOperation_t * pOperation = ( _mqttOperation_t * ) pContext;
     IotMqttCallbackParam_t callbackParam = { 0 };
 
@@ -1068,6 +1069,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pOperationJob;
+    ( void ) destroyOperation;
     IotMqtt_Assert( pOperationJob == pOperation->job );
 
     /* The operation's callback function and status must be set. */
@@ -1083,11 +1085,11 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t pTaskPool,
     pOperation->u.operation.notify.callback.function( pOperation->u.operation.notify.callback.pCallbackContext,
                                                       &callbackParam );
 
-    /* Attempt to destroy the operation once the user callback returns. */
-    if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == true )
-    {
-        _IotMqtt_DestroyOperation( pOperation );
-    }
+    /* Decrement the operation reference count. This function is at the end of the
+     * operation lifecycle, so the operation must be destroyed here. */
+    destroyOperation = _IotMqtt_DecrementOperationReferences( pOperation, false );
+    IotMqtt_Assert( destroyOperation == true );
+    _IotMqtt_DestroyOperation( pOperation );
 }
 
 /*-----------------------------------------------------------*/
