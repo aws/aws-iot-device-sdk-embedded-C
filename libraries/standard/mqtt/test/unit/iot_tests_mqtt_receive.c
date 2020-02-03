@@ -115,17 +115,17 @@ static const uint8_t _pPingrespTemplate[] = { 0xd0, 0x00 };
 /**
  * @brief Initializer for operations in the tests.
  */
-#define INITIALIZE_OPERATION( name )                                                             \
-    {                                                                                            \
-        .link = { 0 }, .incomingPublish = false, .pMqttConnection = NULL,                        \
-        .jobStorage = IOT_TASKPOOL_JOB_STORAGE_INITIALIZER, .job = IOT_TASKPOOL_JOB_INITIALIZER, \
-        .u.operation =                                                                           \
-        {                                                                                        \
-            .jobReference = 1, .type = name, .flags = IOT_MQTT_FLAG_WAITABLE,                    \
-            .packetIdentifier = 1, .pMqttPacket = NULL, .packetSize = 0,                         \
-            .notify = { .callback = { 0 } }, .status = IOT_MQTT_STATUS_PENDING,                  \
-            .periodic = { .retry = { 0 } }                                                       \
-        }                                                                                        \
+#define INITIALIZE_OPERATION( name )                                                                             \
+    {                                                                                                            \
+        .link = { 0 }, .incomingPublish = false, .pMqttConnection = NULL,                                        \
+        .jobStorage = IOT_TASKPOOL_JOB_STORAGE_INITIALIZER, .job = IOT_TASKPOOL_JOB_INITIALIZER,                 \
+        .u.operation =                                                                                           \
+        {                                                                                                        \
+            .jobReference     = 1, .type        = name,                    .flags      = IOT_MQTT_FLAG_WAITABLE, \
+            .packetIdentifier = 1, .pMqttPacket = NULL,                    .packetSize =                      0, \
+            .notify           = { .callback = { 0 } },.status      = IOT_MQTT_STATUS_PENDING,                                       \
+            .periodic         = { .retry = { 0 } }                                                               \
+        }                                                                                                        \
     }
 
 /*-----------------------------------------------------------*/
@@ -637,6 +637,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_Receive )
     RUN_TEST_CASE( MQTT_Unit_Receive, ConnackInvalid );
     RUN_TEST_CASE( MQTT_Unit_Receive, PublishValid );
     RUN_TEST_CASE( MQTT_Unit_Receive, PublishInvalid );
+    RUN_TEST_CASE( MQTT_Unit_Receive, PublishResourceFailure );
     RUN_TEST_CASE( MQTT_Unit_Receive, PubackValid );
     RUN_TEST_CASE( MQTT_Unit_Receive, PubackInvalid );
     RUN_TEST_CASE( MQTT_Unit_Receive, SubackValid );
@@ -815,7 +816,8 @@ TEST( MQTT_Unit_Receive, ReceiveMallocFail )
         /* Network close function should not have been invoked. */
         TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
         TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
-    #else
+    #else /* if ( LIBRARY_LOG_LEVEL == IOT_LOG_NONE ) */
+
         /* Test tear down for this test group checks that deserializer overrides
          * were called. Set these values to true so that the checks pass. */
         _deserializeOverrideCalled = true;
@@ -1211,6 +1213,49 @@ TEST( MQTT_Unit_Receive, PublishInvalid )
         TEST_ASSERT_EQUAL_INT( true, _disconnectCallbackCalled );
         _networkCloseCalled = false;
         _disconnectCallbackCalled = false;
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of @ref mqtt_function_receivecallback with errors
+ * such as memory allocation failure and closed connections.
+ */
+TEST( MQTT_Unit_Receive, PublishResourceFailure )
+{
+    int32_t i = 0;
+    bool status = false;
+
+    /* Test the behavior when memory allocation fails. */
+    for( i = 0; ; i++ )
+    {
+        DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
+
+        UnityMalloc_MakeMallocFailAfterCount( i );
+
+        /* Attempt to process a PUBLISH. Memory allocation will fail at various
+         * times during this call. */
+        status = _processPublish( pPublish, publishSize, 1 );
+
+        /* Exit once the publish is successfully processed. */
+        if( status == true )
+        {
+            break;
+        }
+
+        /* Network close function should not have been invoked. */
+        TEST_ASSERT_EQUAL_INT( false, _networkCloseCalled );
+        TEST_ASSERT_EQUAL_INT( false, _disconnectCallbackCalled );
+    }
+
+    /* Test the behavior when a closed connection is used. */
+    {
+        DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
+
+        /* Mark the connection as closed, then attempt to process a PUBLISH with a closed connection. */
+        _pMqttConnection->disconnected = true;
+        TEST_ASSERT_EQUAL_INT( true, _processPublish( pPublish, publishSize, 0 ) );
     }
 }
 

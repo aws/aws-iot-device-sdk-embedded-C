@@ -346,7 +346,7 @@ TEST( MQTT_Unit_Platform, PublishScheduleFailure )
 
     /* Send a QoS 0 publish that fails to schedule. */
     publishInfo.pTopicName = "test/";
-    publishInfo.topicNameLength = strlen( publishInfo.pTopicName );
+    publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
     publishInfo.pPayload = "";
     publishInfo.payloadLength = 0;
 
@@ -383,7 +383,7 @@ TEST( MQTT_Unit_Platform, SubscriptionScheduleFailure )
 
     /* Set subscription parameters. */
     subscription.pTopicFilter = "test/";
-    subscription.topicFilterLength = strlen( subscription.pTopicFilter );
+    subscription.topicFilterLength = ( uint16_t ) strlen( subscription.pTopicFilter );
     subscription.callback.function = SUBSCRIPTION_CALLBACK_FUNCTION;
 
     /* Create a new MQTT connection. */
