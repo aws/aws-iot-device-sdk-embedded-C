@@ -635,6 +635,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, StringCoverage );
     RUN_TEST_CASE( MQTT_Unit_API, OperationCreateDestroy );
     RUN_TEST_CASE( MQTT_Unit_API, OperationWaitTimeout );
+    RUN_TEST_CASE( MQTT_Unit_API, OperationFindMatch );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectParameters );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectMallocFail );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectRestoreSessionMallocFail );
@@ -942,6 +943,60 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
     }
 
     IotSemaphore_Destroy( &waitSem );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test edge cases when searching for operations.
+ */
+TEST( MQTT_Unit_API, OperationFindMatch )
+{
+    int32_t i = 0;
+    uint16_t packetIdentifier = 0;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    _mqttOperation_t * pMatchedOperation = NULL;
+    _mqttOperation_t * pOperation[ 2 ] = { NULL, NULL };
+
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Set up operations. */
+    for( i = 0; i < 2; i++ )
+    {
+        status = _IotMqtt_CreateOperation( _pMqttConnection, 0, NULL, &( pOperation[ i ] ) );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+
+        TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _IotMqtt_ProcessCompletedOperation,
+                                                                        pOperation[i],
+                                                                        &( pOperation[i]->jobStorage ),
+                                                                        &( pOperation[i]->job ) ) );
+
+        IotListDouble_Remove( &( pOperation[i]->link ) );
+        IotListDouble_InsertHead( &( _pMqttConnection->pendingResponse ), &( pOperation[i]->link ) );
+
+        pOperation[ i ]->u.operation.packetIdentifier = ( uint16_t ) ( i + 1 );
+        pOperation[ i ]->u.operation.periodic.retry.nextPeriodMs = DUP_CHECK_RETRY_MS;
+        pOperation[ i ]->u.operation.periodic.retry.limit = DUP_CHECK_RETRY_LIMIT;
+    }
+
+    pOperation[ 0 ]->u.operation.type = IOT_MQTT_PUBLISH_TO_SERVER;
+    pOperation[ 1 ]->u.operation.type = IOT_MQTT_SUBSCRIBE;
+
+    /* Set one operation's job to an invalid state, then try to find it. The invalid state
+     * will cause that job to be ignored. */
+    packetIdentifier = 1;
+    pOperation[ 0 ]->jobStorage.status = IOT_TASKPOOL_STATUS_COMPLETED;
+    pMatchedOperation = _IotMqtt_FindOperation( _pMqttConnection,
+                                                IOT_MQTT_PUBLISH_TO_SERVER,
+                                                &packetIdentifier );
+    TEST_ASSERT_NULL( pMatchedOperation );
+
+    /* Disconnect the MQTT connection. */
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
