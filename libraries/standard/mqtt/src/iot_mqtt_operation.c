@@ -1045,11 +1045,12 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
          * since a network response could modify the status. */
         if( networkPending == false )
         {
+            /* Operations that are not waiting for a network response either failed or
+             * completed successfully. Check that a status was set. */
+            IotMqtt_Assert( pOperation->u.operation.status != IOT_MQTT_STATUS_PENDING );
+
             /* Notify of operation completion if this job set a status. */
-            if( pOperation->u.operation.status != IOT_MQTT_STATUS_PENDING )
-            {
-                _IotMqtt_Notify( pOperation );
-            }
+            _IotMqtt_Notify( pOperation );
         }
     }
 }
