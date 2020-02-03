@@ -2324,7 +2324,7 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     IotMqttPacketInfo_t mqttPacket;
-    uint8_t buffer[ 10 ];
+    uint8_t buffer[ 10 ] = { 0 };
     uint8_t * bufPtr = buffer;
 
     /* Dummy network interface - pointer to pointer to a buffer. */
