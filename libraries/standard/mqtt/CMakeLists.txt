@@ -4,6 +4,8 @@ set( MQTT_SOURCES
      src/iot_mqtt_network.c
      src/iot_mqtt_operation.c
      src/iot_mqtt_serialize.c
+     src/iot_mqtt_lightweight_api.c
+     src/iot_mqtt_helper.c
      src/iot_mqtt_static_memory.c
      src/iot_mqtt_subscription.c
      src/iot_mqtt_validate.c )
@@ -13,7 +15,7 @@ add_library( iotmqtt
              ${CONFIG_HEADER_PATH}/iot_config.h
              ${MQTT_SOURCES}
              include/iot_mqtt.h
-             include/iot_mqtt_serialize.h
+             include/iot_mqtt_lightweight.h
              include/types/iot_mqtt_types.h
              src/private/iot_mqtt_internal.h )
 

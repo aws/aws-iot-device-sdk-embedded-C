@@ -48,7 +48,7 @@
 #include "iot_test_access_mqtt.h"
 
 /* MQTT serializer API include */
-#include "iot_mqtt_serialize.h"
+#include "iot_mqtt_lightweight.h"
 
 /* MQTT mock include. */
 #include "iot_tests_mqtt_mock.h"
@@ -2532,10 +2532,11 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
     buffer[ 0 ] = 0x20; /* CONN ACK */
 
     /* To generate invalid remaining length response,
-     * three bytes need to have MSB (or continuation bit, 0x80) set */
+     * four bytes need to have MSB (or continuation bit, 0x80) set */
     buffer[ 1 ] = 0xFF;
     buffer[ 2 ] = 0xFF;
     buffer[ 3 ] = 0xFF;
+    buffer[ 4 ] = 0xFF;
     status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, pNetworkInterface );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
 }
@@ -2561,7 +2562,7 @@ TEST( MQTT_Unit_API, DeserializeResponseChecks )
     mqttPacketInfo.type = 0x01;
     mqttPacketInfo.pRemainingData = buffer;
     status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
 
     /* Good case succeeds - Test for CONN ACK */
     /* Set conn ack variable portion */
