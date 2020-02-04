@@ -134,6 +134,11 @@
  */
 #define PACKET_LENGTH    ( 32 )
 
+/**
+ * @brief How many operations to use for the OperationFindMatch test.
+ */
+#define OPERATION_COUNT (2)
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -970,7 +975,7 @@ TEST( MQTT_Unit_API, OperationFindMatch )
     uint16_t packetIdentifier = 0;
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t * pMatchedOperation = NULL;
-    _mqttOperation_t * pOperation[ 2 ] = { NULL, NULL };
+    _mqttOperation_t * pOperation[ OPERATION_COUNT ] = { NULL, NULL };
 
     /* Create a new MQTT connection. */
     _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
@@ -979,7 +984,7 @@ TEST( MQTT_Unit_API, OperationFindMatch )
     TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
     /* Set up operations. */
-    for( i = 0; i < 2; i++ )
+    for( i = 0; i < OPERATION_COUNT; i++ )
     {
         status = _IotMqtt_CreateOperation( _pMqttConnection, 0, NULL, &( pOperation[ i ] ) );
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
@@ -1010,7 +1015,7 @@ TEST( MQTT_Unit_API, OperationFindMatch )
     TEST_ASSERT_NULL( pMatchedOperation );
 
     /* Clean up operations. */
-    for( i = 0; i < 2; i++ )
+    for( i = 0; i < OPERATION_COUNT; i++ )
     {
         TEST_ASSERT_EQUAL_INT( true, _IotMqtt_DecrementOperationReferences( pOperation[ i ], false ) );
         _IotMqtt_DestroyOperation( pOperation[ i ] );
