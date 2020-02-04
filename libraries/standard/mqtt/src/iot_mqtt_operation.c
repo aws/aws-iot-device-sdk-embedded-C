@@ -1045,11 +1045,12 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
          * since a network response could modify the status. */
         if( networkPending == false )
         {
+            /* Operations that are not waiting for a network response either failed or
+             * completed successfully. Check that a status was set. */
+            IotMqtt_Assert( pOperation->u.operation.status != IOT_MQTT_STATUS_PENDING );
+
             /* Notify of operation completion if this job set a status. */
-            if( pOperation->u.operation.status != IOT_MQTT_STATUS_PENDING )
-            {
-                _IotMqtt_Notify( pOperation );
-            }
+            _IotMqtt_Notify( pOperation );
         }
     }
 }
@@ -1060,6 +1061,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t pTaskPool,
                                          IotTaskPoolJob_t pOperationJob,
                                          void * pContext )
 {
+    bool destroyOperation = false;
     _mqttOperation_t * pOperation = ( _mqttOperation_t * ) pContext;
     IotMqttCallbackParam_t callbackParam = { 0 };
 
@@ -1067,6 +1069,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pOperationJob;
+    ( void ) destroyOperation;
     IotMqtt_Assert( pOperationJob == pOperation->job );
 
     /* The operation's callback function and status must be set. */
@@ -1082,11 +1085,11 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t pTaskPool,
     pOperation->u.operation.notify.callback.function( pOperation->u.operation.notify.callback.pCallbackContext,
                                                       &callbackParam );
 
-    /* Attempt to destroy the operation once the user callback returns. */
-    if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == true )
-    {
-        _IotMqtt_DestroyOperation( pOperation );
-    }
+    /* Decrement the operation reference count. This function is at the end of the
+     * operation lifecycle, so the operation must be destroyed here. */
+    destroyOperation = _IotMqtt_DecrementOperationReferences( pOperation, false );
+    IotMqtt_Assert( destroyOperation == true );
+    _IotMqtt_DestroyOperation( pOperation );
 }
 
 /*-----------------------------------------------------------*/
@@ -1289,17 +1292,18 @@ void _IotMqtt_Notify( _mqttOperation_t * pOperation )
         }
         else
         {
-            /* Post to a waitable operation's semaphore. */
-            if( waitable == true )
-            {
-                IotLogDebug( "(MQTT connection %p, %s operation %p) Waitable operation "
-                             "notified of completion.",
-                             pOperation->pMqttConnection,
-                             IotMqtt_OperationType( pOperation->u.operation.type ),
-                             pOperation );
+            /* Only waitable operations will have a reference count greater than 1.
+             * Non-waitable operations will not reach this block. */
+            IotMqtt_Assert( waitable == true );
 
-                IotSemaphore_Post( &( pOperation->u.operation.notify.waitSemaphore ) );
-            }
+            /* Post to a waitable operation's semaphore. */
+            IotLogDebug( "(MQTT connection %p, %s operation %p) Waitable operation "
+                         "notified of completion.",
+                         pOperation->pMqttConnection,
+                         IotMqtt_OperationType( pOperation->u.operation.type ),
+                         pOperation );
+
+            IotSemaphore_Post( &( pOperation->u.operation.notify.waitSemaphore ) );
         }
     }
     else

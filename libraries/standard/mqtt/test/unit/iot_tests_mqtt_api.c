@@ -132,7 +132,12 @@
  * @brief Length of an arbitrary packet for testing. A buffer will be allocated
  * for it, but its contents don't matter.
  */
-#define PACKET_LENGTH    ( 1 )
+#define PACKET_LENGTH    ( 32 )
+
+/**
+ * @brief How many operations to use for the OperationFindMatch test.
+ */
+#define OPERATION_COUNT (2)
 
 /*-----------------------------------------------------------*/
 
@@ -558,8 +563,8 @@ static IotMqttError_t _getNextByte( IotNetworkConnection_t pNetworkInterface,
 /**
  * @brief A PINGREQ serializer that attempts to allocate memory (unlike the default).
  */
-IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
-                                  size_t * pPacketSize )
+static IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
+                                         size_t * pPacketSize )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
@@ -578,6 +583,18 @@ IotMqttError_t _serializePingreq( uint8_t ** pPingreqPacket,
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief A completion callback that does nothing.
+ */
+static void _completionCallback( void * pContext,
+                                 IotMqttCallbackParam_t * pCallbackParam )
+{
+    ( void ) pContext;
+    ( void ) pCallbackParam;
 }
 
 /*-----------------------------------------------------------*/
@@ -635,6 +652,8 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, StringCoverage );
     RUN_TEST_CASE( MQTT_Unit_API, OperationCreateDestroy );
     RUN_TEST_CASE( MQTT_Unit_API, OperationWaitTimeout );
+    RUN_TEST_CASE( MQTT_Unit_API, OperationFindMatch );
+    RUN_TEST_CASE( MQTT_Unit_API, OperationLists );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectParameters );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectMallocFail );
     RUN_TEST_CASE( MQTT_Unit_API, ConnectRestoreSessionMallocFail );
@@ -643,6 +662,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS0Parameters );
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS0MallocFail );
     RUN_TEST_CASE( MQTT_Unit_API, PublishQoS1 );
+    RUN_TEST_CASE( MQTT_Unit_API, PublishRetryPeriod );
     RUN_TEST_CASE( MQTT_Unit_API, PublishDuplicates );
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeUnsubscribeParameters );
     RUN_TEST_CASE( MQTT_Unit_API, SubscribeMallocFail );
@@ -942,6 +962,107 @@ TEST( MQTT_Unit_API, OperationWaitTimeout )
     }
 
     IotSemaphore_Destroy( &waitSem );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test edge cases when searching for operations.
+ */
+TEST( MQTT_Unit_API, OperationFindMatch )
+{
+    int32_t i = 0;
+    uint16_t packetIdentifier = 0;
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    _mqttOperation_t * pMatchedOperation = NULL;
+    _mqttOperation_t * pOperation[ OPERATION_COUNT ] = { NULL, NULL };
+
+    /* Create a new MQTT connection. */
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Set up operations. */
+    for( i = 0; i < OPERATION_COUNT; i++ )
+    {
+        status = _IotMqtt_CreateOperation( _pMqttConnection, 0, NULL, &( pOperation[ i ] ) );
+        TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+
+        TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_CreateJob( _IotMqtt_ProcessCompletedOperation,
+                                                                        pOperation[ i ],
+                                                                        &( pOperation[ i ]->jobStorage ),
+                                                                        &( pOperation[ i ]->job ) ) );
+
+        IotListDouble_Remove( &( pOperation[ i ]->link ) );
+        IotListDouble_InsertHead( &( _pMqttConnection->pendingResponse ), &( pOperation[ i ]->link ) );
+
+        pOperation[ i ]->u.operation.packetIdentifier = ( uint16_t ) ( i + 1 );
+        pOperation[ i ]->u.operation.periodic.retry.nextPeriodMs = DUP_CHECK_RETRY_MS;
+        pOperation[ i ]->u.operation.periodic.retry.limit = DUP_CHECK_RETRY_LIMIT;
+    }
+
+    pOperation[ 0 ]->u.operation.type = IOT_MQTT_PUBLISH_TO_SERVER;
+    pOperation[ 1 ]->u.operation.type = IOT_MQTT_SUBSCRIBE;
+
+    /* Set one operation's job to an invalid state, then try to find it. The invalid state
+     * will cause that job to be ignored. */
+    packetIdentifier = 1;
+    pOperation[ 0 ]->jobStorage.status = IOT_TASKPOOL_STATUS_COMPLETED;
+    pMatchedOperation = _IotMqtt_FindOperation( _pMqttConnection,
+                                                IOT_MQTT_PUBLISH_TO_SERVER,
+                                                &packetIdentifier );
+    TEST_ASSERT_NULL( pMatchedOperation );
+
+    /* Clean up operations. */
+    for( i = 0; i < OPERATION_COUNT; i++ )
+    {
+        TEST_ASSERT_EQUAL_INT( true, _IotMqtt_DecrementOperationReferences( pOperation[ i ], false ) );
+        _IotMqtt_DestroyOperation( pOperation[ i ] );
+    }
+
+    /* Disconnect the MQTT connection. */
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of send and notify with different link statuses.
+ */
+TEST( MQTT_Unit_API, OperationLists )
+{
+    _mqttOperation_t * pOperation = NULL;
+    IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
+
+    /* Create a new MQTT connection. */
+    _networkInterface.send = _sendSuccess;
+    _pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Create a new MQTT operation. */
+    callbackInfo.function = _completionCallback;
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( _pMqttConnection,
+                                                                   0,
+                                                                   &callbackInfo,
+                                                                   &pOperation ) );
+    TEST_ASSERT_NOT_NULL( pOperation );
+    pOperation->u.operation.pMqttPacket = IotMqtt_MallocMessage( PACKET_LENGTH );
+    pOperation->u.operation.packetSize = PACKET_LENGTH;
+
+    /* Process a send with operation unlinked. Check that operation gets linked afterwards. */
+    IotListDouble_Remove( &( pOperation->link ) );
+    _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+    TEST_ASSERT_EQUAL_INT( true, IotLink_IsLinked( &( pOperation->link ) ) );
+
+    /* Notify with the operation linked. */
+    pOperation->u.operation.status = IOT_MQTT_SUCCESS;
+    _IotMqtt_Notify( pOperation );
+
+    /* Disconnect the MQTT connection. */
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
 /*-----------------------------------------------------------*/
@@ -1391,6 +1512,63 @@ TEST( MQTT_Unit_API, PublishQoS1 )
     }
 
     /* Clean up MQTT connection. */
+    IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests that PUBLISH retry periods are calculated correctly.
+ */
+TEST( MQTT_Unit_API, PublishRetryPeriod )
+{
+    _mqttOperation_t * pOperation = NULL;
+    uint32_t periodMs = IOT_MQTT_RETRY_MS_CEILING / 2;
+
+    /* Create a new MQTT connection. */
+    _networkInterface.send = _sendSuccess;
+    _pMqttConnection = IotTestMqtt_createMqttConnection( false,
+                                                         &_networkInfo,
+                                                         0 );
+    TEST_ASSERT_NOT_NULL( _pMqttConnection );
+
+    /* Create a PUBLISH with retry operation. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( _pMqttConnection,
+                                                                   IOT_MQTT_FLAG_WAITABLE,
+                                                                   NULL,
+                                                                   &pOperation ) );
+    TEST_ASSERT_NOT_NULL( pOperation );
+    pOperation->u.operation.type = IOT_MQTT_PUBLISH_TO_SERVER;
+    pOperation->u.operation.pMqttPacket = IotMqtt_MallocMessage( PACKET_LENGTH );
+    pOperation->u.operation.packetSize = PACKET_LENGTH;
+    pOperation->u.operation.periodic.retry.limit = DUP_CHECK_RETRY_LIMIT;
+    pOperation->u.operation.periodic.retry.nextPeriodMs = periodMs;
+    IotListDouble_Remove( &( pOperation->link ) );
+
+    /* Simulate send of PUBLISH. */
+    _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+
+    /* Immediately cancel retried PUBLISH, then check statuses set by send. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
+                                                                    pOperation->job,
+                                                                    NULL ) );
+    TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING, pOperation->u.operation.status );
+    TEST_ASSERT_EQUAL( 1, pOperation->u.operation.periodic.retry.count );
+    TEST_ASSERT_EQUAL( 2 * periodMs, pOperation->u.operation.periodic.retry.nextPeriodMs );
+
+    /* Simulate another send. Check that the retry ceiling is respected. */
+    _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+
+    /* Immediately cancel retried PUBLISH, then check statuses set by send. */
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
+                                                                    pOperation->job,
+                                                                    NULL ) );
+    TEST_ASSERT_EQUAL( IOT_MQTT_STATUS_PENDING, pOperation->u.operation.status );
+    TEST_ASSERT_EQUAL( 2, pOperation->u.operation.periodic.retry.count );
+    TEST_ASSERT_EQUAL( IOT_MQTT_RETRY_MS_CEILING, pOperation->u.operation.periodic.retry.nextPeriodMs );
+
+    /* Clean up. */
+    TEST_ASSERT_EQUAL_INT( false, _IotMqtt_DecrementOperationReferences( pOperation, false ) );
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 }
 
