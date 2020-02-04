@@ -80,7 +80,7 @@
 
 /*-----------------------------------------------------------*/
 
-uint8_t * _mqtt_encodeUserName( uint8_t * pDestination,
+uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
                                 const IotMqttConnectInfo_t * pConnectInfo )
 {
     bool encodedUserName = false;
@@ -150,7 +150,7 @@ uint8_t * _mqtt_encodeUserName( uint8_t * pDestination,
     /* Encode the username if there is one and it hasn't already been done. */
     if( ( pConnectInfo->pUserName != NULL ) && ( encodedUserName == false ) )
     {
-        pBuffer = _mqtt_encodeString( pBuffer,
+        pBuffer = _IotMqtt_EncodeString( pBuffer,
                                       pConnectInfo->pUserName,
                                       pConnectInfo->userNameLength );
     }
@@ -159,7 +159,7 @@ uint8_t * _mqtt_encodeUserName( uint8_t * pDestination,
 }
 /*-----------------------------------------------------------*/
 
-uint8_t * _mqtt_encodeString( uint8_t * pDestination,
+uint8_t * _IotMqtt_EncodeString( uint8_t * pDestination,
                               const char * source,
                               uint16_t sourceLength )
 {
@@ -184,7 +184,7 @@ uint8_t * _mqtt_encodeString( uint8_t * pDestination,
 
 /*-----------------------------------------------------------*/
 
-uint8_t * _mqtt_encodeRemainingLength( uint8_t * pDestination,
+uint8_t * _IotMqtt_EncodeRemainingLength( uint8_t * pDestination,
                                        size_t length )
 {
     uint8_t lengthByte = 0, * pLengthEnd = pDestination;
@@ -212,7 +212,7 @@ uint8_t * _mqtt_encodeRemainingLength( uint8_t * pDestination,
 
 /*-----------------------------------------------------------*/
 
-size_t _mqtt_remainingLengthEncodedSize( size_t length )
+size_t _IotMqtt_RemainingLengthEncodedSize( size_t length )
 {
     size_t encodedSize = 0;
 
@@ -248,7 +248,7 @@ size_t _mqtt_remainingLengthEncodedSize( size_t length )
 
 /*-----------------------------------------------------------*/
 
-uint16_t _mqtt_nextPacketIdentifier( void )
+uint16_t _IotMqtt_NextPacketIdentifier( void )
 {
     /* MQTT specifies 2 bytes for the packet identifier; however, operating on
      * 32-bit integers is generally faster. */
@@ -262,7 +262,7 @@ uint16_t _mqtt_nextPacketIdentifier( void )
 
 /*-----------------------------------------------------------*/
 
-bool _mqtt_connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
+bool _IotMqtt_ConnectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
                               size_t * pRemainingLength,
                               size_t * pPacketSize )
 {
@@ -312,7 +312,7 @@ bool _mqtt_connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
 
     /* Calculate the full size of the MQTT CONNECT packet by adding the size of
      * the "Remaining Length" field plus 1 byte for the "Packet Type" field. */
-    connectPacketSize += 1U + _mqtt_remainingLengthEncodedSize( connectPacketSize );
+    connectPacketSize += 1U + _IotMqtt_RemainingLengthEncodedSize( connectPacketSize );
 
     /* Check that the CONNECT packet is within the bounds of the MQTT spec. */
     if( connectPacketSize > MQTT_PACKET_CONNECT_MAX_SIZE )
@@ -330,7 +330,7 @@ bool _mqtt_connectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
 
 /*-----------------------------------------------------------*/
 
-void _mqtt_serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
+void _IotMqtt_SerializeConnectCommon( const IotMqttConnectInfo_t * pConnectInfo,
                              size_t remainingLength,
                              uint8_t * pPacket,
                              size_t connectPacketSize )
@@ -349,11 +349,11 @@ void _mqtt_serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
     /* The remaining length of the CONNECT packet is encoded starting from the
      * second byte. The remaining length does not include the length of the fixed
      * header or the encoding of the remaining length. */
-    pBuffer = _mqtt_encodeRemainingLength( pBuffer, remainingLength );
+    pBuffer = _IotMqtt_EncodeRemainingLength( pBuffer, remainingLength );
 
     /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
      * header. This string is 4 bytes long. */
-    pBuffer = _mqtt_encodeString( pBuffer, "MQTT", 4 );
+    pBuffer = _IotMqtt_EncodeString( pBuffer, "MQTT", 4 );
 
     /* The MQTT protocol version is the second byte of the variable header. */
     *pBuffer = MQTT_VERSION_3_1_1;
@@ -425,29 +425,29 @@ void _mqtt_serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
     pBuffer += 2;
 
     /* Write the client identifier into the CONNECT packet. */
-    pBuffer = _mqtt_encodeString( pBuffer,
+    pBuffer = _IotMqtt_EncodeString( pBuffer,
                                   pConnectInfo->pClientIdentifier,
                                   pConnectInfo->clientIdentifierLength );
 
     /* Write the will topic name and message into the CONNECT packet if provided. */
     if( pConnectInfo->pWillInfo != NULL )
     {
-        pBuffer = _mqtt_encodeString( pBuffer,
+        pBuffer = _IotMqtt_EncodeString( pBuffer,
                                       pConnectInfo->pWillInfo->pTopicName,
                                       pConnectInfo->pWillInfo->topicNameLength );
 
-        pBuffer = _mqtt_encodeString( pBuffer,
+        pBuffer = _IotMqtt_EncodeString( pBuffer,
                                       pConnectInfo->pWillInfo->pPayload,
                                       ( uint16_t ) pConnectInfo->pWillInfo->payloadLength );
     }
 
     /* Encode the username if there is one or metrics are enabled. */
-    pBuffer = _mqtt_encodeUserName( pBuffer, pConnectInfo );
+    pBuffer = _IotMqtt_EncodeUserName( pBuffer, pConnectInfo );
 
     /* Encode the password field, if requested by the app. */
     if( pConnectInfo->pPassword != NULL )
     {
-        pBuffer = _mqtt_encodeString( pBuffer,
+        pBuffer = _IotMqtt_EncodeString( pBuffer,
                                       pConnectInfo->pPassword,
                                       pConnectInfo->passwordLength );
     }
@@ -462,7 +462,7 @@ void _mqtt_serializeConnect( const IotMqttConnectInfo_t * pConnectInfo,
 
 /*-----------------------------------------------------------*/
 
-bool _mqtt_incomingPacketValid( uint8_t packetType )
+bool _IotMqtt_IncomingPacketValid( uint8_t packetType )
 {
     bool status = true;
 
@@ -489,7 +489,7 @@ bool _mqtt_incomingPacketValid( uint8_t packetType )
 
 /*-----------------------------------------------------------*/
 
-void _mqtt_serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
+void _IotMqtt_SerializeSubscribeCommon( const IotMqttSubscription_t * pSubscriptionList,
                                size_t subscriptionCount,
                                size_t remainingLength,
                                uint16_t * pPacketIdentifier,
@@ -509,10 +509,10 @@ void _mqtt_serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
     pBuffer++;
 
     /* Encode the "Remaining length" starting from the second byte. */
-    pBuffer = _mqtt_encodeRemainingLength( pBuffer, remainingLength );
+    pBuffer = _IotMqtt_EncodeRemainingLength( pBuffer, remainingLength );
 
     /* Get the next packet identifier. It should always be nonzero. */
-    packetIdentifier = _mqtt_nextPacketIdentifier();
+    packetIdentifier = _IotMqtt_NextPacketIdentifier();
     *pPacketIdentifier = packetIdentifier;
     IotMqtt_Assert( packetIdentifier != 0U );
 
@@ -524,7 +524,7 @@ void _mqtt_serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
     /* Serialize each subscription topic filter and QoS. */
     for( i = 0; i < subscriptionCount; i++ )
     {
-        pBuffer = _mqtt_encodeString( pBuffer,
+        pBuffer = _IotMqtt_EncodeString( pBuffer,
                                       pSubscriptionList[ i ].pTopicFilter,
                                       pSubscriptionList[ i ].topicFilterLength );
 
@@ -543,7 +543,7 @@ void _mqtt_serializeSubscribe( const IotMqttSubscription_t * pSubscriptionList,
 
 /*-----------------------------------------------------------*/
 
-bool _mqtt_subscriptionPacketSize( IotMqttOperationType_t type,
+bool _IotMqtt_SubscriptionPacketSize( IotMqttOperationType_t type,
                                    const IotMqttSubscription_t * pSubscriptionList,
                                    size_t subscriptionCount,
                                    size_t * pRemainingLength,
@@ -587,7 +587,7 @@ bool _mqtt_subscriptionPacketSize( IotMqttOperationType_t type,
         /* Calculate the full size of the subscription packet by adding the size of the
          * "Remaining length" field plus 1 byte for the "Packet type" field. Set the
          * pPacketSize output parameter. */
-        subscriptionPacketSize += 1U + _mqtt_remainingLengthEncodedSize( subscriptionPacketSize );
+        subscriptionPacketSize += 1U + _IotMqtt_RemainingLengthEncodedSize( subscriptionPacketSize );
         *pPacketSize = subscriptionPacketSize;
     }
 
@@ -596,7 +596,7 @@ bool _mqtt_subscriptionPacketSize( IotMqttOperationType_t type,
 
 /*-----------------------------------------------------------*/
 
-bool _mqtt_publishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
+bool _IotMqtt_PublishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
                               size_t * pRemainingLength,
                               size_t * pPacketSize )
 {
@@ -631,7 +631,7 @@ bool _mqtt_publishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
 
         /* Now that the "Remaining length" is known, recalculate the payload limit
          * based on the size of its encoding. */
-        payloadLimit -= _mqtt_remainingLengthEncodedSize( publishPacketSize );
+        payloadLimit -= _IotMqtt_RemainingLengthEncodedSize( publishPacketSize );
 
         /* Check that the given payload fits within the size allowed by MQTT spec. */
         if( pPublishInfo->payloadLength > payloadLimit )
@@ -644,7 +644,7 @@ bool _mqtt_publishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
              * size of the PUBLISH packet. */
             *pRemainingLength = publishPacketSize;
 
-            publishPacketSize += 1U + _mqtt_remainingLengthEncodedSize( publishPacketSize );
+            publishPacketSize += 1U + _IotMqtt_RemainingLengthEncodedSize( publishPacketSize );
             *pPacketSize = publishPacketSize;
         }
     }
@@ -654,7 +654,7 @@ bool _mqtt_publishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
 
 /*-----------------------------------------------------------*/
 
-void _mqtt_serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
+void _IotMqtt_SerializePublishCommon( const IotMqttPublishInfo_t * pPublishInfo,
                              size_t remainingLength,
                              uint16_t * pPacketIdentifier,
                              uint8_t ** pPacketIdentifierHigh,
@@ -694,10 +694,10 @@ void _mqtt_serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
     pBuffer++;
 
     /* The "Remaining length" is encoded from the second byte. */
-    pBuffer = _mqtt_encodeRemainingLength( pBuffer, remainingLength );
+    pBuffer = _IotMqtt_EncodeRemainingLength( pBuffer, remainingLength );
 
     /* The topic name is placed after the "Remaining length". */
-    pBuffer = _mqtt_encodeString( pBuffer,
+    pBuffer = _IotMqtt_EncodeString( pBuffer,
                                   pPublishInfo->pTopicName,
                                   pPublishInfo->topicNameLength );
 
@@ -705,7 +705,7 @@ void _mqtt_serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
     if( pPublishInfo->qos > IOT_MQTT_QOS_0 )
     {
         /* Get the next packet identifier. It should always be nonzero. */
-        packetIdentifier = _mqtt_nextPacketIdentifier();
+        packetIdentifier = _IotMqtt_NextPacketIdentifier();
         IotMqtt_Assert( packetIdentifier != 0U );
 
         /* Set the packet identifier output parameters. */
@@ -739,7 +739,7 @@ void _mqtt_serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
 
 /*-----------------------------------------------------------*/
 
-void _mqtt_serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList,
+void _IotMqtt_SerializeUnsubscribeCommon( const IotMqttSubscription_t * pSubscriptionList,
                                  size_t subscriptionCount,
                                  size_t remainingLength,
                                  uint16_t * pPacketIdentifier,
@@ -759,10 +759,10 @@ void _mqtt_serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList
     pBuffer++;
 
     /* Encode the "Remaining length" starting from the second byte. */
-    pBuffer = _mqtt_encodeRemainingLength( pBuffer, remainingLength );
+    pBuffer = _IotMqtt_EncodeRemainingLength( pBuffer, remainingLength );
 
     /* Get the next packet identifier. It should always be nonzero. */
-    packetIdentifier = _mqtt_nextPacketIdentifier();
+    packetIdentifier = _IotMqtt_NextPacketIdentifier();
     *pPacketIdentifier = packetIdentifier;
     IotMqtt_Assert( packetIdentifier != 0U );
 
@@ -774,7 +774,7 @@ void _mqtt_serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList
     /* Serialize each subscription topic filter. */
     for( i = 0; i < subscriptionCount; i++ )
     {
-        pBuffer = _mqtt_encodeString( pBuffer,
+        pBuffer = _IotMqtt_EncodeString( pBuffer,
                                       pSubscriptionList[ i ].pTopicFilter,
                                       pSubscriptionList[ i ].topicFilterLength );
     }
@@ -789,7 +789,7 @@ void _mqtt_serializeUnsubscribe( const IotMqttSubscription_t * pSubscriptionList
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _mqtt_processIncomingPublishFlags( uint8_t publishFlags,
+IotMqttError_t _IotMqtt_ProcessIncomingPublishFlags( uint8_t publishFlags,
                                                   IotMqttPublishInfo_t * pOutput )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;

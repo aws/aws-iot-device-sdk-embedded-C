@@ -48,7 +48,7 @@
 #include "iot_test_access_mqtt.h"
 
 /* MQTT serializer API include */
-#include "iot_mqtt_serialize.h"
+#include "iot_mqtt_lightweight.h"
 
 /* MQTT mock include. */
 #include "iot_tests_mqtt_mock.h"
