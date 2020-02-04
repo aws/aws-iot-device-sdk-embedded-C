@@ -4,6 +4,8 @@ set( MQTT_SOURCES
      src/iot_mqtt_network.c
      src/iot_mqtt_operation.c
      src/iot_mqtt_serialize.c
+     src/iot_mqtt_lightweight_api.c
+     src/iot_mqtt_helper.c
      src/iot_mqtt_static_memory.c
      src/iot_mqtt_subscription.c
      src/iot_mqtt_validate.c )

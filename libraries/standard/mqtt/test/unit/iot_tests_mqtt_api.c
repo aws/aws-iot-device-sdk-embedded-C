@@ -2383,7 +2383,7 @@ TEST( MQTT_Unit_API, DeserializeResponseChecks )
     mqttPacketInfo.type = 0x01;
     mqttPacketInfo.pRemainingData = buffer;
     status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
 
     /* Good case succeeds - Test for CONN ACK */
     /* Set conn ack variable portion */
