@@ -231,9 +231,33 @@ static uint8_t * _encodeString( uint8_t * pDestination,
  *
  * @return Pointer to the end of the encoded string, which will be identical to
  * `pDestination` if nothing was encoded.
+ *
+ * @warning This function does not check the size of `pDestination`! To avoid a buffer
+ * overflow, ensure that `pDestination` is large enough to hold `pConnectInfo->userNameLength`
+ * bytes if a username is supplied, and/or #AWS_IOT_METRICS_USERNAME_LENGTH bytes if
+ * metrics are enabled.
  */
 static uint8_t * _encodeUserName( uint8_t * pDestination,
                                   const IotMqttConnectInfo_t * pConnectInfo );
+
+/**
+ * @brief Encode both connection and metrics username into a buffer,
+ * if they will fit.
+ *
+ * @param[in] pDestination Buffer to write username into.
+ * @param[in] pConnectInfo User-provided CONNECT information.
+ * @param[out] pEncodedUserName Whether the username was written into the buffer.
+ *
+ * @return Pointer to the end of encoded string, which will be identical to
+ * `pDestination` if nothing was encoded.
+ *
+ * @warning This function does not check the size of `pDestination`! Ensure that
+ * `pDestination` is large enough to hold `pConnectInfo->userNameLength` +
+ * #AWS_IOT_METRICS_USERNAME_LENGTH bytes to avoid a buffer overflow.
+ */
+static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
+                                            const IotMqttConnectInfo_t * pConnectInfo,
+                                            bool * pEncodedUserName );
 
 /**
  * @brief Calculate the size and "Remaining length" of a CONNECT packet generated
@@ -504,7 +528,10 @@ static uint8_t * _encodeString( uint8_t * pDestination,
     *pBuffer = UINT16_LOW_BYTE( sourceLength );
     pBuffer++;
 
-    /* Copy the string into pBuffer. */
+    /* Copy the string into pBuffer.
+     * As the types of char and uint8_t are of the same size, this memcpy
+     * is acceptable. */
+    /* coverity[misra_c_2012_rule_21_15_violation] */
     ( void ) memcpy( pBuffer, source, sourceLength );
 
     /* Return the pointer to the end of the encoded string. */
@@ -520,10 +547,6 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
 {
     bool encodedUserName = false;
     uint8_t * pBuffer = pDestination;
-    const char * pMetricsUserName = NULL;
-
-    /* Avoid unused variable warning when AWS_IOT_MQTT_ENABLE_METRICS is set to 0 */
-    ( void ) pMetricsUserName;
 
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
      * Otherwise, write the username and password only when not connecting to the
@@ -534,46 +557,19 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
             IotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
                         "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
 
-            pMetricsUserName = AWS_IOT_METRICS_USERNAME;
             /* Determine if the Connect packet should use a combination of the username
              * for authentication plus the SDK version string. */
             if( pConnectInfo->pUserName != NULL )
             {
-                /* Only include metrics if it will fit within the encoding
-                 * standard. */
-                if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( uint16_t ) ( UINT16_MAX ) ) )
-                {
-                    /* Write the high byte of the combined length. */
-                    *pBuffer = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
-                                                   AWS_IOT_METRICS_USERNAME_LENGTH ) );
-                    pBuffer++;
-
-                    /* Write the low byte of the combined length. */
-                    *pBuffer = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
-                                                  AWS_IOT_METRICS_USERNAME_LENGTH ) );
-                    pBuffer++;
-
-                    /* Write the identity portion of the username. */
-                    ( void ) memcpy( pBuffer,
-                                     pConnectInfo->pUserName,
-                                     pConnectInfo->userNameLength );
-                    pBuffer += pConnectInfo->userNameLength;
-
-                    /* Write the metrics portion of the username. */
-                    ( void ) memcpy( pBuffer,
-                                     pMetricsUserName,
-                                     AWS_IOT_METRICS_USERNAME_LENGTH );
-                    pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
-
-                    encodedUserName = true;
-                }
+                /* Encode username and metrics if they will fit. */
+                pBuffer = _encodeUserNameAndMetrics( pBuffer, pConnectInfo, &encodedUserName );
             }
             else
             {
                 /* The username is not being used for authentication, but
                  * metrics are enabled. */
                 pBuffer = _encodeString( pBuffer,
-                                         pMetricsUserName,
+                                         AWS_IOT_METRICS_USERNAME,
                                          AWS_IOT_METRICS_USERNAME_LENGTH );
 
                 encodedUserName = true;
@@ -588,6 +584,56 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
                                  pConnectInfo->pUserName,
                                  pConnectInfo->userNameLength );
     }
+
+    return pBuffer;
+}
+
+/*-----------------------------------------------------------*/
+
+static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
+                                            const IotMqttConnectInfo_t * pConnectInfo,
+                                            bool * pEncodedUserName )
+{
+    uint8_t * pBuffer = pDestination;
+
+    #if AWS_IOT_MQTT_ENABLE_METRICS == 1
+        const char * pMetricsUserName = AWS_IOT_METRICS_USERNAME;
+    
+        /* Only include metrics if it will fit within the encoding
+         * standard. */
+        if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( uint16_t ) ( UINT16_MAX ) ) )
+        {
+            /* Write the high byte of the combined length. */
+            pBuffer[ 0 ] = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
+                                               AWS_IOT_METRICS_USERNAME_LENGTH ) );
+    
+            /* Write the low byte of the combined length. */
+            pBuffer[ 1 ] = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
+                                              AWS_IOT_METRICS_USERNAME_LENGTH ) );
+            pBuffer += 2;
+    
+            /* Write the identity portion of the username.
+             * As the types of char and uint8_t are of the same size, this memcpy
+             * is acceptable. */
+            /* coverity[misra_c_2012_rule_21_15_violation] */
+            ( void ) memcpy( pBuffer, pConnectInfo->pUserName, pConnectInfo->userNameLength );
+            pBuffer += pConnectInfo->userNameLength;
+    
+            /* Write the metrics portion of the username.
+             * As the types of char and uint8_t are of the same size, this memcpy
+             * is acceptable. */
+            /* coverity[misra_c_2012_rule_21_15_violation] */
+            ( void ) memcpy( pBuffer, pMetricsUserName, AWS_IOT_METRICS_USERNAME_LENGTH );
+            pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
+    
+            *pEncodedUserName = true;
+        }
+    #else
+        /* Avoid unused variable warnings when AWS_IOT_MQTT_ENABLE_METRICS is set to 0. */
+        ( void ) pBuffer;
+        ( void ) pConnectInfo;
+        ( void ) pEncodedUserName;
+    #endif
 
     return pBuffer;
 }
@@ -976,6 +1022,9 @@ static void _serializePublish( const IotMqttPublishInfo_t * pPublishInfo,
     /* The payload is placed after the packet identifier. */
     if( pPublishInfo->payloadLength > 0U )
     {
+        /* This memcpy intentionally copies bytes from a void * buffer into
+         * a uint8_t * buffer. */
+        /* coverity[misra_c_2012_rule_21_15_violation] */
         ( void ) memcpy( pBuffer, pPublishInfo->pPayload, pPublishInfo->payloadLength );
         pBuffer += pPublishInfo->payloadLength;
     }
