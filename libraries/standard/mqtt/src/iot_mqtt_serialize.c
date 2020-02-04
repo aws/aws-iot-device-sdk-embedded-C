@@ -231,6 +231,11 @@ static uint8_t * _encodeString( uint8_t * pDestination,
  *
  * @return Pointer to the end of the encoded string, which will be identical to
  * `pDestination` if nothing was encoded.
+ *
+ * @warning This function does not check the size of `pDestination`! To avoid a buffer
+ * overflow, ensure that `pDestination` is large enough to hold `pConnectInfo->userNameLength`
+ * bytes if a username is supplied, and/or #AWS_IOT_METRICS_USERNAME_LENGTH bytes if
+ * metrics are enabled.
  */
 static uint8_t * _encodeUserName( uint8_t * pDestination,
                                   const IotMqttConnectInfo_t * pConnectInfo );
@@ -245,6 +250,10 @@ static uint8_t * _encodeUserName( uint8_t * pDestination,
  *
  * @return Pointer to the end of encoded string, which will be identical to
  * `pDestination` if nothing was encoded.
+ *
+ * @warning This function does not check the size of `pDestination`! Ensure that
+ * `pDestination` is large enough to hold `pConnectInfo->userNameLength` +
+ * #AWS_IOT_METRICS_USERNAME_LENGTH bytes to avoid a buffer overflow.
  */
 static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
                                             const IotMqttConnectInfo_t * pConnectInfo,
