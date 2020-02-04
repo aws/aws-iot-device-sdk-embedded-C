@@ -273,6 +273,13 @@ typedef enum IotMqttDisconnectReason
 /*------------------------- MQTT parameter structs --------------------------*/
 
 #ifndef IOT_MQTT_MANAGED_API
+
+/**
+ * @brief The type used to represent network connections.
+ *
+ * For the light weight MQTT API, it is application's responsibility to define and 
+ * interpret IotNetworkConnection_t, therefore it is defined as void * here.
+ */
     typedef void * IotNetworkConnection_t;
 #endif
 

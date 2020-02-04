@@ -32,7 +32,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-/* For use of automics library */
+/* For use of atomics library */
 #include "iot_atomic.h"
 
 /* MQTT helper header. */

@@ -28,6 +28,7 @@
  */
 
 #ifndef _IOT_MQTT_PROTOCOL_H_
+#define _IOT_MQTT_PROTOCOL_H_
 
 /*
  * MQTT control packet type and flags. Always the first byte of an MQTT
@@ -135,5 +136,5 @@
 #define MQTT_PACKET_DISCONNECT_SIZE                 ( 2U ) /**< @brief A DISCONNECT packet is always 2 bytes in size. */
 
 
-#define _IOT_MQTT_PROTOCOL_H_
+
 #endif /* ifndef _IOT_MQTT_PROTOCOL_H_ */
