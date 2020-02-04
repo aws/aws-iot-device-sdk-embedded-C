@@ -865,45 +865,6 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_GetIncomingMQTTPacketTypeAndLength( IotMqttPacketInfo_t * pIncomingPacket,
-                                                           IotMqttGetNextByte_t getNextByte,
-                                                           IotNetworkConnection_t pNetworkConnection )
-{
-    IotMqttError_t status = IOT_MQTT_SUCCESS;
-
-    /* Read the packet type, which is the first byte available. */
-    if( getNextByte( pNetworkConnection, &( pIncomingPacket->type ) ) == IOT_MQTT_SUCCESS )
-    {
-        /* Check that the incoming packet type is valid. */
-        if( _incomingPacketValid( pIncomingPacket->type ) == false )
-        {
-            IotLogError( "(MQTT connection) Unknown packet type %02x received.",
-                         pIncomingPacket->type );
-
-            status = IOT_MQTT_BAD_RESPONSE;
-        }
-        else
-        {
-            /* Read the remaining length. */
-            pIncomingPacket->remainingLength = _IotMqtt_GetRemainingLength_Generic( pNetworkConnection,
-                                                                                    getNextByte );
-
-            if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
-            {
-                status = IOT_MQTT_BAD_RESPONSE;
-            }
-        }
-    }
-    else
-    {
-        status = IOT_MQTT_NETWORK_ERROR;
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
 /* Provide access to internal functions and variables if testing. */
 /* IOT_BUILD_TESTS is defined outside the code base, e.g. passed in by build command. */
 /* coverity[misra_c_2012_rule_20_9_violation] */

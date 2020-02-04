@@ -21,14 +21,14 @@
  */
 
 /**
- * @file iot_mqtt_serialize.h
+ * @file iot_mqtt_lightweight.h
  * @brief User-facing functions for serializing MQTT 3.1.1 packets. This header should
  * be included for building a single threaded light-weight MQTT client bypassing
  * stateful CSDK MQTT library.
  */
 
-#ifndef _IOT_MQTT_SERIALIZE_H_
-#define _IOT_MQTT_SERIALIZE_H_
+#ifndef _IOT_MQTT_LIGHTWEIGHT_H_
+#define _IOT_MQTT_LIGHTWEIGHT_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
