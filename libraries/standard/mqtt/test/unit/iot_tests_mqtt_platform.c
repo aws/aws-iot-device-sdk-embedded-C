@@ -31,6 +31,9 @@
 /* Standard includes. */
 #include <string.h>
 
+/* Platform threads include. */
+#include "platform/iot_threads.h"
+
 /* SDK initialization include. */
 #include "iot_init.h"
 
@@ -73,6 +76,12 @@
 #define SUBSCRIPTION_CALLBACK_FUNCTION \
     ( ( void ( * )( void *,            \
                     IotMqttCallbackParam_t * ) ) 0x1 )
+
+/**
+ * @brief Length of an arbitrary packet for testing. A buffer will be allocated
+ * for it, but its contents don't matter.
+ */
+#define PACKET_LENGTH    ( 1 )
 
 /*-----------------------------------------------------------*/
 
@@ -180,8 +189,8 @@ static IotNetworkError_t _networkDestroy( IotNetworkConnection_t pConnection )
  * @brief Serializer override for PUBACK that always fails.
  */
 static IotMqttError_t _serializePuback( uint16_t packetIdentifier,
-                                              uint8_t ** pPubackPacket,
-                                              size_t * pPacketSize )
+                                        uint8_t ** pPubackPacket,
+                                        size_t * pPacketSize )
 {
     ( void ) packetIdentifier;
     ( void ) pPubackPacket;
@@ -248,9 +257,12 @@ TEST_GROUP_RUNNER( MQTT_Unit_Platform )
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectNetworkFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, ConnectScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, DisconnectNetworkFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, PingreqSendFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, PublishScheduleFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, PublishRetryScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, PubackScheduleSerializeFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, SubscriptionScheduleFailure );
+    RUN_TEST_CASE( MQTT_Unit_Platform, NotifyScheduleFailure );
 }
 
 /*-----------------------------------------------------------*/
@@ -347,6 +359,22 @@ TEST( MQTT_Unit_Platform, DisconnectNetworkFailure )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Tests the behavior when a PINGREQ cannot be sent.
+ */
+TEST( MQTT_Unit_Platform, PingreqSendFailure )
+{
+    _mqttConnection_t * pMqttConnection = NULL;
+
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 100 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+
+    _sendStatus = IOT_NETWORK_FAILURE;
+    _IotMqtt_ProcessKeepAlive( IOT_SYSTEM_TASKPOOL, pMqttConnection->pingreq.job, pMqttConnection );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Tests the behavior of @ref mqtt_function_publishasync when scheduling fails.
  */
 TEST( MQTT_Unit_Platform, PublishScheduleFailure )
@@ -391,8 +419,56 @@ TEST( MQTT_Unit_Platform, PublishScheduleFailure )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Tests the behavior when a client-to-server PUBLISH retry fails to
+ * schedule.
+ */
+TEST( MQTT_Unit_Platform, PublishRetryScheduleFailure )
+{
+    IotMqttConnection_t pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    _mqttOperation_t * pOperation = NULL;
+    IotTaskPool_t taskPool = IOT_SYSTEM_TASKPOOL;
+    uint32_t maxThreads = 0;
+
+    /* Create a new MQTT connection. */
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 0 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+
+    /* Create a new PUBLISH with retry operation. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( pMqttConnection,
+                                                                   IOT_MQTT_FLAG_WAITABLE,
+                                                                   NULL,
+                                                                   &pOperation ) );
+    TEST_ASSERT_NOT_NULL( pOperation );
+    pOperation->u.operation.type = IOT_MQTT_PUBLISH_TO_SERVER;
+    pOperation->u.operation.periodic.retry.limit = 3;
+    pOperation->u.operation.periodic.retry.nextPeriodMs = TIMEOUT_MS;
+    pOperation->u.operation.pMqttPacket = IotMqtt_MallocMessage( PACKET_LENGTH );
+    pOperation->u.operation.packetSize = PACKET_LENGTH;
+
+    /* Set the task pool to an invalid state and cause all further scheduling to fail. */
+    maxThreads = taskPool->maxThreads;
+    taskPool->maxThreads = 0;
+
+    /* Send the MQTT PUBLISH. Retry will fail to schedule. */
+    _IotMqtt_ProcessSend( IOT_SYSTEM_TASKPOOL, pOperation->job, pOperation );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SCHEDULING_ERROR, pOperation->u.operation.status );
+    TEST_ASSERT_EQUAL_UINT32( 1, IotSemaphore_GetCount( &( pOperation->u.operation.notify.waitSemaphore ) ) );
+    TEST_ASSERT_EQUAL_UINT32( 1, pOperation->u.operation.periodic.retry.count );
+
+    /* Restore the task pool to a valid state. */
+    taskPool->maxThreads = maxThreads;
+
+    /* Clean up. */
+    TEST_ASSERT_EQUAL_INT( true, _IotMqtt_DecrementOperationReferences( pOperation, false ) );
+    _IotMqtt_DestroyOperation( pOperation );
+    IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Tests the behavior of the client-to-server PUBACK when scheduling and
-  * serializing fail.
+ * serializing fail.
  */
 TEST( MQTT_Unit_Platform, PubackScheduleSerializeFailure )
 {
@@ -461,6 +537,40 @@ TEST( MQTT_Unit_Platform, SubscriptionScheduleFailure )
     /* Send an UNSUBSCRIBE that fails to schedule. */
     status = IotMqtt_UnsubscribeAsync( pMqttConnection, &subscription, 1, 0, NULL, &subscriptionOperation );
     TEST_ASSERT_EQUAL( status, IOT_MQTT_SCHEDULING_ERROR );
+
+    /* Restore the task pool to a valid state. */
+    taskPool->maxThreads = maxThreads;
+
+    /* Clean up. */
+    IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests the behavior of #_IotMqtt_Notify when scheduling fails.
+ */
+TEST( MQTT_Unit_Platform, NotifyScheduleFailure )
+{
+    IotMqttConnection_t pMqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+    _mqttOperation_t * pOperation = NULL;
+    IotTaskPool_t taskPool = IOT_SYSTEM_TASKPOOL;
+    uint32_t maxThreads = 0;
+
+    /* Create a new MQTT connection. */
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 0 );
+    TEST_ASSERT_NOT_NULL( pMqttConnection );
+
+    /* Create a new MQTT operation. */
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_CreateOperation( pMqttConnection, 0, NULL, &pOperation ) );
+    TEST_ASSERT_NOT_NULL( pOperation );
+    pOperation->u.operation.notify.callback.function = SUBSCRIPTION_CALLBACK_FUNCTION;
+
+    /* Set the task pool to an invalid state and cause all further scheduling to fail. */
+    maxThreads = taskPool->maxThreads;
+    taskPool->maxThreads = 0;
+
+    _IotMqtt_Notify( pOperation );
 
     /* Restore the task pool to a valid state. */
     taskPool->maxThreads = maxThreads;
