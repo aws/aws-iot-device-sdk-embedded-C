@@ -36,7 +36,7 @@
 #include "iot_atomic.h"
 
 /* MQTT helper header. */
-#include "iot_mqtt_helper.h"
+#include "private/iot_mqtt_helper.h"
 
 /*-----------------------------------------------------------*/
 

@@ -27,8 +27,8 @@
  * as stateful CSDK MQTT library.
  */
 
-#ifndef _IOT_MQTT_PROTOCOL_H_
-#define _IOT_MQTT_PROTOCOL_H_
+#ifndef IOT_MQTT_PROTOCOL_H_
+#define IOT_MQTT_PROTOCOL_H_
 
 /*
  * MQTT control packet type and flags. Always the first byte of an MQTT

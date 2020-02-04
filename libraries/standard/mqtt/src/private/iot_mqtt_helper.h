@@ -25,6 +25,9 @@
  * @brief Implements internal helper functions for the MQTT library.
  */
 
+#ifndef IOT_MQTT_SERIALIZE_INTERNAL_H_
+#define IOT_MQTT_SERIALIZE_INTERNAL_H_
+
 /* Standard includes. */
 #include <string.h>
 #include <limits.h>
@@ -36,7 +39,6 @@
 #include "iot_mqtt_protocol.h"
 /* MQTT types include. */
 #include "types/iot_mqtt_types.h"
-
 
 /*-----------------------------------------------------------*/
 
@@ -278,3 +280,4 @@ IotMqttError_t _IotMqtt_ProcessIncomingPublishFlags( uint8_t publishFlags,
  */
  uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
                                   const IotMqttConnectInfo_t * pConnectInfo );
+#endif

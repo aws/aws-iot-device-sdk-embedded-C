@@ -35,7 +35,7 @@
 /* MQTT include. */
 /* MQTT types include. */
 #include "types/iot_mqtt_types.h"
-#include "iot_mqtt_helper.h"
+#include "private/iot_mqtt_helper.h"
 
 /*-----------------------------------------------------------*/
 
