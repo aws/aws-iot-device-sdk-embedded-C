@@ -204,7 +204,7 @@ static AwsIotShadowError_t _validateThingNameFlags( _shadowOperationType_t type,
                                                     const AwsIotShadowCallbackInfo_t * pCallbackInfo,
                                                     const AwsIotShadowOperation_t * pOperation )
 {
-    AwsIotShadowError_t status = AWS_IOT_SHADOW_BAD_PARAMETER;
+    AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
 
     /* Type is not used when logging is disabled. */
     ( void ) type;
@@ -219,25 +219,19 @@ static AwsIotShadowError_t _validateThingNameFlags( _shadowOperationType_t type,
             if( pOperation != NULL )
             {
                 /* A callback should not be set for a waitable operation. */
-                if( pCallbackInfo == NULL )
-                {
-                    status = AWS_IOT_SHADOW_SUCCESS;
-                }
-                else
+                if( pCallbackInfo != NULL )
                 {
                     IotLogError( "Callback should not be set for a waitable Shadow %s.",
                                  _pAwsIotShadowOperationNames[ type ] );
+                    status = AWS_IOT_SHADOW_BAD_PARAMETER;
                 }
             }
             else
             {
                 IotLogError( "Reference must be set for a waitable Shadow %s.",
                              _pAwsIotShadowOperationNames[ type ] );
+                status = AWS_IOT_SHADOW_BAD_PARAMETER;
             }
-        }
-        else
-        {
-            status = AWS_IOT_SHADOW_SUCCESS;
         }
 
         if( status == AWS_IOT_SHADOW_SUCCESS )
@@ -269,6 +263,7 @@ static AwsIotShadowError_t _validateThingNameFlags( _shadowOperationType_t type,
     {
         IotLogError( "Thing Name for Shadow %s is not valid.",
                      _pAwsIotShadowOperationNames[ type ] );
+        status = AWS_IOT_SHADOW_BAD_PARAMETER;
     }
 
     return status;
@@ -280,7 +275,7 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
                                                   uint32_t flags,
                                                   const AwsIotShadowDocumentInfo_t * pDocumentInfo )
 {
-    AwsIotShadowError_t status = AWS_IOT_SHADOW_BAD_PARAMETER;
+    AwsIotShadowError_t status = AWS_IOT_SHADOW_SUCCESS;
 
     /* This function should only be called for Shadow GET or UPDATE. */
     AwsIotShadow_Assert( ( type == SHADOW_GET ) || ( type == SHADOW_UPDATE ) );
@@ -290,12 +285,14 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
     {
         IotLogError( "QoS for Shadow %d must be 0 or 1.",
                      _pAwsIotShadowOperationNames[ type ] );
+        status = AWS_IOT_SHADOW_BAD_PARAMETER;
     }
     /* Check the retry parameters. */
     else if( ( pDocumentInfo->retryLimit > 0U ) && ( pDocumentInfo->retryMs == 0U ) )
     {
         IotLogError( "Retry time of Shadow %s must be positive.",
                      _pAwsIotShadowOperationNames[ type ] );
+        status = AWS_IOT_SHADOW_BAD_PARAMETER;
     }
     else
     {
@@ -307,10 +304,7 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
                 ( pDocumentInfo->u.get.mallocDocument == NULL ) )
             {
                 IotLogError( "Memory allocation function must be set for waitable Shadow GET." );
-            }
-            else
-            {
-                status = AWS_IOT_SHADOW_SUCCESS;
+                status = AWS_IOT_SHADOW_BAD_PARAMETER;
             }
         }
         /* Check members relevant to a Shadow UPDATE. */
@@ -322,10 +316,7 @@ static AwsIotShadowError_t _validateDocumentInfo( _shadowOperationType_t type,
             {
                 IotLogError( "Shadow document for Shadow UPDATE cannot be NULL or"
                              " have length 0." );
-            }
-            else
-            {
-                status = AWS_IOT_SHADOW_SUCCESS;
+                status = AWS_IOT_SHADOW_BAD_PARAMETER;
             }
         }
     }
