@@ -35,7 +35,6 @@
 #include "private/iot_mqtt_internal.h"
 
 /* Platform layer includes. */
-#include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
 
 /* Atomics include. */
@@ -522,11 +521,6 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
 
     /* Only valid packets should be given to this function. */
     IotMqtt_Assert( _incomingPacketValid( pIncomingPacket->type ) == true );
-
-    /* Update the timestamp of the last message received. */
-    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-    pMqttConnection->lastMessageTime = IotClock_GetTimeMs();
-    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
     /* Mask out the low bits of packet type to ignore flags. */
     switch( ( pIncomingPacket->type & 0xf0U ) )

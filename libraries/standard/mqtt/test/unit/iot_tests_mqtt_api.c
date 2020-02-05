@@ -1900,6 +1900,8 @@ TEST( MQTT_Unit_API, SingleThreaded )
  */
 TEST( MQTT_Unit_API, KeepAlivePeriodic )
 {
+    IotTaskPoolJobStatus_t cancelStatus = IOT_TASKPOOL_STATUS_UNDEFINED;
+
     /* The expected disconnect reason for this test's disconnect callback. */
     IotMqttDisconnectReason_t expectedReason = IOT_MQTT_KEEP_ALIVE_TIMEOUT;
 
@@ -1923,7 +1925,19 @@ TEST( MQTT_Unit_API, KeepAlivePeriodic )
                                                          1 );
     TEST_ASSERT_NOT_NULL( _pMqttConnection );
 
+    /* Check that PINGREQ is not sent when the connection was used recently. */
+    _pMqttConnection->lastMessageTime = IotClock_GetTimeMs();
+    _IotMqtt_ProcessKeepAlive( IOT_SYSTEM_TASKPOOL, _pMqttConnection->pingreq.job, _pMqttConnection );
+    TEST_ASSERT_EQUAL_INT( 0, _pMqttConnection->pingreq.u.operation.periodic.ping.failure );
+    TEST_ASSERT_EQUAL_INT( _pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs,
+                           _pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs );
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_SUCCESS, IotTaskPool_TryCancel( IOT_SYSTEM_TASKPOOL,
+                                                                    _pMqttConnection->pingreq.job,
+                                                                    &cancelStatus ) );
+    TEST_ASSERT_EQUAL( IOT_TASKPOOL_STATUS_DEFERRED, cancelStatus );
+
     /* Set a short keep-alive interval so this test runs faster. */
+    _pMqttConnection->lastMessageTime = 0;
     _pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = SHORT_KEEP_ALIVE_MS;
     _pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs = SHORT_KEEP_ALIVE_MS;
 
