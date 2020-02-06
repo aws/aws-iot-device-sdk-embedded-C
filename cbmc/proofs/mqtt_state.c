@@ -308,6 +308,10 @@ bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo )
     VALID_STRING( pInfo->pPassword, pInfo->passwordLength ) &&
     VALID_CBMC_SIZE( pInfo->passwordLength ) &&
 
+#ifdef SUBSCRIPTION_COUNT_MAX
+    pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX &&
+#endif
+
     // MAX is one greater than the maximum length
     pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX &&
     IFF( pInfo->pPreviousSubscriptions == NULL,
@@ -536,7 +540,6 @@ bool stubbed_IotNetworkInterface( const IotNetworkInterface_t *netif )
     IS_STUBBED_NETWORKIF_SETRECEIVECALLBACK( netif ) &&
     IS_STUBBED_NETWORKIF_SETCLOSECALLBACK( netif ) &&
     IS_STUBBED_NETWORKIF_DESTROY( netif );
-}
 
 /****************************************************************
  * IotNetworkInterface stubs
