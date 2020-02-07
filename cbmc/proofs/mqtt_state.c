@@ -64,11 +64,11 @@ IotMqttOperation_t allocate_IotMqttOperation(IotMqttOperation_t pOp,
 // TODO: valid_ should have same signature as allocate_,
 // should check that operation points to the connection
 
-bool valid_IotMqttOperation( IotMqttOperation_t pOp )
+bool valid_IotMqttOperation( const IotMqttOperation_t pOp )
 {
-  if (pOp == NULL) return 0;
+  if (pOp == NULL) return false;
 
-  // check that publish member of the union is valid (pOp->incomingPublish)
+  // publish member of the union should be valid (pOp->incomingPublish)
 
   bool valid_publishinfo =
     valid_IotMqttPublishInfo( &(pOp->u.publish.publishInfo) );
@@ -76,7 +76,7 @@ bool valid_IotMqttOperation( IotMqttOperation_t pOp )
   bool valid_publish_member =
     IMPLIES( pOp->incomingPublish, valid_publishinfo );
 
-  // check that operation member of the union is valid (!pOp->incomingPublish)
+  // operation member of the union should be valid (!pOp->incomingPublish)
 
   bool valid_packet =
     VALID_STRING( pOp->u.operation.pMqttPacket, pOp->u.operation.packetSize ) &&
@@ -132,9 +132,9 @@ void ensure_IotMqttConnection_has_lists(IotMqttConnection_t pConn)
   return pConn;
 }
 
-bool valid_IotMqttConnection(IotMqttConnection_t pConn)
+bool valid_IotMqttConnection(const IotMqttConnection_t pConn)
 {
-  if ( pConn == NULL ) return 0;
+  if ( pConn == NULL ) return false;
 
   bool valid_references = pConn->references >= 1;
 
@@ -171,10 +171,10 @@ IotMqttNetworkInfo_t *allocate_IotMqttNetworkInfo(IotMqttNetworkInfo_t *pInfo)
   return pInfo;
 }
 
-bool valid_IotMqttNetworkInfo(IotMqttNetworkInfo_t *pInfo)
+bool valid_IotMqttNetworkInfo(const IotMqttNetworkInfo_t *pInfo)
 {
-  if ( pInfo == NULL ) return 0;
-  return 1;
+  if ( pInfo == NULL ) return false;
+  return true;
 }
 
 /****************************************************************
@@ -195,7 +195,7 @@ IotMqttConnectInfo_t *allocate_IotMqttConnectInfo(IotMqttConnectInfo_t *pInfo)
   pInfo->pPassword = malloc_can_fail(pInfo->passwordLength);
 }
 
-bool valid_IotMqttConnectInfo(IotMqttConnectInfo_t *pInfo)
+bool valid_IotMqttConnectInfo(const IotMqttConnectInfo_t *pInfo)
 {
   return
     pInfo &&
@@ -231,7 +231,7 @@ IotMqttSubscription_t *allocate_IotMqttSubscription(IotMqttSubscription_t *pSub)
   return pSub;
 }
 
-bool valid_IotMqttSubscription(IotMqttSubscription_t *pSub)
+bool valid_IotMqttSubscription(const IotMqttSubscription_t *pSub)
 {
   return
     pSub &&
@@ -260,10 +260,11 @@ IotMqttSubscription_t *allocate_IotMqttSubscriptionArray(IotMqttSubscription_t *
   return pSub;
 }
 
-bool valid_IotMqttSubscriptionArray(IotMqttSubscription_t *pSub, size_t length)
+bool valid_IotMqttSubscriptionArray(const IotMqttSubscription_t *pSub,
+				    const size_t length)
 {
-  if ( !IFF(pSub == NULL, length == 0 ) ) return 0;
-  if ( pSub == NULL ) return 0;
+  if ( !IFF(pSub == NULL, length == 0 ) ) return false;
+  if ( pSub == NULL ) return false;
 
   bool result = 1;
   for (int i = 0; i < length; i++)
@@ -298,9 +299,9 @@ _mqttSubscription_t *allocate_IotMqttSubscriptionListElt(_mqttSubscription_t *pE
   return pElt;
 }
 
-bool valid_IotMqttSubscriptionListElt(_mqttSubscription_t *pElt)
+bool valid_IotMqttSubscriptionListElt(const _mqttSubscription_t *pElt)
 {
-  if ( pElt == NULL ) return 0;
+  if ( pElt == NULL ) return false;
 
   return
 #ifdef TOPIC_LENGTH_MAX
@@ -328,9 +329,10 @@ IotListDouble_t *allocate_IotMqttSubscriptionList(IotListDouble_t *pSub,
   return pSub;
 }
 
-bool valid_IotMqttSubscriptionList(IotListDouble_t *pSub, size_t length)
+bool valid_IotMqttSubscriptionList(const IotListDouble_t *pSub,
+				   const size_t length)
 {
-  if ( pSub == NULL ) return 0;
+  if ( pSub == NULL ) return false;
 
   bool result = 1;
   IotListDouble_t *pLink;
@@ -363,7 +365,7 @@ IotMqttPublishInfo_t *allocate_IotMqttPublishInfo(IotMqttPublishInfo_t *pInfo)
   return pInfo;
 }
 
-bool valid_IotMqttPublishInfo(IotMqttPublishInfo_t *pInfo)
+bool valid_IotMqttPublishInfo(const IotMqttPublishInfo_t *pInfo)
 {
   return
     pInfo &&
@@ -378,9 +380,8 @@ bool valid_IotMqttPublishInfo(IotMqttPublishInfo_t *pInfo)
     pInfo->retryMs <= IOT_MQTT_RETRY_MS_CEILING &&
     pInfo->retryMs > 0  &&
 
-    // BUG: try without this name length assumption
+    // TODO: experiment with removing these assumptions
     pInfo->topicNameLength < 0xFFFF &&
-    // BUG: try without this name length assumption
     pInfo->payloadLength > 0;
 }
 
@@ -402,12 +403,12 @@ IotNetworkInterface_t *allocate_IotNetworkInterface()
   return malloc_can_fail( sizeof( IotNetworkInterface_t ) );
 }
 
-bool valid_IotNetworkInterface(IotNetworkInterface_t *netif)
+bool valid_IotNetworkInterface(const IotNetworkInterface_t *netif)
 {
   return ( netif != NULL );
 }
 
-bool stubbed_IotNetworkInterface(IotNetworkInterface_t *netif)
+bool stubbed_IotNetworkInterface(const IotNetworkInterface_t *netif)
 {
   return
     IS_STUBBED_NETWORKIF_CREATE(netif) &&
@@ -441,7 +442,9 @@ IotNetworkError_t IotNetworkInterfaceCreate( void * pConnectionInfo,
   return error;
 }
 
-#define MAX_TRIES 2
+#ifndef MAX_TRIES
+  #define MAX_TRIES 2
+#endif
 
 size_t IotNetworkInterfaceSend( void * pConnection,
 				const uint8_t * pMessage,
