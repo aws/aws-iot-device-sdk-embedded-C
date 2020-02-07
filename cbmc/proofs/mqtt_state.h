@@ -35,7 +35,7 @@
  * have an option to let malloc fail.
  ****************************************************************/
 
-void *malloc_can_fail(size_t size);
+void *malloc_can_fail(size_t size );
 
 /****************************************************************
  * Type allocators and validators
@@ -86,22 +86,22 @@ IotMqttConnection_t
  ****************************************************************/
 
 IotMqttOperation_t allocate_IotMqttOperation( IotMqttOperation_t pOp,
-					       IotMqttConnection_t pConn );
+					      IotMqttConnection_t pConn );
 bool valid_IotMqttOperation( const IotMqttOperation_t pOp );
 
 /****************************************************************
  * IotMqttNetworkInfo
  ****************************************************************/
 
-IotMqttNetworkInfo_t *allocate_IotMqttNetworkInfo(IotMqttNetworkInfo_t *pInfo);
-bool valid_IotMqttNetworkInfo(const IotMqttNetworkInfo_t *pInfo);
+IotMqttNetworkInfo_t *allocate_IotMqttNetworkInfo( IotMqttNetworkInfo_t *pInfo );
+bool valid_IotMqttNetworkInfo( const IotMqttNetworkInfo_t *pInfo );
 
 /****************************************************************
  * IotMqttConnectInfo
  ****************************************************************/
 
-IotMqttConnectInfo_t *allocate_IotMqttConnectInfo(IotMqttConnectInfo_t *pInfo);
-bool valid_IotMqttConnectInfo(const IotMqttConnectInfo_t *pInfo);
+IotMqttConnectInfo_t *allocate_IotMqttConnectInfo( IotMqttConnectInfo_t *pInfo );
+bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo );
 
 /****************************************************************
  * IotMqttSubscription
@@ -113,8 +113,8 @@ bool valid_IotMqttConnectInfo(const IotMqttConnectInfo_t *pInfo);
  * TOPIC_LENGTH_MAX in the proof's Makefile.
  ****************************************************************/
 
-IotMqttSubscription_t *allocate_IotMqttSubscription(IotMqttSubscription_t *pSub);
-bool valid_IotMqttSubscription(const IotMqttSubscription_t *pSub);
+IotMqttSubscription_t *allocate_IotMqttSubscription( IotMqttSubscription_t *pSub );
+bool valid_IotMqttSubscription( const IotMqttSubscription_t *pSub );
 
 /****************************************************************
  * IotMqttSubscription list
@@ -129,24 +129,26 @@ bool valid_IotMqttSubscription(const IotMqttSubscription_t *pSub);
 
 // Array lists
 
-IotMqttSubscription_t *allocate_IotMqttSubscriptionArray(IotMqttSubscription_t *pSub, size_t length);
-bool valid_IotMqttSubscriptionArray(const IotMqttSubscription_t *pSub,
-				    const size_t length);
+IotMqttSubscription_t *allocate_IotMqttSubscriptionArray( IotMqttSubscription_t *pSub,
+							  size_t length );
+bool valid_IotMqttSubscriptionArray( const IotMqttSubscription_t *pSub,
+				     const size_t length );
 
 // Linked lists
 
-_mqttSubscription_t *allocate_IotMqttSubscriptionListElt(_mqttSubscription_t *pElt);
-bool valid_IotMqttSubscriptionListElt(const _mqttSubscription_t *pElt);
-IotListDouble_t *allocate_IotMqttSubscriptionList(IotListDouble_t *pSub, size_t length);
-bool valid_IotMqttSubscriptionList(const IotListDouble_t *pSub,
-				   const size_t length);
+_mqttSubscription_t *allocate_IotMqttSubscriptionListElt( _mqttSubscription_t *pElt );
+bool valid_IotMqttSubscriptionListElt( const _mqttSubscription_t *pElt );
+IotListDouble_t *allocate_IotMqttSubscriptionList( IotListDouble_t *pSub,
+						   size_t length );
+bool valid_IotMqttSubscriptionList( const IotListDouble_t *pSub,
+				   const size_t length );
 
 /****************************************************************
  * IotMqttPublishInfo
  ****************************************************************/
 
-IotMqttPublishInfo_t *allocate_IotMqttPublishInfo(IotMqttPublishInfo_t *pInfo);
-bool valid_IotMqttPublishInfo(const IotMqttPublishInfo_t *pInfo);
+IotMqttPublishInfo_t *allocate_IotMqttPublishInfo( IotMqttPublishInfo_t *pInfo );
+bool valid_IotMqttPublishInfo( const IotMqttPublishInfo_t *pInfo );
 
 /****************************************************************
  * IotNetworkConnection
@@ -176,8 +178,8 @@ void *allocate_IotNetworkConnection();
  ****************************************************************/
 
 IotNetworkInterface_t *allocate_IotNetworkInterface();
-bool valid_IotNetworkInterface(const IotNetworkInterface_t *netif);
-bool stubbed_IotNetworkInterface(const IotNetworkInterface_t *netif);
+bool valid_IotNetworkInterface( const IotNetworkInterface_t *netif );
+bool stubbed_IotNetworkInterface( const IotNetworkInterface_t *netif );
 
 #define IS_STUBBED_NETWORKIF_CREATE(netif) \
   (netif->create == IotNetworkInterfaceCreate)
@@ -195,8 +197,8 @@ bool stubbed_IotNetworkInterface(const IotNetworkInterface_t *netif);
   (netif->destroy == IotNetworkInterfaceDestroy)
 
 IotNetworkError_t IotNetworkInterfaceCreate( void * pConnectionInfo,
-					       void * pCredentialInfo,
-					       void * pConnection );
+					     void * pCredentialInfo,
+					     void * pConnection );
 size_t IotNetworkInterfaceSend( void * pConnection,
 				const uint8_t * pMessage,
 				size_t messageLength );
@@ -205,13 +207,13 @@ size_t IotNetworkInterfaceReceive( void * pConnection,
 				   uint8_t * pBuffer,
 				   size_t bytesRequested );
 IotNetworkError_t IotNetworkInterfaceReceiveCallback( void * pConnection,
-					       IotNetworkReceiveCallback_t
-					       receiveCallback,
-					       void * pContext );
+						      IotNetworkReceiveCallback_t
+						      receiveCallback,
+						      void * pContext );
 IotNetworkError_t IotNetworkInterfaceCloseCallback( void * pConnection,
-					       IotNetworkCloseCallback_t
-					       closeCallback,
-					       void * pContext );
+						    IotNetworkCloseCallback_t
+						    closeCallback,
+						    void * pContext );
 IotNetworkError_t IotNetworkInterfaceDestroy( void * pConnection );
 
 /****************************************************************/
