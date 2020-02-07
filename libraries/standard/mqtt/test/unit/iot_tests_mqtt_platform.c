@@ -181,11 +181,6 @@ static IotNetworkInterface_t _networkInterface = { 0 };
 static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 /**
- * @brief Tracks whether the global MQTT connection has been created.
- */
-static bool _connectionCreated = false;
-
-/**
  * @brief An #IotMqttNetworkInfo_t to use for the re-entrancy tests.
  */
 static IotMqttNetworkInfo_t _reentrantNetworkInfo = IOT_MQTT_NETWORK_INFO_INITIALIZER;
@@ -643,13 +638,6 @@ TEST_SETUP( MQTT_Unit_Platform )
  */
 TEST_TEAR_DOWN( MQTT_Unit_Platform )
 {
-    /* Destroy the MQTT connection used for the tests. */
-    if( _connectionCreated == true )
-    {
-        IotMqtt_Disconnect( _mqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
-        _connectionCreated = false;
-    }
-
     IotMqtt_Cleanup();
     IotTestNetwork_Cleanup();
     IotSdk_Cleanup();
@@ -1071,15 +1059,15 @@ TEST( MQTT_Unit_Platform, SubscriptionReferences )
     _mqttSubscription_t * pSubscription = NULL;
     IotLink_t * pSubscriptionLink;
     IotSemaphore_t waitSem;
+    _mqttConnection_t * pMqttConnection = NULL;
 
     /* Create an MQTT connection. */
-    _mqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
-                                                         &_networkInfo,
-                                                         0 );
-    _connectionCreated = true;
+    pMqttConnection = IotTestMqtt_createMqttConnection( AWS_IOT_MQTT_SERVER,
+                                                        &_networkInfo,
+                                                        0 );
 
     /* Adjustment to reference count based on keep-alive status. */
-    const int32_t keepAliveReference = 1 + ( ( _mqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0 ) ? 1 : 0 );
+    const int32_t keepAliveReference = 1 + ( ( pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0 ) ? 1 : 0 );
 
     #if ( IOT_STATIC_MEMORY_ONLY == 1 ) && ( IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS < 3 )
     #error "IOT_MQTT_MAX_IN_PROGRESS_OPERATIONS must be at least 3 for SubscriptionReferences test."
@@ -1097,13 +1085,13 @@ TEST( MQTT_Unit_Platform, SubscriptionReferences )
     subscription.callback.pCallbackContext = &waitSem;
 
     /* Add the subscriptions. */
-    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( _mqttConnection,
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_AddSubscriptions( pMqttConnection,
                                                                     1,
                                                                     &subscription,
                                                                     1 ) );
 
     /* Get the pointer to the subscription in the MQTT connection. */
-    pSubscriptionLink = IotListDouble_PeekHead( &( _mqttConnection->subscriptionList ) );
+    pSubscriptionLink = IotListDouble_PeekHead( &( pMqttConnection->subscriptionList ) );
     TEST_ASSERT_NOT_NULL( pSubscriptionLink );
     pSubscription = IotLink_Container( _mqttSubscription_t, pSubscriptionLink, link );
     TEST_ASSERT_NOT_NULL( pSubscription );
@@ -1116,13 +1104,13 @@ TEST( MQTT_Unit_Platform, SubscriptionReferences )
 
         ( void ) memset( pIncomingPublish[ i ], 0x00, sizeof( _mqttOperation_t ) );
         pIncomingPublish[ i ]->incomingPublish = true;
-        pIncomingPublish[ i ]->pMqttConnection = _mqttConnection;
+        pIncomingPublish[ i ]->pMqttConnection = pMqttConnection;
         pIncomingPublish[ i ]->u.publish.publishInfo.pTopicName = "/test";
         pIncomingPublish[ i ]->u.publish.publishInfo.topicNameLength = 5;
         pIncomingPublish[ i ]->u.publish.publishInfo.pPayload = "";
         pIncomingPublish[ i ]->u.publish.pReceivedData = IotMqtt_MallocMessage( 1 );
 
-        IotListDouble_InsertHead( &( _mqttConnection->pendingProcessing ),
+        IotListDouble_InsertHead( &( pMqttConnection->pendingProcessing ),
                                   &( pIncomingPublish[ i ]->link ) );
     }
 
@@ -1131,19 +1119,19 @@ TEST( MQTT_Unit_Platform, SubscriptionReferences )
         /* Schedule 3 callback invocations for the incoming PUBLISH. */
         for( i = 0; i < 3; i++ )
         {
-            TEST_ASSERT_EQUAL_INT( true, _IotMqtt_IncrementConnectionReferences( _mqttConnection ) );
+            TEST_ASSERT_EQUAL_INT( true, _IotMqtt_IncrementConnectionReferences( pMqttConnection ) );
             TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, _IotMqtt_ScheduleOperation( pIncomingPublish[ i ],
                                                                              _IotMqtt_ProcessIncomingPublish,
                                                                              0 ) );
         }
 
         /* Wait for the connection reference count to reach 3 (adjusted for possible keep-alive). */
-        TEST_ASSERT_EQUAL_INT( true, _waitForCount( &( _mqttConnection->referencesMutex ),
-                                                    &( _mqttConnection->references ),
+        TEST_ASSERT_EQUAL_INT( true, _waitForCount( &( pMqttConnection->referencesMutex ),
+                                                    &( pMqttConnection->references ),
                                                     3 + keepAliveReference ) );
 
         /* Check that the subscription also has a reference count of 3. */
-        TEST_ASSERT_EQUAL_INT32( true, _waitForCount( &( _mqttConnection->subscriptionMutex ),
+        TEST_ASSERT_EQUAL_INT32( true, _waitForCount( &( pMqttConnection->subscriptionMutex ),
                                                       &( pSubscription->references ),
                                                       3 ) );
 
@@ -1153,15 +1141,15 @@ TEST( MQTT_Unit_Platform, SubscriptionReferences )
         /* Wait for the connection reference count to decrease to 2 (adjusted for
          * possible keep-alive). Check that the subscription reference count also
          * decreases to 2. */
-        TEST_ASSERT_EQUAL_INT( true, _waitForCount( &( _mqttConnection->referencesMutex ),
-                                                    &( _mqttConnection->references ),
+        TEST_ASSERT_EQUAL_INT( true, _waitForCount( &( pMqttConnection->referencesMutex ),
+                                                    &( pMqttConnection->references ),
                                                     2 + keepAliveReference ) );
-        TEST_ASSERT_EQUAL_INT32( true, _waitForCount( &( _mqttConnection->subscriptionMutex ),
+        TEST_ASSERT_EQUAL_INT32( true, _waitForCount( &( pMqttConnection->subscriptionMutex ),
                                                       &( pSubscription->references ),
                                                       2 ) );
 
         /* Shut down the MQTT connection. */
-        IotMqtt_Disconnect( _mqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
+        IotMqtt_Disconnect( pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
 
         /* Post twice to the wait semaphore, which unblocks the remaining blocking
          * callbacks. */
@@ -1173,9 +1161,6 @@ TEST( MQTT_Unit_Platform, SubscriptionReferences )
         {
             IotClock_SleepMs( 100 );
         }
-
-        /* Clear the MQTT connection flag so test cleanup does not double-free it. */
-        _connectionCreated = false;
     }
 
     IotSemaphore_Destroy( &waitSem );
