@@ -891,8 +891,9 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
         }
     }
 
-    /* When a PINGREQ is successfully sent, reschedule this job to check for a
-     * response shortly. */
+    /* Reschedule this job. When a PINGREQ is sent, schedule a check for PINGRESP.
+     * When PINGREQ is not sent (because the connection was recently used) schedule
+     * another PINGREQ after the keep-alive period. */
     if( status == true )
     {
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
