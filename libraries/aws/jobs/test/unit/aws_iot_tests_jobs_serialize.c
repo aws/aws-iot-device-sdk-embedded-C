@@ -739,16 +739,18 @@ TEST( Jobs_Unit_Serialize, ParseErrorResponse )
     _jobsOperation_t operation = { .link = { 0 } };
 
     /* Test for failure to allocate memory for response. */
-    operation.status = AWS_IOT_JOBS_STATUS_PENDING;
-    operation.flags = AWS_IOT_JOBS_FLAG_WAITABLE;
-    operation.mallocResponse = IotTest_Malloc;
+    #if IOT_TEST_NO_MALLOC_OVERRIDES != 1
+        operation.status = AWS_IOT_JOBS_STATUS_PENDING;
+        operation.flags = AWS_IOT_JOBS_FLAG_WAITABLE;
+        operation.mallocResponse = IotTest_Malloc;
 
-    UnityMalloc_MakeMallocFailAfterCount( 0 );
+        UnityMalloc_MakeMallocFailAfterCount( 0 );
 
-    _AwsIotJobs_ParseResponse( AWS_IOT_ACCEPTED, "{}", 2, &operation );
-    TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, operation.status );
-    UnityMalloc_MakeMallocFailAfterCount( -1 );
-    operation.flags = 0;
+        _AwsIotJobs_ParseResponse( AWS_IOT_ACCEPTED, "{}", 2, &operation );
+        TEST_ASSERT_EQUAL( AWS_IOT_JOBS_NO_MEMORY, operation.status );
+        UnityMalloc_MakeMallocFailAfterCount( -1 );
+        operation.flags = 0;
+    #endif /* if IOT_TEST_NO_MALLOC_OVERRIDES != 1 */
 
     /* Test parsing of error responses. */
     const char * pErrorResponses[] =
