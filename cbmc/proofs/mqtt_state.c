@@ -289,8 +289,7 @@ _mqttSubscription_t *allocate_IotMqttSubscriptionListElt( _mqttSubscription_t *p
 {
   size_t length;
   // Assumption avoids arithmetic overflow in malloc, rechecked in valid_*
-  __CPROVER_assume( length <
-		    CBMC_MAX_OBJECT_SIZE - sizeof( _mqttSubscription_t ) );
+  __CPROVER_assume( length < CBMC_MAX_OBJECT_SIZE - sizeof( *pElt ) );
 
   if ( pElt == NULL ) pElt = malloc_can_fail( sizeof( *pElt ) + length );
   if ( pElt == NULL ) return NULL;
@@ -309,7 +308,7 @@ bool valid_IotMqttSubscriptionListElt( const _mqttSubscription_t *pElt )
 #ifdef TOPIC_LENGTH_MAX
     pElt->topicFilterLength < TOPIC_LENGTH_MAX &&
 #endif
-    pElt->topicFilterLength < CBMC_MAX_OBJECT_SIZE - sizeof( _mqttSubscription_t ) &&
+    pElt->topicFilterLength < CBMC_MAX_OBJECT_SIZE - sizeof( *pElt ) &&
     __CPROVER_r_ok( pElt->pTopicFilter, pElt->topicFilterLength ) &&
     __CPROVER_w_ok( pElt->pTopicFilter, pElt->topicFilterLength );
 }
