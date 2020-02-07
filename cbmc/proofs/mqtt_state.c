@@ -540,6 +540,7 @@ bool stubbed_IotNetworkInterface( const IotNetworkInterface_t *netif )
     IS_STUBBED_NETWORKIF_SETRECEIVECALLBACK( netif ) &&
     IS_STUBBED_NETWORKIF_SETCLOSECALLBACK( netif ) &&
     IS_STUBBED_NETWORKIF_DESTROY( netif );
+}
 
 /****************************************************************
  * IotNetworkInterface stubs
