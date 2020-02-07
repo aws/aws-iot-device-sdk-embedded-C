@@ -530,9 +530,8 @@ static IotMqttError_t _initializeOperation( _mqttConnection_t * pMqttConnection,
 static bool _sendPingRequest( _mqttConnection_t * pMqttConnection )
 {
     size_t bytesSent = 0;
-    bool status = true, sendPingreq = true;
+    bool status = true;
     uint32_t swapStatus = 0;
-    uint64_t elapsedTime = 0;
     _mqttOperation_t * pPingreqOperation = NULL;
 
     IotMqtt_Assert( pMqttConnection != NULL );
@@ -541,61 +540,36 @@ static bool _sendPingRequest( _mqttConnection_t * pMqttConnection )
 
     pPingreqOperation = &( pMqttConnection->pingreq );
 
-    /* Only send the PINGREQ if the keep-alive period has elapsed since the connection
-     * was last used. */
-    IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-    elapsedTime = IotClock_GetTimeMs() - pMqttConnection->lastMessageTime;
-    IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+    /* Because PINGREQ may be used to keep the MQTT connection alive, it is
+     * more important than other operations. Bypass the queue of jobs for
+     * operations by directly sending the PINGREQ in this job. */
+    bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
+                                                          pPingreqOperation->u.operation.pMqttPacket,
+                                                          pPingreqOperation->u.operation.packetSize );
 
-    if( elapsedTime < ( uint64_t ) pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs )
+    if( bytesSent != pPingreqOperation->u.operation.packetSize )
     {
-        /* In some implementations IotLogDebug() maps to C standard printing API
-         * that need specific primitive types for format specifiers. Also
-         * inttypes.h may not be available on some C99 compilers, despite
-         * stdint.h being available. */
-        /* coverity[misra_c_2012_directive_4_6_violation] */
-        IotLogDebug( "(MQTT connection %p) Connection was last used %llu ms ago, which "
-                     "is less than keep-alive period %lu ms. PINGREQ will not be sent.",
-                     pMqttConnection,
-                     ( unsigned long long ) elapsedTime,
-                     ( unsigned long ) pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs );
-
-        sendPingreq = false;
+        IotLogError( "(MQTT connection %p) Failed to send PINGREQ.", pMqttConnection );
+        status = false;
     }
-
-    if( sendPingreq == true )
+    else
     {
-        /* Because PINGREQ may be used to keep the MQTT connection alive, it is
-         * more important than other operations. Bypass the queue of jobs for
-         * operations by directly sending the PINGREQ in this job. */
-        bytesSent = pMqttConnection->pNetworkInterface->send( pMqttConnection->pNetworkConnection,
-                                                              pPingreqOperation->u.operation.pMqttPacket,
-                                                              pPingreqOperation->u.operation.packetSize );
+        /* Update the timestamp of the last message on successful transmission. */
+        IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+        pMqttConnection->lastMessageTime = IotClock_GetTimeMs();
+        IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
 
-        if( bytesSent != pPingreqOperation->u.operation.packetSize )
-        {
-            IotLogError( "(MQTT connection %p) Failed to send PINGREQ.", pMqttConnection );
-            status = false;
-        }
-        else
-        {
-            /* Update the timestamp of the last message on successful transmission. */
-            IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
-            pMqttConnection->lastMessageTime = IotClock_GetTimeMs();
-            IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+        /* Assume the keep-alive will fail. The network receive callback will
+         * clear the failure flag upon receiving a PINGRESP. */
+        swapStatus = Atomic_CompareAndSwap_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ),
+                                                1,
+                                                0 );
+        IotMqtt_Assert( swapStatus == 1U );
 
-            /* Assume the keep-alive will fail. The network receive callback will
-             * clear the failure flag upon receiving a PINGRESP. */
-            swapStatus = Atomic_CompareAndSwap_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ),
-                                                    1,
-                                                    0 );
-            IotMqtt_Assert( swapStatus == 1U );
+        /* Set the period for scheduling a PINGRESP check. */
+        pPingreqOperation->u.operation.periodic.ping.nextPeriodMs = IOT_MQTT_RESPONSE_WAIT_MS;
 
-            /* Set the period for scheduling a PINGRESP check. */
-            pPingreqOperation->u.operation.periodic.ping.nextPeriodMs = IOT_MQTT_RESPONSE_WAIT_MS;
-
-            IotLogDebug( "(MQTT connection %p) PINGREQ sent.", pMqttConnection );
-        }
+        IotLogDebug( "(MQTT connection %p) PINGREQ sent.", pMqttConnection );
     }
 
     return status;
@@ -845,6 +819,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
 {
     bool status = true;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
+    uint64_t elapsedTime = 0;
 
     /* Retrieve the MQTT connection from the context. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
@@ -869,7 +844,29 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     if( pPingreqOperation->u.operation.periodic.ping.nextPeriodMs ==
         pPingreqOperation->u.operation.periodic.ping.keepAliveMs )
     {
-        status = _sendPingRequest( pMqttConnection );
+        /* Only send the PINGREQ if the keep-alive period has elapsed since the connection
+         * was last used. */
+        IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+        elapsedTime = IotClock_GetTimeMs() - pMqttConnection->lastMessageTime;
+        IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
+        if( elapsedTime < ( uint64_t ) pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs )
+        {
+            /* In some implementations IotLogDebug() maps to C standard printing API
+             * that need specific primitive types for format specifiers. Also
+             * inttypes.h may not be available on some C99 compilers, despite
+             * stdint.h being available. */
+            /* coverity[misra_c_2012_directive_4_6_violation] */
+            IotLogDebug( "(MQTT connection %p) Connection was last used %llu ms ago, which "
+                         "is less than keep-alive period %lu ms. PINGREQ will not be sent.",
+                         pMqttConnection,
+                         ( unsigned long long ) elapsedTime,
+                         ( unsigned long ) pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs );
+        }
+        else
+        {
+            status = _sendPingRequest( pMqttConnection );
+        }
     }
     else
     {
