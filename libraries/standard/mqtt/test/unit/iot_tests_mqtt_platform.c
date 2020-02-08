@@ -628,7 +628,6 @@ TEST_SETUP( MQTT_Unit_Platform )
 
     /* Initialize libraries. */
     TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
-    TEST_ASSERT_EQUAL( IOT_NETWORK_SUCCESS, IotTestNetwork_Init() );
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 }
 
@@ -640,7 +639,6 @@ TEST_SETUP( MQTT_Unit_Platform )
 TEST_TEAR_DOWN( MQTT_Unit_Platform )
 {
     IotMqtt_Cleanup();
-    IotTestNetwork_Cleanup();
     IotSdk_Cleanup();
 
     /* Clear the connection pointer. */
@@ -1180,6 +1178,8 @@ TEST( MQTT_Unit_Platform, SubscribeCompleteReentrancy )
     IotMqttSubscription_t subscription = IOT_MQTT_SUBSCRIPTION_INITIALIZER;
     IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
 
+    TEST_ASSERT_EQUAL( IOT_NETWORK_SUCCESS, IotTestNetwork_Init() );
+
     /* Two semaphores are needed for this test: one for incoming PUBLISH and one
      * for test completion. */
     IotSemaphore_t pWaitSemaphores[ 2 ];
@@ -1240,6 +1240,7 @@ TEST( MQTT_Unit_Platform, SubscribeCompleteReentrancy )
     }
 
     IotSemaphore_Destroy( &( pWaitSemaphores[ 0 ] ) );
+    IotTestNetwork_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
@@ -1254,6 +1255,8 @@ TEST( MQTT_Unit_Platform, IncomingPublishReentrancy )
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
     IotMqttSubscription_t pSubscription[ 2 ] = { IOT_MQTT_SUBSCRIPTION_INITIALIZER };
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+
+    TEST_ASSERT_EQUAL( IOT_NETWORK_SUCCESS, IotTestNetwork_Init() );
 
     /* Two semaphores are needed for this test: one for incoming PUBLISH and one
      * for test completion. */
@@ -1333,6 +1336,7 @@ TEST( MQTT_Unit_Platform, IncomingPublishReentrancy )
     }
 
     IotSemaphore_Destroy( &( pWaitSemaphores[ 0 ] ) );
+    IotTestNetwork_Cleanup();
 }
 
 /*-----------------------------------------------------------*/
