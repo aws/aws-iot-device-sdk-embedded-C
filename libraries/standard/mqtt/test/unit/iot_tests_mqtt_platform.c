@@ -628,6 +628,7 @@ TEST_SETUP( MQTT_Unit_Platform )
 
     /* Initialize libraries. */
     TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
+    TEST_ASSERT_EQUAL( IOT_NETWORK_SUCCESS, IotTestNetwork_Init() );
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 }
 
