@@ -819,6 +819,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
 {
     bool status = true;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
+    uint32_t scheduleDelay = 0;
     uint64_t elapsedTime = 0;
 
     /* Retrieve the MQTT connection from the context. */
@@ -862,6 +863,9 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
                          pMqttConnection,
                          ( unsigned long long ) elapsedTime,
                          ( unsigned long ) pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs );
+
+            /* Schedule the next keep-alive job one keep-alive period after the last packet was sent. */
+            scheduleDelay = pPingreqOperation->u.operation.periodic.ping.keepAliveMs - ( ( uint32_t ) elapsedTime );
         }
         else
         {
@@ -896,6 +900,11 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
      * another PINGREQ after the keep-alive period. */
     if( status == true )
     {
+        if( scheduleDelay == 0 )
+        {
+            scheduleDelay = pPingreqOperation->u.operation.periodic.ping.nextPeriodMs;
+        }
+
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
 
         /* Re-create the keep-alive job for rescheduling. This should never fail. */
@@ -905,9 +914,10 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
                                                 &pKeepAliveJob );
         IotMqtt_Assert( taskPoolStatus == IOT_TASKPOOL_SUCCESS );
 
+        IotMqtt_Assert( scheduleDelay > 0 );
         taskPoolStatus = IotTaskPool_ScheduleDeferred( pTaskPool,
                                                        pKeepAliveJob,
-                                                       pPingreqOperation->u.operation.periodic.ping.nextPeriodMs );
+                                                       scheduleDelay );
 
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
@@ -918,7 +928,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
             /* coverity[misra_c_2012_directive_4_6_violation] */
             IotLogDebug( "(MQTT connection %p) Next keep-alive job in %lu ms.",
                          pMqttConnection,
-                         ( unsigned long ) pPingreqOperation->u.operation.periodic.ping.nextPeriodMs );
+                         ( unsigned long ) scheduleDelay );
         }
         else
         {
