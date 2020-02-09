@@ -73,6 +73,16 @@
  */
 #define UINT8_CHECK_BIT( x, position )    ( ( ( x ) &( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
 
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Provide default values for undefined configuration constants.
+ */
+#ifndef AWS_IOT_MQTT_ENABLE_METRICS
+    #define AWS_IOT_MQTT_ENABLE_METRICS             ( 1 )
+#endif
+
 /*-----------------------------------------------------------*/
 
 /**

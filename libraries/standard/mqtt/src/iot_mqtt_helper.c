@@ -83,6 +83,94 @@
 
 /*-----------------------------------------------------------*/
 
+/* Username for metrics with AWS IoT. */
+#if ( AWS_IOT_MQTT_ENABLE_METRICS == 1 ) || ( DOXYGEN == 1 )
+    #ifndef AWS_IOT_METRICS_USERNAME
+
+/**
+ * @brief Specify C SDK and version.
+ */
+        #define AWS_IOT_METRICS_USERNAME           "?SDK=C&Version=4.0.0"
+
+/**
+ * @brief The length of #AWS_IOT_METRICS_USERNAME.
+ */
+        #define AWS_IOT_METRICS_USERNAME_LENGTH    ( ( uint16_t ) sizeof( AWS_IOT_METRICS_USERNAME ) - 1U )
+    #endif /* ifndef AWS_IOT_METRICS_USERNAME */
+#endif /* if AWS_IOT_MQTT_ENABLE_METRICS == 1 || DOXYGEN == 1 */
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Encode both connection and metrics username into a buffer,
+ * if they will fit.
+ *
+ * @param[in] pDestination Buffer to write username into.
+ * @param[in] pConnectInfo User-provided CONNECT information.
+ * @param[out] pEncodedUserName Whether the username was written into the buffer.
+ *
+ * @return Pointer to the end of encoded string, which will be identical to
+ * `pDestination` if nothing was encoded.
+ *
+ * @warning This function does not check the size of `pDestination`! Ensure that
+ * `pDestination` is large enough to hold `pConnectInfo->userNameLength` +
+ * #AWS_IOT_METRICS_USERNAME_LENGTH bytes to avoid a buffer overflow.
+ */
+
+static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
+                                            const IotMqttConnectInfo_t * pConnectInfo,
+                                            bool * pEncodedUserName );
+
+/*-----------------------------------------------------------*/
+
+static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
+                                            const IotMqttConnectInfo_t * pConnectInfo,
+                                            bool * pEncodedUserName )
+{
+    uint8_t * pBuffer = pDestination;
+
+    #if AWS_IOT_MQTT_ENABLE_METRICS == 1
+        const char * pMetricsUserName = AWS_IOT_METRICS_USERNAME;
+
+        /* Only include metrics if it will fit within the encoding
+         * standard. */
+        if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( uint16_t ) ( UINT16_MAX ) ) )
+        {
+            /* Write the high byte of the combined length. */
+            pBuffer[ 0 ] = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
+                                               AWS_IOT_METRICS_USERNAME_LENGTH ) );
+
+            /* Write the low byte of the combined length. */
+            pBuffer[ 1 ] = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
+                                              AWS_IOT_METRICS_USERNAME_LENGTH ) );
+            pBuffer += 2;
+
+            /* Write the identity portion of the username.
+             * As the types of char and uint8_t are of the same size, this memcpy
+             * is acceptable. */
+            /* coverity[misra_c_2012_rule_21_15_violation] */
+            ( void ) memcpy( pBuffer, pConnectInfo->pUserName, pConnectInfo->userNameLength );
+            pBuffer += pConnectInfo->userNameLength;
+
+            /* Write the metrics portion of the username.
+             * As the types of char and uint8_t are of the same size, this memcpy
+             * is acceptable. */
+            /* coverity[misra_c_2012_rule_21_15_violation] */
+            ( void ) memcpy( pBuffer, pMetricsUserName, AWS_IOT_METRICS_USERNAME_LENGTH );
+            pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
+
+            *pEncodedUserName = true;
+        }
+    #else /* if AWS_IOT_MQTT_ENABLE_METRICS == 1 */
+        /* Avoid unused variable warnings when AWS_IOT_MQTT_ENABLE_METRICS is set to 0. */
+        ( void ) pBuffer;
+        ( void ) pConnectInfo;
+        ( void ) pEncodedUserName;
+    #endif /* if AWS_IOT_MQTT_ENABLE_METRICS == 1 */
+
+    return pBuffer;
+}
+
 uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
                                    const IotMqttConnectInfo_t * pConnectInfo )
 {
@@ -108,42 +196,16 @@ uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
              * for authentication plus the SDK version string. */
             if( pConnectInfo->pUserName != NULL )
             {
-                /* Only include metrics if it will fit within the encoding
-                 * standard. */
-                if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( uint16_t ) ( UINT16_MAX ) ) )
-                {
-                    /* Write the high byte of the combined length. */
-                    *pBuffer = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
-                                                   AWS_IOT_METRICS_USERNAME_LENGTH ) );
-                    pBuffer++;
-
-                    /* Write the low byte of the combined length. */
-                    *pBuffer = UINT16_LOW_BYTE( ( pConnectInfo->userNameLength +
-                                                  AWS_IOT_METRICS_USERNAME_LENGTH ) );
-                    pBuffer++;
-
-                    /* Write the identity portion of the username. */
-                    ( void ) memcpy( pBuffer,
-                                     pConnectInfo->pUserName,
-                                     pConnectInfo->userNameLength );
-                    pBuffer += pConnectInfo->userNameLength;
-
-                    /* Write the metrics portion of the username. */
-                    ( void ) memcpy( pBuffer,
-                                     pMetricsUserName,
-                                     AWS_IOT_METRICS_USERNAME_LENGTH );
-                    pBuffer += AWS_IOT_METRICS_USERNAME_LENGTH;
-
-                    encodedUserName = true;
-                }
+                /* Encode username and metrics if they will fit. */
+                pBuffer = _encodeUserNameAndMetrics( pBuffer, pConnectInfo, &encodedUserName );
             }
             else
             {
                 /* The username is not being used for authentication, but
                  * metrics are enabled. */
-                pBuffer = _encodeString( pBuffer,
-                                         pMetricsUserName,
-                                         AWS_IOT_METRICS_USERNAME_LENGTH );
+                pBuffer = _IotMqtt_EncodeString( pBuffer,
+                                                 pMetricsUserName,
+                                                 AWS_IOT_METRICS_USERNAME_LENGTH );
 
                 encodedUserName = true;
             }
