@@ -82,6 +82,7 @@
 #ifndef AWS_IOT_MQTT_ENABLE_METRICS
     #define AWS_IOT_MQTT_ENABLE_METRICS             ( 1 )
 #endif
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 
