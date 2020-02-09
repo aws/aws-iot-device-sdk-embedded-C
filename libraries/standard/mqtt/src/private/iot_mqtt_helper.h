@@ -25,8 +25,8 @@
  * @brief Implements internal helper functions for the MQTT library.
  */
 
-#ifndef IOT_MQTT_SERIALIZE_INTERNAL_H_
-#define IOT_MQTT_SERIALIZE_INTERNAL_H_
+#ifndef IOT_MQTT_HELPER_H_
+#define IOT_MQTT_HELPER_H_
 
 /* Standard includes. */
 #include <string.h>
@@ -80,7 +80,7 @@
  * Provide default values for undefined configuration constants.
  */
 #ifndef AWS_IOT_MQTT_ENABLE_METRICS
-    #define AWS_IOT_MQTT_ENABLE_METRICS             ( 1 )
+    #define AWS_IOT_MQTT_ENABLE_METRICS    ( 1 )
 #endif
 /** @endcond */
 
@@ -291,4 +291,4 @@ IotMqttError_t _IotMqtt_ProcessIncomingPublishFlags( uint8_t publishFlags,
  */
 uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
                                    const IotMqttConnectInfo_t * pConnectInfo );
-#endif /* ifndef IOT_MQTT_SERIALIZE_INTERNAL_H_ */
+#endif /* ifndef IOT_MQTT_HELPER_H_ */
