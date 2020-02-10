@@ -521,6 +521,7 @@ void _IotMqtt_SerializeConnectCommon( const IotMqttConnectInfo_t * pConnectInfo,
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is equal to connectPacketSize, i.e. pBuffer did not overflow. */
+    printf( "Diff: %zu, Expect: %zu", ( size_t ) ( pBuffer - pPacket ), connectPacketSize );
     IotMqtt_Assert( ( ( size_t ) ( pBuffer - pPacket ) ) == connectPacketSize );
 
     /* Print out the serialized CONNECT packet for debugging purposes. */
