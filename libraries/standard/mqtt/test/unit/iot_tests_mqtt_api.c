@@ -135,12 +135,12 @@
  * @brief Length of an arbitrary packet for testing. A buffer will be allocated
  * for it, but its contents don't matter.
  */
-#define PACKET_LENGTH    ( 32 )
+#define PACKET_LENGTH      ( 32 )
 
 /**
  * @brief How many operations to use for the OperationFindMatch test.
  */
-#define OPERATION_COUNT (2)
+#define OPERATION_COUNT    ( 2 )
 
 /*-----------------------------------------------------------*/
 
@@ -2005,7 +2005,7 @@ TEST( MQTT_Unit_API, SerializeConnectChecks )
     IotMqttConnectInfo_t connectInfo;
     IotMqttPublishInfo_t willInfo;
     size_t remainingLength = 0;
-    uint8_t buffer[ 50 ];
+    uint8_t buffer[ 70 ];
     size_t bufferSize = sizeof( buffer );
     size_t packetSize = bufferSize;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
