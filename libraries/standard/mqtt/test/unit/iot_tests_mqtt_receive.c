@@ -991,7 +991,7 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
     /* A CONNACK must have a remaining length of 2. */
     {
         DECLARE_PACKET( _pConnackTemplate, pConnack, connackSize );
-        pConnack[ 1 ] = 0x03;
+        pConnack[ 1 ] = 0x01;
         _operationResetAndPush( &connect );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( &connect,
                                                      pConnack,
@@ -1381,7 +1381,7 @@ TEST( MQTT_Unit_Receive, PubackInvalid )
     /* A PUBACK must have a remaining length of 2. */
     {
         DECLARE_PACKET( _pPubackTemplate, pPuback, pubackSize );
-        pPuback[ 1 ] = 0x03;
+        pPuback[ 1 ] = 0x01;
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( &publish,
                                                      pPuback,
                                                      pubackSize,
@@ -1757,7 +1757,7 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
     /* An UNSUBACK must have a remaining length of 2. */
     {
         DECLARE_PACKET( _pUnsubackTemplate, pUnsuback, unsubackSize );
-        pUnsuback[ 1 ] = 0x03;
+        pUnsuback[ 1 ] = 0x01;
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( &unsubscribe,
                                                      pUnsuback,
                                                      unsubackSize,
