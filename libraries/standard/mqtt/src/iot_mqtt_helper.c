@@ -134,7 +134,7 @@ static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
 
         /* Only include metrics if it will fit within the encoding
          * standard. */
-        if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( uint16_t ) ( UINT16_MAX ) ) )
+        if( ( ( size_t ) pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( size_t ) ( UINT16_MAX ) ) )
         {
             /* Write the high byte of the combined length. */
             pBuffer[ 0 ] = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
@@ -334,6 +334,7 @@ bool _IotMqtt_ConnectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
                                  size_t * pPacketSize )
 {
     bool status = true;
+    bool encodedUserName = false;
     size_t connectPacketSize = 0, remainingLength = 0;
 
     /* The CONNECT packet will always include a 10-byte variable header. */
@@ -354,18 +355,19 @@ bool _IotMqtt_ConnectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
     if( pConnectInfo->awsIotMqttMode == true )
     {
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            connectPacketSize += ( AWS_IOT_METRICS_USERNAME_LENGTH +
-                                   ( size_t ) ( pConnectInfo->userNameLength ) + sizeof( uint16_t ) );
+            if( ( ( size_t ) pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( size_t ) ( UINT16_MAX ) ) )
+            {
+                connectPacketSize += ( AWS_IOT_METRICS_USERNAME_LENGTH +
+                                       ( size_t ) ( pConnectInfo->userNameLength ) + sizeof( uint16_t ) );
+
+                encodedUserName = true;
+            }
         #endif
     }
 
-    /* Add the lengths of the username (if it wasn't already handled above) and
-     * password, if specified. */
-    if( pConnectInfo->pUserName != NULL )
+    if( ( pConnectInfo->pUserName != NULL ) && ( encodedUserName == false ) )
     {
-        #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            connectPacketSize += pConnectInfo->userNameLength + sizeof( uint16_t );
-        #endif
+        connectPacketSize += pConnectInfo->userNameLength + sizeof( uint16_t );
     }
 
     if( pConnectInfo->pPassword != NULL )
@@ -521,7 +523,6 @@ void _IotMqtt_SerializeConnectCommon( const IotMqttConnectInfo_t * pConnectInfo,
 
     /* Ensure that the difference between the end and beginning of the buffer
      * is equal to connectPacketSize, i.e. pBuffer did not overflow. */
-    printf( "Diff: %zu, Expect: %zu", ( size_t ) ( pBuffer - pPacket ), connectPacketSize );
     IotMqtt_Assert( ( ( size_t ) ( pBuffer - pPacket ) ) == connectPacketSize );
 
     /* Print out the serialized CONNECT packet for debugging purposes. */
