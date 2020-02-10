@@ -572,6 +572,11 @@ static bool _waitForCount( IotMutex_t * pMutex,
  */
 TEST_GROUP( MQTT_Unit_Platform );
 
+/**
+ * @brief Test group for MQTT platform tests requiring the network.
+ */
+TEST_GROUP( MQTT_System_Platform );
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -597,6 +602,18 @@ TEST_SETUP( MQTT_Unit_Platform )
 
     _networkInfo.pNetworkInterface = &_networkInterface;
 
+    /* Initialize libraries. */
+    TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test setup for MQTT system platform tests.
+ */
+TEST_SETUP( MQTT_System_Platform )
+{
     /* Generate a new, unique client identifier based on the time if no client
      * identifier is defined. Otherwise, copy the provided client identifier. */
     #ifndef IOT_TEST_MQTT_CLIENT_IDENTIFIER
@@ -628,6 +645,7 @@ TEST_SETUP( MQTT_Unit_Platform )
 
     /* Initialize libraries. */
     TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
+    TEST_ASSERT_EQUAL( IOT_NETWORK_SUCCESS, IotTestNetwork_Init() );
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, IotMqtt_Init() );
 }
 
@@ -637,6 +655,20 @@ TEST_SETUP( MQTT_Unit_Platform )
  * @brief Test tear down for MQTT platform tests.
  */
 TEST_TEAR_DOWN( MQTT_Unit_Platform )
+{
+    IotMqtt_Cleanup();
+    IotSdk_Cleanup();
+
+    /* Clear the connection pointer. */
+    _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test tear down for MQTT system platform tests.
+ */
+TEST_TEAR_DOWN( MQTT_System_Platform )
 {
     IotMqtt_Cleanup();
     IotTestNetwork_Cleanup();
@@ -664,8 +696,17 @@ TEST_GROUP_RUNNER( MQTT_Unit_Platform )
     RUN_TEST_CASE( MQTT_Unit_Platform, NotifyScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, SingleThreaded );
     RUN_TEST_CASE( MQTT_Unit_Platform, SubscriptionReferences );
-    RUN_TEST_CASE( MQTT_Unit_Platform, SubscribeCompleteReentrancy );
-    RUN_TEST_CASE( MQTT_Unit_Platform, IncomingPublishReentrancy );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test group runner for MQTT system platform tests.
+ */
+TEST_GROUP_RUNNER( MQTT_System_Platform )
+{
+    RUN_TEST_CASE( MQTT_System_Platform, SubscribeCompleteReentrancy );
+    RUN_TEST_CASE( MQTT_System_Platform, IncomingPublishReentrancy );
 }
 
 /*-----------------------------------------------------------*/
@@ -1172,7 +1213,7 @@ TEST( MQTT_Unit_Platform, SubscriptionReferences )
  * @brief Test that API functions can be invoked from a callback for a completed
  * subscription operation.
  */
-TEST( MQTT_Unit_Platform, SubscribeCompleteReentrancy )
+TEST( MQTT_System_Platform, SubscribeCompleteReentrancy )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
@@ -1247,7 +1288,7 @@ TEST( MQTT_Unit_Platform, SubscribeCompleteReentrancy )
  * @brief Test that API functions can be invoked from a callback for an incoming
  * PUBLISH.
  */
-TEST( MQTT_Unit_Platform, IncomingPublishReentrancy )
+TEST( MQTT_System_Platform, IncomingPublishReentrancy )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
