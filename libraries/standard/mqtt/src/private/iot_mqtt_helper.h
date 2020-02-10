@@ -277,8 +277,8 @@ uint16_t _IotMqtt_NextPacketIdentifier( void );
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_BAD_RESPONSE.
  */
 
-IotMqttError_t _IotMqtt_ProcessIncomingPublishFlags( uint8_t publishFlags,
-                                                     IotMqttPublishInfo_t * pOutput );
+IotMqttError_t _IotMqtt_ProcessPublishFlags( uint8_t publishFlags,
+                                             IotMqttPublishInfo_t * pOutput );
 
 /**
  * @brief Encode a username into a CONNECT packet, if necessary.

@@ -238,7 +238,10 @@ uint8_t * _IotMqtt_EncodeString( uint8_t * pDestination,
     *pBuffer = UINT16_LOW_BYTE( sourceLength );
     pBuffer++;
 
-    /* Copy the string into pBuffer. */
+    /* Copy the string into pBuffer.
+     * A precondition of this function is that pBuffer can hold sourceLength+2
+     * bytes. */
+    /* coverity[misra_c_2012_rule_21_15_violation] */
     ( void ) memcpy( pBuffer, source, sourceLength );
 
     /* Return the pointer to the end of the encoded string. */
@@ -790,6 +793,9 @@ void _IotMqtt_SerializePublishCommon( const IotMqttPublishInfo_t * pPublishInfo,
     /* The payload is placed after the packet identifier. */
     if( pPublishInfo->payloadLength > 0U )
     {
+        /* This memcpy intentionally copies bytes from a void * buffer into
+         * a uint8_t * buffer. */
+        /* coverity[misra_c_2012_rule_21_15_violation] */
         ( void ) memcpy( pBuffer, pPublishInfo->pPayload, pPublishInfo->payloadLength );
         pBuffer += pPublishInfo->payloadLength;
     }
@@ -854,8 +860,8 @@ void _IotMqtt_SerializeUnsubscribeCommon( const IotMqttSubscription_t * pSubscri
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _IotMqtt_ProcessIncomingPublishFlags( uint8_t publishFlags,
-                                                     IotMqttPublishInfo_t * pOutput )
+IotMqttError_t _IotMqtt_ProcessPublishFlags( uint8_t publishFlags,
+                                             IotMqttPublishInfo_t * pOutput )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
