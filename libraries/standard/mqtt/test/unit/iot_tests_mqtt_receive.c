@@ -996,7 +996,7 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( &connect,
                                                      pConnack,
                                                      connackSize,
-                                                     IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
 
         /* Network close should have been called for invalid packet. */
         TEST_ASSERT_EQUAL_INT( true, _networkCloseCalled );
