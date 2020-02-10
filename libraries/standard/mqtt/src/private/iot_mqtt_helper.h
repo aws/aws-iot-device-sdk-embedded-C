@@ -25,8 +25,8 @@
  * @brief Implements internal helper functions for the MQTT library.
  */
 
-#ifndef IOT_MQTT_SERIALIZE_INTERNAL_H_
-#define IOT_MQTT_SERIALIZE_INTERNAL_H_
+#ifndef IOT_MQTT_HELPER_H_
+#define IOT_MQTT_HELPER_H_
 
 /* Standard includes. */
 #include <string.h>
@@ -71,7 +71,18 @@
  * @param[in] x The unsigned int to check.
  * @param[in] position Which bit to check.
  */
-#define UINT8_CHECK_BIT( x, position )    ( ( ( x ) & ( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
+#define UINT8_CHECK_BIT( x, position )    ( ( ( x ) &( 0x01U << ( position ) ) ) == ( 0x01U << ( position ) ) )
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this section.
+ *
+ * Provide default values for undefined configuration constants.
+ */
+#ifndef AWS_IOT_MQTT_ENABLE_METRICS
+    #define AWS_IOT_MQTT_ENABLE_METRICS    ( 1 )
+#endif
+/** @endcond */
 
 /*-----------------------------------------------------------*/
 
@@ -90,8 +101,8 @@
  * overflow.
  */
 uint8_t * _IotMqtt_EncodeString( uint8_t * pDestination,
-                              const char * source,
-                              uint16_t sourceLength );
+                                 const char * source,
+                                 uint16_t sourceLength );
 
 /**
  * @brief Calculate the number of bytes required to encode an MQTT
@@ -114,10 +125,10 @@ size_t _IotMqtt_RemainingLengthEncodedSize( size_t length );
  *
  * @warning This function does not check the size of `pDestination`! Ensure that
  * `pDestination` is large enough to hold the encoded "Remaining length" using
- * the function #_remainingLengthEncodedSize to avoid buffer overflows.
+ * the function #_IotMqtt_RemainingLengthEncodedSize to avoid buffer overflows.
  */
 uint8_t * _IotMqtt_EncodeRemainingLength( uint8_t * pDestination,
-                                       size_t length );
+                                          size_t length );
 
 /**
  * @brief Calculate the size and "Remaining length" of a CONNECT packet generated
@@ -131,8 +142,8 @@ uint8_t * _IotMqtt_EncodeRemainingLength( uint8_t * pDestination,
  * otherwise. If this function returns `false`, the output parameters should be ignored.
  */
 bool _IotMqtt_ConnectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
-                              size_t * pRemainingLength,
-                              size_t * pPacketSize );
+                                 size_t * pRemainingLength,
+                                 size_t * pPacketSize );
 
 
 /**
@@ -145,9 +156,9 @@ bool _IotMqtt_ConnectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
  *
  */
 void _IotMqtt_SerializeConnectCommon( const IotMqttConnectInfo_t * pConnectInfo,
-                             size_t remainingLength,
-                             uint8_t * pPacket,
-                             size_t connectPacketSize );
+                                      size_t remainingLength,
+                                      uint8_t * pPacket,
+                                      size_t connectPacketSize );
 
 /**
  * @brief Calculate the size and "Remaining length" of a SUBSCRIBE or UNSUBSCRIBE
@@ -163,10 +174,10 @@ void _IotMqtt_SerializeConnectCommon( const IotMqttConnectInfo_t * pConnectInfo,
  * otherwise. If this function returns `false`, the output parameters should be ignored.
  */
 bool _IotMqtt_SubscriptionPacketSize( IotMqttOperationType_t type,
-                                   const IotMqttSubscription_t * pSubscriptionList,
-                                   size_t subscriptionCount,
-                                   size_t * pRemainingLength,
-                                   size_t * pPacketSize );
+                                      const IotMqttSubscription_t * pSubscriptionList,
+                                      size_t subscriptionCount,
+                                      size_t * pRemainingLength,
+                                      size_t * pPacketSize );
 
 /**
  * @brief Generate a SUBSCRIBE packet from the given parameters.
@@ -180,11 +191,11 @@ bool _IotMqtt_SubscriptionPacketSize( IotMqttOperationType_t type,
  *
  */
 void _IotMqtt_SerializeSubscribeCommon( const IotMqttSubscription_t * pSubscriptionList,
-                               size_t subscriptionCount,
-                               size_t remainingLength,
-                               uint16_t * pPacketIdentifier,
-                               uint8_t * pPacket,
-                               size_t subscribePacketSize );
+                                        size_t subscriptionCount,
+                                        size_t remainingLength,
+                                        uint16_t * pPacketIdentifier,
+                                        uint8_t * pPacket,
+                                        size_t subscribePacketSize );
 
 /**
  * @brief Generate an UNSUBSCRIBE packet from the given parameters.
@@ -198,11 +209,11 @@ void _IotMqtt_SerializeSubscribeCommon( const IotMqttSubscription_t * pSubscript
  *
  */
 void _IotMqtt_SerializeUnsubscribeCommon( const IotMqttSubscription_t * pSubscriptionList,
-                                 size_t subscriptionCount,
-                                 size_t remainingLength,
-                                 uint16_t * pPacketIdentifier,
-                                 uint8_t * pPacket,
-                                 size_t unsubscribePacketSize );
+                                          size_t subscriptionCount,
+                                          size_t remainingLength,
+                                          uint16_t * pPacketIdentifier,
+                                          uint8_t * pPacket,
+                                          size_t unsubscribePacketSize );
 
 /**
  * @brief Calculate the size and "Remaining length" of a PUBLISH packet generated
@@ -216,8 +227,8 @@ void _IotMqtt_SerializeUnsubscribeCommon( const IotMqttSubscription_t * pSubscri
  * otherwise. If this function returns `false`, the output parameters should be ignored.
  */
 bool _IotMqtt_PublishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
-                              size_t * pRemainingLength,
-                              size_t * pPacketSize );
+                                 size_t * pRemainingLength,
+                                 size_t * pPacketSize );
 
 /**
  * @brief Generate a PUBLISH packet from the given parameters.
@@ -232,11 +243,11 @@ bool _IotMqtt_PublishPacketSize( const IotMqttPublishInfo_t * pPublishInfo,
  *
  */
 void _IotMqtt_SerializePublishCommon( const IotMqttPublishInfo_t * pPublishInfo,
-                             size_t remainingLength,
-                             uint16_t * pPacketIdentifier,
-                             uint8_t ** pPacketIdentifierHigh,
-                             uint8_t * pPacket,
-                             size_t publishPacketSize );
+                                      size_t remainingLength,
+                                      uint16_t * pPacketIdentifier,
+                                      uint8_t ** pPacketIdentifierHigh,
+                                      uint8_t * pPacket,
+                                      size_t publishPacketSize );
 
 /**
  * @brief Check if an incoming packet type is valid.
@@ -267,7 +278,7 @@ uint16_t _IotMqtt_NextPacketIdentifier( void );
  */
 
 IotMqttError_t _IotMqtt_ProcessIncomingPublishFlags( uint8_t publishFlags,
-                                                  IotMqttPublishInfo_t * pOutput );
+                                                     IotMqttPublishInfo_t * pOutput );
 
 /**
  * @brief Encode a username into a CONNECT packet, if necessary.
@@ -278,6 +289,6 @@ IotMqttError_t _IotMqtt_ProcessIncomingPublishFlags( uint8_t publishFlags,
  * @return Pointer to the end of the encoded string, which will be identical to
  * `pDestination` if nothing was encoded.
  */
- uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
-                                  const IotMqttConnectInfo_t * pConnectInfo );
-#endif
+uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
+                                   const IotMqttConnectInfo_t * pConnectInfo );
+#endif /* ifndef IOT_MQTT_HELPER_H_ */
