@@ -1856,7 +1856,9 @@ TEST( MQTT_Unit_Receive, Pingresp )
     /* A PINGRESP should have a remaining length of 0. */
     {
         IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
-        _mqttPacket_t pingresp = { 0 };
+        _mqttPacket_t pingresp;
+
+        ( void ) memset( &pingresp, 0x00, sizeof( _mqttPacket_t ) );
         pingresp.type = MQTT_PACKET_TYPE_PINGRESP;
         pingresp.remainingLength = 1;
 
