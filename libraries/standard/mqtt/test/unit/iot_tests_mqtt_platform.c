@@ -41,6 +41,10 @@
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
+/* MQTT lightweight includes. */
+#include "iot_mqtt_protocol.h"
+#include "iot_mqtt_lightweight.h"
+
 /* Allow these tests to manipulate the task pool and create failures by including
  * the task pool internal header. */
 #undef LIBRARY_LOG_LEVEL
@@ -702,6 +706,8 @@ TEST_GROUP_RUNNER( MQTT_Unit_Platform )
     RUN_TEST_CASE( MQTT_Unit_Platform, NotifyScheduleFailure );
     RUN_TEST_CASE( MQTT_Unit_Platform, SingleThreaded );
     RUN_TEST_CASE( MQTT_Unit_Platform, SubscriptionReferences );
+    RUN_TEST_CASE( MQTT_Unit_Platform, SubscriptionListTooLarge );
+    RUN_TEST_CASE( MQTT_Unit_Platform, LongUserName );
 }
 
 /*-----------------------------------------------------------*/
@@ -1217,6 +1223,74 @@ TEST( MQTT_Unit_Platform, SubscriptionReferences )
     }
 
     IotSemaphore_Destroy( &waitSem );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test the behavior when the subscription list exceeds the size of an MQTT
+ * packet. Requires a large amount of memory not available on smaller systems.
+ */
+TEST( MQTT_Unit_Platform, SubscriptionListTooLarge )
+{
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    size_t subscriptionCount = MQTT_MAX_REMAINING_LENGTH / UINT16_MAX + 1, i = 0;
+    size_t remainingLength = 0, packetSize = 0;
+    IotMqttSubscription_t * pSubscriptionList = IotTest_Malloc( subscriptionCount * sizeof( IotMqttSubscription_t ) );
+
+    TEST_ASSERT_NOT_NULL( pSubscriptionList );
+    ( void ) memset( pSubscriptionList, 0x00, subscriptionCount * sizeof( IotMqttSubscription_t ) );
+
+    for( i = 0; i < subscriptionCount; i++ )
+    {
+        pSubscriptionList[ i ].topicFilterLength = UINT16_MAX;
+    }
+
+    status = IotMqtt_GetSubscriptionPacketSize( IOT_MQTT_SUBSCRIBE,
+                                                pSubscriptionList,
+                                                subscriptionCount,
+                                                &remainingLength,
+                                                &packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
+
+    IotTest_Free( pSubscriptionList );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Test the behavior when the maximum length user name. Requires a large
+ * amount of memory not available on smaller systems.
+ */
+TEST( MQTT_Unit_Platform, LongUserName )
+{
+    IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttConnectInfo_t connectInfo = IOT_MQTT_CONNECT_INFO_INITIALIZER;
+    size_t remainingLength = 0, packetSize = 0;
+    uint8_t * pConnectPacket = NULL;
+
+    char * pUserName = IotTest_Malloc( UINT16_MAX );
+    TEST_ASSERT_NOT_NULL( pUserName );
+
+    ( void ) memset( pUserName, ( int )'a', UINT16_MAX );
+
+    connectInfo.awsIotMqttMode = true;
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+    connectInfo.pUserName = pUserName;
+    connectInfo.userNameLength = UINT16_MAX;
+
+    status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+    TEST_ASSERT_NOT_EQUAL( 0, packetSize );
+
+    pConnectPacket = IotTest_Malloc( packetSize );
+    TEST_ASSERT_NOT_NULL( pConnectPacket );
+    status = IotMqtt_SerializeConnect( &connectInfo, remainingLength, pConnectPacket, packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+
+    IotTest_Free( pConnectPacket );
+    IotTest_Free( pUserName );
 }
 
 /*-----------------------------------------------------------*/

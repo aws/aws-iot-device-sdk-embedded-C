@@ -991,12 +991,12 @@ TEST( MQTT_Unit_Receive, ConnackInvalid )
     /* A CONNACK must have a remaining length of 2. */
     {
         DECLARE_PACKET( _pConnackTemplate, pConnack, connackSize );
-        pConnack[ 1 ] = 0x03;
+        pConnack[ 1 ] = 0x01;
         _operationResetAndPush( &connect );
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( &connect,
                                                      pConnack,
                                                      connackSize,
-                                                     IOT_MQTT_STATUS_PENDING ) );
+                                                     IOT_MQTT_BAD_RESPONSE ) );
 
         /* Network close should have been called for invalid packet. */
         TEST_ASSERT_EQUAL_INT( true, _networkCloseCalled );
@@ -1381,7 +1381,7 @@ TEST( MQTT_Unit_Receive, PubackInvalid )
     /* A PUBACK must have a remaining length of 2. */
     {
         DECLARE_PACKET( _pPubackTemplate, pPuback, pubackSize );
-        pPuback[ 1 ] = 0x03;
+        pPuback[ 1 ] = 0x01;
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( &publish,
                                                      pPuback,
                                                      pubackSize,
@@ -1757,7 +1757,7 @@ TEST( MQTT_Unit_Receive, UnsubackInvalid )
     /* An UNSUBACK must have a remaining length of 2. */
     {
         DECLARE_PACKET( _pUnsubackTemplate, pUnsuback, unsubackSize );
-        pUnsuback[ 1 ] = 0x03;
+        pUnsuback[ 1 ] = 0x01;
         TEST_ASSERT_EQUAL_INT( true, _processBuffer( &unsubscribe,
                                                      pUnsuback,
                                                      unsubackSize,
@@ -1855,20 +1855,15 @@ TEST( MQTT_Unit_Receive, Pingresp )
 
     /* A PINGRESP should have a remaining length of 0. */
     {
-        _pMqttConnection->pingreq.u.operation.periodic.ping.failure = 1;
+        IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+        _mqttPacket_t pingresp;
 
-        DECLARE_PACKET( _pPingrespTemplate, pPingresp, pingrespSize );
-        pPingresp[ 1 ] = 0x01;
-        TEST_ASSERT_EQUAL_INT( true, _processBuffer( NULL,
-                                                     pPingresp,
-                                                     pingrespSize,
-                                                     IOT_MQTT_SUCCESS ) );
+        ( void ) memset( &pingresp, 0x00, sizeof( _mqttPacket_t ) );
+        pingresp.type = MQTT_PACKET_TYPE_PINGRESP;
+        pingresp.remainingLength = 1;
 
-        TEST_ASSERT_EQUAL_INT( 1, _pMqttConnection->pingreq.u.operation.periodic.ping.failure );
-        TEST_ASSERT_EQUAL_INT( true, _networkCloseCalled );
-        TEST_ASSERT_EQUAL_INT( true, _disconnectCallbackCalled );
-        _networkCloseCalled = false;
-        _disconnectCallbackCalled = false;
+        status = _IotMqtt_DeserializePingresp( &pingresp );
+        TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
     }
 
     /* The PINGRESP control packet type must be 0xd0. */
