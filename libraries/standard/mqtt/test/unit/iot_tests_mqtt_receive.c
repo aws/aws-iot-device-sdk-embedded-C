@@ -1266,6 +1266,33 @@ TEST( MQTT_Unit_Receive, PublishResourceFailure )
     _publishMallocFail( IOT_MQTT_QOS_0 );
     _publishMallocFail( IOT_MQTT_QOS_1 );
 
+    /* Test PUBACK generation when malloc fails. */
+    {
+        IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+        int32_t i = 0;
+        uint8_t * pPubackPacket = NULL;
+        size_t pubackSize = 0;
+
+        for( i = 0; ; i++ )
+        {
+            UnityMalloc_MakeMallocFailAfterCount( i );
+
+            status = _IotMqtt_SerializePuback( 1, &pPubackPacket, &pubackSize );
+
+            if( status == IOT_MQTT_SUCCESS )
+            {
+                TEST_ASSERT_NOT_NULL( pPubackPacket );
+                IotMqtt_FreeMessage( pPubackPacket );
+
+                break;
+            }
+
+            TEST_ASSERT_EQUAL( IOT_MQTT_NO_MEMORY, status );
+        }
+
+        UnityMalloc_MakeMallocFailAfterCount( -1 );
+    }
+
     /* Test the behavior when a closed connection is used. */
     {
         DECLARE_PACKET( _pPublishTemplate, pPublish, publishSize );
