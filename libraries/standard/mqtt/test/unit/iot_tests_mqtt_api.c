@@ -2004,7 +2004,7 @@ TEST( MQTT_Unit_API, SerializeConnectChecks )
 {
     IotMqttConnectInfo_t connectInfo;
     size_t remainingLength = 0;
-    uint8_t buffer[ 20 ];
+    uint8_t buffer[ 30 ];
     size_t bufferSize = sizeof( buffer );
     size_t packetSize = bufferSize;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
@@ -2334,6 +2334,8 @@ TEST( MQTT_Unit_API, GetPublishPacketSizeChecks )
     /* Good case succeeds. */
     publishInfo.pTopicName = "/test/topic";
     publishInfo.topicNameLength = sizeof( "/test/topic" );
+    publishInfo.pPayload = "";
+    publishInfo.payloadLength = 0;
     status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 }

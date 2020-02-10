@@ -1251,6 +1251,8 @@ TEST( MQTT_Unit_Platform, SubscriptionListTooLarge )
                                                 &remainingLength,
                                                 &packetSize );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
+
+    IotTest_Free( pSubscriptionList );
 }
 
 /*-----------------------------------------------------------*/
