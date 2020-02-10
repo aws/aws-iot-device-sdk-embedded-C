@@ -399,6 +399,7 @@ typedef struct _mqttConnection
     IotListDouble_t subscriptionList;                /**< @brief Holds subscriptions associated with this connection. */
     IotMutex_t subscriptionMutex;                    /**< @brief Grants exclusive access to the subscription list. */
 
+    uint64_t lastMessageTime;                        /**< @brief When the most recent message was transmitted. */
     _mqttOperation_t pingreq;                        /**< @brief Operation used for MQTT keep-alive. */
 } _mqttConnection_t;
 
