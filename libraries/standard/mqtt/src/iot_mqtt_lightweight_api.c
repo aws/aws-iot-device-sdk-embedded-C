@@ -1089,13 +1089,17 @@ IotMqttError_t IotMqtt_DeserializeResponse( IotMqttPacketInfo_t * pMqttPacket )
     /* Internal MQTT packet structure */
     IotMqttPacketInfo_t mqttPacket;
 
-    if( ( pMqttPacket == NULL ) || ( pMqttPacket->pRemainingData == NULL ) )
+    if( pMqttPacket == NULL )
     {
-        IotLogError( "IotMqtt_DeserializeResponse() called with NULL pMqttPacket pointer or NULL pRemainingLength." );
+        IotLogError( "IotMqtt_DeserializeResponse() called with NULL pMqttPacket pointer." );
         status = IOT_MQTT_BAD_PARAMETER;
     }
-
-    if( status == IOT_MQTT_SUCCESS )
+    else if( pMqttPacket->pRemainingData == NULL )
+    {
+        IotLogError( "IotMqtt_DeserializeResponse() called with NULL pRemainingLength." );
+        status = IOT_MQTT_BAD_PARAMETER;
+    }
+    else
     {
         /* Set internal mqtt packet parameters. */
         ( void ) memset( ( void * ) &mqttPacket, 0x00, sizeof( IotMqttPacketInfo_t ) );
