@@ -161,6 +161,12 @@ static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
 
             *pEncodedUserName = true;
         }
+        else
+        {
+            IotLogWarn( "Username length of %lu is larger than maximum %lu.",
+                        ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ),
+                        UINT16_MAX );
+        }
     #else /* if AWS_IOT_MQTT_ENABLE_METRICS == 1 */
         /* Avoid unused variable warnings when AWS_IOT_MQTT_ENABLE_METRICS is set to 0. */
         ( void ) pBuffer;
@@ -176,10 +182,6 @@ uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
 {
     bool encodedUserName = false;
     uint8_t * pBuffer = pDestination;
-    const char * pMetricsUserName = NULL;
-
-    /* Avoid unused variable warning when AWS_IOT_MQTT_ENABLE_METRICS is set to 0 */
-    ( void ) pMetricsUserName;
 
     /* If metrics are enabled, write the metrics username into the CONNECT packet.
      * Otherwise, write the username and password only when not connecting to the
@@ -189,8 +191,6 @@ uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
             IotLogInfo( "Anonymous metrics (SDK language, SDK version) will be provided to AWS IoT. "
                         "Recompile with AWS_IOT_MQTT_ENABLE_METRICS set to 0 to disable." );
-
-            pMetricsUserName = AWS_IOT_METRICS_USERNAME;
 
             /* Determine if the Connect packet should use a combination of the username
              * for authentication plus the SDK version string. */
@@ -204,7 +204,7 @@ uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
                 /* The username is not being used for authentication, but
                  * metrics are enabled. */
                 pBuffer = _IotMqtt_EncodeString( pBuffer,
-                                                 pMetricsUserName,
+                                                 AWS_IOT_METRICS_USERNAME,
                                                  AWS_IOT_METRICS_USERNAME_LENGTH );
 
                 encodedUserName = true;
