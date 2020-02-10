@@ -2003,8 +2003,9 @@ TEST( MQTT_Unit_API, GetConnectPacketSizeChecks )
 TEST( MQTT_Unit_API, SerializeConnectChecks )
 {
     IotMqttConnectInfo_t connectInfo;
+    IotMqttPublishInfo_t willInfo;
     size_t remainingLength = 0;
-    uint8_t buffer[ 30 ];
+    uint8_t buffer[ 50 ];
     size_t bufferSize = sizeof( buffer );
     size_t packetSize = bufferSize;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
@@ -2038,6 +2039,36 @@ TEST( MQTT_Unit_API, SerializeConnectChecks )
     /* Make sure test succeeds. */
     status = IotMqtt_SerializeConnect( &connectInfo, remainingLength, buffer, packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+
+    /* Encode user name in AWS mode. */
+    connectInfo.awsIotMqttMode = true;
+    status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    status = IotMqtt_SerializeConnect( &connectInfo, remainingLength, buffer, packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+
+    /* Serialize connect with LWT. */
+    ( void ) memset( &willInfo, 0x00, sizeof( IotMqttPublishInfo_t ) );
+    willInfo.retain = true;
+    willInfo.qos = IOT_MQTT_QOS_1;
+    willInfo.pTopicName = "test";
+    willInfo.topicNameLength = ( uint16_t ) strlen( willInfo.pTopicName );
+    willInfo.pPayload = "test";
+    willInfo.payloadLength = ( uint16_t ) strlen( willInfo.pPayload );
+    connectInfo.pWillInfo = &willInfo;
+    status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    status = IotMqtt_SerializeConnect( &connectInfo, remainingLength, buffer, packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+
+    willInfo.qos = IOT_MQTT_QOS_2;
+    status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+    status = IotMqtt_SerializeConnect( &connectInfo, remainingLength, buffer, packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 
     /* For this example, IotMqtt_GetConnectPacketSize() will return
      * packetSize = remainingLength +2 (two byte fixed header).

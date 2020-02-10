@@ -171,6 +171,8 @@ static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
     return pBuffer;
 }
 
+/*-----------------------------------------------------------*/
+
 uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
                                    const IotMqttConnectInfo_t * pConnectInfo )
 {
@@ -332,7 +334,6 @@ bool _IotMqtt_ConnectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
                                  size_t * pPacketSize )
 {
     bool status = true;
-    bool encodedUserName = false;
     size_t connectPacketSize = 0, remainingLength = 0;
 
     /* The CONNECT packet will always include a 10-byte variable header. */
@@ -355,15 +356,16 @@ bool _IotMqtt_ConnectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
             connectPacketSize += ( AWS_IOT_METRICS_USERNAME_LENGTH +
                                    ( size_t ) ( pConnectInfo->userNameLength ) + sizeof( uint16_t ) );
-            encodedUserName = true;
         #endif
     }
 
     /* Add the lengths of the username (if it wasn't already handled above) and
      * password, if specified. */
-    if( ( pConnectInfo->pUserName != NULL ) && ( encodedUserName == false ) )
+    if( pConnectInfo->pUserName != NULL )
     {
-        connectPacketSize += pConnectInfo->userNameLength + sizeof( uint16_t );
+        #if AWS_IOT_MQTT_ENABLE_METRICS == 1
+            connectPacketSize += pConnectInfo->userNameLength + sizeof( uint16_t );
+        #endif
     }
 
     if( pConnectInfo->pPassword != NULL )
