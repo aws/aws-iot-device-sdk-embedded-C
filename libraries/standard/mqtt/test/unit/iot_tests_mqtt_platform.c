@@ -85,7 +85,13 @@
  * @brief Length of an arbitrary packet for testing. A buffer will be allocated
  * for it, but its contents don't matter.
  */
-#define PACKET_LENGTH    ( 1 )
+#define PACKET_LENGTH          ( 1 )
+
+/**
+ * @brief A short keep-alive interval to use for the keep-alive tests. It may be
+ * shorter than the minimum 1 second specified by the MQTT spec.
+ */
+#define SHORT_KEEP_ALIVE_MS    ( 100 )
 
 /**
  * @cond DOXYGEN_IGNORE
@@ -809,8 +815,14 @@ TEST( MQTT_Unit_Platform, PingreqSendFailure )
 {
     _mqttConnection_t * pMqttConnection = NULL;
 
-    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 100 );
+    pMqttConnection = IotTestMqtt_createMqttConnection( false, &_networkInfo, 1 );
     TEST_ASSERT_NOT_NULL( pMqttConnection );
+
+    /* Set a short keep alive period and sleep for at least that period. Otherwise,
+     * the PINGREQ will not be sent. */
+    pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs = SHORT_KEEP_ALIVE_MS;
+    pMqttConnection->pingreq.u.operation.periodic.ping.nextPeriodMs = SHORT_KEEP_ALIVE_MS;
+    IotClock_SleepMs( SHORT_KEEP_ALIVE_MS * 2 );
 
     _sendStatus = IOT_NETWORK_FAILURE;
     _IotMqtt_ProcessKeepAlive( IOT_SYSTEM_TASKPOOL, pMqttConnection->pingreq.job, pMqttConnection );
