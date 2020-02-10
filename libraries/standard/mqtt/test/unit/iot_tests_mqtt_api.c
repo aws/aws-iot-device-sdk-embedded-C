@@ -2022,6 +2022,21 @@ TEST( MQTT_Unit_API, SerializeConnectChecks )
     status = IotMqtt_SerializeConnect( &connectInfo, 120, buffer, packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
+    /* Connect packet too large. */
+    memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = UINT16_MAX;
+    connectInfo.pPassword = "";
+    connectInfo.passwordLength = UINT16_MAX;
+    connectInfo.pUserName = "";
+    connectInfo.userNameLength = UINT16_MAX;
+    willInfo.pTopicName = TEST_TOPIC_NAME;
+    willInfo.topicNameLength = UINT16_MAX;
+    willInfo.payloadLength = UINT16_MAX + 2;
+    connectInfo.pWillInfo = &willInfo;
+    status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
+
     /* Good case succeeds */
     /* Calculate packet size. */
     memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
