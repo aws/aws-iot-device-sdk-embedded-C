@@ -859,12 +859,8 @@ IotMqttError_t _IotMqtt_ProcessIncomingPublishFlags( uint8_t publishFlags,
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
-    if( pOutput == NULL )
-    {
-        status = IOT_MQTT_BAD_RESPONSE;
-    }
     /* Check for QoS 2. */
-    else if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 ) == true )
+    if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 ) == true )
     {
         /* PUBLISH packet is invalid if both QoS 1 and QoS 2 bits are set. */
         if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 ) == true )

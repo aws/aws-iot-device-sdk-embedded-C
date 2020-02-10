@@ -763,7 +763,7 @@ IotMqttError_t IotMqtt_GetSubscriptionPacketSize( IotMqttOperationType_t type,
                                               pRemainingLength,
                                               pPacketSize ) == false )
     {
-        IotLogError( "Unsubscribe packet remaining length exceeds %lu, which is the "
+        IotLogError( "Subscription packet remaining length exceeds %lu, which is the "
                      "maximum size allowed by MQTT 3.1.1.",
                      MQTT_MAX_REMAINING_LENGTH );
         status = IOT_MQTT_BAD_PARAMETER;

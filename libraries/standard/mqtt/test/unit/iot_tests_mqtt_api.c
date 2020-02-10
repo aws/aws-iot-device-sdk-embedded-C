@@ -37,6 +37,9 @@
 /* MQTT internal include. */
 #include "private/iot_mqtt_internal.h"
 
+/* MQTT protocol include. */
+#include "iot_mqtt_protocol.h"
+
 /* Platform layer includes. */
 #include "platform/iot_clock.h"
 #include "platform/iot_threads.h"
@@ -2024,6 +2027,10 @@ TEST( MQTT_Unit_API, SerializeConnectChecks )
     connectInfo.cleanSession = true;
     connectInfo.pClientIdentifier = "TEST";
     connectInfo.clientIdentifierLength = 4;
+    connectInfo.pUserName = "USER";
+    connectInfo.userNameLength = 4;
+    connectInfo.pPassword = "PASS";
+    connectInfo.passwordLength = 4;
     status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
     /* Make sure buffer has enough space */
@@ -2299,24 +2306,36 @@ TEST( MQTT_Unit_API, GetPublishPacketSizeChecks )
 
     /* Verify bad paramameters fail. */
     status = IotMqtt_GetPublishPacketSize( NULL, &remainingLength, &packetSize );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     status = IotMqtt_GetPublishPacketSize( &publishInfo, NULL, &packetSize );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, NULL );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     /* Empty topic must fail. */
     memset( ( void * ) &publishInfo, 0x00, sizeof( publishInfo ) );
     status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
+
+    /* Packet too large. */
+    memset( ( void * ) &publishInfo, 0x00, sizeof( publishInfo ) );
+    publishInfo.pTopicName = "/test/topic";
+    publishInfo.topicNameLength = sizeof( "/test/topic" );
+    publishInfo.payloadLength = MQTT_MAX_REMAINING_LENGTH;
+    status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
+
+    publishInfo.payloadLength = MQTT_MAX_REMAINING_LENGTH - publishInfo.topicNameLength - sizeof( uint16_t ) - 1;
+    status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     /* Good case succeeds. */
     publishInfo.pTopicName = "/test/topic";
     publishInfo.topicNameLength = sizeof( "/test/topic" );
     status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
-    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+    TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
 }
 
 /*-----------------------------------------------------------*/
@@ -2376,6 +2395,8 @@ TEST( MQTT_Unit_API, SerializePublishChecks )
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
     /* Good case succeeds */
+    publishInfo.qos = IOT_MQTT_QOS_2;
+    publishInfo.retain = true;
     publishInfo.pTopicName = "/test/topic";
     publishInfo.topicNameLength = sizeof( "/test/topic" );
     /* Calculate exact packet size and remaining length. */
