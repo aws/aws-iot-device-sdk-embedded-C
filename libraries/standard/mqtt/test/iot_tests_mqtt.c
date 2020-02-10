@@ -52,6 +52,7 @@ void RunMqttTests( bool disableNetworkTests, bool disableLongTests )
 
     if( disableNetworkTests == false )
     {
+        RUN_TEST_GROUP( MQTT_System_Platform );
         RUN_TEST_GROUP( MQTT_System );
     }
 }
