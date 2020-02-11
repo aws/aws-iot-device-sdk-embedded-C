@@ -61,12 +61,12 @@ static IoT_Error_t _aws_iot_mqtt_handle_disconnect(AWS_IoT_Client *pClient) {
 		_aws_iot_mqtt_force_client_disconnect(pClient);
 	}
 
+	pClient->clientStatus.clientState = CLIENT_STATE_DISCONNECTED_ERROR;
+
 	if(NULL != pClient->clientData.disconnectHandler) {
 		pClient->clientData.disconnectHandler(pClient, pClient->clientData.disconnectHandlerData);
 	}
 
-	/* Reset to 0 since this was not a manual disconnect */
-	pClient->clientStatus.clientState = CLIENT_STATE_DISCONNECTED_ERROR;
 	FUNC_EXIT_RC(NETWORK_DISCONNECTED_ERROR);
 }
 

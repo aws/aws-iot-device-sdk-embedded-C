@@ -75,6 +75,21 @@ static void disconnectCallbackHandler(AWS_IoT_Client *pClient, void *data) {
 	}
 
 	IOT_UNUSED(data);
+
+	if(aws_iot_is_autoreconnect_enabled(pClient)) {
+		IOT_INFO("Auto Reconnect is enabled, Reconnecting attempt will start now");
+		pClient->clientStatus.clientState = CLIENT_STATE_PENDING_RECONNECT;
+	} else {
+		IOT_WARN("Auto Reconnect not enabled. Starting manual reconnect...");
+		rc = aws_iot_mqtt_attempt_reconnect(pClient);
+		if(NETWORK_RECONNECTED == rc) {
+			IOT_WARN("Manual Reconnect Successful");
+			pClient->clientStatus.clientState = CLIENT_STATE_CONNECTED_IDLE;
+		} else {
+			IOT_WARN("Manual Reconnect Failed - %d", rc);
+			pClient->clientStatus.clientState = CLIENT_STATE_DISCONNECTED_ERROR;
+		}
+	}
 }
 
 static void parseInputArgsForConnectParams(int argc, char **argv) {
