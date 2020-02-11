@@ -1037,7 +1037,3 @@ void _IotMqtt_FreePacket( uint8_t * pPacket )
 }
 
 /*-----------------------------------------------------------*/
-
-/* Public interface functions for serialization */
-
-/*-----------------------------------------------------------*/

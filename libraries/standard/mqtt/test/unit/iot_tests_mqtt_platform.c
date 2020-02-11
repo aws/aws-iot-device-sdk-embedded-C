@@ -162,15 +162,15 @@
 /*
  * Will topic name and length to use for the MQTT API tests.
  */
-#define TEST_TOPIC_NAME             ( "/test/topic" )                                  /**< @brief An arbitrary topic name. */
-#define TEST_TOPIC_NAME_LENGTH      ( ( uint16_t ) ( sizeof( TEST_TOPIC_NAME ) - 1 ) ) /**< @brief Length of topic name. */
+#define TEST_TOPIC_NAME           ( "/test/topic" )                                    /**< @brief An arbitrary topic name. */
+#define TEST_TOPIC_NAME_LENGTH    ( ( uint16_t ) ( sizeof( TEST_TOPIC_NAME ) - 1 ) )   /**< @brief Length of topic name. */
 
 /*
  * Constants that affect the behavior of #TEST_MQTT_Unit_API_PublishDuplicates.
  */
-#define DUP_CHECK_RETRY_MS         ( 100 )  /**< @brief When to start sending duplicate packets. */
-#define DUP_CHECK_RETRY_LIMIT      ( 3 )    /**< @brief How many duplicate packets to send. */
-#define DUP_CHECK_TIMEOUT          ( 3000 ) /**< @brief Total time allowed to send all duplicate packets.
+#define DUP_CHECK_RETRY_MS        ( 100 )   /**< @brief When to start sending duplicate packets. */
+#define DUP_CHECK_RETRY_LIMIT     ( 3 )     /**< @brief How many duplicate packets to send. */
+#define DUP_CHECK_TIMEOUT         ( 3000 )  /**< @brief Total time allowed to send all duplicate packets.
                                              * Duplicates are sent using an exponential backoff strategy. */
 
 /*-----------------------------------------------------------*/
@@ -1236,6 +1236,8 @@ TEST( MQTT_Unit_Platform, SubscriptionListTooLarge )
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     size_t subscriptionCount = MQTT_MAX_REMAINING_LENGTH / UINT16_MAX + 1, i = 0;
     size_t remainingLength = 0, packetSize = 0;
+    uint16_t packetIdentifier = 0;
+    uint8_t * pPacket = NULL;
     IotMqttSubscription_t * pSubscriptionList = IotTest_Malloc( subscriptionCount * sizeof( IotMqttSubscription_t ) );
 
     TEST_ASSERT_NOT_NULL( pSubscriptionList );
@@ -1251,6 +1253,21 @@ TEST( MQTT_Unit_Platform, SubscriptionListTooLarge )
                                                 subscriptionCount,
                                                 &remainingLength,
                                                 &packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
+
+    /* Attempt to serialize SUBSCRIBE and UNSUBSCRIBE when the subscription list is too large. */
+    status = _IotMqtt_SerializeSubscribe( pSubscriptionList,
+                                          subscriptionCount,
+                                          &pPacket,
+                                          &packetSize,
+                                          &packetIdentifier );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
+
+    status = _IotMqtt_SerializeUnsubscribe( pSubscriptionList,
+                                            subscriptionCount,
+                                            &pPacket,
+                                            &packetSize,
+                                            &packetIdentifier );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
     IotTest_Free( pSubscriptionList );
@@ -1270,9 +1287,10 @@ TEST( MQTT_Unit_Platform, LongUserName )
     uint8_t * pConnectPacket = NULL;
 
     char * pUserName = IotTest_Malloc( UINT16_MAX );
+
     TEST_ASSERT_NOT_NULL( pUserName );
 
-    ( void ) memset( pUserName, ( int )'a', UINT16_MAX );
+    ( void ) memset( pUserName, ( int ) 'a', UINT16_MAX );
 
     connectInfo.awsIotMqttMode = true;
     connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
