@@ -635,7 +635,7 @@ static IotMqttError_t _checkPublishRemainingLength( const IotMqttPacketInfo_t * 
     else
     {
         /* Check that the "Remaining length" is greater than the minimum. For
-         * QoS 1 or 2, this will be two bytes greater than for QoS due to the
+         * QoS 1 or 2, this will be two bytes greater than for QoS 0 due to the
          * packet identifier. */
         if( pPublish->remainingLength < ( qos0Minimum + 2U ) )
         {

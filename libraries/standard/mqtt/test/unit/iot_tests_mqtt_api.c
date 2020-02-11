@@ -1998,6 +1998,17 @@ TEST( MQTT_Unit_API, GetConnectPacketSizeChecks )
     status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
+    /* Verify empty client identifier fails. */
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = 0;
+    status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+
+    connectInfo.pClientIdentifier = NULL;
+    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+    status = IotMqtt_GetConnectPacketSize( &connectInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+
     /* Verify good case */
     memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
     connectInfo.cleanSession = true;
@@ -2699,6 +2710,22 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
     status = IotMqtt_DeserializePublish( &mqttPacketInfo );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
+    /* Incorrect flags. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0xf;
+    status = IotMqtt_DeserializePublish( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* QoS 0 bad remaining length. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH;
+    mqttPacketInfo.remainingLength = 0;
+    status = IotMqtt_DeserializePublish( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* QoS 1 bad remaining length. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_PUBLISH | 0x2;
+    mqttPacketInfo.remainingLength = 0;
+    status = IotMqtt_DeserializePublish( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
 
     /* Good case succeeds - Test for Publish. */
     /* 1. Find out length of the packet .*/
