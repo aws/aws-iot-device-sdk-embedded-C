@@ -1,0 +1,4 @@
+jobos: ubuntu16 
+cbmcflags:        '=--unwind;1;--bounds-check;--pointer-check;--unwinding-assertions;--nondet-static=' 
+goto: IotMqtt_OperationType.goto
+expected: SUCCESSFUL
