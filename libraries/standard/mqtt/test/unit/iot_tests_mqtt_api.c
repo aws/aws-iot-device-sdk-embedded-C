@@ -50,7 +50,7 @@
 /* MQTT test access include. */
 #include "iot_test_access_mqtt.h"
 
-/* MQTT serializer API include */
+/* MQTT lightweight API include */
 #include "iot_mqtt_lightweight.h"
 
 /* MQTT mock include. */
@@ -681,7 +681,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, SerializePublishChecks );
     RUN_TEST_CASE( MQTT_Unit_API, SerializeDisconnectChecks );
     RUN_TEST_CASE( MQTT_Unit_API, SerializePingReqChecks );
-    RUN_TEST_CASE( MQTT_Unit_API, DeserializeResponseChecks );
+    RUN_TEST_CASE( MQTT_Unit_API, LightweightConnack );
     RUN_TEST_CASE( MQTT_Unit_API, DeserializePublishChecks );
     RUN_TEST_CASE( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks );
 }
@@ -2579,10 +2579,9 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests that IotMqtt_DeserializeResponse works as intended.
- * to @ref mqtt_function_deserializeresponse.
+ * @brief Tests that IotMqtt_DeserializeResponse works as intended with a CONNACK.
  */
-TEST( MQTT_Unit_API, DeserializeResponseChecks )
+TEST( MQTT_Unit_API, LightweightConnack )
 {
     IotMqttPacketInfo_t mqttPacketInfo;
     IotMqttError_t status = IOT_MQTT_SUCCESS;
@@ -2593,20 +2592,47 @@ TEST( MQTT_Unit_API, DeserializeResponseChecks )
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
     memset( ( void * ) &mqttPacketInfo, 0x00, sizeof( mqttPacketInfo ) );
+    status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
+    /* Bad packet type. */
     mqttPacketInfo.type = 0x01;
     mqttPacketInfo.pRemainingData = buffer;
     status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
 
-    /* Good case succeeds - Test for CONN ACK */
-    /* Set conn ack variable portion */
-    buffer[ 0 ] = 0x00;
-    buffer[ 1 ] = 0x00;
-    /* Set type, remaining length and remaining data. */
-    mqttPacketInfo.type = 0x20;            /* CONN ACK */
-    mqttPacketInfo.pRemainingData = buffer;
-    mqttPacketInfo.remainingLength = 0x02; /* CONN ACK Remaining Length. */
+    /* Bad remaining length. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_CONNACK;
+    mqttPacketInfo.remainingLength = MQTT_PACKET_CONNACK_REMAINING_LENGTH - 1;
+    status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* Incorrect reserved bits. */
+    mqttPacketInfo.remainingLength = MQTT_PACKET_CONNACK_REMAINING_LENGTH;
+    buffer[ 0 ] = 0xf;
+    buffer[ 1 ] = 0;
+    status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* Session present but nonzero return code. */
+    buffer[ 0 ] = MQTT_PACKET_CONNACK_SESSION_PRESENT_MASK;
+    buffer[ 1 ] = 1;
+    status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* Invalid response code. */
+    buffer[ 0 ] = 0;
+    buffer[ 1 ] = 6;
+    status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* Valid packet with rejected code. */
+    buffer[ 1 ] = 1;
+    status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SERVER_REFUSED, status );
+
+    /* Valid packet with success code. */
+    buffer[ 1 ] = 0;
     status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 }
@@ -2615,7 +2641,6 @@ TEST( MQTT_Unit_API, DeserializeResponseChecks )
 
 /**
  * @brief Tests that IotMqtt_DeserializePublish works as intended.
- * to @ref mqtt_function_deserializepublish.
  */
 TEST( MQTT_Unit_API, DeserializePublishChecks )
 {
