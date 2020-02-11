@@ -134,7 +134,7 @@ static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
 
         /* Only include metrics if it will fit within the encoding
          * standard. */
-        if( ( pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( uint16_t ) ( UINT16_MAX ) ) )
+        if( ( ( size_t ) pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( size_t ) ( UINT16_MAX ) ) )
         {
             /* Write the high byte of the combined length. */
             pBuffer[ 0 ] = UINT16_HIGH_BYTE( ( pConnectInfo->userNameLength +
@@ -176,6 +176,8 @@ static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
 
     return pBuffer;
 }
+
+/*-----------------------------------------------------------*/
 
 uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
                                    const IotMqttConnectInfo_t * pConnectInfo )
@@ -356,14 +358,16 @@ bool _IotMqtt_ConnectPacketSize( const IotMqttConnectInfo_t * pConnectInfo,
     if( pConnectInfo->awsIotMqttMode == true )
     {
         #if AWS_IOT_MQTT_ENABLE_METRICS == 1
-            connectPacketSize += ( AWS_IOT_METRICS_USERNAME_LENGTH +
-                                   ( size_t ) ( pConnectInfo->userNameLength ) + sizeof( uint16_t ) );
-            encodedUserName = true;
+            if( ( ( size_t ) pConnectInfo->userNameLength + AWS_IOT_METRICS_USERNAME_LENGTH ) <= ( ( size_t ) ( UINT16_MAX ) ) )
+            {
+                connectPacketSize += ( AWS_IOT_METRICS_USERNAME_LENGTH +
+                                       ( size_t ) ( pConnectInfo->userNameLength ) + sizeof( uint16_t ) );
+
+                encodedUserName = true;
+            }
         #endif
     }
 
-    /* Add the lengths of the username (if it wasn't already handled above) and
-     * password, if specified. */
     if( ( pConnectInfo->pUserName != NULL ) && ( encodedUserName == false ) )
     {
         connectPacketSize += pConnectInfo->userNameLength + sizeof( uint16_t );
@@ -865,12 +869,8 @@ IotMqttError_t _IotMqtt_ProcessPublishFlags( uint8_t publishFlags,
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
-    if( pOutput == NULL )
-    {
-        status = IOT_MQTT_BAD_RESPONSE;
-    }
     /* Check for QoS 2. */
-    else if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 ) == true )
+    if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS2 ) == true )
     {
         /* PUBLISH packet is invalid if both QoS 1 and QoS 2 bits are set. */
         if( UINT8_CHECK_BIT( publishFlags, MQTT_PUBLISH_FLAG_QOS1 ) == true )
