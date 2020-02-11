@@ -545,7 +545,7 @@ IotMqttError_t _IotMqtt_DeserializePublish( _mqttPacket_t * pPublish )
     /* The flags are the lower 4 bits of the first byte in PUBLISH. */
     publishFlags = pPublish->type;
 
-    status = _IotMqtt_ProcessIncomingPublishFlags( publishFlags, pOutput );
+    status = _IotMqtt_ProcessPublishFlags( publishFlags, pOutput );
 
     if( status == IOT_MQTT_SUCCESS )
     {

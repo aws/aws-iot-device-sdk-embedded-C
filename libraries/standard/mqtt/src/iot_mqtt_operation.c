@@ -900,7 +900,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
      * another PINGREQ after the keep-alive period. */
     if( status == true )
     {
-        if( scheduleDelay == 0 )
+        if( scheduleDelay == 0U )
         {
             scheduleDelay = pPingreqOperation->u.operation.periodic.ping.nextPeriodMs;
         }
