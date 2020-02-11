@@ -500,7 +500,7 @@ bool valid_IotMqttPublishInfo( const IotMqttPublishInfo_t *pInfo )
 
     // TODO: experiment with removing these assumptions
     // topicNameLength is a unint16
-    pInfo->topicNameLength < 0xFFFF &&
+    pInfo->topicNameLength <= UINT16_MAX &&
     pInfo->payloadLength > 0;
 }
 
