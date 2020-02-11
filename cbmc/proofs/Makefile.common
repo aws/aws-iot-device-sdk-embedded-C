@@ -27,6 +27,7 @@ INC += \
 	-I$(MQTT)/ports/common/include \
 	-I$(MQTT)/libraries/standard/common/include \
 	-I$(MQTT)/libraries/standard/mqtt/src \
+	-I$(MQTT)/cbmc/proofs \
 
 DEF += \
 	-DIOT_SYSTEM_TYPES_FILE=\"$(MQTT)/ports/posix/include/iot_platform_types_posix.h\" \
