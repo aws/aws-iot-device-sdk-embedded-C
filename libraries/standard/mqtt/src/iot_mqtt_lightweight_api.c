@@ -434,8 +434,6 @@ static IotMqttError_t _deserializeSuback( IotMqttPacketInfo_t * pSuback )
 
         IotLogDebug( "Packet identifier %hu.", pSuback->packetIdentifier );
 
-
-
         status = _readSubackStatus( remainingLength - sizeof( uint16_t ),
                                     pVariableHeader + sizeof( uint16_t ) );
     }

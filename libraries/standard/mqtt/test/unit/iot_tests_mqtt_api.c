@@ -709,6 +709,7 @@ TEST_GROUP_RUNNER( MQTT_Unit_API )
     RUN_TEST_CASE( MQTT_Unit_API, SerializeDisconnectChecks );
     RUN_TEST_CASE( MQTT_Unit_API, SerializePingReqChecks );
     RUN_TEST_CASE( MQTT_Unit_API, LightweightConnack );
+    RUN_TEST_CASE( MQTT_Unit_API, LightweightSuback );
     RUN_TEST_CASE( MQTT_Unit_API, DeserializePublishChecks );
     RUN_TEST_CASE( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks );
 }
@@ -2716,6 +2717,49 @@ TEST( MQTT_Unit_API, LightweightConnack )
     /* Valid packet with success code. */
     buffer[ 0 ] = 1;
     buffer[ 1 ] = 0;
+    status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Tests that IotMqtt_DeserializeResponse works as intended with a SUBACK.
+ */
+TEST( MQTT_Unit_API, LightweightSuback )
+{
+    IotMqttPacketInfo_t mqttPacketInfo;
+    IotMqttError_t status = IOT_MQTT_SUCCESS;
+    uint8_t buffer[ 10 ] = { 0 };
+
+    /* Bad remaining length. */
+    mqttPacketInfo.type = MQTT_PACKET_TYPE_SUBACK;
+    mqttPacketInfo.pRemainingData = buffer;
+    mqttPacketInfo.remainingLength = 2;
+    status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* Set packet identifier. */
+    buffer[ 0 ] = 0;
+    buffer[ 1 ] = 1;
+
+    /* Bad response code. */
+    mqttPacketInfo.remainingLength = 3;
+    buffer[ 2 ] = 5;
+    status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* Process a valid SUBACK with server refused response code. */
+    mqttPacketInfo.remainingLength = 3;
+    buffer[ 2 ] = 0x80;
+    status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SERVER_REFUSED, status );
+
+    /* Process a valid SUBACK with various server acceptance codes. */
+    mqttPacketInfo.remainingLength = 5;
+    buffer[ 2 ] = 0x00;
+    buffer[ 3 ] = 0x01;
+    buffer[ 4 ] = 0x02;
     status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 }
