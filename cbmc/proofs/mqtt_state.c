@@ -92,6 +92,9 @@ bool valid_IotMqttOperation( const IotMqttOperation_t pOp )
     ( pOp->u.operation.flags & IOT_MQTT_FLAG_WAITABLE )
         == IOT_MQTT_FLAG_WAITABLE;
   bool valid_jobReference =
+    // Async operations are waitable.  Loosely speaking, an async operation
+    // is split into independent send and ack events, and an sync operation
+    // is not.
     IMPLIES(  waitable, pOp->u.operation.jobReference == 2 ) &&
     IMPLIES( !waitable, pOp->u.operation.jobReference == 1 );
 
@@ -137,6 +140,7 @@ bool valid_IotMqttConnection( const IotMqttConnection_t pConn )
 {
   if ( pConn == NULL ) return false;
 
+  // This is the number of callbacks and operations using the connection.
   bool valid_references = pConn->references >= 1;
 
   bool valid_pingreq =
@@ -211,6 +215,7 @@ bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo )
     VALID_CBMC_SIZE( pInfo->passwordLength ) &&
 
 #ifdef SUBSCRIPTION_COUNT_MAX
+    // MAX is one greater than the maximum length
     pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX &&
 #endif
     IFF( pInfo->pPreviousSubscriptions == NULL,
@@ -241,6 +246,7 @@ bool valid_IotMqttSubscription( const IotMqttSubscription_t *pSub )
     VALID_CBMC_SIZE( pSub->topicFilterLength )
 
 #ifdef TOPIC_LENGTH_MAX
+    // MAX is one greater than the maximum length
     && pSub->topicFilterLength < TOPIC_LENGTH_MAX
 #endif
     ;
@@ -256,7 +262,7 @@ IotMqttSubscription_t *allocate_IotMqttSubscriptionArray( IotMqttSubscription_t 
   if ( pSub == NULL ) pSub = malloc_can_fail( length * sizeof( *pSub ) );
   if ( pSub == NULL ) return NULL;
 
-  for ( int i = 0; i < length; i++ )
+  for ( size_t i = 0; i < length; i++ )
     allocate_IotMqttSubscription( pSub + i );
 
   return pSub;
@@ -268,15 +274,14 @@ bool valid_IotMqttSubscriptionArray( const IotMqttSubscription_t *pSub,
   if ( !IFF( pSub == NULL, length == 0 ) ) return false;
   if ( pSub == NULL ) return false;
 
-  bool result = 1;
-  for ( int i = 0; i < length; i++ )
-    result = result && valid_IotMqttSubscription( pSub + i );
-
+  for ( size_t i = 0; i < length; i++ )
+    if ( !valid_IotMqttSubscription( pSub + i ) ) return false;
   return
 #ifdef SUBSCRIPTION_COUNT_MAX
+    // MAX is one greater than the maximum length
     length < SUBSCRIPTION_COUNT_MAX &&
 #endif
-    result;
+    true;
 }
 
 /****************************************************************
@@ -306,6 +311,7 @@ bool valid_IotMqttSubscriptionListElt( const _mqttSubscription_t *pElt )
 
   return
 #ifdef TOPIC_LENGTH_MAX
+    // MAX is one greater than the maximum length
     pElt->topicFilterLength < TOPIC_LENGTH_MAX &&
 #endif
     pElt->topicFilterLength < CBMC_MAX_OBJECT_SIZE - sizeof( *pElt ) &&
@@ -322,7 +328,7 @@ IotListDouble_t *allocate_IotMqttSubscriptionList( IotListDouble_t *pSub,
   if ( pSub == NULL ) return NULL;
 
   IotListDouble_Create( pSub );
-  for ( int i = 0; i < length; i++ ) {
+  for ( size_t i = 0; i < length; i++ ) {
     _mqttSubscription_t *pElt = allocate_IotMqttSubscriptionListElt( NULL );
     __CPROVER_assume( pElt );
     IotListDouble_InsertHead( pSub, &( pElt->link ) );
@@ -335,19 +341,19 @@ bool valid_IotMqttSubscriptionList( const IotListDouble_t *pSub,
 {
   if ( pSub == NULL ) return false;
 
-  bool result = 1;
   IotListDouble_t *pLink;
   IotContainers_ForEach( pSub, pLink ) {
     _mqttSubscription_t
       *pElt = IotLink_Container( _mqttSubscription_t, pLink, link );
-    result = result && valid_IotMqttSubscriptionListElt( pElt );
+    if ( !valid_IotMqttSubscriptionListElt( pElt ) ) return false;
   }
 
   return
 #ifdef SUBSCRIPTION_COUNT_MAX
+    // MAX is one greater than the maximum length
     length < SUBSCRIPTION_COUNT_MAX &&
 #endif
-    result;
+    true;
 }
 
 /****************************************************************
@@ -382,6 +388,7 @@ bool valid_IotMqttPublishInfo( const IotMqttPublishInfo_t *pInfo )
     pInfo->retryMs > 0  &&
 
     // TODO: experiment with removing these assumptions
+    // topicNameLength is a unint16
     pInfo->topicNameLength < 0xFFFF &&
     pInfo->payloadLength > 0;
 }
