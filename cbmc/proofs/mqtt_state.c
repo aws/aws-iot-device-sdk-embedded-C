@@ -308,13 +308,9 @@ bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo )
     VALID_STRING( pInfo->pPassword, pInfo->passwordLength ) &&
     VALID_CBMC_SIZE( pInfo->passwordLength ) &&
 
-#ifdef SUBSCRIPTION_COUNT_MAX
     // MAX is one greater than the maximum length
     pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX &&
-#endif
 
-    // MAX is one greater than the maximum length
-    pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX &&
     IFF( pInfo->pPreviousSubscriptions == NULL,
 	 pInfo->previousSubscriptionCount == 0 ) &&
     valid_IotMqttSubscriptionArray( pInfo->pPreviousSubscriptions,
