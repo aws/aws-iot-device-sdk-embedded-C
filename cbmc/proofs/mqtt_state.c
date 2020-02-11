@@ -309,6 +309,7 @@ bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo )
     VALID_CBMC_SIZE( pInfo->passwordLength ) &&
 
 #ifdef SUBSCRIPTION_COUNT_MAX
+    // MAX is one greater than the maximum length
     pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX &&
 #endif
 
