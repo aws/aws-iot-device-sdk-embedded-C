@@ -6,6 +6,21 @@
 #include "mqtt_state.h"
 
 /****************************************************************
+ * Bound the lengths of subscription and operation lists.
+ *
+ * Lists are empty by defaut.
+ * Set this variable to L+1 for lists of length <= L.
+ ****************************************************************/
+
+#ifndef SUBSCRIPTION_COUNT_MAX
+  #define SUBSCRIPTION_COUNT_MAX 1
+#endif
+
+#ifndef OPERATION_COUNT_MAX
+  #define OPERATION_COUNT_MAX 1
+#endif
+
+/****************************************************************
  * Model a malloc that can fail and return NULL.
  ****************************************************************/
 
@@ -80,6 +95,10 @@ bool valid_IotMqttOperation( const IotMqttOperation_t pOp )
 
   bool valid_packet =
     VALID_STRING( pOp->u.operation.pMqttPacket, pOp->u.operation.packetSize ) &&
+#ifdef PACKET_SIZE_MAX
+    // Some proofs iterate over a packet and must bound the packet size
+    pOp->u.operation.packetSize < PACKET_SIZE_MAX &&
+#endif
     VALID_CBMC_SIZE( pOp->u.operation.packetSize );
   bool valid_pingreq_packet =
     IMPLIES( pOp->u.operation.type == IOT_MQTT_PINGREQ,
@@ -112,6 +131,67 @@ bool valid_IotMqttOperation( const IotMqttOperation_t pOp )
 }
 
 /****************************************************************
+ * IotMqttOperation list
+ ****************************************************************/
+
+IotListDouble_t *allocate_IotMqttOperationList( IotListDouble_t *pOp,
+						size_t length,
+						IotMqttConnection_t pConn )
+{
+  if ( pOp == NULL ) pOp = malloc_can_fail( sizeof( *pOp ) );
+  if ( pOp == NULL ) return NULL;
+
+  // Allocate lists of length L <= 3 (MAX = L+1)
+  __CPROVER_assert(OPERATION_COUNT_MAX <= 3+1,
+		   "Operation list bound is too big");
+  __CPROVER_assert(length < OPERATION_COUNT_MAX,
+		   "Operation list requested is too long");
+
+  IotListDouble_Create( pOp );
+
+  size_t num_elts;
+  __CPROVER_assume(num_elts <= length);
+
+  if (1 <= num_elts)
+    {
+      IotMqttOperation_t pElt = allocate_IotMqttOperation( NULL, pConn );
+      __CPROVER_assume( pElt );
+      IotListDouble_InsertHead( pOp, &( pElt->link ) );
+    }
+  if (2 <= num_elts)
+    {
+      IotMqttOperation_t pElt = allocate_IotMqttOperation( NULL, pConn );
+      __CPROVER_assume( pElt );
+      IotListDouble_InsertHead( pOp, &( pElt->link ) );
+    }
+  if (3 <= num_elts)
+    {
+      IotMqttOperation_t pElt = allocate_IotMqttOperation( NULL, pConn );
+      __CPROVER_assume( pElt );
+      IotListDouble_InsertHead( pOp, &( pElt->link ) );
+    }
+
+  return pOp;
+}
+
+bool valid_IotMqttOperationList( const IotListDouble_t *pOp,
+				 const size_t length )
+{
+  if ( pOp == NULL ) return false;
+
+  IotListDouble_t *pLink;
+  IotContainers_ForEach( pOp, pLink ) {
+    IotMqttOperation_t
+      *pElt = IotLink_Container( _mqttSubscription_t, pLink, link );
+    if (! valid_IotMqttOperation( pElt ) ) return false;
+  }
+
+  return
+    // MAX is one greater than the maximum length
+    length < OPERATION_COUNT_MAX;
+}
+
+/****************************************************************
  * IotMqttConnection
  ****************************************************************/
 
@@ -123,16 +203,20 @@ IotMqttConnection_t allocate_IotMqttConnection( IotMqttConnection_t pConn )
   pConn->pNetworkConnection = allocate_IotNetworkConnection();
   pConn->pNetworkInterface = allocate_IotNetworkInterface();
   allocate_IotMqttOperation( &(pConn->pingreq ), pConn );
+  allocate_IotMqttCallbackInfo( &(pConn->disconnectCallback) );
   return pConn;
 }
 
 void ensure_IotMqttConnection_has_lists( IotMqttConnection_t pConn )
 {
-  // TODO: add code to make lists nondet nontrivial
-  // Consider using allocate_IotMqttSubscriptionList
-  IotListDouble_Create( &pConn->pendingProcessing );
-  IotListDouble_Create( &pConn->pendingResponse );
-  IotListDouble_Create( &pConn->subscriptionList );
+  allocate_IotMqttOperationList( &pConn->pendingProcessing,
+				 OPERATION_COUNT_MAX - 1,
+				 pConn );
+  allocate_IotMqttOperationList( &pConn->pendingResponse,
+				 OPERATION_COUNT_MAX - 1,
+				 pConn );
+  allocate_IotMqttSubscriptionList( &pConn->subscriptionList,
+				    SUBSCRIPTION_COUNT_MAX - 1 );
   return pConn;
 }
 
@@ -141,7 +225,12 @@ bool valid_IotMqttConnection( const IotMqttConnection_t pConn )
   if ( pConn == NULL ) return false;
 
   // This is the number of callbacks and operations using the connection.
-  bool valid_references = pConn->references >= 1;
+  // It is a uint32 and must be bounded by a number smaller than the
+  // maximum value to avoid integer overflows.  We expect to run out of
+  // memory before having 2^16 references on a device.
+  bool valid_references =
+    pConn->references >= 1 &&
+    pConn->references <= (1 << 16);
 
   bool valid_pingreq =
     ( valid_IotMqttOperation( &(pConn->pingreq ) ) ) &&
@@ -150,6 +239,12 @@ bool valid_IotMqttConnection( const IotMqttConnection_t pConn )
     ( !pConn->pingreq.incomingPublish ) ;
 
   return
+    valid_IotMqttOperationList( &pConn->pendingProcessing,
+				OPERATION_COUNT_MAX - 1 ) &&
+    valid_IotMqttOperationList( &pConn->pendingResponse,
+				OPERATION_COUNT_MAX - 1 ) &&
+    valid_IotMqttSubscriptionList( &pConn->subscriptionList,
+				   SUBSCRIPTION_COUNT_MAX - 1 ) &&
     valid_IotNetworkInterface( pConn->pNetworkInterface ) &&
     valid_references &&
     valid_pingreq;
@@ -214,10 +309,8 @@ bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo )
     VALID_STRING( pInfo->pPassword, pInfo->passwordLength ) &&
     VALID_CBMC_SIZE( pInfo->passwordLength ) &&
 
-#ifdef SUBSCRIPTION_COUNT_MAX
     // MAX is one greater than the maximum length
     pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX &&
-#endif
     IFF( pInfo->pPreviousSubscriptions == NULL,
 	 pInfo->previousSubscriptionCount == 0 ) &&
     valid_IotMqttSubscriptionArray( pInfo->pPreviousSubscriptions,
@@ -277,11 +370,8 @@ bool valid_IotMqttSubscriptionArray( const IotMqttSubscription_t *pSub,
   for ( size_t i = 0; i < length; i++ )
     if ( !valid_IotMqttSubscription( pSub + i ) ) return false;
   return
-#ifdef SUBSCRIPTION_COUNT_MAX
     // MAX is one greater than the maximum length
-    length < SUBSCRIPTION_COUNT_MAX &&
-#endif
-    true;
+    length < SUBSCRIPTION_COUNT_MAX;
 }
 
 /****************************************************************
@@ -327,12 +417,36 @@ IotListDouble_t *allocate_IotMqttSubscriptionList( IotListDouble_t *pSub,
   if ( pSub == NULL ) pSub = malloc_can_fail( sizeof( *pSub ) );
   if ( pSub == NULL ) return NULL;
 
+  // Allocate lists of length L <= 3 (MAX = L+1)
+  __CPROVER_assert(SUBSCRIPTION_COUNT_MAX <= 3+1,
+		   "Subscription list bound is too big");
+  __CPROVER_assert(length < SUBSCRIPTION_COUNT_MAX,
+		   "Subscription list requested is too long");
+
   IotListDouble_Create( pSub );
-  for ( size_t i = 0; i < length; i++ ) {
-    _mqttSubscription_t *pElt = allocate_IotMqttSubscriptionListElt( NULL );
-    __CPROVER_assume( pElt );
-    IotListDouble_InsertHead( pSub, &( pElt->link ) );
-  }
+
+  size_t num_elts;
+  __CPROVER_assume(num_elts <= length);
+
+  if (1 <= num_elts)
+    {
+      _mqttSubscription_t *pElt = allocate_IotMqttSubscriptionListElt( NULL );
+      __CPROVER_assume( pElt );
+      IotListDouble_InsertHead( pSub, &( pElt->link ) );
+    }
+  if (2 <= num_elts)
+    {
+      _mqttSubscription_t *pElt = allocate_IotMqttSubscriptionListElt( NULL );
+      __CPROVER_assume( pElt );
+      IotListDouble_InsertHead( pSub, &( pElt->link ) );
+    }
+  if (3 <= num_elts)
+    {
+      _mqttSubscription_t *pElt = allocate_IotMqttSubscriptionListElt( NULL );
+      __CPROVER_assume( pElt );
+      IotListDouble_InsertHead( pSub, &( pElt->link ) );
+    }
+
   return pSub;
 }
 
@@ -349,11 +463,8 @@ bool valid_IotMqttSubscriptionList( const IotListDouble_t *pSub,
   }
 
   return
-#ifdef SUBSCRIPTION_COUNT_MAX
     // MAX is one greater than the maximum length
-    length < SUBSCRIPTION_COUNT_MAX &&
-#endif
-    true;
+    length < SUBSCRIPTION_COUNT_MAX;
 }
 
 /****************************************************************
@@ -565,3 +676,24 @@ IotNetworkError_t IotNetworkInterfaceDestroy( void * pConnection )
 }
 
 /****************************************************************/
+
+IotMqttCallbackInfo_t *allocate_IotMqttCallbackInfo(IotMqttCallbackInfo_t *pCb)
+{
+  if ( pCb == NULL ) pCb = malloc_can_fail( sizeof( *pCb ) );
+  if ( pCb == NULL ) return NULL;
+
+  pCb->pCallbackContext = allocate_opaque_type();
+  pCb->function = nondet_bool() ? NULL : IotUserCallback;
+
+  return pCb;
+}
+
+void IotUserCallback( void * pCallbackContext,
+		      IotMqttCallbackParam_t * pCallbackParam )
+{
+  __CPROVER_assert( pCallbackContext != NULL,
+		    "IotUserCallback pCallbackContext is not NULL" );
+  __CPROVER_assert( pCallbackParam != NULL,
+		    "IotUserCallback pCallbackParam is not NULL" );
+  return;
+}

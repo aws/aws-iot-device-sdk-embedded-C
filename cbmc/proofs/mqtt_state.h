@@ -217,3 +217,7 @@ IotNetworkError_t IotNetworkInterfaceCloseCallback( void * pConnection,
 IotNetworkError_t IotNetworkInterfaceDestroy( void * pConnection );
 
 /****************************************************************/
+
+IotMqttCallbackInfo_t *allocate_IotMqttCallbackInfo(IotMqttCallbackInfo_t *pCb);
+void IotUserCallback( void * pCallbackContext,
+		      IotMqttCallbackParam_t * pCallbackParam );
