@@ -1154,6 +1154,13 @@ TEST( MQTT_Unit_API, ConnectParameters )
                               0,
                               &_pMqttConnection );
     TEST_ASSERT_EQUAL( IOT_MQTT_TIMEOUT, status );
+
+    /* Check detection of packets that are too large. */
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+    willInfo.payloadLength = MQTT_PACKET_CONNECT_MAX_SIZE + 1;
+    status = _IotMqtt_SerializeConnect( &connectInfo, NULL, NULL );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 }
 
 /*-----------------------------------------------------------*/
@@ -1358,6 +1365,11 @@ TEST( MQTT_Unit_API, PublishQoS0Parameters )
     IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER;
     IotMqttCallbackInfo_t callbackInfo = IOT_MQTT_CALLBACK_INFO_INITIALIZER;
 
+    /* Parameters of PUBLISH serialization. */
+    uint8_t * pPublishPacket = NULL;
+    size_t packetSize = 0;
+    uint16_t packetIdentifier = 0;
+
     /* Initialize parameters. */
     _networkInterface.send = _sendSuccess;
 
@@ -1384,6 +1396,11 @@ TEST( MQTT_Unit_API, PublishQoS0Parameters )
         /* If valid parameters are passed, QoS 0 publish should always return success. */
         status = IotMqtt_PublishAsync( _pMqttConnection, &publishInfo, 0, 0, &publishOperation );
         TEST_ASSERT_EQUAL( IOT_MQTT_SUCCESS, status );
+
+        /* Check detection of packets that are too large. */
+        publishInfo.payloadLength = MQTT_MAX_REMAINING_LENGTH;
+        status = _IotMqtt_SerializePublish( &publishInfo, &pPublishPacket, &packetSize, &packetIdentifier, NULL );
+        TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
     }
 
     IotMqtt_Disconnect( _pMqttConnection, IOT_MQTT_FLAG_CLEANUP_ONLY );
