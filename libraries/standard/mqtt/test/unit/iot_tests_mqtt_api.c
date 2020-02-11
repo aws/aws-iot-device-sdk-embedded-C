@@ -535,7 +535,7 @@ static void _decrementReferencesJob( IotTaskPool_t pTaskPool,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief get next byte mock function to test MQTT serializer API
+ * @brief Get next byte mock function to test MQTT serializer API.
  */
 static IotMqttError_t _getNextByte( IotNetworkConnection_t pNetworkInterface,
                                     uint8_t * nextByte )
@@ -557,6 +557,33 @@ static IotMqttError_t _getNextByte( IotNetworkConnection_t pNetworkInterface,
     {
         status = IOT_MQTT_NETWORK_ERROR;
     }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Get next byte mock function to test MQTT serializer API that fails when
+ * reading the remaining length.
+ */
+static IotMqttError_t _getNextByteFailure( IotNetworkConnection_t pNetworkInterface,
+                                           uint8_t * nextByte )
+{
+    IotMqttError_t status = IOT_MQTT_NETWORK_ERROR;
+    static int32_t invokeCount = 0;
+
+    ( void ) pNetworkInterface;
+    ( void ) nextByte;
+
+    /* Return a valid packet type on the first invocation. */
+    if( invokeCount == 0 )
+    {
+        status = IOT_MQTT_SUCCESS;
+        *nextByte = MQTT_PACKET_TYPE_CONNACK;
+    }
+
+    invokeCount++;
 
     return status;
 }
@@ -2573,7 +2600,6 @@ TEST( MQTT_Unit_API, SerializePingReqChecks )
 
 /**
  * @brief Tests that IotMqtt_GetIncomingMQTTPacketTypeAndLength works as intended.
- * to @ref mqtt_function_getincomingmqttpackettypeandlength.
  */
 TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
 {
@@ -2615,6 +2641,20 @@ TEST( MQTT_Unit_API, GetIncomingMQTTPacketTypeAndLengthChecks )
     buffer[ 3 ] = 0xFF;
     buffer[ 4 ] = 0xFF;
     status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, pNetworkInterface );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* Check with an encoding that does not conform to the MQTT spec. */
+    bufPtr = buffer;
+    buffer[ 1 ] = 0x80;
+    buffer[ 2 ] = 0x80;
+    buffer[ 3 ] = 0x80;
+    buffer[ 4 ] = 0x00;
+    status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByte, pNetworkInterface );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* Check when network receive fails. */
+    memset( buffer, 0x00, 10 );
+    status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacket, _getNextByteFailure, pNetworkInterface );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_RESPONSE, status );
 }
 
@@ -2674,6 +2714,7 @@ TEST( MQTT_Unit_API, LightweightConnack )
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SERVER_REFUSED, status );
 
     /* Valid packet with success code. */
+    buffer[ 0 ] = 1;
     buffer[ 1 ] = 0;
     status = IotMqtt_DeserializeResponse( &mqttPacketInfo );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
