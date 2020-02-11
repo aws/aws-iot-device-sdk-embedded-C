@@ -1,0 +1,6 @@
+proofs/ninja.py
+build.ninja
+.ninja_deps
+.ninja_log
+*.csv
+*.log
