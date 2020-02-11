@@ -1270,7 +1270,6 @@ TEST( MQTT_Unit_Receive, PublishResourceFailure )
     {
         #if IOT_TEST_NO_MALLOC_OVERRIDES != 1
             IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
-            int32_t i = 0;
             uint8_t * pPubackPacket = NULL;
             size_t pubackSize = 0;
 
