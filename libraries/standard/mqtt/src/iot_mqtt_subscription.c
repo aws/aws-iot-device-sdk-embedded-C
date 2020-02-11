@@ -299,14 +299,19 @@ static bool _topicMatch( const IotLink_t * const pSubscriptionLink,
     const _mqttSubscription_t * pSubscription = IotLink_Container( _mqttSubscription_t,
                                                                    pSubscriptionLink,
                                                                    link );
-    const _topicMatchParams_t * pParam = ( _topicMatchParams_t * ) pMatch;
 
+    const _topicMatchParams_t * pParam = ( _topicMatchParams_t * ) pMatch;
+ 
     /* Extract the relevant strings and lengths from parameters. */
     const char * pTopicName = pParam->pTopicName;
     const char * pTopicFilter = pSubscription->pTopicFilter;
+    if ( pTopicName == NULL || pTopicFilter == NULL )
+    {
+        return status;
+    }
     const uint16_t topicNameLength = pParam->topicNameLength;
     const uint16_t topicFilterLength = pSubscription->topicFilterLength;
-
+ 
     /* Check for an exact match. */
     if( topicNameLength == topicFilterLength )
     {
@@ -655,6 +660,12 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
                            IotMqttSubscription_t * const pCurrentSubscription )
 {
     bool status = false;
+    
+    if( mqttConnection == NULL || pTopicFilter == NULL )
+    {
+    	return status;
+    }
+    
     const _mqttSubscription_t * pSubscription = NULL;
     const IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams = { 0 };
