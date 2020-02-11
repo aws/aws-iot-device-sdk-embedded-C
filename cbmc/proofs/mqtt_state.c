@@ -273,8 +273,7 @@ IotMqttNetworkInfo_t *allocate_IotMqttNetworkInfo( IotMqttNetworkInfo_t *pInfo )
 
 bool valid_IotMqttNetworkInfo( const IotMqttNetworkInfo_t *pInfo )
 {
-  if ( pInfo == NULL ) return false;
-  return true;
+  return pInfo != NULL;
 }
 
 /****************************************************************
@@ -298,7 +297,7 @@ IotMqttConnectInfo_t *allocate_IotMqttConnectInfo( IotMqttConnectInfo_t *pInfo )
 bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo )
 {
   return
-    pInfo &&
+    pInfo != NULL &&
 
     VALID_STRING( pInfo->pClientIdentifier, pInfo->clientIdentifierLength ) &&
     VALID_CBMC_SIZE( pInfo->clientIdentifierLength ) &&
