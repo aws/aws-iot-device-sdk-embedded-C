@@ -14,6 +14,9 @@ GOTO_ANALYZER ?= goto-analyzer
 BATCH ?= cbmc-batch
 VIEWER ?= cbmc-viewer
 
+CBMC_OBJECT_BITS = 8
+CBMC_MAX_OBJECT_SIZE = "(SIZE_MAX>>(CBMC_OBJECT_BITS+1))"
+
 ################################################################
 # Build goto binary for cbmc
 # Build goto binaries with options taken from top-level cmake
@@ -31,29 +34,35 @@ INC = \
 DEF += \
 	-DIOT_SYSTEM_TYPES_FILE=\"$(MQTT)/ports/posix/include/iot_platform_types_posix.h\" \
 	-Diotmqtt_EXPORTS \
+	-DCBMC_OBJECT_BITS=$(CBMC_OBJECT_BITS) \
+	-DCBMC_MAX_OBJECT_SIZE=$(CBMC_MAX_OBJECT_SIZE) \
 
 CFLAGS += $(CFLAGS2) $(INC) $(DEF) -std=gnu99
 
 %.goto : %.c
 	$(GOTO_CC) -o $@ $(CFLAGS) $<
 
+# Use the generic implementations of atomic operations.
+# Using the gcc atomic intrinsics causes coverage computation to fail.
+# Define the generic flag here, and replace *_gcc.h with *_generic.h below.
+DEF += -DIOT_ATOMIC_GENERIC=1
+
 $(MQTT)/build:
-	(mkdir -p $(MQTT)/build; cd $(MQTT)/build; cmake ..) 2>&1 \
-		| tee $(ENTRY)0.txt \
-		; exit $${PIPESTATUS[0]}
+	(mkdir -p $(MQTT)/build; cd $(MQTT)/build; cmake ..) \
+	       > $(ENTRY)0.txt 2>&1
+	cp $(MQTT)/ports/common/include/atomic/iot_atomic_generic.h \
+	   $(MQTT)/ports/common/include/atomic/iot_atomic_gcc.h
 
 $(ENTRY)1.goto: $(MQTT)/build $(OBJS)
-	$(GOTO_CC) --function harness -o $@ $(OBJS) 2>&1 \
-		| tee $(ENTRY)1.txt \
-		; exit $${PIPESTATUS[0]}
+	$(GOTO_CC) --function harness -o $@ $(OBJS)
+		> $(ENTRY)1.txt 2>&1
 
 $(ENTRY)2.goto: $(ENTRY)1.goto
 	 $(GOTO_INSTRUMENT) \
 			$(ABSTRACTIONS) \
 			--drop-unused-functions \
-			--slice-global-inits $< $@ 2>&1 \
-		| tee $(ENTRY)2.txt \
-		; exit $${PIPESTATUS[0]}
+			--slice-global-inits $< $@ \
+		> $(ENTRY)2.txt  2>&1
 
 $(ENTRY).goto: $(ENTRY)2.goto
 	cp $< $@
@@ -62,10 +71,23 @@ $(ENTRY).goto: $(ENTRY)2.goto
 # Run cbmc and build html report
 
 CBMCFLAGS += \
+	--object-bits $(CBMC_OBJECT_BITS) \
 	$(UNWINDING) \
 	--bounds-check \
 	--pointer-check \
 	--unwinding-assertions \
+
+CBMCFLAGS += \
+	--nondet-static \
+
+CBMCFLAGS += \
+	--div-by-zero-check \
+	--float-overflow-check \
+	--nan-check \
+	--pointer-overflow-check \
+	--undefined-shift-check \
+	--signed-overflow-check \
+	--unsigned-overflow-check \
 
 goto: $(ENTRY).goto
 
