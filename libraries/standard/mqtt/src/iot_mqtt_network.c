@@ -105,8 +105,8 @@ static IotMqttError_t _deserializeAck( _mqttConnection_t * pMqttConnection,
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_NO_MEMORY, #IOT_MQTT_NETWORK_ERROR,
  * or #IOT_MQTT_SCHEDULING_ERROR.
  */
-static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
-                                           _mqttPacket_t * pIncomingPacket );
+static IotMqttError_t _deserializePublishPacket( _mqttConnection_t * pMqttConnection,
+                                                 _mqttPacket_t * pIncomingPacket );
 
 /**
  * @brief Deserialize a PINGRESP packet.
@@ -380,8 +380,8 @@ static IotMqttError_t _deserializeAck( _mqttConnection_t * pMqttConnection,
 
 /*-----------------------------------------------------------*/
 
-static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
-                                           _mqttPacket_t * pIncomingPacket )
+static IotMqttError_t _deserializePublishPacket( _mqttConnection_t * pMqttConnection,
+                                                 _mqttPacket_t * pIncomingPacket )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t * pOperation = NULL;
@@ -541,7 +541,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
             IotLogDebug( "(MQTT connection %p) PUBLISH in data stream.", pMqttConnection );
 
             /* Deserialize PUBLISH. */
-            status = _deserializePublish( pMqttConnection, pIncomingPacket );
+            status = _deserializePublishPacket( pMqttConnection, pIncomingPacket );
 
             break;
 
@@ -601,7 +601,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
          *
          * This error is triggered by passing a freed argument 'pMqttConnection'
          * to 'IotLogError'. Coverity assumes that 'pMqttConnection' was freed in
-         * '_IotMqtt_CreateOperation', which was invoked in '_deserializePublish'.
+         * '_IotMqtt_CreateOperation', which was invoked in '_deserializePublishPacket'.
          *
          * This will never happen as a valid MQTT connection passed to this
          * function always has a positive reference count; therefore,

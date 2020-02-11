@@ -277,8 +277,8 @@ uint16_t _IotMqtt_NextPacketIdentifier( void );
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_BAD_RESPONSE.
  */
 
-IotMqttError_t _IotMqtt_ProcessIncomingPublishFlags( uint8_t publishFlags,
-                                                     IotMqttPublishInfo_t * pOutput );
+IotMqttError_t _IotMqtt_ProcessPublishFlags( uint8_t publishFlags,
+                                             IotMqttPublishInfo_t * pOutput );
 
 /**
  * @brief Encode a username into a CONNECT packet, if necessary.
@@ -288,6 +288,11 @@ IotMqttError_t _IotMqtt_ProcessIncomingPublishFlags( uint8_t publishFlags,
  *
  * @return Pointer to the end of the encoded string, which will be identical to
  * `pDestination` if nothing was encoded.
+ *
+ * @warning This function does not check the size of `pDestination`! To avoid a
+ * buffer overflow, ensure that `pDestination` is large enough to hold
+ * `pConnectInfo->userNameLength` bytes if a username is supplied, and/or
+ * #AWS_IOT_METRICS_USERNAME_LENGTH bytes if metrics are enabled.
  */
 uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
                                    const IotMqttConnectInfo_t * pConnectInfo );

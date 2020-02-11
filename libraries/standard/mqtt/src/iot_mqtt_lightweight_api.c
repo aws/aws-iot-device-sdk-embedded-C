@@ -36,6 +36,7 @@
 /* MQTT types include. */
 #include "types/iot_mqtt_types.h"
 #include "private/iot_mqtt_helper.h"
+#include "iot_mqtt_lightweight.h"
 
 /*-----------------------------------------------------------*/
 
@@ -185,8 +186,8 @@ static IotMqttError_t _deserializePublish( IotMqttPacketInfo_t * pPublish );
  *
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_SERVER_REFUSED, or #IOT_MQTT_BAD_RESPONSE.
  */
-static IotMqttError_t _decodeSubackStatus( size_t statusCount,
-                                           const uint8_t * pStatusStart );
+static IotMqttError_t _readSubackStatus( size_t statusCount,
+                                         const uint8_t * pStatusStart );
 
 /**
  * @brief Check the remaining length of incoming Publish against some value for
@@ -206,8 +207,8 @@ static IotMqttError_t _checkPublishRemainingLength( const IotMqttPacketInfo_t * 
 
 /*-----------------------------------------------------------*/
 
-static IotMqttError_t _decodeSubackStatus( size_t statusCount,
-                                           const uint8_t * pStatusStart )
+static IotMqttError_t _readSubackStatus( size_t statusCount,
+                                         const uint8_t * pStatusStart )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
     uint8_t subscriptionStatus = 0;
@@ -435,8 +436,8 @@ static IotMqttError_t _deserializeSuback( IotMqttPacketInfo_t * pSuback )
 
 
 
-        status = _decodeSubackStatus( remainingLength - sizeof( uint16_t ),
-                                      pVariableHeader + sizeof( uint16_t ) );
+        status = _readSubackStatus( remainingLength - sizeof( uint16_t ),
+                                    pVariableHeader + sizeof( uint16_t ) );
     }
 
     return status;
@@ -537,7 +538,7 @@ static IotMqttError_t _deserializePublish( IotMqttPacketInfo_t * pPublish )
     /* The flags are the lower 4 bits of the first byte in PUBLISH. */
     publishFlags = pPublish->type;
 
-    status = _IotMqtt_ProcessIncomingPublishFlags( publishFlags, pOutput );
+    status = _IotMqtt_ProcessPublishFlags( publishFlags, pOutput );
 
     if( status == IOT_MQTT_SUCCESS )
     {
@@ -613,9 +614,9 @@ static IotMqttError_t _deserializePublish( IotMqttPacketInfo_t * pPublish )
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t _checkPublishRemainingLength( const IotMqttPacketInfo_t * pPublish,
-                                             IotMqttQos_t qos,
-                                             size_t qos0Minimum )
+static IotMqttError_t _checkPublishRemainingLength( const IotMqttPacketInfo_t * pPublish,
+                                                    IotMqttQos_t qos,
+                                                    size_t qos0Minimum )
 {
     IotMqttError_t status = IOT_MQTT_SUCCESS;
 
