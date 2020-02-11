@@ -2901,21 +2901,31 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
     status = IotMqtt_DeserializePublish( &mqttPacketInfo );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
 
-    /* Good case succeeds - Test for Publish. */
-    /* 1. Find out length of the packet .*/
+    /* QoS 1 invalid packet identifier. */
+    mqttPacketInfo.remainingLength = 5;
+    buffer[ 0 ] = 0;
+    buffer[ 1 ] = 1;
+    buffer[ 2 ] = ( uint8_t )'a';
+    buffer[ 3 ] = 0;
+    buffer[ 4 ] = 0;
+    status = IotMqtt_DeserializePublish( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_RESPONSE, status );
+
+    /* Create a PUBLISH packet to test. */
     memset( &publishInfo, 0x00, sizeof( publishInfo ) );
     publishInfo.pTopicName = "/test/topic";
     publishInfo.topicNameLength = ( uint16_t ) strlen( publishInfo.pTopicName );
     publishInfo.pPayload = "Hello World";
     publishInfo.payloadLength = ( uint16_t ) strlen( publishInfo.pPayload );
+
+    /* Test serialization and deserialization of a QoS 0 PUBLISH. */
     publishInfo.qos = IOT_MQTT_QOS_0;
-    /* Calculate exact packet size and remaining length */
+
+    /* Generate QoS 0 packet. */
     status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
-    /* Make sure buffer has enough space */
     TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
 
-    /* 2. Serialize packet in the buffer. */
     status = IotMqtt_SerializePublish( &publishInfo,
                                        remainingLength,
                                        &packetIdentifier,
@@ -2924,13 +2934,33 @@ TEST( MQTT_Unit_API, DeserializePublishChecks )
                                        packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 
-    /* 3. Deserialize - get type and length. */
+    /* Deserialize QoS 0 packet. */
     pNetworkInterface = buffer;
     status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacketInfo, _getNextByte, ( void * ) &pNetworkInterface );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
-    /* Remaining data points to byte 3. */
     mqttPacketInfo.pRemainingData = &buffer[ 2 ];
-    /* 4. Deserialize publish. */
+    status = IotMqtt_DeserializePublish( &mqttPacketInfo );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+
+    /* Test serialization and deserialization of a QoS 1 PUBLISH. */
+    publishInfo.qos = IOT_MQTT_QOS_1;
+
+    status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+    TEST_ASSERT_GREATER_OR_EQUAL( packetSize, bufferSize );
+
+    status = IotMqtt_SerializePublish( &publishInfo,
+                                       remainingLength,
+                                       &packetIdentifier,
+                                       &pPacketIdentifierHigh,
+                                       buffer,
+                                       packetSize );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+
+    pNetworkInterface = buffer;
+    status = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &mqttPacketInfo, _getNextByte, ( void * ) &pNetworkInterface );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
+    mqttPacketInfo.pRemainingData = &buffer[ 2 ];
     status = IotMqtt_DeserializePublish( &mqttPacketInfo );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_SUCCESS, status );
 }
