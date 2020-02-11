@@ -2034,8 +2034,10 @@ TEST( MQTT_Unit_API, SerializeConnectChecks )
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
     memset( ( void * ) &connectInfo, 0x0, sizeof( connectInfo ) );
-    /* Make sure greater remaining length returns error. */
-    remainingLength = 120;
+    status = IotMqtt_SerializeConnect( &connectInfo, 120, buffer, packetSize );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
     status = IotMqtt_SerializeConnect( &connectInfo, 120, buffer, packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
@@ -2379,6 +2381,13 @@ TEST( MQTT_Unit_API, GetPublishPacketSizeChecks )
 
     /* Empty topic must fail. */
     memset( ( void * ) &publishInfo, 0x00, sizeof( publishInfo ) );
+    publishInfo.pTopicName = NULL;
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+    status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
+    TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
+
+    publishInfo.pTopicName = TEST_TOPIC_NAME;
+    publishInfo.topicNameLength = 0;
     status = IotMqtt_GetPublishPacketSize( &publishInfo, &remainingLength, &packetSize );
     TEST_ASSERT_EQUAL( IOT_MQTT_BAD_PARAMETER, status );
 
@@ -2449,14 +2458,36 @@ TEST( MQTT_Unit_API, SerializePublishChecks )
                                        packetSize );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
-    /* NULL topic fails. */
+    /* Empty topic fails. */
     publishInfo.pTopicName = NULL;
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
     status = IotMqtt_SerializePublish( &publishInfo,
                                        remainingLength,
                                        &packetIdentifier,
                                        &pPacketIdentifierHigh,
                                        buffer,
                                        packetSize );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+
+    publishInfo.pTopicName = TEST_TOPIC_NAME;
+    publishInfo.topicNameLength = 0;
+    status = IotMqtt_SerializePublish( &publishInfo,
+                                       remainingLength,
+                                       &packetIdentifier,
+                                       &pPacketIdentifierHigh,
+                                       buffer,
+                                       packetSize );
+    TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
+
+    /* Remaining length larger than buffer size. */
+    publishInfo.pTopicName = TEST_TOPIC_NAME;
+    publishInfo.topicNameLength = TEST_TOPIC_NAME_LENGTH;
+    status = IotMqtt_SerializePublish( &publishInfo,
+                                       10,
+                                       &packetIdentifier,
+                                       &pPacketIdentifierHigh,
+                                       buffer,
+                                       5 );
     TEST_ASSERT_EQUAL_INT( IOT_MQTT_BAD_PARAMETER, status );
 
     /* Good case succeeds */
