@@ -68,7 +68,7 @@ static IoT_Error_t _aws_iot_mqtt_handle_disconnect(AWS_IoT_Client *pClient) {
 	}
 
 	if (pClient->clientStatus.clientState == CLIENT_STATE_CONNECTED_IDLE) {
-		FUNC_EXIT_RC(NETWORK_RECONNECTED);
+		FUNC_EXIT_RC(SUCCESS);
 	}
 
 	FUNC_EXIT_RC(NETWORK_DISCONNECTED_ERROR);
