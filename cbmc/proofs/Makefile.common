@@ -14,8 +14,6 @@ GOTO_ANALYZER ?= goto-analyzer
 BATCH ?= cbmc-batch
 VIEWER ?= cbmc-viewer
 
-CBMC_OBJECT_BITS = 8
-CBMC_MAX_OBJECT_SIZE = "(SIZE_MAX>>(CBMC_OBJECT_BITS+1))"
 
 ################################################################
 # Build goto binary for cbmc
@@ -60,20 +58,24 @@ $(ENTRY)2.goto: $(ENTRY)1.goto
 $(ENTRY).goto: $(ENTRY)2.goto
 	cp $< $@
 
+
+################################################################
+# Set C compiler defines
+
+CBMC_OBJECT_BITS ?= 8
+CBMCFLAGS += --object-bits $(CBMC_OBJECT_BITS)
+CBMC_MAX_OBJECT_SIZE = "(SIZE_MAX>>(CBMC_OBJECT_BITS+1))"
+
+
 ################################################################
 # Run cbmc and build html report
 
 CBMCFLAGS += \
-	--object-bits $(CBMC_OBJECT_BITS) \
 	$(UNWINDING) \
 	--bounds-check \
 	--pointer-check \
 	--unwinding-assertions \
-
-CBMCFLAGS += \
 	--nondet-static \
-
-CBMCFLAGS += \
 	--div-by-zero-check \
 	--float-overflow-check \
 	--nan-check \
@@ -201,9 +203,9 @@ launch-veryclean: launch-clean
 cbmc-batch.yaml: Makefile ../Makefile.common
 	@echo "Building $@"
 	@$(RM) $@
-	@echo "jobos: $(JOBOS)" >> $@
-	@echo "cbmcflags: $(call encode_options,$(CBMCFLAGS))" >> $@
-	@echo "goto: $(ENTRY).goto" >> $@
+	@echo 'cbmcflags: $(strip $(call yaml_encode_options,$(CBMCFLAGS)))' > $@
 	@echo "expected: SUCCESSFUL" >> $@
+	@echo "goto: $(ENTRY).goto" >> $@
+	@echo "jobos: $(JOBOS)" >> $@
 
 ################################################################
