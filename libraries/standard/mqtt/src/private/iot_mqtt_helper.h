@@ -87,24 +87,6 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Encode a C string as a UTF-8 string, per MQTT 3.1.1 spec.
- *
- * @param[out] pDestination Where to write the encoded string.
- * @param[in] source The string to encode.
- * @param[in] sourceLength The length of source.
- *
- * @return Pointer to the end of the encoded string, which is `sourceLength+2`
- * bytes greater than `pDestination`.
- *
- * @warning This function does not check the size of `pDestination`! Ensure that
- * `pDestination` is large enough to hold `sourceLength+2` bytes to avoid a buffer
- * overflow.
- */
-uint8_t * _IotMqtt_EncodeString( uint8_t * pDestination,
-                                 const char * source,
-                                 uint16_t sourceLength );
-
-/**
  * @brief Calculate the number of bytes required to encode an MQTT
  * "Remaining length" field.
  *
@@ -113,22 +95,6 @@ uint8_t * _IotMqtt_EncodeString( uint8_t * pDestination,
  * @return The size of the encoding of length. This is always `1`, `2`, `3`, or `4`.
  */
 size_t _IotMqtt_RemainingLengthEncodedSize( size_t length );
-
-/**
- * @brief Encode the "Remaining length" field per MQTT spec.
- *
- * @param[out] pDestination Where to write the encoded "Remaining length".
- * @param[in] length The "Remaining length" to encode.
- *
- * @return Pointer to the end of the encoded "Remaining length", which is 1-4
- * bytes greater than `pDestination`.
- *
- * @warning This function does not check the size of `pDestination`! Ensure that
- * `pDestination` is large enough to hold the encoded "Remaining length" using
- * the function #_IotMqtt_RemainingLengthEncodedSize to avoid buffer overflows.
- */
-uint8_t * _IotMqtt_EncodeRemainingLength( uint8_t * pDestination,
-                                          size_t length );
 
 /**
  * @brief Calculate the size and "Remaining length" of a CONNECT packet generated
@@ -280,20 +246,4 @@ uint16_t _IotMqtt_NextPacketIdentifier( void );
 IotMqttError_t _IotMqtt_ProcessPublishFlags( uint8_t publishFlags,
                                              IotMqttPublishInfo_t * pOutput );
 
-/**
- * @brief Encode a username into a CONNECT packet, if necessary.
- *
- * @param[out] pDestination Buffer for the CONNECT packet.
- * @param[in] pConnectInfo User-provided CONNECT information.
- *
- * @return Pointer to the end of the encoded string, which will be identical to
- * `pDestination` if nothing was encoded.
- *
- * @warning This function does not check the size of `pDestination`! To avoid a
- * buffer overflow, ensure that `pDestination` is large enough to hold
- * `pConnectInfo->userNameLength` bytes if a username is supplied, and/or
- * #AWS_IOT_METRICS_USERNAME_LENGTH bytes if metrics are enabled.
- */
-uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
-                                   const IotMqttConnectInfo_t * pConnectInfo );
 #endif /* ifndef IOT_MQTT_HELPER_H_ */

@@ -121,6 +121,57 @@ static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
                                             const IotMqttConnectInfo_t * pConnectInfo,
                                             bool * pEncodedUserName );
 
+/**
+ * @brief Encode a username into a CONNECT packet, if necessary.
+ *
+ * @param[out] pDestination Buffer for the CONNECT packet.
+ * @param[in] pConnectInfo User-provided CONNECT information.
+ *
+ * @return Pointer to the end of the encoded string, which will be identical to
+ * `pDestination` if nothing was encoded.
+ *
+ * @warning This function does not check the size of `pDestination`! To avoid a
+ * buffer overflow, ensure that `pDestination` is large enough to hold
+ * `pConnectInfo->userNameLength` bytes if a username is supplied, and/or
+ * #AWS_IOT_METRICS_USERNAME_LENGTH bytes if metrics are enabled.
+ */
+static uint8_t * _encodeUserName( uint8_t * pDestination,
+                                  const IotMqttConnectInfo_t * pConnectInfo );
+
+/**
+ * @brief Encode a C string as a UTF-8 string, per MQTT 3.1.1 spec.
+ *
+ * @param[out] pDestination Where to write the encoded string.
+ * @param[in] source The string to encode.
+ * @param[in] sourceLength The length of source.
+ *
+ * @return Pointer to the end of the encoded string, which is `sourceLength+2`
+ * bytes greater than `pDestination`.
+ *
+ * @warning This function does not check the size of `pDestination`! Ensure that
+ * `pDestination` is large enough to hold `sourceLength+2` bytes to avoid a buffer
+ * overflow.
+ */
+static uint8_t * _encodeString( uint8_t * pDestination,
+                                const char * source,
+                                uint16_t sourceLength );
+
+/**
+ * @brief Encode the "Remaining length" field per MQTT spec.
+ *
+ * @param[out] pDestination Where to write the encoded "Remaining length".
+ * @param[in] length The "Remaining length" to encode.
+ *
+ * @return Pointer to the end of the encoded "Remaining length", which is 1-4
+ * bytes greater than `pDestination`.
+ *
+ * @warning This function does not check the size of `pDestination`! Ensure that
+ * `pDestination` is large enough to hold the encoded "Remaining length" using
+ * the function #_IotMqtt_RemainingLengthEncodedSize to avoid buffer overflows.
+ */
+static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
+                                         size_t length );
+
 /*-----------------------------------------------------------*/
 
 static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
@@ -179,8 +230,8 @@ static uint8_t * _encodeUserNameAndMetrics( uint8_t * pDestination,
 
 /*-----------------------------------------------------------*/
 
-uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
-                                   const IotMqttConnectInfo_t * pConnectInfo )
+static uint8_t * _encodeUserName( uint8_t * pDestination,
+                                  const IotMqttConnectInfo_t * pConnectInfo )
 {
     bool encodedUserName = false;
     uint8_t * pBuffer = pDestination;
@@ -205,9 +256,9 @@ uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
             {
                 /* The username is not being used for authentication, but
                  * metrics are enabled. */
-                pBuffer = _IotMqtt_EncodeString( pBuffer,
-                                                 AWS_IOT_METRICS_USERNAME,
-                                                 AWS_IOT_METRICS_USERNAME_LENGTH );
+                pBuffer = _encodeString( pBuffer,
+                                         AWS_IOT_METRICS_USERNAME,
+                                         AWS_IOT_METRICS_USERNAME_LENGTH );
 
                 encodedUserName = true;
             }
@@ -217,18 +268,18 @@ uint8_t * _IotMqtt_EncodeUserName( uint8_t * pDestination,
     /* Encode the username if there is one and it hasn't already been done. */
     if( ( pConnectInfo->pUserName != NULL ) && ( encodedUserName == false ) )
     {
-        pBuffer = _IotMqtt_EncodeString( pBuffer,
-                                         pConnectInfo->pUserName,
-                                         pConnectInfo->userNameLength );
+        pBuffer = _encodeString( pBuffer,
+                                 pConnectInfo->pUserName,
+                                 pConnectInfo->userNameLength );
     }
 
     return pBuffer;
 }
 /*-----------------------------------------------------------*/
 
-uint8_t * _IotMqtt_EncodeString( uint8_t * pDestination,
-                                 const char * source,
-                                 uint16_t sourceLength )
+static uint8_t * _encodeString( uint8_t * pDestination,
+                                const char * source,
+                                uint16_t sourceLength )
 {
     uint8_t * pBuffer = pDestination;
 
@@ -254,8 +305,8 @@ uint8_t * _IotMqtt_EncodeString( uint8_t * pDestination,
 
 /*-----------------------------------------------------------*/
 
-uint8_t * _IotMqtt_EncodeRemainingLength( uint8_t * pDestination,
-                                          size_t length )
+static uint8_t * _encodeRemainingLength( uint8_t * pDestination,
+                                         size_t length )
 {
     uint8_t lengthByte = 0, * pLengthEnd = pDestination;
     size_t remainingLength = length;
@@ -421,11 +472,11 @@ void _IotMqtt_SerializeConnectCommon( const IotMqttConnectInfo_t * pConnectInfo,
     /* The remaining length of the CONNECT packet is encoded starting from the
      * second byte. The remaining length does not include the length of the fixed
      * header or the encoding of the remaining length. */
-    pBuffer = _IotMqtt_EncodeRemainingLength( pBuffer, remainingLength );
+    pBuffer = _encodeRemainingLength( pBuffer, remainingLength );
 
     /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
      * header. This string is 4 bytes long. */
-    pBuffer = _IotMqtt_EncodeString( pBuffer, "MQTT", 4 );
+    pBuffer = _encodeString( pBuffer, "MQTT", 4 );
 
     /* The MQTT protocol version is the second byte of the variable header. */
     *pBuffer = MQTT_VERSION_3_1_1;
@@ -497,31 +548,31 @@ void _IotMqtt_SerializeConnectCommon( const IotMqttConnectInfo_t * pConnectInfo,
     pBuffer += 2;
 
     /* Write the client identifier into the CONNECT packet. */
-    pBuffer = _IotMqtt_EncodeString( pBuffer,
-                                     pConnectInfo->pClientIdentifier,
-                                     pConnectInfo->clientIdentifierLength );
+    pBuffer = _encodeString( pBuffer,
+                             pConnectInfo->pClientIdentifier,
+                             pConnectInfo->clientIdentifierLength );
 
     /* Write the will topic name and message into the CONNECT packet if provided. */
     if( pConnectInfo->pWillInfo != NULL )
     {
-        pBuffer = _IotMqtt_EncodeString( pBuffer,
-                                         pConnectInfo->pWillInfo->pTopicName,
-                                         pConnectInfo->pWillInfo->topicNameLength );
+        pBuffer = _encodeString( pBuffer,
+                                 pConnectInfo->pWillInfo->pTopicName,
+                                 pConnectInfo->pWillInfo->topicNameLength );
 
-        pBuffer = _IotMqtt_EncodeString( pBuffer,
-                                         pConnectInfo->pWillInfo->pPayload,
-                                         ( uint16_t ) pConnectInfo->pWillInfo->payloadLength );
+        pBuffer = _encodeString( pBuffer,
+                                 pConnectInfo->pWillInfo->pPayload,
+                                 ( uint16_t ) pConnectInfo->pWillInfo->payloadLength );
     }
 
     /* Encode the username if there is one or metrics are enabled. */
-    pBuffer = _IotMqtt_EncodeUserName( pBuffer, pConnectInfo );
+    pBuffer = _encodeUserName( pBuffer, pConnectInfo );
 
     /* Encode the password field, if requested by the app. */
     if( pConnectInfo->pPassword != NULL )
     {
-        pBuffer = _IotMqtt_EncodeString( pBuffer,
-                                         pConnectInfo->pPassword,
-                                         pConnectInfo->passwordLength );
+        pBuffer = _encodeString( pBuffer,
+                                 pConnectInfo->pPassword,
+                                 pConnectInfo->passwordLength );
     }
 
     /* Ensure that the difference between the end and beginning of the buffer
@@ -581,7 +632,7 @@ void _IotMqtt_SerializeSubscribeCommon( const IotMqttSubscription_t * pSubscript
     pBuffer++;
 
     /* Encode the "Remaining length" starting from the second byte. */
-    pBuffer = _IotMqtt_EncodeRemainingLength( pBuffer, remainingLength );
+    pBuffer = _encodeRemainingLength( pBuffer, remainingLength );
 
     /* Get the next packet identifier. It should always be nonzero. */
     packetIdentifier = _IotMqtt_NextPacketIdentifier();
@@ -596,9 +647,9 @@ void _IotMqtt_SerializeSubscribeCommon( const IotMqttSubscription_t * pSubscript
     /* Serialize each subscription topic filter and QoS. */
     for( i = 0; i < subscriptionCount; i++ )
     {
-        pBuffer = _IotMqtt_EncodeString( pBuffer,
-                                         pSubscriptionList[ i ].pTopicFilter,
-                                         pSubscriptionList[ i ].topicFilterLength );
+        pBuffer = _encodeString( pBuffer,
+                                 pSubscriptionList[ i ].pTopicFilter,
+                                 pSubscriptionList[ i ].topicFilterLength );
 
         /* Place the QoS in the SUBSCRIBE packet. */
         *pBuffer = ( uint8_t ) ( pSubscriptionList[ i ].qos );
@@ -766,12 +817,12 @@ void _IotMqtt_SerializePublishCommon( const IotMqttPublishInfo_t * pPublishInfo,
     pBuffer++;
 
     /* The "Remaining length" is encoded from the second byte. */
-    pBuffer = _IotMqtt_EncodeRemainingLength( pBuffer, remainingLength );
+    pBuffer = _encodeRemainingLength( pBuffer, remainingLength );
 
     /* The topic name is placed after the "Remaining length". */
-    pBuffer = _IotMqtt_EncodeString( pBuffer,
-                                     pPublishInfo->pTopicName,
-                                     pPublishInfo->topicNameLength );
+    pBuffer = _encodeString( pBuffer,
+                             pPublishInfo->pTopicName,
+                             pPublishInfo->topicNameLength );
 
     /* A packet identifier is required for QoS 1 and 2 messages. */
     if( pPublishInfo->qos > IOT_MQTT_QOS_0 )
@@ -834,7 +885,7 @@ void _IotMqtt_SerializeUnsubscribeCommon( const IotMqttSubscription_t * pSubscri
     pBuffer++;
 
     /* Encode the "Remaining length" starting from the second byte. */
-    pBuffer = _IotMqtt_EncodeRemainingLength( pBuffer, remainingLength );
+    pBuffer = _encodeRemainingLength( pBuffer, remainingLength );
 
     /* Get the next packet identifier. It should always be nonzero. */
     packetIdentifier = _IotMqtt_NextPacketIdentifier();
@@ -849,9 +900,9 @@ void _IotMqtt_SerializeUnsubscribeCommon( const IotMqttSubscription_t * pSubscri
     /* Serialize each subscription topic filter. */
     for( i = 0; i < subscriptionCount; i++ )
     {
-        pBuffer = _IotMqtt_EncodeString( pBuffer,
-                                         pSubscriptionList[ i ].pTopicFilter,
-                                         pSubscriptionList[ i ].topicFilterLength );
+        pBuffer = _encodeString( pBuffer,
+                                 pSubscriptionList[ i ].pTopicFilter,
+                                 pSubscriptionList[ i ].topicFilterLength );
     }
 
     /* Ensure that the difference between the end and beginning of the buffer
