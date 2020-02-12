@@ -24,16 +24,52 @@
 
 import logging
 import os
+import pathlib
+import subprocess
 import sys
 import textwrap
-from subprocess import CalledProcessError
 
 from make_cbmc_batch_files import create_cbmc_yaml_files
+
+
+def apply_patches():
+    patch_dir = pathlib.Path(__file__).resolve().parent.parent / "patches"
+    if not patch_dir.is_dir():
+        logging.error("Patches directory at '%s' is not a directory", patch_dir)
+        sys.exit(1)
+
+    proj_dir = pathlib.Path(__file__).resolve().parent.parent.parent
+    if not proj_dir.is_dir():
+        logging.error("Root of project at '%s' is not a directory", proj_dir)
+        sys.exit(1)
+    if not (proj_dir / "LICENSE").exists():
+        logging.error(
+            "Directory '%s' doesn't seem to be root of project", proj_dir)
+        sys.exit(1)
+
+    for fyle in sorted(patch_dir.glob("*.patch")):
+        logging.info("Checking patch '%s'", fyle.name)
+        cmd = ["git", "apply", "--check", str(fyle)]
+        proc = subprocess.run(
+            cmd, cwd=proj_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            universal_newlines=True)
+        if proc.returncode:
+            logging.warning(
+                "Patch checking failed. Check output:\n%s",
+                "\n".join(["    %s" % line for line in proc.stdout]))
+
+        logging.info("Applying patch '%s'", fyle.name)
+        cmd = ["git", "apply", str(fyle)]
+        proc = subprocess.run(cmd, cwd=proj_dir)
+        if proc.returncode:
+            logging.error("Failed to apply patch '%s'", fyle.name)
+            sys.exit(1)
+
 
 def build():
     try:
         create_cbmc_yaml_files()
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         logging.error(textwrap.dedent("""\
             An error occured during cbmc-batch generation.
             The error message is: {}
@@ -46,3 +82,4 @@ if __name__ == '__main__':
     logging.basicConfig(format="{script}: %(levelname)s %(message)s".format(
         script=os.path.basename(__file__)))
     build()
+    apply_patches()
