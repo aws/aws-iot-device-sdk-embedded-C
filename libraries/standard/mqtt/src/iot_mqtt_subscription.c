@@ -305,10 +305,6 @@ static bool _topicMatch( const IotLink_t * const pSubscriptionLink,
     /* Extract the relevant strings and lengths from parameters. */
     const char * pTopicName = pParam->pTopicName;
     const char * pTopicFilter = pSubscription->pTopicFilter;
-    if ( pTopicName == NULL || pTopicFilter == NULL )
-    {
-        return status;
-    }
     const uint16_t topicNameLength = pParam->topicNameLength;
     const uint16_t topicFilterLength = pSubscription->topicFilterLength;
  
