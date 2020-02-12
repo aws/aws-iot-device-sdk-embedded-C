@@ -434,8 +434,6 @@ static IotMqttError_t _deserializeSuback( IotMqttPacketInfo_t * pSuback )
 
         IotLogDebug( "Packet identifier %hu.", pSuback->packetIdentifier );
 
-
-
         status = _readSubackStatus( remainingLength - sizeof( uint16_t ),
                                     pVariableHeader + sizeof( uint16_t ) );
     }
@@ -635,7 +633,7 @@ static IotMqttError_t _checkPublishRemainingLength( const IotMqttPacketInfo_t * 
     else
     {
         /* Check that the "Remaining length" is greater than the minimum. For
-         * QoS 1 or 2, this will be two bytes greater than for QoS due to the
+         * QoS 1 or 2, this will be two bytes greater than for QoS 0 due to the
          * packet identifier. */
         if( pPublish->remainingLength < ( qos0Minimum + 2U ) )
         {
@@ -671,25 +669,16 @@ IotMqttError_t IotMqtt_GetConnectPacketSize( const IotMqttConnectInfo_t * pConne
         IotLogError( "IotMqtt_GetConnectPacketSize() client identifier must be set." );
         status = IOT_MQTT_BAD_PARAMETER;
     }
-
-    /* Calculate the "Remaining length" field and total packet size. If it exceeds
-     * what is allowed in the MQTT standard, return an error. */
-    else if( _IotMqtt_ConnectPacketSize( pConnectInfo, pRemainingLength, pPacketSize ) == false )
-    {
-        IotLogError( "Connect packet length exceeds %lu, which is the maximum"
-                     " size allowed by MQTT 3.1.1.",
-                     MQTT_PACKET_CONNECT_MAX_SIZE );
-
-        status = IOT_MQTT_BAD_PARAMETER;
-    }
     else
     {
-        /* Total size of the subscribe packet should be larger than the "Remaining length"
-         * field. */
-        if( ( *pPacketSize ) < ( *pRemainingLength ) )
+        /* Calculate the "Remaining length" field and total packet size. If it exceeds
+         * what is allowed in the MQTT standard, return an error. */
+        if( _IotMqtt_ConnectPacketSize( pConnectInfo, pRemainingLength, pPacketSize ) == false )
         {
-            IotLogError( "Connection packet remaining length (%lu) exceeds packet size (%lu)",
-                         ( *pRemainingLength ), ( *pPacketSize ) );
+            IotLogError( "Connect packet length exceeds %lu, which is the maximum"
+                         " size allowed by MQTT 3.1.1.",
+                         MQTT_PACKET_CONNECT_MAX_SIZE );
+
             status = IOT_MQTT_BAD_PARAMETER;
         }
     }
@@ -711,9 +700,14 @@ IotMqttError_t IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectIn
         IotLogError( "IotMqtt_SerializeConnect() called with required parameter(s) set to NULL." );
         status = IOT_MQTT_BAD_PARAMETER;
     }
-    else if( ( pConnectInfo->clientIdentifierLength == 0U ) || ( pConnectInfo->pClientIdentifier == NULL ) )
+    else if( pConnectInfo->pClientIdentifier == NULL )
     {
-        IotLogError( "IotMqtt_SerializeConnect() client identifier must be set." );
+        IotLogError( "Client identifier must be set." );
+        status = IOT_MQTT_BAD_PARAMETER;
+    }
+    else if( pConnectInfo->clientIdentifierLength == 0U )
+    {
+        IotLogError( "Client identifier length must be set." );
         status = IOT_MQTT_BAD_PARAMETER;
     }
     else if( remainingLength > bufferSize )
@@ -758,25 +752,17 @@ IotMqttError_t IotMqtt_GetSubscriptionPacketSize( IotMqttOperationType_t type,
         IotLogError( "IotMqtt_GetSubscriptionPacketSize() called with zero subscription count." );
         status = IOT_MQTT_BAD_PARAMETER;
     }
-    else if( _IotMqtt_SubscriptionPacketSize( type,
-                                              pSubscriptionList,
-                                              subscriptionCount,
-                                              pRemainingLength,
-                                              pPacketSize ) == false )
-    {
-        IotLogError( "Subscription packet remaining length exceeds %lu, which is the "
-                     "maximum size allowed by MQTT 3.1.1.",
-                     MQTT_MAX_REMAINING_LENGTH );
-        status = IOT_MQTT_BAD_PARAMETER;
-    }
     else
     {
-        /* Total size of the subscribe packet should be larger than the "Remaining length"
-         * field. */
-        if( ( *pPacketSize ) < ( *pRemainingLength ) )
+        if( _IotMqtt_SubscriptionPacketSize( type,
+                                             pSubscriptionList,
+                                             subscriptionCount,
+                                             pRemainingLength,
+                                             pPacketSize ) == false )
         {
-            IotLogError( "Subscription packet remaining length (%lu) exceeds packet size (%lu)",
-                         ( *pRemainingLength ), ( *pPacketSize ) );
+            IotLogError( "Subscription packet remaining length exceeds %lu, which is the "
+                         "maximum size allowed by MQTT 3.1.1.",
+                         MQTT_MAX_REMAINING_LENGTH );
             status = IOT_MQTT_BAD_PARAMETER;
         }
     }
@@ -881,25 +867,16 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( const IotMqttPublishInfo_t * pPubli
         IotLogError( "IotMqtt_GetPublishPacketSize() called with no topic." );
         status = IOT_MQTT_BAD_PARAMETER;
     }
-
-    /* Calculate the "Remaining length" field and total packet size. If it exceeds
-     * what is allowed in the MQTT standard, return an error. */
-    else if( _IotMqtt_PublishPacketSize( pPublishInfo, pRemainingLength, pPacketSize ) == false )
-    {
-        IotLogError( "Publish packet remaining length exceeds %lu, which is the "
-                     "maximum size allowed by MQTT 3.1.1.",
-                     MQTT_MAX_REMAINING_LENGTH );
-
-        status = IOT_MQTT_BAD_PARAMETER;
-    }
     else
     {
-        /* Total size of the publish packet should be larger than the "Remaining length"
-         * field. */
-        if( ( *pPacketSize ) < ( *pRemainingLength ) )
+        /* Calculate the "Remaining length" field and total packet size. If it exceeds
+         * what is allowed in the MQTT standard, return an error. */
+        if( _IotMqtt_PublishPacketSize( pPublishInfo, pRemainingLength, pPacketSize ) == false )
         {
-            IotLogError( "Publish packet remaining length (%lu) exceeds packet size (%lu).",
-                         ( *pRemainingLength ), ( *pPacketSize ) );
+            IotLogError( "Publish packet remaining length exceeds %lu, which is the "
+                         "maximum size allowed by MQTT 3.1.1.",
+                         MQTT_MAX_REMAINING_LENGTH );
+
             status = IOT_MQTT_BAD_PARAMETER;
         }
     }
