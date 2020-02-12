@@ -6,15 +6,6 @@
 
 #include "mqtt_state.h"
 
-/*
-
-bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
-                           const char * pTopicFilter,
-                           uint16_t topicFilterLength,
-                           IotMqttSubscription_t * pCurrentSubscription );
-
-*/
-
 void harness()
 {
   IotMqttConnection_t mqttConnection = allocate_IotMqttConnection(NULL);
@@ -22,7 +13,6 @@ void harness()
   ensure_IotMqttConnection_has_lists(mqttConnection);
   __CPROVER_assume(valid_IotMqttConnection(mqttConnection));
 
-  // Move to allocation and valid connection?
   allocate_IotMqttSubscriptionList(&(mqttConnection->subscriptionList), 1);
   __CPROVER_assume(valid_IotMqttSubscriptionList(&(mqttConnection->subscriptionList), 1));
 
