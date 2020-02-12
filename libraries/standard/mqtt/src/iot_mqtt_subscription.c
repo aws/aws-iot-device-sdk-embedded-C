@@ -661,7 +661,7 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
 {
     bool status = false;
     
-    if( mqttConnection == NULL || pTopicFilter == NULL )
+    if( pTopicFilter == NULL )
     {
     	return status;
     }
