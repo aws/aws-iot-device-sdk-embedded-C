@@ -87,7 +87,7 @@
 #define MQTT_PACKET_CONNECT_MAX_SIZE                ( 327700UL )
 
 /**
- * @brief The minimum remaining length for a QoS PUBLISH.
+ * @brief The minimum remaining length for a QoS 0 PUBLISH.
  *
  * Includes two bytes for topic name length and one byte for topic name.
  */
