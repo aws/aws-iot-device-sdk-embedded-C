@@ -26,5 +26,5 @@ void harness()
   IotMqtt_IsSubscribed( mqttConnection,
 			TopicFilter,
 			topicFilterLength,
-                        nondet_boo() ? NULL : &result );
+                        nondet_bool() ? NULL : &result );
 }
