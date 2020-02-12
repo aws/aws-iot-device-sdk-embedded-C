@@ -1,5 +1,7 @@
 ENTRY=IotMqtt_Init
 
+# We abstract all the log and concurrency related functions in this proof
+# and assume their implementation is correct
 ABSTRACTIONS += --remove-function-body IotLog_Generic
 ABSTRACTIONS += --remove-function-body Iot_EnterCritical
 ABSTRACTIONS += --remove-function-body Iot_ExitCritical
