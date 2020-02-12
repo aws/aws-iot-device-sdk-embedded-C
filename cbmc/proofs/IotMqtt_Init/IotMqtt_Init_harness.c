@@ -8,7 +8,3 @@ void harness()
 {
   IotMqtt_Init();
 }
-
-
-
-
