@@ -19,14 +19,13 @@ VIEWER ?= cbmc-viewer
 # Build goto binary for cbmc
 # Build goto binaries with options taken from top-level cmake
 
-INC = \
+INC += \
 	-I$(MQTT)/libraries/standard/mqtt/include \
 	-I$(MQTT)/demos \
 	-I$(MQTT)/libraries/platform/.. \
 	-I$(MQTT)/libraries/platform \
 	-I$(MQTT)/ports/common/include \
 	-I$(MQTT)/libraries/standard/common/include \
-	\
 	-I$(MQTT)/libraries/standard/mqtt/src \
 
 DEF += \
@@ -120,7 +119,7 @@ clean:
 	$(RM) *~ \#*
 
 veryclean: clean
-	$(RM) -r html
+	$(RM) -r html TAGS-*
 
 .PHONY: cbmc property coverage report clean veryclean
 
