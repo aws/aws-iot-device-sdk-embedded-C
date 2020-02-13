@@ -7,9 +7,8 @@
 
 <span style="float:right;margin-right:4em"> &mdash; <i>Official description of MQTT from [mqtt.org](http://mqtt.org)</i></span><br>
 
-This MQTT library implements a subset of the MQTT 3.1.1 standard for compatibility with the [AWS IoT MQTT server](https://docs.aws.amazon.com/iot/latest/developerguide/protocols.html#mqtt). It is also compatible with other MQTT servers. Features of this library include:
+This MQTT library implements a subset of the MQTT 3.1.1 standard.  Features of this library include:
 - Both fully asynchronous and blocking API functions.
-- Thread-aware and parallelizable for high throughput.
 - Scalable performance and footprint. The [configuration settings](@ref mqtt_config) allow this library to be tailored to a system's resources.
 
 @attention Currently, this library does not support QoS 2 MQTT messages.
@@ -28,7 +27,7 @@ digraph mqtt_dependencies
     {
         node[fillcolor="#aed8a9ff"];
         rank = same;
-        linear_containers[label="List/Queue", URL="@ref linear_containers"];
+        linear_containers[label="Linear containers", URL="@ref linear_containers"];
         logging[label="Logging", URL="@ref logging"];
         static_memory[label="Static memory", URL="@ref static_memory"];
     }
@@ -48,7 +47,7 @@ digraph mqtt_dependencies
 @enddot
 
 Currently, the MQTT library has the following dependencies:
-- The queue library for maintaining the data structures for managing in-progress MQTT operations.
+- The linear containers library for maintaining the data structures for managing in-progress MQTT operations.
 - The logging library may be used if @ref IOT_LOG_LEVEL_MQTT is not #IOT_LOG_NONE.
 - The task pool to submit background jobs. The MQTT library does not create or manage any threads, but relies on at least one thread being available in the task pool.
 
@@ -61,60 +60,6 @@ In addition to the components above, the MQTT library also depends on C standard
 @brief Code size of the MQTT library.
 
 The following measurements were taken with arm-none-eabi-gcc v9.2.1 (October 2019) with the [MQTT library from January 2020](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/f1a8b698b1d2fd5b8475b11a16d399181c1d867f). These values are rough estimates not tuned for any specific ARM processor.
-
-<b>Debug Build</b> <br>
-All logging, asserts, and diagnostic information enabled. Debugging symbols available. Compiled using the ARM Thumb instruction set (`-mthumb`). Values are in <i>bytes</i>.
-
-<table>
-    <tr>
-        <td><b>object</b></td>
-        <td><b>text</b></td>
-        <td><b>data</b></td>
-        <td><b>bss</b></td>
-    </tr>
-    <tr>
-        <td>iot_mqtt_api</td>
-        <td>11897</td>
-        <td>0</td>
-        <td>4</td>
-    </tr>
-    <tr>
-        <td>iot_mqtt_network</td>
-        <td>5412</td>
-        <td>0</td>
-        <td>0</td>
-    </tr>
-    <tr>
-        <td>iot_mqtt_operation</td>
-        <td>10484</td>
-        <td>0</td>
-        <td>0</td>
-    </tr>
-    <tr>
-        <td>iot_mqtt_serialize</td>
-        <td>14454</td>
-        <td>28</td>
-        <td>0</td>
-    </tr>
-    <tr>
-        <td>iot_mqtt_subscription</td>
-        <td>3885</td>
-        <td>0</td>
-        <td>0</td>
-    </tr>
-    <tr>
-        <td>iot_mqtt_validate</td>
-        <td>4330</td>
-        <td>0</td>
-        <td>0</td>
-    </tr>
-    <tr>
-        <td><b>total</b></td>
-        <td><b>50462</b></td>
-        <td><b>28</b></td>
-        <td><b>4</b></td>
-    </tr>
-</table>
 
 <b>Minimal Size Build</b> <br>
 No logging, asserts, or diagnostic information. Compiled using the ARM Thumb instruction set (`-mthumb`) and optimized for size (`-Os`). Values are in <i>bytes</i>.
@@ -166,6 +111,60 @@ No logging, asserts, or diagnostic information. Compiled using the ARM Thumb ins
         <td><b>total</b></td>
         <td><b>9654</b></td>
         <td><b>4</b></td>
+        <td><b>4</b></td>
+    </tr>
+</table>
+
+<b>Debug Build</b> <br>
+All logging, asserts, and diagnostic information enabled. Debugging symbols available. Compiled using the ARM Thumb instruction set (`-mthumb`). Values are in <i>bytes</i>.
+
+<table>
+    <tr>
+        <td><b>object</b></td>
+        <td><b>text</b></td>
+        <td><b>data</b></td>
+        <td><b>bss</b></td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_api</td>
+        <td>11897</td>
+        <td>0</td>
+        <td>4</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_network</td>
+        <td>5412</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_operation</td>
+        <td>10484</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_serialize</td>
+        <td>14454</td>
+        <td>28</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_subscription</td>
+        <td>3885</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>iot_mqtt_validate</td>
+        <td>4330</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td><b>total</b></td>
+        <td><b>50462</b></td>
+        <td><b>28</b></td>
         <td><b>4</b></td>
     </tr>
 </table>
@@ -230,14 +229,14 @@ Some operations, such as QoS 1 PUBLISHes, may be retried. See @ref IotMqttPublis
 @image html mqtt_design_typicaloperation.png width=80%
 
 @section mqtt_design_subscriptions Subscriptions
-@brief The following diagram shows the lifecycle of MQTT subscriptions.
+@brief This section provides a description of how the library handles subscriptions.
 
 MQTT subscriptions are added with @ref mqtt_function_subscribeasync or @ref mqtt_function_subscribesync; subscriptions are removed with @ref mqtt_function_unsubscribesync or @ref mqtt_function_unsubscribeasync. Subscriptions are associated with a callback function that will be invoked by the library every time a message matching the associated topic filter is received. For example, if a connection has subscriptions for `#` (which matches everything) and `test`, and a message is received on `test`, the callback functions for both `#` and `test` will be invoked. Callbacks are invoked from the context of a background task pool threads. Because incoming messages are asynchronous (may arrive at any time), subscription callbacks are also asynchronous.
 
 This library supports the use of MQTT persistent sessions. Persistent sessions cause the MQTT server to store subscriptions and undelivered messages. When re-establishing a persistent session, the client should set @ref IotMqttConnectInfo_t.pPreviousSubscriptions and @ref IotMqttConnectInfo_t.previousSubscriptionCount to restore a list of sessions that were present in the persistent session. Setting these members does not send an MQTT SUBSCRIBE packet to the server, so they may only be used with topics that are active on the server.
 
 @section mqtt_design_keepalive Periodic keep-alive
-@brief The following diagram shows the workflow of the periodic keep-alive.
+@brief This section provides a description of the workflow of periodic keep-alive.
 
 The MQTT standard specifies a keep-alive mechanism to detect half-open or otherwise unusable network connections. An MQTT client will send periodic ping requests (PINGREQ) to the server if the connection is idle. The MQTT server must respond to ping requests with a ping response (PINGRESP).
 
@@ -251,8 +250,6 @@ Once MQTT CONNECT returns to the application, the keep-alive is processed entire
 3. A PINGREQ is sent to the server.
 4. If the connection is alive, the server will respond with a PINGRESP. When the client receives the PINGRESP, it sets `failure` to `0`.
 5. After @ref IOT_MQTT_RESPONSE_WAIT_MS, the client checks the `failure` flag. If `failure=0`, then a PINGRESP was received and the next PINGREQ is scheduled. Otherwise, if `failure=1`, then no PINGRESP was received and the connection terminates.
-
-@image html mqtt_design_keepalive.png width=80%
 */
 
 /**
@@ -381,7 +378,7 @@ Metrics allow AWS IoT to prioritize engineering resources based on SDK usage. SD
 @section IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES
 @brief Set this to `1` to allow the MQTT packet serializer and deserializer functions to be overridden.
 
-Serializer overrides allow the functions that generate and decode MQTT packets to be overridden. When this setting is `1`, each connection may have different serializer and deserializer functions. This allows the MQTT library to be used as a general-purpose transport library (with limitations). Currently, this setting is used to support MQTT over Bluetooth Low-Energy on Amazon FreeRTOS. See #IotMqttSerializer_t for a list of functions that can be overridden. If this setting is `1`, the [initialization](@ref mqtt_function_init) and [cleanup](@ref mqtt_function_cleanup) functions may be extended by defining `_IotMqtt_InitSerializeAdditional` and `_IotMqtt_CleanupSerializeAdditional`. These functions will be called along with the default initialization and cleanup functions. They must have the following signatures:
+Serializer overrides allow the functions that generate and decode MQTT packets to be overridden. When this setting is `1`, each connection may have different serializer and deserializer functions. This allows the MQTT library to be used as a general-purpose transport library (with limitations). Currently, this setting is used to support MQTT over Bluetooth Low-Energy on FreeRTOS. See #IotMqttSerializer_t for a list of functions that can be overridden. If this setting is `1`, the [initialization](@ref mqtt_function_init) and [cleanup](@ref mqtt_function_cleanup) functions may be extended by defining `_IotMqtt_InitSerializeAdditional` and `_IotMqtt_CleanupSerializeAdditional`. These functions will be called along with the default initialization and cleanup functions. They must have the following signatures:
 @code{c}
 #include <stdbool.h>
 
