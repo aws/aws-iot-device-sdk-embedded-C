@@ -6,9 +6,6 @@
 
 void harness()
 {
+  IotMqtt_Init();
   IotMqtt_Cleanup();
 }
-
-
-
-
