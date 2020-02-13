@@ -15,9 +15,11 @@ OBJS += $(MQTT)/cbmc/proofs/mqtt_state.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_api.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_subscription.goto
 
-# One more than actual number of subscriptions
+# One more than actual number of subscriptions in a subscription list
 SUBSCRIPTION_COUNT_MAX=4
 DEF += -DSUBSCRIPTION_COUNT_MAX=$(SUBSCRIPTION_COUNT_MAX)
+
+# One more than actual number of operations in an operation list
 OPERATION_COUNT_MAX=4
 DEF += -DOPERATION_COUNT_MAX=$(OPERATION_COUNT_MAX)
 
