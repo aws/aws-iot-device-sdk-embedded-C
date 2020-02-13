@@ -228,7 +228,7 @@ bool valid_IotMqttConnection( const IotMqttConnection_t pConn )
   // maximum value to avoid integer overflows.  We expect to run out of
   // memory before having 2^16 references on a device.
   bool valid_references =
-    pConn->references >= 1 &&
+    pConn->references >= 0 &&
     pConn->references <= (1 << 16);
 
   bool valid_pingreq =
@@ -488,6 +488,8 @@ bool valid_IotMqttPublishInfo( const IotMqttPublishInfo_t *pInfo )
 {
   return
     pInfo &&
+
+    (pInfo->qos == IOT_MQTT_QOS_0 || pInfo->qos == IOT_MQTT_QOS_1 || pInfo->qos == IOT_MQTT_QOS_2) &&
 
     VALID_STRING( pInfo->pTopicName, pInfo->topicNameLength ) &&
     VALID_CBMC_SIZE( pInfo->topicNameLength ) &&
