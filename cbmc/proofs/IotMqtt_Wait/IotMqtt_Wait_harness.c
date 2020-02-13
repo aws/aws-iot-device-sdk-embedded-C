@@ -18,11 +18,17 @@ void harness()
   IotMqttOperation_t publishOperation = allocate_IotMqttOperation(NULL, mqttConnection);
   __CPROVER_assume(valid_IotMqttOperation(publishOperation));
 
-  __CPROVER_assume(publishOperation->link.pNext == NULL);
-  __CPROVER_assume(publishOperation->link.pPrevious == NULL);
-
+  if (nondet_bool())
+  {
+    __CPROVER_assume(publishOperation->link.pNext == NULL);
+    __CPROVER_assume(publishOperation->link.pPrevious == NULL);
+  }
+  else
+  {
+    IotListDouble_InsertHead( &( mqttConnection->pendingProcessing ), &( publishOperation->link ));
+  }
+  
   uint32_t timeoutMs;
-
   IotMqtt_Wait( nondet_bool() ? publishOperation : NULL, timeoutMs );
 }
 
