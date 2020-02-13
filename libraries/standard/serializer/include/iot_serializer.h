@@ -1,6 +1,6 @@
 /*
  * IoT Serializer V1.1.0
- * Amazon FreeRTOS System Initialization
+ * FreeRTOS System Initialization
  * Copyright (C) 2017 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of

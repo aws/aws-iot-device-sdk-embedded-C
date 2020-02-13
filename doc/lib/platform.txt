@@ -22,7 +22,7 @@ Component                   | Supported platforms
 ---------                   | -------------------
 @ref platform_clock         | [POSIX](https://en.wikipedia.org/wiki/POSIX)
 @ref platform_threads       | [POSIX](https://en.wikipedia.org/wiki/POSIX)
-@ref platform_network       | [mbed TLS](https://tls.mbed.org/) <br>[Berkeley sockets](https://en.wikipedia.org/wiki/Berkeley_sockets) + [OpenSSL](https://en.wikipedia.org/wiki/OpenSSL) + [POSIX](https://en.wikipedia.org/wiki/POSIX) <br> [Amazon FreeRTOS Secure Sockets](https://docs.aws.amazon.com/freertos/latest/userguide/secure-sockets.html)
+@ref platform_network       | [mbed TLS](https://tls.mbed.org/) <br>[Berkeley sockets](https://en.wikipedia.org/wiki/Berkeley_sockets) + [OpenSSL](https://en.wikipedia.org/wiki/OpenSSL) + [POSIX](https://en.wikipedia.org/wiki/POSIX) <br> [FreeRTOS Secure Sockets](https://docs.aws.amazon.com/freertos/latest/userguide/secure-sockets.html)
 @ref platform_metrics       | Sample implementation using the @ref platform_network abstraction. <br> This implementation is not intended for production use.
 @ref platform_atomic        | GNU compilers (gcc/clang) <br> Generic implementation using a @ref platform_threads mutex.
 */
