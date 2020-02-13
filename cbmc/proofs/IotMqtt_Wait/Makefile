@@ -1,21 +1,17 @@
 ENTRY=IotMqtt_Wait
 
-ABSTRACTIONS += --remove-function-body IotNetworkInterfaceClose
-ABSTRACTIONS += --remove-function-body IotLog_Generic
-ABSTRACTIONS += --remove-function-body IotListDouble_Remove
-ABSTRACTIONS += --remove-function-body _mqttOperation_tryDestroy
-ABSTRACTIONS += --remove-function-body _mqttSubscription_setUnsubscribe
-ABSTRACTIONS += --remove-function-body _mqttSubscription_tryDestroy
 ABSTRACTIONS += --remove-function-body _IotMqtt_ProcessIncomingPublish
-ABSTRACTIONS += --remove-function-body _mqttOperation_match
-ABSTRACTIONS += --remove-function-body IotListDouble_Remove
 ABSTRACTIONS += --remove-function-body _matchEndWildcards
 ABSTRACTIONS += --remove-function-body _matchWildcards
+ABSTRACTIONS += --remove-function-body _mqttOperation_match
+ABSTRACTIONS += --remove-function-body _mqttOperation_tryDestroy
 ABSTRACTIONS += --remove-function-body _packetMatch
 ABSTRACTIONS += --remove-function-body _topicFilterMatch
 ABSTRACTIONS += --remove-function-body _topicMatch
 ABSTRACTIONS += --remove-function-body IotListDouble_Remove
 ABSTRACTIONS += --remove-function-body 'IotListDouble_Remove$$link3'
+ABSTRACTIONS += --remove-function-body IotLog_Generic
+ABSTRACTIONS += --remove-function-body IotNetworkInterfaceClose
 
 OBJS += $(ENTRY)_harness.goto
 OBJS += $(MQTT)/cbmc/proofs/mqtt_state.goto
@@ -37,6 +33,7 @@ DEF += -DTOPIC_LENGTH_MAX=$(TOPIC_LENGTH_MAX)
 
 LOOP += valid_IotMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += valid_IotMqttOperationList.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_RemoveAllMatches.0:$(SUBSCRIPTION_COUNT_MAX)
 
 UNWINDING += --unwind 1
 UNWINDING += --unwindset '$(shell echo $(LOOP) | sed 's/ /,/g')'
