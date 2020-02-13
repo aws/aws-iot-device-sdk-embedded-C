@@ -75,9 +75,6 @@ CBMCFLAGS += \
 	--bounds-check \
 	--pointer-check \
 	--unwinding-assertions \
-	--flush \
-
-CBMCFLAGS += \
 	--nondet-static \
 	--div-by-zero-check \
 	--float-overflow-check \
@@ -86,6 +83,7 @@ CBMCFLAGS += \
 	--undefined-shift-check \
 	--signed-overflow-check \
 	--unsigned-overflow-check \
+	--flush \
 
 goto: $(ENTRY).goto
 
