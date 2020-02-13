@@ -51,7 +51,8 @@ def apply_patches():
         logging.info("Checking patch '%s'", fyle.name)
         cmd = ["git", "apply", "--check", str(fyle)]
         proc = subprocess.run(
-            cmd, cwd=proj_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            cmd, cwd=str(proj_dir),
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             universal_newlines=True)
         if proc.returncode:
             logging.warning(
@@ -60,7 +61,7 @@ def apply_patches():
 
         logging.info("Applying patch '%s'", fyle.name)
         cmd = ["git", "apply", str(fyle)]
-        proc = subprocess.run(cmd, cwd=proj_dir)
+        proc = subprocess.run(cmd, cwd=str(proj_dir))
         if proc.returncode:
             logging.error("Failed to apply patch '%s'", fyle.name)
             sys.exit(1)
