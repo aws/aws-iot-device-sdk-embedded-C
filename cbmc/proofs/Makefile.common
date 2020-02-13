@@ -83,6 +83,7 @@ CBMCFLAGS += \
 	--undefined-shift-check \
 	--signed-overflow-check \
 	--unsigned-overflow-check \
+	--flush \
 
 goto: $(ENTRY).goto
 
@@ -117,7 +118,7 @@ report: cbmc.txt property.xml coverage.xml
 clean:
 	$(RM) $(OBJS) $(ENTRY).goto
 	$(RM) $(ENTRY)[0-9].goto $(ENTRY)[0-9].txt
-	$(RM) cbmc.txt property.xml coverage.xml TAGS
+	$(RM) cbmc.txt property.xml coverage.xml TAGS TAGS-*
 	$(RM) *~ \#*
 
 veryclean: clean
