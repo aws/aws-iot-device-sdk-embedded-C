@@ -1,5 +1,7 @@
 ENTRY=IotMqtt_Wait
 
+# We abstract all the log and concurrency related functions in this proof
+# and assume their implementation is correct
 ABSTRACTIONS += --remove-function-body _IotMqtt_ProcessIncomingPublish
 ABSTRACTIONS += --remove-function-body _matchEndWildcards
 ABSTRACTIONS += --remove-function-body _matchWildcards
@@ -21,9 +23,11 @@ OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_serialize.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_subscription.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_validate.goto
 
-# One more than actual number of subscriptions
+# One more than actual number of subscriptions in a subscription list
 SUBSCRIPTION_COUNT_MAX=4
 DEF += -DSUBSCRIPTION_COUNT_MAX=$(SUBSCRIPTION_COUNT_MAX)
+
+# One more than actual number of operations in an operation list
 OPERATION_COUNT_MAX=4
 DEF += -DOPERATION_COUNT_MAX=$(OPERATION_COUNT_MAX)
 
