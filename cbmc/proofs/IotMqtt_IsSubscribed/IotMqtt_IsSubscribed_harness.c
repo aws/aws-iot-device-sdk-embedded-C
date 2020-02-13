@@ -20,6 +20,7 @@ void harness()
   __CPROVER_assume(topicFilterLength < TOPIC_LENGTH_MAX);
 
   char* TopicFilter = malloc_can_fail(topicFilterLength);
+  __CPROVER_assume( VALID_STRING(TopicFilter, topicFilterLength) );
 
   IotMqttSubscription_t result;
 
