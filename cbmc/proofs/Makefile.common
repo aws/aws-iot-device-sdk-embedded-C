@@ -211,4 +211,6 @@ cbmc-batch.yaml: Makefile ../Makefile.common
 	@echo "goto: $(ENTRY).goto" >> $@
 	@echo "jobos: $(JOBOS)" >> $@
 
+.PHONY: cbmc-batch.yaml
+
 ################################################################
