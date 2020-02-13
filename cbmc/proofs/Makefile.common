@@ -27,6 +27,7 @@ INC += \
 	-I$(MQTT)/ports/common/include \
 	-I$(MQTT)/libraries/standard/common/include \
 	-I$(MQTT)/libraries/standard/mqtt/src \
+	-I$(MQTT)/cbmc/proofs \
 
 DEF += \
 	-DIOT_SYSTEM_TYPES_FILE=\"$(MQTT)/ports/posix/include/iot_platform_types_posix.h\" \
@@ -86,7 +87,8 @@ CBMCFLAGS += \
 goto: $(ENTRY).goto
 
 cbmc.txt: $(ENTRY).goto
-	cbmc $(CBMCFLAGS) --trace $< 2>&1 | tee $@
+	@echo cbmc $(CBMCFLAGS) --trace $< 2>&1 | tee $@
+	cbmc $(CBMCFLAGS) --trace $< 2>&1 | tee -a $@
 
 property.xml: $(ENTRY).goto
 	cbmc $(CBMCFLAGS) --show-properties --xml-ui $< 2>&1 > $@
@@ -199,6 +201,7 @@ launch-veryclean: launch-clean
 ################################################################
 # Build configuration file to run cbmc under cbmc-batch in CI
 
+CBMC_FLAGS =  '$(call encode_options,$(CBMCFLAGS))'
 cbmc-batch.yaml: Makefile ../Makefile.common
 	@echo "Building $@"
 	@$(RM) $@
