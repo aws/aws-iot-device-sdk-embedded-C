@@ -388,6 +388,8 @@ _mqttSubscription_t *allocate_IotMqttSubscriptionListElt( _mqttSubscription_t *p
   if ( pElt == NULL ) pElt = malloc_can_fail( sizeof( *pElt ) + length );
   if ( pElt == NULL ) return NULL;
 
+  // References must never be negative
+  __CPROVER_assume( pElt->references >= 0 );
   pElt->link.pPrevious = NULL;
   pElt->link.pNext = NULL;
   pElt->topicFilterLength = length;

@@ -1,0 +1,4 @@
+cbmcflags: "--object-bits;8;--unwind;1;--unwindset;valid_IotMqttSubscriptionList.0:4,valid_IotMqttOperationList.0:4,IotListDouble_RemoveAllMatches.0:4;--bounds-check;--pointer-check;--unwinding-assertions;--nondet-static;--div-by-zero-check;--float-overflow-check;--nan-check;--pointer-overflow-check;--undefined-shift-check;--signed-overflow-check;--unsigned-overflow-check"
+expected: SUCCESSFUL
+goto: IotMqtt_Wait.goto
+jobos: ubuntu16
