@@ -181,8 +181,7 @@ bool valid_IotMqttOperationList( const IotListDouble_t *pOp,
 
   IotListDouble_t *pLink;
   IotContainers_ForEach( pOp, pLink ) {
-    IotMqttOperation_t
-      *pElt = IotLink_Container( _mqttSubscription_t, pLink, link );
+    IotMqttOperation_t *pElt = IotLink_Container( struct _mqttOperation, pLink, link );
     if (! valid_IotMqttOperation( pElt ) ) return false;
   }
 
@@ -310,6 +309,7 @@ bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo )
 
     // MAX is one greater than the maximum length
     pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX &&
+
     IFF( pInfo->pPreviousSubscriptions == NULL,
 	 pInfo->previousSubscriptionCount == 0 ) &&
     valid_IotMqttSubscriptionArray( pInfo->pPreviousSubscriptions,
