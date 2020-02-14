@@ -24,7 +24,7 @@ void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
 				     void ( *freeElement )( void * pData ),
 				     size_t linkOffset )
 {
-  IotListDouble_t *sentinal = pList->pNext->pPrevious;
+  IotListDouble_t *sentinel = pList->pNext->pPrevious;
 
   size_t num_elts;
   __CPROVER_assume(num_elts < SUBSCRIPTION_COUNT_MAX);
@@ -36,26 +36,26 @@ void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
   if (1 <= num_elts)
     {
       _mqttSubscription_t *pElt = malloc(sizeof(*pElt));
-      sentinal->pNext = &pElt->link;
-      pElt->link.pPrevious = sentinal;
-      pElt->link.pNext = sentinal;
-      sentinal->pPrevious = &pElt->link;
+      sentinel->pNext = &pElt->link;
+      pElt->link.pPrevious = sentinel;
+      pElt->link.pNext = sentinel;
+      sentinel->pPrevious = &pElt->link;
     }
   if (2 <= num_elts)
     {
       _mqttSubscription_t *pElt = malloc(sizeof(*pElt));
-      sentinal->pNext = &pElt->link;
-      pElt->link.pPrevious = sentinal;
-      pElt->link.pNext = sentinal;
-      sentinal->pPrevious = &pElt->link;
+      sentinel->pNext = &pElt->link;
+      pElt->link.pPrevious = sentinel;
+      pElt->link.pNext = sentinel;
+      sentinel->pPrevious = &pElt->link;
     }
   if (3 <= num_elts)
     {
       _mqttSubscription_t *pElt = malloc(sizeof(*pElt));
-      sentinal->pNext = &pElt->link;
-      pElt->link.pPrevious = sentinal;
-      pElt->link.pNext = sentinal;
-      sentinal->pPrevious = &pElt->link;
+      sentinel->pNext = &pElt->link;
+      pElt->link.pPrevious = sentinel;
+      pElt->link.pNext = sentinel;
+      sentinel->pPrevious = &pElt->link;
     }
 }
 
