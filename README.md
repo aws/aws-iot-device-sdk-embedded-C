@@ -7,11 +7,11 @@
 
 The AWS IoT Device SDK for C is a collection of C99 source files that allow applications to securely connect to the AWS IoT platform. It includes an MQTT 3.1.1 client, as well as libraries specific to AWS IoT, such as Thing Shadows. It is distributed in source form and may be built into firmware along with application code.
 
-This library supersedes both the AWS IoT Device SDK Embedded C and the libraries provided with Amazon FreeRTOS.
+This library supersedes both the AWS IoT Device SDK Embedded C and the libraries provided with FreeRTOS.
 
 ## Features
 
-This library is a new design that inherits from both the AWS IoT Device SDK Embedded C and the libraries provided with Amazon FreeRTOS. In addition, it provides the following new features:
+This library is a new design that inherits from both the AWS IoT Device SDK Embedded C and the libraries provided with FreeRTOS. In addition, it provides the following new features:
 - Asynchronous API for both MQTT and Thing Shadow.
 - Multithreaded API by default (removed the `yield` function).
 - More efficient platform layer (especially timers).
