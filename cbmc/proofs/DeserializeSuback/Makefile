@@ -11,17 +11,15 @@ DEF += -DSUBSCRIPTION_COUNT_MAX=$(SUBSCRIPTION_COUNT_MAX)
 OPERATION_COUNT_MAX=2
 DEF += -DOPERATION_COUNT_MAX=$(OPERATION_COUNT_MAX)
 
-#BUFFER_SIZE = 100
 BUFFER_SIZE = 15
 DEF += -DBUFFER_SIZE=$(BUFFER_SIZE)
 
 ################################################################
 # Function omitted from the proof
 
+# We abstract all the log and concurrency related functions in this
+# proof and assume their implementation is correct
 ABSTRACTIONS += --remove-function-body IotLog_Generic
-
-# Functions removed to make coverage calculation accurate
-# None
 
 # These defines have the effect of removing RemoveAllMatches from the
 # linear containers header so that our stub will be used.
@@ -44,8 +42,6 @@ OBJS += $(ENTRY)_harness.goto
 OBJS += $(MQTT)/cbmc/proofs/mqtt_state.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_serialize.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_subscription.goto
-
-CBMCFLAGS += --flush
 
 ################################################################
 

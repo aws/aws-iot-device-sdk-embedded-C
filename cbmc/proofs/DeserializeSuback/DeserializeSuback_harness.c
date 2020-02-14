@@ -74,7 +74,7 @@ void harness()
 
     // Create packet connection
     IotMqttConnection_t pConn = allocate_IotMqttConnection(NULL);
-    __CPROVER_assume(pConn);
+    __CPROVER_assume(pConn != NULL);
     ensure_IotMqttConnection_has_lists(pConn);
     __CPROVER_assume(valid_IotMqttConnection(pConn));
     suback.u.pMqttConnection = pConn;
