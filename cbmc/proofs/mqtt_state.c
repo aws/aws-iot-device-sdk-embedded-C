@@ -310,6 +310,7 @@ bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo )
 
     // MAX is one greater than the maximum length
     pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX &&
+
     IFF( pInfo->pPreviousSubscriptions == NULL,
 	 pInfo->previousSubscriptionCount == 0 ) &&
     valid_IotMqttSubscriptionArray( pInfo->pPreviousSubscriptions,
