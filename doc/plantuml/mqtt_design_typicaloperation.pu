@@ -4,8 +4,12 @@ skinparam classFontName Helvetica
 autonumber
 
 box "Application" #LightGreen
-    participant "Application code" as application
+    participant "Application thread" as application
     create participant "MQTT API\nfunction" as api
+end box
+
+box "Task pool\nThe task pool processes\nbackground work without\nblocking the application.\nIt also invokes asynchronous\ncallbacks.\n" #LightBlue
+    participant "Task pool jobs" as task_pool
 end box
 
 box "Network stack" #Orange
@@ -19,22 +23,30 @@ application -> api: Call MQTT\noperation\nfunction
 deactivate application
 activate api
 api -> api: Allocate resources\nand generate\nMQTT packet
-api -> network: Transmit\n MQTT packet
-api -> api: Mark operation\nas awaiting response
+api -> task_pool: Post send job
+activate task_pool
 api -> application: Return\nSTATUS_PENDING
 destroy api
 activate application
+task_pool -> network: Transmit\n MQTT packet
 activate network
+task_pool -> task_pool: Mark operation\nas awaiting response
 network -> : Send data to server
+deactivate task_pool
+
+network <- : Server response
 
 == Parse Server Response ==
-network <- : Server response
 network -> receive_callback: Notify of response
 deactivate network
 activate receive_callback
 receive_callback -> receive_callback: Parse incoming packet
-receive_callback -> application: Notify of result
+receive_callback -> task_pool: Post notify job
 deactivate receive_callback
+activate task_pool
+task_pool -> application: Notify of result
+
+deactivate task_pool
 deactivate application
 
 @enduml
