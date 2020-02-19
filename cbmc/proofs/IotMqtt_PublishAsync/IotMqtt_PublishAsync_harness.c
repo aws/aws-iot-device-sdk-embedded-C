@@ -26,9 +26,8 @@ IotTaskPoolError_t IotTaskPool_ScheduleDeferred( IotTaskPool_t taskPool,
   IotTaskPoolError_t error;
 
   /* _IotMqtt_ScheduleOperation asserts this */
-  __CPROVER_assume(IMPLIES(error != IOT_TASKPOOL_SUCCESS,
-			   error != IOT_TASKPOOL_BAD_PARAMETER &&
-			   error != IOT_TASKPOOL_ILLEGAL_OPERATION));
+  __CPROVER_assume(error != IOT_TASKPOOL_BAD_PARAMETER &&
+                   error != IOT_TASKPOOL_ILLEGAL_OPERATION);
   return error;
 }
 
