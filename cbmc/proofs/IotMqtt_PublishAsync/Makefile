@@ -22,10 +22,12 @@ DEF += -DSUBSCRIPTION_COUNT_MAX=$(SUBSCRIPTION_COUNT_MAX)
 OPERATION_COUNT_MAX=4
 DEF += -DOPERATION_COUNT_MAX=$(OPERATION_COUNT_MAX)
 
-UNWINDING += --unwindset IotListDouble_RemoveAllMatches.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset valid_IotMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset valid_IotMqttOperationList.0:$(OPERATION_COUNT_MAX)
-UNWINDING += --unwindset _encodeRemainingLength.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_RemoveAllMatches.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += valid_IotMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += valid_IotMqttOperationList.0:$(OPERATION_COUNT_MAX)
+LOOP += _encodeRemainingLength.0:$(SUBSCRIPTION_COUNT_MAX)
+
 UNWINDING += --unwind 1
+UNWINDING += --unwindset '$(shell echo $(LOOP) | sed 's/ /,/g')'
 
 include ../Makefile.common
