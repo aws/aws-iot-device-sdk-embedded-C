@@ -1,4 +1,4 @@
-ENTRY=DeserializePublish
+ENTRY=_IotMqtt_DeserializeConnack
 
 ABSTRACTIONS = \
 	--remove-function-body IotLog_Generic \
