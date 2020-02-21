@@ -140,14 +140,7 @@ static FORCE_INLINE uint32_t Atomic_Add_u32( uint32_t volatile * pAugend,
     /* coverity[misra_c_2012_rule_8_5_violation] */
     /* coverity[misra_c_2012_rule_17_3_violation] */
     /* coverity[caretline] */
-#ifdef CBMC
-#    pragma CPROVER check push
-#    pragma CPROVER check disable "unsigned-overflow"
-#endif
     return ( uint32_t ) ( __atomic_fetch_add( pAugend, addend, __ATOMIC_SEQ_CST ) );
-#ifdef CBMC
-#    pragma CPROVER check pop
-#endif
 }
 
 /*-----------------------------------------------------------*/
