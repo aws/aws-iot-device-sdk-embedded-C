@@ -15,6 +15,10 @@ IotTaskPoolError_t IotTaskPool_CreateJob( IotTaskPoolRoutine_t userCallback,
                                           IotTaskPoolJobStorage_t * const pJobStorage,
                                           IotTaskPoolJob_t * const pJob )
 {
+  if (userCallback == NULL || pJobStorage == NULL || pJob == NULL)
+  {
+    return IOT_TASKPOOL_BAD_PARAMETER;
+  }
   /* _IotMqtt_ScheduleOperation asserts this */
   return IOT_TASKPOOL_SUCCESS;
 }
