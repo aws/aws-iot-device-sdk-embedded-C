@@ -9,7 +9,7 @@ PROJECT_NAME = "Main"
 HTML_OUTPUT = main
 
 # Generate Doxygen tag file for this library.
-GENERATE_TAGFILE = doc/tag/main.tag
+GENERATE_TAGFILE = doc/output/main.tag
 
 # Input directories.
 INPUT = doc/ \
@@ -27,11 +27,11 @@ FILE_PATTERNS = *.txt
 AUTOLINK_SUPPORT = NO
 
 # External tag files required by this library.
-TAGFILES = doc/tag/logging.tag=../logging \
-           doc/tag/platform.tag=../platform \
-           doc/tag/mqtt.tag=../mqtt \
-           doc/tag/shadow.tag=../shadow \
-           doc/tag/jobs.tag=../jobs
+TAGFILES = doc/output/logging.tag=../logging \
+           doc/output/platform.tag=../platform \
+           doc/output/mqtt.tag=../mqtt \
+           doc/output/shadow.tag=../shadow \
+           doc/output/jobs.tag=../jobs
 
 # Use the Main page layout file
 LAYOUT_FILE = doc/config/layout_main.xml

@@ -10,7 +10,7 @@ PROJECT_BRIEF = "AWS IoT Jobs library"
 HTML_OUTPUT = jobs
 
 # Generate Doxygen tag file for this library.
-GENERATE_TAGFILE = doc/tag/jobs.tag
+GENERATE_TAGFILE = doc/output/jobs.tag
 
 # Directories containing library source code.
 INPUT = doc/lib/ \
@@ -25,9 +25,9 @@ INPUT = doc/lib/ \
 FILE_PATTERNS = *jobs*.h *jobs*.c *jobs*.txt
 
 # External tag files required by this library.
-TAGFILES = doc/tag/main.tag=../main \
-           doc/tag/mqtt.tag=../mqtt \
-           doc/tag/logging.tag=../logging \
-           doc/tag/linear_containers.tag=../linear_containers \
-           doc/tag/static_memory.tag=../static_memory \
-           doc/tag/platform.tag=../platform
+TAGFILES = doc/output/main.tag=../main \
+           doc/output/mqtt.tag=../mqtt \
+           doc/output/logging.tag=../logging \
+           doc/output/linear_containers.tag=../linear_containers \
+           doc/output/static_memory.tag=../static_memory \
+           doc/output/platform.tag=../platform

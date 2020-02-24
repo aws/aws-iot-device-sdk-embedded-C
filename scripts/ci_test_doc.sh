@@ -23,9 +23,6 @@ fi
 # Check for doxygen.
 command -v doxygen > /dev/null || { echo "Doxygen not found. Exiting."; exit 1; }
 
-# Create tag directory if needed.
-mkdir -p doc/tag
-
 # Doxygen must be run twice: once to generate tags and once more to link tags.
 i=0; while [ $i -le 1 ]; do
     # Run for each library config file.
