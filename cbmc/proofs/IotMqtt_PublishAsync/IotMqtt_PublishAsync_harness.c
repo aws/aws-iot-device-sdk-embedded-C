@@ -49,7 +49,7 @@ uint16_t _IotMqtt_NextPacketIdentifier( void ) {
   uint16_t id;
 
   /* Packet identifiers will follow the sequence 1,3,5...65535,1,3,5... */
-  __CPROVER_assume(id % 2 == 1);
+  __CPROVER_assume(id & 0x1 == 1);
 
   return id;
 }
@@ -71,6 +71,8 @@ void harness()
   /* assume unconstrained inputs */
   uint32_t flags;
   IotMqttCallbackInfo_t callbackInfo;
+
+  /* output */
   IotMqttOperation_t publishOperation;
 
   /* function under verification */
