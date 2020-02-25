@@ -14,23 +14,26 @@ GOTO_ANALYZER ?= goto-analyzer
 BATCH ?= cbmc-batch
 VIEWER ?= cbmc-viewer
 
+
 ################################################################
 # Build goto binary for cbmc
 # Build goto binaries with options taken from top-level cmake
 
-INC = \
+INC += \
 	-I$(MQTT)/libraries/standard/mqtt/include \
 	-I$(MQTT)/demos \
 	-I$(MQTT)/libraries/platform/.. \
 	-I$(MQTT)/libraries/platform \
 	-I$(MQTT)/ports/common/include \
 	-I$(MQTT)/libraries/standard/common/include \
-	\
 	-I$(MQTT)/libraries/standard/mqtt/src \
+	-I$(MQTT)/cbmc/proofs \
 
 DEF += \
 	-DIOT_SYSTEM_TYPES_FILE=\"$(MQTT)/ports/posix/include/iot_platform_types_posix.h\" \
 	-Diotmqtt_EXPORTS \
+	-DCBMC_OBJECT_BITS=$(CBMC_OBJECT_BITS) \
+	-DCBMC_MAX_OBJECT_SIZE=$(CBMC_MAX_OBJECT_SIZE) \
 
 CFLAGS += $(CFLAGS2) $(INC) $(DEF) -std=gnu99
 
@@ -38,25 +41,31 @@ CFLAGS += $(CFLAGS2) $(INC) $(DEF) -std=gnu99
 	$(GOTO_CC) -o $@ $(CFLAGS) $<
 
 $(MQTT)/build:
-	(mkdir -p $(MQTT)/build; cd $(MQTT)/build; cmake ..) 2>&1 \
-		| tee $(ENTRY)0.txt \
-		; exit $${PIPESTATUS[0]}
+	(mkdir -p $(MQTT)/build; cd $(MQTT)/build; cmake ..) \
+	       > $(ENTRY)0.txt 2>&1
 
 $(ENTRY)1.goto: $(MQTT)/build $(OBJS)
-	$(GOTO_CC) --function harness -o $@ $(OBJS) 2>&1 \
-		| tee $(ENTRY)1.txt \
-		; exit $${PIPESTATUS[0]}
+	$(GOTO_CC) --function harness -o $@ $(OBJS)
+		> $(ENTRY)1.txt 2>&1
 
 $(ENTRY)2.goto: $(ENTRY)1.goto
 	 $(GOTO_INSTRUMENT) \
 			$(ABSTRACTIONS) \
 			--drop-unused-functions \
-			--slice-global-inits $< $@ 2>&1 \
-		| tee $(ENTRY)2.txt \
-		; exit $${PIPESTATUS[0]}
+			--slice-global-inits $< $@ \
+		> $(ENTRY)2.txt  2>&1
 
 $(ENTRY).goto: $(ENTRY)2.goto
 	cp $< $@
+
+
+################################################################
+# Set C compiler defines
+
+CBMC_OBJECT_BITS ?= 8
+CBMCFLAGS += --object-bits $(CBMC_OBJECT_BITS)
+CBMC_MAX_OBJECT_SIZE = "(SIZE_MAX>>(CBMC_OBJECT_BITS+1))"
+
 
 ################################################################
 # Run cbmc and build html report
@@ -66,11 +75,21 @@ CBMCFLAGS += \
 	--bounds-check \
 	--pointer-check \
 	--unwinding-assertions \
+	--nondet-static \
+	--div-by-zero-check \
+	--float-overflow-check \
+	--nan-check \
+	--pointer-overflow-check \
+	--undefined-shift-check \
+	--signed-overflow-check \
+	--unsigned-overflow-check \
+	--flush \
 
 goto: $(ENTRY).goto
 
 cbmc.txt: $(ENTRY).goto
-	cbmc $(CBMCFLAGS) --trace $< 2>&1 | tee $@
+	@echo cbmc $(CBMCFLAGS) --trace $< 2>&1 | tee $@
+	cbmc $(CBMCFLAGS) --trace $< 2>&1 | tee -a $@
 
 property.xml: $(ENTRY).goto
 	cbmc $(CBMCFLAGS) --show-properties --xml-ui $< 2>&1 > $@
@@ -99,7 +118,7 @@ report: cbmc.txt property.xml coverage.xml
 clean:
 	$(RM) $(OBJS) $(ENTRY).goto
 	$(RM) $(ENTRY)[0-9].goto $(ENTRY)[0-9].txt
-	$(RM) cbmc.txt property.xml coverage.xml TAGS
+	$(RM) cbmc.txt property.xml coverage.xml TAGS TAGS-*
 	$(RM) *~ \#*
 
 veryclean: clean
@@ -183,12 +202,15 @@ launch-veryclean: launch-clean
 ################################################################
 # Build configuration file to run cbmc under cbmc-batch in CI
 
+CBMC_FLAGS =  '$(call encode_options,$(CBMCFLAGS))'
 cbmc-batch.yaml: Makefile ../Makefile.common
 	@echo "Building $@"
 	@$(RM) $@
-	@echo "jobos: $(JOBOS)" >> $@
-	@echo "cbmcflags: $(call encode_options,$(CBMCFLAGS))" >> $@
-	@echo "goto: $(ENTRY).goto" >> $@
+	@echo 'cbmcflags: $(strip $(call yaml_encode_options,$(CBMCFLAGS)))' > $@
 	@echo "expected: SUCCESSFUL" >> $@
+	@echo "goto: $(ENTRY).goto" >> $@
+	@echo "jobos: $(JOBOS)" >> $@
+
+.PHONY: cbmc-batch.yaml
 
 ################################################################

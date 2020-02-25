@@ -45,8 +45,13 @@
  * #define IOT_DEMO_IDENTIFIER         "" */
 
 /* MQTT demo configuration. The demo publishes bursts of messages. */
-#define IOT_DEMO_MQTT_PUBLISH_BURST_COUNT       ( 10 ) /* Number of message bursts. */
-#define IOT_DEMO_MQTT_PUBLISH_BURST_SIZE        ( 10 ) /* Number of messages published in each burst. */
+#define IOT_DEMO_MQTT_PUBLISH_BURST_COUNT    ( 10 )    /* Number of message bursts. */
+#define IOT_DEMO_MQTT_PUBLISH_BURST_SIZE     ( 10 )    /* Number of messages published in each burst. */
+
+/* MQTT library configuration. */
+#ifndef IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES
+    #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 0 )
+#endif
 
 /* Shadow demo configuration. The demo publishes periodic Shadow updates and responds
  * to changing Shadows. */

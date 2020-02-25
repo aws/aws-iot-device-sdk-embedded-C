@@ -85,9 +85,11 @@ jobreference
 jobstorage
 keepalivems
 keepaliveseconds
+lastmessagetime
 lu
 lwt
 malloc
+memcpy
 misra
 mqtt
 mqttconnection
@@ -132,6 +134,7 @@ pnetworkcontext
 pnetworkinterface
 pnextbyte
 poperation
+poperationlink
 posix
 ppacketidentifier
 ppacketidentifierhigh
@@ -143,6 +146,7 @@ pre
 preceiveddata
 premainingdata
 pserializer
+psubscriptionlink
 ptopicfilter
 ptopicname
 puback

@@ -48,14 +48,14 @@
  * Declaration of local MQTT serializer override selectors
  */
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttPublishSetDup_t,
-                                   _getMqttPublishSetDupFunc,
-                                   _IotMqtt_PublishSetDup,
-                                   serialize.publishSetDup )
-    _SERIALIZER_OVERRIDE_SELECTOR( IotMqttFreePacket_t,
-                                   _getMqttFreePacketFunc,
-                                   _IotMqtt_FreePacket,
-                                   freePacket )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqttPublishSetDup_t,
+                                  _getMqttPublishSetDupFunc,
+                                  _IotMqtt_PublishSetDup,
+                                  serialize.publishSetDup )
+    SERIALIZER_OVERRIDE_SELECTOR( IotMqttFreePacket_t,
+                                  _getMqttFreePacketFunc,
+                                  _IotMqtt_FreePacket,
+                                  freePacket )
 #else /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
     #define _getMqttFreePacketFunc( pSerializer )       _IotMqtt_FreePacket
     #define _getMqttPublishSetDupFunc( pSerializer )    _IotMqtt_PublishSetDup
@@ -167,8 +167,11 @@ static bool _mqttOperation_match( const IotLink_t * const pOperationLink,
      * must never be NULL. */
     IotMqtt_Assert( pOperationLink != NULL );
 
-    /* Adding parentheses to parameters of IotLink_Container is not applicable
+    /* Casting `pOperationLink` to uint8_t * is done only to calculate the
+     * starting address of the struct and does not modify the link it points to.
+     * Adding parentheses to parameters of IotLink_Container is not applicable
      * because it uses type-casting and offsetof, and would cause compiling errors. */
+    /* coverity[misra_c_2012_rule_11_8_violation] */
     /* coverity[misra_c_2012_rule_20_7_violation] */
     /* coverity[caretline] */
     const _mqttOperation_t * pOperation = IotLink_Container( _mqttOperation_t,
@@ -551,6 +554,11 @@ static bool _sendPingRequest( _mqttConnection_t * pMqttConnection )
     }
     else
     {
+        /* Update the timestamp of the last message on successful transmission. */
+        IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+        pMqttConnection->lastMessageTime = IotClock_GetTimeMs();
+        IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
         /* Assume the keep-alive will fail. The network receive callback will
          * clear the failure flag upon receiving a PINGRESP. */
         swapStatus = Atomic_CompareAndSwap_u32( &( pPingreqOperation->u.operation.periodic.ping.failure ),
@@ -811,6 +819,8 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
 {
     bool status = true;
     IotTaskPoolError_t taskPoolStatus = IOT_TASKPOOL_SUCCESS;
+    uint32_t scheduleDelay = 0;
+    uint64_t elapsedTime = 0;
 
     /* Retrieve the MQTT connection from the context. */
     _mqttConnection_t * pMqttConnection = ( _mqttConnection_t * ) pContext;
@@ -835,7 +845,32 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
     if( pPingreqOperation->u.operation.periodic.ping.nextPeriodMs ==
         pPingreqOperation->u.operation.periodic.ping.keepAliveMs )
     {
-        status = _sendPingRequest( pMqttConnection );
+        /* Only send the PINGREQ if the keep-alive period has elapsed since the connection
+         * was last used. */
+        IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+        elapsedTime = IotClock_GetTimeMs() - pMqttConnection->lastMessageTime;
+        IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
+        if( elapsedTime < ( uint64_t ) pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs )
+        {
+            /* In some implementations IotLogDebug() maps to C standard printing API
+             * that need specific primitive types for format specifiers. Also
+             * inttypes.h may not be available on some C99 compilers, despite
+             * stdint.h being available. */
+            /* coverity[misra_c_2012_directive_4_6_violation] */
+            IotLogDebug( "(MQTT connection %p) Connection was last used %llu ms ago, which "
+                         "is less than keep-alive period %lu ms. PINGREQ will not be sent.",
+                         pMqttConnection,
+                         ( unsigned long long ) elapsedTime,
+                         ( unsigned long ) pMqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs );
+
+            /* Schedule the next keep-alive job one keep-alive period after the last packet was sent. */
+            scheduleDelay = pPingreqOperation->u.operation.periodic.ping.keepAliveMs - ( ( uint32_t ) elapsedTime );
+        }
+        else
+        {
+            status = _sendPingRequest( pMqttConnection );
+        }
     }
     else
     {
@@ -860,10 +895,16 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
         }
     }
 
-    /* When a PINGREQ is successfully sent, reschedule this job to check for a
-     * response shortly. */
+    /* Reschedule this job. When a PINGREQ is sent, schedule a check for PINGRESP.
+     * When PINGREQ is not sent (because the connection was recently used) schedule
+     * another PINGREQ after the keep-alive period. */
     if( status == true )
     {
+        if( scheduleDelay == 0U )
+        {
+            scheduleDelay = pPingreqOperation->u.operation.periodic.ping.nextPeriodMs;
+        }
+
         IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
 
         /* Re-create the keep-alive job for rescheduling. This should never fail. */
@@ -873,9 +914,10 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
                                                 &pKeepAliveJob );
         IotMqtt_Assert( taskPoolStatus == IOT_TASKPOOL_SUCCESS );
 
+        IotMqtt_Assert( scheduleDelay > 0 );
         taskPoolStatus = IotTaskPool_ScheduleDeferred( pTaskPool,
                                                        pKeepAliveJob,
-                                                       pPingreqOperation->u.operation.periodic.ping.nextPeriodMs );
+                                                       scheduleDelay );
 
         if( taskPoolStatus == IOT_TASKPOOL_SUCCESS )
         {
@@ -886,7 +928,7 @@ void _IotMqtt_ProcessKeepAlive( IotTaskPool_t pTaskPool,
             /* coverity[misra_c_2012_directive_4_6_violation] */
             IotLogDebug( "(MQTT connection %p) Next keep-alive job in %lu ms.",
                          pMqttConnection,
-                         ( unsigned long ) pPingreqOperation->u.operation.periodic.ping.nextPeriodMs );
+                         ( unsigned long ) scheduleDelay );
         }
         else
         {
@@ -945,7 +987,7 @@ void _IotMqtt_ProcessIncomingPublish( IotTaskPool_t pTaskPool,
 
     /* Free buffers associated with the current PUBLISH message. */
     IotMqtt_Assert( pOperation->u.publish.pReceivedData != NULL );
-    IotMqtt_FreeMessage( ( void * ) pOperation->u.publish.pReceivedData );
+    IotMqtt_FreeMessage( pOperation->u.publish.pReceivedData );
 
     /* Free the incoming PUBLISH operation. */
     IotMqtt_FreeOperation( pOperation );
@@ -1003,25 +1045,33 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
         {
             pOperation->u.operation.status = IOT_MQTT_NETWORK_ERROR;
         }
-        /* DISCONNECT operations are considered successful upon successful transmission. */
-        else if( pOperation->u.operation.type == IOT_MQTT_DISCONNECT )
-        {
-            /* DISCONNECT operations are always waitable. */
-            IotMqtt_Assert( waitable == true );
-
-            pOperation->u.operation.status = IOT_MQTT_SUCCESS;
-        }
-        /* Non-waitable operations with no callback are also considered successful. */
-        else if( waitable == false )
-        {
-            if( pOperation->u.operation.notify.callback.function == NULL )
-            {
-                pOperation->u.operation.status = IOT_MQTT_SUCCESS;
-            }
-        }
         else
         {
-            /* Empty else MISRA 15.7 */
+            /* Update the timestamp of the last message on successful transmission. */
+            IotMutex_Lock( &( pMqttConnection->referencesMutex ) );
+            pMqttConnection->lastMessageTime = IotClock_GetTimeMs();
+            IotMutex_Unlock( &( pMqttConnection->referencesMutex ) );
+
+            if( pOperation->u.operation.type == IOT_MQTT_DISCONNECT )
+            {
+                /* DISCONNECT operations are always waitable. */
+                IotMqtt_Assert( waitable == true );
+
+                /* DISCONNECT operations are considered successful upon successful transmission. */
+                pOperation->u.operation.status = IOT_MQTT_SUCCESS;
+            }
+            /* Non-waitable operations with no callback are also considered successful. */
+            else if( waitable == false )
+            {
+                if( pOperation->u.operation.notify.callback.function == NULL )
+                {
+                    pOperation->u.operation.status = IOT_MQTT_SUCCESS;
+                }
+            }
+            else
+            {
+                /* Empty else MISRA 15.7 */
+            }
         }
     }
 
@@ -1042,11 +1092,12 @@ void _IotMqtt_ProcessSend( IotTaskPool_t pTaskPool,
          * since a network response could modify the status. */
         if( networkPending == false )
         {
+            /* Operations that are not waiting for a network response either failed or
+             * completed successfully. Check that a status was set. */
+            IotMqtt_Assert( pOperation->u.operation.status != IOT_MQTT_STATUS_PENDING );
+
             /* Notify of operation completion if this job set a status. */
-            if( pOperation->u.operation.status != IOT_MQTT_STATUS_PENDING )
-            {
-                _IotMqtt_Notify( pOperation );
-            }
+            _IotMqtt_Notify( pOperation );
         }
     }
 }
@@ -1057,6 +1108,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t pTaskPool,
                                          IotTaskPoolJob_t pOperationJob,
                                          void * pContext )
 {
+    bool destroyOperation = false;
     _mqttOperation_t * pOperation = ( _mqttOperation_t * ) pContext;
     IotMqttCallbackParam_t callbackParam = { 0 };
 
@@ -1064,6 +1116,7 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t pTaskPool,
      * are disabled. */
     ( void ) pTaskPool;
     ( void ) pOperationJob;
+    ( void ) destroyOperation;
     IotMqtt_Assert( pOperationJob == pOperation->job );
 
     /* The operation's callback function and status must be set. */
@@ -1079,11 +1132,11 @@ void _IotMqtt_ProcessCompletedOperation( IotTaskPool_t pTaskPool,
     pOperation->u.operation.notify.callback.function( pOperation->u.operation.notify.callback.pCallbackContext,
                                                       &callbackParam );
 
-    /* Attempt to destroy the operation once the user callback returns. */
-    if( _IotMqtt_DecrementOperationReferences( pOperation, false ) == true )
-    {
-        _IotMqtt_DestroyOperation( pOperation );
-    }
+    /* Decrement the operation reference count. This function is at the end of the
+     * operation lifecycle, so the operation must be destroyed here. */
+    destroyOperation = _IotMqtt_DecrementOperationReferences( pOperation, false );
+    IotMqtt_Assert( destroyOperation == true );
+    _IotMqtt_DestroyOperation( pOperation );
 }
 
 /*-----------------------------------------------------------*/
@@ -1286,17 +1339,18 @@ void _IotMqtt_Notify( _mqttOperation_t * pOperation )
         }
         else
         {
-            /* Post to a waitable operation's semaphore. */
-            if( waitable == true )
-            {
-                IotLogDebug( "(MQTT connection %p, %s operation %p) Waitable operation "
-                             "notified of completion.",
-                             pOperation->pMqttConnection,
-                             IotMqtt_OperationType( pOperation->u.operation.type ),
-                             pOperation );
+            /* Only waitable operations will have a reference count greater than 1.
+             * Non-waitable operations will not reach this block. */
+            IotMqtt_Assert( waitable == true );
 
-                IotSemaphore_Post( &( pOperation->u.operation.notify.waitSemaphore ) );
-            }
+            /* Post to a waitable operation's semaphore. */
+            IotLogDebug( "(MQTT connection %p, %s operation %p) Waitable operation "
+                         "notified of completion.",
+                         pOperation->pMqttConnection,
+                         IotMqtt_OperationType( pOperation->u.operation.type ),
+                         pOperation );
+
+            IotSemaphore_Post( &( pOperation->u.operation.notify.waitSemaphore ) );
         }
     }
     else

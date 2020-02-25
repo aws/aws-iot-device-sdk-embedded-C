@@ -3,6 +3,7 @@ authmode
 bool
 ca
 callbackmutex
+caretline
 clientcert
 closecallback
 compareandswap

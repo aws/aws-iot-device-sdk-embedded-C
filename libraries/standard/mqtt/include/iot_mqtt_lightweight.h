@@ -21,14 +21,14 @@
  */
 
 /**
- * @file iot_mqtt_serialize.h
+ * @file iot_mqtt_lightweight.h
  * @brief User-facing functions for serializing MQTT 3.1.1 packets. This header should
  * be included for building a single threaded light-weight MQTT client bypassing
  * stateful CSDK MQTT library.
  */
 
-#ifndef _IOT_MQTT_SERIALIZE_H_
-#define _IOT_MQTT_SERIALIZE_H_
+#ifndef _IOT_MQTT_LIGHTWEIGHT_H_
+#define _IOT_MQTT_LIGHTWEIGHT_H_
 
 /* The config header is always included first. */
 #include "iot_config.h"
@@ -82,23 +82,23 @@
  * the output parameters should be ignored.
  *
  * @note This call is part of serializer API used for implementing light-weight MQTT client.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  * // Example code below shows how IotMqtt_GetConnectPacketSize() should be used to calculate
- * // the size of connect request. 
+ * // the size of connect request.
  *
  * IotMqttConnectInfo_t xConnectInfo;
  * size_t xRemainingLength = 0;
  * size_t xPacketSize = 0;
  * IotMqttError_t xResult;
- * 
+ *
  * // start with everything set to zero
  * memset( ( void * ) &xConnectInfo, 0x00, sizeof( xConnectInfo ) );
- *	
+ *
  * // Initialize connection info, details are out of scope for this example.
  * _initializeConnectInfo( &xConnectInfo );
- * // Get size requirement for the connect packet 
+ * // Get size requirement for the connect packet
  * xResult = IotMqtt_GetConnectPacketSize( &xConnectInfo, &xRemainingLength, &xPacketSize );
  * IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *
@@ -125,14 +125,14 @@ IotMqttError_t IotMqtt_GetConnectPacketSize( const IotMqttConnectInfo_t * pConne
  * @note pBuffer must be allocated by caller. Use @ref mqtt_function_getconnectpacketsize
  * to determine the required size.
  * @note This call is part of serializer API used for implementing light-weight MQTT client.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  * // Example code below shows how IotMqtt_SerializeConnect() should be used to serialize
  * // MQTT connect packet and send it to MQTT broker.
  * // Example uses static memory but dynamically allocated memory can be used as well.
  * // Get size requirement for the connect packet.
- * 
+ *
  * #define mqttexampleSHARED_BUFFER_SIZE 100
  * static ucSharedBuffer[mqttexampleSHARED_BUFFER_SIZE];
  * void sendConnectPacket( int xMQTTSocket )
@@ -149,7 +149,7 @@ IotMqttError_t IotMqtt_GetConnectPacketSize( const IotMqttConnectInfo_t * pConne
  *    IotMqtt_Assert( xPacketSize < mqttexampleSHARED_BUFFER_SIZE );
  *    // Serialize MQTT connect packet into provided buffer
  *    xResult = IotMqtt_SerializeConnect( &xConnectInfo, xRemainingLength, ucSharedBuffer, xPacketSize );
- *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS ); 
+ *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *    // xMQTTSocket here is posix socket created and connected to MQTT broker outside of this function.
  *    xSentBytes = send( xMQTTSocket, ( void * ) ucSharedBuffer, xPacketSize, 0 );
  *    IotMqtt_Assert( xSentBytes == xPacketSize );
@@ -178,19 +178,19 @@ IotMqttError_t IotMqtt_SerializeConnect( const IotMqttConnectInfo_t * pConnectIn
  * the output parameters should be ignored.
  *
  * @note This call is part of serializer API used for implementing light-weight MQTT client.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  * // Example code below shows how IotMqtt_GetSubscriptionPacketSize() should be used to calculate
- * // the size of subscribe or unsubscribe request. 
+ * // the size of subscribe or unsubscribe request.
  *
  * IotMqttError_t xResult;
  * IotMqttSubscription_t xMQTTSubscription[ 1 ];
  * size_t xRemainingLength = 0;
  * size_t xPacketSize = 0;
- * 
+ *
  * // Initialize Subscribe parameters. Details are out of scope for this example.
- * // It will involve setting QOS, topic filter  and topic filter length. 
+ * // It will involve setting QOS, topic filter  and topic filter length.
  *  _initializeSubscribe( xMQTTSubscription );
  *
  * xResult = IotMqtt_GetSubscriptionPacketSize( IOT_MQTT_SUBSCRIBE,
@@ -231,7 +231,7 @@ IotMqttError_t IotMqtt_GetSubscriptionPacketSize( IotMqttOperationType_t type,
  * // MQTT Subscribe packet and send it to MQTT broker.
  * // Example uses static memory, but dynamically allocated memory can be used as well.
  * // Get size requirement for the MQTT subscribe packet.
- * 
+ *
  * #define mqttexampleSHARED_BUFFER_SIZE 100
  * static ucSharedBuffer[mqttexampleSHARED_BUFFER_SIZE];
  * void sendSubscribePacket( int xMQTTSocket )
@@ -241,9 +241,9 @@ IotMqttError_t IotMqtt_GetSubscriptionPacketSize( IotMqttOperationType_t type,
  *    size_t xPacketSize = 0;
  *    IotMqttError_t xResult;
  *    size_t xSentBytes = 0;
- *  
+ *
  *    // Initialize Subscribe parameters. Details are out of scope for this example.
- *    // It will involve setting QOS, topic filter  and topic filter length. 
+ *    // It will involve setting QOS, topic filter  and topic filter length.
  *    _initializeSubscribe( xMQTTSubscription );
  *    // Get size requirement for MQTT Subscribe packet.
  *    xResult = IotMqtt_GetSubscriptionPacketSize( IOT_MQTT_SUBSCRIBE,
@@ -253,15 +253,15 @@ IotMqttError_t IotMqtt_GetSubscriptionPacketSize( IotMqttOperationType_t type,
  *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *    // Make sure the packet size is less than static buffer size.
  *    IotMqtt_Assert( xPacketSize < mqttexampleSHARED_BUFFER_SIZE );
- * 
+ *
  *    // Serialize subscribe into statically allocated ucSharedBuffer.
- *	   xResult = IotMqtt_SerializeSubscribe( xMQTTSubscription, 
+ *	   xResult = IotMqtt_SerializeSubscribe( xMQTTSubscription,
  *										  sizeof( xMQTTSubscription ) / sizeof( IotMqttSubscription_t ),
  *										  xRemainingLength,
  *										  &usPacketIdentifier,
  *										  ucSharedBuffer,
  *										  xPacketSize );
- *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS ); 
+ *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *    // xMQTTSocket here is posix socket created and connected to MQTT broker outside of this function.
  *    xSentBytes = send( xMQTTSocket, ( void * ) ucSharedBuffer, xPacketSize, 0 );
  *    IotMqtt_Assert( xSentBytes == xPacketSize );
@@ -291,14 +291,14 @@ IotMqttError_t IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubscr
  *
  * @note pBuffer must be allocated by caller.
  * @note This call is part of serializer API used for implementing light-weight MQTT client.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  * // Example code below shows how IotMqtt_SerializeUnsubscribe() should be used to serialize
  * // MQTT unsubscribe packet and send it to MQTT broker.
  * // Example uses static memory, but dynamically allocated memory can be used as well.
  * // Get size requirement for the Unsubscribe packet.
- * 
+ *
  * #define mqttexampleSHARED_BUFFER_SIZE 100
  * static ucSharedBuffer[mqttexampleSHARED_BUFFER_SIZE];
  * void sendUnsubscribePacket( int xMQTTSocket )
@@ -318,13 +318,13 @@ IotMqttError_t IotMqtt_SerializeSubscribe( const IotMqttSubscription_t * pSubscr
  *    // Make sure the packet size is less than static buffer size.
  *    IotMqtt_Assert( xPacketSize < mqttexampleSHARED_BUFFER_SIZE );
  *    // Serialize subscribe into statically allocated ucSharedBuffer.
- *	   xResult = IotMqtt_SerializeUnsubscribe( xMQTTSubscription, 
+ *	   xResult = IotMqtt_SerializeUnsubscribe( xMQTTSubscription,
  *										  sizeof( xMQTTSubscription ) / sizeof( IotMqttSubscription_t ),
  *										  xRemainingLength,
  *										  &usPacketIdentifier,
  *										  ucSharedBuffer,
  *										  xPacketSize );
- *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS ); 
+ *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *    // xMQTTSocket here is posix socket created and connected to MQTT broker outside of this function.
  *    xSentBytes = send( xMQTTSocket, ( void * ) ucSharedBuffer, xPacketSize, 0 );
  *    IotMqtt_Assert( xSentBytes == xPacketSize );
@@ -353,17 +353,17 @@ IotMqttError_t IotMqtt_SerializeUnsubscribe( const IotMqttSubscription_t * pSubs
  * the output parameters should be ignored.
  *
  * @note This call is part of serializer API used for implementing light-weight MQTT client.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  * // Example code below shows how IotMqtt_GetPublishPacketSize() should be used to calculate
- * // the size of MQTT publish request. 
+ * // the size of MQTT publish request.
  *
  * IotMqttError_t xResult;
  * IotMqttPublishInfo_t xMQTTPublishInfo;
  * size_t xRemainingLength = 0;
  * size_t xPacketSize = 0;
- * 
+ *
  * // Initialize Publish parameters. Details are out of scope for this example.
  * // It will involve setting QOS, topic filter, topic filter length, payload
  * // payload length
@@ -404,7 +404,7 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( const IotMqttPublishInfo_t * pPubli
  * // Example code below shows how IotMqtt_SerializePublish() should be used to serialize
  * // MQTT Publish packet and send it to broker.
  * // Example uses static memory, but dynamically allocated memory can be used as well.
- * 
+ *
  * #define mqttexampleSHARED_BUFFER_SIZE 100
  * static ucSharedBuffer[mqttexampleSHARED_BUFFER_SIZE];
  * void sendUnsubscribePacket( int xMQTTSocket )
@@ -427,15 +427,15 @@ IotMqttError_t IotMqtt_GetPublishPacketSize( const IotMqttPublishInfo_t * pPubli
  *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *    // Make sure the packet size is less than static buffer size
  *	  IotMqtt_Assert( xPacketSize < mqttexampleSHARED_BUFFER_SIZE );
- * 
+ *
  *    xResult = IotMqtt_SerializePublish( &xMQTTPublishInfo,
  *										xRemainingLength,
  *										&usPacketIdentifier,
  *										&pusPacketIdentifierHigh,
  *										ucSharedBuffer,
  *										xPacketSize );
- *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS ); 
- * 
+ *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
+ *
  *    // xMQTTSocket here is posix socket created and connected to MQTT broker outside of this function.
  *    xSentBytes = send( xMQTTSocket, ( void * ) ucSharedBuffer, xPacketSize, 0 );
  *    IotMqtt_Assert( xSentBytes == xPacketSize );
@@ -460,17 +460,17 @@ IotMqttError_t IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishIn
  * @return  returns #IOT_MQTT_SUCCESS or #IOT_MQTT_BAD_PARAMETER
  *
  * @note This call is part of serializer API used for implementing light-weight MQTT client.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  * // Example below shows how IotMqtt_SerializeDisconnect() should be used.
- * 
+ *
  * #define mqttexampleSHARED_BUFFER_SIZE 100
  * static ucSharedBuffer[mqttexampleSHARED_BUFFER_SIZE];
  * void sendDisconnectRequest( int xMQTTSocket )
  * {
  *     size_t xSentBytes = 0;
- * 
+ *
  *    // Disconnect is fixed length packet, therefore there is no need to calculate the size,
  *    // just makes sure static buffer can accommodate disconnect request.
  *    IotMqtt_Assert( MQTT_PACKET_DISCONNECT_SIZE <= mqttexampleSHARED_BUFFER_SIZE );
@@ -483,7 +483,7 @@ IotMqttError_t IotMqtt_SerializePublish( const IotMqttPublishInfo_t * pPublishIn
  *    xSentByte = send( xMQTTSocket, ( void * ) ucSharedBuffer, MQTT_PACKET_DISCONNECT_SIZE, 0 );
  *    IotMqtt_Assert( xSentByte == MQTT_PACKET_DISCONNECT_SIZE );
  * }
- *	
+ *
  * @endcode
  */
 /* @[declare_mqtt_serializedisconnect] */
@@ -498,29 +498,29 @@ IotMqttError_t IotMqtt_SerializeDisconnect( uint8_t * pBuffer,
  * @param[in] bufferSize Size of the buffer pointed to by pBuffer.
  *
  * @return #IOT_MQTT_SUCCESS or #IOT_MQTT_BAD_PARAMETER.
- * 
+ *
  * @note This call is part of serializer API used for implementing light-weight MQTT client.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  * // Example below shows how IotMqtt_SerializePingReq() should be used.
- * 
+ *
  * #define mqttexampleSHARED_BUFFER_SIZE 100
  * static ucSharedBuffer[mqttexampleSHARED_BUFFER_SIZE];
  * void sendPingRequest( int xMQTTSocket )
  * {
  *    size_t xSentBytes = 0;
- * 
+ *
  *    // PingReq is fixed length packet, therefore there is no need to calculate the size,
  *    // just makes sure static buffer can accommodate Ping request.
  *    IotMqtt_Assert( MQTT_PACKET_PINGREQ_SIZE <= mqttexampleSHARED_BUFFER_SIZE );
  *
  *    xResult = IotMqtt_SerializePingreq( ucSharedBuffer, MQTT_PACKET_PINGREQ_SIZE );
  *    IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
- *    
+ *
  *    // xMQTTSocket here is posix socket created and connected to MQTT broker outside of this function.
  *    xSentByte = send( xMQTTSocket, ( void * ) ucSharedBuffer, MQTT_PACKET_DISCONNECT_SIZE, 0 );
- *    IotMqtt_Assert( xSentByte ==  MQTT_PACKET_PINGREQ_SIZE); 
+ *    IotMqtt_Assert( xSentByte ==  MQTT_PACKET_PINGREQ_SIZE);
  * }
  * @endcode
  */
@@ -571,7 +571,7 @@ IotMqttError_t IotMqtt_SerializePingreq( uint8_t * pBuffer,
  *
  *       return result;
  * }
- * 
+ *
  * // Example below shows how IotMqtt_GetIncomingMQTTPacketTypeAndLength() is used to extract type
  * // and length from incoming ping response.
  * // xMQTTSocket here is posix socket created and connected to MQTT broker outside of this function.
@@ -603,10 +603,10 @@ IotMqttError_t IotMqtt_GetIncomingMQTTPacketTypeAndLength( IotMqttPacketInfo_t *
  * - #IOT_MQTT_SERVER_REFUSED
  *
  * @note This call is part of serializer API used for implementing light-weight MQTT client.
- * 
+ *
  * <b>Example</b>
  * @code{c}
- * // Example below shows how IotMqtt_DeserializePublish() used to extract contents of incoming 
+ * // Example below shows how IotMqtt_DeserializePublish() used to extract contents of incoming
  * // Publish.  xMQTTSocket here is posix socket created and connected to MQTT broker outside of this function.
  * void processIncomingPublish( int xMQTTSocket )
  * {
@@ -660,7 +660,7 @@ IotMqttError_t IotMqtt_DeserializePublish( IotMqttPacketInfo_t * pMqttPacket );
  * - #IOT_MQTT_SERVER_REFUSED
  *
  * @note This call is part of serializer API used for implementing light-weight MQTT client.
- * 
+ *
  * <b>Example</b>
  * @code{c}
  * // Example below shows how  IotMqtt_DeserializeResponse() is used to process unsubscribe ack.
@@ -669,8 +669,8 @@ IotMqttError_t IotMqtt_DeserializePublish( IotMqttPacketInfo_t * pMqttPacket );
  * {
  *      IotMqttError_t xResult;
  *      IotMqttPacketInfo_t xIncomingPacket;
- * 
- * 		xResult = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &xIncomingPacket, getNextByte, ( void * ) xMQTTSocket );
+ *
+ *      xResult = IotMqtt_GetIncomingMQTTPacketTypeAndLength( &xIncomingPacket, getNextByte, ( void * ) xMQTTSocket );
  *		IotMqtt_Assert( xResult == IOT_MQTT_SUCCESS );
  *		IotMqtt_Assert( xIncomingPacket.type == MQTT_PACKET_TYPE_UNSUBACK );
  *		IotMqtt_Assert( xIncomingPacket.remainingLength <= sizeof( ucSharedBuffer ) );
