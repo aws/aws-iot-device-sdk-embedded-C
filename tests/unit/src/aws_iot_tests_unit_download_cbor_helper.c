@@ -92,7 +92,7 @@ int prvCreateSampleGetStreamResponseMessage( uint8_t * pucMessageBuffer,
 	{
 		xCborResult = cbor_encode_text_stringz(
 			&xCborMapEncoder,
-			OTA_CBOR_FILEID_KEY );
+			CBOR_FILEID_KEY );
 	}
 
 	if( CborNoError == xCborResult )
@@ -107,7 +107,7 @@ int prvCreateSampleGetStreamResponseMessage( uint8_t * pucMessageBuffer,
 	{
 		xCborResult = cbor_encode_text_stringz(
 			&xCborMapEncoder,
-			OTA_CBOR_BLOCKID_KEY );
+			CBOR_BLOCKID_KEY );
 	}
 
 	if( CborNoError == xCborResult )
@@ -122,7 +122,7 @@ int prvCreateSampleGetStreamResponseMessage( uint8_t * pucMessageBuffer,
 	{
 		xCborResult = cbor_encode_text_stringz(
 			&xCborMapEncoder,
-			OTA_CBOR_BLOCKSIZE_KEY );
+			CBOR_BLOCKSIZE_KEY );
 	}
 
 	if( CborNoError == xCborResult )
@@ -137,7 +137,7 @@ int prvCreateSampleGetStreamResponseMessage( uint8_t * pucMessageBuffer,
 	{
 		xCborResult = cbor_encode_text_stringz(
 			&xCborMapEncoder,
-			OTA_CBOR_BLOCKPAYLOAD_KEY );
+			CBOR_BLOCKPAYLOAD_KEY );
 	}
 
 	if( CborNoError == xCborResult )
@@ -184,9 +184,9 @@ TEST_C(DownloadCbor, CborDownloadAgentApi) {
 	uint8_t * pucPayload = NULL;
 	size_t xPayloadSize = 0;
 
-	IOT_DEBUG( "\n-->Running OTA CBOR Utils Tests - CborDownloadAgentApi test \n" );
+	IOT_DEBUG( "\n-->Running Download Agent CBOR Utils Tests - CborDownloadAgentApi test \n" );
 
-	xResult = OTA_CBOR_Encode_GetStreamRequestMessage(
+	xResult = CBOR_Encode_GetStreamRequestMessage(
 		ucCborWork,
 		sizeof( ucCborWork ),
 		&xEncodedSize,
@@ -215,7 +215,7 @@ TEST_C(DownloadCbor, CborDownloadAgentApi) {
 		&xEncodedSize );
 	CHECK_C( xResult );
 
-	xResult = OTA_CBOR_Decode_GetStreamResponseMessage(
+	xResult = CBOR_Decode_GetStreamResponseMessage(
 		ucCborWork,
 		xEncodedSize,
 		&lFileId,
@@ -254,7 +254,7 @@ TEST_C(DownloadCbor, CborDownloadAgentServerFiles) {
 	char pcChunkFileName[ 512 ];
 	uint32_t ulBitmap = CBOR_TEST_BITMAP_VALUE;
 
-	IOT_DEBUG( "\n-->Running OTA CBOR Utils Tests - CborDownloadAgentServerFiles test \n" );
+	IOT_DEBUG( "\n-->Running Download Agent CBOR Utils Tests - CborDownloadAgentServerFiles test \n" );
 
 	for( uint32_t ulChunk = 0;
 		 ulChunk < CBOR_TEST_SERVER_CHUNK_COUNT;
@@ -282,7 +282,7 @@ TEST_C(DownloadCbor, CborDownloadAgentServerFiles) {
 		CHECK_C( pucPayload != NULL );
 
 		/* Parse the chunk message. */
-		xResult = OTA_CBOR_Decode_GetStreamResponseMessage(
+		xResult = CBOR_Decode_GetStreamResponseMessage(
 			pucInFile,
 			xBufferSize,
 			&lFileId,

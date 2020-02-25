@@ -1,30 +1,20 @@
 /*
- * Amazon FreeRTOS OTA V1.0.2
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright 2015-2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * http://aws.amazon.com/apache2.0
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * http://aws.amazon.com/freertos
- * http://www.FreeRTOS.org
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
  */
 
 /**
- * @file aws_ota_cbor.c
+ * @file aws_download_cbor.c
  * @brief CBOR encode/decode routines for AWS IoT Over-the-Air updates.
  */
 
@@ -40,27 +30,18 @@
  * @brief Message field definitions, per the server specification.
  */
 
-#define OTA_CBOR_GETSTREAMREQUEST_ITEM_COUNT    5
+#define CBOR_GETSTREAMREQUEST_ITEM_COUNT    5
 
 /**
- * @brief Internal context structure for decoding CBOR arrays.
+ * @brief Decode a Get Stream response message.
  */
-typedef struct OTAMessageDecodeContext
-{
-	CborParser xCborParser;
-	CborValue xCborRecursedItem;
-} OTAMessageDecodeContext_t, * OTAMessageDecodeContextPtr_t;
-
-/**
- * @brief Decode a Get Stream response message from AWS IoT OTA.
- */
-int OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
-													 size_t xMessageSize,
-													 int32_t * plFileId,
-													 int32_t * plBlockId,
-													 int32_t * plBlockSize,
-													 uint8_t * pucPayload,
-													 size_t * pxPayloadSize )
+int CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
+												 size_t xMessageSize,
+												 int32_t * plFileId,
+												 int32_t * plBlockId,
+												 int32_t * plBlockSize,
+												 uint8_t * pucPayload,
+												 size_t * pxPayloadSize )
 {
 	CborError xCborResult = CborNoError;
 	CborParser xCborParser;
@@ -88,7 +69,7 @@ int OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
 	if( CborNoError == xCborResult )
 	{
 		xCborResult = cbor_value_map_find_value( &xCborMap,
-												 OTA_CBOR_FILEID_KEY,
+												 CBOR_FILEID_KEY,
 												 &xCborValue );
 	}
 
@@ -110,7 +91,7 @@ int OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
 	if( CborNoError == xCborResult )
 	{
 		xCborResult = cbor_value_map_find_value( &xCborMap,
-												 OTA_CBOR_BLOCKID_KEY,
+												 CBOR_BLOCKID_KEY,
 												 &xCborValue );
 	}
 
@@ -132,7 +113,7 @@ int OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
 	if( CborNoError == xCborResult )
 	{
 		xCborResult = cbor_value_map_find_value( &xCborMap,
-												 OTA_CBOR_BLOCKSIZE_KEY,
+												 CBOR_BLOCKSIZE_KEY,
 												 &xCborValue );
 	}
 
@@ -154,7 +135,7 @@ int OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
 	if( CborNoError == xCborResult )
 	{
 		xCborResult = cbor_value_map_find_value( &xCborMap,
-												 OTA_CBOR_BLOCKPAYLOAD_KEY,
+												 CBOR_BLOCKPAYLOAD_KEY,
 												 &xCborValue );
 	}
 
@@ -186,19 +167,19 @@ int OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
 
 
 /**
- * @brief Create an encoded Get Stream Request message for the AWS IoT OTA
+ * @brief Create an encoded Get Stream Request message
  * service. The service allows block count or block bitmap to be requested,
  * but not both.
  */
-int OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
-													size_t xMessageBufferSize,
-													size_t * pxEncodedMessageSize,
-													const char * pcClientToken,
-													int32_t lFileId,
-													int32_t lBlockSize,
-													int32_t lBlockOffset,
-													uint8_t * pucBlockBitmap,
-													size_t xBlockBitmapSize )
+int CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
+												size_t xMessageBufferSize,
+												size_t * pxEncodedMessageSize,
+												const char * pcClientToken,
+												int32_t lFileId,
+												int32_t lBlockSize,
+												int32_t lBlockOffset,
+												uint8_t * pucBlockBitmap,
+												size_t xBlockBitmapSize )
 {
 	CborError xCborResult = CborNoError;
 	CborEncoder xCborEncoder, xCborMapEncoder;
@@ -211,13 +192,13 @@ int OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
 
 	xCborResult = cbor_encoder_create_map( &xCborEncoder,
 										   &xCborMapEncoder,
-										   OTA_CBOR_GETSTREAMREQUEST_ITEM_COUNT );
+										   CBOR_GETSTREAMREQUEST_ITEM_COUNT );
 
 	/* Encode the client token key and value. */
 	if( CborNoError == xCborResult )
 	{
 		xCborResult = cbor_encode_text_stringz( &xCborMapEncoder,
-												OTA_CBOR_CLIENTTOKEN_KEY );
+												CBOR_CLIENTTOKEN_KEY );
 	}
 
 	if( CborNoError == xCborResult )
@@ -230,7 +211,7 @@ int OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
 	if( CborNoError == xCborResult )
 	{
 		xCborResult = cbor_encode_text_stringz( &xCborMapEncoder,
-												OTA_CBOR_FILEID_KEY );
+												CBOR_FILEID_KEY );
 	}
 
 	if( CborNoError == xCborResult )
@@ -243,7 +224,7 @@ int OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
 	if( CborNoError == xCborResult )
 	{
 		xCborResult = cbor_encode_text_stringz( &xCborMapEncoder,
-												OTA_CBOR_BLOCKSIZE_KEY );
+												CBOR_BLOCKSIZE_KEY );
 	}
 
 	if( CborNoError == xCborResult )
@@ -256,7 +237,7 @@ int OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
 	if( CborNoError == xCborResult )
 	{
 		xCborResult = cbor_encode_text_stringz( &xCborMapEncoder,
-												OTA_CBOR_BLOCKOFFSET_KEY );
+												CBOR_BLOCKOFFSET_KEY );
 	}
 
 	if( CborNoError == xCborResult )
@@ -269,7 +250,7 @@ int OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
 	if( CborNoError == xCborResult )
 	{
 		xCborResult = cbor_encode_text_stringz( &xCborMapEncoder,
-												OTA_CBOR_BLOCKBITMAP_KEY );
+												CBOR_BLOCKBITMAP_KEY );
 	}
 
 	if( CborNoError == xCborResult )
@@ -296,26 +277,26 @@ int OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
 	return CborNoError == xCborResult;
 }
 #else
-int OTA_CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
-													 size_t xMessageSize,
-													 int32_t * plFileId,
-													 int32_t * plBlockId,
-													 int32_t * plBlockSize,
-													 uint8_t * pucPayload,
-													 size_t * pxPayloadSize )
+int CBOR_Decode_GetStreamResponseMessage( const uint8_t * pucMessageBuffer,
+												 size_t xMessageSize,
+												 int32_t * plFileId,
+												 int32_t * plBlockId,
+												 int32_t * plBlockSize,
+												 uint8_t * pucPayload,
+												 size_t * pxPayloadSize )
 {
 	return 0;
 }
 
-int OTA_CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
-													size_t xMessageBufferSize,
-													size_t * pxEncodedMessageSize,
-													const char * pcClientToken,
-													int32_t lFileId,
-													int32_t lBlockSize,
-													int32_t lBlockOffset,
-													uint8_t * pucBlockBitmap,
-													size_t xBlockBitmapSize )
+int CBOR_Encode_GetStreamRequestMessage( uint8_t * pucMessageBuffer,
+												size_t xMessageBufferSize,
+												size_t * pxEncodedMessageSize,
+												const char * pcClientToken,
+												int32_t lFileId,
+												int32_t lBlockSize,
+												int32_t lBlockOffset,
+												uint8_t * pucBlockBitmap,
+												size_t xBlockBitmapSize )
 {
 	return 0;
 }

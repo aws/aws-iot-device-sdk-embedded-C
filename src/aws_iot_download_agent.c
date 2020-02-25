@@ -168,7 +168,7 @@ static IoT_Error_t aws_iot_dla_publish_get_stream_message( void *pClient,
 	ulNumBlocks = ( C->ulFileSize + ( DLA_FILE_BLOCK_SIZE(C->usBlockSizeLog2) - 1U ) ) >> C->usBlockSizeLog2;
 	ulBitmapLen = ( ulNumBlocks + ( BITS_PER_BYTE - 1U ) ) >> LOG2_BITS_PER_BYTE;
 
-	if ( OTA_CBOR_Encode_GetStreamRequestMessage(
+	if ( CBOR_Encode_GetStreamRequestMessage(
 					( uint8_t * ) pcMsg,
 					sizeof( pcMsg ),
 					&xMsgSizeFromStream,
@@ -378,7 +378,7 @@ IoT_Error_t aws_iot_download_ingest_data_block( void * pClient,
 	if( C->pucRxBlockBitmap && ( C->ulBlocksRemaining > 0U ) )
 	{
 		/* Parse the chunk message. */
-		if ( !OTA_CBOR_Decode_GetStreamResponseMessage(
+		if ( !CBOR_Decode_GetStreamResponseMessage(
 			( const uint8_t * ) pcRawMsg,
 			ulMsgSize,
 			( int32_t * ) &lFileId,

@@ -1,11 +1,11 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2015-2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
  *
- *  http://aws.amazon.com/apache2.0
+ * http://aws.amazon.com/apache2.0
  *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
@@ -30,7 +30,7 @@
  *
  * This library provides a simple API that can be integrated on an IoT
  * device for interacting with AWS IoT services and downloading files.
- * A device can integrate this libraryct as long as it has the capability
+ * A device can integrate this library as long as it has the capability
  * to connect to AWS IoT using the MQTT protocol.
  *
  * This library depends on a MQTT stack for interacting with AWS IoT.
