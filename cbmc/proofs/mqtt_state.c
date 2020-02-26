@@ -138,38 +138,43 @@ IotListDouble_t *allocate_IotMqttOperationList( IotListDouble_t *pOp,
 						size_t length,
 						IotMqttConnection_t pConn )
 {
+  // Allocate lists of length L <= 3 (MAX = L+1)
+  __CPROVER_assert(length < OPERATION_COUNT_MAX,
+		   "Operation list length max is greater than MAX");
+  __CPROVER_assert(length <= 3,
+		   "Operation list length max is greater than 3");
+
   if ( pOp == NULL ) pOp = malloc_can_fail( sizeof( *pOp ) );
   if ( pOp == NULL ) return NULL;
-
-  // Allocate lists of length L <= 3 (MAX = L+1)
-  __CPROVER_assert(OPERATION_COUNT_MAX <= 3+1,
-		   "Operation list bound is too big");
-  __CPROVER_assert(length < OPERATION_COUNT_MAX,
-		   "Operation list requested is too long");
 
   IotListDouble_Create( pOp );
 
   size_t num_elts;
   __CPROVER_assume(num_elts <= length);
 
-  if (1 <= num_elts)
-    {
-      IotMqttOperation_t pElt = allocate_IotMqttOperation( NULL, pConn );
-      __CPROVER_assume( pElt );
-      IotListDouble_InsertHead( pOp, &( pElt->link ) );
-    }
-  if (2 <= num_elts)
-    {
-      IotMqttOperation_t pElt = allocate_IotMqttOperation( NULL, pConn );
-      __CPROVER_assume( pElt );
-      IotListDouble_InsertHead( pOp, &( pElt->link ) );
-    }
-  if (3 <= num_elts)
-    {
-      IotMqttOperation_t pElt = allocate_IotMqttOperation( NULL, pConn );
-      __CPROVER_assume( pElt );
-      IotListDouble_InsertHead( pOp, &( pElt->link ) );
-    }
+  IotMqttOperation_t pElt;
+  switch (num_elts) {
+#if 3 < OPERATION_COUNT_MAX
+  case 3:
+    pElt = allocate_IotMqttOperation( NULL, pConn );
+    __CPROVER_assume( pElt );
+    IotListDouble_InsertHead( pOp, &( pElt->link ) );
+#endif
+#if 2 < OPERATION_COUNT_MAX
+  case 2:
+    pElt = allocate_IotMqttOperation( NULL, pConn );
+    __CPROVER_assume( pElt );
+    IotListDouble_InsertHead( pOp, &( pElt->link ) );
+#endif
+#if 1 < OPERATION_COUNT_MAX
+  case 1:
+    pElt = allocate_IotMqttOperation( NULL, pConn );
+    __CPROVER_assume( pElt );
+    IotListDouble_InsertHead( pOp, &( pElt->link ) );
+#endif
+  default:
+    ;
+  }
 
   return pOp;
 }
@@ -178,6 +183,8 @@ bool valid_IotMqttOperationList( const IotListDouble_t *pOp,
 				 const size_t length )
 {
   if ( pOp == NULL ) return false;
+
+  // TODO: Consider replacing loop with straight line code
 
   IotListDouble_t *pLink;
   IotContainers_ForEach( pOp, pLink ) {
@@ -206,7 +213,7 @@ IotMqttConnection_t allocate_IotMqttConnection( IotMqttConnection_t pConn )
   return pConn;
 }
 
-void ensure_IotMqttConnection_has_lists( IotMqttConnection_t pConn )
+IotMqttConnection_t ensure_IotMqttConnection_has_lists( IotMqttConnection_t pConn )
 {
   allocate_IotMqttOperationList( &pConn->pendingProcessing,
 				 OPERATION_COUNT_MAX - 1,
@@ -331,7 +338,7 @@ IotMqttSubscription_t *allocate_IotMqttSubscription( IotMqttSubscription_t *pSub
 bool valid_IotMqttSubscription( const IotMqttSubscription_t *pSub )
 {
   return
-    pSub &&
+    pSub != NULL &&
 
     VALID_STRING( pSub->pTopicFilter,  pSub->topicFilterLength ) &&
     VALID_CBMC_SIZE( pSub->topicFilterLength )
@@ -350,20 +357,41 @@ bool valid_IotMqttSubscription( const IotMqttSubscription_t *pSub )
 IotMqttSubscription_t *allocate_IotMqttSubscriptionArray( IotMqttSubscription_t *pSub,
 							  size_t length )
 {
+  // Allocate lists of length L <= 3 (MAX = L+1)
+  __CPROVER_assert(length < SUBSCRIPTION_COUNT_MAX,
+		   "Subscription array length max is greater than MAX");
+  __CPROVER_assert(length <= 3,
+		   "Subscription array length max is greater than 3");
+
   if ( pSub == NULL ) pSub = malloc_can_fail( length * sizeof( *pSub ) );
   if ( pSub == NULL ) return NULL;
 
-  for ( size_t i = 0; i < length; i++ )
-    allocate_IotMqttSubscription( pSub + i );
+  switch (length) {
+#if 3 < SUBSCRIPTION_COUNT_MAX
+  case 3:
+    allocate_IotMqttSubscription( pSub + 2 );
+#endif
+#if 2 < SUBSCRIPTION_COUNT_MAX
+  case 2:
+    allocate_IotMqttSubscription( pSub + 1 );
+#endif
+#if 1 < SUBSCRIPTION_COUNT_MAX
+  case 1:
+    allocate_IotMqttSubscription( pSub + 0 );
+#endif
+  default:
+    ;
+  }
 
   return pSub;
 }
-
 bool valid_IotMqttSubscriptionArray( const IotMqttSubscription_t *pSub,
 				     const size_t length )
 {
   if ( !IFF( pSub == NULL, length == 0 ) ) return false;
   if ( pSub == NULL ) return false;
+
+  // TODO: Consider replacing loop with straight line code
 
   for ( size_t i = 0; i < length; i++ )
     if ( !valid_IotMqttSubscription( pSub + i ) ) return false;
@@ -390,6 +418,7 @@ _mqttSubscription_t *allocate_IotMqttSubscriptionListElt( _mqttSubscription_t *p
   pElt->link.pPrevious = NULL;
   pElt->link.pNext = NULL;
   pElt->topicFilterLength = length;
+  // pElt->topicFilter is a flexible struct member following pElt
   return pElt;
 }
 
@@ -402,9 +431,7 @@ bool valid_IotMqttSubscriptionListElt( const _mqttSubscription_t *pElt )
     // MAX is one greater than the maximum length
     pElt->topicFilterLength < TOPIC_LENGTH_MAX &&
 #endif
-    pElt->topicFilterLength < CBMC_MAX_OBJECT_SIZE - sizeof( *pElt ) &&
-    __CPROVER_r_ok( pElt->pTopicFilter, pElt->topicFilterLength ) &&
-    __CPROVER_w_ok( pElt->pTopicFilter, pElt->topicFilterLength );
+    pElt->topicFilterLength < CBMC_MAX_OBJECT_SIZE - sizeof( *pElt );
 }
 
 // Subscription linked lists
@@ -412,46 +439,54 @@ bool valid_IotMqttSubscriptionListElt( const _mqttSubscription_t *pElt )
 IotListDouble_t *allocate_IotMqttSubscriptionList( IotListDouble_t *pSub,
 						   size_t length )
 {
+  // Allocate lists of length L <= 3 (MAX = L+1)
+  __CPROVER_assert(length < SUBSCRIPTION_COUNT_MAX,
+		   "Subscription list length max is greater than MAX");
+  __CPROVER_assert(length <= 3,
+		   "Subscription list length max is greater than 3");
+
   if ( pSub == NULL ) pSub = malloc_can_fail( sizeof( *pSub ) );
   if ( pSub == NULL ) return NULL;
-
-  // Allocate lists of length L <= 3 (MAX = L+1)
-  __CPROVER_assert(SUBSCRIPTION_COUNT_MAX <= 3+1,
-		   "Subscription list bound is too big");
-  __CPROVER_assert(length < SUBSCRIPTION_COUNT_MAX,
-		   "Subscription list requested is too long");
 
   IotListDouble_Create( pSub );
 
   size_t num_elts;
   __CPROVER_assume(num_elts <= length);
 
-  if (1 <= num_elts)
-    {
-      _mqttSubscription_t *pElt = allocate_IotMqttSubscriptionListElt( NULL );
+  _mqttSubscription_t *pElt;
+  switch (num_elts) {
+#if 3 < SUBSCRIPTION_COUNT_MAX
+  case 3:
+      pElt = allocate_IotMqttSubscriptionListElt( NULL );
       __CPROVER_assume( pElt );
       IotListDouble_InsertHead( pSub, &( pElt->link ) );
-    }
-  if (2 <= num_elts)
-    {
-      _mqttSubscription_t *pElt = allocate_IotMqttSubscriptionListElt( NULL );
+#endif
+#if 2 < SUBSCRIPTION_COUNT_MAX
+  case 2:
+      pElt = allocate_IotMqttSubscriptionListElt( NULL );
       __CPROVER_assume( pElt );
       IotListDouble_InsertHead( pSub, &( pElt->link ) );
-    }
-  if (3 <= num_elts)
-    {
-      _mqttSubscription_t *pElt = allocate_IotMqttSubscriptionListElt( NULL );
+#endif
+#if 1 < SUBSCRIPTION_COUNT_MAX
+  case 1:
+      pElt = allocate_IotMqttSubscriptionListElt( NULL );
       __CPROVER_assume( pElt );
       IotListDouble_InsertHead( pSub, &( pElt->link ) );
-    }
+#endif
+#if 0 < SUBSCRIPTION_COUNT_MAX
+  default:
+    ;
+#endif
+  }
 
   return pSub;
 }
-
 bool valid_IotMqttSubscriptionList( const IotListDouble_t *pSub,
 				    const size_t length )
 {
   if ( pSub == NULL ) return false;
+
+  // TODO: Consider replacing loop with straight line code
 
   IotListDouble_t *pLink;
   IotContainers_ForEach( pSub, pLink ) {
@@ -464,6 +499,47 @@ bool valid_IotMqttSubscriptionList( const IotListDouble_t *pSub,
     // MAX is one greater than the maximum length
     length < SUBSCRIPTION_COUNT_MAX;
 }
+
+void *invalid_pointer()
+{
+  void *ptr;
+  return ptr;
+}
+
+void free_IotMqttSubscriptionList( IotListDouble_t *pSub )
+{
+  IotListDouble_t *pThis;
+  IotListDouble_t *pNext;
+
+  if (pSub == NULL) return;
+  pThis = pSub->pNext;
+  pSub->pNext = invalid_pointer();
+  pSub->pPrevious = invalid_pointer();
+
+#if 3 < SUBSCRIPTION_COUNT_MAX
+  if (pThis == pSub) return;
+  pNext = pThis->pNext;
+  free( IotLink_Container( _mqttSubscription_t, pThis, link ) );
+  pThis = pNext;
+#endif
+
+#if 2 < SUBSCRIPTION_COUNT_MAX
+  if (pThis == pSub) return;
+  pNext = pThis->pNext;
+  free( IotLink_Container( _mqttSubscription_t, pThis, link ) );
+  pThis = pNext;
+#endif
+
+#if 1 < SUBSCRIPTION_COUNT_MAX
+  if (pThis == pSub) return;
+  pNext = pThis->pNext;
+  free( IotLink_Container( _mqttSubscription_t, pThis, link ) );
+  pThis = pNext;
+#endif
+
+  return;
+}
+
 
 /****************************************************************
  * IotMqttPublishInfo
@@ -494,6 +570,10 @@ bool valid_IotMqttPublishInfo( const IotMqttPublishInfo_t *pInfo )
 
     VALID_STRING( pInfo->pPayload, pInfo->payloadLength ) &&
     VALID_CBMC_SIZE( pInfo->payloadLength ) &&
+#ifdef PAYLOAD_LENGTH_MAX
+    // Some proofs iterate over it
+    pInfo->payloadLength < PAYLOAD_LENGTH_MAX &&
+#endif
 
     pInfo->retryMs <= IOT_MQTT_RETRY_MS_CEILING &&
     pInfo->retryMs > 0  &&
