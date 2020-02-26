@@ -68,12 +68,12 @@ CBMC_OBJECT_BITS ?= 8
 CBMCFLAGS += --object-bits $(CBMC_OBJECT_BITS)
 CBMC_MAX_OBJECT_SIZE = "(SIZE_MAX>>(CBMC_OBJECT_BITS+1))"
 
-
 ################################################################
 # Run cbmc and build html report
 
 CBMCFLAGS += \
 	$(UNWINDING) \
+	--object-bits $(CBMC_OBJECT_BITS) \
 	--bounds-check \
 	--conversion-check \
 	--div-by-zero-check \

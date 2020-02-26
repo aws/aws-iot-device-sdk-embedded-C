@@ -21,9 +21,9 @@ DEF += -DBUFFER_SIZE=$(BUFFER_SIZE)
 # proof and assume their implementation is correct
 ABSTRACTIONS += --remove-function-body IotLog_Generic
 
-# These defines have the effect of removing RemoveAllMatches from the
+# This define has the effect of removing RemoveAllMatches from the
 # linear containers header so that our stub will be used.
-DEF += -DCBMC=1 -DCBMC_PROOF_DESERIALIZE_SUBACK=1
+DEF += -DCBMC_STUB_REMOVEALLMATCHES=1
 
 ################################################################
 # Loop unwinding
