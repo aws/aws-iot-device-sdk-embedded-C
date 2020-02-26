@@ -49,7 +49,7 @@ uint16_t _IotMqtt_NextPacketIdentifier( void ) {
   uint16_t id;
 
   /* Packet identifiers will follow the sequence 1,3,5...65535,1,3,5... */
-  __CPROVER_assume(id & 0x1 == 1);
+  __CPROVER_assume(id & 0x0001 == 1);
 
   return id;
 }
@@ -66,19 +66,23 @@ void harness()
  
   /* assume a valid publish info */
   IotMqttPublishInfo_t *pPublishInfo = allocate_IotMqttPublishInfo(NULL);
-  __CPROVER_assume(valid_IotMqttPublishInfo(pPublishInfo));
-  
+  if (pPublishInfo != NULL) __CPROVER_assume(valid_IotMqttPublishInfo(pPublishInfo));
+
   /* assume unconstrained inputs */
   uint32_t flags;
-  IotMqttCallbackInfo_t callbackInfo;
+  IotMqttCallbackInfo_t *callbackInfo = malloc_can_fail(sizeof (*callbackInfo) );
 
   /* output */
-  IotMqttOperation_t publishOperation;
+  IotMqttOperation_t *publishOperation = malloc_can_fail(sizeof (*publishOperation) );
+
 
   /* function under verification */
-  IotMqtt_PublishAsync( mqttConnection, /* always assume a valid connection */
-			nondet_bool() ? NULL : pPublishInfo,
-			flags,
-			nondet_bool() ? NULL: &callbackInfo,
-			nondet_bool() ? NULL : &publishOperation );
+  IotMqttError_t status = IotMqtt_PublishAsync( mqttConnection, /* always assume a valid connection */
+			                        pPublishInfo,
+			                        flags,
+			                        callbackInfo,
+			                        publishOperation );
+  /* assert post-conditions */
+  assert(IMPLIES(status == IOT_MQTT_STATUS_PENDING, pPublishInfo->qos == IOT_MQTT_QOS_1));
+  assert(IMPLIES(status == IOT_MQTT_SUCCESS, pPublishInfo->qos == IOT_MQTT_QOS_0 || pPublishInfo->qos == IOT_MQTT_QOS_1));
 }

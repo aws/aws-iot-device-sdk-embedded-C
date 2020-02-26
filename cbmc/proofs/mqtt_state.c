@@ -228,11 +228,7 @@ bool valid_IotMqttConnection( const IotMqttConnection_t pConn )
   // maximum value to avoid integer overflows.  We expect to run out of
   // memory before having 2^16 references on a device.
   bool valid_references = pConn->references >= 0 &&
-   // IMPLIES(pConn->pingreq.u.operation.periodic.ping.keepAliveMs == 0,
-   //	    pConn->references >= 0) &&
-   //  IMPLIES(pConn->pingreq.u.operation.periodic.ping.keepAliveMs != 0,
-   //	    pConn->references > 1) &&
-    pConn->references <= (1 << 16);
+                          pConn->references <= (1 << 16);
 
   bool valid_pingreq =
     ( valid_IotMqttOperation( &(pConn->pingreq ) ) ) &&
