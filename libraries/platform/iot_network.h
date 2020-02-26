@@ -295,13 +295,13 @@ typedef IotNetworkError_t ( * IotNetworkDestroy_t )( IotNetworkConnection_t pCon
  */
 typedef struct IotNetworkInterface
 {
-    IotNetworkCreate_t create;                         /**< @brief create network connection. */
-    IotNetworkSetReceiveCallback_t setReceiveCallback; /**< @brief set receive callback. */
-    IotNetworkSetCloseCallback_t setCloseCallback;     /**< @brief set close callback. */
-    IotNetworkSend_t send;                             /**< @brief send data. */
-    IotNetworkReceive_t receive;                       /**< @brief block and wait for receive data. */
-    IotNetworkClose_t close;                           /**< @brief close network connection. */
-    IotNetworkDestroy_t destroy;                       /**< @brief destroy network connection. */
+    IotNetworkCreate_t create;                         /**< @brief Create network connection. */
+    IotNetworkSetReceiveCallback_t setReceiveCallback; /**< @brief Set receive callback. */
+    IotNetworkSetCloseCallback_t setCloseCallback;     /**< @brief Set close callback. */
+    IotNetworkSend_t send;                             /**< @brief Send data. */
+    IotNetworkReceive_t receive;                       /**< @brief Block and wait for receive data. */
+    IotNetworkClose_t close;                           /**< @brief Close network connection. */
+    IotNetworkDestroy_t destroy;                       /**< @brief Destroy network connection. */
 } IotNetworkInterface_t;
 
 /**
