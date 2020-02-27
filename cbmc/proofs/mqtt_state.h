@@ -30,6 +30,15 @@
 #define VALID_CBMC_SIZE(size) ((size) < CBMC_MAX_OBJECT_SIZE)
 
 /****************************************************************
+ * According to the documentation, IOT_MQTT_QOS_2 is not entirely
+ * supported, but it is expected that all functions that deals
+ * with MQTT PUBLISH messages will be resilient to it.
+ ****************************************************************/
+#define VALID_QOS(qos) ( qos == IOT_MQTT_QOS_0 || \
+		         qos == IOT_MQTT_QOS_1 || \
+			 qos == IOT_MQTT_QOS_2 )
+
+/****************************************************************
  * Model a malloc that can fail and return NULL.  CBMC currently
  * models malloc as an allocator that never fails.  CBMC will soon
  * have an option to let malloc fail.

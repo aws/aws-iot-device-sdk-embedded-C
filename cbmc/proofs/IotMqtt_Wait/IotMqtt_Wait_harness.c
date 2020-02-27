@@ -14,6 +14,7 @@ void harness()
   __CPROVER_assume( IS_STUBBED_NETWORKIF_DESTROY( mqttConnection->pNetworkInterface ) );
   ensure_IotMqttConnection_has_lists(mqttConnection);
   __CPROVER_assume(valid_IotMqttConnection(mqttConnection));
+  __CPROVER_assume(mqttConnection->references > 0);
 
   IotMqttOperation_t publishOperation = allocate_IotMqttOperation(NULL, mqttConnection);
   __CPROVER_assume(valid_IotMqttOperation(publishOperation));
