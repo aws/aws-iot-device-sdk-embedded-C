@@ -28,10 +28,11 @@ DEF += -DCBMC=1 -DCBMC_PROOF_DESERIALIZE_SUBACK=1
 ################################################################
 # Loop unwinding
 
+LOOP += _decodeSubackStatus.0:$(BUFFER_SIZE)
+LOOP += IotListDouble_FindFirstMatch.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_RemoveAllMatches\$$link1.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += valid_IotMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += valid_IotMqttOperationList.0:$(OPERATION_COUNT_MAX)
-
-LOOP += _decodeSubackStatus.0:$(BUFFER_SIZE)
 
 UNWINDING += --unwind 1
 UNWINDING += --unwindset '$(shell echo $(LOOP) | sed 's/ /,/g')'
