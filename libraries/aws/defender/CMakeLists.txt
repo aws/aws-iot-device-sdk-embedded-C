@@ -36,6 +36,7 @@ source_group( src FILES ${DEFENDER_SOURCES} )
 if( ${IOT_BUILD_TESTS} )
     # Defender system test sources.
     set( DEFENDER_SYSTEM_TEST_SOURCES
+         test/unit/aws_iot_tests_defender_unit.c
          test/system/aws_iot_tests_defender_system.c )
 
     # Defender tests executable.
