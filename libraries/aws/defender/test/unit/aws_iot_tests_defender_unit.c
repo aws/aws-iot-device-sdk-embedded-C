@@ -42,13 +42,8 @@ static IotMqttConnection_t _mqttConnection = IOT_MQTT_CONNECTION_INITIALIZER;
 
 static AwsIotDefenderStartInfo_t _startInfo = AWS_IOT_DEFENDER_START_INFO_INITIALIZER;
 
-static bool _mqttConnectionStarted = false;
 static bool _mockedMqttConnection = false;
 /*------------------ Functions -----------------------------*/
-
-/* Copy data from MQTT callback to local buffer. */
-static void _copyDataCallbackFunction( void * param1,
-                                       AwsIotDefenderCallbackInfo_t * const pCallbackInfo );
 
 TEST_GROUP( Defender_Unit );
 
