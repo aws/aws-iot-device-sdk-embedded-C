@@ -1,0 +1,63 @@
+From 1728071c2f234b6a5e9e0aaa5fda44958b1e799a Mon Sep 17 00:00:00 2001
+From: "Felipe R. Monteiro" <felisous@amazon.com>
+Date: Tue, 14 Apr 2020 00:04:57 +0000
+Subject: [PATCH] Replace limits to improve coverage on IotMqtt_Connect
+
+Signed-off-by: Felipe R. Monteiro <felisous@amazon.com>
+---
+ libraries/standard/mqtt/include/iot_mqtt_protocol.h   |  4 ++++
+ .../standard/mqtt/src/private/iot_mqtt_internal.h     | 11 ++++++++++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/libraries/standard/mqtt/include/iot_mqtt_protocol.h b/libraries/standard/mqtt/include/iot_mqtt_protocol.h
+index 0fedcea..7777ea2 100644
+--- a/libraries/standard/mqtt/include/iot_mqtt_protocol.h
++++ b/libraries/standard/mqtt/include/iot_mqtt_protocol.h
+@@ -84,7 +84,9 @@
+  * All strings in a CONNECT packet are constrained to 2-byte lengths, giving a
+  * maximum length smaller than the max "Remaining Length" constant above.
+  */
++#ifndef MQTT_PACKET_CONNECT_MAX_SIZE
+ #define MQTT_PACKET_CONNECT_MAX_SIZE                ( 327700UL )
++#endif
+ 
+ /**
+  * @brief The minimum remaining length for a QoS 0 PUBLISH.
+diff --git a/libraries/standard/mqtt/src/private/iot_mqtt_internal.h b/libraries/standard/mqtt/src/private/iot_mqtt_internal.h
+index ccfb802..4249a70 100644
+--- a/libraries/standard/mqtt/src/private/iot_mqtt_internal.h
++++ b/libraries/standard/mqtt/src/private/iot_mqtt_internal.h
+@@ -223,10 +223,13 @@
+     #define IOT_MQTT_RETRY_MS_CEILING               ( 60000U )
+ #endif
+ /** @endcond */
+-
++#ifndef MQTT_SERVER_MAX_CLIENTID_LENGTH
+ #define MQTT_SERVER_MAX_CLIENTID_LENGTH                        ( ( uint16_t ) 23 )          /**< @brief Optional maximum length of client identifier specified by MQTT 3.1.1. */
++#endif
+ #define MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH                 ( ( size_t ) ( 268435456 ) ) /**< @brief Maximum publish payload length supported by MQTT 3.1.1. */
++#ifndef MQTT_SERVER_MAX_LWT_PAYLOAD_LENGTH
+ #define MQTT_SERVER_MAX_LWT_PAYLOAD_LENGTH                     ( ( size_t ) UINT16_MAX )    /**< @brief Maximum LWT payload length supported by MQTT 3.1.1. */
++#endif
+ 
+ /*
+  * Constants related to limits defined in AWS Service Limits.
+@@ -236,9 +239,15 @@
+  *
+  * Used to validate parameters if when connecting to an AWS IoT MQTT server.
+  */
++#ifndef AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH
+ #define AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                ( ( uint16_t ) 128 )      /**< @brief Maximum length of client identifier accepted by AWS IoT. */
++#endif
++#ifndef AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH
+ #define AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH                   ( ( uint16_t ) 256 )      /**< @brief Maximum length of topic names or filters accepted by AWS IoT. */
++#endif
++#ifndef AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE
+ #define AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE    ( ( size_t ) 8 )          /**< @brief Maximum number of topic filters in a single SUBSCRIBE packet. */
++#endif
+ #define AWS_IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH         ( ( size_t ) ( 131072 ) ) /**< @brief Maximum publish payload length accepted by AWS IoT. */
+ 
+ /*
+-- 
+2.17.1
+

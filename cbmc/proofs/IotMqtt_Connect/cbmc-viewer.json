@@ -1,0 +1,21 @@
+{ "expected-missing-functions":
+  [
+    "IotClock_GetTimeMs",
+    "IotLog_Generic",
+    "IotMutex_Destroy",
+    "IotMutex_Lock",
+    "IotMutex_Unlock",
+    "IotSemaphore_Create",
+    "IotSemaphore_Destroy",
+    "IotSemaphore_Post",
+    "IotTaskPool_GetSystemTaskPool",
+    "IotTaskPool_ScheduleDeferred",
+
+    "_IotMqtt_RemoveSubscriptionByPacket",
+    "_checkRetryLimit",
+    "_scheduleCallback",
+    "_scheduleNextRetry"
+  ],
+  "proof-name": "IotMqtt_Connect",
+  "proof-root": "cbmc/proofs"
+}
