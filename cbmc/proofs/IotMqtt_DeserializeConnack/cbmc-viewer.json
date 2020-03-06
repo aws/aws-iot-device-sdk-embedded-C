@@ -17,6 +17,6 @@
     "IotTaskPool_strerror",
     "IotTaskPool_TryCancel"
   ],
-  "proof-name": "DeserializeSuback",
+  "proof-name": "_IotMqtt_DeserializeConnack",
   "proof-root": "cbmc/proofs"
 }
