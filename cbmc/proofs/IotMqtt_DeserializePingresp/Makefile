@@ -1,4 +1,4 @@
-ENTRY=DeserializePuback
+ENTRY=_IotMqtt_DeserializePingresp
 
 ABSTRACTIONS = \
 	--remove-function-body IotLog_Generic \
