@@ -1,4 +1,4 @@
-ENTRY=DeserializeSuback
+ENTRY=_IotMqtt_DeserializeSuback
 
 ################################################################
 # Proof assumptions
