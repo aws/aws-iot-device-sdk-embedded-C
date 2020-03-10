@@ -230,10 +230,10 @@ static bool _validatePublish( bool awsIotMqttMode,
 {
     bool status = true;
 
-    /* Check for a valid QoS and callback function when subscribing. */
-    if( operation == IOT_MQTT_SUBSCRIBE )
+    /* Check for NULL. */
+    if( pPublishInfo == NULL )
     {
-        status = _validateQos( pSubscription->qos );
+        IotLogError( "Publish information cannot be NULL." );
 
         status = false;
     }
@@ -323,21 +323,7 @@ static bool _validateListSize( bool awsIotMqttMode,
 
         status = false;
     }
-
-cleanup:
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
-
-static bool _validateWildcardHash( uint16_t index,
-                                   const IotMqttSubscription_t * pSubscription )
-{
-    bool status = true;
-
-    /* '#' must be the last character in the filter. */
-    if( index != pSubscription->topicFilterLength - 1 )
+    else
     {
         /* AWS IoT supports at most 8 topic filters in a single SUBSCRIBE packet. */
         if( awsIotMqttMode == true )

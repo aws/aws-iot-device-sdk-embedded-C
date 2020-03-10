@@ -446,14 +446,7 @@ static IotMqttError_t _deserializePublishPacket( _mqttConnection_t * pMqttConnec
             /* Schedule PUBLISH for callback invocation. */
             status = _IotMqtt_ScheduleOperation( pOperation, _IotMqtt_ProcessIncomingPublish, 0 );
         }
-    }
-
-    /* Clean up on error. */
-cleanup:
-
-    if( status != IOT_MQTT_SUCCESS )
-    {
-        if( pIncomingPacket->pRemainingData != NULL )
+        else
         {
             status = IOT_MQTT_NETWORK_ERROR;
         }
