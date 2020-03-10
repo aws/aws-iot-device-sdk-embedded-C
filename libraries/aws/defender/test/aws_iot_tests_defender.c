@@ -44,6 +44,8 @@ void RunDefenderTests( bool disableNetworkTests, bool disableLongTests )
     /* Silence warnings about unused parameters. */
     ( void ) disableLongTests;
 
+    RUN_TEST_GROUP( Defender_Unit );
+
     if( disableNetworkTests == false )
     {
         RUN_TEST_GROUP( Defender_System );

@@ -36,6 +36,10 @@
 #ifndef IOT_ATOMIC_H_
 #define IOT_ATOMIC_H_
 
+#ifndef IOT_ATOMIC_USE_PORT
+    #define IOT_ATOMIC_USE_PORT    ( 0 )
+#endif
+
 /* Use an atomic port if provided. */
 #if IOT_ATOMIC_USE_PORT == 1
     #include "atomic/iot_atomic_port.h"
@@ -43,7 +47,7 @@
     /* Both clang and gcc define __GNUC__, but only clang defines __clang__ */
     #ifdef __clang__
         /* clang versions 3.1.0 and greater have built-in atomic support. */
-        #define CLANG_VERSION    ( __clang_major__ * 100 + __clang_minor__ )
+        #define CLANG_VERSION    ( ( __clang_major__ * 100 ) + __clang_minor__ )
         #if CLANG_VERSION > 301
             /* clang is compatible with gcc atomic extensions. */
             #include "atomic/iot_atomic_gcc.h"
@@ -52,16 +56,20 @@
         #endif
     #else
         /* GCC versions 4.7.0 and greater have built-in atomic support. */
-        #define GCC_VERSION    ( __GNUC__ * 100 + __GNUC_MINOR__ )
+        #define GCC_VERSION    ( ( __GNUC__ * 100 ) + __GNUC_MINOR__ )
         #if GCC_VERSION >= 407
             #include "atomic/iot_atomic_gcc.h"
         #else
             #define IOT_ATOMIC_GENERIC    1
         #endif
     #endif /* ifdef __clang__ */
-#else  /* if IOT_ATOMIC_USE_PORT == 1 */
+#else /* if IOT_ATOMIC_USE_PORT == 1 */
     #define IOT_ATOMIC_GENERIC    1
 #endif /* if IOT_ATOMIC_USE_PORT == 1 */
+
+#ifndef IOT_ATOMIC_GENERIC
+    #define IOT_ATOMIC_GENERIC    ( 0 )
+#endif
 
 /* Include the generic atomic header if no supported compiler was found. */
 #if ( IOT_ATOMIC_GENERIC == 1 )

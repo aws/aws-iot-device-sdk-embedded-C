@@ -193,7 +193,7 @@
  *
  * The 3 Shadow operations are DELETE, GET, and UPDATE.
  */
-#define SHADOW_OPERATION_COUNT                   ( 3 )
+#define SHADOW_OPERATION_COUNT                   ( 3U )
 
 /**
  * @brief The number of currently available Shadow callbacks.
@@ -211,7 +211,7 @@
 /**
  * @brief The length of #SHADOW_DELETE_OPERATION_STRING.
  */
-#define SHADOW_DELETE_OPERATION_STRING_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_DELETE_OPERATION_STRING ) - 1 ) )
+#define SHADOW_DELETE_OPERATION_STRING_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_DELETE_OPERATION_STRING ) - 1U ) )
 
 /**
  * @brief The string representing a Shadow GET operation in a Shadow MQTT topic.
@@ -221,7 +221,7 @@
 /**
  * @brief The length of #SHADOW_GET_OPERATION_STRING.
  */
-#define SHADOW_GET_OPERATION_STRING_LENGTH       ( ( uint16_t ) ( sizeof( SHADOW_GET_OPERATION_STRING ) - 1 ) )
+#define SHADOW_GET_OPERATION_STRING_LENGTH       ( ( uint16_t ) ( sizeof( SHADOW_GET_OPERATION_STRING ) - 1U ) )
 
 /**
  * @brief The string representing a Shadow UPDATE operation in a Shadow MQTT topic.
@@ -231,7 +231,7 @@
 /**
  * @brief The length of #SHADOW_UPDATE_OPERATION_STRING.
  */
-#define SHADOW_UPDATE_OPERATION_STRING_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_UPDATE_OPERATION_STRING ) - 1 ) )
+#define SHADOW_UPDATE_OPERATION_STRING_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_UPDATE_OPERATION_STRING ) - 1U ) )
 
 /**
  * @brief The suffix for a Shadow delta topic.
@@ -241,7 +241,7 @@
 /**
  * @brief The length of #SHADOW_DELTA_SUFFIX.
  */
-#define SHADOW_DELTA_SUFFIX_LENGTH               ( ( uint16_t ) ( sizeof( SHADOW_DELTA_SUFFIX ) - 1 ) )
+#define SHADOW_DELTA_SUFFIX_LENGTH               ( ( uint16_t ) ( sizeof( SHADOW_DELTA_SUFFIX ) - 1U ) )
 
 /**
  * @brief The suffix for a Shadow updated topic.
@@ -251,7 +251,7 @@
 /**
  * @brief The length of #SHADOW_UPDATED_SUFFIX.
  */
-#define SHADOW_UPDATED_SUFFIX_LENGTH             ( ( uint16_t ) ( sizeof( SHADOW_UPDATED_SUFFIX ) - 1 ) )
+#define SHADOW_UPDATED_SUFFIX_LENGTH             ( ( uint16_t ) ( sizeof( SHADOW_UPDATED_SUFFIX ) - 1U ) )
 
 /**
  * @brief The length of the longest Shadow suffix.
@@ -265,8 +265,8 @@
  * IOT_MQTT_NO_MEMORY to AWS_IOT_SHADOW_NO_MEMORY
  * all other error codes to AWS_IOT_SHADOW_MQTT_ERROR
  */
-#define SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( X ) \
-    ( ( X ) == IOT_MQTT_SUCCESS ) ? AWS_IOT_SHADOW_SUCCESS : \
+#define SHADOW_CONVERT_STATUS_CODE_MQTT_TO_SHADOW( X )           \
+    ( ( X ) == IOT_MQTT_SUCCESS ) ? AWS_IOT_SHADOW_SUCCESS :     \
     ( ( X ) == IOT_MQTT_NO_MEMORY ) ? AWS_IOT_SHADOW_NO_MEMORY : \
     AWS_IOT_SHADOW_MQTT_ERROR
 
@@ -389,14 +389,14 @@ extern IotMutex_t _AwsIotShadowSubscriptionsMutex;
  * @brief Create a record for a new in-progress Shadow operation.
  *
  * @param[out] pNewOperation Set to point to the new operation on success.
- * @param[in] operation The type of Shadow operation.
+ * @param[in] type The type of Shadow operation.
  * @param[in] flags Flags variables passed to a user-facing Shadow function.
  * @param[in] pCallbackInfo User-provided callback function and parameter.
  *
  * @return #AWS_IOT_SHADOW_SUCCESS or #AWS_IOT_SHADOW_NO_MEMORY
  */
 AwsIotShadowError_t _AwsIotShadow_CreateOperation( _shadowOperation_t ** pNewOperation,
-                                                   _shadowOperationType_t operation,
+                                                   _shadowOperationType_t type,
                                                    uint32_t flags,
                                                    const AwsIotShadowCallbackInfo_t * pCallbackInfo );
 
@@ -453,6 +453,26 @@ AwsIotShadowError_t _AwsIotShadow_ProcessOperation( IotMqttConnection_t mqttConn
                                                     size_t thingNameLength,
                                                     _shadowOperation_t * pOperation,
                                                     const AwsIotShadowDocumentInfo_t * pDocumentInfo );
+
+
+
+/**
+ * @brief Convert an integer to the shadow operation type.
+ *
+ * @param[in] n The integer to convert.
+ *
+ * @return The enum value associated with the input.
+ */
+_shadowOperationType_t _AwsIotShadow_IntToShadowOperationType( uint32_t n );
+
+/**
+ * @brief Convert an integer to the shadow callback type.
+ *
+ * @param[in] n The integer to convert.
+ *
+ * @return The enum value associated with the input.
+ */
+AwsIotShadowCallbackType_t _AwsIotShadow_IntToShadowCallbackType( uint32_t n );
 
 /*---------------------- Shadow subscription functions ----------------------*/
 

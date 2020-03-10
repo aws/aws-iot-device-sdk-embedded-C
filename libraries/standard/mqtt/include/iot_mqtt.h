@@ -174,6 +174,15 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
  * (@ref IotMqttPublishInfo_t.retryLimit) members of #IotMqttPublishInfo_t
  * are ignored for LWT messages. The LWT message is optional; `pWillInfo` may be NULL.
  *
+ * MQTT keep-alive is configured by @ref IotMqttConnectInfo_t.keepAliveSeconds.
+ * Keep-alive is used to detect half-open or otherwise unusable network connections.
+ * An MQTT client will send periodic ping requests (PINGREQ) to the server if the
+ * connection is idle. The MQTT server must respond to ping requests with a ping
+ * response (PINGRESP). The standard does not specify how long the server has to
+ * respond to a ping request, noting only a "reasonable amount of time". In this library,
+ * the amount of time a server has to respond to a ping request is set with
+ * @ref IOT_MQTT_RESPONSE_WAIT_MS.
+ *
  * Unlike @ref mqtt_function_publishasync, @ref mqtt_function_subscribeasync, and
  * @ref mqtt_function_unsubscribeasync, this function is always blocking. Additionally,
  * because the MQTT connection acknowledgement packet (CONNACK packet) does not

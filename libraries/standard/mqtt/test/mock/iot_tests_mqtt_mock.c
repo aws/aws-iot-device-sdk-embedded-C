@@ -200,7 +200,7 @@ static size_t _sendSuccess( IotNetworkConnection_t pNetworkConnection,
     IotMutex_Lock( &_lastPacketMutex );
 
     /* Read the remaining length. */
-    mqttPacket.remainingLength = _IotMqtt_GetRemainingLength( &receiveContext,
+    mqttPacket.remainingLength = _IotMqtt_GetRemainingLength( ( IotNetworkConnection_t ) &receiveContext,
                                                               &_networkInterface );
     IotTest_Assert( mqttPacket.remainingLength != MQTT_REMAINING_LENGTH_INVALID );
 
@@ -230,10 +230,15 @@ static size_t _sendSuccess( IotNetworkConnection_t pNetworkConnection,
             _lastPacketType = MQTT_PACKET_TYPE_UNSUBSCRIBE;
             break;
 
+        case ( MQTT_PACKET_TYPE_DISCONNECT & 0xf0 ):
+            _lastPacketType = 0;
+            _lastPacketIdentifier = 0;
+            break;
+
         default:
 
-            /* The only valid outgoing packets are PUBLISH, SUBSCRIBE, and
-             * UNSUBSCRIBE. Abort if any other packet is found. */
+            /* The only valid outgoing packets are PUBLISH, SUBSCRIBE,
+             * UNSUBSCRIBE and DISCONNECT. Abort if any other packet is found. */
             IotTest_Assert( 0 );
     }
 

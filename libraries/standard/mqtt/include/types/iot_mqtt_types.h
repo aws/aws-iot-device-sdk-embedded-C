@@ -38,7 +38,6 @@
 
 /* Type includes. */
 #include "types/iot_platform_types.h"
-#include "types/iot_taskpool_types.h"
 
 /* Platform network include. */
 #include "platform/iot_network.h"
@@ -445,6 +444,9 @@ typedef struct IotMqttCallbackParam
      */
     IotMqttConnection_t mqttConnection;
 
+    /* MISRA rule 19.2 doesn't allow usage of union
+     * but it is intentionally used here to reduce the size of struct. */
+    /* coverity[misra_c_2012_rule_19_2_violation] */
     union
     {
         /* Valid for completed operations. */
@@ -511,14 +513,14 @@ typedef struct IotMqttCallbackInfo
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void * #IotMqttCallbackInfo_t.pCallbackContext
-     * @param[in] IotMqttCallbackParam_t * Details on the outcome of the MQTT operation
+     * @param[in] pCallbackContext #IotMqttCallbackInfo_t.pCallbackContext.
+     * @param[in] pCallbackParam Details on the outcome of the MQTT operation
      * or an incoming MQTT PUBLISH.
      *
      * @see #IotMqttCallbackParam_t for more information on the second parameter.
      */
-    void ( * function )( void *,
-                         IotMqttCallbackParam_t * );
+    void ( * function )( void * pCallbackContext,
+                         IotMqttCallbackParam_t * pCallbackParam );
 } IotMqttCallbackInfo_t;
 
 /**
@@ -721,7 +723,7 @@ struct _mqttPacket;
  * @param[in] pNetworkInterface Function pointers used to interact with the
  * network.
  */
-typedef uint8_t ( * IotMqttGetPacketType_t )( void * pNetworkConnection,
+typedef uint8_t ( * IotMqttGetPacketType_t )( IotNetworkConnection_t pNetworkConnection,
                                               const IotNetworkInterface_t * pNetworkInterface );
 
 /**
@@ -731,7 +733,7 @@ typedef uint8_t ( * IotMqttGetPacketType_t )( void * pNetworkConnection,
  * @param[in] pNetworkInterface Function pointers used to interact with the
  * network.
  */
-typedef size_t ( * IotMqttGetRemainingLength_t )( void * pNetworkConnection,
+typedef size_t ( * IotMqttGetRemainingLength_t )( IotNetworkConnection_t pNetworkConnection,
                                                   const IotNetworkInterface_t * pNetworkInterface );
 
 /**
@@ -757,7 +759,7 @@ typedef IotMqttError_t ( * IotMqttSerializeConnect_t )( const IotMqttConnectInfo
  * @param[out] uint8_t** Where the PINGREQ packet is written.
  * @param[out] size_t* Size of the PINGREQ packet.
  */
-typedef IotMqttError_t ( * IotMqttSerializePingreq_t )( uint8_t ** pDisconnectPacket,
+typedef IotMqttError_t ( * IotMqttSerializePingreq_t )( uint8_t ** pPingreqPacket,
                                                         size_t * pPacketSize );
 
 /**
@@ -794,7 +796,7 @@ typedef IotMqttError_t ( * IotMqttSerializeSubscribe_t )( const IotMqttSubscript
  * @param[out] uint8_t** Where the DISCONNECT packet is written.
  * @param[out] size_t* Size of the DISCONNECT packet.
  */
-typedef IotMqttError_t ( * IotMqttSerializeDisconnect_t )( uint8_t ** ppDisconnectPacket,
+typedef IotMqttError_t ( * IotMqttSerializeDisconnect_t )( uint8_t ** pDisconnectPacket,
                                                            size_t * pPacketSize );
 
 /**
@@ -828,7 +830,7 @@ typedef void ( * IotMqttPublishSetDup_t )( uint8_t * pPublishPacket,
  * @param[in] pNetworkContext reference to network connection like socket.
  * @param[out] pNextByte Pointer to the byte read from the network.
  */
-typedef IotMqttError_t (* IotMqttGetNextByte_t)( void * pNetworkContext,
+typedef IotMqttError_t (* IotMqttGetNextByte_t)( IotNetworkConnection_t pNetworkContext,
                                                  uint8_t * pNextByte );
 
 #if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1
@@ -1014,6 +1016,9 @@ typedef struct IotMqttNetworkInfo
      */
     bool createNetworkConnection;
 
+    /* MISRA rule 19.2 doesn't allow usage of union
+     * but it is intentionally used here to reduce the size of struct. */
+    /* coverity[misra_c_2012_rule_19_2_violation] */
     union
     {
         struct
@@ -1154,7 +1159,7 @@ typedef struct IotMqttNetworkInfo
  * @note If this flag is set, @ref mqtt_function_wait <b>MUST</b> be called to clean up
  * resources.
  */
-#define IOT_MQTT_FLAG_WAITABLE        ( 0x00000001 )
+#define IOT_MQTT_FLAG_WAITABLE        ( 0x00000001U )
 
 /**
  * @brief Causes @ref mqtt_function_disconnect to only free memory and not send
@@ -1164,6 +1169,6 @@ typedef struct IotMqttNetworkInfo
  * to @ref mqtt_function_disconnect if the network goes offline or is otherwise
  * unusable.
  */
-#define IOT_MQTT_FLAG_CLEANUP_ONLY    ( 0x00000001 )
+#define IOT_MQTT_FLAG_CLEANUP_ONLY    ( 0x00000001UL )
 
 #endif /* ifndef IOT_MQTT_TYPES_H_ */

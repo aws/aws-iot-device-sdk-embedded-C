@@ -185,9 +185,9 @@ static const char * const _pLogLevelStrings[ 5 ] =
 
 /*-----------------------------------------------------------*/
 
-void IotLog_Generic( int libraryLogSetting,
+void IotLog_Generic( int32_t libraryLogSetting,
                      const char * const pLibraryName,
-                     int messageLevel,
+                     int32_t messageLevel,
                      const IotLogConfig_t * const pLogConfig,
                      const char * const pFormat,
                      ... )

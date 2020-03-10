@@ -217,10 +217,10 @@
     #define IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES    ( 0 )
 #endif
 #ifndef IOT_MQTT_RESPONSE_WAIT_MS
-    #define IOT_MQTT_RESPONSE_WAIT_MS               ( 1000 )
+    #define IOT_MQTT_RESPONSE_WAIT_MS               ( 1000U )
 #endif
 #ifndef IOT_MQTT_RETRY_MS_CEILING
-    #define IOT_MQTT_RETRY_MS_CEILING               ( 60000 )
+    #define IOT_MQTT_RETRY_MS_CEILING               ( 60000U )
 #endif
 /** @endcond */
 
@@ -275,7 +275,7 @@
  * use only. Nevertheless, its value must be bitwise exclusive of all conflicting
  * @ref mqtt_constants_flags.
  */
-#define MQTT_INTERNAL_FLAG_BLOCK_ON_SEND                       ( 0x80000000 )
+#define MQTT_INTERNAL_FLAG_BLOCK_ON_SEND                       ( 0x80000000U )
 
 /**
  * @brief When calling #_IotMqtt_RemoveSubscriptionByPacket, use this value
@@ -316,6 +316,9 @@ typedef struct _mqttOperation
     IotTaskPoolJobStorage_t jobStorage;       /**< @brief Task pool job storage associated with this operation. */
     IotTaskPoolJob_t job;                     /**< @brief Task pool job associated with this operation. */
 
+    /* MISRA rule 19.2 doesn't allow usage of union
+     * but it is intentionally used here to reduce the size of struct. */
+    /* coverity[misra_c_2012_rule_19_2_violation] */
     union
     {
         /* If incomingPublish is false, this struct is valid. */
@@ -333,6 +336,10 @@ typedef struct _mqttOperation
             size_t packetSize;               /**< @brief Size of `pMqttPacket`. */
 
             /* How to notify of an operation's completion. */
+
+            /* MISRA rule 19.2 doesn't allow usage of union
+             * but it is intentionally used here to reduce the size of struct. */
+            /* coverity[misra_c_2012_rule_19_2_violation] */
             union
             {
                 IotSemaphore_t waitSemaphore;   /**< @brief Semaphore to be used with @ref mqtt_function_wait. */
@@ -340,6 +347,9 @@ typedef struct _mqttOperation
             } notify;                           /**< @brief How to notify of this operation's completion. */
             IotMqttError_t status;              /**< @brief Result of this operation. This is reported once a response is received. */
 
+            /* MISRA rule 19.2 doesn't allow usage of union
+             * but it is intentionally used here to reduce the size of struct. */
+            /* coverity[misra_c_2012_rule_19_2_violation] */
             union
             {
                 struct
@@ -362,7 +372,7 @@ typedef struct _mqttOperation
         struct
         {
             IotMqttPublishInfo_t publishInfo; /**< @brief Deserialized PUBLISH. */
-            const void * pReceivedData;       /**< @brief Any buffer associated with this PUBLISH that should be freed. */
+            void * pReceivedData;             /**< @brief Any buffer associated with this PUBLISH that should be freed. */
         } publish;
     } u;                                      /**< @brief Valid member depends on _mqttOperation_t.incomingPublish. */
 } _mqttOperation_t;
@@ -374,7 +384,7 @@ typedef struct _mqttConnection
 {
     bool awsIotMqttMode;                             /**< @brief Specifies if this connection is to an AWS IoT MQTT server. */
     bool ownNetworkConnection;                       /**< @brief Whether this MQTT connection owns its network connection. */
-    void * pNetworkConnection;                       /**< @brief References the transport-layer network connection. */
+    IotNetworkConnection_t pNetworkConnection;       /**< @brief References the transport-layer network connection. */
     const IotNetworkInterface_t * pNetworkInterface; /**< @brief Network interface provided to @ref mqtt_function_connect. */
     IotMqttCallbackInfo_t disconnectCallback;        /**< @brief A function to invoke when this connection is disconnected. */
 
@@ -389,6 +399,7 @@ typedef struct _mqttConnection
     IotListDouble_t subscriptionList;                /**< @brief Holds subscriptions associated with this connection. */
     IotMutex_t subscriptionMutex;                    /**< @brief Grants exclusive access to the subscription list. */
 
+    uint64_t lastMessageTime;                        /**< @brief When the most recent message was transmitted. */
     _mqttOperation_t pingreq;                        /**< @brief Operation used for MQTT keep-alive. */
 } _mqttConnection_t;
 
@@ -420,7 +431,11 @@ typedef struct _mqttSubscription
     IotMqttCallbackInfo_t callback; /**< @brief Callback information for this subscription. */
 
     uint16_t topicFilterLength;     /**< @brief Length of #_mqttSubscription_t.pTopicFilter. */
-    char pTopicFilter[];            /**< @brief The subscription topic filter. */
+
+    /* A flexible length array is used here so that the topic filter may
+     * be of an arbitrary length. */
+    /* coverity[misra_c_2012_rule_18_7_violation] */
+    char pTopicFilter[]; /**< @brief The subscription topic filter. */
 } _mqttSubscription_t;
 
 /**
@@ -431,6 +446,9 @@ typedef struct _mqttSubscription
  */
 typedef struct _mqttPacket
 {
+    /* MISRA rule 19.2 doesn't allow usage of union
+     * but it is intentionally used here to reduce the size of struct. */
+    /* coverity[misra_c_2012_rule_19_2_violation] */
     union
     {
         /**
@@ -464,16 +482,22 @@ typedef struct _mqttPacket
 bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo );
 
 /**
- * @brief Check that an #IotMqttPublishInfo_t is valid.
+ * @brief Check that parameters for an MQTT PUBLISH are valid.
  *
  * @param[in] awsIotMqttMode Specifies if this PUBLISH packet is being sent to
  * an AWS IoT MQTT server.
  * @param[in] pPublishInfo The #IotMqttPublishInfo_t to validate.
+ * @param[in] flags Behavior modification flags to validate. See @ref mqtt_constants_flags.
+ * @param[in] pCallbackInfo #IotMqttCallbackInfo_t to validate.
+ * @param[in] pPublishOperation Handle to a PUBLISH operation.
  *
- * @return `true` if `pPublishInfo` is valid; `false` otherwise.
+ * @return `true` if all parameters are valid; `false` otherwise.
  */
 bool _IotMqtt_ValidatePublish( bool awsIotMqttMode,
-                               const IotMqttPublishInfo_t * pPublishInfo );
+                               const IotMqttPublishInfo_t * pPublishInfo,
+                               uint32_t flags,
+                               const IotMqttCallbackInfo_t * pCallbackInfo,
+                               const IotMqttOperation_t * const pPublishOperation );
 
 /**
  * @brief Check that an #IotMqttPublishInfo_t is valid for an LWT publish
@@ -527,7 +551,7 @@ bool _IotMqtt_ValidateSubscriptionList( IotMqttOperationType_t operation,
  * @note This function is only used for incoming packets, and may not work
  * correctly for outgoing packets.
  */
-uint8_t _IotMqtt_GetPacketType( void * pNetworkConnection,
+uint8_t _IotMqtt_GetPacketType( IotNetworkConnection_t pNetworkConnection,
                                 const IotNetworkInterface_t * pNetworkInterface );
 
 /**
@@ -539,27 +563,8 @@ uint8_t _IotMqtt_GetPacketType( void * pNetworkConnection,
  *
  * @return The remaining length; #MQTT_REMAINING_LENGTH_INVALID on error.
  */
-size_t _IotMqtt_GetRemainingLength( void * pNetworkConnection,
+size_t _IotMqtt_GetRemainingLength( IotNetworkConnection_t pNetworkConnection,
                                     const IotNetworkInterface_t * pNetworkInterface );
-
-/**
- * @brief Get the remaining length from a stream of bytes off the network.
- *
- * @param[in] pNetworkConnection Reference to the network connection.
- * @param[in] getNextByte Function pointer used to interact with the
- * network to get next byte.
- *
- * @return The remaining length; #MQTT_REMAINING_LENGTH_INVALID on error.
- *
- * @note This function is similar to _IotMqtt_GetRemainingLength() but it uses
- * user provided getNextByte function to parse the stream instead of using
- * _IotMqtt_GetNextByte(). pNetworkConnection is implementation dependent and
- * user provided function makes use of it.
- *
- */
-size_t _IotMqtt_GetRemainingLength_Generic( void * pNetworkConnection,
-                                            IotMqttGetNextByte_t getNextByte );
-
 /**
  * @brief Generate a CONNECT packet from the given parameters.
  *
@@ -977,7 +982,7 @@ void _IotMqtt_DecrementConnectionReferences( _mqttConnection_t * pMqttConnection
  * @return `true` if a byte was successfully received from the network; `false`
  * otherwise.
  */
-bool _IotMqtt_GetNextByte( void * pNetworkConnection,
+bool _IotMqtt_GetNextByte( IotNetworkConnection_t pNetworkConnection,
                            const IotNetworkInterface_t * pNetworkInterface,
                            uint8_t * pIncomingByte );
 
@@ -1000,20 +1005,20 @@ void _IotMqtt_CloseNetworkConnection( IotMqttDisconnectReason_t disconnectReason
 /**
  * @brief Utility macro for creating serializer override selector functions
  */
-    #define _SERIALIZER_OVERRIDE_SELECTOR( _funcType_t, _funcName, _defaultFunc, _serializerMember ) \
-    static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer );                         \
-    static _funcType_t _funcName( const IotMqttSerializer_t * pSerializer )                          \
-    {                                                                                                \
-        _funcType_t _returnValue = _defaultFunc;                                                     \
-        if( pSerializer != NULL )                                                                    \
-        {                                                                                            \
-            if( pSerializer->_serializerMember != NULL )                                             \
-            {                                                                                        \
-                _returnValue = pSerializer->_serializerMember;                                       \
-            }                                                                                        \
-        }                                                                                            \
-                                                                                                     \
-        return _returnValue;                                                                         \
+    #define SERIALIZER_OVERRIDE_SELECTOR( funcType_t, funcName, defaultFunc, serializerMember ) \
+    static funcType_t funcName( const IotMqttSerializer_t * pSerializer );                      \
+    static funcType_t funcName( const IotMqttSerializer_t * pSerializer )                       \
+    {                                                                                           \
+        funcType_t returnValue = defaultFunc;                                                   \
+        if( pSerializer != NULL )                                                               \
+        {                                                                                       \
+            if( pSerializer->serializerMember != NULL )                                         \
+            {                                                                                   \
+                returnValue = pSerializer->serializerMember;                                    \
+            }                                                                                   \
+        }                                                                                       \
+                                                                                                \
+        return returnValue;                                                                     \
     }
 #endif /* if IOT_MQTT_ENABLE_SERIALIZER_OVERRIDES == 1 */
 

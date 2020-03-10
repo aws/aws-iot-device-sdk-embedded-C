@@ -1,4 +1,0 @@
-jobos: ubuntu16
-cbmcflags:        '=--unwindset;_decodeSubackStatus.0:100;--bounds-check;--pointer-check;--unwinding-assertions='
-goto: DeserializeSuback.goto
-expected: SUCCESSFUL

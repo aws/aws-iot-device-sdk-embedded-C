@@ -167,11 +167,11 @@
 
 /* Check that LIBRARY_LOG_LEVEL is defined and has a valid value. */
 #if !defined( LIBRARY_LOG_LEVEL ) ||            \
-    ( LIBRARY_LOG_LEVEL != IOT_LOG_NONE &&  \
-      LIBRARY_LOG_LEVEL != IOT_LOG_ERROR && \
-      LIBRARY_LOG_LEVEL != IOT_LOG_WARN &&  \
-      LIBRARY_LOG_LEVEL != IOT_LOG_INFO &&  \
-      LIBRARY_LOG_LEVEL != IOT_LOG_DEBUG )
+    ( ( LIBRARY_LOG_LEVEL != IOT_LOG_NONE ) &&  \
+      ( LIBRARY_LOG_LEVEL != IOT_LOG_ERROR ) && \
+      ( LIBRARY_LOG_LEVEL != IOT_LOG_WARN ) &&  \
+      ( LIBRARY_LOG_LEVEL != IOT_LOG_INFO ) &&  \
+      ( LIBRARY_LOG_LEVEL != IOT_LOG_DEBUG ) )
     #error "Please define LIBRARY_LOG_LEVEL as either IOT_LOG_NONE, IOT_LOG_ERROR, IOT_LOG_WARN, IOT_LOG_INFO, or IOT_LOG_DEBUG."
 /* Check that LIBRARY_LOG_NAME is defined and has a valid value. */
 #elif !defined( LIBRARY_LOG_NAME )
@@ -181,7 +181,7 @@
     #if LIBRARY_LOG_LEVEL > IOT_LOG_NONE
         #define IotLog( messageLevel, pLogConfig, ... )   \
                 IotLog_Generic( LIBRARY_LOG_LEVEL,        \
-                                LIBRARY_LOG_NAME,        \
+                                LIBRARY_LOG_NAME,         \
                                 messageLevel,             \
                                 pLogConfig,               \
                                 __VA_ARGS__ )
@@ -195,7 +195,7 @@
         /* If log level is DEBUG, enable the function to print buffers. */
         #if LIBRARY_LOG_LEVEL >= IOT_LOG_DEBUG
         #define IotLog_PrintBuffer( pHeader, pBuffer, bufferSize )    \
-                IotLog_GenericPrintBuffer( LIBRARY_LOG_NAME,         \
+                IotLog_GenericPrintBuffer( LIBRARY_LOG_NAME,          \
                                            pHeader,                   \
                                            pBuffer,                   \
                                            bufferSize )
