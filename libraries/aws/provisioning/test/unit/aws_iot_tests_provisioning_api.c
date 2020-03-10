@@ -32,7 +32,7 @@
 
 /* MQTT include. */
 #include "iot_mqtt.h"
-#include "iot_mqtt_serialize.h"
+#include "iot_mqtt_lightweight.h"
 
 /* Provisioning internal include. */
 #include "private/aws_iot_provisioning_internal.h"
