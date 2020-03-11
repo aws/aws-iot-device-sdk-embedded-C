@@ -40,6 +40,23 @@ _mqttConnection_t * IotTestMqtt_createMqttConnection( bool awsIotMqttMode,
                                                       const IotMqttNetworkInfo_t * pNetworkInfo,
                                                       uint16_t keepAliveSeconds );
 
+/**
+ * @brief Test access function for #_scheduleKeepAlive.
+ *
+ * @see #_scheduleKeepAlive.
+ */
+IotMqttError_t IotTestMqtt_scheduleKeepAlive( IotMqttConnection_t pMqttConnection );
+
+/*-------------------------- iot_mqtt_network.c -------------------------*/
+
+/**
+ * @brief Test access function for #_sendPuback.
+ *
+ * @see #_sendPuback.
+ */
+void IotTestMqtt_sendPuback( _mqttConnection_t * pMqttConnection,
+                             uint16_t packetIdentifier );
+
 /*------------------------- iot_mqtt_serialize.c ------------------------*/
 
 /*

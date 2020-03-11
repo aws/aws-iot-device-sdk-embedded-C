@@ -4,6 +4,7 @@ app
 aws
 awsiotmqttmode
 bool
+caretline
 clientid
 clientidentifierlength
 com
@@ -55,6 +56,9 @@ int
 iot
 iotlink
 iotlistdouble
+iotlog
+iotlogdebug
+iotlogerror
 iotmqtt
 iotmqttcallbackinfo
 iotmqttconnectinfo
@@ -81,9 +85,12 @@ jobreference
 jobstorage
 keepalivems
 keepaliveseconds
+lastmessagetime
 lu
 lwt
 malloc
+memcpy
+misra
 mqtt
 mqttconnection
 mqttoperation
@@ -92,6 +99,7 @@ mqttsubscription
 mutex
 mutexes
 nextperiodms
+offsetof
 onlinepubs
 opengroup
 operationcomplete
@@ -126,6 +134,7 @@ pnetworkcontext
 pnetworkinterface
 pnextbyte
 poperation
+poperationlink
 posix
 ppacketidentifier
 ppacketidentifierhigh
@@ -137,6 +146,7 @@ pre
 preceiveddata
 premainingdata
 pserializer
+psubscriptionlink
 ptopicfilter
 ptopicname
 puback

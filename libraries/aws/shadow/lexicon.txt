@@ -13,6 +13,7 @@ clienttokenlength
 com
 config
 const
+coverity
 deleteasync
 deletesync
 deltacallbackfunction
@@ -33,6 +34,7 @@ init
 int
 iot
 iotlink
+iotlogdebug
 iotmqttconnection
 iotmqttpublishinfo
 iotmqttqos

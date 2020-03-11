@@ -22,7 +22,7 @@ function generate_coverage() {
 }
 
 # Overwrite the value of the COMPILER_OPTIONS variable to remove any thread sanitizer flags, and replace with coverage flags.
-export COMPILER_OPTIONS="-DIOT_TEST_COVERAGE=1 --coverage -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG"
+export COMPILER_OPTIONS="-DIOT_BUILD_TESTS=1 -DIOT_TEST_COVERAGE=1 --coverage -DIOT_LOG_LEVEL_GLOBAL=IOT_LOG_DEBUG"
 
 SCRIPTS_FOLDER_PATH=../scripts
 
@@ -42,15 +42,10 @@ generate_coverage shadow.info
 $SCRIPTS_FOLDER_PATH/ci_test_jobs.sh
 generate_coverage jobs.info
 
-# Run Provisioning tests with code coverage.
-$SCRIPTS_FOLDER_PATH/ci_test_provisioning.sh
-generate_coverage provisioning.info
-
 # Combine the coverage files of all libraries into a single master coverage file.
 lcov --rc lcov_branch_coverage=1 \
      --add-tracefile common.info \
      --add-tracefile mqtt.info \
      --add-tracefile shadow.info \
      --add-tracefile jobs.info \
-     --add-tracefile provisioning.info \
      --output-file coverage.info

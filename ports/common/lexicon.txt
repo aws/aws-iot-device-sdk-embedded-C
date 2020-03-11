@@ -3,11 +3,13 @@ authmode
 bool
 ca
 callbackmutex
+caretline
 clientcert
 closecallback
 compareandswap
 config
 contextmutex
+coverity
 crt
 destroynotification
 dns

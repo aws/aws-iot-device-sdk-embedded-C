@@ -2,16 +2,24 @@
 
 **[Link to API documentation](https://docs.aws.amazon.com/freertos/latest/lib-ref/c-sdk/main/index.html)**
 
-[![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=FleetProvisioning_beta)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
-[![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/FleetProvisioning_beta/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
+[![Build Status](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C.svg?branch=v4_beta)](https://travis-ci.org/aws/aws-iot-device-sdk-embedded-C)
+[![codecov](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C/branch/v4_beta/graph/badge.svg)](https://codecov.io/gh/aws/aws-iot-device-sdk-embedded-C)
 
 The AWS IoT Device SDK for C is a collection of C99 source files that allow applications to securely connect to the AWS IoT platform. It includes an MQTT 3.1.1 client, as well as libraries specific to AWS IoT, such as Thing Shadows. It is distributed in source form and may be built into firmware along with application code.
 
-This library supersedes both the AWS IoT Device SDK Embedded C and the libraries provided with Amazon FreeRTOS.
+This library supersedes both the AWS IoT Device SDK Embedded C and the libraries provided with FreeRTOS.
 
 ## Features
 
-This branch contains all libraries from the [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch, and <b>an additional library to facilitate use of AWS Iot Core's Fleet Provisioning<sup>BETA</sup> feature</b>. The Fleet Provisioning feature can be used to automatically set up generically manufactured devices with unique digital identities, IoT Policies, and other required device-side and cloud-side configurations upon devices’ first connection to AWS IoT Core. For more information, refer to [Provisioning Devices That Don't Have Device Certificates Using Fleet Provisioning](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
+This library is a new design that inherits from both the AWS IoT Device SDK Embedded C and the libraries provided with FreeRTOS. In addition, it provides the following new features:
+- Asynchronous API for both MQTT and Thing Shadow.
+- Multithreaded API by default (removed the `yield` function).
+- More efficient platform layer (especially timers).
+- Complete separation of MQTT and network stack, allowing MQTT to run over any network stack.
+- Configurable memory allocation (static-only or dynamic). Memory allocation functions may also be set by the user.
+- Network stack based on OpenSSL when building for Linux.
+- MQTT persistent session support.
+- Device Defender library.
 
 ## Building and Running the Fleet Provisioning library Demo
 
