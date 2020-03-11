@@ -279,6 +279,41 @@ typedef struct AwsIotProvisioningRejectedResponse
 
 /**
  * @ingroup provisioning_datatypes_paramstructs
+ * @brief Aggregates the data sent as response from AWS IoT Core for the request to create a new certificate for a CSR request.
+ *
+ * @paramfor Response Callback function of @ref provisioning_function_createkeysandcertificate
+ *
+ * The @ref AwsIotProvisioning_CreateKeysAndCertificate library API passes this object to a user-provided callback
+ * function
+ * whenever the operation completes with a response from the server.
+ */
+typedef struct AwsIotProvisioningCreateCertificateFromCsrResponse
+{
+    /** @brief The highest level HTTP based status code sent by the server. */
+    AwsIotProvisioningServerStatusCode_t statusCode;
+
+    union
+    {
+        /** @brief Represents the successful/accepted response of device credentials received from the server. */
+        struct
+        {
+            const char * pDeviceCertificate;         /**< The new certificate for the device.*/
+            size_t deviceCertificateLength;          /**< The size of the device certificate.*/
+            const char * pCertificateId;             /**< The certificate ID associated with the new certificate,
+                                                      * @p pDeviceCertificate.*/
+            size_t certificateIdLength;              /**< The length of the certificate ID.*/
+            const char * pCertificateOwnershipToken; /**< The token that represents ownership of certificate and
+                                                      * associated private key that the device.*/
+            size_t ownershipTokenLength;             /**< The size of the ownership token.*/
+        } acceptedResponse;
+
+        /** @brief Represents the rejected response information received from the server. */
+        AwsIotProvisioningRejectedResponse_t rejectedResponse;
+    } u; /**< @brief Valid member depends on operation status. */
+} AwsIotProvisioningCreateCertificateFromCsrResponse_t;
+
+/**
+ * @ingroup provisioning_datatypes_paramstructs
  * @brief Aggregates the data sent as response from AWS IoT Core service for the request to generate new key-pair and
  * certificate for the device.
  *
@@ -315,6 +350,41 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateResponse
         AwsIotProvisioningRejectedResponse_t rejectedResponse;
     } u; /**< @brief Valid member depends on operation status. */
 } AwsIotProvisioningCreateKeysAndCertificateResponse_t;
+
+/**
+ * @ingroup provisioning_datatypes_paramstructs
+ * @brief User-specific callback information for handling server response of the Provisioning CreateCertificateFromCsr
+ * service API.
+ *
+ * @paramfor @ref provisioning_function_registerthing
+ *
+ * Provides a function that is invoked on completion of an @ref AwsIotProvisioning_CreateCertificateFromCsr API
+ * operation.
+ *
+ * @initializer{AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t,AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER}
+ */
+typedef struct AwsIotProvisioningCreateCertificateFromCsrCallbackInfo
+{
+    void * userParam; /**< The user-provided parameter that is (as the first parameter) to the callback
+                       * function (optional). */
+
+    /**
+     * @brief User-provided callback function signature.
+     *
+     * @param[in] void* #AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t.userParam
+     * @param[in] AwsIotProvisioningCallbackParam_t * Parsed server response of either device credentials
+     * or provisioned device information.
+     *
+     * @see #AwsIotProvisioningCreateCertificateFromCsrResponse_t for more information on the second parameter.
+     */
+    void ( * function )( void *,
+                         const AwsIotProvisioningCreateCertificateFromCsrResponse_t * ); /*<** The user-provided
+                                                                                          * callback to
+                                                                                          * invoke; with the
+                                                                                          *#AwsIotProvisioningCreateCertificateFromCsrCallbackInfo.userParam
+                                                                                          * data as the #first
+                                                                                          * parameter. */
+} AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t;
 
 /**
  * @ingroup provisioning_datatypes_paramstructs

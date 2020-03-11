@@ -42,6 +42,7 @@
  * @functionspage{provisioning,Provisioning library}
  * - @functionname{provisioning_function_init}
  * - @functionname{provisioning_function_createkeysandcertificate}
+ * - @functionname{provisioning_function_createcertificatefromcsr}
  * - @functionname{provisioning_function_registerthing}
  * - @functionname{provisioning_function_cleanup}
  * - @functionname{provisioning_function_strerror}
@@ -50,6 +51,7 @@
 /**
  * @functionpage{AwsIotProvisioning_Init,provisioning,init}
  * @functionpage{AwsIotProvisioning_CreateKeysAndCertificate,provisioning,createkeysandcertificate}
+ * @functionpage{AwsIotProvisioning_CreateCertificateFromCsr,provisioning,createcertificatefromcsr}
  * @functionpage{AwsIotProvisioning_RegisterThing,provisioning,registerthing}
  * @functionpage{AwsIotProvisioning_Cleanup,provisioning,cleanup}
  * @functionpage{AwsIotProvisioning_strerror,provisioning,strerror}
@@ -80,7 +82,6 @@
 AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
 /* @[declare_provisioning_init] */
 
-
 /**
  * @brief Requests a new public-private key pair and certificate for the device from the AWS IoT Core service and
  * invokes the passed user-callback with the credentials it receives from the server.
@@ -88,7 +89,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  * @note The device should be connected to the user AWS IoT account over MQTT and the calling code should provide the
  * MQTT connection handle to the API for communicating with the server.
  *
- * @param[in] provisioningConnection The MQTT connection handle to the user AWS IoT account, which will be used for
+ * @param[in] connection The MQTT connection handle to the user AWS IoT account, which will be used for
  * communicating with the server for creating new device credentials.
  * @param[in] flags The flags for configuring the behavior of the API. See the options available in the
  * aws_iot_provisioning_types.h file.
@@ -115,11 +116,54 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  *   #AWS_IOT_PROVISIONING_INTERNAL_FAILURE, if any there are operation failures internal to the library.
  */
 /* @[declare_provisioning_createkeysandcertificate] */
-AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttConnection_t provisioningConnection,
+AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttConnection_t connection,
                                                                        uint32_t flags,
                                                                        uint32_t timeoutMs,
                                                                        const AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t * pResponseCallback );
 /* @[declare_provisioning_createkeysandcertificate] */
+
+/**
+ * @brief Requests the AWS IoT Core service for a certificate by sending a Certificate-Signing Request, and
+ * invokes the provided user-defined response handler with the response it receives from the server.
+ *
+ * @note The device should be connected to the user AWS IoT account over MQTT and the calling code should provide the
+ * MQTT connection handle to the API for communicating with the server.
+ *
+ * @param[in] connection The MQTT connection handle that will be used to communicate with AWS IoT Core for
+ * the Certificate-Signing Request.
+ * @param[in] pCertificateSigningRequest The PEM encoded string for the Certificate-Signing Request.
+ * @param[in] csrLength The length of the Certificate-Signing Request string.
+ * @param[in] timeoutMs The timeout (in milliseconds) for a response from the server. If there is a timeout, this
+ * function returns #AWS_IOT_PROVISIONING_TIMEOUT.
+ * @param[in] pResponseCallback The user-defined callback that will be invoked with the server's response to the CSR request.
+ * The server can respond either with the new certificate information (in case of request acceptance) OR with error (in case of request
+ * rejection).
+ *
+ * @note The callback is expected to store/retain the new certificate information from the server response, which will be required for
+ * registering the device with @ref provisioning_function_registerthing function.
+ *
+ * @warning Do not overwrite the existing certificate (used for making the server connection) with the new certificate that is provided
+ * by the server. It is RECOMMENDED to retain the Provisinoning claim credentials until the device has been provisioned with a new certificate
+ * using the @ref provisioning_function_registerthing function.
+ * @return This function will return #AWS_IOT_PROVISIONING_SUCCESS upon success; otherwise,
+ *   #AWS_IOT_PROVISIONING_NOT_INITIALIZED, if the API is called without initializing the Provisioning library (i.e.
+ *   with a prior call to @ref AwsIotProvisioning_Init function.)
+ *   #AWS_IOT_PROVISIONING_BAD_PARAMETER, if one or more input parameters are invalid.
+ *   #AWS_IOT_PROVISIONING_NO_MEMORY, if there is insufficient memory for allocation in internal operations.
+ *   #AWS_IOT_PROVISIONING_MQTT_ERROR, for errors from the MQTT stack.
+ *   #AWS_IOT_PROVISIONING_TIMEOUT, if there is a timeout in waiting for the server response for the request to
+ *   generate new credentials for the device.
+ *   #AWS_IOT_PROVISIONING_SERVER_REFUSED, if the server rejects the request for generating device credentials.
+ *   #AWS_IOT_PROVISIONING_BAD_RESPONSE, if the response from the server cannot be successfully parsed or comprehended.
+ *   #AWS_IOT_PROVISIONING_INTERNAL_FAILURE, if any there are operation failures internal to the library.
+ */
+/* @[declare_provisioning_createcertificatefromcsr] */
+AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttConnection_t connection,
+                                                                       const char * pCertificateSigningRequest,
+                                                                       size_t csrLength,
+                                                                       uint32_t timeoutMs,
+                                                                       const AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t * pResponseCallback );
+/* @[declare_provisioning_createcertificatefromcsr] */
 
 /**
  * @brief Requests the AWS IoT Core service to provision the device, and invokes the passed user-callback with the
@@ -135,7 +179,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * Also, the AWS IoT account being connected to for provisioning the device SHOULD have a fleet provisioning template
  * created, whose template name should be passed to this API for requesting device provisioning.
  *
- * @param[in] provisioningConnection The MQTT connection handle to the user AWS IoT account that will be used for
+ * @param[in] connection The MQTT connection handle to the user AWS IoT account that will be used for
  * provisioning the device.
  * @param[in] pProvisioningDataInfo The data (including the certificate) that needs to be sent to the server for
  * provisioning the device.
@@ -160,7 +204,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  */
 /* @[declare_provisioning_registerthing] */
 
-AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t provisioningConnection,
+AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t connection,
                                                             const AwsIotProvisioningRegisterThingRequestInfo_t * pProvisioningDataInfo,
                                                             uint32_t timeoutMs,
                                                             const AwsIotProvisioningRegisterThingCallbackInfo_t * pResponseCallback );

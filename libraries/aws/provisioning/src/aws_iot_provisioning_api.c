@@ -451,9 +451,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeoutMs )
     IOT_FUNCTION_CLEANUP_END();
 }
 
-
 /*-----------------------------------------------------------*/
-
 AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttConnection_t
                                                                        provisioningConnection,
                                                                        uint32_t flags,
@@ -613,6 +611,161 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     }
 
     IOT_FUNCTION_CLEANUP_END();
+}
+
+/*-----------------------------------------------------------*/
+
+AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttConnection_t connection,
+                                                                       const char * pCertificateSigningRequest,
+                                                                       size_t csrLength,
+                                                                       uint32_t timeoutMs,
+                                                                       const AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t * pResponseCallback )
+{
+    uint32_t startingMutexRefCount = 0;
+    bool mutexRefCountIncremented = false;
+    char responseTopicsBuffer[ PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_MAX_TOPIC_LENGTH ] =
+    { 0 };
+    IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
+    /* Configuration for subscribing and unsubscribing to/from response topics. */
+    AwsIotSubscriptionInfo_t responseSubscription =
+    {
+        .mqttConnection        = connection,
+        .callbackFunction      = _keysAndCertificateResponseReceivedCallback,
+        .timeout               = _AwsIotProvisioningMqttTimeoutMs,
+        .pTopicFilterBase      = responseTopicsBuffer,
+        .topicFilterBaseLength = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH
+    };
+    bool subscribedToResponseTopics = false;
+    size_t payloadSize = 0;
+    uint8_t * pPayloadBuffer = NULL;
+    bool payloadBufferAllocated = false;
+    IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
+
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
+
+    /* Verify that library has been initialized. */
+    AwsIotProvisioning_Assert( _checkInit() == true );
+
+    if( connection == IOT_MQTT_CONNECTION_INITIALIZER )
+    {
+        IotLogError( "MQTT connection is not initialized." );
+
+        status = AWS_IOT_PROVISIONING_BAD_PARAMETER;
+    }
+    else if( ( pCertificateSigningRequest == NULL ) || ( csrLength == 0 ) )
+    {
+        IotLogError( "Invalid Certificate-Signing Request data passed." );
+
+        status = AWS_IOT_PROVISIONING_BAD_PARAMETER;
+    }
+    /* Check that a callback function object along with a valid callback functor is provided. */
+    else if( ( pResponseCallback == NULL ) ||
+             ( pResponseCallback->function == NULL ) )
+    {
+        IotLogError(
+            "Invalid callback provided. Both the callback object and functor within should be provided to the %s operation",
+            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+
+        status = AWS_IOT_PROVISIONING_BAD_PARAMETER;
+    }
+
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
+    {
+        /* Copy the response topics in a local buffer for appropriate suffixes to be added. */
+        ( void ) memcpy( responseTopicsBuffer, PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER,
+                         PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH );
+
+        /* Subscribe to the MQTT response topics. */
+        mqttOpResult = AwsIot_ModifySubscriptions( IotMqtt_SubscribeSync, &responseSubscription );
+
+        if( mqttOpResult != IOT_MQTT_SUCCESS )
+        {
+            IotLogError( "Unable to subscribe to response topics for %s operation",
+                         CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+            status = AWS_IOT_PROVISIONING_MQTT_ERROR;
+        }
+    }
+
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
+    {
+        /* Update the operation object to represent an active "Certificate-Signing Request" operation. */
+        _provisioningCallbackInfo_t callbackInfo;
+        callbackInfo.createKeysAndCertificateCallback = *pResponseCallback;
+        _setActiveOperation( &callbackInfo );
+
+        /* Provisioning already has an acknowledgement mechanism, so sending the message at
+         * QoS 1 provides no benefit. */
+        publishInfo.qos = IOT_MQTT_QOS_0;
+
+        /* TODO - Decide on memory allocation scheme. Should the memory be allocated here with 2-step serialization process? */
+        /* Dry run serialization */
+        _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( pCertificateSigningRequest,
+                                                                             csrLength,
+                                                                             NULL,
+                                                                             &payloadSize );
+        AwsIotProvisioning_Assert( payloadSize != 0 );
+
+        /* Allocate memory for payload buffer based on calculated serialization size. */
+        pPayloadBuffer = AwsIotProvisioning_MallocPayload( pPayloadBuffer );
+
+        if( pPayloadBuffer == NULL )
+        {
+            IotLogError( "Unable to allocate memory for request payload in %s API operation",
+                         REGISTER_THING_OPERATION_LOG );
+            status = AWS_IOT_PROVISIONING_NO_MEMORY;
+        }
+    }
+
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
+    {
+        /* Actual serialization in payload buffer. */
+        _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( pCertificateSigningRequest,
+                                                                             csrLength,
+                                                                             pPayloadBuffer,
+                                                                             &payloadSize );
+
+        publishInfo.pPayload = pPayloadBuffer;
+        publishInfo.payloadLength = payloadSize;
+
+        /* Set the operation topic name. */
+        publishInfo.pTopicName = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC;
+        publishInfo.topicNameLength = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC_LENGTH;
+
+        IotLogDebug( "About to publish %.*s topic for the %s operation",
+                     publishInfo.topicNameLength,
+                     publishInfo.pTopicName,
+                     CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+
+        /* Publish to the Provisioning topic name. */
+        mqttOpResult = IotMqtt_PublishSync( connection,
+                                            &publishInfo,
+                                            0,
+                                            _AwsIotProvisioningMqttTimeoutMs );
+
+        if( mqttOpResult != IOT_MQTT_SUCCESS )
+        {
+            IotLogError( "Unable to publish to request topic for %s operation",
+                         CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+            status = AWS_IOT_PROVISIONING_MQTT_ERROR;
+        }
+    }
+
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
+    {
+        /* Wait for response from server using the given timeout period. */
+        status = _timedWaitForServerResponse( timeoutMs );
+
+        /* Unsubscribe from the MQTT response topics only if subscription to those topics was successful. */
+        AwsIot_ModifySubscriptions( IotMqtt_UnsubscribeSync,
+                                    &responseSubscription );
+
+        AwsIotProvisioning_FreePayload( pPayloadBuffer );
+    }
+
+    /* Reset the active operation */
+    _resetActiveOperationData();
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
