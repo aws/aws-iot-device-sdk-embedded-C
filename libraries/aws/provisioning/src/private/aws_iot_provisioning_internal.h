@@ -453,8 +453,7 @@ typedef struct _provisioningOperationInfo
  */
 typedef struct _provisioningOperation
 {
-    _provisioningOperationInfo_t info;  /**< @brief The Provisioning operation object that is protected by the above
-                                         * mutex. */
+    _provisioningOperationInfo_t info;  /**< @brief The Provisioning operation object. */
     IotSemaphore_t responseReceivedSem; /**< @brief Semaphore to be used used by the synchronous API functions @ref
                                          * provisioning_function_registerthing and @ref
                                          * provisioning_function_registerthing. */

@@ -366,6 +366,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeoutMs )
     {
         IotLogWarn( "AwsIotProvisioning_Init called with library already initialized." );
     }
+
+    return status;
 }
 
 /*-----------------------------------------------------------*/
