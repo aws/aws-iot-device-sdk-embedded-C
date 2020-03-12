@@ -60,9 +60,7 @@
  * @brief One-time initialization function for the Provisioning library.
  *
  * This function performs internal setup of the Provisioning library. <b>It must be
- * called once (and only once) before calling any other Provisioning function.</b>
- * Calling this function more than once without first calling @ref
- * provisioning_function_cleanup may result in a crash.
+ * called once before calling any other Fleet Provisioning function.</b>
  *
  * @param[in] mqttTimeout The amount of time (in milliseconds) that the Provisioning
  * library will wait for MQTT operations. Optional; set this to `0` to use
@@ -82,11 +80,13 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
 
 
 /**
- * @brief Requests a new public-private key pair and certificate for the device from the AWS IoT Core service and
- * invokes the passed user-callback with the credentials it receives from the server.
+ * @brief Requests a new public-private key pair and certificate for the device from AWS IoT Core and
+ * invokes the provided user-callback with the response from the server.
  *
- * @note The device should be connected to the user AWS IoT account over MQTT and the calling code should provide the
- * MQTT connection handle to the API for communicating with the server.
+ * @note It is advised to use a shared MQTT connection to AWS IoT Core across all API functions
+ *
+ * @warning This function is NOT thread-safe. Concurrent calls to the library API functions can result in undefined
+ * behavior. Device provisioning with this library REQUIRES calling the API functions of this library sequentially.
  *
  * @param[in] provisioningConnection The MQTT connection handle to the user AWS IoT account, which will be used for
  * communicating with the server for creating new device credentials.
@@ -122,8 +122,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
 /* @[declare_provisioning_createkeysandcertificate] */
 
 /**
- * @brief Requests the AWS IoT Core service to provision the device, and invokes the passed user-callback with the
- * response it receives from the service on provisioning the device.
+ * @brief Requests the AWS IoT Core service to register the device, and invokes the user-defined callback with the
+ * response it receives from the server.
  *
  * For provisioning the device, the service is expected to register the certificate, and optionally set up the Thing,
  * Attributes and other cloud settings based on the fleet provisioning template and device context information that are
@@ -134,6 +134,9 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  *
  * Also, the AWS IoT account being connected to for provisioning the device SHOULD have a fleet provisioning template
  * created, whose template name should be passed to this API for requesting device provisioning.
+ *
+ * @warning This function is NOT thread-safe. Concurrent calls to the library API functions can result in undefined
+ * behavior. Device provisioning with this library REQUIRES calling the API functions of this library sequentially.
  *
  * @param[in] provisioningConnection The MQTT connection handle to the user AWS IoT account that will be used for
  * provisioning the device.
