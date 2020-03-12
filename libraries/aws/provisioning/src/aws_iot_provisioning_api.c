@@ -616,6 +616,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
 /*-----------------------------------------------------------*/
 
 AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttConnection_t connection,
+                                                                       IotMqttQos_t operationQos,
                                                                        const char * pCertificateSigningRequest,
                                                                        size_t csrLength,
                                                                        uint32_t timeoutMs,
@@ -690,12 +691,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
     {
         /* Update the operation object to represent an active "Certificate-Signing Request" operation. */
         _provisioningCallbackInfo_t callbackInfo;
-        callbackInfo.createKeysAndCertificateCallback = *pResponseCallback;
+        callbackInfo.createCertificateFromCsrCallback = *pResponseCallback;
         _setActiveOperation( &callbackInfo );
-
-        /* Provisioning already has an acknowledgement mechanism, so sending the message at
-         * QoS 1 provides no benefit. */
-        publishInfo.qos = IOT_MQTT_QOS_0;
 
         /* TODO - Decide on memory allocation scheme. Should the memory be allocated here with 2-step serialization process? */
         /* Dry run serialization */
@@ -724,6 +721,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
                                                                              pPayloadBuffer,
                                                                              &payloadSize );
 
+        publishInfo.qos = operationQos;
         publishInfo.pPayload = pPayloadBuffer;
         publishInfo.payloadLength = payloadSize;
 

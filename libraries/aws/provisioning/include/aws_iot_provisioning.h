@@ -131,6 +131,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  *
  * @param[in] connection The MQTT connection handle that will be used to communicate with AWS IoT Core for
  * the Certificate-Signing Request.
+ * @param[in] operationQos The Quality of Service (QoS) level for the MQTT publish/subscribe communication with the server.
  * @param[in] pCertificateSigningRequest The PEM encoded string for the Certificate-Signing Request.
  * @param[in] csrLength The length of the Certificate-Signing Request string.
  * @param[in] timeoutMs The timeout (in milliseconds) for a response from the server. If there is a timeout, this
@@ -159,6 +160,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  */
 /* @[declare_provisioning_createcertificatefromcsr] */
 AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttConnection_t connection,
+                                                                       IotMqttQos_t operationQos,
                                                                        const char * pCertificateSigningRequest,
                                                                        size_t csrLength,
                                                                        uint32_t timeoutMs,

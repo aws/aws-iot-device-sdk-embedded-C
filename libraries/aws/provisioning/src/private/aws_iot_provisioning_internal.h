@@ -28,6 +28,9 @@
 #ifndef AWS_IOT_PROVISIONING_INTERNAL_H_
 #define AWS_IOT_PROVISIONING_INTERNAL_H_
 
+/* Standard include */
+#include <stdbool.h>
+
 /* The config header is always included first. */
 #include "iot_config.h"
 
@@ -417,10 +420,13 @@ typedef enum _provisioningOperationType
  */
 typedef union _provisioningCallbackInfo
 {
-    /** @brief The callback provided by the user to the @ref provisioning_function_registerthing API. */
+    /** @brief The user-callback passed to @ref provisioning_function_createkeysandcertificate. */
     AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t createKeysAndCertificateCallback;
 
-    /** @brief The callback provided by the user to the @ref provisioning_function_registerthing API. */
+    /** @brief The user-callback passed to @ref provisioning_function_createcertificatefromcsr. */
+    AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t createCertificateFromCsrCallback;
+
+    /** @brief The user-callback passed to @ref provisioning_function_registerthing. */
     AwsIotProvisioningRegisterThingCallbackInfo_t registerThingCallback;
 } _provisioningCallbackInfo_t;
 
@@ -515,7 +521,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
                                                                           const _provisioningCallbackInfo_t * userCallbackInfo );
 
 /**
- * @brief Serializes payload data for MQTT request to the Provisioning CreateKeysAndCertificate service API.
+ * @brief Serializes payload data for MQTT request to the Fleet Provisioning CreateKeysAndCertificate API on AWS IoT Core.
  *
  * @param[out] pSerializationBuffer This will be assigned to a buffer that will be allocated and populated with the
  * serialized payload data.
@@ -525,6 +531,22 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( uint8_t ** pSerializationBuffer,
                                                                                                size_t * pBufferSize );
+
+/**
+ * @brief Serializes payload data in a buffer, if provided, of a request to the CreateCertificateFromCsr API on AWS IoT Core;
+ * otherwise stores the calculated size of the serialized data in the passed paramater, @a pBufferSize.
+ *
+ * @param[in] pCertificateSigningRequest The Certificate-Signing Request string to serialize for the request.
+ * @param[in] csrLength The length of the Certificate-Signing Request string.
+ * @param[in] pSerializationBuffer The buffer for storing the serialized payload data.
+ * @param[in, out] pBufferSize If the payload buffer is provided, this should contain the size of the buffer. Otherwise,
+ * this will be populated with the size of the serialized data.
+ * @return #true if serialization is successful; otherwise #false for any serialization error.
+ */
+bool _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                          size_t csrLength,
+                                                                          uint8_t * pSerializationBuffer,
+                                                                          size_t * pBufferSize );
 
 /**
  * @brief Serializes payload data for MQTT request to the Provisioning RegisterThing service API.
