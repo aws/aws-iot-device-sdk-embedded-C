@@ -655,6 +655,13 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
                            IotMqttSubscription_t * const pCurrentSubscription )
 {
     bool status = false;
+
+    if( pTopicFilter == NULL )
+    {
+        IotLogError( "Topic filter must be set." );
+        return status;
+    }
+
     const _mqttSubscription_t * pSubscription = NULL;
     const IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams = { 0 };
