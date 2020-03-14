@@ -622,8 +622,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
                                                                        uint32_t timeoutMs,
                                                                        const AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t * pResponseCallback )
 {
-    uint32_t startingMutexRefCount = 0;
-    bool mutexRefCountIncremented = false;
     char responseTopicsBuffer[ PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_MAX_TOPIC_LENGTH ] =
     { 0 };
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
@@ -636,10 +634,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         .pTopicFilterBase      = responseTopicsBuffer,
         .topicFilterBaseLength = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH
     };
-    bool subscribedToResponseTopics = false;
     size_t payloadSize = 0;
     uint8_t * pPayloadBuffer = NULL;
-    bool payloadBufferAllocated = false;
     IotMqttPublishInfo_t publishInfo = IOT_MQTT_PUBLISH_INFO_INITIALIZER;
 
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
@@ -696,14 +692,17 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
         /* TODO - Decide on memory allocation scheme. Should the memory be allocated here with 2-step serialization process? */
         /* Dry run serialization */
-        _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( pCertificateSigningRequest,
-                                                                             csrLength,
-                                                                             NULL,
-                                                                             &payloadSize );
+        status = _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( pCertificateSigningRequest,
+                                                                                      csrLength,
+                                                                                      NULL,
+                                                                                      &payloadSize );
         AwsIotProvisioning_Assert( payloadSize != 0 );
+    }
 
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
+    {
         /* Allocate memory for payload buffer based on calculated serialization size. */
-        pPayloadBuffer = AwsIotProvisioning_MallocPayload( pPayloadBuffer );
+        pPayloadBuffer = AwsIotProvisioning_MallocPayload( payloadSize );
 
         if( pPayloadBuffer == NULL )
         {
