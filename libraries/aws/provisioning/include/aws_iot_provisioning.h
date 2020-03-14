@@ -84,7 +84,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  * @brief Requests a new public-private key pair and certificate for the device from AWS IoT Core and
  * invokes the provided user-callback with the response from the server.
  *
- * @note It is advised to use a shared MQTT connection to AWS IoT Core across all API functions
+ * @note It is advised to use a shared MQTT connection to AWS IoT Core across all API functions.
  *
  * @warning This function is NOT thread-safe. Concurrent calls to the library API functions can result in undefined
  * behavior. Device provisioning with this library REQUIRES calling the API functions of this library sequentially.
@@ -126,8 +126,10 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * @brief Requests the AWS IoT Core service for a certificate by sending a Certificate-Signing Request, and
  * invokes the provided user-defined response handler with the response it receives from the server.
  *
- * @note The device should be connected to the user AWS IoT account over MQTT and the calling code should provide the
- * MQTT connection handle to the API for communicating with the server.
+ * @note It is advised to use a shared MQTT connection to AWS IoT Core across all API functions.
+ *
+ * @warning This function is NOT thread-safe. Concurrent calls to the library API functions can result in undefined
+ * behavior. Device provisioning with this library REQUIRES calling the API functions of this library sequentially.
  *
  * @param[in] connection The MQTT connection handle that will be used to communicate with AWS IoT Core for
  * the Certificate-Signing Request.
@@ -175,21 +177,16 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
  * Attributes and other cloud settings based on the fleet provisioning template and device context information that are
  * passed to the API.
  *
- * @note The device should be connected to the user AWS IoT account over MQTT and the calling code should provide the
- * MQTT connection handle to the API for communicating with the server.
+ * @note It is advised to use a shared MQTT connection to AWS IoT Core across all API functions.
  *
  * Also, the AWS IoT account being connected to for provisioning the device SHOULD have a fleet provisioning template
  * created, whose template name should be passed to this API for requesting device provisioning.
  *
- * <<<<<<< HEAD
- * @param[in] connection The MQTT connection handle to the user AWS IoT account that will be used for
- * =======
  * @warning This function is NOT thread-safe. Concurrent calls to the library API functions can result in undefined
  * behavior. Device provisioning with this library REQUIRES calling the API functions of this library sequentially.
  *
- * @param[in] provisioningConnection The MQTT connection handle to the user AWS IoT account that will be used for
- * >>>>>>> origin/FleetProvisioning_beta
- * provisioning the device.
+ * @param[in] connection The MQTT connection handle to the user AWS IoT account that will be used for
+ * registering the device.
  * @param[in] pProvisioningDataInfo The data (including the certificate) that needs to be sent to the server for
  * provisioning the device.
  * @param[in] timeoutMs The timeout (in milliseconds) for a response from the server. If there is a timeout, this
