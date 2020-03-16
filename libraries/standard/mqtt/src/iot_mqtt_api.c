@@ -1765,20 +1765,20 @@ IotMqttError_t IotMqtt_PublishSync( IotMqttConnection_t mqttConnection,
                                     uint32_t timeoutMs )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
+    IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER,
+                       * pPublishOperation = NULL;
+    /* Set only the "serial" flag. */
+    uint32_t syncFlags = MQTT_INTERNAL_FLAG_BLOCK_ON_SEND;
+
+    /* Flags are currently ignored. */
+    ( void ) flags;
+
     if( pPublishInfo == NULL )
     {
         status = IOT_MQTT_BAD_PARAMETER;
     }
     else
     {
-        IotMqttOperation_t publishOperation = IOT_MQTT_OPERATION_INITIALIZER,
-                           * pPublishOperation = NULL;
-        /* Set only the "serial" flag. */
-        uint32_t syncFlags = MQTT_INTERNAL_FLAG_BLOCK_ON_SEND;
-
-        /* Flags are currently ignored. */
-        ( void ) flags;
-
         /* Set the waitable flag and reference for QoS 1 PUBLISH. */
         if( pPublishInfo->qos == IOT_MQTT_QOS_1 )
         {
