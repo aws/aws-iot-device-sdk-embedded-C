@@ -360,6 +360,11 @@ bool _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const 
                                                                           uint8_t * pSerializationBuffer,
                                                                           size_t * pBufferSize )
 {
+    ( void ) pCertificateSigningRequest;
+    ( void ) csrLength;
+    ( void ) pSerializationBuffer;
+    ( void ) pBufferSize;
+
     return true;
 }
 
