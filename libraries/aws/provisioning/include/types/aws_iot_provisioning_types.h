@@ -498,6 +498,9 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
 #define AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER    { 0 } /**< @brief Initializer for
                                                                                              * #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t
                                                                                              **/
+#define AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER    { 0 } /**< @brief Initializer for
+                                                                                             * #AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t
+                                                                                             **/
 #define AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER                 { 0 } /**< @brief Initializer for
                                                                                              * #AwsIotProvisioningRegisterThingCallbackInfo_t
                                                                                              **/

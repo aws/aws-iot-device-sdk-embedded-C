@@ -538,7 +538,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
  * @param[in] pSerializationBuffer The buffer for storing the serialized payload data.
  * @param[in, out] pBufferSize If the payload buffer is provided, this should contain the size of the buffer. Otherwise,
  * this will be populated with the size of the serialized data.
- * @return #true if serialization is successful; otherwise #false for any serialization error.
+ * @return `true` if serialization is successful; otherwise `false` for any serialization error.
  */
 bool _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const char * pCertificateSigningRequest,
                                                                           size_t csrLength,
