@@ -602,10 +602,10 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
  * this will be populated with the size of the serialized data.
  * @return `true` if serialization is successful; otherwise `false` for any serialization error.
  */
-bool _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const char * pCertificateSigningRequest,
-                                                                          size_t csrLength,
-                                                                          uint8_t * pSerializationBuffer,
-                                                                          size_t * pBufferSize );
+bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                   size_t csrLength,
+                                                                   uint8_t * pSerializationBuffer,
+                                                                   size_t * pBufferSize );
 
 /**
  * @brief Serializes payload data for MQTT request to the Provisioning RegisterThing service API.

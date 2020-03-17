@@ -617,10 +617,10 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         /* Serialization of request payload occurs in a 2-step process, one for calculation of buffer size, and then,
          * serialization in allocated buffer. */
         /* Dry run serialization */
-        if( _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( pCertificateSigningRequest,
-                                                                                 csrLength,
-                                                                                 NULL,
-                                                                                 &payloadSize ) == false )
+        if( _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( pCertificateSigningRequest,
+                                                                          csrLength,
+                                                                          NULL,
+                                                                          &payloadSize ) == false )
         {
             IotLogError( "Unable to calculate PUBLISH payload size: Failed to calculate size in serialization: "
                          "Operation={%s}", CREATE_CERT_FROM_CSR_OPERATION_LOG );
@@ -646,10 +646,10 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Actual serialization in payload buffer. */
-        if( _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( pCertificateSigningRequest,
-                                                                                 csrLength,
-                                                                                 pPayloadBuffer,
-                                                                                 &payloadSize ) == false )
+        if( _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( pCertificateSigningRequest,
+                                                                          csrLength,
+                                                                          pPayloadBuffer,
+                                                                          &payloadSize ) == false )
         {
             IotLogError( "Failed to serialize PUBLISH payload in buffer: Operation={%s}",
                          CREATE_CERT_FROM_CSR_OPERATION_LOG );

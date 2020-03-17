@@ -355,10 +355,10 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
 
 /*------------------------------------------------------------------*/
 
-bool _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const char * pCertificateSigningRequest,
-                                                                          size_t csrLength,
-                                                                          uint8_t * pSerializationBuffer,
-                                                                          size_t * pBufferSize )
+bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                   size_t csrLength,
+                                                                   uint8_t * pSerializationBuffer,
+                                                                   size_t * pBufferSize )
 {
     bool status = false;
 
