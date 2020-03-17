@@ -334,6 +334,21 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
 
 /*------------------------------------------------------------------*/
 
+AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t responseType,
+                                                                const void * pResponsePayload,
+                                                                size_t payloadLength,
+                                                                const _provisioningCallbackInfo_t * userCallbackInfo )
+{
+    ( void ) responseType;
+    ( void ) pResponsePayload;
+    ( void ) payloadLength;
+    ( void ) userCallbackInfo;
+
+    return AWS_IOT_PROVISIONING_SUCCESS;
+}
+
+/*------------------------------------------------------------------*/
+
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIotStatus_t responseType,
                                                                           const void * pResponsePayload,
                                                                           size_t responsePayloadLength,

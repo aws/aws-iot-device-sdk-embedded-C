@@ -230,6 +230,17 @@ static void _keysAndCertificateResponseReceivedCallback( void * param1,
 
 /*-----------------------------------------------------------*/
 
+static void _csrResponseReceivedCallback( void * param1,
+                                          IotMqttCallbackParam_t * const pPublish )
+{
+    /* Silence warnings about unused variables.*/
+    ( void ) param1;
+
+    _commonServerResponseHandler( pPublish, _AwsIotProvisioning_ParseCsrResponse );
+}
+
+/*-----------------------------------------------------------*/
+
 static void _registerThingResponseReceivedCallback( void * param1,
                                                     IotMqttCallbackParam_t * const pPublish )
 {
@@ -523,17 +534,17 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
                                                                        uint32_t timeoutMs,
                                                                        const AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t * pResponseCallback )
 {
-    char responseTopicsBuffer[ PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_MAX_TOPIC_LENGTH ] =
+    char responseTopicsBuffer[ PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_MAX_TOPIC_LENGTH ] =
     { 0 };
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
     /* Configuration for subscribing and unsubscribing to/from response topics. */
     AwsIotSubscriptionInfo_t responseSubscription =
     {
         .mqttConnection        = connection,
-        .callbackFunction      = _keysAndCertificateResponseReceivedCallback,
+        .callbackFunction      = _csrResponseReceivedCallback,
         .timeout               = _AwsIotProvisioningMqttTimeoutMs,
         .pTopicFilterBase      = responseTopicsBuffer,
-        .topicFilterBaseLength = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH
+        .topicFilterBaseLength = PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH
     };
     size_t payloadSize = 0;
     uint8_t * pPayloadBuffer = NULL;
@@ -647,13 +658,13 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         publishInfo.payloadLength = payloadSize;
 
         /* Set the operation topic name. */
-        publishInfo.pTopicName = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC;
-        publishInfo.topicNameLength = PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC_LENGTH;
+        publishInfo.pTopicName = PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_REQUEST_TOPIC;
+        publishInfo.topicNameLength = PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_REQUEST_TOPIC_LENGTH;
 
         IotLogDebug( "About to send request to server. Topic={%.*s}, Operation={%s}",
                      publishInfo.topicNameLength,
                      publishInfo.pTopicName,
-                     CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+                     CREATE_CERTIFICATE_FROM_CSR_OPERATION_LOG );
 
         /* Publish to the Provisioning topic name. */
         mqttOpResult = IotMqtt_PublishSync( connection,

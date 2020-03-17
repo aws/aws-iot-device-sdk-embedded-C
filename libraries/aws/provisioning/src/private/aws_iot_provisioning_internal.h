@@ -262,6 +262,42 @@
     ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC ) - 1 ) )
 
 /**
+ * @brief The MQTT response topic filter for the CreateCertificateFromCsr API.
+ *
+ * @note The complete response topics are suffixed with `AWS_IOT_ACCEPTED_SUFFIX` or `AWS_IOT_REJECTED_SUFFIX` strings.
+ * It should be utilized in the @ref provisioning_function_registerthing API function.
+ */
+#define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER \
+    "$aws/certificates/create/"PROVISIONING_FORMAT
+
+/**
+ * @brief Length of the MQTT response topic filter for the Provisioning CreateCertificateFromCsr service API.
+ */
+#define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH \
+    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER ) - 1 ) )
+
+/**
+ * @brief The length of the longest MQTT response topic of the Provisioning CreateCertificateFromCsr service API.
+ * Out of the two response topics, the "rejected" has the longest length.
+ */
+#define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_MAX_TOPIC_LENGTH \
+    ( PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH + sizeof( AWS_IOT_REJECTED_SUFFIX ) )
+
+/**
+ * @brief The MQTT request topic for the Provisioning CreateCertificateFromCsr service API.
+ *
+ * @note It should be utilized in the @ref provisioning_function_registerthing API function.
+ */
+#define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_REQUEST_TOPIC \
+    "$aws/certificates/create/"PROVISIONING_FORMAT
+
+/**
+ * @brief The length of the MQTT request topic for the Provisioning CreateCertificateFromCsr service API.
+ */
+#define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_REQUEST_TOPIC_LENGTH \
+    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC ) - 1 ) )
+
+/**
  * @brief The key for the device certificate entry in the response payload of the Provisioning CreateKeysAndCertificate
  * service API.
  */
@@ -497,11 +533,30 @@ size_t _AwsIotProvisioning_GenerateRegisterThingTopicFilter( const char * pTempl
  * @param[in] pKeysAndCertificateResponse The response payload from the server to parse.
  * @param[in] keysAndCertificateResponseLength The length of the response payload.
  * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( AwsIotStatus_t responseType,
                                                                                const void * pKeysAndCertificateResponse,
                                                                                size_t keysAndCertificateResponseLength,
                                                                                const _provisioningCallbackInfo_t * userCallbackInfo );
+
+/**
+ * @brief Parses the response from the server received on a Certificate-Signing Request, and invokes the provided
+ * user-callback with the parsed response.
+ *
+ * @note If the server accepts the request, the received certificate information is passed to the user-callback
+ * otherwise, the error information is passed on request rejection by the server.
+ *
+ * @param[in] responseType The type of response, "accepted" or "rejected" received from the server for the operation.
+ * @param[in] pKeysAndCertificateResponse The response payload from the server to parse.
+ * @param[in] keysAndCertificateResponseLength The length of the response payload.
+ * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
+ */
+AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t responseType,
+                                                                const void * pResponsePayload,
+                                                                size_t payloadLength,
+                                                                const _provisioningCallbackInfo_t * userCallbackInfo );
 
 /**
  * @brief Parses the response payload received from the server for device provisioning, and invokes the provided
@@ -511,6 +566,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
  * @param[in] pResponsePayload The response payload from the server to parse.
  * @param[in] responsePayloadLength The length of the response payload.
  * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIotStatus_t responseType,
                                                                           const void * pResponsePayload,
