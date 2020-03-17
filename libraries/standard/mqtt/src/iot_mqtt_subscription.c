@@ -655,13 +655,6 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
                            IotMqttSubscription_t * const pCurrentSubscription )
 {
     bool status = false;
-
-    if( pTopicFilter == NULL )
-    {
-        IotLogError( "Topic filter must be set." );
-        return status;
-    }
-
     const _mqttSubscription_t * pSubscription = NULL;
     const IotLink_t * pSubscriptionLink = NULL;
     _topicMatchParams_t topicMatchParams = { 0 };
@@ -675,11 +668,18 @@ bool IotMqtt_IsSubscribed( IotMqttConnection_t mqttConnection,
      * function is running. */
     IotMutex_Lock( &( mqttConnection->subscriptionMutex ) );
 
-    /* Search for a matching subscription. */
-    pSubscriptionLink = IotListDouble_FindFirstMatch( &( mqttConnection->subscriptionList ),
-                                                      NULL,
-                                                      _topicMatch,
-                                                      &topicMatchParams );
+    if( pTopicFilter == NULL )
+    {
+        IotLogError( "Topic filter must be set." );
+    }
+    else
+    {
+        /* Search for a matching subscription. */
+        pSubscriptionLink = IotListDouble_FindFirstMatch( &( mqttConnection->subscriptionList ),
+                                                          NULL,
+                                                          _topicMatch,
+                                                          &topicMatchParams );
+    }
 
     /* Check if a matching subscription was found. */
     if( pSubscriptionLink != NULL )
