@@ -360,7 +360,7 @@ bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * 
                                                                    uint8_t * pSerializationBuffer,
                                                                    size_t * pBufferSize )
 {
-    bool status = false;
+    bool status = true;
 
     AwsIotProvisioning_Assert( pCertificateSigningRequest != NULL );
     AwsIotProvisioning_Assert( csrLength != 0 );

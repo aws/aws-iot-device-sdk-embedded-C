@@ -44,13 +44,13 @@ void RunProvisioningTests( bool disableNetworkTests,
     /* Silence warnings about unused parameters. */
     ( void ) disableLongTests;
 
-    RUN_TEST_GROUP( Provisioning_Unit_API );
+    /* RUN_TEST_GROUP( Provisioning_Unit_API ); */
     RUN_TEST_GROUP( Provisioning_Unit_Serializer );
-    RUN_TEST_GROUP( Provisioning_Unit_Parser );
+    /* RUN_TEST_GROUP( Provisioning_Unit_Parser ); */
 
     if( disableNetworkTests == false )
     {
-        RUN_TEST_GROUP( Provisioning_System );
+        /* RUN_TEST_GROUP( Provisioning_System ); */
     }
 }
 

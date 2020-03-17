@@ -42,6 +42,25 @@
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Test string to use as the Certificate-Signing Request data in CSR
+ * payload serializer tests.
+ */
+static const char * _testCsrString = "TestCSR";
+
+/**
+ * @brief Expected serialization of the above CSR string as the request payload.
+ */
+static const uint8_t _expectedSerialization[] =
+{
+    0xA1,                                                                   /* map(1) */
+    0x78, 0x19,                                                             /* text(25) */
+    0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x53, 0x69,
+    0x67, 0x6E, 0x69, 0x6E, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, /* "certificateSigningRequest" */
+    0x67,                                                                   /* text(7) */
+    0x54, 0x65, 0x73, 0x74, 0x43, 0x53, 0x52                                /* "TestCSR" */
+};
+
+/**
  * @brief Certificate ID for Provisioning's RegisterThing Request serialization tests.
  */
 static const char * _testCertificateId = "TestCertificateId";
@@ -103,6 +122,8 @@ TEST_TEAR_DOWN( Provisioning_Unit_Serializer )
 TEST_GROUP_RUNNER( Provisioning_Unit_Serializer )
 {
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateKeysAndCertificatePayloadNominalCase );
+    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithoutBuffer );
+    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithBuffer );
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadNominalCase );
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadCaseWithoutParameters );
 }
@@ -111,8 +132,7 @@ TEST_GROUP_RUNNER( Provisioning_Unit_Serializer )
 
 /**
  * @brief Tests that the serializer for Provisioning CreateKeysAndCertificate API generates the expected encoding for an
- *"{}" empty
- * payload.
+ * "{}" empty payload.
  */
 TEST( Provisioning_Unit_Serializer, TestSerializeCreateKeysAndCertificatePayloadNominalCase )
 {
@@ -139,6 +159,45 @@ TEST( Provisioning_Unit_Serializer, TestSerializeCreateKeysAndCertificatePayload
 
     /* Release the buffer that was allocated by the serializer function. */
     AwsIotProvisioning_FreePayload( pSerializationBuffer );
+}
+
+/**
+ * @brief Tests that the CSR payload serializer calculates the serialization size, and populates the passed output
+ * parameter when a serialization buffer is not passed to it.
+ */
+TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithoutBuffer )
+{
+    uint8_t * pSerializationBuffer = NULL;
+    size_t bufferSizeNeeded = 0;
+
+    /* Test the serializer function. */
+    TEST_ASSERT_EQUAL( true,
+                       _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( _testCsrString,
+                                                                                     strlen( _testCsrString ),
+                                                                                     pSerializationBuffer,
+                                                                                     &bufferSizeNeeded ) );
+    /* Make sure that the output parameter has been populated with the serialization size. */
+    TEST_ASSERT_EQUAL( sizeof( _expectedSerialization ), bufferSizeNeeded );
+}
+
+/**
+ * @brief Tests that the CSR payload serializer populates the buffer with the serialized payload, when
+ * the passed buffer is valid.
+ */
+TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithBuffer )
+{
+    uint8_t testBuffer[ sizeof( _expectedSerialization ) ] = { 0 };
+    size_t bufferSize = sizeof( testBuffer );
+
+    /* Test the serializer function. */
+    TEST_ASSERT_EQUAL( true,
+                       _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( _testCsrString,
+                                                                                     strlen( _testCsrString ),
+                                                                                     &testBuffer[ 0 ],
+                                                                                     &bufferSize ) );
+    /* Verify the generated serialization in the buffer. */
+    TEST_ASSERT_EQUAL( 0, memcmp( _expectedSerialization, testBuffer,
+                                  sizeof( _expectedSerialization ) ) );
 }
 
 /**
