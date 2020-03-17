@@ -166,7 +166,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
                                                                        const char * pCertificateSigningRequest,
                                                                        size_t csrLength,
                                                                        uint32_t timeoutMs,
-                                                                       const AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t * pResponseCallback );
+                                                                       const AwsIotProvisioningCreateCertFromCsrCallbackInfo_t * pResponseCallback );
 /* @[declare_provisioning_createcertificatefromcsr] */
 
 /**

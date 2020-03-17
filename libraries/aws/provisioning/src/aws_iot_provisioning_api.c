@@ -538,7 +538,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
                                                                        const char * pCertificateSigningRequest,
                                                                        size_t csrLength,
                                                                        uint32_t timeoutMs,
-                                                                       const AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t * pResponseCallback )
+                                                                       const AwsIotProvisioningCreateCertFromCsrCallbackInfo_t * pResponseCallback )
 {
     char responseTopicsBuffer[ PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_MAX_TOPIC_LENGTH ] =
     { 0 };
