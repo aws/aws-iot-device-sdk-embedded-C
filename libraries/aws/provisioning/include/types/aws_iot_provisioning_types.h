@@ -322,7 +322,7 @@ typedef struct AwsIotProvisioningCreateCertFromCsrResponse
  * Provides a function that is invoked on completion of an @ref AwsIotProvisioning_CreateCertificateFromCsr API
  * operation.
  *
- * @initializer{AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t,AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER}
+ * @initializer{AwsIotProvisioningCreateCertFromCsrCallbackInfo_t,AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER}
  */
 typedef struct AwsIotProvisioningCreateCertFromCsrCallbackInfo
 {
@@ -332,7 +332,7 @@ typedef struct AwsIotProvisioningCreateCertFromCsrCallbackInfo
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] userContext #AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t.userParam
+     * @param[in] userContext #AwsIotProvisioningCreateCertFromCsrCallbackInfo_t.userParam
      * @param[in] serverResponse Parsed server response of either device credentials
      * or provisioned device information.
      *
@@ -342,7 +342,7 @@ typedef struct AwsIotProvisioningCreateCertFromCsrCallbackInfo
                          const AwsIotProvisioningCreateCertFromCsrResponse_t * serverResponse ); /*<** The user-provided
                                                                                                   * callback to
                                                                                                   * invoke; with the
-                                                                                                  *#AwsIotProvisioningCreateCertificateFromCsrCallbackInfo.userParam
+                                                                                                  *#AwsIotProvisioningCreateCertFromCsrCallbackInfo.userParam
                                                                                                   * data as the #first
                                                                                                   * parameter. */
 } AwsIotProvisioningCreateCertFromCsrCallbackInfo_t;
@@ -500,7 +500,7 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
                                                                                              * #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t
                                                                                              **/
 #define AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER    { 0 } /**< @brief Initializer for
-                                                                                             * #AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t
+                                                                                             * #AwsIotProvisioningCreateCertFromCsrCallbackInfo_t
                                                                                              **/
 #define AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER                 { 0 } /**< @brief Initializer for
                                                                                              * #AwsIotProvisioningRegisterThingCallbackInfo_t
