@@ -83,7 +83,7 @@
  */
 /**@{ */
 #define CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG    "CREATE KEYS AND CERTIFICATE"
-#define CREATE_CERTIFICATE_FROM_CSR_OPERATION_LOG    "CREATE CERTIFICATE FROM CSR"
+#define CREATE_CERT_FROM_CSR_OPERATION_LOG           "CREATE CERTIFICATE FROM CSR"
 #define REGISTER_THING_OPERATION_LOG                 "REGISTER DEVICE"
 /**@} */
 
@@ -267,34 +267,34 @@
  * @note The complete response topics are suffixed with `AWS_IOT_ACCEPTED_SUFFIX` or `AWS_IOT_REJECTED_SUFFIX` strings.
  * It should be utilized in the @ref provisioning_function_registerthing API function.
  */
-#define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER \
+#define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER \
     "$aws/certificates/create-from-csr/"PROVISIONING_FORMAT
 
 /**
  * @brief Length of the response topic filter for the MQTT CreateCertificateFromCsr service API.
  */
-#define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH \
-    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER ) - 1 ) )
+#define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH \
+    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER ) - 1 ) )
 
 /**
  * @brief The length of the longest response topic of the MQTT CreateCertificateFromCsr service API.
  * Out of the two response topics, the "rejected" has the longest length.
  */
-#define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_MAX_TOPIC_LENGTH \
-    ( PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH + sizeof( AWS_IOT_REJECTED_SUFFIX ) )
+#define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_MAX_TOPIC_LENGTH \
+    ( PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH + sizeof( AWS_IOT_REJECTED_SUFFIX ) )
 
 /**
  * @brief The request topic for the MQTT CreateCertificateFromCsr service API.
  *
  * @note It should be utilized in the @ref provisioning_function_registerthing API function.
  */
-#define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_REQUEST_TOPIC \
+#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_TOPIC \
     "$aws/certificates/create-from-csr/"PROVISIONING_FORMAT
 
 /**
  * @brief The length of the request topic for the MQTT CreateCertificateFromCsr service API.
  */
-#define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_REQUEST_TOPIC_LENGTH \
+#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_TOPIC_LENGTH \
     ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC ) - 1 ) )
 
 /**
@@ -461,7 +461,7 @@ typedef union _provisioningCallbackInfo
     AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t createKeysAndCertificateCallback;
 
     /** @brief The user-callback passed to @ref provisioning_function_createcertificatefromcsr. */
-    AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t createCertificateFromCsrCallback;
+    AwsIotProvisioningCreateCertFromCsrCallbackInfo_t createCertificateFromCsrCallback;
 
     /** @brief The user-callback passed to @ref provisioning_function_registerthing. */
     AwsIotProvisioningRegisterThingCallbackInfo_t registerThingCallback;

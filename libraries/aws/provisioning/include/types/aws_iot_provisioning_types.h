@@ -324,7 +324,7 @@ typedef struct AwsIotProvisioningCreateCertFromCsrResponse
  *
  * @initializer{AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t,AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER}
  */
-typedef struct AwsIotProvisioningCreateCertificateFromCsrCallbackInfo
+typedef struct AwsIotProvisioningCreateCertFromCsrCallbackInfo
 {
     void * userParam; /**< The user-provided parameter that is (as the first parameter) to the callback
                        * function (optional). */
@@ -345,7 +345,7 @@ typedef struct AwsIotProvisioningCreateCertificateFromCsrCallbackInfo
                                                                                                   *#AwsIotProvisioningCreateCertificateFromCsrCallbackInfo.userParam
                                                                                                   * data as the #first
                                                                                                   * parameter. */
-} AwsIotProvisioningCreateCertificateFromCsrCallbackInfo_t;
+} AwsIotProvisioningCreateCertFromCsrCallbackInfo_t;
 
 /**
  * @ingroup provisioning_datatypes_paramstructs
