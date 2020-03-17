@@ -262,37 +262,37 @@
     ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC ) - 1 ) )
 
 /**
- * @brief The MQTT response topic filter for the CreateCertificateFromCsr API.
+ * @brief The response topic filter for the MQTT CreateCertificateFromCsr service API.
  *
  * @note The complete response topics are suffixed with `AWS_IOT_ACCEPTED_SUFFIX` or `AWS_IOT_REJECTED_SUFFIX` strings.
  * It should be utilized in the @ref provisioning_function_registerthing API function.
  */
 #define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER \
-    "$aws/certificates/create/"PROVISIONING_FORMAT
+    "$aws/certificates/create-from-csr/"PROVISIONING_FORMAT
 
 /**
- * @brief Length of the MQTT response topic filter for the Provisioning CreateCertificateFromCsr service API.
+ * @brief Length of the response topic filter for the MQTT CreateCertificateFromCsr service API.
  */
 #define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH \
     ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER ) - 1 ) )
 
 /**
- * @brief The length of the longest MQTT response topic of the Provisioning CreateCertificateFromCsr service API.
+ * @brief The length of the longest response topic of the MQTT CreateCertificateFromCsr service API.
  * Out of the two response topics, the "rejected" has the longest length.
  */
 #define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_MAX_TOPIC_LENGTH \
     ( PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH + sizeof( AWS_IOT_REJECTED_SUFFIX ) )
 
 /**
- * @brief The MQTT request topic for the Provisioning CreateCertificateFromCsr service API.
+ * @brief The request topic for the MQTT CreateCertificateFromCsr service API.
  *
  * @note It should be utilized in the @ref provisioning_function_registerthing API function.
  */
 #define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_REQUEST_TOPIC \
-    "$aws/certificates/create/"PROVISIONING_FORMAT
+    "$aws/certificates/create-from-csr/"PROVISIONING_FORMAT
 
 /**
- * @brief The length of the MQTT request topic for the Provisioning CreateCertificateFromCsr service API.
+ * @brief The length of the request topic for the MQTT CreateCertificateFromCsr service API.
  */
 #define PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_REQUEST_TOPIC_LENGTH \
     ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC ) - 1 ) )
@@ -587,7 +587,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
 
 /**
  * @brief Serializes payload data in a buffer, if provided, of a request to the CreateCertificateFromCsr API on AWS IoT Core;
- * otherwise stores the calculated size of the serialized data in the passed paramater, @a pBufferSize.
+ * otherwise stores the calculated size of the serialized data in the passed parameter, @a pBufferSize.
  *
  * @param[in] pCertificateSigningRequest The Certificate-Signing Request string to serialize for the request.
  * @param[in] csrLength The length of the Certificate-Signing Request string.

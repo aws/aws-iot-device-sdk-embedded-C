@@ -557,14 +557,14 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
     if( connection == IOT_MQTT_CONNECTION_INITIALIZER )
     {
-        IotLogError( "Bad Paramater: MQTT connection is not initialized: Operation={%s}",
+        IotLogError( "Bad parameter: MQTT connection is not initialized: Operation={%s}",
                      CREATE_CERTIFICATE_FROM_CSR_OPERATION_LOG );
 
         status = AWS_IOT_PROVISIONING_BAD_PARAMETER;
     }
     else if( ( pCertificateSigningRequest == NULL ) || ( csrLength == 0 ) )
     {
-        IotLogError( "Bad Paramater: Invalid Certificate-Signing Request: "
+        IotLogError( "Bad parameter: Invalid Certificate-Signing Request: "
                      "Operation={%s}", CREATE_CERTIFICATE_FROM_CSR_OPERATION_LOG );
 
         status = AWS_IOT_PROVISIONING_BAD_PARAMETER;
@@ -574,7 +574,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
              ( pResponseCallback->function == NULL ) )
     {
         IotLogError(
-            "Bad Paramater: Invalid callback provided: Operation={%s}",
+            "Bad parameter: Invalid callback provided: Operation={%s}",
             CREATE_CERTIFICATE_FROM_CSR_OPERATION_LOG );
 
         status = AWS_IOT_PROVISIONING_BAD_PARAMETER;
