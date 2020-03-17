@@ -110,14 +110,20 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
 
 
 /**
- * @brief The MQTT subscription callback for the response from Provisioning CreateKeysAndCertificate service API.
+ * @brief The common MQTT subscription callback for response topics of the CreateKeysAndCertificate service API.
  */
 static void _keysAndCertificateResponseReceivedCallback( void * param1,
                                                          IotMqttCallbackParam_t * const
                                                          pPublish );
 
 /**
- * @brief The MQTT subscription callback for the response from Provisioning's RegisterThing service API.
+ * @brief The common MQTT subscription callback for response topics of the CreateCertificateFromCsr service API.
+ */
+static void _csrResponseReceivedCallback( void * param1,
+                                          IotMqttCallbackParam_t * const pPublish );
+
+/**
+ * @brief The common MQTT subscription callback for the response topics of the RegisterThing service API.
  */
 static void _registerThingResponseReceivedCallback( void * param1,
                                                     IotMqttCallbackParam_t * const pPublish );

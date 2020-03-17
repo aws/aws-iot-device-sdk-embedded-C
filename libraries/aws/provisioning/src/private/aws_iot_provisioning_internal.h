@@ -530,14 +530,14 @@ size_t _AwsIotProvisioning_GenerateRegisterThingTopicFilter( const char * pTempl
  * with parsed credentials, if parsing was successful.
  *
  * @param[in] responseType The type of response, "accepted" or "rejected" received from the server for the operation.
- * @param[in] pKeysAndCertificateResponse The response payload from the server to parse.
- * @param[in] keysAndCertificateResponseLength The length of the response payload.
+ * @param[in] pResponsePayload The response payload from the server to parse.
+ * @param[in] payloadLength The length of the response payload.
  * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( AwsIotStatus_t responseType,
-                                                                               const void * pKeysAndCertificateResponse,
-                                                                               size_t keysAndCertificateResponseLength,
+                                                                               const void * pResponsePayload,
+                                                                               size_t payloadLength,
                                                                                const _provisioningCallbackInfo_t * userCallbackInfo );
 
 /**
@@ -548,8 +548,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
  * otherwise, the error information is passed on request rejection by the server.
  *
  * @param[in] responseType The type of response, "accepted" or "rejected" received from the server for the operation.
- * @param[in] pKeysAndCertificateResponse The response payload from the server to parse.
- * @param[in] keysAndCertificateResponseLength The length of the response payload.
+ * @param[in] pResponsePayload The response payload from the server to parse.
+ * @param[in] payloadLength The length of the response payload.
  * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
  */
