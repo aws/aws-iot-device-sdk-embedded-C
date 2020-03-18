@@ -124,6 +124,7 @@ TEST_GROUP_RUNNER( Provisioning_Unit_Serializer )
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateKeysAndCertificatePayloadNominalCase );
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithoutBuffer );
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithBuffer );
+    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadFailureCase );
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadNominalCase );
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadCaseWithoutParameters );
 }
@@ -198,6 +199,24 @@ TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithBuf
     /* Verify the generated serialization in the buffer. */
     TEST_ASSERT_EQUAL( 0, memcmp( _expectedSerialization, testBuffer,
                                   sizeof( _expectedSerialization ) ) );
+}
+
+/**
+ * @brief Tests that the CSR payload serializer returns failure when the passed
+ * serialization buffer has insufficient space for serialization.
+ */
+TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadFailureCase )
+{
+    /* Allocate less than required size for payload buffer. */
+    uint8_t testBuffer[ sizeof( _expectedSerialization ) - 1 ] = { 0 };
+    size_t bufferSize = sizeof( testBuffer );
+
+    /* Test the serializer function. */
+    TEST_ASSERT_EQUAL( false,
+                       _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( _testCsrString,
+                                                                                     strlen( _testCsrString ),
+                                                                                     &testBuffer[ 0 ],
+                                                                                     &bufferSize ) );
 }
 
 /**
