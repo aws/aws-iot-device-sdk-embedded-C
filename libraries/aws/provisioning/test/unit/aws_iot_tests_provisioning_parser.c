@@ -421,7 +421,7 @@ TEST( Provisioning_Unit_Parser, TestParseKeysAndCertificateResponseWithMissingEn
     /*************** Response payload only with private key ********************/
     const uint8_t payloadWithOnlyPrivateKey[] =
     {
-        0xA2,                                                       /* # map( 1 ) */
+        0xA1,                                                       /* # map( 1 ) */
         0x6A,                                                       /* # text( 10 ) */
         0x70, 0x72, 0x69, 0x76, 0x61, 0x74, 0x65, 0x4B, 0x65, 0x79, /* # "privateKey" */
         0x4A,                                                       /* # bytes( 10 ) */
