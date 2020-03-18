@@ -56,9 +56,39 @@
 static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObject_t * pPayloadDecoder,
                                                          const char * pOperationName,
                                                          AwsIotProvisioningRejectedResponse_t * pResponseData,
+                                                         AwsIotProvisioningServerStatusCode_t * pStatusCode );
+
+
+/**
+ * @brief Common utility for parsing the Certificate PEM string, Certificate ID,
+ * and Ownership token data from the server response.
+ * These elements are common in the server responses of the MQTT CreateKeysAndCertificate
+ * and CreateCertificateFromCsr APIs.
+ * @param payloadDecoder[in] The decoder object that represents the
+ * server response payload as a map container.
+ * @param certPemDecoder[in/out] The decoder object to store the parsed Certificate
+ * PEM string in.
+ * @param certIdDecoder[in/out] The decoder object to store the parsed
+ * Certificate ID data in.
+ * @param ownershipTokenDecoder[in/out] The decoder object to store the parsed
+ * Certificate Ownership Token string in.
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if parsing is successful; otherwise
+ * #AWS_IOT_PROVISIONING_BAD_RESPONSE if any of the expected data entries is missing
+ * in the payload OR @AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
+ */
+static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDecoderObject_t * payloadDecoder,
+                                                                 IotSerializerDecoderObject_t * certPemDecoder,
+                                                                 IotSerializerDecoderObject_t * certIdDecoder,
+                                                                 IotSerializerDecoderObject_t * ownershipTokenDecoder );
+
+
+static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObject_t * pPayloadDecoder,
+                                                         const char * pOperationName,
+                                                         AwsIotProvisioningRejectedResponse_t * pResponseData,
                                                          AwsIotProvisioningServerStatusCode_t * pStatusCode )
 {
     AwsIotProvisioning_Assert( pPayloadDecoder != NULL );
+    AwsIotProvisioning_Assert( pPayloadDecoder->type == IOT_SERIALIZER_CONTAINER_MAP );
     AwsIotProvisioning_Assert( pResponseData != NULL );
     AwsIotProvisioning_Assert( pStatusCode != NULL );
 
@@ -148,12 +178,125 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
 
 /*------------------------------------------------------------------*/
 
+static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDecoderObject_t * payloadDecoder,
+                                                                 IotSerializerDecoderObject_t * certPemDecoder,
+                                                                 IotSerializerDecoderObject_t * certIdDecoder,
+                                                                 IotSerializerDecoderObject_t * ownershipTokenDecoder )
+{
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
+    IotSerializerError_t serializerStatus = IOT_SERIALIZER_SUCCESS;
+
+    AwsIotProvisioning_Assert( payloadDecoder != NULL );
+    AwsIotProvisioning_Assert( certPemDecoder != NULL );
+    AwsIotProvisioning_Assert( certIdDecoder != NULL );
+    AwsIotProvisioning_Assert( ownershipTokenDecoder != NULL );
+
+    /* Look for the certificate PEM data. */
+    serializerStatus = _pAwsIotProvisioningDecoder->find( payloadDecoder,
+                                                          PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+                                                          certPemDecoder );
+
+    if( serializerStatus == IOT_SERIALIZER_NOT_FOUND )
+    {
+        /* Cannot find "certificatePem" */
+        IotLogError( "parser: Unable to parse server Payload container encoding is invalid: "
+                     "Expected container type is map: Operation={%s}}",
+                     PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+                     CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+        status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
+    }
+    else if( serializerStatus != IOT_SERIALIZER_SUCCESS )
+    {
+        status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
+    }
+    else if( certPemDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
+    {
+        IotLogError(
+            "parser: Unable to parse server Payload container encoding is invalid: "
+            "Expected container type is map: Operation={%s}: "
+            "Key={\"%s\"}, Operation={%s}",
+            PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+        status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
+    }
+
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
+    {
+        /* Look for the certificate ID data. */
+        serializerStatus = _pAwsIotProvisioningDecoder->find( payloadDecoder,
+                                                              PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
+                                                              certIdDecoder );
+
+        if( serializerStatus == IOT_SERIALIZER_NOT_FOUND )
+        {
+            /* Cannot find "certificateId" */
+            IotLogError( "parser: Unable to parse server response: Payload container encoding is invalid: "
+                         "Expected container type is map: Operation={%s}p:"
+                         " ExpectedKey={\"%s\"}: Operation={%s}",
+                         PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
+                         CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+            status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
+        }
+        else if( serializerStatus != IOT_SERIALIZER_SUCCESS )
+        {
+            status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
+        }
+        else if( certIdDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
+        {
+            IotLogError(
+                "parser: Unable to parse server response: Invalid Payload container encoding is invalid: "
+                "Expected container type is map: Operation={%s}: "
+                "Expected type is text string: Key={\"%s\"}, Operation={%s}",
+                PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
+                CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+            status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
+        }
+    }
+
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
+    {
+        /* Look for the certificate ownership token data. */
+        serializerStatus = _pAwsIotProvisioningDecoder->find( payloadDecoder,
+                                                              PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                                                              ownershipTokenDecoder );
+
+        if( serializerStatus == IOT_SERIALIZER_NOT_FOUND )
+        {
+            /* Cannot find "certificate ownership token" */
+            IotLogError( "parser: Unable to parse server response: Payload container encoding is invalid: "
+                         "Expected container type is map: Operation={%s}p:"
+                         " ExpectedKey={\"%s\"}: Operation={%s}",
+                         PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                         CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+            status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
+        }
+        else if( serializerStatus != IOT_SERIALIZER_SUCCESS )
+        {
+            status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
+        }
+        else if( ownershipTokenDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
+        {
+            IotLogError(
+                "parser: Unable to parse server response: Invalid Payload container encoding is invalid: "
+                "Expected container type is map: Operation={%s}: "
+                "Expected type is text string: Key={\"%s\"}, Operation={%s}",
+                PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+            status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
+        }
+    }
+
+    return status;
+}
+
+/*------------------------------------------------------------------*/
+
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( AwsIotStatus_t responseType,
-                                                                               const void * pKeysAndCertificateResponse,
-                                                                               size_t keysAndCertificateResponseLength,
+                                                                               const uint8_t * pResponsePayload,
+                                                                               size_t payloadLength,
                                                                                const _provisioningCallbackInfo_t * userCallbackInfo )
 {
-    AwsIotProvisioning_Assert( pKeysAndCertificateResponse != NULL );
+    AwsIotProvisioning_Assert( pResponsePayload != NULL );
     AwsIotProvisioning_Assert( userCallbackInfo != NULL );
 
     IOT_FUNCTION_ENTRY( AwsIotProvisioningError_t, AWS_IOT_PROVISIONING_SUCCESS );
@@ -161,14 +304,14 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
         AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER;
 
     IotSerializerDecoderObject_t payloadDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
-    IotSerializerDecoderObject_t certificatePemDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
-    IotSerializerDecoderObject_t certificateIdDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t certPemDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t certIdDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t privateKeyDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t ownershipTokenDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
 
     if( _pAwsIotProvisioningDecoder->init( &payloadDecoder,
-                                           pKeysAndCertificateResponse,
-                                           keysAndCertificateResponseLength ) != IOT_SERIALIZER_SUCCESS )
+                                           pResponsePayload,
+                                           payloadLength ) != IOT_SERIALIZER_SUCCESS )
     {
         /* Decoder object initialization failed */
         IotLogError(
@@ -189,46 +332,14 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
     {
         case AWS_IOT_ACCEPTED:
 
-            /* Look for the certificate PEM data. */
-            if( _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                   PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-                                                   &certificatePemDecoder ) != IOT_SERIALIZER_SUCCESS )
-            {
-                /* Cannot find "certificatePem" */
-                IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-                             CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
-            }
+            status = _parseCommonCertInfoInResponse( &payloadDecoder,
+                                                     &certPemDecoder,
+                                                     &certIdDecoder,
+                                                     &ownershipTokenDecoder );
 
-            if( certificatePemDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
+            if( status != AWS_IOT_PROVISIONING_SUCCESS )
             {
-                IotLogError(
-                    "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is text string.",
-                    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-                    CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
-            }
-
-            /* Look for the certificate ID data. */
-            if( _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                   PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                                                   &certificateIdDecoder ) != IOT_SERIALIZER_SUCCESS )
-            {
-                /* Cannot find "certificateId" */
-                IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                             CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
-            }
-
-            if( certificateIdDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
-            {
-                IotLogError(
-                    "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is text string.",
-                    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                    CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
+                IOT_GOTO_CLEANUP();
             }
 
             /* Look for the private Key data. */
@@ -252,39 +363,18 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
 
-            /* Look for the certificate ownership token data. */
-            if( _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                   PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
-                                                   &ownershipTokenDecoder ) != IOT_SERIALIZER_SUCCESS )
-            {
-                /* Cannot find "certificate ownership token" */
-                IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
-                             CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
-            }
-
-            if( ownershipTokenDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
-            {
-                IotLogError(
-                    "Invalid value type of \"%s\" data in server response of %s operation. Expected type is text string.",
-                    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
-                    CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
-            }
-
             /* Populate the status code information to represent success response from the server. */
             userCallbackParam.statusCode = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED;
 
             /* Populate the data to be passed to the user callback.*/
             userCallbackParam.u.acceptedResponse.pDeviceCertificate = ( const char * )
-                                                                      certificatePemDecoder.u.value.u.string.pString;
+                                                                      certPemDecoder.u.value.u.string.pString;
             userCallbackParam.u.acceptedResponse.deviceCertificateLength =
-                certificatePemDecoder.u.value.u.string.length;
+                certPemDecoder.u.value.u.string.length;
             userCallbackParam.u.acceptedResponse.pCertificateId = ( const char * )
-                                                                  certificateIdDecoder.u.value.u.string.pString;
+                                                                  certIdDecoder.u.value.u.string.pString;
             userCallbackParam.u.acceptedResponse.certificateIdLength =
-                certificateIdDecoder.u.value.u.string.length;
+                certIdDecoder.u.value.u.string.length;
             userCallbackParam.u.acceptedResponse.pPrivateKey = ( const char * )
                                                                privateKeyDecoder.u.value.u.string.pString;
             userCallbackParam.u.acceptedResponse.privateKeyLength =
@@ -335,22 +425,117 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
 /*------------------------------------------------------------------*/
 
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t responseType,
-                                                                const void * pResponsePayload,
+                                                                const uint8_t * pResponsePayload,
                                                                 size_t payloadLength,
                                                                 const _provisioningCallbackInfo_t * userCallbackInfo )
 {
-    ( void ) responseType;
-    ( void ) pResponsePayload;
-    ( void ) payloadLength;
-    ( void ) userCallbackInfo;
+    AwsIotProvisioning_Assert( pResponsePayload != NULL );
+    AwsIotProvisioning_Assert( userCallbackInfo != NULL );
+    AwsIotProvisioning_Assert( ( responseType == AWS_IOT_REJECTED ) ||
+                               ( responseType == AWS_IOT_ACCEPTED ) );
 
-    return AWS_IOT_PROVISIONING_SUCCESS;
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
+    AwsIotProvisioningCreateCertFromCsrResponse_t userCallbackParam =
+        AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER;
+
+    IotSerializerDecoderObject_t payloadDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t certPemDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t certIdDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+    IotSerializerDecoderObject_t ownershipTokenDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
+
+    if( _pAwsIotProvisioningDecoder->init( &payloadDecoder,
+                                           pResponsePayload,
+                                           payloadLength ) != IOT_SERIALIZER_SUCCESS )
+    {
+        /* Decoder object initialization failed */
+        IotLogError(
+            "parser: Unable to parser response: Failed to initialize decoder: Operation={%s}",
+            CREATE_CERT_FROM_CSR_OPERATION_LOG );
+        status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
+    }
+    else if( payloadDecoder.type != IOT_SERIALIZER_CONTAINER_MAP )
+    {
+        IotLogError(
+            "parser: Unable to parse server response: Payload container encoding is invalid: "
+            "Expected container type is map: Operation={%s}.",
+            CREATE_CERT_FROM_CSR_OPERATION_LOG );
+        status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
+    }
+
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
+    {
+        if( responseType == AWS_IOT_ACCEPTED )
+        {
+            IotLogInfo( "parser: Server has ACCEPTED the operation request: Operation={%s}",
+                        CREATE_CERT_FROM_CSR_OPERATION_LOG );
+
+            status = _parseCommonCertInfoInResponse( &payloadDecoder,
+                                                     &certPemDecoder,
+                                                     &certIdDecoder,
+                                                     &ownershipTokenDecoder );
+
+            if( status == AWS_IOT_PROVISIONING_SUCCESS )
+            {
+                /* Populate the status code information to represent success response from the server. */
+                userCallbackParam.statusCode = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED;
+
+                /* Populate the data to be passed to the user callback.*/
+                userCallbackParam.u.acceptedResponse.pDeviceCertificate = ( const char * )
+                                                                          certPemDecoder.u.value.u.string.pString;
+                userCallbackParam.u.acceptedResponse.deviceCertLength =
+                    certPemDecoder.u.value.u.string.length;
+                userCallbackParam.u.acceptedResponse.pCertId = ( const char * )
+                                                               certIdDecoder.u.value.u.string.pString;
+                userCallbackParam.u.acceptedResponse.certIdLength =
+                    certIdDecoder.u.value.u.string.length;
+
+                userCallbackParam.u.acceptedResponse.pCertOwnershipToken = ( const char * )
+                                                                           ownershipTokenDecoder.u.value.u.string.pString;
+                userCallbackParam.u.acceptedResponse.ownershipTokenLength =
+                    ownershipTokenDecoder.u.value.u.string.length;
+
+                /* Invoke the user-provided callback with the parsed credentials data . */
+                IotLogInfo( "parser: About to call user-callback with accepted server response: Operation={%s}",
+                            CREATE_CERT_FROM_CSR_OPERATION_LOG );
+                userCallbackInfo->createCertFromCsrCallback.function( userCallbackInfo->createCertFromCsrCallback.userParam,
+                                                                      &userCallbackParam );
+
+
+                _pAwsIotProvisioningDecoder->destroy( &certPemDecoder );
+                _pAwsIotProvisioningDecoder->destroy( &certIdDecoder );
+                _pAwsIotProvisioningDecoder->destroy( &ownershipTokenDecoder );
+            }
+        }
+        else if( responseType == AWS_IOT_REJECTED )
+        {
+            IotLogInfo( "parser: Server has REJECTED the operation request: Operation={%s}",
+                        CREATE_CERT_FROM_CSR_OPERATION_LOG );
+
+            status = _parseRejectedResponse( &payloadDecoder,
+                                             REGISTER_THING_OPERATION_LOG,
+                                             &userCallbackParam.u.rejectedResponse,
+                                             &userCallbackParam.statusCode );
+
+            /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
+            if( status == AWS_IOT_PROVISIONING_SUCCESS )
+            {
+                IotLogInfo( "parser: About to call user-callback with rejected server response: Operation={%s}",
+                            CREATE_CERT_FROM_CSR_OPERATION_LOG );
+                userCallbackInfo->createCertFromCsrCallback.function( userCallbackInfo->createCertFromCsrCallback.userParam,
+                                                                      &userCallbackParam );
+            }
+        }
+    }
+
+    _pAwsIotProvisioningDecoder->destroy( &payloadDecoder );
+
+    return status;
 }
 
 /*------------------------------------------------------------------*/
 
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIotStatus_t responseType,
-                                                                          const void * pResponsePayload,
+                                                                          const uint8_t * pResponsePayload,
                                                                           size_t responsePayloadLength,
                                                                           const _provisioningCallbackInfo_t * userCallbackInfo )
 {

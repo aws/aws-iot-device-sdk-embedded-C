@@ -177,11 +177,11 @@ static bool _checkInit( void )
 static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
                                           _provisioningServerResponseParser responseParser )
 {
-    AwsIotStatus_t responseStatus = AWS_IOT_UNKNOWN;
+    AwsIotStatus_t responseType = AWS_IOT_UNKNOWN;
 
     /* Is a user thread waiting for the result? */
     if( ( _activeOperation.info.userCallback.createKeysAndCertificateCallback.function == NULL ) ||
-        ( _activeOperation.info.userCallback.createCertificateFromCsrCallback.function == NULL ) ||
+        ( _activeOperation.info.userCallback.createCertFromCsrCallback.function == NULL ) ||
         ( _activeOperation.info.userCallback.registerThingCallback.function == NULL ) )
     {
         IotLogDebug( "Received unexpected server response on topic %s.",
@@ -191,10 +191,10 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
     else
     {
         /* Determine whether the response from the server is "accepted" or "rejected". */
-        responseStatus = AwsIot_ParseStatus( pPublishData->u.message.pTopicFilter,
-                                             pPublishData->u.message.topicFilterLength );
+        responseType = AwsIot_ParseStatus( pPublishData->u.message.pTopicFilter,
+                                           pPublishData->u.message.topicFilterLength );
 
-        if( responseStatus == AWS_IOT_UNKNOWN )
+        if( responseType == AWS_IOT_UNKNOWN )
         {
             IotLogWarn( "Unknown parsing status on topic %s. Ignoring message.",
                         pPublishData->u.message.pTopicFilter,
@@ -205,7 +205,7 @@ static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublis
         {
             /* Parse the server response and execute the user callback. */
             _activeOperation.info.status = responseParser(
-                responseStatus,
+                responseType,
                 pPublishData->u.message.info.pPayload,
                 pPublishData->u.message.info.payloadLength,
                 &_activeOperation.info.userCallback );
@@ -611,7 +611,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
         /* Update the operation object to represent an active "Certificate-Signing Request" operation. */
         _provisioningCallbackInfo_t callbackInfo;
-        callbackInfo.createCertificateFromCsrCallback = *pResponseCallback;
+        callbackInfo.createCertFromCsrCallback = *pResponseCallback;
         _setActiveOperation( &callbackInfo );
 
         /* Serialization of request payload occurs in a 2-step process, one for calculation of buffer size, and then,

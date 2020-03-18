@@ -467,7 +467,7 @@ typedef union _provisioningCallbackInfo
     AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t createKeysAndCertificateCallback;
 
     /** @brief The user-callback passed to @ref provisioning_function_createcertificatefromcsr. */
-    AwsIotProvisioningCreateCertFromCsrCallbackInfo_t createCertificateFromCsrCallback;
+    AwsIotProvisioningCreateCertFromCsrCallbackInfo_t createCertFromCsrCallback;
 
     /** @brief The user-callback passed to @ref provisioning_function_registerthing. */
     AwsIotProvisioningRegisterThingCallbackInfo_t registerThingCallback;
@@ -483,7 +483,7 @@ typedef union _provisioningCallbackInfo
  * @param[in] usercallback The user-provided callback to invoke on successful parsing of device credentials.
  */
 typedef AwsIotProvisioningError_t ( * _provisioningServerResponseParser)( AwsIotStatus_t responseType,
-                                                                          const void * responsePayload,
+                                                                          const uint8_t * responsePayload,
                                                                           size_t responsePayloadLength,
                                                                           const _provisioningCallbackInfo_t * userCallback );
 
@@ -542,7 +542,7 @@ size_t _AwsIotProvisioning_GenerateRegisterThingTopicFilter( const char * pTempl
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( AwsIotStatus_t responseType,
-                                                                               const void * pResponsePayload,
+                                                                               const uint8_t * pResponsePayload,
                                                                                size_t payloadLength,
                                                                                const _provisioningCallbackInfo_t * userCallbackInfo );
 
@@ -560,7 +560,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t responseType,
-                                                                const void * pResponsePayload,
+                                                                const uint8_t * pResponsePayload,
                                                                 size_t payloadLength,
                                                                 const _provisioningCallbackInfo_t * userCallbackInfo );
 
@@ -575,7 +575,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIotStatus_t responseType,
-                                                                          const void * pResponsePayload,
+                                                                          const uint8_t * pResponsePayload,
                                                                           size_t responsePayloadLength,
                                                                           const _provisioningCallbackInfo_t * userCallbackInfo );
 
