@@ -17,6 +17,7 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 - Code should be well-commented.
 - Only `/*` and @c *`/` should be used to start and end comments.
 - All comments end with a period.
+- Use of `goto` is discouraged.
 - Only spaces should be used for indenting. A single indent is 4 spaces. No tab characters should be used.
 - A parenthesis is usually followed by a space (see @ref guide_developer_styleguide_codingstyle_example).
 - Lines of code should be less than 80 characters long, although longer lines are permitted.
@@ -29,6 +30,8 @@ The coding style aims to produce code that is readable and easy to debug. An exa
 @endcode
 - All files must include `iot_config.h` at the top of the file <b>before any other includes</b>.
 - `static` functions must have a declaration at the top of the file and be implemented before any application-facing functions.
+- The [GNU complexity](https://www.gnu.org/software/complexity/manual/complexity.html) of every function should be less than 9.
+- Deviations from [MISRA C:2012](https://en.wikipedia.org/wiki/MISRA_C) coding guidelines should be documented as comments in the code.
 
 @subsection guide_developer_styleguide_codingstyle_typeguidelines Type guidelines
 @brief Guidelines for variable types.
@@ -71,13 +74,13 @@ See @ref guide_developer_styleguide_naming for how to name the functions, variab
 
 /* Defined constants follow the included headers. */
 
-/* When possible, parentheses () should be placed around contant values and a type
+/* When possible, parentheses () should be placed around constant values and a type
  * should be specified.  */
 #define LIBRARY_CONSTANT    ( ( int32_t ) 10 )
 
 #define LIBRARY_FUNCTION_MACRO( argument ) \ /* Line continuators are right-aligned. */
     {                                      \ /* Function-like macros are surrounded by curly braces {}. */
-        macro_body( argument );            \
+        macro_body( ( argument ) );        \ /* Parentheses surround macro arguments for MISRA 20.7 */
     }
 
 /*-----------------------------------------------------------*/
@@ -93,13 +96,17 @@ typedef struct _structType /* Structs are named along with the typedef. */
 {
     int32_t member;
 
+    /* As usage of unions violates MISRA rule 19.2, we must document our usage
+     * and justification. Unions are used here to reduce the size of this struct. */
     union /* Anonymous structs/unions are permitted only inside of other structs. */
     {
         int32_t a;
         int32_t b;
     };
 
-    int32_t variableLengthMember[]; /* Variable length arrays (a C99 feature) are permitted. */
+    /* Although variable length arrays (a C99 feature) violate MISRA rule 18.7,
+     * they are permitted provided documentation is supplied in comments. */
+    int32_t variableLengthMember[];
 } _structType_t;
 
 /*-----------------------------------------------------------*/
@@ -135,10 +142,7 @@ static bool _libraryStaticFunction( void * pArgument,
     size_t i = 0;
     int32_t localVariable = 0;
     int32_t * pLocalPointer = ( int32_t * ) pArgument;
-
-    /* Error handling setup, which declares a status variable type and initial
-     * value. */
-    IOT_FUNCTION_ENTRY( bool, true );
+    bool status = true;
 
     /* All functions make generous use of the logging library. */
     IotLogInfo( "Performing calculation..." );
@@ -147,26 +151,27 @@ static bool _libraryStaticFunction( void * pArgument,
     {
         IotLogError( "Bad parameters." );
 
-        /* Error handling exit. */
-        IOT_SET_AND_GOTO_CLEANUP( false );
+        /* Local variable instead of a goto for error handling. */
+        status = false;
     }
-
-    for( i = 0; i < argumentLength; i++ ) /* Note the spacing in the for loop. */
+    else /* Note an else clause is used instead of goto for error handling */
     {
-        localVariable += IotLibrary_ExternalFunction( pArgument );
+        for( i = 0; i < argumentLength; i++ ) /* Note the spacing in the for loop. */
+        {
+            localVariable += IotLibrary_ExternalFunction( pArgument );
 
-        IotLogDebug( "Current value is %d.", ( int ) localVariable );
+            IotLogDebug( "Current value is %d.", ( int ) localVariable );
+        }
+
+        if( localVariable < 0 )
+        {
+            IotLogWarn( "Failed to calculate positive value." );
+        }
+
+        IotLogInfo( "Calculation done." );
     }
 
-    if( localVariable < 0 )
-    {
-        IotLogWarn( "Failed to calculate positive value." );
-    }
-
-    IotLogInfo( "Calculation done." );
-
-    /* Error handling exit. */
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+    return status;
 }
 
 /* A separator is placed between all function implementations. */
