@@ -104,10 +104,10 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  * The callback should be defined appropriately for storing the credentials provided by
  * the server on the device.
  * @warning Do not overwrite the existing Provisioning claim credentials with the new
- * credentials provided by the server. It is RECOMMENDED NOT to delete the certificate
- * and private key used for the passed connection handle until the device has been
- * provisioned with a new certificate with the @ref provisioning_function_registerthing
- * function.
+ * credentials provided by the server, at least until the device has been provisioned
+ * with a new certificate using the @ref provisioning_function_registerthing function.
+ * It is also recommended to always retain the Provisioning claim credentials,
+ * if the claim certificate is long-lived.
  * @return This function will return #AWS_IOT_PROVISIONING_SUCCESS upon success; otherwise,
  *   #AWS_IOT_PROVISIONING_NOT_INITIALIZED, if the API is called without initializing
  *   the Provisioning library (i.e. with a prior call to @ref AwsIotProvisioning_Init function.)
@@ -161,11 +161,11 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * the server response, which will be required for registering the device with
  * @ref provisioning_function_registerthing function.
  *
- * @warning Do not overwrite the claim credentials (used for making the
- * server connection) with the new certificate that is provided by the server.
- * It is RECOMMENDED to retain the Provisinoning claim private key and certificate
- * until the device has been provisioned with a new certificate using the
- * @ref provisioning_function_registerthing function.
+ * @warning Do not overwrite the existing Provisioning claim credentials with the new
+ * credentials provided by the server, at least until the device has been provisioned
+ * with a new certificate using the @ref provisioning_function_registerthing function.
+ * It is also recommended to always retain the Provisioning claim credentials,
+ * if the claim certificate is long-lived.
  * @return This function will return #AWS_IOT_PROVISIONING_SUCCESS upon success;
  *   otherwise,
  *   #AWS_IOT_PROVISIONING_NOT_INITIALIZED, if the API is called without initializing the
