@@ -482,6 +482,7 @@ TEST_GROUP_RUNNER( Provisioning_Unit_Parser )
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseCreateCertFromCsrRejectedResponse );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseCreateCertFromCsrAcceptedResponse );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseCreateCertFromCsrResponseWithMissingEntries );
+    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseCreateCertFromCsrResponseWithIncorrectDataType );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestRegisterThingParsesWithRejectedResponseContainingMissingEntries );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestDeviceCredentialsParsesWithRejectedResponseContainingMissingEntries );
 }
@@ -631,6 +632,94 @@ TEST( Provisioning_Unit_Parser, TestParseCreateCertFromCsrAcceptedResponse )
                                                                                            _sampleAcceptedCertFromCsrResponse,
                                                                                            sizeof( _sampleAcceptedCertFromCsrResponse ),
                                                                                            &wrapperCallback ) );
+}
+
+/**
+ * @brief Verifies that the CSR response parser does not call the user-callback
+ * when the server response payload contains data in non-string format.
+ */
+TEST( Provisioning_Unit_Parser, TestParseCreateCertFromCsrResponseWithIncorrectDataType )
+{
+    _provisioningCallbackInfo_t wrapperCallback;
+
+    wrapperCallback.createCertFromCsrCallback.userParam = NULL;
+    wrapperCallback.createCertFromCsrCallback.function = _certFromCsrCallbackThatFailsOnInvokation;
+
+    /*************** Response payload only with invalid certificate Pem data********************/
+    const uint8_t payloadWithInvalidCertPem[] =
+    {
+        0xA3,                                                                               /* # map( 3 ) */
+        0x6E,                                                                               /* # text( 14 ) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
+        0x0A,                                                                               /* # unsigned(10)*/
+        0x6D,                                                                               /* # text(13) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,       /* # "certificateId" */
+        0x66,                                                                               /* # text(6) */
+        0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                                 /* # "hijklm" */
+        0x78, 0x19,                                                                         /*# text(25) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
+                                                                                             * */
+        0x66,                                                                               /*# text(6) */
+        0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                                  /*# "Token!" */
+    };
+
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
+                                                                                                payloadWithInvalidCertPem,
+                                                                                                sizeof( payloadWithInvalidCertPem ),
+                                                                                                &wrapperCallback ) );
+
+    /*************** Response payload with invalid certificate ID data********************/
+    const uint8_t payloadWithInvalidCertId[] =
+    {
+        0xA3,                                                                               /* # map( 3 ) */
+        0x6E,                                                                               /* # text( 14 ) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
+        0x67,                                                                               /* # text(7) */
+        0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,                                           /* # "abcdefg" */
+        0x6D,                                                                               /* # text(13) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,       /* # "certificateId" */
+        0x0A,                                                                               /* # unsigned(10) */
+        0x78, 0x19,                                                                         /*# text(25) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
+                                                                                             * */
+        0x66,                                                                               /*# text(6) */
+        0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                                  /*# "Token!" */
+    };
+
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
+                                                                                                payloadWithInvalidCertId,
+                                                                                                sizeof( payloadWithInvalidCertId ),
+                                                                                                &wrapperCallback ) );
+
+    /*************** Response payload with invalid ownership token data********************/
+    const uint8_t payloadWithInvalidToken[] =
+    {
+        0xA3,                                                                               /* # map( 3 ) */
+        0x6E,                                                                               /* # text( 14 ) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
+        0x67,                                                                               /* # text(7) */
+        0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,                                           /* # "abcdefg" */
+        0x6D,                                                                               /* # text(13) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,       /* # "certificateId" */
+        0x66,                                                                               /* # text(6) */
+        0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                                 /* # "hijklm" */
+        0x78, 0x19,                                                                         /*# text(25) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
+                                                                                             * */
+        0x0A                                                                                /*#  unsigned(10) */
+    };
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
+                                                                                                payloadWithInvalidToken,
+                                                                                                sizeof( payloadWithInvalidToken ),
+                                                                                                &wrapperCallback ) );
 }
 
 /**
