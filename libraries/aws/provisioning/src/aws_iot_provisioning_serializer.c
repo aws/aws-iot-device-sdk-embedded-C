@@ -360,46 +360,23 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
 
 /*------------------------------------------------------------------*/
 
-bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
-                                                          size_t csrLength,
-                                                          size_t * pPayloadSize )
-{
-    ( void ) pCertificateSigningRequest;
-    ( void ) csrLength;
-    ( void ) pPayloadSize;
-
-    return true;
-}
-
-/*------------------------------------------------------------------*/
-
-bool _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const char * pCertificateSigningRequest,
-                                                                          size_t csrLength,
-                                                                          uint8_t * pSerializationBuffer,
-                                                                          size_t * pBufferSize )
+bool _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
+                                   size_t csrLength,
+                                   IotSerializerEncoderObject_t * pEncoder,
+                                   bool isDrySerialization )
 {
     bool status = true;
 
-    AwsIotProvisioning_Assert( pCertificateSigningRequest != NULL );
-    AwsIotProvisioning_Assert( csrLength != 0 );
-    AwsIotProvisioning_Assert( pBufferSize != NULL );
-
-    if( pSerializationBuffer == NULL )
-    {
-        *pBufferSize = 0;
-    }
-
-    IotSerializerEncoderObject_t outerEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
     IotSerializerEncoderObject_t mapEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
     IotSerializerScalarData_t csrData = IotSerializer_ScalarTextStringWithLength( pCertificateSigningRequest,
                                                                                   csrLength );
 
-    /* Determine the status checking expression logic for the serializer error code based on whether the serialization
-     * buffer has been provided. This is done to accommodate #IOT_SERIALIZER_BUFFER_TOO_SMALL error when no
-     * serialization buffer is provided. */
+    /* Determine the status checking expression logic for the serializer returned
+     * status code based on whether the we are performing a dry-serialization or not.
+     */
     bool (* isSuccessStatus)( IotSerializerError_t );
 
-    if( pSerializationBuffer == NULL )
+    if( isDrySerialization == true )
     {
         isSuccessStatus = _checkSuccessOrBufferToSmall;
     }
@@ -408,20 +385,10 @@ bool _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const 
         isSuccessStatus = _checkSuccess;
     }
 
-    if( isSuccessStatus( _pAwsIotProvisioningEncoder->init( &outerEncoder,
-                                                            pSerializationBuffer,
-                                                            *pBufferSize ) ) == false )
-    {
-        IotLogError( "serializer: Unable to serialize request payload: "
-                     "Failed to initialize encoder: Operation={%s}",
-                     CREATE_CERT_FROM_CSR_OPERATION_LOG );
-        status = false;
-    }
-
     if( status == true )
     {
         /* Encode the payload as a map container. */
-        if( isSuccessStatus( _pAwsIotProvisioningEncoder->openContainer( &outerEncoder,
+        if( isSuccessStatus( _pAwsIotProvisioningEncoder->openContainer( pEncoder,
                                                                          &mapEncoder,
                                                                          1 ) ) == false )
         {
@@ -451,7 +418,7 @@ bool _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const 
          * Note: Always close the container, even if appendVKeyValue() fails,
          * to free the memory of the map encoder object.
          */
-        if( isSuccessStatus( _pAwsIotProvisioningEncoder->closeContainer( &outerEncoder,
+        if( isSuccessStatus( _pAwsIotProvisioningEncoder->closeContainer( pEncoder,
                                                                           &mapEncoder ) ) == false )
         {
             IotLogError( "serializer: Unable to serialize payload: "
@@ -461,16 +428,91 @@ bool _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const 
         }
     }
 
+    return status;
+}
+
+/*------------------------------------------------------------------*/
+
+bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
+                                                          size_t csrLength,
+                                                          size_t * pPayloadSize )
+{
+    AwsIotProvisioning_Assert( pCertificateSigningRequest != NULL );
+    AwsIotProvisioning_Assert( csrLength != 0 );
+    AwsIotProvisioning_Assert( pPayloadSize != NULL );
+
+    bool status = true;
+    IotSerializerEncoderObject_t outerEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
+
+    if( _pAwsIotProvisioningEncoder->init( &outerEncoder,
+                                           NULL,
+                                           0 ) != IOT_SERIALIZER_SUCCESS )
+    {
+        IotLogError( "serializer: Unable to serialize request payload: "
+                     "Failed to initialize encoder: Operation={%s}",
+                     CREATE_CERT_FROM_CSR_OPERATION_LOG );
+        status = false;
+    }
+
     if( status == true )
     {
-        /* If no payload buffer was passed, populate the calculated serialization size in the output parameter. */
-        if( pSerializationBuffer == NULL )
+        if( _serializeCertFromCsrPayload( pCertificateSigningRequest,
+                                          csrLength,
+                                          &outerEncoder,
+                                          true ) == false )
         {
-            *pBufferSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &outerEncoder );
-            AwsIotProvisioning_Assert( *pBufferSize != 0 );
-            IotLogDebug( "serializer: Calculated serialization size and populated in output parameter: "
-                         "Operation={%s}",
-                         CREATE_CERT_FROM_CSR_OPERATION_LOG );
+            status = false;
+        }
+    }
+
+    if( status == true )
+    {
+        *pPayloadSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &outerEncoder );
+        AwsIotProvisioning_Assert( *pPayloadSize != 0 );
+        IotLogDebug( "serializer: Calculated serialization size and populated in output parameter: "
+                     "Operation={%s}",
+                     CREATE_CERT_FROM_CSR_OPERATION_LOG );
+    }
+
+    _pAwsIotProvisioningEncoder->destroy( &outerEncoder );
+
+    return true;
+}
+
+/*------------------------------------------------------------------*/
+
+bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                   size_t csrLength,
+                                                                   uint8_t * pSerializationBuffer,
+                                                                   size_t * pBufferSize )
+{
+    bool status = true;
+
+    AwsIotProvisioning_Assert( pCertificateSigningRequest != NULL );
+    AwsIotProvisioning_Assert( csrLength != 0 );
+    AwsIotProvisioning_Assert( pSerializationBuffer != NULL );
+    AwsIotProvisioning_Assert( pBufferSize != NULL );
+
+    IotSerializerEncoderObject_t outerEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
+
+    if( _pAwsIotProvisioningEncoder->init( &outerEncoder,
+                                           pSerializationBuffer,
+                                           *pBufferSize ) != IOT_SERIALIZER_SUCCESS )
+    {
+        IotLogError( "serializer: Unable to serialize request payload: "
+                     "Failed to initialize encoder: Operation={%s}",
+                     CREATE_CERT_FROM_CSR_OPERATION_LOG );
+        status = false;
+    }
+
+    if( status == true )
+    {
+        if( _serializeCertFromCsrPayload( pCertificateSigningRequest,
+                                          csrLength,
+                                          &outerEncoder,
+                                          false ) == false )
+        {
+            status = false;
         }
     }
 

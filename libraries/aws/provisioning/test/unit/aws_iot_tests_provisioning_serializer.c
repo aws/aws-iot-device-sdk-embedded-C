@@ -122,7 +122,7 @@ TEST_TEAR_DOWN( Provisioning_Unit_Serializer )
 TEST_GROUP_RUNNER( Provisioning_Unit_Serializer )
 {
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateKeysAndCertificatePayloadNominalCase );
-    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithoutBuffer );
+    RUN_TEST_CASE( Provisioning_Unit_Serializer, TestCalculateCertFromCsrPayloadSize );
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithBuffer );
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadFailureCase );
     RUN_TEST_CASE( Provisioning_Unit_Serializer, TestSerializeRegisterThingPayloadNominalCase );
@@ -166,17 +166,15 @@ TEST( Provisioning_Unit_Serializer, TestSerializeCreateKeysAndCertificatePayload
  * @brief Tests that the CSR payload serializer calculates the serialization size, and populates the passed output
  * parameter when a serialization buffer is not passed to it.
  */
-TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithoutBuffer )
+TEST( Provisioning_Unit_Serializer, TestCalculateCertFromCsrPayloadSize )
 {
-    uint8_t * pSerializationBuffer = NULL;
     size_t bufferSizeNeeded = 0;
 
     /* Test the serializer function. */
     TEST_ASSERT_EQUAL( true,
-                       _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( _testCsrString,
-                                                                                     strlen( _testCsrString ),
-                                                                                     pSerializationBuffer,
-                                                                                     &bufferSizeNeeded ) );
+                       _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( _testCsrString,
+                                                                            strlen( _testCsrString ),
+                                                                            &bufferSizeNeeded ) );
     /* Make sure that the output parameter has been populated with the serialization size. */
     TEST_ASSERT_EQUAL( sizeof( _expectedSerialization ), bufferSizeNeeded );
 }
