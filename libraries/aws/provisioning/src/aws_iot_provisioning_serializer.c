@@ -385,18 +385,15 @@ bool _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
         isSuccessStatus = _checkSuccess;
     }
 
-    if( status == true )
+    /* Encode the payload as a map container. */
+    if( isSuccessStatus( _pAwsIotProvisioningEncoder->openContainer( pEncoder,
+                                                                     &mapEncoder,
+                                                                     1 ) ) == false )
     {
-        /* Encode the payload as a map container. */
-        if( isSuccessStatus( _pAwsIotProvisioningEncoder->openContainer( pEncoder,
-                                                                         &mapEncoder,
-                                                                         1 ) ) == false )
-        {
-            IotLogError( "serializer: Unable to serialize payload: "
-                         "Failed to open map container: Operation={%s}",
-                         CREATE_CERT_FROM_CSR_OPERATION_LOG );
-            status = false;
-        }
+        IotLogError( "serializer: Unable to serialize payload: "
+                     "Failed to open map container: Operation={%s}",
+                     CREATE_CERT_FROM_CSR_OPERATION_LOG );
+        status = false;
     }
 
     if( status == true )
@@ -458,13 +455,10 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
     {
         /* Perform a dry-run serialization of the Certificate-Signing Request */
         /* data to calculate the size of the payload. */
-        if( _serializeCertFromCsrPayload( pCertificateSigningRequest,
-                                          csrLength,
-                                          &outerEncoder,
-                                          true ) == false )
-        {
-            status = false;
-        }
+        status = _serializeCertFromCsrPayload( pCertificateSigningRequest,
+                                               csrLength,
+                                               &outerEncoder,
+                                               true );
     }
 
     if( status == true )
@@ -509,13 +503,10 @@ bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * 
     else
     {
         /* Serialize the Certificate-Signing Request string in the buffer. */
-        if( _serializeCertFromCsrPayload( pCertificateSigningRequest,
-                                          csrLength,
-                                          &outerEncoder,
-                                          false ) == false )
-        {
-            status = false;
-        }
+        status = _serializeCertFromCsrPayload( pCertificateSigningRequest,
+                                               csrLength,
+                                               &outerEncoder,
+                                               false );
     }
 
     _pAwsIotProvisioningEncoder->destroy( &outerEncoder );

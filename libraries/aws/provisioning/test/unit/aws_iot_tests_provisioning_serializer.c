@@ -85,7 +85,6 @@ static const char * _testCertificateToken = "Token!";
 /**
  * @brief A sample list of parameters entries for testing serialization logic.
  */
-
 static const AwsIotProvisioningRequestParameterEntry_t _sampleParameters[] =
 {
     { "Param1", ( sizeof( "Param1" ) - 1 ), "Value1", ( sizeof( "Value1" ) - 1 ) },
@@ -136,11 +135,15 @@ void _checkForBufferOverrun( const uint8_t * buffer,
     size_t totalBufferSize = sizeOfSerialization +
                              _reserveSize + _reserveSize;
 
+    /* Check that the front reserve space in buffer is not */
+    /* overwritten. */
     for( int index = 0; index < _reserveSize; index++ )
     {
         assert( _bufferOverrunCheckValue == buffer[ index ] );
     }
 
+    /* Check that the rear-end reserve space in buffer is not */
+    /* overwritten. */
     for( int index = totalBufferSize - 1; index >= totalBufferSize - _reserveSize; index-- )
     {
         assert( _bufferOverrunCheckValue == buffer[ index ] );
@@ -258,7 +261,8 @@ TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithBuf
      * buffer overrun checks after the serialization operation.  */
     size_t serializationSize = sizeof( _expectedSerialization );
     uint8_t * testBuffer = _allocateBufferMemoryWithBufferOverrunReserve(
-        serializationSize, &reserveOffset );
+        serializationSize,
+        &reserveOffset );
 
     /* Test the serializer function. */
     TEST_ASSERT_EQUAL( true,
@@ -267,7 +271,8 @@ TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithBuf
                                                                                      testBuffer + reserveOffset,
                                                                                      serializationSize ) );
     /* Verify the generated serialization in the buffer. */
-    TEST_ASSERT_EQUAL( 0, memcmp( _expectedSerialization, testBuffer + 5,
+    TEST_ASSERT_EQUAL( 0, memcmp( _expectedSerialization,
+                                  testBuffer + 5,
                                   serializationSize ) );
 
     /* Make sure that the reserved space in the buffer was not modified. */
