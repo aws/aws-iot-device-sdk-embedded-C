@@ -380,9 +380,7 @@ bool valid_IotMqttSubscriptionArray( const IotMqttSubscription_t *pSub,
 
 _mqttSubscription_t *allocate_IotMqttSubscriptionListElt( _mqttSubscription_t *pElt )
 {
-  size_t length;
-  // Assumption avoids arithmetic overflow in malloc, rechecked in valid_*
-  __CPROVER_assume( length < CBMC_MAX_OBJECT_SIZE - sizeof( *pElt ) );
+  uint16_t length;
 
   if ( pElt == NULL ) pElt = malloc_can_fail( sizeof( *pElt ) + length );
   if ( pElt == NULL ) return NULL;
