@@ -199,8 +199,8 @@ static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDe
     if( serializerStatus == IOT_SERIALIZER_NOT_FOUND )
     {
         /* Cannot find "certificatePem" */
-        IotLogError( "parser: Unable to parse server Payload container encoding is invalid: "
-                     "Expected container type is map: Operation={%s}}",
+        IotLogError( "parser: Unable to parse server response: Key entry not found in response:"
+                     "ExpectedKey={\"%s\"}: Operation={%s}",
                      PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
                      CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
         status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
@@ -212,12 +212,15 @@ static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDe
     else if( certPemDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
     {
         IotLogError(
-            "parser: Unable to parse server Payload container encoding is invalid: "
-            "Expected container type is map: Operation={%s}: "
-            "Key={\"%s\"}, Operation={%s}",
+            "parser: Unable to parse server response: Invalid value type of key entry in payload: "
+            "Expected type is text string: Key={\"%s\"}, Operation={%s}",
             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
             CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
         status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
+    }
+    else
+    {
+        /* Nothing to do. */
     }
 
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
@@ -230,9 +233,8 @@ static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDe
         if( serializerStatus == IOT_SERIALIZER_NOT_FOUND )
         {
             /* Cannot find "certificateId" */
-            IotLogError( "parser: Unable to parse server response: Payload container encoding is invalid: "
-                         "Expected container type is map: Operation={%s}p:"
-                         " ExpectedKey={\"%s\"}: Operation={%s}",
+            IotLogError( "parser: Unable to parse server response: Key entry not found in response:"
+                         "ExpectedKey={\"%s\"}: Operation={%s}",
                          PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
                          CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
             status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
@@ -244,8 +246,7 @@ static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDe
         else if( certIdDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
         {
             IotLogError(
-                "parser: Unable to parse server response: Invalid Payload container encoding is invalid: "
-                "Expected container type is map: Operation={%s}: "
+                "parser: Unable to parse server response: Invalid value type of key entry in payload: "
                 "Expected type is text string: Key={\"%s\"}, Operation={%s}",
                 PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
                 CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
@@ -263,9 +264,8 @@ static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDe
         if( serializerStatus == IOT_SERIALIZER_NOT_FOUND )
         {
             /* Cannot find "certificate ownership token" */
-            IotLogError( "parser: Unable to parse server response: Payload container encoding is invalid: "
-                         "Expected container type is map: Operation={%s}p:"
-                         " ExpectedKey={\"%s\"}: Operation={%s}",
+            IotLogError( "parser: Unable to parse server response: Key entry not found in response:"
+                         "ExpectedKey={\"%s\"}: Operation={%s}",
                          PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
                          CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
             status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
@@ -277,8 +277,7 @@ static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDe
         else if( ownershipTokenDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
         {
             IotLogError(
-                "parser: Unable to parse server response: Invalid Payload container encoding is invalid: "
-                "Expected container type is map: Operation={%s}: "
+                "parser: Unable to parse server response: Invalid value type of key entry in payload: "
                 "Expected type is text string: Key={\"%s\"}, Operation={%s}",
                 PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
                 CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
@@ -348,7 +347,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
                                                    &privateKeyDecoder ) != IOT_SERIALIZER_SUCCESS )
             {
                 /* Cannot find "private key" */
-                IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
+                IotLogError( "parser: Unable to parse server response: Key entry not found in response:"
+                             "ExpectedKey={\"%s\"}: Operation={%s}",
                              PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
                              CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
@@ -356,10 +356,10 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
 
             if( privateKeyDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
             {
-                IotLogError(
-                    "Invalid value type of \"%s\" data in server response of %s operation. Expected type is text string.",
-                    PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
-                    CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+                "parser: Unable to parse server response: Invalid value type of key entry in payload: "
+                "Expected type is text string: Key={\"%s\"}, Operation={%s}",
+                PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
+                CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
                 IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
             }
 
@@ -456,8 +456,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
     else if( payloadDecoder.type != IOT_SERIALIZER_CONTAINER_MAP )
     {
         IotLogError(
-            "parser: Unable to parse server response: Payload container encoding is invalid: "
-            "Expected container type is map: Operation={%s}.",
+            "parser: Unable to parse server response: Payload format is invalid: "
+            "Expected format is map container: Operation={%s}.",
             CREATE_CERT_FROM_CSR_OPERATION_LOG );
         status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
     }
