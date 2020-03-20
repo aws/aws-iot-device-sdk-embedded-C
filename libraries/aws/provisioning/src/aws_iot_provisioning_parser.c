@@ -73,8 +73,8 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
  * #AWS_IOT_PROVISIONING_BAD_RESPONSE if any of the expected data entries is missing
  * in the payload OR @AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
  */
-static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoderObject_t * payloadDecoder,
-                                                            IotSerializerDecoderObject_t * payloadEntryDecoder,
+static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoderObject_t * pPayloadDecoder,
+                                                            IotSerializerDecoderObject_t * pPayloadEntryDecoder,
                                                             const char * pKeyString,
                                                             const char * pOperationString );
 
@@ -97,10 +97,10 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
  * #AWS_IOT_PROVISIONING_BAD_RESPONSE if any of the expected data entries is missing
  * in the payload OR @AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
  */
-static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDecoderObject_t * payloadDecoder,
-                                                                 IotSerializerDecoderObject_t * certPemDecoder,
-                                                                 IotSerializerDecoderObject_t * certIdDecoder,
-                                                                 IotSerializerDecoderObject_t * ownershipTokenDecoder,
+static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDecoderObject_t * pPayloadDecoder,
+                                                                 IotSerializerDecoderObject_t * pCertPemDecoder,
+                                                                 IotSerializerDecoderObject_t * pCertIdDecoder,
+                                                                 IotSerializerDecoderObject_t * pOwnershipTokenDecoder,
                                                                  const char * pOperationString );
 
 
@@ -200,13 +200,13 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
 
 /*------------------------------------------------------------------*/
 
-static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoderObject_t * payloadDecoder,
-                                                            IotSerializerDecoderObject_t * payloadEntryDecoder,
+static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoderObject_t * pPayloadDecoder,
+                                                            IotSerializerDecoderObject_t * pPayloadEntryDecoder,
                                                             const char * pKeyString,
                                                             const char * pOperationString )
 {
-    AwsIotProvisioning_Assert( payloadDecoder != NULL );
-    AwsIotProvisioning_Assert( payloadEntryDecoder != NULL );
+    AwsIotProvisioning_Assert( pPayloadDecoder != NULL );
+    AwsIotProvisioning_Assert( pPayloadEntryDecoder != NULL );
     AwsIotProvisioning_Assert( pKeyString != NULL );
     AwsIotProvisioning_Assert( pOperationString != NULL );
 
@@ -214,9 +214,9 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
     IotSerializerError_t serializerStatus = IOT_SERIALIZER_SUCCESS;
 
     /* Look for the data entry in the map. */
-    serializerStatus = _pAwsIotProvisioningDecoder->find( payloadDecoder,
+    serializerStatus = _pAwsIotProvisioningDecoder->find( pPayloadDecoder,
                                                           pKeyString,
-                                                          payloadEntryDecoder );
+                                                          pPayloadEntryDecoder );
 
     if( serializerStatus == IOT_SERIALIZER_NOT_FOUND )
     {
@@ -231,7 +231,7 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
     {
         status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
     }
-    else if( payloadEntryDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
+    else if( pPayloadEntryDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
     {
         IotLogError(
             "parser: Unable to parse server response: Invalid value type of key entry in payload: "
