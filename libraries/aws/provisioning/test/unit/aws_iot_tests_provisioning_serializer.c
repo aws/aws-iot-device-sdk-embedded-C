@@ -135,18 +135,12 @@ void _checkForBufferOverrun( const uint8_t * buffer,
     size_t totalBufferSize = sizeOfSerialization +
                              _reserveSize + _reserveSize;
 
-    /* Check that the front reserve space in buffer is not */
+    /* Check that both the front and read reserve spaces in the buffer are not */
     /* overwritten. */
     for( int index = 0; index < _reserveSize; index++ )
     {
         assert( _bufferOverrunCheckValue == buffer[ index ] );
-    }
-
-    /* Check that the rear-end reserve space in buffer is not */
-    /* overwritten. */
-    for( int index = totalBufferSize - 1; index >= totalBufferSize - _reserveSize; index-- )
-    {
-        assert( _bufferOverrunCheckValue == buffer[ index ] );
+        assert( _bufferOverrunCheckValue == buffer[ totalBufferSize - 1 - index ] );
     }
 }
 
