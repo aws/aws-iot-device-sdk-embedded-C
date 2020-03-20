@@ -395,7 +395,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
                                                                        const AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t * keysAndCertificateResponseCallback )
 {
     char responseTopicsBuffer[ PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_MAX_TOPIC_LENGTH ] =
-    { 0 };
+        PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER;
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
     /* Configuration for subscribing and unsubscribing to/from response topics. */
     AwsIotSubscriptionInfo_t responseSubscription =
@@ -422,7 +422,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_NOT_INITIALIZED );
     }
 
-    if( provisioningConnection == IOT_MQTT_CONNECTION_INITIALIZER )
+    if( provisioningConnection == NULL )
     {
         IotLogError( "MQTT connection is not initialized." );
 
@@ -439,10 +439,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_PARAMETER );
     }
-
-    /* Copy the response topics in a local buffer for appropriate suffixes to be added. */
-    ( void ) memcpy( responseTopicsBuffer, PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER,
-                     PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH );
 
     /* Subscribe to the MQTT response topics. */
     mqttOpResult = AwsIot_ModifySubscriptions( IotMqtt_SubscribeSync, &responseSubscription );
@@ -540,8 +536,14 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
                                                                        uint32_t timeoutMs,
                                                                        const AwsIotProvisioningCreateCertFromCsrCallbackInfo_t * pResponseCallback )
 {
+    /* Make sure that the maximum MQTT response topic length is larger than the
+     * topic filter  string that we initialize the topic buffer with. */
+    AwsIotProvisioning_Assert(
+        PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_MAX_TOPIC_LENGTH >
+        strlen( PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER ) );
+
     char responseTopicsBuffer[ PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_MAX_TOPIC_LENGTH ] =
-    { 0 };
+        PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER;
     IotMqttError_t mqttOpResult = IOT_MQTT_SUCCESS;
     /* Configuration for subscribing and unsubscribing to/from response topics. */
     AwsIotSubscriptionInfo_t responseSubscription =
@@ -561,7 +563,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
     /* Verify that library has been initialized. */
     AwsIotProvisioning_Assert( _checkInit() == true );
 
-    if( connection == IOT_MQTT_CONNECTION_INITIALIZER )
+    if( connection == NULL )
     {
         IotLogError( "Bad parameter: MQTT connection is not initialized: Operation={%s}",
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
@@ -588,10 +590,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
-        /* Copy the response topics in a local buffer for appropriate suffixes to be added. */
-        ( void ) memcpy( responseTopicsBuffer, PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER,
-                         PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER_LENGTH );
-
         /* Subscribe to the MQTT response topics. */
         mqttOpResult = AwsIot_ModifySubscriptions( IotMqtt_SubscribeSync, &responseSubscription );
 
@@ -614,15 +612,14 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         callbackInfo.createCertificateFromCsrCallback = *pResponseCallback;
         _setActiveOperation( &callbackInfo );
 
-        /* Serialization of request payload occurs in a 2-step process, one for calculation of buffer size, and then,
-         * serialization in allocated buffer. */
+        /* Serialization of request payload occurs in a 2-step process, one for
+         * calculation of buffer size, and the next, serialization in allocated buffer. */
         /* Dry run serialization */
-        if( _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( pCertificateSigningRequest,
-                                                                          csrLength,
-                                                                          NULL,
-                                                                          &payloadSize ) == false )
+        if( _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( pCertificateSigningRequest,
+                                                                 csrLength,
+                                                                 &payloadSize ) == false )
         {
-            IotLogError( "Unable to calculate PUBLISH payload size: Failed to calculate size in serialization: "
+            IotLogError( "Unable to create PUBLISH payload: Failed to calculate size of payload: "
                          "Operation={%s}", CREATE_CERT_FROM_CSR_OPERATION_LOG );
             status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
         }
@@ -637,7 +634,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
         if( pPayloadBuffer == NULL )
         {
-            IotLogError( "Unable to allocate memory for request payload in %s API operation",
+            IotLogError( "Unable to create PUBLISH payload: Memory allocation for payload failed: "
+                         "Operation={%s}",
                          REGISTER_THING_OPERATION_LOG );
             status = AWS_IOT_PROVISIONING_NO_MEMORY;
         }
@@ -651,7 +649,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
                                                                           pPayloadBuffer,
                                                                           &payloadSize ) == false )
         {
-            IotLogError( "Failed to serialize PUBLISH payload in buffer: Operation={%s}",
+            IotLogError( "Unable to PUBLISH to request topic: Failed to serialize PUBLISH payload in buffer: "
+                         "Operation={%s}",
                          CREATE_CERT_FROM_CSR_OPERATION_LOG );
             status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
         }
@@ -680,7 +679,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
         if( mqttOpResult != IOT_MQTT_SUCCESS )
         {
-            IotLogError( "Failed to publish to request topic: "
+            IotLogError( "Failed to PUBLISH to request topic: "
                          "Topic={%.*s}, Operation={%s}, MQTTError={%s}",
                          publishInfo.topicNameLength,
                          publishInfo.pTopicName,
@@ -759,7 +758,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_NOT_INITIALIZED );
     }
 
-    if( provisioningConnection == IOT_MQTT_CONNECTION_INITIALIZER )
+    if( provisioningConnection == NULL )
     {
         IotLogError( "MQTT connection is not initialized." );
 
