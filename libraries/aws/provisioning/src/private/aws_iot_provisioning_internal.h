@@ -622,7 +622,7 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
 bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
                                                                    size_t csrLength,
                                                                    uint8_t * pSerializationBuffer,
-                                                                   size_t * pBufferSize );
+                                                                   size_t bufferSize );
 
 /**
  * @brief Serializes payload data for MQTT request to the Provisioning RegisterThing service API.

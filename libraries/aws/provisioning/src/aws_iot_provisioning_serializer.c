@@ -456,6 +456,8 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
 
     if( status == true )
     {
+        /* Perform a dry-run serialization of the Certificate-Signing Request */
+        /* data to calculate the size of the payload. */
         if( _serializeCertFromCsrPayload( pCertificateSigningRequest,
                                           csrLength,
                                           &outerEncoder,
@@ -484,29 +486,29 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
 bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
                                                                    size_t csrLength,
                                                                    uint8_t * pSerializationBuffer,
-                                                                   size_t * pBufferSize )
+                                                                   size_t bufferSize )
 {
     bool status = true;
 
     AwsIotProvisioning_Assert( pCertificateSigningRequest != NULL );
     AwsIotProvisioning_Assert( csrLength != 0 );
     AwsIotProvisioning_Assert( pSerializationBuffer != NULL );
-    AwsIotProvisioning_Assert( pBufferSize != NULL );
+    AwsIotProvisioning_Assert( bufferSize != 0 );
 
     IotSerializerEncoderObject_t outerEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
 
     if( _pAwsIotProvisioningEncoder->init( &outerEncoder,
                                            pSerializationBuffer,
-                                           *pBufferSize ) != IOT_SERIALIZER_SUCCESS )
+                                           bufferSize ) != IOT_SERIALIZER_SUCCESS )
     {
         IotLogError( "serializer: Unable to serialize request payload: "
                      "Failed to initialize encoder: Operation={%s}",
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
         status = false;
     }
-
-    if( status == true )
+    else
     {
+        /* Serialize the Certificate-Signing Request string in the buffer. */
         if( _serializeCertFromCsrPayload( pCertificateSigningRequest,
                                           csrLength,
                                           &outerEncoder,

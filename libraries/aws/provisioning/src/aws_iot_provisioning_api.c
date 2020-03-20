@@ -647,7 +647,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         if( _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( pCertificateSigningRequest,
                                                                           csrLength,
                                                                           pPayloadBuffer,
-                                                                          &payloadSize ) == false )
+                                                                          payloadSize ) == false )
         {
             IotLogError( "Unable to PUBLISH to request topic: Failed to serialize PUBLISH payload in buffer: "
                          "Operation={%s}",

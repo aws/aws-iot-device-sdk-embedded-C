@@ -54,6 +54,12 @@ static const char * _testCsrString = "TestCSR";
 static const uint8_t _bufferOverrunCheckValue = 0xA5;
 
 /**
+ * @brief The reserve space to keep in test serialization buffers to
+ * check against buffer overrun faults by the serializer functions.
+ */
+static const size_t _reserveSize = 5;
+
+/**
  * @brief Expected serialization of the above CSR string as the request payload.
  */
 static const uint8_t _expectedSerialization[] =
@@ -87,6 +93,59 @@ static const AwsIotProvisioningRequestParameterEntry_t _sampleParameters[] =
     { "Param3", ( sizeof( "Param3" ) - 1 ), "Value3", ( sizeof( "Value3" ) - 1 ) },
 };
 static const size_t _numOfSampleParameters = 3;
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Allocates memory for buffer used in tests for serialization
+ * with reserve space to check against buffer overrun errors by serializer
+ * functions under test.
+ * @note The reserve space is used at the beginning and the end of the
+ * allocated buffer space.
+ */
+uint8_t * _allocateBufferMemoryWithBufferOverrunReserve( size_t sizeOfSerialization,
+                                                         size_t * serializationStartingIndex )
+{
+    /* We will allocate more space than the expected serialization size to perform
+     * buffer overrun checks after the serialization operation.  */
+    size_t totalBufferSize = sizeOfSerialization +
+                             _reserveSize + _reserveSize;
+    uint8_t * testBuffer = unity_malloc_mt( totalBufferSize );
+
+    assert( testBuffer != NULL );
+
+    /* Fill the buffer with the buffer overrun test value which will be */
+    /* checked after the serialization call. */
+    memset( testBuffer, _bufferOverrunCheckValue, totalBufferSize );
+
+    *serializationStartingIndex = _reserveSize;
+
+    return testBuffer;
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Verifies that the reserve space in test buffer used for serialization
+ * is not corrupted by buffer overrun errors in the serializer function under
+ * test.
+ */
+void _checkForBufferOverrun( const uint8_t * buffer,
+                             size_t sizeOfSerialization )
+{
+    size_t totalBufferSize = sizeOfSerialization +
+                             _reserveSize + _reserveSize;
+
+    for( int index = 0; index < _reserveSize; index++ )
+    {
+        assert( _bufferOverrunCheckValue == buffer[ index ] );
+    }
+
+    for( int index = totalBufferSize - 1; index >= totalBufferSize - _reserveSize; index-- )
+    {
+        assert( _bufferOverrunCheckValue == buffer[ index ] );
+    }
+}
 
 /*-----------------------------------------------------------*/
 
@@ -192,36 +251,28 @@ TEST( Provisioning_Unit_Serializer, TestCalculateCertFromCsrPayloadSize )
  */
 TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithBuffer )
 {
+    size_t reserveOffset;
+
     /* Allocate buffer that will be used for serialization.
      * Note: We will allocate more space than the expected serialization size to perform
      * buffer overrun checks after the serialization operation.  */
-    uint8_t testBuffer[ sizeof( _expectedSerialization ) + 10 ];
-    size_t bufferSizeForSerialization = sizeof( _expectedSerialization );
-
-    /* Fill the buffer with the buffer overrun test value which will be */
-    /* checked after the serialization call. */
-    memset( &testBuffer[ 0 ], _bufferOverrunCheckValue, sizeof( testBuffer ) );
+    size_t serializationSize = sizeof( _expectedSerialization );
+    uint8_t * testBuffer = _allocateBufferMemoryWithBufferOverrunReserve(
+        serializationSize, &reserveOffset );
 
     /* Test the serializer function. */
     TEST_ASSERT_EQUAL( true,
                        _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( _testCsrString,
                                                                                      strlen( _testCsrString ),
-                                                                                     &testBuffer[ 5 ],
-                                                                                     &bufferSizeForSerialization ) );
+                                                                                     testBuffer + reserveOffset,
+                                                                                     serializationSize ) );
     /* Verify the generated serialization in the buffer. */
     TEST_ASSERT_EQUAL( 0, memcmp( _expectedSerialization, testBuffer + 5,
-                                  sizeof( _expectedSerialization ) ) );
+                                  serializationSize ) );
 
     /* Make sure that the reserved space in the buffer was not modified. */
-    for( int index = 0; index < 5; index++ )
-    {
-        TEST_ASSERT_EQUAL( _bufferOverrunCheckValue, testBuffer[ index ] );
-    }
-
-    for( int index = sizeof( testBuffer ) - 1; index >= sizeof( testBuffer ) - 5; index-- )
-    {
-        TEST_ASSERT_EQUAL( _bufferOverrunCheckValue, testBuffer[ index ] );
-    }
+    _checkForBufferOverrun( testBuffer, serializationSize );
+    unity_free_mt( testBuffer );
 }
 
 /**
@@ -239,7 +290,7 @@ TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadFailure
                        _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( _testCsrString,
                                                                                      strlen( _testCsrString ),
                                                                                      &testBuffer[ 0 ],
-                                                                                     &bufferSize ) );
+                                                                                     bufferSize ) );
 }
 
 /**
