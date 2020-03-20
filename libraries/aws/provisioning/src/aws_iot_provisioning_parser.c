@@ -83,14 +83,16 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
  * and Ownership token data from the server response.
  * These elements are common in the server responses of the MQTT CreateKeysAndCertificate
  * and CreateCertificateFromCsr APIs.
- * @param payloadDecoder[in] The decoder object that represents the
+ * @param[in] payloadDecoder The decoder object that represents the
  * server response payload as a map container.
- * @param certPemDecoder[in/out] The decoder object to store the parsed Certificate
+ * @param[in/out] certPemDecoder The decoder object to store the parsed Certificate
  * PEM string in.
- * @param certIdDecoder[in/out] The decoder object to store the parsed
+ * @param[in/out] certIdDecoder The decoder object to store the parsed
  * Certificate ID data in.
- * @param ownershipTokenDecoder[in/out] The decoder object to store the parsed
+ * @param[in/out] ownershipTokenDecoder The decoder object to store the parsed
  * Certificate Ownership Token string in.
+ * @param[in] pOperationString The string of the ongoing operation to use for
+ * logging.
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if parsing is successful; otherwise
  * #AWS_IOT_PROVISIONING_BAD_RESPONSE if any of the expected data entries is missing
  * in the payload OR @AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
@@ -98,7 +100,8 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
 static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDecoderObject_t * payloadDecoder,
                                                                  IotSerializerDecoderObject_t * certPemDecoder,
                                                                  IotSerializerDecoderObject_t * certIdDecoder,
-                                                                 IotSerializerDecoderObject_t * ownershipTokenDecoder );
+                                                                 IotSerializerDecoderObject_t * ownershipTokenDecoder,
+                                                                 const char * pOperationString );
 
 
 static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObject_t * pPayloadDecoder,
@@ -247,40 +250,41 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
 
 /*------------------------------------------------------------------*/
 
-static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDecoderObject_t * payloadDecoder,
-                                                                 IotSerializerDecoderObject_t * certPemDecoder,
-                                                                 IotSerializerDecoderObject_t * certIdDecoder,
-                                                                 IotSerializerDecoderObject_t * ownershipTokenDecoder )
+static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDecoderObject_t * pPayloadDecoder,
+                                                                 IotSerializerDecoderObject_t * pCertPemDecoder,
+                                                                 IotSerializerDecoderObject_t * pCertIdDecoder,
+                                                                 IotSerializerDecoderObject_t * pOwnershipTokenDecoder,
+                                                                 const char * pOperationString )
 {
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
 
-    AwsIotProvisioning_Assert( payloadDecoder != NULL );
-    AwsIotProvisioning_Assert( certPemDecoder != NULL );
-    AwsIotProvisioning_Assert( certIdDecoder != NULL );
-    AwsIotProvisioning_Assert( ownershipTokenDecoder != NULL );
+    AwsIotProvisioning_Assert( pPayloadDecoder != NULL );
+    AwsIotProvisioning_Assert( pCertPemDecoder != NULL );
+    AwsIotProvisioning_Assert( pCertIdDecoder != NULL );
+    AwsIotProvisioning_Assert( pOwnershipTokenDecoder != NULL );
 
     /* Look for the certificate PEM data. */
-    status = _parseKeyedEntryInPayload( payloadDecoder,
-                                        certPemDecoder,
+    status = _parseKeyedEntryInPayload( pPayloadDecoder,
+                                        pCertPemDecoder,
                                         PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-                                        CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+                                        pOperationString );
 
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Look for the certificate ID data. */
-        status = _parseKeyedEntryInPayload( payloadDecoder,
-                                            certIdDecoder,
+        status = _parseKeyedEntryInPayload( pPayloadDecoder,
+                                            pCertIdDecoder,
                                             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                                            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+                                            pOperationString );
     }
 
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Look for the certificate ownership token data. */
-        status = _parseKeyedEntryInPayload( payloadDecoder,
-                                            ownershipTokenDecoder,
+        status = _parseKeyedEntryInPayload( pPayloadDecoder,
+                                            pOwnershipTokenDecoder,
                                             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
-                                            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+                                            pOperationString );
     }
 
     return status;
@@ -332,7 +336,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
             status = _parseCommonCertInfoInResponse( &payloadDecoder,
                                                      &certPemDecoder,
                                                      &certIdDecoder,
-                                                     &ownershipTokenDecoder );
+                                                     &ownershipTokenDecoder,
+                                                     CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
 
             if( status != AWS_IOT_PROVISIONING_SUCCESS )
             {
@@ -459,7 +464,8 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
             status = _parseCommonCertInfoInResponse( &payloadDecoder,
                                                      &certPemDecoder,
                                                      &certIdDecoder,
-                                                     &ownershipTokenDecoder );
+                                                     &ownershipTokenDecoder,
+                                                     CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
             if( status == AWS_IOT_PROVISIONING_SUCCESS )
             {
