@@ -58,6 +58,25 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
                                                          AwsIotProvisioningRejectedResponse_t * pResponseData,
                                                          AwsIotProvisioningServerStatusCode_t * pStatusCode );
 
+/**
+ * @brief Utility for parsing a text-string based key-value pair entry from
+ * from a map container type response payload.
+ *
+ * @param[in] payloadDecoder The decoder object representing the map container
+ * formatted payload.
+ * @param[in, out] payloadEntryDecoder The decoder object to store the parsed
+ * value data of the entry.
+ * @param[in] pKeyString The key string to parse from the payload.
+ * @param[in] pOperationString The string of the ongoing operation to use for
+ * logging.
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if parsing is successful; otherwise
+ * #AWS_IOT_PROVISIONING_BAD_RESPONSE if any of the expected data entries is missing
+ * in the payload OR @AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
+ */
+static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoderObject_t * payloadDecoder,
+                                                            IotSerializerDecoderObject_t * payloadEntryDecoder,
+                                                            const char * pKeyString,
+                                                            const char * pOperationString );
 
 /**
  * @brief Common utility for parsing the Certificate PEM string, Certificate ID,
@@ -178,44 +197,44 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
 
 /*------------------------------------------------------------------*/
 
-static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDecoderObject_t * payloadDecoder,
-                                                                 IotSerializerDecoderObject_t * certPemDecoder,
-                                                                 IotSerializerDecoderObject_t * certIdDecoder,
-                                                                 IotSerializerDecoderObject_t * ownershipTokenDecoder )
+static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoderObject_t * payloadDecoder,
+                                                            IotSerializerDecoderObject_t * payloadEntryDecoder,
+                                                            const char * pKeyString,
+                                                            const char * pOperationString )
 {
+    AwsIotProvisioning_Assert( payloadDecoder != NULL );
+    AwsIotProvisioning_Assert( payloadEntryDecoder != NULL );
+    AwsIotProvisioning_Assert( pKeyString != NULL );
+    AwsIotProvisioning_Assert( pOperationString != NULL );
+
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
     IotSerializerError_t serializerStatus = IOT_SERIALIZER_SUCCESS;
 
-    AwsIotProvisioning_Assert( payloadDecoder != NULL );
-    AwsIotProvisioning_Assert( certPemDecoder != NULL );
-    AwsIotProvisioning_Assert( certIdDecoder != NULL );
-    AwsIotProvisioning_Assert( ownershipTokenDecoder != NULL );
-
-    /* Look for the certificate PEM data. */
+    /* Look for the data entry in the map. */
     serializerStatus = _pAwsIotProvisioningDecoder->find( payloadDecoder,
-                                                          PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-                                                          certPemDecoder );
+                                                          pKeyString,
+                                                          payloadEntryDecoder );
 
     if( serializerStatus == IOT_SERIALIZER_NOT_FOUND )
     {
-        /* Cannot find "certificatePem" */
+        /* Entry not found in the payload map. */
         IotLogError( "parser: Unable to parse server response: Key entry not found in response:"
                      "ExpectedKey={\"%s\"}: Operation={%s}",
-                     PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-                     CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+                     pKeyString,
+                     pOperationString );
         status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
     }
     else if( serializerStatus != IOT_SERIALIZER_SUCCESS )
     {
         status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
     }
-    else if( certPemDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
+    else if( payloadEntryDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
     {
         IotLogError(
             "parser: Unable to parse server response: Invalid value type of key entry in payload: "
             "Expected type is text string: Key={\"%s\"}, Operation={%s}",
-            PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
-            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+            pKeyString,
+            pOperationString );
         status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
     }
     else
@@ -223,66 +242,45 @@ static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDe
         /* Nothing to do. */
     }
 
+    return status;
+}
+
+/*------------------------------------------------------------------*/
+
+static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDecoderObject_t * payloadDecoder,
+                                                                 IotSerializerDecoderObject_t * certPemDecoder,
+                                                                 IotSerializerDecoderObject_t * certIdDecoder,
+                                                                 IotSerializerDecoderObject_t * ownershipTokenDecoder )
+{
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
+
+    AwsIotProvisioning_Assert( payloadDecoder != NULL );
+    AwsIotProvisioning_Assert( certPemDecoder != NULL );
+    AwsIotProvisioning_Assert( certIdDecoder != NULL );
+    AwsIotProvisioning_Assert( ownershipTokenDecoder != NULL );
+
+    /* Look for the certificate PEM data. */
+    status = _parseKeyedEntryInPayload( payloadDecoder,
+                                        certPemDecoder,
+                                        PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+                                        CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Look for the certificate ID data. */
-        serializerStatus = _pAwsIotProvisioningDecoder->find( payloadDecoder,
-                                                              PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                                                              certIdDecoder );
-
-        if( serializerStatus == IOT_SERIALIZER_NOT_FOUND )
-        {
-            /* Cannot find "certificateId" */
-            IotLogError( "parser: Unable to parse server response: Key entry not found in response:"
-                         "ExpectedKey={\"%s\"}: Operation={%s}",
-                         PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                         CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-            status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
-        }
-        else if( serializerStatus != IOT_SERIALIZER_SUCCESS )
-        {
-            status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
-        }
-        else if( certIdDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
-        {
-            IotLogError(
-                "parser: Unable to parse server response: Invalid value type of key entry in payload: "
-                "Expected type is text string: Key={\"%s\"}, Operation={%s}",
-                PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
-                CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-            status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
-        }
+        status = _parseKeyedEntryInPayload( payloadDecoder,
+                                            certIdDecoder,
+                                            PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
+                                            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
     }
 
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Look for the certificate ownership token data. */
-        serializerStatus = _pAwsIotProvisioningDecoder->find( payloadDecoder,
-                                                              PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
-                                                              ownershipTokenDecoder );
-
-        if( serializerStatus == IOT_SERIALIZER_NOT_FOUND )
-        {
-            /* Cannot find "certificate ownership token" */
-            IotLogError( "parser: Unable to parse server response: Key entry not found in response:"
-                         "ExpectedKey={\"%s\"}: Operation={%s}",
-                         PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
-                         CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-            status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
-        }
-        else if( serializerStatus != IOT_SERIALIZER_SUCCESS )
-        {
-            status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
-        }
-        else if( ownershipTokenDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
-        {
-            IotLogError(
-                "parser: Unable to parse server response: Invalid value type of key entry in payload: "
-                "Expected type is text string: Key={\"%s\"}, Operation={%s}",
-                PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
-                CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-            status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
-        }
+        status = _parseKeyedEntryInPayload( payloadDecoder,
+                                            ownershipTokenDecoder,
+                                            PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                                            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
     }
 
     return status;
@@ -342,25 +340,14 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
             }
 
             /* Look for the private Key data. */
-            if( _pAwsIotProvisioningDecoder->find( &payloadDecoder,
-                                                   PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
-                                                   &privateKeyDecoder ) != IOT_SERIALIZER_SUCCESS )
-            {
-                /* Cannot find "private key" */
-                IotLogError( "parser: Unable to parse server response: Key entry not found in response:"
-                             "ExpectedKey={\"%s\"}: Operation={%s}",
-                             PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
-                             CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
-            }
+            status = _parseKeyedEntryInPayload( &payloadDecoder,
+                                                &privateKeyDecoder,
+                                                PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
+                                                CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
 
-            if( privateKeyDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
+            if( status != AWS_IOT_PROVISIONING_SUCCESS )
             {
-                "parser: Unable to parse server response: Invalid value type of key entry in payload: "
-                "Expected type is text string: Key={\"%s\"}, Operation={%s}",
-                PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING,
-                CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
-                IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
+                IOT_GOTO_CLEANUP();
             }
 
             /* Populate the status code information to represent success response from the server. */
