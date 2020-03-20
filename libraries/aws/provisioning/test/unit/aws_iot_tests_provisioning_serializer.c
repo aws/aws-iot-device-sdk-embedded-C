@@ -48,6 +48,12 @@
 static const char * _testCsrString = "TestCSR";
 
 /**
+ * @brief The sanity value to use for checking against buffer overrun
+ * behavior in buffers that will be modified by serializer funtions in tests.
+ */
+static const uint8_t _bufferOverrunCheckValue = 0xA5;
+
+/**
  * @brief Expected serialization of the above CSR string as the request payload.
  */
 static const uint8_t _expectedSerialization[] =
@@ -73,6 +79,7 @@ static const char * _testCertificateToken = "Token!";
 /**
  * @brief A sample list of parameters entries for testing serialization logic.
  */
+
 static const AwsIotProvisioningRequestParameterEntry_t _sampleParameters[] =
 {
     { "Param1", ( sizeof( "Param1" ) - 1 ), "Value1", ( sizeof( "Value1" ) - 1 ) },
@@ -185,18 +192,36 @@ TEST( Provisioning_Unit_Serializer, TestCalculateCertFromCsrPayloadSize )
  */
 TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithBuffer )
 {
-    uint8_t testBuffer[ sizeof( _expectedSerialization ) ] = { 0 };
-    size_t bufferSize = sizeof( testBuffer );
+    /* Allocate buffer that will be used for serialization.
+     * Note: We will allocate more space than the expected serialization size to perform
+     * buffer overrun checks after the serialization operation.  */
+    uint8_t testBuffer[ sizeof( _expectedSerialization ) + 10 ];
+    size_t bufferSizeForSerialization = sizeof( _expectedSerialization );
+
+    /* Fill the buffer with the buffer overrun test value which will be */
+    /* checked after the serialization call. */
+    memset( &testBuffer[ 0 ], _bufferOverrunCheckValue, sizeof( testBuffer ) );
 
     /* Test the serializer function. */
     TEST_ASSERT_EQUAL( true,
                        _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( _testCsrString,
                                                                                      strlen( _testCsrString ),
-                                                                                     &testBuffer[ 0 ],
-                                                                                     &bufferSize ) );
+                                                                                     &testBuffer[ 5 ],
+                                                                                     &bufferSizeForSerialization ) );
     /* Verify the generated serialization in the buffer. */
-    TEST_ASSERT_EQUAL( 0, memcmp( _expectedSerialization, testBuffer,
+    TEST_ASSERT_EQUAL( 0, memcmp( _expectedSerialization, testBuffer + 5,
                                   sizeof( _expectedSerialization ) ) );
+
+    /* Make sure that the reserved space in the buffer was not modified. */
+    for( int index = 0; index < 5; index++ )
+    {
+        TEST_ASSERT_EQUAL( _bufferOverrunCheckValue, testBuffer[ index ] );
+    }
+
+    for( int index = sizeof( testBuffer ) - 1; index >= sizeof( testBuffer ) - 5; index-- )
+    {
+        TEST_ASSERT_EQUAL( _bufferOverrunCheckValue, testBuffer[ index ] );
+    }
 }
 
 /**
