@@ -301,31 +301,31 @@
  * @brief The key string for Certificate-Singing Request value in the request payload
  * to the MQTT CreateCertificateFromCsr service API.
  */
-#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_PAYLOAD_PEM_STRING                              "certificateSigningRequest"
+#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_PAYLOAD_PEM_STRING                    "certificateSigningRequest"
 
 /**
- * @brief The key for the device certificate entry in the response payload of the Provisioning CreateKeysAndCertificate
- * service API.
+ * @brief The key for the certificate PEM data in the response payloads of the
+ * MQTT Fleet Provisioning APIs.
  */
-#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING          "certificatePem"
+#define PROVISIONING_SERVER_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING                     "certificatePem"
 
 /**
- * @brief The key for the certificate Id entry in the response payload of the Provisioning CreateKeysAndCertificate
- * service API.
+ * @brief The key for the certificate Id data in in the response payloads of the
+ * MQTT Fleet Provisioning APIs.
  */
-#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING           "certificateId"
+#define PROVISIONING_SERVER_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING                      "certificateId"
 
 /**
- * @brief The key for the private key entry in the response payload of the Provisioning CreateKeysAndCertificate service
- * API.
+ * @brief The key for the private key data in the response payload of the
+ * MQTT CreateKeysAndCertificate service API of Fleet Provisioning.
  */
-#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING              "privateKey"
+#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING    "privateKey"
 
 /**
- * @brief The key for the token key entry in the response payload of the Provisioning CreateKeysAndCertificate service
- * API.
+ * @brief The key for the token key data in the response payloads of the
+ * MQTT Fleet Provisioning APIs.
  */
-#define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING    "certificateOwnershipToken"
+#define PROVISIONING_SERVER_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING               "certificateOwnershipToken"
 
 /**
  * @brief The common path in the request and response MQTT topics of the Provisioning RegisterThing service API.

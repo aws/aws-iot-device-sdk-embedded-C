@@ -46,11 +46,13 @@
 /**
  * @brief Parses the rejected response payload received from the server, and populates the data of the passed
  * @a pResponseData parameter.
+ *
  * @param[in] pPayloadDecoder The outermost decoder object representing the response payload.
  * @param[in] pOperationName The Provisioning library operation (or API) that the response is associated with.
  * @param[out] pResponseData This will be populated with the data parsed from the response payload, if successful.
  * @param[out] pStatusCode This will be populated with the error status code parsed from the response payload,
  * if successful.
+ *
  * @return #AWS_IOT_PROVISIONING_SUCCESS, if parsing is successful; otherwise appropriate error message.
  */
 static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObject_t * pPayloadDecoder,
@@ -69,6 +71,7 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
  * @param[in] pKeyString The key string to parse from the payload.
  * @param[in] pOperationString The string of the ongoing operation to use for
  * logging.
+ *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if parsing is successful; otherwise
  * #AWS_IOT_PROVISIONING_BAD_RESPONSE if any of the expected data entries is missing
  * in the payload OR @AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
@@ -83,6 +86,7 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
  * and Ownership token data from the server response.
  * These elements are common in the server responses of the MQTT CreateKeysAndCertificate
  * and CreateCertificateFromCsr APIs.
+ *
  * @param[in] payloadDecoder The decoder object that represents the
  * server response payload as a map container.
  * @param[in/out] certPemDecoder The decoder object to store the parsed Certificate
@@ -93,6 +97,7 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
  * Certificate Ownership Token string in.
  * @param[in] pOperationString The string of the ongoing operation to use for
  * logging.
+ *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if parsing is successful; otherwise
  * #AWS_IOT_PROVISIONING_BAD_RESPONSE if any of the expected data entries is missing
  * in the payload OR @AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
@@ -266,7 +271,7 @@ static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDe
     /* Look for the certificate PEM data. */
     status = _parseKeyedEntryInPayload( pPayloadDecoder,
                                         pCertPemDecoder,
-                                        PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+                                        PROVISIONING_SERVER_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
                                         pOperationString );
 
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
@@ -274,7 +279,7 @@ static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDe
         /* Look for the certificate ID data. */
         status = _parseKeyedEntryInPayload( pPayloadDecoder,
                                             pCertIdDecoder,
-                                            PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
+                                            PROVISIONING_SERVER_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING,
                                             pOperationString );
     }
 
@@ -283,7 +288,7 @@ static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDe
         /* Look for the certificate ownership token data. */
         status = _parseKeyedEntryInPayload( pPayloadDecoder,
                                             pOwnershipTokenDecoder,
-                                            PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
+                                            PROVISIONING_SERVER_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING,
                                             pOperationString );
     }
 
