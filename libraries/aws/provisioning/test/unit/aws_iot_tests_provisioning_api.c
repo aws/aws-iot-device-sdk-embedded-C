@@ -223,6 +223,11 @@ static const AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t _acceptedR
 };
 
 /**
+ * @brief Certificate-Signing Request string for CSR API tests.
+ */
+static const char _testCsrString[] = "TestCSR";
+
+/**
  * @brief Certificate ID for Provisioning's RegisterThing API tests.
  */
 static const char _testCertificateId[] = "TestCertificateID";
@@ -344,6 +349,15 @@ static const uint8_t _sampleRejectedServerResponsePayload[] =
 
 static void _dummyKeysAndCertificateCallback( void * contextParam,
                                               const AwsIotProvisioningCreateKeysAndCertificateResponse_t * responseInfo )
+{
+    ( void ) contextParam;
+    ( void ) responseInfo;
+}
+
+/*-----------------------------------------------------------*/
+
+static void _dummyCertFromCsrCallback( void * contextParam,
+                                       const AwsIotProvisioningCreateCertFromCsrResponse_t * responseInfo )
 {
     ( void ) contextParam;
     ( void ) responseInfo;
@@ -630,6 +644,13 @@ TEST_GROUP_RUNNER( Provisioning_Unit_API )
     RUN_TEST_CASE( Provisioning_Unit_API, CreateKeysAndCertificateAPIServerResponseAfterTimeout )
     RUN_TEST_CASE( Provisioning_Unit_API,
                    CreateKeysAndCertificateAPIServerResponseAndTimeoutRaceCondition );
+    RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPIInvalidParameters );
+    /* RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPICalledWithoutInit ); */
+    /* RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPINoServerResponse ); */
+    /* RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPIRejectedResponse ); */
+    /* RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPICorruptDataInResponse ); */
+    /* RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPINominalSuccess ); */
+    /* RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPIServerResponseAfterTimeout ) */
     RUN_TEST_CASE( Provisioning_Unit_API, RegisterThingAPIInvalidParameters );
     RUN_TEST_CASE( Provisioning_Unit_API, RegisterThingAPICalledWithoutInit );
     RUN_TEST_CASE( Provisioning_Unit_API, RegisterThingAPINoServerResponse );
@@ -748,6 +769,63 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPIInvalidParameters )
     /* Callback function not set. */
     status = AwsIotProvisioning_CreateKeysAndCertificate( _pMqttConnection,
                                                           0,
+                                                          0,
+                                                          &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_PARAMETER, status );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Verifies that the API returns the appropriate error code on passing invalid parameters.
+ */
+TEST( Provisioning_Unit_API, CreateCertFromCsrAPIInvalidParameters )
+{
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
+    AwsIotProvisioningCreateCertFromCsrCallbackInfo_t callbackInfo =
+        AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER;
+
+    callbackInfo.function = _dummyCertFromCsrCallback;
+
+    /* Uninitialized MQTT connection. */
+    status = AwsIotProvisioning_CreateCertificateFromCsr( NULL,
+                                                          IOT_MQTT_QOS_0,
+                                                          _testCsrString,
+                                                          sizeof( _testCsrString ),
+                                                          0,
+                                                          &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_PARAMETER, status );
+
+    /* Invalid CSR data. */
+    status = AwsIotProvisioning_CreateCertificateFromCsr( _pMqttConnection,
+                                                          IOT_MQTT_QOS_0,
+                                                          NULL,
+                                                          sizeof( _testCsrString ),
+                                                          0,
+                                                          &callbackInfo );
+    status = AwsIotProvisioning_CreateCertificateFromCsr( _pMqttConnection,
+                                                          IOT_MQTT_QOS_0,
+                                                          _testCsrString,
+                                                          0,
+                                                          0,
+                                                          &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_PARAMETER, status );
+
+    /* Callback object is not set. */
+    status = AwsIotProvisioning_CreateCertificateFromCsr( _pMqttConnection,
+                                                          IOT_MQTT_QOS_0,
+                                                          _testCsrString,
+                                                          sizeof( _testCsrString ),
+                                                          0,
+                                                          NULL );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_PARAMETER, status );
+
+    /* Callback function not set. */
+    callbackInfo.function = NULL;
+    status = AwsIotProvisioning_CreateCertificateFromCsr( _pMqttConnection,
+                                                          IOT_MQTT_QOS_0,
+                                                          _testCsrString,
+                                                          sizeof( _testCsrString ),
                                                           0,
                                                           &callbackInfo );
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_PARAMETER, status );
