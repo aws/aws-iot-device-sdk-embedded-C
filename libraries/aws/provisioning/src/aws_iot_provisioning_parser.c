@@ -158,7 +158,7 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
                                            &errorCodeDecoder ) != IOT_SERIALIZER_SUCCESS )
     {
         IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                     PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING,
+                     PROVISIONING_REJECTED_RESPONSE_ERROR_CODE_STRING,
                      pOperationName );
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
     }
