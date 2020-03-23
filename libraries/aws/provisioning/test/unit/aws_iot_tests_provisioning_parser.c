@@ -281,14 +281,14 @@ static void _verifyParsedRejectedResponse( const AwsIotProvisioningRejectedRespo
     ( void ) pParsedData;
 
     /* Verify that the rejected response was parsed as expected. */
-    AwsIotProvisioning_Assert( pParsedData->errorCodeLength == pExpectedData->errorCodeLength );
-    AwsIotProvisioning_Assert( 0 == memcmp( pParsedData->pErrorCode,
-                                            pExpectedData->pErrorCode,
-                                            pExpectedData->errorCodeLength ) );
-    AwsIotProvisioning_Assert( pParsedData->errorMessageLength == pExpectedData->errorMessageLength );
-    AwsIotProvisioning_Assert( 0 == memcmp( pParsedData->pErrorMessage,
-                                            pExpectedData->pErrorMessage,
-                                            pExpectedData->errorMessageLength ) );
+    TEST_ASSERT( pParsedData->errorCodeLength == pExpectedData->errorCodeLength );
+    TEST_ASSERT( 0 == memcmp( pParsedData->pErrorCode,
+                              pExpectedData->pErrorCode,
+                              pExpectedData->errorCodeLength ) );
+    TEST_ASSERT( pParsedData->errorMessageLength == pExpectedData->errorMessageLength );
+    TEST_ASSERT( 0 == memcmp( pParsedData->pErrorMessage,
+                              pExpectedData->pErrorMessage,
+                              pExpectedData->errorMessageLength ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -299,7 +299,7 @@ static void _testCreateKeysAndCertificateRejectedCallback( void * contextParam,
     AwsIotProvisioningRejectedResponse_t * pExpectedParams =
         ( AwsIotProvisioningRejectedResponse_t * ) contextParam;
 
-    AwsIotProvisioning_Assert( pResponseInfo->statusCode == _expectedStatusCode );
+    TEST_ASSERT( pResponseInfo->statusCode == _expectedStatusCode );
     /* Verify that the rejected response was parsed as expected. */
     _verifyParsedRejectedResponse( pExpectedParams, &pResponseInfo->u.rejectedResponse );
 }
@@ -317,26 +317,26 @@ static void _testCreateKeysAndCertificateAcceptedCallback( void * contextParam,
     ( void ) pResponseInfo;
 
     /* Verify that the rejected response was parsed as expected. */
-    AwsIotProvisioning_Assert( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED );
+    TEST_ASSERT( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED );
 
-    AwsIotProvisioning_Assert(
+    TEST_ASSERT(
         pExpectedParams->u.acceptedResponse.deviceCertificateLength ==
         pResponseInfo->u.acceptedResponse.deviceCertificateLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pDeviceCertificate ==
-                               pResponseInfo->u.acceptedResponse.pDeviceCertificate );
-    AwsIotProvisioning_Assert(
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pDeviceCertificate ==
+                 pResponseInfo->u.acceptedResponse.pDeviceCertificate );
+    TEST_ASSERT(
         pExpectedParams->u.acceptedResponse.certificateIdLength ==
         pResponseInfo->u.acceptedResponse.certificateIdLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pCertificateId ==
-                               pResponseInfo->u.acceptedResponse.pCertificateId );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.privateKeyLength ==
-                               pResponseInfo->u.acceptedResponse.privateKeyLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pPrivateKey ==
-                               pResponseInfo->u.acceptedResponse.pPrivateKey );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.ownershipTokenLength ==
-                               pResponseInfo->u.acceptedResponse.ownershipTokenLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pCertificateOwnershipToken ==
-                               pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pCertificateId ==
+                 pResponseInfo->u.acceptedResponse.pCertificateId );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.privateKeyLength ==
+                 pResponseInfo->u.acceptedResponse.privateKeyLength );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pPrivateKey ==
+                 pResponseInfo->u.acceptedResponse.pPrivateKey );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.ownershipTokenLength ==
+                 pResponseInfo->u.acceptedResponse.ownershipTokenLength );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pCertificateOwnershipToken ==
+                 pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken );
 }
 
 /*-----------------------------------------------------------*/
@@ -347,7 +347,7 @@ static void _testCreateCertFromCsrRejectedCallback( void * contextParam,
     AwsIotProvisioningRejectedResponse_t * pExpectedParams =
         ( AwsIotProvisioningRejectedResponse_t * ) contextParam;
 
-    AwsIotProvisioning_Assert( pResponseInfo->statusCode == _expectedStatusCode );
+    TEST_ASSERT( pResponseInfo->statusCode == _expectedStatusCode );
     /* Verify that the rejected response was parsed as expected. */
     _verifyParsedRejectedResponse( pExpectedParams, &pResponseInfo->u.rejectedResponse );
 }
@@ -365,22 +365,22 @@ static void _testCreateCertFromCsrAcceptedCallback( void * contextParam,
     ( void ) pResponseInfo;
 
     /* Verify that the rejected response was parsed as expected. */
-    AwsIotProvisioning_Assert( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED );
+    TEST_ASSERT( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED );
 
-    AwsIotProvisioning_Assert(
+    TEST_ASSERT(
         pExpectedParams->u.acceptedResponse.deviceCertLength ==
         pResponseInfo->u.acceptedResponse.deviceCertLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pDeviceCert ==
-                               pResponseInfo->u.acceptedResponse.pDeviceCert );
-    AwsIotProvisioning_Assert(
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pDeviceCert ==
+                 pResponseInfo->u.acceptedResponse.pDeviceCert );
+    TEST_ASSERT(
         pExpectedParams->u.acceptedResponse.certIdLength ==
         pResponseInfo->u.acceptedResponse.certIdLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pCertId ==
-                               pResponseInfo->u.acceptedResponse.pCertId );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.ownershipTokenLength ==
-                               pResponseInfo->u.acceptedResponse.ownershipTokenLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pCertOwnershipToken ==
-                               pResponseInfo->u.acceptedResponse.pCertOwnershipToken );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pCertId ==
+                 pResponseInfo->u.acceptedResponse.pCertId );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.ownershipTokenLength ==
+                 pResponseInfo->u.acceptedResponse.ownershipTokenLength );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pCertOwnershipToken ==
+                 pResponseInfo->u.acceptedResponse.pCertOwnershipToken );
 }
 
 /*-----------------------------------------------------------*/
@@ -392,7 +392,7 @@ static void _keysAndCertificateCallbackThatFailsOnInvokation( void * contextPara
     ( void ) pResponseInfo;
 
     /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
-    AwsIotProvisioning_Assert( false );
+    TEST_ASSERT( false );
 }
 
 /*-----------------------------------------------------------*/
@@ -404,7 +404,7 @@ static void _certFromCsrCallbackThatFailsOnInvokation( void * contextParam,
     ( void ) pResponseInfo;
 
     /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
-    AwsIotProvisioning_Assert( false );
+    TEST_ASSERT( false );
 }
 
 /*-----------------------------------------------------------*/
@@ -416,7 +416,7 @@ static void _registerThingCallbackThatFailsOnInvokation( void * contextParam,
     ( void ) pResponseInfo;
 
     /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
-    AwsIotProvisioning_Assert( false );
+    TEST_ASSERT( false );
 }
 
 
@@ -427,7 +427,7 @@ static void _testRegisterThingRejectedDeviceCallback( void * contextParam,
 {
     AwsIotProvisioningRejectedResponse_t * pExpectedParams = ( AwsIotProvisioningRejectedResponse_t * ) contextParam;
 
-    AwsIotProvisioning_Assert( pResponseInfo->statusCode == _expectedStatusCode );
+    TEST_ASSERT( pResponseInfo->statusCode == _expectedStatusCode );
 
     /* Verify that the rejected response was parsed as expected. */
     _verifyParsedRejectedResponse( pExpectedParams, &pResponseInfo->u.rejectedResponse );
