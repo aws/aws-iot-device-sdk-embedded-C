@@ -78,15 +78,6 @@ static void _testCreateKeysAndCertificateCallback( void * contextParam,
                                                    const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo );
 
 /**
- * @brief Test user-callback that validates the CSR-based certificate server response
- * data that is parsed and provided by the @provisioning_function_createcertificatefromcsr
- * API.
- * This is passed as a member of #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t type.
- */
-static void _testCertFromCsrCallback( void * contextParam,
-                                      const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo );
-
-/**
  * @brief Test user-callback that validates the provision device response parsed and provided by the
  * @provisioning_function_registerthing API.
  * This is passed as a member of #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t type.
@@ -109,7 +100,7 @@ static void _dummyKeysAndCertificateCallback( void * contextParam,
 /**
  * @brief Dummy user-callback to pass in #AwsIotProvisioningCreateCertFromCsrCallbackInfo_t.
  */
-static void _dummyCertFromCsrCallback( void * contextParam,
+static void _certFromCsrDummyCallback( void * contextParam,
                                        const AwsIotProvisioningCreateCertFromCsrResponse_t * responseInfo );
 
 /**
@@ -120,8 +111,7 @@ static void _dummyRegisterThingCallback( void * contextParam,
 
 /**
  * @brief Common test logic that simulates server response and calls the #AwsIotProvisioning_CreateKeysAndCertificate
- * API to
- * test.
+ * API to test.
  *
  * @param[in] pServerResponseInfo The server response to inject into the MQTT stack for the test case.
  * @param[in] serverResponseTimerPeriodMs The server response delay (in milliseconds) to simulate.
@@ -181,21 +171,6 @@ static const char * _createKeysAndCertificateAcceptedResponseTopic =
     PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_TOPIC_FILTER "/accepted";
 
 /**
- * @brief The rejected response topic for the Fleet Provisioning
- * MQTT CreateCertificiateFromCsr API.
- */
-static const char * _createCertFromCsrRejectedTopic =
-    PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER "/rejected";
-
-/**
- * @brief The accepted response topic for the Fleet Provisioning
- * MQTT CreateCertificiateFromCsr API.
- */
-static const char * _createCertFromCsrAcceptedTopic =
-    PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER "/accepted";
-
-
-/**
  * @brief Sample CBOR encoded response of Provisioning CreateKeysAndCertificate service API containing mock certificate
  * and private key data.
  */
@@ -253,6 +228,29 @@ static const AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t _keysAndCe
 };
 
 /**
+ * @brief The rejected response topic for the Fleet Provisioning
+ * MQTT CreateCertificiateFromCsr API.
+ */
+static const char * _createCertFromCsrRejectedTopic =
+    PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER "/rejected";
+
+/**
+ * @brief The accepted response topic for the Fleet Provisioning
+ * MQTT CreateCertificiateFromCsr API.
+ */
+static const char * _createCertFromCsrAcceptedTopic =
+    PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER "/accepted";
+
+/**
+ * @brief The callback object for #AwsIotProvisioning_CreateCertificateFromCsr tests.
+ */
+static const AwsIotProvisioningCreateCertFromCsrCallbackInfo_t _certFromCsrDummyCallbackInfo =
+{
+    .userParam = NULL,
+    .function  = _certFromCsrDummyCallback
+};
+
+/**
  * @brief Sample CBOR encoded accepted response payload from the MQTT
  * CreateCertificateFromCsr service API.
  */
@@ -273,36 +271,6 @@ const uint8_t _sampleCertFromCsrAcceptedResponse[] =
                                                                                          * */
     0x66,                                                                               /*# text(6) */
     0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                                  /*# "Token!" */
-};
-
-/**
- * @brief Represents the expected parsed CSR response information that the parser under
- * parser under test should pass to the user-callback.
- * This object will be provided as a context parameter for the callback object supplied
- * to the parser in the test, to verify the parse information by the parser.
- */
-AwsIotProvisioningCreateCertFromCsrResponse_t _expectedCertFromCsrParsedParams =
-{
-    .statusCode                              = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED,
-    .u.acceptedResponse.pDeviceCertificate   = ( const char * )
-                                               &_sampleCertFromCsrAcceptedResponse[ 17 ],
-    .u.acceptedResponse.deviceCertLength     = 7,
-    .u.acceptedResponse.pCertId              = ( const char * )
-                                               &_sampleCertFromCsrAcceptedResponse[ 39 ],
-    .u.acceptedResponse.certIdLength         = 6,
-    .u.acceptedResponse.pCertOwnershipToken  = ( const char * )
-                                               &_sampleCertFromCsrAcceptedResponse[ 73 ],
-    .u.acceptedResponse.ownershipTokenLength = 6,
-};
-
-/**
- * @brief Callback object with #_expectedCertFromCsrParsedParams as context parameter to test
- * #AwsIotProvisioning_CreateCertificateFromCsr API.
- */
-static const AwsIotProvisioningCreateCertFromCsrCallbackInfo_t _certFromCsrAcceptedResponseCallback =
-{
-    .userParam = &_expectedCertFromCsrParsedParams,
-    .function  = _testCertFromCsrCallback
 };
 
 /**
@@ -439,7 +407,7 @@ static void _dummyKeysAndCertificateCallback( void * contextParam,
 
 /*-----------------------------------------------------------*/
 
-static void _dummyCertFromCsrCallback( void * contextParam,
+static void _certFromCsrDummyCallback( void * contextParam,
                                        const AwsIotProvisioningCreateCertFromCsrResponse_t * responseInfo )
 {
     ( void ) contextParam;
@@ -502,43 +470,6 @@ static void _testCreateKeysAndCertificateCallback( void * contextParam,
         default:
             AwsIotProvisioning_Assert( false );
     }
-}
-
-/*-----------------------------------------------------------*/
-
-static void _testCertFromCsrCallback( void * contextParam,
-                                      const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo )
-{
-    AwsIotProvisioningCreateCertFromCsrResponse_t * pExpectedParams =
-        ( AwsIotProvisioningCreateCertFromCsrResponse_t * ) contextParam;
-
-    /* Disable unused warning. */
-    ( void ) pExpectedParams;
-
-    /* Make sure that an accepted response was passed. */
-    AwsIotProvisioning_Assert( pResponseInfo->statusCode ==
-                               AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED );
-
-    AwsIotProvisioning_Assert(
-        pExpectedParams->u.acceptedResponse.deviceCertLength ==
-        pResponseInfo->u.acceptedResponse.deviceCertLength );
-    AwsIotProvisioning_Assert( 0 == memcmp(
-                                   pExpectedParams->u.acceptedResponse.pDeviceCertificate,
-                                   pResponseInfo->u.acceptedResponse.pDeviceCertificate,
-                                   pExpectedParams->u.acceptedResponse.deviceCertLength ) );
-    AwsIotProvisioning_Assert(
-        pExpectedParams->u.acceptedResponse.certIdLength ==
-        pResponseInfo->u.acceptedResponse.certIdLength );
-    AwsIotProvisioning_Assert( 0 == memcmp(
-                                   pExpectedParams->u.acceptedResponse.pCertId,
-                                   pResponseInfo->u.acceptedResponse.pCertId,
-                                   pExpectedParams->u.acceptedResponse.certIdLength ) );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.ownershipTokenLength ==
-                               pResponseInfo->u.acceptedResponse.ownershipTokenLength );
-    AwsIotProvisioning_Assert( 0 == memcmp(
-                                   pExpectedParams->u.acceptedResponse.pCertOwnershipToken,
-                                   pResponseInfo->u.acceptedResponse.pCertOwnershipToken,
-                                   pExpectedParams->u.acceptedResponse.ownershipTokenLength ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -795,7 +726,6 @@ TEST_GROUP_RUNNER( Provisioning_Unit_API )
     RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPIRejectedResponse );
     RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPICorruptDataInResponse );
     RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPINominalSuccess );
-    /* RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPIServerResponseAfterTimeout ) */
     RUN_TEST_CASE( Provisioning_Unit_API, RegisterThingAPIInvalidParameters );
     RUN_TEST_CASE( Provisioning_Unit_API, RegisterThingAPICalledWithoutInit );
     RUN_TEST_CASE( Provisioning_Unit_API, RegisterThingAPINoServerResponse );
@@ -1141,9 +1071,11 @@ TEST( Provisioning_Unit_API, CreateCertFromCsrAPIInvalidParameters )
 {
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
     AwsIotProvisioningCreateCertFromCsrCallbackInfo_t callbackInfo =
-        AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER;
+    {
+        .userParam = NULL,
+        .function  = _certFromCsrDummyCallback
+    };
 
-    callbackInfo.function = _dummyCertFromCsrCallback;
 
     /* Uninitialized MQTT connection. */
     status = AwsIotProvisioning_CreateCertificateFromCsr( NULL,
@@ -1198,11 +1130,6 @@ TEST( Provisioning_Unit_API, CreateCertFromCsrAPIInvalidParameters )
 TEST( Provisioning_Unit_API, CreateCertFromCsrAPINoServerResponse )
 {
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
-    AwsIotProvisioningCreateCertFromCsrCallbackInfo_t callbackInfo =
-    {
-        .userParam = NULL,
-        .function  = _dummyCertFromCsrCallback
-    };
 
     /* We will not simulate any server response for the timeout to occur! */
 
@@ -1212,7 +1139,7 @@ TEST( Provisioning_Unit_API, CreateCertFromCsrAPINoServerResponse )
                                                           _testCsrString,
                                                           sizeof( _testCsrString ),
                                                           _testProvisioningApiTimeoutMs,
-                                                          &callbackInfo );
+                                                          &_certFromCsrDummyCallbackInfo );
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_TIMEOUT, status );
 }
 
@@ -1224,12 +1151,6 @@ TEST( Provisioning_Unit_API, CreateCertFromCsrAPINoServerResponse )
  */
 TEST( Provisioning_Unit_API, CreateCertFromCsrAPIRejectedResponse )
 {
-    AwsIotProvisioningCreateCertFromCsrCallbackInfo_t callbackInfo =
-    {
-        .userParam = NULL,
-        .function  = _dummyCertFromCsrCallback
-    };
-
     _serverResponseThreadContext_t rejectedResponse =
     {
         .pPublishTopic      = _createCertFromCsrRejectedTopic,
@@ -1240,7 +1161,7 @@ TEST( Provisioning_Unit_API, CreateCertFromCsrAPIRejectedResponse )
 
     _testCertFromCsrApiWithServerResponse( &rejectedResponse,
                                            _testProvisioningServerResponseThreadTimeoutMs,
-                                           &callbackInfo,
+                                           &_certFromCsrDummyCallbackInfo,
                                            AWS_IOT_PROVISIONING_SERVER_REFUSED );
 }
 
@@ -1252,12 +1173,6 @@ TEST( Provisioning_Unit_API, CreateCertFromCsrAPIRejectedResponse )
  */
 TEST( Provisioning_Unit_API, CreateCertFromCsrAPICorruptDataInResponse )
 {
-    AwsIotProvisioningCreateCertFromCsrCallbackInfo_t callbackInfo =
-    {
-        .userParam = NULL,
-        .function  = _dummyCertFromCsrCallback
-    };
-
     const uint8_t responseWithMissingEntries[] =
     {
         0xA1,                                                             /* # map( 1 ) */
@@ -1280,7 +1195,7 @@ TEST( Provisioning_Unit_API, CreateCertFromCsrAPICorruptDataInResponse )
 
     _testCertFromCsrApiWithServerResponse( &corruptResponseContext,
                                            _testProvisioningServerResponseThreadTimeoutMs,
-                                           &callbackInfo,
+                                           &_certFromCsrDummyCallbackInfo,
                                            AWS_IOT_PROVISIONING_BAD_RESPONSE );
 }
 
@@ -1302,7 +1217,7 @@ TEST( Provisioning_Unit_API, CreateCertFromCsrAPINominalSuccess )
 
     _testCertFromCsrApiWithServerResponse( &serverResponse,
                                            _testProvisioningServerResponseThreadTimeoutMs,
-                                           &_certFromCsrAcceptedResponseCallback,
+                                           &_certFromCsrDummyCallbackInfo,
                                            AWS_IOT_PROVISIONING_SUCCESS );
 }
 
