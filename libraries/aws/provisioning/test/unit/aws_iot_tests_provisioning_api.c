@@ -719,8 +719,6 @@ TEST_GROUP_RUNNER( Provisioning_Unit_API )
     RUN_TEST_CASE( Provisioning_Unit_API, CreateKeysAndCertificateAPICorruptDataInResponse );
     RUN_TEST_CASE( Provisioning_Unit_API, CreateKeysAndCertificateAPINominalSuccess );
     RUN_TEST_CASE( Provisioning_Unit_API, CreateKeysAndCertificateAPIServerResponseAfterTimeout )
-    RUN_TEST_CASE( Provisioning_Unit_API,
-                   CreateKeysAndCertificateAPIServerResponseAndTimeoutRaceCondition );
     RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPIInvalidParameters );
     RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPINoServerResponse );
     RUN_TEST_CASE( Provisioning_Unit_API, CreateCertFromCsrAPIRejectedResponse );
@@ -1036,29 +1034,6 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPIServerResponseAfterTimeo
                                                         _testProvisioningServerResponseThreadTimeoutMs * 2,
                                                         &_keysAndCertAcceptedResponseCallback,
                                                         AWS_IOT_PROVISIONING_TIMEOUT );
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Tests the behavior of @ref provisioning_function_getpKeysAndCertificate when there is a race condition between
- * the library receiving the server response and the response timeout firing. Even in such a case, the API is expected
- * to process the response and invoke the user callback with the device credentials instead of treating the case as a
- * timeout!*/
-TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPIServerResponseAndTimeoutRaceCondition )
-{
-    _serverResponseThreadContext_t serverResponse =
-    {
-        .pPublishTopic      = _createKeysAndCertificateAcceptedResponseTopic,
-        .publishTopicLength = strlen( _createKeysAndCertificateAcceptedResponseTopic ),
-        .pPublishData       = _sampleCreateKeysAndCertificateServerResponsePayload,
-        .publishDataLength  = sizeof( _sampleCreateKeysAndCertificateServerResponsePayload )
-    };
-
-    _testCreateKeysAndCertificateAPIWithServerResponse( &serverResponse,
-                                                        _testProvisioningApiTimeoutMs,
-                                                        &_keysAndCertAcceptedResponseCallback,
-                                                        AWS_IOT_PROVISIONING_SUCCESS );
 }
 
 /*-----------------------------------------------------------*/
