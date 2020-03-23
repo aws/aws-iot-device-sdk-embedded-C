@@ -154,6 +154,11 @@ typedef enum AwsIotProvisioningServerStatusCode
     AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED = 202,
 
     /**
+     * @brief Provisioning operation rejected: Invalid Certificate-Signing Request.
+     */
+    AWS_IOT_PROVISIONING_SERVER_STATUS_INVALID_CSR = 400,
+
+    /**
      * @brief Provisioning operation rejected: Forbidden.
      */
     AWS_IOT_PROVISIONING_SERVER_STATUS_FORBIDDEN = 403,
