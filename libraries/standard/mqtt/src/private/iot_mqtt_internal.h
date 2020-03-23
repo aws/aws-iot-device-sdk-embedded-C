@@ -37,7 +37,6 @@
 
 /* MQTT include. */
 #include "iot_mqtt.h"
-#include "iot_mqtt_serialize.h"
 
 /* Task pool include. */
 #include "iot_taskpool.h"
@@ -400,6 +399,7 @@ typedef struct _mqttConnection
     IotListDouble_t subscriptionList;                /**< @brief Holds subscriptions associated with this connection. */
     IotMutex_t subscriptionMutex;                    /**< @brief Grants exclusive access to the subscription list. */
 
+    uint64_t lastMessageTime;                        /**< @brief When the most recent message was transmitted. */
     _mqttOperation_t pingreq;                        /**< @brief Operation used for MQTT keep-alive. */
 } _mqttConnection_t;
 
@@ -565,25 +565,6 @@ uint8_t _IotMqtt_GetPacketType( IotNetworkConnection_t pNetworkConnection,
  */
 size_t _IotMqtt_GetRemainingLength( IotNetworkConnection_t pNetworkConnection,
                                     const IotNetworkInterface_t * pNetworkInterface );
-
-/**
- * @brief Get the remaining length from a stream of bytes off the network.
- *
- * @param[in] pNetworkConnection Reference to the network connection.
- * @param[in] getNextByte Function pointer used to interact with the
- * network to get next byte.
- *
- * @return The remaining length; #MQTT_REMAINING_LENGTH_INVALID on error.
- *
- * @note This function is similar to _IotMqtt_GetRemainingLength() but it uses
- * user provided getNextByte function to parse the stream instead of using
- * _IotMqtt_GetNextByte(). pNetworkConnection is implementation dependent and
- * user provided function makes use of it.
- *
- */
-size_t _IotMqtt_GetRemainingLength_Generic( IotNetworkConnection_t pNetworkConnection,
-                                            IotMqttGetNextByte_t getNextByte );
-
 /**
  * @brief Generate a CONNECT packet from the given parameters.
  *

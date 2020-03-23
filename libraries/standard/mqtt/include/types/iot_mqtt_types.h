@@ -38,7 +38,6 @@
 
 /* Type includes. */
 #include "types/iot_platform_types.h"
-#include "types/iot_taskpool_types.h"
 
 /* Platform network include. */
 #include "platform/iot_network.h"

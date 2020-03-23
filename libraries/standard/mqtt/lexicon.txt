@@ -85,9 +85,11 @@ jobreference
 jobstorage
 keepalivems
 keepaliveseconds
+lastmessagetime
 lu
 lwt
 malloc
+memcpy
 misra
 mqtt
 mqttconnection

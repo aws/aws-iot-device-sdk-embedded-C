@@ -105,8 +105,8 @@ static IotMqttError_t _deserializeAck( _mqttConnection_t * pMqttConnection,
  * @return #IOT_MQTT_SUCCESS, #IOT_MQTT_NO_MEMORY, #IOT_MQTT_NETWORK_ERROR,
  * or #IOT_MQTT_SCHEDULING_ERROR.
  */
-static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
-                                           _mqttPacket_t * pIncomingPacket );
+static IotMqttError_t _deserializePublishPacket( _mqttConnection_t * pMqttConnection,
+                                                 _mqttPacket_t * pIncomingPacket );
 
 /**
  * @brief Deserialize a PINGRESP packet.
@@ -380,8 +380,8 @@ static IotMqttError_t _deserializeAck( _mqttConnection_t * pMqttConnection,
 
 /*-----------------------------------------------------------*/
 
-static IotMqttError_t _deserializePublish( _mqttConnection_t * pMqttConnection,
-                                           _mqttPacket_t * pIncomingPacket )
+static IotMqttError_t _deserializePublishPacket( _mqttConnection_t * pMqttConnection,
+                                                 _mqttPacket_t * pIncomingPacket )
 {
     IotMqttError_t status = IOT_MQTT_STATUS_PENDING;
     _mqttOperation_t * pOperation = NULL;
@@ -541,7 +541,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
             IotLogDebug( "(MQTT connection %p) PUBLISH in data stream.", pMqttConnection );
 
             /* Deserialize PUBLISH. */
-            status = _deserializePublish( pMqttConnection, pIncomingPacket );
+            status = _deserializePublishPacket( pMqttConnection, pIncomingPacket );
 
             break;
 
@@ -601,7 +601,7 @@ static IotMqttError_t _deserializeIncomingPacket( _mqttConnection_t * pMqttConne
          *
          * This error is triggered by passing a freed argument 'pMqttConnection'
          * to 'IotLogError'. Coverity assumes that 'pMqttConnection' was freed in
-         * '_IotMqtt_CreateOperation', which was invoked in '_deserializePublish'.
+         * '_IotMqtt_CreateOperation', which was invoked in '_deserializePublishPacket'.
          *
          * This will never happen as a valid MQTT connection passed to this
          * function always has a positive reference count; therefore,
@@ -865,41 +865,10 @@ void IotMqtt_ReceiveCallback( IotNetworkConnection_t pNetworkConnection,
 
 /*-----------------------------------------------------------*/
 
-IotMqttError_t IotMqtt_GetIncomingMQTTPacketTypeAndLength( IotMqttPacketInfo_t * pIncomingPacket,
-                                                           IotMqttGetNextByte_t getNextByte,
-                                                           IotNetworkConnection_t pNetworkConnection )
-{
-    IotMqttError_t status = IOT_MQTT_SUCCESS;
-
-    /* Read the packet type, which is the first byte available. */
-    if( getNextByte( pNetworkConnection, &( pIncomingPacket->type ) ) == IOT_MQTT_SUCCESS )
-    {
-        /* Check that the incoming packet type is valid. */
-        if( _incomingPacketValid( pIncomingPacket->type ) == false )
-        {
-            IotLogError( "(MQTT connection) Unknown packet type %02x received.",
-                         pIncomingPacket->type );
-
-            status = IOT_MQTT_BAD_RESPONSE;
-        }
-        else
-        {
-            /* Read the remaining length. */
-            pIncomingPacket->remainingLength = _IotMqtt_GetRemainingLength_Generic( pNetworkConnection,
-                                                                                    getNextByte );
-
-            if( pIncomingPacket->remainingLength == MQTT_REMAINING_LENGTH_INVALID )
-            {
-                status = IOT_MQTT_BAD_RESPONSE;
-            }
-        }
-    }
-    else
-    {
-        status = IOT_MQTT_NETWORK_ERROR;
-    }
-
-    return status;
-}
-
-/*-----------------------------------------------------------*/
+/* Provide access to internal functions and variables if testing. */
+/* IOT_BUILD_TESTS is defined outside the code base, e.g. passed in by build command. */
+/* coverity[misra_c_2012_rule_20_9_violation] */
+/* coverity[caretline] */
+#if IOT_BUILD_TESTS == 1
+    #include "iot_test_access_mqtt_network.c"
+#endif

@@ -8,7 +8,7 @@ box "Application" #LightGreen
     create participant "MQTT API\nfunction" as api
 end box
 
-box "Task pool" #LightBlue
+box "Task pool\nThe task pool processes\nbackground work without\nblocking the application.\nIt also invokes asynchronous\ncallbacks.\n" #LightBlue
     participant "Task pool jobs" as task_pool
 end box
 
