@@ -302,7 +302,7 @@ typedef struct AwsIotProvisioningCreateCertFromCsrResponse
         /** @brief Represents the successful/accepted response of device credentials received from the server. */
         struct
         {
-            const char * pDeviceCertificate;  /**< The new certificate for the device.*/
+            const char * pDeviceCert;         /**< The new certificate for the device.*/
             size_t deviceCertLength;          /**< The size of the device certificate.*/
             const char * pCertId;             /**< The certificate ID associated with the new certificate,
                                                * @p pDeviceCertificate.*/

@@ -310,7 +310,7 @@
 #define PROVISIONING_SERVER_RESPONSE_PAYLOAD_CERTIFICATE_PEM_STRING                     "certificatePem"
 
 /**
- * @brief The key for the certificate Id data in in the response payloads of the
+ * @brief The key for the certificate Id data in the response payload of the
  * MQTT Fleet Provisioning APIs.
  */
 #define PROVISIONING_SERVER_RESPONSE_PAYLOAD_CERTIFICATE_ID_STRING                      "certificateId"
@@ -322,7 +322,7 @@
 #define PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_RESPONSE_PAYLOAD_PRIVATE_KEY_STRING    "privateKey"
 
 /**
- * @brief The key for the token key data in the response payloads of the
+ * @brief The key for the token key data in the response payload of the
  * MQTT Fleet Provisioning APIs.
  */
 #define PROVISIONING_SERVER_RESPONSE_PAYLOAD_CERTIFICATE_TOKEN_KEY_STRING               "certificateOwnershipToken"
@@ -539,6 +539,7 @@ size_t _AwsIotProvisioning_GenerateRegisterThingTopicFilter( const char * pTempl
  * @param[in] pResponsePayload The response payload from the server to parse.
  * @param[in] payloadLength The length of the response payload.
  * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
+ *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( AwsIotStatus_t responseType,
@@ -557,6 +558,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
  * @param[in] pResponsePayload The response payload from the server to parse.
  * @param[in] payloadLength The length of the response payload.
  * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
+ *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t responseType,
@@ -572,6 +574,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
  * @param[in] pResponsePayload The response payload from the server to parse.
  * @param[in] responsePayloadLength The length of the response payload.
  * @param[in] userCallbackInfo The user-provided callback to invoke on successful parsing of response.
+ *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS when parsing is successful, otherwise the appropriate error code.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIotStatus_t responseType,
@@ -585,6 +588,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
  * @param[out] pSerializationBuffer This will be assigned to a buffer that will be allocated and populated with the
  * serialized payload data.
  * @param[out] pBufferSize This will be populated with the size of the allocated payload data buffer.
+ *
  * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise* #AWS_IOT_PROVISIONING_INTERNAL_FAILURE
  * for any serialization error.
  */
@@ -603,6 +607,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
  * which represents the data to be serialized in the payload.
  * @param[in] csrLength The length of the Certificate-Signing Request string.
  * @param[in] pPayloadSize This will be populated with the size of the serialized data.
+ *
  * @return `true` if calculation of the payload size is successful; otherwise `false`.
  */
 bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
@@ -616,7 +621,8 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
  * @param[in] pCertificateSigningRequest The Certificate-Signing Request string to serialize for the request.
  * @param[in] csrLength The length of the Certificate-Signing Request string.
  * @param[in, out] pSerializationBuffer The buffer for storing the serialized payload data.
- * @param[in] pBufferSize THe size of the serialization buffer.
+ * @param[in] pBufferSize The size of the serialization buffer.
+ *
  * @return `true` if serialization is successful; otherwise `false` for any serialization error.
  */
 bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
@@ -633,6 +639,7 @@ bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * 
  *
  * @note The calling code is responsible for de-allocation of the buffer memory.
  * @param[out] pBufferSize This will be populated with the size of the allocated payload data buffer.
+ *
  * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise #AWS_IOT_PROVISIONING_INTERNAL_FAILURE
  * for any serialization error.
  */

@@ -202,7 +202,7 @@ const uint8_t _sampleAcceptedCertFromCsrResponse[] =
 AwsIotProvisioningCreateCertFromCsrResponse_t _expectedCertFromCsrParsedParams =
 {
     .statusCode                              = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED,
-    .u.acceptedResponse.pDeviceCertificate   = ( const char * )
+    .u.acceptedResponse.pDeviceCert          = ( const char * )
                                                &_sampleAcceptedCertFromCsrResponse[ 17 ],
     .u.acceptedResponse.deviceCertLength     = 7,
     .u.acceptedResponse.pCertId              = ( const char * )
@@ -370,8 +370,8 @@ static void _testCreateCertFromCsrAcceptedCallback( void * contextParam,
     AwsIotProvisioning_Assert(
         pExpectedParams->u.acceptedResponse.deviceCertLength ==
         pResponseInfo->u.acceptedResponse.deviceCertLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pDeviceCertificate ==
-                               pResponseInfo->u.acceptedResponse.pDeviceCertificate );
+    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pDeviceCert ==
+                               pResponseInfo->u.acceptedResponse.pDeviceCert );
     AwsIotProvisioning_Assert(
         pExpectedParams->u.acceptedResponse.certIdLength ==
         pResponseInfo->u.acceptedResponse.certIdLength );

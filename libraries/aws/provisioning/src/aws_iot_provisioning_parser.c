@@ -62,7 +62,7 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
 
 /**
  * @brief Utility for parsing a text-string based key-value pair entry from
- * from a map container type response payload.
+ * a map container type response payload.
  *
  * @param[in] payloadDecoder The decoder object representing the map container
  * formatted payload.
@@ -87,13 +87,13 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
  * These elements are common in the server responses of the MQTT CreateKeysAndCertificate
  * and CreateCertificateFromCsr APIs.
  *
- * @param[in] payloadDecoder The decoder object that represents the
+ * @param[in] pPayloadDecoder The decoder object that represents the
  * server response payload as a map container.
- * @param[in/out] certPemDecoder The decoder object to store the parsed Certificate
+ * @param[in/out] pCertPemDecoder The decoder object to store the parsed Certificate
  * PEM string in.
- * @param[in/out] certIdDecoder The decoder object to store the parsed
+ * @param[in/out] pCertIdDecoder The decoder object to store the parsed
  * Certificate ID data in.
- * @param[in/out] ownershipTokenDecoder The decoder object to store the parsed
+ * @param[in/out] pOwnershipTokenDecoder The decoder object to store the parsed
  * Certificate Ownership Token string in.
  * @param[in] pOperationString The string of the ongoing operation to use for
  * logging.
@@ -432,7 +432,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
                                ( responseType == AWS_IOT_ACCEPTED ) );
 
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
-    AwsIotProvisioningCreateCertFromCsrResponse_t userCallbackParam =
+    AwsIotProvisioningCreateCertFromCsrResponse_t serverResponse =
         AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER;
 
     IotSerializerDecoderObject_t payloadDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
@@ -475,28 +475,28 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
             if( status == AWS_IOT_PROVISIONING_SUCCESS )
             {
                 /* Populate the status code information to represent success response from the server. */
-                userCallbackParam.statusCode = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED;
+                serverResponse.statusCode = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED;
 
                 /* Populate the data to be passed to the user callback.*/
-                userCallbackParam.u.acceptedResponse.pDeviceCertificate = ( const char * )
-                                                                          certPemDecoder.u.value.u.string.pString;
-                userCallbackParam.u.acceptedResponse.deviceCertLength =
+                serverResponse.u.acceptedResponse.pDeviceCert = ( const char * )
+                                                                certPemDecoder.u.value.u.string.pString;
+                serverResponse.u.acceptedResponse.deviceCertLength =
                     certPemDecoder.u.value.u.string.length;
-                userCallbackParam.u.acceptedResponse.pCertId = ( const char * )
-                                                               certIdDecoder.u.value.u.string.pString;
-                userCallbackParam.u.acceptedResponse.certIdLength =
+                serverResponse.u.acceptedResponse.pCertId = ( const char * )
+                                                            certIdDecoder.u.value.u.string.pString;
+                serverResponse.u.acceptedResponse.certIdLength =
                     certIdDecoder.u.value.u.string.length;
 
-                userCallbackParam.u.acceptedResponse.pCertOwnershipToken = ( const char * )
-                                                                           ownershipTokenDecoder.u.value.u.string.pString;
-                userCallbackParam.u.acceptedResponse.ownershipTokenLength =
+                serverResponse.u.acceptedResponse.pCertOwnershipToken = ( const char * )
+                                                                        ownershipTokenDecoder.u.value.u.string.pString;
+                serverResponse.u.acceptedResponse.ownershipTokenLength =
                     ownershipTokenDecoder.u.value.u.string.length;
 
                 /* Invoke the user-provided callback with the parsed credentials data . */
                 IotLogInfo( "parser: About to call user-callback with accepted server response: Operation={%s}",
                             CREATE_CERT_FROM_CSR_OPERATION_LOG );
                 userCallbackInfo->createCertFromCsrCallback.function( userCallbackInfo->createCertFromCsrCallback.userParam,
-                                                                      &userCallbackParam );
+                                                                      &serverResponse );
 
 
                 _pAwsIotProvisioningDecoder->destroy( &certPemDecoder );
@@ -506,13 +506,13 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
         }
         else if( responseType == AWS_IOT_REJECTED )
         {
-            IotLogInfo( "parser: Server has REJECTED the operation request: Operation={%s}",
+            IotLogWarn( "parser: Server has REJECTED the operation request: Operation={%s}",
                         CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
             status = _parseRejectedResponse( &payloadDecoder,
                                              REGISTER_THING_OPERATION_LOG,
-                                             &userCallbackParam.u.rejectedResponse,
-                                             &userCallbackParam.statusCode );
+                                             &serverResponse.u.rejectedResponse,
+                                             &serverResponse.statusCode );
 
             /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
             if( status == AWS_IOT_PROVISIONING_SUCCESS )
@@ -520,7 +520,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
                 IotLogInfo( "parser: About to call user-callback with rejected server response: Operation={%s}",
                             CREATE_CERT_FROM_CSR_OPERATION_LOG );
                 userCallbackInfo->createCertFromCsrCallback.function( userCallbackInfo->createCertFromCsrCallback.userParam,
-                                                                      &userCallbackParam );
+                                                                      &serverResponse );
             }
         }
     }
