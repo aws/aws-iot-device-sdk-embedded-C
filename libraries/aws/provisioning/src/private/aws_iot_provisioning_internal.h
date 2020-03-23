@@ -592,20 +592,37 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
                                                                                                size_t * pBufferSize );
 
 /**
- * @brief Serializes payload data in a buffer, if provided, of a request to the CreateCertificateFromCsr API on AWS IoT Core;
- * otherwise stores the calculated size of the serialized data in the passed parameter, @a pBufferSize.
+ * @brief Calculates the payload size of serializing the passed Certificate-Signing Request
+ * data for the MQTT CreateCertificateFromCsr service API.
+ *
+ * @note This function performs a dry-run serialization of the payload data to
+ * calculate the payload size. This function should be called to determine the
+ * size of the buffer to allocate for the actual payload serialization.
+ *
+ * @param[in] pCertificateSigningRequest The Certificate-Signing Request string
+ * which represents the data to be serialized in the payload.
+ * @param[in] csrLength The length of the Certificate-Signing Request string.
+ * @param[in] pPayloadSize This will be populated with the size of the serialized data.
+ * @return `true` if calculation of the payload size is successful; otherwise `false`.
+ */
+bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
+                                                          size_t csrLength,
+                                                          size_t * pPayloadSize );
+
+/**
+ * @brief Serializes payload data for the request to the MQTT CreateCertificateFromCsr
+ * service API, in the passed buffer.
  *
  * @param[in] pCertificateSigningRequest The Certificate-Signing Request string to serialize for the request.
  * @param[in] csrLength The length of the Certificate-Signing Request string.
- * @param[in] pSerializationBuffer The buffer for storing the serialized payload data.
- * @param[in, out] pBufferSize If the payload buffer is provided, this should contain the size of the buffer. Otherwise,
- * this will be populated with the size of the serialized data.
+ * @param[in, out] pSerializationBuffer The buffer for storing the serialized payload data.
+ * @param[in] pBufferSize THe size of the serialization buffer.
  * @return `true` if serialization is successful; otherwise `false` for any serialization error.
  */
 bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
                                                                    size_t csrLength,
                                                                    uint8_t * pSerializationBuffer,
-                                                                   size_t * pBufferSize );
+                                                                   size_t bufferSize );
 
 /**
  * @brief Serializes payload data for MQTT request to the Provisioning RegisterThing service API.
