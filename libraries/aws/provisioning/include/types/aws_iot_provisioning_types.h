@@ -65,7 +65,7 @@ typedef enum AwsIotProvisioningError
      * Functions that may return this value:
      * - @ref provisioning_function_init
      */
-    AWS_IOT_PROVISIONING_INIT_FAILED,
+    AWS_IOT_PROVISIONING_INIT_FAILED = 1,
 
     /**
      * @brief An API function was called before @ref provisioning_function_init.
@@ -74,7 +74,7 @@ typedef enum AwsIotProvisioningError
      * - @ref provisioning_function_registerthing
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_NOT_INITIALIZED,
+    AWS_IOT_PROVISIONING_NOT_INITIALIZED = 2,
 
     /**
      * @brief At least one parameter is invalid.
@@ -83,7 +83,7 @@ typedef enum AwsIotProvisioningError
      * - @ref provisioning_function_registerthing
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_BAD_PARAMETER,
+    AWS_IOT_PROVISIONING_BAD_PARAMETER = 3,
 
     /**
      * @brief Provisioning operation failed because of memory allocation failure.
@@ -92,7 +92,7 @@ typedef enum AwsIotProvisioningError
      * - @ref provisioning_function_registerthing
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_NO_MEMORY,
+    AWS_IOT_PROVISIONING_NO_MEMORY = 4,
 
     /**
      * @brief Provisioning response received from the network is malformed, corrupt or incomplete.
@@ -101,7 +101,7 @@ typedef enum AwsIotProvisioningError
      * - @ref provisioning_function_registerthing
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_BAD_RESPONSE,
+    AWS_IOT_PROVISIONING_BAD_RESPONSE = 5,
 
     /**
      * @brief An Provisioning operation timed out.
@@ -110,7 +110,7 @@ typedef enum AwsIotProvisioningError
      * - @ref provisioning_function_registerthing
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_TIMEOUT,
+    AWS_IOT_PROVISIONING_TIMEOUT = 6,
 
     /**
      * @brief An Provisioning operation request is rejected by the server.
@@ -119,7 +119,7 @@ typedef enum AwsIotProvisioningError
      * - @ref provisioning_function_registerthing
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_SERVER_REFUSED,
+    AWS_IOT_PROVISIONING_SERVER_REFUSED = 7,
 
     /**
      * @brief Provisioning operation failed due to internal error.
@@ -128,7 +128,7 @@ typedef enum AwsIotProvisioningError
      * - @ref provisioning_function_registerthing
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_INTERNAL_FAILURE,
+    AWS_IOT_PROVISIONING_INTERNAL_FAILURE = 8,
 
     /**
      * @brief Generic code for any MQTT operation error encountered during an
@@ -138,7 +138,7 @@ typedef enum AwsIotProvisioningError
      * - @ref provisioning_function_registerthing
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_MQTT_ERROR
+    AWS_IOT_PROVISIONING_MQTT_ERROR = 9
 } AwsIotProvisioningError_t;
 
 /**

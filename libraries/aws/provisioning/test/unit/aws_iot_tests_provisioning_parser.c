@@ -199,7 +199,7 @@ const uint8_t _sampleAcceptedCertFromCsrResponse[] =
  * This object will be provided as a context parameter for the callback object supplied
  * to the parser in the test, to verify the parse information by the parser.
  */
-AwsIotProvisioningCreateCertFromCsrResponse_t _expectedCertFromCsrParsedParams =
+static AwsIotProvisioningCreateCertFromCsrResponse_t _expectedCertFromCsrParsedParams =
 {
     .statusCode                              = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED,
     .u.acceptedResponse.pDeviceCert          = ( const char * )
