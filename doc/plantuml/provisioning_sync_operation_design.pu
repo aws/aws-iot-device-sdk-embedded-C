@@ -2,87 +2,97 @@
 skinparam classFontSize 8
 skinparam classFontName Helvetica
 
-box "Application Task" #LightBlue
-actor Application as app
-participant "Provisioning API" as provisioning
-participant "Provisioning Serializer (Internal)" as serializer
-participant "Provisionin Parser (Internal) " as parser
-participant "MQTT API" as mqtt
+actor "Application Task" as app
+
+box "Provisioning Library" #LightBlue
+participant "API Layer" as provisioning
+participant "Serializer Layer (Internal)" as serializer
+participant "Parser Layer (Internal) " as parser
 end box
 
+participant "MQTT API" as mqtt
+
 box "Task Pool Task" #LightGreen
+participant "User Callback" as userCallback
 participant "MQTT subscription callback" as callback
 end box
 
-box "Cloud" #LightPink
+box "AWS" #LightPink
 participant "AWS IoT Core" as aws
 end box
 
-app -> provisioning: Call Provisioning operation.Provide\n response handling callback.
+app -> provisioning: Call Provisioning operation API.\n Provide server response handling callback.
 activate app
 
 provisioning -> provisioning: Validate input arguments
 provisioning --> app: Return BAD_PARAMETER for any invalid input argument
 
-provisioning -> mqtt: Subscribe to 'accepted' and 'rejected' response topics
-note right of provisioning: Register subcription callback\n for processing server response
+provisioning -> mqtt: Subscribe to 'accepted' and 'rejected' response topics of operation
+note right of provisioning: Register MQTT subscription callback\nfor processing server response.
 
-mqtt -> aws: Transmit SUB packets to Server
+provisioning -> provisioning: Set user-callback in global state memory
+note right of provisioning: Global state is shared between\nAPI calling and MQTT subscription callback contexts
+
+mqtt -> aws: Transmit MQTT SUBSCRIBE packets to Server
 mqtt -> provisioning: Return SUCCESS or error
 provisioning --> app: Return MQTT_ERROR if error in subscribing
 
-provisioning -> serializer: Calculate size of PUBLISH payload
-serializer -> serializer: Performs <i>dry-run serialization</i> for size calculation
-serializer -> provisioning: Return calculated size and SUCCESS of Failure
+provisioning -> serializer: Calculate size of operation request payload\nfor PUBLISH message
+serializer -> serializer: Performs <i>dry-run serialization</i>\nfor calculating payload size
+serializer -> provisioning: Return calculated size OR error for failure.
 provisioning -> app: Return INTERNAL_FAILURE if calculation failed.
 
 provisioning -> provisioning: Allocate memory for payload buffer
 provisioning -> app: Return NO_MEMORY if allocation fails.
 
-provisioning -> serializer: Request serialization of PUBLISH payload.\n Provide allocated buffer.  
+provisioning -> serializer: Request serialization of PUBLISH payload. \nProvide allocated buffer.  
 serializer -> serializer: Perform <i>actual serialization</i> in buffer.
 serializer -> provisioning: Return SUCCESS or INTERNAL_FAILURE/NO_MEMORY\nfor serializer failure.
 provisioning -> app: Return same error code if serializalion failed.
 
-provisioning -> mqtt: Send payload to operation's request topic
-mqtt -> aws: Transmit MQTT PUBLISH packet to server
+provisioning -> mqtt: PUBLISH payload to operation's request topic
+mqtt -> aws: Transmit MQTT PUBLISH packets to server
 mqtt -> provisioning: Return SUCCESS or failure.
 provisioning --> app: Return MQTT_ERROR if PUBLISH failed.
 
 provisioning -> provisioning: Wait on server response with timeout.
-note left of provisioning: <b>Sempahore</b> resource used for pending on\n notification from MQTT subscription callback.
+note right of provisioning: <b>Sempahore</b> resource used for pending on\n notification from MQTT subscription callback.
 alt Receive Server Response within timeout period
 deactivate app
-aws -> mqtt : incoming PUBLISH response packet from server
+aws -> mqtt : Incoming PUBLISH response from server
 mqtt -> callback: Invoke MQTT subscription callback.\n Pass server response information.
 activate callback
-callback -> callback: Parse incoming PUBLISH topic for ACCEPTED/REJECTED server response.
-callback -> parser: Invoke response payload parser.\n Pass accepted OR rejected response type,\n, response payload, user's response callback.
+callback -> callback: Parse incoming PUBLISH topic for\nACCEPTED/REJECTED suffix to determine\n type of server response.
+callback -> parser: Invoke response payload parser of operation.
+note left of callback: Pass accepted OR rejected response type,\nresponse payload, user's response callback.
 parser -> parser: Parse response payload
 alt If error in parsing
-parser -> callback: Return appropriate error BAD_RESPONSE, INTERNAL_FAILURE
-else 
-parser -> parser: Invoke user's response callback. Pass parsed payload information.
-parser -> callback: Return SUCCESS.
+parser -> callback: Return appropriate error (BAD_RESPONSE, INTERNAL_FAILURE)
+else Successful Payload Parsing
+parser -> userCallback: Invoke user-callback.\nPass parsed payload information.
+parser -> callback: Return SUCCESS
 end alt
-callback -> provisioning: Notify pending API function context about server response.
-note left of callback: Notification done on the shared semaphore resource.
-callback -> callback: Destroy semaphore resource,\nif Provisioning libray was already cleaned.
-note right of callback: Tackles RACE CONDITION between receiving\nduplicate server responses (MQTT QoS 1)\and cleaning library after API returns.
+callback -> provisioning: Notify pending API calling context about server response reception
+note left of callback: Notification done on the shared <b>semaphore resource</b>.
+alt Corner Case: Server response received after Provisionin library cleanup
+callback -> callback: Destroy semaphore resource
+note right of callback: Tackles <b>RACE CONDITION</b> between receiving\nduplicate server responses (MQTT QoS 1)\nand cleaning library after API returns.
+end alt
 deactivate callback
 activate app
+
+provisioning -> mqtt: Unsubscribe from "accepted" and "rejected" response topics
+mqtt -> aws: Transmit MQTT UNSUBSCRIBE packets to server.
+mqtt -> provisioning: Return SUCCESS or error if unsubscribe failed.
+provisioning -> app: Return MQTT_ERROR if unsubscribe failed.
+
+provisioning -> provisioning: Release payload buffer memory
+provisioning -> app: Return SUCCESS
+
 else Server Response Wait Timed Out
 provisioning -> provisioning: Semaphore wait timeout occurred
 provisioning -> app: Return TIMEOUT error
 end alt
-
-provisioning -> mqtt: Unsubscribe from "accepted" and "rejected" response topics
-mqtt -> aws: Transmit MQTT UNSUB packets to server.
-mqtt -> provisioning: Return SUCCESS or error if unsubscribe failed.
-provisioning -> app: Return MQTT_ERROR if unsubscribe failed.
-
-provisioning -> provisioning: Release PUBLISH payload buffer memory.
-provisioning -> app: Return SUCCESS
-deactivate provisioning
+deactivate app
 
 @enduml
