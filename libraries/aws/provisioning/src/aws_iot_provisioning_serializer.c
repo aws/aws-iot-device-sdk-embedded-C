@@ -47,6 +47,22 @@
 /*------------------------------------------------------------------*/
 
 /**
+ * @brief Represents the number of map entries in the request payload of the
+ * MQTT CreateCertificateFromCsr service API.
+ */
+static const size_t _numOfCreateKeysAndCertPayloadMapEntries = 0u;
+
+/**
+ * @brief Represents the number of map entries in the request
+ * payload of the MQTT CreateCertificateFromCsr service API.
+ * The ONLY payload entry is for the Certificate-Signing Request string
+ */
+static const size_t _numOfCertFromCsrPayloadMapEntries = 1u;
+
+
+/*------------------------------------------------------------------*/
+
+/**
  * @brief Wrapper for assert checking the passed serializer error code for `IOT_SERIALIZER_SUCCESS` value.
  *
  * This should be used for asserting serializer status codes when performing actual serialization into a buffer.
@@ -164,7 +180,7 @@ static AwsIotProvisioningError_t _serializeCreateKeysAndCertificateRequestPayloa
     /* Encode an empty map container (Diagnostic notation as "{}"") .*/
     serializerStatus = _pAwsIotProvisioningEncoder->openContainer( pOutermostEncoder,
                                                                    &emptyPayloadEncoder,
-                                                                   0 );
+                                                                   _numOfCreateKeysAndCertPayloadMapEntries );
 
     /* Close the map. */
     if( checkSerializerStatus( _pAwsIotProvisioningEncoder->
@@ -406,7 +422,7 @@ AwsIotProvisioningError_t _serializeCertFromCsrPayload( const char * pCertificat
     /* Encode the payload as a map container. */
     serializerResult = _pAwsIotProvisioningEncoder->openContainer( pEncoder,
                                                                    &mapEncoder,
-                                                                   1 );
+                                                                   _numOfCertFromCsrPayloadMapEntries );
 
     if( serializerResult == IOT_SERIALIZER_OUT_OF_MEMORY )
     {
