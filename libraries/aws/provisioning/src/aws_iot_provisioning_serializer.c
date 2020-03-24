@@ -389,6 +389,7 @@ AwsIotProvisioningError_t _serializeCertFromCsrPayload( const char * pCertificat
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
 
     IotSerializerEncoderObject_t mapEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
+    IotSerializerError_t serializerResult = IOT_SERIALIZER_SUCCESS;
     IotSerializerScalarData_t csrData = IotSerializer_ScalarTextStringWithLength( pCertificateSigningRequest,
                                                                                   csrLength );
 
@@ -407,14 +408,27 @@ AwsIotProvisioningError_t _serializeCertFromCsrPayload( const char * pCertificat
     }
 
     /* Encode the payload as a map container. */
-    if( isSuccessStatus( _pAwsIotProvisioningEncoder->openContainer( pEncoder,
-                                                                     &mapEncoder,
-                                                                     1 ) ) == false )
+    serializerResult = _pAwsIotProvisioningEncoder->openContainer( pEncoder,
+                                                                   &mapEncoder,
+                                                                   1 );
+
+    if( serializerResult == IOT_SERIALIZER_OUT_OF_MEMORY )
     {
-        IotLogError( "serializer: Unable to serialize payload: "
+        IotLogError( "serializer: Unable to serialize request payload: "
+                     "Failed to allocate memory for map container: Operation={%s}",
+                     CREATE_CERT_FROM_CSR_OPERATION_LOG );
+        status = AWS_IOT_PROVISIONING_NO_MEMORY;
+    }
+    else if( isSuccessStatus( serializerResult ) == false )
+    {
+        IotLogError( "serializer: Unable to serialize request payload: "
                      "Failed to open map container: Operation={%s}",
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
         status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
+    }
+    else
+    {
+        /* Nothing to do here. */
     }
 
     if( status == true )
@@ -426,7 +440,7 @@ AwsIotProvisioningError_t _serializeCertFromCsrPayload( const char * pCertificat
 
 
         {
-            IotLogError( "serializer: Unable to serialize payload: "
+            IotLogError( "serializer: Unable to serialize request payload: "
                          "Failed to insert CSR entry in map: Operation={%s}",
                          CREATE_CERT_FROM_CSR_OPERATION_LOG );
             status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
@@ -439,7 +453,7 @@ AwsIotProvisioningError_t _serializeCertFromCsrPayload( const char * pCertificat
         if( isSuccessStatus( _pAwsIotProvisioningEncoder->closeContainer( pEncoder,
                                                                           &mapEncoder ) ) == false )
         {
-            IotLogError( "serializer: Unable to serialize payload: "
+            IotLogError( "serializer: Unable to serialize request payload: "
                          "Failed to close map container: Operation={%s}",
                          CREATE_CERT_FROM_CSR_OPERATION_LOG );
             status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
