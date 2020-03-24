@@ -761,10 +761,10 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Actual serialization in payload buffer. */
-        status = _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( pCertificateSigningRequest,
-                                                                                      csrLength,
-                                                                                      pPayloadBuffer,
-                                                                                      &payloadSize );
+        status = _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( pCertificateSigningRequest,
+                                                                               csrLength,
+                                                                               pPayloadBuffer,
+                                                                               payloadSize );
 
         if( status != AWS_IOT_PROVISIONING_SUCCESS )
         {

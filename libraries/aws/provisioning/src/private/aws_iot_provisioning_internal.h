@@ -295,6 +295,12 @@
     ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC ) - 1 ) )
 
 /**
+ * @brief The key string for Certificate-Singing Request value in the request payload
+ * to the MQTT CreateCertificateFromCsr service API.
+ */
+#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_PAYLOAD_PEM_STRING                              "certificateSigningRequest"
+
+/**
  * @brief The key for the device certificate entry in the response payload of the Provisioning CreateKeysAndCertificate
  * service API.
  */
@@ -618,10 +624,10 @@ AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( c
  * @return #AWS_IOT_PROVISIONING_SUCCESS if calculation of the payload size is
  * successful; otherwise the appropriate error code.
  */
-AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const char * pCertificateSigningRequest,
-                                                                                               size_t csrLength,
-                                                                                               uint8_t * pSerializationBuffer,
-                                                                                               size_t * pBufferSize );
+AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                                        size_t csrLength,
+                                                                                        uint8_t * pSerializationBuffer,
+                                                                                        size_t pBufferSize );
 
 /**
  * @brief Serializes payload data for MQTT request to the Provisioning RegisterThing service API.
