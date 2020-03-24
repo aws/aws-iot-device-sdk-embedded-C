@@ -627,10 +627,10 @@ AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( c
  * @return #AWS_IOT_PROVISIONING_SUCCESS if calculation of the payload size is
  * successful; otherwise the appropriate error code.
  */
-AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const char * pCertificateSigningRequest,
-                                                                                               size_t csrLength,
-                                                                                               uint8_t * pSerializationBuffer,
-                                                                                               size_t * pBufferSize );
+AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                                        size_t csrLength,
+                                                                                        uint8_t * pSerializationBuffer,
+                                                                                        size_t pBufferSize );
 
 /**
  * @brief Serializes payload data for MQTT request to the Provisioning RegisterThing service API.

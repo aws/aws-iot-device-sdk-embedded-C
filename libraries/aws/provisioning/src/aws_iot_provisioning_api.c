@@ -38,6 +38,7 @@
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
+#include "iot_atomic.h"
 
 /* MQTT API include */
 #include "iot_mqtt.h"
@@ -760,10 +761,10 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Actual serialization in payload buffer. */
-        status = _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( pCertificateSigningRequest,
-                                                                                      csrLength,
-                                                                                      pPayloadBuffer,
-                                                                                      &payloadSize );
+        status = _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( pCertificateSigningRequest,
+                                                                               csrLength,
+                                                                               pPayloadBuffer,
+                                                                               payloadSize );
 
         if( status != AWS_IOT_PROVISIONING_SUCCESS )
         {
