@@ -37,7 +37,7 @@ serializer -> provisioning: Return calculated size and SUCCESS of Failure
 provisioning -> app: Return INTERNAL_FAILURE if calculation failed.
 
 provisioning -> provisioning: Allocate memory for payload buffer
-provisioning -> api: Return NO_MEMORY if allocation fails.
+provisioning -> app: Return NO_MEMORY if allocation fails.
 
 provisioning -> serializer: Request serialization of PUBLISH payload.\n Provide allocated buffer.  
 serializer -> serializer: Perform <i>actual serialization</i> in buffer.
