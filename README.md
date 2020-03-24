@@ -35,7 +35,7 @@ The Device SDK implements the specific protocol for Thing Shadows to retrieve, u
 The Device SDK implements features to facilitate use of the AWS Jobs service. The Jobs service can be used for device management tasks such as updating program files, rotating device certificates, or running other maintenance tasks such are restoring device settings or restarting devices.
 
 ### MQTT Download Agent
-The Device SDK implements a file download agent library that can be integrated any MQTT stack that’s compatible with AWS IoT. This file download agent interacts with the [Block Transfer (Streaming) Service of AWS IoT](https://docs.aws.amazon.com/iot/latest/apireference/API_CreateStream.html). It downloads files block by block over the MQTT protocol.
+The Device SDK implements a file download agent library which interacts with the [Block Transfer (Streaming) Service of AWS IoT](https://docs.aws.amazon.com/iot/latest/apireference/API_CreateStream.html). It downloads files block by block over the MQTT protocol.
 
 ## Design Goals of this SDK
 The embedded C SDK was specifically designed for resource constrained devices (running on micro-controllers and RTOS).
