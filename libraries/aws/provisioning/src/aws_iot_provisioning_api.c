@@ -246,10 +246,11 @@ static AwsIotProvisioningError_t _initializeOperationObject( uint8_t operationIn
 static void _cleanUpOperationObject( uint8_t operationIndex )
 {
     /*
-     * Check whether the operation semaphore is being accessed by another thread context,
-     * before destroying the resource.
-     * This tackles the RACE CONDITION of concurrent access of the semaphore from multiple
-     * thread contexts.
+     * Check whether the operation semaphore is being accessed by another thread
+     * context, before destroying the resource.
+     * This tackles the RACE CONDITION of concurrent access of the semaphore
+     * with the MQTT subscription callback context (on an incoming server response,
+     * specifically, for MQTT QoS 1 incoming PUBLISHes).
      */
     if( Atomic_CompareAndSwap_u32( &_activeOperation[ operationIndex ].semReferenceCount,
                                    0u,
@@ -267,10 +268,10 @@ static void _commonServerResponseHandler( const uint8_t operationIndex,
                                           _provisioningServerResponseParser responseParser )
 {
     /*
-     * Check whether the operation's sempahore is valid. There is possibility
-     * of a RACE CONDITION between #AwsIotProvisioning_CleanUp destroying the
-     * semaphore resource, and the server response for the operation being
-     * processed.
+     * Check whether the operation's sempahore is valid. There is tackles the
+     * possible RACE CONDITION between #AwsIotProvisioning_CleanUp destroying the
+     * semaphore resource, and an incoming server response being processed by the
+     * callback.
      */
     if( Atomic_Increment_u32( &_activeOperation[ operationIndex ].
                                  semReferenceCount ) > 0u )
@@ -315,14 +316,6 @@ static void _commonServerResponseHandler( const uint8_t operationIndex,
             /* Notify the waiting thread about arrival of response from server */
             /* Increment the number of PUBLISH messages received. */
             IotSemaphore_Post( &_activeOperation[ operationIndex ].responseReceivedSem );
-
-            /* Invalidate the user-callback information to prevent re-processing the response
-             * if we receive the same response multiple times (which is possible for a QoS 1 publish
-             * from the server). This is done to post on the semaphore ONLY ONCE on receiving the
-             * response from the server.*/
-            memset( &_activeOperation[ operationIndex ].info.userCallback,
-                    0,
-                    sizeof( _activeOperation[ operationIndex ].info.userCallback ) );
         }
     }
     else
@@ -332,8 +325,8 @@ static void _commonServerResponseHandler( const uint8_t operationIndex,
                     operationIndex )
     }
 
-    /* Decrement the operation's semaphore reference count,* as we don't need
-     *  the mutex anymore.
+    /* Decrement the operation's semaphore reference count, as we don't need
+     * the mutex anymore.
      * If reference count is lower than the count at which we incremented at the
      * beginning of the callback, it means that the the #AwsIotProvisioning_CleanUp
      * function was called. In that case, we destroy of semaphore to clean the memory.
