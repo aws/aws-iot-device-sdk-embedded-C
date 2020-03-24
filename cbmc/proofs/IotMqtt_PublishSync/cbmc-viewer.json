@@ -1,19 +1,15 @@
 { "expected-missing-functions":
   [
+    "IotClock_GetTimeMs",
     "IotLog_Generic",
-    "IotMqtt_Wait",
-    "IotMutex_Create",
     "IotMutex_Destroy",
     "IotMutex_Lock",
     "IotMutex_Unlock",
     "IotSemaphore_Create",
     "IotSemaphore_Destroy",
-    "IotSemaphore_Wait",
-    "IotTaskPool_CreateJob",
     "IotTaskPool_GetSystemTaskPool",
-    "IotTaskPool_ScheduleDeferred",
     "IotTaskPool_strerror",
-    "IotTaskPool_TryCancel"
+    "_IotMqtt_RemoveSubscriptionByPacket"
   ],
   "proof-name": "IotMqtt_PublishSync",
   "proof-root": "cbmc/proofs"

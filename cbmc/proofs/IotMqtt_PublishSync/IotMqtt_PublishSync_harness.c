@@ -8,8 +8,8 @@
 #include "mqtt_state.h"
 
 /**
- * We abstract all functions related to concurrency and assume they are correct.
- * Thus, we add these stub to increase coverage.
+ * We constrain the return values of these functions because they
+ * are checked by assertions in the MQTT code.
  */
 IotTaskPoolError_t IotTaskPool_CreateJob( IotTaskPoolRoutine_t userCallback,
                                           void * pUserContext,
@@ -85,10 +85,9 @@ void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
 
 
 /**
- * We abstract these functions to map the expected behavior of
- * IotSemaphore_TimedWait. If IotSemaphore_Post is called, the
- * semaphore is positive. IotSemaphore_TimedWait should always
- * return true if the semaphore is positive at some time during the wait.
+ * We are abstracting the semaphores because we are doing sequential proof.
+ * But the semaphore API assures us that TimedWait called after Post will
+ * never fail. Our abstraction of the semaphores models this behavior.
  */
 static bool flagSemaphore;
 
@@ -118,7 +117,7 @@ void harness()
  
   /* assume a valid publish info */
   IotMqttPublishInfo_t *pPublishInfo = allocate_IotMqttPublishInfo( NULL );
-  __CPROVER_assume( valid_IotMqttPublishInfo( pPublishInfo ) );
+  __CPROVER_assume( IMPLIES( pPublishInfo != NULL, valid_IotMqttPublishInfo( pPublishInfo ) ) );
   
   /* assume unconstrained inputs */
   uint32_t flags;
@@ -129,7 +128,7 @@ void harness()
 
   /* function under verification */
   IotMqtt_PublishSync( mqttConnection, /* always assume a valid connection */
-                       nondet_bool() ? NULL : pPublishInfo,
+                       pPublishInfo,
                        flags,
                        timeoutMs );
 }

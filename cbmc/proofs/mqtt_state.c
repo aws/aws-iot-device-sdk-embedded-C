@@ -511,32 +511,33 @@ void free_IotMqttSubscriptionList( IotListDouble_t *pSub )
   IotListDouble_t *pThis;
   IotListDouble_t *pNext;
 
-  if (pSub == NULL) return;
+  if ( pSub == NULL ) return;
   pThis = pSub->pNext;
   pSub->pNext = invalid_pointer();
   pSub->pPrevious = invalid_pointer();
 
 #if 3 < SUBSCRIPTION_COUNT_MAX
-  if (pThis == pSub) return;
+  if ( pThis == pSub ) return;
   pNext = pThis->pNext;
   free( IotLink_Container( _mqttSubscription_t, pThis, link ) );
   pThis = pNext;
 #endif
 
 #if 2 < SUBSCRIPTION_COUNT_MAX
-  if (pThis == pSub) return;
+  if ( pThis == pSub ) return;
   pNext = pThis->pNext;
   free( IotLink_Container( _mqttSubscription_t, pThis, link ) );
   pThis = pNext;
 #endif
 
 #if 1 < SUBSCRIPTION_COUNT_MAX
-  if (pThis == pSub) return;
+  if ( pThis == pSub ) return;
   pNext = pThis->pNext;
   free( IotLink_Container( _mqttSubscription_t, pThis, link ) );
   pThis = pNext;
 #endif
 
+  assert( pThis == pSub );
   return;
 }
 

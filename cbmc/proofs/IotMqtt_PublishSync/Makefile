@@ -4,9 +4,11 @@ ENTRY=IotMqtt_PublishSync
 # and assume their implementation is correct
 ABSTRACTIONS += --remove-function-body IotLog_Generic
 
+# We abstract this function because manual inspection suggest it is unreachable
+ABSTRACTIONS += --remove-function-body _IotMqtt_RemoveSubscriptionByPacket
+
 # We also abstract unreachable functions to improve coverage metrics
 ABSTRACTIONS += --remove-function-body _IotMqtt_ProcessIncomingPublish
-ABSTRACTIONS += --remove-function-body _IotMqtt_RemoveSubscriptionByPacket
 ABSTRACTIONS += --remove-function-body IotNetworkInterfaceClose
 ABSTRACTIONS += --remove-function-body IotNetworkInterfaceReceive
 
