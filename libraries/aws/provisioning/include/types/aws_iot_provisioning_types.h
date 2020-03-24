@@ -57,7 +57,7 @@ typedef enum AwsIotProvisioningError
      *
      * Functions that may return this value:
      */
-    AWS_IOT_PROVISIONING_SUCCESS = 0,
+    AWS_IOT_PROVISIONING_SUCCESS = 1,
 
     /**
      * @brief Library initialization failure.
@@ -279,6 +279,76 @@ typedef struct AwsIotProvisioningRejectedResponse
 
 /**
  * @ingroup provisioning_datatypes_paramstructs
+ * @brief Aggregates the data from AWS IoT Core's response to the certificate creation request with a CSR.
+ *
+ * @paramfor Response Callback function of @ref provisioning_function_createkeysandcertificate
+ *
+ * The @ref AwsIotProvisioning_CreateKeysAndCertificate library API passes this object to a user-provided callback
+ * function
+ * whenever the operation completes with a response from the server.
+ */
+typedef struct AwsIotProvisioningCreateCertFromCsrResponse
+{
+    /** @brief The highest level HTTP based status code sent by the server. */
+    AwsIotProvisioningServerStatusCode_t statusCode;
+
+    union
+    {
+        /** @brief Represents the successful/accepted response of device credentials received from the server. */
+        struct
+        {
+            const char * pDeviceCertificate;         /**< The new certificate for the device.*/
+            size_t deviceCertificateLength;          /**< The size of the device certificate.*/
+            const char * pCertificateId;             /**< The certificate ID associated with the new certificate,
+                                                      * @p pDeviceCertificate.*/
+            size_t certificateIdLength;              /**< The length of the certificate ID.*/
+            const char * pCertificateOwnershipToken; /**< The token that represents ownership of certificate and
+                                                      * associated private key that the device.*/
+            size_t ownershipTokenLength;             /**< The size of the ownership token.*/
+        } acceptedResponse;
+
+        /** @brief Represents the rejected response information received from the server. */
+        AwsIotProvisioningRejectedResponse_t rejectedResponse;
+    } u; /**< @brief Valid member depends on operation status. */
+} AwsIotProvisioningCreateCertFromCsrResponse_t;
+
+/**
+ * @ingroup provisioning_datatypes_paramstructs
+ * @brief User-specific callback information for handling server response of the Provisioning CreateCertificateFromCsr
+ * service API.
+ *
+ * @paramfor @ref provisioning_function_registerthing
+ *
+ * Provides a function that is invoked on completion of an @ref AwsIotProvisioning_CreateCertificateFromCsr API
+ * operation.
+ *
+ * @initializer{AwsIotProvisioningCreateCertFromCsrCallbackInfo_t,AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER}
+ */
+typedef struct AwsIotProvisioningCreateCertFromCsrCallbackInfo
+{
+    void * userParam; /**< The user-provided parameter that is (as the first parameter) to the callback
+                       * function (optional). */
+
+    /**
+     * @brief User-provided callback function signature.
+     *
+     * @param[in] userContext #AwsIotProvisioningCreateCertFromCsrCallbackInfo_t.userParam
+     * @param[in] serverResponse Parsed server response of either device credentials
+     * or provisioned device information.
+     *
+     * @see #AwsIotProvisioningCreateCertFromCsrResponse_t for more information on the second parameter.
+     */
+    void ( * function )( void * userContext,
+                         const AwsIotProvisioningCreateCertFromCsrResponse_t * serverResponse ); /*<** The user-provided
+                                                                                                  * callback to
+                                                                                                  * invoke; with the
+                                                                                                  *#AwsIotProvisioningCreateCertFromCsrCallbackInfo.userParam
+                                                                                                  * data as the #first
+                                                                                                  * parameter. */
+} AwsIotProvisioningCreateCertFromCsrCallbackInfo_t;
+
+/**
+ * @ingroup provisioning_datatypes_paramstructs
  * @brief Aggregates the data sent as response from AWS IoT Core service for the request to generate new key-pair and
  * certificate for the device.
  *
@@ -316,6 +386,7 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateResponse
     } u; /**< @brief Valid member depends on operation status. */
 } AwsIotProvisioningCreateKeysAndCertificateResponse_t;
 
+
 /**
  * @ingroup provisioning_datatypes_paramstructs
  * @brief User-specific callback information for handling server response for the Provisioning CreateKeysAndCertificate
@@ -336,19 +407,19 @@ typedef struct AwsIotProvisioningCreateKeysAndCertificateCallbackInfo
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void* #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t.userParam
-     * @param[in] AwsIotProvisioningCallbackParam_t* Parsed server response of either device credentials
+     * @param[in] userContext #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t.userParam
+     * @param[in] serverResponse Parsed server response of either device credentials
      * or provisioned device information.
      *
      * @see #AwsIotProvisioningCreateKeysAndCertificateResponse_t for more information on the second parameter.
      */
-    void ( * function )( void *,
-                         const AwsIotProvisioningCreateKeysAndCertificateResponse_t * ); /*<** The user-provided
-                                                                                          * callback to
-                                                                                          * invoke; with the
-                                                                                          *#AwsIotProvisioningCreateKeysAndCertificateCallbackInfo.userParam
-                                                                                          * data as the #first
-                                                                                          * parameter. */
+    void ( * function )( void * userContext,
+                         const AwsIotProvisioningCreateKeysAndCertificateResponse_t * serverResponse ); /*<** The user-provided
+                                                                                                         * callback to
+                                                                                                         * invoke; with the
+                                                                                                         *#AwsIotProvisioningCreateKeysAndCertificateCallbackInfo.userParam
+                                                                                                         * data as the #first
+                                                                                                         * parameter. */
 } AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t;
 
 /**
@@ -409,17 +480,17 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
     /**
      * @brief User-provided callback function signature.
      *
-     * @param[in] void* #AwsIotProvisioningRegisterThingCallbackInfo_t.userParam
-     * @param[in] AwsIotProvisioningRegisterThingResponse_t* Parsed server response of either device credentials
+     * @param[in] userContext #AwsIotProvisioningRegisterThingCallbackInfo_t.userParam
+     * @param[in] serverResponse Parsed server response of either device credentials
      * or provisioned device information.
      *
      * @see #AwsIotProvisioningRegisterThingResponse_t for more information on the second parameter.
      */
-    void ( * function )( void *,
-                         const AwsIotProvisioningRegisterThingResponse_t * ); /*<** The user-provided callback to
-                                                                               * invoke; with the
-                                                                               *#AwsIotProvisioningRegisterThingCallbackInfo.userParam
-                                                                               * data as the #first parameter. */
+    void ( * function )( void * userContext,
+                         const AwsIotProvisioningRegisterThingResponse_t * serverResponse ); /*<** The user-provided callback to
+                                                                                              * invoke; with the
+                                                                                              *#AwsIotProvisioningRegisterThingCallbackInfo.userParam
+                                                                                              * data as the #first parameter. */
 } AwsIotProvisioningRegisterThingCallbackInfo_t;
 
 /*------------------------ Provisioning defined constants -------------------------*/
@@ -427,6 +498,9 @@ typedef struct AwsIotProvisioningRegisterThingCallbackInfo
 /* @[define_provisioning_initializers] */
 #define AWS_IOT_PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_CALLBACK_INFO_INITIALIZER    { 0 } /**< @brief Initializer for
                                                                                              * #AwsIotProvisioningCreateKeysAndCertificateCallbackInfo_t
+                                                                                             **/
+#define AWS_IOT_PROVISIONING_CREATE_CERTIFICATE_FROM_CSR_CALLBACK_INFO_INITIALIZER    { 0 } /**< @brief Initializer for
+                                                                                             * #AwsIotProvisioningCreateCertFromCsrCallbackInfo_t
                                                                                              **/
 #define AWS_IOT_PROVISIONING_REGISTER_THING_CALLBACK_INFO_INITIALIZER                 { 0 } /**< @brief Initializer for
                                                                                              * #AwsIotProvisioningRegisterThingCallbackInfo_t

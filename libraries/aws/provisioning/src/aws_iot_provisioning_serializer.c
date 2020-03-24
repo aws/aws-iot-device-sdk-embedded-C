@@ -355,6 +355,34 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
 
 /*------------------------------------------------------------------*/
 
+AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
+                                                                               size_t csrLength,
+                                                                               size_t * pPayloadSize )
+{
+    ( void ) pCertificateSigningRequest;
+    ( void ) csrLength;
+    ( void ) pPayloadSize;
+
+    return true;
+}
+
+/*------------------------------------------------------------------*/
+
+AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                                               size_t csrLength,
+                                                                                               uint8_t * pSerializationBuffer,
+                                                                                               size_t * pBufferSize )
+{
+    ( void ) pCertificateSigningRequest;
+    ( void ) csrLength;
+    ( void ) pSerializationBuffer;
+    ( void ) pBufferSize;
+
+    return true;
+}
+
+/*------------------------------------------------------------------*/
+
 AwsIotProvisioningError_t _AwsIotProvisioning_SerializeRegisterThingRequestPayload( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData,
                                                                                     uint8_t ** pSerializationBuffer,
                                                                                     size_t * pBufferSize )
