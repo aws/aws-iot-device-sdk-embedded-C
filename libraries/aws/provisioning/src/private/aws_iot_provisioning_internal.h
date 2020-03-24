@@ -494,9 +494,15 @@ typedef struct _provisioningOperationInfo
 typedef struct _provisioningOperation
 {
     _provisioningOperationInfo_t info;  /**< @brief The Provisioning operation object. */
-    IotSemaphore_t responseReceivedSem; /**< @brief Semaphore to be used used by the synchronous API functions @ref
-                                         * provisioning_function_registerthing and @ref
-                                         * provisioning_function_registerthing. */
+    uint32_t semReferenceCount;         /**< @brief An atomic reference counter for
+                                         *  safeguarding semaphore access across thread
+                                         *  contexts. */
+    IotSemaphore_t responseReceivedSem; /**< @brief Binary sempahore used for notifying
+                                         * arrival of server response in the synchronous
+                                         * API functions
+                                         * @ref provisioning_function_createkeysandcertificate,
+                                         * @ref provisioning_function_createcertificatefromcsr
+                                         * and @refprovisioning_function_registerthing. */
 } _provisioningOperation_t;
 
 /*----------------- Declaration of INTERNAL global variables --------------------*/
