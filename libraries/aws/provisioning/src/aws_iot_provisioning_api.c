@@ -71,9 +71,13 @@ const IotSerializerEncodeInterface_t * _pAwsIotProvisioningEncoder = NULL;
 const IotSerializerDecodeInterface_t * _pAwsIotProvisioningDecoder = NULL;
 
 /**
- * @brief The active Provisioning operation object.
+ * @brief An operation object instance for each of the 3 operations:
+ * CreateKeysAndCertificate, CreateCertificateFromCsr, RegisterThing.
  */
-static _provisioningOperation_t _activeOperation;
+static _provisioningOperation_t _activeOperation[ 3 ];
+static const uint8_t _createKeysAndCertOperationIndex = 0;
+static const uint8_t _createCertFromCsrOperationIndex = 1;
+static const uint8_t _registerThingOperationIndex = 2;
 
 /**
  * @brief Timeout for MQTT operations that will be used for communicating with the fleet provisioning APIs of the AWS
@@ -98,47 +102,70 @@ static bool _initCalled = false;
 static bool _checkInit( void );
 
 /**
+ * @brief Initializes the operation object in #_activeOperation array for the
+ * passed index reference.
+ *
+ * @param[in] The index reference to the operation object instance to initialize.
+ *
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if initialization is successful;
+ * otherwise #AWS_IOT_PROVISIONING_INIT_FAILED.
+ */
+static AwsIotProvisioningError_t _initializeOperationObject( uint8_t operationIndex );
+
+/**
+ * @brief Cleans up the operation object in #_activeOperation array for the
+ * passed index reference.
+ *
+ * @param[in] The index reference to the operation object instance to clean-up.
+ */
+static void _cleanUpOperationObject( uint8_t operationIndex );
+
+/**
  * @brief A utility common for processing server responses of all Provisioning operation APIs.
  * If there is an ongoing operation, the utility processes the incoming PUBLISH message and invokes the provided parser
  * if the server response is received on the "accepted" topic.
  *
+ * @param[in] operationIndex The index reference of the operation to the
+ * #_activeOperation array.
  * @param[in] pPublishData The incoming PUBLISH message information from the server.
  * @param[in] responseParser The functor to invoke for parsing a successful server response payload.
  */
-static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
+static void _commonServerResponseHandler( const uint8_t operationIndex,
+                                          IotMqttCallbackParam_t * const pPublishData,
                                           _provisioningServerResponseParser responseParser );
 
 
 /**
- * @brief The common MQTT subscription callback for response topics of the CreateKeysAndCertificate service API.
+ * @brief The common MQTT subscription callback for response topics of the
+ * CreateKeysAndCertificate service API.
  */
 static void _keysAndCertificateResponseReceivedCallback( void * param1,
                                                          IotMqttCallbackParam_t * const
                                                          pPublish );
 
 /**
- * @brief The common MQTT subscription callback for response topics of the CreateCertificateFromCsr service API.
+ * @brief The common MQTT subscription callback for response topics of the
+ * CreateCertificateFromCsr service API.
  */
 static void _csrResponseReceivedCallback( void * param1,
                                           IotMqttCallbackParam_t * const pPublish );
 
 /**
- * @brief The common MQTT subscription callback for the response topics of the RegisterThing service API.
+ * @brief The common MQTT subscription callback for the response topics
+ * of the RegisterThing service API.
  */
 static void _registerThingResponseReceivedCallback( void * param1,
                                                     IotMqttCallbackParam_t * const pPublish );
 
 /**
  * @brief Sets the active operation object, #_activeOperation, to represent an active operation in progress.
+ * @param[in] operationIndex The index reference to the ongoing operation
+ * in #_activeOperation object.
  * @param[in] pUserCallback The user-provided callback information that will be copied
  * to the active operation object.
  */
-static void _setActiveOperation( const _provisioningCallbackInfo_t * pUserCallback );
-
-/**
- * @brief Resets the active operation object.
- */
-static void _resetActiveOperationData();
+static void _setActiveOperation( uint8_t operationIndex,
+                                 const _provisioningCallbackInfo_t * pUserCallback );
 
 /**
  * @brief Waits for server response within the provided timeout period, and returns the result of the wait operation.
@@ -147,7 +174,8 @@ static void _resetActiveOperationData();
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if a server response is received within the @p timeoutMs period; otherwise returns
  * #AWS_IOT_PROVISIONING_TIMEOUT
  */
-static AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs );
+static AwsIotProvisioningError_t _timedWaitForServerResponse( uint8_t operationIndex,
+                                                              uint32_t timeoutMs );
 
 /**
  * @brief Checks whether the data that is provided to send along with the provisioning device request is valid.
@@ -155,6 +183,7 @@ static AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs
  * @return Returns `true` if data is valid; `false` otherwise.
  */
 static bool _isDataForRegisterThingRequestValid( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData );
+
 
 /*------------------------------------------------------------------*/
 
@@ -174,52 +203,138 @@ static bool _checkInit( void )
 
 /*-----------------------------------------------------------*/
 
-static void _commonServerResponseHandler( IotMqttCallbackParam_t * const pPublishData,
+static AwsIotProvisioningError_t _initializeOperationObject( uint8_t operationIndex )
+{
+    AwsIotProvisioning_Assert( operationIndex < sizeof( _activeOperation ) /
+                               sizeof( _provisioningOperation_t ) );
+
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
+
+    memset( &_activeOperation[ operationIndex ].info,
+            0,
+            sizeof( _activeOperation[ operationIndex ].info ) );
+
+    /* Create a binary semaphore needed for signaling arrival of server responses. */
+    if( IotSemaphore_Create( &( _activeOperation[ operationIndex ].
+                                   responseReceivedSem ),
+                             0u /* initialValue */,
+                             1u /* maxValue */ ) == false )
+    {
+        IotLogError(
+            "api: Unable to initialize library: Failed to create semaphore:"
+            "OperationArrayIndex={%d}", operationIndex );
+
+        status = AWS_IOT_PROVISIONING_INIT_FAILED;
+    }
+
+    /* Increment reference counter for semaphore to represent its validity. */
+    if( Atomic_Increment_u32(
+            &_activeOperation[ operationIndex ].semReferenceCount ) != 0u )
+    {
+        IotLogError( "api: Unable to initialize library: Semaphore reference "
+                     "is non-zero: OperationArrayIndex={%d}", operationIndex );
+
+        status = AWS_IOT_PROVISIONING_INIT_FAILED;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static void _cleanUpOperationObject( uint8_t operationIndex )
+{
+    /*
+     * Check whether the operation semaphore is being accessed by another thread
+     * context, before destroying the resource.
+     * This tackles the RACE CONDITION of concurrent access of the semaphore
+     * with the MQTT subscription callback context (on an incoming server response,
+     * specifically, for MQTT QoS 1 incoming PUBLISHes).
+     */
+    if( Atomic_CompareAndSwap_u32( &_activeOperation[ operationIndex ].semReferenceCount,
+                                   0u,
+                                   1u ) == 1u )
+    {
+        /* Semaphore is safe to destroy as no other context is accessing it. */
+        IotSemaphore_Destroy( &( _activeOperation[ operationIndex ].responseReceivedSem ) );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+static void _commonServerResponseHandler( const uint8_t operationIndex,
+                                          IotMqttCallbackParam_t * const pPublishData,
                                           _provisioningServerResponseParser responseParser )
 {
-    AwsIotStatus_t responseStatus = AWS_IOT_UNKNOWN;
-
-    /* Is a user thread waiting for the result? */
-    if( ( _activeOperation.info.userCallback.createKeysAndCertificateCallback.function == NULL ) ||
-        ( _activeOperation.info.userCallback.createCertificateFromCsrCallback.function == NULL ) ||
-        ( _activeOperation.info.userCallback.registerThingCallback.function == NULL ) )
+    /*
+     * Check whether the operation's sempahore is valid. There is tackles the
+     * possible RACE CONDITION between #AwsIotProvisioning_CleanUp destroying the
+     * semaphore resource, and an incoming server response being processed by the
+     * callback.
+     */
+    if( Atomic_Increment_u32( &_activeOperation[ operationIndex ].
+                                 semReferenceCount ) > 0u )
     {
-        IotLogDebug( "Received unexpected server response on topic %s.",
-                     pPublishData->u.message.pTopicFilter,
-                     pPublishData->u.message.topicFilterLength );
-    }
-    else
-    {
-        /* Determine whether the response from the server is "accepted" or "rejected". */
-        responseStatus = AwsIot_ParseStatus( pPublishData->u.message.pTopicFilter,
-                                             pPublishData->u.message.topicFilterLength );
+        AwsIotStatus_t responseStatus = AWS_IOT_UNKNOWN;
+        _provisioningCallbackInfo_t * pCallbackInfo = &_activeOperation[ operationIndex ].
+                                                         info.userCallback;
 
-        if( responseStatus == AWS_IOT_UNKNOWN )
+        /* Is a user thread waiting for the result? */
+        if( ( pCallbackInfo->createKeysAndCertificateCallback.function == NULL ) ||
+            ( pCallbackInfo->createCertificateFromCsrCallback.function == NULL ) ||
+            ( pCallbackInfo->registerThingCallback.function == NULL ) )
         {
-            IotLogWarn( "Unknown parsing status on topic %s. Ignoring message.",
-                        pPublishData->u.message.pTopicFilter,
-                        pPublishData->u.message.topicFilterLength );
-            _activeOperation.info.status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
+            IotLogDebug( "Received unexpected server response on topic %s.",
+                         pPublishData->u.message.pTopicFilter,
+                         pPublishData->u.message.topicFilterLength );
         }
         else
         {
-            /* Parse the server response and execute the user callback. */
-            _activeOperation.info.status = responseParser(
-                responseStatus,
-                pPublishData->u.message.info.pPayload,
-                pPublishData->u.message.info.payloadLength,
-                &_activeOperation.info.userCallback );
+            /* Determine whether the response from the server is "accepted" or "rejected". */
+            responseStatus = AwsIot_ParseStatus( pPublishData->u.message.pTopicFilter,
+                                                 pPublishData->u.message.topicFilterLength );
+
+            if( responseStatus == AWS_IOT_UNKNOWN )
+            {
+                IotLogWarn( "Unknown parsing status on topic %s. Ignoring message.",
+                            pPublishData->u.message.pTopicFilter,
+                            pPublishData->u.message.topicFilterLength );
+                _activeOperation[ operationIndex ].info.status =
+                    AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
+            }
+            else
+            {
+                /* Parse the server response and execute the user callback. */
+                _activeOperation[ operationIndex ].info.status = responseParser(
+                    responseStatus,
+                    pPublishData->u.message.info.pPayload,
+                    pPublishData->u.message.info.payloadLength,
+                    &_activeOperation[ operationIndex ].info.userCallback );
+            }
+
+            /* Notify the waiting thread about arrival of response from server */
+            /* Increment the number of PUBLISH messages received. */
+            IotSemaphore_Post( &_activeOperation[ operationIndex ].responseReceivedSem );
         }
+    }
+    else
+    {
+        IotLogWarn( "api: Unexpected invocation of subscription callback: "
+                    "Clean-up on library was already called: OperationIndex={%d}",
+                    operationIndex )
+    }
 
-        /* Notify the waiting thread about arrival of response from server */
-        /* Increment the number of PUBLISH messages received. */
-        IotSemaphore_Post( &_activeOperation.responseReceivedSem );
-
-        /* Invalidate the user-callback information to prevent re-processing the response
-         * if we receive the same response multiple times (which is possible for a QoS 1 publish
-         * from the server). This is done to post on the semaphore ONLY ONCE on receiving the
-         * response from the server.*/
-        memset( &_activeOperation.info.userCallback, 0, sizeof( _activeOperation.info.userCallback ) );
+    /* Decrement the operation's semaphore reference count, as we don't need
+     * the mutex anymore.
+     * If reference count is lower than the count at which we incremented at the
+     * beginning of the callback, it means that the the #AwsIotProvisioning_CleanUp
+     * function was called. In that case, we destroy of semaphore to clean the memory.
+     */
+    if( Atomic_Decrement_u32( &_activeOperation[ operationIndex ].
+                                 semReferenceCount ) == 1u )
+    {
+        /* Semaphore is safe to destroy as no other context is accessing it. */
+        IotSemaphore_Destroy( &( _activeOperation[ operationIndex ].responseReceivedSem ) );
     }
 }
 
@@ -231,7 +346,9 @@ static void _keysAndCertificateResponseReceivedCallback( void * param1,
     /* Silence warnings about unused variables.*/
     ( void ) param1;
 
-    _commonServerResponseHandler( pPublish, _AwsIotProvisioning_ParseKeysAndCertificateResponse );
+    _commonServerResponseHandler( _createKeysAndCertOperationIndex,
+                                  pPublish,
+                                  _AwsIotProvisioning_ParseKeysAndCertificateResponse );
 }
 
 /*-----------------------------------------------------------*/
@@ -242,7 +359,9 @@ static void _csrResponseReceivedCallback( void * param1,
     /* Silence warnings about unused variables.*/
     ( void ) param1;
 
-    _commonServerResponseHandler( pPublish, _AwsIotProvisioning_ParseCsrResponse );
+    _commonServerResponseHandler( _createCertFromCsrOperationIndex,
+                                  pPublish,
+                                  _AwsIotProvisioning_ParseCsrResponse );
 }
 
 /*-----------------------------------------------------------*/
@@ -253,28 +372,22 @@ static void _registerThingResponseReceivedCallback( void * param1,
     /* Silence warnings about unused variables.*/
     ( void ) param1;
 
-    _commonServerResponseHandler( pPublish, _AwsIotProvisioning_ParseRegisterThingResponse );
+    _commonServerResponseHandler( _registerThingOperationIndex,
+                                  pPublish,
+                                  _AwsIotProvisioning_ParseRegisterThingResponse );
 }
 
 /*-----------------------------------------------------------*/
 
-static void _resetActiveOperationData()
-{
-    memset( &_activeOperation.info.userCallback, 0, sizeof( _activeOperation.info.userCallback ) );
-
-    IotSemaphore_TryWait( &_activeOperation.responseReceivedSem );
-}
-
-/*-----------------------------------------------------------*/
-
-static void _setActiveOperation( const _provisioningCallbackInfo_t * pUserCallback )
+static void _setActiveOperation( uint8_t operationIndex,
+                                 const _provisioningCallbackInfo_t * pUserCallback )
 {
     /* If a successful response is not received, it should be treated as
      * MQTT error. */
-    _activeOperation.info.status = AWS_IOT_PROVISIONING_MQTT_ERROR;
+    _activeOperation[ operationIndex ].info.status = 0;
 
     /* Store the user supplied callback. */
-    _activeOperation.info.userCallback = *pUserCallback;
+    _activeOperation[ operationIndex ].info.userCallback = *pUserCallback;
 }
 
 /*-----------------------------------------------------------*/
@@ -320,17 +433,19 @@ static bool _isDataForRegisterThingRequestValid( const AwsIotProvisioningRegiste
 }
 /*-----------------------------------------------------------*/
 
-static AwsIotProvisioningError_t _timedWaitForServerResponse( uint32_t timeoutMs )
+static AwsIotProvisioningError_t _timedWaitForServerResponse( uint8_t operationIndex,
+                                                              uint32_t timeoutMs )
 {
     AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_TIMEOUT;
 
     /* Wait for response from the server. */
-    if( ( IotSemaphore_TimedWait( &_activeOperation.responseReceivedSem, timeoutMs ) == true )
+    if( ( IotSemaphore_TimedWait( &_activeOperation[ operationIndex ].responseReceivedSem,
+                                  timeoutMs ) == true )
         &&
-        ( _activeOperation.info.status != AWS_IOT_PROVISIONING_MQTT_ERROR ) )
+        ( _activeOperation[ operationIndex ].info.status != 0 ) )
     {
         /* Use the status value calculated from processing the server response in the MQTT callback. */
-        status = _activeOperation.info.status;
+        status = _activeOperation[ operationIndex ].info.status;
     }
     else
     {
@@ -362,26 +477,28 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeoutMs )
             _AwsIotProvisioningMqttTimeoutMs = mqttTimeoutMs;
         }
 
-        _resetActiveOperationData();
+        /* Initialize all operation objects instances. */
+        status = _initializeOperationObject( _createKeysAndCertOperationIndex );
 
-        /* Create a binary semaphore needed for signaling arrival of server responses. */
-        if( IotSemaphore_Create( &( _activeOperation.responseReceivedSem ),
-                                 0 /* initialValue */,
-                                 1 /* maxValue */ ) == false )
+        if( status == AWS_IOT_PROVISIONING_SUCCESS )
         {
-            IotLogError(
-                "Failed to initialize Provisioning library due to semaphore creation failure." );
-
-            status = AWS_IOT_PROVISIONING_INIT_FAILED;
+            status = _initializeOperationObject( _createCertFromCsrOperationIndex );
         }
-        else
+
+        if( status == AWS_IOT_PROVISIONING_SUCCESS )
         {
-            IotLogInfo( "Provisioning library successfully initialized." );
+            status = _initializeOperationObject( _registerThingOperationIndex );
+        }
+
+        if( status == AWS_IOT_PROVISIONING_SUCCESS )
+        {
+            IotLogInfo( "api: Provisioning library successfully initialized." );
         }
     }
     else
     {
-        IotLogWarn( "AwsIotProvisioning_Init called with library already initialized." );
+        IotLogWarn( "api: Unexpected initialization of library: "
+                    "Library is already initialized" );
     }
 
     return status;
@@ -457,7 +574,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     /* Update the operation object to represent an active "get device credentials" operation. */
     _provisioningCallbackInfo_t callbackInfo;
     callbackInfo.createKeysAndCertificateCallback = *keysAndCertificateResponseCallback;
-    _setActiveOperation( &callbackInfo );
+    _setActiveOperation( _createKeysAndCertOperationIndex, &callbackInfo );
 
     /* Provisioning already has an acknowledgement mechanism, so sending the message at
      * QoS 1 provides no benefit. */
@@ -505,7 +622,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     }
 
     /* Wait for response from server using the given timeout period. */
-    status = _timedWaitForServerResponse( timeoutMs );
+    status = _timedWaitForServerResponse( _createKeysAndCertOperationIndex,
+                                          timeoutMs );
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
@@ -520,9 +638,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
     {
         AwsIotProvisioning_FreePayload( pPayloadBuffer );
     }
-
-    /* Reset the active operation */
-    _resetActiveOperationData();
 
     IOT_FUNCTION_CLEANUP_END();
 }
@@ -610,18 +725,19 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         /* Update the operation object to represent an active "Certificate-Signing Request" operation. */
         _provisioningCallbackInfo_t callbackInfo;
         callbackInfo.createCertificateFromCsrCallback = *pResponseCallback;
-        _setActiveOperation( &callbackInfo );
+        _setActiveOperation( _createCertFromCsrOperationIndex, &callbackInfo );
 
         /* Serialization of request payload occurs in a 2-step process, one for
          * calculation of buffer size, and the next, serialization in allocated buffer. */
         /* Dry run serialization */
-        if( _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( pCertificateSigningRequest,
-                                                                 csrLength,
-                                                                 &payloadSize ) == false )
+        status = _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( pCertificateSigningRequest,
+                                                                      csrLength,
+                                                                      &payloadSize );
+
+        if( status != AWS_IOT_PROVISIONING_SUCCESS )
         {
             IotLogError( "Unable to create PUBLISH payload: Failed to calculate size of payload: "
                          "Operation={%s}", CREATE_CERT_FROM_CSR_OPERATION_LOG );
-            status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
         }
     }
 
@@ -644,15 +760,16 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Actual serialization in payload buffer. */
-        if( _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( pCertificateSigningRequest,
-                                                                          csrLength,
-                                                                          pPayloadBuffer,
-                                                                          payloadSize ) == false )
+        status = _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( pCertificateSigningRequest,
+                                                                                      csrLength,
+                                                                                      pPayloadBuffer,
+                                                                                      &payloadSize );
+
+        if( status != AWS_IOT_PROVISIONING_SUCCESS )
         {
             IotLogError( "Unable to PUBLISH to request topic: Failed to serialize PUBLISH payload in buffer: "
                          "Operation={%s}",
                          CREATE_CERT_FROM_CSR_OPERATION_LOG );
-            status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
         }
     }
 
@@ -695,7 +812,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
         /* Wait for response from server using the given timeout period. */
-        status = _timedWaitForServerResponse( timeoutMs );
+        status = _timedWaitForServerResponse( _createCertFromCsrOperationIndex,
+                                              timeoutMs );
 
         if( status == AWS_IOT_PROVISIONING_TIMEOUT )
         {
@@ -712,9 +830,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
     IotLogInfo( "Operation is complete: Operation={%s}",
                 CREATE_CERT_FROM_CSR_OPERATION_LOG );
-
-    /* Reset the active operation */
-    _resetActiveOperationData();
 
     return status;
 }
@@ -812,7 +927,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
     /* Update the operation object to represent an active "register thing" operation. */
     _provisioningCallbackInfo_t callbackInfo;
     callbackInfo.registerThingCallback = *pResponseCallback;
-    _setActiveOperation( &callbackInfo );
+    _setActiveOperation( _registerThingOperationIndex, &callbackInfo );
 
     /* Provisioning already has an acknowledgement mechanism, so sending the message at
      * QoS 1 provides no benefit. */
@@ -869,7 +984,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
     }
 
     /* Wait for response from server using the given timeout period. */
-    status = _timedWaitForServerResponse( timeoutMs );
+    status = _timedWaitForServerResponse( _registerThingOperationIndex,
+                                          timeoutMs );
 
     IOT_FUNCTION_CLEANUP_BEGIN();
 
@@ -885,12 +1001,8 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
         AwsIotProvisioning_FreePayload( pPayloadBuffer );
     }
 
-    /* Reset the active operation */
-    _resetActiveOperationData();
-
     IOT_FUNCTION_CLEANUP_END();
 }
-
 
 /*-----------------------------------------------------------*/
 
@@ -903,15 +1015,17 @@ void AwsIotProvisioning_Cleanup( void )
 
         _AwsIotProvisioningMqttTimeoutMs = AWS_IOT_PROVISIONING_DEFAULT_MQTT_TIMEOUT_MS;
 
-        _resetActiveOperationData();
+        /* Clean-up all objeration objects. */
+        _cleanUpOperationObject( _createKeysAndCertOperationIndex );
+        _cleanUpOperationObject( _createCertFromCsrOperationIndex );
+        _cleanUpOperationObject( _registerThingOperationIndex );
 
-        IotSemaphore_Destroy( &( _activeOperation.responseReceivedSem ) );
-
-        IotLogInfo( "Provisioning library cleanup done." );
+        IotLogInfo( "api: Completed cleanup of library." );
     }
     else
     {
-        IotLogWarn( "AwsIotProvisioning_Init was not called before AwsIotProvisioning_Cleanup." );
+        IotLogWarn( "api: Unexpected call to clean-up library: "
+                    "Library is NOT initialized." );
     }
 }
 

@@ -503,9 +503,15 @@ typedef struct _provisioningOperationInfo
 typedef struct _provisioningOperation
 {
     _provisioningOperationInfo_t info;  /**< @brief The Provisioning operation object. */
-    IotSemaphore_t responseReceivedSem; /**< @brief Semaphore to be used used by the synchronous API functions @ref
-                                         * provisioning_function_registerthing and @ref
-                                         * provisioning_function_registerthing. */
+    uint32_t semReferenceCount;         /**< @brief An atomic reference counter for
+                                         *  safeguarding semaphore access across thread
+                                         *  contexts. */
+    IotSemaphore_t responseReceivedSem; /**< @brief Binary sempahore used for notifying
+                                         * arrival of server response in the synchronous
+                                         * API functions
+                                         * @ref provisioning_function_createkeysandcertificate,
+                                         * @ref provisioning_function_createcertificatefromcsr
+                                         * and @refprovisioning_function_registerthing. */
 } _provisioningOperation_t;
 
 /*----------------- Declaration of INTERNAL global variables --------------------*/
@@ -603,11 +609,12 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
  * which represents the data to be serialized in the payload.
  * @param[in] csrLength The length of the Certificate-Signing Request string.
  * @param[in] pPayloadSize This will be populated with the size of the serialized data.
- * @return `true` if calculation of the payload size is successful; otherwise `false`.
+ * @return #AWS_IOT_PROVISIONING_SUCCESS if calculation of the payload size is
+ * successful; otherwise #AWS_IOT_PROVISIONING_INTERNAL_FAILURE for any serialization failures.
  */
-bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
-                                                          size_t csrLength,
-                                                          size_t * pPayloadSize );
+AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
+                                                                               size_t csrLength,
+                                                                               size_t * pPayloadSize );
 
 /**
  * @brief Serializes payload data for the request to the MQTT CreateCertificateFromCsr
@@ -617,12 +624,13 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
  * @param[in] csrLength The length of the Certificate-Signing Request string.
  * @param[in, out] pSerializationBuffer The buffer for storing the serialized payload data.
  * @param[in] pBufferSize THe size of the serialization buffer.
- * @return `true` if serialization is successful; otherwise `false` for any serialization error.
+ * @return #AWS_IOT_PROVISIONING_SUCCESS if calculation of the payload size is
+ * successful; otherwise the appropriate error code.
  */
-bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
-                                                                   size_t csrLength,
-                                                                   uint8_t * pSerializationBuffer,
-                                                                   size_t bufferSize );
+AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateCertificateFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                                               size_t csrLength,
+                                                                                               uint8_t * pSerializationBuffer,
+                                                                                               size_t * pBufferSize );
 
 /**
  * @brief Serializes payload data for MQTT request to the Provisioning RegisterThing service API.

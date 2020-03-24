@@ -360,10 +360,10 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
 
 /*------------------------------------------------------------------*/
 
-bool _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
-                                   size_t csrLength,
-                                   IotSerializerEncoderObject_t * pEncoder,
-                                   bool isDrySerialization )
+AwsIotProvisioningError_t _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
+                                                        size_t csrLength,
+                                                        IotSerializerEncoderObject_t * pEncoder,
+                                                        bool isDrySerialization )
 {
     bool status = true;
 
@@ -430,9 +430,9 @@ bool _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
 
 /*------------------------------------------------------------------*/
 
-bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
-                                                          size_t csrLength,
-                                                          size_t * pPayloadSize )
+AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
+                                                                               size_t csrLength,
+                                                                               size_t * pPayloadSize )
 {
     AwsIotProvisioning_Assert( pCertificateSigningRequest != NULL );
     AwsIotProvisioning_Assert( csrLength != 0 );
@@ -477,10 +477,10 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
 
 /*------------------------------------------------------------------*/
 
-bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
-                                                                   size_t csrLength,
-                                                                   uint8_t * pSerializationBuffer,
-                                                                   size_t bufferSize )
+AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                                        size_t csrLength,
+                                                                                        uint8_t * pSerializationBuffer,
+                                                                                        size_t bufferSize )
 {
     bool status = true;
 
