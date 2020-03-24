@@ -28,9 +28,6 @@
 #ifndef AWS_IOT_PROVISIONING_INTERNAL_H_
 #define AWS_IOT_PROVISIONING_INTERNAL_H_
 
-/* Standard include */
-#include <stdbool.h>
-
 /* The config header is always included first. */
 #include "iot_config.h"
 

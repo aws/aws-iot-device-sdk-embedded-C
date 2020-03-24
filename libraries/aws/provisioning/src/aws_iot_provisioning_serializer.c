@@ -92,7 +92,7 @@ static AwsIotProvisioningError_t _serializeCreateKeysAndCertificateRequestPayloa
  * serialization operation will occur without a buffer.
  *
  * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization successful;
- * other #AWS_IOT_PROVISIONING_INTERNAL_FAILURE to represent serialization failures.
+ * otherwise #AWS_IOT_PROVISIONING_INTERNAL_FAILURE to represent serialization failures.
  */
 static AwsIotProvisioningError_t _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
                                                                size_t csrLength,
@@ -167,7 +167,8 @@ static AwsIotProvisioningError_t _serializeCreateKeysAndCertificateRequestPayloa
                                                                    0 );
 
     /* Close the map. */
-    if( checkSerializerStatus( _pAwsIotProvisioningEncoder->closeContainer( pOutermostEncoder, &emptyPayloadEncoder ) ) == false )
+    if( checkSerializerStatus( _pAwsIotProvisioningEncoder->
+                                  closeContainer( pOutermostEncoder, &emptyPayloadEncoder ) ) == false )
     {
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
@@ -367,11 +368,6 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
                                                                *pSerializationBuffer,
                                                                *pBufferSize );
 
-    if( status != AWS_IOT_PROVISIONING_SUCCESS )
-    {
-        IOT_GOTO_CLEANUP();
-    }
-
     IOT_FUNCTION_CLEANUP_BEGIN();
 
     _pAwsIotProvisioningEncoder->destroy( &outermostPayloadEncoder );
@@ -431,7 +427,7 @@ AwsIotProvisioningError_t _serializeCertFromCsrPayload( const char * pCertificat
         /* Nothing to do here. */
     }
 
-    if( status == true )
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Encode the CSR string. */
         if( isSuccessStatus( _pAwsIotProvisioningEncoder->appendKeyValue( &mapEncoder,
@@ -473,7 +469,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( c
     AwsIotProvisioning_Assert( csrLength != 0 );
     AwsIotProvisioning_Assert( pPayloadSize != NULL );
 
-    bool status = true;
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
     IotSerializerEncoderObject_t outerEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
 
     if( _pAwsIotProvisioningEncoder->init( &outerEncoder,
@@ -486,7 +482,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( c
         status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
     }
 
-    if( status == true )
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Perform a dry-run serialization of the Certificate-Signing Request */
         /* data to calculate the size of the payload. */
@@ -496,7 +492,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( c
                                                true );
     }
 
-    if( status == true )
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         *pPayloadSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &outerEncoder );
         AwsIotProvisioning_Assert( *pPayloadSize != 0 );
@@ -507,7 +503,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( c
 
     _pAwsIotProvisioningEncoder->destroy( &outerEncoder );
 
-    return true;
+    return status;
 }
 
 /*------------------------------------------------------------------*/
