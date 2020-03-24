@@ -137,21 +137,23 @@ static void _commonServerResponseHandler( const uint8_t operationIndex,
 
 
 /**
- * @brief The common MQTT subscription callback for response topics of the CreateKeysAndCertificate service API.
+ * @brief The common MQTT subscription callback for response topics of the
+ * CreateKeysAndCertificate service API.
  */
 static void _keysAndCertificateResponseReceivedCallback( void * param1,
                                                          IotMqttCallbackParam_t * const
                                                          pPublish );
 
 /**
- * @brief The common MQTT subscription callback for response topics of the CreateCertificateFromCsr service API.
+ * @brief The common MQTT subscription callback for response topics of the
+ * CreateCertificateFromCsr service API.
  */
 static void _csrResponseReceivedCallback( void * param1,
                                           IotMqttCallbackParam_t * const pPublish );
 
 /**
- * @brief The common MQTT subscription c const uint8_t operationIndex,allback for the response topics
- *                                      of the RegisterThing service API.
+ * @brief The common MQTT subscription callback for the response topics
+ * of the RegisterThing service API.
  */
 static void _registerThingResponseReceivedCallback( void * param1,
                                                     IotMqttCallbackParam_t * const pPublish );
