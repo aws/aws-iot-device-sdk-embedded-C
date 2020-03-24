@@ -103,6 +103,25 @@ static bool _initCalled = false;
 static bool _checkInit( void );
 
 /**
+ * @brief Initializes the operation object in #_activeOperation array for the
+ * passed index reference.
+ *
+ * @param[in] The index reference to the operation object instance to initialize.
+ *
+ * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if initialization is successful;
+ * otherwise #AWS_IOT_PROVISIONING_INIT_FAILED.
+ */
+static AwsIotProvisioningError_t _initializeOperationObject( uint8_t operationIndex );
+
+/**
+ * @brief Cleans up the operation object in #_activeOperation array for the
+ * passed index reference.
+ *
+ * @param[in] The index reference to the operation object instance to clean-up.
+ */
+static void _cleanUpOperationObject( uint8_t operationIndex );
+
+/**
  * @brief A utility common for processing server responses of all Provisioning operation APIs.
  * If there is an ongoing operation, the utility processes the incoming PUBLISH message and invokes the provided parser
  * if the server response is received on the "accepted" topic.
@@ -148,11 +167,6 @@ static void _setActiveOperation( uint8_t operationIndex,
                                  const _provisioningCallbackInfo_t * pUserCallback );
 
 /**
- * @brief Resets the active operation object.
- */
-/* static void _resetActiveOperationData(); */
-
-/**
  * @brief Waits for server response within the provided timeout period, and returns the result of the wait operation.
  *
  * @param timeoutMs The time period (in milliseconds) to wait for server response.
@@ -169,6 +183,7 @@ static AwsIotProvisioningError_t _timedWaitForServerResponse( uint8_t operationI
  */
 static bool _isDataForRegisterThingRequestValid( const AwsIotProvisioningRegisterThingRequestInfo_t * pRequestData );
 
+
 /*------------------------------------------------------------------*/
 
 static bool _checkInit( void )
@@ -183,6 +198,64 @@ static bool _checkInit( void )
     }
 
     return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static AwsIotProvisioningError_t _initializeOperationObject( uint8_t operationIndex )
+{
+    AwsIotProvisioning_Assert( operationIndex < sizeof( _activeOperation ) /
+                               sizeof( _provisioningOperation_t ) );
+
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
+
+    memset( &_activeOperation[ operationIndex ].info,
+            0,
+            sizeof( _activeOperation[ operationIndex ].info ) );
+
+    /* Create a binary semaphore needed for signaling arrival of server responses. */
+    if( IotSemaphore_Create( &( _activeOperation[ operationIndex ].
+                                   responseReceivedSem ),
+                             0u /* initialValue */,
+                             1u /* maxValue */ ) == false )
+    {
+        IotLogError(
+            "api: Unable to initialize library: Failed to create semaphore:"
+            "OperationArrayIndex={%d}", operationIndex );
+
+        status = AWS_IOT_PROVISIONING_INIT_FAILED;
+    }
+
+    /* Increment reference counter for semaphore to represent its validity. */
+    if( Atomic_Increment_u32(
+            &_activeOperation[ operationIndex ].semReferenceCount ) != 0u )
+    {
+        IotLogError( "api: Unable to initialize library: Semaphore reference "
+                     "is non-zero: OperationArrayIndex={%d}", operationIndex );
+
+        status = AWS_IOT_PROVISIONING_INIT_FAILED;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static void _cleanUpOperationObject( uint8_t operationIndex )
+{
+    /*
+     * Check whether the operation semaphore is being accessed by another thread context,
+     * before destroying the resource.
+     * This tackles the RACE CONDITION of concurrent access of the semaphore from multiple
+     * thread contexts.
+     */
+    if( Atomic_CompareAndSwap_u32( &_activeOperation[ operationIndex ].semReferenceCount,
+                                   0u,
+                                   1u ) == 1u )
+    {
+        /* Semaphore is safe to destroy as no other context is accessing it. */
+        IotSemaphore_Destroy( &( _activeOperation[ operationIndex ].responseReceivedSem ) );
+    }
 }
 
 /*-----------------------------------------------------------*/
@@ -312,18 +385,6 @@ static void _registerThingResponseReceivedCallback( void * param1,
 
 /*-----------------------------------------------------------*/
 
-/* static void _resetActiveOperationData( const uint8_t operationIndex ) */
-/* { */
-/*     / * Reset all the operation-specifc data. * / */
-/*     memset( &_activeOperation[ operationIndex ].info, */
-/*             0, */
-/*             sizeof( _activeOperation[ operationIndex ].info ) ); */
-
-/*     IotSemaphore_TryWait( &_activeOperation[ operationIndex ].responseReceivedSem ); */
-/* } */
-
-/*-----------------------------------------------------------*/
-
 static void _setActiveOperation( uint8_t operationIndex,
                                  const _provisioningCallbackInfo_t * pUserCallback )
 {
@@ -400,40 +461,6 @@ static AwsIotProvisioningError_t _timedWaitForServerResponse( uint8_t operationI
     return status;
 }
 
-AwsIotProvisioningError_t _initializeOperationObject( uint8_t operationIndex )
-{
-    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
-
-    memset( &_activeOperation[ operationIndex ].info,
-            0,
-            sizeof( _activeOperation[ operationIndex ].info ) );
-
-    /* Create a binary semaphore needed for signaling arrival of server responses. */
-    if( IotSemaphore_Create( &( _activeOperation[ operationIndex ].
-                                   responseReceivedSem ),
-                             0u /* initialValue */,
-                             1u /* maxValue */ ) == false )
-    {
-        IotLogError(
-            "api: Unable to initialize library: Failed to create semaphore:"
-            "OperationArrayIndex={%d}", operationIndex );
-
-        status = AWS_IOT_PROVISIONING_INIT_FAILED;
-    }
-
-    /* Increment reference counter for semaphore to represent its validity. */
-    if( Atomic_Increment_u32(
-            &_activeOperation[ operationIndex ].semReferenceCount ) == 0u )
-    {
-        IotLogError( "api: Unable to initialize library: Semaphore reference "
-                     "is non-zero: OperationArrayIndex={%d}", operationIndex );
-
-        status = AWS_IOT_PROVISIONING_INIT_FAILED;
-    }
-
-    return status;
-}
-
 /*-----------------------------------------------------------*/
 
 AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeoutMs )
@@ -459,12 +486,12 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeoutMs )
         /* Initialize all operation objects instances. */
         status = _initializeOperationObject( _createKeysAndCertOperationIndex );
 
-        if( status != AWS_IOT_PROVISIONING_SUCCESS )
+        if( status == AWS_IOT_PROVISIONING_SUCCESS )
         {
             status = _initializeOperationObject( _createCertFromCsrOperationIndex );
         }
 
-        if( status != AWS_IOT_PROVISIONING_SUCCESS )
+        if( status == AWS_IOT_PROVISIONING_SUCCESS )
         {
             status = _initializeOperationObject( _registerThingOperationIndex );
         }
@@ -981,25 +1008,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_RegisterThing( IotMqttConnection_t 
     }
 
     IOT_FUNCTION_CLEANUP_END();
-}
-
-/*-----------------------------------------------------------*/
-
-void _cleanUpOperationObject( uint8_t operationIndex )
-{
-    /*
-     * Check whether the operation semaphore is being accessed by another thread context,
-     * before destroying the resource.
-     * This tackles the RACE CONDITION of concurrent access of the semaphore from multiple
-     * thread contexts.
-     */
-    if( Atomic_CompareAndSwap_u32( &_activeOperation[ operationIndex ].semReferenceCount,
-                                   0u,
-                                   1u ) == 1u )
-    {
-        /* Semaphore is safe to destroy as no other context is accessing it. */
-        IotSemaphore_Destroy( &( _activeOperation[ operationIndex ].responseReceivedSem ) );
-    }
 }
 
 /*-----------------------------------------------------------*/
