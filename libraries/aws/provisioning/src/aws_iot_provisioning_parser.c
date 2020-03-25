@@ -74,7 +74,7 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
  *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if parsing is successful; otherwise
  * #AWS_IOT_PROVISIONING_BAD_RESPONSE if any of the expected data entries is missing
- * in the payload OR @AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
+ * in the payload OR #AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
  */
 static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoderObject_t * pPayloadDecoder,
                                                             IotSerializerDecoderObject_t * pPayloadEntryDecoder,
@@ -100,7 +100,7 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
  *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if parsing is successful; otherwise
  * #AWS_IOT_PROVISIONING_BAD_RESPONSE if any of the expected data entries is missing
- * in the payload OR @AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
+ * in the payload OR #AWS_IOT_PROVISIONING_INTERNAL_FAILURE for decoder failures.
  */
 static AwsIotProvisioningError_t _parseCommonCertInfoInResponse( IotSerializerDecoderObject_t * pPayloadDecoder,
                                                                  IotSerializerDecoderObject_t * pCertPemDecoder,
@@ -237,6 +237,11 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
     }
     else if( serializerStatus != IOT_SERIALIZER_SUCCESS )
     {
+        IotLogError( "parser: Unable to parse server response: "
+                     "Decoder returned failure in searching key entry:"
+                     "Key={\"%s\"}: Operation={%s}",
+                     pKeyString,
+                     pOperationString );
         status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
     }
     else if( pPayloadEntryDecoder->type != IOT_SERIALIZER_SCALAR_TEXT_STRING )

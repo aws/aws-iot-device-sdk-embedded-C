@@ -263,49 +263,6 @@
  *
  * @note The complete response topics are suffixed with `AWS_IOT_ACCEPTED_SUFFIX` or `AWS_IOT_REJECTED_SUFFIX` strings.
  * It should be utilized in the @ref provisioning_function_registerthing API function.
- * <<<<<<< HEAD
- * =======
- */
-#define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER \
-    "$aws/certificates/create-from-csr/"PROVISIONING_FORMAT
-
-/**
- * @brief Length of the response topic filter for the MQTT CreateCertificateFromCsr service API.
- */
-#define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH \
-    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER ) - 1 ) )
-
-/**
- * @brief The length of the longest response topic of the MQTT CreateCertificateFromCsr service API.
- * Out of the two response topics, the "rejected" has the longest length.
- */
-#define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_MAX_TOPIC_LENGTH \
-    ( PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH + sizeof( AWS_IOT_REJECTED_SUFFIX ) )
-
-/**
- * @brief The request topic for the MQTT CreateCertificateFromCsr service API.
- *
- * @note It should be utilized in the @ref provisioning_function_registerthing API function.
- */
-#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_TOPIC \
-    "$aws/certificates/create-from-csr/"PROVISIONING_FORMAT
-
-/**
- * @brief The length of the request topic for the MQTT CreateCertificateFromCsr service API.
- */
-#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_TOPIC_LENGTH \
-    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC ) - 1 ) )
-
-/**
- * @brief The key string for Certificate-Singing Request value in the request payload
- * to the MQTT CreateCertificateFromCsr service API.
- */
-#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_PAYLOAD_PEM_STRING    "certificateSigningRequest"
-
-/**
- * @brief The key for the device certificate entry in the response payload of the Provisioning CreateKeysAndCertificate
- * service API.
- * >>>>>>> origin/feat/csr-in-fleet-provisioning
  */
 #define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER \
     "$aws/certificates/create-from-csr/"PROVISIONING_FORMAT
@@ -635,7 +592,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
  * serialized payload data.
  * @param[out] pBufferSize This will be populated with the size of the allocated payload data buffer.
  *
- * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise* #AWS_IOT_PROVISIONING_INTERNAL_FAILURE
+ * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization is successful; otherwise #AWS_IOT_PROVISIONING_INTERNAL_FAILURE
  * for any serialization error.
  */
 AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateRequestPayload( uint8_t ** pSerializationBuffer,
