@@ -66,9 +66,9 @@
     #define LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_PROVISIONING
 #else
     #ifdef IOT_LOG_LEVEL_GLOBAL
-        #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_DEBUG
     #else
-        #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_DEBUG
     #endif
 #endif
 
@@ -508,7 +508,7 @@ typedef struct _provisioningOperation
                                          * API functions
                                          * @ref provisioning_function_createkeysandcertificate,
                                          * @ref provisioning_function_createcertificatefromcsr
-                                         * and @refprovisioning_function_registerthing. */
+                                         * and @ref provisioning_function_registerthing. */
 } _provisioningOperation_t;
 
 /*----------------- Declaration of INTERNAL global variables --------------------*/
