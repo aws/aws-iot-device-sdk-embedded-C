@@ -177,9 +177,10 @@ static void _registerThingResponseReceivedCallback( void * param1,
                                                     IotMqttCallbackParam_t * const pPublish );
 
 /**
- * @brief Sets the active operation object, #_activeOperation, to represent an active operation in progress.
+ * @brief Sets an operation object in the #_activeOperation array to represent
+ * an active operation in progress.
  * @param[in] operationIndex The index reference to the ongoing operation
- * in #_activeOperation object.
+ * object in the #_activeOperation array.
  * @param[in] pUserCallback The user-provided callback information that will be copied
  * to the active operation object.
  */
@@ -189,7 +190,10 @@ static void _setActiveOperation( uint8_t operationIndex,
 /**
  * @brief Waits for server response within the provided timeout period, and returns the result of the wait operation.
  *
- * @param timeoutMs The time period (in milliseconds) to wait for server response.
+ * @param[in] operationIndex The index reference to the ongoing operation
+ * object in the #_activeOperation array.
+ * @param[in] timeoutMs The time period (in milliseconds) to wait for server response.
+ *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if a server response is received within the @p timeoutMs period; otherwise returns
  * #AWS_IOT_PROVISIONING_TIMEOUT
  */
