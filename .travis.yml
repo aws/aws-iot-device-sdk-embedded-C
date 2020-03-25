@@ -1,7 +1,7 @@
-# Only run on the FleetProvisioning_beta branch for now.
+# Only run on the feat/csr-in-fleet-provisioning branch for now.
 branches:
   only:
-  - FleetProvisioning_beta
+  - feat/csr-in-fleet-provisioning
 
 # Build on Ubuntu 16.04 by default.
 os: linux
