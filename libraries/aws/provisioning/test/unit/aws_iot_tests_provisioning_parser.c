@@ -170,6 +170,48 @@ AwsIotProvisioningCreateKeysAndCertificateResponse_t _expectedKeysAndCertificate
     .u.acceptedResponse.ownershipTokenLength       = 6,
 };
 
+/**
+ * @brief Sample CBOR encoded accepted response payload CreateCertificateFromCsr
+ * service API.
+ */
+const uint8_t _sampleAcceptedCertFromCsrResponse[] =
+{
+    0xA3,                                                                               /* # map( 3 ) */
+    0x6E,                                                                               /* # text( 14 ) */
+    0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
+    0x67,                                                                               /* # text(7) */
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,                                           /* # "abcdefg" */
+    0x6D,                                                                               /* # text(13) */
+    0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,       /* # "certificateId" */
+    0x66,                                                                               /* # text(6) */
+    0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                                 /* # "hijklm" */
+    0x78, 0x19,                                                                         /*# text(25) */
+    0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+    0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
+                                                                                         * */
+    0x66,                                                                               /*# text(6) */
+    0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                                  /*# "Token!" */
+};
+
+/**
+ * @brief Represents the expected parsed CSR response information that the parser under
+ * parser under test should pass to the user-callback.
+ * This object will be provided as a context parameter for the callback object supplied
+ * to the parser in the test, to verify the parse information by the parser.
+ */
+AwsIotProvisioningCreateCertFromCsrResponse_t _expectedCertFromCsrParsedParams =
+{
+    .statusCode                              = AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED,
+    .u.acceptedResponse.pDeviceCert          = ( const char * )
+                                               &_sampleAcceptedCertFromCsrResponse[ 17 ],
+    .u.acceptedResponse.deviceCertLength     = 7,
+    .u.acceptedResponse.pCertId              = ( const char * )
+                                               &_sampleAcceptedCertFromCsrResponse[ 39 ],
+    .u.acceptedResponse.certIdLength         = 6,
+    .u.acceptedResponse.pCertOwnershipToken  = ( const char * )
+                                               &_sampleAcceptedCertFromCsrResponse[ 73 ],
+    .u.acceptedResponse.ownershipTokenLength = 6,
+};
 /*-----------------------------------------------------------*/
 
 /**
@@ -183,11 +225,25 @@ static void _verifyParsedRejectedResponse( const AwsIotProvisioningRejectedRespo
  * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
  * response. It will be passed as context parameter in callback parameter passed in tests.
  */
+static void _testCreateCertFromCsrRejectedCallback( void * contextParam,
+                                                    const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo );
+
+/**
+ * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
+ * response. It will be passed as context parameter in callback parameter passed in tests.
+ */
 static void _testCreateKeysAndCertificateRejectedCallback( void * contextParam,
                                                            const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo );
 
 /**
- * @brief Test user-callback to set expectations on parsing of #_sampleAcceptedKeysAndCertificateResponse as rejected
+ * @brief Test user-callback to set expectations on parsing of #_sampleAcceptedCertFromCsrResponse as accepted
+ * server response. It will be passed as context parameter in callback parameter passed in tests.
+ */
+static void _testCreateCertFromCsrAcceptedCallback( void * contextParam,
+                                                    const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo );
+
+/**
+ * @brief Test user-callback to set expectations on parsing of #_sampleAcceptedKeysAndCertificateResponse as accepted
  * server response. It will be passed as context parameter in callback parameter passed in tests.
  */
 static void _testCreateKeysAndCertificateAcceptedCallback( void * contextParam,
@@ -225,14 +281,14 @@ static void _verifyParsedRejectedResponse( const AwsIotProvisioningRejectedRespo
     ( void ) pParsedData;
 
     /* Verify that the rejected response was parsed as expected. */
-    AwsIotProvisioning_Assert( pParsedData->errorCodeLength == pExpectedData->errorCodeLength );
-    AwsIotProvisioning_Assert( 0 == memcmp( pParsedData->pErrorCode,
-                                            pExpectedData->pErrorCode,
-                                            pExpectedData->errorCodeLength ) );
-    AwsIotProvisioning_Assert( pParsedData->errorMessageLength == pExpectedData->errorMessageLength );
-    AwsIotProvisioning_Assert( 0 == memcmp( pParsedData->pErrorMessage,
-                                            pExpectedData->pErrorMessage,
-                                            pExpectedData->errorMessageLength ) );
+    TEST_ASSERT( pParsedData->errorCodeLength == pExpectedData->errorCodeLength );
+    TEST_ASSERT_EQUAL_MEMORY( pParsedData->pErrorCode,
+                              pExpectedData->pErrorCode,
+                              pExpectedData->errorCodeLength ) );
+    TEST_ASSERT( pParsedData->errorMessageLength == pExpectedData->errorMessageLength );
+    TEST_ASSERT_EQUAL_MEMORY( pParsedData->pErrorMessage,
+                              pExpectedData->pErrorMessage,
+                              pExpectedData->errorMessageLength ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -243,7 +299,7 @@ static void _testCreateKeysAndCertificateRejectedCallback( void * contextParam,
     AwsIotProvisioningRejectedResponse_t * pExpectedParams =
         ( AwsIotProvisioningRejectedResponse_t * ) contextParam;
 
-    AwsIotProvisioning_Assert( pResponseInfo->statusCode == _expectedStatusCode );
+    TEST_ASSERT( pResponseInfo->statusCode == _expectedStatusCode );
     /* Verify that the rejected response was parsed as expected. */
     _verifyParsedRejectedResponse( pExpectedParams, &pResponseInfo->u.rejectedResponse );
 }
@@ -261,26 +317,70 @@ static void _testCreateKeysAndCertificateAcceptedCallback( void * contextParam,
     ( void ) pResponseInfo;
 
     /* Verify that the rejected response was parsed as expected. */
-    AwsIotProvisioning_Assert( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED );
+    TEST_ASSERT( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED );
 
-    AwsIotProvisioning_Assert(
+    TEST_ASSERT(
         pExpectedParams->u.acceptedResponse.deviceCertificateLength ==
         pResponseInfo->u.acceptedResponse.deviceCertificateLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pDeviceCertificate ==
-                               pResponseInfo->u.acceptedResponse.pDeviceCertificate );
-    AwsIotProvisioning_Assert(
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pDeviceCertificate ==
+                 pResponseInfo->u.acceptedResponse.pDeviceCertificate );
+    TEST_ASSERT(
         pExpectedParams->u.acceptedResponse.certificateIdLength ==
         pResponseInfo->u.acceptedResponse.certificateIdLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pCertificateId ==
-                               pResponseInfo->u.acceptedResponse.pCertificateId );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.privateKeyLength ==
-                               pResponseInfo->u.acceptedResponse.privateKeyLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pPrivateKey ==
-                               pResponseInfo->u.acceptedResponse.pPrivateKey );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.ownershipTokenLength ==
-                               pResponseInfo->u.acceptedResponse.ownershipTokenLength );
-    AwsIotProvisioning_Assert( pExpectedParams->u.acceptedResponse.pCertificateOwnershipToken ==
-                               pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pCertificateId ==
+                 pResponseInfo->u.acceptedResponse.pCertificateId );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.privateKeyLength ==
+                 pResponseInfo->u.acceptedResponse.privateKeyLength );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pPrivateKey ==
+                 pResponseInfo->u.acceptedResponse.pPrivateKey );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.ownershipTokenLength ==
+                 pResponseInfo->u.acceptedResponse.ownershipTokenLength );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pCertificateOwnershipToken ==
+                 pResponseInfo->u.acceptedResponse.pCertificateOwnershipToken );
+}
+
+/*-----------------------------------------------------------*/
+
+static void _testCreateCertFromCsrRejectedCallback( void * contextParam,
+                                                    const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo )
+{
+    AwsIotProvisioningRejectedResponse_t * pExpectedParams =
+        ( AwsIotProvisioningRejectedResponse_t * ) contextParam;
+
+    TEST_ASSERT( pResponseInfo->statusCode == _expectedStatusCode );
+    /* Verify that the rejected response was parsed as expected. */
+    _verifyParsedRejectedResponse( pExpectedParams, &pResponseInfo->u.rejectedResponse );
+}
+
+/*-----------------------------------------------------------*/
+
+static void _testCreateCertFromCsrAcceptedCallback( void * contextParam,
+                                                    const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo )
+{
+    AwsIotProvisioningCreateCertFromCsrResponse_t * pExpectedParams =
+        ( AwsIotProvisioningCreateCertFromCsrResponse_t * ) contextParam;
+
+    /* Disable unused variable warnings. */
+    ( void ) pExpectedParams;
+    ( void ) pResponseInfo;
+
+    /* Verify that the rejected response was parsed as expected. */
+    TEST_ASSERT( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED );
+
+    TEST_ASSERT(
+        pExpectedParams->u.acceptedResponse.deviceCertLength ==
+        pResponseInfo->u.acceptedResponse.deviceCertLength );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pDeviceCert ==
+                 pResponseInfo->u.acceptedResponse.pDeviceCert );
+    TEST_ASSERT(
+        pExpectedParams->u.acceptedResponse.certIdLength ==
+        pResponseInfo->u.acceptedResponse.certIdLength );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pCertId ==
+                 pResponseInfo->u.acceptedResponse.pCertId );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.ownershipTokenLength ==
+                 pResponseInfo->u.acceptedResponse.ownershipTokenLength );
+    TEST_ASSERT( pExpectedParams->u.acceptedResponse.pCertOwnershipToken ==
+                 pResponseInfo->u.acceptedResponse.pCertOwnershipToken );
 }
 
 /*-----------------------------------------------------------*/
@@ -292,7 +392,19 @@ static void _keysAndCertificateCallbackThatFailsOnInvokation( void * contextPara
     ( void ) pResponseInfo;
 
     /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
-    AwsIotProvisioning_Assert( false );
+    TEST_FAIL_MESSAGE( "This callback SHOULD NOT be invoked in the test" );
+}
+
+/*-----------------------------------------------------------*/
+
+static void _certFromCsrCallbackThatFailsOnInvokation( void * contextParam,
+                                                       const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo )
+{
+    ( void ) contextParam;
+    ( void ) pResponseInfo;
+
+    /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
+    TEST_FAIL_MESSAGE( "This callback SHOULD NOT be invoked in the test" );
 }
 
 /*-----------------------------------------------------------*/
@@ -304,7 +416,7 @@ static void _registerThingCallbackThatFailsOnInvokation( void * contextParam,
     ( void ) pResponseInfo;
 
     /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
-    AwsIotProvisioning_Assert( false );
+    TEST_FAIL_MESSAGE( "This callback SHOULD NOT be invoked in the test" );
 }
 
 
@@ -315,7 +427,7 @@ static void _testRegisterThingRejectedDeviceCallback( void * contextParam,
 {
     AwsIotProvisioningRejectedResponse_t * pExpectedParams = ( AwsIotProvisioningRejectedResponse_t * ) contextParam;
 
-    AwsIotProvisioning_Assert( pResponseInfo->statusCode == _expectedStatusCode );
+    TEST_ASSERT( pResponseInfo->statusCode == _expectedStatusCode );
 
     /* Verify that the rejected response was parsed as expected. */
     _verifyParsedRejectedResponse( pExpectedParams, &pResponseInfo->u.rejectedResponse );
@@ -367,6 +479,10 @@ TEST_GROUP_RUNNER( Provisioning_Unit_Parser )
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseKeysAndCertificateRejectedResponse );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseKeysAndCertificateAcceptedResponse );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseKeysAndCertificateResponseWithMissingEntries );
+    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseCreateCertFromCsrRejectedResponse );
+    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseCreateCertFromCsrAcceptedResponse );
+    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseCreateCertFromCsrResponseWithMissingEntries );
+    RUN_TEST_CASE( Provisioning_Unit_Parser, TestParseCreateCertFromCsrResponseWithIncorrectDataType );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestRegisterThingParsesWithRejectedResponseContainingMissingEntries );
     RUN_TEST_CASE( Provisioning_Unit_Parser, TestDeviceCredentialsParsesWithRejectedResponseContainingMissingEntries );
 }
@@ -421,7 +537,7 @@ TEST( Provisioning_Unit_Parser, TestParseKeysAndCertificateResponseWithMissingEn
     /*************** Response payload only with private key ********************/
     const uint8_t payloadWithOnlyPrivateKey[] =
     {
-        0xA2,                                                       /* # map( 1 ) */
+        0xA1,                                                       /* # map( 1 ) */
         0x6A,                                                       /* # text( 10 ) */
         0x70, 0x72, 0x69, 0x76, 0x61, 0x74, 0x65, 0x4B, 0x65, 0x79, /* # "privateKey" */
         0x4A,                                                       /* # bytes( 10 ) */
@@ -484,6 +600,190 @@ TEST( Provisioning_Unit_Parser, TestParseKeysAndCertificateResponseWithMissingEn
                                                                                                                &wrapperCallback ) );
 }
 
+/**
+ * @brief Verifies that the parser function for the CSR response payload can parse
+ * a rejected response from the MQTT CreateCertificateFromCsr service API.
+ */
+TEST( Provisioning_Unit_Parser, TestParseCreateCertFromCsrRejectedResponse )
+{
+    _provisioningCallbackInfo_t wrapperCallback;
+
+    wrapperCallback.createCertFromCsrCallback.userParam = &_expectedParsedParams;
+    wrapperCallback.createCertFromCsrCallback.function = _testCreateCertFromCsrRejectedCallback;
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SERVER_REFUSED, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_REJECTED,
+                                                                                                  _sampleRejectedServerResponsePayload,
+                                                                                                  sizeof( _sampleRejectedServerResponsePayload ),
+                                                                                                  &wrapperCallback ) );
+}
+
+/**
+ * @brief Verifies that the CSR response parser function can parse the
+ * accepted response payload from the MQTT CreateCertificateFromCsr service API.
+ */
+TEST( Provisioning_Unit_Parser, TestParseCreateCertFromCsrAcceptedResponse )
+{
+    _provisioningCallbackInfo_t wrapperCallback;
+
+    wrapperCallback.createCertFromCsrCallback.userParam = &_expectedCertFromCsrParsedParams;
+    wrapperCallback.createCertFromCsrCallback.function = _testCreateCertFromCsrAcceptedCallback;
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
+                                                                                           _sampleAcceptedCertFromCsrResponse,
+                                                                                           sizeof( _sampleAcceptedCertFromCsrResponse ),
+                                                                                           &wrapperCallback ) );
+}
+
+/**
+ * @brief Verifies that the CSR response parser does not call the user-callback
+ * when the server response payload contains data in non-string format.
+ */
+TEST( Provisioning_Unit_Parser, TestParseCreateCertFromCsrResponseWithIncorrectDataType )
+{
+    _provisioningCallbackInfo_t wrapperCallback;
+
+    wrapperCallback.createCertFromCsrCallback.userParam = NULL;
+    wrapperCallback.createCertFromCsrCallback.function = _certFromCsrCallbackThatFailsOnInvokation;
+
+    /*************** Response payload only with invalid certificate Pem data********************/
+    const uint8_t payloadWithInvalidCertPem[] =
+    {
+        0xA3,                                                                               /* # map( 3 ) */
+        0x6E,                                                                               /* # text( 14 ) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
+        0x0A,                                                                               /* # unsigned(10)*/
+        0x6D,                                                                               /* # text(13) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,       /* # "certificateId" */
+        0x66,                                                                               /* # text(6) */
+        0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                                 /* # "hijklm" */
+        0x78, 0x19,                                                                         /*# text(25) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
+                                                                                             * */
+        0x66,                                                                               /*# text(6) */
+        0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                                  /*# "Token!" */
+    };
+
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
+                                                                                                payloadWithInvalidCertPem,
+                                                                                                sizeof( payloadWithInvalidCertPem ),
+                                                                                                &wrapperCallback ) );
+
+    /*************** Response payload with invalid certificate ID data********************/
+    const uint8_t payloadWithInvalidCertId[] =
+    {
+        0xA3,                                                                               /* # map( 3 ) */
+        0x6E,                                                                               /* # text( 14 ) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
+        0x67,                                                                               /* # text(7) */
+        0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,                                           /* # "abcdefg" */
+        0x6D,                                                                               /* # text(13) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,       /* # "certificateId" */
+        0x0A,                                                                               /* # unsigned(10) */
+        0x78, 0x19,                                                                         /*# text(25) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
+                                                                                             * */
+        0x66,                                                                               /*# text(6) */
+        0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                                  /*# "Token!" */
+    };
+
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
+                                                                                                payloadWithInvalidCertId,
+                                                                                                sizeof( payloadWithInvalidCertId ),
+                                                                                                &wrapperCallback ) );
+
+    /*************** Response payload with invalid ownership token data********************/
+    const uint8_t payloadWithInvalidToken[] =
+    {
+        0xA3,                                                                               /* # map( 3 ) */
+        0x6E,                                                                               /* # text( 14 ) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
+        0x67,                                                                               /* # text(7) */
+        0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,                                           /* # "abcdefg" */
+        0x6D,                                                                               /* # text(13) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,       /* # "certificateId" */
+        0x66,                                                                               /* # text(6) */
+        0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                                 /* # "hijklm" */
+        0x78, 0x19,                                                                         /*# text(25) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
+                                                                                             * */
+        0x0A                                                                                /*#  unsigned(10) */
+    };
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
+                                                                                                payloadWithInvalidToken,
+                                                                                                sizeof( payloadWithInvalidToken ),
+                                                                                                &wrapperCallback ) );
+}
+
+/**
+ * @brief Verifies that the CSR response parser  does not call the user-callback
+ * when the server response payload has missing entries of the expected data in
+ * the response.
+ */
+TEST( Provisioning_Unit_Parser, TestParseCreateCertFromCsrResponseWithMissingEntries )
+{
+    _provisioningCallbackInfo_t wrapperCallback;
+
+    wrapperCallback.createCertFromCsrCallback.userParam = NULL;
+    wrapperCallback.createCertFromCsrCallback.function = _certFromCsrCallbackThatFailsOnInvokation;
+
+    /*************** Response payload only with certificate Pem entry********************/
+    const uint8_t payloadWithOnlyCertificatePem[] =
+    {
+        0xA1,                                                                               /* # map( 1 ) */
+        0x6E,                                                                               /* # text( 14 ) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x50, 0x65, 0x6D, /* # "certificatePem" */
+        0x67,                                                                               /* # text(7) */
+        0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,                                           /* # "abcdefg" */
+    };
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
+                                                                                                payloadWithOnlyCertificatePem,
+                                                                                                sizeof( payloadWithOnlyCertificatePem ),
+                                                                                                &wrapperCallback ) );
+
+    /*************** Response payload only with certificate ID entry********************/
+    const uint8_t payloadWithOnlyCertificateId[] =
+    {
+        0xA1,                                                                         /* # map( 1 ) */
+        0x6D,                                                                         /* # text(13) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64, /* # "certificateId" */
+        0x66,                                                                         /* # text(6) */
+        0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                           /* # "hijklm" */
+    };
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
+                                                                                                payloadWithOnlyCertificateId,
+                                                                                                sizeof( payloadWithOnlyCertificateId ),
+                                                                                                &wrapperCallback ) );
+
+    /*************** Response payload only with ownership token entry********************/
+    const uint8_t payloadWithOnlyToken[] =
+    {
+        0xA1,                                                             /* # map( 1 ) */
+        0x78, 0x19,                                                       /*# text(25) */
+        0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E, /*# "certificateOwnershipToken"
+                                                                           * */
+        0x66,                                                             /*# text(6) */
+        0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                /*# "Token!" */
+    };
+
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
+                                                                                                payloadWithOnlyToken,
+                                                                                                sizeof( payloadWithOnlyToken ),
+                                                                                                &wrapperCallback ) );
+}
 
 /**
  * @brief Verifies the parser function behavior (_AwsIotProvisioning_ParseRegisterThingResponse) when the

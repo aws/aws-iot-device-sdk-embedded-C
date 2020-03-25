@@ -844,7 +844,7 @@ TEST( Provisioning_Unit_API, CreateKeysAndCertificateAPICorruptDataInResponse )
     /*************** Response payload without certificate entry********************/
     const uint8_t serverResponseWithoutCertificate[] =
     {
-        0xA2,                                                       /* # map( 2 ) */
+        0xA1,                                                       /* # map( 1 ) */
         0x6A,                                                       /* # text( 10 ) */
         /* THERE IS NO ENTRY FOR "CertificatePem"!! */
         0x70, 0x72, 0x69, 0x76, 0x61, 0x74, 0x65, 0x4B, 0x65, 0x79, /* # "privateKey" */
