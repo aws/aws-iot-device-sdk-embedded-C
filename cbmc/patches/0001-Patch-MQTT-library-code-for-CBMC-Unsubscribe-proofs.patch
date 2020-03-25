@@ -1,0 +1,87 @@
+From 9681dc68e81ea5afa75d310446199ae730ab9943 Mon Sep 17 00:00:00 2001
+From: Mark R Tuttle <mrtuttle@amazon.com>
+Date: Wed, 25 Mar 2020 14:09:26 +0000
+Subject: [PATCH] Patch MQTT library code for CBMC Unsubscribe proofs
+
+---
+ libraries/standard/common/include/iot_linear_containers.h |  5 +++++
+ libraries/standard/mqtt/include/iot_mqtt_protocol.h       |  2 ++
+ libraries/standard/mqtt/src/iot_mqtt_operation.c          | 10 ++++++++++
+ libraries/standard/mqtt/src/private/iot_mqtt_internal.h   |  2 ++
+ 4 files changed, 19 insertions(+)
+
+diff --git a/libraries/standard/common/include/iot_linear_containers.h b/libraries/standard/common/include/iot_linear_containers.h
+index 689ea5e..b9aec35 100644
+--- a/libraries/standard/common/include/iot_linear_containers.h
++++ b/libraries/standard/common/include/iot_linear_containers.h
+@@ -639,6 +639,11 @@ static inline IotLink_t * IotListDouble_FindFirstMatch( const IotListDouble_t *
+     /* Iterate through the list to search for matches. */
+     while( pCurrent != pList )
+     {
++#ifdef CBMC_UNSUBSCRIBEASYNC_PROOF
++      __CPROVER_assert(isMatch != NULL, "FindFirstMatch called with match predicate");
++      __CPROVER_assume(isMatch != NULL);
++#endif
++
+         /* Call isMatch if provided. Otherwise, compare pointers. */
+         if( isMatch != NULL )
+         {
+diff --git a/libraries/standard/mqtt/include/iot_mqtt_protocol.h b/libraries/standard/mqtt/include/iot_mqtt_protocol.h
+index 0fedcea..ef9f8c0 100644
+--- a/libraries/standard/mqtt/include/iot_mqtt_protocol.h
++++ b/libraries/standard/mqtt/include/iot_mqtt_protocol.h
+@@ -97,7 +97,9 @@
+  * @brief Per the MQTT 3.1.1 spec, the largest "Remaining Length" of an MQTT
+  * packet is this value.
+  */
++#ifndef MQTT_MAX_REMAINING_LENGTH
+ #define MQTT_MAX_REMAINING_LENGTH                   ( 268435455UL )
++#endif
+ 
+ /**
+  * @brief The constant specifying MQTT version 3.1.1. Placed in the CONNECT packet.
+diff --git a/libraries/standard/mqtt/src/iot_mqtt_operation.c b/libraries/standard/mqtt/src/iot_mqtt_operation.c
+index 5afce54..0464613 100644
+--- a/libraries/standard/mqtt/src/iot_mqtt_operation.c
++++ b/libraries/standard/mqtt/src/iot_mqtt_operation.c
+@@ -638,6 +638,10 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
+     if( status == IOT_MQTT_SUCCESS )
+     {
+         status = _initializeOperation( pMqttConnection, pOperation, flags, pCallbackInfo );
++#ifdef CBMC_UNSUBSCRIBEASYNC_PROOF
++	__CPROVER_assert(status == IOT_MQTT_SUCCESS,
++			 "An async _initializeOperation can't fail (unwaitable)");
++#endif
+     }
+ 
+     if( status == IOT_MQTT_SUCCESS )
+@@ -661,6 +665,12 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
+             _IotMqtt_DecrementConnectionReferences( pMqttConnection );
+         }
+ 
++#ifdef CBMC_UNSUBSCRIBEASYNC_PROOF
++	__CPROVER_assert(pOperation == NULL,
++			 "Bad status implies null pointer");
++	__CPROVER_assume(pOperation == NULL);
++#endif
++
+         if( pOperation != NULL )
+         {
+             IotMqtt_FreeOperation( pOperation );
+diff --git a/libraries/standard/mqtt/src/private/iot_mqtt_internal.h b/libraries/standard/mqtt/src/private/iot_mqtt_internal.h
+index ccfb802..d1b540c 100644
+--- a/libraries/standard/mqtt/src/private/iot_mqtt_internal.h
++++ b/libraries/standard/mqtt/src/private/iot_mqtt_internal.h
+@@ -237,7 +237,9 @@
+  * Used to validate parameters if when connecting to an AWS IoT MQTT server.
+  */
+ #define AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                ( ( uint16_t ) 128 )      /**< @brief Maximum length of client identifier accepted by AWS IoT. */
++#ifndef AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH
+ #define AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH                   ( ( uint16_t ) 256 )      /**< @brief Maximum length of topic names or filters accepted by AWS IoT. */
++#endif
+ #define AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE    ( ( size_t ) 8 )          /**< @brief Maximum number of topic filters in a single SUBSCRIBE packet. */
+ #define AWS_IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH         ( ( size_t ) ( 131072 ) ) /**< @brief Maximum publish payload length accepted by AWS IoT. */
+ 
+-- 
+2.7.4
+
