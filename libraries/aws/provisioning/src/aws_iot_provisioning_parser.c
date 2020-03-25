@@ -231,7 +231,7 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
     {
         /* Entry not found in the payload map. */
         IotLogError( "parser: Unable to parse server response: Key entry not found in response:"
-                     "ExpectedKey={\"%s\"}: Operation={%s}",
+                     "ExpectedKey={\"%s\"}: Operation={\"%s\"}",
                      pKeyString,
                      pOperationString );
         status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
@@ -240,7 +240,7 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
     {
         IotLogError( "parser: Unable to parse server response: "
                      "Decoder returned failure in searching key entry:"
-                     "Key={\"%s\"}: Operation={%s}",
+                     "Key={\"%s\"}: Operation={\"%s\"}",
                      pKeyString,
                      pOperationString );
         status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
@@ -249,7 +249,7 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
     {
         IotLogError(
             "parser: Unable to parse server response: Invalid value type of key entry in payload: "
-            "Expected type is text string: Key={\"%s\"}, Operation={%s}",
+            "Expected type is text string: Key={\"%s\"}, Operation={\"%s\"}",
             pKeyString,
             pOperationString );
         status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
@@ -455,7 +455,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
     {
         /* Decoder object initialization failed */
         IotLogError(
-            "parser: Unable to parser response: Failed to initialize decoder: Operation={%s}",
+            "parser: Unable to parser response: Failed to initialize decoder: Operation={\"%s\"}",
             CREATE_CERT_FROM_CSR_OPERATION_LOG );
         status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
     }
@@ -463,7 +463,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
     {
         IotLogError(
             "parser: Unable to parse server response: Payload format is invalid: "
-            "Expected format is map container: Operation={%s}.",
+            "Expected format is map container: Operation={\"%s\"}.",
             CREATE_CERT_FROM_CSR_OPERATION_LOG );
         status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
     }
@@ -472,7 +472,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
     {
         if( responseType == AWS_IOT_ACCEPTED )
         {
-            IotLogInfo( "parser: Server has ACCEPTED the operation request: Operation={%s}",
+            IotLogInfo( "parser: Server has ACCEPTED the operation request: Operation={\"%s\"}",
                         CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
             status = _parseCommonCertInfoInResponse( &payloadDecoder,
@@ -502,7 +502,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
                     ownershipTokenDecoder.u.value.u.string.length;
 
                 /* Invoke the user-provided callback with the parsed credentials data . */
-                IotLogInfo( "parser: About to call user-callback with accepted server response: Operation={%s}",
+                IotLogInfo( "parser: About to call user-callback with accepted server response: Operation={\"%s\"}",
                             CREATE_CERT_FROM_CSR_OPERATION_LOG );
                 userCallbackInfo->createCertFromCsrCallback.function( userCallbackInfo->createCertFromCsrCallback.userParam,
                                                                       &serverResponse );
@@ -515,7 +515,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
         }
         else if( responseType == AWS_IOT_REJECTED )
         {
-            IotLogWarn( "parser: Server has REJECTED the operation request: Operation={%s}",
+            IotLogWarn( "parser: Server has REJECTED the operation request: Operation={\"%s\"}",
                         CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
             status = _parseRejectedResponse( &payloadDecoder,
@@ -526,7 +526,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
             /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
             if( status == AWS_IOT_PROVISIONING_SUCCESS )
             {
-                IotLogInfo( "parser: About to call user-callback with rejected server response: Operation={%s}",
+                IotLogInfo( "parser: About to call user-callback with rejected server response: Operation={\"%s\"}",
                             CREATE_CERT_FROM_CSR_OPERATION_LOG );
                 userCallbackInfo->createCertFromCsrCallback.function( userCallbackInfo->createCertFromCsrCallback.userParam,
                                                                       &serverResponse );
