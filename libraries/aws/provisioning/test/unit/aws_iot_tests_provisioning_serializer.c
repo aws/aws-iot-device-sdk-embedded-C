@@ -139,8 +139,8 @@ void _checkForBufferOverrun( const uint8_t * buffer,
     /* overwritten. */
     for( size_t index = 0; index < _reserveSize; index++ )
     {
-        assert( _bufferOverrunCheckValue == buffer[ index ] );
-        assert( _bufferOverrunCheckValue == buffer[ totalBufferSize - 1 - index ] );
+        TEST_ASSERT_EQUAL( _bufferOverrunCheckValue, buffer[ index ] );
+        TEST_ASSERT_EQUAL( _bufferOverrunCheckValue, buffer[ totalBufferSize - 1 - index ] );
     }
 }
 

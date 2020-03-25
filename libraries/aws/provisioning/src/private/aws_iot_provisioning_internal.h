@@ -66,9 +66,9 @@
     #define LIBRARY_LOG_LEVEL        AWS_IOT_LOG_LEVEL_PROVISIONING
 #else
     #ifdef IOT_LOG_LEVEL_GLOBAL
-        #define LIBRARY_LOG_LEVEL    IOT_LOG_DEBUG
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_LEVEL_GLOBAL
     #else
-        #define LIBRARY_LOG_LEVEL    IOT_LOG_DEBUG
+        #define LIBRARY_LOG_LEVEL    IOT_LOG_NONE
     #endif
 #endif
 
