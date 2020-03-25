@@ -1,3 +1,6 @@
+#include "iot_config.h"
+#include "private/iot_mqtt_internal.h"
+
 #include <stdlib.h>
 
 /****************************************************************
@@ -151,6 +154,7 @@ IotListDouble_t *allocate_IotMqttSubscriptionList( IotListDouble_t *pSub,
 						   size_t length );
 bool valid_IotMqttSubscriptionList( const IotListDouble_t *pSub,
 				   const size_t length );
+void free_IotMqttSubscriptionList( IotListDouble_t *pSub );
 
 /****************************************************************
  * IotMqttPublishInfo

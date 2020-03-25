@@ -15,7 +15,7 @@ index 689ea5e..ffb3469 100644
   * or its value is `0`.
   */
  /* @[declare_linear_containers_list_double_removeallmatches] */
-+#ifdef CBMC_PROOF_DESERIALIZE_SUBACK
++#ifdef CBMC_STUB_REMOVEALLMATCHES
 +void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
 +				     bool ( *isMatch )( const IotLink_t * const pOperationLink, void * pCompare ),
 +				     void * pMatch,
@@ -35,4 +35,3 @@ index 689ea5e..ffb3469 100644
   * @brief Create a new queue.
 -- 
 2.7.4
-
