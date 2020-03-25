@@ -282,11 +282,11 @@ static void _verifyParsedRejectedResponse( const AwsIotProvisioningRejectedRespo
 
     /* Verify that the rejected response was parsed as expected. */
     TEST_ASSERT( pParsedData->errorCodeLength == pExpectedData->errorCodeLength );
-    TEST_ASSERT( 0 == memcmp( pParsedData->pErrorCode,
+    TEST_ASSERT_EQUAL_MEMORY( pParsedData->pErrorCode,
                               pExpectedData->pErrorCode,
                               pExpectedData->errorCodeLength ) );
     TEST_ASSERT( pParsedData->errorMessageLength == pExpectedData->errorMessageLength );
-    TEST_ASSERT( 0 == memcmp( pParsedData->pErrorMessage,
+    TEST_ASSERT_EQUAL_MEMORY( pParsedData->pErrorMessage,
                               pExpectedData->pErrorMessage,
                               pExpectedData->errorMessageLength ) );
 }
@@ -392,7 +392,7 @@ static void _keysAndCertificateCallbackThatFailsOnInvokation( void * contextPara
     ( void ) pResponseInfo;
 
     /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
-    TEST_ASSERT( false );
+    TEST_FAIL_MESSAGE( "This callback SHOULD NOT be invoked in the test" );
 }
 
 /*-----------------------------------------------------------*/
@@ -404,7 +404,7 @@ static void _certFromCsrCallbackThatFailsOnInvokation( void * contextParam,
     ( void ) pResponseInfo;
 
     /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
-    TEST_ASSERT( false );
+    TEST_FAIL_MESSAGE( "This callback SHOULD NOT be invoked in the test" );
 }
 
 /*-----------------------------------------------------------*/
@@ -416,7 +416,7 @@ static void _registerThingCallbackThatFailsOnInvokation( void * contextParam,
     ( void ) pResponseInfo;
 
     /* As the callback SHOULD NOT be invoked, we will inject an assert failure.*/
-    TEST_ASSERT( false );
+    TEST_FAIL_MESSAGE( "This callback SHOULD NOT be invoked in the test" );
 }
 
 
