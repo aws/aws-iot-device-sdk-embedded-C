@@ -89,19 +89,24 @@ void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
  * But the semaphore API assures us that TimedWait called after Post will
  * never fail. Our abstraction of the semaphores models this behavior.
  */
-static bool flagSemaphore;
+static unsigned int flagSemaphore;
 
 void IotSemaphore_Post( IotSemaphore_t * pSemaphore )
 {
   assert(pSemaphore != NULL);
-  flagSemaphore = true;
+  flagSemaphore++;
 }
 
 bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
                              uint32_t timeoutMs )
 {
   assert(pSemaphore != NULL);
-  return flagSemaphore;
+  if( flagSemaphore > 0 )
+  {
+    flagSemaphore--;
+    return true;
+  }
+  return false;
 }
 
 void harness()
@@ -124,7 +129,7 @@ void harness()
   uint32_t timeoutMs;
 
   /* initialize semaphore flag */
-  flagSemaphore = false;
+  flagSemaphore = 0;
 
   /* function under verification */
   IotMqtt_PublishSync( mqttConnection, /* always assume a valid connection */
