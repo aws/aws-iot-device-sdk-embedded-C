@@ -60,11 +60,8 @@ IotTaskPoolError_t IotTaskPool_TryCancel( IotTaskPool_t taskPool,
                                           IotTaskPoolJob_t job,
                                           IotTaskPoolJobStatus_t * const pStatus )
 {
-  if( taskPool == NULL || job == NULL )
-  {
-    return IOT_TASKPOOL_BAD_PARAMETER;
-  }
-  return IOT_TASKPOOL_SUCCESS;
+  assert( taskPool == NULL || job == NULL );
+  return IOT_TASKPOOL_BAD_PARAMETER;
 }
 
 /****************************************************************/

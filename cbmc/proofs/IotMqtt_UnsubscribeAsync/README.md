@@ -23,7 +23,7 @@ of why some code is unreachable from IotMqtt_UnsubscribeAsync.
 * libraries/standard/mqtt/src/iot_mqtt_helper.c
   _IotMqtt_RemainingLengthEncodedSize
 
-  * Proof bounds on number and size of subscription topics limits the
+  * Proof assumption: Proof bounds on number and size of subscription topics limits the
 	outbound packet to less than 128 bytes.
 
 * libraries/standard/mqtt/src/iot_mqtt_helper.c
@@ -33,7 +33,7 @@ of why some code is unreachable from IotMqtt_UnsubscribeAsync.
 
 * libraries/standard/mqtt/src/iot_mqtt_helper.c _encodeRemainingLength
 
-  * Proof bounds on number and size of subscription topics limits the
+  * Proof assumption: Proof bounds on number and size of subscription topics limits the
 	outbound packet to less than 128 bytes.
 
 * libraries/standard/mqtt/src/iot_mqtt_operation.c
@@ -107,7 +107,7 @@ of why some code is unreachable from IotMqtt_UnsubscribeAsync.
 
 * libraries/standard/mqtt/src/iot_mqtt_validate.c _validateString
 
-  * Proof assumption: length of topic fileter is always positive.
+  * Proof assumption: length of topic filter is always positive.
 
 * libraries/standard/mqtt/src/iot_mqtt_validate.c _validateSubscription
 
