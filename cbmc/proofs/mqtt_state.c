@@ -149,11 +149,11 @@ IotListDouble_t *allocate_IotMqttOperationList( IotListDouble_t *pOp,
 
   IotListDouble_Create( pOp );
 
-  size_t num_elts;
-  __CPROVER_assume(num_elts <= length);
+  size_t numElts;
+  __CPROVER_assume(numElts <= length);
 
   IotMqttOperation_t pElt;
-  switch (num_elts) {
+  switch (numElts) {
 #if 3 < OPERATION_COUNT_MAX
   case 3:
     pElt = allocate_IotMqttOperation( NULL, pConn );
@@ -450,11 +450,11 @@ IotListDouble_t *allocate_IotMqttSubscriptionList( IotListDouble_t *pSub,
 
   IotListDouble_Create( pSub );
 
-  size_t num_elts;
-  __CPROVER_assume(num_elts <= length);
+  size_t numElts;
+  __CPROVER_assume(numElts <= length);
 
   _mqttSubscription_t *pElt;
-  switch (num_elts) {
+  switch (numElts) {
 #if 3 < SUBSCRIPTION_COUNT_MAX
   case 3:
       pElt = allocate_IotMqttSubscriptionListElt( NULL );
@@ -473,10 +473,8 @@ IotListDouble_t *allocate_IotMqttSubscriptionList( IotListDouble_t *pSub,
       __CPROVER_assume( pElt );
       IotListDouble_InsertHead( pSub, &( pElt->link ) );
 #endif
-#if 0 < SUBSCRIPTION_COUNT_MAX
   default:
     ;
-#endif
   }
 
   return pSub;
@@ -537,7 +535,8 @@ void free_IotMqttSubscriptionList( IotListDouble_t *pSub )
   pThis = pNext;
 #endif
 
-  assert( pThis == pSub );
+  /* The being freed could be longer than SUBSCRIPTION_COUNT_MAX:
+   * Allocate a list of maximal length, then add one subscription, then free it. */
   return;
 }
 
