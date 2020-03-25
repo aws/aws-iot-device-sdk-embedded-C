@@ -210,6 +210,9 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
                                                             const char * pKeyString,
                                                             const char * pOperationString )
 {
+    /* Suppress unused parameter compiler warning. */
+    ( void ) pOperationString;
+
     AwsIotProvisioning_Assert( pPayloadDecoder != NULL );
     AwsIotProvisioning_Assert( pPayloadEntryDecoder != NULL );
     AwsIotProvisioning_Assert( pKeyString != NULL );
