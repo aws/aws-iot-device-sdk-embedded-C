@@ -22,7 +22,7 @@ PLATFORM_DIR = $(IOT_CLIENT_DIR)/platform/linux
 #MbedTLS directory
 TEMP_MBEDTLS_SRC_DIR = $(IOT_CLIENT_DIR)/external_libs/mbedTLS
 TLS_LIB_DIR = $(TEMP_MBEDTLS_SRC_DIR)/library
-CRYPTO_LIB_DIR = $(TEMP_MBEDTLS_SRC_DIR)/crypto/library
+CRYPTO_LIB_DIR = $(TEMP_MBEDTLS_SRC_DIR)/library
 TLS_INCLUDE_DIR = -I $(TEMP_MBEDTLS_SRC_DIR)/include
 
 #CBOR - tinycbor

@@ -6,8 +6,7 @@ install:
   - rm external_libs/mbedTLS/*
 
   # Get mbedtls.
-  - wget -qO- https://github.com/ARMmbed/mbedtls/archive/mbedtls-2.18.1.tar.gz | tar xvz -C external_libs/mbedTLS --strip-components=1
-  - wget -qO- https://github.com/ARMmbed/mbed-crypto/archive/mbedcrypto-1.1.1.tar.gz | tar xvz -C external_libs/mbedTLS/crypto --strip-components=1
+  - wget -qO- https://github.com/ARMmbed/mbedtls/archive/mbedtls-2.16.5.tar.gz | tar xvz -C external_libs/mbedTLS --strip-components=1
 
   # Get tinycbor.
   - wget -qO- https://github.com/intel/tinycbor/archive/v0.5.2.tar.gz | tar xvz -C external_libs/tinycbor --strip-components=1
