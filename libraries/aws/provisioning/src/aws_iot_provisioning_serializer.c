@@ -384,11 +384,6 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
                                                                *pSerializationBuffer,
                                                                *pBufferSize );
 
-    if( status != AWS_IOT_PROVISIONING_SUCCESS )
-    {
-        IOT_GOTO_CLEANUP();
-    }
-
     IOT_FUNCTION_CLEANUP_BEGIN();
 
     _pAwsIotProvisioningEncoder->destroy( &outermostPayloadEncoder );

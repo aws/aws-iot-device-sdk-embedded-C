@@ -284,11 +284,11 @@ static void _verifyParsedRejectedResponse( const AwsIotProvisioningRejectedRespo
     TEST_ASSERT( pParsedData->errorCodeLength == pExpectedData->errorCodeLength );
     TEST_ASSERT_EQUAL_MEMORY( pParsedData->pErrorCode,
                               pExpectedData->pErrorCode,
-                              pExpectedData->errorCodeLength ) );
+                              pExpectedData->errorCodeLength );
     TEST_ASSERT( pParsedData->errorMessageLength == pExpectedData->errorMessageLength );
     TEST_ASSERT_EQUAL_MEMORY( pParsedData->pErrorMessage,
                               pExpectedData->pErrorMessage,
-                              pExpectedData->errorMessageLength ) );
+                              pExpectedData->errorMessageLength );
 }
 
 /*-----------------------------------------------------------*/
@@ -709,11 +709,10 @@ TEST( Provisioning_Unit_Parser, TestParseCreateCertFromCsrResponseWithIncorrectD
         0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,       /* # "certificateId" */
         0x66,                                                                               /* # text(6) */
         0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                                 /* # "hijklm" */
-        0x78, 0x19,                                                                         /*# text(25) */
+        0x78, 0x19,                                                                         /* # text(25) */
         0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
-        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
-                                                                                             * */
-        0x0A                                                                                /*#  unsigned(10) */
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /* # "certificateOwnershipToken" */
+        0x0A                                                                                /* #  unsigned(10) */
     };
 
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_RESPONSE, _AwsIotProvisioning_ParseCsrResponse( AWS_IOT_ACCEPTED,
