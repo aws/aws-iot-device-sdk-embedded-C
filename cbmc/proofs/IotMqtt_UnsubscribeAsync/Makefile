@@ -79,36 +79,37 @@ DEF += -DIotMqtt_MallocMessage=malloc_can_fail
 ################################################################
 # Loop unwinding
 
+LOOP += harness.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += _IotMqtt_RemoveSubscriptionByTopicFilter.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += _IotMqtt_SerializeUnsubscribe.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += _IotMqtt_SerializeUnsubscribeCommon.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += _encodeRemainingLength.0:2
+LOOP += _IotMqtt_SubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += _validateSubscription.0:$(TOPIC_LENGTH_MAX)
+LOOP += allocate_IotMqttSubscriptionArray.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += valid_IotMqttSubscriptionArray.0:$(SUBSCRIPTION_COUNT_MAX)
+
+LOOP += valid_IotMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += valid_IotMqttOperationList.0:$(OPERATION_COUNT_MAX)
+LOOP += _IotMqtt_ValidateSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
+
+LOOP += strncmp.0:$(TOPIC_LENGTH_MAX)
+
+LOOP += IotListDouble_FindFirstMatch.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_FindFirstMatch\$$link1.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_FindFirstMatch\$$link2.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += IotListDouble_FindFirstMatch\$$link5.0:$(SUBSCRIPTION_COUNT_MAX)
+
+LOOP += IotListDouble_RemoveAllMatches.0:$(SUBSCRIPTION_LIST_MAX)
+LOOP += IotListDouble_RemoveAllMatches\$$link1.0:$(SUBSCRIPTION_LIST_MAX)
+LOOP += IotListDouble_RemoveAllMatches\$$link2.0:$(SUBSCRIPTION_LIST_MAX)
+LOOP += IotListDouble_RemoveAllMatches\$$link3.0:$(SUBSCRIPTION_LIST_MAX)
+LOOP += IotListDouble_RemoveAllMatches\$$link4.0:$(SUBSCRIPTION_LIST_MAX)
+LOOP += IotListDouble_RemoveAllMatches\$$link5.0:$(SUBSCRIPTION_LIST_MAX)
+LOOP += IotListDouble_RemoveAllMatches\$$link6.0:$(SUBSCRIPTION_LIST_MAX)
+
 UNWINDING += --unwind 1
-
-UNWINDING += --unwindset harness.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset _IotMqtt_RemoveSubscriptionByTopicFilter.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset _IotMqtt_SerializeUnsubscribe.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset _IotMqtt_SerializeUnsubscribeCommon.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset _encodeRemainingLength.0:2
-UNWINDING += --unwindset _IotMqtt_SubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset _validateSubscription.0:$(TOPIC_LENGTH_MAX)
-UNWINDING += --unwindset allocate_IotMqttSubscriptionArray.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset valid_IotMqttSubscriptionArray.0:$(SUBSCRIPTION_COUNT_MAX)
-
-UNWINDING += --unwindset valid_IotMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset valid_IotMqttOperationList.0:$(OPERATION_COUNT_MAX)
-UNWINDING += --unwindset _IotMqtt_ValidateSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
-
-UNWINDING += --unwindset strncmp.0:$(TOPIC_LENGTH_MAX)
-
-UNWINDING += --unwindset IotListDouble_FindFirstMatch.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset IotListDouble_FindFirstMatch\$$link1.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset IotListDouble_FindFirstMatch\$$link2.0:$(SUBSCRIPTION_COUNT_MAX)
-UNWINDING += --unwindset IotListDouble_FindFirstMatch\$$link5.0:$(SUBSCRIPTION_COUNT_MAX)
-
-UNWINDING += --unwindset IotListDouble_RemoveAllMatches.0:$(SUBSCRIPTION_LIST_MAX)
-UNWINDING += --unwindset IotListDouble_RemoveAllMatches\$$link1.0:$(SUBSCRIPTION_LIST_MAX)
-UNWINDING += --unwindset IotListDouble_RemoveAllMatches\$$link2.0:$(SUBSCRIPTION_LIST_MAX)
-UNWINDING += --unwindset IotListDouble_RemoveAllMatches\$$link3.0:$(SUBSCRIPTION_LIST_MAX)
-UNWINDING += --unwindset IotListDouble_RemoveAllMatches\$$link4.0:$(SUBSCRIPTION_LIST_MAX)
-UNWINDING += --unwindset IotListDouble_RemoveAllMatches\$$link5.0:$(SUBSCRIPTION_LIST_MAX)
-UNWINDING += --unwindset IotListDouble_RemoveAllMatches\$$link6.0:$(SUBSCRIPTION_LIST_MAX)
+UNWINDING += --unwindset '$(shell echo $(LOOP) | sed 's/ /,/g')'
 
 ################################################################
 
