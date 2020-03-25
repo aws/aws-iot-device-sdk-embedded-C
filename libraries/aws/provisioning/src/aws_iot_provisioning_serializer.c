@@ -180,7 +180,7 @@ static AwsIotProvisioningError_t _serializeCreateKeysAndCertificateRequestPayloa
     /* Encode an empty map container (Diagnostic notation as "{}"") .*/
     serializerStatus = _pAwsIotProvisioningEncoder->openContainer( pOutermostEncoder,
                                                                    &emptyPayloadEncoder,
-                                                                   _numCertFromCsrMapEntries );
+                                                                   _numKeysAndCertMapEntries );
 
     /* Close the map. */
     if( checkSerializerStatus( _pAwsIotProvisioningEncoder->
