@@ -84,7 +84,8 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
 /**
  * @brief Common utility for parsing the Certificate PEM string, Certificate ID,
  * and Ownership token data from the server response.
- * These elements are common in the server responses of the MQTT CreateKeysAndCertificate
+ *
+ * @note These elements are common in the server responses of the MQTT CreateKeysAndCertificate
  * and CreateCertificateFromCsr APIs.
  *
  * @param[in] pPayloadDecoder The decoder object that represents the
