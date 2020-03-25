@@ -234,7 +234,7 @@ TEST( Provisioning_Unit_Serializer, TestCalculateCertFromCsrPayloadSize )
     size_t bufferSizeNeeded = 0;
 
     /* Test the serializer function. */
-    TEST_ASSERT_EQUAL( true,
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
                        _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( _testCsrString,
                                                                             strlen( _testCsrString ),
                                                                             &bufferSizeNeeded ) );
@@ -259,7 +259,7 @@ TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadWithBuf
         &reserveOffset );
 
     /* Test the serializer function. */
-    TEST_ASSERT_EQUAL( true,
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS,
                        _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( _testCsrString,
                                                                                      strlen( _testCsrString ),
                                                                                      testBuffer + reserveOffset,
@@ -285,7 +285,7 @@ TEST( Provisioning_Unit_Serializer, TestSerializeCreateCertFromCsrPayloadFailure
     size_t bufferSize = sizeof( testBuffer );
 
     /* Test the serializer function. */
-    TEST_ASSERT_EQUAL( false,
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_INTERNAL_FAILURE,
                        _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( _testCsrString,
                                                                                      strlen( _testCsrString ),
                                                                                      &testBuffer[ 0 ],

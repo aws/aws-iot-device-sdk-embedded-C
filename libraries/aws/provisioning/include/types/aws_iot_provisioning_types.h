@@ -57,7 +57,7 @@ typedef enum AwsIotProvisioningError
      *
      * Functions that may return this value:
      */
-    AWS_IOT_PROVISIONING_SUCCESS = 0,
+    AWS_IOT_PROVISIONING_SUCCESS = 1,
 
     /**
      * @brief Library initialization failure.

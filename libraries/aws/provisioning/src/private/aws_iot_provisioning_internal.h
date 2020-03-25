@@ -28,9 +28,6 @@
 #ifndef AWS_IOT_PROVISIONING_INTERNAL_H_
 #define AWS_IOT_PROVISIONING_INTERNAL_H_
 
-/* Standard include */
-#include <stdbool.h>
-
 /* The config header is always included first. */
 #include "iot_config.h"
 
@@ -266,6 +263,49 @@
  *
  * @note The complete response topics are suffixed with `AWS_IOT_ACCEPTED_SUFFIX` or `AWS_IOT_REJECTED_SUFFIX` strings.
  * It should be utilized in the @ref provisioning_function_registerthing API function.
+ * <<<<<<< HEAD
+ * =======
+ */
+#define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER \
+    "$aws/certificates/create-from-csr/"PROVISIONING_FORMAT
+
+/**
+ * @brief Length of the response topic filter for the MQTT CreateCertificateFromCsr service API.
+ */
+#define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH \
+    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER ) - 1 ) )
+
+/**
+ * @brief The length of the longest response topic of the MQTT CreateCertificateFromCsr service API.
+ * Out of the two response topics, the "rejected" has the longest length.
+ */
+#define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_MAX_TOPIC_LENGTH \
+    ( PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH + sizeof( AWS_IOT_REJECTED_SUFFIX ) )
+
+/**
+ * @brief The request topic for the MQTT CreateCertificateFromCsr service API.
+ *
+ * @note It should be utilized in the @ref provisioning_function_registerthing API function.
+ */
+#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_TOPIC \
+    "$aws/certificates/create-from-csr/"PROVISIONING_FORMAT
+
+/**
+ * @brief The length of the request topic for the MQTT CreateCertificateFromCsr service API.
+ */
+#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_TOPIC_LENGTH \
+    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC ) - 1 ) )
+
+/**
+ * @brief The key string for Certificate-Singing Request value in the request payload
+ * to the MQTT CreateCertificateFromCsr service API.
+ */
+#define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_PAYLOAD_PEM_STRING    "certificateSigningRequest"
+
+/**
+ * @brief The key for the device certificate entry in the response payload of the Provisioning CreateKeysAndCertificate
+ * service API.
+ * >>>>>>> origin/feat/csr-in-fleet-provisioning
  */
 #define PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER \
     "$aws/certificates/create-from-csr/"PROVISIONING_FORMAT
@@ -503,9 +543,15 @@ typedef struct _provisioningOperationInfo
 typedef struct _provisioningOperation
 {
     _provisioningOperationInfo_t info;  /**< @brief The Provisioning operation object. */
-    IotSemaphore_t responseReceivedSem; /**< @brief Semaphore to be used used by the synchronous API functions @ref
-                                         * provisioning_function_registerthing and @ref
-                                         * provisioning_function_registerthing. */
+    uint32_t semReferenceCount;         /**< @brief An atomic reference counter for
+                                         *  safeguarding semaphore access across thread
+                                         *  contexts. */
+    IotSemaphore_t responseReceivedSem; /**< @brief Binary sempahore used for notifying
+                                         * arrival of server response in the synchronous
+                                         * API functions
+                                         * @ref provisioning_function_createkeysandcertificate,
+                                         * @ref provisioning_function_createcertificatefromcsr
+                                         * and @refprovisioning_function_registerthing. */
 } _provisioningOperation_t;
 
 /*----------------- Declaration of INTERNAL global variables --------------------*/
@@ -607,12 +653,12 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
  * which represents the data to be serialized in the payload.
  * @param[in] csrLength The length of the Certificate-Signing Request string.
  * @param[in] pPayloadSize This will be populated with the size of the serialized data.
- *
- * @return `true` if calculation of the payload size is successful; otherwise `false`.
+ * @return #AWS_IOT_PROVISIONING_SUCCESS if calculation of the payload size is
+ * successful; otherwise #AWS_IOT_PROVISIONING_INTERNAL_FAILURE for any serialization failures.
  */
-bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
-                                                          size_t csrLength,
-                                                          size_t * pPayloadSize );
+AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
+                                                                               size_t csrLength,
+                                                                               size_t * pPayloadSize );
 
 /**
  * @brief Serializes payload data for the request to the MQTT CreateCertificateFromCsr
@@ -621,14 +667,14 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
  * @param[in] pCertificateSigningRequest The Certificate-Signing Request string to serialize for the request.
  * @param[in] csrLength The length of the Certificate-Signing Request string.
  * @param[in, out] pSerializationBuffer The buffer for storing the serialized payload data.
- * @param[in] pBufferSize The size of the serialization buffer.
- *
- * @return `true` if serialization is successful; otherwise `false` for any serialization error.
+ * @param[in] pBufferSize THe size of the serialization buffer.
+ * @return #AWS_IOT_PROVISIONING_SUCCESS if calculation of the payload size is
+ * successful; otherwise the appropriate error code.
  */
-bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
-                                                                   size_t csrLength,
-                                                                   uint8_t * pSerializationBuffer,
-                                                                   size_t bufferSize );
+AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                                        size_t csrLength,
+                                                                                        uint8_t * pSerializationBuffer,
+                                                                                        size_t pBufferSize );
 
 /**
  * @brief Serializes payload data for MQTT request to the Provisioning RegisterThing service API.

@@ -47,6 +47,22 @@
 /*------------------------------------------------------------------*/
 
 /**
+ * @brief Represents the number of map entries in the request payload of the
+ * MQTT CreateKeysAndCertificate service API.
+ */
+static const size_t _numKeysAndCertMapEntries = 0u;
+
+/**
+ * @brief Represents the number of map entries in the request
+ * payload of the MQTT CreateCertificateFromCsr service API.
+ * The ONLY payload entry is for the Certificate-Signing Request string
+ */
+static const size_t _numCertFromCsrMapEntries = 1u;
+
+
+/*------------------------------------------------------------------*/
+
+/**
  * @brief Wrapper for assert checking the passed serializer error code for `IOT_SERIALIZER_SUCCESS` value.
  *
  * This should be used for asserting serializer status codes when performing actual serialization into a buffer.
@@ -77,6 +93,27 @@ static bool _checkSuccessOrBufferToSmall( IotSerializerError_t error );
 static AwsIotProvisioningError_t _serializeCreateKeysAndCertificateRequestPayload( IotSerializerEncoderObject_t * pOutermostEncoder,
                                                                                    uint8_t * pSerializationBuffer,
                                                                                    size_t bufferSize );
+
+
+/**
+ * @brief Common utility for serializing CreateCertificateFromCsr service API request payload
+ * used by #_AwsIotProvisioning_CalculateCertFromCsrPayloadSize and
+ * #_AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload functions.
+ *
+ * @param[in] pCertificateSigningRequest The Certificate-Signing Request string to serialize for the request.
+ * @param[in] csrLength The length of the Certificate-Signing Request string.
+ * @param[in] pEncoder The encoder object representing the buffer to serialize the
+ * payload in.
+ * @param[in] isDrySerialization A dry-run serialization flag to represent whether the
+ * serialization operation will occur without a buffer.
+ *
+ * @return #AWS_IOT_PROVISIONING_SUCCESS if serialization successful;
+ * otherwise #AWS_IOT_PROVISIONING_INTERNAL_FAILURE to represent serialization failures.
+ */
+static AwsIotProvisioningError_t _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
+                                                               size_t csrLength,
+                                                               IotSerializerEncoderObject_t * pEncoder,
+                                                               bool isDrySerialization );
 
 /**
  * @brief Performs serializes operations on the passed buffer for creating the MQTT request payload for the RegisterThing operation.
@@ -143,10 +180,11 @@ static AwsIotProvisioningError_t _serializeCreateKeysAndCertificateRequestPayloa
     /* Encode an empty map container (Diagnostic notation as "{}"") .*/
     serializerStatus = _pAwsIotProvisioningEncoder->openContainer( pOutermostEncoder,
                                                                    &emptyPayloadEncoder,
-                                                                   0 );
+                                                                   _numCertFromCsrMapEntries );
 
     /* Close the map. */
-    if( checkSerializerStatus( _pAwsIotProvisioningEncoder->closeContainer( pOutermostEncoder, &emptyPayloadEncoder ) ) == false )
+    if( checkSerializerStatus( _pAwsIotProvisioningEncoder->
+                                  closeContainer( pOutermostEncoder, &emptyPayloadEncoder ) ) == false )
     {
         IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_INTERNAL_FAILURE );
     }
@@ -360,14 +398,15 @@ AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateKeysAndCertificateR
 
 /*------------------------------------------------------------------*/
 
-bool _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
-                                   size_t csrLength,
-                                   IotSerializerEncoderObject_t * pEncoder,
-                                   bool isDrySerialization )
+AwsIotProvisioningError_t _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
+                                                        size_t csrLength,
+                                                        IotSerializerEncoderObject_t * pEncoder,
+                                                        bool isDrySerialization )
 {
-    bool status = true;
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
 
     IotSerializerEncoderObject_t mapEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_MAP;
+    IotSerializerError_t serializerResult = IOT_SERIALIZER_SUCCESS;
     IotSerializerScalarData_t csrData = IotSerializer_ScalarTextStringWithLength( pCertificateSigningRequest,
                                                                                   csrLength );
 
@@ -386,17 +425,30 @@ bool _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
     }
 
     /* Encode the payload as a map container. */
-    if( isSuccessStatus( _pAwsIotProvisioningEncoder->openContainer( pEncoder,
-                                                                     &mapEncoder,
-                                                                     1 ) ) == false )
+    serializerResult = _pAwsIotProvisioningEncoder->openContainer( pEncoder,
+                                                                   &mapEncoder,
+                                                                   _numCertFromCsrMapEntries );
+
+    if( serializerResult == IOT_SERIALIZER_OUT_OF_MEMORY )
     {
-        IotLogError( "serializer: Unable to serialize payload: "
+        IotLogError( "serializer: Unable to serialize request payload: "
+                     "Failed to allocate memory for map container: Operation={%s}",
+                     CREATE_CERT_FROM_CSR_OPERATION_LOG );
+        status = AWS_IOT_PROVISIONING_NO_MEMORY;
+    }
+    else if( isSuccessStatus( serializerResult ) == false )
+    {
+        IotLogError( "serializer: Unable to serialize request payload: "
                      "Failed to open map container: Operation={%s}",
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
-        status = false;
+        status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
+    }
+    else
+    {
+        /* Nothing to do here. */
     }
 
-    if( status == true )
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Encode the CSR string. */
         if( isSuccessStatus( _pAwsIotProvisioningEncoder->appendKeyValue( &mapEncoder,
@@ -405,10 +457,10 @@ bool _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
 
 
         {
-            IotLogError( "serializer: Unable to serialize payload: "
+            IotLogError( "serializer: Unable to serialize request payload: "
                          "Failed to insert CSR entry in map: Operation={%s}",
                          CREATE_CERT_FROM_CSR_OPERATION_LOG );
-            status = false;
+            status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
         }
 
         /* Close the map.
@@ -418,10 +470,10 @@ bool _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
         if( isSuccessStatus( _pAwsIotProvisioningEncoder->closeContainer( pEncoder,
                                                                           &mapEncoder ) ) == false )
         {
-            IotLogError( "serializer: Unable to serialize payload: "
+            IotLogError( "serializer: Unable to serialize request payload: "
                          "Failed to close map container: Operation={%s}",
                          CREATE_CERT_FROM_CSR_OPERATION_LOG );
-            status = false;
+            status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
         }
     }
 
@@ -430,15 +482,15 @@ bool _serializeCertFromCsrPayload( const char * pCertificateSigningRequest,
 
 /*------------------------------------------------------------------*/
 
-bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
-                                                          size_t csrLength,
-                                                          size_t * pPayloadSize )
+AwsIotProvisioningError_t _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertificateSigningRequest,
+                                                                               size_t csrLength,
+                                                                               size_t * pPayloadSize )
 {
     AwsIotProvisioning_Assert( pCertificateSigningRequest != NULL );
     AwsIotProvisioning_Assert( csrLength != 0 );
     AwsIotProvisioning_Assert( pPayloadSize != NULL );
 
-    bool status = true;
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
     IotSerializerEncoderObject_t outerEncoder = IOT_SERIALIZER_ENCODER_CONTAINER_INITIALIZER_STREAM;
 
     if( _pAwsIotProvisioningEncoder->init( &outerEncoder,
@@ -448,10 +500,10 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
         IotLogError( "serializer: Unable to serialize request payload: "
                      "Failed to initialize encoder: Operation={%s}",
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
-        status = false;
+        status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
     }
 
-    if( status == true )
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         /* Perform a dry-run serialization of the Certificate-Signing Request */
         /* data to calculate the size of the payload. */
@@ -461,7 +513,7 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
                                                true );
     }
 
-    if( status == true )
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
         *pPayloadSize = _pAwsIotProvisioningEncoder->getExtraBufferSizeNeeded( &outerEncoder );
         AwsIotProvisioning_Assert( *pPayloadSize != 0 );
@@ -472,17 +524,17 @@ bool _AwsIotProvisioning_CalculateCertFromCsrPayloadSize( const char * pCertific
 
     _pAwsIotProvisioningEncoder->destroy( &outerEncoder );
 
-    return true;
+    return status;
 }
 
 /*------------------------------------------------------------------*/
 
-bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
-                                                                   size_t csrLength,
-                                                                   uint8_t * pSerializationBuffer,
-                                                                   size_t bufferSize )
+AwsIotProvisioningError_t _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * pCertificateSigningRequest,
+                                                                                        size_t csrLength,
+                                                                                        uint8_t * pSerializationBuffer,
+                                                                                        size_t bufferSize )
 {
-    bool status = true;
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
 
     AwsIotProvisioning_Assert( pCertificateSigningRequest != NULL );
     AwsIotProvisioning_Assert( csrLength != 0 );
@@ -498,7 +550,7 @@ bool _AwsIotProvisioning_SerializeCreateCertFromCsrRequestPayload( const char * 
         IotLogError( "serializer: Unable to serialize request payload: "
                      "Failed to initialize encoder: Operation={%s}",
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
-        status = false;
+        status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
     }
     else
     {
