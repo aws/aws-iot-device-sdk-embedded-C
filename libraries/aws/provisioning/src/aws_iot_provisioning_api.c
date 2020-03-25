@@ -76,8 +76,26 @@ const IotSerializerDecodeInterface_t * _pAwsIotProvisioningDecoder = NULL;
  * CreateKeysAndCertificate, CreateCertificateFromCsr, RegisterThing.
  */
 static _provisioningOperation_t _activeOperation[ 3 ];
+
+/**
+ * @brief The index reference to the operation object
+ * in #_activeOperation array for the CreateKeysAndCertificate
+ * operation.
+ */
 static const uint8_t _createKeysAndCertOperationIndex = 0;
+
+/**
+ * @brief The index reference to the operation object
+ * in #_activeOperation array for the CreateCertificateFromCsr
+ * operation.
+ */
 static const uint8_t _createCertFromCsrOperationIndex = 1;
+
+/**
+ * @brief The index reference to the operation object
+ * in #_activeOperation array for the RegisterThing
+ * operation.
+ */
 static const uint8_t _registerThingOperationIndex = 2;
 
 /**
@@ -106,7 +124,7 @@ static bool _checkInit( void );
  * @brief Initializes the operation object in #_activeOperation array for the
  * passed index reference.
  *
- * @param[in] The index reference to the operation object instance to initialize.
+ * @param[in] operationIndex The index reference to the operation object instance to initialize.
  *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if initialization is successful;
  * otherwise #AWS_IOT_PROVISIONING_INIT_FAILED.
@@ -117,7 +135,7 @@ static AwsIotProvisioningError_t _initializeOperationObject( uint8_t operationIn
  * @brief Cleans up the operation object in #_activeOperation array for the
  * passed index reference.
  *
- * @param[in] The index reference to the operation object instance to clean-up.
+ * @param[in] operationIndex The index reference to the operation object instance to clean-up.
  */
 static void _cleanUpOperationObject( uint8_t operationIndex );
 
@@ -159,9 +177,10 @@ static void _registerThingResponseReceivedCallback( void * param1,
                                                     IotMqttCallbackParam_t * const pPublish );
 
 /**
- * @brief Sets the active operation object, #_activeOperation, to represent an active operation in progress.
+ * @brief Sets an operation object in the #_activeOperation array to represent
+ * an active operation in progress.
  * @param[in] operationIndex The index reference to the ongoing operation
- * in #_activeOperation object.
+ * object in the #_activeOperation array.
  * @param[in] pUserCallback The user-provided callback information that will be copied
  * to the active operation object.
  */
@@ -171,7 +190,10 @@ static void _setActiveOperation( uint8_t operationIndex,
 /**
  * @brief Waits for server response within the provided timeout period, and returns the result of the wait operation.
  *
- * @param timeoutMs The time period (in milliseconds) to wait for server response.
+ * @param[in] operationIndex The index reference to the ongoing operation
+ * object in the #_activeOperation array.
+ * @param[in] timeoutMs The time period (in milliseconds) to wait for server response.
+ *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if a server response is received within the @p timeoutMs period; otherwise returns
  * #AWS_IOT_PROVISIONING_TIMEOUT
  */
@@ -322,7 +344,7 @@ static void _commonServerResponseHandler( const uint8_t operationIndex,
     {
         IotLogWarn( "api: Unexpected invocation of subscription callback: "
                     "Clean-up on library was already called: OperationIndex={%d}",
-                    operationIndex )
+                    operationIndex );
     }
 
     /* Decrement the operation's semaphore reference count, as we don't need

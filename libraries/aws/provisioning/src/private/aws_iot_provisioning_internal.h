@@ -508,7 +508,7 @@ typedef struct _provisioningOperation
                                          * API functions
                                          * @ref provisioning_function_createkeysandcertificate,
                                          * @ref provisioning_function_createcertificatefromcsr
-                                         * and @refprovisioning_function_registerthing. */
+                                         * and @ref provisioning_function_registerthing. */
 } _provisioningOperation_t;
 
 /*----------------- Declaration of INTERNAL global variables --------------------*/
