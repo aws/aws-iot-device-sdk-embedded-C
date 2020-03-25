@@ -38,6 +38,7 @@
 
 /* Platform layer includes. */
 #include "platform/iot_threads.h"
+#include "iot_atomic.h"
 
 /* MQTT API include */
 #include "iot_mqtt.h"
@@ -303,7 +304,7 @@ static void _commonServerResponseHandler( const uint8_t operationIndex,
 
         /* Is a user thread waiting for the result? */
         if( ( pCallbackInfo->createKeysAndCertificateCallback.function == NULL ) ||
-            ( pCallbackInfo->createCertificateFromCsrCallback.function == NULL ) ||
+            ( pCallbackInfo->createCertFromCsrCallback.function == NULL ) ||
             ( pCallbackInfo->registerThingCallback.function == NULL ) )
         {
             IotLogDebug( "Received unexpected server response on topic %s.",
