@@ -65,80 +65,88 @@ typedef enum AwsIotProvisioningError
      * Functions that may return this value:
      * - @ref provisioning_function_init
      */
-    AWS_IOT_PROVISIONING_INIT_FAILED = 1,
+    AWS_IOT_PROVISIONING_INIT_FAILED = 2,
 
     /**
      * @brief An API function was called before @ref provisioning_function_init.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_NOT_INITIALIZED = 2,
+    AWS_IOT_PROVISIONING_NOT_INITIALIZED = 3,
 
     /**
      * @brief At least one parameter is invalid.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_BAD_PARAMETER = 3,
+    AWS_IOT_PROVISIONING_BAD_PARAMETER = 4,
 
     /**
      * @brief Provisioning operation failed because of memory allocation failure.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_NO_MEMORY = 4,
+    AWS_IOT_PROVISIONING_NO_MEMORY = 5,
 
     /**
      * @brief Provisioning response received from the network is malformed, corrupt or incomplete.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_BAD_RESPONSE = 5,
+    AWS_IOT_PROVISIONING_BAD_RESPONSE = 6,
 
     /**
      * @brief An Provisioning operation timed out.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_TIMEOUT = 6,
+    AWS_IOT_PROVISIONING_TIMEOUT = 7,
 
     /**
      * @brief An Provisioning operation request is rejected by the server.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_SERVER_REFUSED = 7,
+    AWS_IOT_PROVISIONING_SERVER_REFUSED = 8,
 
     /**
      * @brief Provisioning operation failed due to internal error.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_INTERNAL_FAILURE = 8,
+    AWS_IOT_PROVISIONING_INTERNAL_FAILURE = 9,
 
     /**
      * @brief Generic code for any MQTT operation error encountered during an
      * Provisioning operation.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_MQTT_ERROR = 9
+    AWS_IOT_PROVISIONING_MQTT_ERROR = 10
 } AwsIotProvisioningError_t;
 
 /**
