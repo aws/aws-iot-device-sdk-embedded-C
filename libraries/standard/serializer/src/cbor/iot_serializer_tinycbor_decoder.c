@@ -48,10 +48,10 @@ static IotSerializerError_t _init( IotSerializerDecoderObject_t * pDecoderObject
 static IotSerializerError_t _get( IotSerializerDecoderIterator_t iterator,
                                   IotSerializerDecoderObject_t * pValueObject );
 
-static IotSerializerError_t _find( IotSerializerDecoderObject_t * pDecoderObject,
+static IotSerializerError_t _find( const IotSerializerDecoderObject_t * pDecoderObject,
                                    const char * pKey,
                                    IotSerializerDecoderObject_t * pValueObject );
-static IotSerializerError_t _stepIn( IotSerializerDecoderObject_t * pDecoderObject,
+static IotSerializerError_t _stepIn( const IotSerializerDecoderObject_t * pDecoderObject,
                                      IotSerializerDecoderIterator_t * pIterator );
 static IotSerializerError_t _stepOut( IotSerializerDecoderIterator_t iterator,
                                       IotSerializerDecoderObject_t * pDecoderObject );
@@ -62,12 +62,12 @@ static bool _isEndOfContainer( IotSerializerDecoderIterator_t iterator );
 
 static void _destroy( IotSerializerDecoderObject_t * pDecoderObject );
 
-static IotSerializerError_t _getBufferAddress( IotSerializerDecoderObject_t * pDecoderObject,
+static IotSerializerError_t _getBufferAddress( const IotSerializerDecoderObject_t * pDecoderObject,
                                                const uint8_t ** pEncodedDataStartAddr );
 
 
 
-static IotSerializerError_t _getSizeOfEncodedData( IotSerializerDecoderObject_t * pDecoderObject,
+static IotSerializerError_t _getSizeOfEncodedData( const IotSerializerDecoderObject_t * pDecoderObject,
                                                    size_t * pEncodedDataLength );
 
 
@@ -404,7 +404,7 @@ static IotSerializerError_t _get( IotSerializerDecoderIterator_t iterator,
 
 /*-----------------------------------------------------------*/
 
-static IotSerializerError_t _find( IotSerializerDecoderObject_t * pDecoderObject,
+static IotSerializerError_t _find( const IotSerializerDecoderObject_t * pDecoderObject,
                                    const char * pKey,
                                    IotSerializerDecoderObject_t * pValueObject )
 {
@@ -451,7 +451,7 @@ static IotSerializerError_t _find( IotSerializerDecoderObject_t * pDecoderObject
 
 /*-----------------------------------------------------------*/
 
-static IotSerializerError_t _stepIn( IotSerializerDecoderObject_t * pDecoderObject,
+static IotSerializerError_t _stepIn( const IotSerializerDecoderObject_t * pDecoderObject,
                                      IotSerializerDecoderIterator_t * pIterator )
 {
     IotSerializerError_t returnedError = IOT_SERIALIZER_SUCCESS;
@@ -548,7 +548,7 @@ static bool _isEndOfContainer( IotSerializerDecoderIterator_t iterator )
 }
 /*-----------------------------------------------------------*/
 
-static IotSerializerError_t _getBufferAddress( IotSerializerDecoderObject_t * pDecoderObject,
+static IotSerializerError_t _getBufferAddress( const IotSerializerDecoderObject_t * pDecoderObject,
                                                const uint8_t ** pEncodedDataStartAddr )
 {
     IotSerializer_Assert( pDecoderObject != NULL );
@@ -570,7 +570,7 @@ static IotSerializerError_t _getBufferAddress( IotSerializerDecoderObject_t * pD
 
 /*-----------------------------------------------------------*/
 
-IotSerializerError_t _getSizeOfEncodedData( IotSerializerDecoderObject_t * pDecoderObject,
+IotSerializerError_t _getSizeOfEncodedData( const IotSerializerDecoderObject_t * pDecoderObject,
                                             size_t * pEncodedDataLength )
 {
     IotSerializer_Assert( pDecoderObject != NULL );
