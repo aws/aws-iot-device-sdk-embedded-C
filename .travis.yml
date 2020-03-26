@@ -33,6 +33,7 @@ jobs:
     # Library tests.
     - stage: Tests
       env: RUN_TEST=common
+      env: RUN_TEST=serializer
     - env: RUN_TEST=mqtt NETWORK_STACK=mbedtls
     - env: RUN_TEST=mqtt NETWORK_STACK=openssl
     - env: RUN_TEST=shadow
