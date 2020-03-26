@@ -711,6 +711,8 @@ TEST_TEAR_DOWN( Provisioning_Unit_API )
 TEST_GROUP_RUNNER( Provisioning_Unit_API )
 {
     RUN_TEST_CASE( Provisioning_Unit_API, Init );
+    RUN_TEST_CASE( Provisioning_Unit_API, MultipleInitCalls );
+    RUN_TEST_CASE( Provisioning_Unit_API, CleanupBeforeInit );
     RUN_TEST_CASE( Provisioning_Unit_API, StringCoverage );
     RUN_TEST_CASE( Provisioning_Unit_API, CreateKeysAndCertificateAPIInvalidParameters );
     RUN_TEST_CASE( Provisioning_Unit_API, CreateKeysAndCertificateAPICalledWithoutInit );
@@ -762,7 +764,7 @@ TEST( Provisioning_Unit_API, Init )
     AwsIotProvisioning_Cleanup();
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_DEFAULT_MQTT_TIMEOUT_MS, _AwsIotProvisioningMqttTimeoutMs );
 
-    /* Test provisioning initialization with mutex creation failures. */
+    /* Test provisioning initialization with sempahore creation failures. */
     for( i = 0; ; i++ )
     {
         UnityMalloc_MakeMallocFailAfterCount( i );
@@ -779,6 +781,39 @@ TEST( Provisioning_Unit_API, Init )
 
         AwsIotProvisioning_Cleanup();
     }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Verifies that the @ref provisioning_function_init function can be
+ * called multiple times though the library resources are created only once.
+ * (If more library resources are created than destroyed, there will be a memory
+ * leak)
+ */
+TEST( Provisioning_Unit_API, MultipleInitCalls )
+{
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, AwsIotProvisioning_Init( 0 ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, AwsIotProvisioning_Init( 0 ) );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, AwsIotProvisioning_Init( 0 ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Verifies that the library API can gracefully handle calling the CleanUp
+ * and Init functions in reverse order.
+ */
+TEST( Provisioning_Unit_API, CleanupBeforeInit )
+{
+    /* First clean up library to nullify the library init in Test Setup. */
+    AwsIotProvisioning_Cleanup();
+
+    /* Now that library is cleaned up/uninitialized, we will call */
+    /* CleanUp before Init. */
+    AwsIotProvisioning_Cleanup();
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, AwsIotProvisioning_Init( 0 ) );
 }
 
 /*-----------------------------------------------------------*/
