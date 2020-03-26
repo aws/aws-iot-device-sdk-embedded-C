@@ -64,9 +64,9 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
  * @brief Utility for parsing a text-string based key-value pair entry from
  * a map container type response payload.
  *
- * @param[in] payloadDecoder The decoder object representing the map container
+ * @param[in] pPayloadDecoder The decoder object representing the map container
  * formatted payload.
- * @param[in, out] payloadEntryDecoder The decoder object to store the parsed
+ * @param[in, out] pPayloadEntryDecoder The decoder object to store the parsed
  * value data of the entry.
  * @param[in] pKeyString The key string to parse from the payload.
  * @param[in] pOperationString The string of the ongoing operation to use for
@@ -90,11 +90,11 @@ static AwsIotProvisioningError_t _parseKeyedEntryInPayload( IotSerializerDecoder
  *
  * @param[in] pPayloadDecoder The decoder object that represents the
  * server response payload as a map container.
- * @param[in/out] pCertPemDecoder The decoder object to store the parsed Certificate
+ * @param[in, out] pCertPemDecoder The decoder object to store the parsed Certificate
  * PEM string in.
- * @param[in/out] pCertIdDecoder The decoder object to store the parsed
+ * @param[in, out] pCertIdDecoder The decoder object to store the parsed
  * Certificate ID data in.
- * @param[in/out] pOwnershipTokenDecoder The decoder object to store the parsed
+ * @param[in, out] pOwnershipTokenDecoder The decoder object to store the parsed
  * Certificate Ownership Token string in.
  * @param[in] pOperationString The string of the ongoing operation to use for
  * logging.
