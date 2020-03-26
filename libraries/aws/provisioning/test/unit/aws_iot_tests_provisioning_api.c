@@ -254,7 +254,7 @@ static const AwsIotProvisioningCreateCertFromCsrCallbackInfo_t _certFromCsrDummy
  * @brief Sample CBOR encoded accepted response payload from the MQTT
  * CreateCertificateFromCsr service API.
  */
-const uint8_t _sampleCertFromCsrAcceptedResponse[] =
+static const uint8_t _sampleCertFromCsrAcceptedResponse[] =
 {
     0xA3,                                                                               /* # map( 3 ) */
     0x6E,                                                                               /* # text( 14 ) */
@@ -810,7 +810,7 @@ TEST( Provisioning_Unit_API, CleanupBeforeInit )
     AwsIotProvisioning_Cleanup();
 
     /* Now that library is cleaned up/uninitialized, we will call */
-    /* CleanUp before Init. */
+    /* Cleanup before Init. */
     AwsIotProvisioning_Cleanup();
 
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, AwsIotProvisioning_Init( 0 ) );
