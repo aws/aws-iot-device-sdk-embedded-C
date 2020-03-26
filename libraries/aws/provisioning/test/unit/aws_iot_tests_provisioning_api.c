@@ -265,12 +265,11 @@ const uint8_t _sampleCertFromCsrAcceptedResponse[] =
     0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x49, 0x64,       /* # "certificateId" */
     0x66,                                                                               /* # text(6) */
     0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,                                                 /* # "hijklm" */
-    0x78, 0x19,                                                                         /*# text(25) */
+    0x78, 0x19,                                                                         /* # text(25) */
     0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
-    0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /*# "certificateOwnershipToken"
-                                                                                         * */
-    0x66,                                                                               /*# text(6) */
-    0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                                  /*# "Token!" */
+    0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E,                   /* # "certificateOwnershipToken" */
+    0x66,                                                                               /* # text(6) */
+    0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                                  /* # "Token!" */
 };
 
 /**
@@ -788,8 +787,9 @@ TEST( Provisioning_Unit_API, Init )
 /**
  * @brief Verifies that the @ref provisioning_function_init function can be
  * called multiple times though the library resources are created only once.
+ *
  * (If more library resources are created than destroyed, there will be a memory
- * leak)
+ * leak.)
  */
 TEST( Provisioning_Unit_API, MultipleInitCalls )
 {
@@ -801,7 +801,7 @@ TEST( Provisioning_Unit_API, MultipleInitCalls )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Verifies that the library API can gracefully handle calling the CleanUp
+ * @brief Verifies that the library API can gracefully handle calling the Cleanup
  * and Init functions in reverse order.
  */
 TEST( Provisioning_Unit_API, CleanupBeforeInit )
@@ -1103,6 +1103,7 @@ TEST( Provisioning_Unit_API, CreateCertFromCsrAPIInvalidParameters )
                                                           sizeof( _testCsrString ),
                                                           0,
                                                           &callbackInfo );
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_BAD_PARAMETER, status );
     status = AwsIotProvisioning_CreateCertificateFromCsr( _pMqttConnection,
                                                           IOT_MQTT_QOS_0,
                                                           _testCsrString,
@@ -1186,12 +1187,11 @@ TEST( Provisioning_Unit_API, CreateCertFromCsrAPICorruptDataInResponse )
     const uint8_t responseWithMissingEntries[] =
     {
         0xA1,                                                             /* # map( 1 ) */
-        0x78, 0x19,                                                       /*# text(25) */
+        0x78, 0x19,                                                       /* # text(25) */
         0x63, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x4F, 0x77, 0x6E,
-        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E, /*# "certificateOwnershipToken"
-                                                                           * */
-        0x66,                                                             /*# text(6) */
-        0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                /*# "Token!" */
+        0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x54, 0x6F, 0x6B, 0x65, 0x6E, /* # "certificateOwnershipToken" */
+        0x66,                                                             /* # text(6) */
+        0x54, 0x6F, 0x6B, 0x65, 0x6E, 0x21                                /* # "Token!" */
     };
 
 
