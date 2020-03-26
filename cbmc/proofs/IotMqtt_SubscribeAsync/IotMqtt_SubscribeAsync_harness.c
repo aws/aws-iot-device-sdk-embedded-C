@@ -35,6 +35,8 @@
 typedef bool ( * MatchFunction_t )( const IotLink_t * const pOperationLink,
                                     void * pCompare );
 
+typedef void ( * FreeElementFunction_t )( void * pData );
+
 /**
  * We constrain the return values of these functions because
  * they are checked by assertions in the MQTT code.
@@ -67,8 +69,8 @@ IotTaskPoolError_t IotTaskPool_ScheduleDeferred( IotTaskPool_t taskPool,
 /**
  * _IotMqtt_NextPacketIdentifier calls Atomic_Add_u32, which receives
  * a volatile variable as input. Thus, CBMC will always consider that
- * Atomic_Add_u32 will operate over nondetermistic values and raises
- * a unsigned integer overflow failure. However, developers have reported
+ * Atomic_Add_u32 will operate over nondetermistic values and raise
+ * an unsigned integer overflow failure. However, developers have reported
  * that the use of this overflow is part of the function implementation.
  * In order to mirror _IotMqtt_NextPacketIdentifier behaviour and avoid
  * spurious alarms, we stub out this function to always
@@ -94,7 +96,7 @@ uint16_t _IotMqtt_NextPacketIdentifier( void )
 void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
                                      MatchFunction_t isMatch,
                                      void * pMatch,
-                                     void ( *freeElement )( void * pData ),
+                                     FreeElementFunction_t freeElement,
                                      size_t linkOffset )
 {
     free_IotMqttSubscriptionList( pList );

@@ -68,6 +68,7 @@ CBMC_OBJECT_BITS ?= 8
 CBMCFLAGS += --object-bits $(CBMC_OBJECT_BITS)
 CBMC_MAX_OBJECT_SIZE = "(SIZE_MAX>>(CBMC_OBJECT_BITS+1))"
 
+
 ################################################################
 # Run cbmc and build html report
 
@@ -140,8 +141,7 @@ define encode_options
        '=$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')='
 endef
 
-PROPMEM ?= 64000
-COVMEM ?= 64000
+PROOFMEM ?= 32000
 CBMCPKG ?= cbmc
 BATCHPKG ?= cbmc-batch
 VIEWERPKG ?= cbmc-viewer
@@ -178,8 +178,8 @@ $(ENTRY).yaml: $(ENTRY).goto Makefile
 	echo 'goto: $(ENTRY).goto' >> $@
 	echo 'build: false' >> $@
 	echo 'cbmcflags: $(call yaml_encode_options,$(CBMCFLAGS))' >> $@
-	echo 'property_memory: $(PROPMEM)' >> $@
-	echo 'coverage_memory: $(COVMEM)' >> $@
+	echo 'property_memory: $(PROOFMEM)' >> $@
+	echo 'coverage_memory: $(PROOFMEM)' >> $@
 	echo 'expected: "SUCCESSFUL"' >> $@
 
 launch: $(ENTRY).goto Makefile
@@ -209,10 +209,14 @@ CBMC_FLAGS =  '$(call encode_options,$(CBMCFLAGS))'
 cbmc-batch.yaml: Makefile ../Makefile.common
 	@echo "Building $@"
 	@$(RM) $@
-	@echo 'cbmcflags: $(strip $(call yaml_encode_options,$(CBMCFLAGS)))' > $@
+	@echo 'build_memory: $(PROOFMEM)' > $@
+	@echo 'cbmcflags: $(strip $(call yaml_encode_options,$(CBMCFLAGS)))' >> $@
+	@echo 'coverage_memory: $(PROOFMEM)' >> $@
 	@echo "expected: SUCCESSFUL" >> $@
 	@echo "goto: $(ENTRY).goto" >> $@
 	@echo "jobos: $(JOBOS)" >> $@
+	@echo 'property_memory: $(PROOFMEM)' >> $@
+	@echo 'report_memory: $(PROOFMEM)' >> $@
 
 .PHONY: cbmc-batch.yaml
 
