@@ -5,15 +5,15 @@
 # Exit on any nonzero return code.
 set -e
 
-# CMake compiler flags for building common libraries.
+# CMake compiler flags for building serializer libraries.
 CMAKE_FLAGS="$COMPILER_OPTIONS"
 
 # Build executables.
 cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FLAGS"
 make -j2 iot_tests_serializer
 
-# Run common tests.
-./output/bin/iot_tests_common
+# Run serializer tests.
+./output/bin/iot_tests_serializer
 
 # Don't reconfigure CMake if script is invoked for coverage build.
 if [ "$RUN_TEST" != "coverage" ]; then 
@@ -21,6 +21,6 @@ if [ "$RUN_TEST" != "coverage" ]; then
     cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$CMAKE_FLAGS -DIOT_STATIC_MEMORY_ONLY=1"
     make -j2 iot_tests_serializer
 
-    # Run common tests in static memory mode.
+    # Run serializer tests in static memory mode.
     ./output/bin/iot_tests_serializer
 fi
