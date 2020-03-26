@@ -742,7 +742,9 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
-        IotLogDebug( "Subscribed to response topics: Operation={\"%s\"}",
+        IotLogDebug( "Subscribed to response topics: TopicFilter={%.*s}, Operation={\"%s\"}",
+                     PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH,
+                     PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER,
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
         /* Update the operation object to represent an active "Certificate-Signing Request" operation. */
