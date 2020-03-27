@@ -113,7 +113,7 @@ static const AwsIotProvisioningRequestParameterEntry_t _pTestParameters[] =
  * @brief Type for the context parameter for the certificate-creation API callbacks.
  *
  * It will be used for storing the received Certificate ID and the ownership token
- * data received from the server. These can then be used for the RegisterThing API test..
+ * data received from the server. These can then be used for the RegisterThing API test.
  */
 typedef struct _certIdAndOwnershipTokenContext
 {
