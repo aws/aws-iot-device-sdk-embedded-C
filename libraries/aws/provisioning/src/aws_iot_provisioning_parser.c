@@ -409,7 +409,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
             /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
             if( status == AWS_IOT_PROVISIONING_SUCCESS )
             {
-                IotLogInfo( "parser: About to call user-callback with rejected server response: Operation={\"%s\"}",
+                IotLogInfo( "parser: Calling user-callback with rejected server response: Operation={\"%s\"}",
                             CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
 
                 userCallbackInfo->createKeysAndCertificateCallback.function( userCallbackInfo->createKeysAndCertificateCallback.userParam,
@@ -510,7 +510,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
                     ownershipTokenDecoder.u.value.u.string.length;
 
                 /* Invoke the user-provided callback with the parsed credentials data . */
-                IotLogInfo( "parser: About to call user-callback with accepted server response: Operation={\"%s\"}",
+                IotLogInfo( "parser: Calling user-callback with accepted server response: Operation={\"%s\"}",
                             CREATE_CERT_FROM_CSR_OPERATION_LOG );
                 userCallbackInfo->createCertFromCsrCallback.function( userCallbackInfo->createCertFromCsrCallback.userParam,
                                                                       &serverResponse );
@@ -534,7 +534,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
             /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
             if( status == AWS_IOT_PROVISIONING_SUCCESS )
             {
-                IotLogInfo( "parser: About to call user-callback with rejected server response: Operation={\"%s\"}",
+                IotLogInfo( "parser: Calling user-callback with rejected server response: Operation={\"%s\"}",
                             CREATE_CERT_FROM_CSR_OPERATION_LOG );
                 userCallbackInfo->createCertFromCsrCallback.function( userCallbackInfo->createCertFromCsrCallback.userParam,
                                                                       &serverResponse );
@@ -793,7 +793,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
             /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
             if( status == AWS_IOT_PROVISIONING_SUCCESS )
             {
-                IotLogInfo( "parser: About to call user-callback with rejected server response: Operation={\"%s\"}",
+                IotLogInfo( "parser: Calling user-callback with rejected server response: Operation={\"%s\"}",
                             REGISTER_THING_OPERATION_LOG );
 
                 userCallbackInfo->registerThingCallback.function( userCallbackInfo->registerThingCallback.userParam,
