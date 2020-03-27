@@ -235,6 +235,10 @@ static void _checkInvalidCsrServerResponseCallback( void * contextParam,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Callback for the KeysAndCertificate operation for copying the server provided
+ * credentials in buffers for use in RegisterThing test.
+ */
 static void _storeDataFromKeysAndCertResponseCallback( void * contextParam,
                                                        const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
 {
@@ -291,6 +295,10 @@ static void _storeDataFromKeysAndCertResponseCallback( void * contextParam,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Callback for the CertificateFromCsr operation for copying the server provided
+ * credentials in buffers for use in RegisterThing test.
+ */
 static void _storeDataOfCerFromCsrResponseCallback( void * contextParam,
                                                     const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo )
 {
