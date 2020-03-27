@@ -132,7 +132,7 @@ static void _printRejectedResponse( const AwsIotProvisioningRejectedResponse_t *
     /*Disable unused parameter warning. */
     ( void ) pResponseInfo;
 
-    AwsIotProvisioning_Assert( pResponseInfo != NULL );
+    TEST_ASSERT_NOT_NULL( pResponseInfo );
 
     IotLogError( "\n Request REJECTED!!\n ErrorCode={%.*s}\n ErrorMessage={%.*s}\n",
                  pResponseInfo->errorCodeLength, pResponseInfo->pErrorCode,
@@ -149,7 +149,7 @@ static void _printKeysAndCertificateCallback( void * contextParam,
                                               const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo )
 {
     ( void ) contextParam;
-    AwsIotProvisioning_Assert( pResponseInfo != NULL );
+    TEST_ASSERT_NOT_NULL( pResponseInfo );
 
     IotLogInfo( "\n Status Code = %d\n", pResponseInfo->statusCode );
 
@@ -187,7 +187,7 @@ static void _printCertificateFromCsrCallback( void * contextParam,
                                               const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo )
 {
     ( void ) contextParam;
-    AwsIotProvisioning_Assert( pResponseInfo != NULL );
+    TEST_ASSERT_NOT_NULL( pResponseInfo );
 
     IotLogInfo( "\n Status Code = %d\n", pResponseInfo->statusCode );
 
@@ -209,6 +209,27 @@ static void _printCertificateFromCsrCallback( void * contextParam,
     {
         _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
     }
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Callback function that tests for the "Invalid CSR" status in the
+ * parsed server response in the failure case of calling of the CreateCertFromCsr API
+ * with an invalid CSR string.
+ */
+static void _checkInvalidCsrServerResponseCallback( void * contextParam,
+                                                    const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo )
+{
+    ( void ) contextParam;
+    TEST_ASSERT_NOT_NULL( pResponseInfo );
+
+    /* Make sure that we have received an "Invalid CSR" response from the server. */
+    TEST_ASSERT_MESSAGE( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_INVALID_CSR,
+                         "Callback didn't receive expected server response status: "
+                         "ExpectedResponseStatus={InvalidCsr}" );
+
+    _printRejectedResponse( &pResponseInfo->u.rejectedResponse );
 }
 
 /*-----------------------------------------------------------*/
@@ -328,7 +349,7 @@ static void _printRegisterThingResponseCallback( void * contextParam,
                                                  const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo )
 {
     ( void ) contextParam;
-    AwsIotProvisioning_Assert( pResponseInfo != NULL );
+    TEST_ASSERT_NOT_NULL( pResponseInfo );
 
     IotLogInfo( "\n Status Code = %d\n", pResponseInfo->statusCode );
 
@@ -486,6 +507,7 @@ TEST_GROUP_RUNNER( Provisioning_System )
 {
     RUN_TEST_CASE( Provisioning_System, CreateKeysAndCertificateNominalCase );
     RUN_TEST_CASE( Provisioning_System, CreateCertFromCsrNominalCase );
+    RUN_TEST_CASE( Provisioning_System, CreateCertFromCsrWithInvalidCsr );
     RUN_TEST_CASE( Provisioning_System, RegisterThingWithKeysAndCertNominalCase );
     RUN_TEST_CASE( Provisioning_System, RegisterThingWithCertFromCsrNominalCase );
 }
@@ -493,9 +515,8 @@ TEST_GROUP_RUNNER( Provisioning_System )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Tests the behavior of the CreateKeysAndCertificate API in
- * the nominal (or success) case where the server responds within the specified
- * timeout period.
+ * @brief Verifies the behavior of the CreateKeysAndCertificate API in making
+ * a request with AWS IoT Core for creation of key-pair and certificate.
  */
 TEST( Provisioning_System, CreateKeysAndCertificateNominalCase )
 {
@@ -515,9 +536,8 @@ TEST( Provisioning_System, CreateKeysAndCertificateNominalCase )
 }
 
 /**
- * @brief Tests the behavior of the Provisioning CreateKeysAndCertificate API in
- * the nominal (or success) case where the server responds within the specified
- * timeout period.
+ * @brief Verifies the behavior of the CreateCertificateFromCsr API in making
+ * a request for certificate-creation from CSR with the server.
  */
 TEST( Provisioning_System, CreateCertFromCsrNominalCase )
 {
@@ -536,6 +556,31 @@ TEST( Provisioning_System, CreateCertFromCsrNominalCase )
                                                           &callbackInfo );
 
     TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SUCCESS, status );
+}
+
+/**
+ * @brief Verifies that the CreateCertificateFromCsr API returns an error and correctly
+ * parses a rejected server response server when called with an invalid CSR string.
+ */
+TEST( Provisioning_System, CreateCertFromCsrWithInvalidCsr )
+{
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
+    AwsIotProvisioningCreateCertFromCsrCallbackInfo_t callbackInfo =
+    {
+        .userParam = NULL,
+        .function  = _checkInvalidCsrServerResponseCallback
+    };
+
+    const char * pInvalidCsr = "GibberishCsr";
+
+    status = AwsIotProvisioning_CreateCertificateFromCsr( _mqttConnection,
+                                                          IOT_MQTT_QOS_1,
+                                                          pInvalidCsr,
+                                                          strlen( pInvalidCsr ),
+                                                          AWS_IOT_TEST_PROVISIONING_TIMEOUT,
+                                                          &callbackInfo );
+
+    TEST_ASSERT_EQUAL( AWS_IOT_PROVISIONING_SERVER_REFUSED, status );
 }
 
 /**
