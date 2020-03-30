@@ -11,8 +11,11 @@ HTML_OUTPUT = main
 # Generate Doxygen tag file for this library.
 GENERATE_TAGFILE = doc/tag/main.tag
 
+# Files to show on the main page.
+INPUT = README.md \
+        CHANGELOG.md
+
 # Use repository README as main page.
-INPUT = README.md
 USE_MDFILE_AS_MAINPAGE = README.md
 
 # Don't automatically link to library symbols.
