@@ -57,7 +57,7 @@ def apply_patches():
         if proc.returncode:
             logging.warning(
                 "Patch checking failed. Check output:\n%s",
-                "\n".join(["    %s" % line for line in proc.stdout]))
+                "\n".join(["    %s" % line for line in proc.stdout.splitlines()]))
 
         logging.info("Applying patch '%s'", fyle.name)
         cmd = ["git", "apply", str(fyle)]
