@@ -51,3 +51,5 @@ uint
 username
 www
 xhtml
+certIdLength
+pCertIdBuffer
