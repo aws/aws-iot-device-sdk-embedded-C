@@ -85,8 +85,8 @@ static const char pTemplateName[] = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
  */
 typedef struct _demoCertFromCsrCallbackContext
 {
-    char * pCertIdBuffer;         /**< @brief Buffer containing the certificate ID returned by the server. */
-    size_t certIdLength;          /**< @brief Length of the certificate ID* buffer. */
+    char * pCertificateIdBuffer;  /**< @brief Buffer containing the certificate ID returned by the server. */
+    size_t certificateIdLength;   /**< @brief Length of the certificate ID* buffer. */
     char * pOwnershipTokenBuffer; /**< @brief Buffer containing the certificate ownership token returned
                                    * by the server. */
     size_t tokenLength;           /**< @brief Length of the ownership token. */
@@ -135,20 +135,20 @@ static void _demoCertFromCsrCallback( void * contextParam,
     if( pResponseInfo->statusCode == AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED )
     {
         /* Allocate buffer space for storing the certificate ID obtained from the server. */
-        certIdTokenContext->pCertIdBuffer =
-            Iot_DefaultMalloc( pResponseInfo->u.acceptedResponse.certIdLength + 1 );
+        certIdTokenContext->pCertificateIdBuffer =
+            Iot_DefaultMalloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
 
         /* Copy the certificate ID into the buffer. */
-        if( certIdTokenContext->pCertIdBuffer != NULL )
+        if( certIdTokenContext->pCertificateIdBuffer != NULL )
         {
             /* Copy the size of the Certificate ID string. */
-            certIdTokenContext->certIdLength = pResponseInfo->u.acceptedResponse.certIdLength;
+            certIdTokenContext->certificateIdLength = pResponseInfo->u.acceptedResponse.certificateIdLength;
 
-            memcpy( certIdTokenContext->pCertIdBuffer,
+            memcpy( certIdTokenContext->pCertificateIdBuffer,
                     pResponseInfo->u.acceptedResponse.pCertId,
-                    pResponseInfo->u.acceptedResponse.certIdLength );
+                    pResponseInfo->u.acceptedResponse.certificateIdLength );
             /* Add a NULL terminator to the buffer (to treat the buffer as a string!) */
-            *( certIdTokenContext->pCertIdBuffer + pResponseInfo->u.acceptedResponse.certIdLength ) = '\0';
+            *( certIdTokenContext->pCertificateIdBuffer + pResponseInfo->u.acceptedResponse.certificateIdLength ) = '\0';
         }
 
         /* Allocate buffer space for storing the ownership token string obtained from the server. */
@@ -173,7 +173,7 @@ static void _demoCertFromCsrCallback( void * contextParam,
                     "\nCertificate PEM={%.*s}\nCertificate ID={%.*s}\nOwnership Token={%.*s}\n",
                     pResponseInfo->u.acceptedResponse.deviceCertLength,
                     pResponseInfo->u.acceptedResponse.pDeviceCert,
-                    pResponseInfo->u.acceptedResponse.certIdLength,
+                    pResponseInfo->u.acceptedResponse.certificateIdLength,
                     pResponseInfo->u.acceptedResponse.pCertId,
                     pResponseInfo->u.acceptedResponse.ownershipTokenLength,
                     pResponseInfo->u.acceptedResponse.pCertOwnershipToken );
@@ -398,8 +398,8 @@ int RunProvisioningWithCsrDemo( bool awsIotMqttMode,
      * requesting API through the callback. */
     _demoCertFromCsrCallbackContext_t newCertificateDataContext;
 
-    newCertificateDataContext.pCertIdBuffer = NULL;
-    newCertificateDataContext.certIdLength = 0;
+    newCertificateDataContext.pCertificateIdBuffer = NULL;
+    newCertificateDataContext.certificateIdLength = 0;
     newCertificateDataContext.pOwnershipTokenBuffer = NULL;
     newCertificateDataContext.tokenLength = 0;
 
@@ -519,7 +519,7 @@ int RunProvisioningWithCsrDemo( bool awsIotMqttMode,
             IotLogError( "Request to get new credentials failed, error %s ",
                          AwsIotProvisioning_strerror( requestStatus ) );
         }
-        else if( ( newCertificateDataContext.pCertIdBuffer == NULL ) ||
+        else if( ( newCertificateDataContext.pCertificateIdBuffer == NULL ) ||
                  ( newCertificateDataContext.pOwnershipTokenBuffer == NULL ) )
         {
             IotLogInfo( "Don't have either the Certificate ID OR the Certificate Ownership Token (or both) to proceed with provisioning. So exiting...!" );
@@ -533,8 +533,8 @@ int RunProvisioningWithCsrDemo( bool awsIotMqttMode,
     if( status == EXIT_SUCCESS )
     {
         /* Set the parameters for requesting provisioning. */
-        requestInfo.pDeviceCertificateId = newCertificateDataContext.pCertIdBuffer;
-        requestInfo.deviceCertificateIdLength = newCertificateDataContext.certIdLength;
+        requestInfo.pDeviceCertificateId = newCertificateDataContext.pCertificateIdBuffer;
+        requestInfo.deviceCertificateIdLength = newCertificateDataContext.certificateIdLength;
         requestInfo.pCertificateOwnershipToken = newCertificateDataContext.pOwnershipTokenBuffer;
         requestInfo.ownershipTokenLength = newCertificateDataContext.tokenLength;
         requestInfo.pTemplateName = AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME;
@@ -577,9 +577,9 @@ int RunProvisioningWithCsrDemo( bool awsIotMqttMode,
     }
 
     /* Release the Certificate ID buffer, if memory was allocated for it. */
-    if( newCertificateDataContext.pCertIdBuffer != NULL )
+    if( newCertificateDataContext.pCertificateIdBuffer != NULL )
     {
-        Iot_DefaultFree( newCertificateDataContext.pCertIdBuffer );
+        Iot_DefaultFree( newCertificateDataContext.pCertificateIdBuffer );
     }
 
     /* Release the ownership token buffer, if memory was allocated for it. */

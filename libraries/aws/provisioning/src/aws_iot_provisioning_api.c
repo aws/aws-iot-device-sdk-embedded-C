@@ -733,7 +733,9 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
         if( mqttOpResult != IOT_MQTT_SUCCESS )
         {
-            IotLogError( "Failed to subscribe to response topics: Operation={\"%s\"}, MQTTError={%s}",
+            IotLogError( "Failed to subscribe to response topics: TopicFilter={%s}, "
+                         "Operation={\"%s\"}, MQTTError={%s}",
+                         PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER,
                          CREATE_CERT_FROM_CSR_OPERATION_LOG,
                          IotMqtt_strerror( mqttOpResult ) );
             status = AWS_IOT_PROVISIONING_MQTT_ERROR;
@@ -742,8 +744,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
-        IotLogDebug( "Subscribed to response topics: TopicFilter={%.*s}, Operation={\"%s\"}",
-                     PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER_LENGTH,
+        IotLogDebug( "Subscribed to response topics: TopicFilter={%s}, Operation={\"%s\"}",
                      PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER,
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
