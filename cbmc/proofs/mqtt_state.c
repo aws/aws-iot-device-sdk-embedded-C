@@ -110,12 +110,17 @@ bool valid_IotMqttOperation( const IotMqttOperation_t pOp )
   bool waitable =
     ( pOp->u.operation.flags & IOT_MQTT_FLAG_WAITABLE )
         == IOT_MQTT_FLAG_WAITABLE;
-  bool valid_jobReference =
-    // Async operations are waitable.  Loosely speaking, an async operation
-    // is split into independent send and ack events, and an sync operation
-    // is not.
-    IMPLIES(  waitable, pOp->u.operation.jobReference == 2 ) &&
-    IMPLIES( !waitable, pOp->u.operation.jobReference == 1 );
+  // Async operations are waitable.  Loosely speaking, an async operation
+  // is split into independent send and ack events, and an sync operation
+  // is not.
+  bool valid_jobReference;
+  if ( waitable ) {
+    valid_jobReference = ( pOp->u.operation.jobReference == 2 );
+  }
+  else
+  {
+    valid_jobReference = ( pOp->u.operation.jobReference == 1 );
+  }
 
   bool valid_operation_member =
     IMPLIES( !pOp->incomingPublish,
