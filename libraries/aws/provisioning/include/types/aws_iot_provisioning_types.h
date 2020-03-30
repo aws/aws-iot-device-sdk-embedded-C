@@ -159,6 +159,9 @@ typedef enum AwsIotProvisioningError
  */
 typedef enum AwsIotProvisioningServerStatusCode
 {
+    /**
+     * @brief Provisioning operation: Request Accepted by Server.
+     */
     AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED = 202,
 
     /**

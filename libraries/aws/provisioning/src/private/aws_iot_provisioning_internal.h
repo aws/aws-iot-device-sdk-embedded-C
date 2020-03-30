@@ -292,7 +292,7 @@
  * @brief The length of the request topic for the MQTT CreateCertificateFromCsr service API.
  */
 #define PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_TOPIC_LENGTH \
-    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_KEYS_AND_CERTIFICATE_REQUEST_TOPIC ) - 1 ) )
+    ( ( uint16_t ) ( sizeof( PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_TOPIC ) - 1 ) )
 
 /**
  * @brief The key string for Certificate-Singing Request value in the request payload
