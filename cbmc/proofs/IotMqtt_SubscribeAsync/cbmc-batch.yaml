@@ -1,0 +1,8 @@
+build_memory: 32000
+cbmcflags: "--object-bits;8;--unwind;1;--unwindset;_IotMqtt_AddSubscriptions.0:3,_IotMqtt_SerializeSubscribeCommon.0:3,_IotMqtt_SubscriptionPacketSize.0:3,_IotMqtt_ValidateSubscriptionList.0:3,_validateSubscription.0:6,allocate_IotMqttSubscriptionArray.0:2,allocate_IotMqttSubscriptionList.0:2,IotListDouble_FindFirstMatch.0:3,IotListDouble_FindFirstMatch$link1.0:2,IotListDouble_RemoveAllMatches.0:3,IotListDouble_RemoveAllMatches$link1.0:3,strncmp.0:6,valid_IotMqttOperationList.0:2,valid_IotMqttSubscriptionArray.0:2,valid_IotMqttSubscriptionList.0:2;--object-bits;8;--bounds-check;--conversion-check;--div-by-zero-check;--float-overflow-check;--flush;--nan-check;--nondet-static;--pointer-check;--pointer-overflow-check;--signed-overflow-check;--undefined-shift-check;--unsigned-overflow-check;--unwinding-assertions"
+coverage_memory: 32000
+expected: SUCCESSFUL
+goto: IotMqtt_SubscribeAsync.goto
+jobos: ubuntu16
+property_memory: 32000
+report_memory: 32000
