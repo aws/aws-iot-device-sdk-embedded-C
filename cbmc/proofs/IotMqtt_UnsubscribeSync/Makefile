@@ -1,7 +1,5 @@
 ENTRY=IotMqtt_UnsubscribeSync
 
-#CBMCFLAGS += --verbosity 10
-
 ################################################################
 # Proof assumptions
 
@@ -39,7 +37,9 @@ DEF += -DMQTT_MAX_REMAINING_LENGTH=$(MQTT_MAX_REMAINING_LENGTH)
 
 ABSTRACTIONS += --remove-function-body IotLog_Generic
 
-# Functions removed for coverage
+# Unreachable functions removed for accurate coverage computation
+ABSTRACTIONS += --remove-function-body IotNetworkInterfaceClose
+ABSTRACTIONS += --remove-function-body IotNetworkInterfaceReceive
 ABSTRACTIONS += --remove-function-body _IotMqtt_AddSubscriptions
 ABSTRACTIONS += --remove-function-body _IotMqtt_SerializeSubscribe
 ABSTRACTIONS += --remove-function-body _IotMqtt_SerializeSubscribeCommon
@@ -50,23 +50,14 @@ ABSTRACTIONS += --remove-function-body _mqttSubscription_setUnsubscribe
 ABSTRACTIONS += --remove-function-body _packetMatch
 ABSTRACTIONS += --remove-function-body _topicFilterMatch
 ABSTRACTIONS += --remove-function-body _validateQos
-ABSTRACTIONS += --remove-function-body IotNetworkInterfaceClose
-ABSTRACTIONS += --remove-function-body IotNetworkInterfaceReceive
-#ABSTRACTIONS += --remove-function-body _IotMqtt_PublishSetDup
-#ABSTRACTIONS += --remove-function-body _IotMqtt_RemoveSubscriptionByPacket
-#ABSTRACTIONS += --remove-function-body _checkRetryLimit
-#ABSTRACTIONS += --remove-function-body _scheduleNextRetry
 
-ABSTRACTIONS += --remove-function-body IotTaskPool_CreateJob
-ABSTRACTIONS += --remove-function-body IotTaskPool_ScheduleDeferred
-#ABSTRACTIONS += --remove-function-body _IotMqtt_ScheduleOperation
-#ABSTRACTIONS += --remove-function-body _checkRetryLimit
-#ABSTRACTIONS += --remove-function-body _scheduleCallback
-#ABSTRACTIONS += --remove-function-body _scheduleNextRetry
-#ABSTRACTIONS += --remove-function-body _IotMqtt_PublishSetDup
-#ABSTRACTIONS += --remove-function-body _IotMqtt_RemoveSubscriptionByPacket
-
-
+# Functions manually determined to be unreachable in their calling context
+# See README.md for explanations of unreachability
+ABSTRACTIONS += --remove-function-body _IotMqtt_RemoveSubscriptionByPacket
+ABSTRACTIONS += --remove-function-body _IotMqtt_ScheduleOperation
+ABSTRACTIONS += --remove-function-body _checkRetryLimit
+ABSTRACTIONS += --remove-function-body _scheduleCallback
+ABSTRACTIONS += --remove-function-body _scheduleNextRetry
 
 ################################################################
 
@@ -83,18 +74,11 @@ DEF += -DCBMC_STUB_REMOVEALLMATCHES=1
 
 # allow mqtt mallocs to fail for coverage
 DEF += -include mqtt_state.h
-DEF += -DIotMqtt_MallocOperation=malloc_can_fail
 DEF += -DIotMqtt_MallocMessage=malloc_can_fail
+DEF += -DIotMqtt_MallocOperation=malloc_can_fail
 
 ################################################################
 # Loop unwinding
-
-LOOP += allocate_IotMqttSubscriptionArray.0:$(SUBSCRIPTION_COUNT_MAX)
-LOOP += valid_IotMqttSubscriptionArray.0:$(SUBSCRIPTION_COUNT_MAX)
-
-LOOP += _IotMqtt_RemoveSubscriptionByTopicFilter.0:$(SUBSCRIPTION_COUNT_MAX)
-LOOP += valid_IotMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
-LOOP += valid_IotMqttOperationList.0:$(OPERATION_COUNT_MAX)
 
 LOOP += IotListDouble_FindFirstMatch.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += IotListDouble_FindFirstMatch\$$link1.0:$(SUBSCRIPTION_COUNT_MAX)
@@ -103,12 +87,16 @@ LOOP += IotListDouble_FindFirstMatch\$$link3.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += IotListDouble_FindFirstMatch\$$link4.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += IotListDouble_FindFirstMatch\$$link5.0:$(SUBSCRIPTION_COUNT_MAX)
 
-LOOP += strncmp.0:$(TOPIC_LENGTH_MAX)
-
-LOOP += _validateSubscription.0:$(TOPIC_LENGTH_MAX)
-LOOP += _IotMqtt_ValidateSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
-LOOP += _IotMqtt_SubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += _IotMqtt_RemoveSubscriptionByTopicFilter.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += _IotMqtt_SerializeUnsubscribeCommon.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += _IotMqtt_SubscriptionPacketSize.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += _IotMqtt_ValidateSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += _validateSubscription.0:$(TOPIC_LENGTH_MAX)
+LOOP += allocate_IotMqttSubscriptionArray.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += strncmp.0:$(TOPIC_LENGTH_MAX)
+LOOP += valid_IotMqttOperationList.0:$(OPERATION_COUNT_MAX)
+LOOP += valid_IotMqttSubscriptionArray.0:$(SUBSCRIPTION_COUNT_MAX)
+LOOP += valid_IotMqttSubscriptionList.0:$(SUBSCRIPTION_COUNT_MAX)
 
 UNWINDING += --unwind 1
 UNWINDING += --unwindset '$(shell echo $(LOOP) | sed 's/ /,/g')'

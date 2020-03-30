@@ -1,6 +1,6 @@
-From 9681dc68e81ea5afa75d310446199ae730ab9943 Mon Sep 17 00:00:00 2001
+From 60ea7452b4097d9682b67e75d7b90bbc2092544e Mon Sep 17 00:00:00 2001
 From: Mark R Tuttle <mrtuttle@amazon.com>
-Date: Wed, 25 Mar 2020 14:09:26 +0000
+Date: Mon, 30 Mar 2020 20:15:29 +0000
 Subject: [PATCH] Patch MQTT library code for CBMC Unsubscribe proofs
 
 ---
@@ -11,14 +11,14 @@ Subject: [PATCH] Patch MQTT library code for CBMC Unsubscribe proofs
  4 files changed, 19 insertions(+)
 
 diff --git a/libraries/standard/common/include/iot_linear_containers.h b/libraries/standard/common/include/iot_linear_containers.h
-index 689ea5e..b9aec35 100644
+index 689ea5e..841e4a0 100644
 --- a/libraries/standard/common/include/iot_linear_containers.h
 +++ b/libraries/standard/common/include/iot_linear_containers.h
 @@ -639,6 +639,11 @@ static inline IotLink_t * IotListDouble_FindFirstMatch( const IotListDouble_t *
      /* Iterate through the list to search for matches. */
      while( pCurrent != pList )
      {
-+#ifdef CBMC_UNSUBSCRIBEASYNC_PROOF
++#ifdef CBMC_FINDFIRSTMATCH_MATCH_IS_NONNULL
 +      __CPROVER_assert(isMatch != NULL, "FindFirstMatch called with match predicate");
 +      __CPROVER_assume(isMatch != NULL);
 +#endif
@@ -41,14 +41,14 @@ index 0fedcea..ef9f8c0 100644
  /**
   * @brief The constant specifying MQTT version 3.1.1. Placed in the CONNECT packet.
 diff --git a/libraries/standard/mqtt/src/iot_mqtt_operation.c b/libraries/standard/mqtt/src/iot_mqtt_operation.c
-index 5afce54..0464613 100644
+index 5afce54..0e4d923 100644
 --- a/libraries/standard/mqtt/src/iot_mqtt_operation.c
 +++ b/libraries/standard/mqtt/src/iot_mqtt_operation.c
 @@ -638,6 +638,10 @@ IotMqttError_t _IotMqtt_CreateOperation( _mqttConnection_t * pMqttConnection,
      if( status == IOT_MQTT_SUCCESS )
      {
          status = _initializeOperation( pMqttConnection, pOperation, flags, pCallbackInfo );
-+#ifdef CBMC_UNSUBSCRIBEASYNC_PROOF
++#ifdef CBMC_CREATEOPERATION_INITIALIZE_CANT_FAIL
 +	__CPROVER_assert(status == IOT_MQTT_SUCCESS,
 +			 "An async _initializeOperation can't fail (unwaitable)");
 +#endif
@@ -59,7 +59,7 @@ index 5afce54..0464613 100644
              _IotMqtt_DecrementConnectionReferences( pMqttConnection );
          }
  
-+#ifdef CBMC_UNSUBSCRIBEASYNC_PROOF
++#ifdef CBMC_CREATEOPERATION_UNSUCCESSFUL_STATUS_MEANS_NULL_POINTER
 +	__CPROVER_assert(pOperation == NULL,
 +			 "Bad status implies null pointer");
 +	__CPROVER_assume(pOperation == NULL);

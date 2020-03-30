@@ -1,7 +1,9 @@
 This is a memory safety proof for IotMqtt_UnsubscribeAsync.
 
-This proof attains 84% code coverage.  The following is an explanation
-of why some code is unreachable from IotMqtt_UnsubscribeAsync.
+This proof attains 91% code coverage.  The following comments explain
+why the uncovered lines of code are unreachable code.
+
+Some functions contain unreachable blocks of code:
 
 * libraries/standard/common/include/iot_linear_containers.h
   IotListDouble_FindFirstMatch
@@ -66,11 +68,6 @@ of why some code is unreachable from IotMqtt_UnsubscribeAsync.
 
   * ProcessSsend is called with an UNSUBSCRIBE operation
 
-* libraries/standard/mqtt/src/iot_mqtt_operation.c _checkRetryLimit
-
-  * Unreachable: Only function call is in an unreachable block of code
-	in ProcessSend.
-
 * libraries/standard/mqtt/src/iot_mqtt_operation.c _completePendingSend
 
   * Always called with an unwaitable (asynchronous) and nonPUBLISH
@@ -79,23 +76,6 @@ of why some code is unreachable from IotMqtt_UnsubscribeAsync.
 * libraries/standard/mqtt/src/iot_mqtt_operation.c _initializeOperation
 
   * Always called with an unwaitable (asynchronous) operation
-
-* libraries/standard/mqtt/src/iot_mqtt_operation.c _scheduleNextRetry
-
-  * Unreachable: Only function call is in an unreachable block of code
-	in completePendingSend
-
-* libraries/standard/mqtt/src/iot_mqtt_serialize.c
-  _IotMqtt_PublishSetDup
-
-  * Unreachable: Only function call is from checkRetryLimit which is
-	unreachable.
-
-* libraries/standard/mqtt/src/iot_mqtt_subscription.c
-  _IotMqtt_RemoveSubscriptionByPacket
-
-  * Unreachable: Only function call in from an unreachable block of
-	subscriptionCommon
 
 * libraries/standard/mqtt/src/iot_mqtt_subscription.c _topicMatch
 
@@ -112,3 +92,22 @@ of why some code is unreachable from IotMqtt_UnsubscribeAsync.
 * libraries/standard/mqtt/src/iot_mqtt_validate.c _validateSubscription
 
   * Always called with UNSUBSCRIBE operation type.
+
+Some functions are simply unreachable:
+
+* libraries/standard/mqtt/src/iot_mqtt_operation.c _checkRetryLimit
+
+  * Unreachable: Only function call is in an unreachable block of code
+	in ProcessSend.
+
+* libraries/standard/mqtt/src/iot_mqtt_operation.c _scheduleNextRetry
+
+  * Unreachable: Only function call is in an unreachable block of code
+	in completePendingSend
+
+* libraries/standard/mqtt/src/iot_mqtt_subscription.c
+  _IotMqtt_RemoveSubscriptionByPacket
+
+  * Unreachable: Only function call in from an unreachable block of
+	subscriptionCommon
+
