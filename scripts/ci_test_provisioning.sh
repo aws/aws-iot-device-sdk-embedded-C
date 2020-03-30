@@ -29,29 +29,40 @@ run_tests() {
 
 TEMPLATE_NAME="CI_SYSTEM_TEST_TEMPLATE"
 PROVISIONING_ROLE_NAME="CI_SYSTEM_TEST_ROLE"
+CSR_FILE=./system_test_csr.csr
+GAMMA_ENDPOINT=https://gamma.us-east-1.iot.amazonaws.com \
 
 # Sets up all resources (Provisioning role, Fleet Provisioning template) on the AWS IoT account for running integration tests.
 setup() {
+    # Generate a private key and associated Certificate-Signing Request for
+    # CSR-based provisiong tests. 
+    CSR_PRIVATE_KEY_FILE=./csr_private_key.pem
+    openssl genrsa -passout pass:test -des3 -out $CSR_PRIVATE_KEY_FILE 2048
+    openssl req -new -key $CSR_PRIVATE_KEY_FILE -passin pass:test -out $CSR_FILE -subj "/C=US/ST=WA/L=Seattle/O=AWS/CN=Test_FleetProvisioning"
 
     # Create a provisioning role, if it does not exist in the account. If a new one is created, we add some delay time (10 sec) for the role to be available
     # (IAM role creation is "eventually consistent"). If the provisioning role already exists, then ignore errors. 
     # SUGGESTION: Do not delete the Provisioning Role from the account to ensure that the setup executes reliably.
-    aws iam create-role \
-        --role-name $PROVISIONING_ROLE_NAME \
-        --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' && sleep 10 \
-            || true
-    aws iam attach-role-policy \
-        --region $AWS_PROVISIONING_REGION \
-        --role-name $PROVISIONING_ROLE_NAME \
-        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration  || true
+    # aws iam create-role \
+    #     --endpoint-url $GAMMA_ENDPOINT \
+    #     --role-name $PROVISIONING_ROLE_NAME \
+    #     --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' && sleep 10 \
+    #         || true
+    # aws iam attach-role-policy \
+    #     --endpoint 
+    #     --region $AWS_PROVISIONING_REGION \
+    #     --role-name $PROVISIONING_ROLE_NAME \
+    #     --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration  || true
 
     # Delete an existing fleet provisioning template by the same name, if it exists. Ignore the error if the template does not exist.
     aws iot delete-provisioning-template \
+        --endpoint-url $GAMMA_ENDPOINT \
         --region $AWS_PROVISIONING_REGION \
         --template-name $TEMPLATE_NAME || true
 
     # Add a single provisioning template to test with.
     aws iot create-provisioning-template \
+        --endpoint-url $GAMMA_ENDPOINT \
         --region $AWS_PROVISIONING_REGION \
         --template-name $TEMPLATE_NAME \
         --provisioning-role-arn arn:aws:iam::$AWS_ACCOUNT_ID:role/$PROVISIONING_ROLE_NAME \
@@ -66,6 +77,7 @@ setup() {
 teardown() {
     # Make best effort to delete any inactive certificate that may have been created by the integration tests.
     aws iot list-certificates \
+        --endpoint-url $GAMMA_ENDPOINT \
         --region $AWS_PROVISIONING_REGION | \
             jq -c '.certificates[] | select(.status | contains("INACTIVE")) | .certificateArn' | \
                 tr -d \" | \
@@ -75,6 +87,7 @@ teardown() {
                         # Attempt to delete the certificate (and ignore any errors that come with 
                         # the deletion request).
                         aws iot delete-certificate \
+                            --endpoint-url $GAMMA_ENDPOINT \
                             --region $AWS_PROVISIONING_REGION \
                             --certificate-id $CERTIFICATE_ID \
                             --force-delete || true
@@ -83,6 +96,7 @@ teardown() {
     # Iterate over all the principals/certificates attached to the Thing resource (created by the integration test)
     # and delete the certificates.
     aws iot list-thing-principals \
+        --endpoint-url $GAMMA_ENDPOINT \
         --region $AWS_PROVISIONING_REGION \
         --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT | \
             grep arn | tr -d \",' ' | 
@@ -90,6 +104,7 @@ teardown() {
                 do
                     # Detach the principal from the Thing resource.
                     aws iot detach-thing-principal \
+                        --endpoint-url $GAMMA_ENDPOINT \
                         --region $AWS_PROVISIONING_REGION \
                         --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT \
                         --principal $CERTIFICATE_ARN
@@ -97,21 +112,25 @@ teardown() {
                     CERTIFICATE_ID=$(echo $CERTIFICATE_ARN | cut -d '/' -f2)
 
                     aws iot update-certificate \
+                        --endpoint-url $GAMMA_ENDPOINT \
                         --region $AWS_PROVISIONING_REGION \
                         --certificate-id $CERTIFICATE_ID \
                         --new-status INACTIVE
 
                     aws iot delete-certificate \
+                        --endpoint-url $GAMMA_ENDPOINT \
                         --region $AWS_PROVISIONING_REGION \
                         --certificate-id $CERTIFICATE_ID \
                         --force-delete
                 done
     aws iot delete-thing \
+        --endpoint-url $GAMMA_ENDPOINT \
         --region $AWS_PROVISIONING_REGION \
         --thing-name "ThingPrefix_"$SERIAL_NUMBER_DEVICE_CONTEXT
 
     # Delete Fleet Provisioning Template.
     aws iot delete-provisioning-template \
+        --endpoint-url $GAMMA_ENDPOINT \
         --region $AWS_PROVISIONING_REGION \
         --template-name $TEMPLATE_NAME
 }
@@ -137,8 +156,12 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
         } \
     }"
 
-    # Compiler flags for integration and units tests.
-    COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\" $COMPILER_OPTIONS"
+    # Save the generated CSR for testing.
+    CSR_PEM_DATA=$(echo -E $(cat $CSR_FILE))
+
+    # Compiler flags for integration and unit tests.
+    COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_CSR_PEM=\"\\\"$CSR_PEM_DATA\\\"\" "
+    COMMON_CMAKE_C_FLAGS+="-DAWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME=\"\\\"$TEMPLATE_NAME\\\"\" -DAWS_IOT_TEST_PROVISIONING_TEMPLATE_PARAMETERS=\"$PROVISIONING_PARAMETERS\" $COMPILER_OPTIONS"
 
     # Run teardown routine if we ever encounter a failure for best effort to cleanup resources on the AWS IoT account.
     # We register on the EXIT signal as the set -e flag will convert errors to EXIT.
@@ -149,7 +172,7 @@ else
 fi        
 
 # CMake build configuration.
-cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS"
+cmake .. -DIOT_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="$COMMON_CMAKE_C_FLAGS -DAWS_IOT_LOG_LEVEL_PROVISIONING=IOT_LOG_DEBUG"
 
 # Build tests.
 make -j2 aws_iot_tests_provisioning
