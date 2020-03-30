@@ -38,8 +38,8 @@ set( DEMO_SOURCES
      src/aws_iot_demo_shadow.c
      src/aws_iot_demo_defender.c
      src/aws_iot_demo_jobs.c
-     src/aws_iot_demo_provisioning_with_keys_and_cert.c
-     src/aws_iot_demo_provisioning_with_csr.c )
+     src/Provisioning/aws_iot_demo_provisioning_with_keys_and_cert.c
+     src/Provisioning/aws_iot_demo_provisioning_with_csr.c )
 
 set( DEMO_LIBRARY_DEPENDENCY
      iotmqtt
