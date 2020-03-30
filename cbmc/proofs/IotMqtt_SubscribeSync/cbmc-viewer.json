@@ -9,6 +9,7 @@
     "IotSemaphore_Create",
     "IotSemaphore_Destroy",
     "IotTaskPool_GetSystemTaskPool",
+
     "_checkRetryLimit",
     "_scheduleCallback",
     "_scheduleNextRetry"

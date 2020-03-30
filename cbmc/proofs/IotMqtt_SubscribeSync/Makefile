@@ -47,7 +47,9 @@ DEF += -DSUBSCRIPTION_LIST_MAX=$(SUBSCRIPTION_LIST_MAX)
 # Enables CBMC stub for RemoveAllMatches function
 DEF += -DCBMC_STUB_REMOVEALLMATCHES=1
 
-# Allow MQTT allocations to fail for coverage
+# These functions default to malloc. The CBMC model of malloc never fails,
+# so we replace the CBMC model with a model that can fail to improve
+# coverage and exercise more code
 DEF += -include mqtt_state.h
 DEF += -DIotMqtt_MallocMessage=malloc_can_fail
 DEF += -DIotMqtt_MallocOperation=malloc_can_fail
