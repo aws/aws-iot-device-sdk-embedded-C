@@ -136,19 +136,19 @@ static void _demoCertFromCsrCallback( void * contextParam,
     {
         /* Allocate buffer space for storing the certificate ID obtained from the server. */
         certIdTokenContext->pCertificateIdBuffer =
-            Iot_DefaultMalloc( pResponseInfo->u.acceptedResponse.certificateIdLength + 1 );
+            Iot_DefaultMalloc( pResponseInfo->u.acceptedResponse.certIdLength + 1 );
 
         /* Copy the certificate ID into the buffer. */
         if( certIdTokenContext->pCertificateIdBuffer != NULL )
         {
             /* Copy the size of the Certificate ID string. */
-            certIdTokenContext->certificateIdLength = pResponseInfo->u.acceptedResponse.certificateIdLength;
+            certIdTokenContext->certificateIdLength = pResponseInfo->u.acceptedResponse.certIdLength;
 
             memcpy( certIdTokenContext->pCertificateIdBuffer,
                     pResponseInfo->u.acceptedResponse.pCertId,
-                    pResponseInfo->u.acceptedResponse.certificateIdLength );
+                    pResponseInfo->u.acceptedResponse.certIdLength );
             /* Add a NULL terminator to the buffer (to treat the buffer as a string!) */
-            *( certIdTokenContext->pCertificateIdBuffer + pResponseInfo->u.acceptedResponse.certificateIdLength ) = '\0';
+            *( certIdTokenContext->pCertificateIdBuffer + pResponseInfo->u.acceptedResponse.certIdLength ) = '\0';
         }
 
         /* Allocate buffer space for storing the ownership token string obtained from the server. */
@@ -173,7 +173,7 @@ static void _demoCertFromCsrCallback( void * contextParam,
                     "\nCertificate PEM={%.*s}\nCertificate ID={%.*s}\nOwnership Token={%.*s}\n",
                     pResponseInfo->u.acceptedResponse.deviceCertLength,
                     pResponseInfo->u.acceptedResponse.pDeviceCert,
-                    pResponseInfo->u.acceptedResponse.certificateIdLength,
+                    pResponseInfo->u.acceptedResponse.certIdLength,
                     pResponseInfo->u.acceptedResponse.pCertId,
                     pResponseInfo->u.acceptedResponse.ownershipTokenLength,
                     pResponseInfo->u.acceptedResponse.pCertOwnershipToken );
@@ -364,7 +364,7 @@ static int _establishMqttConnection( const char * pIdentifier,
 
 /**
  * @brief The function that runs the Provisioning demo, for the AWS IoT generated
- * certificate from device generated CSR use-case, called by the demo runner.
+ * cert from device generated CSR use-case, called by the demo runner.
  *
  * @param[in] awsIotMqttMode Ignored for the Provisioning demo.
  * @param[in] pIdentifier NULL-terminated Provisioning Thing Name.
