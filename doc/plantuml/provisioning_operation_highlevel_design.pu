@@ -5,14 +5,13 @@ title High-Level Diagram of an Operation in Provisioning Library
 skinparam classFontSize 8
 skinparam classFontName Helvetica
 
+box "User Application" #Wheat
 actor "Application Task" as app
+participant "User Callback\n(for Provisioning operation)" as callback
+end box
 
 box "Provisioning Library" #LightBlue
 participant "Provisioning" as provisioning
-end box
-
-box "User-Provided Callback" #Wheat
-participant "Provisioning User Callback" as callback
 end box
 
 box "MQTT Library" #LightGreen
@@ -23,17 +22,17 @@ box "AWS" #LightPink
 participant "AWS IoT Core" as aws
 end box
 
+activate app
 app -> mqtt: Create MQTT connection
 mqtt -> app: Return MQTT connection handle or error.
 note right of app: Recommended to <i>share</i> MQTT connection\nacross Provisioning API calls.
 
-app -> provisioning: Call Provisioning operation API.\n Provide server response handling callback.
-activate app
+app -> provisioning: Call Provisioning operation API.\n Provide user-callback for operation.
 
 provisioning -> provisioning: Validate input arguments
 provisioning --> app: Return BAD_PARAMETER for any invalid input argument
 
-provisioning -> mqtt: Subscribe to 'accepted' and 'rejected' response topics of operation
+provisioning -> mqtt: Subscribe to 'accepted' and 'rejected' response topics\nof operation
 
 mqtt -> aws: Transmit MQTT SUBSCRIBE packets to Server
 mqtt -> provisioning: Return SUCCESS or error
