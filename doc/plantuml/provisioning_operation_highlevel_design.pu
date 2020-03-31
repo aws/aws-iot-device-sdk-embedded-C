@@ -79,7 +79,7 @@ mqtt -> provisioning: Return SUCCESS or error if unsubscribe failed.
 alt Unsubscribe from response topics failed
 provisioning -> app: Return MQTT_ERROR if unsubscribe failed.
 else
-provisioning -> app: Return <b?SUCCESS</b>!
+provisioning -> app: Return <b>SUCCESS!</b>
 end alt
 deactivate app
 @enduml
