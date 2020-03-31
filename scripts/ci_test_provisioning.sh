@@ -49,7 +49,7 @@ setup() {
         --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' && sleep 10 \
             || true
     aws iam attach-role-policy \
-        --endpoint 
+        --endpoint-url $GAMMA_ENDPOINT \
         --region $AWS_PROVISIONING_REGION \
         --role-name $PROVISIONING_ROLE_NAME \
         --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration  || true
