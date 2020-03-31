@@ -74,11 +74,10 @@ script:
   # Set credential defines passed to CMake when not a pull request build.
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
       if [ "$RUN_TEST" == "provisioning" ]; then 
-        export AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_GAMMA_ENDPOINT\\\"\"";
+        export AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_GAMMA_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"../credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"../credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"../credentials/privateKey.pem\\\"\"";
       else
-        export AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\"";
+        export AWS_IOT_CREDENTIAL_DEFINES="-DIOT_TEST_SERVER=\"\\\"$AWS_IOT_ENDPOINT\\\"\" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"../credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"../credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"../credentials/privateKey.pem\\\"\"";
       fi
-      AWS_IOT_CREDENTIAL_DEFINES+=" -DIOT_TEST_PORT=443 -DIOT_TEST_ROOT_CA=\"\\\"../credentials/AmazonRootCA1.pem\\\"\" -DIOT_TEST_CLIENT_CERT=\"\\\"../credentials/clientCert.pem\\\"\" -DIOT_TEST_PRIVATE_KEY=\"\\\"../credentials/privateKey.pem\\\"\"";
     fi
   # Create build directory.
   - mkdir build

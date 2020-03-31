@@ -37,7 +37,7 @@ endforeach()
 # Check for some required POSIX functions. This is not intended to be a comprehensive list.
 set( CMAKE_REQUIRED_LIBRARIES rt Threads::Threads )
 list( APPEND REQUIRED_POSIX_FUNCTIONS
-      clock_gettime time localtime_r strftime timer_create timer_delete
+      clock_gettime time localtime_r timer_create timer_delete
       timer_settime pthread_create pthread_attr_init pthread_attr_setdetachstate
       pthread_mutex_init pthread_mutex_lock pthread_mutex_trylock pthread_mutex_unlock
       sem_init sem_getvalue sem_wait sem_trywait sem_timedwait sem_post )
