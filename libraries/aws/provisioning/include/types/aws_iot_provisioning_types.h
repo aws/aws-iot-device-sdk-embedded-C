@@ -65,80 +65,88 @@ typedef enum AwsIotProvisioningError
      * Functions that may return this value:
      * - @ref provisioning_function_init
      */
-    AWS_IOT_PROVISIONING_INIT_FAILED,
+    AWS_IOT_PROVISIONING_INIT_FAILED = 2,
 
     /**
      * @brief An API function was called before @ref provisioning_function_init.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_NOT_INITIALIZED,
+    AWS_IOT_PROVISIONING_NOT_INITIALIZED = 3,
 
     /**
      * @brief At least one parameter is invalid.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_BAD_PARAMETER,
+    AWS_IOT_PROVISIONING_BAD_PARAMETER = 4,
 
     /**
      * @brief Provisioning operation failed because of memory allocation failure.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_NO_MEMORY,
+    AWS_IOT_PROVISIONING_NO_MEMORY = 5,
 
     /**
      * @brief Provisioning response received from the network is malformed, corrupt or incomplete.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_BAD_RESPONSE,
+    AWS_IOT_PROVISIONING_BAD_RESPONSE = 6,
 
     /**
      * @brief An Provisioning operation timed out.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_TIMEOUT,
+    AWS_IOT_PROVISIONING_TIMEOUT = 7,
 
     /**
      * @brief An Provisioning operation request is rejected by the server.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_SERVER_REFUSED,
+    AWS_IOT_PROVISIONING_SERVER_REFUSED = 8,
 
     /**
      * @brief Provisioning operation failed due to internal error.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_INTERNAL_FAILURE,
+    AWS_IOT_PROVISIONING_INTERNAL_FAILURE = 9,
 
     /**
      * @brief Generic code for any MQTT operation error encountered during an
      * Provisioning operation.
      *
      * Functions that may return this value:
-     * - @ref provisioning_function_registerthing
+     * - @ref provisioning_function_createkeysandcertificate
+     * - @ref provisioning_function_createcertificatefromcsr
      * - @ref provisioning_function_registerthing
      */
-    AWS_IOT_PROVISIONING_MQTT_ERROR
+    AWS_IOT_PROVISIONING_MQTT_ERROR = 10
 } AwsIotProvisioningError_t;
 
 /**
@@ -151,7 +159,15 @@ typedef enum AwsIotProvisioningError
  */
 typedef enum AwsIotProvisioningServerStatusCode
 {
+    /**
+     * @brief Provisioning operation: Request Accepted by Server.
+     */
     AWS_IOT_PROVISIONING_SERVER_STATUS_ACCEPTED = 202,
+
+    /**
+     * @brief Provisioning operation rejected: Invalid Certificate-Signing Request.
+     */
+    AWS_IOT_PROVISIONING_SERVER_STATUS_INVALID_CSR = 400,
 
     /**
      * @brief Provisioning operation rejected: Forbidden.
@@ -297,14 +313,14 @@ typedef struct AwsIotProvisioningCreateCertFromCsrResponse
         /** @brief Represents the successful/accepted response of device credentials received from the server. */
         struct
         {
-            const char * pDeviceCertificate;         /**< The new certificate for the device.*/
-            size_t deviceCertificateLength;          /**< The size of the device certificate.*/
-            const char * pCertificateId;             /**< The certificate ID associated with the new certificate,
-                                                      * @p pDeviceCertificate.*/
-            size_t certificateIdLength;              /**< The length of the certificate ID.*/
-            const char * pCertificateOwnershipToken; /**< The token that represents ownership of certificate and
-                                                      * associated private key that the device.*/
-            size_t ownershipTokenLength;             /**< The size of the ownership token.*/
+            const char * pDeviceCert;         /**< The new certificate for the device.*/
+            size_t deviceCertLength;          /**< The size of the device certificate.*/
+            const char * pCertId;             /**< The certificate ID associated with the new certificate,
+                                               * @p pDeviceCertificate.*/
+            size_t certIdLength;              /**< The length of the certificate ID.*/
+            const char * pCertOwnershipToken; /**< The token that represents ownership of certificate and
+                                               * associated private key that the device.*/
+            size_t ownershipTokenLength;      /**< The size of the ownership token.*/
         } acceptedResponse;
 
         /** @brief Represents the rejected response information received from the server. */

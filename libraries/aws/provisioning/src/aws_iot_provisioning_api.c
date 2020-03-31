@@ -76,8 +76,26 @@ const IotSerializerDecodeInterface_t * _pAwsIotProvisioningDecoder = NULL;
  * CreateKeysAndCertificate, CreateCertificateFromCsr, RegisterThing.
  */
 static _provisioningOperation_t _activeOperation[ 3 ];
+
+/**
+ * @brief The index reference to the operation object
+ * in #_activeOperation array for the CreateKeysAndCertificate
+ * operation.
+ */
 static const uint8_t _createKeysAndCertOperationIndex = 0;
+
+/**
+ * @brief The index reference to the operation object
+ * in #_activeOperation array for the CreateCertificateFromCsr
+ * operation.
+ */
 static const uint8_t _createCertFromCsrOperationIndex = 1;
+
+/**
+ * @brief The index reference to the operation object
+ * in #_activeOperation array for the RegisterThing
+ * operation.
+ */
 static const uint8_t _registerThingOperationIndex = 2;
 
 /**
@@ -106,7 +124,7 @@ static bool _checkInit( void );
  * @brief Initializes the operation object in #_activeOperation array for the
  * passed index reference.
  *
- * @param[in] The index reference to the operation object instance to initialize.
+ * @param[in] operationIndex The index reference to the operation object instance to initialize.
  *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if initialization is successful;
  * otherwise #AWS_IOT_PROVISIONING_INIT_FAILED.
@@ -117,7 +135,7 @@ static AwsIotProvisioningError_t _initializeOperationObject( uint8_t operationIn
  * @brief Cleans up the operation object in #_activeOperation array for the
  * passed index reference.
  *
- * @param[in] The index reference to the operation object instance to clean-up.
+ * @param[in] operationIndex The index reference to the operation object instance to clean-up.
  */
 static void _cleanUpOperationObject( uint8_t operationIndex );
 
@@ -159,9 +177,10 @@ static void _registerThingResponseReceivedCallback( void * param1,
                                                     IotMqttCallbackParam_t * const pPublish );
 
 /**
- * @brief Sets the active operation object, #_activeOperation, to represent an active operation in progress.
+ * @brief Sets an operation object in the #_activeOperation array to represent
+ * an active operation in progress.
  * @param[in] operationIndex The index reference to the ongoing operation
- * in #_activeOperation object.
+ * object in the #_activeOperation array.
  * @param[in] pUserCallback The user-provided callback information that will be copied
  * to the active operation object.
  */
@@ -171,7 +190,10 @@ static void _setActiveOperation( uint8_t operationIndex,
 /**
  * @brief Waits for server response within the provided timeout period, and returns the result of the wait operation.
  *
- * @param timeoutMs The time period (in milliseconds) to wait for server response.
+ * @param[in] operationIndex The index reference to the ongoing operation
+ * object in the #_activeOperation array.
+ * @param[in] timeoutMs The time period (in milliseconds) to wait for server response.
+ *
  * @return Returns #AWS_IOT_PROVISIONING_SUCCESS if a server response is received within the @p timeoutMs period; otherwise returns
  * #AWS_IOT_PROVISIONING_TIMEOUT
  */
@@ -282,7 +304,7 @@ static void _commonServerResponseHandler( const uint8_t operationIndex,
 
         /* Is a user thread waiting for the result? */
         if( ( pCallbackInfo->createKeysAndCertificateCallback.function == NULL ) ||
-            ( pCallbackInfo->createCertificateFromCsrCallback.function == NULL ) ||
+            ( pCallbackInfo->createCertFromCsrCallback.function == NULL ) ||
             ( pCallbackInfo->registerThingCallback.function == NULL ) )
         {
             IotLogDebug( "Received unexpected server response on topic %s.",
@@ -322,7 +344,7 @@ static void _commonServerResponseHandler( const uint8_t operationIndex,
     {
         IotLogWarn( "api: Unexpected invocation of subscription callback: "
                     "Clean-up on library was already called: OperationIndex={%d}",
-                    operationIndex )
+                    operationIndex );
     }
 
     /* Decrement the operation's semaphore reference count, as we don't need
@@ -681,7 +703,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
     if( connection == NULL )
     {
-        IotLogError( "Bad parameter: MQTT connection is not initialized: Operation={%s}",
+        IotLogError( "Bad parameter: MQTT connection is not initialized: Operation={\"%s\"}",
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
         status = AWS_IOT_PROVISIONING_BAD_PARAMETER;
@@ -689,7 +711,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
     else if( ( pCertificateSigningRequest == NULL ) || ( csrLength == 0 ) )
     {
         IotLogError( "Bad parameter: Invalid Certificate-Signing Request: "
-                     "Operation={%s}", CREATE_CERT_FROM_CSR_OPERATION_LOG );
+                     "Operation={\"%s\"}", CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
         status = AWS_IOT_PROVISIONING_BAD_PARAMETER;
     }
@@ -698,7 +720,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
              ( pResponseCallback->function == NULL ) )
     {
         IotLogError(
-            "Bad parameter: Invalid callback provided: Operation={%s}",
+            "Bad parameter: Invalid callback provided: Operation={\"%s\"}",
             CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
         status = AWS_IOT_PROVISIONING_BAD_PARAMETER;
@@ -711,7 +733,9 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
         if( mqttOpResult != IOT_MQTT_SUCCESS )
         {
-            IotLogError( "Failed to subscribe to response topics: Operation={%s}, MQTTError={%s}",
+            IotLogError( "Failed to subscribe to response topics: TopicFilter={%s}, "
+                         "Operation={\"%s\"}, MQTTError={%s}",
+                         PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER,
                          CREATE_CERT_FROM_CSR_OPERATION_LOG,
                          IotMqtt_strerror( mqttOpResult ) );
             status = AWS_IOT_PROVISIONING_MQTT_ERROR;
@@ -720,12 +744,13 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
-        IotLogDebug( "Subscribed to response topics: Operation={%s}",
+        IotLogDebug( "Subscribed to response topics: TopicFilter={%s}, Operation={\"%s\"}",
+                     PROVISIONING_CREATE_CERT_FROM_CSR_RESPONSE_TOPIC_FILTER,
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
         /* Update the operation object to represent an active "Certificate-Signing Request" operation. */
         _provisioningCallbackInfo_t callbackInfo;
-        callbackInfo.createCertificateFromCsrCallback = *pResponseCallback;
+        callbackInfo.createCertFromCsrCallback = *pResponseCallback;
         _setActiveOperation( _createCertFromCsrOperationIndex, &callbackInfo );
 
         /* Serialization of request payload occurs in a 2-step process, one for
@@ -738,7 +763,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         if( status != AWS_IOT_PROVISIONING_SUCCESS )
         {
             IotLogError( "Unable to create PUBLISH payload: Failed to calculate size of payload: "
-                         "Operation={%s}", CREATE_CERT_FROM_CSR_OPERATION_LOG );
+                         "Operation={\"%s\"}", CREATE_CERT_FROM_CSR_OPERATION_LOG );
         }
     }
 
@@ -752,7 +777,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         if( pPayloadBuffer == NULL )
         {
             IotLogError( "Unable to create PUBLISH payload: Memory allocation for payload failed: "
-                         "Operation={%s}",
+                         "Operation={\"%s\"}",
                          REGISTER_THING_OPERATION_LOG );
             status = AWS_IOT_PROVISIONING_NO_MEMORY;
         }
@@ -769,7 +794,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         if( status != AWS_IOT_PROVISIONING_SUCCESS )
         {
             IotLogError( "Unable to PUBLISH to request topic: Failed to serialize PUBLISH payload in buffer: "
-                         "Operation={%s}",
+                         "Operation={\"%s\"}",
                          CREATE_CERT_FROM_CSR_OPERATION_LOG );
         }
     }
@@ -784,7 +809,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         publishInfo.pTopicName = PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_TOPIC;
         publishInfo.topicNameLength = PROVISIONING_CREATE_CERT_FROM_CSR_REQUEST_TOPIC_LENGTH;
 
-        IotLogDebug( "About to send request to server. Topic={%.*s}, Operation={%s}",
+        IotLogDebug( "About to send request to server. Topic={%.*s}, Operation={\"%s\"}",
                      publishInfo.topicNameLength,
                      publishInfo.pTopicName,
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
@@ -798,7 +823,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         if( mqttOpResult != IOT_MQTT_SUCCESS )
         {
             IotLogError( "Failed to PUBLISH to request topic: "
-                         "Topic={%.*s}, Operation={%s}, MQTTError={%s}",
+                         "Topic={%.*s}, Operation={\"%s\"}, MQTTError={%s}",
                          publishInfo.topicNameLength,
                          publishInfo.pTopicName,
                          CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG,
@@ -809,7 +834,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
     if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
-        IotLogDebug( "Published to request topic: Operation={%s}",
+        IotLogDebug( "Published to request topic: Operation={\"%s\"}",
                      CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
         /* Wait for response from server using the given timeout period. */
@@ -818,7 +843,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
 
         if( status == AWS_IOT_PROVISIONING_TIMEOUT )
         {
-            IotLogDebug( "Operation timed out waiting for server response: Operation={%s}",
+            IotLogDebug( "Operation timed out waiting for server response: Operation={\"%s\"}",
                          CREATE_CERT_FROM_CSR_OPERATION_LOG );
         }
 
@@ -829,7 +854,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
         AwsIotProvisioning_FreePayload( pPayloadBuffer );
     }
 
-    IotLogInfo( "Operation is complete: Operation={%s}",
+    IotLogInfo( "Operation is complete: Operation={\"%s\"}",
                 CREATE_CERT_FROM_CSR_OPERATION_LOG );
 
     return status;

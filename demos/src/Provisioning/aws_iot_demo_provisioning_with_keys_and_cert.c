@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,8 +20,9 @@
  */
 
 /**
- * @file aws_iot_demo_provisioning.c
- * @brief Demonstrates usage of the Thing Provisioning library.
+ * @file aws_iot_demo_provisioning_with_keys_and_cert.c
+ * @brief Demonstrates usage of the Provisioning library for the use-case involving
+ * generation of keys and certificate by AWS IoT.
  *
  * This program demonstrates the using Provisioning documents to toggle a state called
  * "powerOn" in a remote device.
@@ -55,9 +56,6 @@
  *
  * Provide default values for undefined configuration settings.
  */
-#ifndef AWS_IOT_DEMO_PROVISIONING_UPDATE_COUNT
-    #define AWS_IOT_DEMO_PROVISIONING_UPDATE_COUNT         ( 20 )
-#endif
 #ifndef AWS_IOT_DEMO_PROVISIONING_TIMEOUT_PERIOD_MS
     #define AWS_IOT_DEMO_PROVISIONING_TIMEOUT_PERIOD_MS    ( 5000 )
 #endif
@@ -95,11 +93,11 @@ typedef struct _demoKeysAndCertificateCallbackContext
 /*-----------------------------------------------------------*/
 
 /* Declaration of demo function. */
-int RunProvisioningDemo( bool awsIotMqttMode,
-                         const char * pIdentifier,
-                         void * pNetworkServerInfo,
-                         void * pNetworkCredentialInfo,
-                         const IotNetworkInterface_t * pNetworkInterface );
+int RunProvisioningWithKeysAndCertDemo( bool awsIotMqttMode,
+                                        const char * pIdentifier,
+                                        void * pNetworkServerInfo,
+                                        void * pNetworkCredentialInfo,
+                                        const IotNetworkInterface_t * pNetworkInterface );
 
 /*-----------------------------------------------------------*/
 
@@ -363,7 +361,8 @@ static int _establishMqttConnection( const char * pIdentifier,
 /*-----------------------------------------------------------*/
 
 /**
- * @brief The function that runs the Provisioning demo, called by the demo runner.
+ * @brief The function that runs the Provisioning demo for the AWS IoT generated
+ * keys and certificate use-case, called by the demo runner.
  *
  * @param[in] awsIotMqttMode Ignored for the Provisioning demo.
  * @param[in] pIdentifier NULL-terminated Provisioning Thing Name.
@@ -375,11 +374,11 @@ static int _establishMqttConnection( const char * pIdentifier,
  *
  * @return `EXIT_SUCCESS` if the demo completes successfully; `EXIT_FAILURE` otherwise.
  */
-int RunProvisioningDemo( bool awsIotMqttMode,
-                         const char * pIdentifier,
-                         void * pNetworkServerInfo,
-                         void * pNetworkCredentialInfo,
-                         const IotNetworkInterface_t * pNetworkInterface )
+int RunProvisioningWithKeysAndCertDemo( bool awsIotMqttMode,
+                                        const char * pIdentifier,
+                                        void * pNetworkServerInfo,
+                                        void * pNetworkCredentialInfo,
+                                        const IotNetworkInterface_t * pNetworkInterface )
 {
     /* Return value of this function and the exit status of this program. */
     int status = 0;
@@ -502,8 +501,7 @@ int RunProvisioningDemo( bool awsIotMqttMode,
         /* Set the callback function for handling device credentials that the server will send. */
         keysAndCertificateCallback.function = _demoKeysAndCertificateCallback;
 
-        /* Call the API to get new device credentials for this demo, and check that the certificate ID data is populated.
-         * */
+        /* Call the API to get new device credentials for this demo, and check that the certificate ID data is populated. */
         requestStatus = AwsIotProvisioning_CreateKeysAndCertificate( mqttConnection,
                                                                      0,
                                                                      AWS_IOT_DEMO_PROVISIONING_TIMEOUT_PERIOD_MS,

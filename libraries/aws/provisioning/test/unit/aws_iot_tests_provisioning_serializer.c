@@ -137,10 +137,10 @@ void _checkForBufferOverrun( const uint8_t * buffer,
 
     /* Check that both the front and rear reserve spaces in the buffer are not */
     /* overwritten. */
-    for( int index = 0; index < _reserveSize; index++ )
+    for( size_t index = 0; index < _reserveSize; index++ )
     {
-        assert( _bufferOverrunCheckValue == buffer[ index ] );
-        assert( _bufferOverrunCheckValue == buffer[ totalBufferSize - 1 - index ] );
+        TEST_ASSERT_EQUAL( _bufferOverrunCheckValue, buffer[ index ] );
+        TEST_ASSERT_EQUAL( _bufferOverrunCheckValue, buffer[ totalBufferSize - 1 - index ] );
     }
 }
 

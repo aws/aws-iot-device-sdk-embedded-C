@@ -31,18 +31,22 @@ set( DEMO_MAIN_FUNCTIONS
      RunShadowDemo
      RunDefenderDemo
      RunJobsDemo
-     RunProvisioningDemo )
+     RunProvisioningWithKeysAndCertDemo
+     RunProvisioningWithCsrDemo )
 set( DEMO_SOURCES
      src/iot_demo_mqtt.c
      src/aws_iot_demo_shadow.c
      src/aws_iot_demo_defender.c
      src/aws_iot_demo_jobs.c
-     src/aws_iot_demo_provisioning.c )
+     src/Provisioning/aws_iot_demo_provisioning_with_keys_and_cert.c
+     src/Provisioning/aws_iot_demo_provisioning_with_csr.c )
+
 set( DEMO_LIBRARY_DEPENDENCY
      iotmqtt
      "awsiotshadow\\\;awsiotcommon"
      awsiotdefender 
-     "awsiotjobs\\\;awsiotcommon" 
+     "awsiotjobs\\\;awsiotcommon"  
+     "awsiotprovisioning\\\;awsiotcommon" 
      "awsiotprovisioning\\\;awsiotcommon" )
 
 # Get the list length to iterate over it. Since CMake indexes from 0, subtract
