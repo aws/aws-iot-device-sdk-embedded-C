@@ -55,7 +55,7 @@ provisioning -> mqtt: Unsubscribe from response topics.
 provisioning -> app: Return MQTT_ERROR
 end alt
 
-provisioning -> provisioning: Wait on server response with timeout.
+provisioning -> provisioning: Start waiting on server response with timeout.
 deactivate app
 alt Receive Server Response within timeout period
 activate callback
@@ -66,13 +66,16 @@ provisioning -> app: Return error if parsing failed.
 provisioning -> callback: Invoke user-callback.\n Pass parsed server response payload.
 note right of callback: User-defined logic is executed.\nFor <b>KeysAndCertificate</b> and\n<b>CertificateFromCsr</b> operations,\n credentials should be stored in this callback.
 callback -> provisioning
+note right of callback: User-callback execution has completed.
 deactivate callback
+activate app
+provisioning->provisioning: Stop waiting on server response.
 else Server Response Wait Timed Out 
+provisioning -> provisioning: Stop waiting as timeout occurred.
 provisioning -> mqtt: Unsubscribe from response topics
 provisioning -> app: Return timeout error
 end alt
 
-activate app
 provisioning -> mqtt: Unsubscribe from "accepted" and "rejected" response topics
 mqtt -> aws: Transmit MQTT UNSUBSCRIBE packets to server.
 mqtt -> provisioning: Return SUCCESS or error if unsubscribe failed.
