@@ -61,8 +61,8 @@ provisioning --> app: Return MQTT_ERROR if PUBLISH failed.
 
 provisioning -> provisioning: Wait on server response with timeout.
 note right of provisioning: <b>Sempahore</b> resource used for pending on\n notification from MQTT subscription callback.
-alt Receive Server Response within timeout period
 deactivate app
+alt Receive Server Response within timeout period
 aws -> mqtt : Incoming PUBLISH response from server
 mqtt -> callback: Invoke MQTT subscription callback.\n Pass server response information.
 activate callback
@@ -76,12 +76,13 @@ else Successful Payload Parsing
 parser -> userCallback: Invoke user-callback.\nPass parsed payload information.
 parser -> callback: Return SUCCESS
 end alt
-callback -> provisioning: Notify pending API calling context about server response reception
-note left of callback: Notification done on the shared <b>semaphore resource</b>.
-alt Corner Case: Server response received after Provisionin library cleanup
+alt <u>Corner Case</u>: Server response received after\nProvisioning library has been cleaned up
 callback -> callback: Destroy semaphore resource
 note right of callback: Tackles <b>RACE CONDITION</b> between receiving\nduplicate server responses (MQTT QoS 1)\nand cleaning library after API returns.
 end alt
+callback -> provisioning: Notify pending API calling context about server response reception
+note left of callback: Notification done on the shared <b>semaphore resource</b>.
+
 deactivate callback
 activate app
 
@@ -96,7 +97,7 @@ provisioning -> app: Return SUCCESS
 else Server Response Wait Timed Out
 provisioning -> provisioning: Semaphore wait timeout occurred
 provisioning -> app: Return TIMEOUT error
-end alt
 deactivate app
+end alt
 
 @enduml
