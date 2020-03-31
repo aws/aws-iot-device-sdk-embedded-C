@@ -120,6 +120,7 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
     AwsIotProvisioning_Assert( pResponseData != NULL );
     AwsIotProvisioning_Assert( pStatusCode != NULL );
 
+    IotSerializerError_t decoderResult = IOT_SERIALIZER_SUCCESS;
     IotSerializerDecoderObject_t statusCodeDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t errorCodeDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
     IotSerializerDecoderObject_t errorMessageDecoder = IOT_SERIALIZER_DECODER_OBJECT_INITIALIZER;
@@ -127,81 +128,83 @@ static AwsIotProvisioningError_t _parseRejectedResponse( IotSerializerDecoderObj
     /* Suppress warning when parameter is unused in non-Debug mode. */
     ( void ) pOperationName;
 
-    /* Initialize the status as "server refused" as we are parsing the "rejected" response. */
-    IOT_FUNCTION_ENTRY( AwsIotProvisioningError_t, AWS_IOT_PROVISIONING_SERVER_REFUSED );
+    AwsIotProvisioningError_t status = AWS_IOT_PROVISIONING_SUCCESS;
 
     /* Parse the "status code" information. */
-    if( _pAwsIotProvisioningDecoder->find( pPayloadDecoder,
-                                           PROVISIONING_REJECTED_RESPONSE_STATUS_CODE_STRING,
-                                           &statusCodeDecoder ) != IOT_SERIALIZER_SUCCESS )
+    decoderResult = _pAwsIotProvisioningDecoder->find( pPayloadDecoder,
+                                                       PROVISIONING_REJECTED_RESPONSE_STATUS_CODE_STRING,
+                                                       &statusCodeDecoder );
+
+    if( decoderResult == IOT_SERIALIZER_NOT_FOUND )
     {
-        IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
+        /* Entry not found in the payload map. */
+        IotLogError( "parser: Unable to parse rejected server response: "
+                     "Key entry not found in response:"
+                     "ExpectedKey={\"%s\"}: Operation={\"%s\"}",
                      PROVISIONING_REJECTED_RESPONSE_STATUS_CODE_STRING,
                      pOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
+        status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
     }
-
-    if( statusCodeDecoder.type != IOT_SERIALIZER_SCALAR_SIGNED_INT )
+    else if( decoderResult != IOT_SERIALIZER_SUCCESS )
+    {
+        IotLogError( "parser: Unable to parse rejected server response: "
+                     "Decoder returned failure in searching key entry:"
+                     "Key={\"%s\"}: Operation={\"%s\"}",
+                     PROVISIONING_REJECTED_RESPONSE_STATUS_CODE_STRING,
+                     pOperationName );
+        status = AWS_IOT_PROVISIONING_INTERNAL_FAILURE;
+    }
+    else if( statusCodeDecoder.type != IOT_SERIALIZER_SCALAR_SIGNED_INT )
     {
         IotLogError(
-            "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is integer.",
+            "parser: Unable to parse rejected server response: "
+            "Invalid value type of key entry in payload: "
+            "Expected value type is integer: Key={\"%s\"}, Operation={\"%s\"}",
             PROVISIONING_REJECTED_RESPONSE_STATUS_CODE_STRING,
             pOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
+        status = AWS_IOT_PROVISIONING_BAD_RESPONSE;
     }
-
-    /* Copy the status code value to the output parameter. */
-    *pStatusCode = ( AwsIotProvisioningServerStatusCode_t ) statusCodeDecoder.u.value.u.signedInt;
-
-    /* Parse the "error code" information. */
-    if( _pAwsIotProvisioningDecoder->find( pPayloadDecoder,
-                                           PROVISIONING_REJECTED_RESPONSE_ERROR_CODE_STRING,
-                                           &errorCodeDecoder ) != IOT_SERIALIZER_SUCCESS )
+    else
     {
-        IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                     PROVISIONING_REJECTED_RESPONSE_ERROR_CODE_STRING,
-                     pOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
+        /* Parsing of "status code" is successful. */
+
+        /* Copy the status code value to the output parameter. */
+        *pStatusCode = ( AwsIotProvisioningServerStatusCode_t ) statusCodeDecoder.u.value.u.signedInt;
     }
 
-    if( errorCodeDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
-        IotLogError(
-            "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is text string.",
-            PROVISIONING_REJECTED_RESPONSE_ERROR_CODE_STRING,
-            pOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
+        /* Parse the "error code" information. */
+        status = _parseKeyedEntryInPayload( pPayloadDecoder,
+                                            &errorCodeDecoder,
+                                            PROVISIONING_REJECTED_RESPONSE_ERROR_CODE_STRING,
+                                            pOperationName );
+
+        if( status == AWS_IOT_PROVISIONING_SUCCESS )
+        {
+            /* Store the error code information in the output parameter. */
+            pResponseData->pErrorCode = ( const char * ) errorCodeDecoder.u.value.u.string.pString;
+            pResponseData->errorCodeLength = errorCodeDecoder.u.value.u.string.length;
+        }
     }
 
-    /* Store the error code information in the output parameter. */
-    pResponseData->pErrorCode = ( const char * ) errorCodeDecoder.u.value.u.string.pString;
-    pResponseData->errorCodeLength = errorCodeDecoder.u.value.u.string.length;
-
-    /* Parse the "error message" information. */
-    if( _pAwsIotProvisioningDecoder->find( pPayloadDecoder,
-                                           PROVISIONING_REJECTED_RESPONSE_ERROR_MESSAGE_STRING,
-                                           &errorMessageDecoder ) != IOT_SERIALIZER_SUCCESS )
+    if( status == AWS_IOT_PROVISIONING_SUCCESS )
     {
-        IotLogError( "Cannot find entry for \"%s\" in response from server of %s operation.",
-                     PROVISIONING_REJECTED_RESPONSE_ERROR_MESSAGE_STRING,
-                     pOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
+        /* Parse the "error message" information. */
+        status = _parseKeyedEntryInPayload( pPayloadDecoder,
+                                            &errorMessageDecoder,
+                                            PROVISIONING_REJECTED_RESPONSE_ERROR_MESSAGE_STRING,
+                                            pOperationName );
+
+        if( status == AWS_IOT_PROVISIONING_SUCCESS )
+        {
+            /* Store the error message information in the output parameter. */
+            pResponseData->pErrorMessage = ( const char * ) errorMessageDecoder.u.value.u.string.pString;
+            pResponseData->errorMessageLength = errorMessageDecoder.u.value.u.string.length;
+        }
     }
 
-    if( errorMessageDecoder.type != IOT_SERIALIZER_SCALAR_TEXT_STRING )
-    {
-        IotLogError(
-            "Invalid value type of \"%s\" entry in server response of %s operation. Expected type is text string.",
-            PROVISIONING_REJECTED_RESPONSE_ERROR_MESSAGE_STRING,
-            pOperationName );
-        IOT_SET_AND_GOTO_CLEANUP( AWS_IOT_PROVISIONING_BAD_RESPONSE );
-    }
-
-    /* Store the error message information in the output parameter. */
-    pResponseData->pErrorMessage = ( const char * ) errorMessageDecoder.u.value.u.string.pString;
-    pResponseData->errorMessageLength = errorMessageDecoder.u.value.u.string.length;
-
-    IOT_FUNCTION_EXIT_NO_CLEANUP();
+    return status;
 }
 
 /*------------------------------------------------------------------*/
@@ -406,8 +409,13 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseKeysAndCertificateResponse( A
             /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
             if( status == AWS_IOT_PROVISIONING_SUCCESS )
             {
+                IotLogInfo( "parser: Calling user-callback with rejected server response: Operation={\"%s\"}",
+                            CREATE_KEYS_AND_CERTIFICATE_OPERATION_LOG );
+
                 userCallbackInfo->createKeysAndCertificateCallback.function( userCallbackInfo->createKeysAndCertificateCallback.userParam,
                                                                              &userCallbackParam );
+
+                status = AWS_IOT_PROVISIONING_SERVER_REFUSED;
             }
 
             break;
@@ -502,7 +510,7 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
                     ownershipTokenDecoder.u.value.u.string.length;
 
                 /* Invoke the user-provided callback with the parsed credentials data . */
-                IotLogInfo( "parser: About to call user-callback with accepted server response: Operation={\"%s\"}",
+                IotLogInfo( "parser: Calling user-callback with accepted server response: Operation={\"%s\"}",
                             CREATE_CERT_FROM_CSR_OPERATION_LOG );
                 userCallbackInfo->createCertFromCsrCallback.function( userCallbackInfo->createCertFromCsrCallback.userParam,
                                                                       &serverResponse );
@@ -526,10 +534,12 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseCsrResponse( AwsIotStatus_t r
             /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
             if( status == AWS_IOT_PROVISIONING_SUCCESS )
             {
-                IotLogInfo( "parser: About to call user-callback with rejected server response: Operation={\"%s\"}",
+                IotLogInfo( "parser: Calling user-callback with rejected server response: Operation={\"%s\"}",
                             CREATE_CERT_FROM_CSR_OPERATION_LOG );
                 userCallbackInfo->createCertFromCsrCallback.function( userCallbackInfo->createCertFromCsrCallback.userParam,
                                                                       &serverResponse );
+
+                status = AWS_IOT_PROVISIONING_SERVER_REFUSED;
             }
         }
     }
@@ -783,8 +793,13 @@ AwsIotProvisioningError_t _AwsIotProvisioning_ParseRegisterThingResponse( AwsIot
             /* Invoke the user-provided callback with the parsed rejected data, if parsing was successful . */
             if( status == AWS_IOT_PROVISIONING_SUCCESS )
             {
+                IotLogInfo( "parser: Calling user-callback with rejected server response: Operation={\"%s\"}",
+                            REGISTER_THING_OPERATION_LOG );
+
                 userCallbackInfo->registerThingCallback.function( userCallbackInfo->registerThingCallback.userParam,
                                                                   &userCallbackParam );
+
+                status = AWS_IOT_PROVISIONING_SERVER_REFUSED;
             }
 
             break;

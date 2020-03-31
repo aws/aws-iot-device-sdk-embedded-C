@@ -222,6 +222,12 @@ static void _verifyParsedRejectedResponse( const AwsIotProvisioningRejectedRespo
                                            const AwsIotProvisioningRejectedResponse_t * pParsedData );
 
 /**
+ * @brief Flag to represent whether #_verifyParsedRejectedResponse is called in tests
+ * of parsing rejected response payload.
+ */
+static bool _rejectedResponseCallbackInvoked = false;
+
+/**
  * @brief Test user-callback to set expectations on parsing of #_sampleRejectedServerResponsePayload as rejected server
  * response. It will be passed as context parameter in callback parameter passed in tests.
  */
@@ -243,11 +249,24 @@ static void _testCreateCertFromCsrAcceptedCallback( void * contextParam,
                                                     const AwsIotProvisioningCreateCertFromCsrResponse_t * pResponseInfo );
 
 /**
+ * @brief Flag to represent whether #_testCreateCertFromCsrAcceptedCallback
+ * is called in tests of parsing accepted response payload of the related operation.
+ */
+static bool _certFromCsrCallbackInvoked = false;
+
+
+/**
  * @brief Test user-callback to set expectations on parsing of #_sampleAcceptedKeysAndCertificateResponse as accepted
  * server response. It will be passed as context parameter in callback parameter passed in tests.
  */
 static void _testCreateKeysAndCertificateAcceptedCallback( void * contextParam,
                                                            const AwsIotProvisioningCreateKeysAndCertificateResponse_t * pResponseInfo );
+
+/**
+ * @brief Flag to represent whether #_testCreateKeysAndCertificateAcceptedCallback
+ * is called in tests of parsing accepted response payload of the related operation.
+ */
+static bool _keysAndCertCallbackInvoked = false;
 
 /**
  * @brief Callback for the device credentials parser that fails on being invoked. This is meant to be used for tests
@@ -270,12 +289,14 @@ static void _registerThingCallbackThatFailsOnInvokation( void * contextParam,
 static void _testRegisterThingRejectedDeviceCallback( void * contextParam,
                                                       const AwsIotProvisioningRegisterThingResponse_t * pResponseInfo );
 
-
 /*-----------------------------------------------------------*/
 
 static void _verifyParsedRejectedResponse( const AwsIotProvisioningRejectedResponse_t * pExpectedData,
                                            const AwsIotProvisioningRejectedResponse_t * pParsedData )
 {
+    /* Set the callback invocation flag. */
+    _rejectedResponseCallbackInvoked = true;
+
     /* Disable unused parameter warnings. */
     ( void ) pExpectedData;
     ( void ) pParsedData;
@@ -311,6 +332,9 @@ static void _testCreateKeysAndCertificateAcceptedCallback( void * contextParam,
 {
     AwsIotProvisioningCreateKeysAndCertificateResponse_t * pExpectedParams =
         ( AwsIotProvisioningCreateKeysAndCertificateResponse_t * ) contextParam;
+
+    /* Set the callback invocation flag. */
+    _keysAndCertCallbackInvoked = true;
 
     /* Disable unused variable warnings. */
     ( void ) pExpectedParams;
@@ -359,6 +383,9 @@ static void _testCreateCertFromCsrAcceptedCallback( void * contextParam,
 {
     AwsIotProvisioningCreateCertFromCsrResponse_t * pExpectedParams =
         ( AwsIotProvisioningCreateCertFromCsrResponse_t * ) contextParam;
+
+    /* Set the callback invocation flag. */
+    _certFromCsrCallbackInvoked = true;
 
     /* Disable unused variable warnings. */
     ( void ) pExpectedParams;
@@ -450,6 +477,11 @@ TEST_SETUP( Provisioning_Unit_Parser )
     /* Initialize SDK. */
     TEST_ASSERT_EQUAL_INT( true, IotSdk_Init() );
 
+    /* Reset all callback invocation flags. */
+    _keysAndCertCallbackInvoked = false;
+    _certFromCsrCallbackInvoked = false;
+    _rejectedResponseCallbackInvoked = false;
+
     /* Initialize the Provisioning library. */
     AwsIotProvisioning_Init( 0 );
 
@@ -504,6 +536,8 @@ TEST( Provisioning_Unit_Parser, TestParseKeysAndCertificateRejectedResponse )
                                                                                                                  _sampleRejectedServerResponsePayload,
                                                                                                                  sizeof( _sampleRejectedServerResponsePayload ),
                                                                                                                  &wrapperCallback ) );
+    /* Make sure that the callback was invoked. */
+    TEST_ASSERT_TRUE( _rejectedResponseCallbackInvoked );
 }
 
 /**
@@ -521,6 +555,8 @@ TEST( Provisioning_Unit_Parser, TestParseKeysAndCertificateAcceptedResponse )
                                                                                                           _sampleAcceptedKeysAndCertificateResponse,
                                                                                                           sizeof( _sampleAcceptedKeysAndCertificateResponse ),
                                                                                                           &wrapperCallback ) );
+    /* Make sure that the callback was invoked. */
+    TEST_ASSERT_TRUE( _keysAndCertCallbackInvoked );
 }
 
 /**
@@ -615,6 +651,8 @@ TEST( Provisioning_Unit_Parser, TestParseCreateCertFromCsrRejectedResponse )
                                                                                                   _sampleRejectedServerResponsePayload,
                                                                                                   sizeof( _sampleRejectedServerResponsePayload ),
                                                                                                   &wrapperCallback ) );
+    /* Make sure that the callback was invoked. */
+    TEST_ASSERT_TRUE( _rejectedResponseCallbackInvoked );
 }
 
 /**
@@ -632,6 +670,8 @@ TEST( Provisioning_Unit_Parser, TestParseCreateCertFromCsrAcceptedResponse )
                                                                                            _sampleAcceptedCertFromCsrResponse,
                                                                                            sizeof( _sampleAcceptedCertFromCsrResponse ),
                                                                                            &wrapperCallback ) );
+    /* Make sure that the callback was invoked. */
+    TEST_ASSERT_TRUE( _certFromCsrCallbackInvoked );
 }
 
 /**
