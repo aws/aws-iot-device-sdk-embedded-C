@@ -21,6 +21,10 @@ box "AWS" #LightPink
 participant "AWS IoT Core" as aws
 end box
 
+app -> mqtt: Create MQTT connection
+mqtt -> app: Return MQTT connection handle or error.
+note right of app: Recommended to <i>share</i> MQTT connection\nacross Provisioning API calls.
+
 app -> provisioning: Call Provisioning operation API.\n Provide server response handling callback.
 activate app
 
@@ -30,12 +34,12 @@ provisioning --> app: Return BAD_PARAMETER for any invalid input argument
 provisioning -> mqtt: Subscribe to 'accepted' and 'rejected' response topics of operation
 note right of provisioning: Register MQTT subscription callback\nfor processing server response.
 
-provisioning -> provisioning: Set user-callback in global state memory
-note right of provisioning: Global state is shared between\nAPI calling and MQTT subscription callback contexts
-
 mqtt -> aws: Transmit MQTT SUBSCRIBE packets to Server
 mqtt -> provisioning: Return SUCCESS or error
 provisioning --> app: Return MQTT_ERROR if error in subscribing
+
+provisioning -> provisioning: Set user-callback in global state memory
+note right of provisioning: Global state is shared between\nAPI calling and MQTT subscription callback contexts
 
 provisioning -> serializer: Calculate size of operation request payload\nfor PUBLISH message
 serializer -> serializer: Performs <i>dry-run serialization</i>\nfor calculating payload size
