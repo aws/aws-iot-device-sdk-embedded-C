@@ -364,7 +364,7 @@ static int _establishMqttConnection( const char * pIdentifier,
 
 /**
  * @brief The function that runs the Provisioning demo, for the AWS IoT generated
- * cert from device generated CSR use-case, called by the demo runner.
+ * certificate from device generated CSR use-case, called by the demo runner.
  *
  * @param[in] awsIotMqttMode Ignored for the Provisioning demo.
  * @param[in] pIdentifier NULL-terminated Provisioning Thing Name.
