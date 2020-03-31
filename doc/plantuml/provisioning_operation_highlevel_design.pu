@@ -1,0 +1,75 @@
+@startuml
+
+title High-Level Diagram of an Operation in Provisioning Library
+
+skinparam classFontSize 8
+skinparam classFontName Helvetica
+
+actor "Application Task" as app
+
+box "Provisioning Library" #LightBlue
+participant "Provisioning" as provisioning
+end box
+
+box "User-Provided Callback" #Wheat
+participant "Provisioning User Callback" as callback
+end box
+
+box "MQTT Library" #LightGreen
+participant "MQTT" as mqtt
+end box
+
+box "AWS" #LightPink
+participant "AWS IoT Core" as aws
+end box
+
+app -> mqtt: Create MQTT connection
+mqtt -> app: Return MQTT connection handle or error.
+note right of app: Recommended to <i>share</i> MQTT connection\nacross Provisioning API calls.
+
+app -> provisioning: Call Provisioning operation API.\n Provide server response handling callback.
+activate app
+
+provisioning -> provisioning: Validate input arguments
+provisioning --> app: Return BAD_PARAMETER for any invalid input argument
+
+provisioning -> mqtt: Subscribe to 'accepted' and 'rejected' response topics of operation
+
+mqtt -> aws: Transmit MQTT SUBSCRIBE packets to Server
+mqtt -> provisioning: Return SUCCESS or error
+provisioning --> app: Return MQTT_ERROR if error in subscribing
+
+provisioning -> provisioning: Serialize PUBLISH payload
+provisioning -> provisioning: Return error if serialization failed.
+
+provisioning -> mqtt: PUBLISH payload to operation's request topic
+mqtt -> aws: Transmit MQTT PUBLISH packets to server
+mqtt -> provisioning: Return SUCCESS or failure.
+provisioning -> app: Return MQTT_ERROR if PUBLISH failed.
+
+provisioning -> provisioning: Wait on server response with timeout.
+deactivate app
+alt Receive Server Response within timeout period
+activate callback
+aws -> mqtt : Incoming PUBLISH response from server
+mqtt -> provisioning: Pass server response information.
+provisioning -> provisioning: Parse server response
+provisioning -> app: Return error if parsing failed.
+provisioning -> callback: Invoke user-callback.\n Pass parsed server response payload.
+note right of callback: User-defined logic is executed.\nFor <b>KeysAndCertificate</b> and\n<b>CertificateFromCsr</b> operations,\n credentials should be stored in this callback.
+callback -> provisioning
+deactivate callback
+else Server Response Wait Timed Out 
+provisioning -> provisioning: Return timeout error.
+end alt
+
+activate app
+provisioning -> mqtt: Unsubscribe from "accepted" and "rejected" response topics
+mqtt -> aws: Transmit MQTT UNSUBSCRIBE packets to server.
+mqtt -> provisioning: Return SUCCESS or error if unsubscribe failed.
+provisioning -> app: Return MQTT_ERROR if unsubscribe failed.
+
+provisioning -> provisioning: Release payload buffer memory
+provisioning -> app: Return SUCCESS or appropriate error for failure.
+deactivate app
+@enduml

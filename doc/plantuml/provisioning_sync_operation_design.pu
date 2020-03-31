@@ -1,4 +1,7 @@
 @startuml
+
+title Detailed Worflow Diagram of an Operation in Provisioning Library
+
 skinparam classFontSize 8
 skinparam classFontName Helvetica
 
@@ -37,9 +40,6 @@ note right of provisioning: Register MQTT subscription callback\nfor processing 
 mqtt -> aws: Transmit MQTT SUBSCRIBE packets to Server
 mqtt -> provisioning: Return SUCCESS or error
 provisioning --> app: Return MQTT_ERROR if error in subscribing
-
-provisioning -> provisioning: Set user-callback in global state memory
-note right of provisioning: Global state is shared between\nAPI calling and MQTT subscription callback contexts
 
 provisioning -> serializer: Calculate size of operation request payload\nfor PUBLISH message
 serializer -> serializer: Performs <i>dry-run serialization</i>\nfor calculating payload size
