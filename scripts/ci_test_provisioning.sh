@@ -43,16 +43,16 @@ setup() {
     # Create a provisioning role, if it does not exist in the account. If a new one is created, we add some delay time (10 sec) for the role to be available
     # (IAM role creation is "eventually consistent"). If the provisioning role already exists, then ignore errors. 
     # SUGGESTION: Do not delete the Provisioning Role from the account to ensure that the setup executes reliably.
-    # aws iam create-role \
-    #     --endpoint-url $GAMMA_ENDPOINT \
-    #     --role-name $PROVISIONING_ROLE_NAME \
-    #     --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' && sleep 10 \
-    #         || true
-    # aws iam attach-role-policy \
-    #     --endpoint 
-    #     --region $AWS_PROVISIONING_REGION \
-    #     --role-name $PROVISIONING_ROLE_NAME \
-    #     --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration  || true
+    aws iam create-role \
+        --endpoint-url $GAMMA_ENDPOINT \
+        --role-name $PROVISIONING_ROLE_NAME \
+        --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}' && sleep 10 \
+            || true
+    aws iam attach-role-policy \
+        --endpoint 
+        --region $AWS_PROVISIONING_REGION \
+        --role-name $PROVISIONING_ROLE_NAME \
+        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration  || true
 
     # Delete an existing fleet provisioning template by the same name, if it exists. Ignore the error if the template does not exist.
     aws iot delete-provisioning-template \
