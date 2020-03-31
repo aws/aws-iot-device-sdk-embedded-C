@@ -60,7 +60,7 @@ note right of callback: User-defined logic is executed.\nFor <b>KeysAndCertifica
 callback -> provisioning
 deactivate callback
 else Server Response Wait Timed Out 
-provisioning -> provisioning: Return timeout error.
+provisioning -> app: Return timeout error
 end alt
 
 activate app
@@ -69,7 +69,6 @@ mqtt -> aws: Transmit MQTT UNSUBSCRIBE packets to server.
 mqtt -> provisioning: Return SUCCESS or error if unsubscribe failed.
 provisioning -> app: Return MQTT_ERROR if unsubscribe failed.
 
-provisioning -> provisioning: Release payload buffer memory
 provisioning -> app: Return SUCCESS or appropriate error for failure.
 deactivate app
 @enduml
