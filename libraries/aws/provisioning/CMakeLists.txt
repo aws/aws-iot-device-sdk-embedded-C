@@ -6,7 +6,7 @@ set( PROVISIONING_SOURCES
 
 # PROVISIONING library target.
 add_library( awsiotprovisioning
-            # ${CONFIG_HEADER_PATH}/iot_config.h
+             ${CONFIG_HEADER_PATH}/iot_config.h
              ${PROVISIONING_SOURCES}
              include/aws_iot_provisioning.h
              include/types/aws_iot_provisioning_types.h
@@ -21,7 +21,7 @@ target_include_directories( awsiotprovisioning PRIVATE src )
 # Link required libraries.
 target_link_libraries( awsiotprovisioning PRIVATE awsiotcommon iotbase iotserializer )
 
-# Jobs is currently implemented on MQTT, so link MQTT as a public dependency.
+# Provisioning is currently implemented on MQTT, so link MQTT as a public dependency.
 target_link_libraries( awsiotprovisioning PUBLIC iotmqtt )
 
 # Organization of PROVISIONING in folders.

@@ -139,6 +139,9 @@
 #endif
 
 /* Set defines required for Provisioning demo when building demo target with IOT_BUILD_TESTS set to 1. */
+#ifdef AWS_IOT_TEST_PROVISIONING_CSR_PEM
+    #define AWS_IOT_DEMO_PROVISIONING_CSR_PEM                                 AWS_IOT_TEST_PROVISIONING_CSR_PEM
+#endif
 #ifdef AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME
     #define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME                           AWS_IOT_TEST_PROVISIONING_TEMPLATE_NAME
 #endif

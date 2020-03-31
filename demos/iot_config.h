@@ -59,7 +59,13 @@
 #define AWS_IOT_DEMO_SHADOW_UPDATE_PERIOD_MS       ( 3000 )                 /* Period of Shadow updates. */
 
 /**
- * The name for the provisioning template that will be used for provisioning the demo app.
+ * The Certificate-Signing Request string to use for CSR-based Provisioning demo app.
+ */
+#define AWS_IOT_DEMO_PROVISIONING_CSR_PEM          ""
+
+/**
+ * The name for the fleet provisioning template that will be used for provisioning
+ * for registering thing in the Provisioning demo applications.
  */
 #define AWS_IOT_DEMO_PROVISIONING_TEMPLATE_NAME    ""
 
