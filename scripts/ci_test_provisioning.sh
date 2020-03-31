@@ -156,8 +156,10 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
         } \
     }"
 
-    # Save the generated CSR for testing.
-    CSR_PEM_DATA=$(echo -E $(cat $CSR_FILE))
+    # Save the stored Certificate-Signing Request for testing.
+    # Note: The newline characters are truncated from the file to store the CSR
+    # data as a single-line text.
+    CSR_PEM_DATA=$(tr -d '\r\n' < $CSR_FILE)
 
     # Compiler flags for integration and unit tests.
     COMMON_CMAKE_C_FLAGS="$AWS_IOT_CREDENTIAL_DEFINES -DAWS_IOT_TEST_PROVISIONING_CSR_PEM=\"\\\"$CSR_PEM_DATA\\\"\" "
