@@ -42,7 +42,7 @@ Some functions contain unreachable blocks of code:
   _IotMqtt_CreateOperation
 
   * pOperation is null if status is not SUCCESS.  This is because 1)
-	status is initialized to SUCCESS and is left untouch when operation
+	status is initialized to SUCCESS and is left untouched when operation
 	allocation succeeds (returns a nonnull value), and 2) status is set
 	to SUCCESS by _initializeOperation because _initializeOperation
 	always returns SUCCESS because an asynchronous operation is
@@ -57,7 +57,7 @@ Some functions contain unreachable blocks of code:
   _IotMqtt_DestroyOperation
 
   * Notify calls DestroyOperation with a linked, unwaitable
-	(asychronous) SUBSCRIBE operation.
+	(asynchronous) SUBSCRIBE operation.
 
 * libraries/standard/mqtt/src/iot_mqtt_operation.c _IotMqtt_Notify
 
