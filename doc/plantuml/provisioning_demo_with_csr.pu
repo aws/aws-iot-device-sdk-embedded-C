@@ -17,15 +17,15 @@ box "Provisioning Library" #LightGreen
 end box
 
 box "Fleet Provisioning feature of\nAWS Iot Core service" #LightPink
-    participant "<b>CreateCertificateFromCsr</b>\n MQTT API" as keysandcertapi
+    participant "<b>CreateCertificateFromCsr</b>\n MQTT API" as certfromcsrapi
     participant "<b>RegisterThing</b>\n MQTT API" as registerthingapi
 end box
 
 main -> library: Request new credentials (provide callback)
 note over library: AwsIotProvisioning_CreateCertificateFromCsr
-library -> keysandcertapi: Request new certificate from CSR 
-keysandcertapi -> keysandcertapi: Generate new keys and certificate
-keysandcertapi -> library: Send new certificate response
+library -> certfromcsrapi: Request new certificate from CSR 
+certfromcsrapi -> certfromcsrapi: Generate new keys and certificate
+certfromcsrapi -> library: Send new certificate response
 library -> certfromcsr_callback: Invoke callback with server response payload
 note left of certfromcsr_callback: Print server response data, and \nstore <b>certificate ID</b> and \n<b>certificate ownership token</b>\nin demo application buffers.
 
