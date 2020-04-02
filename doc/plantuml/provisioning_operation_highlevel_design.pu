@@ -14,6 +14,10 @@ box "Provisioning Library" #LightBlue
 participant "Provisioning" as provisioning
 end box
 
+box "Serializer Library" #LightGoldenRodYellow
+participant "Serializer" as serializer
+end box
+
 box "MQTT Library" #LightGreen
 participant "MQTT" as mqtt
 end box
@@ -41,7 +45,8 @@ provisioning -> mqtt: Unsubscribe from response topics.
 provisioning --> app: Return MQTT_ERROR.
 end alt
 
-provisioning -> provisioning: Serialize PUBLISH payload
+provisioning -> serializer: Serialize PUBLISH payload
+serializer -> provisioning: Return success or error.
 alt PUBLISH payload serialization failed
 provisioning -> mqtt: Unsubscribe from response topics.
 provisioning -> app: Return INTERNAL_FAILURE or NO_MEMORY that caused\nserialization failure.
@@ -61,8 +66,12 @@ alt Receive Server Response within timeout period
 activate callback
 aws -> mqtt : Incoming PUBLISH response from server
 mqtt -> provisioning: Pass server response information.
-provisioning -> provisioning: Parse server response
-provisioning -> app: Return error if parsing failed.
+provisioning -> serializer: De-serialize server response
+serializer -> provisioning: Return success of error.
+alt Server response parsing failed
+provisioning -> mqtt: Unsubscribe from response topics. 
+provisioning -> app: Return BAD_RESPONSE or INTERNAL_FAILURE that\ncaused response parsing failure.
+end alt
 provisioning -> callback: Invoke user-callback.\n Pass parsed server response payload.
 note right of callback: User-defined logic is executed.\nFor <b>KeysAndCertificate</b> and\n<b>CertificateFromCsr</b> operations,\n credentials should be stored in this callback.
 callback -> provisioning
