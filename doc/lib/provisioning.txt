@@ -66,23 +66,23 @@ No logging, asserts, or diagnostic information. Compiled using the ARM Thumb ins
         <td>aws_iot_provisioning_api</td>
         <td>1744</td>
         <td>4</td>
-        <td>69</td>
-    </tr>
-    <tr>
-        <td>aws_iot_provisioning_serializer</td>
-        <td>7899</td>
-        <td>0</td>
-        <td>0</td>
+        <td>72</td>
     </tr>
     <tr>
         <td>aws_iot_provisioning_parser</td>
-        <td>5701</td>
+        <td>1542</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>aws_iot_provisioning_serializer</td>
+        <td>1278</td>
         <td>0</td>
         <td>0</td>
     </tr>
     <tr>
         <td><b>total</b></td>
-        <td><b>21244</b></td>
+        <td><b>4564</b></td>
         <td><b>4</b></td>
         <td><b>72</b></td>
     </tr>
@@ -105,14 +105,14 @@ All logging, asserts, and diagnostic information enabled. Debugging symbols avai
         <td>69</td>
     </tr>
     <tr>
-        <td>aws_iot_provisioning_serializer</td>
-        <td>5105</td>
+        <td>aws_iot_provisioning_parser</td>
+        <td>7899</td>
         <td>0</td>
         <td>0</td>
     </tr>
     <tr>
-        <td>aws_iot_provisioning_parser</td>
-        <td>7435</td>
+        <td>aws_iot_provisioning_serializer</td>
+        <td>5701</td>
         <td>0</td>
         <td>0</td>
     </tr>
