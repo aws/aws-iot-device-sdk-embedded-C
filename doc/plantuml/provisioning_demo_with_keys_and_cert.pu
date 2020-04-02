@@ -35,7 +35,7 @@ note left of main: Provides\n1.Certificate ID and Token\n stored in demo applica
 library -> registerthingapi: Request registration of device
 registerthingapi -> registerthingapi: Register <b>certificate</b>,\nattach <b>policy</b>,\ncreate <b>Thing</b> resource,\nand attach <b>certificate to Thing</b>.
 registerthingapi -> library: Send Thing Name,\nand Device Configuration (specified in Fleet Provisioning Template)
-library -> register_thing: Invoke callback with server response
-note left of register_thing: Print the server response
+library -> registerthing_callback: Invoke callback with server response
+note left of registerthing_callback: Print the server response
 
 @enduml
