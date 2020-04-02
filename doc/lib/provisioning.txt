@@ -50,7 +50,7 @@ In addition to the components above, the Provisioning library also depends on C 
 
 The following measurements were taken with arm-none-eabi-gcc v9.2.1 (November 2019) with the [Provisioning library from April 2020](https://github.com/aws/aws-iot-device-sdk-embedded-C/commit/26acc9320e35d29086e2b519f46040daab776f70). These values are rough estimates not tuned for any specific ARM processor.
 
-(Also, refer to the @ref mqtt_memory, which is a dependency of the Provisioning library.)
+(Also, refer to the [MQTT memory requirements](@ref mqtt_memory), which is a dependency of the Provisioning library.)
 
 <b>Minimal Size Build</b> <br>
 No logging, asserts, or diagnostic information. Compiled using the ARM Thumb instruction set (`-mthumb`) and optimized for size (`-Os`). Values are in <i>bytes</i>.
