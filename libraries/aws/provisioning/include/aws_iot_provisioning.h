@@ -103,9 +103,9 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  * For the threat of an unauthorized reuse of the private key, that is received in
  * the server response, in order to clone the device, an effective way to mitigate that
  * is to audit, in the cloud, the use of each device private key. For example, if a
- * device private key is reused, your cloud app could log an audit event for operator
- * follow-up, and/or initiate a workflow for revoking the previous certificate(s)
- * issued to that key.
+ * device private key is reused, your cloud app (through Fleet Provisioning Hooks) could
+ * log an audit event for operator follow-up, and/or initiate a workflow for revoking the
+ * previous certificate(s) issued to that key.
  *
  * @param[in] connection The MQTT connection handle to the user AWS IoT account, which
  * will be used for communicating with the server for creating new device credentials.
@@ -157,14 +157,15 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * @note Depending on the threat model of your IoT device, there are considerations for
  * protecting its identity.
  * One threat is theft of the private key that the application
- * uses to sign the @p pCertificateSigningRequest input to this function. An effective way
- * to mitigate that threat is to store all device private keys in a secure element.
+ * uses to sign the @p pCertificateSigningRequest input to this function. An effective
+ * way to mitigate that threat is to store all device private keys in a secure element.
  * Another threat is the unauthorized reuse of the device private key, and/or of the
  * contents of @p pCertificateSigningRequest, in order to clone the device. An effective
- * way to mitigate that threat is to audit, in the cloud, the use of each device private
- * key. For example, if a device private key is reused, your cloud app could log an audit
- * event for operator follow-up, and/or initiate a workflow for revoking the previous
- * certificate(s) issued to that key.
+ * way to mitigate that threat is to audit, in the cloud, the use of each device
+ * private key. For example, if a device private key is reused, your cloud app
+ * (through Fleet Provisioning Hooks) could log an audit event for operator follow-up,
+ * and/or initiate a workflow for revoking the previous certificate(s) issued to
+ * that key.
  *
  * @warning Do not overwrite the existing Provisioning claim credentials with the new
  * credentials provided by the server, at least until the device has been provisioned
