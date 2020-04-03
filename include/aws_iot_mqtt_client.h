@@ -296,7 +296,8 @@ typedef struct _ClientData {
  *
  */
 struct _Client {
-	Timer pingTimer;
+	Timer pingReqTimer;		/* Timer to keep track of when to send next PINGREQ. */
+	Timer pingRespTimer;	/* Timer to ensure that PINGRESP is received timely. */
 	Timer reconnectDelayTimer;
 
 	ClientStatus clientStatus;

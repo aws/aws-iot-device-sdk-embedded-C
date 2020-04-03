@@ -274,7 +274,8 @@ IoT_Error_t aws_iot_mqtt_init(AWS_IoT_Client *pClient, IoT_Client_Init_Params *p
 		FUNC_EXIT_RC(rc);
 	}
 
-	init_timer(&(pClient->pingTimer));
+	init_timer(&(pClient->pingReqTimer));
+	init_timer(&(pClient->pingRespTimer));
 	init_timer(&(pClient->reconnectDelayTimer));
 
 	pClient->clientStatus.clientState = CLIENT_STATE_INITIALIZED;

@@ -437,8 +437,9 @@ static IoT_Error_t _aws_iot_mqtt_internal_connect(AWS_IoT_Client *pClient, IoT_C
 		FUNC_EXIT_RC(connack_rc);
 	}
 
+	/* Ensure that a ping request is sent after keepAliveInterval. */
 	pClient->clientStatus.isPingOutstanding = false;
-	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval);
+	countdown_sec(&pClient->pingReqTimer, pClient->clientData.keepAliveInterval);
 
 	FUNC_EXIT_RC(SUCCESS);
 }
