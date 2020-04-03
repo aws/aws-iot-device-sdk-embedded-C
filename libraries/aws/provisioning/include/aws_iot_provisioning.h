@@ -96,7 +96,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  * credentials provided by the server, at least until the device has been provisioned
  * with a new certificate using the @ref provisioning_function_registerthing function.
  * It is also recommended to always retain the Provisioning claim credentials,
- * if the claim certificate is long-lived.
+ * if your product use-case supports re-provisioning the device.
  *
  * @note We provide a security recommendation for protecting the identity, received from
  * the server through this API function, for your IoT device.
@@ -171,7 +171,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * credentials provided by the server, at least until the device has been provisioned
  * with a new certificate using the @ref provisioning_function_registerthing function.
  * It is also recommended to always retain the Provisioning claim credentials,
- * if the claim certificate is long-lived.
+ * if your product use-case supports re-provisioning the device.
  *
  * @param[in] connection The MQTT connection handle that will be used to communicate
  * with AWS IoT Core for the Certificate-Signing Request.
