@@ -45,6 +45,7 @@ extern "C" {
 #include "aws_iot_mqtt_client_interface.h"
 #include "aws_iot_mqtt_client_common_internal.h"
 
+/** connect flags byte */
 typedef union {
 	uint8_t all;    /**< all connect flags */
 #if defined(REVERSED)
@@ -57,27 +58,21 @@ typedef union {
 		unsigned int will : 1;			/**< will flag */
 		unsigned int cleansession : 1;	/**< clean session flag */
 		unsigned int : 1;				/**< unused */
-	} bits;
+	} bits; /**< connect flags byte (reversed order) */
 #else
 	struct {
-		unsigned int : 1;
-		/**< unused */
-		unsigned int cleansession : 1;
-		/**< cleansession flag */
-		unsigned int will : 1;
-		/**< will flag */
-		unsigned int willQoS : 2;
-		/**< will QoS value */
-		unsigned int willRetain : 1;
-		/**< will retain setting */
-		unsigned int password : 1;
-		/**< 3.1 password */
-		unsigned int username : 1;        /**< 3.1 user name */
-	} bits;
+		unsigned int : 1; /**< unused */
+		unsigned int cleansession : 1; /**< cleansession flag */
+		unsigned int will : 1; /**< will flag */
+		unsigned int willQoS : 2; /**< will QoS value */
+		unsigned int willRetain : 1; /**< will retain setting */
+		unsigned int password : 1; /**< 3.1 password */
+		unsigned int username : 1; /**< 3.1 user name */
+	} bits; /**< connect flags byte (normal order) */
 #endif
 } MQTT_Connect_Header_Flags;
-/**< connect flags byte */
 
+/** connack flags byte */
 typedef union {
 	uint8_t all;                            /**< all connack flags */
 #if defined(REVERSED)
@@ -85,26 +80,24 @@ typedef union {
 	{
 		unsigned int sessionpresent : 1;	/**< session present flag */
 		unsigned int : 7;					/**< unused */
-	} bits;
+	} bits; /**< connect flags byte (reverse order) */
 #else
 	struct {
-		unsigned int : 7;
-		/**< unused */
-		unsigned int sessionpresent : 1;    /**< session present flag */
-	} bits;
+		unsigned int : 7; /**< unused */
+		unsigned int sessionpresent : 1; /**< session present flag */
+	} bits; /**< connect flags byte (normal order) */
 #endif
 } MQTT_Connack_Header_Flags;
-/**< connack flags byte */
 
+/** @brief Connect request response codes from server */
 typedef enum {
-	CONNACK_CONNECTION_ACCEPTED = 0,
-	CONNACK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR = 1,
-	CONNACK_IDENTIFIER_REJECTED_ERROR = 2,
-	CONNACK_SERVER_UNAVAILABLE_ERROR = 3,
-	CONNACK_BAD_USERDATA_ERROR = 4,
-	CONNACK_NOT_AUTHORIZED_ERROR = 5
-} MQTT_Connack_Return_Codes;    /**< Connect request response codes from server */
-
+	CONNACK_CONNECTION_ACCEPTED = 0, /**< Connection accepted */
+	CONNACK_UNACCEPTABLE_PROTOCOL_VERSION_ERROR = 1, /**< Unacceptable protocol version */
+	CONNACK_IDENTIFIER_REJECTED_ERROR = 2, /**< Client identifier rejected */
+	CONNACK_SERVER_UNAVAILABLE_ERROR = 3, /**< Server unavailable */
+	CONNACK_BAD_USERDATA_ERROR = 4, /**< Bad username */
+	CONNACK_NOT_AUTHORIZED_ERROR = 5 /**< Not authorized */
+} MQTT_Connack_Return_Codes;
 
 /**
   * Determines the length of the MQTT connect packet that would be produced using the supplied connect options.

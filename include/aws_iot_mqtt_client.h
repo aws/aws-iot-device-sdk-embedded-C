@@ -61,6 +61,7 @@ extern "C" {
 #include "threads_interface.h"
 #endif
 
+/** Greatest packet identifier, per MQTT spec */
 #define MAX_PACKET_ID 65535
 
 typedef struct _Client AWS_IoT_Client;
@@ -118,8 +119,10 @@ typedef struct {
 	bool isRetained;		///< NOT supported. The retained flag for the LWT message (see MQTTAsync_message.retained)
 	QoS qos;			///< QoS of LWT message
 } IoT_MQTT_Will_Options;
+/** Default initializer for will */
 extern const IoT_MQTT_Will_Options iotMqttWillOptionsDefault;
 
+/** Default initializer for will */
 #define IoT_MQTT_Will_Options_Initializer { {'M', 'Q', 'T', 'W'}, NULL, 0, NULL, 0, false, QOS0 }
 
 /**
@@ -142,8 +145,10 @@ typedef struct {
 	char *pPassword;			///< Not used in the AWS IoT Service, will need to be cstring if used
 	uint16_t passwordLen;			///< Password Length. 16 bit unsigned integer
 } IoT_Client_Connect_Params;
+/** Default initializer for connect */
 extern const IoT_Client_Connect_Params iotClientConnectParamsDefault;
 
+/** Default initializer for connect */
 #define IoT_Client_Connect_Params_initializer { {'M', 'Q', 'T', 'C'}, MQTT_3_1_1, NULL, 0, 60, true, false, \
         IoT_MQTT_Will_Options_Initializer, NULL, 0, NULL, 0 }
 
@@ -179,8 +184,10 @@ typedef struct {
 	bool isBlockOnThreadLockEnabled;		///< Timeout for Thread blocking calls. Set to 0 to block until lock is obtained. In milliseconds
 #endif
 } IoT_Client_Init_Params;
+/** Default initializer for client */
 extern const IoT_Client_Init_Params iotClientInitParamsDefault;
 
+/** Default initializer for client */
 #ifdef _ENABLE_THREAD_SUPPORT_
 #define IoT_Client_Init_Params_initializer { true, NULL, 0, NULL, NULL, NULL, 2000, 20000, 5000, true, NULL, NULL, false }
 #else
@@ -228,12 +235,12 @@ typedef void (*pApplicationHandler_t)(AWS_IoT_Client *pClient, char *pTopicName,
  *
  */
 typedef struct _MessageHandlers {
-	const char *topicName;
-	uint16_t topicNameLen;
-	char resubscribed;
-	QoS qos;
-	pApplicationHandler_t pApplicationHandler;
-	void *pApplicationHandlerData;
+	const char *topicName; ///< Topic name of subscription
+	uint16_t topicNameLen; ///< Length of topic name
+	char resubscribed; ///< Whether this handler was successfully resubscribed in the reconnect workflow
+	QoS qos; ///< QoS of subscription
+	pApplicationHandler_t pApplicationHandler; ///< Application function to invoke
+	void *pApplicationHandlerData; ///< Context to pass to application handler
 } MessageHandlers;   /* Message handlers are indexed by subscription topic */
 
 /**
@@ -244,9 +251,9 @@ typedef struct _MessageHandlers {
  *
  */
 typedef struct _ClientStatus {
-	ClientState clientState;
-	bool isPingOutstanding;
-	bool isAutoReconnectEnabled;
+	ClientState clientState; ///< The current state of the client's state machine
+	bool isPingOutstanding; ///< Whether this client is waiting for a ping response
+	bool isAutoReconnectEnabled; ///< Whether auto-reconnect is enabled for this client
 } ClientStatus;
 
 /**
@@ -257,36 +264,35 @@ typedef struct _ClientStatus {
  *
  */
 typedef struct _ClientData {
-	uint16_t nextPacketId;
+	uint16_t nextPacketId; ///< Packet ID to use for the next generated packet
 
-	uint32_t packetTimeoutMs;
-	uint32_t commandTimeoutMs;
-	uint16_t keepAliveInterval;
-	uint32_t currentReconnectWaitInterval;
-	uint32_t counterNetworkDisconnected;
+	uint32_t packetTimeoutMs; ///< Timeout for reading incoming packets from the network
+	uint32_t commandTimeoutMs; ///< Timeout for processing outgoing MQTT packets
+	uint16_t keepAliveInterval; ///< Maximum interval between control packets
+	uint32_t currentReconnectWaitInterval; ///< Current backoff period for reconnect
+	uint32_t counterNetworkDisconnected; ///< How many times this client detected a disconnection
 
 	/* The below values are initialized with the
 	 * lengths of the TX/RX buffers and never modified
 	 * afterwards */
-	size_t writeBufSize;
-	size_t readBufSize;
-    size_t readBufIndex;
-	unsigned char writeBuf[AWS_IOT_MQTT_TX_BUF_LEN];
-	unsigned char readBuf[AWS_IOT_MQTT_RX_BUF_LEN];
+	size_t writeBufSize; ///< Size of this client's outgoing data buffer
+	size_t readBufSize; ///< Size of this client's incoming data buffer
+	size_t readBufIndex; ///< Current offset into the incoming data buffer
+	unsigned char writeBuf[AWS_IOT_MQTT_TX_BUF_LEN]; ///< Buffer for outgoing data
+	unsigned char readBuf[AWS_IOT_MQTT_RX_BUF_LEN]; ///< Buffer for incoming data
 
 #ifdef _ENABLE_THREAD_SUPPORT_
-	bool isBlockOnThreadLockEnabled;
-	IoT_Mutex_t state_change_mutex;
-	IoT_Mutex_t tls_read_mutex;
-	IoT_Mutex_t tls_write_mutex;
+	bool isBlockOnThreadLockEnabled; ///< Whether to use nonblocking or blocking mutex APIs
+	IoT_Mutex_t state_change_mutex; ///< Mutex protecting the client's state machine
+	IoT_Mutex_t tls_read_mutex; ///< Mutex protecting incoming data
+	IoT_Mutex_t tls_write_mutex; ///< Mutex protecting outgoing data
 #endif
 
-	IoT_Client_Connect_Params options;
+	IoT_Client_Connect_Params options; ///< Options passed when the client was initialized
 
-	MessageHandlers messageHandlers[AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS];
-	iot_disconnect_handler disconnectHandler;
-
-	void *disconnectHandlerData;
+	MessageHandlers messageHandlers[AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS]; ///< Callbacks for incoming messages
+	iot_disconnect_handler disconnectHandler; ///< Callback when a disconnection is detected
+	void *disconnectHandlerData; ///< Context for disconnect handler
 } ClientData;
 
 /**
@@ -296,12 +302,12 @@ typedef struct _ClientData {
  *
  */
 struct _Client {
-	Timer pingTimer;
-	Timer reconnectDelayTimer;
+	Timer pingTimer; ///< Timer for MQTT keep-alive mechanism
+	Timer reconnectDelayTimer; ///< Timer for backoff on reconnect
 
-	ClientStatus clientStatus;
-	ClientData clientData;
-	Network networkStack;
+	ClientStatus clientStatus; ///< Client state information
+	ClientData clientData; ///< Client context
+	Network networkStack; ///< Table of network function pointers
 };
 
 /**
@@ -372,7 +378,7 @@ bool aws_iot_is_autoreconnect_enabled(AWS_IoT_Client *pClient);
  * The disconnect handler is called whenever the client disconnects with error
  *
  * @param pClient Reference to the IoT Client
- * @param pConnectHandler Reference to the new Disconnect Handler
+ * @param pDisconnectHandler Reference to the new Disconnect Handler
  * @param pDisconnectHandlerData Reference to the data to be passed as argument when disconnect handler is called
  *
  * @return IoT_Error_t Type defining successful/failed API call

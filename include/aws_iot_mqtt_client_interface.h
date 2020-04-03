@@ -32,7 +32,7 @@
  *******************************************************************************/
 
 /**
- * @file aws_iot_mqtt_interface.h
+ * @file aws_iot_mqtt_client_interface.h
  * @brief Interface definition for MQTT client.
  */
 
@@ -120,12 +120,13 @@ IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName
  * @warning pTopicName and pApplicationHandlerData need to be static in memory.
  *
  * @param pClient Reference to the IoT Client
- * @param pTopicName Topic Name to publish to. pTopicName needs to be static in memory since 
- *     no malloc are performed by the SDK
+ * @param pTopicName Topic Name to publish to. pTopicName needs to be static in memory since
+ * no malloc is performed by the SDK
  * @param topicNameLen Length of the topic name
- * @param pApplicationHandler_t Reference to the handler function for this subscription
- * @param pApplicationHandlerData Point to data passed to the callback. 
- *    pApplicationHandlerData also needs to be static in memory  since no malloc are performed by the SDK
+ * @param qos Quality of service for subscription
+ * @param pApplicationHandler Reference to the handler function for this subscription
+ * @param pApplicationHandlerData Point to data passed to the callback. pApplicationHandlerData
+ * also needs to be static in memory since no malloc is performed by the SDK
  *
  * @return An IoT Error Type defining successful/failed subscription
  */
@@ -154,8 +155,8 @@ IoT_Error_t aws_iot_mqtt_resubscribe(AWS_IoT_Client *pClient);
  * @note Call is blocking.  The call returns after the receipt of the UNSUBACK control packet.
  *
  * @param pClient Reference to the IoT Client
- * @param pTopicName Topic Name to publish to
- * @param topicNameLen Length of the topic name
+ * @param pTopicFilter Topic filter of subscription
+ * @param topicFilterLen Length of the topic filter
  *
  * @return An IoT Error Type defining successful/failed unsubscribe call
  */
