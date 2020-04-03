@@ -41,6 +41,89 @@ Currently, the Provisioning library has the following dependencies:
 - The logging library may be used if @ref AWS_IOT_LOG_LEVEL_PROVISIONING is not #IOT_LOG_NONE.
 
 In addition to the components above, the Provisioning library also depends on C standard libraries.
+
+@section provisioning_memory Memory requirements
+@brief Memory requirements of the Provisioning library.
+
+@subsection provisioning_memory_code Code size
+@brief Code size of the Provisioning library.
+
+The following measurements were taken with arm-none-eabi-gcc v9.2.1 (November 2019) with the [Provisioning library from April 2020](https://github.com/aws/aws-iot-device-sdk-embedded-C/commit/26acc9320e35d29086e2b519f46040daab776f70). These values are rough estimates not tuned for any specific ARM processor.
+
+(Also, refer to the [MQTT memory requirements](@ref mqtt_memory), which is a dependency of the Provisioning library.)
+
+<b>Minimal Size Build</b> <br>
+No logging, asserts, or diagnostic information. Compiled using the ARM Thumb instruction set (`-mthumb`) and optimized for size (`-Os`). Values are in <i>bytes</i>.
+
+<table>
+    <tr>
+        <td><b>object</b></td>
+        <td><b>text</b></td>
+        <td><b>data</b></td>
+        <td><b>bss</b></td>
+    </tr>
+    <tr>
+        <td>aws_iot_provisioning_api</td>
+        <td>1744</td>
+        <td>4</td>
+        <td>72</td>
+    </tr>
+    <tr>
+        <td>aws_iot_provisioning_parser</td>
+        <td>1542</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>aws_iot_provisioning_serializer</td>
+        <td>1278</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td><b>total</b></td>
+        <td><b>4564</b></td>
+        <td><b>4</b></td>
+        <td><b>72</b></td>
+    </tr>
+</table>
+
+<b>Debug Build</b> <br>
+All logging, asserts, and diagnostic information enabled. Debugging symbols available. Compiled using the ARM Thumb instruction set (`-mthumb`). Values are in <i>bytes</i>.
+
+<table>
+    <tr>
+        <td><b>object</b></td>
+        <td><b>text</b></td>
+        <td><b>data</b></td>
+        <td><b>bss</b></td>
+    </tr>
+    <tr>
+        <td>aws_iot_provisioning_api</td>
+        <td>7644</td>
+        <td>4</td>
+        <td>69</td>
+    </tr>
+    <tr>
+        <td>aws_iot_provisioning_parser</td>
+        <td>7899</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>aws_iot_provisioning_serializer</td>
+        <td>5701</td>
+        <td>0</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td><b>total</b></td>
+        <td><b>21244</b></td>
+        <td><b>4</b></td>
+        <td><b>69</b></td>
+    </tr>
+</table>
+
 */
 
 /**
