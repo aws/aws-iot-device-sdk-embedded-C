@@ -302,7 +302,8 @@ typedef struct _ClientData {
  *
  */
 struct _Client {
-	Timer pingTimer; ///< Timer for MQTT keep-alive mechanism
+	Timer pingReqTimer;		///< Timer to keep track of when to send next PINGREQ
+	Timer pingRespTimer;	///< Timer to ensure that PINGRESP is received timely
 	Timer reconnectDelayTimer; ///< Timer for backoff on reconnect
 
 	ClientStatus clientStatus; ///< Client state information

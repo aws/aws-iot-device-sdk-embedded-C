@@ -127,14 +127,27 @@ static IoT_Error_t _aws_iot_mqtt_keep_alive(AWS_IoT_Client *pClient) {
 		FUNC_EXIT_RC(SUCCESS);
 	}
 
-	if(!has_timer_expired(&pClient->pingTimer)) {
-		FUNC_EXIT_RC(SUCCESS);
-	}
-
 	if(pClient->clientStatus.isPingOutstanding) {
-		rc = _aws_iot_mqtt_handle_disconnect(pClient);
-		FUNC_EXIT_RC(rc);
+		/* We are waiting for a PINGRESP from the broker. If the pingRespTimer,
+		 * has expired, it indicates that the transport layer connection is
+		 * lost and therefore, we initiate MQTT disconnect (which will triggger)
+		 * the re-connect workflow, if enabled. If the pingRespTimer is not
+		 * expired, there is nothing to do and we continue waiting for PINGRESP. */
+		if(has_timer_expired(&pClient->pingRespTimer)) {
+			rc = _aws_iot_mqtt_handle_disconnect(pClient);
+			FUNC_EXIT_RC(rc);
+		} else {
+			FUNC_EXIT_RC(SUCCESS);
+		}
+	} else {
+		/* We are not waiting for a PINGRESP from the broker. If the
+		 * pingReqTimer has expired, we send a PINGREQ. Otherwise, there is
+		 * nothing to do. */
+		if(!has_timer_expired(&pClient->pingReqTimer)) {
+			FUNC_EXIT_RC(SUCCESS);
+		}
 	}
+	
 
 	/* there is no ping outstanding - send one */
 	init_timer(&timer);
@@ -156,8 +169,10 @@ static IoT_Error_t _aws_iot_mqtt_keep_alive(AWS_IoT_Client *pClient) {
 	}
 
 	pClient->clientStatus.isPingOutstanding = true;
-	/* start a timer to wait for PINGRESP from server */
-	countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval);
+	/* Start a timer to wait for PINGRESP from server. */
+	countdown_sec(&pClient->pingRespTimer, pClient->clientData.keepAliveInterval);
+	/* Start a timer to keep track of when to send the next PINGREQ. */
+	countdown_sec(&pClient->pingReqTimer, pClient->clientData.keepAliveInterval);
 
 	FUNC_EXIT_RC(SUCCESS);
 }

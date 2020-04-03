@@ -684,8 +684,8 @@ IoT_Error_t aws_iot_mqtt_internal_cycle_read(AWS_IoT_Client *pClient, Timer *pTi
 			/* QoS2 not supported at this time */
 			break;
 		case PINGRESP: {
-			pClient->clientStatus.isPingOutstanding = 0;
-			countdown_sec(&pClient->pingTimer, pClient->clientData.keepAliveInterval);
+			/* There is no outstanding ping request anymore. */
+			pClient->clientStatus.isPingOutstanding = false;
 			break;
 		}
 		default: {
