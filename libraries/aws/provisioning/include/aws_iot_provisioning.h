@@ -92,6 +92,21 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  * functions can result in undefined behavior. Device provisioning with this library
  * REQUIRES calling the API functions of this library sequentially.
  *
+ * @warning Do not overwrite the existing Provisioning claim credentials with the new
+ * credentials provided by the server, at least until the device has been provisioned
+ * with a new certificate using the @ref provisioning_function_registerthing function.
+ * It is also recommended to always retain the Provisioning claim credentials,
+ * if your product use-case supports re-provisioning of the device.
+ *
+ * @note We provide a security recommendation for protecting the identity, received from
+ * the server through this API function, for your IoT device.
+ * For the threat of an unauthorized reuse of the private key, that is received in
+ * the server response, in order to clone the device, an effective way to mitigate that
+ * is to audit, in the cloud, the use of each device private key. For example, if a
+ * device private key is reused, your cloud app (through Fleet Provisioning Hooks) could
+ * log an audit event for operator follow-up, and/or initiate a workflow for revoking the
+ * previous certificate(s) issued to that key.
+ *
  * @param[in] connection The MQTT connection handle to the user AWS IoT account, which
  * will be used for communicating with the server for creating new device credentials.
  * @param[in] flags The flags for configuring the behavior of the API. See the options
@@ -103,11 +118,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_Init( uint32_t mqttTimeout );
  * OR error response in case of server rejection of the credentials generation request.
  * The callback should be defined appropriately for storing the credentials provided by
  * the server on the device.
- * @warning Do not overwrite the existing Provisioning claim credentials with the new
- * credentials provided by the server, at least until the device has been provisioned
- * with a new certificate using the @ref provisioning_function_registerthing function.
- * It is also recommended to always retain the Provisioning claim credentials,
- * if the claim certificate is long-lived.
+ *
  * @return This function will return #AWS_IOT_PROVISIONING_SUCCESS upon success; otherwise,
  *   #AWS_IOT_PROVISIONING_NOT_INITIALIZED, if the API is called without initializing
  *   the Provisioning library (i.e. with a prior call to @ref AwsIotProvisioning_Init function.)
@@ -143,6 +154,25 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * API functions can result in undefined behavior. Device provisioning with this
  * library REQUIRES calling the API functions of this library sequentially.
  *
+ * @note Depending on the threat model of your IoT device, there are considerations for
+ * protecting its identity.
+ * One threat is theft of the private key that the application
+ * uses to sign the @p pCertificateSigningRequest input to this function. An effective
+ * way to mitigate that threat is to store all device private keys in a secure element.
+ * Another threat is the unauthorized reuse of the device private key, and/or of the
+ * contents of @p pCertificateSigningRequest, in order to clone the device. An effective
+ * way to mitigate that threat is to audit, in the cloud, the use of each device
+ * private key. For example, if a device private key is reused, your cloud app
+ * (through Fleet Provisioning Hooks) could log an audit event for operator follow-up,
+ * and/or initiate a workflow for revoking the previous certificate(s) issued to
+ * that key.
+ *
+ * @warning Do not overwrite the existing Provisioning claim credentials with the new
+ * credentials provided by the server, at least until the device has been provisioned
+ * with a new certificate using the @ref provisioning_function_registerthing function.
+ * It is also recommended to always retain the Provisioning claim credentials,
+ * if your product use-case supports re-provisioning of the device.
+ *
  * @param[in] connection The MQTT connection handle that will be used to communicate
  * with AWS IoT Core for the Certificate-Signing Request.
  * @param[in] operationQos The Quality of Service (QoS) level for the MQTT
@@ -161,11 +191,6 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateKeysAndCertificate( IotMqttCo
  * the server response, which will be required for registering the device with
  * @ref provisioning_function_registerthing function.
  *
- * @warning Do not overwrite the existing Provisioning claim credentials with the new
- * credentials provided by the server, at least until the device has been provisioned
- * with a new certificate using the @ref provisioning_function_registerthing function.
- * It is also recommended to always retain the Provisioning claim credentials,
- * if the claim certificate is long-lived.
  * @return This function will return #AWS_IOT_PROVISIONING_SUCCESS upon success;
  *   otherwise,
  *   #AWS_IOT_PROVISIONING_NOT_INITIALIZED, if the API is called without initializing the
@@ -212,6 +237,10 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
  * functions can result in undefined behavior. Device provisioning with this library
  * REQUIRES calling the API functions of this library sequentially.
  *
+ * @note In case of success response, the server may send device-specific
+ * configuration data, which will be provided as a list of key-value pairs in the
+ * callback.
+ *
  * @param[in] connection The MQTT connection handle to the user AWS IoT account that
  * will be used for registering the device.
  * @param[in] pProvisioningDataInfo The data (including the certificate) that needs
@@ -221,9 +250,7 @@ AwsIotProvisioningError_t AwsIotProvisioning_CreateCertificateFromCsr( IotMqttCo
  * @param[in] pResponseCallback The user-defined functor that will be called with the
  * response received from the server, whether post-provisioning data in case of
  * success OR error message in case of server rejection of registration request.
- * @note In case of success response, the server may send device-specific
- * configuration data, which will be provided as a list of key-value pairs in the
- * callback.
+ *
  * @return This function will return #AWS_IOT_PROVISIONING_SUCCESS upon success;
  *   otherwise,
  *   #AWS_IOT_PROVISIONING_NOT_INITIALIZED, if the API is called without initializing
