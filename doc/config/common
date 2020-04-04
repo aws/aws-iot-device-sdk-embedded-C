@@ -19,7 +19,6 @@ QUIET = YES
 # Configure Doxygen for C.
 OPTIMIZE_OUTPUT_FOR_C = YES
 TYPEDEF_HIDES_STRUCT = YES
-EXTRACT_STATIC = YES
 
 # Disable the tab bar and use treeview instead.
 DISABLE_INDEX = YES
@@ -43,10 +42,8 @@ HTML_EXTRA_STYLESHEET = doc/config/html/style.css
 EXTERNAL_GROUPS = NO
 EXTERNAL_PAGES = NO
 
-# Enable expansion of Unity test macros.
-ENABLE_PREPROCESSING = YES
-MACRO_EXPANSION = YES
-EXPAND_ONLY_PREDEF = YES
+# Preprocessor defines.
+PREDEFINED = _ENABLE_THREAD_SUPPORT_
 
 # Alias for starting a dependencies section.
 ALIASES += dependencies{2}="@section \1_dependencies Dependencies^^@brief Dependencies of the \2.^^^^"

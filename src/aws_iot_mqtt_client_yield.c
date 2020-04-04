@@ -270,25 +270,6 @@ static IoT_Error_t _aws_iot_mqtt_internal_yield(AWS_IoT_Client *pClient, uint32_
 	FUNC_EXIT_RC(yieldRc);
 }
 
-/**
- * @brief Yield to the MQTT client
- *
- * Called to yield the current thread to the underlying MQTT client.  This time is used by
- * the MQTT client to manage PING requests to monitor the health of the TCP connection as
- * well as periodically check the socket receive buffer for subscribe messages.  Yield()
- * must be called at a rate faster than the keepalive interval.  It must also be called
- * at a rate faster than the incoming message rate as this is the only way the client receives
- * processing time to manage incoming messages.
- * This is the outer function which does the validations and calls the internal yield above
- * to perform the actual operation. It is also responsible for client state changes
- *
- * @param pClient Reference to the IoT Client
- * @param timeout_ms Maximum number of milliseconds to pass thread execution to the client.
- *
- * @return An IoT Error Type defining successful/failed client processing.
- *         If this call results in an error it is likely the MQTT connection has dropped.
- *         iot_is_mqtt_connected can be called to confirm.
- */
 IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms) {
 	IoT_Error_t rc, yieldRc;
 	ClientState clientState;
