@@ -13,7 +13,8 @@ HTML_OUTPUT = mqtt
 GENERATE_TAGFILE = doc/tag/mqtt.tag
 
 # Directories containing library source code.
-INPUT = include/ \
+INPUT = doc/lib \
+        include/ \
         src/
 
 # Library file names.
