@@ -3,10 +3,10 @@
 @anchor mqtt
 @brief MQTT 3.1.1 client library.
 
-MQTT is the protocol that allows a device to communicate with AWS IoT. The MQTT library provided with this SDK implements a subset of the MQTT v3.1.1 protocol. The sample application for Linux `subscribe_publish_sample.c` is provided as a starting point for using this library.
+MQTT is a standardized publish subscribe protocol popular on embedded devices. The MQTT library provided with this SDK implements a subset of the MQTT v3.1.1 protocol. The sample application for Linux `subscribe_publish_sample.c` is provided as a starting point for using this library.
 
 The interface for communication over MQTT is provided in the file `aws_iot_mqtt_interface.h`.
-- MQTT session creation: @ref mqtt_function_init and @ref mqtt_function_free
+- MQTT client context management: @ref mqtt_function_init and @ref mqtt_function_free
 - Connection management: @ref mqtt_function_connect and @ref mqtt_function_disconnect
 - Publishing messages to the server: @ref mqtt_function_publish
 - Managing subscriptions: @ref mqtt_function_subscribe and @ref mqtt_function_unsubscribe

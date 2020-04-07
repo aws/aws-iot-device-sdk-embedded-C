@@ -11,7 +11,7 @@ This SDK is primarily targeted for resource-constrained devices.
 - Flexibility in picking and choosing functionality
 - Static memory only (no malloc)
 - Configurable resource usage (JSON tokens, MQTT subscription handlers, etc.)
-- Portability across RTOS
+- Portability across RTOSes
 
 @section architecture_diagram Layered architecture
 @brief There are primarily 3 layers in the SDK as shown in the diagram below.
@@ -24,7 +24,7 @@ This SDK uses TLS sockets to talk to the server. We provide wrappers around mbed
 
 @subsection architecture_mqtt AWS IoT MQTT client
 
-The MQTT library included in this SDK is a modification of the Paho Embedded C client. MQTT provides a publish subscribe protocol for communication with AWS IoT. It can be used standalone or with Thing Shadows.
+The MQTT library included in this SDK is a modification of the [Paho C MQTT client](https://www.eclipse.org/paho/clients/c/). MQTT is a standardized publish subscribe protocol popular on embedded devices. AWS IoT supports the MQTT protocol for communication with devices. This MQTT library can be used standalone or with other AWS IoT services such as Thing Shadows or Jobs.
 
 @subsection architecture_shadow Thing Shadow
 
