@@ -1,14 +1,4 @@
-# MQTT library source files.
-set( MQTT_SOURCES
-     src/iot_mqtt_api.c
-     src/iot_mqtt_network.c
-     src/iot_mqtt_operation.c
-     src/iot_mqtt_serialize.c
-     src/iot_mqtt_lightweight_api.c
-     src/iot_mqtt_helper.c
-     src/iot_mqtt_static_memory.c
-     src/iot_mqtt_subscription.c
-     src/iot_mqtt_validate.c )
+include(filePaths.cmake)
 
 # MQTT library target.
 add_library( iotmqtt
@@ -20,7 +10,7 @@ add_library( iotmqtt
              src/private/iot_mqtt_internal.h )
 
 # MQTT public include path.
-target_include_directories( iotmqtt PUBLIC include )
+target_include_directories( iotmqtt PUBLIC ${MQTT_INCLUDE_PUBLIC_DIRS} )
 
 # Link required libraries.
 target_link_libraries( iotmqtt PRIVATE iotbase )
@@ -65,22 +55,11 @@ if( ${IOT_BUILD_TESTS} )
     # Link required libraries for MQTT mock.
     target_link_libraries( iot_mqtt_mock PRIVATE iotbase iotmqtt unity )
 
-    # MQTT system test sources.
-    set( MQTT_SYSTEM_TEST_SOURCES
-         test/system/iot_tests_mqtt_system.c )
-
-    # MQTT unit test sources.
-    set( MQTT_UNIT_TEST_SOURCES
-         test/unit/iot_tests_mqtt_api.c
-         test/unit/iot_tests_mqtt_platform.c
-         test/unit/iot_tests_mqtt_receive.c
-         test/unit/iot_tests_mqtt_subscription.c
-         test/unit/iot_tests_mqtt_validate.c )
-
     # MQTT tests executable.
     add_executable( iot_tests_mqtt
                     ${MQTT_SYSTEM_TEST_SOURCES}
                     ${MQTT_UNIT_TEST_SOURCES}
+                    test/unit/iot_tests_mqtt_platform.c
                     test/iot_tests_mqtt.c
                     ${IOT_TEST_APP_SOURCE}
                     ${CONFIG_HEADER_PATH}/iot_config.h )
@@ -90,7 +69,7 @@ if( ${IOT_BUILD_TESTS} )
                                 -DRunTests=RunMqttTests )
 
     # The MQTT tests need the internal MQTT header.
-    target_include_directories( iot_tests_mqtt PRIVATE src )
+    target_include_directories( iot_tests_mqtt PRIVATE ${MQTT_TEST_INCLUDE_PRIVATE_DIRS} )
 
     # MQTT tests library dependencies.
     target_link_libraries( iot_tests_mqtt PRIVATE iotmqtt iotbase unity iot_mqtt_mock )
