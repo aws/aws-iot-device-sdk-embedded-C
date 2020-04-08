@@ -1244,7 +1244,7 @@ IotMqttError_t IotMqtt_Connect( const IotMqttNetworkInfo_t * pNetworkInfo,
         status = IOT_MQTT_NOT_INITIALIZED;
     }
     /* Validate network interface and connect info. */
-    else if( _IotMqtt_ValidateConnect( pConnectInfo ) == false )
+    else if( _IotMqtt_ValidateConnect( pConnectInfo ) == false || pMqttConnection == NULL )
     {
         status = IOT_MQTT_BAD_PARAMETER;
     }

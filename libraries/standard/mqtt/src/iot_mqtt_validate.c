@@ -569,7 +569,9 @@ bool _IotMqtt_ValidateConnect( const IotMqttConnectInfo_t * pConnectInfo )
     bool status = true;
 
     /* Check for NULL. */
-    if( pConnectInfo == NULL )
+    if( pConnectInfo == NULL ||
+      ( pConnectInfo->pUserName == NULL && pConnectInfo->userNameLength != 0 ) ||
+      ( pConnectInfo->pPassword == NULL && pConnectInfo->passwordLength != 0 ) )
     {
         IotLogError( "MQTT connection information cannot be NULL." );
 
