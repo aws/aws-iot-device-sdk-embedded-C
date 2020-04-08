@@ -351,12 +351,13 @@ uint16_t aws_iot_mqtt_get_next_packet_id(AWS_IoT_Client *pClient);
  * This function replaces the current connection parameters of an MQTT client
  * context with a new set of parameters. Its primary use is to modify the connection
  * parameters for the next reconnect attempt if the existing parameters are no longer
- * valid.
+ * valid. Therefore, it should be called just before a reconnect attempt, i.e. just
+ * before @ref mqtt_function_attempt_reconnect or @ref mqtt_function_yield.
  *
  * The new connection parameters take effect at the next connection attempt.
  *
  * @param[in] pClient MQTT client context
- * @param[in] pNewConnectParams New connection parameters structure
+ * @param[in] pNewConnectParams The new connection parameters
  *
  * @return Returns NULL_VALUE_ERROR if provided a bad parameter; otherwise, always
  * returns SUCCESS.

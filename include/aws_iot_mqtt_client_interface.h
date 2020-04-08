@@ -104,7 +104,7 @@ extern "C" {
  * @ref mqtt_function_free should be called.
  *
  * @param[in] pClient MQTT client context to initialize
- * @param[in] pInitParams Pointer to MQTT connection parameters
+ * @param[in] pInitParams The MQTT connection parameters
  *
  * @return `IoT_Error_t`: See `aws_iot_error.h`
  */
@@ -171,7 +171,7 @@ IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName
  *
  * This function sends an MQTT subscribe packet to the server. It registers
  * a subscription that will cause the provided callback function to be invoked
- * when the server sends a matching message to the client.
+ * when the server sends a message on a matching topic to the client.
  *
  * @note Incoming messages are handled by @ref mqtt_function_yield. Therefore,
  * @ref mqtt_function_yield must always be called regularly if any subscriptions
@@ -252,10 +252,10 @@ IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient);
  * This function processes the following events:
  * - Incoming messages from the server <br>
  * Topic filter subscriptions registered with @ref mqtt_function_subscribe instruct
- * the server to send matching messages to this client. These messages are received
- * by this function, which then calls the appropriate message handler. This function
- * must be called at a rate faster than the incoming messages, as it is the only way
- * the client receives processing time to manage incoming messages.
+ * the server to send messages to clients with matching subscriptions. These messages
+ * are received by this function, which then calls the appropriate message handler
+ * This function must be called at a rate faster than the incoming messages, as it is
+ * the only way the client receives processing time to manage incoming messages.
  * - MQTT keep-alive (sending ping requests and processing ping responses) <br>
  * The MQTT keep-alive mechanism involves sending pings to the server if the connection
  * is idle. Therefore, in the absence of any other messages, <b>this function must be called

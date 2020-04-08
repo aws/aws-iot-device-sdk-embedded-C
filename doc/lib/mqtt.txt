@@ -12,7 +12,7 @@ The interface for communication over MQTT is provided in the file `aws_iot_mqtt_
 - Managing subscriptions: @ref mqtt_function_subscribe and @ref mqtt_function_unsubscribe
 - Process incoming messages, reconnections, and keep-alive: @ref mqtt_function_yield
 
-@note In a multithreaded environment, always acquire a lock before calling any function in this library. This library is not thread safe.
+@note In a multithreaded environment, always ensure that calls to this library's functions are serialized, such as with a lock or a queue. This library is not thread safe.
 
 @note This library does not support QoS 2 or retained messages.
 
@@ -32,7 +32,7 @@ The maximum wait time between reconnect attempts. See @ref mqtt_autoreconnect.
 
 /**
 @page mqtt_autoreconnect Auto-reconnect
-@brief This page described the auto-reconnect mechanism of the MQTT library.
+@brief This page describes the auto-reconnect mechanism of the MQTT library.
 
 The auto-reconnect mechanism can be enabled through the following methods:
 - Set #IoT_Client_Init_Params.enableAutoReconnect to `true` when calling @ref mqtt_function_init.
