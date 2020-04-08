@@ -289,7 +289,8 @@ IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms);
  * @return `IoT_Error_t`: See `aws_iot_error.h`
  *
  * @note Generally, it is not necessary to call this function if @ref mqtt_autoreconnect
- * is enabled. Nevertheless, this function may still be called to initiate a reconnect.
+ * is enabled. This function may still be called to initiate a reconnect attempt when
+ * auto-reconnect has exhausted all attempts.
  */
 /* @[declare_mqtt_attempt_reconnect] */
 IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient);

@@ -38,7 +38,7 @@ The auto-reconnect mechanism can be enabled through the following methods:
 - Set #IoT_Client_Init_Params.enableAutoReconnect to `true` when calling @ref mqtt_function_init.
 - Call @ref mqtt_function_autoreconnect_set_status with `newStatus` set to `true`. @ref mqtt_function_autoreconnect_set_status must only be called after @ref mqtt_function_connect.
 
-Once enabled, this feature will attempt to reconnect to the server if the library detects a disconnection. The reconnections are handled through @ref mqtt_function_yield. In addition to re-establishing the network connection and MQTT session, topic filter subscriptions registered with the client will be resubscribed.
+Once enabled, this feature will attempt to reconnect to the server if the library detects a disconnection. The reconnections are handled through @ref mqtt_function_yield. In addition to re-establishing the network connection and MQTT session, topic filter subscriptions registered with the client will be resubscribed. This restores the client-side subscriptions for both clean and persistent MQTT sessions.
 
 The following events are considered disconnects:
 - Fatal errors returned from the TLS layer.
