@@ -13,7 +13,12 @@ GENERATE_TAGFILE = doc/tag/main.tag
 
 # Files to show on the main page.
 INPUT = README.md \
-        CHANGELOG.md
+        CHANGELOG.md \
+        PortingGuide.md \
+        doc/architecture.txt
+
+# Path to architecture image.
+IMAGE_PATH += doc/
 
 # Use repository README as main page.
 USE_MDFILE_AS_MAINPAGE = README.md

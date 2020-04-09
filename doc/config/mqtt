@@ -4,7 +4,7 @@
 
 # Basic project information.
 PROJECT_NAME = "MQTT"
-PROJECT_BRIEF = "MQTT 3.1.1 client library"
+PROJECT_BRIEF = "MQTT v3.1.1 client library"
 
 # Library documentation output directory.
 HTML_OUTPUT = mqtt
@@ -13,7 +13,8 @@ HTML_OUTPUT = mqtt
 GENERATE_TAGFILE = doc/tag/mqtt.tag
 
 # Directories containing library source code.
-INPUT = include/ \
+INPUT = doc/lib \
+        include/ \
         src/
 
 # Library file names.

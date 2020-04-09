@@ -529,17 +529,6 @@ static IoT_Error_t _aws_iot_mqtt_internal_disconnect(AWS_IoT_Client *pClient) {
 	FUNC_EXIT_RC(SUCCESS);
 }
 
-/**
- * @brief Disconnect an MQTT Connection
- *
- * Called to send a disconnect message to the broker.
- * This is the outer function which does the validations and calls the internal disconnect above
- * to perform the actual operation. It is also responsible for client state changes
- *
- * @param pClient Reference to the IoT Client
- *
- * @return An IoT Error Type defining successful/failed send of the disconnect control packet.
- */
 IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient) {
 	ClientState clientState;
 	IoT_Error_t rc;
@@ -573,19 +562,6 @@ IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient) {
 	FUNC_EXIT_RC(rc);
 }
 
-/**
- * @brief MQTT Manual Re-Connection Function
- *
- * Called to establish an MQTT connection with the AWS IoT Service
- * using parameters from the last time a connection was attempted
- * Use after disconnect to start the reconnect process manually
- * Makes only one reconnect attempt. Sets the client state to
- * pending reconnect in case of failure
- *
- * @param pClient Reference to the IoT Client
- *
- * @return An IoT Error Type defining successful/failed connection
- */
 IoT_Error_t aws_iot_mqtt_attempt_reconnect(AWS_IoT_Client *pClient) {
 	IoT_Error_t rc;
 	ClientState currentState = aws_iot_mqtt_get_client_state(pClient);
