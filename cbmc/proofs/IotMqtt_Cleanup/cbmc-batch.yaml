@@ -1,4 +1,0 @@
-jobos: ubuntu16
-cbmcflags:        '=--unwind;1;--bounds-check;--pointer-check;--unwinding-assertions;--nondet-static='
-goto: IotMqtt_Cleanup.goto
-expected: SUCCESSFUL
