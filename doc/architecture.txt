@@ -28,5 +28,5 @@ The MQTT library included in this SDK is a modification of the [Paho C MQTT clie
 
 @subsection architecture_shadow Thing Shadow
 
-This SDK provides a client implementation for AWS IoT Thing Shadows. A device's Shadow is a JSON document that is used to store and retrieve its current state information regardless of whether it is connected to the Internet.
+This SDK provides a client implementation for [AWS IoT Thing Shadows](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html). A device's Shadow is a JSON document that is used to store and retrieve its current state information in the cloud regardless of whether it is connected to the Internet.
 */
