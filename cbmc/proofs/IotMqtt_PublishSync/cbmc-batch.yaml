@@ -1,4 +1,0 @@
-cbmcflags: "--object-bits;8;--unwind;1;--unwindset;_encodeRemainingLength.0:6,_IotMqtt_InvokeSubscriptionCallback.0:4,_matchWildcards.0:6,_topicFilterMatch.0:6,IotListDouble_RemoveAllMatches.0:4,IotListDouble_RemoveAllMatches.0:4,valid_IotMqttOperationList.0:4,valid_IotMqttSubscriptionList.0:4;--bounds-check;--conversion-check;--div-by-zero-check;--float-overflow-check;--flush;--nan-check;--nondet-static;--pointer-check;--pointer-overflow-check;--signed-overflow-check;--undefined-shift-check;--unsigned-overflow-check;--unwinding-assertions"
-expected: SUCCESSFUL
-goto: IotMqtt_PublishSync.goto
-jobos: ubuntu16
