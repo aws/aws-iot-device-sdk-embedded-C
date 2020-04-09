@@ -269,8 +269,9 @@ IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient);
  * after AT LEAST this amount of thime has passed.
  *
  * @return `IoT_Error_t`: See `aws_iot_error.h`
- * @return If this call results a negative value, it is likely the MQTT connection has dropped.
- * @ref mqtt_function_is_client_connected can be called to confirm.
+ * @return If this call results a negative value, assume the MQTT connection has dropped.
+ * @ref mqtt_function_is_client_connected can be called to confirm. If a reconnection is
+ * needed, @ref mqtt_function_attempt_reconnect should be called.
  */
 /* @[declare_mqtt_yield] */
 IoT_Error_t aws_iot_mqtt_yield(AWS_IoT_Client *pClient, uint32_t timeout_ms);
