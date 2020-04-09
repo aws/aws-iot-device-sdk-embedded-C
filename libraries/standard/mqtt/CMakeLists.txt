@@ -1,3 +1,4 @@
+# Include filepaths for source and include.
 include(filePaths.cmake)
 
 # MQTT library target.
@@ -36,21 +37,21 @@ if( ${IOT_BUILD_TESTS} )
 
     # This test library is used to mock MQTT connections.
     add_library( iot_mqtt_mock
-                 test/mock/iot_tests_mqtt_mock.c
+                 ${MQTT_TEST_MOCK_SOURCES}
                  test/mock/iot_tests_mqtt_mock.h
                  ${CONFIG_HEADER_PATH}/iot_config.h )
 
     # Organization of MQTT mock library in folders.
     set_property( TARGET iot_mqtt_mock PROPERTY FOLDER tests )
     source_group( "" FILES
-                  test/mock/iot_tests_mqtt_mock.c
+                  ${MQTT_TEST_MOCK_SOURCES}
                   test/mock/iot_tests_mqtt_mock.h
                   ${CONFIG_HEADER_PATH}/iot_config.h )
 
     # The MQTT mock needs the internal MQTT header.
     target_include_directories( iot_mqtt_mock
-                                PRIVATE src
-                                PUBLIC test/mock )
+                                PRIVATE ${MQTT_TEST_MOCK_INCLUDE_PRIVATE_DIRS}
+                                PUBLIC ${MQTT_TEST_MOCK_INCLUDE_PUBLIC_DIRS} )
 
     # Link required libraries for MQTT mock.
     target_link_libraries( iot_mqtt_mock PRIVATE iotbase iotmqtt unity )
