@@ -182,8 +182,8 @@ IoT_Error_t aws_iot_mqtt_publish(AWS_IoT_Client *pClient, const char *pTopicName
  * @param[in] topicNameLen Length of topic
  * @param[in] qos Quality of service for subscription
  * @param[in] pApplicationHandler Callback function for incoming messages that arrive
- * on this subscription.
- * @param[in] pApplicationHandlerData Data passed to the callback.
+ * on this subscription
+ * @param[in] pApplicationHandlerData Data passed to the callback
  *
  * @return `IoT_Error_t`: See `aws_iot_error.h`
  *
@@ -251,10 +251,12 @@ IoT_Error_t aws_iot_mqtt_disconnect(AWS_IoT_Client *pClient);
  *
  * This function processes the following events:
  * - Incoming messages from the server <br>
- * The server will send messages to clients whose subscriptions match the message's
- * topic. These messages are received by this function, which then calls the appropriate
- * message handler. This function must be called at a rate faster than the incoming messages,
- * as it is the only way the client receives processing time to manage incoming messages.
+ * Whenever a client publishes a message on a topic, the server sends that
+ * message to all the clients whose subscriptions match the message's
+ * topic. The messages sent by the server are received by this function,
+ * which in turn calls the corresponding message handler. This function
+ * must be called at a rate faster than the incoming messages, as it is the
+ * only way the client receives processing time to manage incoming messages.
  * - MQTT keep-alive (sending ping requests and processing ping responses) <br>
  * The MQTT keep-alive mechanism involves sending pings to the server if the connection
  * is idle. Therefore, in the absence of any other messages, <b>this function must be called

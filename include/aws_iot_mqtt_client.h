@@ -381,10 +381,8 @@ IoT_Error_t aws_iot_mqtt_set_connect_params(AWS_IoT_Client *pClient, IoT_Client_
  * @return true if connected; false otherwise.
  *
  * @warning Application code should not rely on this function's return value.
- * It is retrieved solely from the internal state of the client, and therefore
- * does not actually check the network or server's status. Additionally,
- * the connection status may change between the time this function is called
- * and the application checks its return value.
+ * The returned value only represents the internal state of the client and
+ * does not check the network connection status.
  */
 /* @[declare_mqtt_is_client_connected] */
 bool aws_iot_mqtt_is_client_connected(AWS_IoT_Client *pClient);
@@ -397,9 +395,9 @@ bool aws_iot_mqtt_is_client_connected(AWS_IoT_Client *pClient);
  *
  * @return The state of the MQTT client context at the time of the function call.
  *
- * @warning Application code should not rely on this function's return value.
- * The client's state may change between the time this function is called
- * and the application checks its return value.
+ * @note The client's state is internal and generally not useful to application code.
+ * Applications should not make assumptions about the status of the client based on
+ * its state.
  */
 /* @[declare_mqtt_get_client_state] */
 ClientState aws_iot_mqtt_get_client_state(AWS_IoT_Client *pClient);
@@ -422,7 +420,7 @@ bool aws_iot_is_autoreconnect_enabled(AWS_IoT_Client *pClient);
  * This function replaces the current disconnect handler of an MQTT client
  * context with a new disconnect handler.
  *
- * The new disconnect handler takes effect when the next disconnect is detected.
+ * The new disconnect handler will be invoked when the next disconnect is detected.
  *
  * @param[in] pClient MQTT client context
  * @param[in] pDisconnectHandler New disconnect handler
@@ -467,10 +465,6 @@ IoT_Error_t aws_iot_mqtt_autoreconnect_set_status(AWS_IoT_Client *pClient, bool 
  *
  * @return The number of disconnects detected since the client was created
  * (or since the last call to @ref mqtt_function_reset_network_disconnected_count).
- *
- * @warning Application code should not rely on this function's return value.
- * The disconnect count may change between the time this function is called
- * and the application checks its return value.
  *
  * @warning Do not call this function if @ref mqtt_function_yield is in progress.
  */
