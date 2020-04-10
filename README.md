@@ -18,6 +18,10 @@ The [FleetProvisioning_beta](https://github.com/aws/aws-iot-device-sdk-embedded-
 ### v4_beta branch
 The [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta) branch will contain new features and a new design that inherits from both the AWS IoT Device SDK Embedded C and the libraries provided with Amazon FreeRTOS. This is version 4.0.0 of the SDK. Please be aware that v4 beta may have bugs and performance issues. Eventually, we will move v4.0.0 to the master/release branches and delete v4 beta branch.
 
+### Development branch
+
+The [development](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development) currently hosts development of the next iteration of the AWS IoT Embedded C SDK version 4. It is currently a work in progress and should not be used to create any products.  We will update this README when that status changes.
+
 ## Overview
 
 The AWS IoT device SDK for embedded C is a collection of C source files which can be used in embedded applications to securely connect to the [AWS IoT platform](http://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html). It includes transport clients **MQTT**, **TLS** implementations and examples for their use. It also supports AWS IoT specific features such as **Thing Shadow**. It is distributed in source form and intended to be built into customer firmware along with application code, other libraries and RTOS. For additional information about porting the Device SDK for embedded C onto additional platforms please refer to the [PortingGuide](https://github.com/aws/aws-iot-device-sdk-embedded-c/blob/master/PortingGuide.md/).
