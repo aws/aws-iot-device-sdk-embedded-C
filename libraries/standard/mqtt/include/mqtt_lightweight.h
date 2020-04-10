@@ -2,8 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#warning "Temporary workaround, remove following line"
-typedef int MQTTNetworkContext_t;
+#include "config.h"
 
 struct MQTTFixedBuffer;
 typedef struct MQTTFixedBuffer MQTTFixedBuffer_t;

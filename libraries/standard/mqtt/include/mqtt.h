@@ -1,7 +1,5 @@
+#include "config.h"
 #include "mqtt_lightweight.h"
-
-#warning "Temporary workaround, remove following line"
-#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES 10
 
 struct MQTTApplicationCallbacks;
 typedef struct MQTTApplicationCallbacks MQTTApplicationCallbacks_t;
