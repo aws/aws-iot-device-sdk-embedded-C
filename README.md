@@ -20,7 +20,7 @@ The [v4_beta](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v4_beta)
 
 ### Development branch
 
-The [development](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development) branch currently hosts development of the next iteration of the SDK version 4. It is currently a work in progress and should not be used to create any products.
+The [development](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/development) currently hosts development of the next iteration of the AWS IoT Embedded C SDK version 4. It is currently a work in progress and should not be used to create any products.  We will update this README when that status changes.
 
 ## Overview
 
