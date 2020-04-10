@@ -155,7 +155,17 @@ veryclean: clean
 ################################################################
 # Build configuration file to run cbmc under cbmc-batch in CI
 
-CBMC_FLAGS =  '$(call encode_options,$(CBMCFLAGS))'
+JOBOS ?= ubuntu16
+PROOFMEM ?= 32000
+
+define yaml_encode_options
+       "$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')"
+endef
+
+define encode_options
+       '=$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')='
+endef
+
 cbmc-batch.yaml: Makefile ../Makefile.common
 	@echo "Building $@"
 	@$(RM) $@
