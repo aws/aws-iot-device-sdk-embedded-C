@@ -45,9 +45,9 @@ typedef struct MqttPublishInfo MQTTPublishInfo_t;
 struct MQTTPacketInfo;
 typedef struct MQTTPacketInfo MQTTPacketInfo_t;
 
-typedef int32_t (* TransportRecvFunc_t )( MQTTNetworkContext_t context,
-                                          void * pBuffer,
-                                          size_t bytesToRecv );
+typedef int32_t (* MQTTTransportRecvFunc_t )( MQTTNetworkContext_t context,
+                                              void * pBuffer,
+                                              size_t bytesToRecv );
 
 typedef enum MQTTStatus
 {
@@ -156,7 +156,7 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 
 MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer );
 
-MQTTStatus_t MQTT_GetIncomingPacket( TransportRecvFunc_t recvFunc,
+MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
                                      MQTTNetworkContext_t networkContext,
                                      MQTTPacketInfo_t * const pIncomingPacket );
 
