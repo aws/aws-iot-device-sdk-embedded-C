@@ -1,3 +1,6 @@
+#ifndef MQTT_LIGHTWEIGHT_H
+#define MQTT_LIGHTWEIGHT_H
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -143,3 +146,5 @@ MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * const pIncomingPa
 MQTTStatus_t MQTT_DeserializeAck( const MQTTPacketInfo_t * const pIncomingPacket,
                                   uint16_t * const pPacketId,
                                   bool * const pSessionPresent );
+
+#endif
