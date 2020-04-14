@@ -1,0 +1,28 @@
+diff --git a/libraries/standard/mqtt/src/iot_mqtt_serialize.c b/libraries/standard/mqtt/src/iot_mqtt_serialize.c
+index 016111e..285f03d 100644
+--- a/libraries/standard/mqtt/src/iot_mqtt_serialize.c
++++ b/libraries/standard/mqtt/src/iot_mqtt_serialize.c
+@@ -948,6 +948,11 @@ IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
+         0x00
+     };
+ 
++#ifdef CBMC
++    __CPROVER_assume( pPingreq[0] == MQTT_PACKET_TYPE_PINGREQ );
++    __CPROVER_assume( pPingreq[1] == 0x00 );
++#endif
++
+     /* Set the output parameters. */
+     *pPingreqPacket = ( uint8_t * ) pPingreq;
+     *pPacketSize = MQTT_PACKET_PINGREQ_SIZE;
+@@ -1009,6 +1014,11 @@ IotMqttError_t _IotMqtt_SerializeDisconnect( uint8_t ** pDisconnectPacket,
+         0x00
+     };
+ 
++#ifdef CBMC
++    __CPROVER_assume( pDisconnect[0] == MQTT_PACKET_TYPE_DISCONNECT );
++    __CPROVER_assume( pDisconnect[1] == 0x00 );
++#endif
++
+     /* Set the output parameters. */
+     *pDisconnectPacket = ( uint8_t * ) pDisconnect;
+     *pPacketSize = MQTT_PACKET_DISCONNECT_SIZE;
