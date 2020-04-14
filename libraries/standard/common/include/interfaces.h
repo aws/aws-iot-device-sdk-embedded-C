@@ -19,12 +19,41 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef INTERFACES_H
+#define INTERFACES_H
 
-/* Set network context to socket (int). */
-typedef int NetworkContext_t;
+#include <stddef.h>
+#include <stdint.h>
 
-#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES 10
+#include "config.h"
+
+struct FixedBuffer;
+typedef struct FixedBuffer FixedBuffer_t;
+
+struct TransportInterface;
+typedef struct TransportInterface TransportInterface_t;
+
+typedef int32_t (* TransportRecvFunc_t )( NetworkContext_t context,
+                                          void * pBuffer,
+                                          size_t bytesToRecv );
+
+typedef int32_t (* TransportSendFunc_t )( NetworkContext_t context,
+                                          void * pBuffer,
+                                          size_t bytesToSend );
+
+typedef uint32_t (* GetCurrentTimeFunc_t )( void );
+
+struct FixedBuffer
+{
+    uint8_t * pBuffer;
+    size_t size;
+};
+
+struct TransportInterface
+{
+    TransportSendFunc_t send;
+    TransportRecvFunc_t recv;
+    NetworkContext_t networkContext;
+};
 
 #endif

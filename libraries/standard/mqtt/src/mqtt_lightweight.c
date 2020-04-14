@@ -180,7 +180,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
 MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo,
                                     const MQTTPublishInfo_t * const pWillInfo,
                                     size_t remainingLength,
-                                    const MQTTFixedBuffer_t * const pBuffer )
+                                    const FixedBuffer_t * const pBuffer )
 {
     uint8_t connectFlags = 0;
     uint8_t * pIndex = pBuffer->pBuffer;
@@ -291,7 +291,7 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscri
                                       size_t subscriptionCount,
                                       uint16_t packetId,
                                       size_t remainingLength,
-                                      const MQTTFixedBuffer_t * const pBuffer )
+                                      const FixedBuffer_t * const pBuffer )
 {
     return MQTTSuccess;
 }
@@ -300,7 +300,7 @@ MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubsc
                                         size_t subscriptionCount,
                                         uint16_t packetId,
                                         size_t remainingLength,
-                                        const MQTTFixedBuffer_t * const pBuffer )
+                                        const FixedBuffer_t * const pBuffer )
 {
     return MQTTSuccess;
 }
@@ -315,7 +315,7 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublish
 MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo,
                                     uint16_t packetId,
                                     size_t remainingLength,
-                                    const MQTTFixedBuffer_t * const pBuffer )
+                                    const FixedBuffer_t * const pBuffer )
 {
     return MQTTSuccess;
 }
@@ -323,24 +323,24 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo
 MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPublishInfo,
                                           uint16_t packetId,
                                           size_t remainingLength,
-                                          const MQTTFixedBuffer_t * const pBuffer,
+                                          const FixedBuffer_t * const pBuffer,
                                           size_t * const pHeaderSize )
 {
     return MQTTSuccess;
 }
 
-MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
+MQTTStatus_t MQTT_SerializeDisconnect( const FixedBuffer_t * const pBuffer )
 {
     return MQTTSuccess;
 }
 
-MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
+MQTTStatus_t MQTT_SerializePingreq( const FixedBuffer_t * const pBuffer )
 {
     return MQTTSuccess;
 }
 
 MQTTStatus_t MQTT_GetIncomingPacket( TransportRecvFunc_t recvFunc,
-                                     MQTTNetworkContext_t networkContext,
+                                     NetworkContext_t networkContext,
                                      MQTTPacketInfo_t * const pIncomingPacket )
 {
     return MQTTSuccess;
