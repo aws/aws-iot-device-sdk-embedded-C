@@ -4,6 +4,8 @@
 
 #include "config.h"
 
+#define MQTT_PACKET_TYPE_CONNECT         ( ( uint8_t ) 0x10U )
+
 struct MQTTFixedBuffer;
 typedef struct MQTTFixedBuffer MQTTFixedBuffer_t;
 
@@ -19,15 +21,17 @@ typedef struct MqttPublishInfo MQTTPublishInfo_t;
 struct MQTTPacketInfo;
 typedef struct MQTTPacketInfo MQTTPacketInfo_t;
 
-typedef int32_t (* TransportReadFunc_t )( MQTTNetworkContext_t context,
+typedef int32_t (* TransportRecvFunc_t )( MQTTNetworkContext_t context,
                                           void * pBuffer,
-                                          size_t bytesToRead );
+                                          size_t bytesToRecv );
 
 typedef enum MQTTStatus
 {
     MQTTSuccess = 0,
     MQTTBadParameter,
     MQTTNoMemory,
+    MQTTSendFailed,
+    MQTTReceiveFailed,
     MQTTBadResponse,
     MQTTServerRefused
 } MQTTStatus_t;
@@ -83,12 +87,14 @@ struct MQTTPacketInfo
 };
 
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnectInfo,
+                                        const MQTTPublishInfo_t * const pWillInfo,
                                         size_t * const pRemainingLength,
                                         size_t * const pPacketSize );
 
 MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo,
+                                    const MQTTPublishInfo_t * const pWillInfo,
                                     size_t remainingLength,
-                                    MQTTFixedBuffer_t * const pBuffer );
+                                    const MQTTFixedBuffer_t * const pBuffer );
 
 MQTTStatus_t MQTT_SubscriptionPacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
                                           size_t subscriptionCount,
@@ -99,13 +105,13 @@ MQTTStatus_t MQTT_SerializeSubscribe( const MQTTSubscribeInfo_t * const pSubscri
                                       size_t subscriptionCount,
                                       uint16_t packetId,
                                       size_t remainingLength,
-                                      MQTTFixedBuffer_t * const pBuffer );
+                                      const MQTTFixedBuffer_t * const pBuffer );
 
 MQTTStatus_t MQTT_SerializeUnsubscribe( const MQTTSubscribeInfo_t * const pSubscriptionList,
                                         size_t subscriptionCount,
                                         uint16_t packetId,
                                         size_t remainingLength,
-                                        MQTTFixedBuffer_t * const pBuffer );
+                                        const MQTTFixedBuffer_t * const pBuffer );
 
 MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublishInfo,
                                         size_t * const pRemainingLength,
@@ -114,20 +120,21 @@ MQTTStatus_t MQTT_GetPublishPacketSize( const MQTTPublishInfo_t * const pPublish
 MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * const pPublishInfo,
                                     uint16_t packetId,
                                     size_t remainingLength,
-                                    MQTTFixedBuffer_t * const pBuffer );
+                                    const MQTTFixedBuffer_t * const pBuffer );
 
 MQTTStatus_t MQTT_SerializePublishHeader( const MQTTPublishInfo_t * const pPublishInfo,
                                           uint16_t packetId,
                                           size_t remainingLength,
-                                          MQTTFixedBuffer_t * const pBuffer,
+                                          const MQTTFixedBuffer_t * const pBuffer,
                                           size_t * const pHeaderSize );
 
-MQTTStatus_t MQTT_SerializeDisconnect( MQTTFixedBuffer_t * const pBuffer );
+MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer );
 
-MQTTStatus_t MQTT_SerializePingreq( MQTTFixedBuffer_t * const pBuffer );
+MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer );
 
-MQTTStatus_t MQTT_GetPacket( TransportReadFunc_t readFunc,
-                             MQTTPacketInfo_t * const pIncomingPacket );
+MQTTStatus_t MQTT_GetIncomingPacket( TransportRecvFunc_t recvFunc,
+                                     MQTTNetworkContext_t networkContext,
+                                     MQTTPacketInfo_t * const pIncomingPacket );
 
 MQTTStatus_t MQTT_DeserializePublish( const MQTTPacketInfo_t * const pIncomingPacket,
                                       uint16_t * const pPacketId,
