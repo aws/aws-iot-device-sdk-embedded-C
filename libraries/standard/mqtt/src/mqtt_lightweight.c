@@ -176,7 +176,7 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
      * header. This string is 4 bytes long. */
     pIndex = encodeString( pIndex, "MQTT", 4 );
 
-    /* The MQTT protocol version is the second byte of the variable header. */
+    /* The MQTT protocol version is the second field of the variable header. */
     *pIndex = MQTT_VERSION_3_1_1;
     pIndex++;
 
