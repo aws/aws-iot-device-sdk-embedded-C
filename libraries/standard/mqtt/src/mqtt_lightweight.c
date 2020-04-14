@@ -1,10 +1,32 @@
+/*
+ * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 #include <string.h>
 
 #include "mqtt_lightweight.h"
 
 #define MQTT_VERSION_3_1_1    ( ( uint8_t ) 4U )
 
-#define MQTT_PACKET_CONNECT_MAX_SIZE    ( 327700UL )
+#define MQTT_PACKET_CONNECT_HEADER_SIZE    ( 10UL )
+#define MQTT_PACKET_CONNECT_MAX_SIZE       ( 327700UL )
 
 #define MQTT_CONNECT_FLAG_CLEAN          ( 1 )
 #define MQTT_CONNECT_FLAG_WILL           ( 2 )
@@ -110,7 +132,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
     size_t remainingLength;
 
     /* The CONNECT packet will always include a 10-byte variable header. */
-    size_t connectPacketSize = 10U;
+    size_t connectPacketSize = MQTT_PACKET_CONNECT_HEADER_SIZE;
 
     /* Add the length of the client identifier. */
     connectPacketSize += pConnectInfo->clientIdentifierLength + sizeof( uint16_t );
@@ -122,7 +144,7 @@ MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnect
                              pWillInfo->payloadLength + sizeof( uint16_t );
     }
 
-    /* Add the lengths of the user naem and password if provided. */
+    /* Add the lengths of the user name and password if provided. */
     if( pConnectInfo->pUserName != NULL )
     {
         connectPacketSize += pConnectInfo->userNameLength + sizeof( uint16_t );
