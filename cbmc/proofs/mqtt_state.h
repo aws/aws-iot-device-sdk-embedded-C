@@ -209,6 +209,21 @@ bool stubbed_IotNetworkInterface( const IotNetworkInterface_t *netif );
 #define IS_STUBBED_NETWORKIF_DESTROY(netif) \
   (netif->destroy == IotNetworkInterfaceDestroy)
 
+#define MAYBE_STUBBED_NETWORKIF_CREATE(netif) \
+  (netif->create == NULL || netif->create == IotNetworkInterfaceCreate)
+#define MAYBE_STUBBED_NETWORKIF_CLOSE(netif) \
+  (netif->close == NULL || netif->close == IotNetworkInterfaceClose)
+#define MAYBE_STUBBED_NETWORKIF_SEND(netif) \
+  (netif->send == NULL || netif->send == IotNetworkInterfaceSend)
+#define MAYBE_STUBBED_NETWORKIF_RECEIVE(netif) \
+  (netif->receive == NULL || netif->receive == IotNetworkInterfaceReceive)
+#define MAYBE_STUBBED_NETWORKIF_SETRECEIVECALLBACK(netif) \
+  (netif->setReceiveCallback == NULL || netif->setReceiveCallback == IotNetworkInterfaceReceiveCallback)
+#define MAYBE_STUBBED_NETWORKIF_SETCLOSECALLBACK(netif) \
+  (netif->setCloseCallback == NULL || netif->setCloseCallback == IotNetworkInterfaceCloseCallback)
+#define MAYBE_STUBBED_NETWORKIF_DESTROY(netif) \
+  (netif->destroy == NULL || netif->destroy == IotNetworkInterfaceDestroy)
+
 IotNetworkError_t IotNetworkInterfaceCreate( void * pConnectionInfo,
 					     void * pCredentialInfo,
 					     void * pConnection );
