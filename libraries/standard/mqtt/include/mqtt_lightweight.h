@@ -31,7 +31,7 @@ typedef enum MQTTStatus
     MQTTBadParameter,
     MQTTNoMemory,
     MQTTSendFailed,
-    MQTTReceiveFailed,
+    MQTTRecvFailed,
     MQTTBadResponse,
     MQTTServerRefused
 } MQTTStatus_t;
