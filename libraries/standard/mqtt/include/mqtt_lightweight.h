@@ -24,7 +24,7 @@
 
 #include <stdbool.h>
 
-#include "interfaces.h"
+#include "types.h"
 
 #define MQTT_PACKET_TYPE_CONNECT         ( ( uint8_t ) 0x10U )
 
