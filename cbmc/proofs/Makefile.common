@@ -102,7 +102,7 @@ CBMCFLAGS += \
 goto: $(ENTRY).goto
 
 cbmc.txt: $(ENTRY).goto
-	- cbmc $(CBMCFLAGS) --trace $< 2>&1 | tee $@
+	- cbmc $(CBMCFLAGS) --trace $< >$@ 2>&1
 
 cbmc.xml: $(ENTRY).goto
 	- cbmc $(CBMCFLAGS) --trace --xml-ui $< >$@ 2>&1

@@ -1,10 +1,8 @@
 ENTRY=IotMqtt_RemoveSubscriptionByTopicFilter
 
-# We abstract this function because manual inspection demonstrates that it is unreachable
-ABSTRACTIONS += --remove-function-body _topicFilterMatch
-
 # We abstract all unreachable functions to improve coverage metrics
 ABSTRACTIONS += --remove-function-body _packetMatch
+ABSTRACTIONS += --remove-function-body _topicFilterMatch
 
 OBJS += $(ENTRY)_harness.goto
 OBJS += $(MQTT)/cbmc/proofs/mqtt_state.goto
