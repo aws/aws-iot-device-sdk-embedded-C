@@ -1,7 +1,7 @@
 From 1728071c2f234b6a5e9e0aaa5fda44958b1e799a Mon Sep 17 00:00:00 2001
 From: "Felipe R. Monteiro" <felisous@amazon.com>
 Date: Tue, 14 Apr 2020 00:04:57 +0000
-Subject: [PATCH] Replace limits to improve coverage on IotMqtt_Connect
+Subject: [PATCH] Replace limits from internal constant definitions
 
 Signed-off-by: Felipe R. Monteiro <felisous@amazon.com>
 ---
