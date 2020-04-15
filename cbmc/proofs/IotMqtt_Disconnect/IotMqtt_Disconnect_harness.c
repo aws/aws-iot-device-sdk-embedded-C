@@ -35,10 +35,16 @@
 
 #include "mqtt_state.h"
 
-/****************************************************************/
+/****************************************************************
+ * Type definitions used by the IoT List Double remove functions
+ ****************************************************************/
 
-/**
- * We assume the list remove functions are memory safe.
+typedef bool ( *MatchFunction_t )( const IotLink_t * const pOperationLink,
+                                   void * pCompare );
+typedef void ( *FreeElementFunction_t )( void * pData );
+
+/****************************************************************
+ * We assume the IoT List Double remove functions are memory safe.
  *
  * We abstract the list remove functions for performance reasons.  Our
  * abstraction replaces the original list with an unconstrained list.
@@ -46,11 +52,7 @@
  * list are accessed after the remove: We free all elements on the
  * original list, so that any later access will be caught as a
  * use-after-free error.
- */
-
-typedef bool ( *MatchFunction_t )( const IotLink_t * const pOperationLink,
-                                   void * pCompare );
-typedef void ( *FreeElementFunction_t )( void * pData );
+ ****************************************************************/
 
 void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
                                      MatchFunction_t isMatch,
@@ -62,6 +64,8 @@ void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
     allocate_IotMqttSubscriptionList( pList, SUBSCRIPTION_COUNT_MAX - 1 );
 }
 
+/****************************************************************/
+
 void IotListDouble_RemoveAll( const IotListDouble_t * const pList,
                               FreeElementFunction_t freeElement,
                               size_t linkOffset )
@@ -70,10 +74,8 @@ void IotListDouble_RemoveAll( const IotListDouble_t * const pList,
     allocate_IotMqttSubscriptionList( pList, SUBSCRIPTION_COUNT_MAX - 1 );
 }
 
-/****************************************************************/
-
-/**
- * We assume the semaphore operations are memory safe.
+/****************************************************************
+ * We assume the IoT Semaphore operations are memory safe.
  *
  * We abstract the semaphores because we are doing sequential proof.
  * But the semaphore API assures us that TimedWait called after Post will
@@ -84,15 +86,19 @@ void IotListDouble_RemoveAll( const IotListDouble_t * const pList,
  * packet.  The Disconnect method is the only code that accesses this
  * semaphore.  This justifies this simple semaphore model of checking
  * for Post before TimedWait.
- */
+ *****************************************************************/
 
 static unsigned int flagSemaphore;
+
+/****************************************************************/
 
 void IotSemaphore_Post( IotSemaphore_t * pSemaphore )
 {
     assert( pSemaphore != NULL );
     flagSemaphore++;
 }
+
+/****************************************************************/
 
 bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
                              uint32_t timeoutMs )
@@ -108,7 +114,9 @@ bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
     return false;
 }
 
-/****************************************************************/
+/****************************************************************
+ * The proof harness
+ ****************************************************************/
 
 void harness()
 {
@@ -137,3 +145,5 @@ void harness()
 
     IotMqtt_Disconnect( mqttConnection, flags );
 }
+
+/****************************************************************/
