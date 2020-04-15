@@ -1,26 +1,28 @@
-From 9461f210f9a5d803064c39cf93c22ad0d5087538 Mon Sep 17 00:00:00 2001
+From 67cbcc3041a3354fbafd4526d710b59804dd249e Mon Sep 17 00:00:00 2001
 From: "Felipe R. Monteiro" <felisous@amazon.com>
-Date: Tue, 14 Apr 2020 00:09:28 +0000
+Date: Wed, 15 Apr 2020 17:16:26 +0000
 Subject: [PATCH] Make _IotMqtt_SerializePingreq nondet for IotMqtt_Connect
- coverage
 
 Signed-off-by: Felipe R. Monteiro <felisous@amazon.com>
 ---
- libraries/standard/mqtt/src/iot_mqtt_serialize.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ libraries/standard/mqtt/src/iot_mqtt_serialize.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
 diff --git a/libraries/standard/mqtt/src/iot_mqtt_serialize.c b/libraries/standard/mqtt/src/iot_mqtt_serialize.c
-index 016111e..2e92bc5 100644
+index 016111e..8a0d589 100644
 --- a/libraries/standard/mqtt/src/iot_mqtt_serialize.c
 +++ b/libraries/standard/mqtt/src/iot_mqtt_serialize.c
-@@ -955,7 +955,9 @@ IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
+@@ -955,7 +955,13 @@ IotMqttError_t _IotMqtt_SerializePingreq( uint8_t ** pPingreqPacket,
      /* Print out the PINGREQ packet for debugging purposes. */
      IotLog_PrintBuffer( "MQTT PINGREQ packet:", pPingreq, MQTT_PACKET_PINGREQ_SIZE );
  
--    return IOT_MQTT_SUCCESS;
++#ifdef SERIALIZAPINGREQ_NONDET_RETURN
 +    /* Return nondet status to improve coverage */
 +    IotMqttError_t status;
 +    return status;
++#else
+     return IOT_MQTT_SUCCESS;
++#endif
  }
  
  /*-----------------------------------------------------------*/
