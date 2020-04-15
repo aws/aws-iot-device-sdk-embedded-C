@@ -17,7 +17,7 @@ index 016111e..8a0d589 100644
      IotLog_PrintBuffer( "MQTT PINGREQ packet:", pPingreq, MQTT_PACKET_PINGREQ_SIZE );
  
 +#ifdef SERIALIZAPINGREQ_NONDET_RETURN
-+    /* Return nondet status to improve coverage */
++    /* Return nondet status to improve coverage. */
 +    IotMqttError_t status;
 +    return status;
 +#else

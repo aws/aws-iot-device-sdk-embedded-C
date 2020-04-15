@@ -111,9 +111,9 @@ void harness()
                                valid_IotMqttNetworkInfo( pNetworkInfo ) ) );
 
     /* Assume a valid ConnectInfo_t. */
-    IotMqttConnectInfo_t * ConnectInfo = allocate_IotMqttConnectInfo( NULL );
-    __CPROVER_assume( IMPLIES( ConnectInfo != NULL,
-                               valid_IotMqttConnectInfo( ConnectInfo ) ) );
+    IotMqttConnectInfo_t * pConnectInfo = allocate_IotMqttConnectInfo( NULL );
+    __CPROVER_assume( IMPLIES( pConnectInfo != NULL,
+                               valid_IotMqttConnectInfo( pConnectInfo ) ) );
 
     /* Assume a unconstrained timeout. */
     uint32_t timeoutMs;
@@ -122,5 +122,5 @@ void harness()
     IotMqttConnection_t pMqttConnection = allocate_IotMqttConnection( NULL );
 
     /* Operation under verification. */
-    IotMqttError_t status = IotMqtt_Connect( pNetworkInfo, ConnectInfo, timeoutMs, pMqttConnection );
+    IotMqttError_t status = IotMqtt_Connect( pNetworkInfo, pConnectInfo, timeoutMs, pMqttConnection );
 }
