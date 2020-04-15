@@ -35,7 +35,7 @@ struct MQTTTransportInterface;
 typedef struct MQTTTransportInterface MQTTTransportInterface_t;
 
 typedef int32_t (* MQTTTransportSendFunc_t )( MQTTNetworkContext_t context,
-                                              void * pBuffer,
+                                              const void * pBuffer,
                                               size_t bytesToSend );
 
 typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
