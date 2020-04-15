@@ -182,101 +182,113 @@ MQTTStatus_t MQTT_SerializeConnect( const MQTTConnectInfo_t * const pConnectInfo
                                     size_t remainingLength,
                                     const MQTTFixedBuffer_t * const pBuffer )
 {
+    MQTTStatus_t status = MQTTSuccess;
     uint8_t connectFlags = 0;
     uint8_t * pIndex = pBuffer->pBuffer;
 
-    /* The first byte in the CONNECT packet is the control packet type. */
-    *pIndex = MQTT_PACKET_TYPE_CONNECT;
-    pIndex++;
+    /* Check that the full packet size fits within the given buffer. */
+    size_t connectPacketSize = remainingLength + remainingLengthEncodedSize( remainingLength ) + 1U;
 
-    /* The remaining length of the CONNECT packet is encoded starting from the
-     * second byte. The remaining length does not include the length of the fixed
-     * header or the encoding of the remaining length. */
-    pIndex = encodeRemainingLength( pIndex, remainingLength );
-
-    /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
-     * header. This string is 4 bytes long. */
-    pIndex = encodeString( pIndex, "MQTT", 4 );
-
-    /* The MQTT protocol version is the second field of the variable header. */
-    *pIndex = MQTT_VERSION_3_1_1;
-    pIndex++;
-
-    /* Set the clean session flag if needed. */
-    if( pConnectInfo->cleanSession == true )
+    if( connectPacketSize > pBuffer->size )
     {
-        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_CLEAN );
+        status = MQTTNoMemory;
     }
 
-    /* Set the flags for username and password if provided. */
-    if( pConnectInfo->pUserName != NULL )
+    if( status == MQTTSuccess )
     {
-        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
-    }
+        /* The first byte in the CONNECT packet is the control packet type. */
+        *pIndex = MQTT_PACKET_TYPE_CONNECT;
+        pIndex++;
 
-    if( pConnectInfo->pPassword != NULL )
-    {
-        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_PASSWORD );
-    }
+        /* The remaining length of the CONNECT packet is encoded starting from the
+        * second byte. The remaining length does not include the length of the fixed
+        * header or the encoding of the remaining length. */
+        pIndex = encodeRemainingLength( pIndex, remainingLength );
 
-    /* Set will flag if a Last Will and Testament is provided. */
-    if( pWillInfo != NULL )
-    {
-        UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL );
+        /* The string "MQTT" is placed at the beginning of the CONNECT packet's variable
+         * header. This string is 4 bytes long. */
+        pIndex = encodeString( pIndex, "MQTT", 4 );
 
-        /* Flags only need to be changed for Will QoS 1 or 2. */
-        if( pWillInfo->qos == MQTTQoS1 )
+        /* The MQTT protocol version is the second field of the variable header. */
+        *pIndex = MQTT_VERSION_3_1_1;
+        pIndex++;
+
+        /* Set the clean session flag if needed. */
+        if( pConnectInfo->cleanSession == true )
         {
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
-        }
-        else if( pWillInfo->qos == MQTTQoS2 )
-        {
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS2 );
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_CLEAN );
         }
 
-        if( pWillInfo->retain == true )
+        /* Set the flags for username and password if provided. */
+        if( pConnectInfo->pUserName != NULL )
         {
-            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_RETAIN );
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_USERNAME );
         }
-    }
 
-    *pIndex = connectFlags;
-    pIndex++;
+        if( pConnectInfo->pPassword != NULL )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_PASSWORD );
+        }
 
-    /* Write the 2 bytes of the keep alive interval into the CONNECT packet. */
-    *pIndex = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
-    *( pIndex + 1 ) = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
-    pIndex += 2;
+        /* Set will flag if a Last Will and Testament is provided. */
+        if( pWillInfo != NULL )
+        {
+            UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL );
 
-    /* Write the client identifier into the CONNECT packet. */
-    pIndex = encodeString( pIndex,
-                           pConnectInfo->pClientIdentifier,
-                           pConnectInfo->clientIdentifierLength );
+            /* Flags only need to be changed for Will QoS 1 or 2. */
+            if( pWillInfo->qos == MQTTQoS1 )
+            {
+                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS1 );
+            }
+            else if( pWillInfo->qos == MQTTQoS2 )
+            {
+                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_QOS2 );
+            }
 
-    /* Write the will topic name and message into the CONNECT packet if provided. */
-    if( pWillInfo != NULL )
-    {
+            if( pWillInfo->retain == true )
+            {
+                UINT8_SET_BIT( connectFlags, MQTT_CONNECT_FLAG_WILL_RETAIN );
+            }
+        }
+
+        *pIndex = connectFlags;
+        pIndex++;
+
+        /* Write the 2 bytes of the keep alive interval into the CONNECT packet. */
+        *pIndex = UINT16_HIGH_BYTE( pConnectInfo->keepAliveSeconds );
+        *( pIndex + 1 ) = UINT16_LOW_BYTE( pConnectInfo->keepAliveSeconds );
+        pIndex += 2;
+
+        /* Write the client identifier into the CONNECT packet. */
         pIndex = encodeString( pIndex,
-                               pWillInfo->pTopicName,
-                               pWillInfo->topicNameLength );
-        pIndex = encodeString( pIndex,
-                               pWillInfo->pPayload,
-                               ( uint16_t ) pWillInfo->payloadLength );
+                               pConnectInfo->pClientIdentifier,
+                               pConnectInfo->clientIdentifierLength );
+
+        /* Write the will topic name and message into the CONNECT packet if provided. */
+        if( pWillInfo != NULL )
+        {
+            pIndex = encodeString( pIndex,
+                                   pWillInfo->pTopicName,
+                                   pWillInfo->topicNameLength );
+            pIndex = encodeString( pIndex,
+                                   pWillInfo->pPayload,
+                                   ( uint16_t ) pWillInfo->payloadLength );
+        }
+
+        /* Encode the user name if provided. */
+        if( pConnectInfo->pUserName != NULL )
+        {
+            pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
+        }
+
+        /* Encode the password if provided. */
+        if( pConnectInfo->pPassword != NULL )
+        {
+            pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
+        }
     }
 
-    /* Encode the user name if provided. */
-    if( pConnectInfo->pUserName != NULL )
-    {
-        pIndex = encodeString( pIndex, pConnectInfo->pUserName, pConnectInfo->userNameLength );
-    }
-
-    /* Encode the password if provided. */
-    if( pConnectInfo->pPassword != NULL )
-    {
-        pIndex = encodeString( pIndex, pConnectInfo->pPassword, pConnectInfo->passwordLength );
-    }
-
-    return MQTTSuccess;
+    return status;
 }
 
 MQTTStatus_t MQTT_SubscriptionPacketSize( const MQTTSubscribeInfo_t * const pSubscriptionList,
@@ -339,7 +351,7 @@ MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer )
     return MQTTSuccess;
 }
 
-MQTTStatus_t MQTT_GetIncomingPacket( TransportRecvFunc_t recvFunc,
+MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
                                      MQTTNetworkContext_t networkContext,
                                      MQTTPacketInfo_t * const pIncomingPacket )
 {

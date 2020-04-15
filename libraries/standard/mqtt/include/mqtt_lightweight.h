@@ -29,6 +29,7 @@
 #include "config.h"
 
 #define MQTT_PACKET_TYPE_CONNECT         ( ( uint8_t ) 0x10U )
+#define MQTT_PACKET_TYPE_CONNACK         ( ( uint8_t ) 0x20U )
 
 struct MQTTFixedBuffer;
 typedef struct MQTTFixedBuffer MQTTFixedBuffer_t;
@@ -45,9 +46,9 @@ typedef struct MqttPublishInfo MQTTPublishInfo_t;
 struct MQTTPacketInfo;
 typedef struct MQTTPacketInfo MQTTPacketInfo_t;
 
-typedef int32_t (* TransportRecvFunc_t )( MQTTNetworkContext_t context,
-                                          void * pBuffer,
-                                          size_t bytesToRecv );
+typedef int32_t (* MQTTTransportRecvFunc_t )( MQTTNetworkContext_t context,
+                                              void * pBuffer,
+                                              size_t bytesToRecv );
 
 typedef enum MQTTStatus
 {
@@ -156,7 +157,7 @@ MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 
 MQTTStatus_t MQTT_SerializePingreq( const MQTTFixedBuffer_t * const pBuffer );
 
-MQTTStatus_t MQTT_GetIncomingPacket( TransportRecvFunc_t recvFunc,
+MQTTStatus_t MQTT_GetIncomingPacket( MQTTTransportRecvFunc_t recvFunc,
                                      MQTTNetworkContext_t networkContext,
                                      MQTTPacketInfo_t * const pIncomingPacket );
 
