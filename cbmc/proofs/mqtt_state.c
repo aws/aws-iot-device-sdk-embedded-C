@@ -285,18 +285,51 @@ bool valid_IotMqttNetworkInfo( const IotMqttNetworkInfo_t *pInfo )
  * IotMqttConnectInfo
  ****************************************************************/
 
+void bound_IotMqttConnectInfo( IotMqttConnectInfo_t *pInfo )
+{
+#ifdef SUBSCRIPTION_COUNT_MAX
+  __CPROVER_assume( pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX );
+#endif
+
+#ifdef CLIENT_IDENTIFIER_LENGTH_MAX
+  __CPROVER_assume( pInfo->clientIdentifierLength < CLIENT_IDENTIFIER_LENGTH_MAX &&
+                    VALID_CBMC_SIZE( pInfo->clientIdentifierLength ) );
+#else
+  __CPROVER_assume( pInfo->clientIdentifierLength <= UINT16_MAX );
+#endif
+
+#ifdef USER_NAME_LENGTH_MAX
+    __CPROVER_assume( pInfo->userNameLength < USER_NAME_LENGTH_MAX &&
+                      VALID_CBMC_SIZE( pInfo->userNameLength ) );
+#else
+  __CPROVER_assume( pInfo->userNameLength <= UINT16_MAX );
+#endif
+
+#ifdef PASSWORD_LENGTH_MAX
+    __CPROVER_assume( pInfo->passwordLength < PASSWORD_LENGTH_MAX &&
+                      VALID_CBMC_SIZE( pInfo->passwordLength ) );
+#else
+  __CPROVER_assume( pInfo->passwordLength <= UINT16_MAX );
+#endif
+}
+
 IotMqttConnectInfo_t *allocate_IotMqttConnectInfo( IotMqttConnectInfo_t *pInfo )
 {
   if ( pInfo == NULL ) pInfo = malloc_can_fail( sizeof( *pInfo ) );
   if ( pInfo == NULL ) return NULL;
 
+  bound_IotMqttConnectInfo( pInfo );
+
   pInfo->pPreviousSubscriptions =
     allocate_IotMqttSubscriptionArray( NULL,
 				       pInfo->previousSubscriptionCount );
+
   pInfo->pWillInfo = allocate_IotMqttPublishInfo( NULL );
   pInfo->pClientIdentifier = malloc_can_fail( pInfo->clientIdentifierLength );
   pInfo->pUserName = malloc_can_fail( pInfo->userNameLength );
   pInfo->pPassword = malloc_can_fail( pInfo->passwordLength );
+
+  return pInfo;
 }
 
 bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo )
@@ -304,22 +337,12 @@ bool valid_IotMqttConnectInfo( const IotMqttConnectInfo_t *pInfo )
   return
     pInfo != NULL &&
 
-    VALID_STRING( pInfo->pClientIdentifier, pInfo->clientIdentifierLength ) &&
-    VALID_CBMC_SIZE( pInfo->clientIdentifierLength ) &&
-
-    VALID_STRING( pInfo->pUserName, pInfo->userNameLength ) &&
-    VALID_CBMC_SIZE( pInfo->userNameLength ) &&
-
-    VALID_STRING( pInfo->pPassword, pInfo->passwordLength ) &&
-    VALID_CBMC_SIZE( pInfo->passwordLength ) &&
-
-    // MAX is one greater than the maximum length
-    pInfo->previousSubscriptionCount < SUBSCRIPTION_COUNT_MAX &&
+    valid_IotMqttPublishInfo( pInfo->pWillInfo ) &&
 
     IFF( pInfo->pPreviousSubscriptions == NULL,
-	 pInfo->previousSubscriptionCount == 0 ) &&
-    valid_IotMqttSubscriptionArray( pInfo->pPreviousSubscriptions,
-				    pInfo->previousSubscriptionCount );
+	       pInfo->previousSubscriptionCount == 0 ) &&
+         valid_IotMqttSubscriptionArray( pInfo->pPreviousSubscriptions,
+				 pInfo->previousSubscriptionCount );
 }
 
 /****************************************************************
@@ -545,14 +568,31 @@ void free_IotMqttSubscriptionList( IotListDouble_t *pSub )
  * IotMqttPublishInfo
  ****************************************************************/
 
+void bound_IotMqttPublishInfo( IotMqttPublishInfo_t *pInfo )
+{
+    #ifdef TOPIC_NAME_LENGTH_MAX
+        __CPROVER_assume( pInfo->topicNameLength < TOPIC_NAME_LENGTH_MAX &&
+                          VALID_CBMC_SIZE( pInfo->topicNameLength ) );
+    #else
+      __CPROVER_assume( pInfo->topicNameLength <= UINT16_MAX );
+    #endif
+
+    #ifdef PAYLOAD_LENGTH_MAX
+        __CPROVER_assume( pInfo->payloadLength < PAYLOAD_LENGTH_MAX &&
+                          VALID_CBMC_SIZE( pInfo->payloadLength ) );
+    #else
+      __CPROVER_assume( pInfo->payloadLength <= UINT16_MAX );
+    #endif
+}
+
 IotMqttPublishInfo_t *allocate_IotMqttPublishInfo( IotMqttPublishInfo_t *pInfo )
 {
   if ( pInfo == NULL ) pInfo = malloc_can_fail( sizeof( *pInfo ) );
   if ( pInfo == NULL ) return NULL;
 
+  bound_IotMqttPublishInfo( pInfo );
+
   pInfo->pTopicName = malloc_can_fail( pInfo->topicNameLength );
-  // assumption here is checked below in valid_
-  __CPROVER_assume( VALID_CBMC_SIZE( pInfo->payloadLength ) );
   pInfo->pPayload = malloc_can_fail( pInfo->payloadLength );
   return pInfo;
 }
@@ -560,28 +600,9 @@ IotMqttPublishInfo_t *allocate_IotMqttPublishInfo( IotMqttPublishInfo_t *pInfo )
 bool valid_IotMqttPublishInfo( const IotMqttPublishInfo_t *pInfo )
 {
   return
-    pInfo &&
-
+    pInfo != NULL &&
     VALID_QOS(pInfo->qos) &&
-
-    VALID_STRING( pInfo->pTopicName, pInfo->topicNameLength ) &&
-    VALID_CBMC_SIZE( pInfo->topicNameLength ) &&
-    pInfo->pTopicName != NULL &&
-
-    VALID_STRING( pInfo->pPayload, pInfo->payloadLength ) &&
-    VALID_CBMC_SIZE( pInfo->payloadLength ) &&
-#ifdef PAYLOAD_LENGTH_MAX
-    // Some proofs iterate over it
-    pInfo->payloadLength < PAYLOAD_LENGTH_MAX &&
-#endif
-
-    pInfo->retryMs <= IOT_MQTT_RETRY_MS_CEILING &&
-    pInfo->retryMs > 0  &&
-
-    // TODO: experiment with removing these assumptions
-    // topicNameLength is a unint16
-    pInfo->topicNameLength <= UINT16_MAX &&
-    pInfo->payloadLength > 0;
+    pInfo->retryMs <= IOT_MQTT_RETRY_MS_CEILING;
 }
 
 /****************************************************************

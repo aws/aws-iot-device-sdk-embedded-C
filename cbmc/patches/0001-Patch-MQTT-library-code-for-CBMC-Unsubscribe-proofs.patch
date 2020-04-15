@@ -68,19 +68,6 @@ index 5afce54..0e4d923 100644
          if( pOperation != NULL )
          {
              IotMqtt_FreeOperation( pOperation );
-diff --git a/libraries/standard/mqtt/src/private/iot_mqtt_internal.h b/libraries/standard/mqtt/src/private/iot_mqtt_internal.h
-index ccfb802..d1b540c 100644
---- a/libraries/standard/mqtt/src/private/iot_mqtt_internal.h
-+++ b/libraries/standard/mqtt/src/private/iot_mqtt_internal.h
-@@ -237,7 +237,9 @@
-  * Used to validate parameters if when connecting to an AWS IoT MQTT server.
-  */
- #define AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH                ( ( uint16_t ) 128 )      /**< @brief Maximum length of client identifier accepted by AWS IoT. */
-+#ifndef AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH
- #define AWS_IOT_MQTT_SERVER_MAX_TOPIC_LENGTH                   ( ( uint16_t ) 256 )      /**< @brief Maximum length of topic names or filters accepted by AWS IoT. */
-+#endif
- #define AWS_IOT_MQTT_SERVER_MAX_TOPIC_FILTERS_PER_SUBSCRIBE    ( ( size_t ) 8 )          /**< @brief Maximum number of topic filters in a single SUBSCRIBE packet. */
- #define AWS_IOT_MQTT_SERVER_MAX_PUBLISH_PAYLOAD_LENGTH         ( ( size_t ) ( 131072 ) ) /**< @brief Maximum publish payload length accepted by AWS IoT. */
  
 -- 
 2.7.4
