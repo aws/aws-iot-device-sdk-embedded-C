@@ -35,7 +35,7 @@ Unreachable code blocks within functions:
 * `_destroyMqttConnection`
 
 	* Called from `_IotMqtt_DecrementConnectionReferences` but only
-      when references has been decremented to 0.
+      when reference has been decremented to 0.
 		* The uncovered block is guarded by the conditional keepalive!=0.
 		* A valid connection has references > 0 and references > 1
           when keepalive!=0 (the ping request operation references

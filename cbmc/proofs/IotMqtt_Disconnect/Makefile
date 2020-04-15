@@ -1,8 +1,3 @@
-# This doesn't work
-NONDET += --nondet-static-exclude _IotMqtt_SerializeDisconnect::1::pDisconnect
-
-#CBMCFLAGS += --verbosity 10
-
 ENTRY=IotMqtt_Disconnect
 
 ################################################################
@@ -39,6 +34,7 @@ DEF += -DMQTT_MAX_REMAINING_LENGTH=$(MQTT_MAX_REMAINING_LENGTH)
 
 ################################################################
 # Function omitted from the proof
+# See the proof harness for
 
 ABSTRACTIONS += --remove-function-body IotLog_Generic
 
@@ -66,27 +62,11 @@ ABSTRACTIONS += --remove-function-body _packetMatch
 ABSTRACTIONS += --remove-function-body _topicFilterMatch
 ABSTRACTIONS += --remove-function-body _topicMatch
 
-#ABSTRACTIONS += --remove-function-body _IotMqtt_NextPacketIdentifier
-#ABSTRACTIONS += --remove-function-body _IotMqtt_PublishSetDup
-#ABSTRACTIONS += --remove-function-body _IotMqtt_RemoveSubscriptionByPacket
-#ABSTRACTIONS += --remove-function-body _IotMqtt_ScheduleOperation
-#ABSTRACTIONS += --remove-function-body _checkRetryLimit
-#ABSTRACTIONS += --remove-function-body _completePendingSend
-#ABSTRACTIONS += --remove-function-body _scheduleCallback
-#ABSTRACTIONS += --remove-function-body _scheduleNextRetry
-
 ################################################################
-# Experimenting with removing list removes for symex to finish
+# Stub out list remove functions.
 
-# Removing just REMOVE with unwind=1: 900437 variables, 4295384 clauses
-# Removing all three with unwind=1: 434809 variables, 1930368 clauses
-
-#DEF += -DCBMC_STUB_REMOVE=1
 DEF += -DCBMC_STUB_REMOVEALL=1
 DEF += -DCBMC_STUB_REMOVEALLMATCHES=1
-#ABSTRACTIONS += --remove-function-body IotListDouble_Remove
-#ABSTRACTIONS += --remove-function-body IotListDouble_RemoveAll
-#ABSTRACTIONS += --remove-function-body IotListDouble_RemoveAllMatches
 
 ################################################################
 
@@ -99,10 +79,6 @@ OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_network.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_serialize.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_subscription.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_validate.goto
-
-#DEF += -DCBMC_CREATEOPERATION_INITIALIZE_CANT_FAIL=1
-#DEF += -DCBMC_CREATEOPERATION_UNSUCCESSFUL_STATUS_MEANS_NULL_POINTER=1
-#DEF += -DCBMC_FINDFIRSTMATCH_MATCH_IS_NONNULL=1
 
 # allow mqtt mallocs to fail for coverage
 DEF += -include mqtt_state.h

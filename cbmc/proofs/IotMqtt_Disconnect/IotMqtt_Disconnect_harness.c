@@ -43,7 +43,7 @@
  * We abstract the list remove functions for performance reasons.  Our
  * abstraction replaces the original list with an unconstrained list.
  * Our abstraction proves that none of the elements on the original
- * list are accessed after the remove: We free all eleents on the
+ * list are accessed after the remove: We free all elements on the
  * original list, so that any later access will be caught as a
  * use-after-free error.
  */
@@ -118,16 +118,22 @@ void harness()
     IotMqttConnection_t mqttConnection = allocate_IotMqttConnection( NULL );
     uint32_t flags;
 
+    /* Proof assumptions. */
     __CPROVER_assume( mqttConnection != NULL );
     ensure_IotMqttConnection_has_lists( mqttConnection );
     __CPROVER_assume( valid_IotMqttConnection( mqttConnection ) );
     __CPROVER_assume( mqttConnection->references > 0 );
-    __CPROVER_assume( IMPLIES( mqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0,
-                               mqttConnection->references > 1 ) );
+    __CPROVER_assume(
+        IMPLIES(
+            mqttConnection->pingreq.u.operation.periodic.ping.keepAliveMs != 0,
+            mqttConnection->references > 1 ) );
     __CPROVER_assume( mqttConnection->pNetworkInterface != NULL );
-    __CPROVER_assume( IS_STUBBED_NETWORKIF_SEND( mqttConnection->pNetworkInterface ) );
-    __CPROVER_assume( IS_STUBBED_NETWORKIF_DESTROY( mqttConnection->pNetworkInterface ) );
-    __CPROVER_assume( MAYBE_STUBBED_NETWORKIF_CLOSE( mqttConnection->pNetworkInterface ) );
+    __CPROVER_assume(
+        IS_STUBBED_NETWORKIF_SEND( mqttConnection->pNetworkInterface ) );
+    __CPROVER_assume(
+        IS_STUBBED_NETWORKIF_DESTROY( mqttConnection->pNetworkInterface ) );
+    __CPROVER_assume(
+        MAYBE_STUBBED_NETWORKIF_CLOSE( mqttConnection->pNetworkInterface ) );
 
     IotMqtt_Disconnect( mqttConnection, flags );
 }
