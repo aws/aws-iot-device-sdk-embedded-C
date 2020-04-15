@@ -63,7 +63,7 @@
  /**
   * @brief This will be set to true if header "Connection: close" is found.
   * 
-  * If a "Connection: close" header is present the client should always
+  * If a "Connection: close" header is present the application should always
   * close the connection.
   */
 #define HTTP_RESPONSE_CONNECTION_CLOSE_FLAG             0x1U
