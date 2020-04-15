@@ -279,16 +279,6 @@ typedef struct HTTPResponse
      * This is updated by #HTTPClient_Send.
      */
     size_t contentLength;
-    
-    /**
-     * @brief This will be set to true if header "Connection: close" is found.
-     * 
-     * If A "Connection: close" header is present the client should always
-     * close the connection.
-     * 
-     * This is updated by #HTTPClient_Send.
-     */
-    bool hasHeaderConnectionClosed;
 
     /**
      * @brief Count of the headers sent by the server.
