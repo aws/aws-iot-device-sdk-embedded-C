@@ -1,0 +1,8 @@
+{ "expected-missing-functions":
+  [
+    "IotMutex_Lock",
+    "IotMutex_Unlock"
+  ],
+  "proof-name": "IotMqtt_RemoveSubscriptionByTopicFilter",
+  "proof-root": "cbmc/proofs"
+}
