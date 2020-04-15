@@ -2,12 +2,14 @@
   [
     "IotClock_GetTimeMs",
     "IotLog_Generic",
+    "IotMutex_Create",
     "IotMutex_Destroy",
     "IotMutex_Lock",
     "IotMutex_Unlock",
     "IotSemaphore_Create",
     "IotSemaphore_Destroy",
     "IotSemaphore_Post",
+    "IotSemaphore_TimedWait",
     "IotTaskPool_GetSystemTaskPool",
     "IotTaskPool_ScheduleDeferred",
 

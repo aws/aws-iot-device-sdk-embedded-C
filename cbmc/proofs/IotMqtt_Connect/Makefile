@@ -1,24 +1,26 @@
 ENTRY=IotMqtt_Connect
 
 # We abstract these functions because manual inspection demonstrates they are unreachable
-ABSTRACTIONS += --remove-function-body _IotMqtt_RemoveSubscriptionByPacket
 ABSTRACTIONS += --remove-function-body _checkRetryLimit
+ABSTRACTIONS += --remove-function-body _IotMqtt_RemoveSubscriptionByPacket
 ABSTRACTIONS += --remove-function-body _scheduleCallback
 ABSTRACTIONS += --remove-function-body _scheduleNextRetry
 
 # We abstract all unreachable functions to improve coverage metrics
-ABSTRACTIONS += --remove-function-body IotNetworkInterfaceCloseCallback
-ABSTRACTIONS += --remove-function-body _mqttSubscription_setUnsubscribe
-ABSTRACTIONS += --remove-function-body _mqttOperation_match
+ABSTRACTIONS += --remove-function-body _IotMqtt_NextPacketIdentifier
+ABSTRACTIONS += --remove-function-body _IotMqtt_PublishSetDup
+ABSTRACTIONS += --remove-function-body _IotMqtt_ScheduleOperation
 ABSTRACTIONS += --remove-function-body _matchEndWildcards
 ABSTRACTIONS += --remove-function-body _matchWildcards
+ABSTRACTIONS += --remove-function-body _mqttOperation_match
+ABSTRACTIONS += --remove-function-body _mqttSubscription_setUnsubscribe
 ABSTRACTIONS += --remove-function-body _packetMatch
 ABSTRACTIONS += --remove-function-body _topicFilterMatch
-ABSTRACTIONS += --remove-function-body IotTaskPool_ScheduleDeferred
-ABSTRACTIONS += --remove-function-body _IotMqtt_NextPacketIdentifier
+ABSTRACTIONS += --remove-function-body IotMutex_Create
+ABSTRACTIONS += --remove-function-body IotNetworkInterfaceCloseCallback
 ABSTRACTIONS += --remove-function-body IotNetworkInterfaceReceive
-ABSTRACTIONS += --remove-function-body _IotMqtt_ScheduleOperation
-ABSTRACTIONS += --remove-function-body _IotMqtt_PublishSetDup
+ABSTRACTIONS += --remove-function-body IotTaskPool_ScheduleDeferred
+ABSTRACTIONS += --remove-function-body IotSemaphore_TimedWait
 
 OBJS += $(ENTRY)_harness.goto
 OBJS += $(MQTT)/cbmc/proofs/mqtt_state.goto
@@ -28,6 +30,9 @@ OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_operation.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_serialize.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_subscription.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_validate.goto
+
+################################################################
+# Proof assumptions
 
 # This should be smaller than CLIENT_IDENTIFIER_LENGTH_MAX for coverage
 AWS_IOT_MQTT_SERVER_MAX_CLIENTID_LENGTH=6
@@ -100,6 +105,8 @@ DEF += -DIotMqtt_MallocMessage=malloc_can_fail
 DEF += -DIotMqtt_MallocOperation=malloc_can_fail
 DEF += -DIotMqtt_MallocSubscription=malloc_can_fail
 DEF += -DIotMqtt_MallocConnection=malloc_can_fail
+
+################################################################
 
 LOOP += harness.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += allocate_IotMqttSubscriptionArray.0:$(SUBSCRIPTION_COUNT_MAX)

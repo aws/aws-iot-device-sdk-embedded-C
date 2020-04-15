@@ -69,11 +69,14 @@ IotTaskPoolError_t IotTaskPool_CreateJob( IotTaskPoolRoutine_t userCallback,
 }
 
 /**
- * We abstract these functions for performance reasons. In their original
- * implementation, CBMC ended up creating byte extracts for all possible
- * objects, due to the polymorphic nature of the linked list. We assume
- * that the functions are memory safe, and we free and havoc the list to
- * demonstrate that no subsequent code makes use of the values in the list.
+ * We assume the list remove functions are memory safe.
+ *
+ * We abstract the list remove functions for performance reasons.  Our
+ * abstraction replaces the original list with an unconstrained list.
+ * Our abstraction proves that none of the elements on the original
+ * list are accessed after the remove: We free all elements on the
+ * original list, so that any later access will be caught as a
+ * use-after-free error.
  */
 void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
                                      MatchFunction_t isMatch,
@@ -91,23 +94,6 @@ void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnecti
 {
     free_IotMqttSubscriptionList( &( pMqttConnection->subscriptionList ) );
     allocate_IotMqttSubscriptionList( &( pMqttConnection->subscriptionList ), subscriptionCount );
-}
-
-/**
- * We abstract the concurrency related functions because this is a sequential proof.
- * But we implement the following stubs to improve coverage.
- */
-bool IotSemaphore_TimedWait( IotSemaphore_t * pSemaphore,
-                             uint32_t timeoutMs )
-{
-    assert( pSemaphore != NULL );
-    return nondet_bool();
-}
-
-bool IotMutex_Create( IotMutex_t * pNewMutex,
-                      bool recursive )
-{
-    return nondet_bool();
 }
 
 void harness()

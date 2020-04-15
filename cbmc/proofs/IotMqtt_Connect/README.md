@@ -5,137 +5,135 @@ why the uncovered lines of code are unreachable code.
 
 Some functions contain unreachable blocks of code:
 
-* libraries/standard/mqtt/src/iot_mqtt_helper.c
-  \_IotMqtt_SerializeConnectCommon
-  * _validatePublish eliminates that possibility of QoS == IOT_MQTT_QOS_2
+* `_IotMqtt_SerializeConnectCommon`
 
-* libraries/standard/common/include/iot_linear_containers.h
-  IotListDouble_FindFirstMatch	
-  * Always called with a nonnull isMatch parameter
+    * `_validatePublish` eliminates that possibility of `QoS == IOT_MQTT_QOS_2`
 
-* libraries/standard/mqtt/src/iot_mqtt_subscription.c
-  \_topicMatch
-  * _IotMqtt_AddSubscriptions sets pParam->exactMatchOnly == true, so _topicFilterMatch is never called
+* `IotListDouble_FindFirstMatch`
 
-* libraries/standard/mqtt/src/iot_mqtt_helper.c
-  \_encodeUserNameAndMetrics
-  * At this point pConnectInfo->userNameLength is smaller than (UINT16_MAX - AWS_IOT_METRICS_USERNAME_LENGTH)
+    * Always called with a nonnull isMatch parameter
 
-* libraries/standard/mqtt/src/iot_mqtt_validate.c
-  \_validatePublish
-  * Always called with a nonnull pPublishInfo parameter
+* `_topicMatch`
 
-* libraries/standard/mqtt/src/iot_mqtt_operation.c
-  \_IotMqtt_DestroyOperation
-  * Notify calls DestroyOperation with a linked operation.
+    * `_IotMqtt_AddSubscriptions` sets `pParam->exactMatchOnly == true`,
+     so `_topicFilterMatch` is never called
 
-* libraries/standard/mqtt/src/iot_mqtt_api.c
-  \_IotMqtt_IncrementConnectionReferences
-  * pMqttConnection->disconnected is false
+* `_encodeUserNameAndMetrics`
 
-* libraries/standard/mqtt/src/iot_mqtt_helper.c
-  \_encodeRemainingLength
-  * remainingLength is smaller than 128 (higher sizes lead to way higher verification time)
+    * At this point `pConnectInfo->userNameLength` is smaller
+    than `(UINT16_MAX - AWS_IOT_METRICS_USERNAME_LENGTH)`
 
-* libraries/standard/mqtt/src/iot_mqtt_operation.c
-  \_IotMqtt_DecrementOperationReferences
-  * IotTaskPool_TryCancel always return bad parameter, because we do not create a TaskPool job.
+* `_validatePublish`
 
-* libraries/standard/mqtt/src/iot_mqtt_operation.c
-  \_initializeOperation
-  * The operation is always waitable
+    * Always called with a nonnull pPublishInfo parameter
 
-* libraries/standard/mqtt/src/iot_mqtt_operation.c
-  \_IotMqtt_CreateOperation
-  * pMqttConnection->disconnected is true; therefore, _IotMqtt_IncrementConnectionReferences always return false
+* `_IotMqtt_DestroyOperation`
 
-* libraries/standard/mqtt/src/iot_mqtt_api.c
-  \_createKeepAliveOperation
-  * _getMqttPingreqSerializer always return IOT_MQTT_SUCCESS
+    * Notify calls `DestroyOperation` with a linked operation
 
-* libraries/standard/mqtt/src/iot_mqtt_operation.c
-  \_completePendingSend
-  * pOperation->u.operation.periodic.retry.limit always 0
+* `_IotMqtt_IncrementConnectionReferences`
 
-* libraries/standard/mqtt/src/iot_mqtt_operation.c
-  \_IotMqtt_ProcessSend
-  * pOperation->u.operation.periodic.retry.limit always 0
-  * pOperation->u.operation.type != IOT_MQTT_DISCONNECT
-  * operation is always waitable
-  * _completePendingSend always return destroyOperation == false
+    * `pMqttConnection->disconnected` is false
 
-* libraries/standard/mqtt/src/iot_mqtt_api.c
-  \IotMqtt_Wait
-  * operation is always initialized at this point
-  * all parameters are valid
-  * pMqttConnection->disconnected == false
+* `_encodeRemainingLength`
 
-* libraries/standard/mqtt/src/iot_mqtt_api.c
-  \_IotMqtt_DecrementConnectionReferences
-  * pMqttConnection->references always != 0, so the connection won't be destroyed
-  * destroyConnection == false, because pMqttConnection->references always != 0
+    * `remainingLength` is smaller than 128 (higher sizes lead
+      to way higher verification time)
 
-* libraries/standard/mqtt/src/iot_mqtt_api.c
-  \_waitForOperation
+* `_IotMqtt_DecrementOperationReferences`
 
-  * operation->u.operation.type != IOT_MQTT_SUBSCRIBE
+    * `IotTaskPool_TryCancel` always return bad parameter,
+    because we do not create a TaskPool job.
 
-* libraries/standard/mqtt/src/iot_mqtt_api.c
-  IotMqtt_strerror
+* `_initializeOperation`
 
-  * Never returns the following messages: IOT_MQTT_SUCCESS, IOT_MQTT_INIT_FAILED, IOT_MQTT_BAD_RESPONSE, IOT_MQTT_SERVER_REFUSED, IOT_MQTT_RETRY_NO_RESPONSE, and default
+    * The operation is always waitable
 
-* libraries/standard/mqtt/src/iot_mqtt_validate.c
-  \_validateListSize
+* `_IotMqtt_CreateOperation`
 
-  * Always called with a nonnull list parameter
-  * list size != 0
+    * `pMqttConnection->disconnected` is true; therefore,
+      `_IotMqtt_IncrementConnectionReferences` always return false
 
-* libraries/standard/mqtt/src/iot_mqtt_validate.c
-  \_IotMqtt_ValidateOperation
+* `_completePendingSend`
 
-  * Always called with a nonnull operation parameter
-  * operation is waitable
+    * `pOperation->u.operation.periodic.retry.limit` always 0
 
-* libraries/standard/mqtt/src/iot_mqtt_helper.c
-  \_IotMqtt_RemainingLengthEncodedSize
+* `_IotMqtt_ProcessSend`
 
-	* if length is too big, proof takes more than an hour to complete, so we consider small bounds here (i.e. length < 128U)
-					
-* libraries/standard/mqtt/src/iot_mqtt_operation.c
-  \_IotMqtt_Notify
+    * `pOperation->u.operation.periodic.retry.limit` always 0
+    * `pOperation->u.operation.type != IOT_MQTT_DISCONNECT`
+    * Operation is always waitable
+    * `_completePendingSend` always return `destroyOperation == false`
 
-  * pOperation->u.operation.type != IOT_MQTT_SUBSCRIBE
-  * operation is waitable
-  * at this point status is always status == IOT_MQTT_SCHEDULING_ERROR
-  * \_IotMqtt_DecrementOperationReferences always return false and the operation is not destroyed
+* `IotMqtt_Wait`
 
-* libraries/standard/mqtt/src/iot_mqtt_api.c
-  IotMqtt_OperationType
+    * operation is always initialized at this point
+    * all parameters are valid
+    * `pMqttConnection->disconnected == false`
 
-  * always return IOT_MQTT_CONNECT
+* `_IotMqtt_DecrementConnectionReferences`
+
+    * `pMqttConnection->references` is always different than zero, so the
+       connection won't be destroyed
+    * `destroyConnection == false` -> `pMqttConnection->references always != 0`
+
+* `_waitForOperation`
+
+    * `operation->u.operation.type != IOT_MQTT_SUBSCRIBE`
+
+* `IotMqtt_strerror`
+
+    * Never returns the following messages: `IOT_MQTT_SUCCESS`,
+      `IOT_MQTT_INIT_FAILED`, `IOT_MQTT_BAD_RESPONSE`, `IOT_MQTT_SERVER_REFUSED`,
+      `IOT_MQTT_RETRY_NO_RESPONSE`, and `default`
+
+* `_validateListSize`
+
+    * Always called with a nonnull list parameter
+    * List size different than zero
+
+* `_IotMqtt_ValidateOperation`
+
+    * Always called with a nonnull operation parameter
+    * Operation is waitable
+
+* `_IotMqtt_RemainingLengthEncodedSize`
+
+    * If length is too big, proof takes more than an hour to complete,
+      so we consider small bounds here (i.e. `length < 128U`)
+
+* `_IotMqtt_Notify`
+
+    * `pOperation->u.operation.type != IOT_MQTT_SUBSCRIBE`
+    * Operation is waitable
+    * At this point, `status == IOT_MQTT_SCHEDULING_ERROR`
+    * `_IotMqtt_DecrementOperationReferences` always returns false and
+      the operation is not destroyed
+
+* `IotMqtt_OperationType`
+
+    * Always returns `IOT_MQTT_CONNECT`
 
 
 Some functions are simply unreachable:
 
-* libraries/standard/mqtt/src/iot_mqtt_subscription.c
-  \_IotMqtt_RemoveSubscriptionByPacket
+* `_IotMqtt_RemoveSubscriptionByPacket`
 
-  * Unreachable: Only function call in from an unreachable block of
-	_IotMqtt_Notify
+    * Unreachable: Only function call in from an unreachable block of
+	`_IotMqtt_Notify`
 
-* libraries/standard/mqtt/src/iot_mqtt_operation.c \_checkRetryLimit
+* `_checkRetryLimit`
 
-  * Unreachable: Only function call is in an unreachable block of code
-	in ProcessSend.
+    * Unreachable: Only function call is in an unreachable block of code
+	in `ProcessSend`
 
-* libraries/standard/mqtt/src/iot_mqtt_operation.c \_scheduleCallback
+* `_scheduleCallback`
 
-  * Unreachable: Only function call in from an unreachable block of
-  	_IotMqtt_Notify
+    * Unreachable: Only function call in from an unreachable block of
+  	`_IotMqtt_Notify`
 
-* libraries/standard/mqtt/src/iot_mqtt_operation.c \_scheduleNextRetry
+* `_scheduleNextRetry`
 
-  * Unreachable: Only function call is in an unreachable block of code
-	in completePendingSend
+    * Unreachable: Only function call is in an unreachable block of code
+	in `completePendingSend`
 
