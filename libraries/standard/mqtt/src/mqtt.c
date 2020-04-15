@@ -47,7 +47,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     size_t remainingLength, packetSize;
     int32_t bytesSent;
     uint32_t sendTime;
-    MQTTPacketInfo_t connack;
+    MQTTPacketInfo_t incomingPacket;
 
     MQTTStatus_t status = MQTT_GetConnectPacketSize( pConnectInfo,
                                                      pWillInfo,
@@ -84,12 +84,19 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
     {
         status = MQTT_GetIncomingPacket( pContext->pTransportInterface->recv,
                                          pContext->pTransportInterface->networkContext,
-                                         &connack );
+                                         &incomingPacket );
     }
 
     if( status == MQTTSuccess )
     {
-        status = MQTT_DeserializeAck( &connack, NULL, pSessionPresent );
+        if( incomingPacket.type == MQTT_PACKET_TYPE_CONNACK )
+        {
+            status = MQTT_DeserializeAck( &incomingPacket, NULL, pSessionPresent );
+        }
+        else
+        {
+            status = MQTTBadResponse;
+        }
     }
 
     if( status == MQTTSuccess )

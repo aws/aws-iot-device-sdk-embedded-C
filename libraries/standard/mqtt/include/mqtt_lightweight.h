@@ -29,6 +29,7 @@
 #include "config.h"
 
 #define MQTT_PACKET_TYPE_CONNECT         ( ( uint8_t ) 0x10U )
+#define MQTT_PACKET_TYPE_CONNACK         ( ( uint8_t ) 0x20U )
 
 struct MQTTFixedBuffer;
 typedef struct MQTTFixedBuffer MQTTFixedBuffer_t;
