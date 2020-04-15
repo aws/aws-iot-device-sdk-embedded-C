@@ -114,6 +114,9 @@ typedef int32_t (* HTTPTransportRecv_t )( HTTPNetworkContext_t context,
                                           const void * pBuffer, 
                                           size_t bytesToRead );
 
+/**
+ * @brief The HTTP Client library transport layer interface.
+ */
 typedef struct HTTPTransportInterface
 {
     HTTPTransportRecv_t recv;
