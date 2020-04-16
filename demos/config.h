@@ -27,4 +27,19 @@ typedef int MQTTNetworkContext_t;
 
 #define MQTT_MAX_QUEUED_PUBLISH_MESSAGES 10
 
+/*
+ * @brief The Logging Interface Hook.
+ * 
+ * @note Customers can EITHER
+ * Define this macro to tie with their logging
+ * stack. 
+ *          OR
+ * Use the reference POSIX implementation, IotLog_Generic provided by us.
+ * 
+ * @param[in] messageLevel The integer logging level code for the message.
+ * @param[in] pFormat The format string for the log message.
+ * @param[in] ... The variadic argument list for the format string.
+ **/
+#define IotLog( messageLevel, pFormat, ... )
+
 #endif
