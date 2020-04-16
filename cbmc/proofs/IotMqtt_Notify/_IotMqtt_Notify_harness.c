@@ -98,11 +98,14 @@ void harness()
     __CPROVER_assume( IS_STUBBED_NETWORKIF_DESTROY( pMqttConnection->pNetworkInterface ) );
     ensure_IotMqttConnection_has_lists( pMqttConnection );
     __CPROVER_assume( valid_IotMqttConnection( pMqttConnection ) );
+    /* References must be greater than zero; otherwise,
+     * the connection would be destroyed. */
     __CPROVER_assume( pMqttConnection->references > 0 );
 
     /* Assume unconstrained operation. */
     IotMqttOperation_t pOperation = allocate_IotMqttOperation( NULL, pMqttConnection );
     __CPROVER_assume( valid_IotMqttOperation( pOperation ) );
+    /* Incoming publish messages are processed by ProcessIncomingPublish. */
     __CPROVER_assume( pOperation->incomingPublish == false ); 
     IotListDouble_Create( &( pOperation->link ));
     if ( nondet_bool() )

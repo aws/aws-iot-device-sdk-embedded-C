@@ -114,6 +114,8 @@ bool valid_IotMqttOperation( const IotMqttOperation_t pOp )
   // is split into independent send and ack events, and an sync operation
   // is not.
   bool valid_jobReference;
+  // Implication is most natural here, but the use of it with __CPROVER_assume
+  // leads to inconsistent values in jobReferences.
   if ( waitable ) {
     valid_jobReference = ( pOp->u.operation.jobReference == 2 );
   }

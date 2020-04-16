@@ -19,17 +19,12 @@ OPERATION_COUNT_MAX=4
 DEF += -DOPERATION_COUNT_MAX=$(OPERATION_COUNT_MAX)
 
 # One more than actual length of topics
-TOPIC_LENGTH_MAX=10
+TOPIC_LENGTH_MAX=258
 DEF += -DTOPIC_LENGTH_MAX=$(TOPIC_LENGTH_MAX)
-
-# packet size
-DEF += -DPACKET_SIZE_MAX=10
 
 # Enables CBMC stub for RemoveAllMatches function
 DEF += -DCBMC_STUB_REMOVEALLMATCHES=1
 
-LOOP += _encodeRemainingLength.0:$(PAYLOAD_LENGTH_MAX)
-LOOP += _IotMqtt_InvokeSubscriptionCallback.0:$(SUBSCRIPTION_COUNT_MAX)
 LOOP += _matchWildcards.0:$(TOPIC_LENGTH_MAX)
 LOOP += _topicFilterMatch.0:$(TOPIC_LENGTH_MAX)
 LOOP += IotListDouble_RemoveAllMatches.0:$(SUBSCRIPTION_COUNT_MAX)
