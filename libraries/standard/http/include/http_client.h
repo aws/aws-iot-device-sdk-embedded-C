@@ -241,7 +241,7 @@ typedef struct HTTPResponse
      * these functions return.
      * 
      * For optimization this buffer may be used with the request headers. The
-     * request header buffers are configured in #HTTPRequestHeaders_t.pBuffer.
+     * request header buffer is configured in #HTTPRequestHeaders_t.pBuffer.
      * When the same buffer is used for the request headers, #HTTPClient_Send
      * will send the headers in the buffer first, then fill the buffer with 
      * the response message.
