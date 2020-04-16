@@ -401,7 +401,7 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t* pTransport,
 
 /**
  * @brief Read a header from the completed response #HTTPResponse_t. This will
- * return the response header value location within the response buffer.
+ * return the response header value location within #HTTPResponse_t.pBuffer.
  * 
  * This function should be used only a completed response. A #HTTPResponse_t is
  * not complete until #HTTPClient_Send returns.
