@@ -30,9 +30,9 @@
  * Supported HTTP request methods.
  */
 #define HTTP_METHOD_GET                 "GET"  /**< HTTP Method GET. */
-#define HTTP_METHOD_PUT                 "PUT"  /**< HTTP Method GET. */
-#define HTTP_METHOD_POST                "POST" /**< HTTP Method GET. */
-#define HTTP_METHOD_HEAD                "HEAD" /**< HTTP Method GET. */
+#define HTTP_METHOD_PUT                 "PUT"  /**< HTTP Method PUT. */
+#define HTTP_METHOD_POST                "POST" /**< HTTP Method POST. */
+#define HTTP_METHOD_HEAD                "HEAD" /**< HTTP Method HEAD. */
 
 /**
  * Flags for #HTTPRequestInfo_t.flags.
@@ -342,7 +342,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t *pRequestHeaders,
  */
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t* pTransport,
                               const HTTPRequestHeaders_t* pRequestHeaders,
-                              const uint8_t* pRequestBodyBuf, // For a PUT or POST request.
+                              const uint8_t* pRequestBodyBuf,
                               size_t reqBodyBufLen,
                               HTTPResponse_t* pResponse );
 
