@@ -62,8 +62,6 @@ OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_operation.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_serialize.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_subscription.goto
 
-CBMCFLAGS += --flush
-
 # allow mqtt mallocs to fail for coverage
 DEF += -include mqtt_state.h
 DEF += -DIotMqtt_MallocMessage=malloc_can_fail

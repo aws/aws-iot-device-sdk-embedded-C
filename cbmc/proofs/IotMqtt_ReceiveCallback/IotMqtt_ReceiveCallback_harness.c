@@ -1,3 +1,33 @@
+/*
+ * IoT MQTT V2.1.0
+ * Copyright (C) Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * @file IotMqtt_ReceiveCallback_harness.c
+ * @brief Implements the proof harness for IotMqtt_ReceiveCallback function.
+ */
+
 #include "iot_config.h"
 #include "private/iot_mqtt_internal.h"
 
@@ -6,72 +36,23 @@
 #include "mqtt_state.h"
 
 /****************************************************************
-* This proof works by splitting into cases based on incoming packet
-* type.  There are six valid incoming packet types:
-*
-*     MQTT_PACKET_TYPE_CONNACK
-*     MQTT_PACKET_TYPE_PUBLISH
-*     MQTT_PACKET_TYPE_PUBACK
-*     MQTT_PACKET_TYPE_SUBACK
-*     MQTT_PACKET_TYPE_UNSUBACK
-* and
-*     MQTT_PACKET_TYPE_PINGRESP
-*
-* We split these cases into the first 5 and everything else by
-* modifying the function that reads the byte from the network
-* connection that includes the packet type.  This byte consists of 4
-* bits giving the packet type and 4 bits giving the packet flags like
-* quality of service.
-*
-* Note: We break coding conventions by placing this function at the
-* head of the proof harness because it is the heart of the proof and
-* explains what is going on.
+* Type definitions used by the IoT List Double remove functions
 ****************************************************************/
-
-uint8_t _IotMqtt_GetPacketType( IotNetworkConnection_t pNetworkConnection,
-                                const IotNetworkInterface_t * pNetworkInterface )
-{
-    uint8_t byte;
-
-    /* Top 4 bits are packet type, the bottom 4 bits are flags */
-    uint8_t type = byte & 0xf0U;
-
-    #ifdef CBMC_PACKET
-        __CPROVER_assume( type == CBMC_PACKET );
-        assert( type == MQTT_PACKET_TYPE_CONNACK ||
-		type == MQTT_PACKET_TYPE_PUBLISH ||
-		type == MQTT_PACKET_TYPE_PUBACK ||
-		type == MQTT_PACKET_TYPE_SUBACK ||
-		type == MQTT_PACKET_TYPE_UNSUBACK );
-    #else
-        __CPROVER_assume( type != MQTT_PACKET_TYPE_CONNACK &&
-                          type != MQTT_PACKET_TYPE_PUBLISH &&
-                          type != MQTT_PACKET_TYPE_PUBACK &&
-                          type != MQTT_PACKET_TYPE_SUBACK &&
-                          type != MQTT_PACKET_TYPE_UNSUBACK );
-    #endif
-
-    return byte;
-}
-
-/****************************************************************
- * Type definitions used by the IoT List Double remove functions
- ****************************************************************/
 
 typedef bool ( *MatchFunction_t )( const IotLink_t * const pOperationLink,
                                    void * pCompare );
 typedef void ( *FreeElementFunction_t )( void * pData );
 
 /****************************************************************
- * We assume the IoT List Double remove functions are memory safe.
- *
- * We abstract the list remove functions for performance reasons.  Our
- * abstraction replaces the original list with an unconstrained list.
- * Our abstraction proves that none of the elements on the original
- * list are accessed after the remove: We free all elements on the
- * original list, so that any later access will be caught as a
- * use-after-free error.
- ****************************************************************/
+* We assume the IoT List Double remove functions are memory safe.
+*
+* We abstract the list remove functions for performance reasons.  Our
+* abstraction replaces the original list with an unconstrained list.
+* Our abstraction proves that none of the elements on the original
+* list are accessed after the remove: We free all elements on the
+* original list, so that any later access will be caught as a
+* use-after-free error.
+****************************************************************/
 
 void IotListDouble_RemoveAllMatches( const IotListDouble_t * const pList,
                                      MatchFunction_t isMatch,
@@ -107,6 +88,10 @@ IotTaskPoolError_t IotTaskPool_CreateJob( const IotTaskPoolRoutine_t userCallbac
                                           void * const pUserContext,
                                           IotTaskPoolJob_t * const pJob )
 {
+    assert( userCallback != NULL );
+    assert( pUserContext != NULL );
+    assert( pJob != NULL );
+
     /*
      * *_IotMqtt_ScheduleOperation says creating a new job should
      * never fail when parameters are valid.
@@ -120,6 +105,9 @@ IotTaskPoolError_t IotTaskPool_ScheduleDeferred( IotTaskPool_t * const pTaskPool
                                                  IotTaskPoolJob_t * const pJob,
                                                  uint32_t timeMs )
 {
+    /* assert(pTaskPool != NULL); */
+    /* assert(pJob != NULL); */
+
     /*
      * *_IotMqtt_ScheduleOperation says a newly created job should
      * never be invalid or illegal.
@@ -300,6 +288,51 @@ bool pending_operations_have_valid_jobreference( IotMqttConnection_t pConn )
 }
 
 /****************************************************************
+* This proof works by splitting into cases based on incoming packet
+* type.  There are six valid incoming packet types:
+*
+*     MQTT_PACKET_TYPE_CONNACK
+*     MQTT_PACKET_TYPE_PUBLISH
+*     MQTT_PACKET_TYPE_PUBACK
+*     MQTT_PACKET_TYPE_SUBACK
+*     MQTT_PACKET_TYPE_UNSUBACK
+* and
+*     MQTT_PACKET_TYPE_PINGRESP
+*
+* We split these cases into the first 5 and everything else by
+* modifying the function that reads the byte from the network
+* connection that includes the packet type.  This byte consists of 4
+* bits giving the packet type and 4 bits giving the packet flags like
+* quality of service.
+****************************************************************/
+
+uint8_t _IotMqtt_GetPacketType( IotNetworkConnection_t pNetworkConnection,
+                                const IotNetworkInterface_t * pNetworkInterface )
+{
+    uint8_t byte;
+
+    /* Top 4 bits are packet type, the bottom 4 bits are flags */
+    uint8_t type = byte & 0xf0U;
+
+    #ifdef CBMC_PACKET
+        __CPROVER_assume( type == CBMC_PACKET );
+        assert( type == MQTT_PACKET_TYPE_CONNACK ||
+                type == MQTT_PACKET_TYPE_PUBLISH ||
+                type == MQTT_PACKET_TYPE_PUBACK ||
+                type == MQTT_PACKET_TYPE_SUBACK ||
+                type == MQTT_PACKET_TYPE_UNSUBACK );
+    #else
+        __CPROVER_assume( type != MQTT_PACKET_TYPE_CONNACK &&
+                          type != MQTT_PACKET_TYPE_PUBLISH &&
+                          type != MQTT_PACKET_TYPE_PUBACK &&
+                          type != MQTT_PACKET_TYPE_SUBACK &&
+                          type != MQTT_PACKET_TYPE_UNSUBACK );
+    #endif /* ifdef CBMC_PACKET */
+
+    return byte;
+}
+
+/****************************************************************
 * The proof harness
 ****************************************************************/
 
@@ -314,14 +347,15 @@ void harness()
     __CPROVER_assume(
         pending_operations_have_valid_jobreference( ReceiveContext ) );
 
+    /* There must be some operation waiting for an inbound ack */
     __CPROVER_assume( ReceiveContext->references > 0 );
 
-    /* Disconnect callback */
+    /* Disconnect callback function pointer points to our stub */
     __CPROVER_assume(
         MAYBE_STUBBED_USER_CALLBACK(
             ReceiveContext->disconnectCallback.function ) );
 
-    /* Network interface methods */
+    /* Network interface method functions pointers point to our stubs */
     __CPROVER_assume(
         IS_STUBBED_NETWORKIF_RECEIVE(
             ReceiveContext->pNetworkInterface ) );
@@ -343,7 +377,6 @@ void harness()
     __CPROVER_assume(
         MAYBE_STUBBED_NETWORKIF_DESTROY(
             ReceiveContext->pNetworkInterface ) );
-
 
     IotMqtt_ReceiveCallback( ReceiveContext->pNetworkConnection,
                              ReceiveContext );
