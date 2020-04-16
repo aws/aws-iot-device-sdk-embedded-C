@@ -179,19 +179,19 @@ typedef struct HTTPRequestHeaders
 typedef struct HTTPRequestInfo
 {
     /**
-     * @brief The HTTP request method i.e. "GET", "POST", "PUT", or "HEAD". 
+     * @brief The HTTP request method e.g. "GET", "POST", "PUT", or "HEAD". 
      */
     const char* method;
     size_t methodLen; /**< The length of the method in bytes. */
     
     /**
-     * @brief The Request-URI to the objects of interest, i.e. "/path/to/item.txt".
+     * @brief The Request-URI to the objects of interest, e.g. "/path/to/item.txt".
      */
     const char* pPath;
     size_t pathLen; /**< The length of the path in bytes. */
 
     /**
-     * @brief The server's host name, i.e. "s3.amazonaws.com".
+     * @brief The server's host name, e.g. "s3.amazonaws.com".
      * 
      * The host does not have a "https://" or "http://" prepending.
      */
