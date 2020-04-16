@@ -33,10 +33,9 @@
 #define HTTP_METHOD_POST                "POST" /**< HTTP Method GET. */
 #define HTTP_METHOD_HEAD                "HEAD" /**< HTTP Method GET. */
 
-
 /**
  * Flags for #HTTPRequestInfo_t.flags.
- * These headers control what headers are written or not to the 
+ * These flags control what headers are written or not to the 
  * #HttpRequestHeaders_t.pBuffer.
  */
 /**
@@ -53,12 +52,12 @@
  * @brief Set this flag to disable automatically writing the Content-Length
  * header. 
  */
-#define HTTP_REQUEST_DISABLE_AUTO_CONTENT_LENGTH_FLAG   0x2U
-
+#define HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG   0x2U
 
 /**
  * Flags for #HTTPResponse_t.flags.
- * These flags are in #HTTPResponse_t.flags after #HTTPClient_Send() returns.
+ * These flags are updated in #HTTPResponse_t.flags after #HTTPClient_Send()
+ * returns.
  */
  /**
   * @brief This will be set to true if header "Connection: close" is found.
@@ -143,7 +142,10 @@ typedef enum HTTPStatus
 } HTTPStatus_t;
 
 /**
- * @brief Request headers buffer and how many headers exist in the buffer.
+ * @brief Represents header data that will be sent in an HTTP request. 
+ * 
+ * The memory for the header data buffer is supplied by the user. Information in
+ * the buffer will be filled by calling #HTTPClient_InitializeHeaders.
  */
 typedef struct HTTPRequestHeaders
 {
@@ -151,14 +153,19 @@ typedef struct HTTPRequestHeaders
     /**
      * @brief Buffer to hold the raw HTTP request headers.
      * 
-     * This buffer is not available to modify until #HTTPNetworkInterface_t.recv
-     * for the response is invoked.
+     * This buffer is supplied by the application.
      * 
-     * If this buffer is shared with the response, then this buffer cannot be
-     * modified until #HTTPClient_Send() returns.
+     * This buffer is owned by the library during #HTTPClient_AddHeader, 
+     * #HTTPClient_AddRangeHeader, #HTTPClient_InitializeRequestHeaders, and
+     * #HTTPClient_Send. This buffer should not be modifed until 
+     * after these functions return.
+     * 
+     * For optimization this buffer may be shared with the response. The user 
+     * can re-use this buffer for the storing the response with the server in 
+     * #HTTPResponse_t.pBuffer.
      */
     uint8_t* pBuffer;
-    size_t bufferLen; /**< The length pBuffer. */
+    size_t bufferLen; /**< The length of pBuffer in bytes. */
     
     /**
      * @brief The actual amount of headers in the buffer, in bytes. This field
@@ -294,7 +301,6 @@ typedef struct HTTPResponse
      */
     uint32_t flags;
 } HTTPResponse_t;
-
 
 /**
  * TODO: Add through documentation.
