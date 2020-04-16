@@ -357,11 +357,11 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                    size_t valueLen );
 
 /**
- * @brief Adds the byte range request header to the request headers store in
+ * @brief Add the byte range request header to the request headers store in
  * #HTTPRequestHeaders_t.pBuffer.
  * 
- * For example, if range for the first 1kB of a file the following would be 
- * written  "Range: bytes=0-1024".
+ * For example, if requesting for the first 1kB of a file the following would be 
+ * written  "Range: bytes=0-1024\r\n".
  * 
  * TODO: Add documentation about rangeStart and rangeEnd configuration.
  * 
