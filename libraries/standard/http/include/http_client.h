@@ -191,7 +191,7 @@ typedef struct HTTPRequestInfo
     size_t pathLen; /**< The length of the path in bytes. */
 
     /**
-     * @brief The server's host name, e.g. "s3.amazonaws.com".
+     * @brief The server's host name, e.g. "my-storage.my-cloud.com".
      * 
      * The host does not have a "https://" or "http://" prepending.
      */
