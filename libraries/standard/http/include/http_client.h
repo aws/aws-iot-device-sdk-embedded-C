@@ -316,13 +316,39 @@ typedef struct HTTPResponse
 } HTTPResponse_t;
 
 /**
- * TODO: Add through documentation.
+ * @brief Initialize the request headers, stored in
+ * #HTTPRequestHeaders_t.pBuffer, with initial configurations from 
+ * #HTTPRequestInfo_t.
+ * 
+ * Upon return, #HTTPRequestHeaders_t.headersLen will be updated with the number
+ * of bytes written.
+ * 
+ * TODO: Expand documentation.
+ * 
+ * @param[in] pRequestHeaders Request header buffer information.
+ * @param[in] pRequestInfo Initial request header configurations.
+ * @return #HTTP_SUCCESS if successful, an error code otherwise.
+ * TODO: Update for exact error codes returned.
  */
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders, 
-                                                      const HTTPRequestInfo_t * pRequestInfo );
+                                                  const HTTPRequestInfo_t * pRequestInfo );
 
 /**
- * TODO: Add thorough documentation.
+ * @brief Add a header to the request headers stored in 
+ * #HTTPRequestHeaders_t.pBuffer.
+ * 
+ * Upon return, pRequestHeaders->headersLen will be updated with the number of
+ * bytes written.
+ * 
+ * TODO: Expand documentation.
+ * 
+ * @param[in] pRequestHeaders Request header buffer information.
+ * @param[in] pName The header field name to write.
+ * @param[in] nameLen The byte length of the header field name.
+ * @param[in] pValue The header value to write.
+ * @param[in] valueLen The byte length of the header field value.
+ * @return #HTTP_SUCCESS if successful, an error code otherwise.
+ * TODO: Update for exact error codes returned.
  */
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders, 
                                    const char* pName, 
@@ -331,14 +357,41 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                    size_t valueLen );
 
 /**
- * TODO: Add thorough documentation.
+ * @brief Adds the byte range request header to the request headers store in
+ * #HTTPRequestHeaders_t.pBuffer.
+ * 
+ * For example, if range for the first 1kB of a file the following would be 
+ * written  "Range: bytes=0-1024".
+ * 
+ * TODO: Add documentation about rangeStart and rangeEnd configuration.
+ * 
+ * @param[in] pRequestHeaders Request header buffer information.
+ * @param[in] rangeStart The starting range for the requested file.
+ * @param[in] rangeEnd The ending range for the requested file.
+ * @return #HTTP_SUCCESS if successful, an error code otherwise.
+ * TODO: Update for exact error codes returned.
  */
 HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t *pRequestHeaders,
-                                            int32_t rangeStart,
-                                            int32_t rangeEnd );
+                                        int32_t rangeStart,
+                                        int32_t rangeEnd );
 
 /**
- * TODO: Add thorough documentation.
+ * @brief Send the request headers in #HTTPRequestHeaders_t and request body in
+ * parameter pRequestBodyBuf over the transport. The response is received in 
+ * #HTTPResponse_t.
+ * 
+ * TODO: Expand documentation.
+ * 
+ * @param[in] pTransport Transport interface, see #HTTPTransportInterface_t for
+ * more information.
+ * @param[in] pRequestHeaders Request configuration containing the buffer of
+ * headers to send.
+ * @param[in] pRequestBodyBuf Request entity body.
+ * @param[in] reqBodyBufLen The length of the request entity in bytes.
+ * @param[in] pResponse The response message and some notable response
+ * parameters will be returned here on success.
+ * @return #HTTP_SUCCESS if successful, an error code otherwise.
+ * TODO: Update for exact error codes returned.
  */
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t* pTransport,
                               const HTTPRequestHeaders_t* pRequestHeaders,
@@ -347,7 +400,22 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t* pTransport,
                               HTTPResponse_t* pResponse );
 
 /**
- * TODO: Add thorough documentation.
+ * @brief Read a header from the completed response #HTTPResponse_t. This will
+ * return the response header value location within the response buffer.
+ * 
+ * This function should be used only a completed response. A #HTTPResponse_t is
+ * not complete until #HTTPClient_Send returns.
+ * 
+ * TODO: Expand documentation.
+ * 
+ * @param[in] pResponse Completed response.
+ * @param[in] pName The header field name to read.
+ * @param[in] nameLen The length of the header field name in bytes.
+ * @param[out] pValue The location of the header value in 
+ * #HTTPResponse_t.pBuffer.
+ * @param[out] valueLen The length of the header value in bytes.
+ * @return #HTTP_SUCCESS if successful, an error code otherwise.
+ * TODO: Update for exact error codes returned.
  */
 HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t* pResponse,
                                     const char* pName,
