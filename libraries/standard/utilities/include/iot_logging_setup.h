@@ -28,6 +28,9 @@
 #ifndef IOT_LOGGING_SETUP_H_
 #define IOT_LOGGING_SETUP_H_
 
+/* The config header is always included first. */
+#include "config.h"
+
 /* Logging include. Because it's included here, iot_logging.h never needs
  * to be included in source. */
 #include "iot_logging.h"

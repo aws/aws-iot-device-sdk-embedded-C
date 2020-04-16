@@ -35,7 +35,7 @@
 #define IOT_LOGGING_H_
 
 /* The config header is always included first. */
-#include "iot_config.h"
+#include "config.h"
 
 /* Standard includes. */
 #include <stdbool.h>
