@@ -85,7 +85,9 @@ typedef enum MQTTStatus
     MQTTRecvFailed,     /**< The transport receive function failed. */
     MQTTBadResponse,    /**< An invalid packet was received from the server. */
     MQTTServerRefused,  /**< The server refused a CONNECT or SUBSCRIBE. */
-    MQTTNoDataAvailable
+    MQTTNoDataAvailable,/**< No data available from the transport interface. */
+    MQTTIllegalState,   /**< An illegal state in the state record. */
+    MQTTStateCollision  /**< A collision with an existing state record entry. */
 } MQTTStatus_t;
 
 /**

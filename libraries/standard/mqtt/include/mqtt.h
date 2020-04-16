@@ -51,6 +51,7 @@ typedef enum MQTTConnectionStatus
 
 typedef enum MQTTPublishState
 {
+    MQTTInvalidState = 0,
     MQTTPublishSend,
     MQTTPubAckSend,
     MQTTPubRecSend,
@@ -60,16 +61,17 @@ typedef enum MQTTPublishState
     MQTTPubRelPending,
     MQTTPubRecPending,
     MQTTPubCompPending,
-    MQTTPublishDone
+    MQTTPublishDone,
 } MQTTPublishState_t;
 
-typedef enum MQTTPubAckType
+typedef enum MQTTPublishType
 {
-    MQTTPuback,
-    MQTTPubrec,
-    MQTTPubrel,
-    MQTTPubcomp
-} MQTTPubAckType_t;
+    MQTT_PUBLISH,
+    MQTT_PUBACK,
+    MQTT_PUBREC,
+    MQTT_PUBREL,
+    MQTT_PUBCOMP,
+} MQTTPublishType_t;
 
 struct MQTTTransportInterface
 {
@@ -87,7 +89,7 @@ struct MQTTApplicationCallbacks
 struct MQTTPubAckInfo
 {
     uint16_t packetId;
-    MQTTPubAckType_t ackType;
+    MQTTQoS_t qos;
     MQTTPublishState_t publishState;
 };
 
