@@ -253,3 +253,8 @@ IotNetworkError_t IotNetworkInterfaceDestroy( void * pConnection );
 IotMqttCallbackInfo_t *allocate_IotMqttCallbackInfo(IotMqttCallbackInfo_t *pCb);
 void IotUserCallback( void * pCallbackContext,
 		      IotMqttCallbackParam_t * pCallbackParam );
+
+#define IS_STUBBED_USER_CALLBACK(cb) (cb == IotUserCallback)
+#define MAYBE_STUBBED_USER_CALLBACK(cb) (cb == NULL || cb == IotUserCallback)
+
+/****************************************************************/
