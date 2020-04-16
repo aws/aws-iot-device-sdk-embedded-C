@@ -239,8 +239,9 @@ typedef struct HTTPResponse
      * 
      * This buffer is supplied by the application.
      * 
-     * This buffer is owned by the library during  #HTTPClient_Send. This buffer
-     * should not be modifed until after this functions return.
+     * This buffer is owned by the library during  #HTTPClient_Send and 
+     * #HTTPClient_ReadHeader. This buffer should not be modifed until after 
+     * these functions return.
      * 
      * For optimization this buffer may be re-used with the request. The user 
      * can re-use this buffer for the storing the request headers in 
