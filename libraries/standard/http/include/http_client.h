@@ -75,7 +75,7 @@
  * is passed into the network interface functions.
  */
 struct HTTPNetworkContext;
-typedef struct HTTPNetworkContext * HTTPNetworkContext_t;
+typedef struct HTTPNetworkContext HTTPNetworkContext_t;
 
 /**
  * @brief Transport interface for sending data over the network.
@@ -89,7 +89,7 @@ typedef struct HTTPNetworkContext * HTTPNetworkContext_t;
  * @param[in] bytesToWrite Number of bytes to write to the network.
  * @return The number of bytes written or a negative network error code.
  */
-typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t context,
+typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t *pContext,
                                           const void * pBuffer, 
                                           size_t bytesToWrite );
 
@@ -107,7 +107,7 @@ typedef int32_t (* HTTPTransportSend_t )( HTTPNetworkContext_t context,
  * @param[in] bytesToRead Number of bytes requested from the network.
  * @return The number of bytes read or a negative error code.
  */
-typedef int32_t (* HTTPTransportRecv_t )( HTTPNetworkContext_t context,
+typedef int32_t (* HTTPTransportRecv_t )( HTTPNetworkContext_t *pContext,
                                           const void * pBuffer, 
                                           size_t bytesToRead );
 
@@ -118,7 +118,7 @@ typedef struct HTTPTransportInterface
 {
     HTTPTransportRecv_t recv;
     HTTPTransportSend_t send;
-    HTTPNetworkContext_t context;
+    HTTPNetworkContext_t* pContext;
 } HTTPTransportInterface_t;
 
 /**
