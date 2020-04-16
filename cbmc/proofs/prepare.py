@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import argparse
 import logging
 import os
 import pathlib
@@ -31,6 +32,71 @@ import textwrap
 
 from make_cbmc_batch_files import create_cbmc_yaml_files
 
+################################################################
+# Argument parsing
+
+def command_line_arguments():
+    """Define command line arguments."""
+
+    parser = argparse.ArgumentParser(
+        description='Prepare MQTT source tree for CBMC proofs.'
+    )
+
+    parser.add_argument(
+        '--patches',
+        action='store_true',
+        default=True,
+        help='Apply patches to MQTT source tree to run proofs.'
+    )
+    parser.add_argument(
+        '--no-patches',
+        action='store_false',
+        dest='patches',
+        help='Apply patches to MQTT source tree to run proofs.'
+    )
+    parser.add_argument(
+        '--yamls',
+        action='store_true',
+        default=True,
+        help='Generate cbmc-batch.yaml files to run proofs in CI.'
+    )
+    parser.add_argument(
+        '--no-yamls',
+        action='store_false',
+        dest='yamls',
+        help='Generate cbmc-batch.yaml files to run proofs in CI.'
+    )
+
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Verbose output.'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Debugging output.'
+    )
+
+    args = parser.parse_args()
+
+    # Only the first invocation of basicConfig configures the root logger
+    if args.debug:
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="{script}: %(levelname)s %(message)s".format(
+                script=os.path.basename(__file__)))
+    if args.verbose:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="{script}: %(levelname)s %(message)s".format(
+                script=os.path.basename(__file__)))
+    logging.basicConfig(format="{script}: %(levelname)s %(message)s".format(
+        script=os.path.basename(__file__)))
+
+    return args
+
+################################################################
 
 def apply_patches():
     patch_dir = pathlib.Path(__file__).resolve().parent.parent / "patches"
@@ -70,17 +136,22 @@ def apply_patches():
 def build():
     try:
         create_cbmc_yaml_files()
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as error:
         logging.error(textwrap.dedent("""\
             An error occured during cbmc-batch generation.
             The error message is: {}
-            """.format(str(e))))
+            """.format(str(error))))
         exit(1)
 
 ################################################################
 
+def main():
+    args = command_line_arguments()
+
+    if args.yamls:
+        build()
+    if args.patches:
+        apply_patches()
+
 if __name__ == '__main__':
-    logging.basicConfig(format="{script}: %(levelname)s %(message)s".format(
-        script=os.path.basename(__file__)))
-    build()
-    apply_patches()
+    main()

@@ -166,7 +166,8 @@ define encode_options
        '=$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')='
 endef
 
-cbmc-batch.yaml: Makefile ../Makefile.common
+# Regenerate cbmc-batch.yaml every time (use PHONY, list no dependencies)
+cbmc-batch.yaml:
 	@echo "Building $@"
 	@$(RM) $@
 	@echo 'build_memory: $(PROOFMEM)' > $@
