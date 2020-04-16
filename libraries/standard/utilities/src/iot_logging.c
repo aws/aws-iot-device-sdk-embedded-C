@@ -370,9 +370,8 @@ void IotLog_GenericPrintBuffer( const char * const pLibraryName,
     if( pHeader != NULL )
     {
         IotLog_Generic( IOT_LOG_DEBUG,
+                        "[%s] %s",
                         pLibraryName,
-                        IOT_LOG_DEBUG,
-                        NULL,
                         pHeader );
     }
 
