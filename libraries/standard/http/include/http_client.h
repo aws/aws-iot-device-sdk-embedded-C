@@ -56,8 +56,8 @@
 
 /**
  * Flags for #HTTPResponse_t.flags.
- * These flags are updated in #HTTPResponse_t.flags after #HTTPClient_Send()
- * returns.
+ * These flags are populated in #HTTPResponse_t.flags by the #HTTPClient_Send()
+ * function.
  */
  /**
   * @brief This will be set to true if header "Connection: close" is found.
@@ -160,8 +160,8 @@ typedef struct HTTPRequestHeaders
      * #HTTPClient_Send. This buffer should not be modifed until 
      * after these functions return.
      * 
-     * For optimization this buffer may be shared with the response. The user 
-     * can re-use this buffer for the storing the response with the server in 
+     * For optimization this buffer may be re-used with the response. The user 
+     * can re-use this buffer for the storing the response from the server in 
      * #HTTPResponse_t.pBuffer.
      */
     uint8_t* pBuffer;
@@ -207,17 +207,19 @@ typedef struct HTTPRequestInfo
     uint32_t flags;
 } HTTPRequestInfo_t;
 
+
+
 /**
  * @brief Callback to intercept headers during the first parse through of the 
  * response as it is received from the network.
  */
 typedef struct httpResponseParsingCallback {
     /**
-     * Invoked when both a header field and its associated header value is found.
+     * @brief Invoked when both a header field and its associated header value are found.
      * @param[in] pContext User context.
-     * @param[in] fieldLoc Pointer to the first char of the header field name in the response buffer.
+     * @param[in] fieldLoc Location of the header field name in the response buffer.
      * @param[in] fieldLen Length in bytes of the field name.
-     * @param[in] valueLoc Pointer to the first char of the header value in the response buffer.
+     * @param[in] valueLoc Location of the header value in the response buffer.
      * @param[in] valueLen Length in bytes of the value.
      * @param[in] statusCode The HTTP response status-code.
      */
@@ -225,14 +227,24 @@ typedef struct httpResponseParsingCallback {
 
     /* Private context for the application. */
     void *pContext;
-} httpclientHeaderParsingCallback_t;
+} HTTPClient_HeaderParsingCallback_t;
 
+/**
+ * @brief Represents an HTTP response.
+ */
 typedef struct HTTPResponse
 {
     /**
      * @brief Buffer for both the raw HTTP header and body. 
      * 
-     * This buffer cannot be modifed until #HTTPClient_Send returns.
+     * This buffer is supplied by the application.
+     * 
+     * This buffer is owned by the library during  #HTTPClient_Send. This buffer
+     * should not be modifed until after this functions return.
+     * 
+     * For optimization this buffer may be re-used with the request. The user 
+     * can re-use this buffer for the storing the request headers in 
+     * #HTTPRequestHeaders_t.pBuffer.
      */
     uint8_t* pBuffer;
     size_t bufferLen; /**< The length of the response buffer in bytes. */
@@ -241,31 +253,31 @@ typedef struct HTTPResponse
      * @brief Optional callback for intercepting the header during the first 
      * parse through of the response as is it receive from the network.
      */
-    httpclientHeaderParsingCallback_t* pHeaderParsingCallback;
+    HTTPClient_HeaderParsingCallback_t* pHeaderParsingCallback;
     
     /**
-     * @brief The Location of the response headers in pBuffer.
+     * @brief The starting location of the response headers in pBuffer.
      * 
      * This is updated by #HTTPClient_Send.
      */
     uint8_t* pHeaders;
 
     /**
-     * @brief Byte length of the response headers in pBuf.
+     * @brief Byte length of the response headers in pBuffer.
      * 
      * This is updated by #HTTPClient_Send.
      */
     size_t headersLen; 
 
     /**
-     * @brief The location of the response body in pBuf.
+     * @brief The starting location of the response body in pBuffer.
      * 
      * This is updated by #HTTPClient_Send.
      */
     uint8_t* pBody;
 
     /**
-     * @brief Byte length of the body in pBuf.
+     * @brief Byte length of the body in pBuffer.
      * 
      * This is updated by #HTTPClient_Send.
      */
@@ -312,10 +324,10 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
  * TODO: Add thorough documentation.
  */
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders, 
-                                       const char* pName, 
-                                       size_t nameLen, 
-                                       const char * pValue, 
-                                       size_t valueLen );
+                                   const char* pName, 
+                                   size_t nameLen, 
+                                   const char * pValue, 
+                                   size_t valueLen );
 
 /**
  * TODO: Add thorough documentation.
@@ -328,18 +340,18 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t *pRequestHeaders,
  * TODO: Add thorough documentation.
  */
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t* pTransport,
-                                  const HTTPRequestHeaders_t* pRequestHeaders,
-                                  const uint8_t* pRequestBodyBuf, // For a PUT or POST request.
-                                  size_t reqBodyBufLen,
-                                  HTTPResponse_t* pResponse );
+                              const HTTPRequestHeaders_t* pRequestHeaders,
+                              const uint8_t* pRequestBodyBuf, // For a PUT or POST request.
+                              size_t reqBodyBufLen,
+                              HTTPResponse_t* pResponse );
 
 /**
  * TODO: Add thorough documentation.
  */
-HTTPStatus_t HTTPClient_ReadHeader( HTTPResponse_t* pResponse,
-                                       const char* pName,
-                                       size_t nameLen,
-                                       char **pValue,
-                                       size_t* valueLen );
+HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t* pResponse,
+                                    const char* pName,
+                                    size_t nameLen,
+                                    char **pValue,
+                                    size_t* valueLen );
 
 #endif
