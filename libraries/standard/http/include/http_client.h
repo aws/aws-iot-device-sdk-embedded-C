@@ -5,13 +5,14 @@
 #include <stdbool.h>
 
 /**
- * @brief Maximum amount of headers allowed from the server.
+ * @brief Maximum size, in bytes, of headers allowed from the server.
  * 
- * If the server sends more headers than this configuration, then status code
- * #HTTP_SECURITY_ALERT_TOO_MANY_HEADERS is returned from #HTTPClient_Send.
+ * If the total size in bytes of the headers sent from this server exceeds this
+ * configuration, then the status code #HTTP_SECURITY_ALERT_HEADERS is
+ * returned from #HTTPClient_Send.
  */
 #ifndef HTTP_MAX_HEADERS_BYTES
-    #define HTTP_MAX_HEADERS_BYTES      2048U
+    #define HTTP_MAX_RESPONSE_HEADERS_BYTES      2048U
 #endif
 
 /**
@@ -43,9 +44,6 @@
  * 
  * Setting this will cause a "Connection: Keep-Alive" to be written to the
  * request.
- * 
- * Keep in mind some third-party servers do not have to honor persistent
- * connection requests.
  */
 #define HTTP_REQUEST_KEEP_ALIVE_FLAG                    0x1U
 /** 
@@ -168,7 +166,7 @@ typedef struct HTTPRequestHeaders
     size_t bufferLen; /**< The length of pBuffer in bytes. */
     
     /**
-     * @brief The actual amount of headers in the buffer, in bytes. This field
+     * @brief The actual size in bytes of headers in the buffer. This field
      * is updated by the HTTP Client library functions #HTTPClient_AddHeader,
      * and #HTTPClient_InitializeRequestHeaders.
      */
@@ -193,8 +191,7 @@ typedef struct HTTPRequestInfo
     size_t pathLen; /**< The length of the path in bytes. */
 
     /**
-     * @brief The DNS resolvable name of the host or server, i.e. 
-     * "s3.amazonaws.com"
+     * @brief The server's host name, i.e. "s3.amazonaws.com".
      * 
      * The host does not have a "https://" or "http://" prepending.
      */
@@ -239,13 +236,15 @@ typedef struct HTTPResponse
      * 
      * This buffer is supplied by the application.
      * 
-     * This buffer is owned by the library during  #HTTPClient_Send and 
-     * #HTTPClient_ReadHeader. This buffer should not be modifed until after 
+     * This buffer is owned by the library during  #HTTPClient_Send and
+     * #HTTPClient_ReadHeader. This buffer should not be modifed until after
      * these functions return.
      * 
-     * For optimization this buffer may be re-used with the request. The user 
-     * can re-use this buffer for the storing the request headers in 
-     * #HTTPRequestHeaders_t.pBuffer.
+     * For optimization this buffer may be used with the request headers. The
+     * request header buffers are configured in #HTTPRequestHeaders_t.pBuffer.
+     * When the same buffer is used for the request headers, #HTTPClient_Send
+     * will send the headers in the buffer first, then fill the buffer with 
+     * the response message.
      */
     uint8_t* pBuffer;
     size_t bufferLen; /**< The length of the response buffer in bytes. */
@@ -253,6 +252,7 @@ typedef struct HTTPResponse
     /**
      * @brief Optional callback for intercepting the header during the first 
      * parse through of the response as is it receive from the network.
+     * Set to NULL to disable.
      */
     HTTPClient_HeaderParsingCallback_t* pHeaderParsingCallback;
     
