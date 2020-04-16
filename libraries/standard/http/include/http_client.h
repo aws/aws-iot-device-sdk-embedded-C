@@ -20,10 +20,10 @@
  * 
  * The following headerline is automatically written to
  * #HTTPRequestHeaders_t.pBuffer:
- * "User-Agent: AWS\r\n"
+ * "User-Agent: my-platform-name\r\n"
  */ 
 #ifndef HTTP_USER_AGENT_VALUE
-    #define HTTP_USER_AGENT_VALUE       "AWS"
+    #define HTTP_USER_AGENT_VALUE       "my-platform-name"
 #endif
 
 /**
