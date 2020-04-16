@@ -646,39 +646,15 @@ MQTTStatus_t _MQTT_UpdateState( MQTTContext_t * pMqttContext,
     MQTTPublishState_t newState = MQTTInvalidState;
     MQTTQoS_t foundQoS = MQTTInvalidQoS;
     uint16_t recordIndex = MQTT_MAX_QUEUED_PUBLISH_MESSAGES;
-    MQTTPubAckInfo_t * records = NULL, * oppositeRecords = NULL;
+    MQTTPubAckInfo_t * records = NULL;
 
     if( isPublishOutgoing )
     {
         records = pMqttContext->outgoingPublishRecords;
-        oppositeRecords = pMqttContext->incomingPublishRecords;
     }
     else
     {
         records = pMqttContext->incomingPublishRecords;
-        oppositeRecords = pMqttContext->outgoingPublishRecords;
-    }
-    
-    /* Check the opposite array first for a collision. */
-    recordIndex = _findInRecord( oppositeRecords,
-                                 MQTT_MAX_QUEUED_PUBLISH_MESSAGES,
-                                 packetId,
-                                 &idStatus,
-                                 &foundQoS,
-                                 &currentState );
-
-    if( idStatus == ID_KNOWN )
-    {
-        /* Collision. */
-        status = MQTTStateCollision;
-    }
-    else
-    {
-        /* Reset to invalid. */
-        currentState = MQTTInvalidState;
-        foundQoS = MQTTInvalidQoS;
-        idStatus = ID_INVALID;
-        recordIndex = MQTT_MAX_QUEUED_PUBLISH_MESSAGES;
     }
 
     recordIndex = _findInRecord( records,
