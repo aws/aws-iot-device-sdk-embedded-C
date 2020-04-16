@@ -22,6 +22,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+
 /* Set network context to socket (int). */
 typedef int MQTTNetworkContext_t;
 
@@ -31,15 +32,27 @@ typedef int MQTTNetworkContext_t;
  * @brief The Logging Interface Hook.
  * 
  * @note Customers can EITHER
- * Define this macro to tie with their logging
- * stack. 
+ * Define their port of the logging stack through this macro
  *          OR
- * Use the reference POSIX implementation, IotLog_Generic provided by us.
+ * Use the reference POSIX implementation of the logging stack, 
+ * IotLog_Generic (used by default)
  * 
  * @param[in] messageLevel The integer logging level code for the message.
  * @param[in] pFormat The format string for the log message.
  * @param[in] ... The variadic argument list for the format string.
  **/
-#define IotLog( messageLevel, pFormat, ... )
+#ifndef IotLog
+    /* Include file for POSIX reference implementation. */
+    #include "port/posix/iot_logging.h"
+
+    #define IotLog( messageLevel, pFormat, ... )     \
+        IotLog_Generic( messageLevel,                \
+                        "[%s:%d] [%s] "pFormat,      \
+                        __FILE__,                    \
+                        __LINE__,                    \
+                        LIBRARY_LOG_NAME,            \
+                        __VA_ARGS__ )
+#endif
+
 
 #endif

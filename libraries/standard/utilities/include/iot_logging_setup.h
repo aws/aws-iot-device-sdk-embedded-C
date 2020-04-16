@@ -205,15 +205,8 @@
  * @endcode
  */
 
-/* Define metadata information to add in log depending on verbosity configuration. */
 #if !defined( IotLog )
-    #define IotLog( messageLevel, pFormat, ... ) \
-    IotLog_Generic( messageLevel,                \
-                    "[%s:%d] [%s] "pFormat,      \
-                    __FILE__,                    \
-                    __LINE__,                    \
-                    LIBRARY_LOG_NAME,            \
-                    __VA_ARGS__ )
+    #error "Please define IotLog logging interface."
 #endif
 
 /* Check that LIBRARY_LOG_LEVEL is defined and has a valid value. */
