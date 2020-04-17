@@ -91,21 +91,13 @@ def find_proofs_in_filesystem():
 
 NINJA_RULES = """
 ################################################################
-# task pool to force sequential builds of goto binaries
-
-pool goto_pool
-  depth = 1
-
-################################################################
 # proof target rules
 
 rule build_json
   command = cd ${folder} && make sources.json
-  pool = goto_pool
 
 rule build_goto
-  command = cd ${folder} && make goto
-  pool = goto_pool
+  command = cd ${folder} && make sources.json && make goto
 
 rule build_cbmc
   command = cd ${folder} && make cbmc.xml
@@ -149,7 +141,7 @@ build {folder}/coverage.xml: build_coverage {folder}/{entry}.goto
 build {folder}/property.xml: build_property {folder}/{entry}.goto
   folder={folder}
 
-build {folder}/html/index.html: build_report {folder}/sources.json {folder}/{entry}.goto {folder}/cbmc.xml {folder}/coverage.xml {folder}/property.xml
+build {folder}/html/index.html: build_report {folder}/{entry}.goto {folder}/cbmc.xml {folder}/coverage.xml {folder}/property.xml
   folder={folder}
 
 build json_{folder}: phony {folder}/sources.json
