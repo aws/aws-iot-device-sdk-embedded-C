@@ -112,7 +112,7 @@
  *
  * Converts one of the @ref logging_constants_levels to a string.
  */
-static const char * const _pLogLevelStrings[ 4 ] =
+static const char * const _pLogLevelStrings[] =
 {
     "ERROR", /* IOT_LOG_ERROR */
     "WARN ", /* IOT_LOG_WARN */

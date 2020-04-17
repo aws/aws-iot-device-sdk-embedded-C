@@ -106,7 +106,8 @@
  * @brief The common logging interface for all libraries.
  *
  * This acts as a hook for supplying a logging implementation stack
- * for all libraries that log with this macro interface.
+ * for all libraries that log through this macro interface.
+ * This macro should be mapped to the platform's logging library.
  *
  * @param[in] messageLevel The integer code for the log level of the message.
  * Must be one of #IOT_LOG_ERROR, #IOT_LOG_WARN, #IOT_LOG_INFO or #IOT_LOG_DEBUG.
