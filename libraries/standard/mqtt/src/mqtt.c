@@ -23,6 +23,46 @@
 
 #include "mqtt.h"
 
+static int32_t sendPacket( MQTTContext_t * pContext, size_t bytesToSend )
+{
+    const uint8_t * pIndex = pContext->pNetworkBuffer->pBuffer;
+    size_t bytesRemaining = bytesToSend;
+    int32_t totalBytesSent = 0;
+    int32_t bytesSent;
+
+    /* Record the time of transmission. */
+    uint32_t sendTime = pContext->pCallbacks->getTime();
+
+    /* Loop until the entire packet is sent. */
+    while( bytesRemaining > 0 )
+    {
+        bytesSent = pContext->pTransportInterface->send( pContext->pTransportInterface->networkContext,
+                                                         pIndex,
+                                                         bytesRemaining,
+                                                         0 );
+
+        if( bytesSent > 0 )
+        {
+            bytesRemaining -= ( size_t ) bytesSent;
+            totalBytesSent += bytesSent;
+            pIndex += bytesSent;
+        }
+        else
+        {
+            totalBytesSent = -1;
+            break;
+        }
+    }
+
+    /* Update time of last transmission if the entire packet was successfully sent. */
+    if( totalBytesSent > -1 )
+    {
+        pContext->lastPacketTime = sendTime;
+    }
+
+    return totalBytesSent;
+}
+
 void MQTT_Init( MQTTContext_t * const pContext,
                 const MQTTTransportInterface_t * const pTransportInterface,
                 const MQTTApplicationCallbacks_t * const pCallbacks,
@@ -46,7 +86,6 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 {
     size_t remainingLength, packetSize;
     int32_t bytesSent;
-    uint32_t sendTime;
     MQTTPacketInfo_t incomingPacket;
 
     MQTTStatus_t status = MQTT_GetConnectPacketSize( pConnectInfo,
@@ -64,17 +103,9 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        sendTime = pContext->pCallbacks->getTime();
+        bytesSent = sendPacket( pContext, packetSize );
 
-        bytesSent= pContext->pTransportInterface->send( pContext->pTransportInterface->networkContext,
-                                                        pContext->pNetworkBuffer->pBuffer,
-                                                        packetSize );
-
-        if( ( bytesSent > 0 ) && ( ( size_t ) bytesSent == packetSize ) )
-        {
-            pContext->lastPacketTime = sendTime;
-        }
-        else
+        if( bytesSent < 0 )
         {
             status = MQTTSendFailed;
         }

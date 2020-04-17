@@ -105,56 +105,12 @@ static int connectToServer( const char * pServer, uint16_t port )
 
 static int32_t transportSend( int tcpSocket, const void * pMessage, size_t bytesToSend )
 {
-    const uint8_t * pIndex = pMessage;
-    size_t bytesRemaining = bytesToSend;
-    int32_t totalBytesSent = 0;
-    ssize_t bytesSent;
-
-    while( bytesRemaining > 0 )
-    {
-        bytesSent = send( tcpSocket, pIndex, bytesRemaining, 0 );
-
-        if( bytesSent > 0 )
-        {
-            bytesRemaining -= ( size_t ) bytesSent;
-            totalBytesSent += ( int32_t ) bytesSent;
-            pIndex += bytesSent;
-        }
-        else
-        {
-            totalBytesSent = -1;
-            break;
-        }
-    }
-
-    return totalBytesSent;
+    return ( int32_t ) send( tcpSocket, pIndex, bytesRemaining, 0 );
 }
 
 static int32_t transportRecv( int tcpSocket, void * pBuffer, size_t bytesToRecv )
 {
-    uint32_t * pIndex = pBuffer;
-    size_t bytesRemaining = bytesToRecv;
-    int32_t totalBytesRecvd = 0;
-    ssize_t bytesRecvd;
-
-    while( bytesRemaining > 0 )
-    {
-        bytesRecvd = recv( tcpSocket, pIndex, bytesRemaining, 0 );
-
-        if( bytesRecvd > 0 )
-        {
-            bytesRemaining -= ( size_t ) bytesRecvd;
-            totalBytesRecvd += ( int32_t ) bytesRecvd;
-            pIndex += bytesRecvd;
-        }
-        else
-        {
-            totalBytesRecvd = -1;
-            break;
-        }
-    }
-
-    return totalBytesRecvd;
+    return ( int32_t ) recv( tcpSocket, pIndex, bytesRemaining, 0 );
 }
 
 static void eventCallback( MQTTContext_t * pContext, MQTTPacketInfo_t * pPacketInfo )
