@@ -19,7 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "transport_plaintext.h"
+#include <stdlib.h>
 
 #include <netdb.h>
 #include <unistd.h>
@@ -27,7 +27,17 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-int Transport_ConnectToServer( const char * pServer, uint16_t port )
+#include "mqtt.h"
+
+#define SERVER    "test.mosquitto.org"
+#define PORT      1883
+
+#define NETWORK_BUFFER_SIZE    ( 1024U )
+
+#define CLIENT_IDENTIFIER           "testclient"
+#define CLIENT_IDENTIFIER_LENGTH    ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
+
+static int connectToServer( const char * pServer, uint16_t port )
 {
     int status, tcpSocket = -1;
     struct addrinfo * pListHead = NULL, * pIndex;
@@ -93,7 +103,7 @@ int Transport_ConnectToServer( const char * pServer, uint16_t port )
     return status;
 }
 
-int32_t Transport_SendExact( int tcpSocket, const void * pMessage, size_t bytesToSend )
+static int32_t transportSend( int tcpSocket, const void * pMessage, size_t bytesToSend )
 {
     const uint8_t * pIndex = pMessage;
     size_t bytesRemaining = bytesToSend;
@@ -120,20 +130,21 @@ int32_t Transport_SendExact( int tcpSocket, const void * pMessage, size_t bytesT
     return totalBytesSent;
 }
 
-int32_t Transport_RecvExact( int tcpSocket, void * pBuffer, size_t bytesToRecv )
+static int32_t transportRecv( int tcpSocket, void * pBuffer, size_t bytesToRecv )
 {
     uint32_t * pIndex = pBuffer;
     size_t bytesRemaining = bytesToRecv;
-    int32_t bytesRecvd, totalBytesRecvd = 0;
+    int32_t totalBytesRecvd = 0;
+    ssize_t bytesRecvd;
 
     while( bytesRemaining > 0 )
     {
-        bytesRecvd = Transport_RecvUpTo( tcpSocket, pIndex, bytesRemaining );
+        bytesRecvd = recv( tcpSocket, pIndex, bytesRemaining, 0 );
 
         if( bytesRecvd > 0 )
         {
             bytesRemaining -= ( size_t ) bytesRecvd;
-            totalBytesRecvd += bytesRecvd;
+            totalBytesRecvd += ( int32_t ) bytesRecvd;
             pIndex += bytesRecvd;
         }
         else
@@ -146,13 +157,82 @@ int32_t Transport_RecvExact( int tcpSocket, void * pBuffer, size_t bytesToRecv )
     return totalBytesRecvd;
 }
 
-int32_t Transport_RecvUpTo( int tcpSocket, void * pBuffer, size_t bytesToRecv )
+static void eventCallback( MQTTContext_t * pContext, MQTTPacketInfo_t * pPacketInfo )
 {
-    return ( int32_t ) recv( tcpSocket, pBuffer, bytesToRecv, 0 );
+
 }
 
-void Transport_Close( int tcpSocket )
+static uint32_t getTime( void )
 {
-    shutdown( tcpSocket, SHUT_RDWR );
-    close( tcpSocket );
+    return 0;
+}
+
+static int establishMqttSession( MQTTContext_t * pContext, int tcpSocket )
+{
+    int status = EXIT_SUCCESS;
+    MQTTStatus_t mqttStatus;
+    MQTTConnectInfo_t connectInfo;
+
+    /* These members are not copied into the context. They must remain in scope
+     * for the lifetime of the context. */
+    static MQTTTransportInterface_t transport;
+    static MQTTFixedBuffer_t networkBuffer;
+    static MQTTApplicationCallbacks_t callbacks;
+    static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
+
+    /* Initialize MQTT context. */
+    transport.networkContext = tcpSocket;
+    transport.send = transportSend;
+    transport.recv = transportRecv;
+
+    networkBuffer.pBuffer = buffer;
+    networkBuffer.size = NETWORK_BUFFER_SIZE;
+
+    callbacks.appCallback = eventCallback;
+    callbacks.getTime = getTime;
+
+    MQTT_Init( pContext, &transport, &callbacks, &networkBuffer );
+
+    /* Establish MQTT session with a CONNECT packet. */
+    connectInfo.cleanSession = true;
+    connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+    connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+    connectInfo.keepAliveSeconds = 0;
+    connectInfo.pUserName = NULL;
+    connectInfo.userNameLength = 0;
+    connectInfo.pPassword = NULL;
+    connectInfo.passwordLength = 0;
+
+    mqttStatus = MQTT_Connect( pContext, &connectInfo, NULL, NULL );
+
+    if( mqttStatus != MQTTSuccess )
+    {
+        status = EXIT_FAILURE;
+    }
+
+    return status;
+}
+
+int main( int argc, char ** argv )
+{
+    int status;
+    MQTTContext_t context;
+    int tcpSocket = connectToServer( SERVER, PORT );
+
+    if( tcpSocket != -1 )
+    {
+        status = establishMqttSession( &context, tcpSocket );
+    }
+    else
+    {
+        status = EXIT_FAILURE;
+    }
+
+    if( tcpSocket != -1 )
+    {
+        shutdown( tcpSocket, SHUT_RDWR );
+        close( tcpSocket );
+    }
+
+    return status;
 }
