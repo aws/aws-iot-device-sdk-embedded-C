@@ -22,9 +22,24 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+
 /* Set network context to socket (int). */
 typedef int MQTTNetworkContext_t;
 
-#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES 10
+#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES    10
 
-#endif
+/* Include file for POSIX reference implementation. */
+#include "port/posix/iot_logging.h"
+
+/* Define the IotLog logging interface to enabling logging.
+ * This demo maps the macro to the reference POSIX implementation for logging. */
+#define IotLog( messageLevel, pFormat, ... ) \
+    IotLog_Generic( messageLevel,            \
+                    "[%s:%d] [%s] "pFormat,  \
+                    __FILE__,                \
+                    __LINE__,                \
+                    LIBRARY_LOG_NAME,        \
+                    __VA_ARGS__ )
+
+
+#endif /* ifndef CONFIG_H */
