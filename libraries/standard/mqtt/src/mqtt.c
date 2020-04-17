@@ -25,19 +25,19 @@
 
 static int32_t sendPacket( MQTTContext_t * pContext, size_t bytesToSend )
 {
-    const uint8_t * pIndex = pContext->pNetworkBuffer->pBuffer;
+    const uint8_t * pIndex = pContext->networkBuffer.pBuffer;
     size_t bytesRemaining = bytesToSend;
     int32_t totalBytesSent = 0, bytesSent;
 
     /* Record the time of transmission. */
-    uint32_t sendTime = pContext->pCallbacks->getTime();
+    uint32_t sendTime = pContext->callbacks.getTime();
 
     /* Loop until the entire packet is sent. */
     while( bytesRemaining > 0 )
     {
-        bytesSent = pContext->pTransportInterface->send( pContext->pTransportInterface->networkContext,
-                                                         pIndex,
-                                                         bytesRemaining );
+        bytesSent = pContext->transportInterface.send( pContext->transportInterface.networkContext,
+                                                       pIndex,
+                                                       bytesRemaining );
 
         if( bytesSent > 0 )
         {
@@ -69,9 +69,9 @@ void MQTT_Init( MQTTContext_t * const pContext,
     memset( pContext, 0x00, sizeof( MQTTContext_t ) );
 
     pContext->connectStatus = MQTTNotConnected;
-    pContext->pTransportInterface = pTransportInterface;
-    pContext->pCallbacks = pCallbacks;
-    pContext->pNetworkBuffer = pNetworkBuffer;
+    pContext->transportInterface = *pTransportInterface;
+    pContext->callbacks = *pCallbacks;
+    pContext->networkBuffer = *pNetworkBuffer;
 
     /* Zero is not a valid packet ID per MQTT spec. Start from 1. */
     pContext->nextPacketId = 1;
@@ -96,7 +96,7 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
         status = MQTT_SerializeConnect( pConnectInfo,
                                         pWillInfo,
                                         remainingLength,
-                                        pContext->pNetworkBuffer );
+                                        &( pContext->networkBuffer ) );
     }
 
     if( status == MQTTSuccess )
@@ -111,8 +111,8 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * const pContext,
 
     if( status == MQTTSuccess )
     {
-        status = MQTT_GetIncomingPacket( pContext->pTransportInterface->recv,
-                                         pContext->pTransportInterface->networkContext,
+        status = MQTT_GetIncomingPacket( pContext->transportInterface.recv,
+                                         pContext->transportInterface.networkContext,
                                          &incomingPacket );
     }
 

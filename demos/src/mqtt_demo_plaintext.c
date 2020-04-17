@@ -128,12 +128,11 @@ static int establishMqttSession( MQTTContext_t * pContext, int tcpSocket )
     int status = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo;
+    MQTTTransportInterface_t transport;
+    MQTTFixedBuffer_t networkBuffer;
+    MQTTApplicationCallbacks_t callbacks;
 
-    /* These members are not copied into the context. They must remain in scope
-     * for the lifetime of the context. */
-    static MQTTTransportInterface_t transport;
-    static MQTTFixedBuffer_t networkBuffer;
-    static MQTTApplicationCallbacks_t callbacks;
+    /* The network buffer must remain valid for the lifetime of the MQTT context. */
     static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 
     /* Initialize MQTT context. */
