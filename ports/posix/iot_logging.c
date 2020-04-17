@@ -1,6 +1,6 @@
 /*
  * IoT Common V1.1.0
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,11 +22,8 @@
 
 /**
  * @file iot_logging.c
- * @brief Implementation of logging functions from iot_logging.h
+ * @brief Implementation of the generic logging function.
  */
-
-/* The config header is always included first. */
-#include "iot_config.h"
 
 /* Standard includes. */
 #include <stdarg.h>
@@ -40,24 +37,6 @@
 #include "iot_logging.h"
 
 /*-----------------------------------------------------------*/
-
-/* This implementation assumes the following values for the log level constants.
- * Ensure that the values have not been modified. */
-#if IOT_LOG_NONE != 0
-    #error "IOT_LOG_NONE must be 0."
-#endif
-#if IOT_LOG_ERROR != 1
-    #error "IOT_LOG_ERROR must be 1."
-#endif
-#if IOT_LOG_WARN != 2
-    #error "IOT_LOG_WARN must be 2."
-#endif
-#if IOT_LOG_INFO != 3
-    #error "IOT_LOG_INFO must be 3."
-#endif
-#if IOT_LOG_DEBUG != 4
-    #error "IOT_LOG_DEBUG must be 4."
-#endif
 
 /**
  * @def IotLogging_Puts( message )
@@ -126,18 +105,6 @@
  */
 #define MAX_TIMESTRING_LENGTH    ( 64 )
 
-/**
- * @brief The longest string in #_pLogLevelStrings (below), plus 3 to accommodate
- * `[]` and a null-terminator.
- */
-#define MAX_LOG_LEVEL_LENGTH     ( 8 )
-
-/**
- * @brief How many bytes @ref logging_function_genericprintbuffer should output on
- * each line.
- */
-#define BYTES_PER_LINE           ( 16 )
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -145,9 +112,8 @@
  *
  * Converts one of the @ref logging_constants_levels to a string.
  */
-static const char * const _pLogLevelStrings[ 5 ] =
+static const char * const _pLogLevelStrings[ 4 ] =
 {
-    "",      /* IOT_LOG_NONE */
     "ERROR", /* IOT_LOG_ERROR */
     "WARN ", /* IOT_LOG_WARN */
     "INFO ", /* IOT_LOG_INFO */
@@ -189,16 +155,13 @@ void IotLog_Generic( int32_t messageLevel,
                      const char * const pFormat,
                      ... )
 {
+    assert( ( messageLevel >= IOT_LOG_NONE ) && ( messageLevel <= IOT_LOG_DEBUG ) );
+
     int requiredMessageSize = 0;
     size_t bufferSize = 0,
            bufferPosition = 0, timestringLength = 0;
     char * pLoggingBuffer = NULL;
     va_list args;
-
-    if( messageLevel == 0 )
-    {
-        return;
-    }
 
     /* Add length of log level if requested. */
     bufferSize += MAX_LOG_LEVEL_LENGTH;
@@ -232,26 +195,23 @@ void IotLog_Generic( int32_t messageLevel,
     }
 
     /* Print the message log level. */
-    /* Ensure that message level is valid. */
-    if( ( messageLevel >= IOT_LOG_NONE ) && ( messageLevel <= IOT_LOG_DEBUG ) )
+
+    /* Add the log level string to the logging buffer. */
+    requiredMessageSize = snprintf( pLoggingBuffer + bufferPosition,
+                                    bufferSize - bufferPosition,
+                                    "[%s]",
+                                    _pLogLevelStrings[ messageLevel ] );
+
+    /* Check for encoding errors. */
+    if( requiredMessageSize <= 0 )
     {
-        /* Add the log level string to the logging buffer. */
-        requiredMessageSize = snprintf( pLoggingBuffer + bufferPosition,
-                                        bufferSize - bufferPosition,
-                                        "[%s]",
-                                        _pLogLevelStrings[ messageLevel ] );
+        IotLogging_Free( pLoggingBuffer );
 
-        /* Check for encoding errors. */
-        if( requiredMessageSize <= 0 )
-        {
-            IotLogging_Free( pLoggingBuffer );
-
-            return;
-        }
-
-        /* Update the buffer position. */
-        bufferPosition += ( size_t ) requiredMessageSize;
+        return;
     }
+
+    /* Update the buffer position. */
+    bufferPosition += ( size_t ) requiredMessageSize;
 
     /* Print the timestring if requested. */
     /* Add the opening '[' enclosing the timestring. */
@@ -344,62 +304,6 @@ void IotLog_Generic( int32_t messageLevel,
 
     /* Free the logging buffer. */
     IotLogging_Free( pLoggingBuffer );
-}
-
-/*-----------------------------------------------------------*/
-
-void IotLog_GenericPrintBuffer( const char * const pLibraryName,
-                                const char * const pHeader,
-                                const uint8_t * const pBuffer,
-                                size_t bufferSize )
-{
-    size_t i = 0, offset = 0;
-
-    /* Allocate memory to hold each line of the log message. Since each byte
-     * of pBuffer is printed in 4 characters (2 digits, a space, and a null-
-     * terminator), the size of each line is 4 * BYTES_PER_LINE. */
-    char * pMessageBuffer = IotLogging_Malloc( 4 * BYTES_PER_LINE );
-
-    /* Exit if no memory is available. */
-    if( pMessageBuffer == NULL )
-    {
-        return;
-    }
-
-    /* Print pHeader before printing pBuffer. */
-    if( pHeader != NULL )
-    {
-        IotLog_Generic( IOT_LOG_DEBUG,
-                        "[%s] %s",
-                        pLibraryName,
-                        pHeader );
-    }
-
-    /* Print each byte in pBuffer. */
-    for( i = 0; i < bufferSize; i++ )
-    {
-        /* Print a line if BYTES_PER_LINE is reached. But don't print a line
-         * at the beginning (when i=0). */
-        if( ( i % BYTES_PER_LINE == 0 ) && ( i != 0 ) )
-        {
-            IotLogging_Puts( pMessageBuffer );
-
-            /* Reset offset so that pMessageBuffer is filled from the beginning. */
-            offset = 0;
-        }
-
-        /* Print a single byte into pMessageBuffer. */
-        ( void ) snprintf( pMessageBuffer + offset, 4, "%02x ", pBuffer[ i ] );
-
-        /* Move the offset where the next character is printed. */
-        offset += 3;
-    }
-
-    /* Print the final line of bytes. This line isn't printed by the for-loop above. */
-    IotLogging_Puts( pMessageBuffer );
-
-    /* Free memory used by this function. */
-    IotLogging_Free( pMessageBuffer );
 }
 
 /*-----------------------------------------------------------*/
