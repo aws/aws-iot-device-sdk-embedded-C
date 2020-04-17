@@ -33,12 +33,12 @@ typedef int MQTTNetworkContext_t;
 
 /* Define the IotLog logging interface to enabling logging.
  * This demo maps the macro to the reference POSIX implementation for logging. */
-#define IotLog( messageLevel, pFormat, ... ) \
-    IotLog_Generic( messageLevel,            \
-                    "[%s:%d] [%s] "pFormat,  \
-                    __FILE__,                \
-                    __LINE__,                \
-                    LIBRARY_LOG_NAME,        \
+#define IotLog( messageLevel, pLibraryName, pFormat, ... ) \
+    IotLog_Generic( messageLevel,                          \
+                    "[%s:%d] [%s] "pFormat,                \
+                    __FILE__,                              \
+                    __LINE__,                              \
+                    pLibraryName,                          \
                     __VA_ARGS__ )
 
 
