@@ -65,12 +65,12 @@ GOTO_DIR=gotos
 GOTOS=$(patsubst %.c,$(GOTO_DIR)/%.goto,$(SRCS))
 
 # Build sources in the source tree with full paths
-$(GOTO_DIR)/%.goto:$(MQTT)/%.c
+$(GOTO_DIR)/%.goto: $(MQTT)/%.c
 	mkdir -p $(dir $@)
 	$(GOTO_CC) -o $@ $(CFLAGS) $<
 
 # build sources in the local directory with relative paths
-$(GOTO_DIR)/%.goto:./%.c
+$(GOTO_DIR)/%.goto: ./%.c
 	mkdir -p $(dir $@)
 	$(GOTO_CC) -o $@ $(CFLAGS) $<
 
