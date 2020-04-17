@@ -128,7 +128,7 @@ static int32_t recvExact( MQTTTransportRecvFunc_t recvFunc,
                           void * pBuffer,
                           size_t bytesToRecv )
 {
-    uint32_t * pIndex = pBuffer;
+    uint8_t * pIndex = pBuffer;
     size_t bytesRemaining = bytesToRecv;
     int32_t totalBytesRecvd = 0, bytesRecvd;
 
