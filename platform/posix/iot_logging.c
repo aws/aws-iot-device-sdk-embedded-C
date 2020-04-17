@@ -39,61 +39,6 @@
 /*-----------------------------------------------------------*/
 
 /**
- * @def IotLogging_Puts( message )
- * @brief Function the logging library uses to print a line.
- *
- * This function can be set by using a define. By default, the standard library
- * [puts](http://pubs.opengroup.org/onlinepubs/9699919799/functions/puts.html)
- * function is used.
- */
-#ifndef IotLogging_Puts
-    #define IotLogging_Puts    puts
-#endif
-
-/*
- * Provide default values for undefined memory allocation functions based on
- * the usage of dynamic memory allocation.
- */
-#if IOT_STATIC_MEMORY_ONLY == 1
-    /* Static memory allocation header. */
-    #include "iot_static_memory.h"
-
-/**
- * @brief Allocate a new logging buffer. This function must have the same
- * signature as [malloc](http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html).
- */
-    #ifndef IotLogging_Malloc
-        #define IotLogging_Malloc    Iot_MallocMessageBuffer
-    #endif
-
-/**
- * @brief Free a logging buffer. This function must have the same signature
- * as [free](http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html).
- */
-    #ifndef IotLogging_Free
-        #define IotLogging_Free    Iot_FreeMessageBuffer
-    #endif
-
-/**
- * @brief Get the size of a logging buffer. Statically-allocated buffers
- * should all have the same size.
- */
-    #ifndef IotLogging_StaticBufferSize
-        #define IotLogging_StaticBufferSize    Iot_MessageBufferSize
-    #endif
-#else /* if IOT_STATIC_MEMORY_ONLY == 1 */
-    #ifndef IotLogging_Malloc
-        #include <stdlib.h>
-        #define IotLogging_Malloc    malloc
-    #endif
-
-    #ifndef IotLogging_Free
-        #include <stdlib.h>
-        #define IotLogging_Free    free
-    #endif
-#endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
-
-/**
  * @brief A guess of the maximum length of a timestring.
  *
  * There's no way for this logging library to know the length of a timestring
@@ -122,32 +67,30 @@ static const char * const _pLogLevelStrings[] =
 
 /*-----------------------------------------------------------*/
 
-#if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 )
-    static bool _reallocLoggingBuffer( void ** pOldBuffer,
-                                       size_t newSize,
-                                       size_t oldSize )
+static bool _reallocLoggingBuffer( void ** pOldBuffer,
+                                   size_t newSize,
+                                   size_t oldSize )
+{
+    bool status = false;
+
+    /* Allocate a new, larger buffer. */
+    void * pNewBuffer = malloc( newSize );
+
+    /* Ensure that memory allocation succeeded. */
+    if( pNewBuffer != NULL )
     {
-        bool status = false;
+        /* Copy the data from the old buffer to the new buffer. */
+        ( void ) memcpy( pNewBuffer, *pOldBuffer, oldSize );
 
-        /* Allocate a new, larger buffer. */
-        void * pNewBuffer = IotLogging_Malloc( newSize );
+        /* Free the old buffer and update the pointer. */
+        IotLogging_Free( *pOldBuffer );
+        *pOldBuffer = pNewBuffer;
 
-        /* Ensure that memory allocation succeeded. */
-        if( pNewBuffer != NULL )
-        {
-            /* Copy the data from the old buffer to the new buffer. */
-            ( void ) memcpy( pNewBuffer, *pOldBuffer, oldSize );
-
-            /* Free the old buffer and update the pointer. */
-            IotLogging_Free( *pOldBuffer );
-            *pOldBuffer = pNewBuffer;
-
-            status = true;
-        }
-
-        return status;
+        status = true;
     }
-#endif /* if !defined( IOT_STATIC_MEMORY_ONLY ) || ( IOT_STATIC_MEMORY_ONLY == 0 ) */
+
+    return status;
+}
 
 /*-----------------------------------------------------------*/
 
@@ -172,22 +115,8 @@ void IotLog_Generic( int32_t messageLevel,
     /* Add 64 as an initial (arbitrary) guess for the length of the message. */
     bufferSize += 64;
 
-    /* In static memory mode, check that the log message will fit in the a
-     * static buffer. */
-    #if IOT_STATIC_MEMORY_ONLY == 1
-        if( bufferSize >= IotLogging_StaticBufferSize() )
-        {
-            /* If the static buffers are likely too small to fit the log message,
-             * return. */
-            return;
-        }
-
-        /* Otherwise, update the buffer size to the size of a static buffer. */
-        bufferSize = IotLogging_StaticBufferSize();
-    #endif
-
     /* Allocate memory for the logging buffer. */
-    pLoggingBuffer = ( char * ) IotLogging_Malloc( bufferSize );
+    pLoggingBuffer = ( char * ) malloc( bufferSize );
 
     if( pLoggingBuffer == NULL )
     {
@@ -259,36 +188,27 @@ void IotLog_Generic( int32_t messageLevel,
      * a larger logging buffer. */
     if( ( size_t ) requiredMessageSize >= bufferSize - bufferPosition )
     {
-        #if IOT_STATIC_MEMORY_ONLY == 1
-
-            /* There's no point trying to allocate a larger static buffer. Return
-             * immediately. */
+        if( _reallocLoggingBuffer( ( void ** ) &pLoggingBuffer,
+                                   ( size_t ) requiredMessageSize + bufferPosition + 1,
+                                   bufferSize ) == false )
+        {
+            /* If buffer reallocation failed, return. */
             IotLogging_Free( pLoggingBuffer );
 
             return;
-        #else
-            if( _reallocLoggingBuffer( ( void ** ) &pLoggingBuffer,
-                                       ( size_t ) requiredMessageSize + bufferPosition + 1,
-                                       bufferSize ) == false )
-            {
-                /* If buffer reallocation failed, return. */
-                IotLogging_Free( pLoggingBuffer );
+        }
 
-                return;
-            }
+        /* Reallocation successful, update buffer size. */
+        bufferSize = ( size_t ) requiredMessageSize + bufferPosition + 1;
 
-            /* Reallocation successful, update buffer size. */
-            bufferSize = ( size_t ) requiredMessageSize + bufferPosition + 1;
-
-            /* Add the log message to the buffer. Now that the buffer has been
-             * reallocated, this should succeed. */
-            va_start( args, pFormat );
-            requiredMessageSize = vsnprintf( pLoggingBuffer + bufferPosition,
-                                             bufferSize - bufferPosition,
-                                             pFormat,
-                                             args );
-            va_end( args );
-        #endif /* if IOT_STATIC_MEMORY_ONLY == 1 */
+        /* Add the log message to the buffer. Now that the buffer has been
+         * reallocated, this should succeed. */
+        va_start( args, pFormat );
+        requiredMessageSize = vsnprintf( pLoggingBuffer + bufferPosition,
+                                         bufferSize - bufferPosition,
+                                         pFormat,
+                                         args );
+        va_end( args );
     }
 
     /* Check for encoding errors. */
