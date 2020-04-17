@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -38,7 +38,7 @@
 #endif
 
 /* Platform clock include. */
-#include "platform/iot_clock.h"
+#include "platform/include/iot_clock.h"
 
 /* Configure logs for the functions in this file. */
 #ifdef IOT_LOG_LEVEL_PLATFORM
@@ -62,14 +62,7 @@
  * For more information on timestring formats, see [this link.]
  * (http://pubs.opengroup.org/onlinepubs/9699919799/functions/strftime.html)
  */
-#define TIMESTRING_FORMAT              ( "%F %R:%S" )
-
-/*
- * Time conversion constants.
- */
-#define NANOSECONDS_PER_SECOND         ( 1000000000 ) /**< @brief Nanoseconds per second. */
-#define NANOSECONDS_PER_MILLISECOND    ( 1000000 )    /**< @brief Nanoseconds per millisecond. */
-#define MILLISECONDS_PER_SECOND        ( 1000 )       /**< @brief Milliseconds per second. */
+#define TIMESTRING_FORMAT    ( "%F %R:%S" )
 
 /*-----------------------------------------------------------*/
 
