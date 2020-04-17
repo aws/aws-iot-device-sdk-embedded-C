@@ -49,9 +49,9 @@ static MQTTPublishState_t _calculateAckState( MQTTStateOperation_t opType,
  *
  * @return The calculated state.
  */
-static MQTTPublishState_t _calculateQoS1( MQTTPublishType_t packetType,
-                                          MQTTStateOperation_t opType,
-                                          MQTTPacketIDState_t idStatus );
+static MQTTPublishState_t _calculateQoS1State( MQTTPublishType_t packetType,
+                                               MQTTStateOperation_t opType,
+                                               MQTTPacketIDState_t idStatus );
 
 /**
  * @brief Calculate a state when QoS is 2.
@@ -62,9 +62,9 @@ static MQTTPublishState_t _calculateQoS1( MQTTPublishType_t packetType,
  *
  * @return The calculated state.
  */
-static MQTTPublishState_t _calculateQoS2( MQTTPublishType_t packetType,
-                                          MQTTStateOperation_t opType,
-                                          MQTTPacketIDState_t idStatus );
+static MQTTPublishState_t _calculateQoS2State( MQTTPublishType_t packetType,
+                                               MQTTStateOperation_t opType,
+                                               MQTTPacketIDState_t idStatus );
 
 /**
  * @brief Test if a transition to new state is possible.
@@ -87,7 +87,7 @@ static bool _validateTransition( MQTTPublishState_t currentState,
                                  MQTTQoS_t qos );
 
 /**
- * @brief Test is a publish is outgoing or incoming.
+ * @brief Test if a publish is outgoing or incoming.
  *
  * @param[in] packetType PUBLISH, PUBACK, PUBREC, PUBREL, or PUBCOMP.
  * @param[in] opType Reserve, Send, or Receive.
@@ -215,9 +215,9 @@ static MQTTPublishState_t _calculateAckState( MQTTStateOperation_t opType,
     return calculatedState;
 }
 
-static MQTTPublishState_t _calculateQoS1( MQTTPublishType_t packetType,
-                                          MQTTStateOperation_t opType,
-                                          MQTTPacketIDState_t idStatus )
+static MQTTPublishState_t _calculateQoS1State( MQTTPublishType_t packetType,
+                                               MQTTStateOperation_t opType,
+                                               MQTTPacketIDState_t idStatus )
 {
     MQTTPublishState_t calculatedState = MQTTInvalidState;
     switch( packetType )
@@ -260,9 +260,9 @@ static MQTTPublishState_t _calculateQoS1( MQTTPublishType_t packetType,
     return calculatedState;
 }
 
-static MQTTPublishState_t _calculateQoS2( MQTTPublishType_t packetType,
-                                          MQTTStateOperation_t opType,
-                                          MQTTPacketIDState_t idStatus )
+static MQTTPublishState_t _calculateQoS2State( MQTTPublishType_t packetType,
+                                               MQTTStateOperation_t opType,
+                                               MQTTPacketIDState_t idStatus )
 {
     MQTTPublishState_t calculatedState = MQTTInvalidState;
     switch( packetType )
@@ -605,7 +605,7 @@ MQTTPublishState_t _MQTT_CalculateState( MQTTPublishType_t packetType,
     switch( qos )
     {
         case MQTTQoS0:
-            if( idStatus == ID_UNKNOWN && packetType == MQTT_PUBLISH )
+            if( ( idStatus == ID_UNKNOWN ) && ( packetType == MQTT_PUBLISH ) )
             {
                 if( opType == MQTT_RESERVE )
                 {
@@ -616,13 +616,13 @@ MQTTPublishState_t _MQTT_CalculateState( MQTTPublishType_t packetType,
                     calculatedState = MQTTPublishDone;
                 }
             }
-            /* Anything else is an error. */
+            /* Anything else is an invalid state. */
             break;
         case MQTTQoS1:
-            calculatedState = _calculateQoS1( packetType, opType, idStatus );
+            calculatedState = _calculateQoS1State( packetType, opType, idStatus );
             break;
         case MQTTQoS2:
-            calculatedState = _calculateQoS2( packetType, opType, idStatus );
+            calculatedState = _calculateQoS2State( packetType, opType, idStatus );
             break;
         default:
             break;
@@ -636,7 +636,7 @@ MQTTStatus_t _MQTT_UpdateState( MQTTContext_t * pMqttContext,
                                 MQTTStateOperation_t opType,
                                 MQTTQoS_t qos )
 {
-    MQTTStatus_t status = MQTTSuccess;
+    MQTTStatus_t status = MQTTIllegalState;
     bool isPublishOutgoing = _isPublishOutgoing( packetType, opType );
     bool shouldStoreRecord = false;
     bool shouldDeleteRecord = false;
@@ -664,12 +664,8 @@ MQTTStatus_t _MQTT_UpdateState( MQTTContext_t * pMqttContext,
                                  &foundQoS,
                                  &currentState );
 
-    /* Resolve QoS between supplied and found. */
-    if( status == MQTTSuccess )
-    {
-        /* Reconcile the supplied QoS with the one in the record. */
-        status = _resolveQoS( qos, &foundQoS );
-    }
+    /* Reconcile the supplied QoS with the one in the record. */
+    status = _resolveQoS( qos, &foundQoS );
 
     if( status == MQTTSuccess )
     {
