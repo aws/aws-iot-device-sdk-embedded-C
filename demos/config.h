@@ -26,33 +26,20 @@
 /* Set network context to socket (int). */
 typedef int MQTTNetworkContext_t;
 
-#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES 10
+#define MQTT_MAX_QUEUED_PUBLISH_MESSAGES    10
 
-/*
- * @brief The Logging Interface Hook.
- * 
- * @note Customers can EITHER
- * Define their port of the logging stack through this macro
- *          OR
- * Use the reference POSIX implementation of the logging stack, 
- * IotLog_Generic (used by default)
- * 
- * @param[in] messageLevel The integer logging level code for the message.
- * @param[in] pFormat The format string for the log message.
- * @param[in] ... The variadic argument list for the format string.
- **/
-#ifndef IotLog
-    /* Include file for POSIX reference implementation. */
-    #include "port/posix/iot_logging.h"
+/* Include file for POSIX reference implementation. */
+#include "port/posix/iot_logging.h"
 
-    #define IotLog( messageLevel, pFormat, ... )     \
-        IotLog_Generic( messageLevel,                \
-                        "[%s:%d] [%s] "pFormat,      \
-                        __FILE__,                    \
-                        __LINE__,                    \
-                        LIBRARY_LOG_NAME,            \
-                        __VA_ARGS__ )
-#endif
+/* Define the IotLog logging interface to enabling logging.
+ * This demo maps the macro to the reference POSIX implementation for logging. */
+#define IotLog( messageLevel, pFormat, ... ) \
+    IotLog_Generic( messageLevel,            \
+                    "[%s:%d] [%s] "pFormat,  \
+                    __FILE__,                \
+                    __LINE__,                \
+                    LIBRARY_LOG_NAME,        \
+                    __VA_ARGS__ )
 
 
-#endif
+#endif /* ifndef CONFIG_H */
