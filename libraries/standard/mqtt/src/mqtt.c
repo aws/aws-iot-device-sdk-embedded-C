@@ -38,8 +38,7 @@ static int32_t sendPacket( MQTTContext_t * pContext, size_t bytesToSend )
     {
         bytesSent = pContext->pTransportInterface->send( pContext->pTransportInterface->networkContext,
                                                          pIndex,
-                                                         bytesRemaining,
-                                                         0 );
+                                                         bytesRemaining );
 
         if( bytesSent > 0 )
         {

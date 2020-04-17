@@ -105,12 +105,12 @@ static int connectToServer( const char * pServer, uint16_t port )
 
 static int32_t transportSend( int tcpSocket, const void * pMessage, size_t bytesToSend )
 {
-    return ( int32_t ) send( tcpSocket, pIndex, bytesRemaining, 0 );
+    return ( int32_t ) send( tcpSocket, pMessage, bytesToSend, 0 );
 }
 
 static int32_t transportRecv( int tcpSocket, void * pBuffer, size_t bytesToRecv )
 {
-    return ( int32_t ) recv( tcpSocket, pIndex, bytesRemaining, 0 );
+    return ( int32_t ) recv( tcpSocket, pBuffer, bytesToRecv, 0 );
 }
 
 static void eventCallback( MQTTContext_t * pContext, MQTTPacketInfo_t * pPacketInfo )
