@@ -29,7 +29,7 @@ typedef int MQTTNetworkContext_t;
 #define MQTT_MAX_QUEUED_PUBLISH_MESSAGES    10
 
 /* Include file for POSIX reference implementation. */
-#include "port/posix/iot_logging.h"
+#include "platform/include/iot_logging.h"
 
 /* Define the IotLog logging interface to enabling logging.
  * This demo maps the macro to the reference POSIX implementation for logging. */
