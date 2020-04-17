@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "config.h"
 
+#include "const.h"
+
 /**
  * @brief Maximum size, in bytes, of headers allowed from the server.
  *
@@ -27,12 +29,34 @@
 #endif
 
 /**
- * Supported HTTP request methods.
+ * @brief Supported HTTP request methods.
  */
-#define HTTP_METHOD_GET     "GET"              /**< HTTP Method GET. */
-#define HTTP_METHOD_PUT     "PUT"              /**< HTTP Method PUT. */
-#define HTTP_METHOD_POST    "POST"             /**< HTTP Method POST. */
-#define HTTP_METHOD_HEAD    "HEAD"             /**< HTTP Method HEAD. */
+#define HTTP_METHOD_GET                    "GET"   /**< HTTP Method GET. */
+#define HTTP_METHOD_PUT                    "PUT"   /**< HTTP Method PUT. */
+#define HTTP_METHOD_POST                   "POST"  /**< HTTP Method POST. */
+#define HTTP_METHOD_HEAD                   "HEAD"  /**< HTTP Method HEAD. */
+
+/**
+ * @brief The HTTP protocol version of this library is HTTP/1.1.
+ */
+#define HTTP_PROTOCOL_VERSION              "HTTP/1.1"
+
+/**
+ * @brief Consants for HTTP header formatting
+ */
+#define HTTP_HEADER_LINE_END               "\r\n"
+#define HTTP_HEADER_LINE_END_LEN           ( 2 )
+#define CARRIAGE_RETURN_CHARACTER          '\r'
+#define NEWLINE_CHARACTER                  '\n'
+#define HTTP_HEADER_FIELD_SEPARATOR        ": "
+#define HTTP_HEADER_FIELD_SEPARATOR_LEN    ( 2 )
+
+/**
+ * @brief Constants for header fields added automatically during the request initialization.
+ */
+#define HTTP_USER_AGENT_HEADER             "User-Agent"
+#define HTTP_HOST_HEADER                   "Host"
+
 
 /**
  * Flags for #HTTPRequestInfo_t.flags.
@@ -178,7 +202,7 @@ typedef enum HTTPStatus
  * @brief Represents header data that will be sent in an HTTP request.
  *
  * The memory for the header data buffer is supplied by the user. Information in
- * the buffer will be filled by calling #HTTPClient_InitializeHeaders.
+ * the buffer will be filled by calling #HTTPClient_InitializeRequestHeaders.
  */
 typedef struct HTTPRequestHeaders
 {

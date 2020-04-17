@@ -34,8 +34,19 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                   const HTTPRequestInfo_t * pRequestInfo )
 {
-    return HTTP_NOT_SUPPORTED;
-}
+    size_t httpsProtocolVersionLen = STRLEN_LITERAL( HTTP_PROTOCOL_VERSION );
+    HTTPStatus_t status = HTTP_SUCCESS;
+
+    /* Check for null parameters. */
+    if( ( pRequestHeaders == NULL ) || ( pRequestInfo == NULL ) ||
+        ( pRequestHeaders->pBuffer == NULL ) || ( pRequestInfo->method == NULL ) ||
+        ( pRequestInfo->pHost == NULL ) || ( pRequestInfo->pPath == NULL ) )
+    {
+        status = HTTP_INVALID_PARAMETER;
+    }
+
+    /* Check if user-provided buffer is large enough for headers. */
+    pRequestInfo->methodLen + STRLEN_LITERAL( HTTP_PROTOCOL_VERSION );
 
 /*-----------------------------------------------------------*/
 
