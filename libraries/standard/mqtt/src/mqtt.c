@@ -27,8 +27,7 @@ static int32_t sendPacket( MQTTContext_t * pContext, size_t bytesToSend )
 {
     const uint8_t * pIndex = pContext->pNetworkBuffer->pBuffer;
     size_t bytesRemaining = bytesToSend;
-    int32_t totalBytesSent = 0;
-    int32_t bytesSent;
+    int32_t totalBytesSent = 0, bytesSent;
 
     /* Record the time of transmission. */
     uint32_t sendTime = pContext->pCallbacks->getTime();

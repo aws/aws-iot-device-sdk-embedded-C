@@ -130,8 +130,7 @@ static int32_t recvExact( MQTTTransportRecvFunc_t recvFunc,
 {
     uint32_t * pIndex = pBuffer;
     size_t bytesRemaining = bytesToRecv;
-    int32_t totalBytesRecvd = 0;
-    int32_t bytesRecvd;
+    int32_t totalBytesRecvd = 0, bytesRecvd;
 
     while( bytesRemaining > 0 )
     {
@@ -150,7 +149,7 @@ static int32_t recvExact( MQTTTransportRecvFunc_t recvFunc,
         }
     }
 
-    return bytesRecvd;
+    return totalBytesRecvd;
 }
 
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnectInfo,
