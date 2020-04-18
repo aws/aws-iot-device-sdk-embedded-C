@@ -45,6 +45,7 @@
  * @brief Default value when pRequestInfo->pPath == NULL.
  */
 #define HTTP_EMPTY_PATH                    "/"
+#define HTTP_EMPTY_PATH_LEN                ( 1 )
 
 /**
  * @brief Consants for HTTP header formatting
