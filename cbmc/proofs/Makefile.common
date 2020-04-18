@@ -51,15 +51,35 @@ CFLAGS += $(CFLAGS2) $(INC) $(DEF) -std=gnu99
 
 NONDET += --nondet-static
 
-%.goto : %.c
+# Out of source builds
+#
+# Proof makefiles were originally written using in-source builds, but
+# this inhibits building and running proofs concurrently when
+# different proofs build sources with different configurations.  These
+# definitions assume $(OBJS) is the original list of in-source goto
+# binaries and defines $(GOTOS) to be the list of out-of-source goto
+# binaries written into the local gotos subdirectory.
+
+SRCS=$(patsubst %.goto,%.c,$(patsubst $(MQTT)/%,%,$(OBJS)))
+GOTO_DIR=gotos
+GOTOS=$(patsubst %.c,$(GOTO_DIR)/%.goto,$(SRCS))
+
+# Build sources in the source tree with full paths
+$(GOTO_DIR)/%.goto: $(MQTT)/%.c
+	mkdir -p $(dir $@)
+	$(GOTO_CC) -o $@ $(CFLAGS) $<
+
+# build sources in the local directory with relative paths
+$(GOTO_DIR)/%.goto: ./%.c
+	mkdir -p $(dir $@)
 	$(GOTO_CC) -o $@ $(CFLAGS) $<
 
 $(MQTT)/build:
 	(mkdir -p $(MQTT)/build; cd $(MQTT)/build; cmake ..) \
 	       > $(ENTRY)0.txt 2>&1
 
-$(ENTRY)1.goto: $(MQTT)/build $(OBJS)
-	$(GOTO_CC) --function harness -o $@ $(OBJS) \
+$(ENTRY)1.goto: $(MQTT)/build $(GOTOS)
+	$(GOTO_CC) --function harness -o $@ $(GOTOS) \
 		> $(ENTRY)1.txt 2>&1
 
 $(ENTRY)2.goto: $(ENTRY)1.goto
@@ -144,6 +164,7 @@ report: cbmc.txt property.xml coverage.xml
 clean:
 	$(RM) $(OBJS) $(ENTRY).goto
 	$(RM) $(ENTRY)[0-9].goto $(ENTRY)[0-9].txt
+	$(RM) -r $(GOTO_DIR)
 	$(RM) cbmc.txt property.xml coverage.xml TAGS TAGS-*
 	$(RM) *~ \#*
 
