@@ -1,14 +1,6 @@
 #include "http_client.h"
 #include "private/http_client.h"
 
-uint8_t * _writeToBuffer( const uint8_t * pBuffer,
-                          const void * source,
-                          size_t len )
-{
-    memcpy( pBuffer, source, len );
-    return pBuffer + len;
-}
-
 HTTPStatus_t _addHeaderLine( HTTPRequestHeaders_t * pRequestHeaders,
                              const char * pLine,
                              size_t lineLen )
@@ -16,8 +8,8 @@ HTTPStatus_t _addHeaderLine( HTTPRequestHeaders_t * pRequestHeaders,
     HTTPStatus_t status = HTTP_SUCCESS;
     uint8_t * pBufferCur = pRequestHeaders->pBuffer;
 
-    /* Check if there is enough space in buffer for additional header pair.
-     * Also count "\r\n" at the end of line.  */
+    /* Check if there is enough space in buffer for additional header.
+     * Also count "\r\n" at the end of line. */
     size_t toAddLen = lineLen + HTTP_HEADER_LINE_END_LEN;
 
     if( pRequestHeaders->headersLen
@@ -28,18 +20,19 @@ HTTPStatus_t _addHeaderLine( HTTPRequestHeaders_t * pRequestHeaders,
     }
 
     /* Write line to buffer. */
-    pBufferCur = _writeToBuffer( pBufferCur, pLine, lineLen );
-    /* Write "\r\n" to end the line */
-    pBufferCur = _writeToBuffer( pBufferCur, HTTP_HEADER_LINE_END_LEN, HTTP_HEADER_LINE_END_LEN );
+    memcpy( pBufferCur, pLine, lineLen );
+    pBufferCur += lineLen;
+    /* Write "\r\n" to end the line. */
+    memcpy( pBufferCur, HTTP_HEADER_LINE_END_LEN, HTTP_HEADER_LINE_END_LEN );
     pRequestHeaders->headersLen += toAddLen;
     return status;
 }
 
-HTTPStatus_t _addHeaderPair( HTTPRequestHeaders_t * pRequestHeaders,
-                             const char * pField,
-                             size_t fieldLen,
-                             const char * pValue,
-                             size_t valueLen )
+HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
+                         const char * pField,
+                         size_t fieldLen,
+                         const char * pValue,
+                         size_t valueLen )
 {
     HTTPStatus_t status = HTTP_SUCCESS;
     uint8_t * pBufferCur = pRequestHeaders->pBuffer;
@@ -58,12 +51,15 @@ HTTPStatus_t _addHeaderPair( HTTPRequestHeaders_t * pRequestHeaders,
         return HTTP_INSUFFICIENT_MEMORY;
     }
 
-    /* Append "Field: Value \r\n" to headers */
-    pBufferCur = _writeToBuffer( pBufferCur, pField, fieldLen );
-    pBufferCur = _writeToBuffer( pBufferCur, HTTP_HEADER_FIELD_SEPARATOR,
-                                 HTTP_HEADER_FIELD_SEPARATOR_LEN );
-    pBufferCur = _writeToBuffer( pBufferCur, pValue, valueLen );
-    pBufferCur = _writeToBuffer( pBufferCur, HTTP_HEADER_LINE_END, HTTP_HEADER_LINE_END_LEN );
+    /* Write "Field: Value \r\n" to headers. */
+    memcpy( pBufferCur, pField, fieldLen );
+    pBufferCur += fieldLen;
+    memcpy( pBufferCur, HTTP_HEADER_FIELD_SEPARATOR,
+            HTTP_HEADER_FIELD_SEPARATOR_LEN );
+    pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
+    memcpy( pBufferCur, pValue, valueLen );
+    pBufferCur += valueLen;
+    memcpy( pBufferCur, HTTP_HEADER_LINE_END, HTTP_HEADER_LINE_END_LEN );
 
     /* Subtract HTTP_HEADER_LINE_END_LEN because it is not actually written
      * and only used for error checking as mentioned above. */
@@ -79,18 +75,23 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     HTTPStatus_t status = HTTP_SUCCESS;
     size_t toAddLen = 0;
     uint8_t * pBufferCur = pRequestHeaders->pBuffer;
+    size_t httpsProtocolVersionLen = STRLEN_LITERAL( HTTP_PROTOCOL_VERSION );
 
     pRequestHeaders->headersLen = 0;
+    /* Clear user-provided buffer. */
+    memset( pRequestHeaders->pBuffer, 0, pRequestHeaders->bufferLen );
 
     /* Check for null parameters. */
     if( ( pRequestHeaders == NULL ) || ( pRequestInfo == NULL ) ||
-        ( pRequestHeaders->pBuffer == NULL ) || ( pRequestInfo->method == NULL ) ||
-        ( pRequestInfo->pHost == NULL ) || ( pRequestInfo->pPath == NULL ) )
+        ( pRequestHeaders->pBuffer == NULL ) ||
+        ( pRequestInfo->method == NULL ) ||
+        ( pRequestInfo->pHost == NULL ) ||
+        ( pRequestInfo->pPath == NULL ) )
     {
-        status = HTTP_INVALID_PARAMETER;
+        status = HTTP_INSUFFICIENT_MEMORY;
     }
 
-    /* Check if user-provided buffer is large enough for first line. */
+    /* Check if buffer is large enough for "<METHOD> <PATH> HTTP/1.1\r\n". */
     toAddLen = pRequestInfo->methodLen +                 \
                SPACE_CHARACTER_LEN +                     \
                pRequestInfo->pathLen +                   \
@@ -101,28 +102,77 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     if( toAddLen + pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
     {
         /* TODO: Add log. */
-        status = HTTP_INVALID_PARAMETER;
+        status = HTTP_INSUFFICIENT_MEMORY;
     }
 
-    /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start of buffer. */
-    pBufferCur = _writeToBuffer( pBufferCur, pRequestInfo->method, pRequestInfo->methodLen );
-    pBufferCur += pRequestInfo->methodLen;
-    pBufferCur = _writeToBuffer( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
-    pBufferCur +=
-
-        if( STRLEN_LITERAL( HTTP_USER_AGENT_VALUE ) )
+    if( HTTP_SUCCEEDED( status ) )
     {
-        toAddLen += HTTP_USER_AGENT_HEADER +
+        /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
+        memcpy( pBufferCur, pRequestInfo->method, pRequestInfo->methodLen );
+
+        pBufferCur += pRequestInfo->methodLen;
+        memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
+        pBufferCur += SPACE_CHARACTER_LEN;
+
+        /* Use "/" as default value if <PATH> is NULL. */
+        if( ( pRequestInfo->pPath == NULL ) || ( pRequestInfo->pathLen == 0 ) )
+        {
+            memcpy( pBufferCur, HTTP_EMPTY_PATH, HTTP_EMPTY_PATH_LEN );
+            pBufferCur += SPACE_CHARACTER_LEN;
+        }
+        else
+        {
+            memcpy( pBufferCur, pRequestInfo->pPath, pRequestInfo->pathLen );
+            pBufferCur += pRequestInfo->pathLen;
+        }
+
+        memcpy( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
+        pBufferCur += SPACE_CHARACTER_LEN;
+
+        memcpy( pBufferCur, HTTP_PROTOCOL_VERSION, httpsProtocolVersionLen );
+        pBufferCur += httpsProtocolVersionLen;
+        memcpy( pBufferCur, HTTP_HEADER_LINE_END, HTTP_HEADER_LINE_END_LEN );
+        pBufferCur += HTTP_HEADER_LINE_END_LEN;
+        /* Finished "<METHOD> <PATH> HTTP/1.1\r\n". */
     }
 
-    pRequestHeaders->headersLen
+    /* Write "User-Agent: <Value>". */
+    status = _addHeader( pRequestHeaders,
+                         HTTP_USER_AGENT_HEADER,
+                         STRLEN_LITERAL( HTTP_USER_AGENT_HEADER ),
+                         HTTP_USER_AGENT_VALUE,
+                         STRLEN_LITERAL( HTTP_USER_AGENT_VALUE ) );
 
-    if( status == HTTP_SUCCESS )
+    if( HTTP_FAILED( status ) )
     {
-        /* Clear user-provided buffer. */
-        memset( pRequestHeaders->pBuffer, 0, pRequestHeaders->bufferLen );
-        /* Write header data to the buffer. */
+        /* TODO: Add log. */
     }
+
+    /* Write "Host: <Value>". */
+    status = _addHeader( pRequestHeaders,
+                         HTTP_HOST_HEADER,
+                         STRLEN_LITERAL( HTTP_HOST_HEADER ),
+                         pRequestInfo->pHost,
+                         pRequestInfo->hostLen );
+
+    if( HTTP_FAILED( status ) )
+    {
+        /* TODO: Add log. */
+    }
+
+    /* Write "\r\n" line to end the HTTP header. */
+    if( ( HTTP_HEADER_LINE_END_LEN + pRequestHeaders->headersLen )
+        > pRequestHeaders->bufferLen )
+    {
+        status = HTTP_INSUFFICIENT_MEMORY;
+    }
+
+    if( HTTP_SUCCEEDED( status ) )
+    {
+        memcpy( pBufferCur, HTTP_HEADER_LINE_END, HTTP_HEADER_LINE_END_LEN );
+    }
+
+    return status;
 }
 
 HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
