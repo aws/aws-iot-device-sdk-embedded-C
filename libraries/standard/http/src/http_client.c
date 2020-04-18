@@ -34,8 +34,11 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                   const HTTPRequestInfo_t * pRequestInfo )
 {
-    size_t httpsProtocolVersionLen = STRLEN_LITERAL( HTTP_PROTOCOL_VERSION );
     HTTPStatus_t status = HTTP_SUCCESS;
+    size_t toAddLen = 0;
+    uint8_t * pBufferCur = pRequestHeaders->pBuffer;
+
+    pRequestHeaders->headersLen = 0;
 
     /* Check for null parameters. */
     if( ( pRequestHeaders == NULL ) || ( pRequestInfo == NULL ) ||
@@ -45,8 +48,30 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         status = HTTP_INVALID_PARAMETER;
     }
 
-    /* Check if user-provided buffer is large enough for headers. */
-    pRequestInfo->methodLen + STRLEN_LITERAL( HTTP_PROTOCOL_VERSION );
+    /* Check if user-provided buffer is large enough for first line. */
+    toAddLen = pRequestInfo->methodLen +                 \
+               SPACE_CHARACTER_LEN +                     \
+               pRequestInfo->pathLen +                   \
+               SPACE_CHARACTER_LEN +                     \
+               STRLEN_LITERAL( HTTP_PROTOCOL_VERSION ) + \
+               HTTP_HEADER_LINE_END_LEN;
+
+    if( toAddLen + pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
+    {
+        /* TODO: Add log. */
+        status = HTTP_INVALID_PARAMETER;
+    }
+
+    /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start of buffer. */
+    pBufferCur = _writeToBuffer( pBufferCur, pRequestInfo->method, pRequestInfo->methodLen );
+    pBufferCur += pRequestInfo->methodLen;
+    pBufferCur = _writeToBuffer( pBufferCur, SPACE_CHARACTER, SPACE_CHARACTER_LEN );
+    pBufferCur +=
+
+        if( STRLEN_LITERAL( HTTP_USER_AGENT_VALUE ) )
+    {
+        toAddLen += HTTP_USER_AGENT_HEADER +
+    }
 
 /*-----------------------------------------------------------*/
 

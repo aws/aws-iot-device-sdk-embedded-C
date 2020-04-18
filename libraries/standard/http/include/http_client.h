@@ -42,6 +42,11 @@
 #define HTTP_PROTOCOL_VERSION              "HTTP/1.1"
 
 /**
+ * @brief Default value when pRequestInfo->pPath == NULL.
+ */
+#define HTTP_EMPTY_PATH                    "/"
+
+/**
  * @brief Consants for HTTP header formatting
  */
 #define HTTP_HEADER_LINE_END               "\r\n"
@@ -50,12 +55,17 @@
 #define NEWLINE_CHARACTER                  '\n'
 #define HTTP_HEADER_FIELD_SEPARATOR        ": "
 #define HTTP_HEADER_FIELD_SEPARATOR_LEN    ( 2 )
+#define COLON_CHARACTER                    ':'
+#define COLON_CHARACTER_LEN                ( 1 )
+#define SPACE_CHARACTER                    ' '
+#define SPACE_CHARACTER_LEN                ( 1 )
+
 
 /**
  * @brief Constants for header fields added automatically during the request initialization.
  */
-#define HTTP_USER_AGENT_HEADER             "User-Agent"
-#define HTTP_HOST_HEADER                   "Host"
+#define HTTP_USER_AGENT_HEADER    "User-Agent"
+#define HTTP_HOST_HEADER          "Host"
 
 
 /**
