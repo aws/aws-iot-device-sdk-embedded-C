@@ -65,6 +65,10 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         status = HTTP_INSUFFICIENT_MEMORY;
     }
+    else
+    {
+        /* TODO: Add log. */
+    }
 
     if( HTTP_SUCCEEDED( status ) )
     {
@@ -100,10 +104,6 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
                              HTTP_USER_AGENT_FIELD_LEN,
                              HTTP_USER_AGENT_VALUE,
                              STRLEN_LITERAL( HTTP_USER_AGENT_VALUE ) );
-    }
-    else
-    {
-        /* TODO: Add log. */
     }
 
 /*-----------------------------------------------------------*/
@@ -170,11 +170,6 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                              pField, fieldLen, pValue, valueLen );
     }
 
-    if( HTTP_FAILED( status ) )
-    {
-        /* TODO: Add log. */
-    }
-
     return status;
 }
 
@@ -184,10 +179,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeStart,
                                         int32_t rangeEnd )
 {
-    /* Create a buffer to fit max possible length for "bytes=<start>-<end>". */
-    size_t maxLen = HTTP_RANGE_FIELD_LEN + HTTP_HEADER_FIELD_SEPARATOR_LEN +  \
-                    HTTP_RANGE_BYTES_PREFIX_VALUE_LEN + EQUAL_CHARACTER_LEN + \
-                    INT32_STRING_MAX_LEN + DASH_CHARACTER_LEN + INT32_STRING_MAX_LEN;
+    /* Create buffer to fit max possible length for "bytes=<start>-<end>".
+     * This is the value of the Range header. */
     char rangeValueStr[ HTTP_RANGE_BYTES_VALUE_MAX_LEN ] = { 0 };
     char * pRangeValueCur = &rangeValueStr;
     /* Excluding all the remaining null bytes. */
