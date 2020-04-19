@@ -45,8 +45,9 @@ HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
     uint8_t * pBufferCur = pRequestHeaders->pBuffer;
 
     /* (a) Check if there is enough space in buffer for additional header.
-     *     The additional "\r\n" at the end is used for error checking and must
-     *     be added separately after this method returns. */
+     *     The additional "\r\n" at the end is used for checking that there
+     *     is a enough space for the last line of an HTTP header.
+     *     This last line must be added separately after this method returns. */
     size_t toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + \
                       valueLen + HTTP_HEADER_LINE_SEPARATOR_LEN +  \
                       HTTP_HEADER_LINE_SEPARATOR_LEN;
@@ -110,6 +111,10 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         status = HTTP_INSUFFICIENT_MEMORY;
     }
+    else
+    {
+        /* TODO: Add log. */
+    }
 
     if( HTTP_SUCCEEDED( status ) )
     {
@@ -146,24 +151,16 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
                              HTTP_USER_AGENT_VALUE,
                              STRLEN_LITERAL( HTTP_USER_AGENT_VALUE ) );
     }
-    else
-    {
-        /* TODO: Add log. */
-    }
 
     if( HTTP_SUCCEEDED( status ) )
     {
         pRequestHeaders->pBuffer += toAddLen;
         /* Write "Host: <Value>". */
         status = _addHeader( pRequestHeaders,
-                             HTTP_HOST_HEADER,
+                             HTTP_HOST_FIELD,
                              HTTP_HOST_FIELD_LEN,
                              pRequestInfo->pHost,
                              pRequestInfo->hostLen );
-    }
-    else
-    {
-        /* TODO: Add log. */
     }
 
     if( HTTP_SUCCEEDED( status ) )
@@ -187,10 +184,6 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
                                  HTTP_CONNECTION_CLOSE_VALUE_LEN );
         }
     }
-    else
-    {
-        /* TODO: Add log. */
-    }
 
     if( HTTP_SUCCEEDED( status ) )
     {
@@ -200,10 +193,10 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         {
             status = HTTP_INSUFFICIENT_MEMORY;
         }
-    }
-    else
-    {
-        /* TODO: Add log. */
+        else
+        {
+            /* TODO: Add log. */
+        }
     }
 
     if( HTTP_SUCCEEDED( status ) )
@@ -211,11 +204,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         memcpy( pBufferCur,
                 HTTP_HEADER_LINE_SEPARATOR,
                 HTTP_HEADER_LINE_SEPARATOR_LEN );
-        pRequestHeaders->headersLen += HTTP_HEADER_LINE_SEPARATOR_LEN
-    }
-    else
-    {
-        /* TODO: Add log. */
+        pRequestHeaders->headersLen += HTTP_HEADER_LINE_SEPARATOR_LEN;
     }
 
     return status;
@@ -283,11 +272,6 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                              pField, fieldLen, pValue, valueLen );
     }
 
-    if( HTTP_FAILED( status ) )
-    {
-        /* TODO: Add log. */
-    }
-
     return status;
 }
 
@@ -295,10 +279,8 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                         int32_t rangeStart,
                                         int32_t rangeEnd )
 {
-    /* Create a buffer to fit max possible length for "bytes=<start>-<end>". */
-    size_t maxLen = HTTP_RANGE_FIELD_LEN + HTTP_HEADER_FIELD_SEPARATOR_LEN +  \
-                    HTTP_RANGE_BYTES_PREFIX_VALUE_LEN + EQUAL_CHARACTER_LEN + \
-                    INT32_STRING_MAX_LEN + DASH_CHARACTER_LEN + INT32_STRING_MAX_LEN;
+    /* Create buffer to fit max possible length for "bytes=<start>-<end>".
+     * This is the value of the Range header. */
     char rangeValueStr[ HTTP_RANGE_BYTES_VALUE_MAX_LEN ] = { 0 };
     char * pRangeValueCur = &rangeValueStr;
     /* Excluding all the remaining null bytes. */
@@ -331,12 +313,12 @@ HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
                               const HTTPRequestHeaders_t * pRequestHeaders,
                               const uint8_t * pRequestBodyBuf, /* For a PUT or POST request. */
                               size_t reqBodyBufLen,
-                              httpResponse_t * pResponse )
+                              const HTTPResponse_t * pResponse )
 {
     return HTTP_NOT_SUPPORTED;
 }
 
-HTTPStatus_t HTTPClient_ReadHeader( httpResponse_t * pResponse,
+HTTPStatus_t HTTPClient_ReadHeader( const HTTPResponse_t * pResponse,
                                     const char * pName,
                                     size_t nameLen,
                                     char ** pValue,
