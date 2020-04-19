@@ -6,7 +6,6 @@
 #define STRLEN_LITERAL( x )    ( ( sizeof( x ) / sizeof( char ) ) - 1 )
 #define HTTP_SUCCEEDED( x )    ( ( x ) != HTTP_SUCCESS )
 #define HTTP_FAILED( x )       ( ( x ) != HTTP_SUCCESS )
-
     HTTPStatus_t _addHeaderLine( HTTPRequestHeaders_t * pRequestHeaders,
                                  const char * pLine,
                                  size_t lineLen );
@@ -15,5 +14,6 @@
                              size_t fieldLen,
                              const char * pValue,
                              size_t valueLen );
+    bool _isNullParam( const void * ptr );
 
 #endif /* ifndef HTTP_CLIENT_INTERNAL_H_ */
