@@ -33,7 +33,7 @@ typedef int MQTTNetworkContext_t;
 
 /* Define the IotLog logging interface to enabling logging.
  * This demo maps the macro to the reference POSIX implementation for logging.
- * Note: @ref LIBRARY_LOG_LEVEL adds the name of the library, that produces the
+ * Note: @ref LIBRARY_LOG_NAME adds the name of the library, that produces the
  * log, as metadata in each log message. */
 #define IotLog( messageLevel, pFormat, ... ) \
     IotLog_Generic( messageLevel,            \
