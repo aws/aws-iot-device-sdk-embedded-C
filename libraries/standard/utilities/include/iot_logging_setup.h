@@ -114,7 +114,7 @@
  */
 
 /**
- * @def IotLog( messageLevel, pLibraryName, pFormat, ... )
+ * @def IotLog( messageLevel, pFormat, ... )
  * @brief The common logging interface for all libraries.
  *
  * This acts as a hook for supplying a logging implementation stack
@@ -124,8 +124,6 @@
  * @param[in] messageLevel The integer code for the log level of the message.
  * Must be one of #IOT_LOG_ERROR, #IOT_LOG_WARN, #IOT_LOG_INFO or #IOT_LOG_DEBUG.
  * Must not be #IOT_LOG_NONE.
- * @param[in] pLibraryName The string for the library name producing the
- * log message.
  * @param[in] pFormat The format string for the log message.
  * @param[in] ... The variadic argument list for the format string.
  *
