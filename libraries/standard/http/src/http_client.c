@@ -6,15 +6,14 @@ bool _isNullParam( const void * ptr )
     return ptr == NULL;
 }
 
-uint8_t itoaLength( int32_t integer )
+uint8_t itoaLength( int32_t value )
 {
-    int32_t divisor = 1;
-    uint8_t length = 0;
+    uint8_t length = !value;
 
-    while( integer / divisor != 0 )
+    while( value )
     {
-        length += 1;
-        divisor *= 10;
+        length++;
+        value /= 10;
     }
 
     return length;
