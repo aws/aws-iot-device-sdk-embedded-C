@@ -123,6 +123,35 @@ static uint8_t * encodeString( uint8_t * pDestination,
     return pBuffer;
 }
 
+static int32_t recvExact( MQTTTransportRecvFunc_t recvFunc,
+                          MQTTNetworkContext_t networkContext,
+                          void * pBuffer,
+                          size_t bytesToRecv )
+{
+    uint8_t * pIndex = pBuffer;
+    size_t bytesRemaining = bytesToRecv;
+    int32_t totalBytesRecvd = 0, bytesRecvd;
+
+    while( bytesRemaining > 0 )
+    {
+        bytesRecvd = recvFunc( networkContext, pIndex, bytesRemaining );
+
+        if( bytesRecvd > 0 )
+        {
+            bytesRemaining -= ( size_t ) bytesRecvd;
+            totalBytesRecvd += ( int32_t ) bytesRecvd;
+            pIndex += bytesRecvd;
+        }
+        else
+        {
+            totalBytesRecvd = -1;
+            break;
+        }
+    }
+
+    return totalBytesRecvd;
+}
+
 MQTTStatus_t MQTT_GetConnectPacketSize( const MQTTConnectInfo_t * const pConnectInfo,
                                         const MQTTPublishInfo_t * const pWillInfo,
                                         size_t * const pRemainingLength,

@@ -98,12 +98,12 @@ struct MQTTContext
     MQTTPubAckInfo_t incomingPublishRecords[ MQTT_MAX_QUEUED_PUBLISH_MESSAGES ];
     size_t incomingPublishCount;
 
-    const MQTTTransportInterface_t * pTransportInterface;
-    const MQTTFixedBuffer_t * pNetworkBuffer;
+    MQTTTransportInterface_t transportInterface;
+    MQTTFixedBuffer_t networkBuffer;
 
     uint16_t nextPacketId;
     MQTTConnectionStatus_t connectStatus;
-    const MQTTApplicationCallbacks_t * pCallbacks;
+    MQTTApplicationCallbacks_t callbacks;
     uint32_t lastPacketTime;
 };
 
