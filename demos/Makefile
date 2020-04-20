@@ -1,9 +1,9 @@
 CC = gcc
 
-INCLUDE_DIRS = -I . \
+INCLUDE_DIRS = -I include \
                -I ../libraries/standard/mqtt/include
 
-SRC_FILES = $(shell find . -name '*.c') \
+SRC_FILES = $(shell find src -name '*.c') \
             $(shell find ../libraries/standard/mqtt/src -name '*.c')
 
 FLAGS = -g -O0 -Wall -Wextra -Wpedantic
