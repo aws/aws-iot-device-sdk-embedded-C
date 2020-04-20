@@ -1,4 +1,3 @@
-#include "http_client.h"
 #include "private/http_client_internal.h"
 
 bool _isNullParam( const void * ptr )
@@ -7,32 +6,18 @@ bool _isNullParam( const void * ptr )
     return ptr == NULL;
 }
 
-HTTPStatus_t _addHeaderLine( HTTPRequestHeaders_t * pRequestHeaders,
-                             const char * pLine,
-                             size_t lineLen )
+uint8_t itoaLength( int32_t integer )
 {
-    HTTPStatus_t status = HTTP_INTERNAL_ERROR;
-    uint8_t * pBufferCur = pRequestHeaders->pBuffer;
+    int32_t divisor = 1;
+    uint8_t length = 0;
 
-    /* Check if there is enough space in buffer for additional header.
-     * Also count "\r\n" at the end of line. */
-    size_t toAddLen = lineLen + HTTP_HEADER_LINE_SEPARATOR_LEN;
-
-    if( pRequestHeaders->headersLen
-        + toAddLen > pRequestHeaders->bufferLen )
+    while( integer / divisor != 0 )
     {
-        /* TODO: Add log. */
-        return HTTP_INSUFFICIENT_MEMORY;
+        length += 1;
+        divisor *= 10;
     }
 
-    /* Write line to buffer. */
-    memcpy( pBufferCur, pLine, lineLen );
-    pBufferCur += lineLen;
-    /* Write "\r\n" to end the line. */
-    memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR_LEN, HTTP_HEADER_LINE_SEPARATOR_LEN );
-    pRequestHeaders->headersLen += toAddLen;
-
-    return status;
+    return length;
 }
 
 HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
@@ -234,8 +219,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
     /* "Content-Length" header must not be set by user if
      * HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is deactivated. */
-    if( !( HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG & pRequestInfo->flags ) &&
-        strncmp( pField,
+    if( strncmp( pField,
                  HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN ) )
     {
         /* TODO: Add log. */
