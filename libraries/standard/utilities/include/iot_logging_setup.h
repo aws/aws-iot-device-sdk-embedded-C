@@ -114,7 +114,7 @@
  */
 
 /**
- * @def IotLog( messageLevel, pLogConfig, ... )
+ * @def IotLog( messageLevel, pFormat, ... )
  * @brief The common logging interface for all libraries.
  *
  * This acts as a hook for supplying a logging implementation stack
@@ -136,7 +136,7 @@
  *
  * Equivalent to:
  * @code{c}
- * IotLogWith( IOT_LOG_ERROR, "%s" , message )
+ * IotLog( IOT_LOG_ERROR, "%s" , message )
  * @endcode
  */
 
@@ -218,9 +218,6 @@
     ( LIBRARY_LOG_LEVEL != IOT_LOG_INFO ) &&   \
     ( LIBRARY_LOG_LEVEL != IOT_LOG_DEBUG ) )
     #error "Please define LIBRARY_LOG_LEVEL as either IOT_LOG_NONE, IOT_LOG_ERROR, IOT_LOG_WARN, IOT_LOG_INFO, or IOT_LOG_DEBUG."
-/* Check that LIBRARY_LOG_NAME is defined and has a valid value. */
-#elif !defined( LIBRARY_LOG_NAME )
-    #error "Please define LIBRARY_LOG_NAME."
 #else
     #if LIBRARY_LOG_LEVEL != IOT_LOG_NONE
         #if !defined( IotLog )

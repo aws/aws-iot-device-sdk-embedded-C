@@ -29,10 +29,12 @@ typedef int MQTTNetworkContext_t;
 #define MQTT_MAX_QUEUED_PUBLISH_MESSAGES    10
 
 /* Include file for POSIX reference implementation. */
-#include "port/posix/iot_logging.h"
+#include "platform/include/iot_logging.h"
 
 /* Define the IotLog logging interface to enabling logging.
- * This demo maps the macro to the reference POSIX implementation for logging. */
+ * This demo maps the macro to the reference POSIX implementation for logging.
+ * Note: @ref LIBRARY_LOG_NAME adds the name of the library, that produces the
+ * log, as metadata in each log message. */
 #define IotLog( messageLevel, pFormat, ... ) \
     IotLog_Generic( messageLevel,            \
                     "[%s:%d] [%s] "pFormat,  \
@@ -40,6 +42,5 @@ typedef int MQTTNetworkContext_t;
                     __LINE__,                \
                     LIBRARY_LOG_NAME,        \
                     __VA_ARGS__ )
-
 
 #endif /* ifndef CONFIG_H */
