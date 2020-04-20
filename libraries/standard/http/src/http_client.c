@@ -1,4 +1,3 @@
-#include "http_client.h"
 #include "private/http_client_internal.h"
 
 /*-----------------------------------------------------------*/
@@ -30,6 +29,67 @@ static HTTPStatus_t _sendHttpBody( const HTTPTransportInterface_t * pTransport,
                                    size_t reqBodyBufLen );
 
 /*-----------------------------------------------------------*/
+bool _isNullParam( const void * ptr )
+{
+    /* TODO: Add log. */
+    return ptr == NULL;
+}
+
+uint8_t itoaLength( int32_t integer )
+{
+    int32_t divisor = 1;
+    uint8_t length = 0;
+
+    while( integer / divisor != 0 )
+    {
+        length += 1;
+        divisor *= 10;
+    }
+
+    return length;
+}
+
+HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
+                         const char * pField,
+                         size_t fieldLen,
+                         const char * pValue,
+                         size_t valueLen )
+{
+    HTTPStatus_t status = HTTP_INTERNAL_ERROR;
+    uint8_t * pBufferCur = pRequestHeaders->pBuffer;
+
+    /* (a) Check if there is enough space in buffer for additional header.
+     *     The additional "\r\n" at the end is used for checking that there
+     *     is a enough space for the last line of an HTTP header.
+     *     This last line must be added separately after this method returns. */
+    size_t toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + \
+                      valueLen + HTTP_HEADER_LINE_SEPARATOR_LEN +  \
+                      HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+    if( pRequestHeaders->headersLen
+        + toAddLen > pRequestHeaders->bufferLen )
+    {
+        /* TODO: Add log. */
+        return HTTP_INSUFFICIENT_MEMORY;
+    }
+
+    /* Write "Field: Value \r\n" to headers. */
+    memcpy( pBufferCur, pField, fieldLen );
+    pBufferCur += fieldLen;
+    memcpy( pBufferCur, HTTP_HEADER_FIELD_SEPARATOR,
+            HTTP_HEADER_FIELD_SEPARATOR_LEN );
+    pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
+    memcpy( pBufferCur, pValue, valueLen );
+    pBufferCur += valueLen;
+    memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+
+    /* Subtract HTTP_HEADER_LINE_SEPARATOR_LEN because it is not actually written
+     * and only used for error checking as mentioned above in (a). */
+    pRequestHeaders->headersLen += toAddLen - HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+    return status;
+}
+
 
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                   const HTTPRequestInfo_t * pRequestInfo )
@@ -132,8 +192,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
     /* "Content-Length" header must not be set by user if
      * HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is deactivated. */
-    if( !( HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG & pRequestInfo->flags ) &&
-        strncmp( pField,
+    if( strncmp( pField,
                  HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN ) )
     {
         /* TODO: Add log. */
