@@ -206,7 +206,7 @@ int main( int argc, char ** argv )
 
     if( mqttSessionEstablished == true )
     {
-        status = disconnectMqttSession( &context );
+        status |= disconnectMqttSession( &context );
     }
 
     if( tcpSocket != -1 )
