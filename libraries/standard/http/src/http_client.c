@@ -1,6 +1,12 @@
+/* Standard Includes. */
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "http_client.h"
 #include "private/http_client_internal.h"
 
-static bool _isNullPtr( const void * ptr );
+static uint8_t _isNullPtr( const void * ptr );
 
 static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                 const char * pField,
@@ -8,7 +14,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                 const char * pValue,
                                 size_t valueLen );
 
-static bool _isNullPtr( const void * ptr )
+static uint8_t _isNullPtr( const void * ptr )
 {
     /* TODO: Add log. */
     return ptr == NULL;
@@ -32,7 +38,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         status = HTTP_INVALID_PARAMETER;
     }
 
-    if( HTTP_SUCCEEDED( status ) )
+    if( status == HTTP_SUCCESS )
     {
         pBufferCur = pRequestHeaders->pBuffer;
 
@@ -58,7 +64,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         }
     }
 
-    if( HTTP_SUCCEEDED( status ) )
+    if( status == HTTP_SUCCESS )
     {
         /* Write "Field: Value \r\n" to headers. */
         memcpy( pBufferCur, pField, fieldLen );
@@ -118,7 +124,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         /* TODO: Add log. */
     }
 
-    if( HTTP_SUCCEEDED( status ) )
+    if( status == HTTP_SUCCESS )
     {
         /* Write "<METHOD> <PATH> HTTP/1.1\r\n" to start the HTTP header. */
         memcpy( pBufferCur, pRequestInfo->method, pRequestInfo->methodLen );
@@ -158,7 +164,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
                              STRLEN_LITERAL( HTTP_USER_AGENT_VALUE ) );
     }
 
-    if( HTTP_SUCCEEDED( status ) )
+    if( status == HTTP_SUCCESS )
     {
         pRequestHeaders->pBuffer += toAddLen;
         /* Write "Host: <Value>". */
@@ -169,7 +175,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
                              pRequestInfo->hostLen );
     }
 
-    if( HTTP_SUCCEEDED( status ) )
+    if( status == HTTP_SUCCESS )
     {
         if( HTTP_REQUEST_KEEP_ALIVE_FLAG & pRequestInfo->flags )
         {
@@ -191,7 +197,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         }
     }
 
-    if( HTTP_SUCCEEDED( status ) )
+    if( status == HTTP_SUCCESS )
     {
         /* Write "\r\n" line to end the HTTP header. */
         if( ( HTTP_HEADER_LINE_SEPARATOR_LEN + pRequestHeaders->headersLen )
@@ -205,7 +211,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         }
     }
 
-    if( HTTP_SUCCEEDED( status ) )
+    if( status == HTTP_SUCCESS )
     {
         memcpy( pBufferCur,
                 HTTP_HEADER_LINE_SEPARATOR,
@@ -233,7 +239,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         status = HTTP_INVALID_PARAMETER;
     }
 
-    if( HTTP_SUCCEEDED( status ) )
+    if( status == HTTP_SUCCESS )
     {
         pBufferCur = pRequestHeaders->pBuffer;
 
@@ -286,7 +292,7 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
         }
     }
 
-    if( HTTP_SUCCEEDED( status ) )
+    if( status == HTTP_SUCCESS )
     {
         status = _addHeader( pRequestHeaders,
                              pField, fieldLen, pValue, valueLen );
@@ -305,6 +311,7 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     char * pRangeValueCur = &rangeValueStr;
     /* Excluding all the remaining null bytes. */
     size_t rangeValueStrActualLength = 0;
+    int32_t bytesWritten = 0;
 
     /* Write "bytes=<start>:<end>" for Range header value. */
     memcpy( rangeValueStr,
@@ -320,9 +327,16 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     memcpy( rangeValueStr, DASH_CHARACTER, DASH_CHARACTER_LEN );
     pRangeValueCur += DASH_CHARACTER_LEN;
     rangeValueStrActualLength += DASH_CHARACTER_LEN;
-    memcpy( rangeValueStr, itoa( rangeEnd ), itoaLength( rangeEnd ) );
-    pRangeValueCur += itoaLength( rangeEnd );
-    rangeValueStrActualLength += itoaLength( rangeEnd );
+    bytesWritten = snprintf( rangeValueStr,
+                             HTTP_RANGE_BYTES_VALUE_MAX_LEN - rangeValueStrActualLength,
+                             "%d", rangeStart );
+    pRangeValueCur += bytesWritten;
+    rangeValueStrActualLength += bytesWritten;
+    bytesWritten = snprintf( rangeValueStr,
+                             HTTP_RANGE_BYTES_VALUE_MAX_LEN - rangeValueStrActualLength,
+                             "%d", rangeEnd );
+    pRangeValueCur += bytesWritten;
+    rangeValueStrActualLength += bytesWritten;
 
     return _addHeader( pRequestHeaders,
                        HTTP_RANGE_FIELD, HTTP_RANGE_FIELD_LEN,

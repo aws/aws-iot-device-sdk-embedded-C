@@ -1,6 +1,8 @@
 #ifndef HTTP_CLIENT_H_
 #define HTTP_CLIENT_H_
 
+#include <stdint.h>
+
 /**
  * @brief Maximum size, in bytes, of headers allowed from the server.
  *
