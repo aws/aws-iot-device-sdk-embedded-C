@@ -28,3 +28,5 @@ $(TESTS): common.h
 
 # additional dependency for a specific test
 #api_func.c: a_private_func.c
+_addHeader.c: _isNullPtr.c
+HTTPClient_AddHeader.c: _addHeader.c _isNullPtr.c

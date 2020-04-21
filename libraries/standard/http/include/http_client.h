@@ -1,8 +1,6 @@
 #ifndef HTTP_CLIENT_H_
 #define HTTP_CLIENT_H_
 
-#include "private/http_client_internal.h"
-
 /**
  * @brief Maximum size, in bytes, of headers allowed from the server.
  *
@@ -28,89 +26,15 @@
 /**
  * @brief Supported HTTP request methods.
  */
-#define HTTP_METHOD_GET                    "GET"   /**< HTTP Method GET. */
-#define HTTP_METHOD_PUT                    "PUT"   /**< HTTP Method PUT. */
-#define HTTP_METHOD_POST                   "POST"  /**< HTTP Method POST. */
-#define HTTP_METHOD_HEAD                   "HEAD"  /**< HTTP Method HEAD. */
+#define HTTP_METHOD_GET          "GET"             /**< HTTP Method GET. */
+#define HTTP_METHOD_PUT          "PUT"             /**< HTTP Method PUT. */
+#define HTTP_METHOD_POST         "POST"            /**< HTTP Method POST. */
+#define HTTP_METHOD_HEAD         "HEAD"            /**< HTTP Method HEAD. */
 
 /**
  * @brief The HTTP protocol version of this library is HTTP/1.1.
  */
-#define HTTP_PROTOCOL_VERSION              "HTTP/1.1"
-
-/**
- * @brief Default value when pRequestInfo->pPath == NULL.
- */
-#define HTTP_EMPTY_PATH                    "/"
-#define HTTP_EMPTY_PATH_LEN                ( 1 )
-
-/**
- * @brief Consants for HTTP header formatting
- */
-#define HTTP_HEADER_LINE_SEPARATOR         "\r\n"
-#define HTTP_HEADER_LINE_SEPARATOR_LEN     ( 2 )
-#define CARRIAGE_RETURN_CHARACTER          '\r'
-#define NEWLINE_CHARACTER                  '\n'
-#define HTTP_HEADER_FIELD_SEPARATOR        ": "
-#define HTTP_HEADER_FIELD_SEPARATOR_LEN    ( 2 )
-#define COLON_CHARACTER                    ':'
-#define COLON_CHARACTER_LEN                ( 1 )
-#define SPACE_CHARACTER                    ' '
-#define SPACE_CHARACTER_LEN                ( 1 )
-#define EQUAL_CHARACTER                    '='
-#define EQUAL_CHARACTER_LEN                ( 1 )
-#define DASH_CHARACTER                     '-'
-#define DASH_CHARACTER_LEN                 ( 1 )
-
-/**
- * @brief The maximum length for a 32-bit integer when converted to a string.
- *
- * This is used to initialize a local array for the final headers to send.
- */
-#define INT32_STRING_MAX_LEN               ( 10 )
-
-
-/**
- * @brief Constants for header fields added automatically during the request initialization.
- */
-#define HTTP_USER_AGENT_FIELD                   "User-Agent"
-#define HTTP_HOST_FIELD                         "Host"
-#define HTTP_USER_AGENT_FIELD_LEN               ( 10 )
-#define HTTP_HOST_FIELD_LEN                     ( 5 )
-#define HTTP_CONNECTION_FIELD_LEN               ( 10 )
-
-/**
- * @brief Constants for header fields added based on flags.
- */
-#define HTTP_CONNECTION_FIELD                   "Connection"
-#define HTTP_CONTENT_LENGTH_FIELD               "Content-Length"
-#define HTTP_CONNECTION_FIELD_LEN               ( 10 )
-#define HTTP_CONTENT_LENGTH_FIELD_LEN           ( 14 )
-
-/**
- * @brief Constants for header values added based on flags.
- */
-#define HTTP_CONNECTION_KEEP_ALIVE_VALUE        "keep-alive"
-#define HTTP_CONNECTION_CLOSE_VALUE             "close"
-#define HTTP_CONNECTION_KEEP_ALIVE_VALUE_LEN    ( 10 )
-#define HTTP_CONNECTION_CLOSE_VALUE_LEN         ( 5 )
-
-/**
- * @brief Constants for header fields added for "Range" header.
- */
-#define HTTP_RANGE_FIELD                        "Range"
-#define HTTP_RANGE_FIELD_LEN                    ( 5 )
-
-/**
- * @brief Constants for header value prefix added for "Range" header.
- */
-#define HTTP_RANGE_BYTES_PREFIX_VALUE           "bytes"
-#define HTTP_RANGE_BYTES_PREFIX_VALUE_LEN       ( 5 )
-
-/**
- * @brief Longest possible string for "Range" header value field.
- */
-#define HTTP_RANGE_BYTES_VALUE_MAX_LEN          ( 27 )
+#define HTTP_PROTOCOL_VERSION    "HTTP/1.1"
 
 /**
  * Flags for #HTTPRequestInfo_t.flags.
@@ -252,6 +176,11 @@
          * and #HTTPClient_InitializeRequestHeaders.
          */
         size_t headersLen;
+
+        /**
+         * @brief Flags to activate other request header configurations.
+         */
+        uint32_t flags;
     } HTTPRequestHeaders_t;
 
 /**
@@ -408,14 +337,22 @@
  * #HTTPRequestInfo_t.
  *
  * Upon return, #HTTPRequestHeaders_t.headersLen will be updated with the number
- * of bytes written.
+ * of bytes written if there is sufficient memory.
  *
- * TODO: Expand documentation.
+ * Each line in the header is listed below and written in this order:
+ *     <#HTTPRequestInfo_t.method> <#HTTPRequestInfo_t.pPath> <HTTP_PROTOCOL_VERSION>
+ *     User-Agent: <HTTP_USER_AGENT_VALUE>
+ *     Host: <#HTTPRequestInfo_t.pHost>
+ *     Connection: close
+ *
+ * Note that Connection header value can be changed to keep-alive by setting
+ * the HTTP_REQUEST_KEEP_ALIVE_FLAG in #HTTPRequestInfo_t.flags.
  *
  * @param[in] pRequestHeaders Request header buffer information.
  * @param[in] pRequestInfo Initial request header configurations.
  * @return #HTTP_SUCCESS if successful, an error code otherwise.
- * TODO: Update for exact error codes returned.
+ * @return #HTTP_INVALID_PARAMETER if any provided parameters and their members are NULL.
+ * @return #HTTP_INSUFFICIENT_MEMORY if provided buffer size is not large enough to hold headers.
  */
     HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                       const HTTPRequestInfo_t * pRequestInfo );

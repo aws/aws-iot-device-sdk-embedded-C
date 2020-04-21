@@ -1,65 +1,82 @@
 #include "private/http_client_internal.h"
 
-bool _isNullParam( const void * ptr )
+static bool _isNullPtr( const void * ptr );
+
+static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
+                                const char * pField,
+                                size_t fieldLen,
+                                const char * pValue,
+                                size_t valueLen );
+
+static bool _isNullPtr( const void * ptr )
 {
     /* TODO: Add log. */
     return ptr == NULL;
 }
 
-uint8_t itoaLength( int32_t value )
-{
-    uint8_t length = !value;
-
-    while( value )
-    {
-        length++;
-        value /= 10;
-    }
-
-    return length;
-}
-
-HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
-                         const char * pField,
-                         size_t fieldLen,
-                         const char * pValue,
-                         size_t valueLen )
+static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
+                                const char * pField,
+                                size_t fieldLen,
+                                const char * pValue,
+                                size_t valueLen )
 {
     HTTPStatus_t status = HTTP_INTERNAL_ERROR;
-    uint8_t * pBufferCur = pRequestHeaders->pBuffer;
+    uint8_t * pBufferCur = NULL;
+    size_t toAddLen = 0;
 
-    /* (a) Check if there is enough space in buffer for additional header.
-     *     The additional "\r\n" at the end is used for checking that there
-     *     is a enough space for the last line of an HTTP header.
-     *     This last line must be added separately after this method returns. */
-    size_t toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + \
-                      valueLen + HTTP_HEADER_LINE_SEPARATOR_LEN +  \
-                      HTTP_HEADER_LINE_SEPARATOR_LEN;
-
-    if( pRequestHeaders->headersLen
-        + toAddLen > pRequestHeaders->bufferLen )
+    /* Check for NULL parameters. */
+    if( _isNullPtr( pRequestHeaders ) ||
+        _isNullPtr( pRequestHeaders->pBuffer ) ||
+        _isNullPtr( pField ) || _isNullPtr( pValue ) )
     {
-        /* TODO: Add log. */
-        return HTTP_INSUFFICIENT_MEMORY;
+        status = HTTP_INVALID_PARAMETER;
     }
 
-    /* Write "Field: Value \r\n" to headers. */
-    memcpy( pBufferCur, pField, fieldLen );
-    pBufferCur += fieldLen;
-    memcpy( pBufferCur, HTTP_HEADER_FIELD_SEPARATOR,
-            HTTP_HEADER_FIELD_SEPARATOR_LEN );
-    pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
-    memcpy( pBufferCur, pValue, valueLen );
-    pBufferCur += valueLen;
-    memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+    if( HTTP_SUCCEEDED( status ) )
+    {
+        pBufferCur = pRequestHeaders->pBuffer;
 
-    /* Subtract HTTP_HEADER_LINE_SEPARATOR_LEN because it is not actually written
-     * and only used for error checking as mentioned above in (a). */
-    pRequestHeaders->headersLen += toAddLen - HTTP_HEADER_LINE_SEPARATOR_LEN;
+        /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
+         * Note this method writes trailing "\r\n" before returning. */
+        if( strncmp( pBufferCur - 2 * HTTP_HEADER_LINE_SEPARATOR_LEN,
+                     "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) )
+        {
+            pBufferCur -= HTTP_HEADER_LINE_SEPARATOR_LEN;
+            memset( pBufferCur, 0, HTTP_HEADER_LINE_SEPARATOR_LEN );
+            pRequestHeaders->headersLen -= 2 * HTTP_HEADER_LINE_SEPARATOR_LEN;
+        }
+
+        /* Check if there is enough space in buffer for additional header. */
+        toAddLen = fieldLen + HTTP_HEADER_FIELD_SEPARATOR_LEN + valueLen + \
+                   HTTP_HEADER_LINE_SEPARATOR_LEN +                        \
+                   HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+        if( ( pRequestHeaders->headersLen + toAddLen ) > pRequestHeaders->bufferLen )
+        {
+            /* TODO: Add log. */
+            status = HTTP_INSUFFICIENT_MEMORY;
+        }
+    }
+
+    if( HTTP_SUCCEEDED( status ) )
+    {
+        /* Write "Field: Value \r\n" to headers. */
+        memcpy( pBufferCur, pField, fieldLen );
+        pBufferCur += fieldLen;
+        memcpy( pBufferCur, HTTP_HEADER_FIELD_SEPARATOR,
+                HTTP_HEADER_FIELD_SEPARATOR_LEN );
+        pBufferCur += HTTP_HEADER_FIELD_SEPARATOR_LEN;
+        memcpy( pBufferCur, pValue, valueLen );
+        pBufferCur += valueLen;
+        memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+        pBufferCur += HTTP_HEADER_LINE_SEPARATOR_LEN;
+        memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
+
+        pRequestHeaders->headersLen += toAddLen;
+    }
 
     return status;
 }
-
 
 HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pRequestHeaders,
                                                   const HTTPRequestInfo_t * pRequestInfo )
@@ -70,15 +87,16 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     size_t httpsProtocolVersionLen = STRLEN_LITERAL( HTTP_PROTOCOL_VERSION );
 
     pRequestHeaders->headersLen = 0;
+    pRequestHeaders->flags = pRequestInfo->flags;
     /* Clear user-provided buffer. */
     memset( pRequestHeaders->pBuffer, 0, pRequestHeaders->bufferLen );
 
     /* Check for null parameters. */
-    if( _isNullParam( pRequestHeaders ) || _isNullParam( pRequestInfo ) ||
-        _isNullParam( pRequestHeaders->pBuffer ) ||
-        _isNullParam( pRequestInfo->method ) ||
-        _isNullParam( pRequestInfo->pHost ) ||
-        _isNullParam( pRequestInfo->pPath ) )
+    if( _isNullPtr( pRequestHeaders ) || _isNullPtr( pRequestInfo ) ||
+        _isNullPtr( pRequestHeaders->pBuffer ) ||
+        _isNullPtr( pRequestInfo->method ) ||
+        _isNullPtr( pRequestInfo->pHost ) ||
+        _isNullPtr( pRequestInfo->pPath ) )
     {
         status = HTTP_INVALID_PARAMETER;
     }
@@ -91,7 +109,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
                STRLEN_LITERAL( HTTP_PROTOCOL_VERSION ) + \
                HTTP_HEADER_LINE_SEPARATOR_LEN;
 
-    if( toAddLen + pRequestHeaders->headersLen > pRequestHeaders->bufferLen )
+    if( ( toAddLen + pRequestHeaders->headersLen ) > pRequestHeaders->bufferLen )
     {
         status = HTTP_INSUFFICIENT_MEMORY;
     }
@@ -111,6 +129,8 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         /* Use "/" as default value if <PATH> is NULL. */
         if( ( pRequestInfo->pPath == NULL ) || ( pRequestInfo->pathLen == 0 ) )
         {
+            /* Revise toAddLen to contain HTTP_EMPTY_PATH_LEN instead. */
+            toAddLen = ( toAddLen - pRequestInfo->pathLen ) + HTTP_EMPTY_PATH_LEN;
             memcpy( pBufferCur, HTTP_EMPTY_PATH, HTTP_EMPTY_PATH_LEN );
             pBufferCur += HTTP_EMPTY_PATH_LEN;
         }
@@ -127,6 +147,8 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         pBufferCur += httpsProtocolVersionLen;
         memcpy( pBufferCur, HTTP_HEADER_LINE_SEPARATOR, HTTP_HEADER_LINE_SEPARATOR_LEN );
         pBufferCur += HTTP_HEADER_LINE_SEPARATOR_LEN;
+
+        pRequestHeaders->headersLen += toAddLen;
 
         /* Write "User-Agent: <Value>". */
         status = _addHeader( pRequestHeaders,
@@ -151,7 +173,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
     {
         if( HTTP_REQUEST_KEEP_ALIVE_FLAG & pRequestInfo->flags )
         {
-            /* Write "Connection: keep-alive" */
+            /* Write "Connection: keep-alive". */
             status = _addHeader( pRequestHeaders,
                                  HTTP_CONNECTION_FIELD,
                                  HTTP_CONNECTION_FIELD_LEN,
@@ -160,7 +182,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         }
         else
         {
-            /* Write "Connection: close" */
+            /* Write "Connection: close". */
             status = _addHeader( pRequestHeaders,
                                  HTTP_CONNECTION_FIELD,
                                  HTTP_CONNECTION_FIELD_LEN,
@@ -201,52 +223,66 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
                                    size_t valueLen )
 {
     HTTPStatus_t status = HTTP_INTERNAL_ERROR;
+    uint8_t * pBufferCur = NULL;
 
-    /* Check if header field is long enough for length to overflow. */
-    if( fieldLen > ( UINT32_MAX >> 2 ) )
+    /* Check for NULL parameters. */
+    if( _isNullPtr( pRequestHeaders ) ||
+        _isNullPtr( pRequestHeaders->pBuffer ) ||
+        _isNullPtr( pField ) || _isNullPtr( pValue ) )
     {
-        /* TODO: Add log. */
         status = HTTP_INVALID_PARAMETER;
     }
 
-    /* Check if header value is long enough for length to overflow. */
-    if( valueLen > ( UINT32_MAX >> 2 ) )
+    if( HTTP_SUCCEEDED( status ) )
     {
-        /* TODO: Add log. */
-        status = HTTP_INVALID_PARAMETER;
-    }
+        pBufferCur = pRequestHeaders->pBuffer;
 
-    /* "Content-Length" header must not be set by user if
-     * HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is deactivated. */
-    if( strncmp( pField,
-                 HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN ) )
-    {
-        /* TODO: Add log. */
-        status = HTTP_INVALID_PARAMETER;
-    }
+        /* Check if header field is long enough for length to overflow. */
+        if( fieldLen > ( UINT32_MAX >> 2 ) )
+        {
+            /* TODO: Add log. */
+            status = HTTP_INVALID_PARAMETER;
+        }
 
-    /* User must not set "Connection" header through this method. */
-    if( strncmp( pField,
-                 HTTP_CONNECTION_FIELD, HTTP_CONNECTION_FIELD_LEN ) )
-    {
-        /* TODO: Add log. */
-        status = HTTP_INVALID_PARAMETER;
-    }
+        /* Check if header value is long enough for length to overflow. */
+        if( valueLen > ( UINT32_MAX >> 2 ) )
+        {
+            /* TODO: Add log. */
+            status = HTTP_INVALID_PARAMETER;
+        }
 
-    /* User must not set "Host" header through this method. */
-    if( strncmp( pField,
-                 HTTP_HOST_FIELD, HTTP_HOST_FIELD_LEN ) )
-    {
-        /* TODO: Add log. */
-        status = HTTP_INVALID_PARAMETER;
-    }
+        /* "Content-Length" header must not be set by user if
+         * HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is deactivated. */
+        if( strncmp( pField,
+                     HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN ) )
+        {
+            /* TODO: Add log. */
+            status = HTTP_INVALID_PARAMETER;
+        }
 
-    /* User must not set "User-Agent" header through this method. */
-    if( strncmp( pField,
-                 HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_FIELD_LEN ) )
-    {
-        /* TODO: Add log. */
-        status = HTTP_INVALID_PARAMETER;
+        /* User must not set "Connection" header through this method. */
+        if( strncmp( pField,
+                     HTTP_CONNECTION_FIELD, HTTP_CONNECTION_FIELD_LEN ) )
+        {
+            /* TODO: Add log. */
+            status = HTTP_INVALID_PARAMETER;
+        }
+
+        /* User must not set "Host" header through this method. */
+        if( strncmp( pField,
+                     HTTP_HOST_FIELD, HTTP_HOST_FIELD_LEN ) )
+        {
+            /* TODO: Add log. */
+            status = HTTP_INVALID_PARAMETER;
+        }
+
+        /* User must not set "User-Agent" header through this method. */
+        if( strncmp( pField,
+                     HTTP_USER_AGENT_FIELD, HTTP_USER_AGENT_FIELD_LEN ) )
+        {
+            /* TODO: Add log. */
+            status = HTTP_INVALID_PARAMETER;
+        }
     }
 
     if( HTTP_SUCCEEDED( status ) )
@@ -287,9 +323,9 @@ HTTPStatus_t HTTPClient_AddRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
     pRangeValueCur += itoaLength( rangeEnd );
     rangeValueStrActualLength += itoaLength( rangeEnd );
 
-    return HTTPClient_AddHeader( pRequestHeaders,
-                                 HTTP_RANGE_FIELD, HTTP_RANGE_FIELD_LEN,
-                                 rangeValueStr, rangeValueStrActualLength );
+    return _addHeader( pRequestHeaders,
+                       HTTP_RANGE_FIELD, HTTP_RANGE_FIELD_LEN,
+                       rangeValueStr, rangeValueStrActualLength );
 }
 
 HTTPStatus_t HTTPClient_Send( const HTTPTransportInterface_t * pTransport,
