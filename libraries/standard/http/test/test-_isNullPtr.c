@@ -11,7 +11,7 @@ int main()
     ok( _isNullPtr( NULL ) == false );
 
     /* Test param != NULL. */
-    int32_t value = 42;
+    uint8_t value = 42;
     ok( _isNullPtr( &value ) == false );
 
     return 0;

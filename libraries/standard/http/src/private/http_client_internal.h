@@ -38,18 +38,18 @@
  * @brief Consants for HTTP header formatting
  */
 #define HTTP_HEADER_LINE_SEPARATOR         "\r\n"
-#define HTTP_HEADER_LINE_SEPARATOR_LEN     ( 2 )
 #define CARRIAGE_RETURN_CHARACTER          '\r'
 #define NEWLINE_CHARACTER                  '\n'
 #define HTTP_HEADER_FIELD_SEPARATOR        ": "
-#define HTTP_HEADER_FIELD_SEPARATOR_LEN    ( 2 )
 #define COLON_CHARACTER                    ':'
-#define COLON_CHARACTER_LEN                ( 1 )
 #define SPACE_CHARACTER                    ' '
-#define SPACE_CHARACTER_LEN                ( 1 )
 #define EQUAL_CHARACTER                    '='
-#define EQUAL_CHARACTER_LEN                ( 1 )
 #define DASH_CHARACTER                     '-'
+#define HTTP_HEADER_LINE_SEPARATOR_LEN     ( 2 )
+#define HTTP_HEADER_FIELD_SEPARATOR_LEN    ( 2 )
+#define COLON_CHARACTER_LEN                ( 1 )
+#define SPACE_CHARACTER_LEN                ( 1 )
+#define EQUAL_CHARACTER_LEN                ( 1 )
 #define DASH_CHARACTER_LEN                 ( 1 )
 
 /**
@@ -67,7 +67,6 @@
 #define HTTP_HOST_FIELD                         "Host"
 #define HTTP_USER_AGENT_FIELD_LEN               ( 10 )
 #define HTTP_HOST_FIELD_LEN                     ( 5 )
-#define HTTP_CONNECTION_FIELD_LEN               ( 10 )
 
 /**
  * @brief Constants for header fields added based on flags.
@@ -103,5 +102,3 @@
 #define HTTP_RANGE_BYTES_VALUE_MAX_LEN          ( 27 )
 
 #define STRLEN_LITERAL( x )    ( ( sizeof( x ) / sizeof( char ) ) - 1 )
-#define HTTP_SUCCEEDED( x )    ( ( x ) == HTTP_SUCCESS )
-#define HTTP_FAILED( x )       ( ( x ) != HTTP_SUCCESS )
