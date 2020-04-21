@@ -37,7 +37,7 @@ static HTTPStatus_t _addHeader( HTTPRequestHeaders_t * pRequestHeaders,
         pBufferCur = pRequestHeaders->pBuffer;
 
         /* Backtrack before trailing "\r\n" (HTTP header end) if it's already written.
-         * Note this method writes trailing "\r\n" before returning. */
+         * Note that this method also writes trailing "\r\n" before returning. */
         if( strncmp( pBufferCur - 2 * HTTP_HEADER_LINE_SEPARATOR_LEN,
                      "\r\n\r\n", 2 * HTTP_HEADER_LINE_SEPARATOR_LEN ) )
         {
@@ -129,7 +129,7 @@ HTTPStatus_t HTTPClient_InitializeRequestHeaders( HTTPRequestHeaders_t * pReques
         /* Use "/" as default value if <PATH> is NULL. */
         if( ( pRequestInfo->pPath == NULL ) || ( pRequestInfo->pathLen == 0 ) )
         {
-            /* Revise toAddLen to contain HTTP_EMPTY_PATH_LEN instead. */
+            /* Revise toAddLen to contain <HTTP_EMPTY_PATH_LEN> instead. */
             toAddLen = ( toAddLen - pRequestInfo->pathLen ) + HTTP_EMPTY_PATH_LEN;
             memcpy( pBufferCur, HTTP_EMPTY_PATH, HTTP_EMPTY_PATH_LEN );
             pBufferCur += HTTP_EMPTY_PATH_LEN;
@@ -253,7 +253,8 @@ HTTPStatus_t HTTPClient_AddHeader( HTTPRequestHeaders_t * pRequestHeaders,
 
         /* "Content-Length" header must not be set by user if
          * HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG is deactivated. */
-        if( strncmp( pField,
+        if( !( HTTP_REQUEST_DISABLE_CONTENT_LENGTH_FLAG & pRequestHeaders->flags ) &&
+            strncmp( pField,
                      HTTP_CONTENT_LENGTH_FIELD, HTTP_CONTENT_LENGTH_FIELD_LEN ) )
         {
             /* TODO: Add log. */
