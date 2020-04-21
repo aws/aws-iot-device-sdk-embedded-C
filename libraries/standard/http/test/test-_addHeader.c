@@ -12,7 +12,6 @@ header;
 /* Functions are pulled out into their own C files to be tested as a unit. */
 #include "_isNullPtr.c"
 #include "_addHeader.c"
-#include "HTTPClient_AddHeader.c"
 
 #define xqcReset()                      \
     do {                                \
@@ -42,9 +41,9 @@ int main()
     header.fieldLen = 13;
     memcpy( header.value, "None", 4 );
     header.valueLen = 4;
-    test_err = HTTPClient_AddHeader( pRequestHeaders,
-                                     header.field, header.fieldLen,
-                                     header.value, header.valueLen );
+    test_err = _addHeader( pRequestHeaders,
+                           header.field, header.fieldLen,
+                           header.value, header.valueLen );
     ok( test_err == HTTP_SUCCESS );
 
     return 0;
