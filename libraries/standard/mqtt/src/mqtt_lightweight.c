@@ -384,12 +384,19 @@ MQTTStatus_t MQTT_GetDisconnectPacketSize( size_t * pPacketSize )
 MQTTStatus_t MQTT_SerializeDisconnect( const MQTTFixedBuffer_t * const pBuffer )
 {
     MQTTStatus_t status = MQTTSuccess;
+    size_t disconnectPacketSize;
 
-    if( pBuffer->size < MQTT_DISCONNECT_PACKET_SIZE )
+    status = MQTT_GetDisconnectPacketSize( &disconnectPacketSize );
+
+    if( status == MQTTSuccess )
     {
-        status = MQTTNoMemory;
+        if( pBuffer->size < disconnectPacketSize )
+        {
+            status = MQTTNoMemory;
+        }
     }
-    else
+
+    if( status == MQTTSuccess )
     {
         pBuffer->pBuffer[ 0 ] = MQTT_PACKET_TYPE_DISCONNECT;
         pBuffer->pBuffer[ 1 ] = MQTT_DISCONNECT_REMAINING_LENGTH;
