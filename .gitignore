@@ -11,3 +11,4 @@ build/
 # Ignore code coverage artifacts
 *.gcda
 *.gcno
+*.gcov
