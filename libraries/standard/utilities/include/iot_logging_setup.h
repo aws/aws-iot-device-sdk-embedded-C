@@ -196,10 +196,14 @@
         #define IotLogDebugWithArgs( pFormat, ... )
 
     #else /* if LIBRARY_LOG_LEVEL == IOT_LOG_ERROR */
-        #define IotLogError( ... )
-        #define IotLogWarn( ... )
-        #define IotLogInfo( ... )
-        #define IotLogDebug( ... )
+        #define IotLogError( message )
+        #define IotLogErrorWithArgs( pFormat, ... )
+        #define IotLogWarn( message )
+        #define IotLogWarnWithArgs( pFormat, ... )
+        #define IotLogInfo( message )
+        #define IotLogInfoWithArgs( pFormat, ... )
+        #define IotLogDebug( message )
+        #define IotLogDebugWithArgs( pFormat, ... )
     #endif /* if LIBRARY_LOG_LEVEL == IOT_LOG_ERROR */
 #endif /* if !defined( LIBRARY_LOG_LEVEL ) || ( ( LIBRARY_LOG_LEVEL != IOT_LOG_NONE ) && ( LIBRARY_LOG_LEVEL != IOT_LOG_ERROR ) && ( LIBRARY_LOG_LEVEL != IOT_LOG_WARN ) && ( LIBRARY_LOG_LEVEL != IOT_LOG_INFO ) && ( LIBRARY_LOG_LEVEL != IOT_LOG_DEBUG ) ) */
 
