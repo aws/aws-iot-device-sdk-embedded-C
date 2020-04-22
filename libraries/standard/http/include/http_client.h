@@ -43,14 +43,31 @@
     #define LIBRARY_LOG_NAME             ( "HTTP" )
     #include "iot_logging_setup.h"
 #else /* ifdef USE_AWS_IOT_CSDK_LOGGING */
-    #define IotLogError( message )
-    #define IotLogErrorWithArgs( format, ... )
-    #define IotLogWarn( message )
-    #define IotLogWarnWithArgs( format, ... )
-    #define IotLogInfo( message )
-    #define IotLogInfoWithArgs( format, ... )
-    #define IotLogDebug( message )
-    #define IotLogDebugWithArgs( format, ... )
+/* Otherwise please define logging macros in config.h. */
+    #ifndef IotLogError
+        #define IotLogError( message )
+    #endif
+    #ifndef IotLogErrorWithArgs
+        #define IotLogErrorWithArgs( format, ... )
+    #endif
+    #ifndef IotLogWarn
+        #define IotLogWarn( message )
+    #endif
+    #ifndef IotLogWarnWithArgs
+        #define IotLogWarnWithArgs( format, ... )
+    #endif
+    #ifndef IotLogInfo
+        #define IotLogInfo( message )
+    #endif
+    #ifndef IotLogInfoWithArgs
+        #define IotLogInfoWithArgs( format, ... )
+    #endif
+    #ifndef IotLogDebug
+        #define IotLogDebug( message )
+    #endif
+    #ifndef IotLogDebugWithArgs
+        #define IotLogDebugWithArgs( format, ... )
+    #endif
 #endif /* ifdef USE_AWS_IOT_CSDK_LOGGING */
 
 /**
