@@ -24,6 +24,10 @@ ABSTRACTIONS += --remove-function-body IotSemaphore_TimedWait
 
 OBJS += $(ENTRY)_harness.goto
 OBJS += $(MQTT)/cbmc/proofs/mqtt_state.goto
+OBJS += $(MQTT)/cbmc/stubs/IotListDouble_RemoveAllMatches.goto
+OBJS += $(MQTT)/cbmc/stubs/IotTaskPool_CreateJob.goto
+OBJS += $(MQTT)/cbmc/stubs/IotTaskPool_TryCancel.goto
+OBJS += $(MQTT)/cbmc/stubs/_IotMqtt_RemoveSubscriptionByTopicFilter.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_api.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_helper.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_operation.goto

@@ -21,20 +21,25 @@
  */
 
 /**
- * @file _IotMqtt_DeserializePingresp_harness.c
- * @brief Implements the proof harness for _IotMqtt_DeserializePingresp function.
+ * @file IotTaskPool_ScheduleDeferred.c
+ * @brief Implements a stub for IotTaskPool_ScheduleDeferred function.
  */
 
 #include "iot_config.h"
 #include "private/iot_mqtt_internal.h"
 
-#include <stdlib.h>
-
-void harness()
+/**
+ * We constrain the return values of these functions because
+ * they are checked by assertions in the MQTT code.
+ */
+IotTaskPoolError_t IotTaskPool_ScheduleDeferred( IotTaskPool_t taskPool,
+                                                 IotTaskPoolJob_t job,
+                                                 uint32_t timeMs )
 {
-    _mqttPacket_t pingresp;
+    IotTaskPoolError_t error;
 
-    pingresp.pRemainingData = malloc( sizeof( uint8_t ) * pingresp.remainingLength );
-
-    _IotMqtt_DeserializePingresp( &pingresp );
+    /* _IotMqtt_ScheduleOperation asserts this. */
+    __CPROVER_assume( error != IOT_TASKPOOL_BAD_PARAMETER &&
+                      error != IOT_TASKPOOL_ILLEGAL_OPERATION );
+    return error;
 }

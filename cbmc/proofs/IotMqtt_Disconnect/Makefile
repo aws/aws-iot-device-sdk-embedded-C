@@ -72,6 +72,9 @@ DEF += -DCBMC_STUB_REMOVEALLMATCHES=1
 
 OBJS += $(ENTRY)_harness.goto
 OBJS += $(MQTT)/cbmc/proofs/mqtt_state.goto
+OBJS += $(MQTT)/cbmc/stubs/IotListDouble_RemoveAll.goto
+OBJS += $(MQTT)/cbmc/stubs/IotListDouble_RemoveAllMatches.goto
+OBJS += $(MQTT)/cbmc/stubs/IotSemaphore.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_api.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_helper.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_operation.goto

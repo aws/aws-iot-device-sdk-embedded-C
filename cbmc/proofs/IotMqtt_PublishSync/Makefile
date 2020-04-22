@@ -14,6 +14,12 @@ ABSTRACTIONS += --remove-function-body IotNetworkInterfaceReceive
 
 OBJS += $(ENTRY)_harness.goto
 OBJS += $(MQTT)/cbmc/proofs/mqtt_state.goto
+OBJS += $(MQTT)/cbmc/stubs/_IotMqtt_NextPacketIdentifier.goto
+OBJS += $(MQTT)/cbmc/stubs/IotListDouble_RemoveAllMatches.goto
+OBJS += $(MQTT)/cbmc/stubs/IotSemaphore.goto
+OBJS += $(MQTT)/cbmc/stubs/IotTaskPool_CreateJob.goto
+OBJS += $(MQTT)/cbmc/stubs/IotTaskPool_ScheduleDeferred.goto
+OBJS += $(MQTT)/cbmc/stubs/IotTaskPool_TryCancel.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_api.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_helper.goto
 OBJS += $(MQTT)/libraries/standard/mqtt/src/iot_mqtt_operation.goto

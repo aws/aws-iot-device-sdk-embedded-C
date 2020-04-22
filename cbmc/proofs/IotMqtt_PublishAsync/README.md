@@ -69,3 +69,4 @@ Some functions are simply unreachable:
 
     * Unreachable: Only function call in from an unreachable block of
 	`_IotMqtt_Notify`
+

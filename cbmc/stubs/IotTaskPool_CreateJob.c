@@ -21,20 +21,26 @@
  */
 
 /**
- * @file _IotMqtt_DeserializePingresp_harness.c
- * @brief Implements the proof harness for _IotMqtt_DeserializePingresp function.
+ * @file IotTaskPool_CreateJob.c
+ * @brief Implements a stub for IotTaskPool_CreateJob function.
  */
 
 #include "iot_config.h"
 #include "private/iot_mqtt_internal.h"
 
-#include <stdlib.h>
-
-void harness()
+/**
+ * We constrain the return values of these functions because
+ * they are checked by assertions in the MQTT code.
+ */
+IotTaskPoolError_t IotTaskPool_CreateJob( IotTaskPoolRoutine_t userCallback,
+                                          void * pUserContext,
+                                          IotTaskPoolJobStorage_t * const pJobStorage,
+                                          IotTaskPoolJob_t * const pJob )
 {
-    _mqttPacket_t pingresp;
+    assert( userCallback != NULL );
+    assert( pJobStorage != NULL );
+    assert( pJob != NULL );
 
-    pingresp.pRemainingData = malloc( sizeof( uint8_t ) * pingresp.remainingLength );
-
-    _IotMqtt_DeserializePingresp( &pingresp );
+    /* _IotMqtt_ScheduleOperation asserts this. */
+    return IOT_TASKPOOL_SUCCESS;
 }

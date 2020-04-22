@@ -21,20 +21,21 @@
  */
 
 /**
- * @file _IotMqtt_DeserializePingresp_harness.c
- * @brief Implements the proof harness for _IotMqtt_DeserializePingresp function.
+ * @file IotTaskPool_TryCancel.c
+ * @brief Implements a stub for IotTaskPool_TryCancel function.
  */
 
 #include "iot_config.h"
 #include "private/iot_mqtt_internal.h"
 
-#include <stdlib.h>
-
-void harness()
+/**
+ * We constrain the return values of this function because it
+ * is checked by assertions in the MQTT code.
+ */
+IotTaskPoolError_t IotTaskPool_TryCancel( IotTaskPool_t taskPool,
+                                          IotTaskPoolJob_t job,
+                                          IotTaskPoolJobStatus_t * const pStatus )
 {
-    _mqttPacket_t pingresp;
-
-    pingresp.pRemainingData = malloc( sizeof( uint8_t ) * pingresp.remainingLength );
-
-    _IotMqtt_DeserializePingresp( &pingresp );
+    assert( ( taskPool == NULL ) || ( job == NULL ) );
+    return IOT_TASKPOOL_BAD_PARAMETER;
 }

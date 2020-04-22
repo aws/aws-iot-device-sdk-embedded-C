@@ -21,20 +21,29 @@
  */
 
 /**
- * @file _IotMqtt_DeserializePingresp_harness.c
- * @brief Implements the proof harness for _IotMqtt_DeserializePingresp function.
+ * @file _IotMqtt_NextPacketIdentifier.c
+ * @brief Implements a stub for _IotMqtt_NextPacketIdentifier function.
  */
 
 #include "iot_config.h"
 #include "private/iot_mqtt_internal.h"
 
-#include <stdlib.h>
-
-void harness()
+/**
+ * _IotMqtt_NextPacketIdentifier calls Atomic_Add_u32, which receives
+ * a volatile variable as input. Thus, CBMC will always consider that
+ * Atomic_Add_u32 will operate over nondetermistic values and raise
+ * an unsigned integer overflow failure. However, developers have reported
+ * that the use of this overflow is part of the function implementation.
+ * In order to mirror _IotMqtt_NextPacketIdentifier behaviour and avoid
+ * spurious alarms, we stub out this function to always
+ * return a nondetermistic odd value.
+ */
+uint16_t _IotMqtt_NextPacketIdentifier( void )
 {
-    _mqttPacket_t pingresp;
+    uint16_t id;
 
-    pingresp.pRemainingData = malloc( sizeof( uint8_t ) * pingresp.remainingLength );
+    /* Packet identifiers will follow the sequence 1,3,5...65535,1,3,5... */
+    __CPROVER_assume( id % 2 == 1 );
 
-    _IotMqtt_DeserializePingresp( &pingresp );
+    return id;
 }

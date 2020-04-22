@@ -1,4 +1,4 @@
-This is a memory safety proof for IotMqtt_Disconnect.
+# Memory safety proof for IotMqtt_Disconnect
 
 This proof attains 86% code coverage.  The following comments explain
 why the uncovered lines of code are unreachable code.

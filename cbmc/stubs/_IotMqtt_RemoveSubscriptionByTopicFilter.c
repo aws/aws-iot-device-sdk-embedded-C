@@ -21,20 +21,29 @@
  */
 
 /**
- * @file _IotMqtt_DeserializePingresp_harness.c
- * @brief Implements the proof harness for _IotMqtt_DeserializePingresp function.
+ * @file _IotMqtt_RemoveSubscriptionByTopicFilter.c
+ * @brief Implements a stub for _IotMqtt_RemoveSubscriptionByTopicFilter function.
  */
 
 #include "iot_config.h"
 #include "private/iot_mqtt_internal.h"
 
-#include <stdlib.h>
+#include "mqtt_state.h"
 
-void harness()
+/**
+ * We assume the list remove functions are memory safe.
+ *
+ * We abstract the list remove functions for performance reasons.  Our
+ * abstraction replaces the original list with an unconstrained list.
+ * Our abstraction proves that none of the elements on the original
+ * list are accessed after the remove: We free all elements on the
+ * original list, so that any later access will be caught as a
+ * use-after-free error.
+ */
+void _IotMqtt_RemoveSubscriptionByTopicFilter( _mqttConnection_t * pMqttConnection,
+                                               const IotMqttSubscription_t * pSubscriptionList,
+                                               size_t subscriptionCount )
 {
-    _mqttPacket_t pingresp;
-
-    pingresp.pRemainingData = malloc( sizeof( uint8_t ) * pingresp.remainingLength );
-
-    _IotMqtt_DeserializePingresp( &pingresp );
+    free_IotMqttSubscriptionList( &( pMqttConnection->subscriptionList ) );
+    allocate_IotMqttSubscriptionList( &( pMqttConnection->subscriptionList ), subscriptionCount );
 }
