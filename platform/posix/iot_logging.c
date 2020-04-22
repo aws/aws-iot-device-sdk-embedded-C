@@ -28,10 +28,15 @@
 /* Standard includes. */
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 /* Platform clock include. */
-#include "platform/iot_clock.h"
+#include "platform/include/iot_clock.h"
+
+/* Include header for logging level macros. */
+#include "iot_logging_levels.h"
 
 /* Logging includes. */
 #include "iot_logging.h"
@@ -49,6 +54,12 @@
  * @see @ref platform_clock_function_gettimestring
  */
 #define MAX_TIMESTRING_LENGTH    ( 64 )
+
+/**
+ * @brief The longest string in #_pLogLevelStrings (below), plus 3 to accommodate
+ * `[]` and a null-terminator.
+ */
+#define MAX_LOG_LEVEL_LENGTH     ( 8 )
 
 /*-----------------------------------------------------------*/
 
@@ -83,7 +94,7 @@ static bool _reallocLoggingBuffer( void ** pOldBuffer,
         ( void ) memcpy( pNewBuffer, *pOldBuffer, oldSize );
 
         /* Free the old buffer and update the pointer. */
-        IotLogging_Free( *pOldBuffer );
+        free( *pOldBuffer );
         *pOldBuffer = pNewBuffer;
 
         status = true;
@@ -134,7 +145,7 @@ void IotLog_Generic( int32_t messageLevel,
     /* Check for encoding errors. */
     if( requiredMessageSize <= 0 )
     {
-        IotLogging_Free( pLoggingBuffer );
+        free( pLoggingBuffer );
 
         return;
     }
@@ -193,7 +204,7 @@ void IotLog_Generic( int32_t messageLevel,
                                    bufferSize ) == false )
         {
             /* If buffer reallocation failed, return. */
-            IotLogging_Free( pLoggingBuffer );
+            free( pLoggingBuffer );
 
             return;
         }
@@ -214,16 +225,16 @@ void IotLog_Generic( int32_t messageLevel,
     /* Check for encoding errors. */
     if( requiredMessageSize <= 0 )
     {
-        IotLogging_Free( pLoggingBuffer );
+        free( pLoggingBuffer );
 
         return;
     }
 
     /* Print the logging buffer to stdout. */
-    IotLogging_Puts( pLoggingBuffer );
+    puts( pLoggingBuffer );
 
     /* Free the logging buffer. */
-    IotLogging_Free( pLoggingBuffer );
+    free( pLoggingBuffer );
 }
 
 /*-----------------------------------------------------------*/
